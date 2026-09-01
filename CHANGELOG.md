@@ -20,13 +20,22 @@
   parameter unanswered fails `tools/audit_addons.gd` - which now prints `successors=N problems=N` -
   rather than surprising anybody with a sheet open.
 - **Every address is auto-tested, like a lift entry.** One harness walks every successor map the
-  installed vocabulary carries, builds a row on the old spelling, applies the rewrite, and puts the
-  result through the real emitter and the real compiler: no unfilled slot, every renamed value
-  arrives, the same byte twice, and the compiled file carries that exact line.
-- **The first customer: the State Machine pack.** Its *Go to state* and *Current state is* now point
-  at the object-state *Go To State* and *Is In State*, each with the one parameter it renames. *Time
-  in state* and *On any state change* deliberately point nowhere - the newer family has no expression
-  twin, and a trigger for every switch cannot be forwarded to one that names a single state.
+  installed vocabulary carries - plus a table written with real templates, so it goes on proving
+  something when the vocabulary carries none - builds a row on the old spelling filling each
+  parameter with the value that parameter's own field writes, applies the rewrite, and puts the
+  result through the real emitter, the real compiler AND GODOT'S OWN PARSER: no unfilled slot, every
+  renamed value arrives, the same byte twice, the compiled file carries that exact line, and the
+  compiled file is GDScript.
+- **No shipped verb carries a forwarding address yet, and the suite pins that.** The pair that came
+  closest - the State Machine pack's *Go to state* and *Current state is* pointing at the
+  object-state *Go To State* and *Is In State* - was withdrawn, for two reasons the guide now spells
+  out. The pack's parameter is a state NAME, so a row holds the quoted literal a text field writes;
+  the object-state parameter is a member of the object's own `State` enum, so a row holds a bare
+  name. A map may say three things and none of them converts one into the other, so the rewrite
+  emitted `state = State."chasing"` and the file gate refused every real row. And those four verbs
+  are one machine - *Time in state* reads the clock *Go to state* stamps, *On any state change* rides
+  its signal - so forwarding half of them would have left a machine that still compiles and no longer
+  works.
 - **In the sheet, nothing.** A row in the older spelling grows no block, no icon, no badge and no
   amber: it is not wrong. Selecting it puts one muted line - `newer spelling: Go To State` - on the
   help strip, with no door beside it.

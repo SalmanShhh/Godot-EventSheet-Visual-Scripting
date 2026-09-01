@@ -5,12 +5,15 @@
 # keeps it, and the way an address stops keeping it is by being added without a test.
 #
 # So nothing here is written per address. The harness walks EVERY successor map in the installed
-# vocabulary - built-ins and packs alike - and for each one it:
+# vocabulary - built-ins and packs alike - plus a small table written here with real templates, so it
+# goes on proving something on the day the shipped vocabulary carries none. For each map it:
 #   1. BUILDS a row on the old spelling, filling each of its parameters with the value the verb
 #      itself starts on, or a sample where the verb asks the author to say;
 #   2. applies the rewrite the map describes, resolved to the end of its chain;
-#   3. emits the successor row through the REAL emitter (ActionCodegen / ConditionCodegen), and
-#      compiles it inside a one-row sheet through the real compiler, and pins that the two agree;
+#   3. emits the successor row through the REAL emitter (ActionCodegen / ConditionCodegen), compiles
+#      it inside a one-row sheet through the real compiler, pins that the two agree, and PUTS THE
+#      COMPILED FILE THROUGH GODOT'S OWN PARSER - the step the migrate dialog runs before it commits,
+#      and the one a harness that stopped at "the text contains the line" cannot see;
 #   4. checks that every value the old row carried arrived, that no slot was left unfilled, and that
 #      emitting twice writes the same byte.
 # A map that names a verb nobody has, points at itself, joins a cycle, renames a parameter neither
@@ -31,7 +34,7 @@ static func run() -> bool:
 	ok = _test_the_vocabulary_is_sound() and ok
 	ok = _test_the_annotation() and ok
 	ok = _test_the_builder() and ok
-	ok = _test_the_first_customer() and ok
+	ok = _test_the_shipped_vocabulary_carries_none() and ok
 	ok = _test_the_sheet_says_it_quietly() and ok
 	ok = _test_generated_fixtures() and ok
 	ok = _test_the_engine() and ok
@@ -107,37 +110,52 @@ static func _test_the_builder() -> bool:
 	return ok
 
 
-## The first address the plugin ever shipped, pinned as VALUES: the State Machine pack's two
-## superseded verbs point at the object-state vocabulary, with the one parameter each of them
-## renames. The other two verbs of that pack deliberately point nowhere - Time in state is an
-## expression the object-state family has no twin for, and On any state change names no single state
-## - so their absence is pinned too, because a later pass adding an address there should have to say
-## so out loud.
-static func _test_the_first_customer() -> bool:
+## THE SHIPPED VOCABULARY CARRIES NO FORWARDING ADDRESS, and that is pinned rather than merely true,
+## because the way an address gets added is by looking plausible. The State Machine pack is the pair
+## that looked plausible and was not: its Go to state and Current state is ask the same questions the
+## object-state Go To State and Is In State ask, but they keep the answer somewhere else. This pack's
+## parameter is a state NAME, so a row holds the quoted literal a text field writes; the object-state
+## parameter is a member of the object's own State enum, so a row holds a bare name. A map may say
+## three things and none of them converts one into the other, so the rewrite emitted
+## `state = State."chasing"` and the file gate refused every real row.
+##
+## And the second reason, which no value conversion would have fixed: those four verbs are one
+## machine. Time in state reads the clock Go to state stamps and On any state change rides the signal
+## it emits, and neither has an honest address - so forwarding the other two would have left a
+## machine that still compiles and no longer works.
+##
+## An address added here later has to move this test, which is the point.
+static func _test_the_shipped_vocabulary_carries_none() -> bool:
 	var known: Dictionary = EventForgeSuccessors.catalog()
-	var ok: bool = _check("Go to state points at the object-state Go to",
-		EventForgeSuccessors.resolve("StateMachineBehavior::method:set_state", known),
-		{"id": "Core::GoToState", "renames": {"next": "state"}, "defaults": {},
-			"hops": PackedStringArray(["Core::GoToState"])})
-	ok = _check("Current state is points at the object-state Is in",
-		EventForgeSuccessors.resolve("StateMachineBehavior::method:is_in_state", known),
-		{"id": "Core::InState", "renames": {"state_name": "state"}, "defaults": {},
-			"hops": PackedStringArray(["Core::InState"])}) and ok
-	ok = _check("Time in state points nowhere - the newer family has no expression twin",
-		EventForgeSuccessors.resolve("StateMachineBehavior::method:time_in_state", known), {}) and ok
-	ok = _check("and neither does On any state change, which names no one state",
-		EventForgeSuccessors.resolve("StateMachineBehavior::signal:state_changed", known), {}) and ok
+	var addressed: PackedStringArray = PackedStringArray()
+	for key: Variant in known.keys():
+		if not EventForgeSuccessors.normalize_map((known[key] as Dictionary).get("map", {})).is_empty():
+			addressed.append(str(key))
+	addressed.sort()
+	var ok: bool = _check("no shipped verb carries a forwarding address yet", addressed,
+		PackedStringArray())
+	for key: String in ["StateMachineBehavior::method:set_state",
+			"StateMachineBehavior::method:is_in_state",
+			"StateMachineBehavior::method:time_in_state",
+			"StateMachineBehavior::signal:state_changed"]:
+		ok = _check("%s points nowhere - the machine's four verbs stay together" % key,
+			EventForgeSuccessors.resolve(key, known), {}) and ok
 	# The pack itself is untouched by any of this: same ids, same templates, same emitted call.
 	var go_to: Dictionary = known["StateMachineBehavior::method:set_state"]
-	ok = _check("and the superseded verb keeps the template it always had",
+	ok = _check("and the pack keeps the template it always had",
 		str(go_to["template"]), "{target}.set_state({next})") and ok
 	return ok
 
 
-## THE QUIET SHEET LAW, asked of the one thing this slice puts on screen. A row written in the older
-## spelling grows NOTHING in the sheet: no block, no icon, no inline text, not even the amber state,
-## because it is not wrong and still compiles exactly as written. The single place it is mentioned is
-## the help strip once the row is selected, where it reads muted and offers no door.
+## THE QUIET SHEET LAW, asked of the one thing this slice puts on screen, in its two halves.
+##
+## THE SHEET: a row whose verb has been superseded grows NOTHING - no block, no icon, no inline text,
+## not even the amber state - because it is not wrong and still compiles exactly as written. Asked
+## here of a real dock over a real pack row, which today carries no forwarding address at all, so the
+## muted line is absent too and the row is silent in every way a row can be.
+##
+## THE STRIP: the one place the words are allowed to appear, driven directly rather than through a
+## shipped address, so the law stays pinned whether or not the vocabulary happens to carry one.
 static func _test_the_sheet_says_it_quietly() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -153,12 +171,15 @@ static func _test_the_sheet_says_it_quietly() -> bool:
 	sheet.events.append(event)
 	dock.setup(sheet)
 	var row: EventRowData = dock._viewport._root_rows[0]
-	var ok: bool = _check("the row in the older spelling knows where the newer one is",
-		row.successor_hint, "newer spelling: Go To State")
-	ok = _check("but wears no amber state", row.attention_note, "") and ok
+	var ok: bool = _check("a row on a verb with no address says nothing at all",
+		row.successor_hint, "")
+	ok = _check("wears no amber state", row.attention_note, "") and ok
 	ok = _check("and hangs nothing under itself", row.children.size(), 0) and ok
-	dock._update_row_help_strip(row)
-	ok = _check("selecting it puts the muted line on the strip",
+	# The strip, driven directly: the words a superseded row WOULD get, and where they are allowed.
+	var carried: EventRowData = EventRowData.new()
+	carried.successor_hint = "newer spelling: Go To State"
+	dock._update_row_help_strip(carried)
+	ok = _check("selecting a superseded row puts the muted line on the strip",
 		dock._row_help_label.text, "newer spelling: Go To State") and ok
 	ok = _check("and shows it", dock._row_help_label.visible, true) and ok
 	ok = _check("muted rather than in the warning colour",
@@ -175,21 +196,77 @@ static func _test_the_sheet_says_it_quietly() -> bool:
 
 ## The generated corpus. Every line printed here is one this harness invented from the map itself,
 ## so the printout doubles as the list of rewrites the plugin claims it can make.
+##
+## Two populations, and the second one is why this test still means something while the shipped
+## vocabulary carries no address: every installed map, plus a small table written HERE with real
+## templates. A harness whose only corpus is the shipped one quietly becomes an assertion about
+## nothing the day the last address is withdrawn, and would be no readier to catch the next bad
+## address than it was to catch the first.
 static func _test_generated_fixtures() -> bool:
 	var known: Dictionary = EventForgeSuccessors.catalog()
 	var ok: bool = true
 	var probed: int = 0
+	for key: String in _addressed_keys(known):
+		ok = _test_one_map(key, known) and ok
+		probed += 1
+	# A value, not a count of a live tree: the shipped vocabulary carries none today, and an address
+	# added later is walked above without this line moving.
+	ok = _check("every installed forwarding address was probed", probed,
+		_addressed_keys(known).size()) and ok
+	# And the written table, which does carry one, so the whole walk above is exercised either way.
+	var written: Dictionary = _probe_table()
+	for key: String in _addressed_keys(written):
+		ok = _test_one_map(key, written) and ok
+	ok = _check("the written table is sound too",
+		EventForgeSuccessors.problems(written), PackedStringArray()) and ok
+	# THE GATE ITSELF, pinned on the exact shape that got past the old harness: a value a text field
+	# writes, landing in a slot the successor spells as a name.
+	ok = _check("a quoted literal in a slot spelled as a name is not GDScript",
+		EventSheetMigrationPlan.parses("extends Node
+
+
+func _ready() -> void:
+	state = State.\"chasing\"
+"),
+		false) and ok
+	ok = _check("and the same line with a name in it is",
+		EventSheetMigrationPlan.parses("extends Node
+
+
+enum State { CHASING }
+
+var state: State = State.CHASING
+
+
+func _ready() -> void:
+	state = State.CHASING
+"),
+		true) and ok
+	return ok
+
+
+## The keys of one vocabulary that carry a forwarding address, sorted.
+static func _addressed_keys(known: Dictionary) -> PackedStringArray:
 	var keys: PackedStringArray = PackedStringArray()
 	for key: Variant in known.keys():
 		if not EventForgeSuccessors.normalize_map((known[key] as Dictionary).get("map", {})).is_empty():
 			keys.append(str(key))
 	keys.sort()
-	for key: String in keys:
-		ok = _test_one_map(key, known) and ok
-		probed += 1
-	# A harness that walked nothing would pass every assertion above in silence.
-	ok = _check("every forwarding address was probed", probed > 0, true) and ok
-	return ok
+	return keys
+
+
+## A sound address written for this harness, with REAL templates - the corpus the walk above needs to
+## have something to walk. Both verbs write a line that is GDScript on its own, so the compile and
+## the parse are asking about the rewrite rather than about the fixture.
+static func _probe_table() -> Dictionary:
+	var older: Dictionary = _entry("P::Older", ["message"],
+		{"id": "P::Newer", "renames": {"message": "text"}, "defaults": {}})
+	older["template"] = "print({message})"
+	older["declared_types"] = {"message": "String"}
+	var newer: Dictionary = _entry("P::Newer", ["text"], {})
+	newer["template"] = "print({text})"
+	newer["declared_types"] = {"text": "String"}
+	return {"P::Older": older, "P::Newer": newer}
 
 
 ## One address, end to end.
@@ -236,13 +313,45 @@ static func _test_one_map(key: String, known: Dictionary) -> bool:
 ## The values a fixture row starts on: what the verb itself declares, and a sample where the verb
 ## leaves the answer to the author (a blank default means "a row must say which", and a fixture that
 ## honoured the blank would prove nothing about whether the value travels).
+##
+## THE SAMPLE HAS TO BE THE SHAPE A REAL ROW HOLDS, or the whole harness proves the wrong thing. A
+## plain text parameter stores a QUOTED LITERAL - that is what the field writes the moment somebody
+## types a word into it - while a name-shaped one (a state, a variable, a node) stores a bare name.
+## Filling every blank with a bare identifier made `state = State.mg_state` parse and `state =
+## State."chasing"` never be asked about, which is exactly how a forwarding address that cannot
+## migrate one real row shipped.
 static func _sample_params(entry: Dictionary) -> Dictionary:
 	var declared: Dictionary = entry.get("declared_defaults", {})
+	var hints: Dictionary = entry.get("declared_hints", {})
+	var types: Dictionary = entry.get("declared_types", {})
 	var filled: Dictionary = {}
 	for parameter: String in entry.get("params", PackedStringArray()):
 		var value: String = str(declared.get(parameter, "")).strip_edges()
-		filled[parameter] = value if not value.is_empty() else "%s%s" % [SAMPLE_PREFIX, parameter]
+		if not value.is_empty():
+			filled[parameter] = value
+			continue
+		filled[parameter] = _blank_value(parameter, str(hints.get(parameter, "")),
+			str(types.get(parameter, "")))
 	return filled
+
+
+## What a row holds in a parameter its verb leaves blank, in the shape that parameter's own field
+## writes. A hinted field is a picker over names, so its value is a bare name; a plain field of a
+## given type holds a literal of that type.
+static func _blank_value(parameter: String, hint: String, type_name: String) -> String:
+	var token: String = "%s%s" % [SAMPLE_PREFIX, parameter]
+	if not hint.strip_edges().is_empty():
+		return token
+	match type_name:
+		"bool":
+			return "false"
+		"int":
+			return "0"
+		"float":
+			return "0.0"
+		"String":
+			return "\"%s\"" % token
+	return token
 
 
 ## One row's line, through the compiler's own emitters - never a copy of the substitution. A fixture
@@ -261,9 +370,15 @@ static func _emit(template: String, params: Dictionary, ace_type: int) -> String
 	return ActionCodegen.generate_action(action)
 
 
-## Whether a one-row sheet holding the rewritten row compiles, and whether the GDScript it wrote
-## really does carry the emitted line. This is the byte gate the migrate dialog runs before it
-## commits, asked here of every address the vocabulary ships.
+## Whether a one-row sheet holding the rewritten row compiles, whether the GDScript it wrote really
+## does carry the emitted line, AND WHETHER THAT GDSCRIPT PARSES. This is the byte gate the migrate
+## dialog runs before it commits, asked here of every address the vocabulary ships.
+##
+## The parse is the step that matters and the step that was missing: `SheetCompiler.compile` builds
+## text and never asks the engine to read it, so a rewrite that lands a quoted literal in a slot
+## spelled as a name writes a file nothing loads and a `contains()` check calls it a pass. The
+## migrate dialog refuses such a row (`why=file-refuses`); a harness that could not see it let the
+## address ship anyway.
 static func _compiles_to(successor_key: String, successor: Dictionary, params: Dictionary, line: String) -> bool:
 	var address: PackedStringArray = EventForgeSuccessors.split_key(successor_key)
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -295,10 +410,13 @@ static func _compiles_to(successor_key: String, successor: Dictionary, params: D
 		print("  [why] %s did not compile: %s" % [successor_key, str(compiled.get("errors", []))])
 		return false
 	var written: String = str(compiled.get("output", ""))
-	if written.contains(line):
-		return true
-	print("  [why] %s compiled without its own line: %s" % [successor_key, line])
-	return false
+	if not written.contains(line):
+		print("  [why] %s compiled without its own line: %s" % [successor_key, line])
+		return false
+	if not EventSheetMigrationPlan.parses(written):
+		print("  [why] %s compiled to GDScript the engine refuses, around: %s" % [successor_key, line])
+		return false
+	return true
 
 
 ## The engine itself, on maps written for the purpose - the mechanics the shipped addresses rely on

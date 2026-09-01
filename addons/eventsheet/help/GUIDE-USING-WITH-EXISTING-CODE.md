@@ -1432,13 +1432,13 @@ to the function it names, the same jump the Outline panel makes.
   included: that one asks two further questions in its gate and keeps its own handler name.
 
 - **A line written in a spelling the vocabulary has since replaced opens as the row it is, and stays
-  there.** `$StateMachineBehavior.set_state("CHASING")` opens as **Go to state**, the pack's own older
-  row, because a superseded verb keeps its id, its generated line and its place in the picker
-  permanently. Nothing about opening the file consults the forwarding address: the row grows no mark,
-  the file is not touched, and saving it untouched reproduces it byte for byte. Selecting the row puts
-  one muted line on the help strip - *newer spelling: Go To State* - and the sheet's head counts how
-  many such rows there are. Rewriting them is a receipt you open from that counting line and a button
-  you press, never a thing an open does.
+  there.** `$StateMachineBehavior.set_state("CHASING")` opens as **Go to state**, the pack's own row,
+  because a superseded verb keeps its id, its generated line and its place in the picker permanently.
+  Nothing about opening the file consults the forwarding address: the row grows no mark, the file is
+  not touched, and saving it untouched reproduces it byte for byte. Where a verb does carry an
+  address, selecting the row puts one muted line on the help strip - *newer spelling: Announce* - and
+  the sheet's head counts how many such rows there are. Rewriting them is a receipt you open from
+  that counting line and a button you press, never a thing an open does.
 
 - **A baked local's token is a name, not a marker.** A row whose generated line declares a local of
   its own writes `var __peer_a3f81c02 = …`, and that line reads back as the row that wrote it, token

@@ -182,76 +182,70 @@ of them back with their ids, templates, values and readings unharmed.
 
 ## A worked migration, before and after
 
-Here is a real one, from a real pair of verbs. The **State Machine** pack's *Go to state* and *Current
-state is* both carry a forwarding address to the built-in object-state family: *Go To State* and *Is
-In State*, with one renamed parameter each.
+Here is what one looks like. A pack publishes *Say it*, taking a `message`; a later version publishes
+*Announce*, which takes the same value under the name `text` and adds a `seconds` it declares a
+default for. The old verb keeps its id, its template and its place in the picker forever, and gains
+one line:
 
-This is the sheet before. Two rows, written on the pack, compiling to the pack's own calls:
-
-<!-- caption: An enemy written on the State Machine pack -->
+<!-- no-figure -->
 ```gdscript
-extends CharacterBody2D
-
-var speed: float = 40.0
-
-func _ready() -> void:
-	$StateMachineBehavior.set_state("CHASING")
-
-func _physics_process(delta: float) -> void:
-	if $StateMachineBehavior.is_in_state("CHASING"):
-		velocity.x = speed * 3.0
-	move_and_slide()
+## @ace_succeeded_by(SpeechPack::method:announce, renames: message=text)
+func say_it(message: String) -> void:
 ```
 
-Press **Migrate…** on this sheet as it stands and you get the *honest* answer rather than the tidy
-one: both rows are listed under **Left exactly as they are**, with *the rewritten line is not
-something this file would compile* beside them. That is the file gate doing its job. The newer
-spelling writes `state = State.CHASING`, and this object has no `State` enum and no `state` variable,
-so the compiled file would not parse. A migration that had gone ahead anyway would have handed you a
-game that does not start.
+This is the sheet before, written on the older verb:
 
-Declare the states first - **Declare states…** on the sheet head, which writes the enum, the variable
-and its setter as ordinary rows - and press **Migrate…** again. Now the receipt shows both rows, in
-both languages:
+<!-- caption: A sheet written on the older spelling -->
+```gdscript
+extends Node
+
+func _ready() -> void:
+	$SpeechPack.say_it("the gate is open")
+```
+
+Press **Migrate…** and the receipt shows that row twice over - the sentence it reads today beside the
+sentence it would read, and the line it writes beside the line it would write:
 
 | The sentence | Today | Rewritten |
 | --- | --- | --- |
-| the action | `Go to state "CHASING"` | `Go to CHASING` |
-| the condition | `Current state is "CHASING"` | `Is in CHASING` |
+| the action | `Say it "the gate is open"` | `Announce "the gate is open"` |
 
 | The line | Today | Rewritten |
 | --- | --- | --- |
-| the action | `$StateMachineBehavior.set_state("CHASING")` | `state = State.CHASING` |
-| the condition | `$StateMachineBehavior.is_in_state("CHASING")` | `state == State.CHASING` |
+| the action | `$SpeechPack.say_it("the gate is open")` | `$SpeechPack.announce("the gate is open")` |
 
-And this is the file afterwards - one undo step away from the one above:
+Note what is *not* in the rewritten line: `seconds`. The successor declares its own default for it,
+and an argument that only restates what the callee already declares is not an argument anybody typing
+the line would write. Read the file afterwards as a reviewer would - it is ordinary GDScript, typed
+the way a person types it, with no marker saying a machine wrote it and no comment recording that a
+migration happened. **That is the standard a rewritten row is held to**: if a row cannot land looking
+like that, it does not land at all.
 
-<!-- caption: The same enemy after migrating, with the state declarations it now needs -->
-```gdscript
-extends CharacterBody2D
+And the last thing a migration does not do: it does not delete the pack, it does not touch the child
+node, and it does not go looking for other sheets to fix. It rewrites the rows in the receipt and
+stops.
 
-enum State { PATROLLING, CHASING }
+### The shipped vocabulary carries no forwarding address yet, and why that is the honest state
 
-var state: State = State.PATROLLING
-var speed: float = 40.0
+Nothing this plugin publishes today points anywhere. The pair that came closest was the **State
+Machine** pack's *Go to state* and *Current state is* pointing at the built-in object-state *Go To
+State* and *Is In State* - the same questions, one renamed parameter each - and it was withdrawn,
+for two reasons worth knowing if you are about to write an address of your own.
 
-func _ready() -> void:
-	state = State.CHASING
+**The value has to fit the slot as it stands.** The pack's parameter is a state NAME, so a row holds
+the quoted literal a text field writes (`"chasing"`). The object-state parameter is a member of the
+object's own `State` enum, so a row holds a bare name. A map may say three things - where, what the
+parameters are called over there, and a value for what is new - and none of them turns one of those
+into the other. The rewrite emitted `state = State."chasing"`, the file gate refused it correctly,
+and every real row landed under *Left exactly as they are*. **A map is not a program**, deliberately,
+so an address whose two ends store values differently is not an address.
 
-func _physics_process(delta: float) -> void:
-	if state == State.CHASING:
-		velocity.x = speed * 3.0
-	move_and_slide()
-```
-
-Read the diff between those two as a reviewer would: it is ordinary GDScript, typed the way a person
-types it. There is no marker saying a machine wrote it, no comment recording that a migration
-happened, and no argument restating a default. **That is the standard a rewritten row is held to** -
-if a row cannot land looking like that, it does not land at all.
-
-Note the last thing that migration did *not* do: it did not delete the pack, it did not touch the
-`StateMachineBehavior` child node, and it did not go looking for other sheets to fix. It rewrote the
-rows in the receipt and stopped.
+**A coupled family moves together or not at all.** Those four verbs are one machine: *Time in state*
+reads the clock *Go to state* stamps, and *On any state change* rides the signal it emits. Neither
+has an honest address of its own. Forwarding the other two would have left the two that stayed
+reading a member nothing writes any more - a machine that still compiles and no longer works. When a
+successor moves a row to different storage than its unmigrated siblings read, the answer is to leave
+all of them where they are.
 
 ## The whole project at once
 
