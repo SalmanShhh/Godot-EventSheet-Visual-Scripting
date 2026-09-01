@@ -21,6 +21,17 @@
 # absent, and every reader above degrades to the honest plain code it already showed. A guessed class
 # would be worse than none: it would put an object's whole vocabulary on a row that cannot take it.
 #
+# AND TWO SCENES THAT DISAGREE ARE TWO SCENES THAT DISAGREE. One script may run in more than one
+# scene, and each of them may mark a `%HealthBar` - a ProgressBar in one, a Label in the other. The
+# NAME is listed once (the sheet can only speak one of them), but its class is then nobody's to give:
+# taking the first scene's would offer a row written in one class's vocabulary for a sheet whose
+# other scene cannot take it, silently. A name the scenes answer differently carries no class, which
+# is the same "absent" every reader above already degrades on.
+#
+# ONLY TEXT SCENES ARE READ. A `.scn` is the binary form of the same file and has no text table to
+# walk, so a project whose scenes are saved that way contributes no `%names` - the honest nothing,
+# not a wrong something.
+#
 # NOTHING NEW TO CHECK. The Doctor's shipped `%token` validation already sweeps every sheet for a
 # `%Name` no scene carries, so a stale name is reported there and nowhere else - the sheet itself
 # stays quiet, and a row on a name the scene dropped keeps its plain reading and its amber state.
@@ -51,6 +62,7 @@ const SIGIL: String = "%"
 static func for_script(script_path: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var seen: Dictionary = {}
+	var classes: Dictionary = _classes_by_name(script_path)
 	for node: Dictionary in EventSheetSceneLights.nodes_for_script(script_path):
 		if not is_marked(node):
 			continue
@@ -65,11 +77,35 @@ static func for_script(script_path: String) -> Array[Dictionary]:
 		found.append({
 			"name": node_name,
 			"path": str(node.get("path", "")),
-			"class": str(node.get("class", "")),
+			# AND WHEN THE TWO SCENES DISAGREE ABOUT WHAT IT IS, nobody gets to answer. Two scenes
+			# running one script may each mark a `%HealthBar` and mean a ProgressBar in one and a
+			# Label in the other; adopting the first scene's class would offer a row written in one
+			# class's vocabulary for a sheet whose other scene cannot take it, and it would do that
+			# silently. A name the scenes answer differently is listed with NO class, which every
+			# reader here already degrades on: the row keeps its plain code and its honest reading.
+			"class": str(classes.get(node_name, "")),
 			"reference": SIGIL + node_name,
 			"scene_path": str(node.get("scene_path", "")),
 		})
 	return found
+
+
+## `Name` -> the class every scene running this script agrees it is, and "" for a name they do not
+## agree about. Read off the same one walk of the scene text the listing above reads.
+static func _classes_by_name(script_path: String) -> Dictionary:
+	var answers: Dictionary = {}
+	for node: Dictionary in EventSheetSceneLights.nodes_for_script(script_path):
+		if not is_marked(node):
+			continue
+		var node_name: String = str(node.get("name", ""))
+		if node_name.is_empty():
+			continue
+		var node_class: String = str(node.get("class", "")).strip_edges()
+		if not answers.has(node_name):
+			answers[node_name] = node_class
+		elif str(answers[node_name]) != node_class:
+			answers[node_name] = ""
+	return answers
 
 
 ## True when one node entry of the scene walk carries the mark. Asked of the entry rather than of the

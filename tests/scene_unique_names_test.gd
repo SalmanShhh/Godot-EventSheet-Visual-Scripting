@@ -30,6 +30,10 @@ const BOSS_SCENE: String = "res://tests/fixtures/effect_scene_boss.tscn"
 ## for, and the one the round trip is measured on.
 const HUD_SCRIPT: String = "res://tests/fixtures/unique_names_hud.gd"
 
+## One script run by TWO scenes that mark the same `%Bar` as different classes - the shape nothing
+## reported before, because the first scene in order simply won.
+const DISAGREE_SCRIPT: String = "res://tests/fixtures/unique_names_disagree.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -60,6 +64,23 @@ static func _test_the_index() -> bool:
 		EventSheetSceneUniqueNames.class_of(BOSS_SCRIPT, "%HealthBar"), "") and ok
 	ok = _check("a script no scene uses has no names",
 		EventSheetSceneUniqueNames.for_script("res://tests/fixtures/nothing_uses_this.gd").size(), 0) and ok
+	# TWO SCENES, ONE %NAME, TWO CLASSES. One script may run in more than one scene, and each may mark
+	# a `%Bar` - a ProgressBar in the wide layout, a Label in the compact one beside it. The name is
+	# listed once (the sheet can only speak one of them) and its CLASS is nobody's to give: adopting
+	# the first scene's would offer a row written in ProgressBar's vocabulary for a sheet whose other
+	# scene has a Label there, and would do it silently. `%ScoreLabel`, which both scenes agree is a
+	# Label, is unaffected - the refusal is per name, not per script.
+	var disagreeing: Array[String] = []
+	for node: Dictionary in EventSheetSceneUniqueNames.for_script(DISAGREE_SCRIPT):
+		disagreeing.append("%s %s" % [str(node["reference"]), str(node["class"])])
+	ok = _check("a name two scenes answer differently is typed by neither", disagreeing,
+		["%Bar ", "%ScoreLabel Label"]) and ok
+	ok = _check("and the class map says the same",
+		EventSheetSceneUniqueNames.class_of(DISAGREE_SCRIPT, "%Bar"), "") and ok
+	ok = _check("while a name they agree about still answers",
+		EventSheetSceneUniqueNames.class_of(DISAGREE_SCRIPT, "%ScoreLabel"), "Label") and ok
+	ok = _check("so the picker offers the one it can place and not the one it cannot",
+		_picker_labels(DISAGREE_SCRIPT), ["%ScoreLabel   Label"]) and ok
 	# The mark is a bare flag on the node's own header line, which the quoted attribute reader walks
 	# straight past - so the reading of that spelling is pinned where it is made.
 	ok = _check("the bare flag spelling is what the scene file writes", "%s|%s|%s" % [
@@ -72,6 +93,16 @@ static func _test_the_index() -> bool:
 			EventSheetSceneUniqueNames.is_marked({"unique": true}),
 		], "true|false|true") and ok
 	return ok
+
+
+## The labels the picker's %names section shows for one script, in order.
+static func _picker_labels(script_path: String) -> Array[String]:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.external_source_path = script_path
+	var read: Array[String] = []
+	for value: Variant in ACEPickerDialog.unique_names_page_content(sheet).get("entries", []):
+		read.append(str((value as Dictionary)["label"]))
+	return read
 
 
 ## THE PICKER SECTION. What the object page offers, exactly as it offers it - the label a reader

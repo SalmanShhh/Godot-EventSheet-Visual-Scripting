@@ -334,6 +334,13 @@ against Godot 4.7 before it was repaired.
   `EditorInterface.get_selection().get_selected_nodes().pop_front()` - filed the do half, the undo
   half and the old value against three different objects. It now reads the node into a local first,
   like both of its siblings. Both runs still lift in the hand-written spelling as well as the row's.
+- **Two scenes, one `%name`, two classes: the sheet no longer picks one and says nothing.** A script
+  run by two scenes that each mark a `%Bar` - a ProgressBar in one, a Label in the other - had its
+  rows typed by whichever scene came first in order, so a row could be offered in one class's
+  vocabulary for a sheet whose other scene cannot take it. A name the scenes answer differently now
+  carries NO class: the picker leaves it out and a row written on it keeps its plain reading, which
+  is the same honest degradation this reader already had for a name no scene marks. A name the
+  scenes agree about is untouched.
 - **`get_tree().change_scene_to_file("user://…")` was invisible to the trust reader.** The tree's
   own method is how every project travels to a layout, and the call reading refused it for having a
   dot in front of it. The same reading no longer mistakes somebody's own `MyResourceLoader.load(`

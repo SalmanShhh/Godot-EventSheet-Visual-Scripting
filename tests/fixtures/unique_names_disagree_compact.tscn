@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/unique_names_disagree.gd" id="1_compact"]
+
+[node name="CompactHud" type="Control"]
+script = ExtResource("1_compact")
+
+[node name="Bar" type="Label" parent="." unique_name_in_owner=true]
+
+[node name="ScoreLabel" type="Label" parent="." unique_name_in_owner=true]
