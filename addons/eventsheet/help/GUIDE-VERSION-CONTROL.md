@@ -251,8 +251,21 @@ checkout has no import cache and a project that has not been imported cannot res
   run: godot --headless --path . --script tools/verify_sheets.gd
 ```
 
-This repository runs that job on itself, over its own generated content, as the proof that the recipe
-is real: see `.github/workflows/ci.yml`.
+This repository runs that job on itself, so the recipe is one that has to keep working: see
+`.github/workflows/ci.yml`. It runs it TWICE, and the difference is worth knowing because your
+project may need the same shape.
+
+The first form is the one above with two `--skip` prefixes on it, because this repository keeps two
+folders of GDScript that is not meant to load - `tests/fixtures/`, which is deliberately broken so
+the importer can be tested against it, and `tests/corpus/`, which illustrates code the reader is
+being shown rather than code that runs. The gate cannot tell either of them from a real file, which
+is exactly what `--skip` is for. Everything else in the repository is read, generated content
+included.
+
+The second form hands it an explicit list of the generated sheets (`git ls-files 'demo/*.gd'
+'eventsheet_addons/*.gd'`), which is the same shape the pre-commit hook uses, and takes seconds
+rather than minutes. A project with no fixture folders needs neither variation: the plain command
+above reads everything and is the whole gate.
 
 ---
 

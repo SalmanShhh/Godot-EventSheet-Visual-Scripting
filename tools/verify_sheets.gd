@@ -35,7 +35,12 @@ func _init() -> void:
 			expecting_skip = true
 		else:
 			requested.append(argument)
-	var result: Dictionary = EventSheetVerify.run(requested, skipped)
+	# The gate names ITSELF, because the whole-project form always has this file in its corpus and
+	# check 1 loads every file as a script to ask the engine's own verdict. Asking that of the script
+	# the engine is currently running hangs the process and then takes it down; a file the engine is
+	# running is a file the engine read, so that one answer comes from that fact instead.
+	var running: String = str((get_script() as Script).resource_path)
+	var result: Dictionary = EventSheetVerify.run(requested, skipped, running)
 	var failures: Array = result.get("failures", []) as Array
 	for failure: Dictionary in failures:
 		print(EventSheetVerify.failure_line(failure))

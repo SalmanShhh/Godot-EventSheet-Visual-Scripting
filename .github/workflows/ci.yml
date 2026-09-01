@@ -61,6 +61,16 @@ jobs:
           ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
             $(git ls-files 'demo/*.gd' 'eventsheet_addons/*.gd')
 
+      # And the WHOLE-PROJECT form, which is the one the guide prints for a pre-push hook and a
+      # branch gate - run here so that recipe is exercised rather than only described. The two skips
+      # name this repository's folders of GDScript that is not meant to load: tests/fixtures/ is
+      # deliberately broken so the importer can be tested against it, and tests/corpus/ illustrates
+      # code a reader is shown rather than code that runs. A game project needs neither.
+      - name: The standing contracts, whole project (the guide's own pre-push recipe)
+        run: |
+          ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
+            --skip res://tests/fixtures/ --skip res://tests/corpus/
+
       - name: Full suite (known harmless tail segfault tolerated; zero failures expected)
         run: |
           ~/godot/godot --headless --path . --script tests/run_tests.gd 2>&1 | tee full.log || true

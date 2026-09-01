@@ -51,6 +51,9 @@ static func run() -> bool:
 	ok = _test_two_rows_that_mint_the_same_local() and ok
 	ok = _test_a_row_waiting_on_a_human() and ok
 	ok = _test_what_one_run_reads() and ok
+	ok = _test_the_corpus_is_reported_honestly() and ok
+	ok = _test_a_file_nothing_can_read() and ok
+	ok = _test_the_running_script_is_not_reloaded() and ok
 	ok = _test_the_lines_it_prints() and ok
 	return ok
 
@@ -266,6 +269,80 @@ static func _test_what_one_run_reads() -> bool:
 			PackedStringArray(["demo/showcase/"])), PackedStringArray()) and ok
 	DirAccess.remove_absolute(CLEAN_PATH)
 	DirAccess.remove_absolute(ASKING_PATH)
+	return ok
+
+
+## THE VERDICT SAYS WHICH CORPUS EACH ANSWER CAME FROM. Checks 1 to 3 read every file in the run;
+## check 4 asks the migration report, which reads every stored sheet and only SAMPLES the `.gd` ones
+## - so on a whole-project run its corpus is routinely a fraction of the other. A line reading
+## "812 file(s) read, nothing to answer" over a migration check that opened two dozen of them is a
+## gate somebody would trust a branch to for the wrong reason, so the smaller number is printed
+## beside the larger whenever they differ.
+static func _test_the_corpus_is_reported_honestly() -> bool:
+	var ok: bool = _check("a run whose migration check read the same files says one number",
+		EventSheetVerify.verdict({"files": 42, "migration_files": 42, "failures": []}),
+		"verify: 42 file(s) read, nothing to answer.")
+	ok = _check("and one that sampled says both",
+		EventSheetVerify.verdict({"files": 812, "migration_files": 27, "failures": []}),
+		"verify: 812 file(s) read (migration read 27 of them), nothing to answer.") and ok
+	ok = _check("in the red direction too", EventSheetVerify.verdict(
+		{"files": 812, "migration_files": 27, "failures": [{}]}),
+		"verify: 812 file(s) read (migration read 27 of them), 1 failure(s).") and ok
+	# A hook that named its own files is answered about exactly those, so there is nothing to say.
+	_write(CLEAN_PATH, "extends Node\n")
+	var result: Dictionary = EventSheetVerify.run(PackedStringArray([CLEAN_PATH]))
+	ok = _check("a named-files run reads the same corpus twice over",
+		[int(result["files"]), int(result["migration_files"])], [1, 1]) and ok
+	DirAccess.remove_absolute(CLEAN_PATH)
+	# And the Doctor's own summary says the same thing in its own words.
+	ok = _check("the section says nothing when it read every script",
+		EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]),
+			PackedStringArray(["res://one.gd", "res://two.gd"])), "") and ok
+	var many: PackedStringArray = PackedStringArray()
+	for index: int in EventSheetMigrationDoctor.SCRIPTS_SAMPLED + 6:
+		many.append("res://script_%02d.gd" % index)
+	ok = _check("and names both numbers when it sampled",
+		EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]), many),
+		" The .gd half is a sample: %d of %d script(s) were read." % [
+			EventSheetMigrationDoctor.SCRIPTS_SAMPLED, many.size()]) and ok
+	return ok
+
+
+## A FILE NOTHING CAN READ IS A FAILURE, not a pass. `FileAccess.get_file_as_string` answers "" for a
+## file it could not open exactly as it does for an empty one, and the round-trip check reads "" as
+## "nothing to say" - so such a file walked through the gate green while nothing in the project could
+## load it.
+static func _test_a_file_nothing_can_read() -> bool:
+	var missing: String = "user://eventforge_verify_unreadable.gd"
+	DirAccess.remove_absolute(missing)
+	var found: Array[Dictionary] = EventSheetVerify.file_failures(missing)
+	var ok: bool = _check("it answers with one failure rather than nothing", found.size(), 1)
+	if found.is_empty():
+		return ok
+	ok = _check("filed as a parse failure, about the file rather than a line of it",
+		[str(found[0]["check"]), int(found[0]["line"]), str(found[0]["message"])],
+		[EventSheetVerify.CHECK_PARSES, 0,
+			"This file could not be read, so none of the four contracts could be asked of it."]) and ok
+	return ok
+
+
+## THE GATE SCRIPT IS IN ITS OWN CORPUS, and check 1 loads every file as a script to ask the engine's
+## own verdict. Asking that of the script the engine is currently RUNNING hangs the process and then
+## takes it down, which made the documented whole-project form unusable on any project holding the
+## gate. A file the engine is running is a file the engine read, so that one answer comes from that
+## fact - and from that fact only, which is why naming any other file changes nothing.
+static func _test_the_running_script_is_not_reloaded() -> bool:
+	_write(BROKEN_PATH, "extends Node\n\n\nfunc _ready() -> void:\n\t1 +\n")
+	var ok: bool = _check("a file the engine refuses is still a failure",
+		EventSheetVerify.parse_failures(BROKEN_PATH).size(), 1)
+	ok = _check("and stays one when some other file is the running script",
+		EventSheetVerify.parse_failures(BROKEN_PATH, "res://tools/verify_sheets.gd").size(), 1) and ok
+	ok = _check("but the running script itself is answered by the fact that it is running",
+		EventSheetVerify.parse_failures(BROKEN_PATH, BROKEN_PATH), ([] as Array[Dictionary])) and ok
+	ok = _check("named the way git prints it, which is the same file",
+		EventSheetVerify.parse_failures("res://tools/verify_sheets.gd", "tools/verify_sheets.gd"),
+		([] as Array[Dictionary])) and ok
+	DirAccess.remove_absolute(BROKEN_PATH)
 	return ok
 
 

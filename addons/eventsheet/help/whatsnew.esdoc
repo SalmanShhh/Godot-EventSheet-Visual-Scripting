@@ -71,6 +71,30 @@ What changed in the build you have installed (v0.17.0), in the words the release
   it OPENED, so pressing Save afterwards put the pre-merge reading back over the resolved file. That
   was the one write path onto a blocked file, and it now re-reads first: a file that has moved is
   left exactly as it is, and what is on disk now is opened instead.
+- **`tools/verify_sheets.gd` no longer hangs and crashes on its own file.** Check 1 loads every file
+  as a script to ask the engine's own verdict, and asking that of the script the engine is currently
+  RUNNING hung the process for twenty-five minutes and then took it down with a signal 11 - which
+  made the whole-project form the file's own header advertises unusable on any project holding the
+  gate, because the gate lives in the project. That one file is answered by the fact that it is
+  executing; its other three checks are asked as normal. The documented no-argument run now finishes
+  and prints its verdict.
+- **The verdict says which corpus each answer came from.** Checks 1 to 3 read every file in the run;
+  check 4 asks the migration report, which reads every stored sheet and only SAMPLES the `.gd` ones.
+  \"812 file(s) read, nothing to answer\" over a migration check that opened two dozen of them is a
+  gate somebody would trust a branch to for the wrong reason, so the smaller number is now printed
+  beside the larger whenever they differ - and the Doctor's Migration section says the same thing in
+  its own summary line.
+- **A file nothing can read is a failure rather than a pass.** `FileAccess.get_file_as_string`
+  answers `\"\"` for a file it could not open exactly as it does for an empty one, and the round-trip
+  check read `\"\"` as \"nothing to say\", so an unreadable file walked through green.
+- **Two ways the baked-local check could not see a doubled name.** An annotated declaration
+  (`@export var __peer_a3f81c02`) was not a declaration to the pattern, and only a `func` at column
+  zero opened a scope - so an inner class's methods were all filed under the class body, where two of
+  them each declaring one read as a duplicate that is not one. Both are read the way GDScript reads
+  them now, and an inner class's scopes are named for the class they are in.
+- **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
+  recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
+  only described.
 
 ### Since 0.14, said once at the head
 

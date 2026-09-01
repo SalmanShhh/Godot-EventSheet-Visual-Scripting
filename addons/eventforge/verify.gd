@@ -69,18 +69,33 @@ const QUOTED_LINE_WIDTH: int = 72
 ## GDScript kept as test fixtures is the one thing this gate cannot tell from a real file, so a
 ## project that keeps one names it rather than being told its own fixtures are broken.
 ##
-## Returns {"files": int, "failures": Array[Dictionary]}, each failure shaped
+## `running_script` is the file the engine is CURRENTLY EXECUTING, when the caller is a script that
+## is itself inside the corpus - which the whole-project form always is, since the gate script lives
+## in the project. Check 1 loads every file as a script to ask the engine's own verdict, and asking
+## that of the running main loop hangs the process and then takes it down, so the one file the engine
+## is demonstrably able to read is answered by that fact instead. The other three still ask it
+## everything.
+##
+## Returns {"files": int, "migration_files": int, "failures": Array[Dictionary]}, each failure shaped
 ## {check, path, line, message, where} - `line` is 1-based and 0 when the failure belongs to the
 ## file rather than to a line of it, and `where` names the one place in the editor that shows the
-## same thing.
+## same thing. `migration_files` is how many files check 4 actually read, which is NOT always
+## `files`: the whole-project report reads every stored sheet and only samples the `.gd` ones, and a
+## verdict printing one of those numbers over the other is how a gate reports green over files
+## nobody read.
 static func run(requested: PackedStringArray = PackedStringArray(),
-		skipped: PackedStringArray = PackedStringArray()) -> Dictionary:
+		skipped: PackedStringArray = PackedStringArray(),
+		running_script: String = "") -> Dictionary:
 	var paths: PackedStringArray = corpus(requested, skipped)
 	var failures: Array[Dictionary] = []
 	for path: String in paths:
-		failures.append_array(file_failures(path))
-	failures.append_array(migration_failures(_migration_rows(requested, paths)))
-	return {"files": paths.size(), "failures": failures}
+		failures.append_array(file_failures(path, running_script))
+	var migration: Dictionary = _migration_rows(requested, paths)
+	var rows: Array[Dictionary] = []
+	rows.assign(migration.get("rows", []))
+	failures.append_array(migration_failures(rows))
+	return {"files": paths.size(), "migration_files": int(migration.get("files", 0)),
+		"failures": failures}
 
 
 ## The files one run reads: the ones asked for, or the whole project when nothing was asked for.
@@ -141,15 +156,24 @@ static func in_project(path: String) -> String:
 ##
 ## A stored `.tres` sheet answers none of these: it is not GDScript, so "does it parse" and "does it
 ## come back byte for byte" are questions about the `.gd` it emits, which is checked as itself.
-static func file_failures(path: String) -> Array[Dictionary]:
+## A FILE THAT CANNOT BE READ IS A FAILURE, not a pass. `FileAccess.get_file_as_string` answers ""
+## for a file it could not open exactly as it does for an empty one, and the round-trip check reads
+## "" as "nothing to say" - so an unreadable file used to walk through green.
+static func file_failures(path: String, running_script: String = "") -> Array[Dictionary]:
 	if path.get_extension().to_lower() != "gd":
 		return []
-	var source: String = FileAccess.get_file_as_string(path)
+	var handle: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if handle == null:
+		return [_failure(CHECK_PARSES, path, 0,
+			"This file could not be read, so none of the four contracts could be asked of it.",
+			"Check that it is still on disk and that this account may read it - nothing in the editor can open it either.")]
+	var source: String = handle.get_as_text()
+	handle.close()
 	var found: Array[Dictionary] = marker_failures(path, source)
 	found.append_array(duplicate_token_failures(path, source))
 	if not found.is_empty():
 		return found
-	found = parse_failures(path)
+	found = parse_failures(path, running_script)
 	if not found.is_empty():
 		return found
 	return round_trip_failures(path, source)
@@ -183,7 +207,15 @@ static func marker_failures(path: String, source: String) -> Array[Dictionary]:
 ##
 ## The load is asked of the file on DISK rather than of anything already in memory, because the
 ## file on disk is what the hook is about to let through.
-static func parse_failures(path: String) -> Array[Dictionary]:
+## EXCEPT OF THE FILE THE ENGINE IS RUNNING. Loading a script fresh, ignoring the cache, while that
+## same script is the main loop hangs the process for as long as anybody waits and then takes it down
+## with a segfault - and the whole-project form always has the gate script in its corpus, because the
+## gate script lives in the project. That one file is answered by the fact that it is executing: a
+## file the engine is running is a file the engine read. Its other three checks are asked as normal,
+## so nothing about it goes unexamined.
+static func parse_failures(path: String, running_script: String = "") -> Array[Dictionary]:
+	if not running_script.is_empty() and path == in_project(running_script):
+		return []
 	var loaded: Variant = ResourceLoader.load(path, "GDScript", ResourceLoader.CACHE_MODE_IGNORE)
 	if loaded is GDScript and not (loaded as GDScript).get_instance_base_type().is_empty():
 		return []
@@ -338,12 +370,17 @@ static func failure_line(failure: Dictionary) -> String:
 
 ## The verdict line, and it says the same thing in both directions: what was read, and what was
 ## found. A gate whose green run prints nothing leaves the reader guessing whether it ran.
+## The migration check's own corpus is named whenever it is smaller than the run's, because those two
+## numbers are the difference between "this gate read your project" and "this gate read a sample of
+## it", and only one of them is worth trusting a branch to.
 static func verdict(result: Dictionary) -> String:
 	var failures: Array = result.get("failures", []) as Array
+	var files: int = int(result.get("files", 0))
+	var migration: int = int(result.get("migration_files", files))
+	var sampled: String = "" if migration >= files else " (migration read %d of them)" % migration
 	if failures.is_empty():
-		return "verify: %d file(s) read, nothing to answer." % int(result.get("files", 0))
-	return "verify: %d file(s) read, %d failure(s)." % [int(result.get("files", 0)),
-		failures.size()]
+		return "verify: %d file(s) read%s, nothing to answer." % [files, sampled]
+	return "verify: %d file(s) read%s, %d failure(s)." % [files, sampled, failures.size()]
 
 
 # ── the parts nobody outside calls ────────────────────────────────────────────────
@@ -352,16 +389,22 @@ static func verdict(result: Dictionary) -> String:
 ## The migration report's rows for this run: the project's own when nothing was asked for, and the
 ## asked-for files alone when a hook named them.
 ##
-## The whole-project run asks through the public report, so this gate and anything else reading that
-## report can never disagree about what the project holds. A hook that named three staged files is
-## answered about those three instead: the report reads every stored sheet but only samples the
-## `.gd` ones, for a reason that is right for a project-wide audit and wrong for a hook - the three
-## files in front of it may not be in the sample.
+## The whole-project run asks the same two calls `EventSheets.migration_report()` is, so this gate
+## and anything else reading that report can never disagree about what the project holds - and asking
+## them here rather than through the seam is what puts the CORPUS in reach, which is the number the
+## verdict has to print beside the other one. The report reads every stored sheet but only SAMPLES
+## the `.gd` ones, so it is routinely far smaller than the list the other three checks read, and
+## "812 file(s) read, nothing to answer" printed over a migration check that opened two dozen of them
+## is a gate somebody would trust for the wrong reason.
+##
+## A hook that named three staged files is answered about those three instead: the sampling is right
+## for a project-wide audit and wrong for a hook, whose three files may not be in the sample.
 static func _migration_rows(requested: PackedStringArray,
-		paths: PackedStringArray) -> Array[Dictionary]:
-	if requested.is_empty():
-		return EventSheets.migration_report()
-	return EventSheetMigrationDoctor.rows(paths)
+		paths: PackedStringArray) -> Dictionary:
+	if not requested.is_empty():
+		return {"rows": EventSheetMigrationDoctor.rows(paths), "files": paths.size()}
+	var corpus_paths: PackedStringArray = EventSheetMigrationDoctor.project_corpus()
+	return {"rows": EventSheetMigrationDoctor.rows(corpus_paths), "files": corpus_paths.size()}
 
 
 ## A prefix is written the way the path is, so `tests/fixtures/` and `res://tests/fixtures/` are the

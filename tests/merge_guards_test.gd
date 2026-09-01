@@ -113,6 +113,55 @@ static func _test_the_duplicate_is_named() -> bool:
 	ok = _check("the words say it plainly first",
 		EventSheetLocalTokens.duplicate_message(duplicates[0]).begins_with(
 			"Two rows both declare __peer_%s in _ready (lines 7, 10)." % DOUBLED_TOKEN), true) and ok
+	# AN ANNOTATED DECLARATION IS STILL A DECLARATION. `@export var __peer_...` introduces the name
+	# exactly as the bare form does, and a reader that only knew the bare form called such a file
+	# clean while Godot refused to parse it - which is the one state this check exists for.
+	ok = _check("an annotation in front of it does not hide the declaration",
+		_said(EventSheetLocalTokens.declarations_in(
+			"extends Node
+@export var __peer_%s := 1
+@onready var __peer_%s := 2
+" % [
+				DOUBLED_TOKEN, DOUBLED_TOKEN])),
+		PackedStringArray([
+			"__peer_%s|the class body|2" % DOUBLED_TOKEN,
+			"__peer_%s|the class body|3" % DOUBLED_TOKEN,
+		])) and ok
+	# AN INNER CLASS INDENTS ITS OWN FUNCTIONS, and each of them is a scope. A reader that only
+	# recognised a `func` at column zero filed every local they declared under the class body, where
+	# two methods each declaring one read as a doubled name in one scope - a duplicate that is not.
+	ok = _check("an inner class's methods are scopes of their own",
+		_said(EventSheetLocalTokens.declarations_in("
+".join(PackedStringArray([
+			"extends Node",
+			"",
+			"",
+			"class Ticker:",
+			"	func tick() -> void:",
+			"		var __peer_%s := 1" % DOUBLED_TOKEN,
+			"",
+			"	func reset() -> void:",
+			"		var __peer_%s := 2" % DOUBLED_TOKEN,
+			"",
+		])))),
+		PackedStringArray([
+			"__peer_%s|Ticker.tick|6" % DOUBLED_TOKEN,
+			"__peer_%s|Ticker.reset|9" % DOUBLED_TOKEN,
+		])) and ok
+	ok = _check("so neither of them is a duplicate",
+		EventSheetLocalTokens.duplicates_in("
+".join(PackedStringArray([
+			"extends Node",
+			"",
+			"",
+			"class Ticker:",
+			"	func tick() -> void:",
+			"		var __peer_%s := 1" % DOUBLED_TOKEN,
+			"",
+			"	func reset() -> void:",
+			"		var __peer_%s := 2" % DOUBLED_TOKEN,
+			"",
+		]))).size(), 0) and ok
 	ok = _check("and a clean file has nothing to say",
 		EventSheetLocalTokens.duplicates_in("extends Node\n\n\nfunc _ready() -> void:\n\tvar __peer_00000001 := 1\n"),
 		([] as Array[Dictionary])) and ok
@@ -249,6 +298,15 @@ func _ready() -> void:
 	DirAccess.remove_absolute(path)
 	dock.free()
 	return ok
+
+
+## One reading of `declarations_in`, as "name|scope|line" per entry - the three facts the duplicate
+## check joins on, in one comparable line.
+static func _said(declarations: Array[Dictionary]) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in declarations:
+		out.append("%s|%s|%d" % [str(entry["name"]), str(entry["scope"]), int(entry["line"])])
+	return out
 
 
 ## What the inbox would draw on a finding, as "id|label" per chip.

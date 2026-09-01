@@ -21,7 +21,9 @@
 # match, so it degrades to honest code and there is nothing here to find; the only way one of them
 # reports is a vocabulary that disagrees with itself (a lift entry kept after its verb was dropped),
 # which is a pack-authoring mistake worth sampling for and not worth reading a thousand files for.
-# The sample is capped, sorted, and says out loud that it is a sample.
+# The sample is capped, sorted, and SAYS OUT LOUD IN ITS OWN SUMMARY LINE that it is one, with the
+# two numbers - a section whose only sentence read "812 sheet(s) read" over a corpus of two dozen is
+# how a branch gate passes green over files it never opened.
 #
 # Sheets are opened in memory and dropped. Nothing is written, nothing is cached, and a project whose
 # vocabulary is all present reports one summary line and no findings.
@@ -56,7 +58,9 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	# ONE walk for both halves of the section. Opening a sheet is the expensive part of this audit -
 	# a `.gd` one is lifted from its text every time - so the words and the per-sheet counts are
 	# taken from the same open rather than from two walks of the same corpus.
-	var audited: Dictionary = _audit(corpus(sheet_paths, EventSheets.project_scripts()), {})
+	var scripts: PackedStringArray = EventSheets.project_scripts()
+	var audited: Dictionary = _audit(corpus(sheet_paths, scripts), {},
+		sample_note(sheet_paths, scripts))
 	var said: Array[Dictionary] = []
 	said.assign(audited.get("findings", []))
 	var counted: Array[Dictionary] = []
@@ -90,7 +94,7 @@ static func project_corpus() -> PackedStringArray:
 ## editor and the audit can share one reflection of the installed packs.
 static func rows(paths: PackedStringArray, vocabulary: Dictionary = {}) -> Array[Dictionary]:
 	var listed: Array[Dictionary] = []
-	listed.assign(_audit(paths, vocabulary).get("rows", []))
+	listed.assign(_audit(paths, vocabulary, "").get("rows", []))
 	return listed
 
 
@@ -124,6 +128,24 @@ static func sheet_lines(report_rows: Array[Dictionary]) -> Array[Dictionary]:
 	return lines
 
 
+## What the summary line says about its own corpus when that corpus is a SAMPLE: how many of the
+## project's scripts were read and how many there are. "" when every one of them was, so an ordinary
+## small project's line stays the plain sentence it always was.
+##
+## It is a sentence rather than a number in a dictionary because the only reader who needs it is the
+## person reading the section, and the one thing that must never happen is their reading a count of
+## sheets that is not the count of sheets that were opened.
+static func sample_note(sheet_paths: PackedStringArray, scripts: PackedStringArray) -> String:
+	var read: PackedStringArray = corpus(sheet_paths, scripts)
+	var sampled: int = 0
+	for path: String in scripts:
+		if read.has(path):
+			sampled += 1
+	if sampled >= scripts.size():
+		return ""
+	return " The .gd half is a sample: %d of %d script(s) were read." % [sampled, scripts.size()]
+
+
 ## What one audit reads: every stored sheet, then the first few scripts in path order. Sorted and
 ## de-duplicated so two machines read the same files in the same order and print the same report.
 static func corpus(sheet_paths: PackedStringArray, scripts: PackedStringArray) -> PackedStringArray:
@@ -151,9 +173,10 @@ static func corpus(sheet_paths: PackedStringArray, scripts: PackedStringArray) -
 ##
 ## `vocabulary` is the corpus to answer against, so a test or a staged fixture can hand in one of its
 ## own; the audit itself passes nothing and gets the shipped catalogue.
-static func report(paths: PackedStringArray, vocabulary: Dictionary = {}) -> Array[Dictionary]:
+static func report(paths: PackedStringArray, vocabulary: Dictionary = {},
+		note: String = "") -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
-	findings.assign(_audit(paths, vocabulary).get("findings", []))
+	findings.assign(_audit(paths, vocabulary, note).get("findings", []))
 	return findings
 
 
@@ -165,7 +188,8 @@ static func report(paths: PackedStringArray, vocabulary: Dictionary = {}) -> Arr
 ##
 ## Paths are sorted here rather than trusted from the caller, so two machines read the same files in
 ## the same order and print the same report whatever order they were handed in.
-static func _audit(paths: PackedStringArray, vocabulary: Dictionary) -> Dictionary:
+static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
+		note: String = "") -> Dictionary:
 	var findings: Array[Dictionary] = []
 	var listed: Array[Dictionary] = []
 	if paths.is_empty():
@@ -205,8 +229,8 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary) -> Dictiona
 				"asks": bool(entry.get("asks", true)),
 			})
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Migration: %d sheet(s) read, and %d of them hold a verb the installed vocabulary no longer has." % [
-			measured, affected], ""))
+		"Migration: %d sheet(s) read, and %d of them hold a verb the installed vocabulary no longer has.%s" % [
+			measured, affected, note], ""))
 	return {"findings": findings, "rows": listed}
 
 

@@ -36,7 +36,11 @@ const TOKEN_PATTERN := "__[a-z_]+_([0-9a-f]{8})\\b"
 ## The same shape as a DECLARATION - the `var` in front is what makes an occurrence the place the
 ## name is introduced rather than one of the places it is used. Group 1 is the whole local name and
 ## group 2 the token.
-const DECLARATION_PATTERN := "^\\s*var\\s+(__[a-z_]+_([0-9a-f]{8}))\\b"
+##
+## ANNOTATIONS IN FRONT OF IT ARE STILL A DECLARATION. `@export var __peer_a3f81c02` introduces the
+## name exactly as the bare form does, and a pattern that only knew the bare form reported such a
+## file clean while Godot refused to parse it - which is the one state this whole check exists for.
+const DECLARATION_PATTERN := "^\\s*(?:@[A-Za-z_][A-Za-z_0-9]*(?:\\([^)]*\\))?\\s+)*var\\s+(__[a-z_]+_([0-9a-f]{8}))\\b"
 
 ## The id the duplicate finding is filed under, and the id its chip is offered against. Frozen
 ## alongside the wording, like every other check id: the inbox and the tests address it by this.
@@ -79,26 +83,45 @@ static func tokens_in(source: String) -> PackedStringArray:
 ## {token, name, scope, line} - `line` 1-based, `scope` the enclosing function's name or
 ## `CLASS_BODY_SCOPE`.
 ##
-## Scope is read the way GDScript scopes actually work for this purpose: a `func` at the outermost
-## indent opens a body, and everything indented under it belongs to that body. That is enough,
-## because a baked local is only ever written by a template into a function body or by a stateful
-## condition into the class body - the two places this plugin puts one.
+## Scope is read the way GDScript scopes actually work for this purpose: a `func` opens a body, and
+## everything indented deeper than that `func` belongs to it. That is enough, because a baked local
+## is only ever written by a template into a function body or by a stateful condition into the class
+## body - the two places this plugin puts one.
+##
+## THE INDENT OF THE `func` IS WHAT CLOSES ITS BODY, not column zero. An inner class indents its own
+## functions, and a reader that only recognised a `func` at the outermost indent never opened a scope
+## for any of them - so every local an inner class declared was filed under the class body, where two
+## of its methods each declaring one read as a doubled name in a single scope. Names are qualified
+## with the inner class they are in for the same reason: two inner classes may each have a `tick`,
+## and they are two different scopes.
 static func declarations_in(source: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var scope: String = CLASS_BODY_SCOPE
+	# The indent the current scope's `func` was written at, and -1 while there is no open body. A line
+	# at that indent or shallower has left the body behind it.
+	var scope_indent: int = -1
+	var inner_class: String = ""
 	var line_number: int = 0
 	for line: String in source.split("\n"):
 		line_number += 1
 		var without_indent: String = line.lstrip("\t ")
-		var indented: bool = without_indent.length() < line.length()
-		if not indented and (without_indent.begins_with("func ") or without_indent.begins_with("static func ")):
+		var indent: int = line.length() - without_indent.length()
+		if without_indent.begins_with("func ") or without_indent.begins_with("static func "):
 			scope = _function_name(without_indent)
+			if not inner_class.is_empty():
+				scope = "%s.%s" % [inner_class, scope]
+			scope_indent = indent
 			continue
-		# A line back at the outermost indent that is not a `func` has left the body behind it -
-		# another declaration, an annotation, a blank line inside the class. A blank line is not a
-		# scope change (bodies are full of them), so only lines with something on them close one.
-		if not indented and not without_indent.strip_edges().is_empty():
+		# A line back at the scope's own indent or shallower has left the body behind it - another
+		# declaration, an annotation, a line of the class. A blank line is not a scope change (bodies
+		# are full of them), so only lines with something on them close one.
+		if indent <= scope_indent and not without_indent.strip_edges().is_empty():
 			scope = CLASS_BODY_SCOPE
+			scope_indent = -1
+		if indent == 0 and without_indent.begins_with("class "):
+			inner_class = without_indent.trim_prefix("class ").split(":")[0].split(" ")[0].strip_edges()
+		elif indent == 0 and not without_indent.strip_edges().is_empty():
+			inner_class = ""
 		var hit: RegExMatch = _declarations().search(line)
 		if hit == null:
 			continue
