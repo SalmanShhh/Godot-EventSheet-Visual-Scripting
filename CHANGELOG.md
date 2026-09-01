@@ -53,6 +53,14 @@
   pass that did not draw before it acted. It now opens an ordinary dialog naming the row, the name
   it declares now and the name it would declare, digits and all: the token is minted once while the
   receipt is drawn and replayed by the button, so what is shown is what lands.
+- **Keep as code finds its row again instead of holding it.** The strip's second door wrote into the
+  `EventRow` the finding was built with, and the undo funnel replaces every resource with a snapshot
+  duplicate when it commits - so after any intervening edit it mutated a detached row, recorded an
+  undo entry for nothing and reported success over a sheet that had not changed. The row is now
+  addressed inside the closure the way it is addressed everywhere else, by the event's own uid and
+  the slot, and a row that is genuinely gone is said out loud. The dialog's header no longer claims
+  the byte gate proves what the ticked comment does: the gate proves the CODE does not move, and the
+  comment is a line the reader asked for.
 
 ### Since 0.14, said once at the head
 

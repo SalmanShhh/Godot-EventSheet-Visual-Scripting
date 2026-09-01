@@ -9,8 +9,10 @@
 # side by side, before any button does anything. What lands is what was shown.
 #
 # THE BLOCK IS NOT A DOWNGRADE. It is precisely the shape the lift tables read, so a line kept as
-# code today lifts back into words by itself the day the vocabulary grows them again - and the
-# compiled file does not move a byte either way, which is what the gate below actually proves.
+# code today lifts back into words by itself the day the vocabulary grows them again - and the CODE
+# the file compiles to does not move a byte, which is what the gate below proves. It proves that of
+# the code alone: the comment is a line the reader asked for and is deliberately left out of the
+# question, so pressing the button with the tick on does add that one line to the file.
 #
 # THE COMMENT IS AN OFFER. A developer meeting this line in six months deserves to know what it was
 # and where its words went, so a plain comment is offered above it - and struck out with one tick by
@@ -76,8 +78,13 @@ static func receipt_lines(finding: Dictionary, comment: String) -> PackedStringA
 	return PackedStringArray([str(pair["before"]), str(pair["after"])])
 
 
-## The edit. One undo step through the funnel every other mutation takes, and the row is found by its
-## LANE and SLOT rather than held across it - the funnel replaces resources as it commits.
+## The edit. One undo step through the funnel every other mutation takes, and the row is FOUND AGAIN
+## IN THE LIVE SHEET inside the closure rather than written into the one the finding was built with.
+## The funnel replaces every resource with a snapshot duplicate when it commits, so an EventRow held
+## since the sheet was last built may be detached by the time this runs: writing into it would return
+## true, record an undo entry for nothing, and report success over a sheet that did not change. The
+## row is addressed the way it is addressed everywhere else - the event's own uid and the slot - and
+## a row that is no longer there is said out loud rather than silently succeeded over.
 ##
 ## THE BYTE GATE RUNS FIRST, and it is the whole reason this is safe to press: the sheet is compiled
 ## as it stands and compiled again with the block in place of the row, WITHOUT the comment, and the
@@ -89,19 +96,38 @@ func confirm() -> void:
 	var slot: int = int(_finding.get("index", -1))
 	if _dock._current_sheet == null or event_row == null or slot < 0:
 		return
+	if _same_row_in(_dock._current_sheet).is_empty():
+		_dock._set_status(_row_is_gone(), true)
+		return
 	if not _rewrite_is_byte_exact():
 		_dock._set_status(EventSheetL10n.translate("This row cannot be kept as code without changing what the file compiles to, so it has been left exactly as it is."), true)
 		return
+	var found: Array[bool] = [true]
 	if not _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Keep as code"),
 			func() -> bool:
+				var here: Dictionary = _same_row_in(_dock._current_sheet)
+				found[0] = not here.is_empty()
+				if not found[0]:
+					return false
 				return EventSheetMigrationFindings.keep_it_as_code({
-					"event": event_row, "index": slot, "lane": str(_finding.get("lane", "")),
+					"event": here["event"], "index": int(here["index"]),
+					"lane": str(_finding.get("lane", "")),
 					"subject": str(_finding.get("subject", "")),
 					"line": str(_finding.get("line", ""))
 				}, comment)):
+		if not found[0]:
+			_dock._set_status(_row_is_gone(), true)
+			return
 		_dock._set_status(EventSheetL10n.translate("This row is already written as code."))
 		return
 	_dock._set_status(EventSheetL10n.translate("Kept as written: %s") % str(_finding.get("line", "")))
+
+
+## What a reader is told when the row this dialog was opened over is no longer in the sheet - an
+## external change landed, a lift re-read the file, somebody deleted it. Said rather than swallowed:
+## reporting success over a sheet that did not change is the one answer that must not happen.
+func _row_is_gone() -> String:
+	return EventSheetL10n.translate("That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.")
 
 
 ## Whether putting the block where the row is leaves the compiled file byte for byte as it was. The
@@ -129,8 +155,10 @@ func _rewrite_is_byte_exact() -> bool:
 	return str(SheetCompiler.compile(trial, path).get("output", "")) == before
 
 
-## The same row, in the duplicated sheet. A deep duplicate is a different set of objects, so the row
-## is found again by the address it is named by everywhere else - the event's own uid and the slot.
+## The same row, in whichever sheet is asked - the live one inside the funnel, or the deep duplicate
+## the byte gate compiles. A deep duplicate is a different set of objects and a committed edit
+## replaces every resource, so the row is found again by the address it is named by everywhere else:
+## the event's own uid and the slot.
 func _same_row_in(trial: EventSheetResource) -> Dictionary:
 	var event_row: EventRow = _finding.get("event", null) as EventRow
 	if event_row == null:

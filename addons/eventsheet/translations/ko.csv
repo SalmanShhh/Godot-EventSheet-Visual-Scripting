@@ -5955,3 +5955,4 @@ What will be renamed,이름이 바뀌는 것
 Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,열린 시트에서 __%s 를 두 번 선언하는 것이 더 이상 없습니다. 다른 하나는 이미 다시 발급되었을 수 있습니다.
 "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.","이 시트에서 %s 가 이제 %s 입니다. 두 행 모두 읽히는 내용은 그대로이며, Ctrl+Z 로 이름이 되돌아갑니다."
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",영수증이 열려 있는 동안 이 시트가 바뀌어 아무것도 다시 쓰지 않았습니다. 지금 내용은 다음과 같습니다.
+"That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.",그 행은 더 이상 이 시트에 없어 아무것도 쓰지 않았습니다. 이것이 열려 있는 동안 시트가 바뀌었습니다.

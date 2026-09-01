@@ -287,6 +287,53 @@ static func _test_keeping_it_as_code() -> bool:
 		false) and ok
 	ok = _test_the_scope_travels_with_the_line() and ok
 	ok = _test_the_byte_gate_refuses_what_it_cannot_prove() and ok
+	ok = _test_the_row_is_found_again_rather_than_held() and ok
+	return ok
+
+
+## THE ROW IS FOUND AGAIN, NEVER HELD. The finding carries the EventRow the sheet was BUILT with, and
+## the undo funnel replaces every resource with a snapshot duplicate when it commits - so a dialog
+## that wrote into the held row after any intervening edit would mutate a detached object, return
+## true, record an undo entry for nothing, and report success over a sheet that did not change. The
+## row is addressed by the event's own uid and the slot, and a row that is genuinely gone is said out
+## loud rather than silently succeeded over.
+static func _test_the_row_is_found_again_rather_than_held() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sheet: EventSheetResource = _sheet_with_a_gone_verb()
+	sheet.external_source_path = PROBE_PATH
+	dock.setup(sheet)
+	var finding: Dictionary = EventSheetMigrationFindings.findings(
+		dock.get_current_sheet(), PROBE_PATH, _known_vocabulary())[0]
+	dock._keep_as_code_dialog.open(finding)
+	# The funnel's own commit, written out: every resource in the sheet is replaced by a snapshot
+	# duplicate, which is exactly what detaches a row somebody held across the edit.
+	dock._perform_undoable_sheet_edit("An edit that snapshots the sheet", func() -> bool:
+		var replaced: Array[Resource] = []
+		for item: Variant in dock.get_current_sheet().events:
+			replaced.append((item as Resource).duplicate(true))
+		dock.get_current_sheet().events.assign(replaced)
+		return true)
+	var held: EventRow = finding.get("event", null) as EventRow
+	var ok: bool = _check("the held row really is a different object now",
+		held == (dock.get_current_sheet().events[0] as EventRow), false)
+	ok = _check("wearing the same uid, which is how it is found again",
+		held.event_uid, (dock.get_current_sheet().events[0] as EventRow).event_uid) and ok
+	dock._keep_as_code_dialog.confirm()
+	var kept: Variant = (dock.get_current_sheet().events[0] as EventRow).actions[0]
+	ok = _check("and the button still writes into the sheet that is open",
+		kept is RawCodeRow, true) and ok
+	ok = _check("saying what it did rather than reporting over nothing",
+		str(dock._status_label.text).begins_with("Kept as written:"), true) and ok
+	# And a row that is genuinely gone is refused with words, not swallowed.
+	dock._perform_undoable_sheet_edit("Take the row out", func() -> bool:
+		(dock.get_current_sheet().events[0] as EventRow).actions.clear()
+		return true)
+	dock._keep_as_code_dialog.confirm()
+	ok = _check("a row that is no longer there is said out loud",
+		str(dock._status_label.text).replace("⚠  ", ""),
+		"That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.") and ok
+	dock.free()
 	return ok
 
 

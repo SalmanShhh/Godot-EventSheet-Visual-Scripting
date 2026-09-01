@@ -5955,3 +5955,4 @@ What will be renamed,Что будет переименовано
 Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,"В открытом листе больше ничто не объявляет __%s дважды - вторая копия, возможно, уже перечеканена."
 "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.","В этом листе %s теперь %s - обе строки читаются ровно так же, а Ctrl+Z возвращает имя."
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.","Этот лист изменился, пока квитанция была открыта, поэтому ничего не переписано - вот что он говорит сейчас."
+"That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.","Этой строки больше нет в листе, поэтому ничего не записано - лист изменился, пока это было открыто."
