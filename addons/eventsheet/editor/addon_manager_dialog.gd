@@ -240,9 +240,11 @@ func propose_update(zip_path: String) -> String:
 				refresh()
 				if _on_registry_changed.is_valid():
 					_on_registry_changed.call(),
-			func() -> void:
+			# The dry run carries the vocabulary this update WOULD leave, so the receipt it opens is
+			# about the new version's forwarding addresses rather than about the packs installed today.
+			func(vocabulary: Dictionary) -> void:
 				if _on_dry_run.is_valid():
-					_on_dry_run.call()
+					_on_dry_run.call(vocabulary)
 				hide())
 		add_child(_update_dialog)
 	if not _update_dialog.open_update(folder, incoming):

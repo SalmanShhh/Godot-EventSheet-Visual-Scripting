@@ -134,6 +134,28 @@ What changed in the build you have installed (v0.17.0), in the words the release
   sanctions at the head of a sheet, and it was the only surface in the pass built as raw English
   prose with no `translate()` at all - the banner, the save refusal, the Doctor's sentence and the
   \"lines 12, 18 and 24\" phrase included.
+- **A pack update records the version it just installed.** The manager passed no version to
+  `apply()`, so the field that exists to say what a later update is updating FROM was stamped blank
+  every time and the second update of any pack was blind. Left empty it is now read back off the
+  folder once the writing is done, which is the only reading that can be right.
+- **The pack update's dry run answers the vocabulary the update would leave.** It opened the migrate
+  receipt against the packs installed TODAY, in which the incoming version's forwarding addresses do
+  not exist - so the button promising \"every row that would be rewritten\" could not show what the
+  update would do. The incoming version's verbs are laid over the installed catalogue and the
+  receipt is answered against that.
+- **The registry dump carries each parameter's type and default.** It listed parameter NAMES only, so
+  a version that re-typed or re-defaulted every parameter of every verb diffed as \"nothing changed\" -
+  and a default is not decoration: it lands in every freshly picked row and decides whether a
+  forwarding address has to answer that parameter at all. Format version 2; nothing keeps a dump on
+  disk, so no stored file is invalidated.
+- **The backup ring is named rather than promised.** The line after an update says where the previous
+  bytes are, and the module header and the guide now say what the ring is: a folder of files. The
+  editor's Restore menu restores the sheet in front of you, so a pack guide or icon is recovered by
+  copying it back - \"one restore away\" was a promise about a door that does not exist.
+- **Reading an incoming version's vocabulary runs its script, and says so.** It is written under
+  `user://`, loaded, instantiated and removed - which is what the live registry does for every
+  installed pack, the difference being that this one has not been accepted yet. Stated in the dry
+  run's own tooltip and in the guide rather than left for somebody to discover.
 - **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
   recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
   only described.

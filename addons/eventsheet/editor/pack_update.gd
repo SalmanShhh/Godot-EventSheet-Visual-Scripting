@@ -18,8 +18,12 @@
 #               that mentions it opens the migrate dry run rather than demanding anything.
 #
 # THE OLD VERSION GOES TO THE BACKUP RING FIRST. Every file this is about to overwrite or remove is
-# copied into the same per-file ring a sheet save uses, before the first write. An update is then as
-# reversible as any other edit: the previous bytes are one restore away.
+# copied into the same per-file ring a sheet save uses, before the first write, and the line the
+# dialog prints afterwards says how many went and where they are. That ring is a folder of files
+# rather than a button: the editor's own Restore menu restores the SHEET IN FRONT OF YOU, so a pack
+# guide or icon that was taken over is recovered by copying it back, not by pressing anything here.
+# Saying which is the point - "one restore away" would be a promise about a door that does not
+# exist.
 #
 # NOTHING IS DERIVED FROM A DATE. What arrived is known because the attach hashed it into the pack's
 # own manifest; a file's mtime, a version string and a folder's age are all things a checkout can
@@ -167,25 +171,55 @@ static func default_choice(row: Dictionary) -> String:
 ## installed; doing it under `user://` keeps the version being ASKED ABOUT out of res:// until it is
 ## taken, and the file is removed again either way.
 static func vocabulary(pack_folder: String, incoming: Dictionary) -> Dictionary:
+	return _reflected(pack_folder, incoming).get("diff", {
+		"retired": [], "added": [], "changed": [], "readable": false})
+
+
+## The vocabulary a project would have IF this update were taken: the incoming version's verbs laid
+## over the installed catalogue. It is what the dry run has to answer against - the dialog's own
+## button promises "every row that would be rewritten", and answering that against the packs the
+## project has TODAY shows what the update's forwarding addresses would do only by accident, which
+## for an update that adds one is never.
+##
+## {} when the incoming archive holds no script for this pack, which is the same answer `vocabulary`
+## gives that case.
+static func vocabulary_after(pack_folder: String, incoming: Dictionary) -> Dictionary:
+	var incoming_entries: Dictionary = _reflected(pack_folder, incoming).get("entries", {})
+	if incoming_entries.is_empty():
+		return {}
+	var merged: Dictionary = EventForgeSuccessors.catalog().duplicate()
+	for key: Variant in incoming_entries.keys():
+		merged[str(key)] = incoming_entries[key]
+	return merged
+
+
+## The one reflection both answers above come out of: {"diff", "entries"}, `entries` being the
+## incoming version's own catalogue. Reflected ONCE, because reflecting a pack means writing it out
+## and instantiating it, and doing that twice for two questions about one archive is the same answer
+## computed twice.
+static func _reflected(pack_folder: String, incoming: Dictionary) -> Dictionary:
 	var installed_script: String = EventSheetPackCatalog.main_script_for(
 		pack_folder.get_file(), pack_folder.get_base_dir())
+	var unreadable: Dictionary = {"diff": {"retired": [], "added": [], "changed": [],
+		"readable": false}, "entries": {}}
 	if installed_script.is_empty():
-		return {"retired": [], "added": [], "changed": [], "readable": false}
+		return unreadable
 	var relative: String = installed_script.trim_prefix("%s/" % pack_folder)
 	if not incoming.has(relative):
-		return {"retired": [], "added": [], "changed": [], "readable": false}
+		return unreadable
 	DirAccess.make_dir_recursive_absolute(REFLECT_DIR)
 	var reflect_path: String = REFLECT_DIR.path_join(installed_script.get_file())
 	var file: FileAccess = FileAccess.open(reflect_path, FileAccess.WRITE)
 	if file == null:
-		return {"retired": [], "added": [], "changed": [], "readable": false}
+		return unreadable
 	file.store_buffer(incoming[relative])
 	file.close()
 	var before: String = EventForgeRegistryDump.for_script(installed_script)
-	var after: String = EventForgeRegistryDump.for_script(reflect_path)
+	var entries: Dictionary = EventForgeRegistryDump.entries_of_script(reflect_path)
+	var after: String = EventForgeRegistryDump.text(entries)
 	DirAccess.remove_absolute(reflect_path)
 	DirAccess.remove_absolute(REFLECT_DIR)
-	return EventForgeRegistryDump.diff(before, after)
+	return {"diff": EventForgeRegistryDump.diff(before, after), "entries": entries}
 
 
 # ── Taking it ─────────────────────────────────────────────────────────────────────────────────
@@ -196,6 +230,12 @@ static func vocabulary(pack_folder: String, incoming: Dictionary) -> Dictionary:
 ## {"written", "removed", "kept", "backed_up"} - counts, so a caller can say what happened.
 ##
 ## `choices` maps a row's path to CHOICE_*; a path it does not name takes `default_choice`.
+##
+## `version` is what the record should say this folder now holds. Left empty it is READ BACK OFF THE
+## FOLDER once the writing is done, which is the only reading that can be right: the field exists so
+## a later update can say what it is updating FROM, and stamping it blank made the second update of
+## any pack blind. The attach path passes the version it read out of the archive; an update has no
+## such reading of its own until the files are on disk, so it takes it from there.
 static func apply(pack_folder: String, incoming: Dictionary, update_plan: Dictionary,
 		choices: Dictionary, version: String = "") -> Dictionary:
 	var rows: Array[Dictionary] = []
@@ -227,9 +267,29 @@ static func apply(pack_folder: String, incoming: Dictionary, update_plan: Dictio
 		file.close()
 		written += 1
 	# The record is re-stamped over the folder as it now stands, so the NEXT update asks its question
-	# against what this one actually left behind - kept files and taken files alike.
-	EventSheetPackManifest.stamp(pack_folder, version)
+	# against what this one actually left behind - kept files and taken files alike, and the version
+	# the folder now declares rather than a blank.
+	EventSheetPackManifest.stamp(pack_folder, version if not version.is_empty() \
+		else installed_version(pack_folder))
 	return {"written": written, "removed": removed, "kept": kept, "backed_up": backed_up}
+
+
+## What version the pack in this folder says it is, read off the folder itself. "" when it does not
+## say, which is a fine thing for a pack not to say and a bad thing to invent.
+static func installed_version(pack_folder: String) -> String:
+	return EventSheetPackCatalog.version_of(EventSheetPackCatalog.main_script_for(
+		pack_folder.get_file(), pack_folder.get_base_dir())).strip_edges()
+
+
+## Where the previous bytes of everything this update overwrote or removed are, in words a reader can
+## act on. The ring is per-file and it is the same one a sheet save uses, so a pack file that was
+## taken over is one restore away in the same place every other backup in this project lives.
+static func backup_note(done: Dictionary) -> String:
+	var rung: int = int(done.get("backed_up", 0))
+	if rung <= 0:
+		return ""
+	return EventSheetL10n.translate(" The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s.") % [
+		rung, EventSheetBackups.BACKUPS_ROOT]
 
 
 # ── The words ─────────────────────────────────────────────────────────────────────────────────

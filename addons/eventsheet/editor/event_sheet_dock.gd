@@ -7311,8 +7311,11 @@ func apply_selected_row_second_fix() -> void:
 ## spelling: never on open, never on save, never automatically, and never from a report. The dialog
 ## draws the receipt - every row as the sentence it reads today beside the one it would read, and the
 ## line it writes today beside the one it would write - and its button is the only Apply there is.
-func open_migrate_dialog() -> void:
-	_migrate_dialog.open()
+## `vocabulary` is the corpus to answer against, and empty means the packs installed today - which is
+## what the head band's own door wants. The pack update's dry run hands in the vocabulary its update
+## would leave instead, so the receipt is about the addresses the new version brings.
+func open_migrate_dialog(vocabulary: Dictionary = {}) -> void:
+	_migrate_dialog.open(vocabulary)
 
 
 ## The Doctor's Re-mint chip, pressed. Like every other door in this pass it opens a receipt rather
@@ -7759,8 +7762,10 @@ func open_addon_manager() -> void:
 			func(page_id: String) -> void: open_documentation(page_id),
 			func(script_path: String) -> void: EventSheets.open_sheet(script_path),
 			# The pack update's vocabulary section says which verbs the new version forwards; this is
-			# the door beside it, and it is the SAME receipt the head band's counting line opens.
-			func() -> void: open_migrate_dialog())
+			# the door beside it, and it is the SAME receipt the head band's counting line opens -
+			# answered against the vocabulary that update WOULD leave rather than the one installed
+			# today, which is the only corpus its own forwarding addresses exist in.
+			func(vocabulary: Dictionary) -> void: open_migrate_dialog(vocabulary))
 		add_child(_addon_manager_dialog)
 	_addon_manager_dialog.refresh()
 	_addon_manager_dialog.popup_centered(Vector2i(760, 500))

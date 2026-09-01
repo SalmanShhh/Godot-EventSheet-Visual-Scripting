@@ -38,8 +38,10 @@ func wave(times: int = 2) -> void:
 	print(times)
 """
 
-## v2 - the same action, now carrying an address, plus one the version adds.
+## v2 - the same action, now carrying an address, plus one the version adds. It says which version
+## it is, which is what an update with no version told to it has to be able to read back.
 const PACK_V2: String = """@tool
+## @ace_version("2.1.0")
 extends Node
 
 
@@ -70,6 +72,8 @@ static func run() -> bool:
 	ok = _test_the_tri_list() and ok
 	ok = _test_asking_writes_nothing() and ok
 	ok = _test_taking_it_backs_up_first() and ok
+	ok = _test_the_record_says_what_it_now_holds() and ok
+	ok = _test_the_dry_run_answers_the_incoming_vocabulary() and ok
 	_clear_fixture()
 	return ok
 
@@ -77,14 +81,21 @@ static func run() -> bool:
 # ── 1. The dump ───────────────────────────────────────────────────────────────────────────────
 
 
-## The format, pinned on a registry of two verbs. Six tab-separated fields in a fixed order, sorted
+## The format, pinned on a registry of two verbs. Eight tab-separated fields in a fixed order, sorted
 ## by key, one comment line at the top, and a template folded onto one line by escaping.
+##
+## The two parameter-detail fields are on the line because a default is not decoration: it lands in
+## every freshly picked row and it decides whether a forwarding address has to answer that parameter
+## at all. A dump listing parameter NAMES alone said "nothing changed" about a version that re-typed
+## or re-defaulted every one of them.
 static func _test_the_dump_format() -> bool:
 	var registry: Dictionary = {
 		"Probe::Wave": {
 			"ace_type": ACEDefinition.ACEType.ACTION,
 			"category": "Signals",
 			"params": PackedStringArray(["times"]),
+			"declared_types": {"times": "int"},
+			"declared_defaults": {"times": "3"},
 			"template": "wave({times})\n\tpass",
 			"map": {},
 		},
@@ -97,13 +108,20 @@ static func _test_the_dump_format() -> bool:
 		},
 	}
 	var expected: String = "\n".join(PackedStringArray([
-		"# eventsheets registry dump 1",
-		"Probe::IsWaving\tcondition\tSignals\t\tProbe::IsAnimating\tis_waving()",
-		"Probe::Wave\taction\tSignals\ttimes\t\twave({times})\\n\\tpass",
+		"# eventsheets registry dump 2",
+		"Probe::IsWaving\tcondition\tSignals\t\t\t\tProbe::IsAnimating\tis_waving()",
+		"Probe::Wave\taction\tSignals\ttimes\ttimes=int\ttimes=3\t\twave({times})\\n\\tpass",
 		"",
 	]))
-	var ok: bool = _check("the dump is six sorted fields per verb",
+	var ok: bool = _check("the dump is eight sorted fields per verb",
 		EventForgeRegistryDump.text(registry), expected)
+	# A DEFAULT THAT MOVES IS A CHANGE, which is the whole reason those two fields are on the line.
+	var re_defaulted: Dictionary = registry.duplicate(true)
+	(re_defaulted["Probe::Wave"] as Dictionary)["declared_defaults"] = {"times": "5"}
+	ok = _check("re-defaulting a parameter is reported as a change",
+		EventForgeRegistryDump.diff(expected,
+			EventForgeRegistryDump.text(re_defaulted))["changed"],
+		[{"key": "Probe::Wave", "fields": PackedStringArray(["param_defaults"])}]) and ok
 	ok = _check("and it says which format it is",
 		EventForgeRegistryDump.is_current_format(expected), true) and ok
 	ok = _check("a text from another shape is not read at all",
@@ -326,9 +344,14 @@ static func _test_taking_it_backs_up_first() -> bool:
 		FileAccess.get_file_as_string(folder.path_join("guide.md")), mine) and ok
 	ok = _check("the file this version drops is gone",
 		FileAccess.file_exists(folder.path_join("notes.txt")), false) and ok
-	ok = _check("what happened is said in four numbers",
+	# The ring is a folder of files rather than a button - the editor's Restore menu restores the
+	# sheet in front of you - so the line NAMES it. "2 went into the backup ring" is a number a reader
+	# has to trust; the folder they are in is something they can act on.
+	ok = _check("what happened is said in four numbers, and where the old bytes went",
 		EventSheetPackUpdateDialog.applied_text(done),
-		"1 file(s) took the new version, 1 were removed, 1 of yours were kept. 2 went into the backup ring first.") and ok
+		"1 file(s) took the new version, 1 were removed, 1 of yours were kept. 2 went into the backup ring first. The previous bytes of those 2 file(s) are in the backup ring beside each of them, under %s." % EventSheetBackups.BACKUPS_ROOT) and ok
+	ok = _check("and an update that rang nothing says nothing about a ring",
+		EventSheetPackUpdate.backup_note({"backed_up": 0}), "") and ok
 	var ring: PackedStringArray = EventSheetBackups.list_backups(folder.path_join("probe_pack.gd"))
 	ok = _check("the previous version of the script is in the ring", ring.size(), 1) and ok
 	if ring.size() == 1:
@@ -343,6 +366,69 @@ static func _test_taking_it_backs_up_first() -> bool:
 		DirAccess.remove_absolute(stale)
 	for stale_guide: String in EventSheetBackups.list_backups(folder.path_join("guide.md")):
 		DirAccess.remove_absolute(stale_guide)
+	return ok
+
+
+## THE RECORD SAYS WHAT THE FOLDER NOW HOLDS. The field exists so a LATER update can say what it is
+## updating FROM, and the manager passed no version at all - so it was stamped blank and the second
+## update of any pack was blind. Left empty it is read back off the folder once the writing is done,
+## which is the only reading that can be right: an update has no version of its own until the files
+## are on disk.
+static func _test_the_record_says_what_it_now_holds() -> bool:
+	var folder: String = _fresh_pack()
+	EventSheetPackManifest.stamp(folder, "1.0.0")
+	var incoming: Dictionary = {"probe_pack.gd": PACK_V2.to_utf8_buffer(),
+		"guide.md": GUIDE_V2.to_utf8_buffer()}
+	var ok: bool = _check("the version this folder declares is read off the folder itself",
+		EventSheetPackUpdate.installed_version(folder), "")
+	EventSheetPackUpdate.apply(folder, incoming,
+		EventSheetPackUpdate.plan(folder, incoming), {})
+	ok = _check("after the update the folder declares the new version",
+		EventSheetPackUpdate.installed_version(folder), "2.1.0") and ok
+	ok = _check("and that is what the record was stamped with, rather than a blank",
+		str(EventSheetPackManifest.read(folder).get("version", "")), "2.1.0") and ok
+	# A version handed in explicitly still wins - the attach path knows what it landed.
+	EventSheetPackManifest.stamp(folder, "2.1.0")
+	EventSheetPackUpdate.apply(folder, incoming,
+		EventSheetPackUpdate.plan(folder, incoming), {}, "9.9.9")
+	ok = _check("a version the caller does know is used as given",
+		str(EventSheetPackManifest.read(folder).get("version", "")), "9.9.9") and ok
+	for stale: String in EventSheetBackups.list_backups(folder.path_join("probe_pack.gd")):
+		DirAccess.remove_absolute(stale)
+	for stale_guide: String in EventSheetBackups.list_backups(folder.path_join("guide.md")):
+		DirAccess.remove_absolute(stale_guide)
+	return ok
+
+
+## THE DRY RUN ANSWERS THE VOCABULARY THE UPDATE WOULD LEAVE. The button beside the vocabulary
+## section promises "every row that would be rewritten", and the forwarding address it is about is
+## the INCOMING version's - which does not exist in the packs the project has today, so a receipt
+## drawn against those shows what the update would do only by accident.
+static func _test_the_dry_run_answers_the_incoming_vocabulary() -> bool:
+	var folder: String = _fresh_pack()
+	var incoming: Dictionary = {"probe_pack.gd": PACK_V2.to_utf8_buffer()}
+	var after: Dictionary = EventSheetPackUpdate.vocabulary_after(folder, incoming)
+	var ok: bool = _check("the incoming version's own verb is in it",
+		after.has("ProbePack::method:wave"), true)
+	if not ok:
+		print("  [why] keys were: %s" % str(after.keys()))
+		return false
+	ok = _check("carrying the address only the new version has",
+		EventForgeSuccessors.normalize_map(
+			(after["ProbePack::method:wave"] as Dictionary).get("map", {})),
+		{"id": "Core::Print", "renames": {"times": "text"}, "defaults": {}}) and ok
+	ok = _check("the verb the new version adds is in it too",
+		after.has("ProbePack::method:wave_twice"), true) and ok
+	ok = _check("and so is the installed vocabulary it is laid over",
+		after.has("Core::GoToState"), true) and ok
+	# The installed version carries no address, so the receipt drawn against TODAY's packs would
+	# have nothing to say about the very row the dry run is about.
+	ok = _check("which the vocabulary installed today does not",
+		EventForgeSuccessors.catalog().has("ProbePack::method:wave"), false) and ok
+	# And an archive holding no script for this pack answers nothing rather than a half-corpus.
+	ok = _check("an archive with no script for this pack answers nothing",
+		EventSheetPackUpdate.vocabulary_after(folder, {"guide.md": GUIDE_V2.to_utf8_buffer()}),
+		{}) and ok
 	return ok
 
 

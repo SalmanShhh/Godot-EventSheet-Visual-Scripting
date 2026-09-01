@@ -65,13 +65,26 @@ static func describe(pack_dir: String) -> Dictionary:
 		"name": _display_name(header, pack_dir),
 		"pitch": _pitch(source),
 		"category": _annotation_argument(header, "@ace_category"),
-		"version": _annotation_argument(header, "@ace_version"),
+		"version": version_of(script_path),
 		"enabled": true,
 		"inline_capable": header.contains(INLINE_ANNOTATION),
 		"source": _annotation_argument(header, SOURCE_ANNOTATION),
 		"icon": _annotation_argument(header, "@ace_icon"),
 		"guide": guide if FileAccess.file_exists(guide) else "",
 	}
+
+
+## What version ONE pack script says it is, read off its class header, or "" when it does not say.
+##
+## By SCRIPT PATH rather than by folder name, so a caller holding a pack somewhere other than the
+## packs folder - a version being compared before it is taken, a fixture in a test, a folder an
+## update has just written - asks the same rule rather than writing a second one that agrees with
+## this until the day it does not.
+static func version_of(script_path: String) -> String:
+	if script_path.strip_edges().is_empty() or not FileAccess.file_exists(script_path):
+		return ""
+	return _annotation_argument(_class_header(FileAccess.get_file_as_string(script_path)),
+		"@ace_version")
 
 
 ## Everything above (and including) the `extends` line - the region where an annotation is about

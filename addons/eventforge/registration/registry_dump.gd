@@ -1,9 +1,9 @@
 # EventForge - THE VOCABULARY AS ONE SORTED TEXT.
 #
 # Every verb the project publishes, one line each, in a form two machines produce identically and a
-# reader can diff with any tool: `key, type, category, params, successor, template`, tab separated,
-# sorted by key. Nothing else - no counts, no timestamps, no machine paths, no ordering that depends
-# on which module happened to register first.
+# reader can diff with any tool: `key, type, category, params, param_types, param_defaults,
+# successor, template`, tab separated, sorted by key. Nothing else - no counts, no timestamps, no
+# machine paths, no ordering that depends on which module happened to register first.
 #
 # WHY A TEXT RATHER THAN A REPORT. Two questions in this plugin are the same question underneath:
 # "what does this pack's new version retire and add?" (the pack update dialog diffs the installed
@@ -12,10 +12,16 @@
 # texts line for line, so both get the same answer and neither needs a second reflection pass over
 # the registry.
 #
-# THE LINE IS THE IDENTITY. A verb's key, its type, its shelf, the parameters it takes in order, the
-# address it forwards to, and the line it writes. Those six are what a sheet written against this
-# verb depends on; anything else about a descriptor (its wording, its icon, its examples) may change
-# without a single emitted byte changing, so it is deliberately not here.
+# THE LINE IS THE IDENTITY. A verb's key, its type, its shelf, the parameters it takes in order with
+# the type and the DEFAULT each declares, the address it forwards to, and the line it writes. Those
+# are what a sheet written against this verb depends on; anything else about a descriptor (its
+# wording, its icon, its examples) may change without a single emitted byte changing, so it is
+# deliberately not here.
+#
+# A DEFAULT IS NOT DECORATION, which is why it is on the line. It lands in every freshly picked row,
+# and it decides whether a forwarding address has to answer that parameter at all - a verb whose
+# default goes blank starts asking rows for a value nobody gave it. A dump that listed parameter
+# names alone said "nothing changed" about a version that re-typed or re-defaulted every one of them.
 #
 # ESCAPING, ONCE. A template is usually several lines and may hold tabs, so every field escapes
 # backslash, tab, carriage return and newline before it is joined. That keeps one verb on one line,
@@ -29,7 +35,10 @@ extends RefCounted
 ## Bumped only when the LINE SHAPE changes. A diff between two dumps of different versions is
 ## refused rather than answered wrongly, so an old dump kept beside a project cannot quietly
 ## report every verb as changed.
-const FORMAT_VERSION: int = 1
+##
+## 2 added the two parameter-detail fields. Nothing keeps a dump on disk - both sides of every diff
+## are written fresh from a live reflection - so the bump costs nobody a stored file.
+const FORMAT_VERSION: int = 2
 
 ## The one line that is not a verb. Comment-led, so a diff can skip it without a special case.
 const HEADER: String = "# eventsheets registry dump %d" % FORMAT_VERSION
@@ -38,7 +47,8 @@ const HEADER: String = "# eventsheets registry dump %d" % FORMAT_VERSION
 const SEPARATOR: String = "\t"
 
 ## The fields of a line, in order, named so a reader and a test spell them the same way.
-const FIELDS: PackedStringArray = ["key", "type", "category", "params", "successor", "template"]
+const FIELDS: PackedStringArray = ["key", "type", "category", "params", "param_types",
+	"param_defaults", "successor", "template"]
 
 
 # ── Writing ───────────────────────────────────────────────────────────────────────────────────
@@ -62,14 +72,22 @@ static func text(catalog: Dictionary) -> String:
 ## One verb's line. Pure over its arguments, so a test pins the format without a registry.
 static func line_for(key: String, entry: Dictionary) -> String:
 	var params: PackedStringArray = PackedStringArray()
+	var types: PackedStringArray = PackedStringArray()
+	var defaults: PackedStringArray = PackedStringArray()
+	var declared_types: Dictionary = entry.get("declared_types", {})
+	var declared_defaults: Dictionary = entry.get("declared_defaults", {})
 	for param: String in PackedStringArray(entry.get("params", PackedStringArray())):
 		params.append(param)
+		types.append("%s=%s" % [param, str(declared_types.get(param, ""))])
+		defaults.append("%s=%s" % [param, str(declared_defaults.get(param, ""))])
 	var successor: Dictionary = EventForgeSuccessors.normalize_map(entry.get("map", {}))
 	var fields: PackedStringArray = PackedStringArray([
 		_escape(key),
 		type_name(int(entry.get("ace_type", ACEDefinition.ACEType.ACTION))),
 		_escape(str(entry.get("category", ""))),
 		_escape(",".join(params)),
+		_escape(",".join(types)),
+		_escape(",".join(defaults)),
 		_escape(str(successor.get(EventForgeSuccessors.KEY_ID, ""))),
 		_escape(str(entry.get("template", ""))),
 	])
@@ -107,8 +125,10 @@ static func parse(dump_text: String) -> Dictionary:
 			"type": fields[1],
 			"category": _unescape(fields[2]),
 			"params": _unescape(fields[3]),
-			"successor": _unescape(fields[4]),
-			"template": _unescape(fields[5]),
+			"param_types": _unescape(fields[4]),
+			"param_defaults": _unescape(fields[5]),
+			"successor": _unescape(fields[6]),
+			"template": _unescape(fields[7]),
 		}
 	return out
 
@@ -178,6 +198,13 @@ static func diff(old_text: String, new_text: String) -> Dictionary:
 ## The verbs ONE pack script publishes, catalog-shaped. This is how the update dialog gets a dump of
 ## a version that is not installed: the incoming file is written somewhere harmless and reflected
 ## here, exactly the way the live registry reflects an installed one.
+##
+## REFLECTING A PACK RUNS IT, and that is a property to know rather than a bug to hide: the script is
+## loaded and instantiated, so its `_init` and any static initialiser execute. The live registry does
+## exactly this for every installed pack, and the difference here is that an INCOMING version is one
+## the reader has not accepted yet. Nothing of it reaches `res://` - the copy is written under
+## `user://` and removed again - and the reader is told, in the dry run's own tooltip, that asking
+## the question runs the file. An archive whose code you would not run is an archive not to open.
 ##
 ## The analyzer reads `## @ace_*` annotations off DISK, so `script_path` must be a real file - a
 ## GDScript built from a source string in memory carries no annotations at all and would dump a

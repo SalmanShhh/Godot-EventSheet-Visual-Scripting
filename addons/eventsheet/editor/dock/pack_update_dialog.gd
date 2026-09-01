@@ -30,6 +30,8 @@ var _pack_folder: String = ""
 var _incoming: Dictionary = {}
 var _plan: Dictionary = {}
 var _vocabulary: Dictionary = {}
+## The catalogue the project would have if this update were taken. What the dry run answers against.
+var _vocabulary_after: Dictionary = {}
 var _choices: Dictionary = {}
 var _version: String = ""
 
@@ -43,8 +45,12 @@ var _dry_run_button: Button = null
 var _diff_dialog: AcceptDialog = null
 var _diff_text: TextEdit = null
 
-## Called with no arguments when the update lands, so the manager can rebuild its table and the dock
-## can refresh the vocabulary. Called with the pack's folder name when the reader asks for the dry run.
+## Called with the sentence to show when the update lands, so the manager can rebuild its table and
+## the dock can refresh the vocabulary. `_on_dry_run` is called with THE VOCABULARY THIS PROJECT
+## WOULD HAVE if the update were taken - the incoming version's verbs over the installed catalogue -
+## because that is the only corpus in which the update's own forwarding addresses exist. Answering
+## the dry run against the packs the project has today shows what the update would do only by
+## accident, which for an update that adds an address is never.
 var _on_applied: Callable = Callable()
 var _on_dry_run: Callable = Callable()
 
@@ -72,6 +78,7 @@ func open_update(pack_folder: String, incoming: Dictionary, version: String = ""
 	_version = version
 	_plan = EventSheetPackUpdate.plan(_pack_folder, _incoming)
 	_vocabulary = EventSheetPackUpdate.vocabulary(_pack_folder, _incoming)
+	_vocabulary_after = EventSheetPackUpdate.vocabulary_after(_pack_folder, _incoming)
 	_choices.clear()
 	_fill()
 	return true
@@ -98,7 +105,7 @@ func _build_body() -> Control:
 	vocabulary_box.add_child(_vocabulary_list)
 	_dry_run_button = Button.new()
 	_dry_run_button.text = EventSheetL10n.translate("Dry run…")
-	_dry_run_button.tooltip_text = EventSheetL10n.translate("Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.")
+	_dry_run_button.tooltip_text = EventSheetL10n.translate("Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.")
 	_dry_run_button.pressed.connect(_on_dry_run_pressed)
 	vocabulary_box.add_child(_dry_run_button)
 	_vocabulary_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("What this version retires and adds"), vocabulary_box)
@@ -212,7 +219,7 @@ static func diff_text(installed_path: String, incoming_bytes: PackedByteArray) -
 
 func _on_dry_run_pressed() -> void:
 	if _on_dry_run.is_valid():
-		_on_dry_run.call()
+		_on_dry_run.call(_vocabulary_after)
 		hide()
 
 
@@ -224,7 +231,10 @@ func _on_confirmed() -> void:
 
 ## What happened, in the same four numbers whatever the answers were. Pure, so the suite pins the
 ## sentence rather than a window's label.
+## What happened, and WHERE THE PREVIOUS BYTES ARE. The ring is a folder of files rather than a
+## button - the editor's Restore menu restores the sheet in front of you - so naming it is what makes
+## "backed up" something a reader can act on rather than a number they have to trust.
 static func applied_text(done: Dictionary) -> String:
 	return EventSheetL10n.translate("%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.") % [
 		int(done.get("written", 0)), int(done.get("removed", 0)),
-		int(done.get("kept", 0)), int(done.get("backed_up", 0))]
+		int(done.get("kept", 0)), int(done.get("backed_up", 0))] 		+ EventSheetPackUpdate.backup_note(done)

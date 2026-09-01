@@ -384,11 +384,23 @@ Four details are worth knowing before you press anything:
   to exactly the line it always did. The row that mentions it opens the migrate dry run one click
   away, rather than asking for anything.
 - **The old version goes to the backup ring first.** Every file the update is about to overwrite or
-  remove is copied into the same per-file ring a sheet save uses, before the first new byte lands.
+  remove is copied into the same per-file ring a sheet save uses, before the first new byte lands,
+  and the line printed afterwards says how many went and names the folder they are in. That ring is
+  a folder of files rather than a button: the editor's Restore menu restores **the sheet in front of
+  you**, so a pack guide or icon the update took over is recovered by copying it back out of the
+  ring. Knowing which is the point - a promise about a door that does not exist is worse than no
+  promise.
+- **The dry run answers the vocabulary the update would leave**, not the one you have. The
+  forwarding addresses it is about are the incoming version's, and those do not exist in the packs
+  installed today.
 
-**Asking writes nothing.** Reading a new version, classifying every file and diffing both vocabularies
-leaves the pack byte for byte as it was; the copy of the incoming version that is reflected to read
-its verbs lives under `user://` and is removed again either way.
+**Asking writes nothing under `res://`, and it runs the incoming code.** Reading a new version,
+classifying every file and diffing both vocabularies leaves the pack byte for byte as it was. But
+reading a version's verbs means REFLECTING it - the copy is written under `user://`, loaded and
+instantiated, so its `_init` and any static initialiser execute, and then it is removed again. That
+is what the live registry does for every pack you have installed; the difference here is that this
+one is a version you have not accepted yet. An archive whose code you would not run is an archive
+not to open.
 
 ### The registry dump
 
