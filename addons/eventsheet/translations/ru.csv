@@ -5996,3 +5996,7 @@ Play as host + client,Запустить как хост + клиент
 "Every way to play this sheet, and which one this button does. The main button is remembered for this project.","Все способы запустить этот лист и тот, который выполняет эта кнопка. Главная кнопка запоминается для этого проекта."
 Which of these the button beside this arrow does. Remembered for this project.,Что из этого делает кнопка рядом с этой стрелкой. Запоминается для этого проекта.
 The play button runs %s now.,Кнопка запуска теперь выполняет %s.
+Add event,Добавить событие
++ Add…,+ Добавить…
+Add an event to this sheet.,Добавить событие в этот лист.
+"Everything you can add here - the same menu right-clicking empty space opens.","Всё, что здесь можно добавить - то же меню, что открывает правый клик по пустому месту."

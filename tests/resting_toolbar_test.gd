@@ -117,8 +117,11 @@ static func _test_the_cascade() -> bool:
 	var labels: PackedStringArray = PackedStringArray()
 	for index: int in popup.item_count:
 		labels.append(popup.get_item_text(index))
-	ok = _check("the Menu cascades the four groups, then the two doors", labels,
-		PackedStringArray(["Sheet", "Edit", "View", "Tools", "", "Manual…", "What's new…"])) and ok
+	# FIVE groups now: Add joined them when the strip stopped fronting the adding. It sits second,
+	# where it sat on the strip, and it is the same PopupMenu with the same ids - only its hanger
+	# changed.
+	ok = _check("the Menu cascades the five groups, then the two doors", labels,
+		PackedStringArray(["Sheet", "Add", "Edit", "View", "Tools", "", "Manual…", "What's new…"])) and ok
 	# The submenus are the SAME menus, so their contents are pinned here as well as in the workflow
 	# test: a cascade that quietly rebuilt a menu would pass a "there are four submenus" check.
 	var counts: Dictionary = {}
@@ -136,13 +139,14 @@ static func _test_the_cascade() -> bool:
 		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok
 	ok = _check("and it sits beside Keyboard Shortcuts",
 		tools.get_item_index(63) - tools.get_item_index(16), 1) and ok
-	# Nothing named Settings is left on the strip, and no MenuButton but the Menu and Add.
+	# Nothing named Settings is left on the strip, and the Menu is the ONLY MenuButton on it - Add
+	# was the last one beside it, and it cascades from inside the Menu now.
 	var menu_buttons: PackedStringArray = PackedStringArray()
 	for child: Node in editor._toolbar.get_children():
 		if child is MenuButton:
 			menu_buttons.append(str((child as MenuButton).text))
-	ok = _check("only the Menu and Add are MenuButtons on the strip", menu_buttons,
-		PackedStringArray(["☰ Menu", "Add"])) and ok
+	ok = _check("the Menu is the only MenuButton on the strip", menu_buttons,
+		PackedStringArray(["☰ Menu"])) and ok
 	editor.free()
 	return ok
 
@@ -173,7 +177,11 @@ static func _test_the_two_states() -> bool:
 	for child: Node in editor._toolbar.get_children():
 		if child is Button and not str((child as Button).text).is_empty():
 			labels.append(str((child as Button).text))
-	ok = _check("Add Code is still on the expanded strip", labels.has("Add Code"), true) and ok
+	# THE FOUR ADD BUTTONS retired from the RESTING strip (they were never in the resting seven) and
+	# stay, whole, on the expanded one. Nothing about adding was removed - it moved to where the
+	# adding happens: the canvas's corner links, the keys, the Ghost Row, the trailing rows.
+	for add_label: String in ["Add Event", "Add Condition", "Add Action", "Add Code"]:
+		ok = _check("%s is still on the expanded strip" % add_label, labels.has(add_label), true) and ok
 	ok = _check("so is Play as host + client, which a tutorial points at",
 		labels.has("Play as host + client"), true) and ok
 	editor._menu_bar.set_full_toolbar(false)

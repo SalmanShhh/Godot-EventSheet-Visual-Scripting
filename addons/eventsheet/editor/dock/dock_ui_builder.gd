@@ -304,6 +304,7 @@ func build_ui() -> void:
 	_dock._viewport.empty_space_double_clicked.connect(_dock._on_viewport_empty_space_double_clicked)
 	_dock._viewport.template_menu_requested.connect(_dock._open_template_menu)
 	_dock._viewport.empty_space_context_menu_requested.connect(_dock._on_viewport_empty_space_context_menu_requested)
+	_dock._viewport.corner_link_activated.connect(_dock._on_viewport_corner_link_activated)
 	_dock._viewport.set_external_span_edit_handler_enabled(true)
 
 	_dock._viewport.zoom_changed.connect(_dock._on_viewport_zoom_changed)

@@ -5996,3 +5996,7 @@ Play as host + client,Jugar como anfitrión + cliente
 "Every way to play this sheet, and which one this button does. The main button is remembered for this project.","Todas las formas de ejecutar esta hoja, y cuál hace este botón. El botón principal se recuerda para este proyecto."
 Which of these the button beside this arrow does. Remembered for this project.,Cuál de estas hace el botón junto a esta flecha. Se recuerda para este proyecto.
 The play button runs %s now.,El botón de reproducción ahora ejecuta %s.
+Add event,Añadir evento
++ Add…,+ Añadir…
+Add an event to this sheet.,Añade un evento a esta hoja.
+Everything you can add here - the same menu right-clicking empty space opens.,Todo lo que puedes añadir aquí - el mismo menú que abre un clic derecho en el espacio vacío.

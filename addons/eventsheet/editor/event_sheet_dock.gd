@@ -5192,6 +5192,18 @@ func _on_viewport_empty_space_double_clicked() -> void:
 	_ace_picker.open("new_event", false, null, {"object_first": true})
 
 
+## The canvas's two corner links. Neither is a new power: "Add event" runs the same add path the E
+## key, the Ghost Row, the trailing "+ Add event…" row and the (chevron-away) toolbar button run, and
+## "+ Add…" opens the very PopupMenu a right-click on empty space opens. The links exist so the
+## adding lives where the reader is looking - in the sheet - rather than only on the strip.
+func _on_viewport_corner_link_activated(link_id: String, screen_position: Vector2) -> void:
+	match link_id:
+		"add_event":
+			_on_add_event_requested()
+		"add_menu":
+			_on_viewport_empty_space_context_menu_requested(screen_position)
+
+
 func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -> void:
 	_context_row = null
 	_context_hit = {}

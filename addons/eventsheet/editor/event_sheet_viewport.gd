@@ -54,6 +54,10 @@ signal empty_space_double_clicked
 # The empty-state "New from template…" / "Create an event sheet…" CTA buttons - the dock opens
 # its starter-template menu.
 signal template_menu_requested
+## One of the two CORNER LINKS on the canvas was clicked - "add_event" (the top-left link) or
+## "add_menu" (the "+ Add…" link at the top right). The viewport only names the link and where the
+## pointer was; the dock owns the add path and the menu, exactly as it does for every other door.
+signal corner_link_activated(link_id: String, screen_position: Vector2)
 ## Ctrl+Click on a cell the dock can resolve to a definition (see navigation_probe below).
 signal navigate_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
 ## A button on a tool sheet's Include bar was pressed (Run now / Reload / Output / Enable
@@ -376,6 +380,7 @@ func _init() -> void:
 	_input_handlers.init(self)
 	_row_metrics_helper.init(self)
 	_group_breadcrumb.init(self)
+	_corner_links.init(self)
 	_live_values_helper.init(self)
 	_tooltip_helper.init(self)
 	_empty_state_helper.init(self)
@@ -626,6 +631,12 @@ func get_row_height(index: int) -> float:
 ## that window currently sits. The minimap draws one as a box over the other and drags it.
 func get_visible_height() -> float:
 	return _get_viewport_height()
+
+
+## The width of that same window onto the sheet. The corner links pin themselves to its edges, so a
+## canvas wider than the window (a zoomed-in sheet) still puts them where the reader can see them.
+func get_visible_width() -> float:
+	return _get_scroll_width()
 
 
 func get_scroll_offset() -> int:
@@ -1960,6 +1971,9 @@ func _draw() -> void:
 	# an illustration. EventSheetDocFigure refuses an empty sheet up front; this is the backstop.
 	if not figure_mode and _empty_state_helper.is_sheet_visually_empty():
 		_empty_state_helper.draw_empty_state(width)
+		# The corner links are on EVERY sheet, an empty one included: a sheet with nothing in it is
+		# exactly where "Add event" has the most to say.
+		_corner_links.draw(_get_font(), _get_font_size(), 0.0)
 		return
 	# Populated sheet: drop any button rects from a previous empty frame so they can't eat clicks.
 	_empty_state_helper.clear_cta_rects()
@@ -2011,6 +2025,10 @@ func _draw() -> void:
 	_draw_divider_guide(width)
 	_draw_param_cursor(font, font_size)
 	_group_breadcrumb.draw(width, font, font_size)
+	# After the pinned parent strip, and under it: the strip owns the top edge whenever it is
+	# showing, so the links move down by its height rather than being drawn through it.
+	_corner_links.draw(font, font_size,
+		ViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
 	_draw_drag_ghost(font, font_size)
 
 
@@ -2222,6 +2240,14 @@ func _gui_input(event: InputEvent) -> void:
 		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT 				and _group_breadcrumb.handle_click(mouse_button.position):
 			accept_event()
 			return
+		# And the two corner links, claimed before the row hit-test for the same reason: they are
+		# pinned over whatever row happens to be under them.
+		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT:
+			var corner_link: String = _corner_links.link_at_control_position(mouse_button.position)
+			if not corner_link.is_empty():
+				corner_link_activated.emit(corner_link, DisplayServer.mouse_get_position())
+				accept_event()
+				return
 		_handle_mouse_button(mouse_button)
 		return
 	if event is InputEventKey:
@@ -2968,6 +2994,7 @@ func get_host_context_label() -> String:
 var _row_metrics_helper: ViewportRowMetrics = ViewportRowMetrics.new()
 # ── Sticky group breadcrumb (a draw pass pinned at the scroll offset; see its file) ──
 var _group_breadcrumb: ViewportGroupBreadcrumb = ViewportGroupBreadcrumb.new()
+var _corner_links: ViewportCornerLinks = ViewportCornerLinks.new()
 
 # ── Live values (rung 3): inline chips next to variable rows (see ViewportLiveValuesHelper) ──
 var _live_values_helper: ViewportLiveValuesHelper = ViewportLiveValuesHelper.new()
@@ -3642,6 +3669,10 @@ func _get_tooltip(at_position: Vector2) -> String:
 	# The pinned head shows the last two parent names; the hover is where the whole chain is.
 	if _group_breadcrumb.covers(at_position):
 		return _group_breadcrumb.full_chain()
+	# A corner link says what it opens, and prints its key from the shortcut table.
+	var hovered_link: String = _corner_links.link_at_control_position(at_position)
+	if not hovered_link.is_empty():
+		return ViewportCornerLinks.tooltip_for(hovered_link)
 	var hit: Dictionary = _hit_test(_to_logical_position(at_position))
 	# Error → row deep-link: a flagged row leads its tooltip with the diagnostic (it matters
 	# more than the codegen preview).

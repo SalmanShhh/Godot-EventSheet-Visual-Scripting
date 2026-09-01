@@ -5996,3 +5996,7 @@ Play as host + client,以主机 + 客户端运行
 "Every way to play this sheet, and which one this button does. The main button is remembered for this project.",运行此事件表的所有方式，以及此按钮执行的那一种。主按钮会为本项目记住。
 Which of these the button beside this arrow does. Remembered for this project.,此箭头旁的按钮执行其中哪一项。会为本项目记住。
 The play button runs %s now.,播放按钮现在运行 %s。
+Add event,添加事件
++ Add…,+ 添加…
+Add an event to this sheet.,向该表添加一个事件。
+Everything you can add here - the same menu right-clicking empty space opens.,你可以在这里添加的一切 - 与右键点击空白处打开的菜单相同。

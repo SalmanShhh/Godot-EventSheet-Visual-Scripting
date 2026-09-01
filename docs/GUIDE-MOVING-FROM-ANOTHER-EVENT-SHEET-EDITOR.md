@@ -364,6 +364,20 @@ i18n (Godot translations).
   project, and nothing was taken away - a button you cannot see still answers to its key.
 
   ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
+- **Adding happens in the sheet, not on the strip.** The canvas carries the two links you already
+  reach for: a muted **Add event** in its top-left corner and a **+ Add…** in its top-right, on
+  every sheet, pinned to the corners so scrolling never takes them away. "Add event" is the E key;
+  "+ Add…" is the same menu a right-click on empty space opens. The trailing "+ Add event…" rows,
+  the Ghost Row, double-click on empty space and the Quick add field all still add too.
+
+  ![A sheet with the Add event link in its top-left corner and the + Add… link in its top-right](images/sheet-corner-links.png)
+
+  The whole Add menu lives inside the **☰ Menu** beside Sheet, Edit, View and Tools, and it teaches
+  the keys: Event (E), Condition (C), Action (A), Group (G), Comment (Q), Global Variable (V) and
+  Function (F) each print their key beside them, read from your own bindings - rebind one in
+  *Tools ▸ Keyboard Shortcuts* and the menu says the new key.
+
+  ![The Menu open on Add, with E, C, A, G, Q, V and F printed beside their items](images/add-cascade-keys.png)
 - **One play button, and it holds every way to run.** The face runs the way you chose; the arrow
   beside it opens all six. The four the sheet owns come first - Run Scene (the scene this sheet's
   script is on), Debug layout, Run with profiler, Play as host + client - and under *Godot's own*

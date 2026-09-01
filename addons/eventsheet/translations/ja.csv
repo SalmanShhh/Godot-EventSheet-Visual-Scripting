@@ -5996,3 +5996,7 @@ Play as host + client,ホスト + クライアントで実行
 "Every way to play this sheet, and which one this button does. The main button is remembered for this project.",このシートを実行するすべての方法と、このボタンが行うもの。メインボタンはこのプロジェクトごとに記憶されます。
 Which of these the button beside this arrow does. Remembered for this project.,この矢印の隣のボタンがどれを行うか。このプロジェクトごとに記憶されます。
 The play button runs %s now.,再生ボタンは %s を実行します。
+Add event,イベントを追加
++ Add…,+ 追加…
+Add an event to this sheet.,このシートにイベントを追加します。
+Everything you can add here - the same menu right-clicking empty space opens.,ここに追加できるものすべて - 空白部分を右クリックしたときと同じメニューです。

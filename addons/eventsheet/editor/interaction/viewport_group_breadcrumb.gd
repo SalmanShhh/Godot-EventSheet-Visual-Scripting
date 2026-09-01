@@ -195,6 +195,13 @@ static func head_parts(head_row: EventRowData) -> Dictionary:
 	return parts
 
 
+## Whether the pinned head is actually on screen right now. Answered from the LAST draw, which is
+## the only moment the strip's own state is decided, so anything drawn after it in the same pass can
+## ask whether the top edge is already spoken for.
+func is_showing() -> bool:
+	return _jump_index >= 0
+
+
 ## The pinned head's group, or null when the strip is hidden (or pins an Arrange-by header, which is
 ## a reading rather than a resource).
 func pinned_group() -> EventGroup:

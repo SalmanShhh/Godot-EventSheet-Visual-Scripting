@@ -222,19 +222,32 @@ func build(root: Node) -> void:
 	_add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
 	# Kept as a reference: Simple Mode hides this deliberate drop-to-code surface entirely.
 	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
-	# Add ▾ - the rest of the authoring vocabulary.
-	var add_menu: MenuButton = MenuButton.new()
-	add_menu.name = "EventSheetAddMenu"
-	add_menu.text = "Add"
-	add_menu.flat = false
-	var add_popup: PopupMenu = add_menu.get_popup()
+	# Add ▸ - the whole authoring vocabulary, as a cascading submenu of the one Menu rather than as a
+	# MenuButton of its own. The four Add buttons above are still here, one chevron away, and the
+	# canvas carries its own "Add event" / "+ Add…" corner links; the strip stopped competing with
+	# them. Every item id is exactly the one it always had - ADD a number, never renumber - because
+	# the command palette, the shortcut dispatch and the suite all address these items by id.
+	#
+	# THE MENU TEACHES THE KEYS. The five reflexes lead it, each with its key printed from the ONE
+	# shortcut table (never typed out here, so a rebind shows through), and so do the three items
+	# further down that have one.
+	var add_popup: PopupMenu = PopupMenu.new()
+	add_popup.name = "EventSheetAddMenu"
+	menu_popup.add_child(add_popup)
+	menu_popup.add_submenu_node_item("Add", add_popup, 6)
+	add_popup.add_item("Event", 12)
+	add_popup.add_item("Condition", 13)
+	add_popup.add_item("Action", 14)
+	add_popup.add_item("Group", 15)
+	add_popup.add_item("Comment", 16)
+	add_popup.add_separator()
 	add_popup.add_item("Signal Event…", 0)
 	# The sheet's own members are INSTANCE variables of the object the file is; a GLOBAL is
 	# one value the whole project shares, and lives on an autoload. Two different things, so two
 	# items, each named the thing it makes.
 	add_popup.add_item("Instance Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
-	add_popup.add_item("Global Variable… (V)", 8)
+	add_popup.add_item("Global Variable…", 8)
 	# Declare ▸ - every way to give something a NAME, gathered in one place: what the sheet
 	# remembers (Variable, Constant, Collection), reaches (Node reference), uses (Resource),
 	# announces (Signal), and the named values a thing can take (Enum). Each entry opens the
@@ -313,10 +326,22 @@ func build(root: Node) -> void:
 			8: _dock._on_add_project_global_requested()
 			9: EventSheetPatternManual.open_page("")
 			10: _dock._shared_sheets.open_include_sheet()
+			12: _dock._on_add_event_requested()
+			13: _dock._on_add_condition_requested()
+			14: _dock._on_add_action_requested()
+			15: _dock._on_add_group_requested()
+			16: _dock._on_add_comment_requested()
 	)
+	# Every key on this menu, printed from EventSheetShortcuts through the ONE seam that puts a key
+	# on a menu item. A hint only: the keys are already routed in the viewport's own key handling,
+	# and a second listener on a hidden popup would run the gesture twice.
+	for keyed: Variant in [[12, "add_event"], [13, "add_condition"], [14, "add_action"],
+			[15, "add_group"], [16, "add_comment"], [8, "add_variable"], [3, "add_function"]]:
+		var keyed_entry: Array = keyed
+		EventSheetContextMenus.hint_key(add_popup, int(keyed_entry[0]),
+			EventSheetShortcuts.binding_for(str(keyed_entry[1])))
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup
-	_toolbar.add_child(add_menu)
 	# Edit ▸ - clipboard + history (all on shortcuts too).
 	var edit_popup: PopupMenu = PopupMenu.new()
 	edit_popup.name = "EventSheetEditMenu"

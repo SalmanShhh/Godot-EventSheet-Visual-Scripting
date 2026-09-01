@@ -39,6 +39,20 @@
   duplicated. It is an Add toolbar; the play button at the head of the strip is the one run control.
   All six runs are still on the expanded strip as the plain buttons they always were, relabelled by
   the same run controls, so nothing was removed by moving them.
+- **Adding lives in the sheet.** The four Add buttons (Add Event, Add Condition, Add Action, Add
+  Code) are off the resting strip and the Add menu folded into the Menu cascade beside Sheet, Edit,
+  View and Tools. In their place the canvas carries the two doors itself, in its own corners: a
+  muted **Add event** link at the top left and a **+ Add…** link at the top right, on every sheet,
+  pinned to the visible corners so scrolling a long sheet never takes them away. "Add event" opens
+  exactly what the E key opens; "+ Add…" opens exactly the menu a right-click on empty space opens.
+  Nothing about adding was removed - the four buttons are whole on the expanded strip, and the Ghost
+  Row, the trailing "+ Add event…" rows, double-click, the right-click menus and the Quick add field
+  were always the primary doors. The toolbar simply stopped competing with them.
+- **The Add menu teaches its keys.** It leads with the five reflexes - Event, Condition, Action,
+  Group, Comment - each printing its binding beside it, and Global Variable and Function print
+  theirs too. Every one is read from the one shortcut table through the same seam the right-click
+  menus use, so a rebound key shows its new binding with no edit anywhere (the hand-typed "(V)" on
+  Global Variable is gone with it). Every item kept the id it shipped with.
 - **Simple Mode stopped touching the strip.** It no longer hides the Add Code button - the strip is
   already calm, and two calm strips that disagree about what is on them help nobody. Every other
   Simple Mode power is untouched: the picker denylist, the gated right-click menus, reading mode, the

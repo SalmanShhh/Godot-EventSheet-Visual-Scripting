@@ -15,8 +15,10 @@ const PREVIEW_SIZE: Vector2i = Vector2i(760, 520)
 static func build(host: Window) -> Control:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
-	var add_menu: MenuButton = editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
-	var declare_popup: PopupMenu = add_menu.get_popup().find_child("EventSheetDeclareMenu", true, false) as PopupMenu
+	# Add hangs off the one cascading Menu button now rather than off a MenuButton of its own.
+	var menu_button: MenuButton = editor._toolbar.find_child("EventSheetMenu", true, false) as MenuButton
+	var add_popup: PopupMenu = menu_button.get_popup().find_child("EventSheetAddMenu", true, false) as PopupMenu
+	var declare_popup: PopupMenu = add_popup.find_child("EventSheetDeclareMenu", true, false) as PopupMenu
 	var rows: VBoxContainer = EventSheetPopupUI.form_box()
 	for item_index: int in declare_popup.item_count:
 		var entry: VBoxContainer = VBoxContainer.new()

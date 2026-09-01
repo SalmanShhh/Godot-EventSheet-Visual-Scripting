@@ -28,8 +28,12 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	var add_menu: MenuButton = editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
-	var declare_popup: PopupMenu = add_menu.get_popup().find_child("EventSheetDeclareMenu", true, false) as PopupMenu
+	# Add is a cascading submenu of the one Menu button now, not a MenuButton of its own - the strip
+	# stopped fronting the adding, because the canvas's corner links and the keys already do. Same
+	# PopupMenu, same items, same ids; only where it hangs changed.
+	var menu_button: MenuButton = editor._toolbar.find_child("EventSheetMenu", true, false) as MenuButton
+	var add_popup_root: PopupMenu = menu_button.get_popup().find_child("EventSheetAddMenu", true, false) as PopupMenu
+	var declare_popup: PopupMenu = add_popup_root.find_child("EventSheetDeclareMenu", true, false) as PopupMenu
 	all_passed = _check("the Add menu carries a Declare submenu", declare_popup != null, true) and all_passed
 	if declare_popup != null:
 		var labels: PackedStringArray = PackedStringArray()
@@ -40,7 +44,7 @@ static func run() -> bool:
 				"Enum…", "Signal…", "Collection…"])) and all_passed
 	# The submenu item on the Add menu itself, addressed by its own id (the explicit wiring the
 	# menu-id test enforces).
-	var add_popup: PopupMenu = add_menu.get_popup()
+	var add_popup: PopupMenu = add_popup_root
 	all_passed = _check("the Declare submenu answers to its own id",
 		add_popup.get_item_text(add_popup.get_item_index(11)), "Declare") and all_passed
 	# Routing: every declare handler the submenu names must exist on the add-row helper, so a
