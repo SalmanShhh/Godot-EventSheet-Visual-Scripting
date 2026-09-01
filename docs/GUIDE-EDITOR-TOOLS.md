@@ -36,7 +36,7 @@ There is a second, softer flavor of editor tool that does not use `EditorScript`
 
 ## 2. Your first tool in 60 seconds
 
-**1. Scaffold it.** In the workspace toolbar open the **Sheet** menu and pick **New Editor Tool…** (the same starter is also in the New Sheet template menu, under "Editor Tools - run inside the editor", as **Editor Tool (one-click chore)**).
+**1. Scaffold it.** In the workspace toolbar open **Menu ▸ Sheet** and pick **New Editor Tool…** (the same starter is also in the New Sheet template menu, under "Editor Tools - run inside the editor", as **Editor Tool (one-click chore)**).
 
 **2. Read what you got.** The starter is deliberately tiny - one comment explaining the shape, and one event:
 

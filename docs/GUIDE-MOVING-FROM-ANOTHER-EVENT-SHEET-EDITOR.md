@@ -408,9 +408,9 @@ i18n (Godot translations).
   script to its sheet, an object type to Object properties, a behavior to its reference page. Drag a
   class onto the canvas to start an event on it, a sound for a *Play sound* action, a scene for a *Go
   to layout* action. The ✕ hides it again.
-- **Preview is on the sheet.** `▶ Preview layout`, `▶▶ Preview project` and `🐞 Debug layout` sit on
-  the toolbar; the keys underneath are Godot's F6 and F5, and while the game runs the first two say
-  `■ Stop` and `↻ Restart`. **Sheet ▸ Start page** is the start page you expect - templates by genre,
+- **Preview is on the sheet.** `▶ Preview layout`, `▶▶ Preview project` and `🐞 Debug layout` sit in
+  the play button's dropdown; the keys underneath are Godot's F6 and F5, and while the game runs the
+  first two say `■ Stop` and `↻ Restart`. **Menu ▸ Sheet ▸ Start page** is the start page you expect - templates by genre,
   what you had open last, and the tutorials.
 - **Your keys, in one pick.** **Tools ▸ Keyboard Shortcuts ▸ Preset ▾ ▸ Another event-sheet editor**
   rebinds only the handful that differ - X inverts, Ctrl+E collapses and expands, F4 previews - and

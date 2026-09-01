@@ -48,6 +48,13 @@ func _on_frame() -> void:
 		_editor.setup(_sheet())
 		_editor._menu_bar.set_full_toolbar(false)
 		return
+	if _frames == 4:
+		# The resting seven with nothing open, which is the state the guide opens on: a reader who
+		# has just installed the plugin sees this row and nothing else.
+		var resting: Image = root.get_texture().get_image()
+		resting.save_png("res://docs/images/resting-toolbar.png")
+		print("[preview] resting toolbar %dx%d" % [resting.get_width(), resting.get_height()])
+		return
 	if _frames == 6:
 		# The cascade, opened where the Menu button is, with the Sheet submenu shown beside it so the
 		# picture says what "one Menu" means rather than only that there is one.

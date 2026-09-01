@@ -73,7 +73,55 @@ static func run() -> bool:
 	ok = _test_simple_mode_lets_the_strip_alone() and ok
 	ok = _test_the_sheet_theme_menu() and ok
 	ok = _test_the_one_time_note() and ok
+	ok = _test_the_guide_names_every_control() and ok
 	return ok
+
+
+## THE GUIDE IS PART OF THE STRIP. A resting toolbar only works if the reader can find out where a
+## button went, so docs/GUIDE-THE-TOOLBAR.md carries a where-did-it-go row per control. The list is
+## DERIVED from the built strip rather than typed here, so a pass that adds a button to the toolbar
+## and forgets the guide fails this check by name instead of shipping a guide that is quietly short
+## one row. The names are compared with their leading glyph stripped, because the guide writes
+## "Debug layout" where the button wears an emoji in front of it.
+static func _test_the_guide_names_every_control() -> bool:
+	var guide: String = FileAccess.get_file_as_string("res://docs/GUIDE-THE-TOOLBAR.md")
+	var ok: bool = _check("the toolbar guide reads", guide.is_empty(), false)
+	if guide.is_empty():
+		return false
+	var editor: EventSheetEditor = _editor()
+	var unnamed: PackedStringArray = PackedStringArray()
+	var checked: int = 0
+	for child: Node in editor._toolbar.get_children():
+		if not (child is Button):
+			continue
+		var label: String = _plain_label(str((child as Button).text))
+		if label.is_empty():
+			continue
+		checked += 1
+		if not guide.contains(label):
+			unnamed.append(label)
+	editor.free()
+	# Without this the check passes vacuously the day the strip stops building buttons.
+	ok = _check("the strip's buttons were actually swept", checked > 10, true) and ok
+	ok = _check("the guide names every button on the strip", unnamed, PackedStringArray()) and ok
+	# And the four surfaces that are not buttons but are what the guide is FOR.
+	for phrase: String in ["Quick add", "Full toolbar", "Sheet theme", "Words"]:
+		ok = _check("the guide names %s" % phrase, guide.contains(phrase), true) and ok
+	return ok
+
+
+## A button's words with any leading icon glyph and spacing removed, so "🐞 Debug layout" compares as
+## "Debug layout". Returns "" for a control whose whole label is a glyph (the chevron), which the
+## guide names in prose rather than by its character.
+static func _plain_label(text: String) -> String:
+	var start: int = 0
+	while start < text.length() and not _is_word_start(text[start]):
+		start += 1
+	return text.substr(start).strip_edges()
+
+
+static func _is_word_start(character: String) -> bool:
+	return (character >= "A" and character <= "Z") or (character >= "a" and character <= "z")
 
 
 ## THE SEVEN, in reading order. Named rather than counted: a strip that swapped Undo for something

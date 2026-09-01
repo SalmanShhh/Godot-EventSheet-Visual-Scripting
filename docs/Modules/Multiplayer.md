@@ -81,7 +81,7 @@ two guards. That is a convention, not a rule the plugin enforces.
   and not on the row that asked.
 - **Nothing here is magic.** Every row compiles to the call it names, so you can read the emitted
   `.gd`, hand it to somebody who has never used a sheet, and it is ordinary Godot networking code.
-- **Two windows are one button.** **Play as host + client** on the toolbar sets Godot's own Run
+- **Two windows are one button.** **Play as host + client**, in the play button's dropdown, sets Godot's own Run
   Multiple Instances to two copies, tags one `host` and the other `client`, and plays the scene, so
   **Started as** can send one copy to Host a game and the other to Join a game.
 - **A networked project you already wrote opens as these rows, unchanged.** Opening a `.gd` as a

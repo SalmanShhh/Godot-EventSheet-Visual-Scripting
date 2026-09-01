@@ -375,7 +375,7 @@ Each pass **opens** a scene, **edits** the now-current edited scene, and **saves
 
 ### 11. A Play / Stop test-runner (Tool sheet)
 
-**Scenario:** you want one-click "run the scene I am editing" and a partner to stop it, without hunting for the toolbar buttons.
+**Scenario:** you want one-click "run the scene I am editing" and a partner to stop it, without leaving the sheet for the play button.
 
 Run tool:
 

@@ -238,8 +238,8 @@ GDScript theme you already read code in.
 | code | `x` `@export var speed: float = 200.0` |
 
 In **code** the row IS the line: the sentence spans step aside, the echo comes up to full strength,
-and the badge, the wash, the drag, the rename and the dialog are all unchanged. It is a toolbar
-setting, never a row on the sheet. Simple Mode pins it to **sentence**.
+and the badge, the wash, the drag, the rename and the dialog are all unchanged. It is a view setting
+(*Menu ▸ View ▸ Variable rows*), never a row on the sheet. Simple Mode pins it to **sentence**.
 
 ## Add ▸ Declare: every way to give something a name
 

@@ -78,7 +78,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 
 ## Feature tour
 
-- **The editor** - two-lane rows, groups, regions, comments, drag/drop, batch edit, full undo/redo; Find & Replace, project-wide Find all references, Outline, Command Palette, type-a-sentence Ghost Row, Properties bar, Simple and Reading modes, themes, split views, session restore.
+- **The editor** - two-lane rows, groups, regions, comments, drag/drop, batch edit, full undo/redo; Find & Replace, project-wide Find all references, Outline, Command Palette, type-a-sentence Ghost Row, Properties bar, Simple and Reading modes, themes, split views, session restore. The strip across the top rests as **seven controls** (one Menu over 137 commands, the Save / Undo / Redo icons, one play button holding all six ways to run, Quick add, and a chevron that brings every button back); adding lives in the sheet's own corners. ([guide](docs/GUIDE-THE-TOOLBAR.md))
 - **The language** - events, sub-events, Else / Else-if, the full loop and picking set, typed functions, enums, signals, match rows, setters/getters, Script blocks, `await`, autoload sheets, and the Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - lifecycle handlers as triggers, input branches as Keyboard/Mouse events, signal wiring as triggers, whole `.tscn` files as composite sheets; a coverage chip says how much reads as events, and every lift is byte-gated.
 - **1,846 native ACEs** (98 triggers) across scenes, spawning, nodes, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps, input rebinding and more - plus a Helpers escape hatch so unmapped code stays an editable row.
@@ -92,6 +92,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 
 The latest tagged release is **`v0.17.0` - "Adopt Anything, Read Anything & Ask Why"**. Since then, on `main` and heading for the next tag ([CHANGELOG](CHANGELOG.md) has the full story):
 
+- **The resting toolbar** - the top strip went from 21 interactive controls over 137 commands to seven that never wrap: one Menu, three icons, one play button holding every way to run, Quick add, a chevron. Nothing was removed, every key is unchanged, and adding moved to the sheet's own corners. ([guide](docs/GUIDE-THE-TOOLBAR.md))
 - **The readability program** - every pack, script and scene opens in the sheet's own words, down to the long tail: patterns, match rows, the Hierarchy, and the 3D words.
 - **The sheet's own chrome** - variable rows with their compiled echo, one Compare dialog, the Properties bar, Saved Views, Workspaces, Sheet ▸ Export.
 - **Working with the running game** - one debugger with four tabs, runtime errors landed on their row, the Scene dock and sheet sharing one selection.

@@ -2085,7 +2085,7 @@ is instantiated to answer a question.
   the update overwrites or removes goes into the backup ring first. A pack with no record - one that
   ships inside the plugin, or a folder assembled by hand - lists every file as yours and takes
   nothing unless you say so.
-- **The words are yours.** **Settings ▸ Words** is every word the sheet lets you choose, on one
+- **The words are yours.** **Menu ▸ Tools ▸ Words…** is every word the sheet lets you choose, on one
   page: an inheritance set, a scene, `_process`, an attached pack, a Godot group,
   Array/Dictionary, `queue_free`, and the reader. Each row shows the word it reads as with
   Familiar Words on and the word it reads as with it off, as a dropdown of the two defaults plus
@@ -2271,7 +2271,7 @@ entry: the base on top, the scripts that extend it as its members, and the base'
 functions as what they share.
 
 **The word is a setting.** It is `Family` with Familiar Words on, `Base class` with it off, and
-`Kind` or anything else you type on the Words page (Settings ▸ Words). One helper answers - it asks
+`Kind` or anything else you type on the Words page (Menu ▸ Tools ▸ Words…). One helper answers - it asks
 the Words registry for the word and adds the plural the headings need - and every user-facing use
 goes through it, so the Object bar's section, the head bar's folder and the object page change
 together and can never drift apart.
@@ -2572,11 +2572,13 @@ a template or from the migration guide; **View ▸ Project bar** toggles it by h
 
 Three smaller surfaces come with it and are worth knowing on day one:
 
-- **Sheet ▸ Start page** - templates by genre with a one-line pitch, what you had open last, and the
+- **Menu ▸ Sheet ▸ Start page** - templates by genre with a one-line pitch, what you had open last, and the
   tutorials, on one page. It opens by itself when nothing is open; a checkbox turns that half off.
 - **Preview on the sheet** - `▶ Preview layout` (F6), `▶▶ Preview project` (F5) and `🐞 Debug layout`
-  on the toolbar. While a game runs the first two become `■ Stop` and `↻ Restart`; Debug layout arms
-  Event Trace, Live Values and breakpoints first.
+  all sit in the play button's dropdown at the head of the strip, beside Run Scene, Run with
+  profiler and Play as host + client. While a game runs the first two become `■ Stop` and
+  `↻ Restart`; Debug layout arms Event Trace, Live Values and breakpoints first. Which one the
+  button's face does is yours to pick, under *Main button* at the foot of that dropdown.
 - **View ▸ Add toolbar** - the eight Add gestures as buttons above the canvas, each naming its key on
   hover, on by default in Simple mode. And **Keyboard Shortcuts ▸ Preset ▾** offers *Another
   event-sheet editor*, which rebinds only the handful of keys that differ (invert to X, collapse and

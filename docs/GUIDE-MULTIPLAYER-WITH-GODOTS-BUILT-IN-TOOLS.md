@@ -436,8 +436,8 @@ it says the things people go and look up:
 ## Testing it as two players
 
 A networked game needs two copies of itself running before anything about it can be seen. Godot can
-already do that - Debug ▸ Run Multiple Instances - and hardly anybody finds it, so the toolbar has a
-**Play as host + client** button beside Run Scene. One click sets that dialog to two instances, gives
+already do that - Debug ▸ Run Multiple Instances - and hardly anybody finds it, so the play
+button's dropdown carries **Play as host + client**, beside Run Scene. One click sets that dialog to two instances, gives
 the first the feature tag `host` and the second the tag `client`, and then plays the scene this sheet
 is attached to. Nothing about it is this plugin's: the button writes the editor's own setting, the
 dialog shows what it wrote, and unticking **Enable Multiple Instances** there turns it off again.
