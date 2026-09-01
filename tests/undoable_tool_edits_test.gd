@@ -5,9 +5,12 @@
 #   1. THE ONE GESTURE. Every undoable row of one event shares ONE step in the editor's history: the
 #      action is opened once before the first of them and committed once after the last, with the
 #      event's own trigger as its name. Pinned by the exact lines, and by walking the emitted body
-#      counting opens against commits - which is what proves the bracket cannot NEST. An event that
-#      fires again next frame re-enters a block whose bracket has already closed, so the count never
-#      reaches two, and there is no member, flag or static between fires for it to reach two through.
+#      counting opens against commits - which is what proves the bracket cannot NEST while a body
+#      runs to its end. An event that fires again next frame re-enters a block whose bracket has
+#      already closed, so the count never reaches two, and there is no member, flag or static between
+#      fires for it to reach two through. The one shape that CAN leave it open is a body that stops
+#      half way - a row that waits between two undoable ones - and the compile says so, in the
+#      event's own name, which is pinned here beside the count.
 #
 #   2. THE REFUSAL. On a sheet that runs in the GAME the same rows are left out and the compile says
 #      so in the trigger's own words. The editor's undo history is the editor's; a game has none.
@@ -43,6 +46,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_vocabulary() and ok
 	ok = _test_the_one_gesture() and ok
+	ok = _test_a_wait_inside_the_gesture_is_said_out_loud() and ok
 	ok = _test_the_refusal_on_a_game_sheet() and ok
 	ok = _test_the_round_trip() and ok
 	ok = _test_a_foreign_bracket_is_left_alone() and ok
@@ -172,6 +176,42 @@ static func _test_the_refusal_on_a_game_sheet() -> bool:
 	var said: String = "\n".join(PackedStringArray(result.get("warnings", []) as Array))
 	ok = _check("the refusal names the trigger", said.contains(GESTURE), true) and ok
 	ok = _check("the refusal says what to do about it", said.contains("Tool sheet"), true) and ok
+	return ok
+
+
+## THE ONE SHAPE THE BRACKET CANNOT CLOSE ON ITS OWN. A row that WAITS between the first and the last
+## undoable row suspends the function with the action still open, so the gesture stands open while
+## other events run and one of them may open its own. The emitted shape cannot rule that out - it is
+## the reader's own rows - so the compile SAYS SO, in the event's own name, rather than pretending
+## nesting is impossible or quietly moving somebody's rows.
+static func _test_a_wait_inside_the_gesture_is_said_out_loud() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = _tool_sheet()
+	var event: EventRow = sheet.events[0] as EventRow
+	var waiting: ACEAction = event.actions[1] as ACEAction
+	waiting.is_awaited = true
+	var said: String = "\n".join(PackedStringArray(
+		SheetCompiler.compile(sheet).get("warnings", []) as Array))
+	ok = _check("the warning names the event's own gesture",
+		said.contains(UndoableEdits.waits_inside_warning(GESTURE)), true) and ok
+	waiting.is_awaited = false
+	ok = _check("and a sheet with no wait between them says nothing",
+		"\n".join(PackedStringArray(SheetCompiler.compile(sheet).get("warnings", []) as Array)).contains(
+			"WAITS"), false) and ok
+	# A wait BEFORE the first undoable row is outside the gesture and is nobody's problem.
+	ok = _check("a wait outside the span is not inside it",
+		UndoableEdits.waits_inside(event.actions, Vector2i(2, 2)), false) and ok
+	# AND THE OTHER HALF OF THE SAME QUESTION: create_action is emitted at the body indent, in front
+	# of the first undoable row, while a guarded row is emitted one indent further in - so an undoable
+	# row that could be wrapped in the removal guard would commit an action with no operations in it
+	# whenever the guard was false. It cannot be, because the two lists are disjoint, and this is what
+	# keeps them that way.
+	var guarded: PackedStringArray = PackedStringArray()
+	for ace_id: String in UndoableEdits.ACE_IDS:
+		if EventForgeRemovalGuard.GUARDED_ACE_IDS.has(ace_id):
+			guarded.append(ace_id)
+	ok = _check("no undoable row is ever wrapped in the removal guard",
+		guarded, PackedStringArray()) and ok
 	return ok
 
 

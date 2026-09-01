@@ -317,6 +317,13 @@ against Godot 4.7 before it was repaired.
   of the frame - so the familiar close-then-open pair works in one frame, measured. The add's local
   is typed like every other line the pass emits, and the lift claims the row's own run beside the
   three statements people write by hand.
+- **"Nesting cannot happen" was an absolute the shape does not guarantee.** It holds while a body
+  runs to its end, and a row that WAITS between the first and the last undoable row of one event
+  suspends the function with the action still open - anything else that runs meanwhile opens its
+  own. The claim now says exactly that, and the compile warns, in the event's own name, rather than
+  quietly moving somebody's rows. The other half of the same worry (an empty undo entry, if the
+  first undoable row were ever wrapped in the removal guard) is impossible today because the guard
+  is only raised over the three destroy rows, and the suite now pins those two lists disjoint.
 - **Remove Node (Undoable) puts the node back where it was, in order.** The undo half was a plain
   `add_child`, which re-adds as the LAST child, so Ctrl+Z on any node that was not last silently
   reordered the scene - and sibling order is draw order for a CanvasItem and layout order inside a

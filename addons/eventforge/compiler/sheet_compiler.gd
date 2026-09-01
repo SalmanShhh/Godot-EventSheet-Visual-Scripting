@@ -2295,6 +2295,12 @@ static func _emit_event_body(
 		var gesture_refused: bool = gesture_span.x >= 0 and not _tool_sheet_flag
 		if gesture_refused:
 			warnings.append("%s: the undoable edits under it need a Tool sheet - the editor's undo history is the editor's, and a running game has none. They were left out; enable Tool in the Sheet Type dialog to run this sheet in the editor." % gesture_words)
+		# The one shape the bracket cannot close on its own: a row that WAITS between the first and
+		# the last undoable row suspends this function with the action still open, so the gesture is
+		# open while other events run and one of them may open its own. Said out loud rather than
+		# quietly reordered - which of the two the reader meant is theirs to decide.
+		elif EventForgeUndoableEdits.waits_inside(event_row.actions, gesture_span):
+			warnings.append(EventForgeUndoableEdits.waits_inside_warning(gesture_words))
 		var action_slot: int = -1
 
 		for action_item: Variant in event_row.actions:

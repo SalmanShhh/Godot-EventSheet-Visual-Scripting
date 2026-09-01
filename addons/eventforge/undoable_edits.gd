@@ -23,10 +23,25 @@
 # row's: three rows each opening and committing their own action would be three entries in the
 # history, and the reader would have to press Ctrl+Z three times to get back where they started.
 #
-# NESTING CANNOT HAPPEN, and that is a property of the shape rather than a promise. The bracket opens
-# and closes inside one event body with nothing held between fires - no member, no flag, no static -
-# so an event that fires again on the next frame opens a fresh action over a closed one. There is no
-# path through the emitted code that reaches a second create_action before the first has committed.
+# NESTING CANNOT HAPPEN WHILE THE BODY RUNS TO ITS END, and that much is a property of the shape
+# rather than a promise. The bracket opens and closes inside one event body with nothing held between
+# fires - no member, no flag, no static - so an event that fires again on the next frame opens a
+# fresh action over a closed one.
+#
+# THE ONE THING THE SHAPE CANNOT RULE OUT is a body that stops half way. A row that WAITS between the
+# first and the last undoable row of an event suspends the function with the action still OPEN, and
+# anything else that runs during that suspension opens its own. That is not a hazard this file can
+# close by writing the bracket differently: the reader put a wait inside a gesture, and only they can
+# say whether the gesture or the wait was the mistake. So the compiler SAYS SO - `waits_inside` below
+# is what it asks, and the warning names the event - rather than either pretending it cannot happen
+# or quietly moving somebody's rows around.
+#
+# THE REMOVAL GUARD NEVER WRAPS ONE OF THESE. `create_action` is emitted at the body indent, in front
+# of the first undoable row, while a row inside the removal guard is emitted one indent further in -
+# so if an undoable row were ever guarded, a false guard would commit an action with no operations in
+# it: an empty entry in somebody's undo history. It cannot happen today, because the guard is only
+# ever raised over the three destroy rows (EventForgeRemovalGuard.GUARDED_ACE_IDS) and none of them
+# writes to the history, and the suite pins that those two lists stay disjoint.
 #
 # THE ROWS ARE EDITOR-ONLY, in the same sense the rest of the Editor object's vocabulary is: the undo
 # history belongs to the editor, and a game has none. The picker already keeps "Editor Tools" pages
@@ -145,6 +160,30 @@ static func gesture_span(actions: Array) -> Vector2i:
 				first = index
 			last = index
 	return Vector2i(first, last)
+
+
+## True when a row that WAITS stands anywhere inside one lane's gesture. An awaited row suspends the
+## function with the action open, so the gesture is still open while other events run - which is the
+## one shape the bracket cannot close on its own, and therefore the one the compiler warns about.
+## Asked of the span rather than of the whole lane: a wait BEFORE the first undoable row, or after
+## the last, is outside the gesture and is nobody's problem.
+static func waits_inside(actions: Array, span: Vector2i) -> bool:
+	if span.x < 0:
+		return false
+	for index: int in range(span.x, mini(span.y + 1, actions.size())):
+		var row: Resource = actions[index] as Resource
+		if row == null or row.get("enabled") == false:
+			continue
+		if row.get("is_awaited") == true or row.get("await_call") == true:
+			return true
+	return false
+
+
+## The words the compiler says it in. Here rather than in the compiler for the reason every other
+## spelling in this file is here: the test that pins the warning and the line that writes it have to
+## be one string.
+static func waits_inside_warning(gesture: String) -> String:
+	return "%s: a row between its undoable rows WAITS, so the undo step stays open across that wait and anything else that runs meanwhile opens its own. Move the waiting row out from between them, or give it an event of its own." % gesture
 
 
 ## What the gesture written around one event's rows is called: the event's own trigger, said the way
