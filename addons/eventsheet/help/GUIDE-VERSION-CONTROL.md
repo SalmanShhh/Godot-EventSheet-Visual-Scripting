@@ -10,8 +10,10 @@ By default an event sheet is a plain **`.gd`** file - it diffs and merges like a
 2. [Readable Diffs via textconv](#2-readable-diffs-via-textconv)
 3. [Semantic 3-Way Merge (Opt-In)](#3-semantic-3-way-merge-opt-in)
 3b. [Showing a Sheet to Someone Who Is Not in the Editor](#3b-showing-a-sheet-to-someone-who-is-not-in-the-editor)
-4. [Use Cases](#4-use-cases)
-5. [Tips and Common Mistakes](#5-tips-and-common-mistakes)
+4. [Checking the Contracts from a Command Line](#4-checking-the-contracts-from-a-command-line)
+5. [Working on This as a Team](#5-working-on-this-as-a-team)
+6. [Use Cases](#6-use-cases)
+7. [Tips and Common Mistakes](#7-tips-and-common-mistakes)
 
 ---
 
@@ -164,7 +166,163 @@ from, so a health card is a starting point for the work rather than a score.
 
 ---
 
-## 4. Use Cases
+## 4. Checking the Contracts from a Command Line
+
+The promises this plugin makes are not documentation. They are properties of the files sitting in
+your repository, and every one of them can be checked without opening Godot:
+
+```sh
+godot --headless --path . --script tools/verify_sheets.gd
+```
+
+It reads your project without writing a byte of it, and it exits 0 or 1. Four checks, each one
+sentence of the contract spelled out:
+
+| Check | The sentence it is | What a failure means |
+| --- | --- | --- |
+| `parses` | Every file is valid GDScript | A file nothing loads. Merge markers are named as themselves, with their line numbers |
+| `round-trip` | Opening a file as a sheet and saving it untouched reproduces it byte for byte | Saving that file from the editor would change a byte somebody did not ask to change |
+| `duplicate-local-token` | No scope declares one baked local twice | Two branches minted the same token and a merge brought both in. Godot refuses the file |
+| `migration-asks` | The migration report holds no row waiting on a human | A row whose verb has moved and whose rewrite nobody can make for you |
+
+A failure prints one line in the shape every compiler prints one, so a terminal that turns those into
+links does:
+
+```
+res://player.gd:41 [duplicate-local-token] Two rows both declare __peer_a3f81c02 in _ready (lines 38, 41). Godot refuses a file that declares one name twice, so this will not run - it is two branches that minted the same token and a merge that brought both in. Re-mint one of them and both rows go on working. Project Doctor lists this line with one chip on it, Re-mint one of them, and the re-mint is an ordinary undoable sheet edit.
+verify: 214 file(s) read, 1 failure(s).
+```
+
+Every line ends by naming the place in the editor that shows the same thing, because the fix is
+made there and not here.
+
+**Hand it paths and it reads exactly those** - which is what makes it usable from a hook:
+
+```sh
+godot --headless --path . --script tools/verify_sheets.gd -- player.gd sheets/enemy.gd
+```
+
+Paths are accepted the way git prints them (relative to the repository root) or the way Godot writes
+them (`res://…`); both are the same file. `--skip <prefix>` leaves out everything under a folder, and
+exists for one situation: a folder of deliberately broken GDScript kept as test fixtures is the one
+thing this gate cannot tell from a real file, so you name it rather than being told your own fixtures
+are broken.
+
+### The plugin ships the command, git decides when it runs
+
+Nothing here installs itself. These are files you write, in your own repository, and you can read
+every line of them before you do.
+
+**`.git/hooks/pre-commit`** - the staged files only. Measured on this repository, a file costs about
+a third of a second on top of the few seconds a headless engine takes to start, so a normal commit's
+worth of files is a pause and not a coffee break:
+
+```sh
+#!/bin/sh
+# The standing contracts, asked of the sheets this commit touches.
+GODOT=${GODOT:-godot}
+staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.gd' '*.tres')
+[ -z "$staged" ] && exit 0
+"$GODOT" --headless --path . --script tools/verify_sheets.gd -- $staged
+```
+
+**`.git/hooks/pre-push`** - the whole project, which is the last moment before your work is somebody
+else's problem. At a third of a second a file this is a minute for a few hundred files, which is why
+it belongs here rather than on every commit:
+
+```sh
+#!/bin/sh
+GODOT=${GODOT:-godot}
+"$GODOT" --headless --path . --script tools/verify_sheets.gd
+```
+
+Both need `chmod +x`. Hooks live in `.git/hooks`, which is not committed, so this is a per-clone
+setup exactly like the merge driver above - and a teammate who has not run it is not blocked by
+anything, which is why the same command belongs in CI.
+
+**The CI job** (GitHub Actions here; the shape is the same anywhere). Import first, because a fresh
+checkout has no import cache and a project that has not been imported cannot resolve its own classes:
+
+```yaml
+- name: Import project
+  run: godot --headless --import --path .
+
+- name: The standing contracts
+  run: godot --headless --path . --script tools/verify_sheets.gd
+```
+
+This repository runs that job on itself, over its own generated content, as the proof that the recipe
+is real: see `.github/workflows/ci.yml`.
+
+---
+
+## 5. Working on This as a Team
+
+### Everyone is on the same version because the version is a commit
+
+The plugin lives in `addons/` **inside your repository**. There is no per-machine install to keep in
+step, so "which version of the editor are you on" is answered by `git log` like everything else: an
+update is a commit, it is reviewed in a pull request, and checking out last month's commit gives you
+last month's editor along with last month's sheets. A pack you attach is copied into the project the
+same way and is your project's code from that moment.
+
+The one thing the plugin remembers about your project across sessions is a single line in
+`project.godot`:
+
+```
+eventsheets/project/vocabulary_version="0.17.0"
+```
+
+It is written when a sheet is saved from the editor, and only when the value would change. Two
+branches that disagree about it resolve by taking either side: the value only moves forward, and the
+next edit rewrites it. There is no sidecar file, nothing machine-local, and nothing anybody has to
+remember to commit.
+
+### The branch gate is two questions
+
+**Does it hold the contracts?** `tools/verify_sheets.gd`, above. Run it in CI and a branch cannot
+merge a file that does not parse, will not come back byte for byte, or declares one local twice.
+
+**Is it leaving a decision for somebody else?** The same command's fourth check, and the report
+behind it is public:
+
+```gdscript
+for row: Dictionary in EventSheets.migration_report():
+	if row["asks"]:
+		print("%s event %d still asks: %s" % [row["sheet"], row["row"], row["before"]])
+```
+
+Each row says which sheet and which event, the spelling it is written in and the one it would be
+written in, the line it writes today and the line it would write, and whether it **asks**. A row that
+does not ask can be rewritten on one click with a receipt in front of you. A row that asks cannot be
+rewritten by anything: the vocabulary has nowhere to send it, or the newer verb keeps state of its
+own and has to be picked, or the rewrite could not prove it reads back as itself. Landing a branch
+full of those moves the decision onto whoever opens the file next, which is what the gate is for.
+
+### A branch that has been open for three weeks
+
+Nothing goes stale and nothing breaks. A verb that has been superseded keeps its id, its template and
+its place in the picker permanently, so a sheet written in an older spelling compiles to exactly the
+line it always did. **No sheet is ever rewritten when it is opened or when it is saved** - opening a
+file and saving it untouched reproduces it byte for byte whatever spellings it holds, which is the
+same law the round-trip check asks about.
+
+So a long-lived branch merges as ordinary code. Afterwards the sheet's head shows its one counting
+line again, the **Migrate…** door beside it opens the receipt, and you take the rewrite when you want
+it rather than when a merge decided for you. If you never take it, nothing is wrong: it compiles, it
+runs, and the Doctor's Migration section keeps saying so in one line.
+
+### Reviewing the migration commit itself
+
+A migration is an ordinary edit in the sheet's own undo history, so it arrives in review as an
+ordinary diff: the rows that were rewritten, and nothing else. That diff **is** the receipt, and it
+reads as code somebody typed rather than as machine output - a rewritten row lands with the values it
+carried under their new names and nothing more, so an argument that would only restate what the
+callee already declares as its own default is not written. Reviewing it is reviewing GDScript.
+
+---
+
+## 6. Use Cases
 
 ### 1. Reviewing a sheet PR as code
 
@@ -202,7 +360,21 @@ A designer retunes the `enemy_speed` variable while a programmer rewrites an unr
 
 Your pipeline runs the pack builders and fails the build if any regenerated sheet shows a diff. Because emission is deterministic with no timestamps or randomness, a dirty working tree after regeneration is a real, reviewable change every time, so a green CI run is a trustworthy guarantee that committed sheets match their generators.
 
-## 5. Tips and Common Mistakes
+### 10. A branch that outlived a vocabulary change
+
+A gameplay branch sits open for three weeks while the vocabulary moves on underneath it. Nothing on
+it breaks: superseded verbs keep their templates, so every sheet compiles to the line it always did,
+and no sheet is rewritten on open or on save. It merges as ordinary code, and afterwards the head
+band counts the rows that now have a newer spelling and offers **Migrate…** on your schedule.
+
+### 11. A pull request that will not compile on somebody else's machine
+
+Two people minted the same baked local on parallel branches and the merge brought both in. The file
+declares one name twice, which Godot refuses to parse, and it is only refused when somebody opens the
+game. The CI job's `duplicate-local-token` check names it on the pull request instead, with the line
+numbers and the one chip that fixes it.
+
+## 7. Tips and Common Mistakes
 
 - **The merge driver is per-clone.** Merge drivers live in `.git/config`, which isn't committed - run the two `git config merge.eventsheet.*` commands once on every fresh clone.
 - **The attribute is harmless before setup.** Until the driver is configured, git just falls back to its default merge, so `.gitattributes` can ship the mapping safely.
@@ -210,3 +382,6 @@ Your pipeline runs the pack builders and fails the build if any regenerated shee
 - **A conflict never loses work.** Both versions are kept in the merged sheet, fenced by `⚠ MERGE CONFLICT` comment rows - resolve by deleting the wrong one in the editor, never by hand-editing broken `.tres`.
 - **No churn means no noise.** Deterministic row UIDs make regenerating an unchanged sheet byte-identical, so a regeneration commit that shows diffs is a real change, not noise.
 - **Prefer `.gd` sheets.** The default `.gd` format already diffs and merges like ordinary source code; all of the tooling above exists for legacy `.tres` sheets.
+- **Hooks are per-clone too.** `.git/hooks` is not committed, so a teammate who has not set them up is not stopped by anything. Put the same command in CI, where it runs for everybody.
+- **A file with no newline at its end fails the round-trip check.** Saving it from the editor adds one, which is a byte, which is the law. Adding the newline yourself is the whole fix.
+- **A row that asks is not a broken row.** It compiles and it runs. The gate is there so the decision is made by somebody who is looking at the sheet, not by whoever opens it next month.

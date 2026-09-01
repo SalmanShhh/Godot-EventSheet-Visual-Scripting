@@ -6,6 +6,34 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The contracts, asked from a command line
+
+- **`tools/verify_sheets.gd` is the gate you put in front of a branch.** Four checks, each one
+  sentence of the standing contract spelled out rather than described: every file parses as valid
+  GDScript, every file round-trips byte for byte, no scope declares one baked local twice, and the
+  migration report holds no row waiting on a human. It reads, it never writes anything anywhere, and
+  it exits 0 or 1 - so it is a hook, a branch gate and a CI job without being any of them itself.
+- **A failure names the file, the line, and the place in the editor that shows the same thing.** The
+  line is printed in the shape every compiler prints one, so a terminal that turns those into links
+  does: `res://player.gd:41 [duplicate-local-token] Two rows both declare …`. Each ends by pointing
+  at the door that fixes it - the Doctor's Re-mint chip, the head band's Migrate…, the read-only
+  banner's Show the conflicts - because the fix is made there and not on a command line.
+- **The most specific reading of a broken file wins.** A file whose `_ready` declares one local twice
+  is exactly a file Godot refuses to parse, so asking the engine first would report a parse error
+  nobody can act on instead of the sentence that names the token and the chip that re-mints it. Merge
+  markers are read the same way, off the same guard that opens such a file read-only.
+- **Hand it paths and it reads exactly those.** Written the way git prints them or the way Godot
+  writes them, both being the same file - which is what makes the pre-commit hook in the guide two
+  lines long and, measured here, about a third of a second per staged file on top of the engine's
+  start. Hand it nothing and it reads the whole project. `--skip <prefix>` leaves out a folder of
+  deliberately broken fixtures, which is the one thing this gate cannot tell from a real file.
+- **The guide's team chapter, written against what actually ships.** Updates travel as commits
+  because `addons/` lives in the repository, so \"which version is everybody on\" is answered by
+  `git log`; the vocabulary record is one mergeable line of `project.godot`; a branch open for three
+  weeks merges as ordinary code, because a superseded verb keeps its template forever and no sheet is
+  ever rewritten on open or on save; and after the merge the head band counts again and offers
+  Migrate… on your schedule. This repository runs the recipe on itself in CI as the proof of it.
+
 ### The two quiet killers a merge leaves behind
 
 - **A fresh token is drawn against the whole project, not just this session.** A verb whose template
