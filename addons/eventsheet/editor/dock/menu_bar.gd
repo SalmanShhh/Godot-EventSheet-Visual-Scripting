@@ -45,6 +45,10 @@ var _redo_button: Button = null
 ## The View menu, kept so the chevron and the menu item stay one choice shown twice.
 var _view_popup_ref: PopupMenu = null
 
+## The split play button that fills the strip's play slot: one face for the run this project chose,
+## one narrow dropdown for all six. Kept so the dock and the suite can reach the face and its menu.
+var _play_button: EventSheetPlayButton = EventSheetPlayButton.new()
+
 
 func init(dock: Control) -> void:
 	_dock = dock
@@ -189,28 +193,27 @@ func build(root: Node) -> void:
 	_redo_button = _add_toolbar_button(_toolbar, "Redo", _dock._on_redo_requested,
 		_with_key("Redo the edit you just undid.", "redo"), "Redo", true)
 	_redo_button.name = "EventSheetRedoButton"
-	# ── THE PLAY BUTTON'S SLOT ─────────────────────────────────────────────────────────────────
+	# ── THE PLAY BUTTON ────────────────────────────────────────────────────────────────────────
 	# Godot has no split button, so the resting play control is a face Button beside a narrow
-	# MenuButton inside one PanelContainer - two adjacent controls reading as one. It is filled by
-	# the run-controls pass; the slot is created here, in its resting position, so the strip's order
-	# never has to be rearranged to make room for it. An empty container draws nothing.
+	# MenuButton inside one PanelContainer - two adjacent controls reading as one. The slot is a
+	# plain box in the strip's resting order, filled by the play button itself, so the strip's order
+	# never has to be rearranged to make room for it.
 	var play_slot: HBoxContainer = HBoxContainer.new()
 	play_slot.name = "EventSheetPlaySlot"
 	play_slot.add_theme_constant_override("separation", 0)
 	_toolbar.add_child(play_slot)
-	_add_toolbar_button(_toolbar, "Run Scene", _dock._run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
-	# Testing a networked game needs two copies of it running. Godot can already do that; this
-	# button is the one that finds the setting for you and says in its tooltip how to take it back.
-	_add_toolbar_button(_toolbar, "Play as host + client", _dock._play_as_host_and_client,
-		EventSheetRunInstances.tooltip(), "Play")
-	# Preview on the SHEET. The keys stay Godot's (F6 / F5) and the names are the ones an
-	# author coming from another event-sheet editor reaches for; while a game runs the first two
-	# relabel themselves Stop / Restart, so the strip never claims it will do something it will not.
-	for preview_entry: Variant in EventSheetRunControls.BUTTONS:
-		var preview: Array = preview_entry
-		var preview_id: String = str(preview[0])
-		_dock._run_controls.adopt(preview_id, _add_toolbar_button(_toolbar,
-			str(preview[1]), func() -> void: _dock._run_controls.activate(preview_id), str(preview[2])))
+	_play_button.build(play_slot, _dock)
+	# And the same six ways to play, as the plain buttons they have always been, for the expanded
+	# strip. They are one table with the play button's dropdown - the same words, the same order and
+	# the same handlers - and every one of them is adopted by the run controls, so a running game
+	# relabels each of them wherever it is shown. The keys stay Godot's for the two that are
+	# Godot's own (F6 / F5).
+	for run_entry: Variant in EventSheetRunControls.BUTTONS:
+		var run: Array = run_entry
+		var run_id: String = str(run[0])
+		_dock._run_controls.adopt(run_id, _add_toolbar_button(_toolbar,
+			str(run[1]), func() -> void: _dock._run_controls.activate(run_id),
+			EventSheetRunControls.tooltip_for(run_id), str(run[3])))
 	_dock._run_controls.refresh()
 	_add_toolbar_separator(_toolbar)
 	# The core reflexes stay one click (E / C / A on the keyboard).
@@ -987,6 +990,12 @@ static func _with_key(text: String, action: String) -> String:
 	var what: String = EventSheetL10n.translate(text)
 	var binding: String = EventSheetShortcuts.binding_for(action)
 	return what if binding.is_empty() else "%s  (%s)" % [what, binding]
+
+
+## The strip's play button, so a caller that wants the face (a preview harness, a tutorial step, a
+## test) reaches it without knowing how the slot is put together.
+func play_button() -> EventSheetPlayButton:
+	return _play_button
 
 
 ## Whether the strip is showing every button it has.

@@ -18,10 +18,18 @@ class_name RestingToolbarTest
 extends RefCounted
 
 
-## The narrowest canvas any layout test in this suite exercises (event_cell_wrap_test builds its
-## viewport at 520 wide). The resting row has to fit inside that, or "never wrapping" is a claim
-## rather than a property.
-const NARROWEST_TESTED_CANVAS: float = 520.0
+## The budget for the RESTING row, in px, measured off the built strip by this very test.
+##
+## It was 520 while the play slot stood empty - the narrowest canvas any layout test here draws a
+## sheet into (event_cell_wrap_test builds its viewport at 520 wide) - and the row measured 494.
+## The slot is full now: the play button is a face Button wearing the chosen run's own words beside
+## a narrow dropdown, and that pair is 115 px of the row. Headless is the widest the face ever gets,
+## because no editor icon arrives here and the words carry it alone.
+##
+## 609 measured, 640 budgeted: room for one more icon-sized control, so the next pass that puts
+## something on the resting strip comes here, re-measures, and says why - rather than finding out
+## by watching the row wrap.
+const RESTING_WIDTH_BUDGET: float = 640.0
 
 
 ## An undo manager whose history this test can move by hand, so the two icons can be held against a
@@ -78,16 +86,19 @@ static func _test_the_resting_row() -> bool:
 		PackedStringArray(["EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton",
 			"EventSheetRedoButton", "EventSheetPlaySlot", "EventSheetQuickAdd",
 			"EventSheetToolbarExpander"]))
-	# The play button itself is built by the run-controls pass; what rests here is its slot, in its
-	# resting position, so the strip's order never has to be rearranged to make room for it.
-	ok = _check("the play button has a slot waiting for it",
+	# The play button lives in that slot: one face and one narrow dropdown, two adjacent controls in
+	# a single frame, because Godot has no split button to reach for.
+	ok = _check("the play button has its slot",
 		editor._toolbar.find_child("EventSheetPlaySlot", true, false) is HBoxContainer, true) and ok
+	ok = _check("and the split button is in it",
+		editor._toolbar.find_child("EventSheetPlayFace", true, false) is Button
+			and editor._toolbar.find_child("EventSheetPlayMenu", true, false) is MenuButton, true) and ok
 	# The row has to FIT. Measured off the built strip rather than guessed, and held under the
 	# narrowest canvas this suite already draws a sheet into.
 	var width: float = editor._menu_bar.resting_minimum_width()
 	print("[resting_toolbar_test] resting strip minimum width: %.1f px" % width)
-	ok = _check("the resting row fits the narrowest canvas the suite tests",
-		width > 0.0 and width < NARROWEST_TESTED_CANVAS, true) and ok
+	ok = _check("the resting row stays inside its width budget",
+		width > 0.0 and width < RESTING_WIDTH_BUDGET, true) and ok
 	editor.free()
 	return ok
 

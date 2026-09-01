@@ -5990,3 +5990,9 @@ Full toolbar,Barre d'outils complète
 "Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","Afficher tous les boutons de la barre. Désactivé - par défaut - la barre se repose sur Menu, Enregistrer, Annuler, Rétablir, le bouton de lecture, Ajout rapide et le chevron, et tout le reste est à un clic dans le Menu. Mémorisé pour ce projet."
 Show every button on the toolbar.,Afficher tous les boutons de la barre d'outils.
 "Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","Mettre la barre au repos - Menu, Enregistrer, Annuler, Rétablir, lecture et Ajout rapide."
+Godot's own,Celles de Godot
+Main button,Bouton principal
+Play as host + client,Jouer en hôte + client
+"Every way to play this sheet, and which one this button does. The main button is remembered for this project.","Toutes les façons de lancer cette feuille, et celle que fait ce bouton. Le bouton principal est mémorisé pour ce projet."
+Which of these the button beside this arrow does. Remembered for this project.,Laquelle de ces actions exécute le bouton à côté de cette flèche. Mémorisé pour ce projet.
+The play button runs %s now.,Le bouton de lecture exécute maintenant %s.

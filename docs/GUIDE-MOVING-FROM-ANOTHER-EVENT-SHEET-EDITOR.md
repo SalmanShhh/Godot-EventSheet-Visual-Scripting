@@ -364,6 +364,20 @@ i18n (Godot translations).
   project, and nothing was taken away - a button you cannot see still answers to its key.
 
   ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
+- **One play button, and it holds every way to run.** The face runs the way you chose; the arrow
+  beside it opens all six. The four the sheet owns come first - Run Scene (the scene this sheet's
+  script is on), Debug layout, Run with profiler, Play as host + client - and under *Godot's own*
+  sit Preview layout and Preview project, which are Godot's F6 and F5 under the names you already
+  use. *Main button* at the foot says which one the face does, ticked, and the choice is remembered
+  for the project.
+
+  ![The play button's dropdown open on all six ways to play, with Godot's own F6 and F5 under their own heading and Main button at the foot](images/play-button-dropdown.png)
+
+  While a game is running the face reads **Stop** (Preview project reads *Restart*), so the button
+  never claims it will do something it will not. Every run is still a plain button on the expanded
+  strip, relabelled the same way.
+
+  ![The same play button while a game runs, its face reading Stop](images/play-button-stop.png)
 - **The Project bar is where you left it, under Godot's names or yours.** Turn it on with **View ▸
   Project bar** (it is already on if you are in Simple mode or started from a template) and the
   Object bar gains a *Project* tab listing the whole project by kind: Scenes, Scripts, Classes, Base

@@ -5990,3 +5990,9 @@ Full toolbar,ツールバーをすべて表示
 "Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.",ツールバーのすべてのボタンを表示します。オフ（既定）のときはメニュー、保存、元に戻す、やり直す、再生ボタン、クイック追加、矢印だけが残り、他はメニューの中にあります。このプロジェクトごとに記憶されます。
 Show every button on the toolbar.,ツールバーのすべてのボタンを表示します。
 "Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.",ツールバーを休めます - メニュー、保存、元に戻す、やり直す、再生、クイック追加。
+Godot's own,Godot 標準
+Main button,メインボタン
+Play as host + client,ホスト + クライアントで実行
+"Every way to play this sheet, and which one this button does. The main button is remembered for this project.",このシートを実行するすべての方法と、このボタンが行うもの。メインボタンはこのプロジェクトごとに記憶されます。
+Which of these the button beside this arrow does. Remembered for this project.,この矢印の隣のボタンがどれを行うか。このプロジェクトごとに記憶されます。
+The play button runs %s now.,再生ボタンは %s を実行します。

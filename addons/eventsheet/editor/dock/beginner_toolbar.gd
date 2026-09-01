@@ -11,6 +11,12 @@ extends RefCounted
 # unnecessary.
 #
 # It calls the same add paths everything else does. There is no second way to add anything here.
+#
+# IT IS AN ADD TOOLBAR, and only that. It used to end with the run buttons too - "how do I add
+# something" and "how do I see it run" asked side by side - and that made a second place to start a
+# game, one strip below the first. The one run control is the play button at the head of the strip:
+# one face for the run this project chose, one dropdown for all six ways to play. Nothing was lost
+# in moving them out; there is simply one of them now, where a reader already looks for it.
 
 ## The strip, in reading order, as [id, label, action id whose key it shows, what it does].
 ## The action id is looked up in EventSheetShortcuts, so a rebound key shows its NEW binding.
@@ -27,7 +33,6 @@ const BUTTONS: Array = [
 
 var _dock: Control = null
 var _strip: HFlowContainer = null
-var _run_controls: EventSheetRunControls = null
 
 
 func init(dock: Control) -> void:
@@ -52,8 +57,7 @@ static func tooltip_for(button_id: String) -> String:
 
 ## Builds the strip and inserts it directly above the canvas. Kept hidden until the visibility rule
 ## asks for it, so an expert's sheet is the sheet.
-func build(root: Node, run_controls: EventSheetRunControls) -> Control:
-	_run_controls = run_controls
+func build(root: Node) -> Control:
 	_strip = HFlowContainer.new()
 	_strip.name = "EventSheetBeginnerToolbar"
 	_strip.add_theme_constant_override("h_separation", 4)
@@ -64,17 +68,6 @@ func build(root: Node, run_controls: EventSheetRunControls) -> Control:
 		button.text = EventSheetL10n.translate(str(record[1]))
 		button.tooltip_text = tooltip_for(str(record[0]))
 		button.pressed.connect(activate.bind(str(record[0])))
-		_strip.add_child(button)
-	# The Preview buttons finish the strip: on day one, "how do I add something" and "how do I
-	# see it run" are the same question asked twice.
-	_strip.add_child(VSeparator.new())
-	for entry: Variant in EventSheetRunControls.BUTTONS:
-		var record: Array = entry
-		var button := Button.new()
-		button.text = EventSheetL10n.translate(str(record[1]))
-		button.tooltip_text = EventSheetL10n.translate(str(record[2]))
-		button.pressed.connect(func() -> void: _run_controls.activate(str(record[0])))
-		_run_controls.adopt(str(record[0]), button)
 		_strip.add_child(button)
 	root.add_child(_strip)
 	return _strip
@@ -117,8 +110,6 @@ func apply_visibility() -> void:
 		return
 	_strip.visible = should_show(_stored_choice(), _dock.is_simple_mode())
 	_refresh_tooltips()
-	if _run_controls != null:
-		_run_controls.refresh()
 	_sync_view_menu(_strip.visible)
 
 

@@ -208,8 +208,18 @@ static func _toolbar_and_preview_buttons() -> bool:
 	var preview_ids: PackedStringArray = PackedStringArray()
 	for entry: Variant in EventSheetRunControls.BUTTONS:
 		preview_ids.append(str((entry as Array)[0]))
-	all_passed = _check("the sheet offers the run gestures, profiler last",
-		" ".join(preview_ids), "preview_layout preview_project debug_layout run_profiler") and all_passed
+	# UPDATED WITH THE PLAY BUTTON: the table used to hold the four Preview gestures the sheet's own
+	# strip offered, and Run Scene and Play as host + client were two hand-written toolbar buttons
+	# beside it. There is one table now, six entries, and it is read by the play button's face, the
+	# play button's dropdown and the expanded strip's buttons alike - so the order below IS the order
+	# the dropdown lists, four the sheet owns and then Godot's own two.
+	all_passed = _check("the six ways to play, in the order the play button lists them",
+		" ".join(preview_ids),
+		"run_scene debug_layout run_profiler host_client preview_layout preview_project") and all_passed
+	all_passed = _check("and the last two are marked as Godot's own keys under familiar names",
+		" ".join(EventSheetRunControls.GODOT_OWN), "preview_layout preview_project") and all_passed
+	all_passed = _check("Run Scene is what the play button does until a project says otherwise",
+		EventSheetRunControls.main_run_from(""), "run_scene") and all_passed
 	all_passed = _check("the profiler run keeps its name while a game is running - it is not a stop button",
 		EventSheetRunControls.label_for("run_profiler", true), "⏱ Run with profiler") and all_passed
 	all_passed = _check("Preview layout says what it does while nothing is running",

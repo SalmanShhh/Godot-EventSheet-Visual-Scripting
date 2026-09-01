@@ -87,7 +87,7 @@ func build_ui() -> void:
 	# The beginner Add toolbar sits directly above the canvas (not up in the menu strip): on
 	# day one, the buttons have to be beside the thing they add to. Hidden until Simple mode or
 	# View ▸ Add toolbar asks for it, so an expert's sheet is unchanged.
-	_dock._beginner_toolbar.build(root, _dock._run_controls)
+	_dock._beginner_toolbar.build(root)
 
 	# Pinned Conditions/Actions column header, above the scrolling sheet (bound to the
 	# viewport once it exists). Kept outside the scroll so the scroll still has a single child.

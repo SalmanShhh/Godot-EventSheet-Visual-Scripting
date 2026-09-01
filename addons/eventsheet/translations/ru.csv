@@ -5990,3 +5990,9 @@ Full toolbar,Полная панель
 "Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","Показать все кнопки панели. Выключено (по умолчанию) - панель остаётся как Меню, Сохранить, Отменить, Вернуть, кнопка запуска, Быстрое добавление и шеврон, а всё остальное - в одном клике внутри Меню. Запоминается для этого проекта."
 Show every button on the toolbar.,Показать все кнопки панели.
 "Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","Свернуть панель - Меню, Сохранить, Отменить, Вернуть, запуск и Быстрое добавление."
+Godot's own,Собственные Godot
+Main button,Главная кнопка
+Play as host + client,Запустить как хост + клиент
+"Every way to play this sheet, and which one this button does. The main button is remembered for this project.","Все способы запустить этот лист и тот, который выполняет эта кнопка. Главная кнопка запоминается для этого проекта."
+Which of these the button beside this arrow does. Remembered for this project.,Что из этого делает кнопка рядом с этой стрелкой. Запоминается для этого проекта.
+The play button runs %s now.,Кнопка запуска теперь выполняет %s.

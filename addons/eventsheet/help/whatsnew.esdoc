@@ -26,6 +26,23 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **The chevron, and View ▸ Full toolbar.** One choice shown twice: the chevron expands the strip to
   every button it has, in the order it always had them, and the View item mirrors it. The choice is
   remembered per project. Rest is the default for every project, existing ones included.
+- **One play button, six ways to play.** The strip fronted six separate run buttons and the beginner
+  Add toolbar duplicated four of them one strip below, so \"how do I run this\" had six answers and no
+  obvious one. There is one control now, in the strip's play slot: a face button that performs the
+  run this project chose, beside a narrow dropdown holding all six - Run Scene, Debug layout, Run
+  with profiler, Play as host + client, and, under their own heading, Godot's own F6 and F5 under
+  the names an event-sheet author reaches for. Godot has no split button, so it is what Godot's own
+  editor is: two adjacent controls in one frame. Every key in the list is printed from the one
+  shortcut table, so a rebind shows through with no edit anywhere.
+- **The face is your choice, and it says Stop.** The dropdown ends with Main button - the same six,
+  ticked - and the face wears the chosen run's words and icon. The choice is remembered per project,
+  and Run Scene is what a project that never chose gets. While a game is running the face reads Stop
+  (or Restart, for Preview project) exactly like every other run button on the strip: it is adopted
+  by the same run controls, so there is one answer to what a run is called right now, not two.
+- **The Add toolbar only adds.** Simple mode's beginner strip dropped the four run buttons it
+  duplicated. It is an Add toolbar; the play button at the head of the strip is the one run control.
+  All six runs are still on the expanded strip as the plain buttons they always were, relabelled by
+  the same run controls, so nothing was removed by moving them.
 - **Simple Mode stopped touching the strip.** It no longer hides the Add Code button - the strip is
   already calm, and two calm strips that disagree about what is on them help nobody. Every other
   Simple Mode power is untouched: the picker denylist, the gated right-click menus, reading mode, the
