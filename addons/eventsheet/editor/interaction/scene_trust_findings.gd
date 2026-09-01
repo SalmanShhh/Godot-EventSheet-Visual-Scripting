@@ -137,17 +137,46 @@ static func emitted_text(entry: Variant) -> String:
 	var ace: Resource = entry as Resource
 	if ace == null:
 		return ""
-	var baked: String = str(ace.get("codegen_template"))
-	var text: String = baked
-	if text.strip_edges().is_empty():
-		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
-			str(ace.get("provider_id")), str(ace.get("ace_id")))
-		text = "" if descriptor == null else descriptor.codegen_template
+	var text: String = row_template(ace)
 	var params: Variant = ace.get("params")
 	if params is Dictionary:
 		for key: Variant in (params as Dictionary).keys():
 			text = text.replace("{%s}" % str(key), str((params as Dictionary)[key]))
 	return text
+
+
+## One row's template BEFORE its values are filled in - the cheap half of the reading above, so the
+## first question can be asked without paying for a replace per parameter.
+static func row_template(ace: Resource) -> String:
+	var baked: String = str(ace.get("codegen_template"))
+	if not baked.strip_edges().is_empty():
+		return baked
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
+		str(ace.get("provider_id")), str(ace.get("ace_id")))
+	return "" if descriptor == null else descriptor.codegen_template
+
+
+## THE CHEAPEST FIRST QUESTION, asked of one row before its text is ever built: does anything about
+## it build a file at all. The trust reader keeps that question precisely so a project which never
+## loads a scene pays one substring test, and the Doctor's own walk asks it before it opens a script;
+## this is the same gate on the canvas side of the same finding. The row's template AND its values
+## are both offered to it, because a load can be written in either - the template of Add Layout On
+## Top carries one, and a value handed to Set Property can be one.
+static func _might_build_a_scene(entry: Variant) -> bool:
+	if entry is RawCodeRow:
+		return EventForgeSceneTrust.says_enough((entry as RawCodeRow).code)
+	var ace: Resource = entry as Resource
+	if ace == null:
+		return false
+	if EventForgeSceneTrust.says_enough(row_template(ace)):
+		return true
+	var params: Variant = ace.get("params")
+	if not (params is Dictionary):
+		return false
+	for key: Variant in (params as Dictionary).keys():
+		if EventForgeSceneTrust.says_enough(str((params as Dictionary)[key])):
+			return true
+	return false
 
 
 ## One walk of the rows. `asked` is every scene file the events ABOVE this one already ask about,
@@ -177,6 +206,8 @@ static func _note_this_event(event_row: EventRow, label: String, asked: PackedSt
 	var unasked: PackedStringArray = PackedStringArray()
 	var first_line: Dictionary = {}
 	for entry: Variant in event_row.actions:
+		if not _might_build_a_scene(entry):
+			continue
 		for line: String in emitted_text(entry).split("\n"):
 			var text: String = line.strip_edges()
 			for path_expression: String in EventForgeSceneTrust.untrusted_scene_paths(text):
@@ -199,10 +230,21 @@ static func _note_this_event(event_row: EventRow, label: String, asked: PackedSt
 ## Every line one event's QUESTIONS compile to, joined - what the guard is counted off. Conditions
 ## only: a question asked in the action lane would be asked after the build it was meant to stand in
 ## front of.
+##
+## A TURNED-OFF ROW ASKS NOTHING, and an INVERTED one asks the opposite: a Scene File Is Data-Only
+## row with its answer flipped compiles to `not <question>`, which lets the body run on exactly the
+## files the question refused. Both are written into the text here rather than filtered out, so the
+## one reading of what counts as a guard - the trust reader's - answers for the canvas too.
 static func _conditions_text(event_row: EventRow) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	for entry: Variant in event_row.conditions:
-		lines.append(emitted_text(entry))
+		var row: Resource = entry as Resource
+		if row != null and row.get("enabled") == false:
+			continue
+		var text: String = emitted_text(entry)
+		if row != null and bool(row.get("negated")):
+			text = "not %s" % text
+		lines.append(text)
 	return "\n".join(lines)
 
 

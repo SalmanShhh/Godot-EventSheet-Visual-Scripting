@@ -278,6 +278,31 @@
   counted off the runner's own total rather than from a grep.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
+### Fixed in the scenes pass
+
+Everything below was found by reading the shipped pass adversarially, and each one was proved
+against Godot 4.7 before it was repaired.
+
+- **Scene File Is Data-Only reads TAGS now, not lines - the guard was bypassable.** Godot's own
+  parser tokenises a scene tag, so `[ext_resource type = "Script" path = "user://payload.gd"]` with
+  spaces around the equals, and the same tag broken over two lines, both load the script they name
+  while a reading built on `contains("type=\"Script\"")` answered TRUE about them. The emitted
+  question now gathers each tag (quotes respected, so a `]` inside a value does not end it early)
+  and parses its attributes as the pairs they are. Three more holes closed with it: `res://../x.gd`
+  climbs out of the project and is no longer read as the project's own; a `CSharpScript` is a script
+  like any other; and EVERY `ext_resource` pointing outside `res://` now answers false, not only the
+  scripts - a scene naming another scene names a file with a table of its own, which this reading
+  does not open. Anything it cannot parse answers false, which is the doctrine the row already had.
+- **A question mentioned is not a question answered.** `if not <the question>:` and `if debug or
+  <the question>:` both ran the body on exactly the files the question refused, and both silenced
+  the Doctor's finding and the sheet's amber state. A negated mention, and one standing beside an
+  `or`, no longer count as guards - in emitted text, and on the sheet, where an inverted or
+  turned-off condition row now reads the same way.
+- **`get_tree().change_scene_to_file("user://…")` was invisible to the trust reader.** The tree's
+  own method is how every project travels to a layout, and the call reading refused it for having a
+  dot in front of it. The same reading no longer mistakes somebody's own `MyResourceLoader.load(`
+  for the engine's loader.
+
 ### An object's states are a variable, declared once
 
 - **Declare states, on the sheet head.** The states band's **Declare states…** asks the two questions

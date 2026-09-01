@@ -323,10 +323,23 @@ On load pressed
 ```
 
 It reads the file's own resource table as **text** and builds nothing, so asking is safe on a file
-from anywhere. It answers false for a scene carrying a script inside it, for one pointing at a
-script outside `res://`, and for a file it cannot read at all - an unreadable file is not a file
-that has been cleared. And it reads the **one file you name**: a scene that file points at is a
-separate file with a table of its own.
+from anywhere. It answers false for a scene carrying a script inside it, and for a scene that points
+at **anything at all** outside `res://` - a script, another scene, a `.tres`. Not only scripts,
+because a scene that names another scene names a file with a table of its own, and this reading
+opens the one file you gave it. So a true answer means *nothing comes in with this file that the
+game did not ship with*, which is a promise it can keep.
+
+It reads **tags, not lines**, because that is what Godot's own parser reads: `type = "Script"` with
+spaces around the `=` is the same tag as `type="Script"`, and a tag may run over two lines. The
+threat here is a file somebody wrote by hand, so "the editor does not write it that way" is not an
+answer - both of those spellings load the script they name. And anything it cannot read as a scene
+table - a tag that never closes, a resource with no type, a binary `.scn`, a file that is not there
+- answers false, because an unfamiliar file is not a file that has been cleared.
+
+**A question mentioned is not a question answered.** `if not <the question>` and `if debug or <the
+question>` both run the body on exactly the files the question refused, so neither counts as a guard
+- the row still wears the amber state and the Doctor still reports it. Inverting the condition row
+in the sheet reads the same way, for the same reason.
 
 ![Two events above the GDScript they compile to: a save key press running Save branch Level as scene file into the user folder, and a load key press whose scene-file-is-data-only condition guards an Add layout on top row, with the owner walk, the pack and the guarded load visible in the code panel below](images/scenes-save-branch.png)
 

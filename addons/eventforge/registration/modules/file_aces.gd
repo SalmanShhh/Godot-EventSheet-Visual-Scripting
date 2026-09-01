@@ -446,7 +446,13 @@ static func _sound_template() -> String:
 ##                plain pack writes an empty scene and reports nothing. The walk is emitted into the
 ##                script where it can be read, exactly as the archive loop beside it is.
 ##   the question Scene File Is Data-Only. It reads the file's own resource table as TEXT and builds
-##                nothing, so asking is safe on a file this game did not write.
+##                nothing, so asking is safe on a file this game did not write. It reads TAGS rather
+##                than lines, because that is what the engine's own parser reads: `type = "Script"`
+##                with spaces around the `=`, and a tag broken over two lines, are the same tag to
+##                the engine, and a reading that went by substring answered true for both while the
+##                script they name loaded. And it refuses EVERY `ext_resource` that points outside
+##                res://, not only the scripts - a scene may name another scene or a `.tres`, each
+##                with a table of its own that this reading does not open.
 ##
 ## THE EDITOR HAS ITS OWN TWIN, and the two are deliberately separate rows. Editor Tools ▸ Save Node
 ## As Scene packs the node you are EDITING, from a Tool sheet, with the editor's own owners already
@@ -467,7 +473,7 @@ static func _scene_files() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SceneFileIsDataOnly", "Scene File Is Data-Only", ACEDescriptor.ACEType.CONDITION, "%s({path})" % SceneTrust.HELPER_NAME, "", [
 		F.make_param("path", "String", "\"user://built_level.tscn\"", "Scene File", "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.", "file_path")
 	], "Files", "scene file {path} is data-only")
-		.described("True when a scene file names no code: no script written inside it, and no script it points at from anywhere but res://. It reads the file's own resource table as text and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. It reads the ONE file you name: a scene that file points at is a separate file with a table of its own.").featured())
+		.described("True when a scene file brings nothing in from outside the game: no script written inside it, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared.").featured())
 	return descriptors
 
 

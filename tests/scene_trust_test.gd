@@ -162,6 +162,16 @@ static func _test_the_owner_walk() -> bool:
 
 ## The scene files this test writes, each one a real `.tscn` a project could have on disk.
 const DATA_ONLY_SCENE: String = "[gd_scene format=3]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+## The crafted spellings. Godot's own parser TOKENISES a tag, so each of these loads the script it
+## names while a reading built on `contains("type=\"Script\"")` answers true about it.
+const SPACED_EQUALS_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type = \"Script\" path = \"user://_scene_trust_test/mod.gd\" id = \"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
+const TAG_OVER_TWO_LINES_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource\ntype=\"Script\" path=\"user://_scene_trust_test/mod.gd\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
+const CLIMBING_OUT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://../payload.gd\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const OTHER_LANGUAGE_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"CSharpScript\" path=\"user://_scene_trust_test/mod.cs\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const NESTED_SCENE_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"PackedScene\" path=\"user://_scene_trust_test/inner.tscn\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const NESTED_RESOURCE_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Resource\" path=\"user://_scene_trust_test/loot.tres\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const UNCLOSED_TAG_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://player.gd\" id=\"1_a\"\n"
+const PROJECT_SCENE_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"PackedScene\" path=\"res://enemy.tscn\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
 const OUTSIDE_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"user://_scene_trust_test/mod.gd\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
 const PROJECT_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" uid=\"uid://abc\" path=\"res://player.gd\" id=\"1_a\"]\n\n[node name=\"Player\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
 const EMBEDDED_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[sub_resource type=\"GDScript\" id=\"1_a\"]\nscript/source = \"extends Node2D\"\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = SubResource(\"1_a\")\n"
@@ -192,6 +202,34 @@ static func _test_the_question_answers() -> bool:
 	ok = _check("and a file that is not there answers false - unreadable is not cleared",
 		asking.call(EventForgeSceneTrust.HELPER_NAME,
 			"%s/nothing_here.tscn" % TEST_DIR), false) and ok
+
+	# THE CRAFTED SPELLINGS. The threat this question exists for is a HAND-WRITTEN file, so "Godot
+	# writes it the other way" is not an answer: every one of these parses as the tag it looks like
+	# and loads the script it names.
+	ok = _check("spaces around the equals do not get a script past it",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("spaced_equals.tscn", SPACED_EQUALS_SCENE)), false) and ok
+	ok = _check("nor does a tag broken over two lines",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("two_line_tag.tscn", TAG_OVER_TWO_LINES_SCENE)), false) and ok
+	ok = _check("a res:// path that climbs out of the project is not the project's own",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("climbing_out.tscn", CLIMBING_OUT_SCENE)), false) and ok
+	ok = _check("a script in the engine's other language is a script",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("other_language.tscn", OTHER_LANGUAGE_SCENE)), false) and ok
+	ok = _check("a scene pointing at another scene outside the game answers false",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("nested_scene.tscn", NESTED_SCENE_SCENE)), false) and ok
+	ok = _check("and at a resource file outside the game too",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("nested_resource.tscn", NESTED_RESOURCE_SCENE)), false) and ok
+	ok = _check("a tag that never closes is unfamiliar, and unfamiliar is not cleared",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("unclosed_tag.tscn", UNCLOSED_TAG_SCENE)), false) and ok
+	ok = _check("while a scene naming the game's OWN scenes is the game running",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("project_scene.tscn", PROJECT_SCENE_SCENE)), true) and ok
 	return ok
 
 
@@ -295,6 +333,13 @@ const ASKED_ABOUT_ANOTHER: String = "extends Node\n\n\nfunc _ready() -> void:\n\
 const SHIPPED_SCENE: String = "extends Node\n\n\nfunc _ready() -> void:\n\tget_tree().change_scene_to_file(\"res://levels/one.tscn\")\n"
 const BUILT_PATH: String = "extends Node\n\n\nfunc _ready() -> void:\n\tadd_child(load(chosen_path).instantiate())\n"
 const NOT_A_SCENE_FILE: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar table = load(\"user://mods/loot.tres\")\n"
+## A question MENTIONED is not a question ANSWERED. Both of these run the build on exactly the files
+## the question refused, so both are the unguarded build they look like.
+const GUARD_INVERTED: String = "extends Node\n\n\nfunc _ready() -> void:\n\tif not __eventsheets_scene_is_data_only(\"user://mods/level.tscn\"):\n\t\tadd_child(load(\"user://mods/level.tscn\").instantiate())\n"
+const GUARD_ORED_AWAY: String = "extends Node\n\n\nfunc _ready() -> void:\n\tif debug_mode or __eventsheets_scene_is_data_only(\"user://mods/level.tscn\"):\n\t\tadd_child(load(\"user://mods/level.tscn\").instantiate())\n"
+## Travelling to a layout builds it the same way any loader does, and the tree's own method is how
+## every project writes it.
+const TRAVELLED_TO: String = "extends Node\n\n\nfunc _ready() -> void:\n\tget_tree().change_scene_to_file(\"user://mods/level.tscn\")\n"
 
 
 static func _test_the_doctors_reading() -> bool:
@@ -311,6 +356,16 @@ static func _test_the_doctors_reading() -> bool:
 		EventSheetFilesDoctor.untrusted_scene_lines(BUILT_PATH).size(), 0) and ok
 	ok = _check("and a file that is not a scene is a different question",
 		EventSheetFilesDoctor.untrusted_scene_lines(NOT_A_SCENE_FILE).size(), 0) and ok
+	ok = _check("a question asked and then INVERTED guards nothing",
+		EventSheetFilesDoctor.untrusted_scene_lines(GUARD_INVERTED).size(), 1) and ok
+	ok = _check("nor does one standing beside an or",
+		EventSheetFilesDoctor.untrusted_scene_lines(GUARD_ORED_AWAY).size(), 1) and ok
+	ok = _check("and travelling to a layout in the player's folder is a build like any other",
+		EventSheetFilesDoctor.untrusted_scene_lines(TRAVELLED_TO),
+		PackedStringArray(["get_tree().change_scene_to_file(\"user://mods/level.tscn\")"])) and ok
+	ok = _check("a loader of somebody's own is not the engine's",
+		EventForgeSceneTrust.untrusted_scene_paths(
+			"var s = MyResourceLoader.load(\"user://mods/level.tscn\")").size(), 0) and ok
 
 	var filed: Array[Dictionary] = EventSheetFilesDoctor.untrusted_scene_findings(
 		{"res://mods.gd": UNASKED})
@@ -371,6 +426,18 @@ static func _test_the_row_state_and_its_door() -> bool:
 	var nested: EventSheetResource = _sheet_that_asks_above_and_builds_below()
 	ok = _check("a question on the event above guards the sub-event under it",
 		EventSheetSceneTrustFindings.findings(nested, "res://mods.gd").size(), 0) and ok
+
+	# The same sheet with the same question INVERTED: the body then runs on exactly the files the
+	# question refused, so the amber state is earned again. The canvas and the Doctor read the guard
+	# through one function, which is what keeps these two answers the same answer.
+	var flipped: EventSheetResource = _sheet_that_asks_above_and_builds_below()
+	((flipped.events[0] as EventRow).conditions[0] as ACECondition).negated = true
+	ok = _check("but the same question, inverted, guards nothing",
+		EventSheetSceneTrustFindings.findings(flipped, "res://mods.gd").size(), 1) and ok
+	var turned_off: EventSheetResource = _sheet_that_asks_above_and_builds_below()
+	((turned_off.events[0] as EventRow).conditions[0] as ACECondition).enabled = false
+	ok = _check("and a question that is turned off asks nothing at all",
+		EventSheetSceneTrustFindings.findings(turned_off, "res://mods.gd").size(), 1) and ok
 	return ok
 
 
