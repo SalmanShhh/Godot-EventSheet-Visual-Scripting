@@ -230,6 +230,12 @@ static func helper_head() -> String:
 ##
 ## A TRUE ANSWER IS ABOUT THIS FILE AND THE PLACES IT NAMES. It does not open the res:// files it
 ## points at, because those are the game's own - which is what a game IS.
+##
+## THE `uid=` ATTRIBUTE IS NOT READ, and does not need to be. Godot's text loader prefers a uid over
+## the path beside it, but a uid only resolves through the project's own registry - which is built
+## from the project's own files - so a tag whose PATH is under res:// names this project's code
+## whichever of the two the engine follows, and a tag whose path is not answers false before the
+## question of which one wins can arise.
 static func helper_body() -> Array:
 	return [
 		"	var scene_text: String = FileAccess.get_file_as_string(scene_path)",

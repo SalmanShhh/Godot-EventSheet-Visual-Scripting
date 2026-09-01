@@ -17,7 +17,8 @@ var _viewport: EventSheetViewport = null
 
 func _init() -> void:
 	root.title = "Layout On Top"
-	root.size = Vector2i(1152, 648)
+	root.size = Vector2i(1152, 700)
+	DisplayServer.window_set_size(Vector2i(1152, 700))
 	var base := Color("#252525")
 	var background: ColorRect = ColorRect.new()
 	background.color = base.darkened(0.25)
@@ -29,7 +30,7 @@ func _init() -> void:
 	# the ends of the very lines this preview exists to show.
 	var columns: VBoxContainer = VBoxContainer.new()
 	columns.position = Vector2(8, 8)
-	columns.size = Vector2(1136, 632)
+	columns.size = Vector2(1136, 684)
 	columns.add_theme_constant_override("separation", 6)
 	root.add_child(columns)
 
