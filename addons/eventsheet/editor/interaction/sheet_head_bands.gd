@@ -44,6 +44,11 @@ const BAND_MODES: String = "modes"
 const BAND_STATES: String = "states"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
+## The one counting line a sheet gets when some of its rows have a newer spelling. It stands for no
+## line of the file - it is derived from the rows themselves - and it is the ONLY place in the sheet
+## that says so: the sentences and the doors belong to the selected row's help strip and to the
+## Doctor, and a sheet with nothing to migrate grows no band at all.
+const BAND_MIGRATION: String = "migration"
 const BAND_ATTACH: String = "attach"
 
 ## The row that plays one animation with another queued behind it, and the parameter holding the one
@@ -60,7 +65,7 @@ const ORDER: PackedStringArray = [
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_SPAWNS,
 	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
 	BAND_COLLISIONS, BAND_FILES,
-	BAND_MODES, BAND_STATES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
+	BAND_MODES, BAND_STATES, BAND_REMEMBER, BAND_INCLUDE, BAND_MIGRATION, BAND_ATTACH,
 ]
 
 ## The bands that come from the SCENE rather than from the file, and the key each
@@ -106,6 +111,7 @@ const LEADERS: Dictionary = {
 	BAND_STATES: "states",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
+	BAND_MIGRATION: "migration",
 	BAND_ATTACH: "attach",
 }
 
@@ -147,6 +153,11 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 		"class_name": "", "file_name": "", "extends": "", "icon": "", "tool": false,
 		"description": "", "autoload": "", "source_path": "", "host": "",
 		"remembered": PackedStringArray(), "includes": PackedStringArray(), "attached": attached,
+		# {count, since} - how many of this sheet's rows have a newer spelling, and the version the
+		# project's record says they were written under. Left empty here because it is not a fact
+		# about the FILE: it is counted from the rows by whoever is already walking them, and
+		# handed in beside these.
+		"migration": {},
 	}
 	for raw_line: String in scaffold_code.split("\n"):
 		var line: String = raw_line.strip_edges()
@@ -500,6 +511,19 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 			# No echo: an include is merged into this sheet at compile time rather than written as a
 			# line of it, and a band never invents a line the file does not have.
 			return _make(kind, ", ".join(names), "")
+		BAND_MIGRATION:
+			# Derived, never stored: the count comes from the rows of this sheet, and the version
+			# comes from the project's own one-line record. A project that has never carried the
+			# record still gets the band - it just stops short of naming a version.
+			var migration: Variant = head_facts.get("migration", {})
+			if not (migration is Dictionary):
+				return {}
+			var counted: String = EventForgeVocabularyRecord.band_reading(migration as Dictionary)
+			if counted.is_empty():
+				return {}
+			# No echo: nothing in the file says this, and a band never invents a line the file
+			# does not have.
+			return _make(kind, counted, "")
 		BAND_ATTACH:
 			if bool(head_facts.get("attached", true)):
 				return {}

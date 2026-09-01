@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,场景文件只有数据
 scene file {path} is data-only,场景文件 {path} 只有数据
 Scene File,场景文件
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.",要读的场景文件。它按文本读取，里面的东西一个也不构建，所以对任何来路的文件问这个问题都是安全的。缺失的文件、读不了的文件，或者以这里读不了的二进制形式保存的文件，都回答假 - 读不了的文件不等于已经查明干净的文件。
+newer spelling: %s,更新的写法：%s
+1 row has a newer spelling,1 行有更新的写法
+%d rows have a newer spelling,%d 行有更新的写法
+"1 row has a newer spelling, since %s",1 行有更新的写法，自 %s 起
+"%d rows have a newer spelling, since %s",%d 行有更新的写法，自 %s 起

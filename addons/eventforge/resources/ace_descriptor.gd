@@ -66,6 +66,31 @@ var looping_iterator: String = "item"
 ## category (the event-sheet "highlight"). Set inline via `.featured()`.
 @export var is_featured: bool = false
 
+## THE FORWARDING ADDRESS - where the newer spelling of this verb lives, and nothing else.
+##
+## A superseded verb carries exactly three facts, because those are exactly the three a rewritten
+## row needs to be COMPLETE the moment it lands, and a fourth would turn a forwarding address into a
+## scripting language for edits:
+##   - `successor_ace_id`         the "<provider>::<ace_id>" that replaced this one;
+##   - `successor_param_renames`  what this row's parameters are called over there ({old: new});
+##   - `successor_param_defaults` a value for each parameter the old row never had ({new: value}).
+## A parameter the successor does not have is simply not carried; a parameter whose name did not
+## change needs no entry.
+##
+## SET AT CONSTRUCTION, NEVER AFTER. Descriptors are normalized once and shared for the whole
+## session, so this is filled by `.succeeded_by(...)` on the builder call (or, for a pack, by the
+## `## @ace_succeeded_by(...)` annotation as its definition is generated) and read as plain data
+## everywhere else - the picker, the sheet's help strip, the Doctor and the migrate dialog all read
+## this one source rather than each keeping a table of their own.
+##
+## IT IS NOT DEPRECATION, and the two are deliberately separate. A verb may be superseded and still
+## be a perfectly ordinary thing to have written; a verb may be deprecated with nowhere to go.
+## `.deprecated()` hides a verb from the picker; this says only where the newer spelling lives, and
+## the old row keeps compiling byte-for-byte either way.
+@export var successor_ace_id: String = ""
+@export var successor_param_renames: Dictionary = {}
+@export var successor_param_defaults: Dictionary = {}
+
 ## PROJECT-SCOPED: this row's choices come out of the open project, not out of this vocabulary. A
 ## shader dial is the case it exists for - only a `.gdshader` can say what its dials are called, and
 ## the whole point of the row is that the reader never types that name. Set inline via
@@ -204,6 +229,36 @@ func deprecated(message: String = "", replacement: String = "") -> ACEDescriptor
 	deprecation_message = message
 	replacement_ace_id = replacement
 	return self
+
+
+## Names the verb that replaced this one, and returns self so it chains after make_descriptor like
+## .described(): `F.make_descriptor(...).succeeded_by("Core::GoToState", {"next": "state"})`.
+##
+## `param_renames` is {old param id: new param id} - only the ones whose NAME changed.
+## `new_param_defaults` is {new param id: value} for parameters the old row never had, so the
+## rewritten row lands complete rather than half-filled. Neither is required.
+##
+## Nothing about this verb changes: it keeps its id, its template and its place in the picker, and
+## every sheet already using it compiles exactly as before. The address is read, never followed, by
+## anything but an edit a person approved.
+func succeeded_by(new_ace_id: String, param_renames: Dictionary = {}, new_param_defaults: Dictionary = {}) -> ACEDescriptor:
+	successor_ace_id = new_ace_id.strip_edges()
+	successor_param_renames = param_renames.duplicate(true)
+	successor_param_defaults = new_param_defaults.duplicate(true)
+	return self
+
+
+## This verb's forwarding address as the one dictionary every reader takes - {"id", "renames",
+## "defaults"} - or {} when the verb has not been superseded. The same three keys the annotation
+## route produces, so a built-in and a pack verb are answered identically.
+func successor_map() -> Dictionary:
+	if successor_ace_id.strip_edges().is_empty():
+		return {}
+	return {
+		"id": successor_ace_id.strip_edges(),
+		"renames": successor_param_renames.duplicate(true),
+		"defaults": successor_param_defaults.duplicate(true),
+	}
 
 
 ## A one-line "[Deprecated] …" note for hover/tooltips, or "" when not deprecated. Defined once here so the

@@ -2829,6 +2829,12 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		lines.append("## @ace_category(\"%s\")" % category)
 	if not event_function.description.strip_edges().is_empty():
 		lines.append("## @ace_description(\"%s\")" % event_function.description.strip_edges())
+	# Where the newer spelling of this verb lives, when it has been superseded - said right after what
+	# it does, because "and this is what to write now" is the next thing a reader wants. Keys are
+	# sorted so the line is the same on every machine.
+	var forwarding: String = _successor_annotation(event_function)
+	if not forwarding.is_empty():
+		lines.append(forwarding)
 	# A readable sentence for the row (and the picker), with {param} slots - emitted right after the
 	# description so the block round-trips in a stable order.
 	if not event_function.display_template.strip_edges().is_empty():
@@ -2876,6 +2882,38 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		# no node paths (the whole point of an autoload).
 		call_prefix = "%s." % sheet.autoload_singleton_name()
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
+
+
+## One published verb's forwarding address as the single line the file carries, or "" when the verb
+## has not been superseded:
+##   ## @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)
+## The two lists are |-separated so commas keep separating the sections, and both are written in
+## sorted key order - emission is deterministic, so two machines compiling the same sheet write the
+## same byte. A section with nothing in it is left off entirely rather than written empty.
+static func _successor_annotation(event_function: EventFunction) -> String:
+	var successor_id: String = event_function.successor_ace_id.strip_edges()
+	if successor_id.is_empty():
+		return ""
+	var parts: PackedStringArray = PackedStringArray([successor_id])
+	var renames: String = _successor_pairs(event_function.successor_param_renames)
+	if not renames.is_empty():
+		parts.append("renames: %s" % renames)
+	var defaults: String = _successor_pairs(event_function.successor_param_defaults)
+	if not defaults.is_empty():
+		parts.append("defaults: %s" % defaults)
+	return "## @ace_succeeded_by(%s)" % ", ".join(parts)
+
+
+## One half of that line - `a=b|c=d`, keys sorted - or "" for an empty map.
+static func _successor_pairs(pairs: Dictionary) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for name: Variant in pairs.keys():
+		names.append(str(name))
+	names.sort()
+	var written: PackedStringArray = PackedStringArray()
+	for name: String in names:
+		written.append("%s=%s" % [name, str(pairs[name])])
+	return "|".join(written)
 
 
 ## One dropdown option, in the form the provider scanner reads back out of the emitted pack.

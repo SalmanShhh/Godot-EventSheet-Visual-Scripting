@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,Il file di scena contiene solo dati
 scene file {path} is data-only,il file di scena {path} contiene solo dati
 Scene File,File di scena
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.","Il file di scena da leggere. Viene letto come TESTO e nulla al suo interno viene costruito, quindi fare questa domanda su un file di qualunque provenienza è sicuro. Un file mancante, illeggibile, o salvato nella forma binaria che questo non sa leggere risponde falso - un file illeggibile non è un file di cui si sia accertata la pulizia."
+newer spelling: %s,dicitura più recente: %s
+1 row has a newer spelling,1 riga ha una dicitura più recente
+%d rows have a newer spelling,%d righe hanno una dicitura più recente
+"1 row has a newer spelling, since %s","1 riga ha una dicitura più recente, da %s"
+"%d rows have a newer spelling, since %s","%d righe hanno una dicitura più recente, da %s"

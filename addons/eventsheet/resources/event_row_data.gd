@@ -55,6 +55,12 @@ var attention_note: String = ""
 # deriving anything of its own - the join happened once, when the sheet was built. Empty = nothing
 # wrong. View-only and recomputed per rebuild, never serialized.
 var attention_findings: Array[Dictionary] = []
+# The muted "newer spelling: …" hintline for a row whose verb has been superseded. Deliberately NOT
+# the amber state and deliberately nothing in the sheet: a row written in the older spelling is not
+# wrong, it still compiles byte for byte, and the only place it is mentioned is the help strip once
+# the row is selected - where it reads muted, beside nothing. "" = this row's verb is the current one
+# (which is nearly every row of nearly every sheet). View-only, recomputed per rebuild.
+var successor_hint: String = ""
 # Live event trace: true while this event is in the latest streamed "fired" frame - a transient
 # highlight so you can watch which events fire in real time during a debug run.
 var firing: bool = false

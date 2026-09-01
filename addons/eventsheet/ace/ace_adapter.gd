@@ -31,6 +31,11 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		"deprecated": descriptor.is_deprecated,
 		"deprecation_note": descriptor.deprecation_note(),
 		"replacement_ace_id": descriptor.replacement_ace_id,
+		# The forwarding address, when this verb has one. Deliberately a separate channel from
+		# deprecation: a superseded verb may be perfectly ordinary to have written, and a deprecated
+		# one may have nowhere to go. Read back through EventForgeSuccessors, which answers the same
+		# question for a pack verb whose map arrived by annotation.
+		"successor": descriptor.successor_map(),
 		# Featured (the everyday-verb highlight) rides the same metadata channel.
 		"featured": descriptor.is_featured,
 		# And so does "the project names this row's choices": the picker offers the copies it built

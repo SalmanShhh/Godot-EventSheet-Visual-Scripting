@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,Szenendatei enthält nur Daten
 scene file {path} is data-only,Szenendatei {path} enthält nur Daten
 Scene File,Szenendatei
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.","Die zu lesende Szenendatei. Sie wird als TEXT gelesen und nichts darin wird aufgebaut, sodass diese Frage bei einer Datei von überall her sicher ist. Eine Datei, die fehlt, unlesbar ist oder in der binären Form gespeichert wurde, die dies nicht lesen kann, antwortet mit falsch - eine unlesbare Datei ist keine Datei, die als sauber erwiesen wurde."
+newer spelling: %s,neuere Schreibweise: %s
+1 row has a newer spelling,1 Zeile hat eine neuere Schreibweise
+%d rows have a newer spelling,%d Zeilen haben eine neuere Schreibweise
+"1 row has a newer spelling, since %s","1 Zeile hat eine neuere Schreibweise, seit %s"
+"%d rows have a newer spelling, since %s","%d Zeilen haben eine neuere Schreibweise, seit %s"

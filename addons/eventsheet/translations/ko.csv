@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,씬 파일이 데이터뿐이다
 scene file {path} is data-only,씬 파일 {path} 이 데이터뿐이다
 Scene File,씬 파일
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.","읽을 씬 파일. 텍스트로 읽고 그 안의 어떤 것도 만들지 않으므로, 어디서 온 파일이든 이 질문을 하는 것은 안전합니다. 없는 파일, 읽을 수 없는 파일, 또는 이것이 읽지 못하는 바이너리 형식으로 저장된 파일은 거짓을 답합니다. 읽을 수 없는 파일은 깨끗하다고 확인된 파일이 아닙니다."
+newer spelling: %s,새로운 표현: %s
+1 row has a newer spelling,1개 행에 새로운 표현이 있습니다
+%d rows have a newer spelling,%d개 행에 새로운 표현이 있습니다
+"1 row has a newer spelling, since %s","1개 행에 새로운 표현이 있습니다, %s 이후"
+"%d rows have a newer spelling, since %s","%d개 행에 새로운 표현이 있습니다, %s 이후"

@@ -9,6 +9,7 @@ extends RefCounted
 const KNOWN_ANNOTATIONS := {
 	"@ace_hidden": true,
 	"@ace_deprecated": true,
+	"@ace_succeeded_by": true,
 	"@ace_category": true,
 	"@ace_name": true,
 	"@ace_description": true,
@@ -335,6 +336,15 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 				overrides["deprecation_message"] = _unquoted(deprecation_parts[0]) if deprecation_parts.size() > 0 else ""
 				if deprecation_parts.size() > 1:
 					overrides["replacement_ace_id"] = _unquoted(deprecation_parts[1])
+			"@ace_succeeded_by":
+				# `## @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` -
+				# the forwarding address: where the newer spelling of this verb lives, what this row's
+				# parameters are called over there, and a value for any parameter the old row never
+				# had. Three facts and no more, and none of them changes what this verb does - it keeps
+				# its id and its template, and every sheet already using it compiles exactly as before.
+				# The pairs are |-separated so commas stay free to separate the sections, the way
+				# `@ace_param`'s options list does.
+				overrides["successor"] = _parse_successor_spec(_extract_annotation_parens_raw(directive))
 			"@ace_category":
 				overrides["category"] = _extract_annotation_value(directive)
 			"@ace_name":
@@ -422,6 +432,61 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 		# should differ from the code documentation.
 		overrides["description"] = " ".join(doc_lines).strip_edges()
 	return overrides
+
+
+## One `@ace_succeeded_by(<id>, renames: a=b|c=d, defaults: e=1.0)` spec, as the three-key map every
+## reader of a forwarding address takes: {"id", "renames", "defaults"}. {} when no successor is
+## named, because an address with no destination is not an address.
+##
+## The successor id leads and may be written `Core::GoToState` or `id: Core::GoToState` - the second
+## spelling reads better in a long line and means exactly the same thing. Values are taken verbatim
+## apart from surrounding quotes, so a default that is a string literal keeps its quotes in the
+## emitted code and one that is a number stays a number.
+func _parse_successor_spec(spec: String) -> Dictionary:
+	var segments: Array[String] = _split_outside_quotes(spec, ",")
+	if segments.is_empty():
+		return {}
+	var successor_id: String = segments[0].strip_edges()
+	if successor_id.begins_with("id:") or successor_id.begins_with("id="):
+		successor_id = successor_id.substr(3).strip_edges()
+	elif successor_id.begins_with("renames:") or successor_id.begins_with("defaults:"):
+		# An annotation that opens with one of the lists names no successor at all, and a rename with
+		# nowhere to send it is not a forwarding address.
+		return {}
+	successor_id = _unquoted(successor_id)
+	if successor_id.is_empty():
+		return {}
+	var renames: Dictionary = {}
+	var defaults: Dictionary = {}
+	for segment_index in range(1, segments.size()):
+		var segment: String = segments[segment_index]
+		var colon_index: int = segment.find(":")
+		if colon_index == -1:
+			continue
+		var key: String = segment.substr(0, colon_index).strip_edges()
+		var pairs: Dictionary = _parse_successor_pairs(segment.substr(colon_index + 1))
+		match key:
+			"renames":
+				renames.merge(pairs, true)
+			"defaults":
+				defaults.merge(pairs, true)
+	return {"id": successor_id, "renames": renames, "defaults": defaults}
+
+
+## The `a=b|c=d` half of a successor spec as a dictionary. A pair with no `=`, or with an empty left
+## side, is skipped rather than guessed at.
+func _parse_successor_pairs(text: String) -> Dictionary:
+	var pairs: Dictionary = {}
+	for raw_pair: String in _split_outside_quotes(text, "|"):
+		var equals_index: int = raw_pair.find("=")
+		if equals_index <= 0:
+			continue
+		var left: String = raw_pair.substr(0, equals_index).strip_edges()
+		var right: String = raw_pair.substr(equals_index + 1).strip_edges()
+		if left.is_empty():
+			continue
+		pairs[left] = right
+	return pairs
 
 
 ## Fills the param_hints/param_options/param_autocomplete/param_descriptions channels

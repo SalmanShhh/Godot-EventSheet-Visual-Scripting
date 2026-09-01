@@ -7189,6 +7189,10 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	# an event, a variable's declaration, a message's function head.
 	var found: Array[Dictionary] = row_data.attention_findings
 	if found.is_empty():
+		# Nothing is wrong with this row - but the verb in it may have a newer spelling, which is a
+		# different kind of thing to say and is said differently: muted, with no door and no colour,
+		# because the row is not a problem and neither is leaving it exactly as it is.
+		_show_successor_hint(row_data)
 		return
 	_row_help_label.text = row_data.attention_note
 	_row_help_label.tooltip_text = _row_help_label.text
@@ -7202,6 +7206,21 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	var label: String = str(_row_help_finding.get("fix_label", ""))
 	_row_help_button.text = label
 	_row_help_button.visible = not label.is_empty()
+
+
+## The muted half of the same strip: "newer spelling: Go to state", for a selected row whose verb has
+## been superseded. It carries no door - following an address is an edit somebody approves, and the
+## place that offers it is the head band's migrate dialog, not a button under one row - and it wears
+## the strip's ordinary muted colour rather than the warning one, because a row written in the older
+## spelling is not a warning. A row with a finding never reaches here: something being wrong outranks
+## something being older.
+func _show_successor_hint(row_data: EventRowData) -> void:
+	if row_data.successor_hint.is_empty():
+		return
+	_row_help_label.text = row_data.successor_hint
+	_row_help_label.tooltip_text = _row_help_label.text
+	_row_help_label.modulate = EventSheetActiveTheme.reading().muted_text_color
+	_row_help_label.visible = true
 
 
 ## The help strip's door was clicked. The finding's family tag says whose door it is: a collision

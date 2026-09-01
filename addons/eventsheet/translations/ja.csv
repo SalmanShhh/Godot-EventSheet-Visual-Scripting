@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,シーンファイルがデータだけである
 scene file {path} is data-only,シーンファイル {path} がデータだけである
 Scene File,シーンファイル
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.",読み取るシーンファイル。テキストとして読まれ、中身は何も組み立てられないので、どこから来たファイルについて尋ねても安全です。存在しないファイル、読めないファイル、これが読めないバイナリ形式で保存されたファイルは偽を返します。読めないファイルは、きれいだと確かめられたファイルではありません。
+newer spelling: %s,新しい書き方: %s
+1 row has a newer spelling,1 行に新しい書き方があります
+%d rows have a newer spelling,%d 行に新しい書き方があります
+"1 row has a newer spelling, since %s",1 行に新しい書き方があります（%s 以降）
+"%d rows have a newer spelling, since %s",%d 行に新しい書き方があります（%s 以降）

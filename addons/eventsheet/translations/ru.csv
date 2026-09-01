@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,Файл сцены содержит только дан
 scene file {path} is data-only,файл сцены {path} содержит только данные
 Scene File,Файл сцены
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.","Файл сцены для чтения. Он читается как ТЕКСТ, и ничего в нём не строится, поэтому задавать этот вопрос о файле откуда угодно безопасно. Отсутствующий файл, нечитаемый файл или файл, сохранённый в двоичной форме, которую это прочесть не может, отвечают ложью - нечитаемый файл это не файл, про который доказано, что он чист."
+newer spelling: %s,новое написание: %s
+1 row has a newer spelling,1 строка имеет новое написание
+%d rows have a newer spelling,%d строк имеют новое написание
+"1 row has a newer spelling, since %s","1 строка имеет новое написание, с %s"
+"%d rows have a newer spelling, since %s","%d строк имеют новое написание, с %s"

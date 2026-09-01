@@ -651,6 +651,10 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	# The half of the head that comes from the SCENE: what keeps this object in step, and which
 	# spawner can make it. Read, never stored, so a project with no scenes gains no bands at all.
 	head_facts.merge(EventSheetHeadBands.scene_facts(sheet), true)
+	# And the one fact the head reads out of the ROWS rather than out of the file or the scene: how
+	# many of them are written in a spelling the vocabulary has since replaced. Counted here, said as
+	# one line, and said NOWHERE else - the rows themselves stay exactly as they look.
+	head_facts["migration"] = EventForgeVocabularyRecord.band_facts(_rows_with_a_newer_spelling(sheet))
 	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
 		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
@@ -6586,6 +6590,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# sentence is read in the Doctor's inbox and in the help strip once the row is selected, and a
 	# sheet with nothing wrong grows nothing at all.
 	_stamp_attention(row_data, _findings_about(event_row))
+	# And the one other thing a row can say about itself: that the verb written in it has a newer
+	# spelling. That is not a finding and wears no colour - the row is not wrong and compiles exactly
+	# as it always did - so it stamps a muted hintline the help strip reads once the row is selected,
+	# and nothing whatsoever in the sheet.
+	_stamp_successor_hint(row_data, event_row)
 	# Event-row spans are the expensive part of building a sheet, so they are built
 	# lazily via _ensure_event_spans() only when a row is laid out/hit-tested. The
 	# line count (which drives row height/metrics) is computed cheaply up front so
@@ -9222,6 +9231,109 @@ func _tagged(family: String, found: Array[Dictionary]) -> Array[Dictionary]:
 		carried["family"] = family
 		tagged.append(carried)
 	return tagged
+
+
+## How many of a sheet's events hold a verb the vocabulary has since replaced - the whole of what the
+## head's migration band says, and the only place in the sheet the fact appears at all.
+##
+## Counted over the rows themselves rather than remembered anywhere, which is what makes the band
+## true in a project that has never carried the version record: the record only adds the "since"
+## half. An event is counted ONCE however many superseded verbs it holds, because the band counts
+## rows a reader would go and look at.
+func _rows_with_a_newer_spelling(sheet: EventSheetResource) -> int:
+	if sheet == null or _viewport == null:
+		return 0
+	var counted: int = _count_newer_spellings(sheet.events)
+	for function: Variant in sheet.functions:
+		if function != null and function.get("events") is Array:
+			counted += _count_newer_spellings(function.get("events") as Array)
+	return counted
+
+
+## The same count over one run of rows, following groups and sub-events down.
+func _count_newer_spellings(rows: Array) -> int:
+	var counted: int = 0
+	for row: Variant in rows:
+		if row is EventRow:
+			var event_row: EventRow = row
+			if not _successor_hint_of(event_row).is_empty():
+				counted += 1
+			counted += _count_newer_spellings(event_row.sub_events)
+		elif row != null and row.get("events") is Array:
+			counted += _count_newer_spellings(row.get("events") as Array)
+	return counted
+
+
+## The muted "newer spelling: …" hintline, when a verb in this row has been superseded.
+##
+## THE FIRST verb of the row that has a forwarding address wins, in reading order (the trigger, then
+## the conditions, then the actions) - a row rarely has two, and naming both in one muted line would
+## turn a hint into a list. The address itself comes from the shipped vocabulary rather than from
+## anything stored on the row, so a verb that gains a successor tomorrow is answered by every sheet
+## already written without any of them being touched.
+func _stamp_successor_hint(row_data: EventRowData, event_row: EventRow) -> void:
+	row_data.successor_hint = _successor_hint_of(event_row)
+
+
+## One event's hintline, or "" when every verb in it is the current spelling. The band's count and
+## the strip's words are the same reading, asked once each, so they can never disagree about which
+## rows have moved on.
+func _successor_hint_of(event_row: EventRow) -> String:
+	if event_row == null or _viewport == null:
+		return ""
+	for candidate: Array in _successor_candidates(event_row):
+		var hint: String = _successor_hint_for(str(candidate[0]), str(candidate[1]))
+		if not hint.is_empty():
+			return hint
+	return ""
+
+
+## Every verb this row names, in reading order, as [provider_id, ace_id] pairs. The trigger leads
+## because it leads the sentence.
+func _successor_candidates(event_row: EventRow) -> Array[Array]:
+	var named: Array[Array] = []
+	if not event_row.trigger_id.strip_edges().is_empty():
+		named.append([event_row.trigger_provider_id, event_row.trigger_id])
+	for condition: Variant in event_row.conditions:
+		if condition is ACECondition:
+			named.append([(condition as ACECondition).provider_id, (condition as ACECondition).ace_id])
+	for action: Variant in event_row.actions:
+		if action is ACEAction:
+			named.append([(action as ACEAction).provider_id, (action as ACEAction).ace_id])
+	return named
+
+
+## One verb's hintline, or "" when it has not been superseded. The successor is named by its DISPLAY
+## NAME, not by its id: the reader is being told what to write, and what they would write is the row
+## they would pick out of the picker.
+##
+## The chain is walked to its END through the editor's own registry - a verb superseded twice names
+## the verb a reader should actually write today, not the one that briefly stood in between - and a
+## chain that leaves the installed vocabulary, or comes back on itself, says nothing at all rather
+## than sending anybody to an address nobody is at.
+func _successor_hint_for(provider_id: String, ace_id: String) -> String:
+	var here: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
+	if here == null or EventForgeSuccessors.map_of(here).is_empty():
+		return ""
+	var seen: Dictionary = {here.get_identifier(): true}
+	var newest: ACEDefinition = null
+	for _hop: int in range(EventForgeSuccessors.MAX_HOPS):
+		var map: Dictionary = EventForgeSuccessors.map_of(here)
+		if map.is_empty():
+			break
+		var next_key: String = str(map[EventForgeSuccessors.KEY_ID])
+		if seen.has(next_key):
+			return ""
+		seen[next_key] = true
+		var address: PackedStringArray = EventForgeSuccessors.split_key(next_key)
+		var next_definition: ACEDefinition = _viewport._find_definition(address[0], address[1])
+		if next_definition == null:
+			return ""
+		newest = next_definition
+		here = next_definition
+	if newest == null:
+		return ""
+	return EventSheetL10n.translate("newer spelling: %s") % EventSheetL10n.translate(newest.display_name)
 
 
 ## The quiet amber state, stamped. The note text is every finding's sentence joined the way the
@@ -13385,6 +13497,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 	slice_row.error_message = row.error_message
 	slice_row.attention_note = row.attention_note
 	slice_row.attention_findings = row.attention_findings
+	slice_row.successor_hint = row.successor_hint
 	slice_row.ternary_view = true
 	slice_row.ternary_anchor_uid = row.row_uid
 	slice_row.action_slice_from = slice_from

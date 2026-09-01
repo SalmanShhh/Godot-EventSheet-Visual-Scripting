@@ -225,6 +225,14 @@ static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Di
 		return
 	if bool(overrides.get("featured", false)):
 		definition.metadata["featured"] = true
+	# The forwarding address (`## @ace_succeeded_by(...)`), carried as the same three-key map a
+	# built-in descriptor's .succeeded_by() produces, so the picker, the sheet's help strip and the
+	# Doctor read one shape whichever half of the vocabulary a verb came from. Set HERE, as the
+	# definition is generated - definitions are cached and shared for the session, so nothing may
+	# write a successor into one afterwards.
+	var successor: Variant = overrides.get("successor", {})
+	if successor is Dictionary and not str((successor as Dictionary).get("id", "")).strip_edges().is_empty():
+		definition.metadata["successor"] = (successor as Dictionary).duplicate(true)
 	if not bool(overrides.get("deprecated", false)):
 		return
 	definition.metadata["deprecated"] = true

@@ -49,9 +49,29 @@ func _init() -> void:
 		print("SPELLING NOTE: %s" % advisory)
 	print("spellings=%d problems=%d" % [EventForgePackSpellings.entries().size(),
 		spelling_problems.size()])
+	# And the FORWARDING ADDRESSES the vocabulary carries, held to the same standard: a verb
+	# succeeded by one nobody has, a chain that comes back to itself, a rename naming a parameter
+	# neither side has, or a successor parameter nothing answers. All four are build errors here
+	# rather than a loop or a blank cell somebody meets with a sheet open.
+	var catalog: Dictionary = EventForgeSuccessors.catalog()
+	var successor_problems: PackedStringArray = EventForgeSuccessors.problems(catalog)
+	for problem: String in successor_problems:
+		print("SUCCESSOR: %s" % problem)
+	print("successors=%d problems=%d" % [_successor_count(catalog), successor_problems.size()])
 	# A red gate must FAIL the invocation: anything checking only the exit code (CI, shell
 	# chains) used to see success even when packs drifted or failed to parse.
-	quit(1 if drifted > 0 or failed > 0 or not spelling_problems.is_empty() else 0)
+	quit(1 if drifted > 0 or failed > 0 or not spelling_problems.is_empty() \
+		or not successor_problems.is_empty() else 0)
+
+
+## How many verbs in the vocabulary carry a forwarding address at all - printed beside the problem
+## count so a gate that stops finding any of them says so instead of reading green.
+func _successor_count(catalog: Dictionary) -> int:
+	var carried: int = 0
+	for key: Variant in catalog.keys():
+		if not EventForgeSuccessors.normalize_map((catalog[key] as Dictionary).get("map", {})).is_empty():
+			carried += 1
+	return carried
 
 
 ## One pack script's round-trip + parse verdict. The .gd is both the sheet and the runtime

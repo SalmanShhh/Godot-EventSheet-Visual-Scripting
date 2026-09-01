@@ -6,6 +6,47 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### A verb that has moved says where it went
+
+- **The forwarding address, on the descriptor.** A superseded verb now carries where its newer
+  spelling lives - `.succeeded_by(\"Core::GoToState\", {\"next\": \"state\"})` on a built-in,
+  `## @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` on a pack. The
+  map says three things and no more: the successor's id, what this row's parameters are called over
+  there, and a value for each parameter the old row never had - exactly enough for a rewritten row to
+  land complete. Set where the descriptor is built, never written into a cached one afterwards.
+- **Nothing about the old verb changes.** Same `ace_id`, same template, same place in the picker, and
+  every sheet already using it compiles byte for byte as it always did. This is not deprecation and
+  the two stay separate: a superseded verb can be a perfectly ordinary thing to have written, and a
+  deprecated one may have nowhere to go.
+- **Chains resolve to the end, cycles are a build error.** A verb superseded twice offers the verb a
+  reader would write today, with the renames composed through the middle. A chain that comes back on
+  itself, names a verb nobody has, renames a parameter neither side has, or leaves a successor
+  parameter unanswered fails `tools/audit_addons.gd` - which now prints `successors=N problems=N` -
+  rather than surprising anybody with a sheet open.
+- **Every address is auto-tested, like a lift entry.** One harness walks every successor map the
+  installed vocabulary carries, builds a row on the old spelling, applies the rewrite, and puts the
+  result through the real emitter and the real compiler: no unfilled slot, every renamed value
+  arrives, the same byte twice, and the compiled file carries that exact line.
+- **The first customer: the State Machine pack.** Its *Go to state* and *Current state is* now point
+  at the object-state *Go To State* and *Is In State*, each with the one parameter it renames. *Time
+  in state* and *On any state change* deliberately point nowhere - the newer family has no expression
+  twin, and a trigger for every switch cannot be forwarded to one that names a single state.
+- **In the sheet, nothing.** A row in the older spelling grows no block, no icon, no badge and no
+  amber: it is not wrong. Selecting it puts one muted line - `newer spelling: Go To State` - on the
+  help strip, with no door beside it.
+
+### Since 0.14, said once at the head
+
+- **One project-level record, and not a byte in any `.gd`.** `eventsheets/project/vocabulary_version`
+  in Project Settings remembers which vocabulary this project's sheets were last edited under. One
+  line, committed, trivially mergeable, written when a sheet is saved from the editor and only when
+  it changes. Nothing about the plugin is written into a sheet's own file, which stays plain
+  GDScript.
+- **The head band is derived from the rows.** A sheet whose rows have a newer spelling grows one
+  counting line at its head - \"3 rows have a newer spelling, since 0.14.0\" - and a sheet that is up
+  to date grows nothing. A project that has never carried the record gets the same band without the
+  version: the record only ever adds the \"since\".
+
 ### The %name is a word the sheet speaks
 
 - **The picker's `%names` section.** The object step of the Add picker opens with the scene-unique

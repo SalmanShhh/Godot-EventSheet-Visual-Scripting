@@ -28,6 +28,7 @@ var previous_state: String = ""
 ## @ace_name("Current state is")
 ## @ace_category("State Machine")
 ## @ace_description("True while the machine is in the given state.")
+## @ace_succeeded_by(Core::InState, renames: state_name=state)
 ## @ace_icon("res://eventsheet_addons/state_machine/icon.svg")
 ## @ace_codegen_template("$StateMachineBehavior.is_in_state({state_name})")
 func is_in_state(state_name: String) -> bool:
@@ -37,6 +38,7 @@ func is_in_state(state_name: String) -> bool:
 ## @ace_name("Go to state")
 ## @ace_category("State Machine")
 ## @ace_description("Switches to the given state and fires On any state change.")
+## @ace_succeeded_by(Core::GoToState, renames: next=state)
 ## @ace_icon("res://eventsheet_addons/state_machine/icon.svg")
 ## @ace_codegen_template("$StateMachineBehavior.set_state({next})")
 func set_state(next: String) -> void:

@@ -41,6 +41,12 @@ static func build() -> bool:
 	is_in_state.ace_display_name = "Current state is"
 	is_in_state.ace_category = "State Machine"
 	is_in_state.description = "True while the machine is in the given state."
+	# The newer spelling of this exact question is the object-state row Is in, which asks about the
+	# object's own declared states instead of a string held in a child node. Same question, same
+	# answer, one parameter renamed - so the address is worth carrying. The verb itself is frozen:
+	# same id, same template, and every sheet already asking it compiles unchanged.
+	is_in_state.successor_ace_id = "Core::InState"
+	is_in_state.successor_param_renames = {"state_name": "state"}
 	is_in_state.params.append(_param("state_name", "String"))
 	var is_in_state_body: EventRow = EventRow.new()
 	is_in_state_body.actions.append(_action("ReturnValue", {"value": "state == state_name"}))
@@ -54,6 +60,16 @@ static func build() -> bool:
 	set_state.ace_display_name = "Go to state"
 	set_state.ace_category = "State Machine"
 	set_state.description = "Switches to the given state and fires On any state change."
+	# And the newer spelling of the switch is Go to state, whose announcement rides the state
+	# variable's own setter rather than this function. One parameter renamed, nothing else to say.
+	#
+	# The other two published verbs deliberately carry NO address, because neither has one that is
+	# honest: Time in state is an expression the object-state family has no twin for (its timed
+	# question is a CONDITION, Is in X for over N seconds, which is a different shape), and On any
+	# state change fires for every switch while On entering / On leaving each name one state - so
+	# forwarding it would mean inventing a state the old row never named.
+	set_state.successor_ace_id = "Core::GoToState"
+	set_state.successor_param_renames = {"next": "state"}
 	set_state.params.append(_param("next", "String"))
 	var set_state_body: EventRow = EventRow.new()
 	set_state_body.conditions.append(_cond("ExpressionIsTrue", {"expr": "state != next"}))

@@ -54,6 +54,17 @@ extends Resource
 ## Featured verbs lead their picker section starred + bold (the pack's heroes). Emitted as
 ## `## @ace_featured` and lifted back, so it round-trips.
 @export var featured: bool = false
+## THE FORWARDING ADDRESS of a published verb that has been superseded: the "<provider>::<ace_id>"
+## of the newer spelling, what this verb's parameters are called over there ({old: new}), and a value
+## for each parameter the old row never had ({new: value}). Emitted as one
+## `## @ace_succeeded_by(<id>, renames: a=b, defaults: c=1)` line and lifted back, so it round-trips.
+##
+## The verb itself is untouched by this - same id, same template, same place in the picker - and
+## every sheet already calling it compiles byte for byte as before. The address is read by the
+## editor and the Doctor; following it is always an edit somebody approved.
+@export var successor_ace_id: String = ""
+@export var successor_param_renames: Dictionary = {}
+@export var successor_param_defaults: Dictionary = {}
 ## The lines this verb is written as BY HAND, as marked examples (the value spans wrapped in
 ## `[[name|fragment: text]]`), one per entry. A file somebody wrote before the sheet existed reads its
 ## calls as the generic "call a method" row; a spelling here upgrades those rows to this verb without

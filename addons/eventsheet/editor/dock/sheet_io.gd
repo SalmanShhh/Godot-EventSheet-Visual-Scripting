@@ -376,6 +376,10 @@ func _save_backed_sheet() -> bool:
 	_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	_dock._refresh_title_strip()
+	# The project's one-line record of which vocabulary its sheets were last edited under. Nothing is
+	# written into the .gd - it is a plain script and stays one - and this only writes at all when the
+	# value would change, so a project file is touched once per version rather than once per save.
+	EventForgeVocabularyRecord.stamp()
 	EventSheets._notify_lifecycle("saved", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path})
 	return true
 

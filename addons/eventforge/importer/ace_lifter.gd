@@ -1498,6 +1498,11 @@ static func _parse_annotations(code: String) -> Dictionary:
 			fields["category"] = text.substr(18, text.length() - 20)
 		elif text.begins_with("## @ace_description(\"") and text.ends_with("\")"):
 			fields["description"] = text.substr(21, text.length() - 23)
+		elif text.begins_with("## @ace_succeeded_by(") and text.ends_with(")"):
+			# The forwarding address: where this verb's newer spelling lives, what its parameters are
+			# called over there, and a value for any the old row never had. Read back into the three
+			# fields the emitter writes it from, so a pack that names a successor round-trips.
+			fields.merge(_parse_successor_annotation(text.substr(21, text.length() - 22)), true)
 		elif text.begins_with("## @ace_display_template(\"") and text.ends_with("\")"):
 			fields["display_template"] = text.substr(26, text.length() - 28)
 		elif text.begins_with("## @ace_lift_example(\"") and text.ends_with("\")"):
@@ -1542,6 +1547,36 @@ static func _parse_annotations(code: String) -> Dictionary:
 	if str(fields["description"]).is_empty() and not doc_lines.is_empty():
 		fields["description"] = " ".join(doc_lines)
 	return fields if recognized else {}
+
+
+## The inside of one `@ace_succeeded_by(<id>, renames: a=b, defaults: c=1)` line, as the three
+## annotation fields the emitter writes it back from. {} when no successor is named - the line said
+## nothing, so nothing is remembered and the emitter writes no line either.
+static func _parse_successor_annotation(inner: String) -> Dictionary:
+	var sections: PackedStringArray = inner.split(",")
+	if sections.is_empty():
+		return {}
+	var successor_id: String = sections[0].strip_edges()
+	if successor_id.is_empty():
+		return {}
+	var read: Dictionary = {"successor_ace_id": successor_id}
+	for index: int in range(1, sections.size()):
+		var section: String = sections[index]
+		var colon: int = section.find(":")
+		if colon == -1:
+			continue
+		var pairs: Dictionary = {}
+		for raw_pair: String in section.substr(colon + 1).split("|"):
+			var equals: int = raw_pair.find("=")
+			if equals <= 0:
+				continue
+			pairs[raw_pair.substr(0, equals).strip_edges()] = raw_pair.substr(equals + 1).strip_edges()
+		match section.substr(0, colon).strip_edges():
+			"renames":
+				read["successor_param_renames"] = pairs
+			"defaults":
+				read["successor_param_defaults"] = pairs
+	return read
 
 
 ## A non-trigger function → EventFunction (sheet function), body parsed with the same
@@ -1623,6 +1658,9 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.display_template = str(annotations.get("display_template", ""))
 	event_function.lift_examples = annotations.get("lift_examples", PackedStringArray())
 	event_function.featured = bool(annotations.get("featured", false))
+	event_function.successor_ace_id = str(annotations.get("successor_ace_id", ""))
+	event_function.successor_param_renames = annotations.get("successor_param_renames", {})
+	event_function.successor_param_defaults = annotations.get("successor_param_defaults", {})
 	# The source's call template: `<prefix>name({a}, {b})` keeps just the prefix (renames and
 	# parameter edits still track); any other shape is kept verbatim.
 	var source_template: String = str(annotations.get("codegen_template", ""))

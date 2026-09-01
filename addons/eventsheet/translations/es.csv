@@ -5879,3 +5879,8 @@ Scene File Is Data-Only,El archivo de escena solo tiene datos
 scene file {path} is data-only,el archivo de escena {path} solo tiene datos
 Scene File,Archivo de escena
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.","El archivo de escena que se lee. Se lee como TEXTO y nada de él se construye, así que hacer esta pregunta sobre un archivo de cualquier procedencia es seguro. Un archivo que falta, que no se puede leer, o guardado en la forma binaria que esto no sabe leer responde falso - un archivo ilegible no es un archivo del que se haya comprobado que está limpio."
+newer spelling: %s,forma más reciente: %s
+1 row has a newer spelling,1 fila tiene una forma más reciente
+%d rows have a newer spelling,%d filas tienen una forma más reciente
+"1 row has a newer spelling, since %s","1 fila tiene una forma más reciente, desde %s"
+"%d rows have a newer spelling, since %s","%d filas tienen una forma más reciente, desde %s"

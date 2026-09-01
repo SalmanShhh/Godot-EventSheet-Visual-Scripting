@@ -29,6 +29,8 @@ const DEFINITIONS: Array[Dictionary] = [
 	{"name": "eventsheets/project/vocabulary_doc_path", "default": "res://EVENTSHEETS-VOCABULARY.md", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_FILE, "hint_string": "*.md",
 		"doc": "Where Tools → Vocabulary Doc writes the generated project reference."},
+	{"name": "eventsheets/project/vocabulary_version", "default": "", "type": TYPE_STRING,
+		"doc": "The vocabulary version this project's sheets were last edited under. Written when a sheet is saved and only when it changes; commit it - it is what lets a sheet's head band say \"since 0.14\" instead of just \"these rows have a newer spelling\". Blank on a project that has never carried it, which changes nothing except that the band stops naming a version."},
 	{"name": "eventsheets/project/templates_dir", "default": "res://eventsheet_templates", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_DIR,
 		"doc": "Sheets in this folder join the New… menu as project templates."},
