@@ -151,6 +151,13 @@ static func _hold_to_the_file(sheet: EventSheetResource, known: Dictionary,
 ## Whether this GDScript is GDScript. The `class_name` line is dropped first: a probe built from a
 ## string is not a file, and asking the engine to parse a global class declaration that belongs to a
 ## file somewhere else is a question about the wrong thing.
+##
+## THE ENGINE IS ASKED QUIETLY. A refused candidate is the WHOLE POINT of this call - it is how a
+## rewrite that would not compile gets left alone - but `reload()` prints the parse error and a
+## backtrace into the editor's Output as it answers, so merely opening the Migrate dialog over a
+## sheet with a refusable row filled the console with SCRIPT ERROR lines and read as a broken
+## project. The printing is turned off around the one call and put back exactly as it was found, so a
+## project that had it off stays off.
 static func parses(source: String) -> bool:
 	if source.strip_edges().is_empty():
 		return false
@@ -160,7 +167,11 @@ static func parses(source: String) -> bool:
 			kept.append(line)
 	var probe: GDScript = GDScript.new()
 	probe.source_code = "\n".join(kept)
-	return probe.reload(true) == OK
+	var was_printing: bool = Engine.print_error_messages
+	Engine.print_error_messages = false
+	var verdict: int = probe.reload(true)
+	Engine.print_error_messages = was_printing
+	return verdict == OK
 
 
 ## The five fields a rewrite moves, held so a trial can be put back exactly as it was.
@@ -277,6 +288,13 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 	var ace_id: String = str(row.get("ace_id")).strip_edges()
 	if ace_id.is_empty():
 		return
+	# THE ORDINAL IS THE ROW'S PLACE AMONG THIS SHEET'S VERB-CARRYING ROWS, counted HERE - before any
+	# of the reasons below to say nothing about it. That is what the public report's `row` key promises,
+	# what the guide's table says, and what "Event %d writes ..." means in the gate's own failure line:
+	# an address a person can count to in the sheet in front of them. Counted after the early returns
+	# instead, it was the row's place among the PLANNED rows - a different number on any sheet where
+	# some rows are current and some are not, which is every sheet the report has anything to say about.
+	counter[0] += 1
 	var provider_id: String = str(row.get("provider_id")).strip_edges()
 	var key: String = EventForgeSuccessors.key_of(provider_id, ace_id)
 	var here: Variant = known.get(key)
@@ -298,7 +316,6 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 		return
 	var params: Variant = row.get("params")
 	var old_params: Dictionary = params.duplicate(true) if params is Dictionary else {}
-	counter[0] += 1
 	var stored_reading: String = str(row.get("display_text"))
 	var listed: Dictionary = {
 		"ordinal": counter[0], "event": event_row, "row": row, "lane": lane, "index": slot,

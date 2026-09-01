@@ -93,6 +93,18 @@ static func _test_the_annotation() -> bool:
 		{"id": "P::B", "renames": {"one": "two", "three": "four"}, "defaults": {}}) and ok
 	ok = _check("and an annotation naming no successor is not an address",
 		analyzer._parse_successor_spec("renames: one=two"), {}) and ok
+	# THE TWO READERS OF THAT LINE HAVE TO AGREE. The analyzer builds the live vocabulary from it and
+	# the lifter re-emits it, so a comma one of them reads as a separator and the other as a
+	# character of a string literal is a file that comes back different - and the per-function byte
+	# gate then degrades the whole function to a verbatim block.
+	var spec: String = "P::B, renames: one=two, defaults: msg=\"a,b\"|n=2"
+	ok = _check("a comma inside a default's string literal is not a separator",
+		analyzer._parse_successor_spec(spec),
+		{"id": "P::B", "renames": {"one": "two"}, "defaults": {"msg": "\"a,b\"", "n": "2"}}) and ok
+	ok = _check("and the lifter reads that line exactly the same way",
+		EventSheetACELifter._parse_successor_annotation(spec),
+		{"successor_ace_id": "P::B", "successor_param_renames": {"one": "two"},
+			"successor_param_defaults": {"msg": "\"a,b\"", "n": "2"}}) and ok
 	return ok
 
 
@@ -439,6 +451,22 @@ static func _test_the_engine() -> bool:
 		EventForgeSuccessors.resolve("P::Nobody", known), {}) and ok
 	ok = _check("a cycle answers nothing rather than looping",
 		EventForgeSuccessors.resolve("P::Ring", known), {}) and ok
+	# A PARAMETER THE FIRST HOP SUPPLIED AS A DEFAULT AND THE SECOND HOP RENAMED. It arrives at the
+	# second hop carrying a value, but not from the original row - which has no parameter of that
+	# name at all - so it belongs in the defaults under its new name and never in the renames. Put
+	# there, it composed an entry keyed by a name the first verb never had, and problems() called a
+	# correct chain a build error, which fails the pack audit.
+	var carried: Dictionary = _carried_default_table()
+	ok = _check("a default carried through a hop that renames it stays a default",
+		EventForgeSuccessors.resolve("P::First", carried),
+		{"id": "P::Third", "renames": {"a": "b2"}, "defaults": {"c2": "5"},
+			"hops": PackedStringArray(["P::Second", "P::Third"])}) and ok
+	ok = _check("so the chain is sound rather than a build error",
+		EventForgeSuccessors.problems(carried), PackedStringArray()) and ok
+	ok = _check("and the rewrite puts both values where they belong",
+		EventForgeSuccessors.rewrite_params({"a": "hp"},
+			EventForgeSuccessors.resolve("P::First", carried),
+			PackedStringArray(["b2", "c2"])), {"b2": "hp", "c2": "5"}) and ok
 	# The rewrite itself: values move to their new names, new parameters get their value, and a
 	# parameter the successor does not have is left behind rather than carried as baggage.
 	ok = _check("the rewrite renames, fills and drops",
@@ -473,6 +501,20 @@ static func _test_a_broken_map_is_named() -> bool:
 			"P::Stranger: succeeded by P::Nobody, which no installed vocabulary has",
 			"P::Twice: gives three both a renamed value and a default",
 		]))
+
+
+## THE TWO-HOP SHAPE THE CHAIN MACHINERY EXISTS FOR: the first hop supplies a parameter the original
+## verb never had, and the second hop renames that very parameter. First has [a]; Second has [b, c]
+## and is reached by renaming a to b and giving c a value; Third has [b2, c2] and is reached by
+## renaming both. From First's point of view the answer is one rename and one default.
+static func _carried_default_table() -> Dictionary:
+	return {
+		"P::First": _entry("P::First", ["a"],
+			{"id": "P::Second", "renames": {"a": "b"}, "defaults": {"c": "5"}}),
+		"P::Second": _entry("P::Second", ["b", "c"],
+			{"id": "P::Third", "renames": {"b": "b2", "c": "c2"}, "defaults": {}}),
+		"P::Third": _entry("P::Third", ["b2", "c2"], {}),
+	}
 
 
 ## A sound little vocabulary: A -> B -> C, plus a verb that cycles.

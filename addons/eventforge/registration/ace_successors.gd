@@ -301,6 +301,14 @@ static func resolve(key: String, from_catalog: Dictionary = {}) -> Dictionary:
 			arrives_as[str(renames[old_name])] = str(old_name)
 		var composed: Dictionary = {}
 		for middle_param: String in middle_params:
+			# A PARAMETER THE FIRST HOP SUPPLIED AS A DEFAULT IS NOT A RENAME. It arrives at this hop
+			# carrying a value, but not from the original row - the original row has no parameter of
+			# that name at all - so putting it in `renames` composed an entry keyed by a name the first
+			# verb never had, and `problems()` then reported the map as renaming a parameter it does
+			# not have, failing the pack audit over a chain that is correct. It is carried and re-keyed
+			# in `defaults` below instead, which is where it belongs and which already had it right.
+			if defaults.has(middle_param) and not arrives_as.has(middle_param):
+				continue
 			var origin: String = str(arrives_as.get(middle_param, middle_param))
 			var target: String = str(hop_renames.get(middle_param, middle_param))
 			if origin != target:

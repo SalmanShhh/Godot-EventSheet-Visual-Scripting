@@ -124,6 +124,19 @@ static func _row(ace_id: String, params: Dictionary) -> ACEAction:
 	return action
 
 
+## One row written in the spelling the vocabulary uses today - a verb-carrying row the report has
+## nothing to say about, which is nearly every row of nearly every sheet. It is the row that has to
+## be COUNTED and not LISTED for the report's ordinal to mean what it says.
+static func _current_row() -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "ActionEraseEvents"
+	action.codegen_template = "InputMap.action_erase_events(&{action})"
+	action.display_text = "Clear bindings for {action}"
+	action.params = {"action": "\"pause\""}
+	return action
+
+
 ## A one-event sheet holding the given rows, in order.
 static func _sheet(rows: Array) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -425,6 +438,23 @@ static func _test_the_project_report() -> bool:
 	ok = _check("and asking twice answers the same",
 		EventSheetMigrationDoctor.rows(PackedStringArray([FIXTURE_ONE, FIXTURE_TWO]), _known()),
 		listed) and ok
+	# THE `row` KEY IS THE ROW'S PLACE AMONG VERB-CARRYING ROWS, which is what the API doc, the
+	# guide's table and the gate's own "Event %d writes ..." all say it is - an address a person can
+	# count to in the sheet in front of them. Counted among PLANNED rows instead, it named a
+	# different row on any sheet where some rows are current and some are not, which is every sheet
+	# the report has anything to say about. Pinned on a sheet whose SECOND row is already current.
+	var mixed: EventSheetResource = _sheet([
+		_row("ClearBinding", {"control": "\"jump\""}),
+		_current_row(),
+		_row("PolishTheLamp", {}),
+	])
+	ResourceSaver.save(mixed, FIXTURE_ONE)
+	var counted: Array[Dictionary] = EventSheetMigrationDoctor.rows(
+		PackedStringArray([FIXTURE_ONE]), _known())
+	ok = _check("a row on the current spelling is not in the report at all", counted.size(), 2) and ok
+	if counted.size() == 2:
+		ok = _check("but it is still counted, so the two rows are events 1 and 3",
+			[int(counted[0]["row"]), int(counted[1]["row"])], [1, 3]) and ok
 	DirAccess.remove_absolute(FIXTURE_ONE)
 	DirAccess.remove_absolute(FIXTURE_TWO)
 	return ok

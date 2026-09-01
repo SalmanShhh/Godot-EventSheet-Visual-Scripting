@@ -1586,8 +1586,15 @@ static func _parse_annotations(code: String) -> Dictionary:
 ## The inside of one `@ace_succeeded_by(<id>, renames: a=b, defaults: c=1)` line, as the three
 ## annotation fields the emitter writes it back from. {} when no successor is named - the line said
 ## nothing, so nothing is remembered and the emitter writes no line either.
+##
+## THE SECTIONS SPLIT OUTSIDE QUOTES, the way the analyzer splits them. A default may be a string
+## literal, and a comma inside one is a character of that literal rather than a separator - so a
+## plain `split(",")` read `defaults: msg="a,b"` as two sections, remembered a different line from
+## the one on disk, and the per-function byte gate then degraded the whole function to a verbatim
+## block. The analyzer has always read that line correctly, which is exactly what made the two
+## disagree about a file neither of them is allowed to change.
 static func _parse_successor_annotation(inner: String) -> Dictionary:
-	var sections: PackedStringArray = inner.split(",")
+	var sections: PackedStringArray = _split_outside_quotes(inner, ",")
 	if sections.is_empty():
 		return {}
 	var successor_id: String = sections[0].strip_edges()
@@ -1600,7 +1607,7 @@ static func _parse_successor_annotation(inner: String) -> Dictionary:
 		if colon == -1:
 			continue
 		var pairs: Dictionary = {}
-		for raw_pair: String in section.substr(colon + 1).split("|"):
+		for raw_pair: String in _split_outside_quotes(section.substr(colon + 1), "|"):
 			var equals: int = raw_pair.find("=")
 			if equals <= 0:
 				continue
@@ -1611,6 +1618,43 @@ static func _parse_successor_annotation(inner: String) -> Dictionary:
 			"defaults":
 				read["successor_param_defaults"] = pairs
 	return read
+
+
+## One text split on a separator that is OUTSIDE any quoted string - the same reading the analyzer
+## gives an annotation, so the line written back is the line that was read. A separator inside a
+## string literal is a character of that literal and nothing else.
+static func _split_outside_quotes(text: String, separator: String) -> PackedStringArray:
+	var parts: PackedStringArray = PackedStringArray()
+	var held: String = ""
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var here: String = text[index]
+		if not quote.is_empty():
+			held += here
+			# A backslash escapes the next character, so a quote behind one does not close the string.
+			if here == "\\" and index + 1 < text.length():
+				held += text[index + 1]
+				index += 2
+				continue
+			if here == quote:
+				quote = ""
+			index += 1
+			continue
+		if here == "\"" or here == "'":
+			quote = here
+			held += here
+			index += 1
+			continue
+		if text.substr(index, separator.length()) == separator:
+			parts.append(held)
+			held = ""
+			index += separator.length()
+			continue
+		held += here
+		index += 1
+	parts.append(held)
+	return parts
 
 
 ## A non-trigger function → EventFunction (sheet function), body parsed with the same

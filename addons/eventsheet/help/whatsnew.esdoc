@@ -102,6 +102,28 @@ What changed in the build you have installed (v0.17.0), in the words the release
   are process-static and keyed on a file's identity, so a test that rewrote a file an earlier test
   had read inherited the earlier reading. It shows up serially and not in shards, which is how a leak
   comes to look like a platform-specific CI failure.
+- **`migration_report()`'s `row` key counts what all three documents say it counts.** It incremented
+  only after every early return, so it was the row's place among PLANNED rows rather than among the
+  sheet's verb-carrying rows in reading order - a different number on any sheet where some rows are
+  current and some are not, which is every sheet the report has anything to say about. The frozen
+  shape is unchanged; the number in it is now the address the API doc, the guide's table and the
+  gate's own \"Event %d writes ...\" all promise.
+- **A two-hop chain whose middle verb renames a parameter the first hop supplied is sound again.**
+  Composition walked the middle verb's parameters and put such a parameter into the composed renames
+  keyed by a name the original verb never had, so `problems()` reported a correct map as renaming a
+  parameter it does not have - and `tools/audit_addons.gd` fails on any successor problem. It is
+  carried and re-keyed in the defaults instead, which is where it belongs and where its value was
+  already right.
+- **The lifter and the analyzer read an `@ace_succeeded_by` line the same way.** The lifter split its
+  sections on every comma, so a default whose value is a string literal containing one
+  (`defaults: msg=\"a,b\"`) was remembered as a different line from the one on disk, the per-function
+  byte gate failed, and the whole function degraded to a verbatim block. Both split outside quotes
+  now.
+- **Asking the migration question no longer prints Parse Errors into the Output.** A refused
+  candidate is the whole point of the file gate, but `reload()` printed the error and a backtrace as
+  it answered - so opening the Migrate dialog over exactly the sheet the feature is for filled the
+  console with SCRIPT ERROR lines and read as a broken project. The printing is turned off around
+  that one call and put back as it was found.
 - **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
   recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
   only described.
