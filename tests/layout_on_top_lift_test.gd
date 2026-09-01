@@ -69,8 +69,16 @@ static func _test_descriptors() -> bool:
 	ok = _check("every new row and parameter carries real help", missing_help, PackedStringArray()) and ok
 
 	var adding: ACEDescriptor = ACERegistry.find_descriptor("Core", "AddLayoutOnTop")
-	ok = _check("adding writes the three lines it names, in that order", adding.codegen_template,
-		"var __layout_{uid} = load({path}).instantiate()\n__layout_{uid}.name = {layout_name}\nget_tree().root.add_child(__layout_{uid})") and ok
+	# THE NAME IS THE PROMISE. `add_child` renames a newcomer whose name a sibling already has, so a
+	# second add under one name used to leave a copy that neither of the rows below could ever find
+	# again - under the tree root, where it outlives every change of layout. The add asks first.
+	ok = _check("adding asks the name first and builds nothing when it is taken",
+		adding.codegen_template,
+		"var __layout_{uid}: Node = get_tree().root.get_node_or_null({layout_name})\n"
+		+ "if __layout_{uid} == null:\n"
+		+ "\t__layout_{uid} = (load({path}) as PackedScene).instantiate()\n"
+		+ "\t__layout_{uid}.name = {layout_name}\n"
+		+ "\tget_tree().root.add_child(__layout_{uid})") and ok
 	ok = _check("and reads as a sentence", adding.get_display_text(),
 		"Add layout {path} on top as {layout_name}") and ok
 	ok = _check("filed with the layout rows it belongs beside", adding.category, "Scene") and ok
@@ -78,8 +86,14 @@ static func _test_descriptors() -> bool:
 		adding.params[0].hint, "scene_path") and ok
 
 	var removing: ACEDescriptor = ACERegistry.find_descriptor("Core", "RemoveLayoutOnTop")
-	ok = _check("removing looks the name up and guards the answer", removing.codegen_template,
-		"var __layout_{uid}: Node = get_tree().root.get_node_or_null({layout_name})\nif __layout_{uid} != null:\n\t__layout_{uid}.queue_free()") and ok
+	# And the removal takes it OFF THE TREE at once: a node only queued for freeing is still a child
+	# for the rest of the frame, so the familiar close-then-open pair would find the dying one.
+	ok = _check("removing looks the name up, takes it off the tree, then frees it",
+		removing.codegen_template,
+		"var __layout_{uid}: Node = get_tree().root.get_node_or_null({layout_name})\n"
+		+ "if __layout_{uid} != null:\n"
+		+ "\tget_tree().root.remove_child(__layout_{uid})\n"
+		+ "\t__layout_{uid}.queue_free()") and ok
 	ok = _check("and reads as a sentence", removing.get_display_text(),
 		"Remove layout {layout_name} from on top") and ok
 
@@ -158,10 +172,21 @@ static func _test_authored_emission() -> bool:
 	sheet.events.append(event)
 	sheet.external_source_path = "user://_layout_on_top_authored.gd"
 	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
-	var ok: bool = _check("the picked add writes the three canonical lines",
-		output.contains("\tvar __layout_a1 = load(\"res://pause_menu.tscn\").instantiate()\n\t__layout_a1.name = \"PauseMenu\"\n\tget_tree().root.add_child(__layout_a1)"), true)
+	var ok: bool = _check("the picked add writes the canonical lines",
+		output.contains("\tvar __layout_a1: Node = get_tree().root.get_node_or_null(\"PauseMenu\")\n\tif __layout_a1 == null:\n\t\t__layout_a1 = (load(\"res://pause_menu.tscn\") as PackedScene).instantiate()\n\t\t__layout_a1.name = \"PauseMenu\"\n\t\tget_tree().root.add_child(__layout_a1)"), true)
 	ok = _check("the picked removal writes its guard",
-		output.contains("\tvar __layout_b2: Node = get_tree().root.get_node_or_null(\"PauseMenu\")\n\tif __layout_b2 != null:\n\t\t__layout_b2.queue_free()"), true) and ok
+		output.contains("\tvar __layout_b2: Node = get_tree().root.get_node_or_null(\"PauseMenu\")\n\tif __layout_b2 != null:\n\t\tget_tree().root.remove_child(__layout_b2)\n\t\t__layout_b2.queue_free()"), true) and ok
+	# And what the ADD wrote opens again as the row that wrote it, which is the other half of the
+	# promise the three hand-written statements already keep. The removal is deliberately not
+	# claimed - it is an `if` block, and an `if` block already has a reading of its own.
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(
+		output, true, sheet.external_source_path)
+	ok = _check("and the file it wrote re-opens with the add as the row that wrote it",
+		_event_row_ids(reopened)[0] if not _event_row_ids(reopened).is_empty() else "(nothing)",
+		"AddLayoutOnTop") and ok
+	ok = _check("with the file and the name it was given still on it",
+		_event_row_params(reopened),
+		{"path": "\"res://pause_menu.tscn\"", "layout_name": "\"PauseMenu\""}) and ok
 	# Compiled inside the host these rows are for. A sheet with no source file of its own emits the
 	# body alone, and a body calling get_tree() would not parse under GDScript's implicit RefCounted
 	# base - which would say nothing about the lines under test, so the base is stated here.
@@ -213,6 +238,31 @@ static func _function_action(sheet: EventSheetResource, function_name: String, i
 					if action is ACEAction:
 						found.append(action as ACEAction)
 	return found[index] if index < found.size() else null
+
+
+## The ace ids of the actions of a sheet's top-level events, in order - what an emitted file reads
+## back as when it is opened again.
+static func _event_row_ids(sheet: EventSheetResource) -> PackedStringArray:
+	var ids: PackedStringArray = PackedStringArray()
+	for row: Variant in sheet.events:
+		if not (row is EventRow):
+			continue
+		for action: Variant in (row as EventRow).actions:
+			if action is ACEAction:
+				ids.append((action as ACEAction).ace_id)
+	return ids
+
+
+## The values of the FIRST action of a sheet's top-level events - the row an emitted file re-opens
+## with, and what it kept.
+static func _event_row_params(sheet: EventSheetResource) -> Dictionary:
+	for row: Variant in sheet.events:
+		if not (row is EventRow):
+			continue
+		for action: Variant in (row as EventRow).actions:
+			if action is ACEAction:
+				return (action as ACEAction).params
+	return {}
 
 
 static func _function_row_ids(sheet: EventSheetResource, function_name: String) -> PackedStringArray:

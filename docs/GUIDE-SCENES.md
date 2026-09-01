@@ -95,8 +95,8 @@ Three rows say exactly that:
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Add Layout On Top | Puts a layout over the running game under a name you choose | three lines: load and instance, name it, `get_tree().root.add_child(…)` |
-| Remove Layout On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `queue_free()` |
+| Add Layout On Top | Puts a layout over the running game under a name you choose | the name asked about first, then load and instance, name it, `get_tree().root.add_child(…)` |
+| Remove Layout On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `remove_child` and `queue_free()` |
 | Layout Is On Top | True while it is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
 
 **Under the tree root, not under this node.** That is the one design decision in the row, and it is
@@ -107,6 +107,14 @@ is also why the Scene Flow pack parents its fade overlay to the same root.
 **The name is the node's own name under the root.** Nothing keeps a registry of it; `get_node_or_null`
 is what answers, which is why the three rows have to agree on the spelling and why a close row is
 safe to run twice.
+
+**One name, one layout.** `add_child` will not take a name a sibling already has - it renames the
+newcomer to something like `@Node@2` - so a second add under one name would leave a copy that
+neither of the other two rows could ever find or remove, sitting under the tree root for the rest of
+the run. Add Layout On Top therefore asks the name first and loads nothing when it is already up.
+And the removal takes the node **off the tree** before freeing it, because `queue_free` frees at the
+end of the frame: a node only queued is still a child, still found by name, and still in the way.
+That is what makes the familiar pair - remove it, then add it again - work in one frame.
 
 Here it is as people actually write it, and as it reads back:
 

@@ -307,6 +307,16 @@ against Godot 4.7 before it was repaired.
   descendants and level **1**, now room 2 and level **3**. The row also stopped rewriting the
   running game's ownership behind the reader's back, because it hands every adopted owner back the
   moment the pack is done. The lift claims the new run and the two hand-written ones alike.
+- **Add Layout On Top leaked a layout nothing could ever find.** `add_child` refuses a name a
+  sibling already has and renames the newcomer - measured: the second add under `"PauseMenu"` came
+  out as `@Node@2` - so Layout Is On Top and Remove Layout On Top both went on finding the FIRST
+  one, and the second sat under the tree root, outliving every change of layout, for the rest of the
+  run. The add now asks the name first and loads nothing when it is already up: one name, one
+  layout, which is what the other two rows promise to find. Remove Layout On Top takes the node off
+  the tree before freeing it, because a node only queued for freeing is still a child for the rest
+  of the frame - so the familiar close-then-open pair works in one frame, measured. The add's local
+  is typed like every other line the pass emits, and the lift claims the row's own run beside the
+  three statements people write by hand.
 - **`get_tree().change_scene_to_file("user://…")` was invisible to the trust reader.** The tree's
   own method is how every project travels to a layout, and the call reading refused it for having a
   dot in front of it. The same reading no longer mistakes somebody's own `MyResourceLoader.load(`

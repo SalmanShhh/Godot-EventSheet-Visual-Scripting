@@ -33,20 +33,35 @@ extends RefCounted
 # the thing added outlive the layout beneath it. So: no name line, or an add_child onto anything
 # other than `get_tree().root`, and this matcher refuses and the lines keep the reading they had.
 #
-# THE REMOVAL TWIN IS NOT HERE. Remove Layout On Top writes a guarded `get_node_or_null` and a
-# `queue_free()` under an `if`, which is a BLOCK rather than a run of statements; a sheet that
-# authored one re-emits it from the row, and a hand-written one keeps the reading an `if` already
-# has. Only the add is claimed, because only the add is an unambiguous three-statement shape.
+# TWO SPELLINGS OF ONE ROW, because the row and the reader write it differently. The three
+# statements above are what a person types. What the ROW emits asks the name first:
+#
+#     var __layout_a1: Node = get_tree().root.get_node_or_null("PauseMenu")
+#     if __layout_a1 == null:
+#         __layout_a1 = (load("res://pause_menu.tscn") as PackedScene).instantiate()
+#         __layout_a1.name = "PauseMenu"
+#         get_tree().root.add_child(__layout_a1)
+#
+# because `add_child` refuses a name a sibling already has and renames the newcomer instead, which
+# would leave a second copy nothing could ever find. Both runs are claimed, so a file this plugin
+# wrote re-opens as the row that wrote it and a file a person wrote opens as the same row.
+#
+# THE REMOVAL TWIN IS NOT HERE. Remove Layout On Top writes a guarded `get_node_or_null`, a
+# `remove_child` and a `queue_free()` under an `if`; a sheet that authored one re-emits it from the
+# row, and a hand-written one keeps the reading an `if` already has. Only the add is claimed,
+# because only the add is a shape nothing else in a project is written as.
 
 ## The fragment a statement must contain before any pattern here is compiled - one word that rules
-## out almost every line in a project first.
+## out almost every line in a project first. The guarded spelling carries it on its third line, so
+## the run is entered on either.
 const MARK: String = ".instantiate()"
 
-## The row the run below means. Frozen with the descriptor it names.
+## The row both runs below mean. Frozen with the descriptor it names.
 const ACE_ID: String = "AddLayoutOnTop"
 
-## How many statements the run is, when it matches at all.
+## How many statements each spelling is: the three a person writes, and the five the row emits.
 const RUN_LENGTH: int = 3
+const GUARDED_LENGTH: int = 5
 
 ## Compiled patterns, built once for the life of the session: this runs on every statement of every
 ## opened file.
@@ -57,6 +72,12 @@ static var _regexes: Dictionary = {}
 ## function body as the lifter holds it, `index` the statement to try, `depth` its indentation.
 ## Returns {ace_id, params, template, consumed}.
 static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var guarded: Dictionary = _guarded_run(lines, index, depth)
+	return guarded if not guarded.is_empty() else _plain_run(lines, index, depth)
+
+
+## The three statements a person writes: make the copy, name it, put it under the root.
+static func _plain_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
 	var opener: String = _statement_at(lines, index, depth)
 	if not opener.contains(MARK):
 		return {}
@@ -67,29 +88,78 @@ static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dicti
 	if made == null:
 		return {}
 	var holder: String = made.get_string(2)
-	var named: RegExMatch = _regex("^%s\\.name = (.+)$" % holder).search(_statement_at(lines, index + 1, depth))
-	if named == null:
+	var named: RegExMatch = _regex(NAMED_PATTERN).search(_statement_at(lines, index + 1, depth))
+	if named == null or named.get_string(1) != holder:
 		return {}
-	if _statement_at(lines, index + 2, depth) != "get_tree().root.add_child(%s)" % holder:
+	if _statement_at(lines, index + 2, depth) != _added(holder):
 		return {}
-	return {
-		"ace_id": ACE_ID,
-		"params": {
-			"path": made.get_string(3).strip_edges(),
-			"layout_name": named.get_string(1).strip_edges()
-		},
-		"template": "\n".join(PackedStringArray([
-			"%s({path}).instantiate()" % made.get_string(1),
-			"%s.name = {layout_name}" % holder,
-			"get_tree().root.add_child(%s)" % holder
-		])),
-		"consumed": RUN_LENGTH
-	}
+	var run: PackedStringArray = PackedStringArray(["%s({path}).instantiate()" % made.get_string(1),
+		"%s.name = {layout_name}" % holder, _added(holder)])
+	return _claim(made.get_string(3), named.get_string(2), run, RUN_LENGTH)
+
+
+## What the ROW writes: the same three statements, under the question that keeps one name to one
+## layout. The name is asked about on the first line and given on the fourth, and the two have to be
+## the same words - a run that looks one name up and gives another is somebody else's program.
+static func _guarded_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var looked: RegExMatch = _regex("^var[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*:[ \\t]*Node[ \\t]*=[ \\t]*get_tree\\(\\)\\.root\\.get_node_or_null\\((.+)\\)$").search(
+		_statement_at(lines, index, depth))
+	if looked == null:
+		return {}
+	var holder: String = looked.get_string(1)
+	if _statement_at(lines, index + 1, depth) != "if %s == null:" % holder:
+		return {}
+	var opener: String = _inside_at(lines, index + 2, depth)
+	if not opener.contains(MARK):
+		return {}
+	var made: RegExMatch = _regex("^(%s[ \\t]*=[ \\t]*\\((?:pre)?load)\\((.*)\\)( as PackedScene\\))\\.instantiate\\(\\)$" % holder).search(opener)
+	if made == null:
+		return {}
+	var named: RegExMatch = _regex(NAMED_PATTERN).search(_inside_at(lines, index + 3, depth))
+	if named == null or named.get_string(1) != holder:
+		return {}
+	if named.get_string(2).strip_edges() != looked.get_string(2).strip_edges():
+		return {}
+	if _inside_at(lines, index + 4, depth) != _added(holder):
+		return {}
+	var run: PackedStringArray = PackedStringArray([
+		"var %s: Node = get_tree().root.get_node_or_null({layout_name})" % holder,
+		"if %s == null:" % holder,
+		"\t%s({path})%s.instantiate()" % [made.get_string(1), made.get_string(3)],
+		"\t%s.name = {layout_name}" % holder, "\t" + _added(holder)])
+	return _claim(made.get_string(2), named.get_string(2), run, GUARDED_LENGTH)
+
+
+## The statement that names the copy, whichever spelling it is written in: the holder, then the name.
+const NAMED_PATTERN: String = "^([A-Za-z_][A-Za-z0-9_]*)\\.name = (.+)$"
+
+
+## The line that puts one copy under the tree root - what makes this run a layout rather than a
+## spawn, and the one line of it that is never spelled two ways.
+static func _added(holder: String) -> String:
+	return "get_tree().root.add_child(%s)" % holder
+
+
+## One matched run as the lifter takes it: the row, its two values, the template that re-emits the
+## author's own spelling of it, and how many statements it swallowed.
+static func _claim(path: String, layout_name: String, run: PackedStringArray,
+		consumed: int) -> Dictionary:
+	var values: Dictionary = {"path": path.strip_edges(), "layout_name": layout_name.strip_edges()}
+	return {"ace_id": ACE_ID, "params": values, "template": "\n".join(run), "consumed": consumed}
 
 
 ## One statement of the body at the given indentation, or "" when the line is blank, absent, or
 ## deeper than the run being matched (a deeper line is inside a block, not the next statement).
 static func _statement_at(lines: PackedStringArray, index: int, depth: int) -> String:
+	return _at(lines, index, depth)
+
+
+## One statement INSIDE the guarded run's block - one tab further in, and no further than that.
+static func _inside_at(lines: PackedStringArray, index: int, depth: int) -> String:
+	return _at(lines, index, depth + 1)
+
+
+static func _at(lines: PackedStringArray, index: int, depth: int) -> String:
 	if index < 0 or index >= lines.size():
 		return ""
 	var line: String = lines[index]
