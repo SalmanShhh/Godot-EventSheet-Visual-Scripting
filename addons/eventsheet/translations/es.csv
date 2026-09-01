@@ -5956,3 +5956,4 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.","%s ahora es %s en esta hoja: ambas filas se leen exactamente igual, y Ctrl+Z devuelve el nombre."
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.","Esta hoja cambio mientras el recibo estaba abierto, asi que no se reescribio nada: esto es lo que dice ahora."
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.","Esa fila ya no esta en esta hoja, asi que no se escribio nada: la hoja cambio mientras esto estaba abierto."
+"%s has changed on disk since this window read it, so nothing was written - opening what it says now.","%s ha cambiado en disco desde que esta ventana la leyo, asi que no se escribio nada: se abre lo que dice ahora."

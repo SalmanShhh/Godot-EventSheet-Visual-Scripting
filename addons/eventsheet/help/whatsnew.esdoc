@@ -65,6 +65,12 @@ What changed in the build you have installed (v0.17.0), in the words the release
   the slot, and a row that is genuinely gone is said out loud. The dialog's header no longer claims
   the byte gate proves what the ticked comment does: the gate proves the CODE does not move, and the
   comment is a line the reader asked for.
+- **Show the conflicts cannot write over a merge you finished elsewhere.** The blocked banner says
+  to finish the merge in the tool you started it in, and puts that button beside the advice - so
+  doing both is the ordinary thing. What the window would write is built from the text it read when
+  it OPENED, so pressing Save afterwards put the pre-merge reading back over the resolved file. That
+  was the one write path onto a blocked file, and it now re-reads first: a file that has moved is
+  left exactly as it is, and what is on disk now is opened instead.
 
 ### Since 0.14, said once at the head
 

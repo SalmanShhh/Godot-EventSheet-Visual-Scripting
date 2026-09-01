@@ -13,6 +13,13 @@ extends RefCounted
 # headless); this file is the shell: two columns, a choice per pair, and the Save that writes the
 # resolved file back with no markers in it and every byte outside the region exactly as it was.
 #
+# THE ONE WRITE ONTO A BLOCKED FILE, AND IT CHECKS FIRST. The blocked banner says "finish the merge
+# in the tool you started it in, then open it again", and puts this window's button beside it - so
+# the reader can perfectly reasonably do both. What is resolved here is built from the text this
+# window read WHEN IT OPENED, and writing that over a file somebody has since finished merging
+# elsewhere would put the pre-merge reading back. So the Save re-reads the file first and refuses
+# when it has moved, which is the only thing that keeps the guard total.
+#
 # Built lazily and by path from the menu, so nothing here sits in the editor's boot path.
 
 var _dock: Control = null
@@ -168,7 +175,18 @@ func resolved_text() -> String:
 	return str(EventSheetConflictRegions.resolve(_source, _choices)["text"])
 
 
+## The Save. It writes the resolved text this window's choices describe, and only over the file it
+## actually read: a file that has moved on disk since it opened is left exactly as it is, the window
+## closes, and what is on disk now is opened instead. The alternative is the one way this feature
+## could destroy work - following the banner's own advice, coming back, and pressing Save.
 func _save_resolved() -> void:
+	if FileAccess.get_file_as_string(_path) != _source:
+		window.hide()
+		# Opened first and said afterwards, so the sentence a reader needs is the one left on the
+		# strip rather than the open's own "1 event(s), 0 function(s)".
+		_dock._load_sheet_from_path(_path)
+		_dock._set_status(EventSheetL10n.translate("%s has changed on disk since this window read it, so nothing was written - opening what it says now.") % _path.get_file(), true)
+		return
 	var file: FileAccess = FileAccess.open(_path, FileAccess.WRITE)
 	if file == null:
 		_dock._set_status(EventSheetL10n.translate("Could not write %s.") % _path.get_file(), true)

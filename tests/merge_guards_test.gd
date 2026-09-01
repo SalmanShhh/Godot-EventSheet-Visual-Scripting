@@ -37,6 +37,7 @@ static func run() -> bool:
 	ok = _test_the_remint_is_one_token() and ok
 	ok = _test_the_remint_shows_its_receipt_first() and ok
 	ok = _test_a_marker_file_opens_blocked() and ok
+	ok = _test_show_the_conflicts_never_writes_over_a_finished_merge() and ok
 	ok = _test_the_bytes_survive() and ok
 	ok = _test_the_endings_note() and ok
 	ok = _test_sheets_are_written_with_unix_endings() and ok
@@ -200,6 +201,52 @@ static func _test_the_remint_shows_its_receipt_first() -> bool:
 			"path": "res://somewhere_else.gd"}, {"dock": dock})
 	ok = _check("a chip on a line about another file writes nothing",
 		answered["ok"], false) and ok
+	dock.free()
+	return ok
+
+
+## THE ONE WRITE ONTO A BLOCKED FILE, AND IT CHECKS FIRST. The blocked banner says "finish the merge
+## in the tool you started it in, then open it again" and puts Show the conflicts beside it - so
+## following that advice with this window still open is the ordinary thing to do. What this window
+## would write is built from the text it read WHEN IT OPENED, so writing it over a file somebody has
+## since finished merging elsewhere would put the pre-merge reading back over their work. That is the
+## one way the guard's "total" could have been untrue, and it is the state pinned here.
+static func _test_show_the_conflicts_never_writes_over_a_finished_merge() -> bool:
+	var path: String = "user://eventforge_conflict_view_probe.gd"
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(_conflicted_source())
+	file.close()
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	var view: EventSheetConflictViewDialog = EventSheetConflictViewDialog.new()
+	view.init(dock)
+	var ok: bool = _check("the window opens on the conflicted file", view.open_path(path), true)
+	ok = _check("and knows what it would write",
+		view.resolved_text().contains("<<<<<<<"), false) and ok
+	# The reader does what the banner told them to: they finish the merge somewhere else.
+	var merged: String = "extends Node
+
+
+func _ready() -> void:
+	speed = 250
+"
+	var second: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	second.store_string(merged)
+	second.close()
+	view._save_resolved()
+	ok = _check("Save writes nothing over the merge they finished elsewhere",
+		FileAccess.get_file_as_string(path), merged) and ok
+	ok = _check("and says so rather than closing in silence",
+		str(dock._status_label.text).replace("⚠  ", ""),
+		"%s has changed on disk since this window read it, so nothing was written - opening what it says now." % path.get_file()) and ok
+	# And over a file that has NOT moved, the Save is the Save it always was.
+	var third: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	third.store_string(_conflicted_source())
+	third.close()
+	ok = _check("re-opening reads the conflicted file again", view.open_path(path), true) and ok
+	view._save_resolved()
+	ok = _check("and Save writes the resolved file with no markers in it",
+		EventSheetConflictGuard.blocks(FileAccess.get_file_as_string(path)), false) and ok
+	DirAccess.remove_absolute(path)
 	dock.free()
 	return ok
 

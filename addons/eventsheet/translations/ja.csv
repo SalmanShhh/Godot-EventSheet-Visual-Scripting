@@ -5956,3 +5956,4 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.",このシートで %s は %s になりました。どちらの行も読み方はまったく同じで、Ctrl+Z で名前は戻ります。
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",控えを開いている間にこのシートが変わったため、何も書き換えていません。いま何と言っているかを示します。
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.",その行はもうこのシートにないため、何も書き込んでいません。これを開いている間にシートが変わりました。
+"%s has changed on disk since this window read it, so nothing was written - opening what it says now.",このウィンドウが読み込んでから %s がディスク上で変わったため、何も書き込んでいません。いまの内容を開きます。

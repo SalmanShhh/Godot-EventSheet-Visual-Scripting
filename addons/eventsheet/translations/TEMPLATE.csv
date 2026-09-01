@@ -5944,3 +5944,4 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.",
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.",
+"%s has changed on disk since this window read it, so nothing was written - opening what it says now.",

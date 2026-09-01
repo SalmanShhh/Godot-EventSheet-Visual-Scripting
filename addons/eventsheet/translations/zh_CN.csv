@@ -5956,3 +5956,4 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.",在本表中 %s 现在是 %s，两行读起来完全不变，Ctrl+Z 可把名字改回。
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",回执打开期间本表发生了变化，因此没有重写任何内容 - 以下是它现在的内容。
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.",该行已不在本表中，因此未写入任何内容 - 此窗口打开期间本表发生了变化。
+"%s has changed on disk since this window read it, so nothing was written - opening what it says now.",自本窗口读取以来，%s 在磁盘上已发生变化，因此未写入任何内容 - 现在打开它当前的内容。
