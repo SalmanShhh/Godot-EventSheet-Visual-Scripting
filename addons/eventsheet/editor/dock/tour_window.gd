@@ -38,25 +38,25 @@ static func steps() -> Array[Dictionary]:
 		{
 			"title": "Add your first event",
 			"body": "An event starts with a trigger - the moment it runs. On Ready fires once when the object appears; Every Frame runs continuously.",
-			"task": "Click \"+ Add event…\" at the bottom of the sheet (or Add Event in the toolbar) and pick a trigger - try On Ready.",
+			"task": "Click \"Add event\" in the sheet's top-left corner (or the trailing \"+ Add event…\" row) and pick a trigger - try On Ready.",
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_event(sheet),
 		},
 		{
 			"title": "Give it a condition",
 			"body": "Conditions decide WHEN the row runs this tick. Stack several and ALL must hold; conditions like Every X Seconds even keep their own timer.",
-			"task": "Select your event and click Add Condition (or double-click the left lane). Try Every X Seconds.",
+			"task": "Select your event and double-click the left lane (or press C). Try Every X Seconds.",
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_condition(sheet),
 		},
 		{
 			"title": "Make it DO something",
 			"body": "Actions are what happens - they run top to bottom whenever the conditions pass.",
-			"task": "Click Add Action (or double-click the right lane) and pick Print Message, then type something friendly.",
+			"task": "Double-click the right lane (or press A) and pick Print Message, then type something friendly.",
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_action(sheet),
 		},
 		{
 			"title": "See the honest GDScript",
 			"body": "Your sheet IS a plain Godot script - no runtime, no magic. Clicking a code line jumps to the row that made it, so the sheet and the script always explain each other.",
-			"task": "Click the GDScript button in the toolbar and find the line your action just added.",
+			"task": "Open Menu ▸ View ▸ GDScript Panel and find the line your action just added.",
 			"check": Callable(),
 		},
 		{

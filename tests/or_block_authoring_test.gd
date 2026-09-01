@@ -85,8 +85,12 @@ static func run() -> bool:
 	var add_labels: PackedStringArray = PackedStringArray()
 	for index: int in range(dock._add_menu_popup.item_count):
 		add_labels.append(dock._add_menu_popup.get_item_text(index))
+	# The Add menu says the same command WITHOUT the key typed into its words: the cascade prints
+	# every key it has from the one shortcut table instead, so this item carries B as a Shortcut on
+	# the item rather than as four characters of its label (pinned in resting_toolbar_test). The
+	# right-click menu still spells it out, and that reading is pinned above.
 	ok = _check("the Add menu offers a blank sub-event",
-		add_labels.has("Add blank sub-event (B)"), true) and ok
+		add_labels.has("Add blank sub-event"), true) and ok
 	ok = _check("the Add menu offers an Or block", add_labels.has("Make 'Or' block"), true) and ok
 	ok = _check("the Add menu offers Else", add_labels.has("Add 'Else'"), true) and ok
 

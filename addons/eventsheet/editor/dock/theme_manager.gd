@@ -12,8 +12,10 @@ extends RefCounted
 #   • the visual THEME EDITOR window (_open_theme_editor → EventSheetThemeEditor) + apply_theme_style,
 #     the "Apply To Current Sheet" landing point (also reached by theme_editor_dialog.gd via the dock's
 #     apply_theme_style delegate),
-#   • the toolbar theme PICKER's populate/refresh logic (_populate_theme_picker /
-#     _refresh_theme_picker_selection) - the picker WIDGET itself stays declared on the dock,
+#   • View ▸ Sheet theme, the per-sheet theme SWITCHER (bind_sheet_theme_menu / _populate_theme_menu /
+#     _refresh_theme_menu_selection / _on_theme_preset_selected). The submenu is built by menu_bar.gd
+#     and handed over here, which then owns filling it, ticking it and acting on a pick. It replaced
+#     an OptionButton on the toolbar; the per-sheet semantics are unchanged,
 #   • the LIVE-RELOAD binding to the active style: _active_theme_style + _sync_active_theme_binding
 #     (connect/disconnect/swap the style's `changed` signal on tab-switch) + _on_active_theme_style_changed
 #     (the handler that repaints when the active `.tres` is edited on disk). The state var and BOTH
@@ -22,9 +24,6 @@ extends RefCounted
 # Extracted from event_sheet_dock.gd to keep that file maintainable.
 #
 # WHAT STAYS ON THE DOCK (reached here through `_dock`):
-#   • the theme picker WIDGET `_theme_picker` (an OptionButton built by menu_bar.gd, which assigns it
-#     back onto the dock and connects `_dock._on_theme_preset_selected`); this helper populates it via
-#     `_dock._theme_picker`,
 #   • `_refresh_title_strip` (the title/identity hub - not theme; apply_theme_style pulls it via _dock),
 #   • the active-tab state (`_current_sheet` / `_current_sheet_path`), `_viewport`,
 #   • the mutation funnel (`_perform_undoable_sheet_edit` / `_mark_dirty` / `_set_status` /
@@ -35,7 +34,7 @@ extends RefCounted
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
 # reached from outside this helper - the in-file call sites, the tests (dock.load_theme_style_from_path
 # / dock.reload_active_theme / dock.use_default_theme), menu_bar.gd (_on_load_theme_requested /
-# _on_reload_theme_requested / _open_theme_editor / _on_theme_preset_selected / _populate_theme_picker),
+# _on_reload_theme_requested / _open_theme_editor / _bind_sheet_theme_menu / _populate_sheet_theme_menu),
 # and theme_editor_dialog.gd (which does `_dock.has_method("apply_theme_style")` +
 # `_dock.call("apply_theme_style", ...)`) - so those callers resolve unchanged.
 #
@@ -164,46 +163,67 @@ func _on_reload_theme_requested() -> void:
 		_dock._set_status("Reload theme failed: no active style resource path.", true)
 
 
-## Populates the toolbar theme switcher with "Default" plus the discovered bundled themes.
-func _populate_theme_picker() -> void:
-	if _dock._theme_picker == null:
+## View ▸ Sheet theme, the per-sheet theme switcher. Held here rather than on the dock because this
+## helper is the one that fills it, ticks it and acts on it; the menu itself is built by menu_bar.gd
+## and handed over at build time.
+var _theme_menu: PopupMenu = null
+
+
+## Takes ownership of the View menu’s Sheet theme submenu: fills it now and wires the pick.
+func bind_sheet_theme_menu(menu: PopupMenu) -> void:
+	if menu == null:
 		return
-	_dock._theme_picker.clear()
+	_theme_menu = menu
+	if not _theme_menu.id_pressed.is_connected(_on_theme_preset_selected):
+		_theme_menu.id_pressed.connect(_on_theme_preset_selected)
+	_populate_theme_menu()
+
+
+## Fills the Sheet theme submenu with "Match Editor (default)" plus every discovered bundled theme,
+## the sheet’s own one ticked. Ids are indices into the list this call just built, so the entries
+## and the ids can never drift; the menu is refilled every time View opens, which is what lets a
+## theme dropped into the themes folder mid-session be pickable with no restart.
+func _populate_theme_menu() -> void:
+	if _theme_menu == null:
+		return
+	_theme_menu.clear()
 	# The default IS the editor-derived style (see _apply_editor_native_defaults) -
 	# label it so a Godot dev knows the sheet already matches their editor.
-	_dock._theme_picker.add_item("Match Editor (default)")
-	_dock._theme_picker.set_item_metadata(0, "")
+	_theme_menu.add_radio_check_item(EventSheetL10n.translate("Match Editor (default)"), 0)
+	_theme_menu.set_item_metadata(0, "")
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
-		_dock._theme_picker.add_item(str(preset.get("name", "Theme")))
-		_dock._theme_picker.set_item_metadata(_dock._theme_picker.item_count - 1, str(preset.get("path", "")))
-	_refresh_theme_picker_selection()
+		_theme_menu.add_radio_check_item(str(preset.get("name", "Theme")), _theme_menu.item_count)
+		_theme_menu.set_item_metadata(_theme_menu.item_count - 1, str(preset.get("path", "")))
+	_refresh_theme_menu_selection()
 
 
-## Selects the switcher entry matching the current sheet's active theme (Default if none).
-func _refresh_theme_picker_selection() -> void:
-	if _dock._theme_picker == null:
+## Ticks the entry matching the current sheet’s active theme (Match Editor if none).
+func _refresh_theme_menu_selection() -> void:
+	if _theme_menu == null:
 		return
 	var active_path: String = ""
 	if _dock._current_sheet != null and _dock._current_sheet.editor_style != null:
 		active_path = _dock._current_sheet.editor_style.resource_path
 	var target_index: int = 0
-	for i in range(_dock._theme_picker.item_count):
-		if str(_dock._theme_picker.get_item_metadata(i)) == active_path:
+	for i in range(_theme_menu.item_count):
+		if str(_theme_menu.get_item_metadata(i)) == active_path:
 			target_index = i
 			break
-	_dock._theme_picker.selected = target_index
+	for i in range(_theme_menu.item_count):
+		_theme_menu.set_item_checked(i, i == target_index)
 
 
-## Applies the chosen theme preset (or the built-in default) to the current sheet.
+## Applies the chosen theme preset (or the built-in default) to the current sheet. Per-sheet, out of
+## the undo history, persisted on the sheet resource - exactly what picking one always did.
 func _on_theme_preset_selected(index: int) -> void:
-	if _dock._theme_picker == null:
+	if _theme_menu == null or index < 0 or index >= _theme_menu.item_count:
 		return
-	var path: String = str(_dock._theme_picker.get_item_metadata(index))
+	var path: String = str(_theme_menu.get_item_metadata(index))
 	if path.is_empty():
 		_on_set_default_theme_requested()
 	else:
 		load_theme_style_from_path(path)
-	_refresh_theme_picker_selection()
+	_refresh_theme_menu_selection()
 
 
 func _open_theme_editor() -> void:
@@ -225,7 +245,7 @@ func apply_theme_style(style: EventSheetEditorStyle) -> void:
 		_active_theme_style = style
 		_publish_active_style()
 		_dock._refresh_after_edit()
-		_refresh_theme_picker_selection()
+		_refresh_theme_menu_selection()
 		_dock._mark_dirty("Theme applied from the theme editor.")
 
 

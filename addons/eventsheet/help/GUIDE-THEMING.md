@@ -11,8 +11,8 @@ This editor uses Godot-native resources instead of runtime CSS. The goal is stil
 
 Current additions on top of the model below:
 
-- A **toolbar theme switcher** lists "Default" plus the bundled presets - no file dialog
-  needed for the common case.
+- **View ▸ Sheet theme** lists "Match Editor (default)" plus the bundled presets, the one this
+  sheet wears ticked - no file dialog needed for the common case.
 - The built-in default is **Godot-adaptive** (`EventSheetGodotTheme.adapt_to_editor`):
   with no theme assigned, the sheet derives its colors from your editor theme so it looks
   native in any Godot skin.
@@ -109,13 +109,16 @@ follow the theme.
 3. Edit the `.tres` resource in the Inspector for structural tokens such as sheet background, group/comment styling, and hover/selection fills.
 4. Use the Theme Editor dialog's live preview for lane and chip styling - it is the visual preview path, since rows are painted by the renderer and there are no per-row scenes.
 5. Save the resource.
-6. Assign the style to `EventSheetResource.editor_style` or load it through the dock toolbar.
+6. Assign the style to `EventSheetResource.editor_style` or load it from the dock's View menu.
 
 ## Switching themes
 
-- Toolbar actions in the EventSheet dock:
+![The dock's View menu open with Sheet theme highlighted near its foot, its submenu beside it listing Match Editor (default) - ticked - above the bundled presets: Catppuccin Mocha, Designer Template, Dracula, Gruvbox Dark, High Contrast, Mockup Slate, Monokai, Nord, Soft Light and Solarized Light](images/view-sheet-theme-menu.png)
+
+- In the EventSheet dock's **Menu ▸ View**:
+  - **Sheet theme**: pick a bundled preset for this sheet; the active one is ticked.
   - **Load Theme**: pick an `EventSheetEditorStyle` resource.
-  - To clear a per-sheet override, pick **Match Editor (default)** in the toolbar theme picker.
+  - To clear a per-sheet override, pick **Match Editor (default)** under **Sheet theme**.
   - **Reload Theme**: reload the active style from disk.
 
 ### Bundled example themes

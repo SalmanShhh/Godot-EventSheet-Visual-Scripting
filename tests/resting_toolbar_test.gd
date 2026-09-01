@@ -71,6 +71,8 @@ static func run() -> bool:
 	ok = _test_the_history_icons() and ok
 	ok = _test_keys_come_from_the_table() and ok
 	ok = _test_simple_mode_lets_the_strip_alone() and ok
+	ok = _test_the_sheet_theme_menu() and ok
+	ok = _test_the_one_time_note() and ok
 	return ok
 
 
@@ -131,7 +133,10 @@ static func _test_the_cascade() -> bool:
 		counts[name] = -1 if submenu == null else submenu.item_count
 	ok = _check("Sheet keeps its items", counts["EventSheetSheetMenu"], 27) and ok
 	ok = _check("Edit keeps its items", counts["EventSheetEditMenu"], 10) and ok
-	ok = _check("View keeps its items, plus Full toolbar", counts["EventSheetViewMenu"], 56) and ok
+	# 57, not 56: View ▸ Sheet theme joined it when the theme OptionButton left the strip. The item
+	# is a submenu, so this counts the hanger - its entries are pinned in _test_the_sheet_theme_menu.
+	ok = _check("View keeps its items, plus Full toolbar and Sheet theme",
+		counts["EventSheetViewMenu"], 57) and ok
 	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	var tools: PopupMenu = popup.find_child("EventSheetToolsMenu", true, false) as PopupMenu
@@ -230,7 +235,104 @@ static func _test_keys_come_from_the_table() -> bool:
 		var binding: String = EventSheetShortcuts.binding_for(str(entry[1]))
 		ok = _check("%s prints its key from the table" % str(entry[0]),
 			button.tooltip_text.ends_with("(%s)" % binding), true) and ok
+	# And so does every entry in the cascade that has one. A menu item carries its key as a Shortcut
+	# (hint_key builds it from the same table), so the pin is "the item has one, and it is the one
+	# the table says" - never a typed-out key name, which is the whole point of the seam.
+	var popup: PopupMenu = (editor._toolbar.find_child("EventSheetMenu", true, false) as MenuButton).get_popup()
+	for entry: Array in [["EventSheetSheetMenu", 1, "open"], ["EventSheetSheetMenu", 2, "save"],
+			["EventSheetSheetMenu", 3, "save_as"], ["EventSheetEditMenu", 0, "copy"],
+			["EventSheetEditMenu", 1, "paste"], ["EventSheetEditMenu", 2, "undo"],
+			["EventSheetEditMenu", 3, "redo"], ["EventSheetToolsMenu", 6, "project_search"],
+			["EventSheetAddMenu", 5, "add_blank_subevent"]]:
+		var submenu: PopupMenu = popup.find_child(str(entry[0]), true, false) as PopupMenu
+		var index: int = submenu.get_item_index(int(entry[1]))
+		var shortcut: Shortcut = submenu.get_item_shortcut(index)
+		ok = _check("%s id %d carries a key" % [str(entry[0]), int(entry[1])],
+			shortcut != null and not shortcut.events.is_empty(), true) and ok
+		if shortcut != null and not shortcut.events.is_empty():
+			var expected: Dictionary = EventSheetShortcuts.parse(EventSheetShortcuts.binding_for(str(entry[2])))
+			var pressed: InputEventKey = shortcut.events[0] as InputEventKey
+			ok = _check("and it is the table’s key for %s" % str(entry[2]),
+				int(pressed.keycode), int(expected.get("keycode", KEY_NONE))) and ok
+	# The one hand-typed key on the Add menu is gone: the item says what it does, and its key is
+	# printed beside it by the seam.
+	var add_menu: PopupMenu = popup.find_child("EventSheetAddMenu", true, false) as PopupMenu
+	ok = _check("no hand-typed key is left on the blank sub-event item",
+		add_menu.get_item_text(add_menu.get_item_index(5)), "Add blank sub-event") and ok
 	editor.free()
+	return ok
+
+
+## THE THEME PICKER MOVED, WHOLE. It was an OptionButton on the strip; it is View ▸ Sheet theme now,
+## built from the very same preset list with the sheet’s own theme ticked. Pinned against
+## EventSheetThemePresets rather than against typed-out theme names, so a bundled theme added or
+## renamed cannot make this test lie.
+static func _test_the_sheet_theme_menu() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var ok: bool = _check("nothing named a theme picker is left on the strip",
+		editor._toolbar.find_child("EventSheetThemePicker", true, false), null)
+	var view_popup: PopupMenu = editor._view_popup
+	var index: int = view_popup.get_item_index(EventSheetMenuBar.SHEET_THEME_VIEW_ID)
+	ok = _check("View names it", view_popup.get_item_text(index), "Sheet theme") and ok
+	var theme_menu: PopupMenu = view_popup.find_child("EventSheetSheetThemeMenu", true, false) as PopupMenu
+	ok = _check("and it is a submenu of View", theme_menu != null, true) and ok
+	if theme_menu == null:
+		editor.free()
+		return false
+	var expected: PackedStringArray = PackedStringArray(["Match Editor (default)"])
+	for preset: Dictionary in EventSheetThemePresets.list_presets():
+		expected.append(str(preset.get("name", "Theme")))
+	var listed: PackedStringArray = PackedStringArray()
+	for item: int in theme_menu.item_count:
+		listed.append(theme_menu.get_item_text(item))
+	ok = _check("it lists Match Editor plus every discovered preset", listed, expected) and ok
+	# The tick: a sheet with no style of its own wears the editor-derived default, which is entry 0.
+	ok = _check("a sheet with no theme of its own ticks Match Editor",
+		theme_menu.is_item_checked(0), true) and ok
+	# Picking one is the same per-sheet apply the OptionButton did: the style lands on THIS sheet,
+	# and the tick follows it.
+	if theme_menu.item_count > 1:
+		editor._theme_manager._on_theme_preset_selected(1)
+		ok = _check("picking a preset puts it on this sheet",
+			editor._current_sheet.editor_style != null
+				and editor._current_sheet.editor_style.resource_path == str(theme_menu.get_item_metadata(1)),
+			true) and ok
+		ok = _check("and the tick moves with it", theme_menu.is_item_checked(1), true) and ok
+		ok = _check("leaving Match Editor unticked", theme_menu.is_item_checked(0), false) and ok
+		editor._theme_manager._on_theme_preset_selected(0)
+		ok = _check("Match Editor clears the per-sheet override",
+			editor._current_sheet.editor_style, null) and ok
+	# The GDScript toggle is on the expanded strip and named in View, beside the other panel
+	# toggles - one toggle, two doors, and neither of them on the resting strip.
+	var code_button: Button = editor._toolbar.find_child("EventSheetCodePanelButton", true, false) as Button
+	ok = _check("the GDScript toggle is a button on the strip", code_button != null, true) and ok
+	ok = _check("and it rests hidden", code_button != null and code_button.visible, false) and ok
+	ok = _check("View names the same panel",
+		view_popup.get_item_text(view_popup.get_item_index(0)), "GDScript Panel (toggle)") and ok
+	editor.free()
+	return ok
+
+
+## THE ONE-TIME NOTE. A project that already has sheets in it is told once, in the status bar, that
+## the strip rests and where everything went. Once - not once per sheet, not once per tab - and
+## never at all for a project whose first sheet is the blank one the workspace seeds.
+static func _test_the_one_time_note() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var ok: bool = _check("a brand-new project is told nothing",
+		editor._menu_bar.announce_resting_strip(false), false)
+	ok = _check("a project with sheets in it is told once",
+		editor._menu_bar.announce_resting_strip(true), true) and ok
+	ok = _check("and the note is the one this file states",
+		editor._status_label.text, EventSheetMenuBar.RESTING_NOTE) and ok
+	ok = _check("never again, however many sheets it opens",
+		editor._menu_bar.announce_resting_strip(true), false) and ok
+	editor.free()
+	# A reader who already expanded the strip is not told it is resting - because it is not.
+	var expanded: EventSheetEditor = _editor()
+	expanded._menu_bar.set_full_toolbar(true)
+	ok = _check("an expanded strip says nothing about resting",
+		expanded._menu_bar.announce_resting_strip(true), false) and ok
+	expanded.free()
 	return ok
 
 

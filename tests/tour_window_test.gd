@@ -44,7 +44,26 @@ static func run() -> bool:
 		bool((steps[3]["check"] as Callable).call(event_sheet)), true) and passed
 	passed = _check("checks survive a null sheet (no open sheet = pending, never a crash)",
 		bool((steps[1]["check"] as Callable).call(null)), false) and passed
+	passed = _test_no_step_points_at_a_retired_button(steps) and passed
 	return passed
+
+
+## THE TOUR POINTS AT THE SURFACE THAT IS THERE. The editor's top strip rests: one cascading Menu,
+## the save/undo/redo icons, the play button, Quick add and a chevron. A step that says "click Add
+## Event in the toolbar" or "click the GDScript button in the toolbar" is telling a beginner to look
+## for a button their strip does not show - so no step may name one. The doors the tour uses instead
+## are the ones the canvas and the Menu actually carry: the corner links, the lanes, the keys, and
+## Menu ▸ View.
+static func _test_no_step_points_at_a_retired_button(steps: Array[Dictionary]) -> bool:
+	var offenders: PackedStringArray = PackedStringArray()
+	for index: int in range(steps.size()):
+		var task: String = str(steps[index].get("task", ""))
+		for phrase: String in ["Add Event in the toolbar", "GDScript button in the toolbar",
+				"click Add Condition", "click Add Action", "in the toolbar"]:
+			if task.contains(phrase):
+				offenders.append("step %d: %s" % [index + 1, phrase])
+	return _check("no step sends a reader to a button the resting strip does not show",
+		offenders, PackedStringArray())
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

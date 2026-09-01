@@ -360,10 +360,16 @@ i18n (Godot translations).
 
   Press the chevron (or tick **View ▸ Full toolbar**) and every button the strip has comes back, in
   the order it always had them: Run Scene, the preview buttons, Add Event / Condition / Action /
-  Code, the Add menu, the GDScript toggle and the theme picker. The choice is remembered for the
+  Code and the GDScript toggle. The choice is remembered for the
   project, and nothing was taken away - a button you cannot see still answers to its key.
 
   ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
+
+  The first time a project that already has sheets in it opens on the resting strip, the status bar
+  says so once - where the buttons went, and that no key changed. It is remembered per project, so
+  it is never said twice, and a brand-new project never sees it at all.
+
+  ![The editor with the strip at rest and the status bar along its foot reading: The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.](images/resting-toolbar-note.png)
 - **Adding happens in the sheet, not on the strip.** The canvas carries the two links you already
   reach for: a muted **Add event** in its top-left corner and a **+ Add…** in its top-right, on
   every sheet, pinned to the corners so scrolling never takes them away. "Add event" is the E key;

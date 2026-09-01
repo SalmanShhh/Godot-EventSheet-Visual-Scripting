@@ -6000,3 +6000,4 @@ Add event,Добавить событие
 + Add…,+ Добавить…
 Add an event to this sheet.,Добавить событие в этот лист.
 "Everything you can add here - the same menu right-clicking empty space opens.","Всё, что здесь можно добавить - то же меню, что открывает правый клик по пустому месту."
+"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","Панель инструментов отдыхает: каждая кнопка находится в меню или под стрелкой, клавиши не изменились. Вид > Полная панель инструментов вернёт всё."

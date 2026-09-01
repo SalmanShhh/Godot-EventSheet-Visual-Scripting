@@ -2,11 +2,11 @@
 class_name EventSheetMenuBar
 extends RefCounted
 # The dock's top toolbar + menu bar: the HFlowContainer that flow-wraps the grouped
-# Sheet/Add/Edit/View/Tools MenuButtons, the high-frequency one-click buttons, the per-sheet
-# theme picker, and the quick-add LineEdit. Assembly only - every menu/button action targets
+# Sheet/Add/Edit/View/Tools menus, the high-frequency one-click buttons, and the quick-add
+# LineEdit. Assembly only - every menu/button action targets
 # a dock method that STAYS on the dock, reached through the `_dock` back-reference (the same
 # pattern as the other dock/ helpers). The widgets the dock reads later (_toolbar, _view_popup,
-# _theme_picker, _quick_add_edit) stay DECLARED on the dock; build() constructs them and assigns
+# _quick_add_edit) stay DECLARED on the dock; build() constructs them and assigns
 # them back so nothing else changes. Extracted from event_sheet_dock.gd to keep that file
 # maintainable; the menus keep their .name + item order so the dock's tests find them unchanged.
 
@@ -26,11 +26,30 @@ const FULL_TOOLBAR_META_KEY: String = "eventsheets_full_toolbar"
 ## The View menu's mirror of the chevron. A number the View menu has never used.
 const FULL_TOOLBAR_VIEW_ID: int = 9814
 
+## View ▸ Sheet theme, the home of the per-sheet theme picker that used to be an OptionButton on
+## the strip. The next number the View menu has never used.
+const SHEET_THEME_VIEW_ID: int = 9815
+
+## Where "this project has already been told the strip rests" is remembered, in the same editor
+## settings project metadata section every other per-project editor choice uses. Read with a NON-null
+## sentinel default, because a missing key with a null default prints an editor ERROR.
+const RESTING_NOTE_META_KEY: String = "eventsheets_resting_note_seen"
+
+## The one-time note itself, said in the status bar the first time a project with sheets already in
+## it opens on the resting strip. Held as a constant so the suite pins the words rather than a
+## paraphrase of them.
+const RESTING_NOTE: String = "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back."
+
 ## The controls the strip shows AT REST, in reading order: the one cascading Menu, the save/undo/redo
 ## icons, the play button's slot, the Quick add field, and the chevron that expands the rest. Held as
 ## node references rather than indices, because the strip's order is edited by every pass that
 ## touches it and an index list goes stale silently.
 var _resting_controls: Array = []
+
+## Whether this session has already said the one-time resting note. The durable answer is the
+## project metadata beside it; this is what keeps a session that has no EditorSettings to write to
+## (a headless run, a test) from repeating the note on every sheet it opens.
+var _resting_note_said: bool = false
 
 ## The chevron itself, and the strip it expands.
 var _expander: Button = null
@@ -56,7 +75,7 @@ func init(dock: Control) -> void:
 
 ## Builds the toolbar + menu bar and adds it as the FIRST child of `root` (the workspace
 ## VBox), exactly where the dock used to inline this. Assigns _toolbar/_view_popup/
-## _theme_picker/_quick_add_edit back onto the dock during the build, before any reader runs.
+## _quick_add_edit back onto the dock during the build, before any reader runs.
 func build(root: Node) -> void:
 	var _toolbar: HFlowContainer = HFlowContainer.new()
 	_toolbar.name = "EventSheetToolbar"
@@ -178,6 +197,14 @@ func build(root: Node) -> void:
 			16: _dock._save_sheet_as_text_requested()
 			19: _dock._shared_sheets.open_new_shared_sheet()
 	)
+	# THE MENU TEACHES ITS KEYS. Every entry in this group that has a binding in the ONE shortcut
+	# table prints it, through the same hint_key seam the right-click menus and the Add menu use - a
+	# hint only, never a second listener, because the keys are already routed in the viewport. An
+	# entry with no binding (New…, Export GDScript…, the wizards) simply says what it does.
+	for keyed: Variant in [[1, "open"], [2, "save"], [3, "save_as"]]:
+		var sheet_keyed: Array = keyed
+		EventSheetContextMenus.hint_key(sheet_popup, int(sheet_keyed[0]),
+			EventSheetShortcuts.binding_for(str(sheet_keyed[1])))
 	# ── THE ICON STRIP ─────────────────────────────────────────────────────────────────────────
 	# Save, Undo, Redo, as icon-only buttons wearing the editor's own icons. Every tooltip prints its
 	# key from the ONE shortcut table, so a rebound key shows its new binding here without an edit.
@@ -289,7 +316,7 @@ func build(root: Node) -> void:
 	add_popup.add_separator()
 	# The three event-shape commands, on the Add menu as well as the right-click menu: the sheet
 	# reads Or blocks, blank sub-events and Else, so all three must be typeable in the same words.
-	add_popup.add_item("Add blank sub-event (B)", 5)
+	add_popup.add_item("Add blank sub-event", 5)
 	add_popup.add_item("Make 'Or' block", 6)
 	add_popup.add_item("Add 'Else'", 7)
 	add_popup.add_separator()
@@ -336,7 +363,8 @@ func build(root: Node) -> void:
 	# on a menu item. A hint only: the keys are already routed in the viewport's own key handling,
 	# and a second listener on a hidden popup would run the gesture twice.
 	for keyed: Variant in [[12, "add_event"], [13, "add_condition"], [14, "add_action"],
-			[15, "add_group"], [16, "add_comment"], [8, "add_variable"], [3, "add_function"]]:
+			[15, "add_group"], [16, "add_comment"], [8, "add_variable"], [3, "add_function"],
+			[5, "add_blank_subevent"]]:
 		var keyed_entry: Array = keyed
 		EventSheetContextMenus.hint_key(add_popup, int(keyed_entry[0]),
 			EventSheetShortcuts.binding_for(str(keyed_entry[1])))
@@ -367,6 +395,11 @@ func build(root: Node) -> void:
 			5: _dock._find_references_requested()
 			6: _dock._open_ai_generate()
 	)
+	# The four gestures on this menu that have keys print them from the same table.
+	for keyed: Variant in [[0, "copy"], [1, "paste"], [2, "undo"], [3, "redo"]]:
+		var edit_keyed: Array = keyed
+		EventSheetContextMenus.hint_key(edit_popup, int(edit_keyed[0]),
+			EventSheetShortcuts.binding_for(str(edit_keyed[1])))
 	# View ▸ - panels, multi-view, zoom and theming.
 	var view_popup: PopupMenu = PopupMenu.new()
 	view_popup.name = "EventSheetViewMenu"
@@ -461,6 +494,19 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(41), "Show the selected condition, action, object or group beside the sheet, with its parameters editable in place. Hidden by default in Simple Mode.")
 	view_popup.set_item_checked(view_popup.get_item_index(41), not _dock._simple_mode)
 	view_popup.add_separator()
+	# Sheet theme ▸ - the per-sheet theme picker, which used to be an OptionButton on the strip. Same
+	# preset list, same per-sheet semantics, ticked on the one this sheet wears. The submenu is
+	# refilled every time View opens (the Language idiom), so a theme dropped into the themes folder
+	# mid-session is pickable without a restart and the tick follows a theme changed elsewhere.
+	# Explicit child-popup wiring with its own id, never an id-less add_submenu_item.
+	var sheet_theme_menu: PopupMenu = PopupMenu.new()
+	sheet_theme_menu.name = "EventSheetSheetThemeMenu"
+	view_popup.add_child(sheet_theme_menu)
+	view_popup.add_submenu_item("Sheet theme", "EventSheetSheetThemeMenu", SHEET_THEME_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(SHEET_THEME_VIEW_ID),
+		"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.")
+	_dock._bind_sheet_theme_menu(sheet_theme_menu)
+	view_popup.about_to_popup.connect(func() -> void: _dock._populate_sheet_theme_menu())
 	view_popup.add_item("Load Theme…", 6)
 	view_popup.add_item("Reload Theme", 7)
 	view_popup.add_item("Theme Editor…", 8)
@@ -651,6 +697,8 @@ func build(root: Node) -> void:
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
+	# The one gesture on this menu with a key of its own, printed from the table like every other.
+	EventSheetContextMenus.hint_key(tools_popup, 6, EventSheetShortcuts.binding_for("project_search"))
 	# The Menu's foot: the two doors a reader looks for by name rather than by group. Both open the
 	# same Manual the Tools entry does - this is a second door onto one page, never a second page.
 	menu_popup.add_separator()
@@ -665,16 +713,15 @@ func build(root: Node) -> void:
 	# Simple Mode is no longer a pill on the strip: the strip is already calm, so the audience flag
 	# reads and flips from View ▸ Simple Mode (id 11) and from the Welcome window, where a reader
 	# meets it first. Every one of its other powers is untouched.
-	# GDScript stays a one-click toggle (the pairing thesis: honest output, always
-	# one click away) next to the per-sheet theme picker.
-	_add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
-	var _theme_picker: OptionButton = OptionButton.new()
-	_theme_picker.name = "EventSheetThemePicker"
-	_theme_picker.tooltip_text = "Theme for this sheet (Load/Reload and the Theme Editor live in View)"
-	_theme_picker.item_selected.connect(_dock._on_theme_preset_selected)
-	_dock._theme_picker = _theme_picker
-	_toolbar.add_child(_theme_picker)
-	_dock._populate_theme_picker()
+	# GDScript stays a one-click toggle on the EXPANDED strip (the pairing thesis: honest output,
+	# always one click away), beside its twin in View ▸ GDScript Panel - the same toggle, the same
+	# handler, shown where the other panel toggles are named.
+	var code_panel_button: Button = _add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
+	code_panel_button.name = "EventSheetCodePanelButton"
+	# The per-sheet theme picker is no longer an OptionButton on the strip: it is View ▸ Sheet theme,
+	# a submenu built from the very same preset list with the sheet's own theme ticked. The
+	# semantics are untouched - one theme per sheet, chosen out of the undo history, persisted on
+	# the sheet resource - only the surface moved.
 	var _quick_add_edit: LineEdit = LineEdit.new()
 	_quick_add_edit.name = "EventSheetQuickAdd"
 	_quick_add_edit.placeholder_text = "Quick add or find…  (e.g. heal 5, or Chase)"
@@ -1039,6 +1086,32 @@ func set_full_toolbar(shown: bool) -> void:
 	if _dock != null:
 		_dock._set_status("Full toolbar on - every button is on the strip." if shown
 			else "Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.")
+
+
+## THE ONE-TIME NOTE. A project that already has sheets in it had a strip with twenty-one controls
+## on it yesterday; the first sheet it opens on the resting strip says once, in the status bar,
+## where everything went and that no key changed. Said ONCE per project, remembered in the same
+## per-project metadata the rest of the strip's state uses.
+##
+## `opened_existing_sheet` is what makes a brand-new project never see it: a project whose first
+## sheet is the blank one the workspace seeds has nothing to be told, because it never saw the old
+## strip. Answers whether the note was said, so the caller (and the suite) can tell.
+func announce_resting_strip(opened_existing_sheet: bool) -> bool:
+	if _dock == null or _full_toolbar or not opened_existing_sheet or _resting_note_said:
+		return false
+	var settings: Object = _editor_settings()
+	var stored: Variant = ("" if settings == null
+		else settings.call("get_project_metadata", "eventsheets", RESTING_NOTE_META_KEY, ""))
+	# Said once per SESSION as well as once per project: every tab activation passes through here,
+	# and the metadata write is the editor's to keep - a headless run (no EditorSettings at all)
+	# still has to say it exactly once rather than on every sheet it opens.
+	_resting_note_said = true
+	if stored is bool and bool(stored):
+		return false
+	if settings != null:
+		settings.call("set_project_metadata", "eventsheets", RESTING_NOTE_META_KEY, true)
+	_dock._set_status(EventSheetL10n.translate(RESTING_NOTE))
+	return true
 
 
 func _toggle_full_toolbar_from_chevron() -> void:

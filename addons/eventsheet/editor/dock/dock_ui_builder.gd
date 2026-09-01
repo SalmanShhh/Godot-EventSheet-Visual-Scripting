@@ -38,7 +38,7 @@ func build_ui() -> void:
 	# of ~28 controls overflowed past the panel edge).
 	# The toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add
 	# are built by the extracted EventSheetMenuBar; it adds _dock._toolbar as root's FIRST child
-	# and assigns _dock._toolbar/_dock._view_popup/_dock._theme_picker/_dock._quick_add_edit back onto the dock.
+	# and assigns _dock._toolbar/_dock._view_popup/_dock._quick_add_edit back onto the dock.
 	_dock._menu_bar.init(_dock)
 	_dock._menu_bar.build(root)
 

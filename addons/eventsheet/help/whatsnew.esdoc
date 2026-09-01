@@ -57,6 +57,28 @@ What changed in the build you have installed (v0.17.0), in the words the release
   theirs too. Every one is read from the one shortcut table through the same seam the right-click
   menus use, so a rebound key shows its new binding with no edit anywhere (the hand-typed \"(V)\" on
   Global Variable is gone with it). Every item kept the id it shipped with.
+- **The theme picker is View ▸ Sheet theme.** The per-sheet theme switcher left the strip and became
+  a submenu of View, built from the very same preset list - Match Editor (default) plus every bundled
+  theme - with the one this sheet wears ticked. The semantics did not move an inch: one theme per
+  sheet, chosen out of the undo history, persisted on the sheet resource so it travels with the file.
+  The submenu refills every time View opens, so a theme dropped into the themes folder mid-session is
+  pickable with no restart. Load Theme…, Reload Theme and the Theme Editor sit directly beneath it,
+  where they always were.
+- **The GDScript panel toggle is a panel toggle.** It is on the expanded strip and named in View
+  beside the other panel toggles - one toggle, two doors, neither of them on the resting strip.
+- **The Menu teaches every key it has.** Sheet ▸ Open / Save / Save As, Edit ▸ Copy / Paste / Undo /
+  Redo, Tools ▸ Find in Project and Add ▸ Add blank sub-event now print their bindings beside them,
+  read from the one shortcut table through the same seam the right-click menus use - so a rebound key
+  shows its new binding with no edit anywhere, and the last hand-typed key name in the cascade (the
+  \"(B)\" on Add blank sub-event) is gone with it.
+- **One note, once.** The first time a project that already has sheets in it opens on the resting
+  strip, the status bar says once where everything went and that no key changed. It is remembered per
+  project, so it is never said twice; a brand-new project never sees it at all, because it never saw
+  the old strip. A reader who has already expanded the strip is not told it is resting.
+- **The tour points at the surface that is there.** Its steps named \"Add Event in the toolbar\" and
+  \"the GDScript button in the toolbar\" - two buttons a resting strip does not show. They now name the
+  sheet's own corner links, the lanes, the keys and Menu ▸ View, and a suite sweep keeps a retired
+  button out of the tour's words.
 - **Simple Mode stopped touching the strip.** It no longer hides the Add Code button - the strip is
   already calm, and two calm strips that disagree about what is on them help nobody. Every other
   Simple Mode power is untouched: the picker denylist, the gated right-click menus, reading mode, the

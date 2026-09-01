@@ -206,7 +206,6 @@ var _row_help_button_second: Button = null
 ## The finding the door acts on, held only between the selection that showed it and the click that
 ## answers it.
 var _row_help_finding: Dictionary = {}
-var _theme_picker: OptionButton = null
 var _provider_dialog: Window = null
 var _provider_list: ItemList = null
 var _provider_file_dialog: FileDialog = null
@@ -314,7 +313,7 @@ var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  
 var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new()  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
 var _sheet_diff: EventSheetSheetDiff = EventSheetSheetDiff.new()  # "What Changed Since Save" - rows a save would touch (dock/sheet_diff.gd)
 var _variable_grouping: EventSheetVariableGrouping = EventSheetVariableGrouping.new()  # drag-onto-variable folders + rename popup (dock/variable_grouping.gd)
-var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add (dock/menu_bar.gd)
+var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + the one cascading Menu (Sheet/Add/Edit/View/Tools) + quick-add (dock/menu_bar.gd)
 var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # The Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
 var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
 var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # The eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
@@ -720,7 +719,7 @@ func _activate_tab(index: int) -> void:
 	_refresh_functions_list()
 	_theme_manager._sync_active_theme_binding()
 	_refresh_title_strip()
-	_theme_manager._refresh_theme_picker_selection()
+	_theme_manager._refresh_theme_menu_selection()
 	_refresh_exposed_node()
 	_refresh_tab_bar()
 	# Godot-native default (welcome panel choice): the generated-GDScript panel rides
@@ -732,6 +731,12 @@ func _activate_tab(index: int) -> void:
 	_refresh_code_panel()
 	var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
 	_set_status("Loaded: %s" % label)
+	# THE ONE-TIME NOTE, said over that status line the first time a project that already has sheets
+	# in it opens on the resting strip: where the buttons went, and that no key changed. A project
+	# whose first sheet is the blank one the workspace seeds never saw the old strip, so it is never
+	# told about the new one - which is why the sheet's own path is what decides.
+	if _menu_bar != null:
+		_menu_bar.announce_resting_strip(not _current_sheet_path.is_empty())
 	_persist_session()
 
 
@@ -1405,8 +1410,9 @@ func _on_open_requested() -> void:
 
 
 # Theme delegates → dock/theme_manager.gd. menu_bar.gd's View menu drives _on_load_theme_requested /
-# _on_reload_theme_requested; the toolbar picker connects _on_theme_preset_selected + calls
-# _populate_theme_picker / _refresh_theme_picker_selection back through the dock.
+# _on_reload_theme_requested, and hands View ▸ Sheet theme over with _bind_sheet_theme_menu +
+# _populate_sheet_theme_menu (called again each time View opens, so a theme dropped in mid-session is
+# pickable and the tick is current).
 func _on_load_theme_requested() -> void:  # menu_bar.gd View menu
 	_theme_manager._on_load_theme_requested()
 
@@ -1419,16 +1425,16 @@ func _on_reload_theme_requested() -> void:  # menu_bar.gd View menu
 	_theme_manager._on_reload_theme_requested()
 
 
-func _populate_theme_picker() -> void:  # menu_bar.gd (after building the toolbar theme picker)
-	_theme_manager._populate_theme_picker()
+func _bind_sheet_theme_menu(menu: PopupMenu) -> void:  # menu_bar.gd (View ▸ Sheet theme)
+	_theme_manager.bind_sheet_theme_menu(menu)
 
 
-func _refresh_theme_picker_selection() -> void:
-	_theme_manager._refresh_theme_picker_selection()
+func _populate_sheet_theme_menu() -> void:  # menu_bar.gd (every time the View menu opens)
+	_theme_manager._populate_theme_menu()
 
 
-func _on_theme_preset_selected(index: int) -> void:  # menu_bar.gd theme-picker item_selected
-	_theme_manager._on_theme_preset_selected(index)
+func _refresh_theme_menu_selection() -> void:
+	_theme_manager._refresh_theme_menu_selection()
 
 
 # Sheet FILE-IO delegates → dock/sheet_io.gd (EventSheetSheetIO). Bodies live there; the dock keeps
