@@ -5900,3 +5900,15 @@ Kept as written: %s,Tenuta com'era scritta: %s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Questa riga conserva la riga in cui gia compila, scritta come codice. Nient'altro nel file cambia, e torna a leggersi come una riga scelta se il vocabolario riavra il verbo."
 Leave a comment above it,Lascia un commento sopra
 As it will be written,Come verra scritta
+Every row in this sheet is written in the spelling the vocabulary uses today.,Ogni riga di questo foglio e scritta nella grafia che il vocabolario usa oggi.
+"the vocabulary has no newer spelling for this one, so it stays exactly as written","il vocabolario non ha una grafia piu recente per questa, quindi resta com'e scritta"
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten","il verbo piu recente tiene uno stato suo, quindi va scelto invece che riscritto"
+"the rewritten line is not something this file would compile, so it is left alone","la riga riscritta non e qualcosa che questo file compilerebbe, quindi viene lasciata com'e"
+"the rewritten row could not be read back as the same row, so it is left alone","la riga riscritta non si e potuta rileggere come la stessa riga, quindi viene lasciata com'e"
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,Qui non c'e nulla che si possa riscrivere da solo - %d riga/e sono elencate sotto con il motivo.
+"%d row(s) would be rewritten, in one step you can undo.","%d riga/e verrebbero riscritte, in un passo che puoi annullare."
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.","%d riga/e verrebbero riscritte in un passo che puoi annullare, e %d restano esattamente come sono."
+Migrate rows,Migra le righe
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,Non e stato riscritto nulla - ogni riga qui e gia aggiornata oppure elencata come una che questo non puo scrivere.
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d riga/e migrate - un Ctrl+Z riporta tutto indietro.
+Migrate…,Migra…

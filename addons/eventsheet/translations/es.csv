@@ -5900,3 +5900,15 @@ Kept as written: %s,Mantenida tal cual: %s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Esta fila conserva la linea a la que ya compila, escrita como codigo. Nada mas en el archivo cambia, y vuelve a leerse como una fila elegida si el vocabulario vuelve a tener el verbo."
 Leave a comment above it,Dejar un comentario encima
 As it will be written,Como quedara escrita
+Every row in this sheet is written in the spelling the vocabulary uses today.,Cada fila de esta hoja esta escrita con la grafia que el vocabulario usa hoy.
+"the vocabulary has no newer spelling for this one, so it stays exactly as written","el vocabulario no tiene una grafia mas nueva para esta, asi que queda tal como esta escrita"
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten","el verbo mas nuevo guarda su propio estado, asi que hay que elegirlo en vez de reescribirlo"
+"the rewritten line is not something this file would compile, so it is left alone","la linea reescrita no es algo que este archivo compilaria, asi que se deja tal cual"
+"the rewritten row could not be read back as the same row, so it is left alone","la fila reescrita no pudo leerse de vuelta como la misma fila, asi que se deja tal cual"
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,Aqui no hay nada que se pueda reescribir por si solo - %d fila(s) aparecen abajo con el motivo.
+"%d row(s) would be rewritten, in one step you can undo.","%d fila(s) se reescribirian, en un paso que puedes deshacer."
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.","%d fila(s) se reescribirian en un paso que puedes deshacer, y %d quedan tal como estan."
+Migrate rows,Migrar filas
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,No se reescribio nada - cada fila de aqui ya esta al dia o aparece como una que esto no puede escribir.
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d fila(s) migradas - un Ctrl+Z lo devuelve todo.
+Migrate…,Migrar…

@@ -5900,3 +5900,15 @@ Kept as written: %s,書かれたまま残しました: %s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.",この行は、すでにコンパイルされている行をコードとして書き出して保ちます。ファイルの他の部分は変わらず、語彙がその動詞を再び持てば、また選ばれた行として読めるようになります。
 Leave a comment above it,上にコメントを残す
 As it will be written,書かれる姿
+Every row in this sheet is written in the spelling the vocabulary uses today.,このシートのすべての行は、語彙が今使っている綴りで書かれています。
+"the vocabulary has no newer spelling for this one, so it stays exactly as written",語彙にこれより新しい綴りがないため、書かれたままにします
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten",新しい動詞は自前の状態を持つため、書き換えではなく選び直す必要があります
+"the rewritten line is not something this file would compile, so it is left alone",書き換えた行はこのファイルがコンパイルできるものではないため、そのままにします
+"the rewritten row could not be read back as the same row, so it is left alone",書き換えた行を同じ行として読み戻せなかったため、そのままにします
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,ここには自動で書き換えられるものがありません - %d 行を理由とともに下に並べています。
+"%d row(s) would be rewritten, in one step you can undo.",%d 行が書き換えられます。取り消せる一手です。
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.",%d 行が取り消せる一手で書き換えられ、%d 行はそのまま残ります。
+Migrate rows,行を移行する
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,何も書き換えていません - ここの行はすでに最新か、これでは書けないものとして並べてあります。
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d 行を移行しました - Ctrl+Z 一回ですべて戻ります。
+Migrate…,移行…

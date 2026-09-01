@@ -1122,6 +1122,32 @@ static func project_scripts() -> PackedStringArray:
 	return EventSheetProjectDoctor._project_scripts()
 
 
+## Every row of the project that migration has something to say about, sorted and deterministic:
+##
+##   [{sheet: String, row: int, from_id: String, to_id: String, before: String, after: String,
+##     asks: bool}]
+##
+## `sheet` is the file the row lives in and `row` its 1-based place among that sheet's verb-carrying
+## rows in reading order (conditions before actions, sub-events after their parent, functions last) -
+## an address a person can count to, not a handle. `from_id` and `to_id` are "<provider>::<ace_id>"
+## spellings; `to_id` is empty when the vocabulary has no newer spelling for this verb at all.
+## `before` is the line the row writes today and `after` the line it would write once rewritten.
+##
+## `asks` is true when a person has to decide - the verb has no successor, the newer one keeps state
+## of its own and has to be picked, the rewritten row could not be read back as itself, or the file
+## would not compile with it in place. `after` is non-empty EXACTLY when `asks` is false: a row
+## nothing can rewrite has no line to show for a rewrite that will not happen.
+##
+## A row written in the spelling the vocabulary uses today is not here, which is nearly every row of
+## nearly every sheet. Nothing is written, nothing is cached, and nothing carries a timestamp or a
+## machine path - this answers a question, and applying the answer is an edit somebody approves in
+## the sheet's own migrate dialog.
+##
+## This shape is FROZEN, like an `ace_id`: a reader of it may be a studio's own script.
+static func migration_report() -> Array[Dictionary]:
+	return EventSheetMigrationDoctor.rows(EventSheetMigrationDoctor.project_corpus())
+
+
 ## Every scene of the project that loads one resource FILE, in path order, leaving out `own_scene`.
 ##
 ## The question behind "shared with N other scenes": a `.tres` is one object, so a material, an

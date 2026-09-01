@@ -75,6 +75,10 @@ func handle(action: String) -> void:
 			_dock.open_modes_dialog()
 		EventSheetHeadBands.BAND_STATES:
 			_dock.open_states_dialog()
+		EventSheetHeadBands.BAND_MIGRATION:
+			# The one door out of the counting line, and the only place Apply exists. It opens a
+			# receipt; nothing is rewritten until somebody reads it and presses the button on it.
+			_dock.open_migrate_dialog()
 		EventSheetHeadBands.BAND_ATTACH:
 			_dock._attach_behavior_to_selection()
 		"add":

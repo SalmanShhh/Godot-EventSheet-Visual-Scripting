@@ -5900,3 +5900,15 @@ Kept as written: %s,Оставлено как написано: %s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Эта строка сохраняет ту строку, в которую уже компилируется, выписанную кодом. Больше в файле ничего не меняется, и она снова прочитается как выбранная строка, если словарь когда-нибудь вернёт себе этот глагол."
 Leave a comment above it,Оставить комментарий сверху
 As it will be written,Как это будет записано
+Every row in this sheet is written in the spelling the vocabulary uses today.,"Каждая строка в этом листе написана тем написанием, которое словарь использует сегодня."
+"the vocabulary has no newer spelling for this one, so it stays exactly as written","у словаря нет для неё более нового написания, поэтому она остаётся как написана"
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten","новый глагол хранит собственное состояние, поэтому его надо выбрать, а не переписать"
+"the rewritten line is not something this file would compile, so it is left alone","переписанная строка - не то, что этот файл скомпилирует, поэтому она оставлена как есть"
+"the rewritten row could not be read back as the same row, so it is left alone","переписанную строку не удалось прочитать обратно как ту же строку, поэтому она оставлена как есть"
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,Здесь нечего переписать самостоятельно - %d строк(и) перечислены ниже с причиной.
+"%d row(s) would be rewritten, in one step you can undo.","%d строк(и) были бы переписаны, одним шагом, который можно отменить."
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.","%d строк(и) были бы переписаны одним отменяемым шагом, а %d остаются как есть."
+Migrate rows,Перенести строки
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,"Ничего не переписано - каждая строка здесь либо уже актуальна, либо перечислена как та, которую это не может написать."
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d строк(и) перенесено - одно Ctrl+Z возвращает всё назад.
+Migrate…,Перенести…

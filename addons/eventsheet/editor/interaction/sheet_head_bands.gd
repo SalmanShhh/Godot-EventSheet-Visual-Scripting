@@ -437,6 +437,11 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("Edit modes…")
 		BAND_STATES:
 			return EventSheetL10n.translate("Declare states…")
+		BAND_MIGRATION:
+			# The band's count is a fact; this is the one door out of it. The ellipsis is the promise
+			# the band scale law needs kept: pressing it opens a receipt, and nothing is rewritten
+			# until somebody reads that receipt and presses the button on it.
+			return EventSheetL10n.translate("Migrate…")
 	return ""
 
 

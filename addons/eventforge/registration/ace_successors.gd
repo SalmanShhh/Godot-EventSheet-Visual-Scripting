@@ -151,6 +151,19 @@ static func entry_of(source: Variant) -> Dictionary:
 			"key": key_of(descriptor.provider_id, descriptor.ace_id),
 			"name": descriptor.get_list_name(),
 			"template": descriptor.codegen_template,
+			# The reading a row applied on this verb would be baked under - slots and all, never a
+			# finished sentence. A rewrite carries it over so the migrated row goes on reading as a
+			# sentence rather than as an id, exactly as a freshly picked one does.
+			"display_template": descriptor.get_display_text(),
+			# Whether landing on this verb needs more than an id, a template and values: a per-instance
+			# `{uid}`, a member of its own, a prelude, or a term the compiler hoists. Such a verb has to
+			# be PICKED (the dock bakes the uid at apply time and the compiler never does), so a rewrite
+			# that only copied ids and values onto it would emit an unbaked `{uid}` into somebody's file.
+			"needs_baking": descriptor.codegen_template.contains("{uid}") \
+				or not descriptor.member_template.strip_edges().is_empty() \
+				or not descriptor.codegen_prelude.strip_edges().is_empty() \
+				or not descriptor.codegen_on_true.strip_edges().is_empty() \
+				or descriptor.evaluate_last,
 			# ALWAYS an ACEDefinition.ACEType. The two enums number their members differently, so an
 			# entry that carried whichever one its source happened to use would read ACTION as
 			# CONDITION half the time; one spelling here means a reader never has to ask which.
@@ -176,10 +189,19 @@ static func entry_of(source: Variant) -> Dictionary:
 			definition_defaults[parameter_id] = parameter_dict.get("default_value", "")
 			if not str(parameter_dict.get("default_value", "")).strip_edges().is_empty():
 				definition_answered.append(parameter_id)
+		var pack_template: String = str(definition.metadata.get("codegen_template", ""))
 		return {
 			"key": key_of(definition.provider_id, definition.id),
 			"name": definition.display_name,
-			"template": str(definition.metadata.get("codegen_template", "")),
+			"template": pack_template,
+			"display_template": str(definition.metadata.get("display_template", "")) \
+				if not str(definition.metadata.get("display_template", "")).strip_edges().is_empty() \
+				else definition.display_name,
+			"needs_baking": pack_template.contains("{uid}") \
+				or not str(definition.metadata.get("member_template", "")).strip_edges().is_empty() \
+				or not str(definition.metadata.get("codegen_prelude", "")).strip_edges().is_empty() \
+				or not str(definition.metadata.get("codegen_on_true", "")).strip_edges().is_empty() \
+				or bool(definition.metadata.get("evaluate_last", false)),
 			"ace_type": definition.ace_type,
 			"params": definition_params,
 			"declared_defaults": definition_defaults,

@@ -5900,3 +5900,15 @@ Kept as written: %s,쓰인 그대로 남겼습니다: %s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","이 행은 이미 컴파일되는 그 줄을 코드로 적어 그대로 지킵니다. 파일의 다른 부분은 바뀌지 않고, 어휘가 그 동사를 다시 갖게 되면 고른 행으로 다시 읽힙니다."
 Leave a comment above it,위에 주석 남기기
 As it will be written,이렇게 쓰입니다
+Every row in this sheet is written in the spelling the vocabulary uses today.,이 시트의 모든 행은 어휘가 오늘 쓰는 철자로 적혀 있습니다.
+"the vocabulary has no newer spelling for this one, so it stays exactly as written",어휘에 더 새로운 철자가 없어 적힌 그대로 둡니다
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten",새 동사는 자체 상태를 가지므로 다시 쓰기보다 골라야 합니다
+"the rewritten line is not something this file would compile, so it is left alone",다시 쓴 줄은 이 파일이 컴파일할 수 있는 것이 아니어서 그대로 둡니다
+"the rewritten row could not be read back as the same row, so it is left alone",다시 쓴 행을 같은 행으로 되읽지 못해 그대로 둡니다
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,여기에는 저절로 다시 쓸 수 있는 것이 없습니다 - %d개 행을 이유와 함께 아래에 적었습니다.
+"%d row(s) would be rewritten, in one step you can undo.",%d개 행이 되돌릴 수 있는 한 단계로 다시 쓰입니다.
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.","%d개 행이 되돌릴 수 있는 한 단계로 다시 쓰이고, %d개는 그대로 남습니다."
+Migrate rows,행 이전
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,아무것도 다시 쓰지 않았습니다 - 여기 행은 이미 최신이거나 이것이 쓸 수 없는 것으로 적혀 있습니다.
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d개 행을 옮겼습니다 - Ctrl+Z 한 번이면 모두 되돌아갑니다.
+Migrate…,이전…

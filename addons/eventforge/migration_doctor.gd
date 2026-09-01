@@ -33,6 +33,10 @@ extends RefCounted
 ## the wording: the quick-fix chips and the tests address a finding by its check id.
 const CHECK_ID := "migration"
 const CHECK_VERB_GONE := EventSheetMigrationFindings.KIND_VERB_GONE
+## The per-sheet line: one file, how many of its rows migrate cleanly and how many ask you. Its own
+## id because it is the line the "Apply per sheet" chip hangs off, and a chip on the section's
+## summary would offer to migrate a file the summary does not name.
+const CHECK_SHEET := "migration-sheet"
 
 ## How many `.gd` scripts one audit samples, on top of every `.tres` sheet. A ceiling, not a target -
 ## the header says why a `.gd` sheet is a sample and a `.tres` one is not.
@@ -49,7 +53,75 @@ static func ensure_registered() -> void:
 ## inside res://. `sheet_paths` is the project's `.tres` sheets, which is exactly the half of the
 ## corpus that has to be read whole; the `.gd` half is sampled beside it.
 static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(corpus(sheet_paths, EventSheets.project_scripts())))
+	# ONE walk for both halves of the section. Opening a sheet is the expensive part of this audit -
+	# a `.gd` one is lifted from its text every time - so the words and the per-sheet counts are
+	# taken from the same open rather than from two walks of the same corpus.
+	var audited: Dictionary = _audit(corpus(sheet_paths, EventSheets.project_scripts()), {})
+	var said: Array[Dictionary] = []
+	said.assign(audited.get("findings", []))
+	var counted: Array[Dictionary] = []
+	counted.assign(audited.get("rows", []))
+	findings.append_array(said)
+	findings.append_array(sheet_lines(counted))
+
+
+## The project's own corpus, listed the way the audit lists it - what the public report reads when
+## nobody hands it a list of its own.
+static func project_corpus() -> PackedStringArray:
+	return corpus(
+		EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets()),
+		EventSheets.project_scripts())
+
+
+## THE PUBLIC REPORT'S ROWS, and the shape is frozen the way an `ace_id` is - see
+## `EventSheets.migration_report()`, which is the seam this is served through.
+##
+## One entry per row of the project that migration has something to say about:
+##   {sheet, row, from_id, to_id, before, after, asks}
+## `sheet` is the file, `row` its 1-based place among that sheet's verb-carrying rows in reading
+## order, `from_id`/`to_id` are "<provider>::<ace_id>" spellings (`to_id` empty when the vocabulary
+## has no newer one), `before`/`after` are the lines the row writes now and would write, and `asks`
+## is true when a person has to decide. `after` is non-empty exactly when `asks` is false: a row
+## nothing can rewrite has no line to show for a rewrite that will not happen.
+##
+## Sorted by file and then by row, so two machines print the same report. No timestamps, no machine
+## paths, nothing remembered between runs.
+## `vocabulary` is the corpus to answer against, so a test can hand in a catalogue of its own and the
+## editor and the audit can share one reflection of the installed packs.
+static func rows(paths: PackedStringArray, vocabulary: Dictionary = {}) -> Array[Dictionary]:
+	var listed: Array[Dictionary] = []
+	listed.assign(_audit(paths, vocabulary).get("rows", []))
+	return listed
+
+
+## One line per sheet the report names: how many of its rows migrate cleanly and how many ask you.
+## Filed as findings so they land in the same triage inbox as everything else, and so double-clicking
+## one opens the sheet it is about - which is the whole point of a per-sheet line.
+##
+## NOTHING APPLIES FROM HERE. The chip on one of these lines opens the sheet's own migrate dialog,
+## which shows the receipt and owns the undo step. A report that rewrote files from a list nobody was
+## looking at would be the fatal version of this feature.
+static func sheet_lines(report_rows: Array[Dictionary]) -> Array[Dictionary]:
+	var clean: Dictionary = {}
+	var asks: Dictionary = {}
+	var order: PackedStringArray = PackedStringArray()
+	for row: Dictionary in report_rows:
+		var path: String = str(row.get("sheet", ""))
+		if not order.has(path):
+			order.append(path)
+			clean[path] = 0
+			asks[path] = 0
+		if bool(row.get("asks", true)):
+			asks[path] = int(asks[path]) + 1
+		else:
+			clean[path] = int(clean[path]) + 1
+	order.sort()
+	var lines: Array[Dictionary] = []
+	for path: String in order:
+		lines.append(_finding("info", CHECK_SHEET, path,
+			"%s - %d row(s) migrate cleanly, %d ask you." % [path.get_file(), int(clean[path]),
+				int(asks[path])], path))
+	return lines
 
 
 ## What one audit reads: every stored sheet, then the first few scripts in path order. Sorted and
@@ -76,12 +148,33 @@ static func corpus(sheet_paths: PackedStringArray, scripts: PackedStringArray) -
 ##
 ## The vocabulary is resolved ONCE for the whole run and handed to every sheet: reflecting the
 ## installed packs per sheet would be the same answer computed a hundred times.
-static func report(paths: PackedStringArray) -> Array[Dictionary]:
+##
+## `vocabulary` is the corpus to answer against, so a test or a staged fixture can hand in one of its
+## own; the audit itself passes nothing and gets the shipped catalogue.
+static func report(paths: PackedStringArray, vocabulary: Dictionary = {}) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
+	findings.assign(_audit(paths, vocabulary).get("findings", []))
+	return findings
+
+
+## The one walk both halves of the section come out of: {"findings": [...], "rows": [...]}.
+##
+## Each path is opened exactly ONCE, because opening is what this audit costs - a `.gd` sheet is
+## lifted from its text every time it is read - and asking the same corpus two questions is not a
+## reason to read it twice. The vocabulary is reflected once too and handed to every sheet.
+##
+## Paths are sorted here rather than trusted from the caller, so two machines read the same files in
+## the same order and print the same report whatever order they were handed in.
+static func _audit(paths: PackedStringArray, vocabulary: Dictionary) -> Dictionary:
+	var findings: Array[Dictionary] = []
+	var listed: Array[Dictionary] = []
 	if paths.is_empty():
-		return findings
-	var known: Callable = EventSheetMigrationFindings.catalog_resolver()
+		return {"findings": findings, "rows": listed}
+	var catalog: Dictionary = vocabulary if not vocabulary.is_empty() else EventForgeSuccessors.catalog()
+	var known: Callable = EventSheetMigrationFindings.resolver_over(catalog)
 	var importer := GDScriptImporter.new()
+	var read: PackedStringArray = paths.duplicate()
+	read.sort()
 	var measured: int = 0
 	var affected: int = 0
 	# The summary points at the sheet with the MOST gone verbs, because that is the one worth
@@ -89,7 +182,7 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 	# points at nothing: a line that opens a file for no reason is a line that wastes a click.
 	var worst_path: String = ""
 	var worst_count: int = 0
-	for path: String in paths:
+	for path: String in read:
 		var sheet: EventSheetResource = _opened(importer, path)
 		if sheet == null:
 			continue
@@ -101,10 +194,20 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 			worst_count = mine.size()
 			worst_path = path
 		findings.append_array(script_findings(path, mine))
+		for entry: Dictionary in EventSheetMigrationPlan.plan(sheet, catalog):
+			listed.append({
+				"sheet": path,
+				"row": int(entry.get("ordinal", 0)),
+				"from_id": str(entry.get("from", "")),
+				"to_id": str(entry.get("to", "")),
+				"before": str(entry.get("before", "")),
+				"after": str(entry.get("after", "")),
+				"asks": bool(entry.get("asks", true)),
+			})
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		"Migration: %d sheet(s) read, and %d of them hold a verb the installed vocabulary no longer has." % [
 			measured, affected], ""))
-	return findings
+	return {"findings": findings, "rows": listed}
 
 
 ## One path as a sheet, whichever of the two formats it is: a `.tres` is loaded as the resource it

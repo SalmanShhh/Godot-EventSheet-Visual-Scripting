@@ -1020,6 +1020,40 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 	return output
 
 
+## ONE emitted line, read back the way opening the file would read it - the ACE row it lifts to, or
+## null when nothing in the vocabulary claims it as a verb.
+##
+## This is the seam a rewrite proves itself through. A migrated row is only honest if the line it
+## writes is a line this editor reads back as the same row: emit, lift here, emit again, and the
+## three have to agree. Anything else is a row that would change identity the next time somebody
+## opened the file, which is the lossless round-trip law asked one row at a time.
+##
+## An ACTION lifts as a statement inside a throwaway handler; a CONDITION lifts as the term of an
+## `if`, which is the only shape a condition ever has. Both go through the same reverse grammar the
+## importer uses, so a line this refuses is a line the importer would refuse too.
+static func lift_one_line(line: String, as_condition: bool = false) -> Resource:
+	var statement: String = line.strip_edges()
+	if statement.is_empty() or statement.contains("\n"):
+		return null
+	var reverse_entries: Array = _build_reverse_entries()
+	if as_condition:
+		var host_event: EventRow = EventRow.new()
+		if not _parse_conditions(statement, host_event, reverse_entries, ""):
+			return null
+		return host_event.conditions[0] if host_event.conditions.size() == 1 else null
+	var lines: PackedStringArray = PackedStringArray(["func _ready() -> void:", "\t" + statement])
+	var parsed: Dictionary = _parse_body(lines, 1, 1, "", "", "", "", reverse_entries, true)
+	if not bool(parsed.get("ok", false)):
+		return null
+	var rows: Array = parsed.get("rows", [])
+	if rows.size() != 1 or not (rows[0] is EventRow):
+		return null
+	var lifted: EventRow = rows[0]
+	if not lifted.conditions.is_empty() or lifted.actions.size() != 1:
+		return null
+	return lifted.actions[0]
+
+
 ## Build-time de-coding for behaviour packs: replaces each sheet function's single-RawCode body with
 ## lifted ACE rows (the same reverse grammar that opens a .gd as events), kept ONLY when the whole
 ## sheet still recompiles BYTE-IDENTICALLY - a PER-FUNCTION gate, so one un-liftable body never reverts

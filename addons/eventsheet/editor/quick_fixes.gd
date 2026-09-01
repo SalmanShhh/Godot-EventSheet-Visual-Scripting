@@ -173,6 +173,12 @@ const OFFERED := {
 	"collisions-one-way-facing": [
 		{"id": "show_the_node", "label": "Show me the node in the scene"},
 	],
+	# Migration. The chip OPENS the sheet's own migrate dialog and stops there - NOTHING is ever
+	# rewritten from the report, because a rewrite is a receipt somebody read and a button somebody
+	# pressed. The dialog owns the gate and the undo step; this is only a way in from the inbox.
+	"migration-sheet": [
+		{"id": "apply_migrations", "label": "Apply per sheet…"},
+	],
 }
 
 ## Where a guide has to live for a chip to edit it: the packs of THIS project. A shipped guide under
@@ -325,7 +331,31 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 				str(finding.get("path", "")), dock)
 		"unpin_before_free":
 			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
+		# A door, and only a door: it opens the sheet's own migrate receipt and stops there.
+		"apply_migrations":
+			return _open_migrate_dialog(str(finding.get("path", "")), dock)
 	return {"ok": false, "message": "No fix named %s." % fix_id}
+
+
+## Opens the migrate receipt for the sheet in front of the reader, and NOTHING ELSE. Nothing in this
+## file rewrites a row onto a newer spelling: the dialog draws every row as the sentence it reads
+## today beside the one it would read and the line it writes beside the one it would write, proves
+## each rewrite against the compiled file, and owns the one undo step. A report that rewrote files
+## from a list nobody was looking at is the version of this feature that must not exist.
+##
+## IT ONLY EVER REACHES THE OPEN SHEET, for the reason every other chip here does: this section comes
+## off a sweep of the whole project, so the file a line names is usually not the one on screen.
+## Double-clicking the line is what opens its sheet; the chip is what acts once it is there.
+static func _open_migrate_dialog(sheet_path: String, dock: Variant) -> Dictionary:
+	var elsewhere: String = "Open %s and its head band says how many rows have a newer spelling - double-clicking this line opens it." % sheet_path.get_file()
+	if dock == null or not dock.has_method("open_migrate_dialog") \
+			or not _is_the_open_sheet(dock, sheet_path):
+		return {"ok": false, "message": elsewhere}
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	if sheet == null or sheet.read_only:
+		return {"ok": false, "message": "%s is still opening - it reads as code until its rows have been lifted. Try again once it has finished." % sheet_path.get_file()}
+	dock.call("open_migrate_dialog")
+	return {"ok": true, "message": "The receipt lists every row that would be rewritten before anything changes."}
 
 
 ## Swaps every plain Log row of the sheet in front of the reader for the debug-builds-only one, in

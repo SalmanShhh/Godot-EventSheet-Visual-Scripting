@@ -5900,3 +5900,15 @@ Kept as written: %s,"So behalten, wie geschrieben: %s"
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Diese Zeile behaelt die Zeile, zu der sie ohnehin kompiliert, ausgeschrieben als Code. Sonst aendert sich nichts in der Datei, und sie liest sich wieder als gewaehlte Zeile, sollte das Vokabular das Verb je wieder haben."
 Leave a comment above it,Einen Kommentar darueber lassen
 As it will be written,So wird sie geschrieben
+Every row in this sheet is written in the spelling the vocabulary uses today.,"Jede Zeile in diesem Blatt ist in der Schreibweise geschrieben, die das Vokabular heute verwendet."
+"the vocabulary has no newer spelling for this one, so it stays exactly as written","das Vokabular hat dafuer keine neuere Schreibweise, sie bleibt genau so, wie sie geschrieben ist"
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten","das neuere Verb haelt einen eigenen Zustand, es muss also gewaehlt statt umgeschrieben werden"
+"the rewritten line is not something this file would compile, so it is left alone","die umgeschriebene Zeile ist nichts, was diese Datei kompilieren wuerde, sie bleibt unberuehrt"
+"the rewritten row could not be read back as the same row, so it is left alone","die umgeschriebene Zeile konnte nicht als dieselbe Zeile zurueckgelesen werden, sie bleibt unberuehrt"
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,Hier laesst sich nichts von allein umschreiben - %d Zeile(n) sind unten mit dem Grund aufgefuehrt.
+"%d row(s) would be rewritten, in one step you can undo.","%d Zeile(n) wuerden umgeschrieben, in einem Schritt, den du rueckgaengig machen kannst."
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.","%d Zeile(n) wuerden in einem rueckgaengig machbaren Schritt umgeschrieben, und %d bleiben genau so, wie sie sind."
+Migrate rows,Zeilen migrieren
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,"Es wurde nichts umgeschrieben - jede Zeile hier ist entweder schon aktuell oder als eine aufgefuehrt, die dies nicht schreiben kann."
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d Zeile(n) migriert - ein Strg+Z nimmt alles zurueck.
+Migrate…,Migrieren…

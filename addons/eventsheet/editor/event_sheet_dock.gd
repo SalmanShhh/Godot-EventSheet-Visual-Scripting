@@ -367,6 +367,7 @@ var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sh
 var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
 var _pattern_adopt_dialog: EventSheetPatternAdoptDialog = EventSheetPatternAdoptDialog.new()  # row ▸ Adopt behavior…: preview-first swap of a hand-written pattern for the shipped one (dock/pattern_adopt_dialog.gd)
 var _keep_as_code_dialog: EventSheetKeepAsCodeDialog = EventSheetKeepAsCodeDialog.new()  # the gone-verb strip's second door: the row held as the verbatim block, receipt and byte gate first (dock/keep_as_code_dialog.gd)
+var _migrate_dialog: EventSheetMigrateDialog = EventSheetMigrateDialog.new()  # the head band's migration count: the receipt for every row with a newer spelling, and the one place Apply exists (dock/migrate_dialog.gd)
 var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
 var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
 var _language_variants_dialog: EventSheetLanguageVariantsDialog = EventSheetLanguageVariantsDialog.new()  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
@@ -488,6 +489,7 @@ func _init() -> void:
 	_variable_retype_dialog.init(self)
 	_pattern_adopt_dialog.init(self)
 	_keep_as_code_dialog.init(self)
+	_migrate_dialog.init(self)
 	_grid_csv_dialog.init(self)
 	_paste_special_dialog.init(self)
 	# The translation seams follow the same rule: init() only stores _dock, and the suite drives the
@@ -7272,6 +7274,14 @@ func apply_selected_row_second_fix() -> void:
 	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
 		return
 	_keep_as_code_dialog.open(finding)
+
+
+## The head band's migration count, pressed. It is the ONE place a row is rewritten onto a newer
+## spelling: never on open, never on save, never automatically, and never from a report. The dialog
+## draws the receipt - every row as the sentence it reads today beside the one it would read, and the
+## line it writes today beside the one it would write - and its button is the only Apply there is.
+func open_migrate_dialog() -> void:
+	_migrate_dialog.open()
 
 
 ## "See what replaced it". A door, not a fix: which verb stands where the old one did is the reader's

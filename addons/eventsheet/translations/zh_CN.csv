@@ -5900,3 +5900,15 @@ Kept as written: %s,按原样保留：%s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.",这一行把它本来就会编译成的那行代码原样写出来保留下来。文件里的其他内容都不变；如果词汇有朝一日重新拥有这个动词，它会再次读作一行选出来的行。
 Leave a comment above it,在上面留一条注释
 As it will be written,将被写成的样子
+Every row in this sheet is written in the spelling the vocabulary uses today.,这张表里的每一行都用词汇今天使用的写法写成。
+"the vocabulary has no newer spelling for this one, so it stays exactly as written",词汇里没有更新的写法，所以它保持写下时的样子
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten",更新的动词自带状态，所以要挑选而不是改写
+"the rewritten line is not something this file would compile, so it is left alone",改写后的这行不是这个文件能编译的东西，所以原样保留
+"the rewritten row could not be read back as the same row, so it is left alone",改写后的这行读不回同一行，所以原样保留
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,这里没有能自行改写的内容 - 下面列出了 %d 行以及原因。
+"%d row(s) would be rewritten, in one step you can undo.",%d 行会被改写，一步即可撤销。
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.",%d 行会在一步内被改写并可撤销，另有 %d 行原样保留。
+Migrate rows,迁移行
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,没有改写任何内容 - 这里的每一行要么已经是最新的，要么被列为这个无法写出的行。
+%d row(s) migrated - one Ctrl+Z takes all of it back.,已迁移 %d 行 - 一次 Ctrl+Z 全部撤回。
+Migrate…,迁移…

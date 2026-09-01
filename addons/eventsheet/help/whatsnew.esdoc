@@ -6,6 +6,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Migrating a sheet onto the spelling the vocabulary uses today
+
+- **The head band's counting line is now a door.** A sheet whose head reads
+  `migration: 3 rows have a newer spelling` grows one word beside it - *Migrate…* - and pressing it
+  opens a receipt. That is the only place Apply exists: never on open, never on save, never
+  automatically, and never from a report. Opening a sheet full of older spellings and saving it
+  untouched still reproduces the file byte for byte.
+- **The receipt is drawn in both languages a row has.** Every row that would be rewritten is shown
+  twice: the sentence it reads today beside the sentence it would read, and the line it writes today
+  beside the line it would write. A migration that showed only the sentence would hide the half a
+  reviewer reads in the diff; one that showed only the line would hide the half a beginner reads in
+  the sheet.
+- **Rows with nowhere to go are listed, not touched**, each with its own reason and its own next
+  step: the vocabulary has no newer spelling for it, the newer verb keeps state of its own and has to
+  be picked rather than rewritten, the rewritten line does not read back as the same row, or the file
+  would not compile with it in place. \"12 rows migrated\" over a list that quietly held 13 is how
+  trust goes.
+- **Every rewrite proves itself, twice, before anything commits.** The rewritten row is emitted
+  through the compiler's own emitter, the line it wrote is read back through the importer's own
+  reverse grammar, and the row that comes back has to be the same verb writing the same byte - the
+  lossless round-trip law asked one row at a time. Then the file itself gets the last word: the
+  candidate is compiled into a COPY of the sheet and the GDScript that came out is put through
+  Godot's own parser, which is what catches a value that was fine under the old verb and is not
+  GDScript under the new one. A row that fails either gate stays on the spelling it has and the
+  dialog says which one and why.
+- **A migrated line reads as one somebody typed.** Values arrive under the names the successor calls
+  them, with a value for each parameter the old row never had and nothing else - an argument that
+  would only restate what the callee already declares as its default is not written. The reading is
+  carried over too, so a migrated row goes on saying something if the pack it now names ever goes in
+  its turn.
+- **Apply is ONE undo step.** Every proved row moves inside a single sheet edit, so one Ctrl+Z puts
+  all of them back with their ids, templates, values and readings unharmed.
+- **`EventSheets.migration_report()`** answers the same question for a whole project, deterministic
+  and sorted: `[{sheet, row, from_id, to_id, before, after, asks}]`, one entry per row that migration
+  has something to say about, with `after` filled exactly when `asks` is false. No timestamps, no
+  machine paths, nothing written. The shape is frozen like an `ace_id`.
+- **The Doctor's Migration section now has a line per sheet** - \"torch_room.gd - 11 row(s) migrate
+  cleanly, 1 ask you\" - which double-clicks through to the sheet, and offers one chip: *Apply per
+  sheet…*, which opens that sheet's own receipt. Nothing applies from the report.
+
 ### A verb the vocabulary has lost, and the honest exit for it
 
 - **A row whose verb is gone keeps its last stored reading.** The display template a row was applied

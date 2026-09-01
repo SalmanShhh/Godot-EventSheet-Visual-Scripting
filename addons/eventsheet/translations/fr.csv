@@ -5900,3 +5900,15 @@ Kept as written: %s,Gardee telle quelle : %s
 "This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Cette ligne conserve la ligne vers laquelle elle compile deja, ecrite comme du code. Rien d'autre ne change dans le fichier, et elle se relit comme une ligne choisie si le vocabulaire retrouve un jour le verbe."
 Leave a comment above it,Laisser un commentaire au-dessus
 As it will be written,Telle qu'elle sera ecrite
+Every row in this sheet is written in the spelling the vocabulary uses today.,Chaque ligne de cette feuille est ecrite dans l'orthographe que le vocabulaire emploie aujourd'hui.
+"the vocabulary has no newer spelling for this one, so it stays exactly as written","le vocabulaire n'a pas d'orthographe plus recente pour celle-ci, elle reste telle qu'elle est ecrite"
+"the newer verb keeps state of its own, so it has to be picked rather than rewritten","le verbe plus recent garde un etat qui lui est propre, il faut donc le choisir plutot que le reecrire"
+"the rewritten line is not something this file would compile, so it is left alone","la ligne reecrite n'est pas quelque chose que ce fichier compilerait, elle est laissee telle quelle"
+"the rewritten row could not be read back as the same row, so it is left alone","la ligne reecrite n'a pas pu etre relue comme la meme ligne, elle est laissee telle quelle"
+Nothing here can be rewritten on its own - %d row(s) are listed below with the reason.,Rien ici ne peut etre reecrit tout seul - %d ligne(s) sont listees ci-dessous avec la raison.
+"%d row(s) would be rewritten, in one step you can undo.","%d ligne(s) seraient reecrites, en une etape annulable."
+"%d row(s) would be rewritten in one step you can undo, and %d are left exactly as they are.","%d ligne(s) seraient reecrites en une etape annulable, et %d restent exactement telles qu'elles sont."
+Migrate rows,Migrer les lignes
+Nothing was rewritten - every row here is either already current or listed as one this cannot write.,Rien n'a ete reecrit - chaque ligne ici est deja a jour ou listee comme une que ceci ne peut pas ecrire.
+%d row(s) migrated - one Ctrl+Z takes all of it back.,%d ligne(s) migrees - un seul Ctrl+Z reprend tout.
+Migrate…,Migrer…
