@@ -229,16 +229,18 @@ when running that command would change anything.
   `57588286..HEAD`: `registry=same words=same fields=same order=same verbs=5324`.
 
 - **The ledger can see its own instruments.** Its universe was `*.gd`, and two of the things the
-  second wave built - the ledger itself and the descriptor-identity gate - are PowerShell, so 416
-  lines of tooling at the base and 735 at this commit were spent by the campaign and counted by
-  nobody. That is the one direction a ledger must never be wrong in: it made the campaign's own
-  overheads look free. The universe is now every hand-maintained language in the repository, which
-  is GDScript and PowerShell and nothing else, the instruments have a row of their own so "a tool is
-  paid for in full" is a claim a reader can check, and the `doctors` area reads `*doctor*` on both
-  halves rather than `*_doctor.gd` on one, which had been hiding the Doctor's own section, inbox and
-  tidiness classes from the area named after them. `FormatVersion` is **2** and prints in the header,
-  because a figure from format 1 and a figure from format 2 are not comparable; the base commit is
-  restated under the new definition in the same breath as the old one everywhere it is quoted.
+  second wave built - the ledger itself and the descriptor-identity gate - are PowerShell, so the
+  campaign's own tooling was spent and counted by nobody. That is the one direction a ledger must
+  never be wrong in: it made the campaign's own overheads look free. The universe is now every
+  hand-maintained language in the repository, the PowerShell under `tools/` has a row of its own so
+  "a tool is paid for in full" is a claim a reader can check, and the `doctors` area reads
+  `*doctor*` on both halves rather than `*_doctor.gd` on one, which had been hiding the Doctor's own
+  section, inbox and tidiness classes from the area named after them. `FormatVersion` prints in the
+  header, because figures from two formats are not comparable; the base commit is restated under
+  each new definition in the same breath as the old one everywhere it is quoted. (Corrected later in
+  this wave: that row's SIZE at the base is **416** lines the campaign did not write - the bisect
+  wrapper, the parallel launcher, the test daemon and its client all predate it - so the row is
+  named `powershell tooling` after what it measures, and the campaign's bill is its DELTA, **+407**.)
 
 - **A pack's behaviour code is a real file, and the measurement says that costs lines rather than
   saving them.** A pack builder held the code its pack ships as arrays of quoted, backslash-escaped
@@ -392,10 +394,14 @@ when running that command would change anything.
   **8,300**, the hand-written lift matchers **3,976**, and the two mega-files **32,646** between
   them. The tool itself is hand-written and counts against that first figure in full - the campaign
   pays for its own instruments. (Format 1. The third wave widened the universe and RESTATED this
-  same commit under format 2, which is the line every figure from here on is quoted against:
-  **434,002** hand-written lines in **1,783** files - the 416 lines of PowerShell format 1 could not
-  see - with the shipped plugin unmoved at **235,693** in **608** and doctors reading **9,076** in
-  **21** rather than **8,300**, because the area's pathspec had been missing its own classes.)
+  same commit twice: under format 2 as **434,002** hand-written lines in **1,783** files - the 416
+  lines of PowerShell format 1 could not see, with doctors reading **9,076** in **21** rather than
+  **8,300** because the area's pathspec had been missing its own classes - and then under FORMAT 3,
+  which is the line every figure from here on is quoted against: **434,060** hand-written lines in
+  **1,788** files. The extra **58** lines in **5** files are the two shell merge-driver shims and
+  the three hand-written shader fixtures that format 2's "GDScript and PowerShell and nothing else"
+  had wrongly left out. The shipped plugin is unmoved by all of it at **235,693** in **608**,
+  because none of those languages is under `addons/`.)
 - **The vocabulary has a second text, and the identity gate is both.** `tools/dump_registry.gd`
   carries no wording at all, and that is right: a reworded verb is the same verb, and the pack update
   dialog diffs that text in front of a user to say what a version retires, so a description typo
