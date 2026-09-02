@@ -115,10 +115,10 @@ that must exist before a big migration can be trusted (a ledger that reproduces,
 gate compares, and a translation ratchet that measures verbs instead of filenames), and a dev tool
 is paid for in full by the figure it measures. The vocabulary migration then turned the wave
 around, and the Doctor's own copies after it. The lift matchers then gave a line back, and the review of the
-whole wave cost eighty-nine more, both of which are said in full below rather than folded away.
-Measured across the second wave at the last commit in it that moves a `.gd`, `57588286..5abbe26f`:
-**-2,390 lines** of hand-written GDScript (**+3,903 / -6,293**), of which the installed plugin is
-**-3,064**. Every one of those numbers comes from `tools/measure_ledger.ps1`, at the commits named
+whole wave cost ninety-seven more, both of which are said in full below rather than folded away.
+Measured across the second wave at the last commit in it that moves a `.gd`, `57588286..68224c24`:
+**-2,382 lines** of hand-written GDScript (**+3,911 / -6,293**), of which the installed plugin is
+**-3,056**. Every one of those numbers comes from `tools/measure_ledger.ps1`, at the commits named
 beside it; the entry you are reading and the doc-bundle bake after it move no `.gd`, so the figure
 is the tree that ships.
 
