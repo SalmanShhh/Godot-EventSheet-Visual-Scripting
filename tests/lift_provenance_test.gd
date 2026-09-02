@@ -104,6 +104,7 @@ static func run() -> bool:
 	ok = _test_a_run_of_statements() and ok
 	ok = _test_the_by_example_layer_is_told_apart() and ok
 	ok = _test_the_printed_shape() and ok
+	ok = _test_which_builder_path_shaped_it() and ok
 	ok = _test_a_line_that_is_not_one() and ok
 	return ok
 
@@ -222,9 +223,30 @@ static func _test_the_printed_shape() -> bool:
 		EventSheetLiftProvenance.text(SOURCE, TABLE_LINE, "res://buffer.gd"),
 		"res://buffer.gd:8  rpc(&\"take_damage\", 10)\n"
 		+ "  row      EventRow  OnReady\n"
+		+ "  shaped   bespoke:_trigger_sentence, grammar:NodeSetProcessing, template\n"
 		+ "  read by:\n"
 		+ "  1. table    multiplayer_lift.gd  send_everyone_with_arguments -> SendMessageToEveryone\n"
 		+ "  5. call     Node2D.rpc (receiver: self)")
+
+
+## THE THIRD QUESTION: which builder path shaped the reading the row draws. Same grain as the claim
+## above - the source map is keyed on the row that owns an emission, so a line inside an event is
+## answered by that event - and the same words the reading census counts in, so the door and the
+## figure can never say different things about one row.
+##
+## The chrome of an event row (its badge column) is deliberately NOT in the answer while the row has a
+## verb in it: it is the same on every event and would bury the part that differs. A row that is only
+## chrome falls back to it, which is the variable declaration pinned last here.
+static func _test_which_builder_path_shaped_it() -> bool:
+	var ok: bool = _check("an event's cells name their paths in the order the canvas draws them",
+		EventSheetLiftProvenance.shaped_by(SOURCE, TABLE_LINE, "res://buffer.gd"),
+		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, template")
+	ok = _check("a line of the same event gets the same answer - the grain is the row",
+		EventSheetLiftProvenance.shaped_by(SOURCE, DERIVED_LINE, "res://buffer.gd"),
+		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, template") and ok
+	ok = _check("a row that is only chrome says so rather than naming nothing",
+		EventSheetLiftProvenance.shaped_by(SOURCE, 3, "res://buffer.gd"), "structure") and ok
+	return ok
 
 
 ## The two lines that are not lines of code. Said in words, because a mistyped line number that came

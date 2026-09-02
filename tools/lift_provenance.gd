@@ -82,6 +82,10 @@
 class_name EventSheetLiftProvenance
 extends RefCounted
 
+## The reading classifier, shared with the reading dump and the reading census so this tool and those
+## two can never say a row was shaped by two different things.
+const READING := preload("res://tools/reading_lines.gd")
+
 ## The reading layers, in the order the importer asks them. The order is the enum's own, so the
 ## printed numbering and this file's walk cannot disagree about what comes before what.
 enum Layer {
@@ -128,6 +132,11 @@ const OUT_OF_RANGE: String = "there is no such line in this file"
 
 ## What the three `Row` answers that are not a row are told.
 const NO_ROW: String = "no row emits this line"
+
+## What a row the canvas walk holds no cell for is told. The usual cause is a row inside a published
+## verb: the canvas builds a verb's body when the verb is opened, so a walk of the resting sheet has
+## no cell to attribute for it.
+const NO_READING: String = "no cell of that row is on the resting canvas walk"
 const NOT_LOSSLESS: String = "this file does not re-emit byte for byte, so no line number maps"
 const NOT_A_SHEET: String = "this file does not open as a sheet"
 
@@ -239,6 +248,50 @@ static func claims(source: String, number: int, script_path: String = "") -> Arr
 	return found
 
 
+## WHICH BUILDER PATH SHAPED THE ROW'S READING, in the same words the reading census counts in:
+## `template` for the generic assembly out of the descriptor, `grammar:<ace_id>` for the shared
+## sentence grammar, `bespoke:<function>` for a per-vocabulary branch, `derived` for a derived
+## reading, `verbatim` for code that stays code, `structure` for a row the vocabulary never enters.
+##
+## THE GRAIN IS THE ROW, exactly as `row_claim`'s is: the source map is keyed per emitting resource,
+## and an event emits the lines of every condition and action under it, so a line inside an event
+## cannot be narrowed to one of its cells. The answer is therefore every path the row's own cells came
+## down, deduplicated and in the order the canvas draws them, which is what somebody about to change a
+## branch wants to see anyway - the row and what shaped it, not one cell of it.
+##
+## Gated on the round trip exactly as `row_claim` is, and for the same reason: without it, line N of
+## the re-emission is not line N of the file.
+static func shaped_by(source: String, number: int, script_path: String = "") -> String:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
+		script_path)
+	if sheet == null:
+		return NOT_A_SHEET
+	sheet.external_source_path = PROBE_PATH
+	var emitted: Dictionary = SheetCompiler.compile(sheet, PROBE_PATH)
+	if str(emitted.get("output", "")) != source:
+		return NOT_LOSSLESS
+	var row: Resource = EventSheetLineRowMapper.resource_for_line(
+		emitted.get("source_map", []) as Array, number)
+	if row == null:
+		return NO_ROW
+	var paths: PackedStringArray = PackedStringArray()
+	var chrome: PackedStringArray = PackedStringArray()
+	for entry: Variant in READING.readings_of_sheet(sheet, script_path):
+		var reading: Variant = entry
+		if reading.owner != row:
+			continue
+		var spelled: String = reading.path_text()
+		# The cells that are a reading OF A VERB first. Every event row also carries chrome - the
+		# badge column, the divider - and listing that in front of the answer would bury it. A row
+		# with no verb in it falls back to the chrome, because then the chrome IS the row.
+		var into: PackedStringArray = chrome if str(reading.ace_key).is_empty() else paths
+		if not into.has(spelled):
+			into.append(spelled)
+	if paths.is_empty():
+		paths = chrome
+	return NO_READING if paths.is_empty() else ", ".join(paths)
+
+
 ## The whole answer as the command line prints it and a test pins it: the line itself, then the row it
 ## became, then one line per layer that would have claimed it. Deterministic over the same tree: every
 ## walk under it is sorted or comes from a fixed list, and nothing here reads a clock, a machine path
@@ -251,6 +304,7 @@ static func text(source: String, number: int, script_path: String = "") -> Strin
 	var out: PackedStringArray = PackedStringArray()
 	out.append("%s:%d  %s" % [script_path if not script_path.is_empty() else "(buffer)", number, shown])
 	out.append(row_claim(source, number, script_path).line())
+	out.append("  shaped   %s" % shaped_by(source, number, script_path))
 	out.append("  read by:")
 	for answer: Answer in claims(source, number, script_path):
 		out.append(answer.line())
