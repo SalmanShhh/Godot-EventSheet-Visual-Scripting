@@ -69,6 +69,14 @@ const MAKER_POSITIONS: Dictionary = {
 ## The provider a maker publishes under when its call does not name one.
 const MAKER_PROVIDER := "Core"
 
+## The file a vocabulary module reaches for its makers through, and the name it conventionally gives
+## it. A maker's name is a short, ordinary word, so the call alone says nothing: `foo.expr(a, b, c)`
+## in someone's own script is not a publish. What makes it one is being called on the FACTORY, so
+## the reading asks each file what name it gave the factory and only reads makers called on that.
+## A line read on its own carries no declaration to ask, and stands on the conventional name.
+const FACTORY_FILE := "ace_factory.gd"
+const FACTORY_ALIAS := "F"
+
 ## The chained calls that add ONE field, and where each carries the field's id and its type. A type
 ## position of -1 means the call names no type, because the field's default says what it is.
 const PARAM_CALLS: Dictionary = {
@@ -472,10 +480,11 @@ static func _descriptor_rows(lines: PackedStringArray) -> Array:
 static func _maker_rows(lines: PackedStringArray) -> Array:
 	var rows: Array = []
 	var constants: Dictionary = _string_constants(lines)
+	var factories: Dictionary = _factory_names(lines)
 	for line: String in lines:
 		for maker: String in MAKER_CALLS:
 			var head: String = ".%s(" % maker
-			var at: int = line.find(head)
+			var at: int = _factory_call_at(line, head, factories)
 			if at < 0:
 				continue
 			var open_at: int = at + head.length() - 1
@@ -505,6 +514,45 @@ static func _maker_rows(lines: PackedStringArray) -> Array:
 			})
 			break
 	return rows
+
+
+## The names this file gives the descriptor factory, off its own `const NAME := preload(...)` lines.
+## A file that names it nowhere is a single statement read on its own, which stands on the
+## conventional name rather than reading every call that shares a maker's short word.
+static func _factory_names(lines: PackedStringArray) -> Dictionary:
+	var names: Dictionary = {}
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if not text.begins_with("const ") or not text.contains("preload(") 				or not text.contains(FACTORY_FILE):
+			continue
+		var declared: String = ""
+		for character: String in text.substr("const ".length()).strip_edges():
+			if not (character == "_" or character.is_valid_identifier()):
+				break
+			declared += character
+		if not declared.is_empty():
+			names[declared] = true
+	if names.is_empty():
+		names[FACTORY_ALIAS] = true
+	return names
+
+
+## Where this line calls one maker ON the factory, or -1. Every occurrence is measured, because the
+## word before the dot is what decides - a line whose first `.expr(` belongs to something else may
+## still publish a row further along it.
+static func _factory_call_at(line: String, head: String, factories: Dictionary) -> int:
+	var from: int = 0
+	while true:
+		var at: int = line.find(head, from)
+		if at < 0:
+			return -1
+		var start: int = at
+		while start > 0 and (line[start - 1] == "_" or line[start - 1].is_valid_identifier() 				or line[start - 1].is_valid_int()):
+			start -= 1
+		if start < at and factories.has(line.substr(start, at - start)):
+			return at
+		from = at + 1
+	return -1
 
 
 ## One of a maker's positional arguments, unquoted, with a named constant resolved to the text it

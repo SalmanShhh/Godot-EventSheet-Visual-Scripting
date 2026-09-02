@@ -169,6 +169,12 @@ static func _test_vocabulary_module() -> bool:
 	ok = _check("a verb that names a host class still publishes under the vocabulary's own name",
 		_joined(EventSheetSentence.statement(hosted, {})),
 		"Core ▸ Define trigger On Screen Resized   OnScreenResized · category Game Window") and ok
+	# A maker's name is an ordinary short word, so what makes a call a publish is being called on the
+	# FACTORY. Someone else's call that happens to take three strings is not a Define row.
+	ok = _check("someone else's call that shares a maker's word publishes nothing",
+		EventSheetSentence.vocabulary_define_statement("	var reading := lens.expr(\"a\", \"b\", \"c\")").is_empty(), true) and ok
+	ok = _check("and the same shape called on the factory still publishes",
+		EventSheetSentence.vocabulary_define_statement("	var reading := F.expr(\"a\", \"b\", \"c\")").is_empty(), false) and ok
 	# And the same statement over EVERY shipped module, so the column is read right on all of them
 	# rather than on the one verb a pin happens to spell.
 	ok = _check("no shipped module publishes a row under a name other than the vocabulary's",
