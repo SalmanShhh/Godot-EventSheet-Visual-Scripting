@@ -71,6 +71,21 @@ func _process(delta: float) -> void:
 
 const MEMBER_LINE: int = 3
 
+## A buffer whose three statements are ONE row: the layout-on-top run. It is here because a run is
+## the one claim a per-line reader cannot make on its own, and because the entry that claims it is a
+## table entry - so the layer it is reported under is the table, not the matcher that used to answer
+## for it, and the answer says how much of the body it took.
+const RUN: String = """extends Node
+
+
+func open_pause_menu() -> void:
+	var menu = load("res://pause_menu.tscn").instantiate()
+	menu.name = "PauseMenu"
+	get_tree().root.add_child(menu)
+"""
+
+const RUN_LINE: int = 5
+
 ## A third buffer that cannot round-trip, for the read-only proof: it ends without a last newline
 ## and the emitter always writes one, so re-emitting it can never reproduce it. The closing quotes
 ## sit against `pass` for that reason - a newline before them would make this file round-trip and
@@ -86,6 +101,7 @@ static func run() -> bool:
 	var ok: bool = _test_the_row_the_line_became()
 	ok = _test_the_claim_never_writes_to_the_file_it_asks_about() and ok
 	ok = _test_the_three_known_lines() and ok
+	ok = _test_a_run_of_statements() and ok
 	ok = _test_the_by_example_layer_is_told_apart() and ok
 	ok = _test_the_printed_shape() and ok
 	ok = _test_a_line_that_is_not_one() and ok
@@ -154,6 +170,23 @@ static func _test_the_three_known_lines() -> bool:
 		]) and ok
 	ok = _check("and a line no layer claims says exactly that", _claims(VERBATIM_LINE),
 		["  7. verbatim %s" % EventSheetLiftProvenance.UNCLAIMED]) and ok
+	return ok
+
+
+## A run of statements, which is the claim no per-line reading can make: the answer names the ENTRY
+## that claimed it, the row it means and how many statements it took - at the TABLE layer, because a
+## run written as a table entry is a table claim. It was reported as a matcher while the layout family
+## matched by hand, and a family that goes back to matching by hand would say `match_run` here again.
+##
+## The two lines UNDER the opening one are pinned with it, because they are the honest half of this
+## answer: the tool asks each line as an isolated statement, so the second and third statements of a
+## claimed run still report what they would have read as on their own.
+static func _test_a_run_of_statements() -> bool:
+	var ok: bool = _check("a run claimed by a table entry is a table claim, over its statements",
+		_claims_of(RUN, RUN_LINE, ""),
+		["  1. table    layout_on_top_lift.gd  layout_on_top_written -> AddLayoutOnTop over 3 lines"])
+	ok = _check("and a line inside the run is still asked on its own",
+		_claims_of(RUN, RUN_LINE + 1, ""), ["  4. index    Core::SetNodeName"]) and ok
 	return ok
 
 

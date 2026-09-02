@@ -14,12 +14,15 @@ extends RefCounted
 #     scene.pack(branch)
 #     ResourceSaver.save(scene, "user://built_level.tscn")
 #
-# WHY THIS IS A HAND-WRITTEN MATCHER AND NOT A TABLE ENTRY. EventForgeLiftTable takes ONE statement:
-# a pattern, the row it means, and the captures that are values. This is a run of statements that
-# only mean something together - a local made on the first line, walked over on the second, written
-# through on the fourth, packed on the sixth - and the table's own header says that is exactly where
-# a family stops being a pattern and becomes a matcher. The layout-on-top run beside it is entered on
-# the same seam for the same reason.
+# WHY THIS IS STILL A HAND-WRITTEN MATCHER. EventForgeLiftTable takes a RUN of statements now - an
+# ordered list of patterns sharing their captures, which is how the layout-on-top run beside it is
+# written. What it does not take is a run whose statements are OPTIONAL, and this one has two pairs
+# of them: the list the borrowed ownership is remembered in (with the loop that hands it back), and
+# the two error answers the row's own tail writes and a hand-written one does not. Those two choices
+# are independent, so the run is four spellings of seven to twelve statements, differing by two lines
+# each. Written as entries that is four near-identical tables that have to be kept in agreement by
+# hand - measured at about the length of this file and harder to read - so the four are one matcher
+# with two branches in it instead, and the walk below is asked once for all of them.
 #
 # WHY THE WALK IS REQUIRED, which is the whole boundary this file draws. `PackedScene.pack` writes
 # out the root plus every node the ROOT OWNS, and a node added while the game runs owns nothing and

@@ -53,10 +53,12 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 ]
 
 ## The families that claim a RUN of statements rather than a single line - two or three statements
-## that only mean something together, which is where the table engine stops and a hand-written
-## matcher starts. Each answers `match_run(lines, index, depth)` with {ace_id, params, template,
-## consumed}, or {} when it does not claim the run, and they are asked in this order before any
-## single line of the run is looked at on its own. Adding a family here is adding one line.
+## that only mean something together. Most are lift-table entries written as a run of patterns
+## (EventForgeLiftTable.match_run); the rest match by hand, and each says in its own header what its
+## run has in it that a list of patterns cannot say. Each answers `match_run(lines, index, depth)`
+## with {ace_id, params, template, consumed}, or {} when it does not claim the run, and they are
+## asked in this order before any single line of the run is looked at on its own. Adding a family
+## here is adding one line.
 const RUN_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/multiplayer_lift.gd"),
 	preload("res://addons/eventforge/importer/layout_on_top_lift.gd"),

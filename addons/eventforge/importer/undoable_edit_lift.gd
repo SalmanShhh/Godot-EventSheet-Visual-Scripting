@@ -14,13 +14,13 @@ extends RefCounted
 #     undo.add_undo_property($Sign, &"text", $Sign.text)
 #     EditorInterface.get_editor_undo_redo().commit_action()
 #
-# WHY THIS IS A HAND-WRITTEN MATCHER AND NOT A TABLE ENTRY, the boundary the table's own header
-# draws: EventForgeLiftTable takes ONE statement - a pattern, the row it means, and the captures that
-# are values. Each of these three is a run of statements that only mean something together (a local
-# made on one line, called on the next three, and a do half that is only half a change without the
-# undo half beside it), which is exactly where a family stops being a pattern and becomes a matcher.
-# The scene-save run and the layout-on-top run beside it are entered on the same seam for the same
-# reason. The one-statement dignities of the same pass ARE table entries, in node_dignity_lift.gd.
+# WHY THIS IS STILL A HAND-WRITTEN MATCHER. EventForgeLiftTable takes a RUN of statements now - an
+# ordered list of patterns sharing their captures - and a family whose run is a fixed list of
+# statements is written that way (the layout-on-top one is). This one is not a fixed list: the
+# bracket around the edit is found by SCANNING for the commit that closes it, however many statements
+# away that is, and the gesture the bracket names is read from the sheet's own vocabulary rather than
+# from the lines. A pattern list cannot say "and somewhere below, the line that closes this".
+# The one-statement dignities of the same pass ARE table entries, in node_dignity_lift.gd.
 #
 # THE BRACKET IS NOT A ROW, which is the one thing that makes this family different from its
 # neighbours. create_action and commit_action are written by the COMPILER around the undoable rows of

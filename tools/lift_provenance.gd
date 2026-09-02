@@ -37,7 +37,10 @@
 #    actually has, and stays useful exactly where the claim above says "no row": it names the
 #    vocabulary that WOULD have spoken. Every layer that answers is reported:
 #
-#   1. TABLE    a lift-table entry whose pattern somebody wrote (EventForgeLiftTable).
+#   1. TABLE    a lift-table entry whose pattern somebody wrote (EventForgeLiftTable). An entry
+#               written as a RUN of statements is reported here too, with the statements it took
+#               ("over N lines") - a run is a table claim like any other, and which layer answered is
+#               the question this list is for.
 #   2. EXAMPLE  a lift-table entry DERIVED from a marked example (EventForgeLiftExample) - a built-in
 #               family written that way, or a pack's own @ace_lift_example spelling. The same engine,
 #               a different authoring route, and the entry itself says which one it came down
@@ -331,9 +334,22 @@ static func _matcher_answers(lines: PackedStringArray, number: int, statement: S
 			number - 1, _indent_of(lines[number - 1]))
 		if run.is_empty():
 			continue
-		found.append(Answer.new(Layer.MATCHER, family.resource_path.get_file(),
-			"%s -> %s over %d lines" % [EventSheetACELifter.RUN_SPELLING_METHOD,
-				str(run.get("ace_id", "")), int(run.get("consumed", 1))]))
+		var file_name: String = family.resource_path.get_file()
+		var over: int = int(run.get("consumed", 1))
+		# A run a TABLE ENTRY claimed is a table claim like any other, and answers with the entry and
+		# the authoring route it came down rather than with the name of the static that was called.
+		# Only a family still matching a run BY HAND has no entry to name, and only that one is the
+		# matcher layer - the same rule the single-statement families are reported under above.
+		var entry_id: String = str(run.get("entry_id", ""))
+		if entry_id.is_empty():
+			found.append(Answer.new(Layer.MATCHER, file_name,
+				"%s -> %s over %d lines" % [EventSheetACELifter.RUN_SPELLING_METHOD,
+					str(run.get("ace_id", "")), over]))
+			continue
+		var by_example: bool = _origin_of(file_name.trim_suffix(".gd"),
+			entry_id) == EventForgeLiftTable.ORIGIN_EXAMPLE
+		found.append(Answer.new(Layer.EXAMPLE if by_example else Layer.TABLE, file_name,
+			"%s -> %s over %d lines" % [entry_id, str(run.get("ace_id", "")), over]))
 	return found
 
 

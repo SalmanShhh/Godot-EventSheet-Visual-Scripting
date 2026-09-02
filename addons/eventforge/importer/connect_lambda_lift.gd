@@ -17,6 +17,14 @@
 # event, an inline form without the ordinary space after the colon. The file still opens; those
 # lines simply stay code, which is what they were.
 #
+# WHY THIS IS NOT A LIFT-TABLE ENTRY, now that the table takes a run of statements as well as one.
+# A table entry claims a fixed list of whole statements and hands back a row with a template on it.
+# This claims a statement and then a REGION: the body between the connect line and its closing paren,
+# bounded by indentation, whose lines are not this family's to read at all - they are lifted as the
+# event's own rows, and this hands back the two halves of the spelling to put back around them
+# afterwards (see emitted_lines, which the compiler calls on the way out). There is no row here, no
+# template, and no statement count; a pattern list has nothing to say about any of it.
+#
 # PURE + STATIC: text in, plain values out. It never sees a sheet, a row or an editor.
 @tool
 class_name EventForgeConnectLambdaLift
