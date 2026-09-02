@@ -18,11 +18,12 @@ What changed in the build you have installed (v0.17.0), in the words the release
   why. Nothing was removed - every retired control keeps its id, its key, its home in the Menu, and
   the in-sheet door it already had.
 - **One Menu, five cascading submenus.** Sheet, Add, Edit, View and Tools left the strip and became
-  submenus of a single Menu button. They are the very same menus: every item id, every handler and
-  every menu that rebuilds itself on open (Language, Sheet theme, Arrange by, Saved Views,
-  Workspaces, Export) works exactly as before, because nothing was rebuilt - the menus were
-  re-parented. The Manual and What's new sit at the Menu's foot, and the Settings menu retired: its
-  one item, Words…, moved into Tools beside Keyboard Shortcuts.
+  submenus of a single Menu button. Each hangs under the Menu carrying the same name, the same items
+  in the same order, the same ids and the same handlers, held item by item by the suite - so every
+  item id, every handler and every menu that rebuilds itself on open (Language, Sheet theme, Arrange
+  by, Saved Views, Workspaces, Export) works exactly as before. The Manual and What's new sit at the
+  Menu's foot, and the Settings menu retired: its one item, Words…, moved into Tools beside Keyboard
+  Shortcuts.
 - **The Menu teaches every key it has.** Sheet ▸ Open / Save / Save As, Edit ▸ Copy / Paste / Undo /
   Redo, Tools ▸ Find in Project and Add ▸ Add blank sub-event now print their bindings beside them,
   read from the one shortcut table through the same seam the right-click menus use - so a rebound key
@@ -104,6 +105,10 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Fixed
 
+- **The Menu's own Manual door says when there is something unread.** Tools ▸ Manual… wears a mark
+  when the reader has not opened What's new since the plugin's version changed, and the Menu's foot -
+  the door a reader looks for by name rather than by group - did not, so the entry most readers reach
+  for was the one that never said. Both are asked on open, through one seam.
 - **The two corner links have a band of their own.** \"Add event\" and \"+ Add…\" were drawn straight
   into the first row's lanes - the left one over row 1's condition lane (and over the words of a head
   band where the sheet had one), the right one on top of the row's own \"+ Add action…\" cell - and

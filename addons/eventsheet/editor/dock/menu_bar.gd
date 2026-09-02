@@ -95,9 +95,10 @@ func build(root: Node) -> void:
 	# strip used to front is still here - it moved into the Menu, and the chevron brings the whole
 	# strip back. Nothing was removed: every retired control keeps its key and its in-sheet door.
 	#
-	# ☰ Menu ▾ - Sheet, Edit, View and Tools as cascading submenus of ONE button. The submenus are
-	# the very same PopupMenus those four MenuButtons used to open, re-parented here, so every item
-	# id, handler, dynamic submenu and shortcut is untouched.
+	# ☰ Menu ▾ - Sheet, Add, Edit, View and Tools as cascading submenus of ONE button. Each carries
+	# the name, the items in their order, the ids and the handlers the MenuButton it replaces
+	# carried, so every item id, handler, dynamic submenu and printed key answers untouched - held
+	# item by item by the suite rather than claimed here.
 	var menu_button: MenuButton = MenuButton.new()
 	menu_button.name = "EventSheetMenu"
 	menu_button.text = "☰ Menu"
@@ -713,13 +714,7 @@ func build(root: Node) -> void:
 	# The dot: a reader who has not opened What's new since the plugin's version changed gets a mark
 	# on the Manual entry, and it comes off the moment they read it. Re-asked every time the menu
 	# opens, so reading the page while the menu is closed still clears it.
-	tools_popup.about_to_popup.connect(func() -> void:
-		var index: int = tools_popup.get_item_index(22)
-		if index < 0:
-			return
-		var version: String = EventSheets.docs_version()
-		tools_popup.set_item_text(index,
-			"Manual… ●" if EventSheetDocWhatsNew.has_unread(version, EventSheetDocWhatsNew.seen_version()) else "Manual…"))
+	tools_popup.about_to_popup.connect(func() -> void: mark_unread(tools_popup, 22, "Manual…"))
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
@@ -731,6 +726,11 @@ func build(root: Node) -> void:
 	menu_popup.add_separator()
 	menu_popup.add_item("Manual…", 4)
 	menu_popup.add_item("What's new…", 5)
+	# THE SAME DOT ON THE SAME DOOR. Tools ▸ Manual… wears a mark when the reader has not opened
+	# What's new since the plugin's version changed, and this is the door a reader looks for by name
+	# rather than by group - so it was the one Manual entry that never said there was something
+	# unread. Re-asked every time the Menu opens, so reading the page clears it either way.
+	menu_popup.about_to_popup.connect(func() -> void: mark_unread(menu_popup, 4, "Manual…"))
 	menu_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			4: _dock.open_documentation()
@@ -1066,6 +1066,19 @@ func build(root: Node) -> void:
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == FULL_TOOLBAR_VIEW_ID:
 			set_full_toolbar(not _full_toolbar))
+
+
+## Puts (or takes off) the unread mark on a Manual entry: a reader who has not opened What's new
+## since the plugin's version changed gets a ● beside the words, and it comes off the moment they
+## read it. Asked on every open rather than kept, so reading the page while the menu is closed
+## clears it too. One function because two menus carry this same door.
+static func mark_unread(popup: PopupMenu, item_id: int, label: String) -> void:
+	var index: int = popup.get_item_index(item_id)
+	if index < 0:
+		return
+	var unread: bool = EventSheetDocWhatsNew.has_unread(EventSheets.docs_version(),
+		EventSheetDocWhatsNew.seen_version())
+	popup.set_item_text(index, "%s ●" % label if unread else label)
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes

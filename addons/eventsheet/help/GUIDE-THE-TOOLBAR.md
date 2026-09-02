@@ -78,9 +78,10 @@ That is **137 commands** behind one button, which is exactly why they are behind
 Three things about the cascade are worth knowing:
 
 - **They are the same menus.** Sheet, Add, Edit, View and Tools used to be five separate buttons on
-  the strip. They were not rebuilt to hang under the Menu; they were re-parented. Every item keeps
-  the id it shipped with, so the command palette, the keyboard dispatch and every test that
-  addresses an item by number still finds it.
+  the strip. Each one hangs under the Menu now carrying the same name, the same items in the same
+  order, the same ids and the same handlers - held item by item by the suite rather than claimed
+  here - so the command palette, the keyboard dispatch and every test that addresses an item by
+  number still finds it.
 - **The ones that rebuild themselves still do.** Language, Sheet theme, Arrange by, Saved Views,
   Workspaces and Export refill every time they open, so a theme dropped into the themes folder or a
   view saved a second ago is listed with no restart.

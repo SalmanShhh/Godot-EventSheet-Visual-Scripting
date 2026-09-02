@@ -1,4 +1,4 @@
-# EventForge - the words the sheet lets you choose (Settings ▸ Words).
+# EventForge - the words the sheet lets you choose (Menu ▸ Tools ▸ Words…).
 #
 # Familiar Words used to be one toggle over a fixed table. It is now a per-user CHOICE per word,
 # per state: the word with the toggle on and the word with it off are picked separately, because

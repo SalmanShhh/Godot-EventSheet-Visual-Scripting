@@ -197,6 +197,21 @@ static func _test_the_cascade() -> bool:
 	# changed.
 	ok = _check("the Menu cascades the five groups, then the two doors", labels,
 		PackedStringArray(["Sheet", "Add", "Edit", "View", "Tools", "", "Manual…", "What's new…"])) and ok
+	# THE SAME DOT ON THE SAME DOOR. Tools ▸ Manual… wears a mark when What's new is unread, and the
+	# Menu's own foot - the door a reader looks for by NAME rather than by group - did not, so the
+	# one entry most readers reach for was the one that never said there was something to read. Both
+	# are asked on open through one seam; driven here rather than waited for, because a popup that is
+	# in no tree emits nothing.
+	var tools: PopupMenu = popup.find_child("EventSheetToolsMenu", true, false) as PopupMenu
+	EventSheetMenuBar.mark_unread(popup, 4, "Manual…")
+	EventSheetMenuBar.mark_unread(tools, 22, "Manual…")
+	var unread: bool = EventSheetDocWhatsNew.has_unread(EventSheets.docs_version(),
+		EventSheetDocWhatsNew.seen_version())
+	var expected_manual: String = "Manual… ●" if unread else "Manual…"
+	ok = _check("the Menu's own Manual door says whether What's new is unread",
+		popup.get_item_text(popup.get_item_index(4)), expected_manual) and ok
+	ok = _check("and Tools ▸ Manual… says exactly the same thing",
+		tools.get_item_text(tools.get_item_index(22)), expected_manual) and ok
 	# THE HOVER NAMES THE MENU IT OPENS. It said "four groups: Sheet, Edit, View and Tools" while the
 	# button cascaded five - Add joined after those words were written - so the one control on the
 	# strip described a menu that is not the one underneath it. Derived from the popup's own submenu
@@ -227,7 +242,6 @@ static func _test_the_cascade() -> bool:
 		counts["EventSheetViewMenu"], 57) and ok
 	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
-	var tools: PopupMenu = popup.find_child("EventSheetToolsMenu", true, false) as PopupMenu
 	ok = _check("Words… is on Tools, at its own id",
 		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok
 	ok = _check("and it sits beside Keyboard Shortcuts",
