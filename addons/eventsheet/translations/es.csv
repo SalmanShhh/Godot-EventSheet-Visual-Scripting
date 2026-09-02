@@ -6001,3 +6001,11 @@ Add event,Añadir evento
 Add an event to this sheet.,Añade un evento a esta hoja.
 Everything you can add here - the same menu right-clicking empty space opens.,Todo lo que puedes añadir aquí - el mismo menú que abre un clic derecho en el espacio vacío.
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","La barra de herramientas está en reposo: cada botón está bajo Menú o el galón, las teclas no cambian. Ver > Barra de herramientas completa lo devuelve todo."
+Sheet theme,Tema de la hoja
+"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.","El tema con el que se dibuja esta hoja: los preajustes incluidos y Match Editor, que deriva los colores de la hoja de tu propio tema del editor. Se recuerda en la hoja, así que viaja con el archivo."
+Variable rows,Filas de variables
+Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks.,Desactiva el modo simple (Menú ▸ Ver ▸ Modo simple) para añadir bloques de script.
+Full toolbar on - every button is on the strip.,Barra de herramientas completa activada: todos los botones están en la barra.
+"Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.","Barra de herramientas en reposo. El chevrón, o Ver ▸ Barra de herramientas completa, trae de vuelta el resto."
+"Debug layout: Event Trace, Live Values and breakpoints are on for this run.","Depurar disposición: el rastreo de eventos, los valores en vivo y los puntos de interrupción están activos para esta ejecución."
+Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,Se muestran todos los botones para poder señalar este: tu barra en reposo sigue recordada. El chevrón la vuelve a poner en reposo.

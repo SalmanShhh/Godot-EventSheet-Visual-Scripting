@@ -81,6 +81,7 @@ static func run() -> bool:
 	ok = _test_simple_mode_lets_the_strip_alone() and ok
 	ok = _test_the_sheet_theme_menu() and ok
 	ok = _test_the_one_time_note() and ok
+	ok = _test_pointing_at_a_button_is_not_a_choice() and ok
 	ok = _test_the_guide_names_every_control() and ok
 	return ok
 
@@ -508,6 +509,40 @@ static func _test_the_one_time_note() -> bool:
 	ok = _check("an expanded strip says nothing about resting",
 		expanded._menu_bar.announce_resting_strip(true), false) and ok
 	expanded.free()
+	return ok
+
+
+## POINTING AT A BUTTON IS NOT A CHOICE. The Manual's "show me this control" links, and the public
+## EventSheets.pulse_control behind them, have to make a hidden button visible before they can pulse
+## it - and that used to be done by calling set_full_toolbar(true), which WRITES the project's
+## remembered choice. Reading a doc page that points at, say, Add Action permanently expanded a strip
+## the reader had chosen to rest, with nothing to put it back.
+##
+## Two answers are separate now and both are pinned: what the strip is SHOWING, and what the reader
+## CHOSE. Only the chevron and View ▸ Full toolbar move the second one.
+static func _test_pointing_at_a_button_is_not_a_choice() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var ok: bool = _check("the strip rests, and that is the reader's choice",
+		[editor._menu_bar.full_toolbar(), editor._menu_bar.remembered_full_toolbar()], [false, false])
+	var hidden: Button = editor._toolbar.find_child("EventSheetCodePanelButton", true, false) as Button
+	ok = _check("the button being pointed at rests hidden", hidden.visible, false) and ok
+	ok = _check("pointing at it says it belongs to this strip",
+		editor.pulse_control(editor._toolbar_control_label(hidden)), true) and ok
+	ok = _check("and now it can be seen", hidden.visible, true) and ok
+	ok = _check("but nothing was decided on the reader's behalf",
+		editor._menu_bar.remembered_full_toolbar(), false) and ok
+	# The chevron still is a choice, in both directions.
+	editor._menu_bar.set_full_toolbar(false)
+	ok = _check("the chevron rests it again", hidden.visible, false) and ok
+	editor._menu_bar.set_full_toolbar(true)
+	ok = _check("and choosing the full strip IS remembered",
+		editor._menu_bar.remembered_full_toolbar(), true) and ok
+	# A control that is already on show needs no expanding, so pointing at Save decides nothing
+	# either - and does not expand a strip that was resting.
+	editor._menu_bar.set_full_toolbar(false)
+	ok = _check("pointing at a resting control expands nothing",
+		[editor.pulse_control("Save"), editor._menu_bar.full_toolbar()], [true, false]) and ok
+	editor.free()
 	return ok
 
 

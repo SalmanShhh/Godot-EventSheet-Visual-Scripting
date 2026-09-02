@@ -6001,3 +6001,11 @@ Add event,イベントを追加
 Add an event to this sheet.,このシートにイベントを追加します。
 Everything you can add here - the same menu right-clicking empty space opens.,ここに追加できるものすべて - 空白部分を右クリックしたときと同じメニューです。
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","ツールバーは休止中です: すべてのボタンはメニューまたは矢印の中にあり、キーは変わりません。表示 > フルツールバーですべて戻ります。"
+Sheet theme,シートのテーマ
+"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.",このシートを描画するテーマ - 同梱プリセットに加え、エディターのテーマからシートの色を導き出す Match Editor。シート自身に記憶されるため、ファイルと一緒に移動します。
+Variable rows,変数の行
+Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks.,スクリプトブロックを追加するには、シンプルモードをオフにしてください (メニュー ▸ 表示 ▸ シンプルモード)。
+Full toolbar on - every button is on the strip.,ツールバーをすべて表示中 - すべてのボタンがバーに並びます。
+"Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.",ツールバーを休ませました。山形の矢印、または 表示 ▸ ツールバーをすべて表示 で残りが戻ります。
+"Debug layout: Event Trace, Live Values and breakpoints are on for this run.",レイアウトをデバッグ実行: この実行ではイベントトレース、ライブ値、ブレークポイントが有効です。
+Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,このボタンを指し示すため、すべてのボタンを表示しています - 休ませたツールバーの設定はそのままです。山形の矢印でまた休みます。

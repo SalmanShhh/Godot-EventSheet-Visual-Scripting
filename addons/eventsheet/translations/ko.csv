@@ -6001,3 +6001,11 @@ Add event,이벤트 추가
 Add an event to this sheet.,이 시트에 이벤트를 추가합니다.
 Everything you can add here - the same menu right-clicking empty space opens.,여기에 추가할 수 있는 모든 것 - 빈 공간을 오른쪽 클릭할 때와 같은 메뉴입니다.
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","툴바가 쉬고 있습니다: 모든 버튼은 메뉴 또는 화살표 안에 있으며 단축키는 그대로입니다. 보기 > 전체 툴바로 모두 되돌립니다."
+Sheet theme,시트 테마
+"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.","이 시트를 그리는 테마 - 기본 제공 프리셋과, 편집기 테마에서 시트 색을 이끌어내는 Match Editor. 시트에 기억되므로 파일과 함께 이동합니다."
+Variable rows,변수 행
+Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks.,스크립트 블록을 추가하려면 간단 모드를 끄세요 (메뉴 ▸ 보기 ▸ 간단 모드).
+Full toolbar on - every button is on the strip.,전체 도구 모음 켜짐 - 모든 버튼이 막대에 있습니다.
+"Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.",도구 모음을 쉬게 했습니다. 꺾쇠 화살표 또는 보기 ▸ 전체 도구 모음으로 나머지가 돌아옵니다.
+"Debug layout: Event Trace, Live Values and breakpoints are on for this run.","레이아웃 디버그: 이번 실행에서는 이벤트 추적, 라이브 값, 중단점이 켜집니다."
+Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,이 버튼을 가리키기 위해 모든 버튼을 보여 줍니다 - 쉬게 해 둔 도구 모음 설정은 그대로입니다. 꺾쇠 화살표로 다시 쉽니다.

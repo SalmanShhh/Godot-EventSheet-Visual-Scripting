@@ -6001,3 +6001,11 @@ Add event,添加事件
 Add an event to this sheet.,向该表添加一个事件。
 Everything you can add here - the same menu right-clicking empty space opens.,你可以在这里添加的一切 - 与右键点击空白处打开的菜单相同。
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","工具栏已收起：每个按钮都在菜单或折叠箭头下，快捷键不变。视图 > 完整工具栏可全部恢复。"
+Sheet theme,事件表主题
+"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.",绘制此事件表所用的主题 - 内置预设，以及从你自己的编辑器主题推导事件表配色的 Match Editor。记在事件表上，因此随文件一同移动。
+Variable rows,变量行
+Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks.,关闭简易模式（菜单 ▸ 视图 ▸ 简易模式）即可添加脚本块。
+Full toolbar on - every button is on the strip.,已开启完整工具栏 - 所有按钮都在栏上。
+"Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.",工具栏已休息。点箭头，或选择 视图 ▸ 完整工具栏，其余按钮就会回来。
+"Debug layout: Event Trace, Live Values and breakpoints are on for this run.",调试布局：本次运行已开启事件追踪、实时数值与断点。
+Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,为了指向这个按钮，暂时显示了全部按钮 - 你选择的休息状态仍然记着。点箭头即可让它重新休息。

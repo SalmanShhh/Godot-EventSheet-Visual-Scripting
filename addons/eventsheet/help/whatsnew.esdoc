@@ -104,6 +104,21 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Fixed
 
+- **Reading a doc page no longer changes a setting.** The Manual's \"show me this control\" links (and
+  the public `EventSheets.pulse_control` behind them) have to make a hidden button visible before
+  they can pulse it, and they did that by calling the same function the chevron calls - which WRITES
+  the project's remembered choice. So following a link that points at a button the resting strip
+  keeps hidden permanently expanded a strip the reader had chosen to rest, with nothing to put it
+  back. Pointing at something is not a decision: the strip expands for as long as it takes to look,
+  says so, and the remembered choice is untouched - the chevron rests it again, and so does
+  reopening the project. What the strip is SHOWING and what the reader CHOSE are two answers now,
+  and only the chevron and View ▸ Full toolbar move the second.
+- **Eight editor strings reach the eight locales.** *Sheet theme* and its tooltip, *Variable rows*,
+  the rewritten \"Turn off Simple Mode (Menu ▸ View ▸ Simple Mode)\" tooltip and the strip's four
+  status lines reached the reader in English on every locale: they were raw literals rather than
+  keyed strings, and the coverage gate only sweeps explicit `translate()` calls, so nothing said so.
+  All eight go through the seam now and are keyed in `TEMPLATE.csv` and all eight locale CSVs in
+  lockstep.
 - **The play button stops lying about what it will do.** Nothing re-asked the editor whether a game
   was running: the face's words were recomputed only when the sheet itself started a run or the
   choice changed. So a game closed from its own window, or started and stopped from Godot's own play

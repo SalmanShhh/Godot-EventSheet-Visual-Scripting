@@ -6001,3 +6001,11 @@ Add event,Ereignis hinzufügen
 Add an event to this sheet.,Fügt diesem Blatt ein Ereignis hinzu.
 "Everything you can add here - the same menu right-clicking empty space opens.","Alles, was hier hinzugefügt werden kann - dasselbe Menü, das ein Rechtsklick auf freie Fläche öffnet."
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","Die Werkzeugleiste ruht: Jede Schaltfläche liegt unter Menü oder dem Pfeil, die Tasten bleiben unverändert. Ansicht > Vollständige Werkzeugleiste holt alles zurück."
+Sheet theme,Blatt-Thema
+"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.","Das Thema, mit dem dieses Blatt gezeichnet wird - die mitgelieferten Vorlagen und Match Editor, das die Farben des Blatts aus deinem eigenen Editor-Thema ableitet. Wird am Blatt gespeichert und reist mit der Datei mit."
+Variable rows,Variablenzeilen
+Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks.,"Schalte den einfachen Modus aus (Menü ▸ Ansicht ▸ Einfacher Modus), um Skriptblöcke hinzuzufügen."
+Full toolbar on - every button is on the strip.,Vollständige Werkzeugleiste an - jede Schaltfläche liegt auf der Leiste.
+"Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.",Werkzeugleiste ruht. Der Pfeil oder Ansicht ▸ Vollständige Werkzeugleiste holt den Rest zurück.
+"Debug layout: Event Trace, Live Values and breakpoints are on for this run.","Layout debuggen: Ereignisverfolgung, Live-Werte und Haltepunkte sind für diesen Lauf an."
+Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,"Es werden alle Schaltflächen gezeigt, damit auf diese gezeigt werden kann - deine ruhende Werkzeugleiste bleibt gemerkt. Der Pfeil lässt sie wieder ruhen."

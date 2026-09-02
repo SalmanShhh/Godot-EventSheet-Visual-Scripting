@@ -304,7 +304,7 @@ func _arm_debugger() -> void:
 	sheet.emit_event_trace = true
 	sheet.emit_live_values = true
 	sheet.emit_breakpoints = true
-	_dock._set_status("Debug layout: Event Trace, Live Values and breakpoints are on for this run.")
+	_dock._set_status(EventSheetL10n.translate("Debug layout: Event Trace, Live Values and breakpoints are on for this run."))
 
 
 func _play_current() -> void:

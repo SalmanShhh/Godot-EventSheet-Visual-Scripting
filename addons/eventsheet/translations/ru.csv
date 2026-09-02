@@ -6001,3 +6001,11 @@ Add event,Добавить событие
 Add an event to this sheet.,Добавить событие в этот лист.
 "Everything you can add here - the same menu right-clicking empty space opens.","Всё, что здесь можно добавить - то же меню, что открывает правый клик по пустому месту."
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","Панель инструментов отдыхает: каждая кнопка находится в меню или под стрелкой, клавиши не изменились. Вид > Полная панель инструментов вернёт всё."
+Sheet theme,Тема листа
+"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.","Тема, которой отрисован этот лист - встроенные пресеты и Match Editor, выводящий цвета листа из вашей темы редактора. Запоминается в листе, поэтому путешествует вместе с файлом."
+Variable rows,Строки переменных
+Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks.,"Отключите простой режим (Меню ▸ Вид ▸ Простой режим), чтобы добавлять блоки скрипта."
+Full toolbar on - every button is on the strip.,Полная панель включена - все кнопки на панели.
+"Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.",Панель отдыхает. Шеврон или Вид ▸ Полная панель вернут остальное.
+"Debug layout: Event Trace, Live Values and breakpoints are on for this run.","Отладка макета: трассировка событий, живые значения и точки останова включены для этого запуска."
+Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,"Показаны все кнопки, чтобы можно было указать на эту - ваш выбор отдыхающей панели сохранён. Шеврон снова её свернёт."

@@ -56,6 +56,12 @@ var _expander: Button = null
 var _toolbar_ref: HFlowContainer = null
 var _full_toolbar: bool = false
 
+## The reader's OWN choice, which is not always what the strip is showing. Something can expand the
+## strip for a moment without that being a decision - a Manual link pointing at a button that rests
+## hidden, say - and a moment must never overwrite a preference. Only set_full_toolbar moves this,
+## and only this is written to the project's metadata.
+var _remembered_full_toolbar: bool = false
+
 ## The two history icons, kept so their disabled state can follow the undo history the way Godot's
 ## own toolbars do.
 var _undo_button: Button = null
@@ -517,9 +523,10 @@ func build(root: Node) -> void:
 	var sheet_theme_menu: PopupMenu = PopupMenu.new()
 	sheet_theme_menu.name = "EventSheetSheetThemeMenu"
 	view_popup.add_child(sheet_theme_menu)
-	view_popup.add_submenu_item("Sheet theme", "EventSheetSheetThemeMenu", SHEET_THEME_VIEW_ID)
+	view_popup.add_submenu_item(EventSheetL10n.translate("Sheet theme"), "EventSheetSheetThemeMenu",
+		SHEET_THEME_VIEW_ID)
 	view_popup.set_item_tooltip(view_popup.get_item_index(SHEET_THEME_VIEW_ID),
-		"The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.")
+		EventSheetL10n.translate("The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file."))
 	_dock._bind_sheet_theme_menu(sheet_theme_menu)
 	view_popup.about_to_popup.connect(func() -> void: _dock._populate_sheet_theme_menu())
 	view_popup.add_item("Load Theme…", 6)
@@ -764,6 +771,7 @@ func build(root: Node) -> void:
 	_resting_controls = [menu_button, save_button, _undo_button, _redo_button, play_slot,
 		_quick_add_edit, _expander]
 	_full_toolbar = _stored_full_toolbar()
+	_remembered_full_toolbar = _full_toolbar
 	_apply_toolbar_expansion()
 	refresh_history_buttons()
 	# Every menu on the strip remembers this file too, so "where is this menu made" is the same
@@ -906,7 +914,7 @@ func build(root: Node) -> void:
 	var variable_view_menu: PopupMenu = PopupMenu.new()
 	variable_view_menu.name = "EventSheetVariableViewMenu"
 	view_popup.add_child(variable_view_menu)
-	view_popup.add_submenu_item("Variable rows", "EventSheetVariableViewMenu", 9813)
+	view_popup.add_submenu_item(EventSheetL10n.translate("Variable rows"), "EventSheetVariableViewMenu", 9813)
 	view_popup.set_item_tooltip(view_popup.get_item_index(9813),
 		"How much of a variable row to draw: the sentence on its own, the sentence with the GDScript declaration echoed at the right edge, or that declaration as the whole row. Display only - the file is never touched. Simple Mode keeps it on sentence.")
 	variable_view_menu.about_to_popup.connect(func() -> void:
@@ -1094,13 +1102,14 @@ func full_toolbar() -> bool:
 ## View menu's tick on the same answer.
 func set_full_toolbar(shown: bool) -> void:
 	_full_toolbar = shown
+	_remembered_full_toolbar = shown
 	var settings: Object = _editor_settings()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", FULL_TOOLBAR_META_KEY, shown)
 	_apply_toolbar_expansion()
 	if _dock != null:
-		_dock._set_status("Full toolbar on - every button is on the strip." if shown
-			else "Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.")
+		_dock._set_status(EventSheetL10n.translate("Full toolbar on - every button is on the strip.") if shown
+			else EventSheetL10n.translate("Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back."))
 
 
 ## THE ONE-TIME NOTE. A project that already has sheets in it had a strip with twenty-one controls
@@ -1169,12 +1178,30 @@ func refresh_history_buttons() -> void:
 ## Makes sure a control on the strip can actually be seen before something points at it: a tutorial
 ## step that pulses "Add Action" while the strip rests would pulse a hidden button. Answers whether
 ## the control belongs to this strip at all.
+##
+## THIS IS NOT A CHOICE, so it does not overwrite one. It used to call set_full_toolbar(true), which
+## wrote eventsheets_full_toolbar into the project's metadata and never put it back - so following a
+## Manual link that points at a hidden button permanently expanded a strip the reader had chosen to
+## rest, with nothing to undo it. The strip is expanded for as long as it takes to look at the thing
+## being pointed at; the remembered choice is untouched, the chevron rests it again, and reopening
+## the project rests it on its own.
 func reveal_control(control: Control) -> bool:
 	if _toolbar_ref == null or control == null or control.get_parent() != _toolbar_ref:
 		return false
-	if not control.visible:
-		set_full_toolbar(true)
+	if control.visible:
+		return true
+	_full_toolbar = true
+	_apply_toolbar_expansion()
+	if _dock != null:
+		_dock._set_status(EventSheetL10n.translate("Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again."))
 	return true
+
+
+## The reader's own resting/expanded choice, which is what gets remembered for the project. Not
+## always what the strip is SHOWING: something that points at a hidden button expands the strip
+## without deciding anything.
+func remembered_full_toolbar() -> bool:
+	return _remembered_full_toolbar
 
 
 ## The narrowest the RESTING strip can be drawn without wrapping: every resting control's own
