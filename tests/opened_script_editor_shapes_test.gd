@@ -162,7 +162,40 @@ static func _test_vocabulary_module() -> bool:
 	ok = _check("and the same verb written with the maker reads as that row too",
 		_joined(EventSheetSentence.statement(terse, {})),
 		"Core ▸ Define action Add Input Action   InputAddAction · category Input · input action: String   Writes InputMap.add_action({action})") and ok
+	# A verb that names the CLASS it belongs on carries that class between its description and its
+	# provider, and a vocabulary is published under one name whatever its rows sit on. The pin above
+	# cannot see the difference, because its verb names no class - so this one does.
+	var hosted: String = "	descriptors.append(F.trig(\"OnScreenResized\", \"On Screen Resized\", \"size_changed\", \"Game Window\", \"on screen resized\", \"Runs when the game window changes size.\", \"Window\"))"
+	ok = _check("a verb that names a host class still publishes under the vocabulary's own name",
+		_joined(EventSheetSentence.statement(hosted, {})),
+		"Core ▸ Define trigger On Screen Resized   OnScreenResized · category Game Window") and ok
+	# And the same statement over EVERY shipped module, so the column is read right on all of them
+	# rather than on the one verb a pin happens to spell.
+	ok = _check("no shipped module publishes a row under a name other than the vocabulary's",
+		_foreign_providers(), PackedStringArray()) and ok
 	return ok
+
+
+## The provider each shipped vocabulary module's rows are read under, minus the one they are all
+## published under - so the answer is empty until a reading files a row somewhere nobody published
+## it. Walked in sorted order, because a directory hands its files back in whatever order it likes.
+static func _foreign_providers() -> PackedStringArray:
+	var foreign: Dictionary = {}
+	var directory: String = "res://addons/eventforge/registration/modules"
+	var names: PackedStringArray = DirAccess.get_files_at(directory)
+	names.sort()
+	for name: String in names:
+		if not name.ends_with(".gd"):
+			continue
+		var text: String = FileAccess.get_file_as_string("%s/%s" % [directory, name])
+		for row: Variant in EventSheetEditorSourceFacts.vocabulary_rows(text.split("
+")):
+			var provider: String = str((row as Dictionary).get("provider", ""))
+			if not provider.is_empty() and provider != "Core":
+				foreign["%s: %s" % [name, provider]] = true
+	var listed: PackedStringArray = PackedStringArray(foreign.keys())
+	listed.sort()
+	return listed
 
 
 # ── The facts themselves ──

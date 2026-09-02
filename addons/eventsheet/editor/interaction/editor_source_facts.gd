@@ -58,10 +58,12 @@ const MAKER_CALLS: Dictionary = {
 }
 
 ## Where a maker carries each field. A TRIGGER's third argument is the SIGNAL it hangs off rather
-## than a template, so its template is read as the empty one it is; the provider is the last argument
-## and is almost never written, because a vocabulary is published under one name.
+## than a template, so its template is read as the empty one it is; the provider is the LAST
+## argument - the eighth, after the host class - and is almost never written, because a vocabulary
+## is published under one name. Counting to the host instead files every verb that names one under
+## its host class, which is a provider nobody published.
 const MAKER_POSITIONS: Dictionary = {
-	"id": 0, "name": 1, "template": 2, "category": 3, "provider": 6
+	"id": 0, "name": 1, "template": 2, "category": 3, "provider": 7
 }
 
 ## The provider a maker publishes under when its call does not name one.
