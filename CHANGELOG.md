@@ -108,6 +108,34 @@ Measured across the wave, outside the three generated trees: **-966 lines** of h
 (**+3,360 / -4,326**), of which `tests/` is **-1,484** and the installed plugin - everything under
 `addons/` except the doc bundle - is **-6**.
 
+**A dialog field said once, and the measurement that stopped the rollout behind it.** A field in
+this editor was five gestures across four lines and two functions: make a control, configure it,
+wire it, wrap it in a form row, and read it back somewhere else entirely - which is the split that
+lets a field be added to the build and forgotten in the read. `EventSheetFieldSpec` says it once, as
+data: a kind (a METHOD on `EventSheetPopupUI` - `text_field`, `number_field`, `options_field`,
+`check_field`, `path_field`, `code_field`, `choice_field` - never a string, so a misspelled kind
+cannot compile), a label, an id, and chainable modifiers that cannot be misspelled either.
+`EventSheetPopupUI.form()` builds a list of them THROUGH THE HELPERS THAT WERE ALREADY THERE, and
+`EventSheetFieldForm` reads them back by id from the same table the build came from. An id the form
+does not hold is an error naming the id and the ids that do exist, at the moment it is asked for.
+The New Event Sheet dialog is the worked example, and its rendered preview before and after the
+change is byte-identical.
+
+**And then the rollout stopped, on the measurement.** Converting that dialog cost **+5 lines**, not
+saved them: two field sites, seventeen candidate lines in and twenty-one out. Priced in whole field
+sites over the 90 that remain across the dialogs area, the completed rollout lands between **+352**
+and **+749** on the installed plugin - the optimistic end being the one where every remaining site
+converts as well as the single best block in the tree, `variable_dialog`'s twelve-field advanced
+tier, hand-priced at -23 lines. The seam itself is 702 hand-written lines, 523 of them shipped. The
+projection this replaces had counted 265 raw control constructions at a whole build block each; most
+of those 265 are not fields but rows built inside loops over data - a shelf of pack buttons, a table
+with one row per word - and a loop already says its row once. The field sites are the 92 form-row
+calls, and a form-row call is the fourth line of a four-line site, not the whole of it. The two
+lines a spec truly absorbs are the constructor and the parenting: `.placeholder("x")` is exactly as
+long as `.placeholder_text = "x"`. The seam ships anyway, as the door every new dialog comes through
+and with the old raw path still entirely legal, but it is an instrument and it is paid for in full
+by the figure.
+
 The second wave built its instruments first and then used them. The instruments themselves were
 honestly a GROWTH in the campaign's own figure - **+354 lines** of hand-written GDScript, of which
 the installed plugin was **-7** - because three of the four things in that step are tools and gates

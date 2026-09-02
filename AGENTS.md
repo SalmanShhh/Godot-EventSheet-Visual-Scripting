@@ -83,7 +83,12 @@ from `tools/build_help_bundle.gd`).
   CSVs, source-string-keyed, hand-maintained in LOCKSTEP (same keys, same order, no empty cells;
   suite-gated). Every new user-facing string lands in all nine files.
 - Dialogs build with `EventSheetPopupUI` helpers (`titled_card`, `panel_section`, `form_row`, the
-  help strip family) - never raw flat controls.
+  help strip family) - never raw flat controls. A field that is only what it says it is can be
+  declared instead of built: `EventSheetFieldSpec` (a kind is a MAKER METHOD on `EventSheetPopupUI`,
+  never a string; the modifiers chain) plus `form(host, specs)`, which builds through those same
+  helpers, and `EventSheetFieldForm`, which reads the fields back by id from the table the build
+  came from. An unknown id is an error naming it. The raw path stays legal and is still the right
+  one for a field with live gating or a widget of its own.
 - MCP server (AI tooling, policy-aware): `res://addons/eventsheet/mcp/mcp_server.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
 - Test harness: `tests/run_tests.gd` auto-discovers `tests/*_test.gd` files exposing
