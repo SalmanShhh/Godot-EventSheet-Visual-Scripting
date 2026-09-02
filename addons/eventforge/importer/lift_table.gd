@@ -38,11 +38,37 @@
 # way is spliced the same way, and the row a lift hands back is then the row the picker would have
 # authored, down to the byte.
 #
-# WHAT DOES NOT BELONG HERE: a family whose spelling is several statements that only mean something
-# together (the connection run: declare a peer, open it, hand it to the API), or one that has to read
-# the scene to know whether it is even looking at the right kind of node. Those stay hand-written
-# matchers. A table is for the shape a single statement can be recognised by - which, in practice, is
-# most of them.
+# SEVERAL STATEMENTS THAT ONLY MEAN SOMETHING TOGETHER are entries too. An entry may carry an
+# ordered list of `statements` instead of one `pattern` - each with the indentation it is written at,
+# relative to the statement the run opens on:
+#
+#     {
+#         "id": "layout_on_top_written",
+#         "ace_id": "AddLayoutOnTop",
+#         "mark": ".instantiate()",                                # cheap first refusal, optional
+#         "statements": [
+#             {"pattern": "^var (?<holder>…) = load\\((?<path>.+)\\)\\.instantiate\\(\\)$"},
+#             {"pattern": "^(?<holder>…)\\.name = (?<layout_name>.+)$"},
+#             {"pattern": "^get_tree\\(\\)\\.root\\.add_child\\((?<holder>…)\\)$", "indent": 0}
+#         ],
+#         "params": ["path", "layout_name"],
+#         "shape": "var menu = load({path}).instantiate()\n…",     # the whole run, one text
+#         "slots": {"path": "\"res://pause_menu.tscn\"", "layout_name": "\"PauseMenu\""}
+#     }
+#
+# THE STATEMENTS SHARE THEIR CAPTURES. A capture spelled in more than one of them must read the SAME
+# text in all of them or the run is not claimed - which is how a run says "the local made on the first
+# line is the one named on the second and placed on the third" without that local ever becoming a
+# value of the row. It is matched, agreed on, and spliced back verbatim, exactly like a receiver.
+#
+# Everything else is the single-statement form unchanged: the same params, the same defaults, the same
+# guard, and a `shape` that is simply several lines long - so the harness generates a MULTI-LINE
+# fixture through the real emitter and gates the byte round trip of the whole run the same way.
+#
+# WHAT DOES NOT BELONG HERE: a family that has to read the scene to know whether it is even looking at
+# the right kind of node, or one whose spelling is not a run of whole statements at all (the connect
+# lambda's body is bounded by indentation and re-emitted around, not matched). Those stay hand-written
+# matchers, and each says so in its own header.
 #
 # ADDING A FAMILY: put a `static func lift_entries() -> Array[Dictionary]` on a script in this
 # folder. The harness (tests/lift_table_test.gd) finds it by scanning, generates a fixture line per
@@ -64,9 +90,25 @@ const FIXTURE_CONTEXT_METHOD: String = "lift_fixture_context"
 ## the harness the moment it exists (memory rule: derived over hand-maintained).
 const FAMILY_DIR: String = "res://addons/eventforge/importer/"
 
-## Keys every entry must carry, and the ones it may.
+## Keys every entry must carry, and the ones it may. A MULTI-STATEMENT entry answers for `pattern`
+## with `statements` instead, which is the one substitution `validate` makes below.
 const REQUIRED_KEYS: Array[String] = ["id", "ace_id", "pattern", "shape", "slots"]
-const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error", "origin"]
+const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error", "origin",
+	"statements", "mark"]
+
+## The key a MULTI-STATEMENT entry carries instead of `pattern`: an ordered Array of
+## {pattern, indent} - one per statement of the run, `indent` counted in tabs from the statement the
+## run opens on and taken as 0 when it is left out. Matched in order, sharing captures.
+const STATEMENTS_KEY: String = "statements"
+
+## The relative indentation of one statement of a run, in tabs.
+const INDENT_KEY: String = "indent"
+
+## The optional substring an entry's OPENING statement must contain before any pattern of it is run.
+## One `contains` rules out almost every line in a project, and this engine is asked about every
+## statement of every opened file - the hand-written matchers all opened with such a test, and an
+## entry that replaces one keeps it rather than paying a regex per line for the same answer.
+const MARK_KEY: String = "mark"
 
 ## HOW AN ENTRY WAS AUTHORED, and the one thing this engine will say about it that does not affect
 ## matching at all. A table entry is a table entry whichever way it was written, so nothing in
@@ -132,6 +174,8 @@ static func match_line(entries: Array, line: String) -> Dictionary:
 		var pattern: String = str(entry.get("pattern", ""))
 		if pattern.is_empty():
 			continue
+		if not _marked(entry, text):
+			continue
 		var regex: RegEx = _regex(pattern)
 		if regex == null:
 			continue
@@ -149,6 +193,31 @@ static func match_line(entries: Array, line: String) -> Dictionary:
 			"params": params,
 			"template": _template_of(entry, hit, text, params)
 		}
+	return {}
+
+
+## The row a RUN of statements means, or {} when no entry claims it. `lines` is the function body as
+## the lifter holds it, `index` the statement the run would open on, and `depth` the indentation that
+## statement is written at - the same three arguments every hand-written run matcher took, so a
+## family that has become a table is entered on the lifter's existing seam unchanged.
+##
+## Only entries carrying `statements` are asked. They are tried IN ORDER and the first whole run that
+## matches wins, so a table puts its longer spellings above the shorter ones they contain (the guarded
+## layout run before the three bare statements inside it).
+##
+## Returns {entry_id, ace_id, provider, params, template, consumed}: `consumed` is how many statements
+## the run swallowed, and `template` the whole run as one text, with the author's own spelling of every
+## line but the param spans kept verbatim.
+static func match_run(entries: Array, lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	for entry: Variant in entries:
+		if not (entry is Dictionary):
+			continue
+		var table_entry: Dictionary = entry
+		if table_entry.has(REFUSAL_KEY) or not table_entry.has(STATEMENTS_KEY):
+			continue
+		var claimed: Dictionary = _match_statements(table_entry, lines, index, depth)
+		if not claimed.is_empty():
+			return claimed
 	return {}
 
 
@@ -176,8 +245,11 @@ static func validate(entries: Array) -> PackedStringArray:
 			problems.append("%s: refused - %s" % [named, str(table_entry[REFUSAL_KEY])])
 			continue
 		for key: String in REQUIRED_KEYS:
-			if not table_entry.has(key):
-				problems.append("%s: no %s" % [named, key])
+			# A run answers for `pattern` with `statements`, and is asked for that instead.
+			var wanted: String = STATEMENTS_KEY if key == "pattern" \
+				and table_entry.has(STATEMENTS_KEY) else key
+			if not table_entry.has(wanted):
+				problems.append("%s: no %s" % [named, wanted])
 		if id.is_empty():
 			continue
 		if seen.has(id):
@@ -187,6 +259,7 @@ static func validate(entries: Array) -> PackedStringArray:
 			if not (REQUIRED_KEYS.has(key) or OPTIONAL_KEYS.has(key)):
 				problems.append("%s: unknown key %s" % [id, key])
 		problems.append_array(_validate_pattern(table_entry, id))
+		problems.append_array(_validate_statements(table_entry, id))
 		problems.append_array(_validate_slots(table_entry, id))
 		problems.append_array(_validate_fixture_line(table_entry, id, fixture_lines))
 	return problems
@@ -198,6 +271,15 @@ static func validate(entries: Array) -> PackedStringArray:
 static func fixture_line(entry: Dictionary) -> String:
 	return ActionCodegen._apply_template(str(entry.get("shape", "")),
 		entry.get("slots", {}) as Dictionary)
+
+
+## What the whole table says its own generated fixture means - asked the way the LIFTER would ask it,
+## which is `match_run` for a run of statements and `match_line` for one. The harness and the
+## round-trip gate below both go through here, so an entry is tested on the seam it ships on.
+static func fixture_claim(entries: Array, entry: Dictionary, line: String) -> Dictionary:
+	if entry.has(STATEMENTS_KEY):
+		return match_run(entries, line.split("\n"), 0, 0)
+	return match_line(entries, line)
 
 
 ## The round trip, as sentences - empty when every entry keeps its promise. Each entry generates its
@@ -216,7 +298,7 @@ static func round_trip_problems(entries: Array) -> PackedStringArray:
 			continue  # a refusal is already a problem, said by validate; it has no shape to test
 		var id: String = str(table_entry.get("id", ""))
 		var line: String = fixture_line(table_entry)
-		var hit: Dictionary = match_line(entries, line)
+		var hit: Dictionary = fixture_claim(entries, table_entry, line)
 		if str(hit.get("entry_id", "")) != id:
 			var claimant: String = str(hit.get("entry_id", ""))
 			problems.append("%s: its own spelling (%s) is claimed by %s"\
@@ -302,6 +384,110 @@ static func _params_of(entry: Dictionary, hit: RegExMatch) -> Dictionary:
 	return params
 
 
+## One run of statements against one multi-statement entry: every statement in order, at exactly the
+## indentation the entry says it is written at, sharing its captures with the ones before it.
+static func _match_statements(entry: Dictionary, lines: PackedStringArray, index: int,
+		depth: int) -> Dictionary:
+	var statements: Array = entry.get(STATEMENTS_KEY, []) as Array
+	if statements.is_empty():
+		return {}
+	var captures: Dictionary = {}
+	var hits: Array[RegExMatch] = []
+	var texts: PackedStringArray = PackedStringArray()
+	var indents: PackedInt32Array = PackedInt32Array()
+	for step: int in statements.size():
+		var statement: Dictionary = statements[step] as Dictionary
+		var indent: int = int(statement.get(INDENT_KEY, 0))
+		var text: String = _statement_at(lines, index + step, depth + indent)
+		if text.is_empty():
+			return {}
+		if step == 0 and not _marked(entry, text):
+			return {}
+		var regex: RegEx = _regex(str(statement.get("pattern", "")))
+		if regex == null:
+			return {}
+		var hit: RegExMatch = regex.search(text)
+		if hit == null or not _agrees(captures, hit):
+			return {}
+		hits.append(hit)
+		texts.append(text)
+		indents.append(indent)
+	var guard: Variant = entry.get("guard", null)
+	if guard is Callable and not (guard as Callable).call(captures):
+		return {}
+	var params: Dictionary = (entry.get("defaults", {}) as Dictionary).duplicate()
+	for name: String in param_names(entry):
+		if captures.has(name):
+			params[name] = captures[name]
+	return {
+		"entry_id": str(entry.get("id", "")),
+		"ace_id": str(entry.get("ace_id", "")),
+		"provider": str(entry.get("provider", DEFAULT_PROVIDER)),
+		"params": params,
+		"template": _run_template(entry, hits, texts, indents, params),
+		"consumed": statements.size()
+	}
+
+
+## Merges one statement's captures into the run's, and says whether they AGREE. A name spelled by
+## more than one statement of a run has to read the same text in all of them - that is how a run says
+## the local it makes is the one it goes on to use, without that local becoming a value of the row.
+static func _agrees(captures: Dictionary, hit: RegExMatch) -> bool:
+	for name: Variant in hit.names.keys():
+		var key: String = str(name)
+		if hit.get_start(key) < 0:
+			continue
+		var text: String = hit.get_string(key)
+		if captures.has(key) and str(captures[key]) != text:
+			return false
+		captures[key] = text
+	return true
+
+
+## One statement of the body at exactly `indent` tabs, or "" when the line is blank, absent,
+## shallower, or deeper than that. A deeper line is inside a block rather than the next statement of
+## the run, and a run whose statements are not where the entry says they are is not that run.
+static func _statement_at(lines: PackedStringArray, index: int, indent: int) -> String:
+	if index < 0 or index >= lines.size():
+		return ""
+	var line: String = lines[index]
+	if not line.begins_with("\t".repeat(indent)):
+		return ""
+	var rest: String = line.substr(indent)
+	if rest.begins_with("\t") or rest.strip_edges().is_empty():
+		return ""
+	return rest
+
+
+## True when an entry's cheap first refusal admits this text - and when it has none.
+static func _marked(entry: Dictionary, text: String) -> bool:
+	var mark: String = str(entry.get(MARK_KEY, ""))
+	return mark.is_empty() or text.contains(mark)
+
+
+## The whole matched run as the spelling to bake onto the row: the canonical shape where the author
+## wrote exactly what it emits, and otherwise each statement spliced on its own and put back at the
+## indentation it was found at. The same reasoning as one statement's template, a line at a time.
+static func _run_template(entry: Dictionary, hits: Array[RegExMatch], texts: PackedStringArray,
+		indents: PackedInt32Array, params: Dictionary) -> String:
+	var shape: String = str(entry.get("shape", ""))
+	if ActionCodegen._apply_template(shape, params) == _run_text(texts, indents):
+		return shape
+	var written: PackedStringArray = PackedStringArray()
+	var names: PackedStringArray = param_names(entry)
+	for step: int in texts.size():
+		written.append("\t".repeat(indents[step]) + _spliced(shape, hits[step], texts[step], names))
+	return "\n".join(written)
+
+
+## A matched run as one text, each statement back at the indentation it was written at.
+static func _run_text(texts: PackedStringArray, indents: PackedInt32Array) -> String:
+	var written: PackedStringArray = PackedStringArray()
+	for step: int in texts.size():
+		written.append("\t".repeat(indents[step]) + texts[step])
+	return "\n".join(written)
+
+
 ## The receiver fragment's two halves, as the families already ask this class for them: the shape
 ## slot `{target.}` and the optional capture that matches it. Both are the capture grammar's, and are
 ## answered through it rather than beside it, so widening one can never leave the other behind.
@@ -339,8 +525,15 @@ static func _template_of(entry: Dictionary, hit: RegExMatch, text: String, param
 	var shape: String = str(entry.get("shape", ""))
 	if ActionCodegen._apply_template(shape, params) == text:
 		return shape
+	return _spliced(shape, hit, text, param_names(entry))
+
+
+## One matched line with its param captures spliced out for their slots - the mechanics the note
+## above describes, shared by the single-statement template and by each line of a run's.
+static func _spliced(shape: String, hit: RegExMatch, text: String,
+		names: PackedStringArray) -> String:
 	var spans: Array = []
-	for name: String in param_names(entry):
+	for name: String in names:
 		if hit.get_start(name) < 0:
 			continue
 		var prefix: bool = shape.contains(optional_prefix_slot(name)) \
@@ -364,29 +557,77 @@ static func _captures(hit: RegExMatch) -> Dictionary:
 
 static func _validate_pattern(entry: Dictionary, id: String) -> PackedStringArray:
 	var problems: PackedStringArray = PackedStringArray()
-	var pattern: String = str(entry.get("pattern", ""))
-	if pattern.is_empty():
+	var patterns: PackedStringArray = _patterns_of(entry)
+	if patterns.is_empty() or (patterns.size() == 1 and patterns[0].is_empty()):
 		return problems
-	var regex: RegEx = _regex(pattern)
-	if regex == null or not regex.is_valid():
-		problems.append("%s: the pattern does not compile" % id)
-		return problems
-	if not (pattern.begins_with("^") and pattern.ends_with("$")):
-		problems.append("%s: the pattern must anchor to the whole statement (^…$)" % id)
-	# A group with no name is a span nothing can read: the splice that stores the author's spelling
-	# works from NAMED captures, so an unnamed one costs the same to match and can never become a
-	# value. Write `(?:...)` for scenery and `(?<name>...)` for anything the row shows.
-	if _has_an_unnamed_group(pattern):
-		problems.append("%s: every group in the pattern must be named or non-capturing" % id)
-	# A param is a NAMED capture by definition - it is the span the template splices out. The pattern
-	# is read as text here rather than matched against the shape, because the shape is a template with
-	# `{slots}` in it and no pattern of a real spelling would match one.
+	var many: bool = patterns.size() > 1
+	for step: int in patterns.size():
+		var pattern: String = patterns[step]
+		var where: String = ("%s statement %d" % [id, step + 1]) if many else id
+		var regex: RegEx = _regex(pattern)
+		if regex == null or not regex.is_valid():
+			problems.append("%s: the pattern does not compile" % where)
+			continue
+		if not (pattern.begins_with("^") and pattern.ends_with("$")):
+			problems.append("%s: the pattern must anchor to the whole statement (^…$)" % where)
+		# A group with no name is a span nothing can read: the splice that stores the author's
+		# spelling works from NAMED captures, so an unnamed one costs the same to match and can never
+		# become a value. Write `(?:...)` for scenery and `(?<name>...)` for anything the row shows.
+		if _has_an_unnamed_group(pattern):
+			problems.append("%s: every group in the pattern must be named or non-capturing" % where)
+	# A param is a NAMED capture by definition - it is the span the template splices out. The patterns
+	# are read as text here rather than matched against the shape, because the shape is a template with
+	# `{slots}` in it and no pattern of a real spelling would match one. Any statement of a run may be
+	# the one that captures a param, so they are asked together.
+	var spelled: String = "".join(patterns)
 	for name: String in param_names(entry):
-		if not pattern.contains("(?<%s>" % name):
+		if not spelled.contains("(?<%s>" % name):
 			problems.append("%s: %s is a param with no capture group of that name" % [id, name])
 	var guard: Variant = entry.get("guard", null)
 	if entry.has("guard") and not (guard is Callable and (guard as Callable).is_valid()):
 		problems.append("%s: the guard is not a callable" % id)
+	return problems
+
+
+## Every pattern an entry matches with: the one a single statement carries, or one per statement of a
+## run, in order.
+static func _patterns_of(entry: Dictionary) -> PackedStringArray:
+	var patterns: PackedStringArray = PackedStringArray()
+	if not entry.has(STATEMENTS_KEY):
+		patterns.append(str(entry.get("pattern", "")))
+		return patterns
+	for statement: Variant in entry.get(STATEMENTS_KEY, []) as Array:
+		patterns.append(str((statement as Dictionary).get("pattern", "")) \
+			if statement is Dictionary else "")
+	return patterns
+
+
+## A run's own two questions, asked of nothing else: is it a run at all, and does its SHAPE spell the
+## same run its statements match? One shape line per statement, at the indentation that statement
+## says it is written at - so the fixture a run generates for itself is a run this engine can find,
+## and an entry whose shape drifted from its patterns fails here rather than by never matching.
+static func _validate_statements(entry: Dictionary, id: String) -> PackedStringArray:
+	var problems: PackedStringArray = PackedStringArray()
+	if not entry.has(STATEMENTS_KEY):
+		return problems
+	var statements: Array = entry.get(STATEMENTS_KEY, []) as Array
+	if statements.is_empty():
+		problems.append("%s: a run with no statements in it" % id)
+		return problems
+	var shape_lines: PackedStringArray = str(entry.get("shape", "")).split("\n")
+	if shape_lines.size() != statements.size():
+		problems.append("%s: the run is %d statements and its shape %d lines"\
+			% [id, statements.size(), shape_lines.size()])
+		return problems
+	for step: int in statements.size():
+		if not (statements[step] is Dictionary):
+			problems.append("%s: statement %d is not a Dictionary" % [id, step + 1])
+			continue
+		var indent: int = int((statements[step] as Dictionary).get(INDENT_KEY, 0))
+		var written: int = shape_lines[step].length() - shape_lines[step].lstrip("\t").length()
+		if written != indent:
+			problems.append("%s: statement %d is indented %d in the run and %d in the shape"\
+				% [id, step + 1, indent, written])
 	return problems
 
 

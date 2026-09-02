@@ -128,11 +128,17 @@ static func _test_one_entry(entries: Array, entry: Dictionary) -> bool:
 	var id: String = str(entry.get("id", ""))
 	var shape: String = str(entry.get("shape", ""))
 	var line: String = _emit(shape, entry.get("slots", {}))
-	print("  [line] %s -> %s" % [id, line])
-	var hit: Dictionary = EventForgeLiftTable.match_line(entries, line)
+	print("  [line] %s -> %s" % [id, line.replace("\n", "\n         ")])
+	var hit: Dictionary = EventForgeLiftTable.fixture_claim(entries, entry, line)
 	var ok: bool = _check("%s: its own spelling is claimed by it" % id, str(hit.get("entry_id", "")), id)
 	if not ok:
 		return false
+	# A run says how much of the body it took, and the whole of its own fixture is the answer: a run
+	# that swallowed fewer statements than it was written as would leave the rest of itself behind as
+	# code, which is a lift nobody would see fail anywhere else.
+	if entry.has(EventForgeLiftTable.STATEMENTS_KEY):
+		ok = _check("%s: over the statements it is written as" % id, int(hit.get("consumed", 0)),
+			(entry.get(EventForgeLiftTable.STATEMENTS_KEY, []) as Array).size()) and ok
 	ok = _check("%s: as the row it means" % id, str(hit.get("ace_id", "")), str(entry.get("ace_id", ""))) and ok
 	ok = _check("%s: with the values the line says" % id,
 		hit.get("params", {}), EventForgeLiftTable.expected_params(entry)) and ok
@@ -206,6 +212,73 @@ static func _test_the_engine() -> bool:
 	ok = _check("nor does an entry whose pattern is blank",
 		EventForgeLiftTable.match_line([{"id": "blank", "ace_id": "A", "pattern": "",
 			"shape": "", "slots": {}}], "hp -= 1"), {}) and ok
+	ok = _test_the_run_engine() and ok
+	return ok
+
+
+## A RUN of statements, on a table written for the purpose: the three things a run form adds to the
+## single-statement one, none of which any single family exercises alone.
+static func _test_the_run_engine() -> bool:
+	var table: Array = [
+		{
+			"id": "held",
+			"ace_id": "Held",
+			"statements": [
+				{"pattern": "^if (?<holder>[a-z]+):$"},
+				{"pattern": "^drop (?<holder>[a-z]+)$", "indent": 1}
+			],
+			"shape": "if torch:\n\tdrop torch",
+			"slots": {}
+		},
+		{
+			"id": "carried",
+			"ace_id": "Carried",
+			"statements": [
+				{"pattern": "^take[ \\t]+(?<what>[a-z]+)$"},
+				{"pattern": "^drop[ \\t]+(?<what>[a-z]+)$"}
+			],
+			"params": ["what"],
+			"shape": "take {what}\ndrop {what}",
+			"slots": {"what": "torch"}
+		}
+	]
+	var ok: bool = _check("the run is sound", EventForgeLiftTable.validate(table),
+		PackedStringArray())
+	ok = _check("a run of statements is claimed as one row",
+		EventForgeLiftTable.match_run(table, PackedStringArray(["take torch", "drop torch"]), 0, 0),
+		{"entry_id": "carried", "ace_id": "Carried", "provider": "Core",
+			"params": {"what": "torch"}, "template": "take {what}\ndrop {what}",
+			"consumed": 2}) and ok
+	# The whole point of a shared capture: the two statements have to be talking about one thing.
+	ok = _check("a capture two statements disagree about is not a run",
+		EventForgeLiftTable.match_run(table,
+			PackedStringArray(["take torch", "drop lantern"]), 0, 0), {}) and ok
+	# And the whole point of the splice: the author's own spacing rides back out on the template.
+	ok = _check("each line keeps the spelling it was written in",
+		str(EventForgeLiftTable.match_run(table,
+			PackedStringArray(["take   torch", "drop torch"]), 0, 0).get("template", "")),
+		"take   {what}\ndrop {what}") and ok
+	# Indentation is part of the run's shape: the statement inside the block is inside it or the run
+	# is somebody else's program.
+	ok = _check("a statement written inside the block is matched inside it",
+		str(EventForgeLiftTable.match_run(table,
+			PackedStringArray(["if torch:", "\tdrop torch"]), 0, 0).get("entry_id", "")),
+		"held") and ok
+	ok = _check("and the same two lines flat are not that run",
+		EventForgeLiftTable.match_run(table,
+			PackedStringArray(["if torch:", "drop torch"]), 0, 0), {}) and ok
+	ok = _check("a run written deeper than it is asked for is not claimed",
+		EventForgeLiftTable.match_run(table,
+			PackedStringArray(["\t\ttake torch", "\t\tdrop torch"]), 0, 0), {}) and ok
+	ok = _check("and is claimed at the depth it is written at",
+		str(EventForgeLiftTable.match_run(table,
+			PackedStringArray(["\t\ttake torch", "\t\tdrop torch"]), 0, 2).get("entry_id", "")),
+		"carried") and ok
+	ok = _check("a run that runs off the end of the body is not claimed",
+		EventForgeLiftTable.match_run(table, PackedStringArray(["take torch"]), 0, 0), {}) and ok
+	# A run is asked for as a run. One statement of it, on its own, is not a row.
+	ok = _check("no single line of a run is claimed by the line engine",
+		EventForgeLiftTable.match_line(table, "take torch"), {}) and ok
 	return ok
 
 
@@ -235,6 +308,11 @@ static func _test_a_broken_table_is_named() -> bool:
 		{"id": "unbacked", "ace_id": "A", "pattern": "^j$", "shape": "j {k}", "slots": {}},
 		{"id": "echo", "ace_id": "A", "pattern": "^m$", "shape": "m", "slots": {}},
 		{"id": "echo_again", "ace_id": "A", "pattern": "^n$", "shape": "m", "slots": {}},
+		{"id": "unshaped_run", "ace_id": "A", "shape": "p", "slots": {},
+			"statements": [{"pattern": "^p$"}, {"pattern": "^q$"}]},
+		{"id": "misindented_run", "ace_id": "A", "shape": "r\ns", "slots": {},
+			"statements": [{"pattern": "^r$"}, {"pattern": "^s$", "indent": 1}]},
+		{"id": "runless", "ace_id": "A", "shape": "t", "slots": {}, "statements": []},
 		EventForgeLiftExample.entry("by_example", "A", ""),
 		{"ace_id": "A", "pattern": "^z$", "shape": "z"}
 	])
@@ -250,6 +328,9 @@ static func _test_a_broken_table_is_named() -> bool:
 		"grouped: every group in the pattern must be named or non-capturing",
 		"unbacked: the shape's {k} is backed by no capture",
 		"echo_again: its fixture line is already echo's",
+		"unshaped_run: the run is 2 statements and its shape 1 lines",
+		"misindented_run: statement 2 is indented 1 in the run and 0 in the shape",
+		"runless: a run with no statements in it",
 		"by_example: refused - the example is empty",
 		"(unnamed entry): no id",
 		"(unnamed entry): no slots"
