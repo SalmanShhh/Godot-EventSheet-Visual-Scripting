@@ -15,6 +15,8 @@ extends RefCounted
 #
 # NAMING: the widget already claims the class name EventSheetFunctionDialog (editor/function_dialog.gd),
 # so this glue helper is EventSheetFunctionDialogGlue - mirroring the EventSheetPreviewGlue sibling.
+# The FILE is named for the class for the same reason: two files both called function_dialog.gd, one
+# the widget and one its wiring, is a name that answers the wrong question when someone opens it.
 #
 # Extracted from event_sheet_dock.gd to keep that file maintainable.
 #

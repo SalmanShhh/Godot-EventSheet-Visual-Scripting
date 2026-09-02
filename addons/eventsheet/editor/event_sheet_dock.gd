@@ -358,7 +358,7 @@ var _save_studio: EventSheetSaveStudio = EventSheetSaveStudio.new()  # Tools ▸
 ## nobody opens should not cost a window, and loading it by path keeps it off the boot path.
 var _lift_workbench: RefCounted = null
 var _translation_studio: EventSheetTranslationStudio = EventSheetTranslationStudio.new()  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
-var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
+var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog_glue.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
 var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
@@ -5766,7 +5766,7 @@ func _open_lift_report() -> void:
 	_preview_glue._open_lift_report()
 
 
-# ── Sheet functions: the Add ▾ → Function… dialog glue → dock/function_dialog.gd ─────
+# ── Sheet functions: the Add ▾ → Function… dialog glue → dock/function_dialog_glue.gd ─
 # (Bodies live in EventSheetFunctionDialogGlue; these delegates keep the names reached from
 # outside: the in-file Add-Function button + menu_bar Add menu (id 3) + command palette hit
 # _open_function_dialog, and the function_dialog + godot_workflow tests call _apply_function_data.)
