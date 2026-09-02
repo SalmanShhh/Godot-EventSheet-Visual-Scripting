@@ -3153,6 +3153,16 @@ func _apply_zoom_delta(direction: int, anchor_position: Vector2) -> void:
 	scroll.scroll_vertical = max(int(round(logical_anchor_y * _zoom_factor - anchor_position.y)), 0)
 
 
+## THE BAND AT THE TOP OF THE SHEET, in logical canvas pixels: what the rows owe the two corner
+## links before the first of them starts. Zero on a sheet that carries no links - an illustration,
+## and anything being read rather than edited - so a figure is exactly as tall as its rows and a
+## read-only preview starts where it always did.
+func content_top_offset() -> float:
+	if not ViewportCornerLinks.shown_on(self):
+		return 0.0
+	return ViewportCornerLinks.band_height(EventSheetPalette.resolve_font_size(_get_font_size(), -1))
+
+
 func _to_logical_position(position: Vector2) -> Vector2:
 	return position / max(_zoom_factor, 0.001)
 

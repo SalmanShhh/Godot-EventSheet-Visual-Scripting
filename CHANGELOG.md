@@ -100,6 +100,16 @@
 
 ### Fixed
 
+- **The two corner links have a band of their own.** "Add event" and "+ Add…" were drawn straight
+  into the first row's lanes - the left one over row 1's condition lane (and over the words of a head
+  band where the sheet had one), the right one on top of the row's own "+ Add action…" cell - and
+  they claim the click before the row hit-test runs, so the top of row 1 could not be clicked as a
+  row at all. The sheet reserves the band they sit in now, and the band is painted rather than
+  floated, so a row scrolled up passes UNDER the links instead of through their words. Same recipe
+  the pinned group head already uses. And a sheet being READ carries neither link: an opened pack, a
+  read-only resource and reading mode already suppress the trailing "+ Add event…" footers because
+  they are an offer the view cannot honour, and these two doors are the same offer in the corners -
+  with no links there is no band either, so a read-only preview starts exactly where it did.
 - **Tab reaches the Menu and the play dropdown.** `MenuButton` defaults to `FOCUS_ACCESSIBILITY`,
   which the focus ring skips, and neither control set anything else - so the one button holding the
   whole command tree, and the dropdown holding all six ways to play, were mouse-only, and the only

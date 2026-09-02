@@ -81,6 +81,18 @@ static func layout(widths: Dictionary, left: float, right: float, top: float, li
 	return rects
 
 
+## THE BAND THE LINKS OWN, in logical canvas pixels: the words plus the air above and below them.
+##
+## They used to be drawn straight into the first row's lanes - "Add event" over row 1's condition
+## lane, "+ Add…" over the row's own "+ Add action…" cell, and over the words of a head band when
+## the sheet had one - and they claimed the click before the row hit-test, so the top of row 1 could
+## not be clicked as a row at all. The band is REAL now: the sheet's rows start below it, and the
+## strip is painted rather than floated, so a row scrolling past passes UNDER the links instead of
+## through their words. Same recipe the pinned group head uses, for the same reason.
+static func band_height(link_size: int) -> float:
+	return MARGIN_Y * 2.0 + float(link_size) + 8.0
+
+
 ## The id of the link under `position` in a set of laid-out rects, or "" when the point is on
 ## neither. Static, so the same answer can be pinned off `layout` alone.
 static func link_at_in(rects: Dictionary, position: Vector2) -> String:
@@ -99,7 +111,7 @@ static func link_at_in(rects: Dictionary, position: Vector2) -> String:
 ## zones in it is not a picture. Same rule the getting-started buttons follow.
 func draw(font: Font, font_size: int, top_offset: float) -> void:
 	_link_rects.clear()
-	if _viewport.figure_mode or font == null:
+	if not shown_on(_viewport) or font == null:
 		return
 	var zoom: float = maxf(_viewport._zoom_factor, 0.001)
 	var left: float = float(_viewport.get_horizontal_scroll()) / zoom
@@ -116,6 +128,16 @@ func draw(font: Font, font_size: int, top_offset: float) -> void:
 		labels[str(record[0])] = label
 		widths[str(record[0])] = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, link_size).x
 	_link_rects = layout(widths, left, right, top, link_size)
+	# The band itself, painted before the words: the links sit ON the sheet rather than floating over
+	# whatever row happens to be beneath them, and a row scrolled up passes under an opaque strip
+	# instead of through two pieces of text. Same two draws the pinned group head makes.
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var band: Color = event_style.column_header_background_color
+	band.a = 0.97
+	var band_width: float = right - left
+	_viewport.draw_rect(Rect2(left, top, band_width, band_height(link_size)), band, true)
+	_viewport.draw_rect(Rect2(left, top + band_height(link_size) - 1.0, band_width, 1.0),
+		event_style.lane_divider_color, true)
 	var color: Color = EventSheetPalette.TEXT_MUTED
 	for link_id: String in _link_rects:
 		var rect: Rect2 = _link_rects[link_id]
@@ -126,6 +148,16 @@ func draw(font: Font, font_size: int, top_offset: float) -> void:
 		# reads as a door rather than as a caption somebody left in the corner.
 		_viewport.draw_rect(Rect2(rect.position.x, rect.position.y + rect.size.y - 1.0, rect.size.x, 1.0),
 			Color(color.r, color.g, color.b, color.a * 0.5), true)
+
+
+## WHETHER THIS SHEET CARRIES THE LINKS AT ALL. A figure is a picture of a sheet, and a picture with
+## live click zones in it is not a picture. A sheet that is being READ - an opened pack, a read-only
+## resource, reading mode - carries neither: the trailing "+ Add event…" footers are already
+## suppressed there because they are an offer the view cannot honour, and these two doors are the
+## same offer in the corners. Static and pure over the viewport, so the answer is one line in both
+## the draw pass and the reserved band.
+static func shown_on(viewport: Control) -> bool:
+	return viewport != null and not viewport.figure_mode and not viewport.is_reading_mode()
 
 
 ## The id of the link under `position` (logical canvas space), or "" when the point is on neither.

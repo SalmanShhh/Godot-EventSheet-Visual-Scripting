@@ -54,6 +54,8 @@ static func run() -> bool:
 	ok = _test_the_two_corners() and ok
 	ok = _test_the_links_move_with_the_window() and ok
 	ok = _test_what_each_link_opens() and ok
+	ok = _test_the_links_own_their_band() and ok
+	ok = _test_a_sheet_being_read_offers_nothing() and ok
 	ok = _test_the_add_cascade() and ok
 	ok = _test_the_four_buttons_are_still_there() and ok
 	return ok
@@ -133,6 +135,75 @@ static func _test_what_each_link_opens() -> bool:
 		"Everything you can add here - the same menu right-clicking empty space opens.") and ok
 	editor.free()
 	return ok
+
+
+## THE LINKS OWN A BAND, and the sheet starts below it. They used to be drawn straight into the
+## first row's lanes - "Add event" over row 1's condition lane and "+ Add…" over the row's own
+## "+ Add action…" cell - and they claim the click before the row hit-test, so the top of row 1
+## could not be clicked as a row at all, and on a sheet with a head band the left link sat over the
+## band's words. Pinned by VALUE: the band's height, that row 1 starts under it, and that a click in
+## the band is a click on no row.
+static func _test_the_links_own_their_band() -> bool:
+	var ok: bool = _check("the band is the words plus the air around them",
+		ViewportCornerLinks.band_height(LINK_SIZE), 6.0 * 2.0 + float(LINK_SIZE) + 8.0)
+	# The laid-out link sits INSIDE its own band rather than through the row beneath it.
+	var widths: Dictionary = {"add_event": ADD_EVENT_WIDTH, "add_menu": ADD_MENU_WIDTH}
+	var rects: Dictionary = ViewportCornerLinks.layout(widths, 0.0, 800.0, 0.0, LINK_SIZE)
+	var link: Rect2 = rects["add_event"]
+	ok = _check("and the words sit inside it",
+		link.position.y >= 0.0 and link.position.y + link.size.y <= ViewportCornerLinks.band_height(LINK_SIZE),
+		true) and ok
+	var editor: EventSheetEditor = _editor_with_one_event()
+	var offset: float = editor._viewport.content_top_offset()
+	ok = _check("an editing surface owes the links a band", offset > 0.0, true) and ok
+	ok = _check("and row 1 starts under it, not through it",
+		editor._viewport._get_row_top(0), offset) and ok
+	ok = _check("a click in the band is a click on no row",
+		editor._viewport._find_row_index_at_y(offset * 0.5), -1) and ok
+	ok = _check("and a click just under it is row 1",
+		editor._viewport._find_row_index_at_y(offset + 2.0), 0) and ok
+	editor.free()
+	return ok
+
+
+## A SHEET BEING READ OFFERS NOTHING TO ADD. An opened pack, a read-only resource and reading mode
+## already suppress the trailing "+ Add event…" footers, because they are an offer the view cannot
+## honour - and these two corner doors are the same offer in the corners, so they were the one
+## "Add" left standing on a sheet nothing can be added to. With no links there is no band either:
+## a read-only preview starts exactly where it always did.
+static func _test_a_sheet_being_read_offers_nothing() -> bool:
+	var editor: EventSheetEditor = _editor_with_one_event()
+	var ok: bool = _check("an editable sheet carries them",
+		ViewportCornerLinks.shown_on(editor._viewport), true)
+	editor._current_sheet.read_only = true
+	editor._viewport._rebuild_row_metrics()
+	ok = _check("a read-only sheet does not", ViewportCornerLinks.shown_on(editor._viewport), false) and ok
+	ok = _check("and owes them no band", editor._viewport.content_top_offset(), 0.0) and ok
+	ok = _check("so its first row starts at the top",
+		editor._viewport._get_row_top(0), 0.0) and ok
+	editor._current_sheet.read_only = false
+	editor._viewport.reading_mode = true
+	ok = _check("reading mode does not either",
+		ViewportCornerLinks.shown_on(editor._viewport), false) and ok
+	editor._viewport.reading_mode = false
+	editor._viewport.set_figure_mode(true)
+	ok = _check("and neither does an illustration",
+		ViewportCornerLinks.shown_on(editor._viewport), false) and ok
+	editor.free()
+	return ok
+
+
+## An editor over a sheet with one event in it, so the row metrics have a row 1 to place.
+static func _editor_with_one_event() -> EventSheetEditor:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var event_row: EventRow = EventRow.new()
+	event_row.trigger_provider_id = "Core"
+	event_row.trigger_id = "OnProcess"
+	sheet.events.append(event_row)
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	return editor
 
 
 ## THE ADD CASCADE. Add is a submenu of the one Menu button now, and it TEACHES THE KEYS: the five

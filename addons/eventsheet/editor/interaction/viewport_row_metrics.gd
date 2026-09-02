@@ -31,7 +31,12 @@ func init(viewport: Control) -> void:
 func rebuild() -> void:
 	_metrics_canvas_width = _viewport._get_logical_canvas_width()
 	_row_metrics.clear()
-	var top: float = 0.0
+	# The sheet starts BELOW the corner links' band where that band is drawn, so "Add event" and
+	# "+ Add…" have somewhere of their own to be. Without it the two links were painted straight
+	# into the first row's lanes and claimed the click before the row hit-test, and the top of row 1
+	# could not be clicked as a row. A click in the band itself resolves to no row, which is right:
+	# the band belongs to the links.
+	var top: float = _viewport.content_top_offset()
 	var previous_indent: int = -1
 	var previous_attached: bool = false
 	for index in range(_viewport._flat_rows.size()):

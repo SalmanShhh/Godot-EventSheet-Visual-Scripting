@@ -209,12 +209,35 @@ static func _test_inertness() -> bool:
 	figure._input_handlers.handle_mouse_motion(motion)
 	all_passed = _check("hovering a figure highlights nothing", figure._hovered_row_index, -1) and all_passed
 
-	# The CONTRAST, so none of the three above can pass vacuously: the identical events on an
-	# editing surface do select and do hover.
-	editing._input_handlers.handle_mouse_button(press)
+	# The CONTRAST, so none of the three above can pass vacuously: the same events on an editing
+	# surface do select and do hover.
+	#
+	# The y is taken from the surface's OWN reserved band rather than typed, because an editing
+	# surface owes the two corner links a band at the top of the sheet before its first row starts
+	# (a figure owes them nothing - it carries no links). The events above land at y = 20, which is
+	# inside that band on the editing surface, so they would resolve to no row for a reason that has
+	# nothing to do with what this check is about.
+	var row_y: float = editing.content_top_offset() + 20.0
+	var editing_press := InputEventMouseButton.new()
+	editing_press.button_index = MOUSE_BUTTON_LEFT
+	editing_press.pressed = true
+	editing_press.position = Vector2(40.0, row_y)
+	editing._input_handlers.handle_mouse_button(editing_press)
 	all_passed = _check("the same click DOES select on an editing surface", editing.get_selected_row_index(), 0) and all_passed
-	editing._input_handlers.handle_mouse_motion(motion)
+	var editing_motion := InputEventMouseMotion.new()
+	editing_motion.position = Vector2(60.0, row_y)
+	editing._input_handlers.handle_mouse_motion(editing_motion)
 	all_passed = _check("the same motion DOES hover on an editing surface", editing._hovered_row_index, 0) and all_passed
+	# And the band itself is not a row: a click in it selects nothing, which is what makes it a place
+	# the links can live rather than a strip painted over the top of row 1.
+	var band_press := InputEventMouseButton.new()
+	band_press.button_index = MOUSE_BUTTON_LEFT
+	band_press.pressed = true
+	band_press.position = Vector2(300.0, editing.content_top_offset() * 0.5)
+	all_passed = _check("the corner links have a band of their own", editing.content_top_offset() > 0.0, true) and all_passed
+	editing._input_handlers.handle_mouse_button(band_press)
+	all_passed = _check("and a click in it is not a click on row 1", editing.get_selected_row_index(), -1) and all_passed
+	all_passed = _check("a figure owes the links nothing", figure.content_top_offset(), 0.0) and all_passed
 
 	# Turning figure mode back off restores the editing surface, so the flag is a mode and
 	# not a one-way door (a host that reuses a viewport must be able to hand it back).
