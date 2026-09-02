@@ -135,6 +135,12 @@ installed plugin **+80** - the eleven picker facts the fields text is written of
 reduction all three sorted texts already walk. That is a GROWTH and it is stated as one; the
 migration steps of this wave are what pay it back, and they will be quoted against the same figure.
 
+The first migration step did not pay it back, and the honest thing is that the measurement is why.
+Measured at `5cef2ef2..84388024`: **+557 lines** of hand-written source (**+2,214 / -1,657**), of
+which `tests/` is **+181** and the installed plugin is **0** - the figure a shrink must not grow did
+not move at all, because nothing in that step ships. The reason is in the bullet below and it is
+arithmetic rather than execution.
+
 - **The one thing that differs between the gate's two trees by construction, said out loud.** The
   descriptor-identity gate reads its base out of a detached worktree, and importing that worktree
   RE-MINTS every `.uid` sidecar in it - the same script carries one resource id there and another
@@ -178,6 +184,37 @@ migration steps of this wave are what pay it back, and they will be quoted again
   tidiness classes from the area named after them. `FormatVersion` is **2** and prints in the header,
   because a figure from format 1 and a figure from format 2 are not comparable; the base commit is
   restated under the new definition in the same breath as the old one everywhere it is quoted.
+
+- **A pack's behaviour code is a real file, and the measurement says that costs lines rather than
+  saving them.** A pack builder held the code its pack ships as arrays of quoted, backslash-escaped
+  string literals: **16,365** of the **28,855** lines under `tools/pack_builders/` are one line of
+  GDScript wearing quotes, across **311** places where somebody wrote real code with no
+  highlighting, no parse check, no breakpoint and every embedded quote written twice.
+  `Lib.pack_from_source` reads a folder of real `.gd` files under `tools/pack_builders/src/<pack>/`
+  instead, where a piece is either a `#region` pair around top-level code or the BODY of a top-level
+  `func`, dedented by one tab - both of them ordinary GDScript, so the editor checks the file and
+  the parser parses it. The pieces are assembled by the same makers and published through the same
+  `save_pack`, so the bytes are the bytes. Four builders of different shapes went first - `wrap`
+  (172 lines), `skin_catalog_loader` (37), `weapon_kit` (254) and `save_system` (1,308): all 114
+  packs rebuild byte-identically, `audit_addons` reports `audited=116 drifted=0`, `--check-only`
+  parses each of the four emitted packs, and `--check-only` parses each of the four SOURCE files,
+  which is the whole point. **And it loses.** The four conversions are **+88 lines**
+  (**+1,734 / -1,646**) on 1,771 lines of builder holding 75 authored verbs; lines per verb went
+  **23.6 -> 24.8**, and the seam is a further **+288**. The escaped form was ALREADY one line per
+  line of code, so the tax it charges is characters rather than lines, and a faithful real-file form
+  adds a signature line and a blank line per piece plus a line for every `
+` that used to be
+  escaped inside a body. Projected for the remaining 108 both ways, so the band is visible: **+520**
+  scaled by verbs, **+1,346** scaled by builder lines. The rollout stops there on that projection -
+  this wave is a shrink - and the seam stands as the door every NEW pack should come through, where
+  a real file costs nothing extra and buys everything. The style gate learns about the tree rather
+  than looking away from it: it is scanned like the rest of `tools/`, with the two-blank rule alone
+  exempted (a blank line in a source file is a blank line in a drift-gated emitted pack, so
+  re-spacing one moves bytes), and the gate prints how many exemptions it took - **130** - so the
+  debt is a number on the page. `tests/pack_source_test.gd` pins the reader on a two-file fixture
+  and pins the four scans that must walk past a source file; `wrap` joins the
+  pack-builder-matches-shipped gate, so a change to what a piece IS fails the suite rather than the
+  next rebuild.
 
 - **A built-in verb is one line, and the line says which kind of verb it is.** The 1,783 built-in
   ACEs were each written as ten positional arguments with the kind spelled out in the middle of
