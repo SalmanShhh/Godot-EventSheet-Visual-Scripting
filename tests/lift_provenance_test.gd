@@ -1,10 +1,18 @@
-# Godot EventSheets - what claims this line, pinned as the ANSWERS rather than as a count.
+# Godot EventSheets - what row a line became, and what claims it, pinned as the ANSWERS.
 #
-# The provenance reader (EventSheetLiftProvenance) walks every reading layer in the order the
-# importer asks them and reports each one that answers. A count of how many answered would pass on
-# any two layers swapping places, so nothing here counts: every pin is the layer, the file it names
-# and the sentence it says, on four lines of one buffer chosen because each lands on a different
-# layer of the stack.
+# The provenance reader (EventSheetLiftProvenance) answers two questions about one line, and this
+# pins both of them.
+#
+# THE CLAIM is what row the editor actually turns the line into, asked of the row builder itself:
+# reopen, re-emit, look the line up in the compiler's source map. It is the question the whole tool
+# exists for, and it is the one a per-line walk cannot answer, because the importer reads a file
+# STRUCTURALLY - a class-level member is a variable row and never a statement, however confidently a
+# statement layer would have read it. The second buffer here is exactly that case.
+#
+# THE PREVIEW is which reading layer WOULD have claimed the line, walked in the importer's own order.
+# A count of how many answered would pass on any two layers swapping places, so nothing here counts:
+# every pin is the printed line, naming the layer, the file it names and the sentence it says. Four
+# lines of one buffer, chosen because each lands on a different layer of the stack.
 #
 #   a curated table entry  `rpc(&"take_damage", 10)`   the multiplayer family's own spelling
 #   an entry BY EXAMPLE    `event.is_action_pressed`   the input-event family, derived from a marked
@@ -48,12 +56,45 @@ const TABLE_LINE: int = 8
 const VERBATIM_LINE: int = 9
 const EXAMPLE_LINE: int = 15
 
+## A second buffer for the STRUCTURAL question, because the first one has no structure worth asking
+## about. Its one member declaration is the case that made the claim a separate question: asked as an
+## isolated statement it reads as a typed local-variable assignment, and the file it is in turns it
+## into a variable row that no statement layer ever sees.
+const MEMBERS: String = """extends Node2D
+
+var level_seconds: float = 0.0
+
+
+func _process(delta: float) -> void:
+	level_seconds += delta
+"""
+
+const MEMBER_LINE: int = 3
+
 
 static func run() -> bool:
-	var ok: bool = _test_the_three_known_lines()
+	var ok: bool = _test_the_row_the_line_became()
+	ok = _test_the_three_known_lines() and ok
 	ok = _test_the_by_example_layer_is_told_apart() and ok
 	ok = _test_the_printed_shape() and ok
 	ok = _test_a_line_that_is_not_one() and ok
+	return ok
+
+
+## The claim: the row the editor makes of the line, from the row builder rather than from a parallel
+## walk. The member declaration is the pin that matters - the statement layers below it read it as a
+## typed local-variable assignment, and the file makes it a variable row.
+static func _test_the_row_the_line_became() -> bool:
+	var member: EventSheetLiftProvenance.RowClaim = EventSheetLiftProvenance.row_claim(MEMBERS,
+		MEMBER_LINE, "res://members.gd")
+	var ok: bool = _check("a class-level member is a variable row, not a statement",
+		member.detail, "LocalVariable  level_seconds")
+	ok = _check("...and it is a NAMED claim rather than a guess", member.kind,
+		EventSheetLiftProvenance.Row.NAMED) and ok
+	# And the preview says what it WOULD have read as, which is exactly the wrong answer the claim
+	# exists to replace: a statement layer sees a typed assignment on that line.
+	ok = _check("...while the statement layers, asked the line alone, say something else entirely",
+		_claims_of(MEMBERS, MEMBER_LINE, "res://members.gd").is_empty(), false) and ok
 	return ok
 
 
@@ -62,19 +103,18 @@ static func run() -> bool:
 static func _test_the_three_known_lines() -> bool:
 	var ok: bool = _check("a curated table entry claims its own spelling",
 		_claims(TABLE_LINE), [
-			_answer(0, "table", "multiplayer_lift.gd",
-				"send_everyone_with_arguments -> SendMessageToEveryone"),
-			_answer(4, "call", "", "Node2D.rpc (receiver: self)")
+			"  1. table    multiplayer_lift.gd  send_everyone_with_arguments -> SendMessageToEveryone",
+			"  5. call     Node2D.rpc (receiver: self)"
 		])
 	# The derived layer answers BELOW the index, and says which receiver resolution got it there -
 	# `node`, because the @onready declaration at the top of the buffer types $Beam as a Light2D.
 	ok = _check("a line nothing curated names reads through the index and the derived call layer",
 		_claims(DERIVED_LINE), [
-			_answer(3, "index", "", "Core::NodeSetProcessing"),
-			_answer(4, "call", "", "Light2D.set_process (receiver: node)")
+			"  4. index    Core::NodeSetProcessing",
+			"  5. call     Light2D.set_process (receiver: node)"
 		]) and ok
 	ok = _check("and a line no layer claims says exactly that", _claims(VERBATIM_LINE),
-		[_answer(6, "verbatim", "", EventSheetLiftProvenance.UNCLAIMED)]) and ok
+		["  7. verbatim %s" % EventSheetLiftProvenance.UNCLAIMED]) and ok
 	return ok
 
 
@@ -85,8 +125,7 @@ static func _test_the_three_known_lines() -> bool:
 static func _test_the_by_example_layer_is_told_apart() -> bool:
 	var ok: bool = _check("an entry derived from an example says so, and names its family",
 		_claims(EXAMPLE_LINE),
-		[_answer(1, "example", "input_event_lift.gd",
-			"event_action_pressed -> EventIsActionPressed")])
+		["  2. example  input_event_lift.gd  event_action_pressed -> EventIsActionPressed"])
 	# And the stamp itself, at the seam, so a family that stops carrying it fails here rather than by
 	# quietly reading as a hand-written table.
 	var derived: Dictionary = EventForgeLiftExample.entry("probe", "Probe",
@@ -99,12 +138,19 @@ static func _test_the_by_example_layer_is_told_apart() -> bool:
 
 
 ## The text the command line prints, byte for byte. It is a deliberately plain format - a header
-## naming the file and the line, then one line per layer - and it is what somebody diffs two runs of,
-## so it is pinned rather than described.
+## naming the file and the line, then the row the line became, then one line per layer that would
+## have claimed it - and it is what somebody diffs two runs of, so it is pinned rather than described.
+##
+## The claim here is the EVENT, not the verb inside it: the compiler's source map is keyed on the row
+## that OWNS an emission, and an event owns the lines of every condition and action under it. That is
+## the grain the editor itself works at (it is what click-to-select selects), and the preview beneath
+## says which verb of that event claimed this particular line.
 static func _test_the_printed_shape() -> bool:
 	return _check("the whole answer, as it prints",
 		EventSheetLiftProvenance.text(SOURCE, TABLE_LINE, "res://buffer.gd"),
 		"res://buffer.gd:8  rpc(&\"take_damage\", 10)\n"
+		+ "  row      EventRow  OnReady\n"
+		+ "  read by:\n"
 		+ "  1. table    multiplayer_lift.gd  send_everyone_with_arguments -> SendMessageToEveryone\n"
 		+ "  5. call     Node2D.rpc (receiver: self)")
 
@@ -113,23 +159,25 @@ static func _test_the_printed_shape() -> bool:
 ## back as "nothing claims it" would read as a finding about the file.
 static func _test_a_line_that_is_not_one() -> bool:
 	var ok: bool = _check("a blank line is asked of nothing", _claims(2),
-		[_answer(6, "verbatim", "", EventSheetLiftProvenance.BLANK)])
+		["  7. verbatim %s" % EventSheetLiftProvenance.BLANK])
 	ok = _check("and a line past the end of the buffer says so", _claims(9999),
-		[_answer(6, "verbatim", "", EventSheetLiftProvenance.OUT_OF_RANGE)]) and ok
+		["  7. verbatim %s" % EventSheetLiftProvenance.OUT_OF_RANGE]) and ok
 	return ok
 
 
-## The answers for one line of the shared buffer, as a plain Array so a pin compares values.
+## The answers for one line of the shared buffer, as the lines they print, so a pin compares the
+## words a reader sees rather than a shape only this file knows.
 static func _claims(number: int) -> Array:
+	return _claims_of(SOURCE, number, "")
+
+
+## The same, for any buffer.
+static func _claims_of(source: String, number: int, script_path: String) -> Array:
 	var found: Array = []
-	for answer: Dictionary in EventSheetLiftProvenance.claims(SOURCE, number):
-		found.append(answer)
+	for answer: EventSheetLiftProvenance.Answer in EventSheetLiftProvenance.claims(source, number,
+			script_path):
+		found.append(answer.line())
 	return found
-
-
-## One expected answer, in the shape the reader hands back.
-static func _answer(order: int, layer: String, where: String, detail: String) -> Dictionary:
-	return {"order": order, "layer": layer, "where": where, "detail": detail}
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

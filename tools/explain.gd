@@ -1,12 +1,21 @@
 # Godot EventSheets - WHAT CLAIMS THIS LINE (dev tool).
 #
-# Point it at a script and a line number and it says, in provenance order, which reading layer claims
-# that line: the curated lift tables (which entry, in which family file), the entries derived from a
-# marked example, the hand-written matcher families, the general reverse index, the derived call and
-# property readings (and which receiver resolution answered), and finally the honest verbatim
-# fallback. The answers come from the real readers - EventSheetLiftProvenance asks the same
-# EventSheetLiftReading, EventSheetACELifter and derived-reading code that runs when a file opens -
-# so a line this tool explains is a line the editor reads the same way.
+# Point it at a script and a line number and it answers two questions about it.
+#
+# THE ROW IT BECAME, first, asked of the row builder itself: the file is reopened the way opening a
+# `.gd` reopens it, re-emitted the way saving it re-emits it, and the line looked up in the source map
+# that emission hands back. Structure included - a class-level member is a variable row, a connect
+# inside a bare `_ready` is a signal trigger - which is exactly what asking the line as an isolated
+# statement gets wrong. A file that does not re-emit byte for byte is told so rather than answered by
+# a line number that no longer means the same line.
+#
+# THEN WHICH READING LAYER WOULD HAVE CLAIMED IT, in provenance order: the curated lift tables (which
+# entry, in which family file), the entries derived from a marked example, the hand-written matcher
+# families, the general reverse index, the derived call and property readings (and which receiver
+# resolution answered), and finally the honest verbatim fallback. That walk is the preview a developer
+# retiring a table entry wants; the answers come from the real readers - EventSheetLiftProvenance asks
+# the same EventSheetLiftReading, EventSheetACELifter and derived-reading code that runs when a file
+# opens - so a line this tool explains is a line the editor reads the same way.
 #
 # USAGE
 #   "$GODOT" --headless --path . --script tools/explain.gd -- res://path/to/file.gd 42
