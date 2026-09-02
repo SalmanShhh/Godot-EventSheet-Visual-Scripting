@@ -162,6 +162,40 @@ saying which single-sourcing pays here and which does not, and **0** in the inst
 resemblance between those eighteen files is real and it is the kind that costs a day to disprove, so
 the disproof is now written where the next person to notice it will read it first.
 
+The third migration step was priced before it was written and the price was right, which is the
+first time in this campaign that sentence has been true of a step that GREW. The nine translation
+CSVs are 5,986 hand-maintained rows and deriving them is the largest single de-duplication left in
+the tree - but a CSV is not in the ledger's universe, which counts the two hand-maintained
+languages and nothing else, so a translation deriver can only ever cost lines. Projected before a
+line was written: a deriver plus its gate is an instrument, paid for in full, on the order of the
+`+354` the second wave's instruments cost. Measured at `8897aa90..3ad26e8b`: **+350 lines** of
+hand-written source (**+817 / -467**), of which `tests/` is **-252** and the installed plugin is
+**0**. The projection and the result agree to four lines. What it buys is not in the figure: nine
+files that had to be edited in step now have one command that edits them, and a gate that fails
+when running that command would change anything.
+
+- **The nine translation files have a deriver, and running it changes nothing.** `TEMPLATE.csv` and
+  the eight bundled locales were kept in lockstep by hand across 5,986 rows, and three suite gates
+  NAMED the row a wave forgot without being able to write it.
+  `tools/harvest_translations.gd` derives what is owed and appends it to the end of all nine at
+  once, with an empty cell in the locales so the blank-cell gate then names the language still
+  owing a word. It never deletes and never reorders. Of 5,984 unique keys, **4,278 are derived** -
+  1,406 `translate()` literals read out of the plugin's own source and 2,335 descriptor wording
+  strings from the modules and verbs the l10n obligation names - and **1,706 are kept by hand**,
+  which is canvas-drawn text, data-table wording and vocabulary beyond the ratchet. None is
+  unexplained and none is dropped. Translating the vocabulary is a deliberately partial job: a full
+  descriptor sweep derives 7,794 strings of which 5,169 have no row, so the whole vocabulary is not
+  a source and the header says why. The live-editor Control walk is not a source either - it sees
+  938 strings of which 316 have no row, engine-supplied dialog filters among them - so it reports
+  rather than writes, and `tools/extract_editor_strings.gd` keeps its own command and its own
+  artefact for the translator starting a new language, byte-identical to before, over the same walk.
+  Four shipped rows begin with a space because the sentence they tail onto supplies the one before
+  them; the first harvest trimmed keys and would have appended four spaceless duplicates of rows
+  already translated in eight languages, so a literal is now its own key to the character and a test
+  pins that space. The translate()-literal reader and the l10n obligation table each had two copies
+  and now have one: the tool that writes a missing row and the gate that fails on one read the same
+  words.
+
 - **The one thing that differs between the gate's two trees by construction, said out loud.** The
   descriptor-identity gate reads its base out of a detached worktree, and importing that worktree
   RE-MINTS every `.uid` sidecar in it - the same script carries one resource id there and another

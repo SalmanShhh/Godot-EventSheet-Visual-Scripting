@@ -112,6 +112,12 @@ from `tools/build_help_bundle.gd`).
   quoted and backslash-escaped. Those files spell their blank lines the EMITTER's way (one
   between members), which the style gate exempts by name and no one may re-space by hand; `build_examples.gd` (showcases, byte-stable);
   `audit_addons.gd` (pack drift + spelling + successor gates); `vocabulary_doc.gd`;
+  `harvest_translations.gd` (the nine translation CSVs' deriver: the translate()-literal reader, the
+  l10n obligation table and the live-editor walk all live here, and both l10n gates read them from
+  it. Appends the owed key to all nine files at once with an empty locale cell, never deletes, never
+  reorders; running it on a clean tree must print `nothing owed`, which `translation_harvest_test`
+  asserts. About three in ten template rows are derivable by no source and are KEPT - the vocabulary
+  is translated ratchet-wise, on purpose);
   `project_doctor.gd` (CLI shim); `verify_sheets.gd` (the four-contract repository gate: parses,
   round-trips, unique tokens, no unanswered migrations - read-only, exit-coded, wired into CI);
   `dump_registry.gd` (every descriptor in one sorted text form - the diff receipt for pack

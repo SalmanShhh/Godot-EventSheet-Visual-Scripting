@@ -29,6 +29,10 @@ GODOT="/path/to/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
 - Rebuild all packs after touching `tools/pack_builders/`: `"$GODOT" --headless --path . --script tools/build_sample_behaviors.gd` - then `--check-only --script` the emitted pack (the build + drift gates do NOT parse-check output).
 - Regenerate showcases after touching `tools/build_examples.gd`: `"$GODOT" --headless --path . --script tools/build_examples.gd` (regen must be byte-stable - verify by hashing the showcase folder across two runs, never with `git stash`).
 - Regenerate the vocabulary doc: `"$GODOT" --headless --path . --script tools/vocabulary_doc.gd`
+- Harvest the translation CSVs (appends the owed key to all nine, never deletes; must print
+  `nothing owed`): `"$GODOT" --headless --path . --script tools/harvest_translations.gd` - add
+  `-- --dry-run` to see what it would write. `translation_harvest_test` is the same question as a
+  gate.
 - Project health audit (prints `doctor: N error(s), N warning(s), N note(s)`): `"$GODOT" --headless --path . --script tools/project_doctor.gd`
 - Standing-contract gate (prints `verify: N file(s) read, …`; exit 1 on any failure): `"$GODOT" --headless --path . --script tools/verify_sheets.gd -- <paths...>` - parse, byte-exact round trip, doubled baked locals, and migration rows still waiting on a human. With no paths it walks the whole project, which here means ~1,300 files at ~0.4 s each; pass the paths you changed (git's spelling is accepted) or `--skip res://tests/fixtures/` for the deliberately broken ones. CI runs it over `demo/` + `eventsheet_addons/`.
 - Release ritual: bump `sheet_compiler.gd` `VERSION` + `addons/eventforge/plugin.cfg`, regenerate the compiler golden (`tools/regenerate_demo_golden.gd`, writes `tests/fixtures/compiler_golden_sheet_generated.gd`), finalize the CHANGELOG header + `docs/internal/RELEASE-NOTES-vX.md`, refresh README status/milestones + pack counts, delete shipped specs from `docs/internal/`, then commit + annotated tag `vX.Y.Z` + `git push --follow-tags`.
