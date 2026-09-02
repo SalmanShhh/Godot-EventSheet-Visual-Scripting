@@ -21,9 +21,10 @@
 #   "$GODOT" --headless --path . --script tools/explain.gd -- res://path/to/file.gd 42
 #   "$GODOT" --headless --path . --script tools/explain.gd -- res://path/to/file.gd 42 out=user://x.txt
 #
-# The output is plain text, one line per layer that answers, and the same bytes on every machine.
-# `out=` writes it to a file instead of stdout, so the console binary's own banner lines cannot land
-# in a text somebody means to diff.
+# The output is plain text and the same bytes on every machine: the line itself, then the `row` it
+# became, then `read by:` and one line per layer that would have claimed it. `out=` writes it to a
+# file instead of stdout, so the console binary's own banner lines cannot land in a text somebody
+# means to diff.
 #
 # THE FAST LOOP FOR A TABLE ENTRY. This tool says which entry claims a line; the harness says whether
 # that entry still keeps its promise. Between them the loop for changing one spelling is:
