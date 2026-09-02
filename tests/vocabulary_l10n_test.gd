@@ -40,189 +40,11 @@ const MODULES_DIR := "res://addons/eventforge/registration/modules"
 ## The bundled languages. English is the source, so it is not a file.
 const LOCALES: Array[String] = ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]
 
-## Modules whose WHOLE descriptor set shipped in this wave.
-const NEW_MODULES: Array[String] = [
-	"res://addons/eventforge/registration/modules/clipboard_aces.gd",
-	"res://addons/eventforge/registration/modules/resource_aces.gd",
-	"res://addons/eventforge/registration/modules/table_aces.gd",
-	"res://addons/eventforge/registration/modules/text_extract_aces.gd",
-	"res://addons/eventforge/registration/modules/text_format_aces.gd",
-	"res://addons/eventforge/registration/modules/spatial_aces.gd",
-	# The reading waves that followed: the game shapes every project writes by hand, the words for
-	# authoring an editor plugin, the 3D move/turn/face/place vocabulary, and the cursor-and-canvas
-	# words. Each of these modules is WHOLLY new, so the whole module is owed and swept.
-	"res://addons/eventforge/registration/modules/game_mechanics_aces.gd",
-	"res://addons/eventforge/registration/modules/cursor_canvas_aces.gd",
-	# Playing together, and lighting a game: three modules that shipped whole, so the whole of each
-	# is owed. The node-scoped lighting rows now live in lighting_aces.gd beside the frozen ones they
-	# were authored next to, and that whole file is keyed, so the file is what is listed.
-	"res://addons/eventforge/registration/modules/multiplayer_aces.gd",
-	"res://addons/eventforge/registration/modules/lighting_aces.gd",
-	"res://addons/eventforge/registration/modules/scene_lighting_aces.gd",
-	# The game's own mode, and the value-shaping and movement words. Three modules that shipped
-	# whole, so the whole of each is owed.
-	"res://addons/eventforge/registration/modules/game_state_aces.gd",
-	"res://addons/eventforge/registration/modules/math_words_aces.gd",
-	"res://addons/eventforge/registration/modules/space_words_aces.gd",
-	# The spawn sentence: the row that names a new copy, the deferred spelling beside it, and the
-	# four expressions that answer "where". One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/spawn_aces.gd",
-	# The other half of the same sentence: the three destroy verbs and the question beside them. One
-	# module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/removal_aces.gd",
-	# The copies said in the plural: joining a group on the way in, the cap with its policy on the
-	# row, the count, and the trigger that answers a crowd emptying. One module, shipped whole.
-	"res://addons/eventforge/registration/modules/crowd_aces.gd",
-	# The questions a handler asks the ONE event it was handed, filed apart from the polled Input
-	# rows on purpose. One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/input_event_aces.gd",
-	# The four things the engine tells a node through its notification callback. One module,
-	# shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/notification_aces.gd",
-	# One object's own state, which is the game-mode module one level down: the same six roles owed
-	# for the same reason. One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/object_state_aces.gd",
-	# The tree announcing a node joining or leaving a group: two triggers and the group they watch.
-	# One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/group_arrival_aces.gd",
-]
+## The l10n obligation - which modules and which verbs owe a translated word - is declared once,
+## in the harvester that WRITES a missing row, and read here by the gate that FAILS on one. Two
+## copies of that table would be two answers waiting to disagree.
+const HARVEST := preload("res://tools/harvest_translations.gd")
 
-## The two doors content from outside the project comes in through. Added to the shipped Files
-## module rather than to a module of their own, so they are swept by id here rather than wholesale.
-const USER_CONTENT_DOOR_IDS: Array[String] = [
-	"OnFilesDropped", "AskForAFileToOpen", "AskWhereToSave", "OnFileChosen", "OnAskCancelled",
-	"LoadImageFile", "LoadSoundFile",
-	# The two archive verbs and the three events an unpack raises, added to the same shipped module.
-	"PackFolderIntoZip", "UnpackZipIntoFolder", "OnUnpackProgress", "OnUnpackRefused",
-	"OnUnpackFinished",
-	# The name a player typed made safe, the path that is still free, and the door back to their
-	# own file browser. Added to the same shipped module.
-	"SafeFileName", "FreeFilePath", "ShowInFileManager",
-	# The guarded read, the write that makes its folder, and the door onto the player's own folder.
-	"ReadTextFileOr", "WriteTextFileInFolder", "OpenUserDataFolder",
-	# What the player built, written down, and the question asked before one is read back in. Added
-	# to the same shipped module as the doors above, so they are swept by id here for the same
-	# reason: the module predates the wave and only what the wave added is owed.
-	"SaveBranchAsSceneFile", "SceneFileIsDataOnly",
-]
-
-## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
-## test says what this wave owes rather than retro-failing on vocabulary that predates it.
-const EXTENDED_MODULES: Dictionary = {
-	"res://addons/eventforge/registration/modules/comparison_aces.gd": [
-		"TextIsANumber", "TextIsAWholeNumber", "ContainsAnyOf", "ContainsAllOf", "ContainsNoneOf",
-		"NumberFromText", "WholeNumberFromText", "IsNothing", "HasSomething",
-	],
-	"res://addons/eventforge/registration/modules/collection_aces.gd": [
-		"NumberOr", "TextOr", "ListOr", "RecordOr", "ValueOr", "PartOf", "SetPartOf",
-		# The flow wave: waits that can end two ways, retries, and the race.
-		"WaitUntil", "WaitForAllOf", "WaitForAnyOf", "WaitSucceeded", "WaitTimedOut",
-		"FirstToFinish", "RetryUpTo", "RetryAttemptNumber", "StopRetrying", "RetriesExhausted",
-		"WaitBeforeNextTry",
-		# A layout put OVER the running game rather than instead of it: the add, the removal, and
-		# the question between them.
-		"AddLayoutOnTop", "RemoveLayoutOnTop", "LayoutIsOnTop",
-	],
-	# The flow/diagnostics wave: trails, measurements and the frame-budget conditions.
-	"res://addons/eventforge/registration/modules/dev_aces.gd": [
-		"RememberInTrail", "TrailValues", "TrailLowest", "TrailHighest", "TrailAverage",
-		"TrailNewest", "TrailLength", "LogTrail", "SaveTrailCsv", "ClearTrail",
-		"FrameOverBudget", "FpsBelowFor", "StartMeasuring", "StopMeasuring", "MeasuredLast",
-		"MeasuredAverage", "MeasuredPeak", "LogMeasurements", "ClearMeasurements",
-		# The two edges of the budget: the frame it went long on, and the frame it came right on.
-		"FrameRunningLong", "FrameRecovered",
-		# The write half of the scene owner, beside the read-only row that predates it.
-		"SetSceneOwner",
-	],
-	# The wire's own words need no entry of their own: multiplayer_aces.gd is listed above as a
-	# WHOLLY new module, so every descriptor it grows is already swept.
-	# Drawing order as a sentence, and the on-screen question.
-	"res://addons/eventforge/registration/modules/rendering_aces.gd": [
-		"RenderingDrawInFrontOf", "RenderingShowOnlyTo", "RenderingIsOnScreen",
-	],
-	# The flow wave: the service registry, the capability loop and the deferral verbs.
-	"res://addons/eventforge/registration/modules/node_aces.gd": [
-		"RegisterAsService", "ServiceNamed", "HasService", "ForEachNodeThatCan",
-		"DoAfterFrame", "CallLater", "SetPropertyDeferred", "OnceThisFrame",
-		# The hierarchy wave: parenting, the two follow-flag escape hatches, and the child picks.
-		"RemoveChild", "HierarchyAddChild", "HierarchyRemoveFromParent", "SetIgnoreParentMovement",
-		"CopyPlaceTo", "StopCopyingPlace", "ForEachChildOf", "MoveChild", "QueueFreeNode",
-		# The copy with its three questions asked out loud, beside the frozen engine-default one.
-		"DuplicateNodeChoosing",
-	],
-	# The hierarchy wave's two triggers, the element-input trigger that shipped beside them, and the
-	# error trigger a shipped build fires.
-	"res://addons/eventforge/registration/modules/core_aces.gd": [
-		"OnControlInput", "OnChildEnteredTree", "OnChildExitingTree", "OnSomethingWentWrong",
-		# The reparent that says which of the two things should happen to where the node is.
-		"ReparentToChoosing",
-	],
-	# The data wave: watched data files and the data-folder validation verbs.
-	"res://addons/eventforge/registration/modules/resource_aces.gd": [
-		"WatchDataFile", "ReloadDataAsset", "signal:data_file_changed",
-		"DataFolderProblems", "DataFolderIsValid", "ValidateDataFolder",
-	],
-	# The flow wave: named spawns, the success/failure report seam and the once-per-thing guards.
-	"res://addons/eventforge/registration/modules/system_aces.gd": [
-		"SpawnSceneAs", "TheSpawned", "SpawnIsAlive", "signal:scene_spawned",
-		"signal:verb_failed", "signal:verb_succeeded", "ReportFailure", "ReportSuccess",
-		"AtMostEvery", "Poke", "ClearPoke", "HasBeenQuiet", "OnlyOncePerNode",
-		"OnlyOncePerName", "OnlyOnceThisSceneLoad", "ForgetOnceFor",
-	],
-	# The drop door, the ask door and the two loaders - see USER_CONTENT_DOOR_IDS above.
-	"res://addons/eventforge/registration/modules/file_aces.gd": USER_CONTENT_DOOR_IDS,
-	# The two rows that build a menu and answer the item that was chosen out of it.
-	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
-		"MenuAddItem", "OnMenuItemChosen",
-		# The words for authoring an editor plugin. They arrived as a module of their own and were
-		# owed wholesale; the module joined this one, so the same rows are owed here by name.
-		"EditorIcon", "EditorPreference", "ProjectSetting", "EditorMainScreen", "SetProjectSetting",
-		"SaveProjectSettings", "SwitchToWorkspace", "ShowInProjectBar", "OpenScriptAtLine",
-		"AddEditorWindow", "AddCommandPaletteCommand", "AddBottomPanel", "RemoveBottomPanel",
-		"OnProjectFilesChanged", "OnPreferencesChanged",
-	],
-	# The three edits a tool makes as steps the editor can take back.
-	"res://addons/eventforge/registration/modules/tooling_aces.gd": [
-		"SetPropertyUndoable", "AddNodeUndoable", "RemoveNodeUndoable",
-	],
-	# The combo wave: the slice of a clip a move may be cancelled in, the per-object
-	# freeze, and the two ways an animation tells the game when something happens.
-	"res://addons/eventforge/registration/modules/animation_player_aces.gd": [
-		"AnimationIsBetween", "PauseAnimationFor",
-		"OnAnimationFrame", "SpriteAnimationFrameIs", "OnAnimationEvent",
-		# The names picked off the scene: the two rows that wave added, and the three whose fields
-		# stopped being free text.
-		"PlayThenQueue", "AnimationPastMarker", "QueueAnimation", "SetAnimationTime", "HasAnimation",
-	],
-	# The layers said in the project's own words: the two mask verbs, the two layer verbs and the
-	# question beside them, each in both dimensions.
-	"res://addons/eventforge/registration/modules/collision_aces.gd": [
-		"CollideWithLayer", "StopCollidingWithLayer", "BeOnLayer", "LeaveLayer",
-		"IsSetToCollideWithLayer",
-		"CollideWithLayer3D", "StopCollidingWithLayer3D", "BeOnLayer3D", "LeaveLayer3D",
-		"IsSetToCollideWithLayer3D",
-		# The step a standing state changed: the two floor edges, the two overlap edges and the
-		# four gates that go under them. They arrived as a module of their own and were owed
-		# wholesale; the module joined this one, so the same rows are owed here by name.
-		"OnLanded", "OnLanded3D", "OnLeftTheGround", "OnLeftTheGround3D",
-		"JustLanded", "JustLanded3D", "JustLeftTheGround", "JustLeftTheGround3D",
-		"OnFirstOverlap", "OnFirstOverlap3D", "OnLastOverlapEnded", "OnLastOverlapEnded3D",
-		"IsTheFirstOneIn", "IsTheFirstOneIn3D", "WasTheLastOneOut", "WasTheLastOneOut3D",
-		# The touch said with a group on it: the four filtered triggers and the standing question
-		# beside them, owed here for the same reason.
-		"OnCollisionWithGroup", "OnCollisionWithGroup3D",
-		"OnStoppedCollidingWithGroup", "OnStoppedCollidingWithGroup3D",
-		"OnOverlapWithGroup", "OnOverlapWithGroup3D",
-		"OnOverlapEndedWithGroup", "OnOverlapEndedWithGroup3D",
-		"IsTouchingGroup", "IsTouchingGroup3D",
-	],
-	# The press remembered for a moment so an input made slightly too early still lands,
-	# in seconds and in the frame-counted spelling beside it.
-	"res://addons/eventforge/registration/modules/timed_input_aces.gd": [
-		"BufferInput", "IsInputBuffered", "ConsumeBufferedInput",
-		"BufferInputFrames", "IsInputBufferedFrames", "ConsumeBufferedInputFrames",
-	],
-}
 
 ## One pinned translation per language, chosen from a string whose translation differs from its
 ## English source in every one of them - the proof that the catalog is loaded and resolving.
@@ -316,52 +138,17 @@ static func _test_wave_vocabulary_has_keys() -> bool:
 	return passed
 
 
-## Every string of the wave that reaches a user: the seven roles the editor routes through the
-## translation layer. Ids, templates and hints never translate and are not collected.
+## Every string the obligation owes a user: the seven roles the editor routes through the
+## translation layer, from the modules and verbs the shared obligation names. Ids, templates and
+## hints never translate and are not collected.
 static func _wave_strings() -> PackedStringArray:
-	var seen: Dictionary = {}
-	var strings: PackedStringArray = PackedStringArray()
-	for path: String in NEW_MODULES:
-		_collect(path, PackedStringArray(), seen, strings)
-	for path: Variant in EXTENDED_MODULES:
-		_collect(str(path), PackedStringArray(EXTENDED_MODULES[path]), seen, strings)
-	return strings
+	return HARVEST.owed_vocabulary().keys
 
 
-## `only_ids` empty means every descriptor in the module qualifies.
-static func _collect(path: String, only_ids: PackedStringArray, seen: Dictionary, strings: PackedStringArray) -> void:
-	var script: GDScript = load(path)
-	if script == null:
-		return
-	for descriptor: ACEDescriptor in script.get_descriptors():
-		if not only_ids.is_empty() and not only_ids.has(descriptor.ace_id):
-			continue
-		_collect_descriptor(descriptor, seen, strings)
-
-
-## The seven roles ONE verb routes through the translation layer. The wave sweep above and the
-## per-verb ratchet below ask the same question of a descriptor, so they ask it in one place.
+## The seven roles ONE verb routes through the translation layer. The harvester that writes a
+## missing row asks a descriptor the same question, so it is asked in one place.
 static func _collect_descriptor(descriptor: ACEDescriptor, seen: Dictionary, strings: PackedStringArray) -> void:
-	_add(descriptor.display_name, seen, strings)
-	_add(descriptor.description, seen, strings)
-	_add(descriptor.category, seen, strings)
-	_add(descriptor.get_display_text(), seen, strings)
-	for parameter: ACEParam in descriptor.params:
-		if parameter == null:
-			continue
-		_add(parameter.get_param_name(), seen, strings)
-		_add(parameter.get_param_description(), seen, strings)
-		for option: Variant in parameter.options:
-			if option is Dictionary:
-				_add(str((option as Dictionary).get("label", "")), seen, strings)
-
-
-static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> void:
-	var trimmed: String = text.strip_edges()
-	if trimmed.is_empty() or seen.has(trimmed):
-		return
-	seen[trimmed] = true
-	strings.append(trimmed)
+	HARVEST.collect_descriptor(descriptor, seen, strings)
 
 
 # ── 3b. The ratchet: a verb that is wholly keyed stays wholly keyed ──
