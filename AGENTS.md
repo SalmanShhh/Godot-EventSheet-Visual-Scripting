@@ -131,7 +131,11 @@ from `tools/build_help_bundle.gd`).
 - A pack builder may hold its behaviour code as a folder of REAL `.gd` files under
   `tools/pack_builders/src/<pack>/`, assembled with `Lib.pack_from_source` - a piece is a `#region`
   pair around top-level code or the body of a top-level `func`, so the code is highlighted,
-  parse-checked and breakpointable instead of quoted and backslash-escaped. Those files spell their
+  parse-checked and breakpointable instead of quoted and backslash-escaped. What a source file
+  cannot carry (behavior, autoload, category, tags, version, Inspector variables, wholesale verb
+  exposure) is declared on a typed `Lib.manifest()`, one setter per fact, never a dictionary key.
+  A piece asked for by a name the folder does not hold FAILS the build rather than emitting an
+  empty body: `publish` refuses and `build_sample_behaviors.gd` exits 1. Those files spell their
   blank lines the EMITTER's way (one between members), which the style gate exempts by name and no
   one may re-space by hand. They are ordinary GDScript under `tools/`, invisible to the provider
   scan, the suite's discovery and the docs index; the one reading that DOES see them is the "This
