@@ -55,6 +55,13 @@ const POLL_SECONDS: float = 0.05
 ## way a warm process can be actively WRONG rather than merely stale, so it hands over instead.
 const WATCHED_DIRS: Array[String] = ["res://addons/", "res://tools/"]
 
+## Shared helper files under `tests/` that this process is also holding compiled in memory. The
+## requested test itself is re-read from disk every time (CACHE_MODE_IGNORE below), but a file it
+## `preload`s resolves through the resource cache, so an edit to one of these would be answered
+## from the copy compiled at first use. Watching them by name keeps that honest without watching
+## all of `tests/`, which would hand over on every edit the loop exists to serve.
+const WATCHED_FILES: Array[String] = ["res://tests/support.gd"]
+
 var _runs_served: int = 0
 var _waited: float = 0.0
 var _source_stamp: int = 0
@@ -146,12 +153,15 @@ func _next_request() -> String:
 	return "" if names.is_empty() else names[0]
 
 
-## The newest modification time under the watched folders. Walked per request, which is a few
-## milliseconds against the twenty-five seconds a boot costs.
+## The newest modification time across the watched folders and the watched shared files. Walked per
+## request, which is a few milliseconds against the twenty-five seconds a boot costs.
 func _newest_source_time() -> int:
 	var newest: int = 0
 	for dir_path: String in WATCHED_DIRS:
 		newest = maxi(newest, _newest_in(dir_path))
+	for file_path: String in WATCHED_FILES:
+		if FileAccess.file_exists(file_path):
+			newest = maxi(newest, int(FileAccess.get_modified_time(file_path)))
 	return newest
 
 
