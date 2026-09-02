@@ -141,6 +141,27 @@ which `tests/` is **+181** and the installed plugin is **0** - the figure a shri
 not move at all, because nothing in that step ships. The reason is in the bullet below and it is
 arithmetic rather than execution.
 
+The second migration step did not spend anything, because it was measured before it was built and
+the measurement said not to build it. Nine packs ship as a 2D/3D pair, and they look like one
+source and a substitution table away from each other: normalise `Vector2`, `Node2D`, `Area2D` and
+the rest of the mechanical spellings away, and **61%** of the 3D builders' lines have a match in
+their 2D twin. That figure is a mirage. An override replaces a whole block, not a line, and only
+**3%** of those lines sit in a block that matches whole - so 97% of every 3D builder would have
+been override. **803** of the **1,097** differing lines are code rather than wording: the 3D twin
+aims along -Z instead of a rotation angle, carries a third axis, and exposes verbs its 2D twin does
+not have and never wanted. One pair does not even share an authoring style, `move_to` being written
+entirely as event rows under a zero-RawCode budget the suite pins while `move_to_3d` is not. Costed
+on the closest pair in the set, `line_of_sight`, where 86% of lines match: its 3D builder falls from
+92 lines to about 38, its 2D builder gains a seam, and the derivation engine costs 60 or more, which
+is a net gain of lines on the best case. The parts the pairs genuinely do emit identically were
+lifted into one source long ago and are still there - the light-brightness question, the five shader
+effects, the Juice overlay and its verb bodies - which is why what remains in each pair is, by
+construction, the part that differs. The step therefore ships the measurement instead of the
+refactor: **+23 lines** of hand-written source, all of them a comment in `tools/pack_builders/_lib.gd`
+saying which single-sourcing pays here and which does not, and **0** in the installed plugin. The
+resemblance between those eighteen files is real and it is the kind that costs a day to disprove, so
+the disproof is now written where the next person to notice it will read it first.
+
 - **The one thing that differs between the gate's two trees by construction, said out loud.** The
   descriptor-identity gate reads its base out of a detached worktree, and importing that worktree
   RE-MINTS every `.uid` sidecar in it - the same script carries one resource id there and another

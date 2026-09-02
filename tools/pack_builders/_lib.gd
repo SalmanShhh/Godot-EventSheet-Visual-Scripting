@@ -459,6 +459,29 @@ const JUICE_COUNT_TO_BODY := "var from: float = float(_tickers.get(ticker_name, 
 const JUICE_SET_TICKER_BODY := "var old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\n_tickers[ticker_name] = value\n_ticker_targets[ticker_name] = value"
 
 
+# ── Why a 2D pack and its 3D twin are two builders ───────────────────────────────────────
+# Nine packs ship as a 2D/3D pair (bullet, juice, line_of_sight, move_to, orbit, pin, sine,
+# skateboard, traversal_kit). They read like one source and a substitution table away from each
+# other, and they are not. Measured over all nine, with Vector2/Node2D/Area2D and the rest of the
+# mechanical spellings normalised away first:
+#   - 61% of the 3D builders' LINES have a match in their 2D twin, but only 3% of those lines sit
+#     in a block that matches WHOLE. An override can only replace a whole piece, so the block is
+#     the unit that counts, and 97% of every 3D builder would be override.
+#   - 803 of the 1,097 differing lines are CODE, not wording. The 3D twin aims along -Z instead of
+#     a rotation angle, carries a third axis, and exposes different verbs: bullet 3D has Launch
+#     Forward and an editor preview, bullet 2D has acceleration, an angle of motion and an enable
+#     verb, and neither pack has the other's.
+#   - move_to is authored entirely as ACE rows under the zero-RawCode budget the suite pins;
+#     move_to_3d is not. That pair does not even share an authoring style.
+# What the two DO emit identically was already lifted out, in the sections above: the
+# light-brightness question, the five shader effects, and the Juice overlay with its verb bodies.
+# What is left in each pair is the part that genuinely differs, so a transposition engine plus a
+# per-pack override file would buy nothing. Costed on the closest pair, line_of_sight, where 86%
+# of lines match: its 3D builder falls from 92 lines to about 38, its 2D builder gains a seam, and
+# the engine costs 60 or more - a NET GAIN of lines, on the best pair in the set. Single-source a
+# block the two packs emit identically, the way the sections above do. Do not derive the pair.
+
+
 # ── Pack source folders: the behaviour code as REAL GDScript ─────────────────────────────
 # A pack's behaviour code used to be authored as quoted, backslash-escaped string literals inside
 # its builder: no syntax highlighting, no parse checking, no breakpoints, and an escaped quote
