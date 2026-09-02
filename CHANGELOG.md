@@ -100,6 +100,12 @@
 
 ### Fixed
 
+- **Tab reaches the Menu and the play dropdown.** `MenuButton` defaults to `FOCUS_ACCESSIBILITY`,
+  which the focus ring skips, and neither control set anything else - so the one button holding the
+  whole command tree, and the dropdown holding all six ways to play, were mouse-only, and the only
+  keyboard route into either was the Ctrl+P palette. Both take focus now, and a focused MenuButton
+  opens on Enter. Held by a sweep over the whole resting row, so a control added to the strip is
+  held to it too.
 - **Reading a doc page no longer changes a setting.** The Manual's "show me this control" links (and
   the public `EventSheets.pulse_control` behind them) have to make a hidden button visible before
   they can pulse it, and they did that by calling the same function the chevron calls - which WRITES

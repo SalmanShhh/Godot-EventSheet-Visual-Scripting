@@ -107,6 +107,11 @@ func build(root: Node) -> void:
 	# the list from this popup's own submenus, so the next group to join fails that check by name.
 	menu_button.tooltip_text = "Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools."
 	menu_button.flat = false
+	# TAB REACHES IT. A MenuButton defaults to FOCUS_ACCESSIBILITY, which means the focus ring skips
+	# it entirely - so the one button holding the whole command tree could only be reached with a
+	# mouse or through the Ctrl+P palette. Enter opens the cascade from the keyboard once it can be
+	# focused, because that is what a focused MenuButton already does with ui_accept.
+	menu_button.focus_mode = Control.FOCUS_ALL
 	var menu_popup: PopupMenu = menu_button.get_popup()
 	_toolbar.add_child(menu_button)
 

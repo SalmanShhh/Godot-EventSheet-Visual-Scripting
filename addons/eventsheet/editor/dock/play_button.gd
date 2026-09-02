@@ -63,6 +63,9 @@ func build(slot: HBoxContainer, dock: Control) -> void:
 	_menu.name = "EventSheetPlayMenu"
 	_menu.text = "▾"
 	_menu.flat = true
+	# Tab reaches the dropdown too. A MenuButton defaults to FOCUS_ACCESSIBILITY, which the focus
+	# ring skips - so the face was keyboard-reachable and the six ways to play behind it were not.
+	_menu.focus_mode = Control.FOCUS_ALL
 	_menu.tooltip_text = EventSheetL10n.translate("Every way to play this sheet, and which one this button does. The main button is remembered for this project.")
 	EventSheetBuiltHere.mark(_menu, THIS_FILE_PATH, "▾")
 	pair.add_child(_menu)

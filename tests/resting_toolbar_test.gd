@@ -74,6 +74,7 @@ static func run() -> bool:
 	ok = _test_the_resting_row() and ok
 	ok = _test_the_cascade() and ok
 	ok = _test_the_two_states() and ok
+	ok = _test_the_strip_is_keyboard_reachable() and ok
 	ok = _test_the_history_icons() and ok
 	ok = _test_the_icon_faces() and ok
 	ok = _test_keys_come_from_the_table() and ok
@@ -278,6 +279,34 @@ static func _test_the_two_states() -> bool:
 		labels.has("Play as host + client"), true) and ok
 	editor._menu_bar.set_full_toolbar(false)
 	ok = _check("and the strip rests again", expander.text, "»") and ok
+	editor.free()
+	return ok
+
+
+## TAB REACHES EVERY RESTING CONTROL. A MenuButton defaults to FOCUS_ACCESSIBILITY, which the focus
+## ring skips, and neither the one Menu button nor the play dropdown set anything else - so the whole
+## command tree and all six ways to play were mouse-only, and the only keyboard route to them was the
+## Ctrl+P palette. Pinned over the resting row as a whole rather than over the two that were wrong,
+## so a control added to the strip is held to it too.
+static func _test_the_strip_is_keyboard_reachable() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var unreachable: PackedStringArray = PackedStringArray()
+	var checked: int = 0
+	for child: Node in editor._toolbar.get_children():
+		var control: Control = child as Control
+		if control == null or not control.visible or control is HBoxContainer:
+			continue
+		checked += 1
+		if control.focus_mode != Control.FOCUS_ALL:
+			unreachable.append(str(control.name))
+	# The play slot is a plain box; what has to be reachable is the pair inside it.
+	for inner: String in ["EventSheetPlayFace", "EventSheetPlayMenu"]:
+		var control: Control = editor._toolbar.find_child(inner, true, false) as Control
+		checked += 1
+		if control == null or control.focus_mode != Control.FOCUS_ALL:
+			unreachable.append(inner)
+	var ok: bool = _check("the resting row was actually swept", checked, 8)
+	ok = _check("and Tab reaches every control on it", unreachable, PackedStringArray()) and ok
 	editor.free()
 	return ok
 
