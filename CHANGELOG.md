@@ -174,6 +174,116 @@ hand-written source (**+817 / -467**), of which `tests/` is **-252** and the ins
 files that had to be edited in step now have one command that edits them, and a gate that fails
 when running that command would change anything.
 
+The wave's own review then read every step back and found eight things wrong with the steps rather
+than with the tree, and this is what fixing them cost. Two were real holes: the seam every new pack
+is told to come through took its manifest as an untyped dictionary, so a misspelled key shipped a
+pack without the trait its author asked for, and a piece asked for by a name a source folder does
+not hold returned an empty body that was written out under a green build. Two more were gates that
+could not fail: the repository contract gate answered `0 file(s) read, nothing to answer` over a
+folder it was handed, which is the spelling its own map invites, and the ledger's instrument row
+was reading 416 lines of pre-campaign test tooling as this campaign's spend while its header claimed
+two hand-maintained languages where there are four. Projected before the work: a repair slice is an
+instrument, paid for in full, on the order of **+300** hand-written lines with **+30** of it shipped.
+Measured at `bb989cc7..7fb7961b`: **+396 lines** of hand-written source (**+512 / -116**), of which
+`tests/` is **+145**, the PowerShell tooling **+60**, and the installed plugin **+35** - the folder
+walk the contract gate needed. The projection lost by 96 lines, a third over on the total and within
+five on the figure that matters; the tests are where it went, because four of the eight fixes are
+only fixed once something pins them.
+
+Where the third wave stands after that, under format 3 and at the last commit in it that moves a
+line of source, `57588286..7fb7961b`: **-17 lines** of hand-written source (**+8,374 / -8,391**) and
+**-2,941** in the installed plugin, which is **232,752** lines in **605** files against the base's
+**235,693** in **608**. The wave has so far paid for its own instruments almost exactly and taken
+the whole of its shrink out of the tree that ships, which is the figure a shrink must not grow.
+
+- **A pack declares itself by name, and a misspelling is a parse error.** The manifest a
+  source-folder builder hands `pack_from_source` was an untyped `Dictionary` keyed by strings
+  nothing checked, on the one seam every new pack is told to come through: `{"behaviour": true}`
+  built a pack that was not a behavior, with no error and no trace, and the pack shipped without the
+  trait its author asked for. It is a typed `PackManifest` now - one field and one setter per fact,
+  each setter returning the manifest so a pack declares itself in one expression - and the two
+  wholesale-exposure MODES are methods (`expose_all_verbs`, `expose_all_verbs_on_a_node`) rather
+  than a spelling a call site types out, so the strings the compiler reads are written down in one
+  place. The four converted builders regenerate byte-identically: 114 packs rebuilt,
+  `eventsheet_addons/` clean, `audit_addons` reports `audited=116 drifted=0`.
+
+- **A pack with a hole in it fails its build.** Asking a source folder for a piece it does not hold
+  pushed an error and returned `""`, and the caller appended that empty string as the pack's body:
+  `save_pack` returned true, the build tool printed its own error and then exited **0**, and the
+  pack was written. Only the drift gate would have noticed, and only for a pack already committed,
+  so a NEW pack with a hole shipped under a green build. Every problem a source folder can have is
+  now kept as well as pushed - missing, unreadable, a duplicate piece name, a region nobody closed,
+  a signature over two lines, a piece asked for by a name it does not hold - `publish` refuses on a
+  non-empty list before a byte reaches the disk, and the build tool exits 1. The two reader rules
+  nobody had written down are written down and pinned: a `static func` is scaffolding, and a `#`
+  comment at column 0 ends a func piece there.
+
+- **The contract gate reads a folder it is handed.** `verify_sheets.gd -- eventsheet_addons demo`
+  printed `verify: 0 file(s) read, nothing to answer.` and exited **0** - a clean verdict over two
+  trees it never opened, and the spelling the map's own shortcut invites, which is why CI had to
+  expand it with `git ls-files` first. A requested folder is the files under it now, at any depth,
+  with both halves of the walk sorted so two machines read the same list; a skip still applies to
+  what an expansion found, and a path that is not there still contributes nothing in silence,
+  because a hook hands over what git printed and a staged deletion is a path that is gone. Measured
+  after: the same two words read **166** files.
+
+- **The iteration picker can see this wave's own gates.** A change to the pack assembler, to a
+  pack's own source file, or to the translation deriver picked none of the four tests that answer
+  for them, so `-Iterate` would have gone green over the seam this wave built and the CSVs it
+  derives. Two override entries, each carrying the reason a file name cannot say it. The registry
+  pair needed none: `registry_order.gd` and `registry_fields.gd` already reach `registry_*_test` by
+  first word, and an override that repeats a convention is a line that rots. Measured on the five
+  files: **11** tests picked, from **6**.
+
+- **The ledger's rows are named after what they measure.** Two things in it were not true. The
+  `campaign instruments` row is `tools/*.ps1`, which at the base is four files of test tooling this
+  campaign did not write - a bisect wrapper, the parallel launcher, the daemon and its client - so
+  **416** lines of somebody else's work were being read as the campaign's spend; the row is
+  `powershell tooling` now, named after its SIZE, with the campaign's bill being its DELTA (**+467**
+  at this commit). And "the only two hand-maintained languages are GDScript and PowerShell" was
+  false: two merge-driver shims are shell and three shader fixtures are hand-written. **Format 3**
+  adds `*.sh` and `*.gdshader`, so that claim is one `git ls-files` can check rather than one the
+  header asserts. The base restated under format 3: **434,060** hand-written lines in **1,788**
+  files, with the shipped plugin unmoved at **235,693** in **608**, because none of those languages
+  is under `addons/`.
+
+- **The identity gate says which of its copies are shipped.** Its blind-spot report was written when
+  every copied file was a formatter under `tools/`. Two of them are not: `registry_dump.gd` and
+  `ace_successors.gd` live under `addons/`, and the second is also where a pack's forwarding address
+  is worked out - so a change to that resolution is read through the tree's copy on BOTH sides and
+  can never move any of the four texts, while the report said `+102/-0` in the same quiet line as a
+  dev tool and the verdict said `same`. Shipped copies are their own group now, and when one has
+  changed the run names the functions that APPEARED or VANISHED in it, which is the difference
+  between an instrument that gained a field the dump prints and one that grew a rule the plugin
+  obeys. Re-run at `57588286`: `registry=same words=same fields=same order=same verbs=5324`, and the
+  two shipped copies report a rename and two spellings, no rule.
+
+- **The harvester says which of its errors are expected.** Its documented happy path printed an
+  engine error and two GDScript stack traces before the census, because the advisory live-editor
+  walk builds the real dock and the real Theme Editor with no Godot editor around them, so a dialog
+  asking to be shown is a window the engine cannot open. The verdict and the exit code were always
+  right; the command just looked like it had failed. The walk is bracketed by two lines saying so,
+  and the map says the same. Re-run: `nothing owed`, nine CSVs byte-identical, exit 0.
+
+- **A source file is invisible to four scans, not to five.** "Invisible to the provider scan, the
+  suite's discovery and the docs index" was being read as invisible to everything, and the "This
+  editor" folder listing shelves anything under the pack-builder folder as a pack recipe, so the
+  four source files appear there beside the builders they belong to. That is what a folder listing
+  is for (a new file is included by an existing rule), it is gated on being this plugin's own
+  repository, and it publishes no vocabulary - so it is pinned as intended rather than fixed.
+
+- **Two things the review found are NOT fixed here, on purpose.** `demo/showcase/` has drifted from
+  its builder: regenerating is byte-stable run to run but differs from the committed tree in five
+  `.tscn` files, over the order exported properties are written inside behavior nodes. The cause is
+  a pack member-order change that landed without a showcase regen, and nothing catches it because
+  that tree has no drift gate the way `eventsheet_addons/` has one. Moving a generated tree's bytes
+  is a behavior change under this wave's rules, so the regeneration was reverted rather than
+  committed: the gate comes first, then one regen commit under it. And the shipped plugin grew
+  **80 lines** to serve a text only a dev tool reads; the reason given was that the picker facts
+  belong in the one reduction all three sorted texts already walk, but the alternative - reflecting
+  descriptors inside `tools/` and keeping `addons/` at zero - is not costed anywhere. The shipped
+  figure is this campaign's one hard constraint, so the road not taken is owed a sentence.
+
 - **The nine translation files have a deriver, and running it changes nothing.** `TEMPLATE.csv` and
   the eight bundled locales were kept in lockstep by hand across 5,986 rows, and three suite gates
   NAMED the row a wave forgot without being able to write it.
