@@ -127,6 +127,14 @@ read **-2,063** (**+4,230 / -6,293**) - the shipped-plugin figure is untouched a
 nothing under `addons/` is PowerShell. The wave was 319 lines better than it said and is 319 lines
 worse than it said; the number below it is the honest one.
 
+The third wave opens the way the second did, by making its instruments honest before it moves a
+line of anything else, and the three steps below cost what an instrument costs. Measured under the
+new format-2 definition at `b85c979f..3e7f8469`: **+720 lines** of hand-written source
+(**+765 / -45**), of which `tests/` is **+226**, the PowerShell instruments **+88**, and the
+installed plugin **+80** - the eleven picker facts the fields text is written off, carried in the one
+reduction all three sorted texts already walk. That is a GROWTH and it is stated as one; the
+migration steps of this wave are what pay it back, and they will be quoted against the same figure.
+
 - **The one thing that differs between the gate's two trees by construction, said out loud.** The
   descriptor-identity gate reads its base out of a detached worktree, and importing that worktree
   RE-MINTS every `.uid` sidecar in it - the same script carries one resource id there and another
