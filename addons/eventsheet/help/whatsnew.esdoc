@@ -103,6 +103,28 @@ What changed in the build you have installed (v0.17.0), in the words the release
   glossary's Simple Mode entry included. All **59** entries in the Manual's index carry a description;
   none is blank.
 
+### Half the words: the copies that had no reason to be copies
+
+- **One door to EditorSettings instead of eight.** Eight dock helpers each carried the same
+  `_editor_settings()` - the three questions that ask whether there is an editor to talk to and
+  reach it through the singleton rather than by naming the editor-only class, which is what keeps an
+  exported game parsing. One of the eight had already drifted and named the class directly. The
+  guard is `EventSheetEditorSettings.current()` now, and the copies are gone.
+- **Three more copied dialog helpers get one home each.** The dropdown select-or-fall-back
+  (`EventSheetPopupUI.select_option`), the sized receipt list (`EventSheetPopupUI.sized_list`, three
+  copies, not two) and the stored on/off preference (`EventSheetEditorSettings.stored_flag`) each
+  lived in two or three files, byte for byte. Helpers that merely SHARE A NAME across the modes and
+  states dialogs were deliberately left alone: their bodies differ, and a shared name is not a
+  duplicate.
+- **One name, one file.** The 357-line glue that builds and wires the sheet-function dialog was
+  called `function_dialog.gd`, exactly like the 667-line widget it builds. It is
+  `function_dialog_glue.gd` now, matching the class name it has carried since it was extracted.
+- **Two aspect-split vocabulary modules merge into the one they belong to.** The 3D page joins the
+  spatial maths it was authored beside; the rows that put a light in the object column join the ones
+  that take it as a parameter. Held by a descriptor-identity proof: `tools/dump_registry.gd` before
+  and after is byte-identical, 5324 verbs, and registry order - which breaks ties in the
+  reverse-lifter - is preserved by construction.
+
 ### Fixed
 
 - **The Menu's own Manual door says when there is something unread.** Tools ▸ Manual… wears a mark
