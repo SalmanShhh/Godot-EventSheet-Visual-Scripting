@@ -115,6 +115,17 @@
 - **One name, one file.** The 357-line glue that builds and wires the sheet-function dialog was
   called `function_dialog.gd`, exactly like the 667-line widget it builds. It is
   `function_dialog_glue.gd` now, matching the class name it has carried since it was extracted.
+- **Five hundred copies of one assertion become one call.** Nearly every test in `tests/` carried
+  its own byte-identical copy of the same eight-line `_check`, differing only in the label prefix it
+  printed - about 4,000 lines saying the same thing. `tests/support.gd` is that function once, with
+  the prefix passed in, beside `pins()` for table-shaped assertions and the compile / reopen /
+  re-emit trio the round-trip tests hand-rolled. 495 files delegate to it and 1,887 lines are gone.
+  The printed lines did not move: the suite's `[PASS]` / `[FAIL]` shapes are parsed by the runner,
+  the report tool, the parallel launcher and CI, so identity was proved by census - across 21,072
+  reported lines, before and after differ only where a label carries a measured duration, plus the
+  two file-count labels that went up by exactly one because the new file exists. The 235 tests that
+  print something else were left alone: those lines are a contract too, and normalising them would
+  be a behaviour change rather than a shrink.
 - **Two aspect-split vocabulary modules merge into the one they belong to.** The 3D page joins the
   spatial maths it was authored beside; the rows that put a light in the object column join the ones
   that take it as a parameter. Held by a descriptor-identity proof: `tools/dump_registry.gd` before
