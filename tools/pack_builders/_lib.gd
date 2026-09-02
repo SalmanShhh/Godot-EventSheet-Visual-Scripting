@@ -457,3 +457,291 @@ const JUICE_PLAY_SOUND_INTENSITY_BODY := "var power: float = clampf(intensity, 0
 const JUICE_COUNT_TO_BODY := "var from: float = float(_tickers.get(ticker_name, 0.0))\n_ticker_targets[ticker_name] = target\nvar old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_method(func(v: float) -> void: _tickers[ticker_name] = v, from, target, maxf(duration, 0.001)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_finish_ticker.bind(ticker_name))\n_ticker_tweens[ticker_name] = tw"
 
 const JUICE_SET_TICKER_BODY := "var old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\n_tickers[ticker_name] = value\n_ticker_targets[ticker_name] = value"
+
+
+# ── Pack source folders: the behaviour code as REAL GDScript ─────────────────────────────
+# A pack's behaviour code used to be authored as quoted, backslash-escaped string literals inside
+# its builder: no syntax highlighting, no parse checking, no breakpoints, and an escaped quote
+# between the author and every line they wrote. The code now lives in real `.gd` files under
+# `tools/pack_builders/src/<pack>/`, and a builder names the pieces it wants instead of quoting
+# them.
+#
+# THE RULES OF A SOURCE FILE, in full. There are two kinds of piece, and both are ordinary GDScript:
+#   - `#region <name>` ... `#endregion` around TOP-LEVEL code marks one piece: the exports, signals
+#     and helpers a pack emits verbatim. The piece is the lines between the markers, with the
+#     opening marker's own indentation removed from each of them.
+#   - A top-level `func <name>(...):` that is not inside a region is a piece too: its BODY, dedented
+#     by one tab, named after the function. That is how a statement body - an event body, a verb
+#     body - stays real GDScript, with a signature the editor resolves its parameters against,
+#     rather than a quoted fragment nothing can check. Trailing blank lines are trimmed, so a piece
+#     ends where its code ends.
+#   - Everything else outside a region is scaffolding: the `extends`, and the members the pack
+#     declares for itself at build time (its host, its Inspector variables). Scaffolding is what
+#     lets the editor check the file; it never reaches the pack.
+#   - Piece names are unique across the whole folder. A folder may hold several files (one per part
+#     of a large pack); they are read in sorted order, so a build is deterministic.
+#   - Regions may NOT nest.
+#
+# The pieces are assembled by the same makers a builder always used and published through the same
+# save_pack, so a converted builder emits byte-identical bytes - which is what the pack drift gate
+# (tools/audit_addons.gd) checks on every build.
+const SOURCE_ROOT := "res://tools/pack_builders/src"
+
+
+## One pack's source folder, read once, plus the sheet being assembled from it. A builder gets one
+## from `Lib.pack_from_source(...)`, names the pieces it wants in the order the pack declares them,
+## and finishes with `Lib.publish(...)`.
+class PackSource extends RefCounted:
+
+	## The sheet being assembled. A builder may set anything on it directly; the makers below are
+	## the shapes every pack shares.
+	var sheet: EventSheetResource = null
+
+	## The picker category new verbs get when `verb`/`condition`/`expression` is not given one.
+	var verb_category: String = ""
+
+	# Piece name -> the piece's text, dedented. Filled once, when the folder is read.
+	var _pieces: Dictionary = {}
+
+	# The folder these pieces came from, named in every error so a typo says where to look.
+	var _dir: String = ""
+
+	## The piece named `piece_name`, as the pack will emit it. Fails loudly rather than quietly
+	## emitting an empty body: a mistyped name is a pack that would ship a hole.
+	func code(piece_name: String) -> String:
+		if not _pieces.has(piece_name):
+			push_error("pack source %s has no piece named '%s' (it has: %s)" % [
+				_dir, piece_name, ", ".join(piece_names())])
+			return ""
+		return str(_pieces[piece_name])
+
+	## Whether the folder holds a piece by that name.
+	func has(piece_name: String) -> bool:
+		return _pieces.has(piece_name)
+
+	## Every piece name the folder holds, sorted - the list an error message prints.
+	func piece_names() -> PackedStringArray:
+		var names: PackedStringArray = PackedStringArray(_pieces.keys())
+		names.sort()
+		return names
+
+	## Appends a prose comment row - the pack's "what this is" note. Prose rather than code, so it
+	## stays in the builder instead of moving to a source file.
+	func note(text: String) -> void:
+		var comment: CommentRow = CommentRow.new()
+		comment.text = text
+		sheet.events.append(comment)
+
+	## Appends one piece of top-level code (exports, signals, private helpers) as its own row.
+	func block(piece_name: String) -> void:
+		var row: RawCodeRow = RawCodeRow.new()
+		row.code = code(piece_name)
+		sheet.events.append(row)
+
+	## Appends the piece as the body of the host's `_ready`.
+	func on_ready(piece_name: String = "_ready") -> void:
+		_trigger("OnReady", piece_name)
+
+	## Appends the piece as the body of the host's `_process`.
+	func on_process(piece_name: String = "_process") -> void:
+		_trigger("OnProcess", piece_name)
+
+	## Appends the piece as the body of the host's `_physics_process`.
+	func on_physics_process(piece_name: String = "_physics_process") -> void:
+		_trigger("OnPhysicsProcess", piece_name)
+
+	## Appends the piece as the body of the host's `_exit_tree`.
+	func on_tree_exiting(piece_name: String = "_exit_tree") -> void:
+		_trigger("OnTreeExiting", piece_name)
+
+	## Appends an exposed void verb - an Action in the picker - whose body is the piece named after
+	## the function. `params` is the `[[id, type_name], ...]` list the picker builds its row from.
+	func verb(function_name: String, display_name: String, description: String, params: Array, category: String = "") -> void:
+		sheet.functions.append(_exposed(function_name, display_name, description, params, category))
+
+	## Appends an exposed bool verb - a Condition in the picker.
+	func condition(function_name: String, display_name: String, description: String, params: Array, category: String = "") -> void:
+		var fn: EventFunction = _exposed(function_name, display_name, description, params, category)
+		fn.return_type = TYPE_BOOL
+		sheet.functions.append(fn)
+
+	## Appends an exposed value-returning verb - an Expression - with the given return type
+	## (TYPE_FLOAT / TYPE_INT / TYPE_STRING / TYPE_ARRAY / TYPE_VECTOR2 ...; TYPE_MAX is Variant).
+	func expression(function_name: String, display_name: String, description: String, params: Array, ret: int, category: String = "") -> void:
+		var fn: EventFunction = _exposed(function_name, display_name, description, params, category)
+		fn.return_type = ret
+		sheet.functions.append(fn)
+
+	## Appends an exposed verb that returns an OBJECT of a named class - a Texture2D, a Node, a
+	## Resource. Godot's TYPE_* numbers only reach as far as "an object"; the class is the name.
+	func object_expression(function_name: String, display_name: String, description: String, params: Array, returns_class: String, category: String = "") -> void:
+		var fn: EventFunction = _exposed(function_name, display_name, description, params, category)
+		fn.return_type = TYPE_MAX
+		fn.return_type_name = returns_class
+		sheet.functions.append(fn)
+
+	# One engine-callback event row carrying one piece as its whole body.
+	func _trigger(trigger_id: String, piece_name: String) -> void:
+		var row: EventRow = EventRow.new()
+		row.trigger_provider_id = "Core"
+		row.trigger_id = trigger_id
+		var body: RawCodeRow = RawCodeRow.new()
+		body.code = code(piece_name)
+		row.actions.append(body)
+		sheet.events.append(row)
+
+	# The shared exposed-function shape; the body is always the piece named after the function.
+	func _exposed(function_name: String, display_name: String, description: String, params: Array, category: String) -> EventFunction:
+		var event_function: EventFunction = EventFunction.new()
+		event_function.function_name = function_name
+		event_function.expose_as_ace = true
+		event_function.ace_display_name = display_name
+		event_function.ace_category = verb_category if category.is_empty() else category
+		event_function.description = description
+		for param_pair: Array in params:
+			var parameter: ACEParam = ACEParam.new()
+			parameter.id = str(param_pair[0])
+			parameter.type_name = str(param_pair[1])
+			event_function.params.append(parameter)
+		var body_row: RawCodeRow = RawCodeRow.new()
+		body_row.code = code(function_name)
+		event_function.events.append(body_row)
+		return event_function
+
+
+## Compiles and writes a pack assembled from a source folder, exactly as a string-array builder
+## always did - the same `save_pack`, so the bytes are the bytes. It is a static beside the class
+## rather than a method on it because an inner class cannot reach its own file's statics.
+static func publish(opened: PackSource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
+	return save_pack(opened.sheet, base_path, icon_path)
+
+
+## Opens a pack's source folder and starts the sheet assembled from it.
+##
+##   source_dir   the folder's own name under `tools/pack_builders/src/` (e.g. "wrap")
+##   host_class   the class the behaviour attaches to ("Node2D"), or the sheet's own base
+##   pack_class   the `class_name` the pack ships as ("WrapBehavior")
+##   description  the sheet's class description - the sentence the Add Behavior list reads
+##   options      the small manifest of everything a source file cannot carry, all optional:
+##                  behavior      bool              a behavior pack (a host and its `_enter_tree`)
+##                  autoload      String            the autoload name; sets autoload_mode with it
+##                  category      String            the pack's Add Behavior category
+##                  verb_category String            the picker category its verbs default to
+##                  tags          PackedStringArray the pack's search tags
+##                  version       String            the pack's own version (1.0.0 is the floor)
+##                  variables     Dictionary        the Inspector variables, in declaration order
+##                  expose_all    String            ace_expose_all_mode ("node" scopes every verb
+##                                                  to a picked node)
+##
+## The returned PackSource carries the sheet: a builder adds the pack's rows and verbs to it, in
+## the order the pack declares them, and finishes with `Lib.publish(src, base_path)`.
+static func pack_from_source(source_dir: String, host_class: String, pack_class: String, description: String, options: Dictionary = {}) -> PackSource:
+	var opened: PackSource = PackSource.new()
+	opened._dir = SOURCE_ROOT.path_join(source_dir)
+	opened._pieces = _read_pieces(opened._dir)
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = host_class
+	sheet.custom_class_name = pack_class
+	sheet.class_description = description
+	if bool(options.get("behavior", false)):
+		sheet.behavior_mode = true
+	var autoload_name: String = str(options.get("autoload", ""))
+	if not autoload_name.is_empty():
+		sheet.autoload_mode = true
+		sheet.autoload_name = autoload_name
+	var category: String = str(options.get("category", ""))
+	if not category.is_empty():
+		sheet.addon_category = category
+	if options.has("tags"):
+		sheet.addon_tags = PackedStringArray(options["tags"])
+	var version: String = str(options.get("version", ""))
+	if not version.is_empty():
+		sheet.addon_version = version
+	if options.has("variables"):
+		sheet.variables = options["variables"]
+	var expose_all: String = str(options.get("expose_all", ""))
+	if not expose_all.is_empty():
+		sheet.ace_expose_all_mode = expose_all
+	opened.sheet = sheet
+	opened.verb_category = str(options.get("verb_category", category))
+	return opened
+
+
+# Every piece in every `.gd` of one source folder, read in sorted file order so a build is
+# deterministic. A duplicate piece name is an error rather than a silent last-one-wins, because the
+# two pieces would be indistinguishable at the call site that asks for one of them.
+static func _read_pieces(dir_path: String) -> Dictionary:
+	var pieces: Dictionary = {}
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		push_error("pack source folder %s does not exist" % dir_path)
+		return pieces
+	var file_names: PackedStringArray = PackedStringArray()
+	for entry: String in dir.get_files():
+		if entry.get_extension() == "gd":
+			file_names.append(entry)
+	file_names.sort()
+	for file_name: String in file_names:
+		_read_file_pieces(dir_path.path_join(file_name), pieces)
+	return pieces
+
+
+# The pieces of one file, by the two rules written at the top of this section: a `#region` pair
+# around top-level code, and the body of any top-level `func` outside every region.
+static func _read_file_pieces(file_path: String, pieces: Dictionary) -> void:
+	var text: String = FileAccess.get_file_as_string(file_path)
+	if text.is_empty():
+		push_error("pack source file %s is empty or unreadable" % file_path)
+		return
+	var open_name: String = ""
+	var open_indent: String = ""
+	var in_function: bool = false
+	var collected: PackedStringArray = PackedStringArray()
+	for line: String in text.split("\n"):
+		var trimmed: String = line.strip_edges()
+		if not open_name.is_empty() and not in_function:
+			if trimmed == "#endregion":
+				_store_piece(file_path, pieces, open_name, collected, false)
+				open_name = ""
+			elif line.begins_with(open_indent):
+				collected.append(line.substr(open_indent.length()))
+			else:
+				collected.append(line.lstrip("\t "))
+			continue
+		if in_function:
+			if line.is_empty() or line.begins_with("\t"):
+				collected.append(line.substr(1) if line.begins_with("\t") else line)
+				continue
+			_store_piece(file_path, pieces, open_name, collected, true)
+			open_name = ""
+			in_function = false
+		if trimmed.begins_with("#region "):
+			open_name = trimmed.substr(8).strip_edges()
+			open_indent = line.substr(0, line.length() - line.lstrip("\t ").length())
+			collected = PackedStringArray()
+			continue
+		if line.begins_with("func "):
+			if not line.ends_with(":"):
+				push_error("pack source %s: '%s' spreads its signature over more than one line" % [
+					file_path, trimmed])
+				return
+			open_name = line.substr(5, line.find("(") - 5).strip_edges()
+			in_function = true
+			collected = PackedStringArray()
+	if in_function:
+		_store_piece(file_path, pieces, open_name, collected, true)
+	elif not open_name.is_empty():
+		push_error("pack source %s: region '%s' is never closed" % [file_path, open_name])
+
+
+# One finished piece. A function body loses its trailing blank lines - the ones separating it from
+# whatever comes next in the source file, which are the file's punctuation and not the pack's.
+static func _store_piece(file_path: String, pieces: Dictionary, piece_name: String, collected: PackedStringArray, trim_tail: bool) -> void:
+	if pieces.has(piece_name):
+		push_error("pack source %s: a second piece is also named '%s'" % [file_path, piece_name])
+		return
+	var lines: PackedStringArray = collected
+	if trim_tail:
+		while lines.size() > 0 and lines[lines.size() - 1].strip_edges().is_empty():
+			lines.remove_at(lines.size() - 1)
+	pieces[piece_name] = "\n".join(lines)

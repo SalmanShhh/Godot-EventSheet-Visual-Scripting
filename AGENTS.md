@@ -105,7 +105,12 @@ from `tools/build_help_bundle.gd`).
   spelled after `EVENTFORGE_TEST_ONLY` so the two compose.
 - Maintenance tools: `tools/` - pack builders in `tools/pack_builders/` (auto-registered by glob,
   no list to maintain; run by `build_sample_behaviors.gd`, which regenerates EVERY pack - prefer
-  a single-builder throwaway script for one pack); `build_examples.gd` (showcases, byte-stable);
+  a single-builder throwaway script for one pack). A builder may hold its behaviour code as a
+  folder of REAL `.gd` files under `tools/pack_builders/src/<pack>/` and assemble it with
+  `Lib.pack_from_source` - a piece is a `#region` pair around top-level code or the body of a
+  top-level `func`, so the code is highlighted, parse-checked and breakpointable instead of
+  quoted and backslash-escaped. Those files spell their blank lines the EMITTER's way (one
+  between members), which the style gate exempts by name and no one may re-space by hand; `build_examples.gd` (showcases, byte-stable);
   `audit_addons.gd` (pack drift + spelling + successor gates); `vocabulary_doc.gd`;
   `project_doctor.gd` (CLI shim); `verify_sheets.gd` (the four-contract repository gate: parses,
   round-trips, unique tokens, no unanswered migrations - read-only, exit-coded, wired into CI);

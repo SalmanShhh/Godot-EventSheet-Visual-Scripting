@@ -6,11 +6,13 @@
 # through the real builders (redirected to a temporary directory, so the repository is never
 # touched) and compares the bytes against the shipped files.
 #
-# Two packs, not all 112 - the full sweep is the build tool itself
-# (tools/build_sample_behaviors.gd, whose faithfulness gate is tools/audit_addons.gd). These two
+# Three packs, not all 114 - the full sweep is the build tool itself
+# (tools/build_sample_behaviors.gd, whose faithfulness gate is tools/audit_addons.gd). These three
 # cover what actually drifted: member order with exported and internal variables interleaved
-# (car), and Inspector groups, whose headers move with the variables they precede
-# (uhtn_plan_resource).
+# (car), Inspector groups, whose headers move with the variables they precede (uhtn_plan_resource),
+# and a builder that assembles its pack out of a source FOLDER rather than out of string literals
+# (wrap), where a change to the reader of those folders - what a piece is, where it is dedented to,
+# which of its blank lines belong to the pack - is a change to emitted bytes.
 #
 # When this fails: the builder is the thing to change, never the shipped pack - member order is
 # user-visible (the head bars read in file order, and a .tres stores properties in the script's
@@ -27,7 +29,8 @@ const TEMP_DIR := "user://eventsheets_pack_builder_gate"
 # builder file basename -> the pack .gd it ships.
 const GATED_PACKS := {
 	"car": "res://eventsheet_addons/car/car_behavior.gd",
-	"uhtn_plan_resource": "res://eventsheet_addons/uhtn_plan_resource/uhtn_plan_resource.gd"
+	"uhtn_plan_resource": "res://eventsheet_addons/uhtn_plan_resource/uhtn_plan_resource.gd",
+	"wrap": "res://eventsheet_addons/wrap/wrap_behavior.gd"
 }
 
 

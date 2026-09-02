@@ -8,165 +8,27 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## screen (or a custom rectangle) it teleports to the opposite edge, per axis. The
 ## event-sheet-parity Wrap behavior: attach and ships fly off the right and return on the left.
 static func build() -> bool:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.behavior_mode = true
-	sheet.host_class = "Node2D"
-	sheet.custom_class_name = "WrapBehavior"
-	sheet.class_description = "Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed."
-	sheet.addon_category = "Wrap"
-	sheet.addon_tags = PackedStringArray(["movement", "screen"])
-	var about: CommentRow = CommentRow.new()
-	about.text = "Wrap behavior (event-sheet parity): once the host is FULLY outside an edge of the SCREEN (the camera's view) or a CUSTOM rectangle, it teleports to the opposite edge - Asteroids in one attach. Per-axis toggles; On Wrapped tells you which side it left. This pack is an event sheet - extend it by editing it."
-	sheet.events.append(about)
-	var block: RawCodeRow = RawCodeRow.new()
-	block.code = "\n".join(PackedStringArray([
-		"# --- Designer knobs (tune in the Inspector) ---",
-		"## What to wrap around: the camera's on-screen view, or the custom bounds rectangle.",
-		"@export_enum(\"screen\", \"custom\") var wrap_space: String = \"screen\"",
-		"## The custom constraint's SHAPE: a rectangle (wrap across opposite edges) or a circle",
-		"## (wrap to the antipode - leave one side of the arena, glide in from the other).",
-		"@export_enum(\"rect\", \"circle\") var wrap_shape: String = \"rect\"",
-		"## Circle constraint: the center of the circular arena (world space).",
-		"@export var wrap_circle_center: Vector2 = Vector2(576.0, 324.0)",
-		"## Circle constraint: the arena radius in pixels.",
-		"@export var wrap_circle_radius: float = 300.0",
-		"## Wrap across the left/right edges.",
-		"@export var wrap_horizontal: bool = true",
-		"## Wrap across the top/bottom edges.",
-		"@export var wrap_vertical: bool = true",
-		"## Half the host's width in pixels - it must be FULLY off screen before wrapping.",
-		"@export var half_width: float = 16.0",
-		"## Half the host's height in pixels - it must be FULLY off screen before wrapping.",
-		"@export var half_height: float = 16.0",
-		"## Master on/off - Set Wrap Enabled flips it at runtime.",
-		"@export var wrap_enabled: bool = true:",
-		"\tset(value):",
-		"\t\twrap_enabled = value",
-		"\t\t# Every write lands here - a sheet's Set Wrap Enabled action, the Inspector, another",
-		"\t\t# script - so the edge test stops and restarts with the knob whoever switched it.",
-		"\t\tset_physics_process(value)",
-		"",
-		"# --- Internal state ---",
-		"# The custom rectangle (world space) used when wrap_space is \"custom\" - Rect2 cannot",
-		"# emit from the variables dict, so it lives here; Set Custom Wrap Bounds writes it.",
-		"var custom_bounds: Rect2 = Rect2(0.0, 0.0, 1152.0, 648.0)",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Wrapped\")",
-		"signal wrapped(side: String)",
-		"",
-		"## The world-space rectangle being wrapped around: the camera's visible rect (the canvas",
-		"## transform inverted maps screen space to world space) or the custom rectangle.",
-		"## @ace_hidden",
-		"func _wrap_rect() -> Rect2:",
-		"\tif wrap_space == \"custom\":",
-		"\t\treturn custom_bounds",
-		"\tvar viewport: Viewport = host.get_viewport() if host != null else null",
-		"\tif viewport == null:",
-		"\t\treturn custom_bounds",
-		"\treturn viewport.get_canvas_transform().affine_inverse() * viewport.get_visible_rect()",
-		"",
-		"## Switches what the host wraps around: the on-screen camera view, or the custom rectangle.",
-		"## @ace_action",
-		"## @ace_name(\"Set Wrap Space\")",
-		"## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)",
-		"func set_wrap_space(space: String) -> void:",
-		"\tif space in [\"screen\", \"custom\"]:",
-		"\t\twrap_space = space",
-		"",
-		"## Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it:",
-		"## fully outside the circle teleports to the antipode - a round arena in one action.",
-		"## @ace_action",
-		"## @ace_name(\"Set Circle Wrap Bounds\")",
-		"func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:",
-		"\twrap_circle_center = Vector2(center_x, center_y)",
-		"\twrap_circle_radius = maxf(radius, 1.0)",
-		"\twrap_shape = \"circle\"",
-		"\twrap_space = \"custom\"",
-		"",
-		"## The dominant exit direction as a side word - so circle wraps report through the",
-		"## same On Wrapped vocabulary the rect edges use.",
-		"## @ace_hidden",
-		"func _direction_side(direction: Vector2) -> String:",
-		"\tif absf(direction.x) >= absf(direction.y):",
-		"\t\treturn \"right\" if direction.x >= 0.0 else \"left\"",
-		"\treturn \"bottom\" if direction.y >= 0.0 else \"top\""
-	]))
-	sheet.events.append(block)
-	var ready_row: EventRow = EventRow.new()
-	ready_row.trigger_provider_id = "Core"
-	ready_row.trigger_id = "OnReady"
-	var ready_body: RawCodeRow = RawCodeRow.new()
-	ready_body.code = "\n".join(PackedStringArray([
-		"# The edge test only runs while wrapping is on - a host authored with Wrap off costs",
-		"# nothing per physics frame until Set Wrap Enabled turns it on.",
-		"set_physics_process(wrap_enabled)"
-	]))
-	ready_row.actions.append(ready_body)
-	sheet.events.append(ready_row)
-	var tick: EventRow = EventRow.new()
-	tick.trigger_provider_id = "Core"
-	tick.trigger_id = "OnPhysicsProcess"
-	var tick_body: RawCodeRow = RawCodeRow.new()
-	tick_body.code = "\n".join(PackedStringArray([
-		"if not wrap_enabled or host == null:",
-		"\treturn",
-		"# The circular constraint: once fully outside the circle, re-enter at the ANTIPODE",
-		"# (still fully outside, so momentum glides the host in instead of popping it).",
-		"if wrap_shape == \"circle\" and wrap_space == \"custom\":",
-		"\tvar offset: Vector2 = host.global_position - wrap_circle_center",
-		"\tvar pad: float = maxf(half_width, half_height)",
-		"\tif offset.length() - pad > wrap_circle_radius:",
-		"\t\tvar direction: Vector2 = offset.normalized()",
-		"\t\thost.global_position = wrap_circle_center - direction * (wrap_circle_radius + pad)",
-		"\t\twrapped.emit(_direction_side(direction))",
-		"\treturn",
-		"var rect: Rect2 = _wrap_rect()",
-		"var pos: Vector2 = host.global_position",
-		"# Fully-outside test per side; re-enter at the opposite edge, still fully outside,",
-		"# so a fast mover glides on instead of popping mid-screen.",
-		"if wrap_horizontal:",
-		"\tif pos.x - half_width > rect.end.x:",
-		"\t\tpos.x = rect.position.x - half_width",
-		"\t\thost.global_position = pos",
-		"\t\twrapped.emit(\"right\")",
-		"\telif pos.x + half_width < rect.position.x:",
-		"\t\tpos.x = rect.end.x + half_width",
-		"\t\thost.global_position = pos",
-		"\t\twrapped.emit(\"left\")",
-		"if wrap_vertical:",
-		"\tif pos.y - half_height > rect.end.y:",
-		"\t\tpos.y = rect.position.y - half_height",
-		"\t\thost.global_position = pos",
-		"\t\twrapped.emit(\"bottom\")",
-		"\telif pos.y + half_height < rect.position.y:",
-		"\t\tpos.y = rect.end.y + half_height",
-		"\t\thost.global_position = pos",
-		"\t\twrapped.emit(\"top\")"
-	]))
-	tick.actions.append(tick_body)
-	sheet.events.append(tick)
-
-	Lib.append_function(sheet, "set_wrap_enabled", "Set Wrap Enabled", "Wrap",
+	var src: Lib.PackSource = Lib.pack_from_source("wrap", "Node2D", "WrapBehavior",
+		"Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed.",
+		{"behavior": true, "category": "Wrap", "tags": PackedStringArray(["movement", "screen"])})
+	src.note("Wrap behavior (event-sheet parity): once the host is FULLY outside an edge of the SCREEN (the camera's view) or a CUSTOM rectangle, it teleports to the opposite edge - Asteroids in one attach. Per-axis toggles; On Wrapped tells you which side it left. This pack is an event sheet - extend it by editing it.")
+	src.block("block_1")
+	src.on_ready()
+	src.on_physics_process()
+	src.verb("set_wrap_enabled", "Set Wrap Enabled",
 		"Turns wrapping on or off at runtime.",
-		[["enabled", "bool"]],
-		"wrap_enabled = enabled\n# Wrapping off means no edge test to run, so stop paying for the physics frame.\nset_physics_process(enabled)")
-	Lib.append_function(sheet, "set_custom_wrap_bounds", "Set Custom Wrap Bounds", "Wrap",
+		[["enabled", "bool"]])
+	src.verb("set_custom_wrap_bounds", "Set Custom Wrap Bounds",
 		"Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.",
-		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"]],
-		"custom_bounds = Rect2(x, y, width, height)\nwrap_shape = \"rect\"\nwrap_space = \"custom\"")
-	Lib.append_function(sheet, "set_wrap_axes", "Set Wrap Axes", "Wrap",
+		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"]])
+	src.verb("set_wrap_axes", "Set Wrap Axes",
 		"Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).",
-		[["horizontal", "bool"], ["vertical", "bool"]],
-		"wrap_horizontal = horizontal\nwrap_vertical = vertical")
-	Lib.append_function(sheet, "set_wrap_extents", "Set Wrap Extents", "Wrap",
+		[["horizontal", "bool"], ["vertical", "bool"]])
+	src.verb("set_wrap_extents", "Set Wrap Extents",
 		"Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.",
-		[["new_half_width", "float"], ["new_half_height", "float"]],
-		"half_width = new_half_width\nhalf_height = new_half_height")
-
-	# The pack's hero verbs: starred + bold at the top of their picker section.
-	Lib.verb_sentences(sheet, {
+		[["new_half_width", "float"], ["new_half_height", "float"]])
+	Lib.verb_sentences(src.sheet, {
 		"set_wrap_enabled": "Set wrap to [b]{enabled}[/b]",
 	})
-	Lib.feature_verbs(sheet, ["set_wrap_enabled"])
-	return Lib.save_pack(sheet, "res://eventsheet_addons/wrap/wrap_behavior")
+	Lib.feature_verbs(src.sheet, ["set_wrap_enabled"])
+	return Lib.publish(src, "res://eventsheet_addons/wrap/wrap_behavior")

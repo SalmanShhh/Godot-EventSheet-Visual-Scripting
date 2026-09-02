@@ -14,14 +14,10 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## THE DEEPEST EXTENSION POINT: this pack IS an event sheet - open the .tres, add
 ## functions, recompile, re-register.
 static func build() -> bool:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.autoload_mode = true
-	sheet.autoload_name = "SaveSystem"
-	sheet.host_class = "Node"
-	sheet.custom_class_name = "SaveSystemAddon"
-	sheet.class_description = "Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back."
-	sheet.addon_tags = PackedStringArray(["persistence"])
-	sheet.variables = {
+	var src: Lib.PackSource = Lib.pack_from_source("save_system", "Node", "SaveSystemAddon",
+		"Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back.",
+		{"autoload": "SaveSystem", "verb_category": "Save System", "tags": PackedStringArray(["persistence"])})
+	src.sheet.variables = {
 		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false},
 		"autosave_interval": {"type": "float", "default": 0.0, "exported": true,
 			"attributes": {"tooltip": "Seconds between autosaves (0 = off). Fires On Before Save first.", "range": {"min": "0", "max": "600", "step": "1"}}},
@@ -44,1250 +40,198 @@ static func build() -> bool:
 		"slot": {"type": "int", "default": 0, "exported": true,
 			"attributes": {"tooltip": "Active save slot (each slot is its own file).", "range": {"min": "0", "max": "9", "step": "1"}, "group": "Save System"}}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it."
-	sheet.events.append(about)
-	var helpers: RawCodeRow = RawCodeRow.new()
-	helpers.code = "\n".join(PackedStringArray([
-		"## @ace_trigger",
-		"## @ace_name(\"On Save Written\")",
-		"## @ace_category(\"Save System\")",
-		"signal save_written(slot_index: int)",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On Before Save\")",
-		"## @ace_category(\"Save System\")",
-		"signal before_save(slot_index: int)",
-		"",
-		"## @ace_trigger",
-		"## @ace_name(\"On After Load\")",
-		"## @ace_category(\"Save System\")",
-		"signal after_load(slot_index: int)",
-		"",
-		"## Fires when the autosave clock comes round, INSTEAD of saving - so the conditions on",
-		"## this event decide whether now is a good moment (mid boss phase, mid scene change,",
-		"## mid death animation). With nothing connected the pack saves itself on the interval,",
-		"## exactly as it always did, so an existing project does not change behaviour.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Autosave Due\")",
-		"## @ace_category(\"Save System\")",
-		"signal autosave_due(slot_index: int)",
-		"",
-		"## Fires inside Load Game when the file on disk was written by an older Save Version,",
-		"## BEFORE anything reads it - so migration rows (Data Is Older Than Version, Rename",
-		"## Field, Stamp Data Version) rewrite the record in the gap. Hand it back with Use",
-		"## Upgraded Save. Nothing connected? Load Game behaves exactly as it does today.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Save Needs Upgrade\")",
-		"## @ace_category(\"Save System\")",
-		"signal save_needs_upgrade(save_data: Dictionary, from_version: int)",
-		"",
-		"## Fires when Load Game meets a file it cannot read - a wrong encryption key, a",
-		"## truncated write from an older build, a hand-edited JSON. The reason is a plain",
-		"## sentence, ready to drop straight into a label.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Load Failed\")",
-		"## @ace_category(\"Save System\")",
-		"signal load_failed(slot_index: int, reason: String)",
-		"",
-		"## Fires when a write is refused or fails - the moment a player needs to hear \"your",
-		"## progress was NOT saved\" instead of nothing at all.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Save Failed\")",
-		"## @ace_category(\"Save System\")",
-		"signal save_failed(slot_index: int, reason: String)",
-		"",
-		"## Fires when Start New Run has written the fresh slot - where the NG+ banner, the",
-		"## difficulty curve and the seeded map generation hang, instead of on whichever button",
-		"## happened to be pressed.",
-		"## @ace_trigger",
-		"## @ace_name(\"On New Run Started\")",
-		"## @ace_category(\"Save System\")",
-		"signal new_run_started(slot_index: int, run_number: int)",
-		"",
-		"# Reserved keys. Everything the pack writes for itself lives under a \"__\" name so it",
-		"# cannot collide with a game's own keys: __persist (the scene-tree snapshot), __card",
-		"# (the load-menu header), __version (which build wrote the file), __addons (the",
-		"# autoload snapshot) and __run (the New Game Plus counter).",
-		"const CARD_KEY: String = \"__card\"",
-		"const VERSION_KEY: String = \"__version\"",
-		"const ADDONS_KEY: String = \"__addons\"",
-		"const RUN_KEY: String = \"__run\"",
-		"const READ_OPEN_PROBLEM: String = \"the file could not be opened (a wrong encryption key is the usual cause)\"",
-		"",
-		"func _slot_path(target_slot: int = -1) -> String:",
-		"\tvar chosen: int = slot if target_slot < 0 else target_slot",
-		"\treturn save_directory.path_join(file_pattern.replace(\"{slot}\", str(chosen)))",
-		"",
-		"# The slot's picture lives beside the slot file, so it travels with the save, Copy Slot",
-		"# takes it along and Delete Slot takes it away.",
-		"func _thumbnail_path(target_slot: int = -1) -> String:",
-		"\treturn _slot_path(target_slot) + \".png\"",
-		"",
-		"func _open_read(path: String) -> FileAccess:",
-		"\treturn FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)",
-		"",
-		"func _open_write(path: String) -> FileAccess:",
-		"\treturn FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)",
-		"",
-		"# JSON has no integer type - JSON.parse reloads every number as a float (even 5",
-		"# becomes 5.0, and a 64-bit int loses precision), and it cannot hold Vector2/Color.",
-		"# So ints and non-JSON-native Variants travel as a one-key wrapper and come back",
-		"# through str_to_var, keeping their exact type. Floats/strings/bools stay bare so",
-		"# the file is still readable. The key is long and namespaced so a real one-key user",
-		"# dictionary is extremely unlikely to be mistaken for a wrapped value.",
-		"const VAR_WRAPPER_KEY: String = \"__eventsheet_var\"",
-		"",
-		"func _to_jsonable(value: Variant) -> Variant:",
-		"\tmatch typeof(value):",
-		"\t\tTYPE_NIL, TYPE_BOOL, TYPE_FLOAT, TYPE_STRING:",
-		"\t\t\treturn value",
-		"\t\tTYPE_INT:",
-		"\t\t\treturn {VAR_WRAPPER_KEY: var_to_str(value)}",
-		"\t\tTYPE_DICTIONARY:",
-		"\t\t\tvar out: Dictionary = {}",
-		"\t\t\tfor key: Variant in (value as Dictionary).keys():",
-		"\t\t\t\tout[str(key)] = _to_jsonable((value as Dictionary)[key])",
-		"\t\t\treturn out",
-		"\t\tTYPE_ARRAY:",
-		"\t\t\tvar items: Array = []",
-		"\t\t\tfor item: Variant in (value as Array):",
-		"\t\t\t\titems.append(_to_jsonable(item))",
-		"\t\t\treturn items",
-		"\t\t_:",
-		"\t\t\treturn {VAR_WRAPPER_KEY: var_to_str(value)}",
-		"",
-		"func _from_jsonable(value: Variant) -> Variant:",
-		"\tif value is Dictionary:",
-		"\t\tvar dict: Dictionary = value",
-		"\t\tif dict.size() == 1 and dict.has(VAR_WRAPPER_KEY):",
-		"\t\t\treturn str_to_var(str(dict[VAR_WRAPPER_KEY]))",
-		"\t\tvar out: Dictionary = {}",
-		"\t\tfor key: Variant in dict.keys():",
-		"\t\t\tout[key] = _from_jsonable(dict[key])",
-		"\t\treturn out",
-		"\tif value is Array:",
-		"\t\tvar items: Array = []",
-		"\t\tfor item: Variant in value:",
-		"\t\t\titems.append(_from_jsonable(item))",
-		"\t\treturn items",
-		"\treturn value",
-		"",
-		"# _read_all sets _last_read_ok = false when a slot file EXISTS but cannot be read",
-		"# (bad decrypt key, corrupt JSON, truncated binary). Writers check the flag and",
-		"# refuse to overwrite a slot they could not read, so a failed read never wipes a",
-		"# good save on the next write or autosave. A genuinely absent file reads as OK.",
-		"var _last_read_ok: bool = true",
-		"# Why the last read failed, as a plain sentence (\"\" when it worked). The triggers wrap",
-		"# it into a player-facing line; Slot Problem hands it to a menu tile.",
-		"var _last_read_problem: String = \"\"",
-		"# The last failure of ANY kind, kept for Last Save Problem.",
-		"var _last_problem: String = \"\"",
-		"# Seconds counted since this slot's playtime was last banked into its card, so nobody has",
-		"# to wire a timer for it. Playtime belongs to the SLOT, not to this object: the count",
-		"# restarts whenever the ACTIVE SLOT changes, so a menu instance that never loaded a game",
-		"# cannot stamp its own session onto a slot it merely wrote a card line to, and banking ADDS",
-		"# the session to the card's own total instead of overwriting (or ratcheting) it.",
-		"var _playtime: float = 0.0",
-		"var _playtime_slot: int = -1",
-		"var _autosave_paused: bool = false",
-		"# Keys Never Save This Key has excluded, dropped on the way to the file whichever row",
-		"# wrote them, and keys Carry Value Into Next Run keeps through Start New Run.",
-		"var _never_save: PackedStringArray = PackedStringArray()",
-		"var _carried: PackedStringArray = PackedStringArray()",
-		"# Set by Use Upgraded Save so Load Game knows to pick the migrated record back up.",
-		"var _upgrade_applied: bool = false",
-		"",
-		"func _read_failed(reason: String) -> Dictionary:",
-		"\t_last_read_ok = false",
-		"\t_last_read_problem = reason",
-		"\treturn {}",
-		"",
-		"# One place for every failure: it becomes a plain sentence a label can show, it still",
-		"# reaches the Output panel for the developer, and it fires the matching trigger so the",
-		"# sheet can tell the player. push_error alone was a developer-only channel.",
-		"func _fail_save(slot_index: int, reason: String) -> void:",
-		"\t_last_problem = reason",
-		"\tpush_error(\"Save System: %s\" % reason)",
-		"\tsave_failed.emit(slot_index, reason)",
-		"",
-		"func _fail_load(slot_index: int, reason: String) -> void:",
-		"\t_last_problem = reason",
-		"\tpush_error(\"Save System: %s\" % reason)",
-		"\tload_failed.emit(slot_index, reason)",
-		"",
-		"# The slot card: the small header a load menu reads WITHOUT loading the game (chapter,",
-		"# hero, percent, playtime). A copy, so editing it never touches the record in place.",
-		"func _card_of(data: Dictionary) -> Dictionary:",
-		"\tvar card: Variant = data.get(CARD_KEY, {})",
-		"\treturn (card as Dictionary).duplicate() if card is Dictionary else {}",
-		"",
-		"# Adds the seconds counted since the last bank onto the card's OWN total and starts a fresh",
-		"# count. The card carries the slot's real playtime, so a second instance writing the same",
-		"# slot adds to it rather than replacing it, and a slot nobody played gains nothing. Seconds",
-		"# counted while ANOTHER slot was active are dropped here rather than banked: they belong to",
-		"# that slot, and a save straight after a slot switch would otherwise pour them into this one.",
-		"func _bank_playtime(card: Dictionary) -> Dictionary:",
-		"\tvar earned: float = maxf(_playtime, 0.0) if _playtime_slot == slot else 0.0",
-		"\tcard[\"playtime\"] = float(card.get(\"playtime\", 0.0)) + earned",
-		"\t_playtime = 0.0",
-		"\t_playtime_slot = slot",
-		"\treturn card",
-		"",
-		"# The backup ring for game saves, modelled on the editor's own ring for sheet files:",
-		"# one folder per slot, zero-padded sequence names so lexicographic order IS age order",
-		"# (timestamps collide on same-second saves), newest first, pruned to backup_count.",
-		"# Atomic writes already make a TORN file impossible - this is for a save that was",
-		"# written perfectly and is wrong (a bug that zeroed the wallet, a mis-sold item).",
-		"func _backup_dir_for(target_slot: int) -> String:",
-		"\treturn save_directory.path_join(\"save_backups\").path_join(\"slot_%d\" % (slot if target_slot < 0 else target_slot))",
-		"",
-		"# The sequence number in front of a ring entry's name (\"0007.save_0.dat\" -> 7).",
-		"func _backup_index_of(path: String) -> int:",
-		"\treturn int(path.get_file().get_slice(\".\", 0))",
-		"",
-		"func _backups_for(target_slot: int) -> PackedStringArray:",
-		"\tvar found: Array = []",
-		"\tvar dir_path: String = _backup_dir_for(target_slot)",
-		"\tvar dir: DirAccess = DirAccess.open(dir_path)",
-		"\tif dir == null:",
-		"\t\treturn PackedStringArray()",
-		"\tdir.list_dir_begin()",
-		"\tvar entry: String = dir.get_next()",
-		"\twhile not entry.is_empty():",
-		"\t\t# A .tmp is a write in flight, or the wreck of one - never part of the ring.",
-		"\t\tif not dir.current_is_dir() and not entry.ends_with(\".tmp\"):",
-		"\t\t\tfound.append(dir_path.path_join(entry))",
-		"\t\tentry = dir.get_next()",
-		"\tdir.list_dir_end()",
-		"\t# Newest first, by SEQUENCE NUMBER rather than by name: a plain text sort puts \"10000\"",
-		"\t# below \"9999\", so a slot past ten thousand writes would invert its own ring - handing",
-		"\t# Restore Slot From Backup the oldest file while the prune deleted the newest.",
-		"\tfound.sort_custom(func(first: String, second: String) -> bool: return _backup_index_of(first) > _backup_index_of(second))",
-		"\treturn PackedStringArray(found)",
-		"",
-		"func _push_backup(target_slot: int) -> String:",
-		"\tvar chosen: int = slot if target_slot < 0 else target_slot",
-		"\tvar source: String = _slot_path(chosen)",
-		"\tif backup_count <= 0 or not FileAccess.file_exists(source):",
-		"\t\treturn \"\"",
-		"\tvar dir_path: String = _backup_dir_for(chosen)",
-		"\tDirAccess.make_dir_recursive_absolute(dir_path)",
-		"\tvar existing: PackedStringArray = _backups_for(chosen)",
-		"\tvar current_bytes: PackedByteArray = FileAccess.get_file_as_bytes(source)",
-		"\tvar next_index: int = 1",
-		"\tif not existing.is_empty():",
-		"\t\t# Identical to the newest entry: nothing new to protect, so the ring does not churn.",
-		"\t\tif FileAccess.get_file_as_bytes(existing[0]) == current_bytes:",
-		"\t\t\treturn existing[0]",
-		"\t\tnext_index = _backup_index_of(existing[0]) + 1",
-		"\tvar backup_path: String = dir_path.path_join(\"%04d.%s\" % [next_index, source.get_file()])",
-		"\t# Written through the same .tmp-then-rename the six save backends use, and error-checked",
-		"\t# like them: an entry left SHORT by a crash or a full disk is the one file Restore Slot",
-		"\t# From Backup would otherwise copy over a perfectly good save.",
-		"\tvar tmp: String = backup_path + \".tmp\"",
-		"\tvar out: FileAccess = FileAccess.open(tmp, FileAccess.WRITE)",
-		"\tif out == null:",
-		"\t\treturn \"\"",
-		"\t# Raw bytes, so an encrypted save stays encrypted in the ring and restores as itself.",
-		"\tout.store_buffer(current_bytes)",
-		"\tvar write_ok: bool = out.get_error() == Error.OK",
-		"\tout.close()",
-		"\tif not write_ok or DirAccess.rename_absolute(tmp, backup_path) != Error.OK:",
-		"\t\tDirAccess.remove_absolute(tmp)",
-		"\t\treturn \"\"",
-		"\tvar all_backups: PackedStringArray = _backups_for(chosen)",
-		"\tfor index: int in range(backup_count, all_backups.size()):",
-		"\t\tDirAccess.remove_absolute(all_backups[index])",
-		"\treturn backup_path",
-		"",
-		"func _read_all() -> Dictionary:",
-		"\treturn _read_path(_slot_path(), format)",
-		"",
-		"# Reads any save file at `path` in `fmt` (the same six backends). Reused by the",
-		"# active-slot read and by Read Save File, so tooling can open a file from anywhere.",
-		"func _read_path(path: String, fmt: String) -> Dictionary:",
-		"\t_last_read_ok = true",
-		"\t_last_read_problem = \"\"",
-		"\tif not FileAccess.file_exists(path):",
-		"\t\treturn {}",
-		"\tif fmt == \"json\":",
-		"\t\tvar file: FileAccess = _open_read(path)",
-		"\t\tif file == null:",
-		"\t\t\treturn _read_failed(READ_OPEN_PROBLEM)",
-		"\t\tvar parsed: Variant = JSON.parse_string(file.get_as_text())",
-		"\t\tif not parsed is Dictionary:",
-		"\t\t\treturn _read_failed(\"the file is not valid JSON\")",
-		"\t\treturn _from_jsonable((parsed as Dictionary).get(section, {}))",
-		"\tif fmt == \"binary\":",
-		"\t\tvar file: FileAccess = _open_read(path)",
-		"\t\tif file == null:",
-		"\t\t\treturn _read_failed(READ_OPEN_PROBLEM)",
-		"\t\tvar parsed: Variant = file.get_var()",
-		"\t\tif not parsed is Dictionary:",
-		"\t\t\treturn _read_failed(\"the file is not a binary save\")",
-		"\t\treturn (parsed as Dictionary).get(section, {})",
-		"\tif fmt == \"csv\":",
-		"\t\tvar file: FileAccess = _open_read(path)",
-		"\t\tif file == null:",
-		"\t\t\treturn _read_failed(READ_OPEN_PROBLEM)",
-		"\t\tvar data: Dictionary = {}",
-		"\t\twhile not file.eof_reached():",
-		"\t\t\tvar row: PackedStringArray = file.get_csv_line()",
-		"\t\t\tif row.size() < 2 or row[0].is_empty():",
-		"\t\t\t\tcontinue",
-		"\t\t\tvar parsed: Variant = str_to_var(row[1])",
-		"\t\t\t# Hand-authored cells (bare words) parse to null - keep them as raw text.",
-		"\t\t\tdata[row[0]] = parsed if parsed != null or row[1] == \"null\" else row[1]",
-		"\t\treturn data",
-		"\tif fmt == \"ini\":",
-		"\t\tvar file: FileAccess = _open_read(path)",
-		"\t\tif file == null:",
-		"\t\t\treturn _read_failed(READ_OPEN_PROBLEM)",
-		"\t\tvar data: Dictionary = {}",
-		"\t\t# Read only keys under our [section]; an empty section reads every key.",
-		"\t\tvar in_section: bool = section.is_empty()",
-		"\t\twhile not file.eof_reached():",
-		"\t\t\tvar line: String = file.get_line().strip_edges()",
-		"\t\t\tif line.is_empty() or line.begins_with(\";\") or line.begins_with(\"#\"):",
-		"\t\t\t\tcontinue",
-		"\t\t\tif line.begins_with(\"[\") and line.ends_with(\"]\"):",
-		"\t\t\t\tin_section = line.substr(1, line.length() - 2) == section or section.is_empty()",
-		"\t\t\t\tcontinue",
-		"\t\t\tvar eq: int = line.find(\"=\")",
-		"\t\t\tif not in_section or eq < 0:",
-		"\t\t\t\tcontinue",
-		"\t\t\tvar ini_key: String = line.substr(0, eq).strip_edges()",
-		"\t\t\tvar raw: String = line.substr(eq + 1).strip_edges()",
-		"\t\t\tvar parsed: Variant = str_to_var(raw)",
-		"\t\t\tdata[ini_key] = parsed if parsed != null or raw == \"null\" else raw",
-		"\t\treturn data",
-		"\tif fmt == \"xml\":",
-		"\t\tvar file: FileAccess = _open_read(path)",
-		"\t\tif file == null:",
-		"\t\t\treturn _read_failed(READ_OPEN_PROBLEM)",
-		"\t\tvar parser: XMLParser = XMLParser.new()",
-		"\t\tif parser.open_buffer(file.get_as_text().to_utf8_buffer()) != Error.OK:",
-		"\t\t\treturn _read_failed(\"the file is not valid XML\")",
-		"\t\tvar data: Dictionary = {}",
-		"\t\t# XMLParser resolves &amp;/&lt;/&gt; itself, so the text is ready for str_to_var.",
-		"\t\tvar pending_key: String = \"\"",
-		"\t\twhile parser.read() == Error.OK:",
-		"\t\t\tvar node_type: int = parser.get_node_type()",
-		"\t\t\tif node_type == XMLParser.NODE_ELEMENT and parser.get_node_name() == \"entry\":",
-		"\t\t\t\tpending_key = parser.get_named_attribute_value_safe(\"key\")",
-		"\t\t\t\tif parser.is_empty():",
-		"\t\t\t\t\tdata[pending_key] = \"\"",
-		"\t\t\t\t\tpending_key = \"\"",
-		"\t\t\telif node_type == XMLParser.NODE_TEXT and not pending_key.is_empty():",
-		"\t\t\t\tvar raw: String = parser.get_node_data()",
-		"\t\t\t\tvar parsed: Variant = str_to_var(raw)",
-		"\t\t\t\tdata[pending_key] = parsed if parsed != null or raw == \"null\" else raw",
-		"\t\t\t\tpending_key = \"\"",
-		"\t\t\telif node_type == XMLParser.NODE_ELEMENT_END and parser.get_node_name() == \"entry\" and not pending_key.is_empty():",
-		"\t\t\t\tdata[pending_key] = \"\"",
-		"\t\t\t\tpending_key = \"\"",
-		"\t\treturn data",
-		"\tvar config: ConfigFile = ConfigFile.new()",
-		"\tvar load_err: Error = config.load(path) if encryption_key.is_empty() else config.load_encrypted_pass(path, encryption_key)",
-		"\tif load_err != Error.OK:",
-		"\t\treturn _read_failed(\"it may be damaged, or the encryption key is wrong\")",
-		"\tvar data: Dictionary = {}",
-		"\tfor key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():",
-		"\t\tdata[key] = config.get_value(section, key)",
-		"\treturn data",
-		"",
-		"# XML entities on write; XMLParser un-escapes on read.",
-		"func _xml_escape(text: String) -> String:",
-		"\treturn text.replace(\"&\", \"&amp;\").replace(\"<\", \"&lt;\").replace(\">\", \"&gt;\").replace(\"\\\"\", \"&quot;\")",
-		"",
-		"# Best-effort format detection for a save file. The extension is authoritative for",
-		"# the pack's own files (config and ini are otherwise identical on disk); an unknown",
-		"# extension sniffs the first bytes. Returns \"\" when the file is missing or unclear.",
-		"func _detect_format(path: String) -> String:",
-		"\tif not FileAccess.file_exists(path):",
-		"\t\treturn \"\"",
-		"\tmatch path.get_extension().to_lower():",
-		"\t\t\"cfg\":",
-		"\t\t\treturn \"config\"",
-		"\t\t\"ini\":",
-		"\t\t\treturn \"ini\"",
-		"\t\t\"json\":",
-		"\t\t\treturn \"json\"",
-		"\t\t\"csv\":",
-		"\t\t\treturn \"csv\"",
-		"\t\t\"xml\":",
-		"\t\t\treturn \"xml\"",
-		"\t\t\"sav\":",
-		"\t\t\treturn \"binary\"",
-		"\tvar bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)",
-		"\tif bytes.is_empty():",
-		"\t\treturn \"\"",
-		"\tif bytes.slice(0, mini(256, bytes.size())).find(0) != -1:",
-		"\t\treturn \"binary\"",
-		"\tvar text: String = bytes.get_string_from_utf8().strip_edges()",
-		"\tif text.begins_with(\"<\"):",
-		"\t\treturn \"xml\"",
-		"\tif text.begins_with(\"{\"):",
-		"\t\treturn \"json\"",
-		"\tif text.begins_with(\"[\"):",
-		"\t\t# config and ini both open with a [section]; content alone cannot tell them apart.",
-		"\t\treturn \"config\"",
-		"\tif text.contains(\",\"):",
-		"\t\treturn \"csv\"",
-		"\treturn \"\"",
-		"",
-		"# Atomic write: every backend writes a .tmp sibling then renames it over the slot,",
-		"# so a crash mid-write leaves the previous good save intact, never a half-file.",
-		"# Reached through _write_all, which is the door that opens and closes the write window.",
-		"func _write_file(data: Dictionary, stamp_current_version: bool = false) -> bool:",
-		"\tvar path: String = _slot_path()",
-		"\tvar tmp: String = path + \".tmp\"",
-		"\t# Two facts get applied on the way out, both no-ops at their defaults so a project",
-		"\t# that uses neither writes byte-identical files to the ones it wrote before:",
-		"\t# keys marked Never Save This Key are dropped whichever row wrote them, and a build",
-		"\t# past Save Version 1 stamps which SHAPE the file holds (no stamp = version 1).",
-		"\tif not _never_save.is_empty() or save_version > 1:",
-		"\t\tdata = data.duplicate()",
-		"\t\tfor skipped: String in _never_save:",
-		"\t\t\tdata.erase(skipped)",
-		"\t\t# The stamp says what shape the FILE is in, never which build last touched it. An",
-		"\t\t# ordinary write passes an older save through with its shape unchanged, so it keeps",
-		"\t\t# its own stamp and On Save Needs Upgrade still fires for it - otherwise one settings",
-		"\t\t# write from the menu would mark an un-migrated file as migrated, permanently. Only a",
-		"\t\t# brand-new file (current by definition) and the record Use Upgraded Save just fixed",
-		"\t\t# carry this build's version.",
-		"\t\tif save_version > 1 and (stamp_current_version or not FileAccess.file_exists(path)):",
-		"\t\t\tdata[VERSION_KEY] = save_version",
-		"\tif backup_count > 0:",
-		"\t\t_push_backup(slot)",
-		"\tif format == \"json\":",
-		"\t\tvar file: FileAccess = _open_write(tmp)",
-		"\t\tif file == null:",
-		"\t\t\treturn false",
-		"\t\tfile.store_string(JSON.stringify({section: _to_jsonable(data)}, \"\\t\"))",
-		"\t\tvar write_ok: bool = file.get_error() == Error.OK",
-		"\t\tfile.close()",
-		"\t\tif not write_ok:",
-		"\t\t\treturn false",
-		"\telif format == \"binary\":",
-		"\t\tvar file: FileAccess = _open_write(tmp)",
-		"\t\tif file == null:",
-		"\t\t\treturn false",
-		"\t\tfile.store_var({section: data})",
-		"\t\tvar write_ok: bool = file.get_error() == Error.OK",
-		"\t\tfile.close()",
-		"\t\tif not write_ok:",
-		"\t\t\treturn false",
-		"\telif format == \"csv\":",
-		"\t\tvar file: FileAccess = _open_write(tmp)",
-		"\t\tif file == null:",
-		"\t\t\treturn false",
-		"\t\t# var_to_str escapes newlines inside strings, so the only real newlines are the",
-		"\t\t# ones it pretty-prints between container elements - stripping those keeps each",
-		"\t\t# value on one CSV row without a second escape layer to conflict with str_to_var.",
-		"\t\tfor key: Variant in data.keys():",
-		"\t\t\tfile.store_csv_line(PackedStringArray([str(key), var_to_str(data[key]).replace(\"\\n\", \"\")]))",
-		"\t\tvar write_ok: bool = file.get_error() == Error.OK",
-		"\t\tfile.close()",
-		"\t\tif not write_ok:",
-		"\t\t\treturn false",
-		"\telif format == \"ini\":",
-		"\t\tvar file: FileAccess = _open_write(tmp)",
-		"\t\tif file == null:",
-		"\t\t\treturn false",
-		"\t\t# A plain, portable [section] + key=value INI; var_to_str keeps each value",
-		"\t\t# on one line and exact-typed, so other INI tools can read the structure.",
-		"\t\tfile.store_line(\"[%s]\" % section)",
-		"\t\tfor key: Variant in data.keys():",
-		"\t\t\tfile.store_line(\"%s=%s\" % [str(key), var_to_str(data[key]).replace(\"\\n\", \"\")])",
-		"\t\tvar write_ok: bool = file.get_error() == Error.OK",
-		"\t\tfile.close()",
-		"\t\tif not write_ok:",
-		"\t\t\treturn false",
-		"\telif format == \"xml\":",
-		"\t\tvar file: FileAccess = _open_write(tmp)",
-		"\t\tif file == null:",
-		"\t\t\treturn false",
-		"\t\tfile.store_line(\"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\")",
-		"\t\tfile.store_line(\"<save section=\\\"%s\\\">\" % _xml_escape(section))",
-		"\t\tfor key: Variant in data.keys():",
-		"\t\t\tfile.store_line(\"\\t<entry key=\\\"%s\\\">%s</entry>\" % [_xml_escape(str(key)), _xml_escape(var_to_str(data[key]).replace(\"\\n\", \"\"))])",
-		"\t\tfile.store_line(\"</save>\")",
-		"\t\tvar write_ok: bool = file.get_error() == Error.OK",
-		"\t\tfile.close()",
-		"\t\tif not write_ok:",
-		"\t\t\treturn false",
-		"\telse:",
-		"\t\tvar config: ConfigFile = ConfigFile.new()",
-		"\t\tfor key: Variant in data.keys():",
-		"\t\t\tconfig.set_value(section, str(key), data[key])",
-		"\t\tvar err: Error = config.save(tmp) if encryption_key.is_empty() else config.save_encrypted_pass(tmp, encryption_key)",
-		"\t\tif err != Error.OK:",
-		"\t\t\treturn false",
-		"\tif DirAccess.rename_absolute(tmp, path) != Error.OK:",
-		"\t\treturn false",
-		"\t# Last Save Problem describes the CURRENT state, not the first thing that ever went wrong:",
-		"\t# a write that landed clears it, so a \"your progress was NOT saved\" banner comes down.",
-		"\t_last_problem = \"\"",
-		"\treturn true",
-		"",
-		"# The save-state seam: any node (or behavior child) exposing save_state() ->",
-		"# Dictionary and load_state(state) participates - no registration, no base class.",
-		"func _collect_node_state(node: Node) -> Dictionary:",
-		"\tvar states: Dictionary = {}",
-		"\tif node == null:",
-		"\t\treturn states",
-		"\tif node.has_method(\"save_state\"):",
-		"\t\tstates[\".\"] = node.save_state()",
-		"\tfor child: Node in node.get_children():",
-		"\t\tif child.has_method(\"save_state\"):",
-		"\t\t\tstates[str(child.name)] = child.save_state()",
-		"\treturn states",
-		"",
-		"func _apply_node_state(node: Node, states: Dictionary) -> void:",
-		"\tif node == null:",
-		"\t\treturn",
-		"\tfor entry: Variant in states.keys():",
-		"\t\tvar target: Node = node if str(entry) == \".\" else node.get_node_or_null(NodePath(str(entry)))",
-		"\t\tif target != null and target.has_method(\"load_state\") and states[entry] is Dictionary:",
-		"\t\t\ttarget.load_state(states[entry] as Dictionary)",
-		"",
-		"# The autoload walk: every /root child answering save_state (itself or through a behavior",
-		"# child) is in the save, keyed by its autoload name. Duck-typed exactly like the",
-		"# persist-group walk, so installing a pack and registering it IS the whole \"add it to",
-		"# the save\" step - there is no list here to fall out of date. Split from the public",
-		"# verbs so the walk itself can be driven against any parent.",
-		"func _collect_children_states(parent: Node, playing: Node = null) -> Dictionary:",
-		"\tvar states: Dictionary = {}",
-		"\tif parent == null:",
-		"\t\treturn states",
-		"\t# `playing` is the CURRENT SCENE. It is a /root child like the autoloads, but it is the",
-		"\t# GAME, not an addon: its state belongs to the persist group, keyed by node PATH.",
-		"\t# Snapshotting it here would key the level by its NAME and pour that state into whatever",
-		"\t# scene answers to the same name next, and would list the level as an addon in For Each",
-		"\t# Saveable Addon.",
-		"\tfor child: Node in parent.get_children():",
-		"\t\tif child == self or (playing != null and child == playing):",
-		"\t\t\tcontinue",
-		"\t\tvar entry: Dictionary = _collect_node_state(child)",
-		"\t\tif not entry.is_empty():",
-		"\t\t\tstates[str(child.name)] = entry",
-		"\treturn states",
-		"",
-		"func _apply_children_states(parent: Node, states: Dictionary) -> void:",
-		"\tif parent == null:",
-		"\t\treturn",
-		"\tfor addon_name: Variant in states.keys():",
-		"\t\tvar addon: Node = parent.get_node_or_null(NodePath(str(addon_name)))",
-		"\t\tif addon == null:",
-		"\t\t\t# The save covers an addon this build does not have (removed, renamed, or not",
-		"\t\t\t# registered yet). Say so rather than dropping its state in silence.",
-		"\t\t\tpush_warning(\"Save System: no autoload named %s to restore its saved state.\" % str(addon_name))",
-		"\t\t\tcontinue",
-		"\t\tif states[addon_name] is Dictionary:",
-		"\t\t\t_apply_node_state(addon, states[addon_name] as Dictionary)",
-		"",
-		"func _collect_addon_states() -> Dictionary:",
-		"\treturn _collect_children_states(get_tree().root, get_tree().current_scene) if is_inside_tree() else {}",
-		"",
-		"func _collect_group_state(group: String) -> Dictionary:",
-		"\tvar states: Dictionary = {}",
-		"\tif not is_inside_tree() or group.is_empty():",
-		"\t\treturn states",
-		"\tfor member: Node in get_tree().get_nodes_in_group(group):",
-		"\t\tvar entry: Dictionary = _collect_node_state(member)",
-		"\t\tif not entry.is_empty():",
-		"\t\t\tstates[str(member.get_path())] = entry",
-		"\treturn states",
-		"",
-		"func _apply_states(states: Dictionary) -> void:",
-		"\tfor path: Variant in states.keys():",
-		"\t\tvar member: Node = get_node_or_null(NodePath(str(path)))",
-		"\t\tif member != null and states[path] is Dictionary:",
-		"\t\t\t_apply_node_state(member, states[path] as Dictionary)",
-		"\t\telif member == null:",
-		"\t\t\t# The save holds state for a node that is not here now (renamed, re-parented,",
-		"\t\t\t# or the scene is not loaded yet). Surface it rather than dropping it silently.",
-		"\t\t\tpush_warning(\"Save System: no node at %s to restore its saved state.\" % str(path))"
-	]))
-	sheet.events.append(helpers)
-	var autosave_tick: EventRow = EventRow.new()
-	autosave_tick.trigger_provider_id = "Core"
-	autosave_tick.trigger_id = "OnProcess"
-	var autosave_body: RawCodeRow = RawCodeRow.new()
-	autosave_body.code = "\n".join(PackedStringArray([
-		"if _playtime_slot != slot:",
-		"\t# The active slot changed. Whatever was counted belongs to the slot that was active and",
-		"\t# was banked by its last save, so the new slot starts its own count at zero.",
-		"\t_playtime_slot = slot",
-		"\t_playtime = 0.0",
-		"_playtime += delta",
-		"if autosave_interval <= 0.0 or _autosave_paused:",
-		"\treturn",
-		"autosave_accumulator += delta",
-		"if autosave_accumulator >= autosave_interval:",
-		"\tautosave_accumulator = 0.0",
-		"\t# The blind interval becomes a MOMENT the sheet can veto: with a handler connected",
-		"\t# the trigger fires instead of saving and the event's conditions decide. With none",
-		"\t# connected the pack saves itself, exactly as it did before.",
-		"\tif autosave_due.get_connections().is_empty():",
-		"\t\tsave_game()",
-		"\telse:",
-		"\t\tautosave_due.emit(slot)"
-	]))
-	autosave_tick.actions.append(autosave_body)
-	sheet.events.append(autosave_tick)
-	# Looping conditions: adding one to an event runs its actions once per item. They carry
-	# `@ace_looping`, which only the annotation form expresses, so they are authored as
-	# annotated GDScript rather than through the exposed-function helper.
-	var loops: RawCodeRow = RawCodeRow.new()
-	loops.code = "\n".join(PackedStringArray([
-		"## Runs this event's actions once per slot that has a save file - the load menu, as",
-		"## one row. Read the current one as `slot_index`, then fill the tile with Slot Detail",
-		"## and Slot Playtime (both read straight off disk, nothing is loaded).",
-		"## @ace_looping(slot_index)",
-		"## @ace_name(\"For Each Saved Slot\")",
-		"## @ace_category(\"Save System\")",
-		"func each_saved_slot() -> Array:",
-		"\treturn list_slots()",
-		"",
-		"## Runs this event's actions once per autoload that saves itself, so a debug panel can",
-		"## list exactly what the save covers - and, by its absence, what quietly does not. Read",
-		"## the current one as `addon_name`.",
-		"## @ace_looping(addon_name)",
-		"## @ace_name(\"For Each Saveable Addon\")",
-		"## @ace_category(\"Save System\")",
-		"func each_saveable_addon() -> Array:",
-		"\treturn _collect_addon_states().keys()",
-		"",
-		"## Runs this event's actions once per kept backup of the slot, newest first. Read the",
-		"## current one as `backup_path` - a real file path, so File Size (bytes) and Read Save",
-		"## File work on it, and its position in the loop is the \"how many back\" number.",
-		"## @ace_looping(backup_path)",
-		"## @ace_name(\"For Each Backup Of Slot\")",
-		"## @ace_category(\"Save System\")",
-		"func each_backup_of_slot(slot_index: int) -> Array:",
-		"\tvar found: Array = []",
-		"\tfor backup_path: String in _backups_for(slot_index):",
-		"\t\tfound.append(backup_path)",
-		"\treturn found"
-	]))
-	sheet.events.append(loops)
-	# Per-key outcomes, the write window, and the two verbs whose bodies must sit INSIDE it.
-	# Each trigger is one plain signal carrying the key it is about: the signal's arguments
-	# become the trigger row's captured context, so one signal serves every key, the row reads
-	# `key`, and a handler that wants exactly one key adds an ordinary condition on it
-	# underneath. No per-key filter, and no "last saved key" variable to remember to check.
-	var key_events: RawCodeRow = RawCodeRow.new()
-	key_events.code = "\n".join(PackedStringArray([
-		"## Fires when one key's value has landed on disk - Save Value, Save Number and Save Text",
-		"## all raise it, with the key that was written as the row's own captured value. A key held",
-		"## back by Never Save This Key never raises it, because it never reached the file.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Key Saved\")",
-		"## @ace_category(\"Save System\")",
-		"signal key_saved(key: String, slot_index: int)",
-		"",
-		"## Fires when Check Save Key finds the key in the slot - the found half of that question,",
-		"## answered as a row instead of a value somebody has to remember to test.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Key Loaded\")",
-		"## @ace_category(\"Save System\")",
-		"signal key_loaded(key: String, slot_index: int)",
-		"",
-		"## Fires when Remove Save Key has taken the key out of the file, and once per key that",
-		"## Clear Slot Keys emptied out of it.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Key Removed\")",
-		"## @ace_category(\"Save System\")",
-		"signal key_removed(key: String, slot_index: int)",
-		"",
-		"## Fires when a key was asked for and the slot does not hold it - Check Save Key, or a",
-		"## Remove Save Key with nothing to remove. This is where a first run seeds its default",
-		"## once, instead of quietly defaulting forever.",
-		"## @ace_trigger",
-		"## @ace_name(\"On Save Key Missing\")",
-		"## @ace_category(\"Save System\")",
-		"signal save_key_missing(key: String, slot_index: int)",
-		"",
-		"# The save and load windows, counted rather than flagged. This pack writes synchronously",
-		"# (a .tmp, then a rename), so a window is short - but an On Before Save handler that saves",
-		"# a key of its own opens a second one INSIDE it, and a plain bool would close the outer",
-		"# window when the inner write finished. Is Saving and Is Loading read these.",
-		"var _write_depth: int = 0",
-		"var _load_depth: int = 0",
-		"",
-		"# Every write goes through this door, so Is Saving covers the whole window - which is",
-		"# exactly where a second writer, a Save All Addons sweep, or a quit button does damage.",
-		"func _write_all(data: Dictionary, stamp_current_version: bool = false) -> bool:",
-		"\t_write_depth += 1",
-		"\tvar written: bool = _write_file(data, stamp_current_version)",
-		"\t_write_depth -= 1",
-		"\treturn written",
-		"",
-		"# Save Game's body, held one call away so the whole broadcast - On Before Save included -",
-		"# sits inside the write window, without threading a flag through its early returns.",
-		"func _run_save_game() -> void:",
-		"\tbefore_save.emit(slot)",
-		"\tvar data: Dictionary = _read_all()",
-		"\tif not _last_read_ok:",
-		"\t\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
-		"\t\treturn",
-		"\tvar persisted: Dictionary = _collect_group_state(persist_group)",
-		"\tif not persisted.is_empty():",
-		"\t\tdata[\"__persist\"] = persisted",
-		"\t# The slot card rides along on every full save, so a load menu can show playtime even in a",
-		"\t# game that never calls Set Slot Detail. The seconds are ADDED to the slot's own total, so",
-		"\t# two instances writing the same slot never overwrite each other's hours.",
-		"\tvar card: Dictionary = _bank_playtime(_card_of(data))",
-		"\tdata[CARD_KEY] = card",
-		"\tif _write_all(data):",
-		"\t\tsave_written.emit(slot)",
-		"\telse:",
-		"\t\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)",
-		"",
-		"# Load Game's body, held one call away for the same reason: Is Loading stays true across",
-		"# the read, the migration gap and the On After Load broadcast, so a row that fires during",
-		"# the restore can tell it is looking at a game mid-load.",
-		"func _run_load_game() -> void:",
-		"\tvar data: Dictionary = _read_all()",
-		"\tif not _last_read_ok:",
-		"\t\t_fail_load(slot, \"slot %d could not be read - %s.\" % [slot, _last_read_problem])",
-		"\t\treturn",
-		"\t# The migration seam: a file written by an older Save Version is handed to the sheet",
-		"\t# BEFORE anything reads it, and Use Upgraded Save writes the fixed record back. With",
-		"\t# no handler connected none of this runs, so an existing project is untouched.",
-		"\tvar from_version: int = int(data.get(VERSION_KEY, 1))",
-		"\tif from_version < save_version and not save_needs_upgrade.get_connections().is_empty():",
-		"\t\t_upgrade_applied = false",
-		"\t\tsave_needs_upgrade.emit(data, from_version)",
-		"\t\tif _upgrade_applied:",
-		"\t\t\tdata = _read_all()",
-		"\t\t\tif not _last_read_ok:",
-		"\t\t\t\t# The one path that could report success on a FAILED read: every sheet would then",
-		"\t\t\t\t# read its state back out of an empty record and the game would quietly start from",
-		"\t\t\t\t# defaults with nothing said.",
-		"\t\t\t\t_fail_load(slot, \"slot %d could not be read back after its upgrade - %s.\" % [slot, _last_read_problem])",
-		"\t\t\t\treturn",
-		"\t# A clean read is the load working: the sentence from an earlier failure comes down.",
-		"\t_last_problem = \"\"",
-		"\t# This session's count starts here; the card already holds every second banked before it.",
-		"\t_playtime = 0.0",
-		"\t_playtime_slot = slot",
-		"\tif data.get(\"__persist\", null) is Dictionary:",
-		"\t\t_apply_states(data[\"__persist\"] as Dictionary)",
-		"\tafter_load.emit(slot)"
-	]))
-	sheet.events.append(key_events)
-	# Variant-typed core.
-	Lib.append_function(sheet, "save_value", "Save Value", "Save System", "Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.",
-		[["key", "String"], ["value", "Variant"]],
-		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
-			"\treturn",
-			"data[key] = value",
-			"if not _write_all(data):",
-			"\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)",
-			"\treturn",
-			"# The write landed. A key on the Never Save This Key list was dropped on the way to the",
-			"# file, so the file is fine but THIS key is not in it - saying it saved would be the one",
-			"# lie On Key Saved exists to prevent.",
-			"if not _never_save.has(key):",
-			"\tkey_saved.emit(key, slot)"
-		])))
-	var load_value: EventFunction = Lib.exposed_function("load_value", "Load Value", "Save System", "Reads any value (your default when missing).", [["key", "String"], ["default_value", "Variant"]],
-		"return _read_all().get(key, default_value)")
-	# TYPE_MAX = the compiler's "returns Variant" sentinel.
-	load_value.return_type = TYPE_MAX
-	sheet.functions.append(load_value)
-	# Typed conveniences (ace_ids are API - kept, now thin delegations).
-	Lib.append_function(sheet, "save_number", "Save Number", "Save System", "Writes a number under the key (active slot).",
-		[["key", "String"], ["value", "float"]],
-		"save_value(key, value)")
-	var load_number: EventFunction = Lib.exposed_function("load_number", "Load Number", "Save System", "Reads a number (0 when missing).", [["key", "String"]],
-		"return float(load_value(key, 0.0))")
-	load_number.return_type = TYPE_FLOAT
-	sheet.functions.append(load_number)
-	Lib.append_function(sheet, "save_text", "Save Text", "Save System", "Writes a string under the key (active slot).",
-		[["key", "String"], ["value", "String"]],
-		"save_value(key, value)")
-	var load_text: EventFunction = Lib.exposed_function("load_text", "Load Text", "Save System", "Reads a string (\"\" when missing).", [["key", "String"]],
-		"return str(load_value(key, \"\"))")
-	load_text.return_type = TYPE_STRING
-	sheet.functions.append(load_text)
-	var has_key: EventFunction = Lib.exposed_function("has_save_key", "Has Save Key", "Save System", "Whether the key exists in the active slot.", [["key", "String"]],
-		"return _read_all().has(key)")
-	has_key.return_type = TYPE_BOOL
-	sheet.functions.append(has_key)
-	# Read helpers: open a whole save at once, list its keys, or read a file from anywhere.
-	var read_all: EventFunction = Lib.exposed_function("read_all", "Read All", "Save System", "Reads the whole active slot as one Dictionary (every saved key and value).", [],
-		"return _read_all()")
-	read_all.return_type = TYPE_DICTIONARY
-	sheet.functions.append(read_all)
-	var save_keys: EventFunction = Lib.exposed_function("save_keys", "List Save Keys", "Save System", "The keys stored in the active slot (loop them to read a whole save).", [],
-		"return _read_all().keys()")
-	save_keys.return_type = TYPE_ARRAY
-	sheet.functions.append(save_keys)
-	var read_file: EventFunction = Lib.exposed_function("read_file", "Read Save File", "Save System", "Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.", [["path", "String"], ["file_format", "String"]],
-		"return _read_path(path, file_format if not file_format.is_empty() else format)")
-	read_file.return_type = TYPE_DICTIONARY
-	sheet.functions.append(read_file)
-	# Format helpers: know a file's format (detect it, or check it), and the active one.
-	var file_format: EventFunction = Lib.exposed_function("save_file_format", "Save File Format", "Save System", "Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or \"\" when it is missing or unrecognised. Feed it to Read Save File.", [["path", "String"]],
-		"return _detect_format(path)")
-	file_format.return_type = TYPE_STRING
-	sheet.functions.append(file_format)
-	var file_is_format: EventFunction = Lib.exposed_function("save_file_is_format", "Save File Is Format", "Save System", "Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).", [["path", "String"], ["expected_format", "String"]],
-		"return _detect_format(path) == expected_format")
-	file_is_format.return_type = TYPE_BOOL
-	sheet.functions.append(file_is_format)
-	var format_is: EventFunction = Lib.exposed_function("save_format_is", "Save Format Is", "Save System", "Whether the active save format (the Inspector format property) equals the given one.", [["expected_format", "String"]],
-		"return format == expected_format")
-	format_is.return_type = TYPE_BOOL
-	sheet.functions.append(format_is)
-	Lib.append_function(sheet, "delete_slot", "Delete Slot", "Save System", "Removes the active slot's save file (and its slot picture, which lives beside it).",
-		[],
-		"if FileAccess.file_exists(_slot_path()):\n\tDirAccess.remove_absolute(_slot_path())\nif FileAccess.file_exists(_thumbnail_path()):\n\tDirAccess.remove_absolute(_thumbnail_path())")
-	# Lifecycle orchestration: other sheets contribute state via On Before Save, and
-	# every node in the persist group snapshots itself automatically (save_state seam).
-	Lib.append_function(sheet, "save_game", "Save Game", "Save System", "Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).",
-		[],
-		"\n".join(PackedStringArray([
-			"_write_depth += 1",
-			"_run_save_game()",
-			"_write_depth -= 1"
-		])))
-	Lib.append_function(sheet, "load_game", "Load Game", "Save System", "Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.",
-		[],
-		"\n".join(PackedStringArray([
-			"_load_depth += 1",
-			"_run_load_game()",
-			"_load_depth -= 1"
-		])))
-	# Targeted state verbs: the same seam, aimed at one node, one group, or a singleton.
-	Lib.append_function(sheet, "save_node_state", "Save Node State", "Save System", "Snapshots a node and its behaviors (any child with save_state) under the key.",
-		[["node", "Node"], ["key", "String"]],
-		"save_value(key, _collect_node_state(node))")
-	Lib.append_function(sheet, "load_node_state", "Load Node State", "Save System", "Restores a node and its behaviors from the key's snapshot.",
-		[["node", "Node"], ["key", "String"]],
-		"var states: Variant = load_value(key, {})\nif states is Dictionary:\n\t_apply_node_state(node, states as Dictionary)")
-	Lib.append_function(sheet, "save_group_state", "Save Group State", "Save System", "Snapshots every node in the scene-tree group (and their behaviors) under the key.",
-		[["group", "String"], ["key", "String"]],
-		"save_value(key, _collect_group_state(group))")
-	Lib.append_function(sheet, "load_group_state", "Load Group State", "Save System", "Restores the group snapshot saved under the key (nodes matched by scene path).",
-		[["key", "String"]],
-		"var states: Variant = load_value(key, {})\nif states is Dictionary:\n\t_apply_states(states as Dictionary)")
-	Lib.append_function(sheet, "save_singleton_state", "Save Singleton State", "Save System", "Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.",
-		[["singleton_name", "String"], ["key", "String"]],
-		"save_value(key, _collect_node_state(get_node_or_null(\"/root/\" + singleton_name)))")
-	Lib.append_function(sheet, "load_singleton_state", "Load Singleton State", "Save System", "Restores an autoload addon's snapshot from the key.",
-		[["singleton_name", "String"], ["key", "String"]],
-		"var states: Variant = load_value(key, {})\nif states is Dictionary:\n\t_apply_node_state(get_node_or_null(\"/root/\" + singleton_name), states as Dictionary)")
-	# Slot metadata (save/load menus).
-	var slot_exists: EventFunction = Lib.exposed_function("slot_exists", "Slot Exists", "Save System", "Whether the slot has a save file.", [["slot_index", "int"]],
-		"return FileAccess.file_exists(_slot_path(slot_index))")
-	slot_exists.return_type = TYPE_BOOL
-	sheet.functions.append(slot_exists)
-	var list_slots: EventFunction = Lib.exposed_function("list_slots", "List Slots", "Save System", "Slot numbers that have save files (for menus).", [],
-		"\n".join(PackedStringArray([
-			"var found: Array = []",
-			"for candidate: int in range(100):",
-			"\tif FileAccess.file_exists(_slot_path(candidate)):",
-			"\t\tfound.append(candidate)",
-			"return found"
-		])))
-	list_slots.return_type = TYPE_ARRAY
-	sheet.functions.append(list_slots)
-	var slot_time: EventFunction = Lib.exposed_function("slot_modified_time", "Slot Modified Time", "Save System", "Unix mtime of the slot's file (0 when missing).", [["slot_index", "int"]],
-		"return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0")
-	slot_time.return_type = TYPE_INT
-	sheet.functions.append(slot_time)
-	# Slot cards: the small header a load menu shows WITHOUT loading the game. It lives inside
-	# the same file under a reserved key, so one read of one file answers "Chapter 3, Ilsa,
-	# 61%, 4h12m" and nothing is applied to the running game.
-	Lib.append_function(sheet, "set_slot_detail", "Set Slot Detail", "Save System", "Writes one line of the active slot's card - the header a load menu reads without ever calling Load Game (chapter, hero name, percent, difficulty...). Playtime rides along automatically.",
-		[["detail_name", "String"], ["value", "Variant"]],
-		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
-			"\treturn",
-			"var card: Dictionary = _card_of(data)",
-			"card[detail_name] = value",
-			"_bank_playtime(card)",
-			"data[CARD_KEY] = card",
-			"if not _write_all(data):",
-			"\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)"
-		])))
-	var slot_detail: EventFunction = Lib.exposed_function("slot_detail", "Slot Detail", "Save System", "Reads one card field of any slot straight off disk (your fallback when that slot has no such detail). Nothing is loaded and nothing is applied - safe to call for every tile of a load menu.",
-		[["slot_index", "int"], ["detail_name", "String"], ["fallback", "Variant"]],
-		"\n".join(PackedStringArray([
-			"var card: Variant = _read_path(_slot_path(slot_index), format).get(CARD_KEY, {})",
-			"return (card as Dictionary).get(detail_name, fallback) if card is Dictionary else fallback"
-		])))
-	slot_detail.return_type = TYPE_MAX
-	sheet.functions.append(slot_detail)
-	var slot_playtime: EventFunction = Lib.exposed_function("slot_playtime", "Slot Playtime", "Save System", "Seconds played on that slot, accumulated by this pack and stamped on every save (0 when the slot has none). Feed it to Format Time for a 4h12m tile.",
-		[["slot_index", "int"]],
-		"return float(_card_of(_read_path(_slot_path(slot_index), format)).get(\"playtime\", 0.0))")
-	slot_playtime.return_type = TYPE_FLOAT
-	sheet.functions.append(slot_playtime)
-	Lib.append_function(sheet, "capture_slot_thumbnail", "Capture Slot Thumbnail", "Save System", "Photographs the viewport, shrinks it to tile size and writes it beside the active slot's file, so the picture travels with the save - Copy Slot brings it along, Delete Slot takes it away, and an encryption key covers the picture exactly as it covers the save. Hide your pause menu first.",
-		[["width", "int"], ["height", "int"]],
-		"\n".join(PackedStringArray([
-			"if not is_inside_tree() or get_viewport() == null:",
-			"\t# A headless run has nothing to photograph: warn and keep the old picture rather",
-			"\t# than leaving a black PNG beside the save.",
-			"\tpush_warning(\"Save System: there is no viewport to photograph - the slot keeps its previous picture.\")",
-			"\treturn",
-			"var shot: Image = get_viewport().get_texture().get_image()",
-			"if shot == null:",
-			"\tpush_warning(\"Save System: the viewport has not drawn a frame yet - the slot keeps its previous picture.\")",
-			"\treturn",
-			"shot.resize(maxi(width, 1), maxi(height, 1), Image.INTERPOLATE_LANCZOS)",
-			"var picture_bytes: PackedByteArray = shot.save_png_to_buffer()",
-			"if picture_bytes.is_empty():",
-			"\tpush_warning(\"Save System: the picture could not be encoded - the slot keeps its previous one.\")",
-			"\treturn",
-			"# The picture goes through the SAME door as the save, so an encryption key covers it too: a",
-			"# save nobody may inspect must not ship a readable screenshot of itself beside it. Written to",
-			"# a .tmp and renamed like every save, so a crash leaves the old picture, never half a new one.",
-			"var tmp: String = _thumbnail_path(slot) + \".tmp\"",
-			"var out: FileAccess = _open_write(tmp)",
-			"if out == null:",
-			"\tpush_warning(\"Save System: the slot picture could not be written - the slot keeps its previous one.\")",
-			"\treturn",
-			"out.store_buffer(picture_bytes)",
-			"var write_ok: bool = out.get_error() == Error.OK",
-			"out.close()",
-			"if not write_ok or DirAccess.rename_absolute(tmp, _thumbnail_path(slot)) != Error.OK:",
-			"\tDirAccess.remove_absolute(tmp)",
-			"\tpush_warning(\"Save System: the slot picture could not be written - the slot keeps its previous one.\")"
-		])))
-	var slot_thumbnail: EventFunction = Lib.exposed_function("slot_thumbnail", "Slot Thumbnail", "Save System", "The picture saved beside that slot, ready to drop into a TextureRect (null when the slot has none). Read off disk, so a load menu never loads a game to draw its tiles.",
-		[["slot_index", "int"]],
-		"\n".join(PackedStringArray([
-			"var path: String = _thumbnail_path(slot_index)",
-			"if not FileAccess.file_exists(path):",
-			"\treturn null",
-			"# Read through the same door it was written (encrypted when a key is set) and decoded from",
-			"# the bytes, never through load(): a save picture lives in user://, which the resource",
-			"# importer never sees.",
-			"var file: FileAccess = _open_read(path)",
-			"if file == null:",
-			"\treturn null",
-			"var picture: Image = Image.new()",
-			"if picture.load_png_from_buffer(file.get_buffer(file.get_length())) != Error.OK:",
-			"\treturn null",
-			"return ImageTexture.create_from_image(picture)"
-		])))
-	# TYPE_MAX plus a verbatim return NAME: the sentinel keeps it an expression (a Variant.Type
-	# cannot name an engine class), while the emitted signature stays `-> Texture2D`.
-	slot_thumbnail.return_type = TYPE_MAX
-	slot_thumbnail.return_type_name = "Texture2D"
-	sheet.functions.append(slot_thumbnail)
-	Lib.append_function(sheet, "copy_slot", "Copy Slot", "Save System", "Duplicates one slot's save file (and its picture) onto another slot - branching a save as one row. The destination is overwritten.",
-		[["from_slot", "int"], ["to_slot", "int"]],
-		"\n".join(PackedStringArray([
-			"var source: String = _slot_path(from_slot)",
-			"if not FileAccess.file_exists(source):",
-			"\t_fail_save(to_slot, \"slot %d has no save file to copy.\" % from_slot)",
-			"\treturn",
-			"DirAccess.make_dir_recursive_absolute(_slot_path(to_slot).get_base_dir())",
-			"if DirAccess.copy_absolute(source, _slot_path(to_slot)) != Error.OK:",
-			"\t_fail_save(to_slot, \"slot %d could not be copied to slot %d.\" % [from_slot, to_slot])",
-			"\treturn",
-			"if FileAccess.file_exists(_thumbnail_path(from_slot)):",
-			"\tDirAccess.copy_absolute(_thumbnail_path(from_slot), _thumbnail_path(to_slot))",
-			"_last_problem = \"\""
-		])))
-	var slot_path: EventFunction = Lib.exposed_function("slot_path", "Slot Path", "Save System", "Where that slot's file lives (built from the Save Directory and File Pattern properties). Feed it to Read Save File, File Size or Copy File - the paths the pack uses are no longer private.",
-		[["slot_index", "int"]],
-		"return _slot_path(slot_index)")
-	slot_path.return_type = TYPE_STRING
-	sheet.functions.append(slot_path)
-	# Autosave as a moment, not a metronome: the interval still ships, but the sheet gets to
-	# see the beat, veto it, defer it, pause it, and count down to it.
-	Lib.append_function(sheet, "delay_autosave_by", "Delay Autosave By", "Save System", "Pushes the next autosave out by this many seconds. The beat is deferred, never dropped - use it in the not-now branch of On Autosave Due.",
-		[["seconds", "float"]],
-		"# Relative, because the verb promises to DEFER the beat: setting the clock absolutely\n# would push a mid-interval save out by far more than was asked, and a second, SMALLER\n# delay would then pull the save nearer than the first one put it.\nautosave_accumulator -= absf(seconds)")
-	Lib.append_function(sheet, "pause_autosave", "Pause Autosave", "Save System", "Stops the autosave clock without losing the interval - for a boss fight, a cutscene, or a scene transition. Resume Autosave starts it again.",
-		[],
-		"_autosave_paused = true")
-	Lib.append_function(sheet, "resume_autosave", "Resume Autosave", "Save System", "Starts the autosave clock again after Pause Autosave, from a fresh interval.",
-		[],
-		"_autosave_paused = false\nautosave_accumulator = 0.0")
-	var seconds_until: EventFunction = Lib.exposed_function("seconds_until_autosave", "Seconds Until Autosave", "Save System", "How long until the next autosave beat - for a countdown pip in the corner. 0 when autosave is off or paused.", [],
-		"\n".join(PackedStringArray([
-			"if autosave_interval <= 0.0 or _autosave_paused:",
-			"\treturn 0.0",
-			"return maxf(autosave_interval - autosave_accumulator, 0.0)"
-		])))
-	seconds_until.return_type = TYPE_FLOAT
-	sheet.functions.append(seconds_until)
-	Lib.condition(sheet, "autosave_is_paused", "Autosave Is Paused", "Save System", "Whether Pause Autosave is currently holding the clock.", [],
-		"return _autosave_paused")
-	Lib.condition(sheet, "can_save_now", "Safe To Save Now", "Save System", "Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write).", [],
-		"\n".join(PackedStringArray([
-			"if not FileAccess.file_exists(_slot_path()):",
-			"\treturn true",
-			"_read_all()",
-			"return _last_read_ok"
-		])))
-	# Migration: the moment between reading an old save and applying it. The record-editing
-	# verbs (Data Is Older Than Version, Rename Field, Stamp Data Version) already ship under
-	# Variables: Dictionary - these three only supply the seam they run in.
-	Lib.append_function(sheet, "use_upgraded_save", "Use Upgraded Save", "Save System", "Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file.",
-		[["save_data", "Dictionary"]],
-		"\n".join(PackedStringArray([
-			"# THE deliberate stamp: an ordinary write leaves an older file's version alone, so this is",
-			"# the one call that says \"this record is the current shape now\" and makes the trigger stop",
-			"# firing for that file.",
-			"_upgrade_applied = _write_all(save_data, true)",
-			"if not _upgrade_applied:",
-			"\t_fail_save(slot, \"the upgraded save for slot %d could not be written.\" % slot)"
-		])))
-	var slot_version: EventFunction = Lib.exposed_function("slot_save_version", "Slot Save Version", "Save System", "Which Save Version wrote that slot's file. A file with no stamp counts as 1, so saves written before you ever bumped the number still answer.",
-		[["slot_index", "int"]],
-		"return int(_read_path(_slot_path(slot_index), format).get(VERSION_KEY, 1))")
-	slot_version.return_type = TYPE_INT
-	sheet.functions.append(slot_version)
-	# Damaged saves say a sentence: the data safety was already built (a failed read never
-	# overwrites a good file) - this is the telling.
-	Lib.condition(sheet, "slot_is_readable", "Slot Is Readable", "Save System", "Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one.",
-		[["slot_index", "int"]],
-		"\n".join(PackedStringArray([
-			"if not FileAccess.file_exists(_slot_path(slot_index)):",
-			"\treturn false",
-			"_read_path(_slot_path(slot_index), format)",
-			"return _last_read_ok"
-		])))
-	var last_problem: EventFunction = Lib.exposed_function("last_save_problem", "Last Save Problem", "Save System", "The last save or load failure as one readable sentence (\"\" when both worked). Show it in a label, or log it.", [],
-		"return _last_problem")
-	last_problem.return_type = TYPE_STRING
-	sheet.functions.append(last_problem)
-	var slot_problem: EventFunction = Lib.exposed_function("slot_problem", "Slot Problem", "Save System", "What is wrong with that slot's file, as one readable sentence (\"\" when it reads fine or does not exist) - the tooltip for a greyed-out Continue button.",
-		[["slot_index", "int"]],
-		"\n".join(PackedStringArray([
-			"_read_path(_slot_path(slot_index), format)",
-			"return _last_read_problem"
-		])))
-	slot_problem.return_type = TYPE_STRING
-	sheet.functions.append(slot_problem)
-	# Autoloads in the save, with no list to maintain: the persist group covers scene nodes,
-	# this covers the packs living at /root (Currency Ledger, Upgrades, Prestige, Skin Vault...).
-	Lib.append_function(sheet, "save_all_addons", "Save All Addons", "Save System", "Snapshots every autoload that exposes the save_state seam - Currency Ledger, Upgrades, Prestige, Skin Vault, StatForge and anything you wrote - each under its own autoload name. There is no list to maintain: install a pack, register it, and it is in the save.",
-		[],
-		"save_value(ADDONS_KEY, _collect_addon_states())")
-	Lib.append_function(sheet, "load_all_addons", "Load All Addons", "Save System", "Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence.",
-		[],
-		"\n".join(PackedStringArray([
-			"var states: Variant = load_value(ADDONS_KEY, {})",
-			"if states is Dictionary and is_inside_tree():",
-			"\t_apply_children_states(get_tree().root, states as Dictionary)"
-		])))
-	Lib.condition(sheet, "addon_saves_itself", "Addon Saves Itself", "Save System", "Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam.",
-		[["addon_name", "String"]],
-		"return _collect_addon_states().has(addon_name)")
-	# What stays out of the file, and what the file costs.
-	Lib.append_function(sheet, "never_save_key", "Never Save This Key", "Save System", "Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.",
-		[["key", "String"]],
-		"if not _never_save.has(key):\n\t_never_save.append(key)")
-	var save_size: EventFunction = Lib.exposed_function("save_size", "Save Size", "Save System", "How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save.", [],
-		"return FileAccess.get_file_as_bytes(_slot_path()).size() if FileAccess.file_exists(_slot_path()) else 0")
-	save_size.return_type = TYPE_INT
-	sheet.functions.append(save_size)
-	var save_report: EventFunction = Lib.exposed_function("save_report", "Save Report", "Save System", "A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total.", [],
-		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"var lines: PackedStringArray = PackedStringArray([\"Save slot %d - %d bytes in %d keys\" % [slot, save_size(), data.size()]])",
-			"var weights: Array = []",
-			"for key: Variant in data.keys():",
-			"\tweights.append({\"key\": str(key), \"bytes\": var_to_str(data[key]).length()})",
-			"weights.sort_custom(func(first: Dictionary, second: Dictionary) -> bool: return int(first[\"bytes\"]) > int(second[\"bytes\"]))",
-			"for entry: Dictionary in weights:",
-			"\tlines.append(\"\\t%s  %d\" % [str(entry[\"key\"]), int(entry[\"bytes\"])])",
-			"if not _never_save.is_empty():",
-			"\tlines.append(\"never saved: %s\" % \", \".join(_never_save))",
-			"return \"\\n\".join(lines)"
-		])))
-	save_report.return_type = TYPE_STRING
-	sheet.functions.append(save_report)
-	# A backup ring for game saves. Not about crashes mid-write (the atomic write already makes
-	# a torn file impossible) - about a save that was written perfectly and is wrong.
-	Lib.append_function(sheet, "restore_slot_from_backup", "Restore Slot From Backup", "Save System", "Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.",
-		[["slot_index", "int"], ["how_many_back", "int"]],
-		"\n".join(PackedStringArray([
-			"var ring: PackedStringArray = _backups_for(slot_index)",
-			"if how_many_back < 1 or how_many_back > ring.size():",
-			"\t_fail_load(slot_index, \"slot %d has no backup %d to restore - it keeps %d.\" % [slot_index, how_many_back, ring.size()])",
-			"\treturn",
-			"# Read the wanted bytes BEFORE backing the current file up: that push can prune the",
-			"# oldest ring entry, which may be the very one being restored.",
-			"var wanted: PackedByteArray = FileAccess.get_file_as_bytes(ring[how_many_back - 1])",
-			"if wanted.is_empty():",
-			"\t_fail_load(slot_index, \"backup %d of slot %d could not be read.\" % [how_many_back, slot_index])",
-			"\treturn",
-			"# Restored through the same .tmp-then-rename the six write backends use, so a crash",
-			"# mid-restore leaves the current save intact rather than a half file.",
-			"var tmp: String = _slot_path(slot_index) + \".tmp\"",
-			"var out: FileAccess = FileAccess.open(tmp, FileAccess.WRITE)",
-			"if out == null:",
-			"\t_fail_load(slot_index, \"slot %d could not be written while restoring its backup.\" % slot_index)",
-			"\treturn",
-			"out.store_buffer(wanted)",
-			"var write_ok: bool = out.get_error() == Error.OK",
-			"out.close()",
-			"if not write_ok:",
-			"\tDirAccess.remove_absolute(tmp)",
-			"\t_fail_load(slot_index, \"slot %d could not be written while restoring its backup.\" % slot_index)",
-			"\treturn",
-			"# A backup is bytes on disk like any other file, and a restore REPLACES a working save with",
-			"# them - so it is read BACK before it is trusted. An entry that will not parse, or that",
-			"# parses to nothing, leaves the live slot exactly where it was instead of destroying it in",
-			"# the name of safety (the ring only ever holds saves that were overwritten, so an entry",
-			"# holding no keys is wreckage, not a save somebody wants back).",
-			"var restored: Dictionary = _read_path(tmp, format)",
-			"if not _last_read_ok or restored.is_empty():",
-			"\tvar damage: String = _last_read_problem if not _last_read_ok else \"it holds no save data\"",
-			"\tDirAccess.remove_absolute(tmp)",
-			"\t_fail_load(slot_index, \"backup %d of slot %d is damaged (%s) - slot %d was left alone.\" % [how_many_back, slot_index, damage, slot_index])",
-			"\treturn",
-			"_push_backup(slot_index)",
-			"if DirAccess.rename_absolute(tmp, _slot_path(slot_index)) != Error.OK:",
-			"\t_fail_load(slot_index, \"slot %d could not be replaced by its backup.\" % slot_index)",
-			"\treturn",
-			"_last_problem = \"\""
-		])))
-	var backup_count: EventFunction = Lib.exposed_function("slot_backup_count", "Slot Backup Count", "Save System", "How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet).",
-		[["slot_index", "int"]],
-		"return _backups_for(slot_index).size()")
-	backup_count.return_type = TYPE_INT
-	sheet.functions.append(backup_count)
-	# New Game Plus: wipe the slot, keep what you chose.
-	Lib.append_function(sheet, "carry_value_into_next_run", "Carry Value Into Next Run", "Save System", "Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.",
-		[["key", "String"]],
-		"if not _carried.has(key):\n\t_carried.append(key)")
-	Lib.append_function(sheet, "start_new_run", "Start New Run", "Save System", "Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.",
-		[["slot_index", "int"]],
-		"\n".join(PackedStringArray([
-			"var previous: Dictionary = _read_path(_slot_path(slot_index), format)",
-			"if not _last_read_ok:",
-			"\t_fail_save(slot_index, \"slot %d could not be read - refusing to reset it (%s).\" % [slot_index, _last_read_problem])",
-			"\treturn",
-			"var kept: Dictionary = {}",
-			"for key: String in _carried:",
-			"\tif previous.has(key):",
-			"\t\tkept[key] = previous[key]",
-			"kept[RUN_KEY] = int(previous.get(RUN_KEY, 1)) + 1",
-			"if previous.get(CARD_KEY, null) is Dictionary:",
-			"\tkept[CARD_KEY] = previous[CARD_KEY]",
-			"# The carried keys came out of the OLD file, so the new run holds the old shape: its stamp",
-			"# travels with them and a pending migration still runs on the next load.",
-			"if previous.has(VERSION_KEY):",
-			"\tkept[VERSION_KEY] = previous[VERSION_KEY]",
-			"# _write_all always writes the ACTIVE slot, so the target is borrowed and handed",
-			"# straight back - the trigger fires with the sheet's normal active slot restored.",
-			"var previous_slot: int = slot",
-			"slot = slot_index",
-			"var written: bool = _write_all(kept)",
-			"slot = previous_slot",
-			"if written:",
-			"\tnew_run_started.emit(slot_index, int(kept[RUN_KEY]))",
-			"else:",
-			"\t_fail_save(slot_index, \"slot %d could not be written for the new run.\" % slot_index)"
-		])))
-	var run_number: EventFunction = Lib.exposed_function("run_number", "Run Number", "Save System", "1 on a fresh save, 2 after the first New Game Plus, and so on - the number every NG+ banner, difficulty curve and you-have-beaten-this-N-times line is really asking for.", [],
-		"return int(_read_all().get(RUN_KEY, 1))")
-	run_number.return_type = TYPE_INT
-	sheet.functions.append(run_number)
-	# Single-key housekeeping. The pack could refuse a key forever (Never Save This Key) or take
-	# the whole file away (Delete Slot), and nothing in between - so forgetting one tutorial flag
-	# meant nuking a player's slot. Removal raises its outcome as a row either way: the key left,
-	# or it was never there.
-	Lib.append_function(sheet, "remove_save_key", "Remove Save Key", "Save System", "Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.",
-		[["key", "String"]],
-		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
-			"\treturn",
-			"if not data.has(key):",
-			"\tsave_key_missing.emit(key, slot)",
-			"\treturn",
-			"data.erase(key)",
-			"if _write_all(data):",
-			"\tkey_removed.emit(key, slot)",
-			"else:",
-			"\t_fail_save(slot, \"%s could not be removed from slot %d - is the save folder writable?\" % [key, slot])"
-		])))
-	Lib.append_function(sheet, "clear_slot_keys", "Clear Slot Keys", "Save System", "Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.",
-		[],
-		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_save(slot, \"slot %d could not be read - refusing to clear it (%s).\" % [slot, _last_read_problem])",
-			"\treturn",
-			"var kept: Dictionary = {}",
-			"var removed: Array = []",
-			"for stored: Variant in data.keys():",
-			"\t# The pack's own reserved keys stay: the card a load menu reads without loading, the",
-			"\t# stamp a migration needs, and the run counter. Everything the game wrote goes.",
-			"\tif str(stored) == CARD_KEY or str(stored) == VERSION_KEY or str(stored) == RUN_KEY:",
-			"\t\tkept[stored] = data[stored]",
-			"\telse:",
-			"\t\tremoved.append(str(stored))",
-			"if removed.is_empty():",
-			"\treturn",
-			"if not _write_all(kept):",
-			"\t_fail_save(slot, \"slot %d could not be cleared - is the save folder writable?\" % slot)",
-			"\treturn",
-			"# Emitted only once the file is on disk, and once per key, so a handler watching one key",
-			"# hears about that key rather than about a slot-wide event it has to decode.",
-			"for gone: String in removed:",
-			"\tkey_removed.emit(gone, slot)"
-		])))
-	Lib.append_function(sheet, "check_save_key", "Check Save Key", "Save System", "Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.",
-		[["key", "String"]],
-		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_load(slot, \"slot %d could not be read - %s.\" % [slot, _last_read_problem])",
-			"\treturn",
-			"if data.has(key):",
-			"\tkey_loaded.emit(key, slot)",
-			"else:",
-			"\tsave_key_missing.emit(key, slot)"
-		])))
-	# The write window, as a question a row can ask. Honest about what this pack is: the write is
-	# synchronous, so these are true inside the window and nowhere else - a re-entrancy guard for
-	# a second writer or a quit button, not a spinner for a background job.
-	Lib.condition(sheet, "is_saving", "Is Saving", "Save System", "Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.", [],
-		"return _write_depth > 0")
-	Lib.condition(sheet, "is_loading", "Is Loading", "Save System", "Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.", [],
-		"return _load_depth > 0")
-	Lib.condition(sheet, "save_key_is", "Save Key Is", "Save System", "Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.",
-		[["key", "String"], ["value", "Variant"]],
-		"return _read_all().get(key, null) == value")
-	# Counted and indexed reads. List Save Keys already gives the loop; these are the two answers
-	# a loop cannot give: a "12 keys saved" label and a numbered inspector row.
-	var key_count: EventFunction = Lib.exposed_function("save_key_count", "Save Key Count", "Save System", "How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.", [],
-		"return _read_all().size()")
-	key_count.return_type = TYPE_INT
-	sheet.functions.append(key_count)
-	var key_at: EventFunction = Lib.exposed_function("save_key_at", "Save Key At", "Save System", "The key at this position in the active slot, for a numbered or paged list (\"\" when the position is past the end). Loop List Save Keys instead when you just want them all.",
-		[["index", "int"]],
-		"\n".join(PackedStringArray([
-			"var keys: Array = _read_all().keys()",
-			"return str(keys[index]) if index >= 0 and index < keys.size() else \"\""
-		])))
-	key_at.return_type = TYPE_STRING
-	sheet.functions.append(key_at)
-	# Authored row sentences for the new verbs (the event-sheet styled read).
-	Lib.verb_sentences(sheet, {
+	src.note("Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it.")
+	src.block("block_1")
+	src.on_process()
+	src.block("block_2")
+	src.block("block_3")
+	src.verb("save_value", "Save Value",
+		"Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.",
+		[["key", "String"], ["value", "Variant"]])
+	src.expression("load_value", "Load Value",
+		"Reads any value (your default when missing).",
+		[["key", "String"], ["default_value", "Variant"]], TYPE_MAX)
+	src.verb("save_number", "Save Number",
+		"Writes a number under the key (active slot).",
+		[["key", "String"], ["value", "float"]])
+	src.expression("load_number", "Load Number",
+		"Reads a number (0 when missing).",
+		[["key", "String"]], TYPE_FLOAT)
+	src.verb("save_text", "Save Text",
+		"Writes a string under the key (active slot).",
+		[["key", "String"], ["value", "String"]])
+	src.expression("load_text", "Load Text",
+		"Reads a string (\"\" when missing).",
+		[["key", "String"]], TYPE_STRING)
+	src.condition("has_save_key", "Has Save Key",
+		"Whether the key exists in the active slot.",
+		[["key", "String"]])
+	src.expression("read_all", "Read All",
+		"Reads the whole active slot as one Dictionary (every saved key and value).",
+		[], TYPE_DICTIONARY)
+	src.expression("save_keys", "List Save Keys",
+		"The keys stored in the active slot (loop them to read a whole save).",
+		[], TYPE_ARRAY)
+	src.expression("read_file", "Read Save File",
+		"Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.",
+		[["path", "String"], ["file_format", "String"]], TYPE_DICTIONARY)
+	src.expression("save_file_format", "Save File Format",
+		"Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or \"\" when it is missing or unrecognised. Feed it to Read Save File.",
+		[["path", "String"]], TYPE_STRING)
+	src.condition("save_file_is_format", "Save File Is Format",
+		"Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).",
+		[["path", "String"], ["expected_format", "String"]])
+	src.condition("save_format_is", "Save Format Is",
+		"Whether the active save format (the Inspector format property) equals the given one.",
+		[["expected_format", "String"]])
+	src.verb("delete_slot", "Delete Slot",
+		"Removes the active slot's save file (and its slot picture, which lives beside it).",
+		[])
+	src.verb("save_game", "Save Game",
+		"Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).",
+		[])
+	src.verb("load_game", "Load Game",
+		"Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.",
+		[])
+	src.verb("save_node_state", "Save Node State",
+		"Snapshots a node and its behaviors (any child with save_state) under the key.",
+		[["node", "Node"], ["key", "String"]])
+	src.verb("load_node_state", "Load Node State",
+		"Restores a node and its behaviors from the key's snapshot.",
+		[["node", "Node"], ["key", "String"]])
+	src.verb("save_group_state", "Save Group State",
+		"Snapshots every node in the scene-tree group (and their behaviors) under the key.",
+		[["group", "String"], ["key", "String"]])
+	src.verb("load_group_state", "Load Group State",
+		"Restores the group snapshot saved under the key (nodes matched by scene path).",
+		[["key", "String"]])
+	src.verb("save_singleton_state", "Save Singleton State",
+		"Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.",
+		[["singleton_name", "String"], ["key", "String"]])
+	src.verb("load_singleton_state", "Load Singleton State",
+		"Restores an autoload addon's snapshot from the key.",
+		[["singleton_name", "String"], ["key", "String"]])
+	src.condition("slot_exists", "Slot Exists",
+		"Whether the slot has a save file.",
+		[["slot_index", "int"]])
+	src.expression("list_slots", "List Slots",
+		"Slot numbers that have save files (for menus).",
+		[], TYPE_ARRAY)
+	src.expression("slot_modified_time", "Slot Modified Time",
+		"Unix mtime of the slot's file (0 when missing).",
+		[["slot_index", "int"]], TYPE_INT)
+	src.verb("set_slot_detail", "Set Slot Detail",
+		"Writes one line of the active slot's card - the header a load menu reads without ever calling Load Game (chapter, hero name, percent, difficulty...). Playtime rides along automatically.",
+		[["detail_name", "String"], ["value", "Variant"]])
+	src.expression("slot_detail", "Slot Detail",
+		"Reads one card field of any slot straight off disk (your fallback when that slot has no such detail). Nothing is loaded and nothing is applied - safe to call for every tile of a load menu.",
+		[["slot_index", "int"], ["detail_name", "String"], ["fallback", "Variant"]], TYPE_MAX)
+	src.expression("slot_playtime", "Slot Playtime",
+		"Seconds played on that slot, accumulated by this pack and stamped on every save (0 when the slot has none). Feed it to Format Time for a 4h12m tile.",
+		[["slot_index", "int"]], TYPE_FLOAT)
+	src.verb("capture_slot_thumbnail", "Capture Slot Thumbnail",
+		"Photographs the viewport, shrinks it to tile size and writes it beside the active slot's file, so the picture travels with the save - Copy Slot brings it along, Delete Slot takes it away, and an encryption key covers the picture exactly as it covers the save. Hide your pause menu first.",
+		[["width", "int"], ["height", "int"]])
+	src.object_expression("slot_thumbnail", "Slot Thumbnail",
+		"The picture saved beside that slot, ready to drop into a TextureRect (null when the slot has none). Read off disk, so a load menu never loads a game to draw its tiles.",
+		[["slot_index", "int"]], "Texture2D")
+	src.verb("copy_slot", "Copy Slot",
+		"Duplicates one slot's save file (and its picture) onto another slot - branching a save as one row. The destination is overwritten.",
+		[["from_slot", "int"], ["to_slot", "int"]])
+	src.expression("slot_path", "Slot Path",
+		"Where that slot's file lives (built from the Save Directory and File Pattern properties). Feed it to Read Save File, File Size or Copy File - the paths the pack uses are no longer private.",
+		[["slot_index", "int"]], TYPE_STRING)
+	src.verb("delay_autosave_by", "Delay Autosave By",
+		"Pushes the next autosave out by this many seconds. The beat is deferred, never dropped - use it in the not-now branch of On Autosave Due.",
+		[["seconds", "float"]])
+	src.verb("pause_autosave", "Pause Autosave",
+		"Stops the autosave clock without losing the interval - for a boss fight, a cutscene, or a scene transition. Resume Autosave starts it again.",
+		[])
+	src.verb("resume_autosave", "Resume Autosave",
+		"Starts the autosave clock again after Pause Autosave, from a fresh interval.",
+		[])
+	src.expression("seconds_until_autosave", "Seconds Until Autosave",
+		"How long until the next autosave beat - for a countdown pip in the corner. 0 when autosave is off or paused.",
+		[], TYPE_FLOAT)
+	src.condition("autosave_is_paused", "Autosave Is Paused",
+		"Whether Pause Autosave is currently holding the clock.",
+		[])
+	src.condition("can_save_now", "Safe To Save Now",
+		"Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write).",
+		[])
+	src.verb("use_upgraded_save", "Use Upgraded Save",
+		"Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file.",
+		[["save_data", "Dictionary"]])
+	src.expression("slot_save_version", "Slot Save Version",
+		"Which Save Version wrote that slot's file. A file with no stamp counts as 1, so saves written before you ever bumped the number still answer.",
+		[["slot_index", "int"]], TYPE_INT)
+	src.condition("slot_is_readable", "Slot Is Readable",
+		"Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one.",
+		[["slot_index", "int"]])
+	src.expression("last_save_problem", "Last Save Problem",
+		"The last save or load failure as one readable sentence (\"\" when both worked). Show it in a label, or log it.",
+		[], TYPE_STRING)
+	src.expression("slot_problem", "Slot Problem",
+		"What is wrong with that slot's file, as one readable sentence (\"\" when it reads fine or does not exist) - the tooltip for a greyed-out Continue button.",
+		[["slot_index", "int"]], TYPE_STRING)
+	src.verb("save_all_addons", "Save All Addons",
+		"Snapshots every autoload that exposes the save_state seam - Currency Ledger, Upgrades, Prestige, Skin Vault, StatForge and anything you wrote - each under its own autoload name. There is no list to maintain: install a pack, register it, and it is in the save.",
+		[])
+	src.verb("load_all_addons", "Load All Addons",
+		"Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence.",
+		[])
+	src.condition("addon_saves_itself", "Addon Saves Itself",
+		"Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam.",
+		[["addon_name", "String"]])
+	src.verb("never_save_key", "Never Save This Key",
+		"Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.",
+		[["key", "String"]])
+	src.expression("save_size", "Save Size",
+		"How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save.",
+		[], TYPE_INT)
+	src.expression("save_report", "Save Report",
+		"A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total.",
+		[], TYPE_STRING)
+	src.verb("restore_slot_from_backup", "Restore Slot From Backup",
+		"Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.",
+		[["slot_index", "int"], ["how_many_back", "int"]])
+	src.expression("slot_backup_count", "Slot Backup Count",
+		"How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet).",
+		[["slot_index", "int"]], TYPE_INT)
+	src.verb("carry_value_into_next_run", "Carry Value Into Next Run",
+		"Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.",
+		[["key", "String"]])
+	src.verb("start_new_run", "Start New Run",
+		"Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.",
+		[["slot_index", "int"]])
+	src.expression("run_number", "Run Number",
+		"1 on a fresh save, 2 after the first New Game Plus, and so on - the number every NG+ banner, difficulty curve and you-have-beaten-this-N-times line is really asking for.",
+		[], TYPE_INT)
+	src.verb("remove_save_key", "Remove Save Key",
+		"Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.",
+		[["key", "String"]])
+	src.verb("clear_slot_keys", "Clear Slot Keys",
+		"Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.",
+		[])
+	src.verb("check_save_key", "Check Save Key",
+		"Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.",
+		[["key", "String"]])
+	src.condition("is_saving", "Is Saving",
+		"Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.",
+		[])
+	src.condition("is_loading", "Is Loading",
+		"Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.",
+		[])
+	src.condition("save_key_is", "Save Key Is",
+		"Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.",
+		[["key", "String"], ["value", "Variant"]])
+	src.expression("save_key_count", "Save Key Count",
+		"How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.",
+		[], TYPE_INT)
+	src.expression("save_key_at", "Save Key At",
+		"The key at this position in the active slot, for a numbered or paged list (\"\" when the position is past the end). Loop List Save Keys instead when you just want them all.",
+		[["index", "int"]], TYPE_STRING)
+	Lib.verb_sentences(src.sheet, {
 		"set_slot_detail": "remember [b]{detail_name}[/b] = [b]{value}[/b] on this slot",
 		"capture_slot_thumbnail": "photograph this slot at [b]{width}[/b] x [b]{height}[/b]",
 		"copy_slot": "copy slot [b]{from_slot}[/b] onto slot [b]{to_slot}[/b]",
@@ -1298,11 +242,10 @@ static func build() -> bool:
 		"never_save_key": "never put [b]{key}[/b] in a save",
 		"restore_slot_from_backup": "put slot [b]{slot_index}[/b] back to backup [b]{how_many_back}[/b]",
 		"carry_value_into_next_run": "carry [b]{key}[/b] into the next run",
+		"start_new_run": "start a new run in slot [b]{slot_index}[/b]",
 		"remove_save_key": "forget [b]{key}[/b] from this slot",
 		"clear_slot_keys": "forget everything this slot saved",
 		"check_save_key": "ask whether [b]{key}[/b] is saved",
-		"start_new_run": "start a new run in slot [b]{slot_index}[/b]"
 	})
-	# The pack's hero verbs: starred + bold at the top of their picker section.
-	Lib.feature_verbs(sheet, ["save_game", "load_game", "save_all_addons"])
-	return Lib.save_pack(sheet, "res://eventsheet_addons/save_system/save_system_addon")
+	Lib.feature_verbs(src.sheet, ["save_game", "load_game", "save_all_addons"])
+	return Lib.publish(src, "res://eventsheet_addons/save_system/save_system_addon")
