@@ -134,7 +134,9 @@ from `tools/build_help_bundle.gd`).
   parse-checked and breakpointable instead of quoted and backslash-escaped. Those files spell their
   blank lines the EMITTER's way (one between members), which the style gate exempts by name and no
   one may re-space by hand. They are ordinary GDScript under `tools/`, invisible to the provider
-  scan, the suite's discovery and the docs index, and `tests/pack_source_test.gd` asserts each.
+  scan, the suite's discovery and the docs index; the one reading that DOES see them is the "This
+  editor" folder listing, which shelves them with the pack recipes on purpose.
+  `tests/pack_source_test.gd` asserts each of those, the visible one included.
 
 ## EventSheet editor structure
 

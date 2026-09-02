@@ -18,6 +18,11 @@
 #      have to keep walking past it - the provider scan (which publishes vocabulary), the suite's
 #      own discovery, the documentation index, and the style gate. Three of them are addressed by
 #      where the tree lives; the fourth was taught about it on purpose, and that is asserted too.
+#      ONE READING DOES SEE THEM, and should: the "This editor" folder listing classifies anything
+#      under the pack-builder folder as a pack recipe, so these files appear there beside the
+#      builders they belong to. That listing is folders rather than a list of files precisely so a
+#      new file is included by an existing rule, it is gated on being this plugin's own repository,
+#      and it publishes no vocabulary - so it is pinned here as intended rather than fixed.
 @tool
 class_name PackSourceTest
 extends RefCounted
@@ -26,6 +31,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 const AddonScanner := preload("res://addons/eventsheet/ace/addon_scanner.gd")
 const StyleGuide := preload("res://tests/style_guide_test.gd")
+const ThisEditorFacts := preload("res://addons/eventsheet/editor/interaction/this_editor_facts.gd")
 
 const SOURCE_ROOT := "res://tools/pack_builders/src"
 const FIXTURE_DIR := "user://eventsheets_pack_source_fixture"
@@ -188,6 +194,12 @@ static func _folders_are_not_packs() -> bool:
 	all_passed = _pins("no source file is a document the index must list", documented, "") and all_passed
 	all_passed = _pins("the style gate knows the tree spells its blanks the emitter's way",
 		StyleGuide.SINGLE_BLANK_TREE, SOURCE_ROOT + "/") and all_passed
+	# The one reading that does see them, pinned so "invisible" is never read as "invisible to
+	# everything". A source file is shelved with the builders it belongs to, which is where a
+	# reader of this repository would look for it.
+	all_passed = _pins("the This editor listing shelves a source file with the pack recipes",
+		ThisEditorFacts.role_for(SOURCE_ROOT + "/wrap/wrap.gd", "extends Node2D\n"),
+		"pack_recipes") and all_passed
 	return all_passed
 
 
