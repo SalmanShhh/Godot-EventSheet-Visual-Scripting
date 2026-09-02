@@ -895,3 +895,77 @@ static func sized_list(rows_high: float) -> ItemList:
 	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return list
+
+
+# ── The typed field makers ────────────────────────────────────────────────────────────────────
+#
+# A dialog field used to be five gestures spread over four lines - make, configure, wire, wrap in
+# a form_row, read back on accept - and the read-back lived in a different function from the
+# build, which is how a field gets added to one and forgotten in the other. These say the field
+# once, as a typed EventSheetFieldSpec, and form() builds a whole list of them THROUGH THE SAME
+# HELPERS above, so a dialog that changes over does not move a pixel.
+#
+# The kind is a METHOD here, not a string argument: text() and check() are different functions, so
+# a misspelled kind cannot compile. Modifiers chain off the returned spec, so they cannot be
+# misspelled either, and the editor's own completion lists the vocabulary from the dot.
+#
+# The old raw path stays entirely legal. A field with live gating, a bespoke widget or a picker of
+# its own is still built by hand beside the spec'd ones - a spec is for the fields that are only
+# what they say they are.
+
+
+## A single line of text. `field_id` is what values() answers under; `label` is the words at the
+## left of the row (empty for a field that fills the row on its own).
+static func text_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.TEXT)
+
+
+## A number in a SpinBox, bounded with at_least() / at_most() and stepped with stepping().
+static func number_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.NUMBER)
+
+
+## A dropdown of fixed choices. Fill it with options(labels) - or options(labels, stored) when the
+## value a choice writes is not the words it shows.
+static func options_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.OPTIONS)
+
+
+## A tick. Give it a label for a "Label  [x]" row, or leave the label empty and pass the words as
+## default() for a tick that carries its own text.
+static func check_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.CHECK)
+
+
+## A path typed into a line edit - a TEXT field by another name, kept distinct so a reader (and a
+## later completion source) can tell a path field from a prose one.
+static func path_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.PATH)
+
+
+## A multi-line GDScript box, hardened by configure_code_editor the way every editable code field
+## in the plugin is.
+static func code_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.CODE)
+
+
+## Free text with the plugin's own ▾ picker beside it. Give it suggesting(provider) - a Callable
+## returning the CURRENT suggestions - and it attaches through autocomplete_combo() above, so it
+## is the same combo the ACE params dialog uses.
+static func choice_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
+	return _spec(field_id, label, EventSheetFieldSpec.Kind.CHOICE)
+
+
+## Builds `specs` into `host` in order and returns the form that reads them back. `owner_name` is
+## what an error about an unknown or duplicated field id calls this form.
+static func form(host: Control, specs: Array[EventSheetFieldSpec],
+		owner_name: String = "form") -> EventSheetFieldForm:
+	return EventSheetFieldForm.new().fill(host, specs, owner_name)
+
+
+static func _spec(field_id: String, label: String, kind: EventSheetFieldSpec.Kind) -> EventSheetFieldSpec:
+	var spec: EventSheetFieldSpec = EventSheetFieldSpec.new()
+	spec.id = field_id
+	spec.label = label
+	spec.kind = kind
+	return spec
