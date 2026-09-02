@@ -104,8 +104,8 @@
 This section is for whoever works on the plugin. Nothing in it changes what a project compiles to,
 what a sheet reads like, or one user-visible string, which is why the What's new page a reader opens
 now drops a Maintenance section whole rather than showing somebody a shrink they cannot see.
-Measured across the wave, outside the three generated trees: **-993 lines** of hand-written GDScript
-(**+3,333 / -4,326**), of which `tests/` is **-1,523** and the installed plugin - everything under
+Measured across the wave, outside the three generated trees: **-950 lines** of hand-written GDScript
+(**+3,376 / -4,326**), of which `tests/` is **-1,484** and the installed plugin - everything under
 `addons/` except the doc bundle - is **-6**.
 
 - **Five hundred copies of one assertion become one call, and there is one assertion file.** Nearly
@@ -170,7 +170,7 @@ Measured across the wave, outside the three generated trees: **-993 lines** of h
   the several hundred entries the change was not about. Unset, nothing changes.
 - **The iteration list can see the file the suite asserts through.** `tools/pick_tests.gd` had two
   rules and neither could read a shared helper under `tests/`: asked what an edit to `support.gd`
-  could have broken it named the two gates that pick on any `.gd` at all, while 508 tests assert
+  could have broken it named the two gates that pick on any `.gd` at all, while 507 test files assert
   through that file, so an `-Iterate` run could have gone green over a broken `check()`. A third rule
   reads the dependants out of the test files themselves - not a list, which would be wrong the first
   time somebody preloads a helper somewhere new.
