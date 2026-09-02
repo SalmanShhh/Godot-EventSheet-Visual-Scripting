@@ -122,15 +122,18 @@ The New Event Sheet dialog is the worked example, and its rendered preview befor
 change is byte-identical.
 
 **And then the rollout stopped, on the measurement.** Converting that dialog cost **+5 lines**, not
-saved them: two field sites, seventeen candidate lines in and twenty-one out. Priced in whole field
-sites over the 90 that remain across the dialogs area, the completed rollout lands between **+352**
-and **+749** on the installed plugin - the optimistic end being the one where every remaining site
-converts as well as the single best block in the tree, `variable_dialog`'s twelve-field advanced
-tier, hand-priced at -23 lines. The seam itself is 702 hand-written lines, 523 of them shipped. The
-projection this replaces had counted 265 raw control constructions at a whole build block each; most
-of those 265 are not fields but rows built inside loops over data - a shelf of pack buttons, a table
-with one row per word - and a loop already says its row once. The field sites are the 92 form-row
-calls, and a form-row call is the fourth line of a four-line site, not the whole of it. The two
+saved them: two field sites, seventeen candidate lines in and twenty-one out. The dialogs area holds
+91 form-row sites, of which **71** name their field with a literal - the ones a spec table can
+describe at all; the other 20 are built inside loops over data and already say their row once.
+Priced in whole field sites over those 71, the completed rollout lands between **+388** and **+701**
+on the installed plugin - the optimistic end being the one where every remaining site converts as
+well as the single best block in the tree, `variable_dialog`'s twelve-field advanced tier,
+hand-priced at -23 lines over 12 sites. The seam itself is 702 hand-written lines, 523 of them
+shipped. The projection this replaces had counted 265 raw control constructions at a whole build
+block each; most of those 265 are not fields at all but shelf buttons, result cards and per-knob
+rows - `add_behavior_dialog` has exactly one static field in it, and `words_settings_dialog` has
+none, its whole table being a loop over the word keys. And a form-row call is the fourth line of a
+four-line site, not the whole of it. The two
 lines a spec truly absorbs are the constructor and the parenting: `.placeholder("x")` is exactly as
 long as `.placeholder_text = "x"`. The seam ships anyway, as the door every new dialog comes through
 and with the old raw path still entirely legal, but it is an instrument and it is paid for in full
