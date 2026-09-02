@@ -105,12 +105,7 @@ from `tools/build_help_bundle.gd`).
   spelled after `EVENTFORGE_TEST_ONLY` so the two compose.
 - Maintenance tools: `tools/` - pack builders in `tools/pack_builders/` (auto-registered by glob,
   no list to maintain; run by `build_sample_behaviors.gd`, which regenerates EVERY pack - prefer
-  a single-builder throwaway script for one pack). A builder may hold its behaviour code as a
-  folder of REAL `.gd` files under `tools/pack_builders/src/<pack>/` and assemble it with
-  `Lib.pack_from_source` - a piece is a `#region` pair around top-level code or the body of a
-  top-level `func`, so the code is highlighted, parse-checked and breakpointable instead of
-  quoted and backslash-escaped. Those files spell their blank lines the EMITTER's way (one
-  between members), which the style gate exempts by name and no one may re-space by hand; `build_examples.gd` (showcases, byte-stable);
+  a single-builder throwaway script for one pack); `build_examples.gd` (showcases, byte-stable);
   `audit_addons.gd` (pack drift + spelling + successor gates); `vocabulary_doc.gd`;
   `harvest_translations.gd` (the nine translation CSVs' deriver: the translate()-literal reader, the
   l10n obligation table and the live-editor walk all live here, and both l10n gates read them from
@@ -120,12 +115,26 @@ from `tools/build_help_bundle.gd`).
   is translated ratchet-wise, on purpose);
   `project_doctor.gd` (CLI shim); `verify_sheets.gd` (the four-contract repository gate: parses,
   round-trips, unique tokens, no unanswered migrations - read-only, exit-coded, wired into CI);
-  `dump_registry.gd` (every descriptor in one sorted text form - the diff receipt for pack
-  updates and the identity proof for vocabulary-touching refactors; `-- words` prints the WORDING
-  as a second text, and a migrated module ships only when BOTH are byte-identical to the verbose
-  form's - `prove_registry_identity.ps1 -Base <sha>` runs that gate through a detached worktree);
-  `measure_ledger.ps1` (the maintainability campaign's ledger: hand-written GDScript and the shipped
-  plugin, sized and diffed over pinned pathspecs, per area).
+  `dump_registry.gd` (the vocabulary as text - the diff receipt for pack updates and the identity
+  proof for vocabulary-touching refactors. It writes FOUR texts and THE GATE IS ALL FOUR: the
+  default identity line; `-- words` for the wording a picker reads out; `-- fields` for what a verb
+  OFFERS (each parameter's options, autocomplete, lens, option-label and required flags, plus the
+  descriptor's node type, signal, return type and featured / project-scoped / deprecated flags),
+  none of which moves an emitted byte; and `-- order`, the only unsorted text, for the registration
+  sequence and the lifter's reverse index, which the three sorted ones are structurally blind to. A
+  migrated module ships only when all four are byte-identical to the verbose form's -
+  `prove_registry_identity.ps1 -Base <sha>` runs that gate through a detached worktree, and names
+  the instrument files it copied into the base, because those are the one thing it cannot see);
+  `measure_ledger.ps1` (the maintainability campaign's ledger: every hand-maintained language -
+  GDScript and PowerShell - and the shipped plugin, sized and diffed over pinned pathspecs, per
+  area).
+- A pack builder may hold its behaviour code as a folder of REAL `.gd` files under
+  `tools/pack_builders/src/<pack>/`, assembled with `Lib.pack_from_source` - a piece is a `#region`
+  pair around top-level code or the body of a top-level `func`, so the code is highlighted,
+  parse-checked and breakpointable instead of quoted and backslash-escaped. Those files spell their
+  blank lines the EMITTER's way (one between members), which the style gate exempts by name and no
+  one may re-space by hand. They are ordinary GDScript under `tools/`, invisible to the provider
+  scan, the suite's discovery and the docs index, and `tests/pack_source_test.gd` asserts each.
 
 ## EventSheet editor structure
 

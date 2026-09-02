@@ -257,8 +257,7 @@ when running that command would change anything.
   (**+1,734 / -1,646**) on 1,771 lines of builder holding 75 authored verbs; lines per verb went
   **23.6 -> 24.8**, and the seam is a further **+288**. The escaped form was ALREADY one line per
   line of code, so the tax it charges is characters rather than lines, and a faithful real-file form
-  adds a signature line and a blank line per piece plus a line for every `
-` that used to be
+  adds a signature line and a blank line per piece plus a line for every newline that used to be
   escaped inside a body. Projected for the remaining 108 both ways, so the band is visible: **+520**
   scaled by verbs, **+1,346** scaled by builder lines. The rollout stops there on that projection -
   this wave is a shrink - and the seam stands as the door every NEW pack should come through, where
