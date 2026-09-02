@@ -500,7 +500,14 @@ const JUICE_SET_TICKER_BODY := "var old_tween: Tween = _ticker_tweens.get(ticker
 #     ends where its code ends.
 #   - Everything else outside a region is scaffolding: the `extends`, and the members the pack
 #     declares for itself at build time (its host, its Inspector variables). Scaffolding is what
-#     lets the editor check the file; it never reaches the pack.
+#     lets the editor check the file; it never reaches the pack. A `static func` is scaffolding
+#     too - only a plain `func` at column 0 opens a piece - so a helper the pack is meant to emit
+#     goes in a region, not in a static.
+#   - A FUNC PIECE ENDS AT THE FIRST LINE THAT IS NOT BLANK AND NOT INDENTED, which is how the
+#     body knows where it stops - and which means a `#` comment written at COLUMN 0 inside a body
+#     ends the piece there, with the rest of that body becoming scaffolding nobody emits. Comment
+#     a body's lines at the body's own indentation. The same rule makes a space-indented line
+#     (rather than a tab-indented one) end a piece, which is one more reason this tree is tabs.
 #   - Piece names are unique across the whole folder. A folder may hold several files (one per part
 #     of a large pack); they are read in sorted order, so a build is deterministic.
 #   - Regions may NOT nest.
@@ -509,6 +516,20 @@ const JUICE_SET_TICKER_BODY := "var old_tween: Tween = _ticker_tweens.get(ticker
 # save_pack, so a converted builder emits byte-identical bytes - which is what the pack drift gate
 # (tools/audit_addons.gd) checks on every build.
 const SOURCE_ROOT := "res://tools/pack_builders/src"
+
+# Everything wrong with the folder the last `_read_pieces` walked, in the order it was found: a
+# folder that is not there, a file that could not be read, a duplicate piece name, a region nobody
+# closed. Reset by that call and carried onto the PackSource it opened, so a build FAILS on it
+# rather than printing an error and writing the pack anyway.
+static var _read_problems: PackedStringArray = PackedStringArray()
+
+
+# One problem with a source folder: pushed as an engine error so it is visible where errors are, and
+# kept so the build's exit code can be made of it.
+static func _source_problem(message: String) -> void:
+	push_error(message)
+	_read_problems.append(message)
+
 
 
 ## Everything about a pack that its source folder cannot carry: the facts the SHEET holds rather
@@ -615,14 +636,29 @@ class PackSource extends RefCounted:
 	# The folder these pieces came from, named in every error so a typo says where to look.
 	var _dir: String = ""
 
-	## The piece named `piece_name`, as the pack will emit it. Fails loudly rather than quietly
-	## emitting an empty body: a mistyped name is a pack that would ship a hole.
+	# Everything that went wrong assembling this pack: the folder's own problems, plus every piece
+	# asked for by a name the folder does not hold. `publish` refuses on a non-empty one.
+	var _problems: PackedStringArray = PackedStringArray()
+
+	## The piece named `piece_name`, as the pack will emit it.
+	##
+	## A MISTYPED NAME FAILS THE BUILD. It used to push an error and return "", and the caller
+	## appended that empty string as a row: the pack was written, `save_pack` returned true, the
+	## build's exit code was 0, and the only thing that noticed was the drift gate - which can only
+	## notice for a pack that is already committed. A NEW pack with a hole in it shipped green.
 	func code(piece_name: String) -> String:
 		if not _pieces.has(piece_name):
-			push_error("pack source %s has no piece named '%s' (it has: %s)" % [
-				_dir, piece_name, ", ".join(piece_names())])
+			var message: String = "pack source %s has no piece named '%s' (it has: %s)" % [
+				_dir, piece_name, ", ".join(piece_names())]
+			push_error(message)
+			_problems.append(message)
 			return ""
 		return str(_pieces[piece_name])
+
+	## Everything that went wrong assembling this pack, in the order it was found. Empty is a pack
+	## that may be published.
+	func problems() -> PackedStringArray:
+		return _problems
 
 	## Whether the folder holds a piece by that name.
 	func has(piece_name: String) -> bool:
@@ -723,7 +759,15 @@ class PackSource extends RefCounted:
 ## Compiles and writes a pack assembled from a source folder, exactly as a string-array builder
 ## always did - the same `save_pack`, so the bytes are the bytes. It is a static beside the class
 ## rather than a method on it because an inner class cannot reach its own file's statics.
+## The bytes, and NOT the bytes of a pack with a hole in it: a folder that could not be read or a
+## piece asked for by a name it does not hold refuses here, so the build that called it fails
+## instead of writing a pack whose body is an empty string.
 static func publish(opened: PackSource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
+	var problems: PackedStringArray = opened.problems()
+	if not problems.is_empty():
+		push_error("pack %s is not published: %d problem(s) assembling it - %s" % [
+			base_path, problems.size(), problems[0]])
+		return false
 	return save_pack(opened.sheet, base_path, icon_path)
 
 
@@ -743,6 +787,7 @@ static func pack_from_source(source_dir: String, host_class: String, pack_class:
 	var opened: PackSource = PackSource.new()
 	opened._dir = SOURCE_ROOT.path_join(source_dir)
 	opened._pieces = _read_pieces(opened._dir)
+	opened._problems = _read_problems.duplicate()
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = host_class
 	sheet.custom_class_name = pack_class
@@ -777,10 +822,11 @@ static func manifest() -> PackManifest:
 # deterministic. A duplicate piece name is an error rather than a silent last-one-wins, because the
 # two pieces would be indistinguishable at the call site that asks for one of them.
 static func _read_pieces(dir_path: String) -> Dictionary:
+	_read_problems = PackedStringArray()
 	var pieces: Dictionary = {}
 	var dir: DirAccess = DirAccess.open(dir_path)
 	if dir == null:
-		push_error("pack source folder %s does not exist" % dir_path)
+		_source_problem("pack source folder %s does not exist" % dir_path)
 		return pieces
 	var file_names: PackedStringArray = PackedStringArray()
 	for entry: String in dir.get_files():
@@ -797,7 +843,7 @@ static func _read_pieces(dir_path: String) -> Dictionary:
 static func _read_file_pieces(file_path: String, pieces: Dictionary) -> void:
 	var text: String = FileAccess.get_file_as_string(file_path)
 	if text.is_empty():
-		push_error("pack source file %s is empty or unreadable" % file_path)
+		_source_problem("pack source file %s is empty or unreadable" % file_path)
 		return
 	var open_name: String = ""
 	var open_indent: String = ""
@@ -828,7 +874,7 @@ static func _read_file_pieces(file_path: String, pieces: Dictionary) -> void:
 			continue
 		if line.begins_with("func "):
 			if not line.ends_with(":"):
-				push_error("pack source %s: '%s' spreads its signature over more than one line" % [
+				_source_problem("pack source %s: '%s' spreads its signature over more than one line" % [
 					file_path, trimmed])
 				return
 			open_name = line.substr(5, line.find("(") - 5).strip_edges()
@@ -837,14 +883,14 @@ static func _read_file_pieces(file_path: String, pieces: Dictionary) -> void:
 	if in_function:
 		_store_piece(file_path, pieces, open_name, collected, true)
 	elif not open_name.is_empty():
-		push_error("pack source %s: region '%s' is never closed" % [file_path, open_name])
+		_source_problem("pack source %s: region '%s' is never closed" % [file_path, open_name])
 
 
 # One finished piece. A function body loses its trailing blank lines - the ones separating it from
 # whatever comes next in the source file, which are the file's punctuation and not the pack's.
 static func _store_piece(file_path: String, pieces: Dictionary, piece_name: String, collected: PackedStringArray, trim_tail: bool) -> void:
 	if pieces.has(piece_name):
-		push_error("pack source %s: a second piece is also named '%s'" % [file_path, piece_name])
+		_source_problem("pack source %s: a second piece is also named '%s'" % [file_path, piece_name])
 		return
 	var lines: PackedStringArray = collected
 	if trim_tail:

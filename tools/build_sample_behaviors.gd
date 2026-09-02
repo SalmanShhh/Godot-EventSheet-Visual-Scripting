@@ -29,8 +29,13 @@ func _init() -> void:
 		built += 1
 	print("[build_sample_behaviors] built %d packs" % built)
 	if not ok:
+		# EXIT 1, because a build that pushed an error and then exited 0 is a build a script
+		# believed. A pack that failed here is one whose body the assembler could not make -
+		# nothing downstream (the drift gate included) reports that for a pack not yet committed.
 		push_error("[build_sample_behaviors] one or more packs failed - see errors above.")
-	quit()
+		quit(1)
+		return
+	quit(0)
 
 
 ## Every pack builder in tools/pack_builders/, sorted for a deterministic build. A leading

@@ -35,6 +35,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _reader_pins() and all_passed
 	all_passed = _manifest_pins() and all_passed
+	all_passed = _a_hole_fails_the_build() and all_passed
 	all_passed = _folders_are_not_packs() and all_passed
 	all_passed = _every_folder_is_claimed() and all_passed
 	return all_passed
@@ -75,10 +76,26 @@ static func _reader_pins() -> bool:
 		"func set_speed(value: float) -> void:",
 		"\tspeed = value",
 		""])
+	_write(FIXTURE_DIR.path_join("c_third.gd"), [
+		"# The two rules a reader of this tree has to know, pinned so they cannot change quietly.",
+		"extends Node",
+		"",
+		"static func a_static_helper() -> void:",
+		"	pass",
+		"",
+		"func stops_at_a_column_zero_comment() -> void:",
+		"	var kept: int = 1",
+		"# A comment at column 0 ends the piece here.",
+		"	var lost: int = 2",
+		""])
 	var pieces: Dictionary = Lib._read_pieces(FIXTURE_DIR)
 	var all_passed: bool = true
 	all_passed = _pins("the folder's piece names", ",".join(PackedStringArray(pieces.keys())),
-		"knobs,_ready,set_speed") and all_passed
+		"knobs,_ready,set_speed,stops_at_a_column_zero_comment") and all_passed
+	all_passed = _pins("a static func is scaffolding, not a piece",
+		pieces.has("a_static_helper"), false) and all_passed
+	all_passed = _pins("a column-0 comment ends a func piece",
+		str(pieces.get("stops_at_a_column_zero_comment", "")), "var kept: int = 1") and all_passed
 	all_passed = _pins("a region piece keeps its own column", str(pieces.get("knobs", "")),
 		"@export var speed: float = 1.0\n\n## A helper the pack emits verbatim.\nfunc _halve(value: float) -> float:\n\treturn value * 0.5") and all_passed
 	all_passed = _pins("a func piece is dedented by one tab", str(pieces.get("_ready", "")),
@@ -124,6 +141,29 @@ static func _manifest_pins() -> bool:
 	all_passed = _pins("a pack with no verb category of its own falls back to its Add Behavior one",
 		Lib.pack_from_source("wrap", "Node2D", "Fallback", "", Lib.manifest().category("Wrap")).verb_category,
 		"Wrap") and all_passed
+	return all_passed
+
+
+## A pack with a hole in it does not get published. Asking for a piece the folder does not hold
+## returns "" (there is nothing else it could return), and that empty body used to be appended as a
+## row and written: the pack shipped, `save_pack` said true, and the build's exit code was 0. The
+## refusal is at `publish`, so nothing reaches the disk.
+##
+## The engine errors this prints are the point of it - they are what a builder's author sees.
+static func _a_hole_fails_the_build() -> bool:
+	var all_passed: bool = true
+	var opened: Lib.PackSource = Lib.pack_from_source("wrap", "Node2D", "Holed", "A pack with a hole.")
+	all_passed = _pins("a folder that reads cleanly has no problems", opened.problems().size(), 0) and all_passed
+	all_passed = _pins("a piece the folder does not hold is empty", opened.code("no_such_piece"), "") and all_passed
+	all_passed = _pins("and it is a problem", opened.problems().size(), 1) and all_passed
+	all_passed = _pins("a holed pack refuses to publish",
+		Lib.publish(opened, "user://eventsheets_pack_source_never_written"), false) and all_passed
+	all_passed = _pins("and nothing was written",
+		FileAccess.file_exists("user://eventsheets_pack_source_never_written.gd"), false) and all_passed
+	var missing: Lib.PackSource = Lib.pack_from_source(
+		"no_such_folder", "Node", "Missing", "A pack whose folder is not there.")
+	all_passed = _pins("a folder that is not there is a problem before a piece is even asked for",
+		missing.problems().size(), 1) and all_passed
 	return all_passed
 
 
