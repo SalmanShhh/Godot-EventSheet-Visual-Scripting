@@ -874,9 +874,11 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
 ## matches. Dialogs re-show with a remembered choice whose word may since have been renamed or
 ## deleted; falling back rather than leaving the dropdown unselected keeps the field readable and
 ## keeps the caller from having to special-case an empty selection. No-op on an empty dropdown.
+##
+## The body is the one both dialogs carried, line for line, with nothing added: the merge that
+## brought it here rests on being able to say that, and a guard neither of them had would have made
+## the claim untrue for the sake of a case no caller reaches.
 static func select_option(dropdown: OptionButton, wanted: String) -> void:
-	if dropdown == null:
-		return
 	for index: int in range(dropdown.item_count):
 		if dropdown.get_item_text(index) == wanted:
 			dropdown.select(index)
