@@ -108,6 +108,14 @@ Measured across the wave, outside the three generated trees: **-966 lines** of h
 (**+3,360 / -4,326**), of which `tests/` is **-1,484** and the installed plugin - everything under
 `addons/` except the doc bundle - is **-6**.
 
+The second wave is the instruments and the last of the straight deletions, and it is honestly a
+GROWTH in the campaign's own figure: **+354 lines** of hand-written GDScript (**+919 / -565**), of
+which the installed plugin is **-7**. Three of the four things in it are tools and gates that must
+exist before the big migrations can be trusted - a ledger that reproduces, a second dump the gate
+compares, and a translation ratchet that measures verbs instead of filenames - and a dev tool is
+paid for in full by the figure it measures. Every one of those numbers comes from
+`tools/measure_ledger.ps1`, at the two commits named in it.
+
 - **Five hundred copies of one assertion become one call, and there is one assertion file.** Nearly
   every test in `tests/` carried its own copy of the same eight-line `_check`, differing only in the
   label prefix it printed. `tests/support.gd` is that function once, with the prefix passed in,
