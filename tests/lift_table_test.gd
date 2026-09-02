@@ -23,8 +23,25 @@ const SUPPORT := preload("res://tests/support.gd")
 ## When a re-emission is refused, the evidence goes on disk instead of into a rebuild by hand.
 const Repro := preload("res://tests/repro_bundle.gd")
 
+## THE FAST LOOP, one entry at a time. Set to a comma-separated list of entry ids and this file runs
+## the round trip for those entries ALONE - the same walk, the same emitter, the same pins, minus the
+## several hundred entries the change was not about. Spelled after EVENTFORGE_TEST_ONLY, which picks
+## the test files the same way, so the two compose: pick this file, then pick the entry inside it.
+##
+##     $env:EVENTFORGE_LIFT_ONLY = "torch_brightness"
+##     $env:EVENTFORGE_TEST_ONLY = "lift_table_test"
+##     "$GODOT" --headless --path . --script tests/run_tests.gd
+##
+## Unset - which is what CI and every ordinary run leave it - nothing here changes: the whole table
+## is walked and every line the suite has always printed is printed. An id that names no entry runs
+## nothing and fails on the "was probed" pin rather than passing in silence, because a filter that
+## quietly matched nothing is a green run over an untested change.
+const ONLY_VARIABLE: String = "EVENTFORGE_LIFT_ONLY"
+
 
 static func run() -> bool:
+	if not _only_ids().is_empty():
+		return _test_generated_fixtures()
 	var ok: bool = true
 	ok = _test_families_are_found() and ok
 	ok = _test_tables_are_sound() and ok
@@ -32,6 +49,19 @@ static func run() -> bool:
 	ok = _test_the_engine() and ok
 	ok = _test_a_broken_table_is_named() and ok
 	return ok
+
+
+## The entry ids a caller asked for, as a set - empty when they asked for all of them.
+static func _only_ids() -> Dictionary:
+	var wanted: Dictionary = {}
+	var requested: String = OS.get_environment(ONLY_VARIABLE).strip_edges()
+	if requested.is_empty():
+		return wanted
+	for id: String in requested.split(",", false):
+		var trimmed: String = id.strip_edges()
+		if not trimmed.is_empty():
+			wanted[trimmed] = true
+	return wanted
 
 
 ## Discovery, pinned as a VALUE: the multiplayer table is found by scanning rather than by being
@@ -78,7 +108,10 @@ static func _test_generated_fixtures() -> bool:
 		if script != null and script.has_method(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD):
 			script.call(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD)
 		var entries: Array = _all_tables()[path]
+		var wanted: Dictionary = _only_ids()
 		for entry: Dictionary in entries:
+			if not wanted.is_empty() and not wanted.has(str(entry.get("id", ""))):
+				continue
 			ok = _test_one_entry(entries, entry) and ok
 			probed += 1
 	# A harness that walked nothing would pass every assertion above in silence.

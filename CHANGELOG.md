@@ -126,6 +126,23 @@
   two file-count labels that went up by exactly one because the new file exists. The 235 tests that
   print something else were left alone: those lines are a contract too, and normalising them would
   be a behaviour change rather than a shrink.
+- **"What claims this line?", answered by the readers themselves.** A hand-written line becomes a row
+  through one of several vocabularies, and finding out WHICH meant reading the importer.
+  `tools/explain.gd` takes a script and a line number and answers in provenance order: the curated
+  lift tables (which entry, in which family file), the entries derived from a marked example, the
+  hand-written matcher families, the general reverse index, the derived call and property readings
+  with the receiver resolution that got them there, and finally the honest verbatim fallback. Every
+  answer comes from the reader that actually produces it when a file opens - the same
+  `EventSheetLiftReading`, `EventSheetACELifter` and derived-reading code - so a line the tool
+  explains is a line the editor reads the same way. Two small read-only seams were needed and no
+  behaviour moved: an entry now carries how it was AUTHORED (`EventForgeLiftTable.origin_of`, stamped
+  by the by-example builder and ignored by the matching engine), and the term a branch is asked under
+  became public so every layer is asked the same string.
+- **One table entry, rerun alone.** `EVENTFORGE_LIFT_ONLY=<entry ids>` narrows the lift-table harness
+  to the entries named, spelled after `EVENTFORGE_TEST_ONLY` so the two compose: pick the file, then
+  pick the entry inside it. The whole byte round trip for one spelling - its generated fixture line,
+  the row it claims, the values it reads and the bytes it re-emits - in a second or two instead of
+  the several hundred entries the change was not about. Unset, nothing changes.
 - **Two aspect-split vocabulary modules merge into the one they belong to.** The 3D page joins the
   spatial maths it was authored beside; the rows that put a light in the object column join the ones
   that take it as a parameter. Held by a descriptor-identity proof: `tools/dump_registry.gd` before
