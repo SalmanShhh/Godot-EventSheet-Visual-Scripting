@@ -104,7 +104,10 @@ static func run() -> bool:
 	new_sheet_dialog.init_dialog(new_sheet_host)
 	new_sheet_dialog._directory = "res://scenes"
 	new_sheet_dialog._name_edit.text = "My Sheet"
-	new_sheet_dialog._start_option.select(0)  # Blank (id 0)
+	# The starter is a spec'd field now, so the test asks the form for it by id rather than
+	# reaching for a control the dialog no longer keeps a second reference to.
+	new_sheet_dialog._form.set_value(
+		EventSheetNewSheetDialog.FIELD_STARTER, EventSheetNewSheetDialog.BLANK_STARTER_ID)
 	var create_payload: Array = [null]
 	new_sheet_dialog.create_requested.connect(func(dir: String, nm: String, sid: int) -> void:
 		create_payload[0] = [dir, nm, sid])
@@ -115,7 +118,8 @@ static func run() -> bool:
 		and str((create_payload[0] as Array)[1]) == "My Sheet"
 		and int((create_payload[0] as Array)[2]) == 0, true) and all_passed
 	all_passed = _check("the starter dropdown offers the curated dock-free set",
-		new_sheet_dialog._start_option.item_count, EventSheetStarterTemplates.create_new_starters().size()) and all_passed
+		(new_sheet_dialog._form.control(EventSheetNewSheetDialog.FIELD_STARTER) as OptionButton).item_count,
+		EventSheetStarterTemplates.create_new_starters().size()) and all_passed
 	new_sheet_host.free()
 
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
