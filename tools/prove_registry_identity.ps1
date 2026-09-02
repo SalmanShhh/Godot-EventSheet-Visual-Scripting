@@ -82,21 +82,45 @@ function Write-Dump($ProjectDir, $OutFile, $Words) {
 }
 
 
-# What moved between two texts, as the lines themselves. Sorted by key already, so a plain
-# set difference reads as a diff a person can act on.
-function Show-Moves($Name, $BaseFile, $HeadFile) {
-	$before = Get-Content -LiteralPath $BaseFile
-	$after = Get-Content -LiteralPath $HeadFile
-	$moves = Compare-Object -ReferenceObject $before -DifferenceObject $after
-	if ($null -eq $moves -or $moves.Count -eq 0) { return $true }
-	Write-Output "$Name moved on $($moves.Count) line(s):"
-	foreach ($move in ($moves | Select-Object -First 20)) {
-		$side = 'base only'
-		if ($move.SideIndicator -eq '=>') { $side = 'tree only' }
-		Write-Output ("  [{0}] {1}" -f $side, $move.InputObject)
+# What moved between two texts, as the lines themselves - one record per line that is not the line
+# at the same place in the other text.
+#
+# IT RETURNS THE MOVES AND PRINTS NOTHING, which is not a style choice. A PowerShell function
+# returns everything it wrote to the output stream, so a function that both PRINTS its findings and
+# `return $false`es hands its caller the printed lines AND the boolean as one array - and a non-empty
+# array is true. Written that way this gate reported `same` over every real move it found, printed
+# none of them, and could not fail. The caller below prints, and decides.
+#
+# THE COMPARISON IS CASE-SENSITIVE AND POSITIONAL. `Compare-Object` defaults to case-insensitive
+# equality, which would call a re-cased description the same words; and it compares two texts as
+# SETS, which cannot see two lines that swapped places. Both texts here are sorted by key, so a
+# positional walk is the honest reading and a length difference is itself a move.
+function Get-Moves($BaseFile, $HeadFile) {
+	$before = @(Get-Content -LiteralPath $BaseFile)
+	$after = @(Get-Content -LiteralPath $HeadFile)
+	$moves = New-Object System.Collections.ArrayList
+	$longest = [Math]::Max($before.Count, $after.Count)
+	for ($index = 0; $index -lt $longest; $index++) {
+		$baseLine = if ($index -lt $before.Count) { $before[$index] } else { $null }
+		$headLine = if ($index -lt $after.Count) { $after[$index] } else { $null }
+		if ($baseLine -cne $headLine) {
+			[void]$moves.Add([PSCustomObject]@{ Line = $index + 1; Base = $baseLine; Head = $headLine })
+		}
 	}
-	if ($moves.Count -gt 20) { Write-Output "  ... and $($moves.Count - 20) more" }
-	return $false
+	return , $moves.ToArray()
+}
+
+
+# The moves as lines a person can act on. Prints only; the caller already holds the verdict.
+function Show-Moves($Name, $Moves) {
+	if ($Moves.Count -eq 0) { return }
+	Write-Output "$Name moved on $($Moves.Count) line(s):"
+	foreach ($move in ($Moves | Select-Object -First 20)) {
+		Write-Output ("  line {0}" -f $move.Line)
+		Write-Output ("    [base] {0}" -f $move.Base)
+		Write-Output ("    [tree] {0}" -f $move.Head)
+	}
+	if ($Moves.Count -gt 20) { Write-Output "  ... and $($Moves.Count - 20) more" }
 }
 
 
@@ -104,7 +128,12 @@ function Show-Moves($Name, $BaseFile, $HeadFile) {
 $Instrument = @(
 	'tools/dump_registry.gd',
 	'tools/registry_wording.gd',
-	'addons/eventforge/registration/registry_dump.gd'
+	'addons/eventforge/registration/registry_dump.gd',
+	# The reduction both texts are written off. It gained the four WORDING fields when the wording
+	# dump landed, so a base older than that answers `words` with a text of blanks - which is not a
+	# vocabulary that lost its words, it is an instrument that cannot read them. It publishes no
+	# verb, so copying it hides nothing this gate is for.
+	'addons/eventforge/registration/ace_successors.gd'
 )
 
 if (-not (Test-Path $tree)) {
@@ -122,8 +151,12 @@ Write-Dump $tree (Join-Path $dumps "$baseShort-words.txt") $true
 Write-Dump $repo (Join-Path $dumps "tree-registry.txt") $false
 Write-Dump $repo (Join-Path $dumps "tree-words.txt") $true
 
-$sameRegistry = Show-Moves "registry" (Join-Path $dumps "$baseShort-registry.txt") (Join-Path $dumps "tree-registry.txt")
-$sameWords = Show-Moves "words" (Join-Path $dumps "$baseShort-words.txt") (Join-Path $dumps "tree-words.txt")
+$registryMoves = Get-Moves (Join-Path $dumps "$baseShort-registry.txt") (Join-Path $dumps "tree-registry.txt")
+$wordsMoves = Get-Moves (Join-Path $dumps "$baseShort-words.txt") (Join-Path $dumps "tree-words.txt")
+Show-Moves "registry" $registryMoves
+Show-Moves "words" $wordsMoves
+$sameRegistry = $registryMoves.Count -eq 0
+$sameWords = $wordsMoves.Count -eq 0
 
 $verbs = (Get-Content -LiteralPath (Join-Path $dumps "tree-registry.txt")).Count - 1
 
