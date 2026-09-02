@@ -687,7 +687,17 @@ static func _walk_drawn_tables(seen: Dictionary) -> void:
 
 func _init() -> void:
 	var dry_run: bool = OS.get_cmdline_user_args().has("--dry-run")
-	var sources: Array = [editor_literals(), owed_vocabulary(), walked_controls(self)]
+	var sources: Array = [editor_literals(), owed_vocabulary()]
+	# THE ENGINE ERRORS THE NEXT LINES PRINT ARE EXPECTED, and saying so is the difference between
+	# a command that looks like it failed and one that did what it says. The advisory walk builds
+	# the real dock and its real dialogs with NO Godot editor around them, so a dialog that asks to
+	# be shown is a window the engine cannot open and complains about. That is the price of reading
+	# the live UI rather than a list of it: nothing below is derived from those lines, the two
+	# BINDING sources are already read, and neither the verdict nor the exit code is made of them.
+	print("walking the live editor - the engine errors printed until the census below are expected:")
+	print("  the advisory walk opens real dialogs with no editor around them, and derives nothing.")
+	sources.append(walked_controls(self))
+	print("live editor walked; everything from here is the harvest.")
 	var harvest: Plan = plan(sources)
 	for source: Source in sources:
 		print("%-16s %5d key(s)%s" % [source.title, source.keys.size(),
