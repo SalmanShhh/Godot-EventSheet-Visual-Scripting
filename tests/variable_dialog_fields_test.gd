@@ -290,4 +290,4 @@ static func _params_operator_note() -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return SUPPORT.check("variable_dialog_v5_test", label, actual, expected)
+	return SUPPORT.check("variable_dialog_fields_test", label, actual, expected)

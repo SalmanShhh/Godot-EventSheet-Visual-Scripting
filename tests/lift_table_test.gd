@@ -103,12 +103,14 @@ static func _all_tables() -> Dictionary:
 static func _test_generated_fixtures() -> bool:
 	var ok: bool = true
 	var probed: int = 0
+	# Read once, not once per family file: the filter is one environment variable and it cannot
+	# change halfway through a run.
+	var wanted: Dictionary = _only_ids()
 	for path: String in _all_tables().keys():
 		var script: GDScript = EventForgeLiftTable.family_script(path)
 		if script != null and script.has_method(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD):
 			script.call(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD)
 		var entries: Array = _all_tables()[path]
-		var wanted: Dictionary = _only_ids()
 		for entry: Dictionary in entries:
 			if not wanted.is_empty() and not wanted.has(str(entry.get("id", ""))):
 				continue
