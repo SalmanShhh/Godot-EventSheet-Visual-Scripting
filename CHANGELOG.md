@@ -108,14 +108,44 @@ Measured across the wave, outside the three generated trees: **-966 lines** of h
 (**+3,360 / -4,326**), of which `tests/` is **-1,484** and the installed plugin - everything under
 `addons/` except the doc bundle - is **-6**.
 
-The second wave is the instruments and the last of the straight deletions, and it is honestly a
-GROWTH in the campaign's own figure: **+354 lines** of hand-written GDScript (**+919 / -565**), of
-which the installed plugin is **-7**. Three of the four things in it are tools and gates that must
-exist before the big migrations can be trusted - a ledger that reproduces, a second dump the gate
-compares, and a translation ratchet that measures verbs instead of filenames - and a dev tool is
-paid for in full by the figure it measures. Every one of those numbers comes from
-`tools/measure_ledger.ps1`, at the two commits named in it.
+The second wave built its instruments first and then used them. The instruments themselves were
+honestly a GROWTH in the campaign's own figure - **+354 lines** of hand-written GDScript, of which
+the installed plugin was **-7** - because three of the four things in that step are tools and gates
+that must exist before a big migration can be trusted (a ledger that reproduces, a second dump the
+gate compares, and a translation ratchet that measures verbs instead of filenames), and a dev tool
+is paid for in full by the figure it measures. The vocabulary migration then turned the wave
+around. Measured across the second wave to date: **-2,607 lines** of hand-written GDScript
+(**+3,130 / -5,737**), of which the installed plugin is **-3,112**. Every one of those numbers
+comes from `tools/measure_ledger.ps1`, at the two commits named in it.
 
+- **A built-in verb is one line, and the line says which kind of verb it is.** The 1,783 built-in
+  ACEs were each written as ten positional arguments with the kind spelled out in the middle of
+  them (`ACEDescriptor.ACEType.ACTION`), the provider typed again at every single site (1,782 of
+  them said `"Core"`), a legacy signal slot left empty at 96%, and the help text on a chained line
+  of its own. There are four makers now - `F.act` / `F.cond` / `F.expr` / `F.trig(ace_id, label,
+  template, group, reads_as, description)` - where the KIND is the method, the provider defaults to
+  the one name a builtin publishes under, the legacy slot dies at the API (a trigger takes its
+  signal where the other three take a template), and the help is an argument, which is what lets a
+  whole verb be one line. A field is a typed chained call, never a mini-language inside a string:
+  `.param(id, default, label, words, hint)` reads the type off the default's own type, with
+  `.param_typed` / `.param_choice` / `.param_suggesting` / `.param_built` naming what it cannot.
+  Every one is `##`-doc-commented, so Godot's completion documents them. **1,772 of the 1,783 verbs
+  moved: 12,849 lines -> 9,457, -3,392.** The eleven still written the long way are the right
+  eleven - a parameter list built by a shared helper (6), a comment sitting inside the argument
+  list explaining the argument under it (4), and a template that is a two-line string with a real
+  newline in it (1) - and `make_descriptor` / `make_param` stay forever, because every shipped
+  `ace_id`, template and parameter default is a compatibility promise; the makers compile to them.
+  Estimated the way this campaign now estimates: five modules of mixed density were migrated first
+  and measured (**-398 lines over 299 verbs**), the residue model projected **-2,950** for the
+  remaining 1,484, and the actual was **-2,994** - 1.5% out, where an estimate from site counts
+  would have said -11,000. Proved verb by verb: the descriptor-identity gate reports
+  `registry=same words=same verbs=5324` against the wave's base commit, so every key, kind, shelf,
+  parameter, default, forwarding address and emitted template - and every word of every
+  description - is byte-identical to what the verbose form published. `tests/ace_makers_test.gd`
+  builds one verb both ways and compares them field by field off the property list, defaults
+  compared with their own type. The editor reads the new spelling as it read the old one, so
+  opening a vocabulary module still shows the Define row each verb publishes, and the module guide
+  and `tools/new_ace_module.gd` teach the one-line form.
 - **Five hundred copies of one assertion become one call, and there is one assertion file.** Nearly
   every test in `tests/` carried its own copy of the same eight-line `_check`, differing only in the
   label prefix it printed. `tests/support.gd` is that function once, with the prefix passed in,
