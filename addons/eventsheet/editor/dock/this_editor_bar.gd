@@ -178,25 +178,16 @@ static func cfg_row_text(row: Dictionary) -> String:
 
 ## Whether the save question is still being asked. Off means the reader answered "Always".
 static func keep_asking() -> bool:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return false
 	return bool(settings.call("get_project_metadata", "eventsheets", KEEP_ASKING_KEY, true))
 
 
 static func set_keep_asking(asking: bool) -> void:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", KEEP_ASKING_KEY, asking)
-
-
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")
 
 
 ## An answer forced by a test or a preview harness, or -1 for "ask the editor". Neither of those runs

@@ -115,7 +115,7 @@ static func tooltip() -> String:
 ## settings to ask - which is also what makes every reader above degrade to "off" rather than
 ## guess.
 static func stored() -> Dictionary:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return {}
 	return {
@@ -129,7 +129,7 @@ static func stored() -> Dictionary:
 ## is no editor to write to. Writing what is already there is still ok: the button's job is to
 ## leave the editor in that state, not to have changed it.
 static func apply_tags(tags: PackedStringArray) -> Dictionary:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return {"ok": false, "reason": EventSheetL10n.translate(
 			"Run Multiple Instances is an editor setting, and there is no editor here.")}
@@ -150,9 +150,3 @@ static func apply_tags(tags: PackedStringArray) -> Dictionary:
 static func label_for_session(session_id: int) -> String:
 	var named: PackedStringArray = labels(stored())
 	return named[session_id] if session_id >= 0 and session_id < named.size() else ""
-
-
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	return EditorInterface.get_editor_settings()

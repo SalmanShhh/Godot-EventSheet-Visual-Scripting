@@ -114,7 +114,7 @@ func apply_visibility() -> void:
 
 
 func set_shown(shown: bool) -> void:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", _META_KEY, shown)
 	apply_visibility()
@@ -141,19 +141,10 @@ func _sync_view_menu(shown: bool) -> void:
 
 
 func _stored_choice() -> Variant:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return null
 	# The default must not be null: a missing key with a null default prints an editor ERROR.
 	# "" is the no-choice sentinel; only a stored bool counts as an explicit choice.
 	var stored: Variant = settings.call("get_project_metadata", "eventsheets", _META_KEY, "")
 	return stored if stored is bool else null
-
-
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")

@@ -1121,7 +1121,7 @@ func full_toolbar() -> bool:
 func set_full_toolbar(shown: bool) -> void:
 	_full_toolbar = shown
 	_remembered_full_toolbar = shown
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", FULL_TOOLBAR_META_KEY, shown)
 	_apply_toolbar_expansion()
@@ -1141,7 +1141,7 @@ func set_full_toolbar(shown: bool) -> void:
 func announce_resting_strip(opened_existing_sheet: bool) -> bool:
 	if _dock == null or _full_toolbar or not opened_existing_sheet or _resting_note_said:
 		return false
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	var stored: Variant = ("" if settings == null
 		else settings.call("get_project_metadata", "eventsheets", RESTING_NOTE_META_KEY, ""))
 	# Said once per SESSION as well as once per project: every tab activation passes through here,
@@ -1245,20 +1245,11 @@ func resting_minimum_width() -> float:
 ## sentinel default, because a missing key with a null default prints an editor ERROR on a fresh
 ## project. Anything that is not a stored bool means "nobody chose", and nobody choosing means rest.
 func _stored_full_toolbar() -> bool:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return false
 	var stored: Variant = settings.call("get_project_metadata", "eventsheets", FULL_TOOLBAR_META_KEY, "")
 	return stored if stored is bool else false
-
-
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")
 
 
 ## The Run Tests… window, built the first time it is asked for and kept afterwards. Loaded by path

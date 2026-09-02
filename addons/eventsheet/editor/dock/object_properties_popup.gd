@@ -60,7 +60,7 @@ static func set_secret(source_path: String, object_label: String, marked: bool) 
 		_secret_flags[key] = true
 	else:
 		_secret_flags.erase(key)
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", SECRET_META_SECTION, SECRET_META_KEY, _secret_flags)
 
@@ -75,7 +75,7 @@ static func _ensure_secret_flags() -> void:
 	if _secret_flags_loaded:
 		return
 	_secret_flags_loaded = true
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return
 	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, SECRET_META_KEY, {})
@@ -99,7 +99,7 @@ static func set_water(source_path: String, object_label: String, marked: bool) -
 		_water_flags[key] = true
 	else:
 		_water_flags.erase(key)
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", SECRET_META_SECTION, WATER_META_KEY, _water_flags)
 
@@ -114,22 +114,12 @@ static func _ensure_water_flags() -> void:
 	if _water_flags_loaded:
 		return
 	_water_flags_loaded = true
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return
 	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, WATER_META_KEY, {})
 	if stored is Dictionary:
 		_water_flags = (stored as Dictionary).duplicate()
-
-
-## Export-safe editor access (the palette's pattern): never NAME the editor-only class.
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")
 
 
 ## True when "secret" is a sensible thing to say about this object at all: an area is the shape a
@@ -178,7 +168,7 @@ static func set_needs_key(source_path: String, object_label: String, key_name: S
 		_needs_key.erase(key)
 	else:
 		_needs_key[key] = wanted
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", SECRET_META_SECTION, NEEDS_KEY_META_KEY, _needs_key)
 
@@ -193,7 +183,7 @@ static func _ensure_needs_key() -> void:
 	if _needs_key_loaded:
 		return
 	_needs_key_loaded = true
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return
 	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, NEEDS_KEY_META_KEY, {})

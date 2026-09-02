@@ -190,7 +190,7 @@ func set_main_run(run_id: String) -> void:
 	if not has_run(run_id):
 		return
 	_main_run = run_id
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", MAIN_RUN_META_KEY, run_id)
 
@@ -335,17 +335,10 @@ func _stop() -> void:
 ## NON-null sentinel default, because a missing key read with a null default prints an editor ERROR
 ## on a fresh project. "" is that sentinel, and it is not one of the six, so it reads as no choice.
 func _stored_main_run() -> Variant:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return ""
 	return settings.call("get_project_metadata", "eventsheets", MAIN_RUN_META_KEY, "")
-
-
-static func _editor_settings() -> Object:
-	var editor_interface: Object = _editor_interface()
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")
 
 
 static func _editor_interface() -> Object:

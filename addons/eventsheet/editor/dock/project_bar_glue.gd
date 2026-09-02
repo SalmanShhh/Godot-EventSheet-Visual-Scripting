@@ -70,7 +70,7 @@ func set_shown(shown: bool) -> void:
 ## Marks this project as one that started from a template or from the migration path, which is what
 ## turns the bar on for a reader who never asked for it by name.
 static func mark_started_from_template() -> void:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", STARTED_FROM_TEMPLATE_KEY, true)
 
@@ -190,7 +190,7 @@ const SCRIPT_OPENS_AS_KEY: String = "eventsheets_script_opens_as"
 
 
 func _script_opens_as_sheet() -> bool:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return true
 	return str(settings.call("get_project_metadata", "eventsheets", SCRIPT_OPENS_AS_KEY, "sheet")) == "sheet"
@@ -205,7 +205,7 @@ func _sync_view_menu(shown: bool) -> void:
 
 
 func _stored_choice() -> Variant:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return null
 	# The default must not be null: a missing key with a null default prints an editor ERROR.
@@ -215,22 +215,13 @@ func _stored_choice() -> Variant:
 
 
 func _write_choice(shown: bool) -> void:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", _META_KEY, shown)
 
 
 func _started_from_template() -> bool:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return false
 	return bool(settings.call("get_project_metadata", "eventsheets", STARTED_FROM_TEMPLATE_KEY, false))
-
-
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")

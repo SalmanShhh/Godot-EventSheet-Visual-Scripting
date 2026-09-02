@@ -65,14 +65,14 @@ func init(dock: Control) -> void:
 ## Whether the page should open by itself when the workspace has no sheet. The menu entry ignores
 ## this - a reader who turned the startup half off can still ask for the page.
 static func opens_on_startup() -> bool:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return true
 	return bool(settings.call("get_project_metadata", "eventsheets", _META_KEY, true))
 
 
 static func _set_opens_on_startup(on: bool) -> void:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", "eventsheets", _META_KEY, on)
 
@@ -283,12 +283,3 @@ func _open_showcase(folder_path: String) -> void:
 		if editor_interface.has_method("open_scene_from_path"):
 			editor_interface.call("open_scene_from_path", scene_path)
 	_dock._set_status("Opened %s - press Play to try it, then open its scripts as sheets." % scene_path.get_file())
-
-
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")
