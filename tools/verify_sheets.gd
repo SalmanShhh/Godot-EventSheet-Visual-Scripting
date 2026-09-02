@@ -2,6 +2,7 @@
 #
 #   godot --headless --path . --script tools/verify_sheets.gd
 #   godot --headless --path . --script tools/verify_sheets.gd -- res://player.gd res://enemy.gd
+#   godot --headless --path . --script tools/verify_sheets.gd -- sheets/
 #   godot --headless --path . --script tools/verify_sheets.gd -- --skip res://tests/fixtures/
 #
 # Exit 0 when every check passes, 1 when any fails. A failure prints one line naming the file, the
@@ -10,7 +11,9 @@
 #
 # With no paths it reads the whole project, which is what a branch gate and a CI job want. With
 # paths it reads exactly those, which is what a pre-commit hook wants: it hands over the staged
-# files and the run costs a fraction of a second per file instead of a walk of everything.
+# files and the run costs a fraction of a second per file instead of a walk of everything. A path
+# that names a FOLDER is the files under it, at any depth - the obvious way to ask for one subtree,
+# which used to be the one spelling that answered "nothing to answer" over a tree nobody opened.
 #
 # `--skip <prefix>` leaves out every path starting with that prefix, and exists for one situation: a
 # folder of deliberately broken GDScript kept as test fixtures is the one thing this gate cannot

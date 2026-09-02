@@ -267,6 +267,23 @@ static func _test_what_one_run_reads() -> bool:
 	ok = _check("and a skip written the same way skips the same folder",
 		EventSheetVerify.corpus(PackedStringArray(["demo/showcase/path_chase/path_chase.gd"]),
 			PackedStringArray(["demo/showcase/"])), PackedStringArray()) and ok
+	# A FOLDER IS THE FILES UNDER IT. Handed a directory this gate used to read nothing and say
+	# "0 file(s) read, nothing to answer" - a clean verdict over a tree it never opened, and the
+	# spelling the guide's own shortcut invites. Both spellings of the folder name the same files,
+	# a skip still applies to what an expansion found, and the walk is sorted so two machines read
+	# the same list.
+	var walked: PackedStringArray = EventSheetVerify.corpus(
+		PackedStringArray(["res://demo/showcase/path_chase"]))
+	ok = _check("a requested folder is read as the files under it", walked.has(REAL_FILE), true) and ok
+	ok = _check("and git's spelling of the same folder reads the same files",
+		EventSheetVerify.corpus(PackedStringArray(["demo/showcase/path_chase"])), walked) and ok
+	ok = _check("and a skip still applies to what the folder expanded to",
+		EventSheetVerify.corpus(PackedStringArray(["res://demo/showcase/path_chase"]),
+			PackedStringArray(["res://demo/"])), PackedStringArray()) and ok
+	var nested: PackedStringArray = EventSheetVerify.files_under("res://demo/showcase")
+	ok = _check("a folder walk reaches the folders inside it", nested.has(REAL_FILE), true) and ok
+	ok = _check("and reads the same list twice, because both halves of it are sorted",
+		EventSheetVerify.files_under("res://demo/showcase"), nested) and ok
 	DirAccess.remove_absolute(CLEAN_PATH)
 	DirAccess.remove_absolute(ASKING_PATH)
 	return ok

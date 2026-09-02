@@ -110,6 +110,13 @@ static func run(requested: PackedStringArray = PackedStringArray(),
 ## A `.tres` is in the list for the migration check alone - it is a stored sheet rather than
 ## GDScript, so the three text checks have nothing to ask it, and its emitted `.gd` is in the list
 ## separately like any other file.
+##
+## A REQUESTED FOLDER IS THE FILES UNDER IT. A path that names a directory used to contribute
+## nothing at all, so `-- eventsheet_addons demo` printed "0 file(s) read, nothing to answer" and
+## exited 0 - a gate reporting a clean run over two trees it never opened. The obvious way to ask
+## for a subtree is now the way that works, and a CI job no longer has to expand it with git first.
+## A path that is not there contributes nothing and says nothing, deliberately: a hook hands over
+## whatever git printed, and a staged deletion is a path that is gone.
 static func corpus(requested: PackedStringArray = PackedStringArray(),
 		skipped: PackedStringArray = PackedStringArray()) -> PackedStringArray:
 	var listed: PackedStringArray = requested.duplicate()
@@ -119,15 +126,35 @@ static func corpus(requested: PackedStringArray = PackedStringArray(),
 			EventSheetProjectFind.list_project_sheets()))
 	var kept: PackedStringArray = PackedStringArray()
 	for listed_path: String in listed:
-		var path: String = in_project(listed_path)
-		if not READ_AS.has(path.get_extension().to_lower()) or not FileAccess.file_exists(path):
-			continue
-		if path.begins_with(TEMPLATE_DIR) or _is_skipped(path, skipped):
-			continue
-		if not kept.has(path):
-			kept.append(path)
+		for path: String in _named_files(in_project(listed_path)):
+			if not READ_AS.has(path.get_extension().to_lower()) or not FileAccess.file_exists(path):
+				continue
+			if path.begins_with(TEMPLATE_DIR) or _is_skipped(path, skipped):
+				continue
+			if not kept.has(path):
+				kept.append(path)
 	kept.sort()
 	return kept
+
+
+## Every file under a folder, at any depth, sorted - the whole subtree, whatever its extension,
+## because the caller decides which kinds it has a question about. Deterministic on any machine:
+## a directory's entries come back in whatever order the filesystem holds them, so both lists are
+## sorted before they are walked.
+static func files_under(dir_path: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return found
+	var file_names: PackedStringArray = dir.get_files()
+	file_names.sort()
+	for file_name: String in file_names:
+		found.append(dir_path.path_join(file_name))
+	var folder_names: PackedStringArray = dir.get_directories()
+	folder_names.sort()
+	for folder_name: String in folder_names:
+		found.append_array(files_under(dir_path.path_join(folder_name)))
+	return found
 
 
 ## A path as the engine addresses it. Git prints paths relative to the repository root and Godot
@@ -410,6 +437,14 @@ static func _migration_rows(requested: PackedStringArray,
 ## A prefix is written the way the path is, so `tests/fixtures/` and `res://tests/fixtures/` are the
 ## same instruction: somebody naming a folder on a command line should not have to know which of the
 ## two spellings the walk happens to use.
+# What one requested path names: the files under it when it is a folder, and itself otherwise. A
+# path that is neither is itself too, and drops out of the corpus a line later for not existing.
+static func _named_files(path: String) -> PackedStringArray:
+	if DirAccess.dir_exists_absolute(path):
+		return files_under(path)
+	return PackedStringArray([path])
+
+
 static func _is_skipped(path: String, skipped: PackedStringArray) -> bool:
 	for prefix: String in skipped:
 		var written: String = in_project(prefix)
