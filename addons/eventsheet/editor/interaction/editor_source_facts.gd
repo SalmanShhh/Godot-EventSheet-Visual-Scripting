@@ -523,11 +523,13 @@ static func _factory_names(lines: PackedStringArray) -> Dictionary:
 	var names: Dictionary = {}
 	for line: String in lines:
 		var text: String = line.strip_edges()
-		if not text.begins_with("const ") or not text.contains("preload(") 				or not text.contains(FACTORY_FILE):
+		if not text.begins_with("const ") or not text.contains("preload("):
+			continue
+		if not text.contains(FACTORY_FILE):
 			continue
 		var declared: String = ""
 		for character: String in text.substr("const ".length()).strip_edges():
-			if not (character == "_" or character.is_valid_identifier()):
+			if not _is_name_character(character):
 				break
 			declared += character
 		if not declared.is_empty():
@@ -535,6 +537,12 @@ static func _factory_names(lines: PackedStringArray) -> Dictionary:
 	if names.is_empty():
 		names[FACTORY_ALIAS] = true
 	return names
+
+
+## True for a character a name may be spelled with, which is what the walk back from a dot reads to
+## find the word in front of it.
+static func _is_name_character(character: String) -> bool:
+	return character == "_" or character.is_valid_identifier() or character.is_valid_int()
 
 
 ## Where this line calls one maker ON the factory, or -1. Every occurrence is measured, because the
@@ -547,7 +555,7 @@ static func _factory_call_at(line: String, head: String, factories: Dictionary) 
 		if at < 0:
 			return -1
 		var start: int = at
-		while start > 0 and (line[start - 1] == "_" or line[start - 1].is_valid_identifier() 				or line[start - 1].is_valid_int()):
+		while start > 0 and _is_name_character(line[start - 1]):
 			start -= 1
 		if start < at and factories.has(line.substr(start, at - start)):
 			return at
