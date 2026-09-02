@@ -71,7 +71,7 @@ static func _ensure_loaded() -> void:
 	if _loaded:
 		return
 	_loaded = true
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return
 	var stored: Variant = settings.call("get_project_metadata", _META_SECTION, _META_KEY, {})
@@ -80,16 +80,6 @@ static func _ensure_loaded() -> void:
 
 
 static func _save() -> void:
-	var settings: Object = _editor_settings()
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings != null:
 		settings.call("set_project_metadata", _META_SECTION, _META_KEY, _cache)
-
-
-## Export-safe editor access (the palette's pattern): never NAME the editor-only class.
-static func _editor_settings() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
-		return null
-	return editor_interface.call("get_editor_settings")

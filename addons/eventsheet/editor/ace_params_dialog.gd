@@ -1181,12 +1181,7 @@ func _create_editor_preference_field(key: String, default_value: Variant) -> Con
 
 
 static func editor_preference_choices() -> Array:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return []
-	var interface: Object = Engine.get_singleton("EditorInterface")
-	if interface == null or not interface.has_method("get_editor_settings"):
-		return []
-	var settings: Object = interface.call("get_editor_settings")
+	var settings: Object = EventSheetEditorSettings.current()
 	if settings == null:
 		return []
 	var choices: Array = []

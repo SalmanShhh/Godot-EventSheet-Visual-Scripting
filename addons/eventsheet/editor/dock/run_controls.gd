@@ -248,7 +248,7 @@ func refresh_as(running: bool) -> void:
 
 
 func is_playing() -> bool:
-	var editor_interface: Object = _editor_interface()
+	var editor_interface: Object = EventSheetEditorSettings.interface()
 	if editor_interface == null or not editor_interface.has_method("is_playing_scene"):
 		return false
 	return bool(editor_interface.call("is_playing_scene"))
@@ -308,7 +308,7 @@ func _arm_debugger() -> void:
 
 
 func _play_current() -> void:
-	var editor_interface: Object = _editor_interface()
+	var editor_interface: Object = EventSheetEditorSettings.interface()
 	if editor_interface == null or not editor_interface.has_method("play_current_scene"):
 		_dock._set_status("Preview needs the Godot editor - there is nothing to run from here.", true)
 		return
@@ -317,7 +317,7 @@ func _play_current() -> void:
 
 
 func _play_main() -> void:
-	var editor_interface: Object = _editor_interface()
+	var editor_interface: Object = EventSheetEditorSettings.interface()
 	if editor_interface == null or not editor_interface.has_method("play_main_scene"):
 		_dock._set_status("Preview needs the Godot editor - there is nothing to run from here.", true)
 		return
@@ -326,7 +326,7 @@ func _play_main() -> void:
 
 
 func _stop() -> void:
-	var editor_interface: Object = _editor_interface()
+	var editor_interface: Object = EventSheetEditorSettings.interface()
 	if editor_interface != null and editor_interface.has_method("stop"):
 		editor_interface.call("stop")
 
@@ -340,8 +340,3 @@ func _stored_main_run() -> Variant:
 		return ""
 	return settings.call("get_project_metadata", "eventsheets", MAIN_RUN_META_KEY, "")
 
-
-static func _editor_interface() -> Object:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	return Engine.get_singleton("EditorInterface")
