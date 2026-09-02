@@ -77,6 +77,7 @@ static func run() -> bool:
 	ok = _test_the_history_icons() and ok
 	ok = _test_the_icon_faces() and ok
 	ok = _test_keys_come_from_the_table() and ok
+	ok = _test_the_printed_keys_are_hints_only() and ok
 	ok = _test_simple_mode_lets_the_strip_alone() and ok
 	ok = _test_the_sheet_theme_menu() and ok
 	ok = _test_the_one_time_note() and ok
@@ -393,6 +394,48 @@ static func _test_keys_come_from_the_table() -> bool:
 		add_menu.get_item_text(add_menu.get_item_index(5)), "Add blank sub-event") and ok
 	editor.free()
 	return ok
+
+
+## A PRINTED KEY IS A HINT, NEVER A LISTENER. Hanging a live Shortcut on a menu item under the one
+## Menu button does not add a label to the item - it adds a LISTENER, and one that wins: a MenuButton
+## forwards every key press it sees to its popup (and recursively into its submenus) whenever the
+## MenuButton is visible in the tree, popup closed and focus anywhere, and Godot runs _shortcut_input
+## before _unhandled_key_input. So E stopped opening the Ghost Row and started opening the full
+## picker, and every other printed key fired the sheet's handler from any non-text focus in the
+## editor, ahead of Godot's own.
+##
+## Swept over the WHOLE cascade rather than over a typed list of items, so an item hinted by a later
+## pass is held to this too. Two values per item: it carries the key (that is the hint), and the key
+## is disabled (that is the not-a-listener).
+static func _test_the_printed_keys_are_hints_only() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var popup: PopupMenu = (editor._toolbar.find_child("EventSheetMenu", true, false) as MenuButton).get_popup()
+	var live: PackedStringArray = PackedStringArray()
+	var hinted: int = 0
+	for menu: Node in _every_popup_under(popup):
+		var submenu: PopupMenu = menu as PopupMenu
+		for index: int in submenu.item_count:
+			var shortcut: Shortcut = submenu.get_item_shortcut(index)
+			if shortcut == null or shortcut.events.is_empty():
+				continue
+			hinted += 1
+			if not submenu.is_item_shortcut_disabled(index):
+				live.append("%s ▸ %s" % [str(submenu.name), submenu.get_item_text(index)])
+	# Without this the sweep passes vacuously the day hint_key stops hanging keys on items at all.
+	var ok: bool = _check("the cascade prints keys at all", hinted > 8, true)
+	ok = _check("and not one of them is a live editor shortcut", live, PackedStringArray()) and ok
+	editor.free()
+	return ok
+
+
+## Every PopupMenu in the cascade, the root included - the Menu's five groups and every submenu they
+## hang, however deep. Walked rather than listed, because the cascade grows.
+static func _every_popup_under(popup: PopupMenu) -> Array[PopupMenu]:
+	var found: Array[PopupMenu] = [popup]
+	for child: Node in popup.get_children():
+		if child is PopupMenu:
+			found.append_array(_every_popup_under(child as PopupMenu))
+	return found
 
 
 ## THE THEME PICKER MOVED, WHOLE. It was an OptionButton on the strip; it is View ▸ Sheet theme now,

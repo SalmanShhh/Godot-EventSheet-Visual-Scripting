@@ -100,6 +100,17 @@
 
 ### Fixed
 
+- **A key printed on a menu is a hint, not a second listener.** Teaching the Menu its keys hung a
+  real `Shortcut` on each hinted item, and a `Shortcut` on a menu item under a visible `MenuButton`
+  is not a label - it is a listener, and one that wins. A `MenuButton` forwards every key press it
+  sees to its popup (recursing into its submenus) whenever it is visible in the tree, with the popup
+  closed and the focus anywhere, and Godot runs `_shortcut_input` before `_unhandled_key_input`. So
+  **E** stopped opening the Ghost Row and started opening the full picker, and the other fifteen
+  printed keys (C, A, G, Q, B and Ctrl+S / O / Shift+S / C / V / Z / Shift+Z / Shift+F) fired the
+  sheet's own handlers from any non-text focus while the EventSheets screen was up, ahead of Godot's
+  own handlers. Every hinted key is disabled the moment it is set now: `PopupMenu` still PAINTS a
+  disabled shortcut's text, and `activate_item_by_event` skips it - which is exactly what a hint is.
+  A sweep over the whole cascade, not a list of items, holds it.
 - **Undo and Redo are icons now, because Godot has no icon called "Undo".** The strip asked the
   editor theme for icons named `Save`, `Undo` and `Redo` and kept the words for any that did not
   arrive - so the resting row read "[save icon] Undo [redo icon]": two pictures and a word. Probed

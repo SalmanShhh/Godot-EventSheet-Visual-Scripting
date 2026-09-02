@@ -48,9 +48,19 @@ func init(dock: Control) -> void:
 ## ("F2", "Ctrl+Shift+V") and goes through its parser, so passing binding_for(action) hints a REBOUND
 ## key as the key it was bound to.
 ##
-## A HINT: the shortcut is never registered as global. Every one of these keys is already routed
-## where it belongs (the viewport's own key handling), and a second listener living on a hidden
-## popup would run the same gesture twice.
+## A HINT AND NOTHING ELSE: the Shortcut this hangs on the item is DISABLED the moment it is set.
+## Every one of these keys is already routed where it belongs (the viewport's own key handling), and
+## a live one here is not a duplicate listener - it is a listener that WINS.
+##
+## The mechanism, because it is not obvious: a MenuButton forwards every key press it sees to its
+## popup's activate_item_by_event, which recurses into submenus, whenever the MenuButton is visible
+## in the tree - popup closed, focus anywhere. Godot runs _shortcut_input BEFORE _unhandled_key_input,
+## so a live shortcut on a menu item beats the handler the sheet actually routes that key to and then
+## ends the event. Hanging the strip's own keys on the one Menu button that way re-routed E / C / A
+## away from the Ghost Row and into the full picker, and made every other hinted key fire the
+## sheet's handlers from any non-text focus in the editor. set_item_shortcut_disabled keeps the key
+## DRAWN beside the item (PopupMenu paints a shortcut's text whether or not it is disabled) while
+## activate_item_by_event skips it, which is exactly what a hint is.
 static func hint_key(menu: PopupMenu, item_id: int, binding: String) -> void:
 	var index: int = menu.get_item_index(item_id)
 	if index < 0 or binding.strip_edges().is_empty():
@@ -66,6 +76,7 @@ static func hint_key(menu: PopupMenu, item_id: int, binding: String) -> void:
 	var shortcut := Shortcut.new()
 	shortcut.events = [pressed]
 	menu.set_item_shortcut(index, shortcut, false)
+	menu.set_item_shortcut_disabled(index, true)
 
 
 ## Builds every right-click context menu once and assigns each back onto the dock (the members
