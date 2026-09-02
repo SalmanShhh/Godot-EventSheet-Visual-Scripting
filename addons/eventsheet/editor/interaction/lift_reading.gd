@@ -119,7 +119,7 @@ static func layer_counts(reading: Dictionary) -> Dictionary:
 ## FIRST and come back marked as the draft family they are, so a draft never looks like a shipped
 ## spelling.
 static func table_claim(line: String, draft_entries: Array = []) -> Dictionary:
-	var text: String = _asked_term(line.strip_edges())
+	var text: String = asked_term(line.strip_edges())
 	if text.is_empty() or text.begins_with("#"):
 		return {}
 	if not draft_entries.is_empty():
@@ -152,6 +152,10 @@ static func table_claim(line: String, draft_entries: Array = []) -> Dictionary:
 # ── the pieces ──────────────────────────────────────────────────────────────────
 
 
+## PUBLIC because every layer below the table is asked the same term. A provenance reader walking
+## the whole stack - tables, hand-written matchers, the reverse index, the derived readings - has to
+## put the same question to all of them or its answers are about different strings.
+##
 ## The part of a line a lift table is actually asked about. For a statement that is the whole line;
 ## for a BRANCH it is the question inside it, because a condition family's entries are written to
 ## match the term (`event.is_action_pressed("jump")`) and never the branch that carries it.
@@ -163,7 +167,7 @@ static func table_claim(line: String, draft_entries: Array = []) -> Dictionary:
 ## Only the three heads the emitter itself writes, and only when the line ends in the colon that
 ## makes it a branch. A line beginning with the word "if" that is not a branch (there is no such
 ## statement in GDScript) cannot reach this, and a term is asked exactly as it was written.
-static func _asked_term(text: String) -> String:
+static func asked_term(text: String) -> String:
 	if not text.ends_with(":"):
 		return text
 	for head: String in ["if ", "elif ", "while "]:

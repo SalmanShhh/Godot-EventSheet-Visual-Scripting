@@ -83,12 +83,16 @@ static func entry(id: String, ace_id: String, example: String, extras: Dictionar
 	var built: Dictionary = _build(example)
 	if built.has(REFUSED):
 		return {"id": id, "ace_id": ace_id, EventForgeLiftTable.REFUSAL_KEY: str(built[REFUSED])}
+	# The one column this builder adds that no example asks for: how the entry was authored. Nothing
+	# in the matching engine reads it - it is there so that a reader asking what claims a line can say
+	# "by example" truthfully instead of inferring it from the family's source.
 	var made: Dictionary = {
 		"id": id,
 		"ace_id": ace_id,
 		"pattern": "^%s$" % str(built["pattern"]),
 		"shape": str(built["shape"]),
-		"slots": built["slots"]
+		"slots": built["slots"],
+		EventForgeLiftTable.ORIGIN_KEY: EventForgeLiftTable.ORIGIN_EXAMPLE
 	}
 	var params: PackedStringArray = built["params"]
 	if not params.is_empty():

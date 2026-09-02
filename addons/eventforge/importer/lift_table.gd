@@ -66,7 +66,20 @@ const FAMILY_DIR: String = "res://addons/eventforge/importer/"
 
 ## Keys every entry must carry, and the ones it may.
 const REQUIRED_KEYS: Array[String] = ["id", "ace_id", "pattern", "shape", "slots"]
-const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error"]
+const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error", "origin"]
+
+## HOW AN ENTRY WAS AUTHORED, and the one thing this engine will say about it that does not affect
+## matching at all. A table entry is a table entry whichever way it was written, so nothing in
+## `match_line` reads this - it exists because a reader asking WHAT CLAIMS THIS LINE deserves a
+## truthful answer about which of the two authoring routes the claimant came down, and deriving that
+## by inspecting a family's source would be a guess.
+##
+## `EventForgeLiftExample.entry` stamps ORIGIN_EXAMPLE on everything it derives (a built-in family
+## written by example, a pack's `@ace_lift_example` spelling, a workbench draft). Everything else is
+## ORIGIN_HAND by omission, which is what `origin_of` answers with.
+const ORIGIN_KEY: String = "origin"
+const ORIGIN_EXAMPLE: String = "example"
+const ORIGIN_HAND: String = "hand"
 
 ## The key a REFUSED entry carries instead of a table. A builder that derives an entry from something
 ## (an example, a descriptor, a word map) and cannot do it mechanically says so here rather than
@@ -248,6 +261,14 @@ static func expected_params(entry: Dictionary) -> Dictionary:
 	var expected: Dictionary = (entry.get("defaults", {}) as Dictionary).duplicate()
 	expected.merge(entry.get("slots", {}) as Dictionary, true)
 	return expected
+
+
+## How one entry was authored - ORIGIN_EXAMPLE for an entry the by-example builder derived,
+## ORIGIN_HAND for one somebody wrote the pattern of. Never blank, so a caller showing provenance
+## never has to decide what an unstamped entry means.
+static func origin_of(entry: Dictionary) -> String:
+	var stamped: String = str(entry.get(ORIGIN_KEY, ""))
+	return stamped if not stamped.is_empty() else ORIGIN_HAND
 
 
 ## Every family table in the folder, as {script_path: entries}. Found by scanning for the static, so
