@@ -5,13 +5,46 @@
 #   godot --headless --path . --script tools/build_examples.gd
 # The flagship is the ONLY demo/showcase/showcase_*.tscn, so EventForgePlugin._find_showcase_scene
 # discovers it deterministically; the secondaries use un-versioned names so they never go stale.
+#
+# THE DRIFT GATE lives here too, as `-- --check`:
+#   godot --headless --path . --script tools/build_examples.gd -- --check
+# demo/showcase/ is compiler output, exactly as eventsheet_addons/ is, and for a long time it was the
+# one generated tree with nothing watching it. A pack member-order change landed without a showcase
+# regeneration and five .tscn files sat stale for months, because the disagreement only surfaces when
+# somebody runs the rebuild - and then it looks like their change rather than like a debt that was
+# already there. `--check` snapshots the tree, runs the ORDINARY build over it, compares every byte,
+# puts the committed bytes back, and prints `showcases=N drifted=M`, exiting 1 on any drift.
+#
+# WHY IT REBUILDS IN PLACE AND RESTORES rather than redirecting the output somewhere safe: the
+# showcase paths are written into the showcases themselves - a scene loads its own compiled script by
+# res:// path, one demo instantiates another's .tscn - so a redirected build is a DIFFERENT build and
+# the bytes it produces answer a question nobody asked. Building where the real build builds keeps
+# the gate and the release ritual on one code path, which is the only way a gate can be trusted to
+# mean what it says. The restore is byte-for-byte and touches only the files that differ. A run
+# killed half way therefore leaves a REGENERATED tree, which is the correct tree: `git status` names
+# it, and the fix is to keep it or revert it, never to wonder what happened.
 @tool
 extends SceneTree
 
 const PackLib := preload("res://tools/pack_builders/_lib.gd")
 
+## The generated tree this builder owns, and the one `--check` holds it to.
+const SHOWCASE_ROOT: String = "res://demo/showcase"
+
+## Every file under SHOWCASE_ROOT as it stood before the build, {res:// path: bytes}, filled only on
+## a check run. It is both halves of the gate: what the rebuild is compared against, and what is put
+## back afterwards.
+var _committed: Dictionary = {}
+
+## True for `-- --check`. Nothing else in this file branches on it - the build a check runs is the
+## build a release runs, down to the last call.
+var _checking: bool = false
+
 
 func _init() -> void:
+	_checking = OS.get_cmdline_user_args().has("--check")
+	if _checking:
+		_committed = _read_tree()
 	var all_ok: bool = true
 	all_ok = _build_carousel() and all_ok
 	all_ok = _build_starfall() and all_ok
@@ -42,7 +75,111 @@ func _init() -> void:
 	all_ok = _build_traversal_course_3d() and all_ok
 	all_ok = _build_combo_fighter() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
+	if _checking:
+		quit(1 if _compare_and_restore() > 0 or not all_ok else 0)
+		return
 	quit(0 if all_ok else 1)
+
+# ── the drift gate ───────────────────────────────────────────────────────────
+
+
+## Every file under the showcase tree as {res:// path: bytes}, walked in SORTED order so the gate
+## names its drift in the same order on every filesystem - a directory-order walk reads like two
+## different failures on Linux and on Windows for one identical tree.
+func _read_tree() -> Dictionary:
+	var found: Dictionary = {}
+	for path: String in _tree_paths(SHOWCASE_ROOT):
+		found[path] = FileAccess.get_file_as_bytes(path)
+	return found
+
+
+## Every file path under one folder, recursively, sorted. Breadth-first over a queue rather than
+## recursion, because the depth here is data and a builder may nest a showcase's assets one deeper
+## tomorrow without anybody remembering this walk exists.
+func _tree_paths(folder: String) -> PackedStringArray:
+	var files: PackedStringArray = PackedStringArray()
+	var pending: PackedStringArray = PackedStringArray([folder])
+	while not pending.is_empty():
+		var here: String = pending[0]
+		pending.remove_at(0)
+		var dir: DirAccess = DirAccess.open(here)
+		if dir == null:
+			continue
+		dir.list_dir_begin()
+		var entry: String = dir.get_next()
+		while not entry.is_empty():
+			if dir.current_is_dir():
+				pending.append("%s/%s" % [here, entry])
+			else:
+				files.append("%s/%s" % [here, entry])
+			entry = dir.get_next()
+		dir.list_dir_end()
+	files.sort()
+	return files
+
+
+## The tree this run just rebuilt against the tree that was committed, then the committed bytes put
+## back. Three kinds of drift are named separately, because the fix differs: a file that changed, a
+## file the builder no longer writes, and a file the builder writes that nobody committed. Returns
+## how many files drifted, and prints the verdict line the gate is read by.
+func _compare_and_restore() -> int:
+	var rebuilt: Dictionary = _read_tree()
+	var paths: PackedStringArray = PackedStringArray()
+	for path: Variant in _committed.keys():
+		paths.append(str(path))
+	for path: Variant in rebuilt.keys():
+		if not _committed.has(path):
+			paths.append(str(path))
+	paths.sort()
+	var drifted: int = 0
+	for path: String in paths:
+		if not _committed.has(path):
+			print("DRIFT: %s (the builder writes a file the tree does not hold)" % path)
+			drifted += 1
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+			continue
+		var committed: PackedByteArray = _committed[path]
+		if not rebuilt.has(path):
+			print("DRIFT: %s (the tree holds a file the builder does not write)" % path)
+		elif committed != PackedByteArray(rebuilt[path]):
+			print("DRIFT: %s (the rebuild differs from the committed file)" % path)
+		else:
+			continue
+		drifted += 1
+		_restore(path, committed)
+	print("[build_examples] compared %d file(s) under %s/" % [paths.size(), SHOWCASE_ROOT])
+	print("showcases=%d drifted=%d" % [_showcase_count(), drifted])
+	return drifted
+
+
+## How many showcases the tree holds - the folders directly under it, so the verdict counts the
+## things a reader thinks in rather than the files they happen to be made of.
+func _showcase_count() -> int:
+	var dir: DirAccess = DirAccess.open(SHOWCASE_ROOT)
+	if dir == null:
+		return 0
+	var count: int = 0
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while not entry.is_empty():
+		if dir.current_is_dir() and not entry.begins_with("."):
+			count += 1
+		entry = dir.get_next()
+	dir.list_dir_end()
+	return count
+
+
+## One committed file put back, byte for byte. A check run must leave the tree exactly as it found
+## it: the regeneration it makes is a QUESTION, and committing an answer to it is an edit a person
+## approves, never a side effect of asking.
+func _restore(path: String, bytes: PackedByteArray) -> void:
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("[build_examples] could not restore %s" % path)
+		return
+	file.store_buffer(bytes)
+	file.close()
 
 # ── shared helpers ───────────────────────────────────────────────────────────
 
