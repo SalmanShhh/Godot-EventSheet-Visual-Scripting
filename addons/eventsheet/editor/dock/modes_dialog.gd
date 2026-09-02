@@ -124,20 +124,11 @@ func _refill(declared: PackedStringArray, keep_starting: String) -> void:
 		dropdown.clear()
 		for word: String in declared:
 			dropdown.add_item(word)
-	_select(_starts_option, keep_starting)
+	EventSheetPopupUI.select_option(_starts_option, keep_starting)
 	if _policy_mode_option.item_count > 0:
 		_policy_mode_option.select(0)
 	_show_policy()
 	_help_strip.set_reading(reads_as(declared, _starts_in()), in_code(declared, _starts_in()))
-
-
-static func _select(dropdown: OptionButton, wanted: String) -> void:
-	for index: int in range(dropdown.item_count):
-		if dropdown.get_item_text(index) == wanted:
-			dropdown.select(index)
-			return
-	if dropdown.item_count > 0:
-		dropdown.select(0)
 
 
 func _starts_in() -> String:

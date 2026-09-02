@@ -29,3 +29,15 @@ static func current() -> Object:
 	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
 		return null
 	return editor_interface.call("get_editor_settings")
+
+
+## The bool stored under "eventsheets"/`key` in the project's editor metadata, or null when nobody
+## has chosen yet. The default handed to Godot is "" rather than null on purpose: reading a missing
+## key with a null default prints an editor ERROR, and "" is a sentinel no caller can mistake for a
+## choice. Only a stored bool counts as one, so a value of some other type reads as "not chosen".
+static func stored_flag(key: String) -> Variant:
+	var settings: Object = current()
+	if settings == null:
+		return null
+	var stored: Variant = settings.call("get_project_metadata", "eventsheets", key, "")
+	return stored if stored is bool else null

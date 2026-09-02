@@ -250,16 +250,6 @@ func _point_the_nodes(new_reference: String) -> void:
 		% moved[0])
 
 
-## One list, sized so several rows read at once without the dialog growing past a screen. The second
-## list is the shorter one on purpose: it is what is NOT moving, and giving it the same height as the
-## first would draw a rename's exceptions as big as its work.
-func _list(rows_high: float) -> ItemList:
-	var list: ItemList = ItemList.new()
-	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return list
-
-
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
@@ -273,14 +263,14 @@ func _build_dialog() -> void:
 	content.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("New name"), _name_edit))
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
-	_rows_list = _list(170.0)
+	_rows_list = EventSheetPopupUI.sized_list(170.0)
 	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rows_list))
-	_elsewhere_list = _list(90.0)
+	_elsewhere_list = EventSheetPopupUI.sized_list(90.0)
 	_elsewhere_card = EventSheetPopupUI.titled_card(
 		EventSheetL10n.translate("Named and left exactly as they are - the index answers by name, so a file here may be calling something else"),
 		_elsewhere_list)
 	content.add_child(_elsewhere_card)
-	_includers_list = _list(60.0)
+	_includers_list = EventSheetPopupUI.sized_list(60.0)
 	_includers_card = EventSheetPopupUI.titled_card(
 		EventSheetL10n.translate("Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them"),
 		_includers_list)

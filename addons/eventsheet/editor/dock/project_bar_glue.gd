@@ -49,7 +49,8 @@ static func should_show(explicit: Variant, simple_mode: bool, started_from_templ
 func apply_visibility() -> void:
 	if _dock._objects_panel == null:
 		return
-	var wanted: bool = should_show(_stored_choice(), _dock.is_simple_mode(), _started_from_template())
+	var chosen: Variant = EventSheetEditorSettings.stored_flag(_META_KEY)
+	var wanted: bool = should_show(chosen, _dock.is_simple_mode(), _started_from_template())
 	if wanted and _bar == null:
 		_build()
 	elif not wanted and _bar != null:
@@ -202,16 +203,6 @@ func _sync_view_menu(shown: bool) -> void:
 	var index: int = _dock._view_popup.get_item_index(_dock.PROJECT_BAR_VIEW_ID)
 	if index >= 0:
 		_dock._view_popup.set_item_checked(index, shown)
-
-
-func _stored_choice() -> Variant:
-	var settings: Object = EventSheetEditorSettings.current()
-	if settings == null:
-		return null
-	# The default must not be null: a missing key with a null default prints an editor ERROR.
-	# "" is the no-choice sentinel; only a stored bool counts as an explicit choice.
-	var stored: Variant = settings.call("get_project_metadata", "eventsheets", _META_KEY, "")
-	return stored if stored is bool else null
 
 
 func _write_choice(shown: bool) -> void:

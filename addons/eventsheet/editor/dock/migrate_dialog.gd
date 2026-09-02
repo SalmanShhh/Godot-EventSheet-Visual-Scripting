@@ -161,16 +161,6 @@ static func _said(entry: Dictionary, key: String) -> String:
 	return EventForgeSuccessors.split_key(str(entry.get("from", "")))[1]
 
 
-## One list, sized so several rows read at once without the dialog growing past a screen. The
-## second list is the shorter one on purpose: it is the exception, and giving it the same height as
-## the first would draw a sheet's exceptions as big as its work.
-func _list(rows_high: float) -> ItemList:
-	var list: ItemList = ItemList.new()
-	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return list
-
-
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
@@ -181,9 +171,9 @@ func _build_dialog() -> void:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
-	_rewrite_list = _list(180.0)
+	_rewrite_list = EventSheetPopupUI.sized_list(180.0)
 	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rewrite_list))
-	_left_alone_list = _list(90.0)
+	_left_alone_list = EventSheetPopupUI.sized_list(90.0)
 	_left_alone_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Left exactly as they are"), _left_alone_list)
 	content.add_child(_left_alone_card)
 	_dialog.add_child(EventSheetPopupUI.margined(content))

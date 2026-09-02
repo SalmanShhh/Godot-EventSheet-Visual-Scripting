@@ -89,7 +89,7 @@ func _build_body() -> Control:
 	page.custom_minimum_size = Vector2(760.0, 520.0)
 	_summary = EventSheetPopupUI.hint_label("", 720.0)
 	page.add_child(_summary)
-	_untouched_list = _list(120.0)
+	_untouched_list = EventSheetPopupUI.sized_list(120.0)
 	page.add_child(EventSheetPopupUI.titled_card(
 		EventSheetL10n.translate("Untouched - these take the new version"), _untouched_list))
 	_yours_box = VBoxContainer.new()
@@ -101,7 +101,7 @@ func _build_body() -> Control:
 	_yours_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Yours - you changed these"), yours_scroll)
 	page.add_child(_yours_card)
 	var vocabulary_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_vocabulary_list = _list(90.0)
+	_vocabulary_list = EventSheetPopupUI.sized_list(90.0)
 	vocabulary_box.add_child(_vocabulary_list)
 	_dry_run_button = Button.new()
 	_dry_run_button.text = EventSheetL10n.translate("Dry run…")
@@ -111,13 +111,6 @@ func _build_body() -> Control:
 	_vocabulary_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("What this version retires and adds"), vocabulary_box)
 	page.add_child(_vocabulary_card)
 	return page
-
-
-func _list(rows_high: float) -> ItemList:
-	var list: ItemList = ItemList.new()
-	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return list
 
 
 # ── Drawing the proposal ──────────────────────────────────────────────────────────────────────

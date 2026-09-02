@@ -868,3 +868,28 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
 			popup.popup()
 			edit.accept_event())
 	return picker
+
+
+## Selects the dropdown entry whose TEXT is `wanted`, falling back to the first entry when nothing
+## matches. Dialogs re-show with a remembered choice whose word may since have been renamed or
+## deleted; falling back rather than leaving the dropdown unselected keeps the field readable and
+## keeps the caller from having to special-case an empty selection. No-op on an empty dropdown.
+static func select_option(dropdown: OptionButton, wanted: String) -> void:
+	if dropdown == null:
+		return
+	for index: int in range(dropdown.item_count):
+		if dropdown.get_item_text(index) == wanted:
+			dropdown.select(index)
+			return
+	if dropdown.item_count > 0:
+		dropdown.select(0)
+
+
+## An ItemList sized to show roughly `rows_high` pixels of rows at the editor's own scale, filling
+## the width it is given. Receipt and review dialogs stack several of these at DIFFERENT heights on
+## purpose - the shorter list is the shorter story - so the height is the caller's to say.
+static func sized_list(rows_high: float) -> ItemList:
+	var list: ItemList = ItemList.new()
+	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(rows_high))
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return list

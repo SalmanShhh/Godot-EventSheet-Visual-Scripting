@@ -108,7 +108,8 @@ const _META_KEY: String = "eventsheets_add_toolbar_shown"
 func apply_visibility() -> void:
 	if _strip == null:
 		return
-	_strip.visible = should_show(_stored_choice(), _dock.is_simple_mode())
+	var chosen: Variant = EventSheetEditorSettings.stored_flag(_META_KEY)
+	_strip.visible = should_show(chosen, _dock.is_simple_mode())
 	_refresh_tooltips()
 	_sync_view_menu(_strip.visible)
 
@@ -138,13 +139,3 @@ func _sync_view_menu(shown: bool) -> void:
 	var index: int = _dock._view_popup.get_item_index(_dock.ADD_TOOLBAR_VIEW_ID)
 	if index >= 0:
 		_dock._view_popup.set_item_checked(index, shown)
-
-
-func _stored_choice() -> Variant:
-	var settings: Object = EventSheetEditorSettings.current()
-	if settings == null:
-		return null
-	# The default must not be null: a missing key with a null default prints an editor ERROR.
-	# "" is the no-choice sentinel; only a stored bool counts as an explicit choice.
-	var stored: Variant = settings.call("get_project_metadata", "eventsheets", _META_KEY, "")
-	return stored if stored is bool else null
