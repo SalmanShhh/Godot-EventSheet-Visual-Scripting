@@ -105,7 +105,13 @@ from `tools/build_help_bundle.gd`).
   spelled after `EVENTFORGE_TEST_ONLY` so the two compose.
 - Maintenance tools: `tools/` - pack builders in `tools/pack_builders/` (auto-registered by glob,
   no list to maintain; run by `build_sample_behaviors.gd`, which regenerates EVERY pack - prefer
-  a single-builder throwaway script for one pack); `build_examples.gd` (showcases, byte-stable);
+  a single-builder throwaway script for one pack); `build_examples.gd` (showcases, byte-stable -
+  and its own drift gate under `-- --check`, which snapshots `demo/showcase/`, runs the ORDINARY
+  build over it, compares every byte and puts the committed bytes back, printing
+  `showcases=N drifted=M`. It rebuilds in place rather than into a safe corner because showcase
+  paths are written into the showcases themselves, so a redirected build is a different build; the
+  gate and the release ritual are therefore one code path. A pack member-order change drifts this
+  tree without touching it, which is how five `.tscn` files once went stale unnoticed);
   `audit_addons.gd` (pack drift + spelling + successor gates); `vocabulary_doc.gd`;
   `harvest_translations.gd` (the nine translation CSVs' deriver: the translate()-literal reader, the
   l10n obligation table and the live-editor walk all live here, and both l10n gates read them from
