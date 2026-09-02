@@ -55,11 +55,11 @@ move_speed = 280.0
 
 [node name="WeaponKit" type="Node" parent="Player"]
 script = ExtResource("3_305mw")
-current_ammo = 8
-fire_mode = 1
-fire_rate = 7.0
 max_ammo = 8
+current_ammo = 8
+fire_rate = 7.0
 reload_time = 0.8
+fire_mode = 1
 
 [node name="Hud" type="Label" parent="."]
 offset_left = 28.0

@@ -53,9 +53,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile0"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile0"]
 script = ExtResource("2_cgeu4")
@@ -70,9 +70,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile1"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile1"]
 script = ExtResource("2_cgeu4")
@@ -87,9 +87,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile2"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile2"]
 script = ExtResource("2_cgeu4")
@@ -104,9 +104,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile3"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile3"]
 script = ExtResource("2_cgeu4")
@@ -121,9 +121,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile4"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile4"]
 script = ExtResource("2_cgeu4")
@@ -138,9 +138,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile5"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile5"]
 script = ExtResource("2_cgeu4")
@@ -155,9 +155,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile6"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile6"]
 script = ExtResource("2_cgeu4")
@@ -172,9 +172,9 @@ texture = SubResource("ImageTexture_x1041")
 
 [node name="SineBehavior" type="Node" parent="Tiles/Tile7"]
 script = ExtResource("5_ku8y6")
-magnitude = 18.0
 movement = "vertical"
 period = 1.6
+magnitude = 18.0
 
 [node name="SpringBehavior" type="Node" parent="Tiles/Tile7"]
 script = ExtResource("2_cgeu4")
