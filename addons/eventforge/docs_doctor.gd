@@ -37,7 +37,7 @@
 # that went green while nothing was written is worse than the gap it hid.
 @tool
 class_name EventSheetDocsDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section registers under. The individual lines file under the coverage module's own
 ## check ids, so the quick-fix chips and the inbox identities are addressed by what the line IS
@@ -147,14 +147,14 @@ static func _summary(reports: Array[Dictionary], read: int, total: int) -> Dicti
 		counts["thin"] = int(counts["thin"]) + (page.get("thin", []) as Array).size()
 		counts["unwritten"] = int(counts["unwritten"]) + (page.get("unwritten", PackedStringArray()) as PackedStringArray).size()
 	if read == 0:
-		return _finding(CHECK_ID, "info", "", EventSheetL10n.translate("Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report."), "summary")
+		return _finding("info", CHECK_ID, "", EventSheetL10n.translate("Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report."), "summary")
 	var message: String = EventSheetL10n.translate("Docs: %d of %d guide(s) read, %d out of step.") % [
 		read, total, reports.size()]
 	message += " " + EventSheetL10n.translate("%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.") % [
 		int(counts["missing"]), int(counts["extra"]), int(counts["thin"]), int(counts["unwritten"])]
 	if reports.size() > GUIDES_LISTED_LIMIT:
 		message += " " + EventSheetL10n.translate("The %d worst are listed below.") % GUIDES_LISTED_LIMIT
-	return _finding(CHECK_ID, "info", "", message, "summary")
+	return _finding("info", CHECK_ID, "", message, "summary")
 
 
 ## One guide's lines: the headline for the page, then at most a few of the things it holds, worst
@@ -167,10 +167,10 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 	var page_id: String = str(page.get("page", ""))
 	var path: String = EventSheetDocLibrary.page_path(page_id)
 	var out: Array[Dictionary] = []
-	out.append(_finding(CHECK_ID, "info", path, EventSheetDocCoverage.advisory_line(page), page_id))
+	out.append(_finding("info", CHECK_ID, path, EventSheetDocCoverage.advisory_line(page), page_id))
 	var missing: PackedStringArray = page.get("missing", PackedStringArray())
 	for index: int in range(mini(missing.size(), LINES_PER_GUIDE_LIMIT)):
-		out.append(_finding(EventSheetDocCoverage.CHECK_UNLISTED, "info", path,
+		out.append(_finding("info", EventSheetDocCoverage.CHECK_UNLISTED, path,
 			EventSheetL10n.translate("%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.") % [
 				page_id.get_file(), missing[index]],
 			missing[index]))
@@ -179,7 +179,7 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 	for index: int in range(mini(extra.size(), LINES_PER_GUIDE_LIMIT)):
 		var name: String = extra[index]
 		var closest: PackedStringArray = nearest.get(name, PackedStringArray())
-		out.append(_finding(EventSheetDocCoverage.CHECK_UNANSWERED, "info", path,
+		out.append(_finding("info", EventSheetDocCoverage.CHECK_UNANSWERED, path,
 			EventSheetL10n.translate("%s documents \"%s\" and no verb answers to it. Nearest that do: %s.") % [
 				page_id.get_file(), name, ", ".join(closest)] if not closest.is_empty()
 			else EventSheetL10n.translate("%s documents \"%s\" and no verb answers to it, nor anything near it.") % [
@@ -188,14 +188,14 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 	var thin: Array = page.get("thin", []) as Array
 	for index: int in range(mini(thin.size(), LINES_PER_GUIDE_LIMIT)):
 		var entry: Dictionary = thin[index] as Dictionary
-		out.append(_finding(EventSheetDocCoverage.CHECK_THIN, "info", path,
+		out.append(_finding("info", EventSheetDocCoverage.CHECK_THIN, path,
 			EventSheetL10n.translate("%s lists %s with nothing under \"what it does\". Draft: \"%s\"") % [
 				page_id.get_file(), str(entry.get("name", "")),
 				EventSheetDocCoverage.draft_note(str(entry.get("name", "")), str(entry.get("params", "")))],
 			str(entry.get("name", ""))))
 	var unwritten: PackedStringArray = page.get("unwritten", PackedStringArray())
 	for index: int in range(mini(unwritten.size(), LINES_PER_GUIDE_LIMIT)):
-		out.append(_finding(EventSheetDocCoverage.CHECK_UNWRITTEN, "info", path,
+		out.append(_finding("info", EventSheetDocCoverage.CHECK_UNWRITTEN, path,
 			EventSheetL10n.translate("%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.") % [
 				page_id.get_file(), unwritten[index]],
 			unwritten[index]))
@@ -208,11 +208,3 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 static func _changelog_text() -> String:
 	var file: FileAccess = FileAccess.open(EventSheetDocWhatsNew.SOURCE_PATH, FileAccess.READ)
 	return "" if file == null else file.get_as_text()
-
-
-static func _finding(check_id: String, severity: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject,
-	}

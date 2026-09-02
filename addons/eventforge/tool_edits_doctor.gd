@@ -22,7 +22,7 @@
 # dropped. A project with no editor tools in it reports nothing at all.
 @tool
 class_name EventSheetToolEditsDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id its one finding is filed as. Frozen alongside
 ## the wording: the quick-fix chips and the tests address a finding by its check id.
@@ -97,11 +97,3 @@ static func script_findings(script_path: String, mine: Array[Dictionary]) -> Arr
 		findings.append(_finding("warning", CHECK_NOT_UNDOABLE, script_path,
 			str(finding.get("message", "")), str(finding.get("subject", ""))))
 	return findings
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

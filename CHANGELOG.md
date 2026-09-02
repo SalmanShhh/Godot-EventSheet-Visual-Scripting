@@ -296,6 +296,17 @@ comes from `tools/measure_ledger.ps1`, at the two commits named in it.
   no single one, so joining them would make a 600-line file with nothing easier to find in it.
   Translation / Translation Quality and Editor Author / Editor Object DID share their shelves, and
   both merged, above.
+- **Every Doctor section shares the four beats it never had a reason to copy.** Sixteen section
+  files each carried their own byte-identical copy of the finding dictionary the panel, the triage
+  inbox, the quick-fix chips and the headless CLI all read by key; four also carried the same filing
+  walk that turns a family's findings into that shape; five re-declared the same one-line constant
+  naming the plugin's own folder; and the "does this text say any of these words" pre-read and the
+  "score, then sort by score and then by path" ordering each stood in two or three files. They live
+  once in `EventSheetDoctorSection`, which the sections EXTEND rather than name - GDScript inherits
+  static functions, so `_finding(...)` inside a section still reads exactly as it did and not one
+  call site moved. Held by a findings-identity proof: the whole Doctor run over this repository is
+  275 findings before and 275 byte-identical findings after, severity, check id, path, subject,
+  order key and message each compared in full.
 
 ### Fixed
 

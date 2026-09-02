@@ -60,7 +60,7 @@
 # report is not a place from which to rewrite somebody's sheet.
 @tool
 class_name EventSheetFilesDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the ids each kind of line is filed as. Frozen
 ## alongside the wording: the tests and the quick-fix chips address a finding by these.
@@ -117,7 +117,6 @@ static func project_sources() -> Dictionary:
 		if not text.is_empty():
 			sources[script_path] = text
 	return sources
-
 
 
 # ── The export trap ──────────────────────────────────────────────────────────────────────────
@@ -276,7 +275,6 @@ static func _file_call_literals(line: String) -> PackedStringArray:
 	return found
 
 
-
 # ── A read of a file that is not there yet ───────────────────────────────────────────────────
 
 
@@ -331,7 +329,6 @@ static func _guarded_paths(line: String) -> PackedStringArray:
 	return asked
 
 
-
 # ── A file from outside the game, handed to the loader that can run code ─────────────────────
 
 
@@ -360,7 +357,6 @@ static func loads_outside_findings(sources: Dictionary) -> Array[Dictionary]:
 		message += " " + EventSheetL10n.translate("This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.")
 		findings.append(_finding("warning", CHECK_LOADS_OUTSIDE, script_path, message, lines[0]))
 	return findings
-
 
 
 # ── A scene built from a file this project cannot vouch for ──────────────────────────────────
@@ -676,7 +672,6 @@ static func _walk_rows(rows: Array, visitor: Callable) -> void:
 			_walk_rows(event.sub_events, visitor)
 
 
-
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────
 
 
@@ -793,11 +788,3 @@ static func _is_someone_elses(script_path: String) -> bool:
 		if script_path.begins_with(prefix):
 			return true
 	return false
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

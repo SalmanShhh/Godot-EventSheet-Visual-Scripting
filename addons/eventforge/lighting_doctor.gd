@@ -21,7 +21,7 @@
 # all.
 @tool
 class_name EventSheetLightingDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the ids each kind of finding is filed as. Frozen
 ## alongside the wording: the quick-fix chips and the tests address a finding by its check id.
@@ -41,10 +41,6 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetLightingFindings.KIND_NO_ENVIRONMENT: CHECK_NO_WORLD,
 	EventSheetLightingFindings.KIND_SHARED_ENVIRONMENT: CHECK_SHARED
 }
-
-## The plugin's own folder, left out of both corpora for the reason every other Doctor corpus leaves
-## it out: it is shipped code the project author did not write and cannot usefully edit.
-const PLUGIN_DIRECTORY := "res://addons/"
 
 ## What every light class of both dimensions has in its name - the cheap first question asked of a
 ## scene's text before anything is parsed.
@@ -115,7 +111,7 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 		if troubled == 0:
 			worst_path = scene_path
 		troubled += 1
-		findings.append_array(_filed(scene_path, found))
+		findings.append_array(_filed(scene_path, found, CHECK_FOR_KIND, CHECK_ID))
 	for script_path: String in scripts:
 		findings.append_array(sheet_findings(script_path))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
@@ -137,24 +133,4 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
 	if sheet == null:
 		return []
-	return _filed(script_path, EventSheetLightingFindings.findings(sheet))
-
-
-## A family's findings as the Doctor files them: its own severity and wording, under the check id
-## its kind maps to, pointing at the file a reader should open.
-static func _filed(path: String, found: Array[Dictionary]) -> Array[Dictionary]:
-	var filed: Array[Dictionary] = []
-	for finding: Dictionary in found:
-		filed.append(_finding(str(finding.get("severity", "warning")),
-			str(CHECK_FOR_KIND.get(str(finding.get("kind", "")), CHECK_ID)), path,
-			"%s %s" % [path.get_file(), str(finding.get("message", ""))],
-			str(finding.get("subject", ""))))
-	return filed
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}
+	return _filed(script_path, EventSheetLightingFindings.findings(sheet), CHECK_FOR_KIND, CHECK_ID)

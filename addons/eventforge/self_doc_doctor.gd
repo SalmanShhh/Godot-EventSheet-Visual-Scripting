@@ -19,7 +19,7 @@
 # person decides. Rewording is not drift; only losing the subject is.
 @tool
 class_name EventSheetSelfDocDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the ids its two kinds of line are filed as. Frozen
 ## alongside the wording, because a quick-fix chip and the tests address a finding by its check id.
@@ -55,7 +55,7 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	var read: int = 0
 	for sheet_path: String in sorted:
 		if read >= SHEETS_READ_LIMIT:
-			findings.append(_finding(CHECK_ID, "",
+			findings.append(_finding("info", CHECK_ID, "",
 				EventSheetL10n.translate("Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.") % [
 					read, sorted.size()], ""))
 			return
@@ -74,7 +74,7 @@ static func report(sheet: EventSheetResource, sheet_path: String) -> Array[Dicti
 	var undescribed: Array[Dictionary] = undescribed_entries(sheet)
 	if not undescribed.is_empty():
 		var numbers: Dictionary = EventSheetDescriptions.coverage(sheet)
-		findings.append(_finding(CHECK_ID, sheet_path,
+		findings.append(_finding("info", CHECK_ID, sheet_path,
 			EventSheetL10n.translate("%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.") % [
 				sheet_path.get_file(), EventSheetDescriptions.coverage_sentence(sheet)],
 			str(numbers.get("described", 0))))
@@ -82,10 +82,10 @@ static func report(sheet: EventSheetResource, sheet_path: String) -> Array[Dicti
 		if index >= LISTED_LIMIT:
 			break
 		var entry: Dictionary = undescribed[index]
-		findings.append(_finding(CHECK_UNDESCRIBED, sheet_path, _undescribed_line(entry),
+		findings.append(_finding("info", CHECK_UNDESCRIBED, sheet_path, _undescribed_line(entry),
 			"%s:%s" % [str(entry.get("kind", "")), str(entry.get("name", ""))]))
 	for drifted: Dictionary in drifted_entries(sheet):
-		findings.append(_finding(CHECK_DRIFTED, sheet_path, _drifted_line(drifted),
+		findings.append(_finding("info", CHECK_DRIFTED, sheet_path, _drifted_line(drifted),
 			str(drifted.get("name", ""))))
 	return findings
 
@@ -141,12 +141,3 @@ static func _undescribed_line(entry: Dictionary) -> String:
 static func _drifted_line(entry: Dictionary) -> String:
 	return EventSheetL10n.translate("%s still says \"%s\", but its rows no longer mention any of that. Fresh draft: \"%s\"") % [
 		str(entry.get("name", "")), str(entry.get("described", "")), str(entry.get("draft", ""))]
-
-
-## One finding. Every line of this section is a note: nothing here is wrong, and a project that
-## ignores all of it is a working project.
-static func _finding(check_id: String, path: String, message: String, subject: String) -> Dictionary:
-	return {
-		"severity": "info", "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

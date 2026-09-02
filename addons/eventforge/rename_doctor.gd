@@ -32,7 +32,7 @@
 # four runners (the panel, the headless CLI, CI and the MCP server).
 @tool
 class_name EventSheetRenameDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the ids its findings are filed as. Frozen alongside
 ## the wording: the quick-fix chips and the tests address a finding by its check id.
@@ -122,11 +122,3 @@ static func _opened(importer: GDScriptImporter, path: String) -> EventSheetResou
 	if path.get_extension().to_lower() == "tres":
 		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 	return importer.import_external(path)
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

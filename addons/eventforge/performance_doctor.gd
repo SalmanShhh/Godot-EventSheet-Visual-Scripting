@@ -18,7 +18,7 @@
 # one read per script and reports nothing at all.
 @tool
 class_name EventSheetPerformanceDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id each kind of finding is filed as. Frozen
 ## alongside the wording: the quick-fix chips and the tests address a finding by its check id.
@@ -158,14 +158,7 @@ static func _smallest_first(scripts: PackedStringArray) -> PackedStringArray:
 	var sized: Array[Dictionary] = []
 	for script_path: String in scripts:
 		sized.append({"path": script_path, "size": _size_of(script_path)})
-	sized.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
-		if int(left["size"]) == int(right["size"]):
-			return str(left["path"]) < str(right["path"])
-		return int(left["size"]) < int(right["size"]))
-	var ordered: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in sized:
-		ordered.append(str(entry["path"]))
-	return ordered
+	return _ordered_paths(sized, "size", true)
 
 
 static func _size_of(script_path: String) -> int:
@@ -191,11 +184,3 @@ static func _scripts_with_findings(findings: Array[Dictionary]) -> int:
 	for finding: Dictionary in findings:
 		paths[str(finding.get("path", ""))] = true
 	return paths.size()
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

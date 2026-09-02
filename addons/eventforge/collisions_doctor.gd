@@ -21,7 +21,7 @@
 # substring test per script and reports nothing at all.
 @tool
 class_name EventSheetCollisionsDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id each finding is filed as. Frozen alongside the
 ## wording: the quick-fix chips and the tests address a finding by its check id.
@@ -39,10 +39,6 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetCollisionFindings.KIND_NO_SHAPE: CHECK_NO_SHAPE,
 	EventSheetCollisionFindings.KIND_ONE_WAY_FACING: CHECK_ONE_WAY,
 }
-
-## The plugin's own folder, left out of the corpus for the reason every other Doctor corpus leaves it
-## out: it is shipped code the project author did not write and cannot usefully edit.
-const PLUGIN_DIRECTORY := "res://addons/"
 
 ## The words a script's own TEXT has to say before it is opened. Reading the rows of a script means
 ## opening it as a sheet, which is the most expensive thing this section can do - so a script that
@@ -128,7 +124,7 @@ static func sheet_findings(script_path: String,
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
 	if sheet == null:
 		return []
-	return _filed(script_path, EventSheetCollisionFindings.findings(sheet, script_path, scenes))
+	return _filed(script_path, EventSheetCollisionFindings.findings(sheet, script_path, scenes), CHECK_FOR_KIND, CHECK_ID)
 
 
 ## The scripts worth reading, sorted. The plugin's own are left out, and so is every script that
@@ -157,27 +153,4 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 ## Does this text wait on a touch at all. Deliberately looser than the rules: it only decides what
 ## gets OPENED, and the rules decide what is reported.
 static func says_enough(source: String) -> bool:
-	for word: String in TOUCH_WORDS:
-		if source.contains(word):
-			return true
-	return false
-
-
-## A family's findings as the Doctor files them: its own severity and wording, under the check id its
-## kind maps to, pointing at the file a reader should open.
-static func _filed(path: String, found: Array[Dictionary]) -> Array[Dictionary]:
-	var filed: Array[Dictionary] = []
-	for finding: Dictionary in found:
-		filed.append(_finding(str(finding.get("severity", "warning")),
-			str(CHECK_FOR_KIND.get(str(finding.get("kind", "")), CHECK_ID)), path,
-			"%s %s" % [path.get_file(), str(finding.get("message", ""))],
-			str(finding.get("subject", ""))))
-	return filed
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}
+	return _says_any(source, TOUCH_WORDS)

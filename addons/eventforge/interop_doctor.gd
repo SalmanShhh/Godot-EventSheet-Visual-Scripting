@@ -20,7 +20,7 @@
 # smallest are also the best next candidates - a small input or UI script is the one that reads 100%.
 @tool
 class_name EventSheetInteropDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the ids each kind of line is filed as. Frozen
 ## alongside the wording: the tests and any quick-fix chip address a finding by its check id.
@@ -114,7 +114,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			kept_as_code.append(script_path)
 			continue
 		sized.append({"path": script_path, "size": text.length()})
-	var measured: Array[Dictionary] = _measure(_smallest_first(sized))
+	var measured: Array[Dictionary] = _measure(_ordered_paths(sized, "size", true))
 	var candidates: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in sized:
 		candidates.append(str(entry["path"]))
@@ -149,19 +149,6 @@ static func _script_line(entry: Dictionary) -> String:
 	if callers > 0:
 		line += " " + EventSheetL10n.translate("%d other script(s) call something it declares.") % callers
 	return line
-
-
-## The candidates, smallest file first - which is both the cheapest to measure and, as it happens,
-## the best place to start: a small input or UI script is the one that reads 100%.
-static func _smallest_first(sized: Array[Dictionary]) -> PackedStringArray:
-	sized.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
-		if int(left["size"]) == int(right["size"]):
-			return str(left["path"]) < str(right["path"])
-		return int(left["size"]) < int(right["size"]))
-	var ordered: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in sized:
-		ordered.append(str(entry["path"]))
-	return ordered
 
 
 ## Opens as many as the ceilings allow, then sorts what it read best-candidate-first: the script that
@@ -225,11 +212,3 @@ static func _adoptable_names(sheet: EventSheetResource) -> PackedStringArray:
 		if not label.is_empty() and not names.has(label):
 			names.append(label)
 	return names
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

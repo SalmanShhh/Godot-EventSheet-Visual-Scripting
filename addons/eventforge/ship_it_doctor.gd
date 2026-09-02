@@ -33,7 +33,7 @@
 # sees.
 @tool
 class_name EventSheetShipItDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under. Frozen alongside the wording: the tests and the panel
 ## address a finding by these.
@@ -126,7 +126,6 @@ static func project_sources() -> Dictionary:
 	return sources
 
 
-
 # ── There is nothing to build ────────────────────────────────────────────────────────────────
 
 
@@ -138,7 +137,6 @@ static func export_preset_findings(preset_text: String) -> Array[Dictionary]:
 		return []
 	return [_finding("warning", CHECK_EXPORT_PRESET, EXPORT_PRESETS_PATH,
 		EventSheetL10n.translate("This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to."), "")]
-
 
 
 # ── It still looks like a new project ────────────────────────────────────────────────────────
@@ -155,7 +153,6 @@ static func identity_findings(project_name: String, icon_path: String) -> Array[
 		findings.append(_finding("warning", CHECK_IDENTITY, "res://project.godot",
 			EventSheetL10n.translate("The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon."), ICON_SETTING))
 	return findings
-
 
 
 # ── A console line a player would see ────────────────────────────────────────────────────────
@@ -283,7 +280,6 @@ static func _collect_receipt(rows: Array, receipt: Array[Dictionary]) -> void:
 			_collect_receipt(event.sub_events, receipt)
 
 
-
 # ── A language that is short ─────────────────────────────────────────────────────────────────
 
 
@@ -408,7 +404,6 @@ static func missing_keys_csv(used: PackedStringArray, catalogs: Dictionary) -> S
 	return "\n".join(lines) + "\n"
 
 
-
 # ── The frame, where it was measured ─────────────────────────────────────────────────────────
 
 
@@ -481,7 +476,6 @@ static func frame_budget_findings(costs: Array[Dictionary]) -> Array[Dictionary]
 			worst_path.get_file(), worst_ms, int(round(share * 100.0)), FRAME_MS], worst_path)]
 
 
-
 # ── What gets saved ──────────────────────────────────────────────────────────────────────────
 
 
@@ -512,7 +506,6 @@ static func what_gets_saved_findings(usage: Dictionary) -> Array[Dictionary]:
 	return [_finding("info", CHECK_WHAT_GETS_SAVED, _sorted_keys(usage)[0],
 		EventSheetL10n.translate("A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.") % [
 			keys.size(), usage.size(), _named_then_counted(keys)], "")]
-
 
 
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────
@@ -557,11 +550,3 @@ static func _indent_of(line: String) -> int:
 
 static func _read_text(path: String) -> String:
 	return EventSheetProjectDoctor.source_of(path) if FileAccess.file_exists(path) else ""
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

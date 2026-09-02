@@ -20,7 +20,7 @@
 # script and reports nothing at all.
 @tool
 class_name EventSheetSpawningDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id each finding is filed as. Frozen alongside the
 ## wording: the quick-fix chips and the tests address a finding by its check id.
@@ -38,10 +38,6 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetSpawnFindings.KIND_SPAWNS_ITSELF: CHECK_SELF_SPAWN,
 	EventSheetSpawnFindings.KIND_FREED_STILL_BOOKED: CHECK_STILL_BOOKED,
 }
-
-## The plugin's own folder, left out of the corpus for the reason every other Doctor corpus leaves it
-## out: it is shipped code the project author did not write and cannot usefully edit.
-const PLUGIN_DIRECTORY := "res://addons/"
 
 ## The cheap first questions asked of a script's TEXT, one per rule. Reading the rows of a script
 ## means opening it as a sheet, which is the most expensive thing this section can do, so a script is
@@ -147,7 +143,7 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 		return []
 	var scenes: PackedStringArray = EventSheetSceneReplication.scenes_using(script_path)
 	var scene_path: String = scenes[0] if scenes.size() > 0 else ""
-	return _filed(script_path, EventSheetSpawnFindings.findings(sheet, scene_path))
+	return _filed(script_path, EventSheetSpawnFindings.findings(sheet, scene_path), CHECK_FOR_KIND, CHECK_ID)
 
 
 ## The scripts of a corpus that could earn a finding, STRONGEST EVIDENCE FIRST and then by path. The
@@ -163,14 +159,7 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 		var weight: int = evidence(EventSheetProjectDoctor.source_of(script_path))
 		if weight > 0:
 			scored.append({"path": script_path, "weight": weight})
-	scored.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
-		if int(left["weight"]) == int(right["weight"]):
-			return str(left["path"]) < str(right["path"])
-		return int(left["weight"]) > int(right["weight"]))
-	var ordered: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in scored:
-		ordered.append(str(entry["path"]))
-	return ordered
+	return _ordered_paths(scored, "weight", false)
 
 
 ## How much a script's own text says it could earn - a weight per rule whose shape it holds inside
@@ -245,29 +234,3 @@ static func might_earn_a_finding(script_path: String) -> bool:
 static func says_enough(source: String) -> bool:
 	return evidence(source) > 0
 
-
-static func _says_any(source: String, words: PackedStringArray) -> bool:
-	for word: String in words:
-		if source.contains(word):
-			return true
-	return false
-
-
-## A family's findings as the Doctor files them: its own severity and wording, under the check id its
-## kind maps to, pointing at the file a reader should open.
-static func _filed(path: String, found: Array[Dictionary]) -> Array[Dictionary]:
-	var filed: Array[Dictionary] = []
-	for finding: Dictionary in found:
-		filed.append(_finding(str(finding.get("severity", "warning")),
-			str(CHECK_FOR_KIND.get(str(finding.get("kind", "")), CHECK_ID)), path,
-			"%s %s" % [path.get_file(), str(finding.get("message", ""))],
-			str(finding.get("subject", ""))))
-	return filed
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

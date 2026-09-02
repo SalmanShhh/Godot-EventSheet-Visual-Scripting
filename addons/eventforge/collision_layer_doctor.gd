@@ -28,17 +28,13 @@
 # NOTHING is written and nothing is stored.
 @tool
 class_name EventSheetCollisionLayerDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id each finding is filed as. Frozen alongside the
 ## wording: the tests address a finding by its check id.
 const CHECK_ID := "collision-layers"
 const CHECK_UNNAMED := "collision-layer-unnamed"
 const CHECK_NOT_A_LAYER := "collision-layer-out-of-range"
-
-## The plugin's own folder, left out of the corpus for the reason every other Doctor corpus leaves it
-## out: it is shipped code the project author did not write and cannot usefully edit.
-const PLUGIN_DIRECTORY := "res://addons/"
 
 ## The three calls a named-layer row compiles to, as the text a script carries. The pre-read that
 ## keeps a project which never touches a layer from paying for this section at all.
@@ -90,12 +86,7 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 ## Does this text address a layer by number at all. Deliberately looser than the rules below: it only
 ## decides what gets READ, and the rules decide what is reported.
 static func says_enough(source: String) -> bool:
-	if not source.contains(MARK):
-		return false
-	for call_text: String in LAYER_CALLS:
-		if source.contains(call_text):
-			return true
-	return false
+	return source.contains(MARK) and _says_any(source, LAYER_CALLS)
 
 
 ## One script's findings. The dimension is the file's own - a script extending a 3D body means the
@@ -213,11 +204,3 @@ static func _first_argument(source: String, from: int) -> String:
 		if character == "\n":
 			return ""
 	return ""
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

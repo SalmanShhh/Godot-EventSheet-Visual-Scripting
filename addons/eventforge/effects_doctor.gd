@@ -20,7 +20,7 @@
 # per scene and one per script, and reports nothing at all.
 @tool
 class_name EventSheetEffectsDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id each finding is filed as. Frozen alongside the
 ## wording: the quick-fix chips and the tests address a finding by its check id.
@@ -40,10 +40,6 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetEffectFindings.KIND_UNDECLARED_GLOBAL: CHECK_GLOBAL,
 	EventSheetEffectFindings.KIND_IDLE_SCREEN_EFFECT: CHECK_SCREEN,
 }
-
-## The plugin's own folder, left out of both corpora for the reason every other Doctor corpus leaves
-## it out: it is shipped code the project author did not write and cannot usefully edit.
-const PLUGIN_DIRECTORY := "res://addons/"
 
 ## The cheap first question asked of a scene's text before anything is parsed - a scene with no
 ## material line in it wears no effect, and a project with no shaders should not pay to have every
@@ -106,7 +102,7 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 		if troubled == 0:
 			worst_path = scene_path
 		troubled += 1
-		findings.append_array(_filed(scene_path, found))
+		findings.append_array(_filed(scene_path, found, CHECK_FOR_KIND, CHECK_ID))
 	for script_path: String in scripts:
 		findings.append_array(sheet_findings(script_path))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
@@ -120,32 +116,9 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 ## reaches a shader costs one substring test.
 static func sheet_findings(script_path: String) -> Array[Dictionary]:
 	var source: String = EventSheetProjectDoctor.source_of(script_path)
-	var reaches: bool = false
-	for word: String in SHEET_WORDS:
-		reaches = reaches or source.contains(word)
-	if not reaches:
+	if not _says_any(source, SHEET_WORDS):
 		return []
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
 	if sheet == null:
 		return []
-	return _filed(script_path, EventSheetEffectFindings.findings(sheet))
-
-
-## A family's findings as the Doctor files them: its own severity and wording, under the check id its
-## kind maps to, pointing at the file a reader should open.
-static func _filed(path: String, found: Array[Dictionary]) -> Array[Dictionary]:
-	var filed: Array[Dictionary] = []
-	for finding: Dictionary in found:
-		filed.append(_finding(str(finding.get("severity", "warning")),
-			str(CHECK_FOR_KIND.get(str(finding.get("kind", "")), CHECK_ID)), path,
-			"%s %s" % [path.get_file(), str(finding.get("message", ""))],
-			str(finding.get("subject", ""))))
-	return filed
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}
+	return _filed(script_path, EventSheetEffectFindings.findings(sheet), CHECK_FOR_KIND, CHECK_ID)

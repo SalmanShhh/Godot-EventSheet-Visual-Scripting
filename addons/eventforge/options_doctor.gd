@@ -21,7 +21,7 @@
 # stops reporting with no state to clean up.
 @tool
 class_name EventSheetOptionsDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the id each finding is filed as. Frozen alongside the
 ## wording: the tests and the panel address a finding by these.
@@ -108,11 +108,3 @@ static func settings_every_preset_should_answer(preset_paths: PackedStringArray)
 			if not wanted.has(str(setting_name)):
 				wanted.append(str(setting_name))
 	return wanted
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}

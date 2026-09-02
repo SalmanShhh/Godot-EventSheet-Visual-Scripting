@@ -16,7 +16,7 @@
 # nothing at all.
 @tool
 class_name EventSheetMultiplayerDoctor
-extends RefCounted
+extends EventSheetDoctorSection
 
 ## The id the section is registered under, and the ids each kind of finding is filed as. Frozen
 ## alongside the wording: the quick-fix chips and the tests address a finding by its check id.
@@ -138,11 +138,3 @@ static func unread_lines(sheet: EventSheetResource) -> PackedStringArray:
 ## coverage census follows, so the section's number and a head's number can never disagree.
 static func _percent(read: int, total: int) -> int:
 	return 100 if total <= 0 else int(floor(100.0 * float(read) / float(total)))
-
-
-static func _finding(severity: String, check_id: String, path: String, message: String,
-		subject: String) -> Dictionary:
-	return {
-		"severity": severity, "check": check_id, "path": path, "message": message,
-		"subject": subject
-	}
