@@ -1,7 +1,7 @@
 # EventForge module - the two lighting objects that are not lights.
 #
 # A lit scene has three kinds of node in it. The lights themselves are the object of their own rows
-# (light_node_aces.gd beside this file). The other two are here:
+# (lighting_aces.gd beside this file). The other two are here:
 #
 #   DARKNESS is a CanvasModulate. Godot stores it as a colour multiplied over everything on the
 #   layer, which is exactly right and says nothing: `Color(0.3, 0.3, 0.36)` does not tell a reader

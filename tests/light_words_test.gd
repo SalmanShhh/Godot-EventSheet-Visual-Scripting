@@ -16,7 +16,7 @@ class_name LightWordsTest
 extends RefCounted
 
 const W := preload("res://addons/eventforge/registration/light_words.gd")
-const MODULE := preload("res://addons/eventforge/registration/modules/light_node_aces.gd")
+const MODULE := preload("res://addons/eventforge/registration/modules/lighting_aces.gd")
 
 
 static func run() -> bool:
@@ -113,6 +113,11 @@ static func _test_the_word_map() -> bool:
 static func _test_the_rows() -> bool:
 	var built: Dictionary = {}
 	for descriptor: ACEDescriptor in MODULE.get_descriptors():
+		# The module also holds the older rows that take their light as a PARAMETER, and those are
+		# not word-built and not scoped to a light class. Being hosted on a light is what makes a
+		# row one of these, so that is the question asked rather than a list of ids to keep in sync.
+		if not W.is_light_class(descriptor.node_type):
+			continue
 		built[descriptor.ace_id] = "%s | %s" % [descriptor.node_type, descriptor.codegen_template]
 	return _check("every light word builds its rows on the class that answers to it", built, {
 		"LightSetBrightness": "Light2D | energy = {value}",

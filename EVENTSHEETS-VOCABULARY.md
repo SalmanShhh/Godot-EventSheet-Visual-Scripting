@@ -4083,8 +4083,8 @@ Keys and doors: the coloured keycard, said as the sheet's list words.
 #### Expressions
 - **Keys Held** (`keys: String`) - How many keys the player is carrying - the number a row of HUD key icons counts up to.
 
-### Light Node (`res://addons/eventforge/registration/modules/light_node_aces.gd`)
-the LIGHT is the object, not a parameter.
+### Lighting (`res://addons/eventforge/registration/modules/lighting_aces.gd`)
+the Lighting vocabulary: lights, the world's look, and the light as an object.
 
 #### Conditions
 - **Is On** (`target: String`) - True while is on. Reads `Light2D.enabled`.
@@ -4111,21 +4111,6 @@ the LIGHT is the object, not a parameter.
 - **Turn Shadows Off** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.
 - **Turn Shadows On** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.
 - **Turn Shadows Off** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.
-
-#### Expressions
-- **Brightness** (`target: String`) - Reads brightness back: `Light2D.energy`. Use it in any value field.
-- **Brightness** (`target: String`) - Reads brightness back: `Light3D.light_energy`. Use it in any value field.
-- **Colour** (`target: String`) - Reads the light's colour back: `Light2D.color`. Use it in any value field.
-- **Colour** (`target: String`) - Reads the light's colour back: `Light3D.light_color`. Use it in any value field.
-- **Reach** (`target: String`) - Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.
-- **Reach** (`target: String`) - Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.
-- **Reach** (`target: String`) - Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.
-- **Cone Angle** (`target: String`) - Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.
-
-### Lighting (`res://addons/eventforge/registration/modules/lighting_aces.gd`)
-lights, layer tint and the world's ambient light.
-
-#### Actions
 - **Set Light Energy (2D)** (`node: String, value: float`) - Sets how bright a 2D light is. The row shows the fraction as a percentage.
 - **Set Light Colour (2D)** (`node: String, colour: Color`) - Sets the colour a 2D light casts.
 - **Set Light On/Off** (`node: String, on: bool`) - Switches a 2D light on or off. Different from hiding the node, which also hides its children.
@@ -4141,6 +4126,16 @@ lights, layer tint and the world's ambient light.
 - **Set Glow Strength** (`env: String, value: String`) - Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.
 - **Set Ambient Occlusion On/Off** (`env: String, on: bool`) - Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.
 - **Set Sky Rotation** (`value: String, env: String`) - Turns the sky. Advance it slowly every tick and the clouds drift.
+
+#### Expressions
+- **Brightness** (`target: String`) - Reads brightness back: `Light2D.energy`. Use it in any value field.
+- **Brightness** (`target: String`) - Reads brightness back: `Light3D.light_energy`. Use it in any value field.
+- **Colour** (`target: String`) - Reads the light's colour back: `Light2D.color`. Use it in any value field.
+- **Colour** (`target: String`) - Reads the light's colour back: `Light3D.light_color`. Use it in any value field.
+- **Reach** (`target: String`) - Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.
+- **Reach** (`target: String`) - Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.
+- **Reach** (`target: String`) - Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.
+- **Cone Angle** (`target: String`) - Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.
 
 ### Locale Asset (`res://addons/eventforge/registration/modules/locale_asset_aces.gd`)
 the parts of a localised game that are NOT strings: files, voice, data cells.
@@ -4762,6 +4757,11 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 - **Is Cell In Bounds** (`cell: Vector2i, size: Vector2i`) - True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.
 - **For Each Cell In Radius** (`center: Vector2i, radius: int, shape: String`) - Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.
 - **Is Within Cone Of** (`origin: Vector2, facing_degrees: float, point: Vector2, fov_degrees: float, range_px: float`) - True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.
+- **Is Within Angle Of Facing** (`forward: String, direction: String, angle: String`) - Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.
+- **Is Behind** (`point: String, target: String`) - Asks whether a place is behind this object - the backstab half of a facing test.
+- **Is In Front Of** (`point: String, target: String`) - Asks whether a place is in front of this object, whichever way it happens to be turned.
+- **Is To The Right Of** (`point: String, target: String`) - Asks whether a place is off this object's right side - which way to lean, dodge or steer.
+- **Is To The Left Of** (`point: String, target: String`) - Asks whether a place is off this object's left side - the twin of Is To The Right Of.
 
 #### Actions
 - **Wrap Inside The View (3D)** - The Asteroids rule in 3D: leave the right of the view and come back on the left, off the top and back at the bottom, at the same distance from the camera. The missing twin of the 2D Wrap Inside The Screen, for a wrap-around arena or an endless shoal. Does nothing while there is no 3D camera.
@@ -4770,6 +4770,16 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 - **Look At (flat)** (`target: Vector3`) - Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.
 - **Apply Radial Impulse** (`center: Vector2, strength: float, radius: float`) - Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.
 - **Push Group Away From** (`group: String, center: Vector2, radius: float, strength: float`) - Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.
+- **Move In Direction** (`direction: String, speed: String, delta_t: String, target: String`) - Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.
+- **Rotate Clockwise** (`degrees_per_second: String, delta_t: String, target: String`) - Turns a 3D node about its up axis - the yaw a character or a turret turns with.
+- **Rotate Up Or Down** (`degrees_per_second: String, delta_t: String, target: String`) - Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.
+- **Roll** (`degrees_per_second: String, delta_t: String, target: String`) - Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.
+- **Rotate Toward Facing** (`facing: String, rate: String, delta_t: String`) - Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.
+- **Set Position To Another Object** (`other: String`) - Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.
+- **Place On The Ground** (`reach: String`) - Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.
+- **Align To The Ground's Slope** (`normal: String`) - Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.
+- **Create Evenly Around A Circle** (`count: String, scene: String, centre: String, radius: String`) - Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.
+- **Store As Angle And Distance** (`from: String, to: String, angle_name: String, distance_name: String`) - Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.
 
 #### Expressions
 - **World Point To Screen** (`world_point: Vector2`) - Where a world point sits on screen right now, camera zoom and scroll included - pin a nameplate, a health bar or a damage number to something that moves. Put the answer on a node that lives on a CanvasLayer and it will track its target without lagging behind the camera.
@@ -4808,30 +4818,6 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 - **Cells In Rectangle** (`top_left: Vector2i, size: Vector2i`) - Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.
 - **Falloff At Distance** (`center: Vector2, point: Vector2, radius: float, shape: String`) - How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.
 - **Strength Toward** (`node: String, radius: float`) - Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.
-
-### Spatial Words (`res://addons/eventforge/registration/modules/spatial_words_aces.gd`)
-the 3D page: moving, turning, placing, and the point at an angle
-
-#### Conditions
-- **Is Within Angle Of Facing** (`forward: String, direction: String, angle: String`) - Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.
-- **Is Behind** (`point: String, target: String`) - Asks whether a place is behind this object - the backstab half of a facing test.
-- **Is In Front Of** (`point: String, target: String`) - Asks whether a place is in front of this object, whichever way it happens to be turned.
-- **Is To The Right Of** (`point: String, target: String`) - Asks whether a place is off this object's right side - which way to lean, dodge or steer.
-- **Is To The Left Of** (`point: String, target: String`) - Asks whether a place is off this object's left side - the twin of Is To The Right Of.
-
-#### Actions
-- **Move In Direction** (`direction: String, speed: String, delta_t: String, target: String`) - Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.
-- **Rotate Clockwise** (`degrees_per_second: String, delta_t: String, target: String`) - Turns a 3D node about its up axis - the yaw a character or a turret turns with.
-- **Rotate Up Or Down** (`degrees_per_second: String, delta_t: String, target: String`) - Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.
-- **Roll** (`degrees_per_second: String, delta_t: String, target: String`) - Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.
-- **Rotate Toward Facing** (`facing: String, rate: String, delta_t: String`) - Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.
-- **Set Position To Another Object** (`other: String`) - Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.
-- **Place On The Ground** (`reach: String`) - Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.
-- **Align To The Ground's Slope** (`normal: String`) - Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.
-- **Create Evenly Around A Circle** (`count: String, scene: String, centre: String, radius: String`) - Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.
-- **Store As Angle And Distance** (`from: String, to: String, angle_name: String, distance_name: String`) - Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.
-
-#### Expressions
 - **Facing Along** (`direction: String`) - The facing that looks along a direction - what Rotate Toward Facing turns toward.
 - **Point At Angle** (`angle: String, distance: String`) - The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.
 

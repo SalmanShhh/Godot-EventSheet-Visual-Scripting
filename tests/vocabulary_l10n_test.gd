@@ -52,13 +52,12 @@ const NEW_MODULES: Array[String] = [
 	# words. Each of these modules is WHOLLY new, so the whole module is owed and swept.
 	"res://addons/eventforge/registration/modules/game_mechanics_aces.gd",
 	"res://addons/eventforge/registration/modules/editor_author_aces.gd",
-	"res://addons/eventforge/registration/modules/spatial_words_aces.gd",
 	"res://addons/eventforge/registration/modules/cursor_canvas_aces.gd",
 	# Playing together, and lighting a game: three modules that shipped whole, so the whole of each
-	# is owed. The frozen lighting module beside them (lighting_aces.gd) predates both waves and was
-	# keyed at the same time, which is why it is not listed here but is held by the ratchet below.
+	# is owed. The node-scoped lighting rows now live in lighting_aces.gd beside the frozen ones they
+	# were authored next to, and that whole file is keyed, so the file is what is listed.
 	"res://addons/eventforge/registration/modules/multiplayer_aces.gd",
-	"res://addons/eventforge/registration/modules/light_node_aces.gd",
+	"res://addons/eventforge/registration/modules/lighting_aces.gd",
 	"res://addons/eventforge/registration/modules/scene_lighting_aces.gd",
 	# The game's own mode, and the value-shaping and movement words. Three modules that shipped
 	# whole, so the whole of each is owed.
@@ -362,11 +361,11 @@ const FULLY_KEYED_MODULES: Array[String] = [
 	"clipboard_aces.gd", "collision_edge_aces.gd", "collision_filter_aces.gd", "crowd_aces.gd",
 	"cursor_canvas_aces.gd",
 	"editor_author_aces.gd", "facing_aces.gd", "group_arrival_aces.gd",
-	"game_mechanics_aces.gd", "game_state_aces.gd", "input_event_aces.gd", "light_node_aces.gd",
+	"game_mechanics_aces.gd", "game_state_aces.gd", "input_event_aces.gd",
 	"lighting_aces.gd", "notification_aces.gd",
 	"math_words_aces.gd", "multiplayer_aces.gd", "object_state_aces.gd", "resource_aces.gd",
 	"scene_lighting_aces.gd",
-	"removal_aces.gd", "spatial_aces.gd", "space_words_aces.gd", "spatial_words_aces.gd",
+	"removal_aces.gd", "spatial_aces.gd", "space_words_aces.gd",
 	"table_aces.gd", "spawn_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"
 ]
 

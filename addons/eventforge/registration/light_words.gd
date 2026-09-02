@@ -31,7 +31,7 @@ const ROOT_3D: String = "Light3D"
 
 ## What kind of row a word makes. A VALUE word is set to a number and can be read back; a SWITCH is
 ## turned on or off and can be asked about; a COLOUR is a value with a colour field rather than an
-## expression one. One builder per kind, in light_node_aces.gd.
+## expression one. One builder per kind, in lighting_aces.gd.
 const KIND_VALUE: String = "value"
 const KIND_COLOUR: String = "colour"
 const KIND_SWITCH: String = "switch"

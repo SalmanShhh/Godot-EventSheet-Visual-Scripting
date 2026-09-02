@@ -88,8 +88,10 @@ static func _test_registration() -> bool:
 	var shipped: Dictionary = _shipped()
 	all_passed = _check("the spatial module reaches the live registry",
 		shipped.has("WorldPointToScreen"), true) and all_passed
+	# The five maths families this file is about, plus the 3D page (move, place, see, the point at
+	# an angle) that was authored beside them and now lives in the same module file.
 	all_passed = _check("the module ships the whole family",
-		_module_ids().size(), 47) and all_passed
+		_module_ids().size(), 64) and all_passed
 	for ace_id: String in ["WrapInsideView3D", "FaceAlongVelocity", "LookAtSafeUp", "LookAtFlat",
 			"StrengthToward", "ApplyRadialImpulse", "PushGroupAwayFrom"]:
 		var descriptor: ACEDescriptor = shipped.get(ace_id, null)
