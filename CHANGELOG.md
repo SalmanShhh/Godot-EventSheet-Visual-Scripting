@@ -99,8 +99,31 @@
   glossary's Simple Mode entry included. All **59** entries in the Manual's index carry a description;
   none is blank.
 
-### Half the words: the copies that had no reason to be copies
+### Maintenance: half the words, and the copies that had no reason to be copies
 
+This section is for whoever works on the plugin. Nothing in it changes what a project compiles to,
+what a sheet reads like, or one user-visible string, which is why the What's new page a reader opens
+now drops a Maintenance section whole rather than showing somebody a shrink they cannot see.
+Measured across the wave, outside the three generated trees: **-993 lines** of hand-written GDScript
+(**+3,333 / -4,326**), of which `tests/` is **-1,523** and the installed plugin - everything under
+`addons/` except the doc bundle - is **-6**.
+
+- **Five hundred copies of one assertion become one call, and there is one assertion file.** Nearly
+  every test in `tests/` carried its own copy of the same eight-line `_check`, differing only in the
+  label prefix it printed. `tests/support.gd` is that function once, with the prefix passed in,
+  beside `pins()` for table-shaped assertions and the compile / reopen / re-emit trio the round-trip
+  tests hand-rolled. **495** of the **731** test files carried the byte-identical clone and now
+  delegate to it; the other **236** print something else, and their lines are a contract too, so
+  normalising them would have been a behaviour change rather than a shrink. **1,887 lines** went
+  with the copies - a ceiling of 495 x 8 = 3,960 minus the preload and the one-line shim each file
+  keeps, which is **3.8 lines saved per file, not 8**, and the arithmetic worth carrying into the
+  next wave's estimate rather than the count of duplicate sites. `tests/pin_table.gd`, a SECOND
+  shared vocabulary that predated all of this, folded in as `pin_table` / `pin_value`: its two
+  functions moved verbatim, because the quieter line they print on a failure is a contract in the
+  same way. The printed lines did not move anywhere - the suite's `[PASS]` / `[FAIL]` shapes are
+  parsed by the runner, the report tool, the parallel launcher and CI, so identity was proved by
+  census across 21,072 reported lines, which differ before and after only where a label carries a
+  measured duration.
 - **One door to EditorSettings instead of eight.** Eight dock helpers each carried the same
   `_editor_settings()` - the three questions that ask whether there is an editor to talk to and
   reach it through the singleton rather than by naming the editor-only class, which is what keeps an
@@ -109,45 +132,57 @@
 - **Three more copied dialog helpers get one home each.** The dropdown select-or-fall-back
   (`EventSheetPopupUI.select_option`), the sized receipt list (`EventSheetPopupUI.sized_list`, three
   copies, not two) and the stored on/off preference (`EventSheetEditorSettings.stored_flag`) each
-  lived in two or three files, byte for byte. Helpers that merely SHARE A NAME across the modes and
-  states dialogs were deliberately left alone: their bodies differ, and a shared name is not a
-  duplicate.
+  lived in two or three files, byte for byte - and the shared body is the removed one line for line
+  with nothing added, which is the whole argument for merging them. Helpers that merely SHARE A NAME
+  across the modes and states dialogs were deliberately left alone: their bodies differ, and a
+  shared name is not a duplicate.
 - **One name, one file.** The 357-line glue that builds and wires the sheet-function dialog was
   called `function_dialog.gd`, exactly like the 667-line widget it builds. It is
   `function_dialog_glue.gd` now, matching the class name it has carried since it was extracted.
-- **Five hundred copies of one assertion become one call.** Nearly every test in `tests/` carried
-  its own byte-identical copy of the same eight-line `_check`, differing only in the label prefix it
-  printed - about 4,000 lines saying the same thing. `tests/support.gd` is that function once, with
-  the prefix passed in, beside `pins()` for table-shaped assertions and the compile / reopen /
-  re-emit trio the round-trip tests hand-rolled. 495 files delegate to it and 1,887 lines are gone.
-  The printed lines did not move: the suite's `[PASS]` / `[FAIL]` shapes are parsed by the runner,
-  the report tool, the parallel launcher and CI, so identity was proved by census - across 21,072
-  reported lines, before and after differ only where a label carries a measured duration, plus the
-  two file-count labels that went up by exactly one because the new file exists. The 235 tests that
-  print something else were left alone: those lines are a contract too, and normalising them would
-  be a behaviour change rather than a shrink.
-- **"What claims this line?", answered by the readers themselves.** A hand-written line becomes a row
-  through one of several vocabularies, and finding out WHICH meant reading the importer.
-  `tools/explain.gd` takes a script and a line number and answers in provenance order: the curated
-  lift tables (which entry, in which family file), the entries derived from a marked example, the
-  hand-written matcher families, the general reverse index, the derived call and property readings
-  with the receiver resolution that got them there, and finally the honest verbatim fallback. Every
-  answer comes from the reader that actually produces it when a file opens - the same
-  `EventSheetLiftReading`, `EventSheetACELifter` and derived-reading code - so a line the tool
-  explains is a line the editor reads the same way. Two small read-only seams were needed and no
-  behaviour moved: an entry now carries how it was AUTHORED (`EventForgeLiftTable.origin_of`, stamped
-  by the by-example builder and ignored by the matching engine), and the term a branch is asked under
-  became public so every layer is asked the same string.
+- **Two aspect-split vocabulary modules merge into the one they belong to.** The 3D page joins the
+  spatial maths it was authored beside; the rows that put a light in the object column join the ones
+  that take it as a parameter. Held by a descriptor-identity proof: `tools/dump_registry.gd` before
+  and after is byte-identical, 5324 verbs. Registry order - which breaks ties in the reverse-lifter -
+  is preserved by construction rather than by that dump, which is sorted by key and so cannot see
+  order: each merged pair was already adjacent in the sorted module walk, and each merged file
+  appends the earlier half first.
+- **"What row did this line become?", answered by the row builder itself.** A hand-written line
+  becomes a row through one of several vocabularies, and finding out WHICH meant reading the
+  importer. `tools/explain.gd` takes a script and a line number and answers twice over. First the
+  CLAIM: the file is reopened the way opening a `.gd` reopens it, re-emitted the way saving it
+  re-emits it, and the line looked up in the source map that emission hands back - so structure is
+  included, and a class-level member reads as the variable row it is rather than as the typed
+  assignment a statement layer sees. It is gated on the round trip being byte-identical, because
+  line N of the re-emission is line N of the file only then. Then the PREVIEW: which reading layer
+  would have claimed the line, in provenance order - the curated lift tables (which entry, in which
+  family file), the entries derived from a marked example, the hand-written matcher families, the
+  general reverse index, the derived call and property readings with the receiver resolution that
+  got them there, and finally the honest verbatim fallback. Every answer comes from the reader that
+  actually produces it when a file opens. Two small read-only seams were needed and no behaviour
+  moved: an entry now carries how it was AUTHORED (`EventForgeLiftTable.origin_of`, stamped by the
+  by-example builder and ignored by the matching engine), and the term a branch is asked under became
+  public so every layer is asked the same string. The reader behind it lives in `tools/` rather than
+  inside the plugin, because its only callers are that command line and its own test.
 - **One table entry, rerun alone.** `EVENTFORGE_LIFT_ONLY=<entry ids>` narrows the lift-table harness
   to the entries named, spelled after `EVENTFORGE_TEST_ONLY` so the two compose: pick the file, then
   pick the entry inside it. The whole byte round trip for one spelling - its generated fixture line,
   the row it claims, the values it reads and the bytes it re-emits - in a second or two instead of
   the several hundred entries the change was not about. Unset, nothing changes.
-- **Two aspect-split vocabulary modules merge into the one they belong to.** The 3D page joins the
-  spatial maths it was authored beside; the rows that put a light in the object column join the ones
-  that take it as a parameter. Held by a descriptor-identity proof: `tools/dump_registry.gd` before
-  and after is byte-identical, 5324 verbs, and registry order - which breaks ties in the
-  reverse-lifter - is preserved by construction.
+- **The iteration list can see the file the suite asserts through.** `tools/pick_tests.gd` had two
+  rules and neither could read a shared helper under `tests/`: asked what an edit to `support.gd`
+  could have broken it named the two gates that pick on any `.gd` at all, while 508 tests assert
+  through that file, so an `-Iterate` run could have gone green over a broken `check()`. A third rule
+  reads the dependants out of the test files themselves - not a list, which would be wrong the first
+  time somebody preloads a helper somewhere new.
+- **A file that is not a test still leaves a finish line on the crash trail.** A shared helper has no
+  `run()`, so it left the runner's loop with a START and no DONE - the exact shape the crash sentinel
+  reads as "the process died here". Harmless only because `support.gd` sorts before some two hundred
+  t-z tests; it would have reported a false CRASHED the first time a helper landed last in a shard's
+  slice. Every file that loaded is marked finished now, and the start line still guards the load
+  itself.
+- **The suite stops printing a design-item id as a test's name.** `variable_dialog_v5_test.gd` was
+  renamed to `variable_dialog_fields_test.gd` when the shorthand lint landed; the label it printed in
+  front of every assertion was left behind.
 
 ### Fixed
 
