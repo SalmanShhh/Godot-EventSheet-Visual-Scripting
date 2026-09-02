@@ -114,10 +114,13 @@ the installed plugin was **-7** - because three of the four things in that step 
 that must exist before a big migration can be trusted (a ledger that reproduces, a second dump the
 gate compares, and a translation ratchet that measures verbs instead of filenames), and a dev tool
 is paid for in full by the figure it measures. The vocabulary migration then turned the wave
-around, and the Doctor's own copies after it. The lift matchers then gave a line back, which is said
-in full below rather than folded away. Measured across the second wave to date: **-2,479 lines** of
-hand-written GDScript (**+3,814 / -6,293**), of which the installed plugin is **-3,114**. Every one
-of those numbers comes from `tools/measure_ledger.ps1`, at the two commits named in it.
+around, and the Doctor's own copies after it. The lift matchers then gave a line back, and the review of the
+whole wave cost eighty-nine more, both of which are said in full below rather than folded away.
+Measured across the second wave at the last commit in it that moves a `.gd`, `57588286..5abbe26f`:
+**-2,390 lines** of hand-written GDScript (**+3,903 / -6,293**), of which the installed plugin is
+**-3,064**. Every one of those numbers comes from `tools/measure_ledger.ps1`, at the commits named
+beside it; the entry you are reading and the doc-bundle bake after it move no `.gd`, so the figure
+is the tree that ships.
 
 - **A built-in verb is one line, and the line says which kind of verb it is.** The 1,783 built-in
   ACEs were each written as ten positional arguments with the kind spelled out in the middle of
@@ -144,9 +147,12 @@ of those numbers comes from `tools/measure_ledger.ps1`, at the two commits named
   parameter, default, forwarding address and emitted template - and every word of every
   description - is byte-identical to what the verbose form published. `tests/ace_makers_test.gd`
   builds one verb both ways and compares them field by field off the property list, defaults
-  compared with their own type. The editor reads the new spelling as it read the old one, so
-  opening a vocabulary module still shows the Define row each verb publishes, and the module guide
-  and `tools/new_ace_module.gd` teach the one-line form.
+  compared with their own type. The editor reads the new spelling, so opening a vocabulary module
+  still shows the Define row each verb publishes - and it reads MORE of them than it read of the old
+  one, which is worth saying plainly rather than filing under identity: the reading walks a line at
+  a time, and a verbose publish spread over several lines was never a line it could claim, so **392**
+  verbs that opened as plain code now open as the Define rows they always were. The module guide and
+  `tools/new_ace_module.gd` teach the one-line form.
 - **Five hundred copies of one assertion become one call, and there is one assertion file.** Nearly
   every test in `tests/` carried its own copy of the same eight-line `_check`, differing only in the
   label prefix it printed. `tests/support.gd` is that function once, with the prefix passed in,
@@ -304,10 +310,14 @@ of those numbers comes from `tools/measure_ledger.ps1`, at the two commits named
   naming the plugin's own folder; and the "does this text say any of these words" pre-read and the
   "score, then sort by score and then by path" ordering each stood in two or three files. They live
   once in `EventSheetDoctorSection`, which the sections EXTEND rather than name - GDScript inherits
-  static functions, so `_finding(...)` inside a section still reads exactly as it did and not one
-  call site moved. Held by a findings-identity proof: the whole Doctor run over this repository is
-  275 findings before and 275 byte-identical findings after, severity, check id, path, subject,
-  order key and message each compared in full.
+  static functions, so `_finding(...)` inside a section is the base's `_finding` and every call site
+  that already spelled it the shared way is untouched. Two sections had spelled it their own way -
+  one swapped the first two arguments, one took four arguments and no severity - and their **eleven**
+  call sites were rewritten to the shared order. Held by a findings-identity proof: the whole Doctor
+  run over this repository is 275 findings before and 275 byte-identical findings after, severity,
+  check id, path, subject, order key and message each compared in full. (The run is a reading of THIS
+  repository, so its size moves as the repository does - a later entry below counts 274 at its own
+  commit. Each figure is the count on both sides of the step it holds, which is what the proof is.)
 - **One directory walk instead of four.** The Doctor listed the project's files four times over -
   the scripts it reads, the project's own scripts for the notes sweep, every scene or resource of a
   given extension, and every `.tres` shaped like a skill tree - and each of the four carried its own
@@ -387,9 +397,39 @@ of those numbers comes from `tools/measure_ledger.ps1`, at the two commits named
   index in the same 1,390-entry match order, and every hint, option list, suggestion list, lens,
   host and signal identical. The same was done for the Doctor and the lift table: the whole Doctor
   run is **274 findings** on both sides with severity, check id, path, subject and message identical
-  except five lines whose numbers count the project's own scripts (this wave added three), and every
+  except five lines that count something the wave itself changed: four of them count the project's
+  own scripts, of which the wave added three, and the fifth counts the controls in one test fixture,
+  which this wave edited. Every
   one of the **67** generated lift fixtures is byte-identical with exactly **two** added, which are
   the two layout-on-top runs the table now claims.
+- **A verb's provider is its last argument, and the reader was counting to the one before it.** The
+  reading that opens a vocabulary module as Define rows learned the terse makers this wave and
+  counted the provider to argument six. The makers take the host class at six and the provider at
+  seven, so every migrated verb that names the class it belongs on - `CharacterBody2D`, `Node2D`,
+  `Control` - opened filed under THAT class instead of under the vocabulary that published it: **596**
+  of the **1,765** rows a module publishes, **431** of them rows the verbose form had always read as
+  Core. Nothing compiled differently and no shipped descriptor moved; it is what a reader SAW, which
+  is exactly the kind of change a shrink is not allowed to make. Two pins hold the column now and
+  both fail on the old index: a trigger that names a host, read on its own, and every shipped module
+  swept for a row published under any other name.
+- **A maker is a publish only when it is called on the factory.** `act`, `cond`, `expr` and `trig`
+  are ordinary short words, and the new reading claimed any call that spelled one with a quoted first
+  argument and three arguments behind it. The grammar asks that reading of EVERY opened statement, so
+  someone's own `lens.expr("a", "b", "c")` rendered as a Define row for a verb nobody published - a
+  false positive the older positional reading could not have, because `make_descriptor` is nobody
+  else's word. A file says what it calls the descriptor factory in its own `preload` line, so the
+  reading asks it and reads makers called on that name only; a statement read alone carries no
+  declaration and stands on the conventional one. Every published row in the repository is unchanged:
+  **1,775** rows, byte-identical before and after, across `addons/`, `tools/`, `tests/`, the packs
+  and the showcases.
+- **The identity gate says out loud what it cannot see.** Four files are copied from the working tree
+  into the base worktree so both halves of the proof are written by one instrument - necessary, and
+  also a blind spot, because a change to one of them between the base and the tree is a change both
+  halves are read THROUGH, and one of the four is a shipped file the migration doctor and the
+  pack-update dialog read as well. The run prints each copied file's added and removed lines between
+  the base and the tree now, under a heading that says why, so the one thing the gate cannot measure
+  is the one thing it names. This wave's four read `+21/-4`, `+92/-0`, `+11/-8` and `+22/-0`, all of
+  them fields added to a record, beside `identity: registry=same words=same verbs=5324`.
 
 ### Fixed
 
