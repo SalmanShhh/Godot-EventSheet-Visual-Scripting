@@ -12,7 +12,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var src: Lib.PackSource = Lib.pack_from_source("weapon_kit", "Node2D", "WeaponKit",
 		"Turns any Node2D into a gun: a magazine and reserve pool, a fire-rate cooldown, single / auto / burst modes, and timed or instant reloads with optional auto-reload. Fire spends a round and fires On Fire - inside that trigger you spawn the bullet or cast the hitscan however your game likes.",
-		{"behavior": true, "category": "Weapon", "tags": PackedStringArray(["combat", "shooter"]), "expose_all": "node"})
+		Lib.manifest().behavior().category("Weapon").tags(["combat", "shooter"]).expose_all_verbs_on_a_node())
 	src.sheet.variables = {
 		"max_ammo": {"type": "int", "default": 12, "exported": true,
 			"attributes": {"tooltip": "Magazine size (rounds before a reload)."}},

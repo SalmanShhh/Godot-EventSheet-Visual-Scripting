@@ -8,7 +8,12 @@
 #      a top-level `func`, dedented by one tab with its trailing blank lines trimmed. Every one of
 #      those rules is a byte of an emitted pack, so each is pinned here on a fixture whose expected
 #      text is written out in full rather than counted.
-#   2. A source file is NOT a pack, NOT a test and NOT a document. It is ordinary GDScript sitting
+#   2. The MANIFEST is typed. Everything a source folder cannot carry - behavior, autoload,
+#      category, tags, version, variables, how the verbs are exposed - is declared by name on a
+#      typed manifest rather than by key in a dictionary, so a misspelling is a parse error at the
+#      call site instead of a trait the pack silently ships without. What each declaration puts on
+#      the sheet is pinned here, because that is what an emitted pack is made of.
+#   3. A source file is NOT a pack, NOT a test and NOT a document. It is ordinary GDScript sitting
 #      under tools/, and the four scans that walk this repository looking for those things each
 #      have to keep walking past it - the provider scan (which publishes vocabulary), the suite's
 #      own discovery, the documentation index, and the style gate. Three of them are addressed by
@@ -29,6 +34,7 @@ const FIXTURE_DIR := "user://eventsheets_pack_source_fixture"
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _reader_pins() and all_passed
+	all_passed = _manifest_pins() and all_passed
 	all_passed = _folders_are_not_packs() and all_passed
 	all_passed = _every_folder_is_claimed() and all_passed
 	return all_passed
@@ -38,7 +44,10 @@ static func run() -> bool:
 ## dedented by one tab and loses its trailing blank lines, and a second file in the same folder
 ## contributes its pieces beside the first one's.
 static func _reader_pins() -> bool:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(FIXTURE_DIR))
+	# The folder is EMPTIED first, not just created. The reader reads every `.gd` in it, so a file
+	# a past run of a past fixture left behind would join this one's pieces and fail the piece-name
+	# pin with a message about a file this test has never heard of.
+	_empty_fixture_dir()
 	_write(FIXTURE_DIR.path_join("a_first.gd"), [
 		"# A fixture, not a pack.",
 		"extends Node",
@@ -76,6 +85,45 @@ static func _reader_pins() -> bool:
 		"speed = _halve(speed)\nif speed < 0.0:\n\tspeed = 0.0") and all_passed
 	all_passed = _pins("a companion file's piece is read too", str(pieces.get("set_speed", "")),
 		"speed = value") and all_passed
+	return all_passed
+
+
+## The manifest, field by field: what each declaration puts on the sheet, and what a pack that
+## declares nothing gets. The two wholesale-exposure MODES are methods rather than a string a call
+## site spells, so the spellings the compiler reads ("node", "all") are written down once, here and
+## in the maker, and nowhere else.
+static func _manifest_pins() -> bool:
+	var all_passed: bool = true
+	var bare: EventSheetResource = Lib.pack_from_source(
+		"wrap", "Node2D", "Bare", "A pack that declares nothing.").sheet
+	all_passed = _pins("an undeclared pack is not a behavior", bare.behavior_mode, false) and all_passed
+	all_passed = _pins("an undeclared pack is not an autoload", bare.autoload_mode, false) and all_passed
+	all_passed = _pins("an undeclared pack exposes no verbs wholesale", bare.ace_expose_all_mode, "") and all_passed
+	var declared: Lib.PackManifest = Lib.manifest().behavior().category("Wrap")
+	declared.verb_category("Wrapping").tags(PackedStringArray(["movement"])).version("2.1.0")
+	declared.variables({"speed": {"type": "float", "default": 1.0, "exported": true}})
+	declared.expose_all_verbs_on_a_node()
+	var opened: Lib.PackSource = Lib.pack_from_source(
+		"wrap", "Node2D", "Declared", "A pack that declares all of it.", declared)
+	var sheet: EventSheetResource = opened.sheet
+	all_passed = _pins("behavior() sets behavior_mode", sheet.behavior_mode, true) and all_passed
+	all_passed = _pins("category() sets the Add Behavior category", sheet.addon_category, "Wrap") and all_passed
+	all_passed = _pins("verb_category() sets the picker default", opened.verb_category, "Wrapping") and all_passed
+	all_passed = _pins("tags() sets the search tags", ",".join(sheet.addon_tags), "movement") and all_passed
+	all_passed = _pins("version() sets the pack version", sheet.addon_version, "2.1.0") and all_passed
+	all_passed = _pins("variables() sets the Inspector variables",
+		",".join(PackedStringArray(sheet.variables.keys())), "speed") and all_passed
+	all_passed = _pins("a node-scoped wholesale exposure is the mode the compiler reads",
+		sheet.ace_expose_all_mode, "node") and all_passed
+	all_passed = _pins("a plain wholesale exposure is the other one",
+		Lib.manifest().expose_all_verbs().expose_all_mode, "all") and all_passed
+	var autoloaded: EventSheetResource = Lib.pack_from_source("save_system", "Node", "Auto",
+		"An autoload pack.", Lib.manifest().autoload("SaveSystem")).sheet
+	all_passed = _pins("autoload() turns autoload_mode on with the name",
+		"%s/%s" % [autoloaded.autoload_mode, autoloaded.autoload_name], "true/SaveSystem") and all_passed
+	all_passed = _pins("a pack with no verb category of its own falls back to its Add Behavior one",
+		Lib.pack_from_source("wrap", "Node2D", "Fallback", "", Lib.manifest().category("Wrap")).verb_category,
+		"Wrap") and all_passed
 	return all_passed
 
 
@@ -144,6 +192,19 @@ static func _source_files() -> PackedStringArray:
 		for file_name: String in names:
 			found.append(SOURCE_ROOT.path_join(folder).path_join(file_name))
 	return found
+
+
+## The fixture folder, emptied. `user://` survives between runs on a developer's machine (CI gets a
+## fresh one), so the folder is cleared rather than trusted.
+static func _empty_fixture_dir() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(FIXTURE_DIR))
+	var dir: DirAccess = DirAccess.open(FIXTURE_DIR)
+	if dir == null:
+		return
+	var names: PackedStringArray = dir.get_files()
+	names.sort()
+	for file_name: String in names:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(FIXTURE_DIR.path_join(file_name)))
 
 
 static func _write(path: String, lines: PackedStringArray) -> void:

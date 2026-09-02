@@ -511,6 +511,92 @@ const JUICE_SET_TICKER_BODY := "var old_tween: Tween = _ticker_tweens.get(ticker
 const SOURCE_ROOT := "res://tools/pack_builders/src"
 
 
+## Everything about a pack that its source folder cannot carry: the facts the SHEET holds rather
+## than the code does. One typed field per fact and one setter per fact, because the shape this
+## replaced was a dictionary of magic strings - `{"behaviour": true}` built a pack that was not a
+## behavior, silently and with no error, because nothing rejected a key nobody knew.
+##
+## Every setter returns the manifest, so a pack declares itself in one expression:
+##
+##   Lib.manifest().behavior().category("Wrap").tags(["movement", "screen"])
+##
+## A pack that declares none of this passes no manifest at all.
+class PackManifest extends RefCounted:
+
+	## A behavior pack: it attaches to a host and gets its `_enter_tree`.
+	var is_behavior: bool = false
+
+	## The autoload name, for a pack that ships as one. Non-empty also turns autoload_mode on.
+	var autoload_name: String = ""
+
+	## The pack's own category in the Add Behavior list.
+	var addon_category: String = ""
+
+	## The picker category new verbs default to. Empty means the Add Behavior category.
+	var picker_category: String = ""
+
+	## The pack's search tags.
+	var search_tags: PackedStringArray = PackedStringArray()
+
+	## The pack's own version. 1.0.0 is the floor; empty leaves the sheet's default.
+	var addon_version: String = ""
+
+	## The Inspector variables, in DECLARATION ORDER - which is emission order, so it is part of
+	## the shipped pack rather than a private detail.
+	var inspector_variables: Dictionary = {}
+
+	## How the pack exposes its verbs wholesale, set by `expose_all_verbs`/`_on_a_node` rather
+	## than by writing the mode's own spelling at a call site.
+	var expose_all_mode: String = ""
+
+	## Declares a behavior pack.
+	func behavior() -> PackManifest:
+		is_behavior = true
+		return self
+
+	## Declares the pack an autoload under this name.
+	func autoload(singleton_name: String) -> PackManifest:
+		autoload_name = singleton_name
+		return self
+
+	## Sets the Add Behavior category (and, unless `verb_category` says otherwise, the picker
+	## category its verbs default to).
+	func category(name: String) -> PackManifest:
+		addon_category = name
+		return self
+
+	## Sets the picker category new verbs default to, for a pack whose verbs shelve somewhere
+	## other than its own Add Behavior category.
+	func verb_category(name: String) -> PackManifest:
+		picker_category = name
+		return self
+
+	## Sets the pack's search tags.
+	func tags(names: PackedStringArray) -> PackManifest:
+		search_tags = names
+		return self
+
+	## Sets the pack's own version.
+	func version(number: String) -> PackManifest:
+		addon_version = number
+		return self
+
+	## Sets the Inspector variables, in declaration order.
+	func variables(declared: Dictionary) -> PackManifest:
+		inspector_variables = declared
+		return self
+
+	## Exposes every function of the pack as vocabulary.
+	func expose_all_verbs() -> PackManifest:
+		expose_all_mode = "all"
+		return self
+
+	## Exposes every function of the pack as vocabulary, each one scoped to a picked node.
+	func expose_all_verbs_on_a_node() -> PackManifest:
+		expose_all_mode = "node"
+		return self
+
+
 ## One pack's source folder, read once, plus the sheet being assembled from it. A builder gets one
 ## from `Lib.pack_from_source(...)`, names the pieces it wants in the order the pack declares them,
 ## and finishes with `Lib.publish(...)`.
@@ -590,7 +676,9 @@ class PackSource extends RefCounted:
 
 	## Appends an exposed value-returning verb - an Expression - with the given return type
 	## (TYPE_FLOAT / TYPE_INT / TYPE_STRING / TYPE_ARRAY / TYPE_VECTOR2 ...; TYPE_MAX is Variant).
-	func expression(function_name: String, display_name: String, description: String, params: Array, ret: int, category: String = "") -> void:
+	## `params` is the `[[id, type_name], ...]` list every maker in this library takes - the one
+	## shape the whole pack-builder tree shares, so it stays that shape here too.
+	func expression(function_name: String, display_name: String, description: String, params: Array, ret: Variant.Type, category: String = "") -> void:
 		var fn: EventFunction = _exposed(function_name, display_name, description, params, category)
 		fn.return_type = ret
 		sheet.functions.append(fn)
@@ -645,20 +733,13 @@ static func publish(opened: PackSource, base_path: String, icon_path: String = B
 ##   host_class   the class the behaviour attaches to ("Node2D"), or the sheet's own base
 ##   pack_class   the `class_name` the pack ships as ("WrapBehavior")
 ##   description  the sheet's class description - the sentence the Add Behavior list reads
-##   options      the small manifest of everything a source file cannot carry, all optional:
-##                  behavior      bool              a behavior pack (a host and its `_enter_tree`)
-##                  autoload      String            the autoload name; sets autoload_mode with it
-##                  category      String            the pack's Add Behavior category
-##                  verb_category String            the picker category its verbs default to
-##                  tags          PackedStringArray the pack's search tags
-##                  version       String            the pack's own version (1.0.0 is the floor)
-##                  variables     Dictionary        the Inspector variables, in declaration order
-##                  expose_all    String            ace_expose_all_mode ("node" scopes every verb
-##                                                  to a picked node)
+##   manifest     everything a source file cannot carry, declared by name on `Lib.manifest()`;
+##                a pack that declares none of it passes nothing
 ##
 ## The returned PackSource carries the sheet: a builder adds the pack's rows and verbs to it, in
 ## the order the pack declares them, and finishes with `Lib.publish(src, base_path)`.
-static func pack_from_source(source_dir: String, host_class: String, pack_class: String, description: String, options: Dictionary = {}) -> PackSource:
+static func pack_from_source(source_dir: String, host_class: String, pack_class: String, description: String, manifest: PackManifest = null) -> PackSource:
+	var declared: PackManifest = PackManifest.new() if manifest == null else manifest
 	var opened: PackSource = PackSource.new()
 	opened._dir = SOURCE_ROOT.path_join(source_dir)
 	opened._pieces = _read_pieces(opened._dir)
@@ -666,28 +747,30 @@ static func pack_from_source(source_dir: String, host_class: String, pack_class:
 	sheet.host_class = host_class
 	sheet.custom_class_name = pack_class
 	sheet.class_description = description
-	if bool(options.get("behavior", false)):
+	if declared.is_behavior:
 		sheet.behavior_mode = true
-	var autoload_name: String = str(options.get("autoload", ""))
-	if not autoload_name.is_empty():
+	if not declared.autoload_name.is_empty():
 		sheet.autoload_mode = true
-		sheet.autoload_name = autoload_name
-	var category: String = str(options.get("category", ""))
-	if not category.is_empty():
-		sheet.addon_category = category
-	if options.has("tags"):
-		sheet.addon_tags = PackedStringArray(options["tags"])
-	var version: String = str(options.get("version", ""))
-	if not version.is_empty():
-		sheet.addon_version = version
-	if options.has("variables"):
-		sheet.variables = options["variables"]
-	var expose_all: String = str(options.get("expose_all", ""))
-	if not expose_all.is_empty():
-		sheet.ace_expose_all_mode = expose_all
+		sheet.autoload_name = declared.autoload_name
+	if not declared.addon_category.is_empty():
+		sheet.addon_category = declared.addon_category
+	if not declared.search_tags.is_empty():
+		sheet.addon_tags = declared.search_tags
+	if not declared.addon_version.is_empty():
+		sheet.addon_version = declared.addon_version
+	if not declared.inspector_variables.is_empty():
+		sheet.variables = declared.inspector_variables
+	if not declared.expose_all_mode.is_empty():
+		sheet.ace_expose_all_mode = declared.expose_all_mode
 	opened.sheet = sheet
-	opened.verb_category = str(options.get("verb_category", category))
+	opened.verb_category = declared.addon_category if declared.picker_category.is_empty() else declared.picker_category
 	return opened
+
+
+## A fresh, empty manifest for a builder to declare its pack on. Every setter returns it, so the
+## whole declaration is one expression at the call site.
+static func manifest() -> PackManifest:
+	return PackManifest.new()
 
 
 # Every piece in every `.gd` of one source folder, read in sorted file order so a build is

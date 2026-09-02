@@ -16,7 +16,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var src: Lib.PackSource = Lib.pack_from_source("save_system", "Node", "SaveSystemAddon",
 		"Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back.",
-		{"autoload": "SaveSystem", "verb_category": "Save System", "tags": PackedStringArray(["persistence"])})
+		Lib.manifest().autoload("SaveSystem").verb_category("Save System").tags(["persistence"]))
 	src.sheet.variables = {
 		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false},
 		"autosave_interval": {"type": "float", "default": 0.0, "exported": true,

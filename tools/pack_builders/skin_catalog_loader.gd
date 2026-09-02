@@ -12,7 +12,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var src: Lib.PackSource = Lib.pack_from_source("skin_catalog_loader", "Node", "SkinCatalogLoader",
 		"The data-driven bridge for the SkinVault pack: attach to a node, drop a Skin Catalog resource (.tres) onto it in the Inspector, and on ready it loads the whole catalog (rarities and skins) into the SkinVault autoload. The Inspector flags the required slot with a warning until a resource is attached.",
-		{"behavior": true, "category": "SkinVault", "tags": PackedStringArray(["cosmetics", "data"])})
+		Lib.manifest().behavior().category("SkinVault").tags(["cosmetics", "data"]))
 	Lib.require_resource(src.sheet, "catalog", "Skin Catalog resource", "The .tres holding this game's rarities and skins (create one from the SkinCatalogResource class, fill its grids, and drop it here).")
 	src.note("Skin Catalog Loader: attach to a node and drop a Skin Catalog resource (.tres) onto it. On ready it registers the whole catalog into the SkinVault autoload - data-driven cosmetics, authored in the Inspector. The Inspector warns until you attach a resource.")
 	src.on_ready()

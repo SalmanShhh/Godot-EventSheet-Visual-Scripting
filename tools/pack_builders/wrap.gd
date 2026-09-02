@@ -10,7 +10,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 static func build() -> bool:
 	var src: Lib.PackSource = Lib.pack_from_source("wrap", "Node2D", "WrapBehavior",
 		"Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed.",
-		{"behavior": true, "category": "Wrap", "tags": PackedStringArray(["movement", "screen"])})
+		Lib.manifest().behavior().category("Wrap").tags(["movement", "screen"]))
 	src.note("Wrap behavior (event-sheet parity): once the host is FULLY outside an edge of the SCREEN (the camera's view) or a CUSTOM rectangle, it teleports to the opposite edge - Asteroids in one attach. Per-axis toggles; On Wrapped tells you which side it left. This pack is an event sheet - extend it by editing it.")
 	src.block("block_1")
 	src.on_ready()
