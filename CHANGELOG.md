@@ -295,6 +295,27 @@ the whole of its shrink out of the tree that ships, which is the figure a shrink
   descriptors inside `tools/` and keeping `addons/` at zero - is not costed anywhere. The shipped
   figure is this campaign's one hard constraint, so the road not taken is owed a sentence.
 
+- **The road not taken, costed: it is twice the price, and the eighty lines stay where they are.**
+  The sentence owed above is this one. The alternative was written rather than argued - a working
+  `registry_field_facts.gd` under `tools/` that re-derives all eleven facts from the source objects
+  and hands them to the fields formatter, run over the whole vocabulary and diffed: **byte-identical
+  across all 5,324 verbs**, so the arm is real and the comparison is between two things that both
+  work. It measures **147 lines** in `tools/` - and that is its FLOOR, written with a five-line
+  header where every instrument beside it carries twenty-five - plus **14 lines** of wiring in its
+  caller, against the **80** it takes out of `addons/`. Moving them costs **+81 hand-written lines
+  to save 80 shipped ones**: not the equal-or-lower total the move needed. The reason is structural
+  rather than stylistic. The facts are spelled two different ways by the two source shapes - a
+  descriptor's properties and a pack definition's metadata dictionary - so a tool-side reading has
+  to carry BOTH branches, and it has to walk the vocabulary a second time to reach the sources at
+  all: 5,324 verbs re-reflected and every pack script re-instantiated, purely to read fields the
+  first walk already had in its hand. The cheapest conceivable variant, where the catalog carries
+  its source object and the tool reads facts off that, still measures about **100 tool lines against
+  78 shipped** - **+22** - and pays for it by putting a live object into a reduction that is
+  statically cached and shared for the whole session, which is the one thing that table is not
+  allowed to hold. So the eleven facts stay in the one reduction all three sorted texts walk, the
+  **+80** stands as a growth in the campaign's hard figure, and it stands as a growth that was
+  priced against its alternative instead of assumed to be the cheaper one.
+
 - **The nine translation files have a deriver, and running it changes nothing.** `TEMPLATE.csv` and
   the eight bundled locales were kept in lockstep by hand across 5,986 rows, and three suite gates
   NAMED the row a wave forgot without being able to write it.
