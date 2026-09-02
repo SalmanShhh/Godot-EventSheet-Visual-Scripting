@@ -39,13 +39,21 @@ func _init() -> void:
 		# green hiding however many assertions went with it. can_instantiate() separates the two (every
 		# real test instantiates; only a broken parse does not). It prints a [FAIL] line as well as
 		# failing the verdict, so the usual grep-for-FAIL catches it too.
+		# EVERY FILE THAT LOADED GETS A FINISH LINE, including the ones that are not tests. The crash
+		# sentinel reads "a START with no DONE after it" as a process that died, so a helper or a
+		# broken file that stopped at a bare `continue` would be accused of crashing the moment it
+		# happened to be the last file in a shard's slice - and the helper count grows with every
+		# shared vocabulary that lands here. The start line still guards the load itself: it is
+		# written before load(), so a file that takes the process down while parsing is still named.
 		if script == null or not script.can_instantiate():
 			print("[FAIL] run_tests: %s failed to load - see the Parse Error above." % test_file)
 			push_error("Test %s failed to load (parse error?)." % test_file)
 			passed = false
+			_mark_finished(test_file, 0)
 			continue
 		if not _has_static_run(script):
-			continue  # a shared helper living in tests/, not a test
+			_mark_finished(test_file, 0)  # a shared helper living in tests/, not a test
+			continue
 		var started_at: int = Time.get_ticks_msec()
 		var result: Variant = script.call("run")
 		if result is bool:

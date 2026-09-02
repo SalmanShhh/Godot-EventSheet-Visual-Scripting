@@ -39,6 +39,12 @@ const TRAILS: Dictionary = {
 	# A finish line carries the test's milliseconds (the launcher's slowest-ten footer reads them off
 	# this same trail), and the crash reading must go on ignoring whatever follows the name.
 	"START a_test.gd\nDONE a_test.gd 12\nSTART b_test.gd\n": "b_test",
+	# A HELPER IS ON THE TRAIL TOO, because the runner loads every `.gd` under tests/ and only then
+	# finds out which of them are tests. It gets a finish line like everything else - and this pair
+	# is why: the rule is positional, so a helper that stopped at a bare START would be accused of
+	# crashing the run for no reason other than sorting last in a shard's slice.
+	"START a_test.gd\nDONE a_test.gd 12\nSTART support.gd\nDONE support.gd 0\n": "",
+	"START a_test.gd\nDONE a_test.gd 12\nSTART support.gd\n": "support",
 }
 
 ## Log lines, and the test the report files each under. The indented shape is the one that matters:
