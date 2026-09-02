@@ -3189,6 +3189,24 @@ Collections (rich variables)
 ### Collision (`res://addons/eventforge/registration/modules/collision_aces.gd`)
 Collision vocabulary (the "Helper ACEs for collisions").
 
+#### Triggers
+- **On Landed** - Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.
+- **On Left The Ground** - Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.
+- **On Landed (3D)** - Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.
+- **On Left The Ground (3D)** - Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.
+- **On First Overlap** (`body: Node`) - Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.
+- **On Last Overlap Ended** (`body: Node`) - Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.
+- **On First Overlap (3D)** (`body: Node`) - Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.
+- **On Last Overlap Ended (3D)** (`body: Node`) - Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.
+- **On Collision With Group** (`group: String, body: Node`) - Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.
+- **On Stopped Colliding With Group** (`group: String, body: Node`) - Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.
+- **On Collision With Group (3D)** (`group: String, body: Node`) - Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.
+- **On Stopped Colliding With Group (3D)** (`group: String, body: Node`) - Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.
+- **On Overlap With Group** (`group: String, body: Node`) - Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.
+- **On Overlap Ended With Group** (`group: String, body: Node`) - Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.
+- **On Overlap With Group (3D)** (`group: String, body: Node`) - Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.
+- **On Overlap Ended With Group (3D)** (`group: String, body: Node`) - Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.
+
 #### Conditions
 - **Is By Wall** - True when this 2D character is pressing against a wall.
 - **Is Touching Ceiling** - True when this 2D character is touching a ceiling above.
@@ -3209,6 +3227,16 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Is Falling (3D)** - True while this 3D character is moving downward.
 - **Is Moving (3D)** - True while this 3D character has any speed along X - the walk-or-idle question for a side-on 3D mover.
 - **Has Overlapping Bodies (3D)** (`target: String`) - True when this 3D Area is currently overlapping at least one physics body.
+- **Just Landed** - True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.
+- **Just Left The Ground** - True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.
+- **Just Landed (3D)** - True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.
+- **Just Left The Ground (3D)** - True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.
+- **Is The First One In** (`target: String`) - True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.
+- **Was The Last One Out** (`target: String`) - True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.
+- **Is The First One In (3D)** (`target: String`) - True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.
+- **Was The Last One Out (3D)** (`target: String`) - True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.
+- **Is Touching Group** (`group: String, target: String`) - True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.
+- **Is Touching Group (3D)** (`group: String, target: String`) - True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.
 
 #### Actions
 - **Set Collision Layer Bit** (`layer: String, enabled: String, target: String`) - Turns a collision layer on or off, controlling what this object sits on.
@@ -3235,46 +3263,6 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Wall Normal (3D)** - Fires with the direction a 3D body just bumped into a wall, useful for wall-jumps or ricochets.
 - **Floor Normal (3D)** - Fires with the slope direction of the floor a 3D body is standing on, handy for slope-aware movement.
 - **Overlapping Bodies (3D)** (`target: String`) - Fires with the list of physics bodies currently inside this 3D Area.
-
-### Collision Edge (`res://addons/eventforge/registration/modules/collision_edge_aces.gd`)
-the EDGE sentences: the step a standing state changed.
-
-#### Triggers
-- **On Landed** - Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.
-- **On Left The Ground** - Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.
-- **On Landed (3D)** - Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.
-- **On Left The Ground (3D)** - Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.
-- **On First Overlap** (`body: Node`) - Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.
-- **On Last Overlap Ended** (`body: Node`) - Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.
-- **On First Overlap (3D)** (`body: Node`) - Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.
-- **On Last Overlap Ended (3D)** (`body: Node`) - Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.
-
-#### Conditions
-- **Just Landed** - True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.
-- **Just Left The Ground** - True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.
-- **Just Landed (3D)** - True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.
-- **Just Left The Ground (3D)** - True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.
-- **Is The First One In** (`target: String`) - True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.
-- **Was The Last One Out** (`target: String`) - True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.
-- **Is The First One In (3D)** (`target: String`) - True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.
-- **Was The Last One Out (3D)** (`target: String`) - True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.
-
-### Collision Filter (`res://addons/eventforge/registration/modules/collision_filter_aces.gd`)
-the filtered collision sentences.
-
-#### Triggers
-- **On Collision With Group** (`group: String, body: Node`) - Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.
-- **On Stopped Colliding With Group** (`group: String, body: Node`) - Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.
-- **On Collision With Group (3D)** (`group: String, body: Node`) - Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.
-- **On Stopped Colliding With Group (3D)** (`group: String, body: Node`) - Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.
-- **On Overlap With Group** (`group: String, body: Node`) - Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.
-- **On Overlap Ended With Group** (`group: String, body: Node`) - Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.
-- **On Overlap With Group (3D)** (`group: String, body: Node`) - Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.
-- **On Overlap Ended With Group (3D)** (`group: String, body: Node`) - Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.
-
-#### Conditions
-- **Is Touching Group** (`group: String, target: String`) - True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.
-- **Is Touching Group (3D)** (`group: String, target: String`) - True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.
 
 ### Comparison (`res://addons/eventforge/registration/modules/comparison_aces.gd`)
 comparing values of every kind
@@ -3700,12 +3688,19 @@ Drawing (2D immediate-mode canvas, on any node).
 #### Expressions
 - **Canvas Texture** (`node: Node`) - A node's LIVE canvas texture - assign it to a TextureRect, a material, a particle, or a 3D Decal. Updates as the canvas draws.
 
-### Editor Author (`res://addons/eventforge/registration/modules/editor_author_aces.gd`)
-the tool author's everyday Editor set (icons, preferences, project settings,
+### Editor Object (`res://addons/eventforge/registration/modules/editor_object_aces.gd`)
+the Editor object (plugin lifecycle, docks, menu items, object types).
 
 #### Triggers
 - **On Project Files Changed** - Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.
 - **On Preferences Changed** - Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.
+- **On Plugin Enabled** - Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types.
+- **On Plugin Disabled** - Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns.
+- **On Object Handed To Plugin** - Runs when the editor hands this plugin an object to edit - the user selected something this plugin said yes to. The object arrives as `object`.
+- **On Draw Over 2D Viewport** - The editor's 2D overlay pass. Draw handles, guides or labels on top of the scene with the Drawing actions - the surface arrives as `overlay`.
+- **On 2D Viewport Input** - Input that lands in the editor's 2D viewport, before the viewport itself sees it. End the event with Stop This Input Here to keep the viewport from also acting on it.
+- **On Draw Gizmo** - A gizmo's own paint pass - what an EditorNode3DGizmo redraws when its node moves or changes.
+- **On Item Chosen** (`menu: PopupMenu, item: int`) - Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.
 
 #### Actions
 - **Set Setting** (`path: String, value: Variant`) - Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.
@@ -3717,26 +3712,6 @@ the tool author's everyday Editor set (icons, preferences, project settings,
 - **Add Command** (`title: String, key_name: String, handler: Callable`) - Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.
 - **Add Bottom Panel** (`control: Control, title: String`) - Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.
 - **Remove Bottom Panel** (`control: Control`) - Takes the plugin's tab back out of the bottom row.
-
-#### Expressions
-- **Editor Icon** (`icon_name: String`) - One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.
-- **Editor Preference** (`path: String`) - One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.
-- **Project Setting** (`path: String`) - One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.
-- **Workspace Area** - The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.
-
-### Editor Object (`res://addons/eventforge/registration/modules/editor_object_aces.gd`)
-the Editor object (plugin lifecycle, docks, menu items, object types).
-
-#### Triggers
-- **On Plugin Enabled** - Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types.
-- **On Plugin Disabled** - Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns.
-- **On Object Handed To Plugin** - Runs when the editor hands this plugin an object to edit - the user selected something this plugin said yes to. The object arrives as `object`.
-- **On Draw Over 2D Viewport** - The editor's 2D overlay pass. Draw handles, guides or labels on top of the scene with the Drawing actions - the surface arrives as `overlay`.
-- **On 2D Viewport Input** - Input that lands in the editor's 2D viewport, before the viewport itself sees it. End the event with Stop This Input Here to keep the viewport from also acting on it.
-- **On Draw Gizmo** - A gizmo's own paint pass - what an EditorNode3DGizmo redraws when its node moves or changes.
-- **On Item Chosen** (`menu: PopupMenu, item: int`) - Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.
-
-#### Actions
 - **Add Tools Menu Item** (`title: String, handler: Callable`) - Adds an item to the editor's Project > Tools menu. Remove it again on plugin disabled or the menu keeps a dead entry.
 - **Remove Tools Menu Item** (`title: String`) - Takes the plugin's item back out of Project > Tools.
 - **Add Dock** (`control: Control, slot: int`) - Hangs a Control in one of the editor's dock slots. Remove it on plugin disabled - a dock left behind survives the plugin.
@@ -3749,6 +3724,10 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Add Item** (`menu: PopupMenu, label: String, id: int`) - Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.
 
 #### Expressions
+- **Editor Icon** (`icon_name: String`) - One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.
+- **Editor Preference** (`path: String`) - One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.
+- **Project Setting** (`path: String`) - One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.
+- **Workspace Area** - The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.
 - **Editor Settings** - The editor's own settings object - read a user's grid step, theme or font size from it.
 - **Undo History** - The editor's undo / redo history. Put it in a local object variable and add do / undo steps to it, so Ctrl+Z reverses what your tool changed.
 
@@ -5162,6 +5141,7 @@ Translation vocabulary (localisation the Godot way).
 - **Region Is** (`country: String`) - True when the active locale names that country - pt_BR is region BR, plain pt is no region at all and answers false. It looks at every subtag after the language rather than only the last one, so sr_Latn_RS reads RS and a locale carrying a variant (ca_ES_valencia) still reads ES; and a country code is capitals, so a script subtag like the Hans in zh_Hans can never be mistaken for one. For a region-gated screen (an imprint page, an age gate, a storefront link) rather than a translation.
 - **Text Is Translated** (`key: String`) - True when the active language has text for this key. A key with no entry comes back unchanged from tr(), which is exactly what a player then sees on screen - this is the row that catches it first. Note that a translation IDENTICAL to the source reads as untranslated; use Language Has Text For when that matters.
 - **Language Has Text For** (`locale: String, key: String`) - Asks one language's catalog directly, without switching to it - the exact check, so a translation identical to its source still counts. Exact in the OTHER sense too: it answers about the catalog for that very locale, so a build shipping pt_BR answers false for "pt_PT" rather than handing back Brazilian text. A language with no catalog of its own answers false. Use it to offer a language only when the screen the player is about to see is actually translated.
+- **Translation Is Complete** (`locale: String, path: String, separator: String`) - True only when every source string in the spreadsheet has a filled cell for that language. An empty, missing or unreadable catalog is never "complete", so a mistyped path fails a build gate loudly instead of passing it. Put it under On Project Export beside Export Has Feature "release", inverted, and a release build can refuse to ship half-translated.
 
 #### Actions
 - **Set Language** (`locale: String`) - Switches the game's language live. Auto-translated Controls and every later tr() lookup follow immediately.
@@ -5190,14 +5170,6 @@ Translation vocabulary (localisation the Godot way).
 - **Number From Local Digits** (`text: String, locale: String`) - Turns digits the player typed in their own numeral system back into plain ASCII ones you can put through Whole Number From Text - the return trip for Number In Local Digits, so a quantity field works for every player.
 - **Percent Sign** (`locale: String`) - The percent sign the language writes - Arabic and Persian use their own. Pair it with Number In Local Digits instead of typing "%" into a label.
 - **Date Parts** (`unix: String`) - A date broken into {year}, {month}, {day}, {hour}, {minute}, {second} and {weekday}, ready to fill a translated pattern - so DATE_FORMAT reads "{month}/{day}/{year}" in English and "{day}.{month}.{year}" in German, and a translator fixes the order without a build. Drop it into the Values field of Set Text (translated pattern). The parts are UTC, the same clock Unix Time reads.
-
-### Translation Quality (`res://addons/eventforge/registration/modules/translation_quality_aces.gd`)
-Translation QUALITY: is the catalog actually finished?
-
-#### Conditions
-- **Translation Is Complete** (`locale: String, path: String, separator: String`) - True only when every source string in the spreadsheet has a filled cell for that language. An empty, missing or unreadable catalog is never "complete", so a mistyped path fails a build gate loudly instead of passing it. Put it under On Project Export beside Export Has Feature "release", inverted, and a release build can refuse to ship half-translated.
-
-#### Expressions
 - **Translation Coverage** (`locale: String, path: String, separator: String`) - How much of the translator's spreadsheet that language actually fills, as a number from 0 to 100. A cell holding only spaces counts as unfilled, and a file that is missing or unreadable reads as 0 rather than as finished. Reads the .csv exactly the way Table From File reads it, so the number in a build gate is the number the game sees.
 - **Missing Translation Keys** (`locale: String, path: String, separator: String`) - The list of source strings that language has NOT filled in, in file order - so the Output panel, a debug overlay or an export gate can NAME them instead of only counting them. Empty when the language is finished. Each entry is the first column of its row, which is the string the catalog is keyed by.
 

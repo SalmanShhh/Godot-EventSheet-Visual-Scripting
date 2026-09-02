@@ -221,6 +221,43 @@ Measured across the wave, outside the three generated trees: **-966 lines** of h
   pays for a whole project import and a migration proves one module at a time. The three files that
   FORMAT a dump are copied into the worktree first, so both halves are written by one instrument and
   a base older than the wording dump cannot answer `words` with the identity text.
+- **The last three copies of the EditorSettings guard, and the interface half beside it.** Eight dock
+  helpers lost their copy of the three-question guard last wave; three callers outside `dock/` kept
+  theirs - the usage store, the colour presets, and the params dialog, which had the whole guard
+  inlined in the middle of a function. All three ask `EventSheetEditorSettings.current()` now. The
+  run controls asked a shorter question - is there an `EditorInterface` at all, for playing a scene,
+  asking whether one is running, and stopping it - and kept their own copy of that too; it is
+  `EventSheetEditorSettings.interface()` beside `current()`, which is now written as the third
+  question on top of it. One door, two depths, no copies.
+- **The translation ratchet is held per VERB, not per file.** The gate that keeps a wholly translated
+  vocabulary wholly translated compared a list of module FILES against the files it measured as
+  covered - a statement about where vocabulary is STORED rather than about the vocabulary. Moving a
+  covered verb into a file that is not covered therefore failed it with nothing translated and
+  nothing untranslated, and it blocked a merge last wave for a reason that had nothing to do with
+  translation. It lists the **536** verbs that are covered now, measured the same way from the same
+  live sweep, and the same move is silent because the same verbs are covered on both sides of it. A
+  verb that gains an untranslated word still drops out and still names itself. It is a longer list -
+  **+78 lines** - and that is the price of a gate that measures the thing it is named after.
+- **Three aspect-split vocabulary modules join the shelves they were always filed under.** The edge
+  sentences and the filtered touch sentences were files of their own beside the collision vocabulary,
+  filing every row under the one "Collisions" page; the catalog-quality verbs sat beside the
+  translation vocabulary under "Translation"; the editor-authoring rows sat beside the editor-object
+  vocabulary under two pages that vocabulary already owned. Five files became two. Nothing moved:
+  each pair or triple was already ADJACENT in the sorted module walk and each merged file registers
+  the earlier half's rows first, so registry order - which breaks ties in the reverse-lifter - is
+  preserved by construction. Held by BOTH gate texts, `registry=same words=same verbs=5324`, and by
+  a source-line census whose only differences are the class boilerplate a merged file stops needing,
+  two helpers that were byte-identical in both halves, and two payload notes renamed because the two
+  halves had used one name for two different sentences. Merges are close to line-neutral, as the last
+  wave measured: **-16, -4 and -7 lines** of code respectively.
+- **The six remaining apparent aspect splits, decided rather than left open.** Audio / Audio Server,
+  Physics / Physics Server, Input / Input Event and Nodes / Nodes: Activation are NOT aspect splits:
+  each second half files its rows under a shelf of its own name, so the split IS the shelf and a
+  reader looking for "set bus muted" is already looking at the right page. The three text modules
+  carry five shelves between them (Text, JSON, Files: Tables, Variables: Dictionary, UI) and share
+  no single one, so joining them would make a 600-line file with nothing easier to find in it.
+  Translation / Translation Quality and Editor Author / Editor Object DID share their shelves, and
+  both merged, above.
 
 ### Fixed
 

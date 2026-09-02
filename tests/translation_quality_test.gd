@@ -4,7 +4,7 @@
 # is run for real, because an emission pin alone cannot tell a correct expression from a plausible one:
 #
 #   1. Translation Coverage / Missing Translation Keys / Translation Is Complete
-#      (addons/eventforge/registration/modules/translation_quality_aces.gd). Every catalog case is a
+#      (addons/eventforge/registration/modules/translation_aces.gd). Every catalog case is a
 #      real .csv written to user:// and read by the REAL emitted expression, compiled and run: a
 #      partly filled language, a language with no column at all, a whitespace-only cell, an RTL cell,
 #      cells quoting the separator, CRLF line endings, a semicolon catalog, a header-only file and a

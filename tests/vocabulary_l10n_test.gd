@@ -52,7 +52,6 @@ const NEW_MODULES: Array[String] = [
 	# authoring an editor plugin, the 3D move/turn/face/place vocabulary, and the cursor-and-canvas
 	# words. Each of these modules is WHOLLY new, so the whole module is owed and swept.
 	"res://addons/eventforge/registration/modules/game_mechanics_aces.gd",
-	"res://addons/eventforge/registration/modules/editor_author_aces.gd",
 	"res://addons/eventforge/registration/modules/cursor_canvas_aces.gd",
 	# Playing together, and lighting a game: three modules that shipped whole, so the whole of each
 	# is owed. The node-scoped lighting rows now live in lighting_aces.gd beside the frozen ones they
@@ -77,12 +76,6 @@ const NEW_MODULES: Array[String] = [
 	# The questions a handler asks the ONE event it was handed, filed apart from the polled Input
 	# rows on purpose. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/input_event_aces.gd",
-	# The touch said with a filter on it: the four group-filtered triggers and the standing
-	# question beside them. One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/collision_filter_aces.gd",
-	# The step a standing state changed: the two floor edges, the two overlap edges, and the four
-	# gates that go under them. One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/collision_edge_aces.gd",
 	# The four things the engine tells a node through its notification callback. One module,
 	# shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/notification_aces.gd",
@@ -181,6 +174,12 @@ const EXTENDED_MODULES: Dictionary = {
 	# The two rows that build a menu and answer the item that was chosen out of it.
 	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
 		"MenuAddItem", "OnMenuItemChosen",
+		# The words for authoring an editor plugin. They arrived as a module of their own and were
+		# owed wholesale; the module joined this one, so the same rows are owed here by name.
+		"EditorIcon", "EditorPreference", "ProjectSetting", "EditorMainScreen", "SetProjectSetting",
+		"SaveProjectSettings", "SwitchToWorkspace", "ShowInProjectBar", "OpenScriptAtLine",
+		"AddEditorWindow", "AddCommandPaletteCommand", "AddBottomPanel", "RemoveBottomPanel",
+		"OnProjectFilesChanged", "OnPreferencesChanged",
 	],
 	# The three edits a tool makes as steps the editor can take back.
 	"res://addons/eventforge/registration/modules/tooling_aces.gd": [
@@ -202,6 +201,20 @@ const EXTENDED_MODULES: Dictionary = {
 		"IsSetToCollideWithLayer",
 		"CollideWithLayer3D", "StopCollidingWithLayer3D", "BeOnLayer3D", "LeaveLayer3D",
 		"IsSetToCollideWithLayer3D",
+		# The step a standing state changed: the two floor edges, the two overlap edges and the
+		# four gates that go under them. They arrived as a module of their own and were owed
+		# wholesale; the module joined this one, so the same rows are owed here by name.
+		"OnLanded", "OnLanded3D", "OnLeftTheGround", "OnLeftTheGround3D",
+		"JustLanded", "JustLanded3D", "JustLeftTheGround", "JustLeftTheGround3D",
+		"OnFirstOverlap", "OnFirstOverlap3D", "OnLastOverlapEnded", "OnLastOverlapEnded3D",
+		"IsTheFirstOneIn", "IsTheFirstOneIn3D", "WasTheLastOneOut", "WasTheLastOneOut3D",
+		# The touch said with a group on it: the four filtered triggers and the standing question
+		# beside them, owed here for the same reason.
+		"OnCollisionWithGroup", "OnCollisionWithGroup3D",
+		"OnStoppedCollidingWithGroup", "OnStoppedCollidingWithGroup3D",
+		"OnOverlapWithGroup", "OnOverlapWithGroup3D",
+		"OnOverlapEndedWithGroup", "OnOverlapEndedWithGroup3D",
+		"IsTouchingGroup", "IsTouchingGroup3D",
 	],
 	# The press remembered for a moment so an input made slightly too early still lands,
 	# in seconds and in the frame-counted spelling beside it.

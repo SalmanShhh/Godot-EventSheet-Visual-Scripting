@@ -182,7 +182,7 @@ static func _test_editor_vocabulary() -> bool:
 	}
 	var found: Dictionary = {}
 	var categories: Dictionary = {}
-	for descriptor: ACEDescriptor in EventForgeEditorAuthorACEs.get_descriptors():
+	for descriptor: ACEDescriptor in EventForgeEditorObjectACEs.get_descriptors():
 		found[descriptor.ace_id] = descriptor.codegen_template
 		categories[descriptor.ace_id] = descriptor.category
 	for ace_id: String in expected:
@@ -206,7 +206,7 @@ static func _test_editor_vocabulary() -> bool:
 
 
 static func _param_hint(_found: Dictionary, ace_id: String, param_id: String) -> String:
-	for descriptor: ACEDescriptor in EventForgeEditorAuthorACEs.get_descriptors():
+	for descriptor: ACEDescriptor in EventForgeEditorObjectACEs.get_descriptors():
 		if descriptor.ace_id != ace_id:
 			continue
 		for parameter: ACEParam in descriptor.params:
@@ -334,7 +334,7 @@ static func _test_picker_pages() -> bool:
 	all_passed = _check("a category that merely starts with the words is not one of ours",
 		ACEPickerDialog.is_editor_tools_category("Editor Toolsmith"), false) and all_passed
 	all_passed = _check("each page says what it is for",
-		str(EventForgeEditorAuthorACEs.section_descriptions().get("Editor Tools: Project & preferences", "")).begins_with("This project's settings"),
+		str(EventForgeEditorObjectACEs.section_descriptions().get("Editor Tools: Project & preferences", "")).begins_with("This project's settings"),
 		true) and all_passed
 	# The two rows that are about the PROJECT rather than about the editor wear the project's name.
 	all_passed = _check("writing a project setting reads as the Project, not the Editor",
@@ -343,7 +343,7 @@ static func _test_picker_pages() -> bool:
 	# the flat root keeps only the one-off chores. Pinned by VALUE per row: a row that quietly slid
 	# back onto the root would still pass a count.
 	var filed: Dictionary = {}
-	for module: Object in [EventForgeToolingACEs, EventForgeEditorObjectACEs, EventForgeEditorAuthorACEs]:
+	for module: Object in [EventForgeToolingACEs, EventForgeEditorObjectACEs]:
 		for descriptor: ACEDescriptor in module.call("get_descriptors"):
 			filed[str(descriptor.ace_id)] = str(descriptor.category)
 	for pair: Array in [

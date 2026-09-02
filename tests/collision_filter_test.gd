@@ -19,7 +19,7 @@ class_name CollisionFilterTest
 extends RefCounted
 
 const FILTERS := preload("res://addons/eventforge/registration/collision_filters.gd")
-const MODULE := preload("res://addons/eventforge/registration/modules/collision_filter_aces.gd")
+const MODULE := preload("res://addons/eventforge/registration/modules/collision_aces.gd")
 
 const LIFT_PATH := "user://collision_filter_lift.gd"
 
