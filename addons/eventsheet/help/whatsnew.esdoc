@@ -157,7 +157,8 @@ What changed in the build you have installed (v0.17.0), in the words the release
   sheet's own handlers from any non-text focus while the EventSheets screen was up, ahead of Godot's
   own handlers. Every hinted key is disabled the moment it is set now: `PopupMenu` still PAINTS a
   disabled shortcut's text, and `activate_item_by_event` skips it - which is exactly what a hint is.
-  A sweep over the whole cascade, not a list of items, holds it.
+  A sweep over the whole cascade, not a list of items, holds it. The three right-click menus keep their hints live, because a plain popup can only
+  answer its key while it is open - F2 with the variable menu open still renames, as it always did.
 - **Undo and Redo are icons now, because Godot has no icon called \"Undo\".** The strip asked the
   editor theme for icons named `Save`, `Undo` and `Redo` and kept the words for any that did not
   arrive - so the resting row read \"[save icon] Undo [redo icon]\": two pictures and a word. Probed

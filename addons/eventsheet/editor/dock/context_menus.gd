@@ -61,7 +61,7 @@ func init(dock: Control) -> void:
 ## sheet's handlers from any non-text focus in the editor. set_item_shortcut_disabled keeps the key
 ## DRAWN beside the item (PopupMenu paints a shortcut's text whether or not it is disabled) while
 ## activate_item_by_event skips it, which is exactly what a hint is.
-static func hint_key(menu: PopupMenu, item_id: int, binding: String) -> void:
+static func hint_key(menu: PopupMenu, item_id: int, binding: String, live_while_open: bool = false) -> void:
 	var index: int = menu.get_item_index(item_id)
 	if index < 0 or binding.strip_edges().is_empty():
 		return
@@ -76,7 +76,10 @@ static func hint_key(menu: PopupMenu, item_id: int, binding: String) -> void:
 	var shortcut := Shortcut.new()
 	shortcut.events = [pressed]
 	menu.set_item_shortcut(index, shortcut, false)
-	menu.set_item_shortcut_disabled(index, true)
+	# A right-click menu is a plain popup, not a MenuButton: its shortcut can only fire while the
+	# popup is open and focused, which is the one moment the hint SHOULD answer the key (F2 with
+	# the variable menu open renames, as it always did). Those callers ask for it to stay live.
+	menu.set_item_shortcut_disabled(index, not live_while_open)
 
 
 ## Builds every right-click context menu once and assigns each back onto the dock (the members
@@ -184,7 +187,7 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Export Text for Translation…", _dock.VARIABLE_MENU_TEXT_EXPORT)
 	_dock._variable_context_menu.add_item("Import Translations…", _dock.VARIABLE_MENU_TEXT_IMPORT)
 	# The keys that do the same thing, at the right of the items that do it.
-	hint_key(_dock._variable_context_menu, _dock.VARIABLE_MENU_RENAME, "F2")
+	hint_key(_dock._variable_context_menu, _dock.VARIABLE_MENU_RENAME, "F2", true)
 	_dock._variable_context_menu.id_pressed.connect(_dock._on_variable_context_menu_id_pressed)
 	_dock.add_child(_dock._variable_context_menu)
 
@@ -215,9 +218,9 @@ func build_all() -> void:
 	# And the two of these three that have a key say which. Read off the shortcut table, so a
 	# rebound key hints as the key it was rebound to; Local has no key of its own to name.
 	hint_key(_dock._add_variable_submenu, _dock.EMPTY_MENU_ADD_VARIABLE,
-		EventSheetShortcuts.binding_for("add_variable"))
+		EventSheetShortcuts.binding_for("add_variable"), true)
 	hint_key(_dock._add_variable_submenu, _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE,
-		EventSheetShortcuts.binding_for("add_variable_chord"))
+		EventSheetShortcuts.binding_for("add_variable_chord"), true)
 	_dock._add_variable_submenu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("Add Variable", _dock._add_variable_submenu)
 	# The smallest editor tool there is, one menu item away: a button in the Inspector and the
