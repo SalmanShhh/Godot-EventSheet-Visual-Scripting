@@ -6,12 +6,18 @@
 # how many times an idea gets tried. A green run here means nothing more than "the tests most likely
 # to notice this did not notice it".
 #
-# HOW A CHANGE IS TURNED INTO A LIST. Two rules, in this order:
+# HOW A CHANGE IS TURNED INTO A LIST. Three rules, in this order:
 #   1. THE NAMING CONVENTION does most of it. `tests/<x>_test.gd` tests `<x>.gd`, wherever that file
 #      lives, and a changed test picks itself. A changed file whose name is a compound (`multiplayer_
 #      lift.gd`) also picks the family that shares its first word, as long as that word is a real
 #      subject rather than one of the words half the plugin is called after (`sheet`, `event`, ...).
-#   2. THE OVERRIDES fill in what a name cannot say: the compiler has no `sheet_compiler_test.gd`, it
+#   2. A SHARED TEST HELPER picks everything that preloads it. A file under `tests/` that is not
+#      itself a test - `support.gd`, `repro_bundle.gd`, `huge_project_fixture.gd` - has no name a
+#      convention can read, and the one the whole suite asserts through has five hundred dependants:
+#      an edit to it that picked two lint tests would let `-Iterate` go green over a broken check().
+#      The dependants are read out of the test files themselves rather than listed here, because a
+#      list would be wrong the first time somebody preloads the helper somewhere new.
+#   3. THE OVERRIDES fill in what a name cannot say: the compiler has no `sheet_compiler_test.gd`, it
 #      has five tests that compile things. That table is an OVERRIDE LIST - it exists for the cases
 #      the convention gets wrong, and every name in it is checked to be a real file by the test
 #      beside this script, so it cannot rot into a list of tests that no longer exist.
@@ -152,14 +158,16 @@ static func status_paths(status_text: String) -> PackedStringArray:
 # ── the pieces ──────────────────────────────────────────────────────────────────
 
 
-## Rule 1, the naming convention: the test named after this file, and the family that shares its
-## first word when that word is its own subject.
+## Rules 1 and 2: the test named after this file, the family that shares its first word when that
+## word is its own subject, and - for a shared helper under `tests/` - every test that preloads it.
 static func _named_by(relative: String, known: Dictionary) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	var stem: String = relative.get_file().get_basename()
 	if relative.begins_with("tests/") and relative.ends_with(TEST_SUFFIX):
 		names.append(stem)
 		return names
+	if relative.begins_with("tests/") and relative.ends_with(".gd"):
+		return dependants_of(stem, known)
 	if known.has(stem + "_test"):
 		names.append(stem + "_test")
 	var first_word: String = stem.get_slice("_", 0)
@@ -167,6 +175,22 @@ static func _named_by(relative: String, known: Dictionary) -> PackedStringArray:
 		return names
 	for name: String in known.keys():
 		if name.begins_with(first_word + "_"):
+			names.append(name)
+	return names
+
+
+## Rule 2: every test that preloads the shared helper `tests/<helper_stem>.gd`, read out of the test
+## files themselves and sorted, so two machines pick the same list. A helper nothing preloads picks
+## nothing, which is the honest answer for a file the suite has stopped using.
+static func dependants_of(helper_stem: String, known: Dictionary) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var wanted: String = "res://%s%s.gd" % [TESTS_DIR.trim_prefix("res://"), helper_stem]
+	var test_names: PackedStringArray = PackedStringArray()
+	for name: Variant in known.keys():
+		test_names.append(str(name))
+	test_names.sort()
+	for name: String in test_names:
+		if FileAccess.get_file_as_string("%s%s.gd" % [TESTS_DIR, name]).contains(wanted):
 			names.append(name)
 	return names
 

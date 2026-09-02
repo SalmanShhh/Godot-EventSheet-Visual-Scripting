@@ -61,6 +61,7 @@ static func run() -> bool:
 	ok = _test_the_crash_trail_names_the_test_that_never_finished() and ok
 	ok = _test_the_log_reader_files_every_failure_under_its_test() and ok
 	ok = _test_the_blame_is_the_pick_mapping_asked_backwards() and ok
+	ok = _test_a_shared_test_helper_picks_its_dependants() and ok
 	ok = _test_the_pin_helper_reports_the_way_it_promises() and ok
 	ok = _test_a_refused_byte_gate_leaves_its_evidence() and ok
 	return ok
@@ -121,6 +122,27 @@ static func _test_the_blame_is_the_pick_mapping_asked_backwards() -> bool:
 	ok = SUPPORT.pin_value("red_run_report_test", "the trailing .gd is accepted, since a trail carries one",
 		Picker.blamed_files("shard_split_test.gd", changed),
 		PackedStringArray(["tests/shard_split_test.gd"])) and ok
+	return ok
+
+
+## The rule the naming convention has nothing to say about: a file under `tests/` that is not itself
+## a test is a shared helper, and it picks every test that preloads it. Without it an edit to the one
+## file five hundred tests assert through picked the two gates that sweep every `.gd` in the tree, and
+## an iteration run could go green over a broken `check()`.
+##
+## Pinned as MEMBERSHIP rather than as a count, because a count passes on the wrong list: this file
+## preloads `support.gd` and so does `lift_grammar_test`, so both are in `support.gd`'s own list.
+static func _test_a_shared_test_helper_picks_its_dependants() -> bool:
+	var picked: PackedStringArray = Picker.pick(PackedStringArray(["tests/support.gd"]))
+	var ok: bool = SUPPORT.pin_value("red_run_report_test",
+		"an edit to the shared assertion file picks a test that asserts through it",
+		picked.has("red_run_report_test"), true)
+	ok = SUPPORT.pin_value("red_run_report_test", "...and it is not just this one",
+		picked.has("lift_grammar_test"), true) and ok
+	# And the reverse: a helper nothing preloads is not an excuse to run the whole suite.
+	ok = SUPPORT.pin_value("red_run_report_test", "a helper nothing preloads picks nothing",
+		Picker.dependants_of("no_such_helper_lives_here", {"red_run_report_test": true}),
+		PackedStringArray()) and ok
 	return ok
 
 
