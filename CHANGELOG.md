@@ -183,6 +183,22 @@ Measured across the wave, outside the three generated trees: **-966 lines** of h
 - **The suite stops printing a design-item id as a test's name.** `variable_dialog_v5_test.gd` was
   renamed to `variable_dialog_fields_test.gd` when the shorthand lint landed; the label it printed in
   front of every assertion was left behind.
+- **The ledger is a tool now, and it reproduces.** Every estimate in this campaign was quoted against
+  one survey figure nobody could produce a second time, which is how a wave came to project -7,000
+  lines and deliver -966. `tools/measure_ledger.ps1` is that figure's definition, executable: two
+  `git` readings over pinned pathspecs, printed per area with the size at HEAD beside the added,
+  removed and net between any two commits. HAND-WRITTEN GDSCRIPT is `*.gd` minus the two generated
+  trees (`eventsheet_addons/`, `demo/showcase/`); THE SHIPPED PLUGIN is the same filter narrowed to
+  `addons/` minus the generated doc bundle. Sizes come from `git grep -c "^"` at a commit and deltas
+  from `git diff --numstat` over the identical pathspec, so the two halves of a row always describe
+  the same files. Checked against the wave above, which it reprints exactly: **-966** hand-written
+  (**+3,360 / -4,326**), `tests/` **-1,484**, shipped plugin **-6**. The reference line the campaign
+  quotes from now on is the tree this wave starts from: **433,586** lines of hand-written GDScript in
+  **1,779** files, of which the shipped plugin is **235,693** in **608**; `tests/` is **144,870**,
+  pack builders **29,338**, dialogs **19,080**, the registration modules **16,779**, doctors
+  **8,300**, the hand-written lift matchers **3,976**, and the two mega-files **32,646** between
+  them. The tool itself is hand-written and counts against that first figure in full - the campaign
+  pays for its own instruments.
 
 ### Fixed
 
