@@ -4666,7 +4666,13 @@ func _build_pin_modes_3d() -> bool:
 
 	var sun: DirectionalLight3D = DirectionalLight3D.new()
 	sun.name = "Sun"
-	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
+	# The sun and the camera below are turned by ASSIGNING their basis rather than by rotation_degrees.
+	# A rotation goes through the platform's own sin and cos, which disagree in the last bit between
+	# Windows and Linux, and this scene happened to land on a value that prints differently on each -
+	# so the drift gate went red on the CI runner over a file that regenerates byte-identically here.
+	# The nine numbers are what a -55 / -35 degree turn produced; written down, both runners agree.
+	sun.basis = Basis(Vector3(0.81915206, 0.0, 0.57357645), Vector3(0.46984634, 0.57357645, -0.6710101),
+		Vector3(-0.32898995, 0.81915206, 0.46984634))
 	sun.shadow_enabled = true
 	root.add_child(sun)
 	sun.owner = root
@@ -4684,7 +4690,9 @@ func _build_pin_modes_3d() -> bool:
 	var camera: Camera3D = Camera3D.new()
 	camera.name = "Camera"
 	camera.position = Vector3(0.0, 7.0, 16.0)
-	camera.rotation_degrees = Vector3(-22.0, 0.0, 0.0)
+	# A -22 degree pitch, written as the basis it produced (see the sun above for why).
+	camera.basis = Basis(Vector3(1.0, 0.0, 0.0), Vector3(0.0, 0.92718387, -0.37460658),
+		Vector3(0.0, 0.37460658, 0.92718387))
 	root.add_child(camera)
 	camera.owner = root
 

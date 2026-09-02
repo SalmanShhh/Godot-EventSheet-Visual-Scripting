@@ -196,6 +196,14 @@ source (**+8,374 / -8,391**) and **-2,941** in the installed plugin, which is **
 **235,693** in **608**. The wave has so far paid for its own instruments almost exactly and taken
 the whole of its shrink out of the tree that ships, which is the figure a shrink must not grow.
 
+- **The showcase gate is green on both runners.** Its first day on CI it named
+  `pin_modes/pin_modes_3d.tscn` as drifted on Linux while the same rebuild was byte-identical on
+  Windows: the scene's sun and camera were turned with `rotation_degrees`, which goes through the
+  platform's own sin and cos, and those disagree in the last bit often enough that one of the nine
+  basis numbers printed differently on each runner. The builder now assigns the two bases as the
+  numbers the turn produced, so every runner writes the same bytes and the committed tree did not
+  move by one.
+
 - **The three wave-3 gates cannot say same over nothing.** A boundary review of the third wave read
   its instruments the way it had read the code: the identity gate discarded the dump tool's exit code
   and kept last run's dump files, so a parse error in the tree would have compared the base against a
