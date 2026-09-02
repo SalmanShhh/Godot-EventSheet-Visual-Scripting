@@ -32,7 +32,12 @@
 # worktree, so both halves are written by one formatter. Without that, a base older than the wording
 # dump would answer `words` with the identity text and the gate would report every verb reworded.
 # It cannot hide anything the gate is for: what is being measured is the VOCABULARY the registration
-# modules publish, and none of the three copied files publishes a verb.
+# modules publish, and none of the copied files publishes a verb. It IS a blind spot all the same -
+# a change to one of them between the base and the tree is a change both halves are read through, so
+# the gate can no longer see it. The run therefore PRINTS what each copied file did between the two,
+# as added and removed lines, so the one thing the gate cannot measure is the one thing it says out
+# loud. A reviewer reads that list; a copied file that grew a rule rather than a field is a gate
+# result to distrust.
 #
 # USAGE (from the repository root)
 #   $env:GODOT = "<path to the Godot 4.7 console binary>"
@@ -144,6 +149,19 @@ if (-not (Test-Path $tree)) {
 
 foreach ($file in $Instrument) {
 	Copy-Item -LiteralPath (Join-Path $repo $file) -Destination (Join-Path $tree $file) -Force
+}
+
+# The blind spot, named. `git diff <base>` reads the base against the WORKING TREE, which is the
+# half the copies come from, so this is exactly what the gate is reading both sides through.
+Write-Output "instrument (copied into the base worktree, so the gate reads both sides through the tree's copy):"
+foreach ($file in $Instrument) {
+	$stat = (& git -C $repo diff --numstat $baseSha -- $file) | Select-Object -First 1
+	if ([string]::IsNullOrWhiteSpace($stat)) {
+		Write-Output ("  {0}  unchanged since {1}" -f $file, $baseShort)
+		continue
+	}
+	$parts = $stat -split "`t"
+	Write-Output ("  {0}  +{1}/-{2} since {3}" -f $file, $parts[0], $parts[1], $baseShort)
 }
 
 Write-Dump $tree (Join-Path $dumps "$baseShort-registry.txt") $false
