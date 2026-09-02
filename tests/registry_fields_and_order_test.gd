@@ -30,9 +30,18 @@
 #   4. THE ORDER TEXT IS TWO SECTIONS, headed by comment lines a diff skips, with the reverse half
 #      carrying the literal-character count the tie-break sorts on.
 #   5. EACH TEXT HAS ITS OWN FORMAT VERSION, so no two of the four can be mistaken for each other.
+#   6. NONE OF THE FOUR CARRIES A MINTED UID. The gate reads its base out of a detached worktree, and
+#      importing that worktree RE-MINTS every `.uid` sidecar in it - the same script has one id there
+#      and another here. A text carrying one would report every verb moved on a second machine and
+#      nothing at all about the vocabulary. The `{uid}` PLACEHOLDER is a different thing entirely: it
+#      is five literal characters a template carries until the dock bakes a value into a row, it is
+#      the same five characters in both trees, and the identity text is asserted to still have it - a
+#      no-uid check that passed because the templates had gone blank would prove nothing.
 #
-# Nothing here reads or writes a sheet and nothing needs a live registry: every function under test
-# is pure over the catalog-shaped dictionaries, descriptors and index entries it is handed.
+# Nothing here reads or writes a sheet. The first five are pure over the catalog-shaped dictionaries,
+# descriptors and index entries they are handed, so they need no registry at all; the sixth asks the
+# LIVE vocabulary, because "no shipped template holds a uid" is a claim only the shipped templates
+# can answer.
 @tool
 class_name RegistryFieldsAndOrderTest
 extends RefCounted
@@ -51,6 +60,7 @@ static func run() -> bool:
 	passed = _test_a_reordering_moves_only_the_order_text() and passed
 	passed = _test_the_order_text_is_two_headed_sections() and passed
 	passed = _test_each_text_has_its_own_version() and passed
+	passed = _test_the_four_texts_carry_no_minted_uid() and passed
 	return passed
 
 
@@ -191,4 +201,26 @@ static func _test_each_text_has_its_own_version() -> bool:
 		["and refuses the order text's", PICKER_FIELDS.is_current_format(ORDER.HEADER + "\n"), false],
 		["the order text recognises its own",
 			ORDER.is_current_format(ORDER.HEADER + "\n"), true],
+	])
+
+
+## THE ONE THING THAT DIFFERS BETWEEN THE GATE'S TWO TREES BY CONSTRUCTION. `prove_registry_identity`
+## reads its base out of a detached worktree, and importing that worktree re-mints every `.uid`
+## sidecar in it: one script's sidecar says one id there and another here, with neither wrong. Any of
+## the four texts that carried a minted uid would therefore report a vocabulary that moved when
+## nothing did, on every machine, for ever.
+##
+## This walks the LIVE vocabulary rather than a probe entry, because the hazard is a real template or
+## a real default quietly holding a `uid://` path - which is a thing a person can write, and which
+## only a reading of what actually ships can rule out.
+static func _test_the_four_texts_carry_no_minted_uid() -> bool:
+	var catalog: Dictionary = EventForgeSuccessors.catalog()
+	var identity: String = EventForgeRegistryDump.text(catalog)
+	return SUPPORT.pins(P, [
+		["the identity text carries no minted uid", identity.contains("uid://"), false],
+		["nor does the wording text", WORDING.text(catalog).contains("uid://"), false],
+		["nor does the fields text", PICKER_FIELDS.text(catalog).contains("uid://"), false],
+		["nor does the order text", ORDER.text().contains("uid://"), false],
+		# The check above is only worth having while the templates are still in the text.
+		["and the identity text does still carry the {uid} placeholder", identity.contains("{uid}"), true],
 	])

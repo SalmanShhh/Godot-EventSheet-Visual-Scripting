@@ -47,6 +47,21 @@
 # ABSOLUTE path under the temp folder rather than to `user://something.txt` - two runs writing the
 # same `user://` name would compare a text against itself and print a green gate over a real change.
 #
+# THE IMPORT RE-MINTS EVERY `.uid` SIDECAR IN THE BASE WORKTREE. Importing a fresh checkout writes
+# new resource ids into the `.gd.uid` files beside the scripts, so the same script has one id in the
+# base worktree and a different one here, with neither of them wrong and neither of them meaning a
+# thing about the vocabulary. TWO CONSEQUENCES, both of them rules rather than observations:
+#
+#   * ANYTHING COMPARING PATHS OR IDS ACROSS THE TWO TREES MUST NORMALISE. A future text that put a
+#     script's uid, or a `res://` path resolved through one, on a line would report every verb moved
+#     on every machine and nothing about what changed. None of the four does today, and
+#     `tests/registry_fields_and_order_test.gd` holds all four to it against the LIVE vocabulary -
+#     the `{uid}` PLACEHOLDER a template carries is not one of these: it is the same five literal
+#     characters in both trees, and the same test asserts it is still there so the check cannot pass
+#     by the templates having gone blank.
+#   * `git status` IN THE BASE WORKTREE IS DIRTY AFTER A RUN, and that churn is the import's, not a
+#     change anyone made. Never carry a `.uid` back from it into this checkout.
+#
 # THE WORKTREE IS CACHED per base commit and kept, because a first run pays for a full project
 # import and a migration proves one module at a time. `-Clean` removes it when the wave is done.
 #

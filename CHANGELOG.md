@@ -127,6 +127,18 @@ read **-2,063** (**+4,230 / -6,293**) - the shipped-plugin figure is untouched a
 nothing under `addons/` is PowerShell. The wave was 319 lines better than it said and is 319 lines
 worse than it said; the number below it is the honest one.
 
+- **The one thing that differs between the gate's two trees by construction, said out loud.** The
+  descriptor-identity gate reads its base out of a detached worktree, and importing that worktree
+  RE-MINTS every `.uid` sidecar in it - the same script carries one resource id there and another
+  here, with neither wrong and neither meaning anything about the vocabulary. A text that put a
+  script's uid, or a path resolved through one, on a line would report every verb moved on every
+  machine and nothing about what changed. The gate's header now states the rule (anything comparing
+  paths or ids across the two trees normalises first, and the churn `git status` shows in the base
+  worktree afterwards is the import's, never a change to carry back), and the four texts are held to
+  it against the LIVE vocabulary rather than asserted: none of them contains a `uid://`, and the
+  identity text is checked to still carry the `{uid}` PLACEHOLDER - five literal characters that read
+  the same in both trees - so the check cannot pass by the templates having gone blank.
+
 - **The identity gate is four texts, and the two new ones watch what sorting destroys.** Identity
   and wording between them sign off two changes that break the editor in front of a user. `fields`
   is what a verb OFFERS - every parameter's hint, dropdown options, autocomplete suggestions, reading
