@@ -5,6 +5,7 @@ extends RefCounted
 
 
 const SUPPORT := preload("res://tests/support.gd")
+const PREFIX := "ace_metadata_test"
 
 
 ## Runs ACE metadata normalization checks.
@@ -32,17 +33,24 @@ static func run() -> bool:
 		]
 	})
 
+	# The existence pin stays a check of its own: everything under it dereferences `normalized`,
+	# and a pins() table builds all of its rows before it reports any of them.
 	all_passed = _check("normalize descriptor exists", normalized != null, true) and all_passed
-	all_passed = _check("listName alias", normalized.get_list_name(), "Set variable jump height") and all_passed
-	all_passed = _check("displayText alias", normalized.get_display_text(), "Set variable jump height to {0}") and all_passed
-	all_passed = _check("description alias", normalized.description, "Tap for a short hop, hold for a full jump. Disable for a fixed jump height every time.") and all_passed
-	all_passed = _check("param count", normalized.params.size(), 1) and all_passed
-	all_passed = _check("param desc alias", normalized.params[0].description, "Whether variable jump height is active.") and all_passed
-	all_passed = _check("param initialValue alias", str(normalized.params[0].get_initial_value()), "true") and all_passed
-	all_passed = _check("param hint preserved", normalized.params[0].hint, "variable_reference") and all_passed
-	all_passed = _check("param options preserved", normalized.params[0].options.size(), 2) and all_passed
-	all_passed = _check("default params generated", str(normalized.build_default_params().get("enabled", "")), "true") and all_passed
-	all_passed = _check("display template render", normalized.format_display(normalized.build_default_params()), "Set variable jump height to true") and all_passed
+	if normalized == null:
+		return false
+	var first_param: ACEParam = normalized.params[0] as ACEParam
+	all_passed = SUPPORT.pins(PREFIX, [
+		["listName alias", normalized.get_list_name(), "Set variable jump height"],
+		["displayText alias", normalized.get_display_text(), "Set variable jump height to {0}"],
+		["description alias", normalized.description, "Tap for a short hop, hold for a full jump. Disable for a fixed jump height every time."],
+		["param count", normalized.params.size(), 1],
+		["param desc alias", first_param.description, "Whether variable jump height is active."],
+		["param initialValue alias", str(first_param.get_initial_value()), "true"],
+		["param hint preserved", first_param.hint, "variable_reference"],
+		["param options preserved", first_param.options.size(), 2],
+		["default params generated", str(normalized.build_default_params().get("enabled", "")), "true"],
+		["display template render", normalized.format_display(normalized.build_default_params()), "Set variable jump height to true"],
+	]) and all_passed
 
 	var always_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "Always")
 	all_passed = _check("core Always condition registered", always_descriptor != null, true) and all_passed
@@ -93,4 +101,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return SUPPORT.check("ace_metadata_test", label, actual, expected)
+	return SUPPORT.check(PREFIX, label, actual, expected)
