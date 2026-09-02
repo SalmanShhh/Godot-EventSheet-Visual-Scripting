@@ -2396,29 +2396,8 @@ static func check_disabled_pack_usage(_sheet_paths: PackedStringArray, findings:
 
 
 static func _list_files_with_extension(extension: String) -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
-	var pending: PackedStringArray = PackedStringArray(["res://"])
-	while not pending.is_empty():
-		var directory_path: String = pending[pending.size() - 1]
-		pending.remove_at(pending.size() - 1)
-		var directory: DirAccess = DirAccess.open(directory_path)
-		if directory == null:
-			continue
-		directory.list_dir_begin()
-		var entry: String = directory.get_next()
-		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
-			if directory.current_is_dir():
-				if not entry.begins_with(".") and entry != "addons":
-					pending.append(full_path)
-			elif entry.get_extension() == extension:
-				found.append(full_path)
-			entry = directory.get_next()
-		directory.list_dir_end()
-	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
-	# on NTFS, hash order on ext4), and this order is the order findings appear in the report.
-	found.sort()
-	return found
+	return _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
+		return path.get_extension() == extension)
 
 
 ## Calls to a behaviour verb that no longer exists - the ONE failure in this plugin that compiles
@@ -2838,31 +2817,11 @@ static func _is_skill_tree_text(path: String) -> bool:
 ## `tree_name` and a `starting_points`. Found by shape rather than by class so a tree still reports
 ## when the pack that reads it has been removed from the project.
 static func _skill_tree_assets() -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
-	var pending: PackedStringArray = PackedStringArray(["res://"])
-	while not pending.is_empty():
-		var directory_path: String = pending[pending.size() - 1]
-		pending.remove_at(pending.size() - 1)
-		var directory: DirAccess = DirAccess.open(directory_path)
-		if directory == null:
-			continue
-		directory.list_dir_begin()
-		var entry: String = directory.get_next()
-		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
-			if directory.current_is_dir():
-				if not entry.begins_with(".") and entry != "addons":
-					pending.append(full_path)
-			elif entry.ends_with(".tres") and _is_skill_tree_text(full_path):
-				var asset: Resource = ResourceLoader.load(full_path, "", ResourceLoader.CACHE_MODE_REUSE)
-				if asset != null and asset.get("skills") is Array:
-					found.append(full_path)
-			entry = directory.get_next()
-		directory.list_dir_end()
-	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
-	# on NTFS, hash order on ext4), and this order is the order findings appear in the report.
-	found.sort()
-	return found
+	return _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
+		if not (path.ends_with(".tres") and _is_skill_tree_text(path)):
+			return false
+		var asset: Resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE)
+		return asset != null and asset.get("skills") is Array)
 
 
 ## Every project GDScript, excluding addons/ (the plugin's own code is not a user's game).
@@ -2917,7 +2876,29 @@ static func source_of(path: String) -> String:
 
 
 static func _walk_project_scripts() -> PackedStringArray:
-	var scripts: PackedStringArray = PackedStringArray()
+	return _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
+		return path.ends_with(".gd"))
+
+
+## The directories no sweep here steps into: this plugin's own code, which the reader did not write.
+## `.godot` and every other dot-directory are skipped by the walk itself.
+const _PLUGIN_DIRECTORIES: PackedStringArray = ["addons"]
+
+
+## Every file under res:// that `keeps` says yes to, in path order.
+##
+## The ONE directory walk, which four sweeps here were each carrying their own copy of. The copies
+## only ever differed in two places - which directories to step over, and which files to keep - so
+## those are the two arguments, and the walk, the unreadable-directory guard, the handle that gets
+## closed and the final sort live here once.
+##
+## PATH ORDER, ALWAYS. A directory walk hands files back in filesystem order (near-alphabetical on
+## NTFS, hash order on ext4), and forty-odd checks derive their finding order and their "first user"
+## picks from these lists - so a report that took the walk's own order would reorder itself between
+## two machines and be reporting the filesystem rather than the project.
+static func _walk_files(skipped_directories: PackedStringArray,
+		keeps: Callable) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
 	while not pending.is_empty():
 		var directory_path: String = pending[pending.size() - 1]
@@ -2930,17 +2911,14 @@ static func _walk_project_scripts() -> PackedStringArray:
 		while not entry.is_empty():
 			var full_path: String = directory_path.path_join(entry)
 			if directory.current_is_dir():
-				if not entry.begins_with(".") and entry != "addons":
+				if not entry.begins_with(".") and not skipped_directories.has(entry):
 					pending.append(full_path)
-			elif entry.ends_with(".gd"):
-				scripts.append(full_path)
+			elif keeps.call(full_path):
+				found.append(full_path)
 			entry = directory.get_next()
 		directory.list_dir_end()
-	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
-	# on NTFS, hash order on ext4), and forty-odd checks derive finding order and "first user" picks
-	# from this list.
-	scripts.sort()
-	return scripts
+	found.sort()
+	return found
 
 
 ## `event_number` is the sheet's own margin number for the row the finding is about (0 when the
@@ -3878,23 +3856,5 @@ static func task_note_in(line: String) -> Dictionary:
 
 ## Every .gd under res:// that belongs to the PROJECT rather than to a plugin or to generated output.
 static func _project_script_paths() -> PackedStringArray:
-	var script_paths: PackedStringArray = PackedStringArray()
-	var pending: PackedStringArray = PackedStringArray(["res://"])
-	while not pending.is_empty():
-		var directory_path: String = pending[pending.size() - 1]
-		pending.remove_at(pending.size() - 1)
-		var directory: DirAccess = DirAccess.open(directory_path)
-		if directory == null:
-			continue
-		directory.list_dir_begin()
-		var entry: String = directory.get_next()
-		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
-			if directory.current_is_dir():
-				if not entry.begins_with(".") and not _TASK_NOTE_SKIPPED_DIRS.has(entry):
-					pending.append(full_path)
-			elif entry.ends_with(".gd"):
-				script_paths.append(full_path)
-			entry = directory.get_next()
-	script_paths.sort()  # deterministic, so the report never reorders between runs
-	return script_paths
+	return _walk_files(_TASK_NOTE_SKIPPED_DIRS, func(path: String) -> bool:
+		return path.ends_with(".gd"))

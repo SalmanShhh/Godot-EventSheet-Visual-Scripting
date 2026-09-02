@@ -307,6 +307,15 @@ comes from `tools/measure_ledger.ps1`, at the two commits named in it.
   call site moved. Held by a findings-identity proof: the whole Doctor run over this repository is
   275 findings before and 275 byte-identical findings after, severity, check id, path, subject,
   order key and message each compared in full.
+- **One directory walk instead of four.** The Doctor listed the project's files four times over -
+  the scripts it reads, the project's own scripts for the notes sweep, every scene or resource of a
+  given extension, and every `.tres` shaped like a skill tree - and each of the four carried its own
+  copy of the same twenty-line walk, unreadable-directory guard and final sort. The copies differed
+  in exactly two places: which directories to step over, and which files to keep. Those are the two
+  arguments of `_walk_files` now, and the reason the sort is there (a walk hands files back in
+  filesystem order, and forty-odd checks derive their order and their "first user" picks from these
+  lists) is written once instead of three times. Same findings-identity proof: 275 before, 275
+  byte-identical after.
 
 ### Fixed
 
