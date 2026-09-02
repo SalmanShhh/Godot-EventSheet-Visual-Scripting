@@ -72,19 +72,8 @@ static func _darkness_rows() -> Array[ACEDescriptor]:
 		"The darkness to arrive at.", "color")
 	faded_tint.display_lens = EventForgeValueLens.LENS_DARKNESS_PERCENT
 	return [
-		F.make_descriptor("Core", "DarknessSet", "Set Darkness", ACEDescriptor.ACEType.ACTION,
-			"color = {value}", "", [tint], CAT, "Set darkness to {value}", DARKNESS_HOST)
-			.described("Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.")
-			.featured(),
-		F.make_descriptor("Core", "DarknessFade", "Fade Darkness", ACEDescriptor.ACEType.ACTION,
-			"create_tween().tween_property({target}, \"color\", {value}, {seconds})", "",
-			[_target_param("The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on."),
-				faded_tint,
-				F.make_param("seconds", "String", DEFAULT_DARKNESS_SECONDS, "Seconds",
-					"How long the fade takes.", "expression")],
-			CAT, "Fade darkness to {value} over {seconds} s", DARKNESS_HOST)
-			.described("Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.")
-			.featured()
+		F.act("DarknessSet", "Set Darkness", "color = {value}", CAT, "Set darkness to {value}", "Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.", DARKNESS_HOST).param_built(tint).featured(),
+		F.act("DarknessFade", "Fade Darkness", "create_tween().tween_property({target}, \"color\", {value}, {seconds})", CAT, "Fade darkness to {value} over {seconds} s", "Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.", DARKNESS_HOST).param_built(_target_param("The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on.")).param_built(faded_tint).param_typed("String", "seconds", DEFAULT_DARKNESS_SECONDS, "Seconds", "How long the fade takes.", "expression").featured()
 	]
 
 
@@ -109,23 +98,8 @@ static func _world_rows() -> Array[ACEDescriptor]:
 			"How much light everything gets regardless of the lights, as a fraction.",
 			"Set ambient light to {value}",
 			"Sets how much light the scene has with no light shining on it - the floor under every other light."),
-		F.make_descriptor("Core", "WorldFadeGlow", "Fade The Glow", ACEDescriptor.ACEType.ACTION,
-			"create_tween().tween_property({target}.%s, \"glow_intensity\", {value}, {seconds})" % ENVIRONMENT_MEMBER,
-			"", [_target_param("The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on."),
-				F.make_param("value", "String", _environment_default("glow_intensity"), "Strength",
-					"How much bright things bleed by the end. Around 1 is strong.", "expression"),
-				F.make_param("seconds", "String", DEFAULT_FADE_SECONDS, "Seconds",
-					"How long the fade takes.", "expression")],
-			CAT, "Fade the glow to {value} over {seconds} s", WORLD_HOST)
-			.described("Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.")
-			.featured(),
-		F.make_descriptor("Core", "WorldOwnEnvironment", "Make The Environment This Scene's Own",
-			ACEDescriptor.ACEType.ACTION,
-			"{target.}%s = {target.}%s.duplicate()" % [ENVIRONMENT_MEMBER, ENVIRONMENT_MEMBER], "",
-			[F.make_param("target", "String", "", "On node",
-				"The WorldEnvironment to give its own copy. Leave it blank for this node.", "expression")],
-			CAT, "Make the environment this scene's own", WORLD_HOST)
-			.described("Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.")
+		F.act("WorldFadeGlow", "Fade The Glow", "create_tween().tween_property({target}.%s, \"glow_intensity\", {value}, {seconds})" % ENVIRONMENT_MEMBER, CAT, "Fade the glow to {value} over {seconds} s", "Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.", WORLD_HOST).param_built(_target_param("The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on.")).param_typed("String", "value", _environment_default("glow_intensity"), "Strength", "How much bright things bleed by the end. Around 1 is strong.", "expression").param_typed("String", "seconds", DEFAULT_FADE_SECONDS, "Seconds", "How long the fade takes.", "expression").featured(),
+		F.act("WorldOwnEnvironment", "Make The Environment This Scene's Own", "{target.}%s = {target.}%s.duplicate()" % [ENVIRONMENT_MEMBER, ENVIRONMENT_MEMBER], CAT, "Make the environment this scene's own", "Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.", WORLD_HOST).param("target", "", "On node", "The WorldEnvironment to give its own copy. Leave it blank for this node.", "expression")
 	]
 
 
@@ -133,21 +107,14 @@ static func _world_rows() -> Array[ACEDescriptor]:
 ## writes and "Set fog false" is the one they have to decode.
 static func _world_switch(ace_id: String, display_name: String, property: String, turned_on: bool,
 		verb: String, about: String) -> ACEDescriptor:
-	return F.make_descriptor("Core", ace_id, display_name, ACEDescriptor.ACEType.ACTION,
-		"%s.%s = %s" % [ENVIRONMENT_MEMBER, property, "true" if turned_on else "false"], "",
-		[], CAT, verb, WORLD_HOST) \
-		.described("%s Writes `Environment.%s`." % [about, property])
+	return F.act(ace_id, display_name, "%s.%s = %s" % [ENVIRONMENT_MEMBER, property, "true" if turned_on else "false"], CAT, verb, "%s Writes `Environment.%s`." % [about, property], WORLD_HOST)
 
 
 ## One environment knob that carries a number. Its starting value is the ENGINE's own default for
 ## that property, asked of ClassDB rather than guessed.
 static func _world_value(ace_id: String, display_name: String, property: String, field: String,
 		field_about: String, verb: String, about: String) -> ACEDescriptor:
-	return F.make_descriptor("Core", ace_id, display_name, ACEDescriptor.ACEType.ACTION,
-		"%s.%s = {value}" % [ENVIRONMENT_MEMBER, property], "",
-		[F.make_param("value", "String", _environment_default(property), field, field_about, "expression")],
-		CAT, verb, WORLD_HOST) \
-		.described("%s Writes `Environment.%s`." % [about, property])
+	return F.act(ace_id, display_name, "%s.%s = {value}" % [ENVIRONMENT_MEMBER, property], CAT, verb, "%s Writes `Environment.%s`." % [about, property], WORLD_HOST).param_typed("String", "value", _environment_default(property), field, field_about, "expression")
 
 
 ## The "On node" param the two FADE rows carry themselves. A tween's target is an ARGUMENT of the

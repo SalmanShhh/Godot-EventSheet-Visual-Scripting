@@ -17,10 +17,8 @@ const CAT := "Behavior"
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var d: Array[ACEDescriptor] = []
-	d.append(F.make_descriptor("Core", "BehaviorHost", "Host", ACEDescriptor.ACEType.EXPRESSION, "host", "", [], CAT, "host")
-		.described("The parent node this behavior is attached to (its host) - the object your behavior reads and acts on."))
-	d.append(F.make_descriptor("Core", "BehaviorHostValid", "Host Is Valid", ACEDescriptor.ACEType.CONDITION, "is_instance_valid(host)", "", [], CAT, "host is valid")
-		.described("True when this behavior has a live host - the parent it acts on still exists. Guard host access with it before the host is bound or after it is freed."))
+	d.append(F.expr("BehaviorHost", "Host", "host", CAT, "host", "The parent node this behavior is attached to (its host) - the object your behavior reads and acts on."))
+	d.append(F.cond("BehaviorHostValid", "Host Is Valid", "is_instance_valid(host)", CAT, "host is valid", "True when this behavior has a live host - the parent it acts on still exists. Guard host access with it before the host is bound or after it is freed."))
 	return d
 
 

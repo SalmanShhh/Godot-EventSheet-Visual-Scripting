@@ -44,62 +44,39 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 # ── Whole-node on/off: the verb most people are looking for. ──
 static func _add_whole_node(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "DeactivateNode2D", "Deactivate Node (2D)", ACEDescriptor.ACEType.ACTION, "visible = false\nprocess_mode = Node.PROCESS_MODE_DISABLED", "", [], CAT, "Deactivate node", "CanvasItem")
-		.described("Hides a node and stops it running, along with everything under it - the usual \"switch this off\" for a 2D object you want back later. Reversed by Activate Node.").featured())
-	descriptors.append(F.make_descriptor("Core", "ActivateNode2D", "Activate Node (2D)", ACEDescriptor.ACEType.ACTION, "visible = true\nprocess_mode = Node.PROCESS_MODE_INHERIT", "", [], CAT, "Activate node", "CanvasItem")
-		.described("Shows a node and starts it running again, along with everything under it. The exact undo of Deactivate Node.").featured())
-	descriptors.append(F.make_descriptor("Core", "DeactivateNode3D", "Deactivate Node (3D)", ACEDescriptor.ACEType.ACTION, "visible = false\nprocess_mode = Node.PROCESS_MODE_DISABLED", "", [], CAT, "Deactivate node", "Node3D")
-		.described("Hides a 3D node and stops it running, along with everything under it. Reversed by Activate Node.").featured())
-	descriptors.append(F.make_descriptor("Core", "ActivateNode3D", "Activate Node (3D)", ACEDescriptor.ACEType.ACTION, "visible = true\nprocess_mode = Node.PROCESS_MODE_INHERIT", "", [], CAT, "Activate node", "Node3D")
-		.described("Shows a 3D node and starts it running again, along with everything under it.").featured())
-	descriptors.append(F.make_descriptor("Core", "NodeIsActive", "Node Is Running", ACEDescriptor.ACEType.CONDITION, "can_process()", "", [], CAT, "Node is running", "Node")
-		.described("True when this node is actually running right now - it answers the whole question, taking its process mode AND whether the game is paused into account.").featured())
+	descriptors.append(F.act("DeactivateNode2D", "Deactivate Node (2D)", "visible = false\nprocess_mode = Node.PROCESS_MODE_DISABLED", CAT, "Deactivate node", "Hides a node and stops it running, along with everything under it - the usual \"switch this off\" for a 2D object you want back later. Reversed by Activate Node.", "CanvasItem").featured())
+	descriptors.append(F.act("ActivateNode2D", "Activate Node (2D)", "visible = true\nprocess_mode = Node.PROCESS_MODE_INHERIT", CAT, "Activate node", "Shows a node and starts it running again, along with everything under it. The exact undo of Deactivate Node.", "CanvasItem").featured())
+	descriptors.append(F.act("DeactivateNode3D", "Deactivate Node (3D)", "visible = false\nprocess_mode = Node.PROCESS_MODE_DISABLED", CAT, "Deactivate node", "Hides a 3D node and stops it running, along with everything under it. Reversed by Activate Node.", "Node3D").featured())
+	descriptors.append(F.act("ActivateNode3D", "Activate Node (3D)", "visible = true\nprocess_mode = Node.PROCESS_MODE_INHERIT", CAT, "Activate node", "Shows a 3D node and starts it running again, along with everything under it.", "Node3D").featured())
+	descriptors.append(F.cond("NodeIsActive", "Node Is Running", "can_process()", CAT, "Node is running", "True when this node is actually running right now - it answers the whole question, taking its process mode AND whether the game is paused into account.", "Node").featured())
 
 
 # ── Pausing: the same property, asked as a question about the game pause. ──
 static func _add_pausing(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "NodePause", "Pause Node", ACEDescriptor.ACEType.ACTION, "process_mode = Node.PROCESS_MODE_DISABLED", "", [], CAT, "Pause node", "Node")
-		.described("Freezes one node and everything under it, whatever the rest of the game is doing - a cutscene actor, a disabled turret, an off-screen room.").featured())
-	descriptors.append(F.make_descriptor("Core", "NodeResume", "Unpause Node", ACEDescriptor.ACEType.ACTION, "process_mode = Node.PROCESS_MODE_INHERIT", "", [], CAT, "Unpause node", "Node")
-		.described("Lets a node follow its parent again, undoing Pause Node.").featured())
-	descriptors.append(F.make_descriptor("Core", "NodeRunWhilePaused", "Keep Node Running While Paused", ACEDescriptor.ACEType.ACTION, "process_mode = Node.PROCESS_MODE_ALWAYS", "", [], CAT, "Keep node running while paused", "Node")
-		.described("Exempts a node from the game pause, so it keeps running while everything else is frozen. This is how a pause menu, its music, and its animations stay alive.").featured())
-	descriptors.append(F.make_descriptor("Core", "NodePauseWithGame", "Pause Node With The Game", ACEDescriptor.ACEType.ACTION, "process_mode = Node.PROCESS_MODE_PAUSABLE", "", [], CAT, "Pause node with the game", "Node")
-		.described("Makes a node stop when the game pauses, regardless of what its parent does. The normal behaviour, stated explicitly."))
-	descriptors.append(F.make_descriptor("Core", "NodeOnlyWhenPaused", "Run Node Only While Paused", ACEDescriptor.ACEType.ACTION, "process_mode = Node.PROCESS_MODE_WHEN_PAUSED", "", [], CAT, "Run node only while paused", "Node")
-		.described("Runs a node ONLY while the game is paused and never otherwise - a pause overlay that should not tick during play."))
-	descriptors.append(F.make_descriptor("Core", "NodeSetProcessMode", "Set Node Process Mode", ACEDescriptor.ACEType.ACTION, "process_mode = {mode}", "", [F.make_param("mode", "String", "Node.PROCESS_MODE_INHERIT", "Mode", "How this node reacts to the game pause.", "", _mode_options())], CAT, "Set process mode to {mode}", "Node")
-		.described("Sets how a node reacts to the game pause, picking any of the five modes directly. The Pause / Unpause / Keep Running actions are shorthands for the common three."))
-	descriptors.append(F.make_descriptor("Core", "NodeGetProcessMode", "Node Process Mode", ACEDescriptor.ACEType.EXPRESSION, "process_mode", "", [], CAT, "process mode", "Node")
-		.described("Returns a node's current process mode, as one of the Node.PROCESS_MODE_* values."))
-	descriptors.append(F.make_descriptor("Core", "NodeIsPausedByGame", "Node Is Frozen By The Game Pause", ACEDescriptor.ACEType.CONDITION, "(get_tree().paused and not can_process())", "", [], CAT, "Node is frozen by the game pause", "Node")
-		.described("True when the game is paused AND this node is one of the things it froze - so a check can tell \"paused\" apart from \"paused but I am exempt\"."))
+	descriptors.append(F.act("NodePause", "Pause Node", "process_mode = Node.PROCESS_MODE_DISABLED", CAT, "Pause node", "Freezes one node and everything under it, whatever the rest of the game is doing - a cutscene actor, a disabled turret, an off-screen room.", "Node").featured())
+	descriptors.append(F.act("NodeResume", "Unpause Node", "process_mode = Node.PROCESS_MODE_INHERIT", CAT, "Unpause node", "Lets a node follow its parent again, undoing Pause Node.", "Node").featured())
+	descriptors.append(F.act("NodeRunWhilePaused", "Keep Node Running While Paused", "process_mode = Node.PROCESS_MODE_ALWAYS", CAT, "Keep node running while paused", "Exempts a node from the game pause, so it keeps running while everything else is frozen. This is how a pause menu, its music, and its animations stay alive.", "Node").featured())
+	descriptors.append(F.act("NodePauseWithGame", "Pause Node With The Game", "process_mode = Node.PROCESS_MODE_PAUSABLE", CAT, "Pause node with the game", "Makes a node stop when the game pauses, regardless of what its parent does. The normal behaviour, stated explicitly.", "Node"))
+	descriptors.append(F.act("NodeOnlyWhenPaused", "Run Node Only While Paused", "process_mode = Node.PROCESS_MODE_WHEN_PAUSED", CAT, "Run node only while paused", "Runs a node ONLY while the game is paused and never otherwise - a pause overlay that should not tick during play.", "Node"))
+	descriptors.append(F.act("NodeSetProcessMode", "Set Node Process Mode", "process_mode = {mode}", CAT, "Set process mode to {mode}", "Sets how a node reacts to the game pause, picking any of the five modes directly. The Pause / Unpause / Keep Running actions are shorthands for the common three.", "Node").param_choice("mode", "Node.PROCESS_MODE_INHERIT", "Mode", "How this node reacts to the game pause.", _mode_options()))
+	descriptors.append(F.expr("NodeGetProcessMode", "Node Process Mode", "process_mode", CAT, "process mode", "Returns a node's current process mode, as one of the Node.PROCESS_MODE_* values.", "Node"))
+	descriptors.append(F.cond("NodeIsPausedByGame", "Node Is Frozen By The Game Pause", "(get_tree().paused and not can_process())", CAT, "Node is frozen by the game pause", "True when the game is paused AND this node is one of the things it froze - so a check can tell \"paused\" apart from \"paused but I am exempt\".", "Node"))
 
 
 # ── Per-callback control: finer than the whole node. ──
 static func _add_callbacks(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "NodeSetProcessing", "Set Node Per-Frame Processing", ACEDescriptor.ACEType.ACTION, "set_process({on})", "", [F.make_param("on", "String", "true", "Enabled", "false to stop the every-frame work.", "", ["true", "false"])], CAT, "Set per-frame processing to {on}", "Node")
-		.described("Turns just the every-frame work on or off, leaving physics and input alone. Cheaper than deactivating when only the per-frame cost is the problem."))
-	descriptors.append(F.make_descriptor("Core", "NodeSetPhysicsProcessing", "Set Node Physics Processing", ACEDescriptor.ACEType.ACTION, "set_physics_process({on})", "", [F.make_param("on", "String", "true", "Enabled", "false to stop the physics-step work.", "", ["true", "false"])], CAT, "Set physics processing to {on}", "Node")
-		.described("Turns just the physics-step work on or off. Movement usually lives here, so this stops a body moving without hiding it."))
-	descriptors.append(F.make_descriptor("Core", "NodeSetInputProcessing", "Set Node Input Handling", ACEDescriptor.ACEType.ACTION, "set_process_input({on})", "", [F.make_param("on", "String", "true", "Enabled", "false to stop receiving input events.", "", ["true", "false"])], CAT, "Set input handling to {on}", "Node")
-		.described("Turns a node's input handling on or off, so it stops responding to the player while still running everything else."))
-	descriptors.append(F.make_descriptor("Core", "NodeSetUnhandledInputProcessing", "Set Node Unhandled Input Handling", ACEDescriptor.ACEType.ACTION, "set_process_unhandled_input({on})", "", [F.make_param("on", "String", "true", "Enabled", "false to stop receiving unhandled input.", "", ["true", "false"])], CAT, "Set unhandled input handling to {on}", "Node")
-		.described("Turns handling of UNHANDLED input on or off - the events the UI did not consume, which is where gameplay controls usually listen."))
-	descriptors.append(F.make_descriptor("Core", "NodeIsProcessing", "Node Is Processing Per Frame", ACEDescriptor.ACEType.CONDITION, "is_processing()", "", [], CAT, "Node is processing per frame", "Node")
-		.described("True when a node's every-frame work is switched on."))
-	descriptors.append(F.make_descriptor("Core", "NodeIsPhysicsProcessing", "Node Is Physics Processing", ACEDescriptor.ACEType.CONDITION, "is_physics_processing()", "", [], CAT, "Node is physics processing", "Node")
-		.described("True when a node's physics-step work is switched on."))
-	descriptors.append(F.make_descriptor("Core", "NodeIsProcessingInput", "Node Is Handling Input", ACEDescriptor.ACEType.CONDITION, "is_processing_input()", "", [], CAT, "Node is handling input", "Node")
-		.described("True when a node is still receiving input events."))
-	descriptors.append(F.make_descriptor("Core", "NodeSetProcessPriority", "Set Node Process Order", ACEDescriptor.ACEType.ACTION, "process_priority = {priority}", "", [F.make_param("priority", "String", "0", "Priority", "Lower numbers run FIRST. Default 0.", "expression")], CAT, "Set process order to {priority}", "Node")
-		.described("Decides where a node sits in the per-frame order among its siblings. Lower runs first, so a camera that must move after its target gets a higher number."))
+	descriptors.append(F.act("NodeSetProcessing", "Set Node Per-Frame Processing", "set_process({on})", CAT, "Set per-frame processing to {on}", "Turns just the every-frame work on or off, leaving physics and input alone. Cheaper than deactivating when only the per-frame cost is the problem.", "Node").param_choice("on", "true", "Enabled", "false to stop the every-frame work.", ["true", "false"]))
+	descriptors.append(F.act("NodeSetPhysicsProcessing", "Set Node Physics Processing", "set_physics_process({on})", CAT, "Set physics processing to {on}", "Turns just the physics-step work on or off. Movement usually lives here, so this stops a body moving without hiding it.", "Node").param_choice("on", "true", "Enabled", "false to stop the physics-step work.", ["true", "false"]))
+	descriptors.append(F.act("NodeSetInputProcessing", "Set Node Input Handling", "set_process_input({on})", CAT, "Set input handling to {on}", "Turns a node's input handling on or off, so it stops responding to the player while still running everything else.", "Node").param_choice("on", "true", "Enabled", "false to stop receiving input events.", ["true", "false"]))
+	descriptors.append(F.act("NodeSetUnhandledInputProcessing", "Set Node Unhandled Input Handling", "set_process_unhandled_input({on})", CAT, "Set unhandled input handling to {on}", "Turns handling of UNHANDLED input on or off - the events the UI did not consume, which is where gameplay controls usually listen.", "Node").param_choice("on", "true", "Enabled", "false to stop receiving unhandled input.", ["true", "false"]))
+	descriptors.append(F.cond("NodeIsProcessing", "Node Is Processing Per Frame", "is_processing()", CAT, "Node is processing per frame", "True when a node's every-frame work is switched on.", "Node"))
+	descriptors.append(F.cond("NodeIsPhysicsProcessing", "Node Is Physics Processing", "is_physics_processing()", CAT, "Node is physics processing", "True when a node's physics-step work is switched on.", "Node"))
+	descriptors.append(F.cond("NodeIsProcessingInput", "Node Is Handling Input", "is_processing_input()", CAT, "Node is handling input", "True when a node is still receiving input events.", "Node"))
+	descriptors.append(F.act("NodeSetProcessPriority", "Set Node Process Order", "process_priority = {priority}", CAT, "Set process order to {priority}", "Decides where a node sits in the per-frame order among its siblings. Lower runs first, so a camera that must move after its target gets a higher number.", "Node").param("priority", "0", "Priority", "Lower numbers run FIRST. Default 0.", "expression"))
 	# `process_physics_priority`, NOT `physics_process_priority` - the setter is
 	# set_physics_process_priority(), so the property name reads the other way round to the method.
-	descriptors.append(F.make_descriptor("Core", "NodeSetPhysicsProcessPriority", "Set Node Physics Order", ACEDescriptor.ACEType.ACTION, "process_physics_priority = {priority}", "", [F.make_param("priority", "String", "0", "Priority", "Lower numbers run FIRST. Default 0.", "expression")], CAT, "Set physics order to {priority}", "Node")
-		.described("The same ordering knob for the physics step, for when one body must resolve before another."))
-	descriptors.append(F.make_descriptor("Core", "NodeIsReady", "Node Is Ready", ACEDescriptor.ACEType.CONDITION, "is_node_ready()", "", [], CAT, "Node is ready", "Node")
-		.described("True once a node has finished entering the tree and its _ready has run. Guards code that reaches a freshly spawned node before it has set itself up."))
+	descriptors.append(F.act("NodeSetPhysicsProcessPriority", "Set Node Physics Order", "process_physics_priority = {priority}", CAT, "Set physics order to {priority}", "The same ordering knob for the physics step, for when one body must resolve before another.", "Node").param("priority", "0", "Priority", "Lower numbers run FIRST. Default 0.", "expression"))
+	descriptors.append(F.cond("NodeIsReady", "Node Is Ready", "is_node_ready()", CAT, "Node is ready", "True once a node has finished entering the tree and its _ready has run. Guards code that reaches a freshly spawned node before it has set itself up.", "Node"))
 
 
 ## The mode dropdown: each entry inserts the real constant and reads as plain English in the row.

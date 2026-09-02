@@ -15,12 +15,9 @@ const CAT := "Vibration"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "VibrationStopJoy", "Stop Gamepad Vibration", ACEDescriptor.ACEType.ACTION, "Input.stop_joy_vibration({device})", "", [F.make_param("device", "int", "0", "Device", "Gamepad number (0 = the first controller).", "expression")], CAT, "stop vibration on gamepad {device}")
-		.described("Stops a gamepad rumble that is still running."))
-	descriptors.append(F.make_descriptor("Core", "VibrationHandheld", "Vibrate Phone", ACEDescriptor.ACEType.ACTION, "Input.vibrate_handheld({duration_ms})", "", [F.make_param("duration_ms", "int", "200", "Duration (ms)", "How long to buzz, in milliseconds.", "expression")], CAT, "vibrate phone for {duration_ms}ms")
-		.described("Buzzes a handheld device (phone / tablet) for a moment. Does nothing on desktop."))
-	descriptors.append(F.make_descriptor("Core", "VibrationJoyStrength", "Gamepad Vibration Strength", ACEDescriptor.ACEType.EXPRESSION, "Input.get_joy_vibration_strength({device})", "", [F.make_param("device", "int", "0", "Device", "Gamepad number (0 = the first controller).", "expression")], CAT, "gamepad {device} vibration strength")
-		.described("The current rumble strength of a gamepad as a Vector2 (weak, strong motor)."))
+	descriptors.append(F.act("VibrationStopJoy", "Stop Gamepad Vibration", "Input.stop_joy_vibration({device})", CAT, "stop vibration on gamepad {device}", "Stops a gamepad rumble that is still running.").param_typed("int", "device", "0", "Device", "Gamepad number (0 = the first controller).", "expression"))
+	descriptors.append(F.act("VibrationHandheld", "Vibrate Phone", "Input.vibrate_handheld({duration_ms})", CAT, "vibrate phone for {duration_ms}ms", "Buzzes a handheld device (phone / tablet) for a moment. Does nothing on desktop.").param_typed("int", "duration_ms", "200", "Duration (ms)", "How long to buzz, in milliseconds.", "expression"))
+	descriptors.append(F.expr("VibrationJoyStrength", "Gamepad Vibration Strength", "Input.get_joy_vibration_strength({device})", CAT, "gamepad {device} vibration strength", "The current rumble strength of a gamepad as a Vector2 (weak, strong motor).").param_typed("int", "device", "0", "Device", "Gamepad number (0 = the first controller).", "expression"))
 
 	return descriptors
 

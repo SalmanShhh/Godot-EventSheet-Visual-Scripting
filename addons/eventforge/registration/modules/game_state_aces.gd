@@ -50,31 +50,17 @@ const MODE_HINT: String = "mode_reference"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "GoToMode", "Go To Mode", ACEDescriptor.ACEType.ACTION,
-		"mode = Mode.{mode}", "", [_mode_param()], CAT, "Go to mode {mode}")
-		.described("Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself."))
+	descriptors.append(F.act("GoToMode", "Go To Mode", "mode = Mode.{mode}", CAT, "Go to mode {mode}", "Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.").param_built(_mode_param()))
 
-	descriptors.append(F.make_descriptor("Core", "InMode", "In Mode", ACEDescriptor.ACEType.CONDITION,
-		"mode == Mode.{mode}", "", [_mode_param()], CAT, "In mode {mode}")
-		.described("True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own \"runs in\" word does this for every row inside it."))
+	descriptors.append(F.cond("InMode", "In Mode", "mode == Mode.{mode}", CAT, "In mode {mode}", "True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own \"runs in\" word does this for every row inside it.").param_built(_mode_param()))
 
-	descriptors.append(F.make_descriptor("Core", "PushMode", "Push Mode", ACEDescriptor.ACEType.ACTION,
-		"push_mode(Mode.{mode})", "", [_mode_param()], CAT, "Push mode {mode}")
-		.described("Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary."))
+	descriptors.append(F.act("PushMode", "Push Mode", "push_mode(Mode.{mode})", CAT, "Push mode {mode}", "Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.").param_built(_mode_param()))
 
-	descriptors.append(F.make_descriptor("Core", "GoBackMode", "Go Back", ACEDescriptor.ACEType.ACTION,
-		"go_back()", "", [], CAT, "Go back")
-		.described("Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key."))
+	descriptors.append(F.act("GoBackMode", "Go Back", "go_back()", CAT, "Go back", "Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key."))
 
-	descriptors.append(F.make_descriptor("Core", EventSheetModeFacts.ENTERING_TRIGGER_ID, "On Entering Mode",
-		ACEDescriptor.ACEType.TRIGGER, "", EventSheetModeFacts.CHANGED_SIGNAL, [_mode_param()],
-		CAT, "On entering {mode}")
-		.described("Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled."))
+	descriptors.append(F.trig(EventSheetModeFacts.ENTERING_TRIGGER_ID, "On Entering Mode", EventSheetModeFacts.CHANGED_SIGNAL, CAT, "On entering {mode}", "Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.").param_built(_mode_param()))
 
-	descriptors.append(F.make_descriptor("Core", EventSheetModeFacts.LEAVING_TRIGGER_ID, "On Leaving Mode",
-		ACEDescriptor.ACEType.TRIGGER, "", EventSheetModeFacts.CHANGED_SIGNAL, [_mode_param()],
-		CAT, "On leaving {mode}")
-		.described("Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one."))
+	descriptors.append(F.trig(EventSheetModeFacts.LEAVING_TRIGGER_ID, "On Leaving Mode", EventSheetModeFacts.CHANGED_SIGNAL, CAT, "On leaving {mode}", "Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.").param_built(_mode_param()))
 
 	return descriptors
 

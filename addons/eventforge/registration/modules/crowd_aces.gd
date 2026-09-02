@@ -90,12 +90,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# The spawn sentence with one line more than the plain one: the copy joins a group named after
 	# the scene it is a copy of, so every question below has something to ask. Placement stays LAST,
 	# for the reason the plain spawn row states: global_position only means anything in a tree.
-	descriptors.append(F.make_descriptor("Core", "SpawnIntoCrowd", "Spawn A Copy Into The Crowd", ACEDescriptor.ACEType.ACTION,
-		"var {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)\n{parent}.add_child({name})\n{name}.global_position = {at}", "",
-		[_scene_param(), _name_param(), _crowd_param(), _at_param(), _parent_param()],
-		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]", "Node2D")
-		.described("Spawns a copy the way Spawn A Copy does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.")
-		.featured())
+	descriptors.append(F.act("SpawnIntoCrowd", "Spawn A Copy Into The Crowd", "var {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)\n{parent}.add_child({name})\n{name}.global_position = {at}", CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]", "Spawns a copy the way Spawn A Copy does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_crowd_param()).param_built(_at_param()).param_built(_parent_param()).featured())
 
 	# ── The cap, and the two answers to reaching it ────────────────────────────────────
 	# One row per policy. Both read the crowd once into a local, because both need the count and one
@@ -106,28 +101,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# one member is staying, whatever number the author typed in the cap. It is a `while` rather than
 	# an `if` so the row's sentence is true the moment the line has run, even on a crowd that was
 	# already over its cap when the frame began.
-	descriptors.append(F.make_descriptor("Core", "SpawnIntoCrowdOldestFirst", "Spawn A Copy, The First Makes Room", ACEDescriptor.ACEType.ACTION,
-		"var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())\n"\
-		+ "while crowd_{name}.size() >= maxi({cap}, 1):\n\tcrowd_{name}.pop_front().queue_free()\n"\
-		+ "var {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)\n"\
-		+ "{parent}.add_child({name})\n{name}.global_position = {at}", "",
-		[_scene_param(), _name_param(), _crowd_param(), _cap_param(), _at_param(), _parent_param()],
-		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room", "Node2D")
-		.described("Spawns a copy into the crowd, and when the crowd is already full destroys members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones destroyed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.")
-		.featured())
+	descriptors.append(F.act("SpawnIntoCrowdOldestFirst", "Spawn A Copy, The First Makes Room", "var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())\n" + "while crowd_{name}.size() >= maxi({cap}, 1):\n\tcrowd_{name}.pop_front().queue_free()\n" + "var {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)\n" + "{parent}.add_child({name})\n{name}.global_position = {at}", CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room", "Spawns a copy into the crowd, and when the crowd is already full destroys members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones destroyed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_crowd_param()).param_built(_cap_param()).param_built(_at_param()).param_built(_parent_param()).featured())
 	# The other policy, reading the crowd the same way so that "alive" means one thing in both rows.
 	# The name is declared BEFORE the branch on purpose: a following row can still say it either way,
 	# and what it holds when the crowd was full is nothing - which is a thing the sheet can ask about
 	# with Is Still Here rather than a silence it has to guess at.
-	descriptors.append(F.make_descriptor("Core", "SpawnIntoCrowdUnlessFull", "Spawn A Copy Unless The Crowd Is Full", ACEDescriptor.ACEType.ACTION,
-		"var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())\n"\
-		+ "var {name}: Node = null\n"\
-		+ "if crowd_{name}.size() < {cap}:\n"\
-		+ "\t{name} = {scene}.instantiate()\n\t{name}.add_to_group({crowd}, true)\n"\
-		+ "\t{parent}.add_child({name})\n\t{name}.global_position = {at}", "",
-		[_scene_param(), _name_param(), _crowd_param(), _cap_param(), _at_param(), _parent_param()],
-		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip spawning when full", "Node2D")
-		.described("Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. A member already on its way out has stopped counting against the cap, so a spawn in the same frame something died in still happens. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart."))
+	descriptors.append(F.act("SpawnIntoCrowdUnlessFull", "Spawn A Copy Unless The Crowd Is Full", "var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())\n" + "var {name}: Node = null\n" + "if crowd_{name}.size() < {cap}:\n" + "\t{name} = {scene}.instantiate()\n\t{name}.add_to_group({crowd}, true)\n" + "\t{parent}.add_child({name})\n\t{name}.global_position = {at}", CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip spawning when full", "Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. A member already on its way out has stopped counting against the cap, so a spawn in the same frame something died in still happens. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_crowd_param()).param_built(_cap_param()).param_built(_at_param()).param_built(_parent_param()))
 
 	# ── Counting them ──────────────────────────────────────────────────────────────────
 	# The group's size, which is the whole of what "how many are alive" means when the crowd is a
@@ -135,28 +114,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Left UNFILTERED on purpose - this is the group's own size, and paying for an array and a lambda
 	# on a line a HUD reads every frame to shave off a member that has one frame left would be a worse
 	# trade than saying so.
-	descriptors.append(F.make_descriptor("Core", "CrowdCount", "How Many Alive", ACEDescriptor.ACEType.EXPRESSION,
-		"get_tree().get_node_count_in_group({crowd})", "",
-		[_crowd_param()],
-		CATEGORY, "[b]{crowd}[/b] alive")
-		.described("How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member destroyed this frame is still counted until the end of it, which is what queue_free means everywhere else too.")
-		.featured())
+	descriptors.append(F.expr("CrowdCount", "How Many Alive", "get_tree().get_node_count_in_group({crowd})", CATEGORY, "[b]{crowd}[/b] alive", "How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member destroyed this frame is still counted until the end of it, which is what queue_free means everywhere else too.").param_built(_crowd_param()).featured())
 
 	# ── When the last one goes ─────────────────────────────────────────────────────────
 	# The trigger, and the gate the dock adds underneath it. The trigger itself is the tree's own
 	# node_removed signal, which fires for every node anywhere; the gate is what narrows it to this
 	# crowd emptying, and it is a condition row rather than a hidden wrapper.
-	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_TRIGGER_ID, "On The Last One Destroyed", ACEDescriptor.ACEType.TRIGGER,
-		"", "", [_crowd_param()],
-		CATEGORY, "On the last of [b]{crowd}[/b] destroyed")
-		.described("Runs the moment the last member of a crowd is destroyed, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count."))
-	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_GATE_ID, "Crowd Is Down To This One", ACEDescriptor.ACEType.CONDITION,
-		LAST_REMOVED_GATE_TEMPLATE, "",
-		[_crowd_param(), F.make_param(REMOVED_NODE_ARGUMENT, "String", REMOVED_NODE_ARGUMENT, "Leaving",
-			"The node that is leaving - the one the trigger handed this event. On The Last One Destroyed fills this in for you.",
-			"expression")],
-		CATEGORY, "[b]{crowd}[/b] is down to [i]{node}[/i], which is being destroyed")
-		.described("The gate under On The Last One Destroyed: true when the node that is leaving belongs to the crowd, is really being destroyed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty."))
+	descriptors.append(F.trig(LAST_REMOVED_TRIGGER_ID, "On The Last One Destroyed", "", CATEGORY, "On the last of [b]{crowd}[/b] destroyed", "Runs the moment the last member of a crowd is destroyed, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count.").param_built(_crowd_param()))
+	descriptors.append(F.cond(LAST_REMOVED_GATE_ID, "Crowd Is Down To This One", LAST_REMOVED_GATE_TEMPLATE, CATEGORY, "[b]{crowd}[/b] is down to [i]{node}[/i], which is being destroyed", "The gate under On The Last One Destroyed: true when the node that is leaving belongs to the crowd, is really being destroyed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty.").param_built(_crowd_param()).param_typed("String", REMOVED_NODE_ARGUMENT, REMOVED_NODE_ARGUMENT, "Leaving", "The node that is leaving - the one the trigger handed this event. On The Last One Destroyed fills this in for you.", "expression"))
 
 	return descriptors
 

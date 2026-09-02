@@ -54,44 +54,25 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Now ────────────────────────────────────────────────────────────────────────────
 	# The plain call. The frozen Free Node row writes the same line and stays the reading of it;
 	# this is the authoring sentence, and the row the guard rule below knows how to protect.
-	descriptors.append(F.make_descriptor("Core", "DestroyNow", "Destroy Now", ACEDescriptor.ACEType.ACTION,
-		"{object}.queue_free()", "",
-		[_object_param()],
-		CATEGORY, "destroy [i]{object}[/i] now")
-		.described("Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.")
-		.featured())
+	descriptors.append(F.act("DestroyNow", "Destroy Now", "{object}.queue_free()", CATEGORY, "destroy [i]{object}[/i] now", "Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.").param_built(_object_param()).featured())
 
 	# ── In a while ─────────────────────────────────────────────────────────────────────
 	# A one-shot SceneTree timer with the node's own queue_free hung off it. Godot drops a signal
 	# connection when the object at the far end of it is freed, which is exactly why this spelling
 	# needs no bookkeeping: something else destroying the thing first simply takes the connection with
 	# it, and the timer fires into nothing.
-	descriptors.append(F.make_descriptor("Core", "DestroyAfterSeconds", "Destroy After Seconds", ACEDescriptor.ACEType.ACTION,
-		"get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)", "",
-		[_object_param(), _after_param()],
-		CATEGORY, "destroy [i]{object}[/i] after {seconds}s")
-		.described("Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.")
-		.featured())
+	descriptors.append(F.act("DestroyAfterSeconds", "Destroy After Seconds", "get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)", CATEGORY, "destroy [i]{object}[/i] after {seconds}s", "Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.").param_built(_object_param()).param_built(_after_param()).featured())
 
 	# ── Fade first ─────────────────────────────────────────────────────────────────────
 	# Tween, await, destroy - and the guard in the template, because that await is a real gap. The
 	# row's own sentence says the wait, and its own lines say the check; nothing about the deferral
 	# is hidden behind the row.
-	descriptors.append(F.make_descriptor("Core", "FadeOutAndDestroy", "Fade Out Then Destroy", ACEDescriptor.ACEType.ACTION,
-		"await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY\
-		+ "if is_instance_valid({object}):\n\t{object}.queue_free()", "",
-		[_object_param(), _over_param()],
-		CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then destroy it")
-		.described("Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly."))
+	descriptors.append(F.act("FadeOutAndDestroy", "Fade Out Then Destroy", "await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY + "if is_instance_valid({object}):\n\t{object}.queue_free()", CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then destroy it", "Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly.").param_built(_object_param()).param_built(_over_param()))
 
 	# ── The question ───────────────────────────────────────────────────────────────────
 	# The sentence beside the frozen Object Still Exists. Same call, same answer; a sheet that reads
 	# in these words gets a row that reads in them too.
-	descriptors.append(F.make_descriptor("Core", "IsStillHere", "Is Still Here", ACEDescriptor.ACEType.CONDITION,
-		"is_instance_valid({object})", "",
-		[_object_param()],
-		CATEGORY, "[i]{object}[/i] is still here")
-		.described("True while the object has not been destroyed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN destruction uses the On Exit Tree trigger instead, which fires as it leaves."))
+	descriptors.append(F.cond("IsStillHere", "Is Still Here", "is_instance_valid({object})", CATEGORY, "[i]{object}[/i] is still here", "True while the object has not been destroyed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN destruction uses the On Exit Tree trigger instead, which fires as it leaves.").param_built(_object_param()))
 
 	return descriptors
 

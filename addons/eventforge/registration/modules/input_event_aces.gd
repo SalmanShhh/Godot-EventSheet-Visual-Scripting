@@ -62,35 +62,15 @@ static func _action_param(description: String) -> ACEParam:
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "EventIsActionPressed", "Event Is Action Pressed",
-		ACEDescriptor.ACEType.CONDITION, "event.is_action_pressed(&{action})", "",
-		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "this event is {action} going down")
-		.described("True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers."))
+	descriptors.append(F.cond("EventIsActionPressed", "Event Is Action Pressed", "event.is_action_pressed(&{action})", CAT, "this event is {action} going down", "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.").param_built(_action_param("The action this event has to be, from the Input Map.")))
 
-	descriptors.append(F.make_descriptor("Core", "EventIsActionPressedRepeating", "Event Is Action Pressed Or Repeating",
-		ACEDescriptor.ACEType.CONDITION, "event.is_action_pressed(&{action}, true)", "",
-		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "this event is {action} going down, or repeating")
-		.described("The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not."))
+	descriptors.append(F.cond("EventIsActionPressedRepeating", "Event Is Action Pressed Or Repeating", "event.is_action_pressed(&{action}, true)", CAT, "this event is {action} going down, or repeating", "The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.").param_built(_action_param("The action this event has to be, from the Input Map.")))
 
-	descriptors.append(F.make_descriptor("Core", "EventIsActionReleased", "Event Is Action Released",
-		ACEDescriptor.ACEType.CONDITION, "event.is_action_released(&{action})", "",
-		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "this event is {action} coming up")
-		.described("True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control."))
+	descriptors.append(F.cond("EventIsActionReleased", "Event Is Action Released", "event.is_action_released(&{action})", CAT, "this event is {action} coming up", "True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.").param_built(_action_param("The action this event has to be, from the Input Map.")))
 
-	descriptors.append(F.make_descriptor("Core", "EventIsAction", "Event Is The Action",
-		ACEDescriptor.ACEType.CONDITION, "event.is_action(&{action})", "",
-		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "this event is {action}")
-		.described("True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from."))
+	descriptors.append(F.cond("EventIsAction", "Event Is The Action", "event.is_action(&{action})", CAT, "this event is {action}", "True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.").param_built(_action_param("The action this event has to be, from the Input Map.")))
 
-	descriptors.append(F.make_descriptor("Core", "EventActionStrength", "Event Action Strength",
-		ACEDescriptor.ACEType.EXPRESSION, "event.get_action_strength(&{action})", "",
-		[_action_param("The action to read out of this event, from the Input Map.")],
-		CAT, "how hard {action} is held in this event")
-		.described("How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1."))
+	descriptors.append(F.expr("EventActionStrength", "Event Action Strength", "event.get_action_strength(&{action})", CAT, "how hard {action} is held in this event", "How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.").param_built(_action_param("The action to read out of this event, from the Input Map.")))
 
 	return descriptors
 

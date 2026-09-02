@@ -72,9 +72,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	for constant: String in ORDER:
 		var entry: Array = NOTIFICATIONS[constant]
 		var name: String = str(entry[0])
-		descriptors.append(F.make_descriptor("Core", PREFIX + constant, name,
-			ACEDescriptor.ACEType.TRIGGER, "", "", [], CAT, name)
-			.described(str(entry[1])))
+		descriptors.append(F.trig(PREFIX + constant, name, "", CAT, name, str(entry[1])))
 	return descriptors
 
 

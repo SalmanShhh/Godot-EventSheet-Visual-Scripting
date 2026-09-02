@@ -39,44 +39,10 @@ const CAT := "Math & Random"
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "KeepBetween", "Keep Between",
-		ACEDescriptor.ACEType.ACTION, "{var_name} = clampf({var_name}, {low}, {high})", "",
-		[F.make_param("var_name", "String", "value", "Value", "The value being kept in range.",
-			"variable_reference"),
-		F.make_param("low", "String", "0.0", "At least", "It never goes below this.", "expression"),
-		F.make_param("high", "String", "1.0", "At most", "It never goes above this.", "expression")],
-		CAT, "Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i]")
-		.described("Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.").featured())
-	descriptors.append(F.make_descriptor("Core", "MoveTowardEachTick", "Move Toward (each tick)",
-		ACEDescriptor.ACEType.ACTION, "{var_name} = lerp({var_name}, {target}, {weight})", "",
-		[F.make_param("var_name", "String", "value", "Value", "The value being eased.",
-			"variable_reference"),
-		F.make_param("target", "String", "1.0", "Toward", "The value it heads for.", "expression"),
-		F.make_param("weight", "String", "0.1", "Each tick",
-			"How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.",
-			"expression").with_lens(LENS.LENS_FRACTION)],
-		CAT, "Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick")
-		.described("Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.").featured())
-	descriptors.append(F.make_descriptor("Core", "RescaleInto", "Rescale",
-		ACEDescriptor.ACEType.ACTION,
-		"{into} = remap({amount}, {in_low}, {in_high}, {out_low}, {out_high})", "",
-		[F.make_param("into", "String", "value", "Into", "Where the rescaled number is put.",
-			"variable_reference"),
-		F.make_param("amount", "String", "0.0", "Rescale", "The number being rescaled.", "expression"),
-		F.make_param("in_low", "String", "0.0", "From", "What counts as empty in the number's own range.", "expression"),
-		F.make_param("in_high", "String", "1.0", "to", "What counts as full in the number's own range.", "expression"),
-		F.make_param("out_low", "String", "0.0", "Into range", "What empty becomes.", "expression"),
-		F.make_param("out_high", "String", "1.0", "to", "What full becomes.", "expression")],
-		CAT, "Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b]")
-		.described("Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.").featured())
-	descriptors.append(F.make_descriptor("Core", "WrapAround", "Wrap Around",
-		ACEDescriptor.ACEType.ACTION, "{var_name} = wrapf({var_name}, {low}, {high})", "",
-		[F.make_param("var_name", "String", "value", "Value", "The value being wrapped.",
-			"variable_reference"),
-		F.make_param("low", "String", "0.0", "From", "The low end it comes back to.", "expression"),
-		F.make_param("high", "String", "360.0", "to", "The high end it goes past.", "expression")],
-		CAT, "Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i]")
-		.described("Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.").featured())
+	descriptors.append(F.act("KeepBetween", "Keep Between", "{var_name} = clampf({var_name}, {low}, {high})", CAT, "Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i]", "Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.").param("var_name", "value", "Value", "The value being kept in range.", "variable_reference").param("low", "0.0", "At least", "It never goes below this.", "expression").param("high", "1.0", "At most", "It never goes above this.", "expression").featured())
+	descriptors.append(F.act("MoveTowardEachTick", "Move Toward (each tick)", "{var_name} = lerp({var_name}, {target}, {weight})", CAT, "Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick", "Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.").param("var_name", "value", "Value", "The value being eased.", "variable_reference").param("target", "1.0", "Toward", "The value it heads for.", "expression").param_built(F.make_param("weight", "String", "0.1", "Each tick", "How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.", "expression").with_lens(LENS.LENS_FRACTION)).featured())
+	descriptors.append(F.act("RescaleInto", "Rescale", "{into} = remap({amount}, {in_low}, {in_high}, {out_low}, {out_high})", CAT, "Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b]", "Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.").param("into", "value", "Into", "Where the rescaled number is put.", "variable_reference").param("amount", "0.0", "Rescale", "The number being rescaled.", "expression").param("in_low", "0.0", "From", "What counts as empty in the number's own range.", "expression").param("in_high", "1.0", "to", "What counts as full in the number's own range.", "expression").param("out_low", "0.0", "Into range", "What empty becomes.", "expression").param("out_high", "1.0", "to", "What full becomes.", "expression").featured())
+	descriptors.append(F.act("WrapAround", "Wrap Around", "{var_name} = wrapf({var_name}, {low}, {high})", CAT, "Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i]", "Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.").param("var_name", "value", "Value", "The value being wrapped.", "variable_reference").param("low", "0.0", "From", "The low end it comes back to.", "expression").param("high", "360.0", "to", "The high end it goes past.", "expression").featured())
 	return descriptors
 
 

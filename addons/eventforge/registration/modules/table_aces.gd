@@ -80,32 +80,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# -- Tables: a spreadsheet as rows of records --
-	descriptors.append(F.make_descriptor("Core", "TableFromFile", "Table From File", ACEDescriptor.ACEType.EXPRESSION,
-		table_expression("FileAccess.get_file_as_string({path})", "{separator}"), "",
-		[F.make_param("path", "String", "\"res://data/items.csv\"", "File", "The .csv to read. Its FIRST line must be the column names.", "expression"),
-			_separator_param()],
-		CAT_TABLES, "rows of [b]{path}[/b]")
-		.described("Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[\"price\"]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.").featured())
+	descriptors.append(F.expr("TableFromFile", "Table From File", table_expression("FileAccess.get_file_as_string({path})", "{separator}"), CAT_TABLES, "rows of [b]{path}[/b]", "Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[\"price\"]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.").param("path", "\"res://data/items.csv\"", "File", "The .csv to read. Its FIRST line must be the column names.", "expression").param_built(_separator_param()).featured())
 
-	descriptors.append(F.make_descriptor("Core", "TableFromText", "Table From Text", ACEDescriptor.ACEType.EXPRESSION,
-		table_expression("{text}", "{separator}"), "",
-		[F.make_param("text", "String", "\"\"", "Text", "Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.", "expression"),
-			_separator_param()],
-		CAT_TABLES, "rows in [b]{text}[/b]")
-		.described("The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk."))
+	descriptors.append(F.expr("TableFromText", "Table From Text", table_expression("{text}", "{separator}"), CAT_TABLES, "rows in [b]{text}[/b]", "The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.").param("text", "\"\"", "Text", "Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.", "expression").param_built(_separator_param()))
 
-	descriptors.append(F.make_descriptor("Core", "TableColumn", "Column Of Table", ACEDescriptor.ACEType.EXPRESSION,
-		"{table}.map(func(__record): return __record.get({column}, \"\"))", "",
-		[_table_param(), F.make_param("column", "String", "\"price\"", "Column", "The column name to read, exactly as it is spelled in the header row.", "expression")],
-		CAT_TABLES, "column [b]{column}[/b] of [b]{table}[/b]")
-		.described("Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text."))
+	descriptors.append(F.expr("TableColumn", "Column Of Table", "{table}.map(func(__record): return __record.get({column}, \"\"))", CAT_TABLES, "column [b]{column}[/b] of [b]{table}[/b]", "Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.").param_built(_table_param()).param("column", "\"price\"", "Column", "The column name to read, exactly as it is spelled in the header row.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TableRowWhere", "Row Where", ACEDescriptor.ACEType.EXPRESSION,
-		"{table}.reduce(func(__found, __record): return __found if not __found.is_empty() else (__record if str(__record.get({column}, \"\")) == str({value}) else __found), {})", "",
-		[_table_param(), F.make_param("column", "String", "\"id\"", "Column", "The column to match on, exactly as it is spelled in the header row.", "expression"),
-			F.make_param("value", "String", "\"sword\"", "Is", "The value to look for. Compared as text, so 25 and \"25\" both match a cell reading 25.", "expression")],
-		CAT_TABLES, "row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b]")
-		.described("Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item \"sword\". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields."))
+	descriptors.append(F.expr("TableRowWhere", "Row Where", "{table}.reduce(func(__found, __record): return __found if not __found.is_empty() else (__record if str(__record.get({column}, \"\")) == str({value}) else __found), {})", CAT_TABLES, "row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b]", "Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item \"sword\". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.").param_built(_table_param()).param("column", "\"id\"", "Column", "The column to match on, exactly as it is spelled in the header row.", "expression").param("value", "\"sword\"", "Is", "The value to look for. Compared as text, so 25 and \"25\" both match a cell reading 25.", "expression"))
 
 	# -- The same spreadsheet read and written by GODOT'S OWN reader --
 	#
@@ -113,48 +94,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# these two do not parse anything. They call FileAccess.get_csv_line / store_csv_line, so quoting
 	# is exactly whatever the engine does with a quote, not whatever this file decided - and the two
 	# of them are each other's inverse for that reason.
-	descriptors.append(F.make_descriptor("Core", "FileTable", "Table Of File", ACEDescriptor.ACEType.EXPRESSION,
-		file_table_expression(), "",
-		[F.make_param("path", "String", "\"res://data/items.csv\"", "File", "The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.", "file_path"),
-			_separator_param(),
-			_headers_param("How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[\"price\"]; otherwise every line is a plain list of cells.")],
-		CAT_TABLES, "table of [b]{path}[/b] - {headers}")
-		.described("Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in \"double quotes\" may hold the separator, and a doubled \"\" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.").featured())
+	descriptors.append(F.expr("FileTable", "Table Of File", file_table_expression(), CAT_TABLES, "table of [b]{path}[/b] - {headers}", "Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in \"double quotes\" may hold the separator, and a doubled \"\" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.").param("path", "\"res://data/items.csv\"", "File", "The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.", "file_path").param_built(_separator_param()).param_built(_headers_param("How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[\"price\"]; otherwise every line is a plain list of cells.")).featured())
 
-	descriptors.append(F.make_descriptor("Core", "WriteFileTable", "Write Table To File", ACEDescriptor.ACEType.ACTION,
-		write_table_template(), "",
-		[F.make_param("path", "String", "\"user://scores.csv\"", "File", "File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.", "file_path"),
-			_written_table_param(),
-			_separator_param(),
-			_headers_param("Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.")],
-		CAT_TABLES, "write table [b]{table}[/b] to [b]{path}[/b] - {headers}")
-		.described("Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged."))
+	descriptors.append(F.act("WriteFileTable", "Write Table To File", write_table_template(), CAT_TABLES, "write table [b]{table}[/b] to [b]{path}[/b] - {headers}", "Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.").param("path", "\"user://scores.csv\"", "File", "File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.", "file_path").param_built(_written_table_param()).param_built(_separator_param()).param_built(_headers_param("Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.")))
 
 	# -- Looping conditions: the loop lane, one row instead of split-then-pick-filter --
-	descriptors.append(F.make_descriptor("Core", "ForEachLineInText", "For Each Line In Text", ACEDescriptor.ACEType.CONDITION,
-		"{text}.replace(\"\\r\\n\", \"\\n\").replace(\"\\r\", \"\\n\").split(\"\\n\", false)", "",
-		[F.make_param("text", "String", "\"\"", "Text", "The text to walk line by line - a file you read, a pasted blob, a leaderboard body.", "expression")],
-		CAT_LOOPS, "for each line in [b]{text}[/b]")
-		.described("Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.").looping("line").featured())
+	descriptors.append(F.cond("ForEachLineInText", "For Each Line In Text", "{text}.replace(\"\\r\\n\", \"\\n\").replace(\"\\r\", \"\\n\").split(\"\\n\", false)", CAT_LOOPS, "for each line in [b]{text}[/b]", "Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.").param("text", "\"\"", "Text", "The text to walk line by line - a file you read, a pasted blob, a leaderboard body.", "expression").looping("line").featured())
 
-	descriptors.append(F.make_descriptor("Core", "ForEachPartInText", "For Each Part In Text", ACEDescriptor.ACEType.CONDITION,
-		"Array({text}.split({separator}, false)).map(func(__part): return __part.strip_edges()).filter(func(__part): return not __part.is_empty())", "",
-		[F.make_param("text", "String", "\"\"", "Text", "The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.", "expression"),
-			F.make_param("separator", "String", "\",\"", "Split by", "What separates the pieces, e.g. \",\" or \";\" or \" \".", "expression")],
-		CAT_LOOPS, "for each part of [b]{text}[/b] split by [b]{separator}[/b]")
-		.described("Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so \"sword; shield;; bow\" is three parts. Read the current one as `part`.").looping("part"))
+	descriptors.append(F.cond("ForEachPartInText", "For Each Part In Text", "Array({text}.split({separator}, false)).map(func(__part): return __part.strip_edges()).filter(func(__part): return not __part.is_empty())", CAT_LOOPS, "for each part of [b]{text}[/b] split by [b]{separator}[/b]", "Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so \"sword; shield;; bow\" is three parts. Read the current one as `part`.").param("text", "\"\"", "Text", "The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.", "expression").param("separator", "\",\"", "Split by", "What separates the pieces, e.g. \",\" or \";\" or \" \".", "expression").looping("part"))
 
-	descriptors.append(F.make_descriptor("Core", "ForEachLineInFile", "For Each Line In File", ACEDescriptor.ACEType.CONDITION,
-		"Array(FileAccess.get_file_as_string({path}).replace(\"\\r\\n\", \"\\n\").replace(\"\\r\", \"\\n\").split(\"\\n\", false))", "",
-		[F.make_param("path", "String", "\"user://log.txt\"", "File", "The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.", "file_path")],
-		CAT_LOOPS, "for each line of [b]{path}[/b]")
-		.described("Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.").looping("line").featured())
+	descriptors.append(F.cond("ForEachLineInFile", "For Each Line In File", "Array(FileAccess.get_file_as_string({path}).replace(\"\\r\\n\", \"\\n\").replace(\"\\r\", \"\\n\").split(\"\\n\", false))", CAT_LOOPS, "for each line of [b]{path}[/b]", "Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.").param("path", "\"user://log.txt\"", "File", "The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.", "file_path").looping("line").featured())
 
-	descriptors.append(F.make_descriptor("Core", "ForEachResourceInFolder", "For Each Resource In Folder", ACEDescriptor.ACEType.CONDITION,
-		"Array(DirAccess.get_files_at({folder}) if DirAccess.dir_exists_absolute({folder}) else PackedStringArray()).map(func(__file): return String(__file).trim_suffix(\".remap\")).filter(func(__file): return __file.ends_with(\".tres\") or __file.ends_with(\".res\")).map(func(__file): return load({folder}.path_join(__file))).filter(func(__resource): return __resource != null)", "",
-		[F.make_param("folder", "String", "\"res://data/items\"", "Folder", "Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.", "expression")],
-		CAT_LOOPS, "for each resource in [b]{folder}[/b]")
-		.described("Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the \"a folder of items IS my item list\" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.").looping("entry"))
+	descriptors.append(F.cond("ForEachResourceInFolder", "For Each Resource In Folder", "Array(DirAccess.get_files_at({folder}) if DirAccess.dir_exists_absolute({folder}) else PackedStringArray()).map(func(__file): return String(__file).trim_suffix(\".remap\")).filter(func(__file): return __file.ends_with(\".tres\") or __file.ends_with(\".res\")).map(func(__file): return load({folder}.path_join(__file))).filter(func(__resource): return __resource != null)", CAT_LOOPS, "for each resource in [b]{folder}[/b]", "Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the \"a folder of items IS my item list\" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.").param("folder", "\"res://data/items\"", "Folder", "Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.", "expression").looping("entry"))
 
 	return descriptors
 

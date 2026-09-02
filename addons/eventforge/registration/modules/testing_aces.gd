@@ -44,96 +44,35 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── The trigger the runner raises (backed by the sheet's own test_started signal) ──
-	descriptors.append(F.make_descriptor("Core", "OnTestStart", "On Test Start", ACEDescriptor.ACEType.TRIGGER, "", "test_started", [], CAT, "On test start ([b]test_name[/b])")
-		.described("Runs when a test runner starts this test sheet. A Test sheet declares signal test_started(test_name: String) and the runner emits it, so the test's name arrives as a parameter you can use in messages.")
-		.featured())
+	descriptors.append(F.trig("OnTestStart", "On Test Start", "test_started", CAT, "On test start ([b]test_name[/b])", "Runs when a test runner starts this test sheet. A Test sheet declares signal test_started(test_name: String) and the runner emits it, so the test's name arrives as a parameter you can use in messages.").featured())
 
 	# ── Claims (each records one line of the report) ──
-	descriptors.append(F.make_descriptor("Core", "AssertThat", "Assert That", ACEDescriptor.ACEType.ACTION, _assert_that_template(), "", [
-		F.make_param("named", "String", "\"gravity pulls down\"", "Named", "What this check is called in the report - write it as the claim, so a failure reads like a sentence.", "expression"),
-		F.make_param("claim", "String", "true", "Is True", "The check that has to be true. Anything that reads as a yes/no.", "expression"),
-	], CAT, "assert [b]{named}[/b]: [b]{claim}[/b]")
-		.described("Records a pass when the check is true and a failure when it is not, under the name you give it. The failure message says what the check was, so the report can be read without opening the sheet.")
-		.featured())
-	descriptors.append(F.make_descriptor("Core", "AssertEqual", "Assert Equal", ACEDescriptor.ACEType.ACTION, _assert_equal_template(), "", [
-		F.make_param("named", "String", "\"score after one pickup\"", "Named", "What this check is called in the report.", "expression"),
-		F.make_param("actual", "String", "0", "Got", "The value your game produced.", "expression"),
-		F.make_param("expected", "String", "0", "Expected", "The value it should be.", "expression"),
-	], CAT, "assert [b]{named}[/b]: [b]{actual}[/b] equals [b]{expected}[/b]")
-		.described("Records a pass when the two values are equal. The failure message carries BOTH values (\"expected 3, got 2\") - the one fact a failing equality check always needs."))
-	descriptors.append(F.make_descriptor("Core", "ExpectSignal", "Expect Signal", ACEDescriptor.ACEType.ACTION, _expect_signal_template(), "", [
-		F.make_param("named", "String", "\"death fires on zero hp\"", "Named", "What this check is called in the report.", "expression"),
-		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The name of the signal that has to fire.", "expression"),
-		F.make_param("target", "String", "self", "On", "The node that should emit it.", "expression"),
-		F.make_param("seconds", "String", "2.0", "Within", "How long to give it, in seconds.", "expression"),
-	], CAT, "expect [b]{signal_name}[/b] on [b]{target}[/b] within [b]{seconds}[/b]s - [b]{named}[/b]")
-		.described("Waits for a signal and records the verdict itself: a pass when it fires in time, a failure saying \"expected within 2.00s, never fired\" when it does not. Use Watch For Signal instead when the test should decide what each outcome means."))
+	descriptors.append(F.act("AssertThat", "Assert That", _assert_that_template(), CAT, "assert [b]{named}[/b]: [b]{claim}[/b]", "Records a pass when the check is true and a failure when it is not, under the name you give it. The failure message says what the check was, so the report can be read without opening the sheet.").param("named", "\"gravity pulls down\"", "Named", "What this check is called in the report - write it as the claim, so a failure reads like a sentence.", "expression").param("claim", "true", "Is True", "The check that has to be true. Anything that reads as a yes/no.", "expression").featured())
+	descriptors.append(F.act("AssertEqual", "Assert Equal", _assert_equal_template(), CAT, "assert [b]{named}[/b]: [b]{actual}[/b] equals [b]{expected}[/b]", "Records a pass when the two values are equal. The failure message carries BOTH values (\"expected 3, got 2\") - the one fact a failing equality check always needs.").param("named", "\"score after one pickup\"", "Named", "What this check is called in the report.", "expression").param("actual", "0", "Got", "The value your game produced.", "expression").param("expected", "0", "Expected", "The value it should be.", "expression"))
+	descriptors.append(F.act("ExpectSignal", "Expect Signal", _expect_signal_template(), CAT, "expect [b]{signal_name}[/b] on [b]{target}[/b] within [b]{seconds}[/b]s - [b]{named}[/b]", "Waits for a signal and records the verdict itself: a pass when it fires in time, a failure saying \"expected within 2.00s, never fired\" when it does not. Use Watch For Signal instead when the test should decide what each outcome means.").param("named", "\"death fires on zero hp\"", "Named", "What this check is called in the report.", "expression").param("signal_name", "\"tree_exited\"", "Signal", "The name of the signal that has to fire.", "expression").param("target", "self", "On", "The node that should emit it.", "expression").param("seconds", "2.0", "Within", "How long to give it, in seconds.", "expression"))
 
 	# ── Verdicts a test states outright ──
-	descriptors.append(F.make_descriptor("Core", "PassTest", "Pass Test", ACEDescriptor.ACEType.ACTION, _record_template("{named}", "true", "\"\"") + "\nset_meta(&\"%s\", true)" % FINISHED_META, "", [
-		F.make_param("named", "String", "\"death fires on zero hp\"", "Named", "What passed, as it should read in the report.", "expression"),
-	], CAT, "pass test [b]{named}[/b]")
-		.described("Records a pass under this name and marks the test finished, so a runner stops waiting on it and moves to the next one."))
-	descriptors.append(F.make_descriptor("Core", "FailTest", "Fail Test", ACEDescriptor.ACEType.ACTION, _fail_test_template(), "", [
-		F.make_param("named", "String", "\"death fires on zero hp\"", "Named", "What failed, as it should read in the report.", "expression"),
-		F.make_param("reason", "String", "\"expected within 2.00s, never fired\"", "Because", "Why it failed, in plain words. A test that cannot say why it failed is the one thing a test may not be.", "expression"),
-	], CAT, "fail test [b]{named}[/b] - [b]{reason}[/b]")
-		.described("Records a failure with its reason and marks the test finished. The reason is what the report prints beside the name."))
+	descriptors.append(F.act("PassTest", "Pass Test", _record_template("{named}", "true", "\"\"") + "\nset_meta(&\"%s\", true)" % FINISHED_META, CAT, "pass test [b]{named}[/b]", "Records a pass under this name and marks the test finished, so a runner stops waiting on it and moves to the next one.").param("named", "\"death fires on zero hp\"", "Named", "What passed, as it should read in the report.", "expression"))
+	descriptors.append(F.act("FailTest", "Fail Test", _fail_test_template(), CAT, "fail test [b]{named}[/b] - [b]{reason}[/b]", "Records a failure with its reason and marks the test finished. The reason is what the report prints beside the name.").param("named", "\"death fires on zero hp\"", "Named", "What failed, as it should read in the report.", "expression").param("reason", "\"expected within 2.00s, never fired\"", "Because", "Why it failed, in plain words. A test that cannot say why it failed is the one thing a test may not be.", "expression"))
 
 	# ── The watch and the two conditions that read it ──
-	descriptors.append(F.make_descriptor("Core", "WatchForSignal", "Watch For Signal", ACEDescriptor.ACEType.ACTION, _watch_for_signal_template(), "", [
-		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The name of the signal to watch for.", "expression"),
-		F.make_param("target", "String", "self", "On", "The node to watch.", "expression"),
-		F.make_param("seconds", "String", "2.0", "For", "How long to watch, in seconds.", "expression"),
-	], CAT, "watch for [b]{signal_name}[/b] on [b]{target}[/b] for [b]{seconds}[/b]s")
-		.described("Waits until the signal fires or the time runs out, then records which happened. It states no verdict of its own: the next rows read it with Watch For Signal Succeeded / Watch For Signal Timed Out and decide what each outcome means."))
-	descriptors.append(F.make_descriptor("Core", "WatchForSignalSucceeded", "Watch For Signal Succeeded", ACEDescriptor.ACEType.CONDITION, _watch_state_template("1"), "", [
-		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The signal name the Watch For Signal row used.", "expression"),
-	], CAT, "watch for [b]{signal_name}[/b] succeeded")
-		.described("True when the matching Watch For Signal row saw its signal fire before the time ran out."))
-	descriptors.append(F.make_descriptor("Core", "WatchForSignalTimedOut", "Watch For Signal Timed Out", ACEDescriptor.ACEType.CONDITION, _watch_state_template("2"), "", [
-		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The signal name the Watch For Signal row used.", "expression"),
-	], CAT, "watch for [b]{signal_name}[/b] timed out")
-		.described("True when the matching Watch For Signal row ran out of time without the signal firing - the outcome a test has to be able to name."))
+	descriptors.append(F.act("WatchForSignal", "Watch For Signal", _watch_for_signal_template(), CAT, "watch for [b]{signal_name}[/b] on [b]{target}[/b] for [b]{seconds}[/b]s", "Waits until the signal fires or the time runs out, then records which happened. It states no verdict of its own: the next rows read it with Watch For Signal Succeeded / Watch For Signal Timed Out and decide what each outcome means.").param("signal_name", "\"tree_exited\"", "Signal", "The name of the signal to watch for.", "expression").param("target", "self", "On", "The node to watch.", "expression").param("seconds", "2.0", "For", "How long to watch, in seconds.", "expression"))
+	descriptors.append(F.cond("WatchForSignalSucceeded", "Watch For Signal Succeeded", _watch_state_template("1"), CAT, "watch for [b]{signal_name}[/b] succeeded", "True when the matching Watch For Signal row saw its signal fire before the time ran out.").param("signal_name", "\"tree_exited\"", "Signal", "The signal name the Watch For Signal row used.", "expression"))
+	descriptors.append(F.cond("WatchForSignalTimedOut", "Watch For Signal Timed Out", _watch_state_template("2"), CAT, "watch for [b]{signal_name}[/b] timed out", "True when the matching Watch For Signal row ran out of time without the signal firing - the outcome a test has to be able to name.").param("signal_name", "\"tree_exited\"", "Signal", "The signal name the Watch For Signal row used.", "expression"))
 
 	# ── Something to make claims about ──
-	descriptors.append(F.make_descriptor("Core", "LoadSceneUnderTest", "Load Scene Under Test", ACEDescriptor.ACEType.ACTION, _load_scene_template(), "", [
-		F.make_param("scene_path", "String", "\"res://scene.tscn\"", "Scene", "The scene this test exercises.", "scene_path"),
-		F.make_param("as_name", "String", "\"P\"", "As", "A short name to address it by on later rows.", "expression"),
-	], CAT, "load scene [b]{scene_path}[/b] as [b]{as_name}[/b]")
-		.described("Instantiates a scene, adds it under the test node so it really runs, and remembers it under a short name. A missing scene is recorded as a failure rather than crashing the test.")
-		.featured())
-	descriptors.append(F.make_descriptor("Core", "SceneUnderTest", "Scene Under Test", ACEDescriptor.ACEType.EXPRESSION, _scene_under_test_template(), "", [
-		F.make_param("as_name", "String", "\"P\"", "Named", "The short name the Load Scene Under Test row gave it.", "expression"),
-	], CAT, "scene [b]{as_name}[/b]")
-		.described("The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals."))
+	descriptors.append(F.act("LoadSceneUnderTest", "Load Scene Under Test", _load_scene_template(), CAT, "load scene [b]{scene_path}[/b] as [b]{as_name}[/b]", "Instantiates a scene, adds it under the test node so it really runs, and remembers it under a short name. A missing scene is recorded as a failure rather than crashing the test.").param("scene_path", "\"res://scene.tscn\"", "Scene", "The scene this test exercises.", "scene_path").param("as_name", "\"P\"", "As", "A short name to address it by on later rows.", "expression").featured())
+	descriptors.append(F.expr("SceneUnderTest", "Scene Under Test", _scene_under_test_template(), CAT, "scene [b]{as_name}[/b]", "The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals.").param("as_name", "\"P\"", "Named", "The short name the Load Scene Under Test row gave it.", "expression"))
 
 	# ── Frame-addressed rows: what a recorded play is written in ──
 	# A replay is a list of "this happened at this frame", so the frame is part of the row rather
 	# than a wait somebody has to remember to put in front of it. Frame 0 is the frame the FIRST of
 	# these rows ran on, recorded on the test node itself, so a replay says the same thing no matter
 	# how long the engine had been up when the runner reached it.
-	descriptors.append(F.make_descriptor("Core", "WaitUntilFrame", "Wait Until Frame", ACEDescriptor.ACEType.ACTION, _wait_until_frame_template(), "", [
-		F.make_param("frame", "String", "60", "Frame", "Which frame of this test to wait for. Frame 0 is the first frame a frame-addressed row ran on.", "expression"),
-	], CAT, "wait until frame [b]{frame}[/b]")
-		.described("Holds the test until the given frame of the run, so the rows after it happen at a time a recording can reproduce exactly."))
-	descriptors.append(F.make_descriptor("Core", "SimulateControlPressedAtFrame", "Simulate Control Pressed At Frame", ACEDescriptor.ACEType.ACTION, _at_frame_template("Input.action_press({action})"), "", [
-		F.make_param("action", "String", F.default_input_action(), "Control", "The control to press.", "input_action", F.input_action_options()),
-		F.make_param("frame", "String", "0", "At frame", "Which frame of this test to press it on.", "expression"),
-	], CAT, "simulate control [b]{action}[/b] pressed at frame [b]{frame}[/b]")
-		.described("Presses a control at a named frame of the run - one row of a recorded play."))
-	descriptors.append(F.make_descriptor("Core", "SimulateControlReleasedAtFrame", "Simulate Control Released At Frame", ACEDescriptor.ACEType.ACTION, _at_frame_template("Input.action_release({action})"), "", [
-		F.make_param("action", "String", F.default_input_action(), "Control", "The control to let go.", "input_action", F.input_action_options()),
-		F.make_param("frame", "String", "0", "At frame", "Which frame of this test to let it go on.", "expression"),
-	], CAT, "simulate control [b]{action}[/b] released at frame [b]{frame}[/b]")
-		.described("Lets a control go at a named frame of the run - one row of a recorded play."))
-	descriptors.append(F.make_descriptor("Core", "ExpectAtFrame", "Expect At Frame", ACEDescriptor.ACEType.ACTION, _expect_at_frame_template(), "", [
-		F.make_param("named", "String", "\"hp after the fall\"", "Named", "What this checkpoint is called in the report.", "expression"),
-		F.make_param("actual", "String", "0", "Got", "The value to read at that frame.", "expression"),
-		F.make_param("expected", "String", "0", "Expected", "The value it should be by then.", "expression"),
-		F.make_param("frame", "String", "60", "At frame", "Which frame of this test to check on.", "expression"),
-	], CAT, "expect [b]{actual}[/b] = [b]{expected}[/b] at frame [b]{frame}[/b]")
-		.described("A checkpoint in a recorded play: waits for the frame, then records a pass or a failure that names the frame it drifted on."))
+	descriptors.append(F.act("WaitUntilFrame", "Wait Until Frame", _wait_until_frame_template(), CAT, "wait until frame [b]{frame}[/b]", "Holds the test until the given frame of the run, so the rows after it happen at a time a recording can reproduce exactly.").param("frame", "60", "Frame", "Which frame of this test to wait for. Frame 0 is the first frame a frame-addressed row ran on.", "expression"))
+	descriptors.append(F.act("SimulateControlPressedAtFrame", "Simulate Control Pressed At Frame", _at_frame_template("Input.action_press({action})"), CAT, "simulate control [b]{action}[/b] pressed at frame [b]{frame}[/b]", "Presses a control at a named frame of the run - one row of a recorded play.").param_built(F.make_param("action", "String", F.default_input_action(), "Control", "The control to press.", "input_action", F.input_action_options())).param("frame", "0", "At frame", "Which frame of this test to press it on.", "expression"))
+	descriptors.append(F.act("SimulateControlReleasedAtFrame", "Simulate Control Released At Frame", _at_frame_template("Input.action_release({action})"), CAT, "simulate control [b]{action}[/b] released at frame [b]{frame}[/b]", "Lets a control go at a named frame of the run - one row of a recorded play.").param_built(F.make_param("action", "String", F.default_input_action(), "Control", "The control to let go.", "input_action", F.input_action_options())).param("frame", "0", "At frame", "Which frame of this test to let it go on.", "expression"))
+	descriptors.append(F.act("ExpectAtFrame", "Expect At Frame", _expect_at_frame_template(), CAT, "expect [b]{actual}[/b] = [b]{expected}[/b] at frame [b]{frame}[/b]", "A checkpoint in a recorded play: waits for the frame, then records a pass or a failure that names the frame it drifted on.").param("named", "\"hp after the fall\"", "Named", "What this checkpoint is called in the report.", "expression").param("actual", "0", "Got", "The value to read at that frame.", "expression").param("expected", "0", "Expected", "The value it should be by then.", "expression").param("frame", "60", "At frame", "Which frame of this test to check on.", "expression"))
 
 	return descriptors
 

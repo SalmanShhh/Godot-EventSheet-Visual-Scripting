@@ -84,20 +84,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var d: Array[ACEDescriptor] = []
 
 	# ── Direction: right-to-left languages ──
-	d.append(F.make_descriptor("Core", "LanguageIsRightToLeft", "Language Reads Right To Left", ACEDescriptor.ACEType.CONDITION,
-		"TextServerManager.get_primary_interface().is_locale_right_to_left(TranslationServer.get_locale())", "", [],
-		CAT_TRANSLATION, "language reads right to left")
-		.described("True while the game is running in a right-to-left language: Arabic, Hebrew, Persian, Urdu. The engine answers, so a language you add later is covered without editing a list of codes."))
+	d.append(F.cond("LanguageIsRightToLeft", "Language Reads Right To Left", "TextServerManager.get_primary_interface().is_locale_right_to_left(TranslationServer.get_locale())", CAT_TRANSLATION, "language reads right to left", "True while the game is running in a right-to-left language: Arabic, Hebrew, Persian, Urdu. The engine answers, so a language you add later is covered without editing a list of codes."))
 
-	d.append(F.make_descriptor("Core", "MirrorLayoutForLanguage", "Mirror Layout For Language", ACEDescriptor.ACEType.ACTION,
-		"layout_direction = Control.LAYOUT_DIRECTION_APPLICATION_LOCALE", "", [],
-		CAT_TRANSLATION, "mirror layout for the language", "Control")
-		.described("Makes this control - and everything under it - lay itself out from the game's language: containers, anchors and margins mirror for a right-to-left language, and flip back the moment the language changes again. One row on your UI root usually covers the whole game."))
+	d.append(F.act("MirrorLayoutForLanguage", "Mirror Layout For Language", "layout_direction = Control.LAYOUT_DIRECTION_APPLICATION_LOCALE", CAT_TRANSLATION, "mirror layout for the language", "Makes this control - and everything under it - lay itself out from the game's language: containers, anchors and margins mirror for a right-to-left language, and flip back the moment the language changes again. One row on your UI root usually covers the whole game.", "Control"))
 
-	d.append(F.make_descriptor("Core", "LayoutIsMirrored", "Layout Is Mirrored", ACEDescriptor.ACEType.CONDITION,
-		"is_layout_rtl()", "", [],
-		CAT_TRANSLATION, "layout is mirrored", "Control")
-		.described("True when this control is currently laid out right to left. Ask it before a hand-placed offset or a slide-in tween, so the panel still enters from the side the player reads towards. Godot mirrors containers and anchors for you; this is for the positions you set yourself."))
+	d.append(F.cond("LayoutIsMirrored", "Layout Is Mirrored", "is_layout_rtl()", CAT_TRANSLATION, "layout is mirrored", "True when this control is currently laid out right to left. Ask it before a hand-placed offset or a slide-in tween, so the panel still enters from the side the player reads towards. Godot mirrors containers and anchors for you; this is for the positions you set yourself.", "Control"))
 
 	# ── Glyphs: the font that draws what yours cannot ──
 	# Idempotent on purpose (the Rename Field shape): safe under On Language Changed and safe on every
@@ -105,69 +96,22 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# font to rebuild the chain it draws with. The null guard is what makes the row inert until a font
 	# is really named: a default naming a file that only exists in someone else's project would push a
 	# load error and append a null into the chain the moment the row is dropped.
-	d.append(F.make_descriptor("Core", "AddFontFallback", "Add Font Fallback", ACEDescriptor.ACEType.ACTION,
-		"if {fallback} != null and not {font}.fallbacks.has({fallback}):\n\t{font}.fallbacks = {font}.fallbacks + [{fallback}]", "",
-		[
-			F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font your UI actually draws with. ThemeDB.fallback_font is the engine default every unstyled control uses; for one control's own font, use the Font Of This Control expression.", "expression", [], _font_suggestions()),
-			F.make_param("fallback", "Font", "null", "Falls back to", "The font that draws whatever the first one has no glyph for - a CJK face, a Cyrillic face, an emoji face. Point it at a font file you shipped: load(\"res://fonts/your_fallback.ttf\"). Use something that resolves to the SAME resource every run - load(\"res://...\") does, while SystemFont.new() builds a new one each time and would stack up. Left empty the row does nothing.", "expression", [], _font_suggestions()),
-		], CAT_UI, "give [i]{font}[/i] the fallback [i]{fallback}[/i]")
-		.described("Any character the main font cannot draw is drawn by this one instead, so a Japanese, Russian or emoji-carrying build stops rendering empty boxes while your Latin text keeps the face you chose. Adding the same fallback twice does nothing, so this is safe to run on every load and after every language change.")
-		.featured())
+	d.append(F.act("AddFontFallback", "Add Font Fallback", "if {fallback} != null and not {font}.fallbacks.has({fallback}):\n\t{font}.fallbacks = {font}.fallbacks + [{fallback}]", CAT_UI, "give [i]{font}[/i] the fallback [i]{fallback}[/i]", "Any character the main font cannot draw is drawn by this one instead, so a Japanese, Russian or emoji-carrying build stops rendering empty boxes while your Latin text keeps the face you chose. Adding the same fallback twice does nothing, so this is safe to run on every load and after every language change.").param_built(F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font your UI actually draws with. ThemeDB.fallback_font is the engine default every unstyled control uses; for one control's own font, use the Font Of This Control expression.", "expression", [], _font_suggestions())).param_built(F.make_param("fallback", "Font", "null", "Falls back to", "The font that draws whatever the first one has no glyph for - a CJK face, a Cyrillic face, an emoji face. Point it at a font file you shipped: load(\"res://fonts/your_fallback.ttf\"). Use something that resolves to the SAME resource every run - load(\"res://...\") does, while SystemFont.new() builds a new one each time and would stack up. Left empty the row does nothing.", "expression", [], _font_suggestions())).featured())
 
-	d.append(F.make_descriptor("Core", "UseFont", "Use Font", ACEDescriptor.ACEType.ACTION,
-		"add_theme_font_override({slot}, {font})", "",
-		[
-			F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font to draw this control's text with - usually load(\"res://fonts/your_font.ttf\").", "expression", [], _font_suggestions()),
-			_slot_param(),
-		], CAT_UI, "draw this control with [i]{font}[/i]", "Control")
-		.described("Gives ONE control its own font, without a theme resource: a per-language display face, a monospace font so the column actions line up, a bigger face for a heading. Run it again with another font and the new one wins."))
+	d.append(F.act("UseFont", "Use Font", "add_theme_font_override({slot}, {font})", CAT_UI, "draw this control with [i]{font}[/i]", "Gives ONE control its own font, without a theme resource: a per-language display face, a monospace font so the column actions line up, a bigger face for a heading. Run it again with another font and the new one wins.", "Control").param_built(F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font to draw this control's text with - usually load(\"res://fonts/your_font.ttf\").", "expression", [], _font_suggestions())).param_built(_slot_param()))
 
-	d.append(F.make_descriptor("Core", "ControlFont", "Font Of This Control", ACEDescriptor.ACEType.EXPRESSION,
-		"get_theme_font(&\"font\")", "", [],
-		CAT_UI, "this control's font", "Control")
-		.described("The font this control is actually drawing with right now, whether that came from a theme, a Use Font row or the engine default. Feed it to Font Can Show or Add Font Fallback so those rows are about the real font on screen instead of one you named twice."))
+	d.append(F.expr("ControlFont", "Font Of This Control", "get_theme_font(&\"font\")", CAT_UI, "this control's font", "The font this control is actually drawing with right now, whether that came from a theme, a Use Font row or the engine default. Feed it to Font Can Show or Add Font Fallback so those rows are about the real font on screen instead of one you named twice.", "Control"))
 
-	d.append(F.make_descriptor("Core", "FontCanShow", "Font Can Show", ACEDescriptor.ACEType.CONDITION,
-		"({text}.is_empty() or Array(range({text}.length())).all(func(__i): return {font}.has_char({text}.unicode_at(__i))))", "",
-		[
-			F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font to test. Use the Font Of This Control expression to test the one a label really draws with.", "expression", [], _font_suggestions()),
-			F.make_param("text", "String", "tr(\"MENU_START\")", "Can show", "The text it has to draw. Feed it a TRANSLATED string - the source English always fits, which is exactly why nobody catches this.", "expression"),
-		], CAT_UI, "[i]{font}[/i] can show [b]{text}[/b]")
-		.described("True when the font has a glyph for every character in the text, empty text included. It follows the fallback chain, so a font that has been given a CJK fallback answers true for Japanese. Invert it (right-click the row) and log the failure, and \"we found out from a store review\" becomes something you see while authoring."))
+	d.append(F.cond("FontCanShow", "Font Can Show", "({text}.is_empty() or Array(range({text}.length())).all(func(__i): return {font}.has_char({text}.unicode_at(__i))))", CAT_UI, "[i]{font}[/i] can show [b]{text}[/b]", "True when the font has a glyph for every character in the text, empty text included. It follows the fallback chain, so a font that has been given a CJK fallback answers true for Japanese. Invert it (right-click the row) and log the failure, and \"we found out from a store review\" becomes something you see while authoring.").param_built(F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font to test. Use the Font Of This Control expression to test the one a label really draws with.", "expression", [], _font_suggestions())).param("text", "tr(\"MENU_START\")", "Can show", "The text it has to draw. Feed it a TRANSLATED string - the source English always fits, which is exactly why nobody catches this.", "expression"))
 
 	# ── Fit: overflow measured in pixels, not characters ──
-	d.append(F.make_descriptor("Core", "TextOverflows", "Text Overflows", ACEDescriptor.ACEType.CONDITION,
-		"%s > {target.}size.x" % (_MEASURE % [_CONTROL_FONT, _CONTROL_TEXT, _CONTROL_FONT_SIZE]), "",
-		[_on_node_param()], CAT_TEXT, "text overflows this control", "Control")
-		.described("True when the text is wider than the control showing it - the clipped-button bug, answered in pixels with the control's real font instead of a character count. It measures what the control DRAWS, so a label still holding its English source string is measured in the language on screen. This is about controls that cannot grow: a Label or Button free to widen is grown by the engine to fit its text and honestly answers false, so turn on Clip Text (or a Text Overrun Behavior, or put it in a fixed-size container) for the answer to mean anything. It measures ONE line, so for a label that wraps, compare Wrapped Text Height against the box height instead."))
+	d.append(F.cond("TextOverflows", "Text Overflows", "%s > {target.}size.x" % (_MEASURE % [_CONTROL_FONT, _CONTROL_TEXT, _CONTROL_FONT_SIZE]), CAT_TEXT, "text overflows this control", "True when the text is wider than the control showing it - the clipped-button bug, answered in pixels with the control's real font instead of a character count. It measures what the control DRAWS, so a label still holding its English source string is measured in the language on screen. This is about controls that cannot grow: a Label or Button free to widen is grown by the engine to fit its text and honestly answers false, so turn on Clip Text (or a Text Overrun Behavior, or put it in a fixed-size container) for the answer to mean anything. It measures ONE line, so for a label that wraps, compare Wrapped Text Height against the box height instead.", "Control").param_built(_on_node_param()))
 
-	d.append(F.make_descriptor("Core", "FitTextToLabel", "Fit Text To Label", ACEDescriptor.ACEType.ACTION,
-		_fit_template(), "",
-		[
-			F.make_param("suffix", "String", "\"...\"", "Ending", "What marks the cut, e.g. \"...\". Its own width comes out of the budget. An empty ending simply trims.", "expression"),
-			_on_node_param(),
-		], CAT_TEXT, "fit this control's text, ending [b]{suffix}[/b]", "Control")
-		.described("Backs this control's text up until it MEASURES inside the control, and marks the cut. Whole words first (the Shorten To Whole Words rule), falling back to cutting mid-word when one long word is all there is, and cutting with no marker at all when the control is too narrow to hold even the ending - so the result is never just the ending and never wider than the control. It cuts the TRANSLATED line, and remembers the string it was given in the node's \"fit_source_text\" meta, so running it again after a language switch re-fits the whole sentence instead of trimming its own leftovers - and a line that now fits is put back in full, still translating itself. Needs a control that cannot grow (Clip Text, a Text Overrun Behavior, or a fixed-size container); one free to widen never overflows in the first place."))
+	d.append(F.act("FitTextToLabel", "Fit Text To Label", _fit_template(), CAT_TEXT, "fit this control's text, ending [b]{suffix}[/b]", "Backs this control's text up until it MEASURES inside the control, and marks the cut. Whole words first (the Shorten To Whole Words rule), falling back to cutting mid-word when one long word is all there is, and cutting with no marker at all when the control is too narrow to hold even the ending - so the result is never just the ending and never wider than the control. It cuts the TRANSLATED line, and remembers the string it was given in the node's \"fit_source_text\" meta, so running it again after a language switch re-fits the whole sentence instead of trimming its own leftovers - and a line that now fits is put back in full, still translating itself. Needs a control that cannot grow (Clip Text, a Text Overrun Behavior, or a fixed-size container); one free to widen never overflows in the first place.", "Control").param("suffix", "\"...\"", "Ending", "What marks the cut, e.g. \"...\". Its own width comes out of the budget. An empty ending simply trims.", "expression").param_built(_on_node_param()))
 
-	d.append(F.make_descriptor("Core", "TextFitsInWidth", "Text Fits In Width", ACEDescriptor.ACEType.CONDITION,
-		"%s <= float({width})" % (_MEASURE % ["{font}", "{text}", "{font_size}"]), "",
-		[
-			F.make_param("text", "String", "tr(\"START GAME\")", "Text", "The text to measure. Feed it a TRANSLATED string, so the answer is about the language the player will see.", "expression"),
-			F.make_param("width", "String", "180", "Width", "The room it has, in pixels.", "expression"),
-			_font_param(),
-			_font_size_param(),
-		], CAT_TEXT, "[b]{text}[/b] fits in [b]{width}[/b] px")
-		.described("True when the text would draw no wider than that many pixels - the check for a control you are about to fill or size, before it exists on screen. Invert it and widen the button, or pick a shorter key. The width is in pixels, so it survives the proportional font and the long language that a character count does not."))
+	d.append(F.cond("TextFitsInWidth", "Text Fits In Width", "%s <= float({width})" % (_MEASURE % ["{font}", "{text}", "{font_size}"]), CAT_TEXT, "[b]{text}[/b] fits in [b]{width}[/b] px", "True when the text would draw no wider than that many pixels - the check for a control you are about to fill or size, before it exists on screen. Invert it and widen the button, or pick a shorter key. The width is in pixels, so it survives the proportional font and the long language that a character count does not.").param("text", "tr(\"START GAME\")", "Text", "The text to measure. Feed it a TRANSLATED string, so the answer is about the language the player will see.", "expression").param("width", "180", "Width", "The room it has, in pixels.", "expression").param_built(_font_param()).param_built(_font_size_param()))
 
-	d.append(F.make_descriptor("Core", "WrappedTextHeight", "Wrapped Text Height", ACEDescriptor.ACEType.EXPRESSION,
-		"{font}.get_multiline_string_size({text}, HORIZONTAL_ALIGNMENT_LEFT, float({width}), {font_size}).y", "",
-		[
-			F.make_param("text", "String", "tr(\"DIALOGUE_LINE\")", "Text", "The text that has to fit in the box. Feed it a TRANSLATED string.", "expression"),
-			F.make_param("width", "String", "220", "Wrapped into", "The box width in pixels that the text wraps inside.", "expression"),
-			_font_param(),
-			_font_size_param(),
-		], CAT_TEXT, "height of [b]{text}[/b] wrapped into [b]{width}[/b] px")
-		.described("How TALL the text becomes once it wraps into a box that wide, in pixels. The answer for a dialogue box or a quest log: compare it with the box height and grow the panel, shrink the font or split the line before the last sentence disappears off the bottom in the one language nobody on the team reads."))
+	d.append(F.expr("WrappedTextHeight", "Wrapped Text Height", "{font}.get_multiline_string_size({text}, HORIZONTAL_ALIGNMENT_LEFT, float({width}), {font_size}).y", CAT_TEXT, "height of [b]{text}[/b] wrapped into [b]{width}[/b] px", "How TALL the text becomes once it wraps into a box that wide, in pixels. The answer for a dialogue box or a quest log: compare it with the box height and grow the panel, shrink the font or split the line before the last sentence disappears off the bottom in the one language nobody on the team reads.").param("text", "tr(\"DIALOGUE_LINE\")", "Text", "The text that has to fit in the box. Feed it a TRANSLATED string.", "expression").param("width", "220", "Wrapped into", "The box width in pixels that the text wraps inside.", "expression").param_built(_font_param()).param_built(_font_size_param()))
 
 	return d
 

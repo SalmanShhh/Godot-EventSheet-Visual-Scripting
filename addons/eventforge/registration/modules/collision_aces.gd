@@ -25,57 +25,37 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── CharacterBody2D: slide results (valid after Move And Slide) ──
 	# The display words are the sheet's own platform words, which is also what an opened script
 	# reads them as - one wording for the row whether it was picked here or typed in a .gd file.
-	descriptors.append(F.make_descriptor("Core", "IsOnWall", "Is By Wall", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is by wall", "CharacterBody2D")
-		.described("True when this 2D character is pressing against a wall."))
-	descriptors.append(F.make_descriptor("Core", "IsOnCeiling", "Is Touching Ceiling", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is touching ceiling", "CharacterBody2D")
-		.described("True when this 2D character is touching a ceiling above."))
+	descriptors.append(F.cond("IsOnWall", "Is By Wall", "{host.}is_on_wall()", "Collisions", "Is by wall", "True when this 2D character is pressing against a wall.", "CharacterBody2D"))
+	descriptors.append(F.cond("IsOnCeiling", "Is Touching Ceiling", "{host.}is_on_ceiling()", "Collisions", "Is touching ceiling", "True when this 2D character is touching a ceiling above.", "CharacterBody2D"))
 	# The three questions every platformer asks about its own speed. Written as the comparisons they
 	# are, so the row and a hand-written line are the same line - and read back as these same words.
-	descriptors.append(F.make_descriptor("Core", "IsJumping", "Is Jumping", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y < 0", "", [], "Collisions", "Is jumping", "CharacterBody2D")
-		.described("True while this 2D character is moving upward - the rising half of a jump. In 2D, Y grows downward, so going up is a NEGATIVE vertical speed."))
-	descriptors.append(F.make_descriptor("Core", "IsFalling", "Is Falling", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y > 0", "", [], "Collisions", "Is falling", "CharacterBody2D")
-		.described("True while this 2D character is moving downward - the falling half of a jump, or walking off a ledge."))
-	descriptors.append(F.make_descriptor("Core", "IsMoving", "Is Moving", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.x != 0", "", [], "Collisions", "Is moving", "CharacterBody2D")
-		.described("True while this 2D character has any sideways speed - the walk-or-idle question an animation state usually asks."))
-	descriptors.append(F.make_descriptor("Core", "GetWallNormal", "Wall Normal", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody2D")
-		.described("Returns the direction the touched wall is facing, for wall-jumps or sliding."))
-	descriptors.append(F.make_descriptor("Core", "GetFloorNormal", "Floor Normal", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody2D")
-		.described("Returns the direction the floor is facing, useful on slopes."))
-	descriptors.append(F.make_descriptor("Core", "GetSlideCount", "Slide Collision Count", ACEDescriptor.ACEType.EXPRESSION, "get_slide_collision_count()", "", [], "Collisions", "slide collision count", "CharacterBody2D")
-		.described("Returns how many things the character hit during its last move."))
-	descriptors.append(F.make_descriptor("Core", "GetLastSlideCollider", "Last Slide Collider", ACEDescriptor.ACEType.EXPRESSION, "(get_last_slide_collision().get_collider() if get_slide_collision_count() > 0 else null)", "", [], "Collisions", "last slide collider", "CharacterBody2D")
-		.described("Returns the node the character bumped into last, or nothing if none."))
-	descriptors.append(F.make_descriptor("Core", "GetLastSlideNormal", "Last Slide Normal", ACEDescriptor.ACEType.EXPRESSION, "(get_last_slide_collision().get_normal() if get_slide_collision_count() > 0 else Vector2.ZERO)", "", [], "Collisions", "last slide normal", "CharacterBody2D")
-		.described("Returns the surface direction from the character's last collision."))
+	descriptors.append(F.cond("IsJumping", "Is Jumping", "{host.}velocity.y < 0", "Collisions", "Is jumping", "True while this 2D character is moving upward - the rising half of a jump. In 2D, Y grows downward, so going up is a NEGATIVE vertical speed.", "CharacterBody2D"))
+	descriptors.append(F.cond("IsFalling", "Is Falling", "{host.}velocity.y > 0", "Collisions", "Is falling", "True while this 2D character is moving downward - the falling half of a jump, or walking off a ledge.", "CharacterBody2D"))
+	descriptors.append(F.cond("IsMoving", "Is Moving", "{host.}velocity.x != 0", "Collisions", "Is moving", "True while this 2D character has any sideways speed - the walk-or-idle question an animation state usually asks.", "CharacterBody2D"))
+	descriptors.append(F.expr("GetWallNormal", "Wall Normal", "{host.}get_wall_normal()", "Collisions", "wall normal", "Returns the direction the touched wall is facing, for wall-jumps or sliding.", "CharacterBody2D"))
+	descriptors.append(F.expr("GetFloorNormal", "Floor Normal", "{host.}get_floor_normal()", "Collisions", "floor normal", "Returns the direction the floor is facing, useful on slopes.", "CharacterBody2D"))
+	descriptors.append(F.expr("GetSlideCount", "Slide Collision Count", "get_slide_collision_count()", "Collisions", "slide collision count", "Returns how many things the character hit during its last move.", "CharacterBody2D"))
+	descriptors.append(F.expr("GetLastSlideCollider", "Last Slide Collider", "(get_last_slide_collision().get_collider() if get_slide_collision_count() > 0 else null)", "Collisions", "last slide collider", "Returns the node the character bumped into last, or nothing if none.", "CharacterBody2D"))
+	descriptors.append(F.expr("GetLastSlideNormal", "Last Slide Normal", "(get_last_slide_collision().get_normal() if get_slide_collision_count() > 0 else Vector2.ZERO)", "Collisions", "last slide normal", "Returns the surface direction from the character's last collision.", "CharacterBody2D"))
 
 	# ── Area2D: overlap tests + lists (the common "am I touching X" queries) ──
 	# The overlap questions say what the sheet's own rows say, so a picked row and the hand-written
 	# `overlaps_body(x)` beside it read one sentence. The ids and the templates are frozen; only the
 	# words a reader sees changed.
-	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Is Overlapping Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_tree().get_first_node_in_group(\"player\")", "Body", "The body to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "is overlapping {body}", "Area2D")
-		.described("True when this Area2D is overlapping the given physics body."))
-	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Is Overlapping Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_tree().get_first_node_in_group(\"triggers\")", "Area", "The area to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "is overlapping {area}", "Area2D")
-		.described("True when this Area2D is overlapping the given other area."))
+	descriptors.append(F.cond("OverlapsBody", "Is Overlapping Body", "overlaps_body({body})", "Collisions", "is overlapping {body}", "True when this Area2D is overlapping the given physics body.", "Area2D").param("body", "get_tree().get_first_node_in_group(\"player\")", "Body", "The body to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression"))
+	descriptors.append(F.cond("OverlapsArea", "Is Overlapping Area", "overlaps_area({area})", "Collisions", "is overlapping {area}", "True when this Area2D is overlapping the given other area.", "Area2D").param("area", "get_tree().get_first_node_in_group(\"triggers\")", "Area", "The area to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression"))
 	# The platformer's own question: "is there ground just below me?" is a MOVE that is never
 	# made - the body is asked where it would end up one pixel down, and nothing moves either way.
-	descriptors.append(F.make_descriptor("Core", "IsOverlappingAtOffset", "Is Overlapping At Offset", ACEDescriptor.ACEType.CONDITION, "test_move(transform, {offset})", "", [F.make_param("offset", "String", "Vector2(0, 1)", "Offset", "How far to look, from where the object is now - (0, 1) is one pixel down, which is the ground check.", "expression")], "Collisions", "is overlapping at offset {offset} (a solid)", "PhysicsBody2D")
-		.described("True when this body WOULD hit something solid if it moved by the offset - the ground check every platformer needs, and nothing actually moves.").featured())
-	descriptors.append(F.make_descriptor("Core", "HasOverlappingBodies", "Has Overlapping Bodies", ACEDescriptor.ACEType.CONDITION, "has_overlapping_bodies()", "", [], "Collisions", "has overlapping bodies", "Area2D")
-		.described("True when this Area2D currently overlaps any physics body."))
-	descriptors.append(F.make_descriptor("Core", "HasOverlappingAreas", "Has Overlapping Areas", ACEDescriptor.ACEType.CONDITION, "has_overlapping_areas()", "", [], "Collisions", "has overlapping areas", "Area2D")
-		.described("True when this Area2D currently overlaps any other area."))
-	descriptors.append(F.make_descriptor("Core", "GetOverlappingBodies", "Overlapping Bodies", ACEDescriptor.ACEType.EXPRESSION, "get_overlapping_bodies()", "", [], "Collisions", "overlapping bodies", "Area2D")
-		.described("Returns the list of physics bodies currently inside this Area2D."))
-	descriptors.append(F.make_descriptor("Core", "GetOverlappingAreas", "Overlapping Areas", ACEDescriptor.ACEType.EXPRESSION, "get_overlapping_areas()", "", [], "Collisions", "overlapping areas", "Area2D")
-		.described("Returns the list of areas currently overlapping this Area2D."))
+	descriptors.append(F.cond("IsOverlappingAtOffset", "Is Overlapping At Offset", "test_move(transform, {offset})", "Collisions", "is overlapping at offset {offset} (a solid)", "True when this body WOULD hit something solid if it moved by the offset - the ground check every platformer needs, and nothing actually moves.", "PhysicsBody2D").param("offset", "Vector2(0, 1)", "Offset", "How far to look, from where the object is now - (0, 1) is one pixel down, which is the ground check.", "expression").featured())
+	descriptors.append(F.cond("HasOverlappingBodies", "Has Overlapping Bodies", "has_overlapping_bodies()", "Collisions", "has overlapping bodies", "True when this Area2D currently overlaps any physics body.", "Area2D"))
+	descriptors.append(F.cond("HasOverlappingAreas", "Has Overlapping Areas", "has_overlapping_areas()", "Collisions", "has overlapping areas", "True when this Area2D currently overlaps any other area.", "Area2D"))
+	descriptors.append(F.expr("GetOverlappingBodies", "Overlapping Bodies", "get_overlapping_bodies()", "Collisions", "overlapping bodies", "Returns the list of physics bodies currently inside this Area2D.", "Area2D"))
+	descriptors.append(F.expr("GetOverlappingAreas", "Overlapping Areas", "get_overlapping_areas()", "Collisions", "overlapping areas", "Returns the list of areas currently overlapping this Area2D.", "Area2D"))
 
 	# ── CollisionObject2D: layers & masks (CharacterBody / Area / Rigid / Static all inherit) ──
-	descriptors.append(F.make_descriptor("Core", "SetCollisionLayerBit", "Set Collision Layer Bit", ACEDescriptor.ACEType.ACTION, "set_collision_layer_value({layer}, {enabled})", "", [F.make_param("layer", "String", "1", "Layer", "Layer number (1-32).", "expression"), F.make_param("enabled", "String", "true", "Enabled", "Sit on this layer?", "", ["true", "false"])], "Collisions", "Set layer {layer} = {enabled}", "CollisionObject2D")
-		.described("Turns a collision layer on or off, controlling what this object sits on."))
-	descriptors.append(F.make_descriptor("Core", "SetCollisionMaskBit", "Set Collision Mask Bit", ACEDescriptor.ACEType.ACTION, "set_collision_mask_value({mask}, {enabled})", "", [F.make_param("mask", "String", "1", "Mask", "Mask number (1-32).", "expression"), F.make_param("enabled", "String", "true", "Enabled", "Scan this layer?", "", ["true", "false"])], "Collisions", "Set mask {mask} = {enabled}", "CollisionObject2D")
-		.described("Turns a collision mask bit on or off, controlling what this object detects."))
-	descriptors.append(F.make_descriptor("Core", "IsOnCollisionLayer", "Is On Collision Layer", ACEDescriptor.ACEType.CONDITION, "get_collision_layer_value({layer})", "", [F.make_param("layer", "String", "1", "Layer", "Layer number (1-32).", "expression")], "Collisions", "is on layer {layer}", "CollisionObject2D")
-		.described("True when this object occupies the given collision layer."))
+	descriptors.append(F.act("SetCollisionLayerBit", "Set Collision Layer Bit", "set_collision_layer_value({layer}, {enabled})", "Collisions", "Set layer {layer} = {enabled}", "Turns a collision layer on or off, controlling what this object sits on.", "CollisionObject2D").param("layer", "1", "Layer", "Layer number (1-32).", "expression").param_choice("enabled", "true", "Enabled", "Sit on this layer?", ["true", "false"]))
+	descriptors.append(F.act("SetCollisionMaskBit", "Set Collision Mask Bit", "set_collision_mask_value({mask}, {enabled})", "Collisions", "Set mask {mask} = {enabled}", "Turns a collision mask bit on or off, controlling what this object detects.", "CollisionObject2D").param("mask", "1", "Mask", "Mask number (1-32).", "expression").param_choice("enabled", "true", "Enabled", "Scan this layer?", ["true", "false"]))
+	descriptors.append(F.cond("IsOnCollisionLayer", "Is On Collision Layer", "get_collision_layer_value({layer})", "Collisions", "is on layer {layer}", "True when this object occupies the given collision layer.", "CollisionObject2D").param("layer", "1", "Layer", "Layer number (1-32).", "expression"))
 
 	# ── The same three knobs said in the project's own words ──
 	#
@@ -97,32 +77,21 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(_named_layer_descriptors("CollisionObject3D", "3D", "physics_layer_name_3d", "3D"))
 
 	# ── CollisionShape2D: toggle (deferred so it is safe to call mid-physics) ──
-	descriptors.append(F.make_descriptor("Core", "EnableCollisionShape", "Enable Collision Shape", ACEDescriptor.ACEType.ACTION, "set_deferred(&\"disabled\", false)", "", [], "Collisions", "Enable collision shape", "CollisionShape2D")
-		.described("Switches this collision shape back on so it can collide again."))
-	descriptors.append(F.make_descriptor("Core", "DisableCollisionShape", "Disable Collision Shape", ACEDescriptor.ACEType.ACTION, "set_deferred(&\"disabled\", true)", "", [], "Collisions", "Disable collision shape", "CollisionShape2D")
-		.described("Switches this collision shape off, safely, so it stops colliding."))
+	descriptors.append(F.act("EnableCollisionShape", "Enable Collision Shape", "set_deferred(&\"disabled\", false)", "Collisions", "Enable collision shape", "Switches this collision shape back on so it can collide again.", "CollisionShape2D"))
+	descriptors.append(F.act("DisableCollisionShape", "Disable Collision Shape", "set_deferred(&\"disabled\", true)", "Collisions", "Disable collision shape", "Switches this collision shape off, safely, so it stops colliding.", "CollisionShape2D"))
 
 	# ── 3D parity (CharacterBody3D slide + Area3D overlap) ──
-	descriptors.append(F.make_descriptor("Core", "IsOnWall3D", "Is By Wall (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is by wall", "CharacterBody3D")
-		.described("True when this 3D character is pressing against a wall."))
-	descriptors.append(F.make_descriptor("Core", "IsOnCeiling3D", "Is Touching Ceiling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is touching ceiling", "CharacterBody3D")
-		.described("True when this 3D character is touching a ceiling above."))
+	descriptors.append(F.cond("IsOnWall3D", "Is By Wall (3D)", "{host.}is_on_wall()", "Collisions", "Is by wall", "True when this 3D character is pressing against a wall.", "CharacterBody3D"))
+	descriptors.append(F.cond("IsOnCeiling3D", "Is Touching Ceiling (3D)", "{host.}is_on_ceiling()", "Collisions", "Is touching ceiling", "True when this 3D character is touching a ceiling above.", "CharacterBody3D"))
 	# In 3D, where Y grows UPWARD: the same two questions ask the opposite sign, and the words
 	# follow the axis rather than the sign, exactly as the reading of an opened 3D script does.
-	descriptors.append(F.make_descriptor("Core", "IsJumping3D", "Is Jumping (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y > 0", "", [], "Collisions", "Is jumping", "CharacterBody3D")
-		.described("True while this 3D character is moving upward. In 3D, Y grows upward, so going up is a POSITIVE vertical speed - the opposite sign from the 2D question."))
-	descriptors.append(F.make_descriptor("Core", "IsFalling3D", "Is Falling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y < 0", "", [], "Collisions", "Is falling", "CharacterBody3D")
-		.described("True while this 3D character is moving downward."))
-	descriptors.append(F.make_descriptor("Core", "IsMoving3D", "Is Moving (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.x != 0", "", [], "Collisions", "Is moving", "CharacterBody3D")
-		.described("True while this 3D character has any speed along X - the walk-or-idle question for a side-on 3D mover."))
-	descriptors.append(F.make_descriptor("Core", "GetWallNormal3D", "Wall Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody3D")
-		.described("Fires with the direction a 3D body just bumped into a wall, useful for wall-jumps or ricochets."))
-	descriptors.append(F.make_descriptor("Core", "GetFloorNormal3D", "Floor Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody3D")
-		.described("Fires with the slope direction of the floor a 3D body is standing on, handy for slope-aware movement."))
-	descriptors.append(F.make_descriptor("Core", "HasOverlappingBodies3D", "Has Overlapping Bodies (3D)", ACEDescriptor.ACEType.CONDITION, "has_overlapping_bodies()", "", [], "Collisions", "has overlapping bodies", "Area3D")
-		.described("True when this 3D Area is currently overlapping at least one physics body."))
-	descriptors.append(F.make_descriptor("Core", "GetOverlappingBodies3D", "Overlapping Bodies (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_overlapping_bodies()", "", [], "Collisions", "overlapping bodies", "Area3D")
-		.described("Fires with the list of physics bodies currently inside this 3D Area."))
+	descriptors.append(F.cond("IsJumping3D", "Is Jumping (3D)", "{host.}velocity.y > 0", "Collisions", "Is jumping", "True while this 3D character is moving upward. In 3D, Y grows upward, so going up is a POSITIVE vertical speed - the opposite sign from the 2D question.", "CharacterBody3D"))
+	descriptors.append(F.cond("IsFalling3D", "Is Falling (3D)", "{host.}velocity.y < 0", "Collisions", "Is falling", "True while this 3D character is moving downward.", "CharacterBody3D"))
+	descriptors.append(F.cond("IsMoving3D", "Is Moving (3D)", "{host.}velocity.x != 0", "Collisions", "Is moving", "True while this 3D character has any speed along X - the walk-or-idle question for a side-on 3D mover.", "CharacterBody3D"))
+	descriptors.append(F.expr("GetWallNormal3D", "Wall Normal (3D)", "{host.}get_wall_normal()", "Collisions", "wall normal", "Fires with the direction a 3D body just bumped into a wall, useful for wall-jumps or ricochets.", "CharacterBody3D"))
+	descriptors.append(F.expr("GetFloorNormal3D", "Floor Normal (3D)", "{host.}get_floor_normal()", "Collisions", "floor normal", "Fires with the slope direction of the floor a 3D body is standing on, handy for slope-aware movement.", "CharacterBody3D"))
+	descriptors.append(F.cond("HasOverlappingBodies3D", "Has Overlapping Bodies (3D)", "has_overlapping_bodies()", "Collisions", "has overlapping bodies", "True when this 3D Area is currently overlapping at least one physics body.", "Area3D"))
+	descriptors.append(F.expr("GetOverlappingBodies3D", "Overlapping Bodies (3D)", "get_overlapping_bodies()", "Collisions", "overlapping bodies", "Fires with the list of physics bodies currently inside this 3D Area.", "Area3D"))
 
 	# The two halves that used to be modules of their own, appended in the order the sorted module
 	# walk used to reach them - collision_edge_aces.gd before collision_filter_aces.gd - because
@@ -155,36 +124,11 @@ static func _named_layer_descriptors(host_class: String, suffix: String, hint: S
 	var mask_note: String = "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ %s Physics. A layer the project never named shows as its number, and can be named from here." % dimension_word
 	var layer_note: String = "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ %s Physics. A layer the project never named shows as its number, and can be named from here." % dimension_word
 	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
-	descriptors.append(F.make_descriptor("Core", "CollideWithLayer%s" % suffix,
-		"Collide With Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
-		"set_collision_mask_value({layer}, true)", "",
-		[F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)],
-		"Collisions", "Collide with {layer}", host_class)
-		.described("Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.").featured())
-	descriptors.append(F.make_descriptor("Core", "StopCollidingWithLayer%s" % suffix,
-		"Stop Colliding With Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
-		"set_collision_mask_value({layer}, false)", "",
-		[F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)],
-		"Collisions", "Stop colliding with {layer}", host_class)
-		.described("Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible."))
-	descriptors.append(F.make_descriptor("Core", "BeOnLayer%s" % suffix,
-		"Be On Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
-		"set_collision_layer_value({layer}, true)", "",
-		[F.make_param("layer", "String", "1", "Layer", layer_note, hint).with_lens(hint)],
-		"Collisions", "Be on layer {layer}", host_class)
-		.described("Puts this object on one named collision layer, so everything watching that layer starts noticing it."))
-	descriptors.append(F.make_descriptor("Core", "LeaveLayer%s" % suffix,
-		"Leave Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
-		"set_collision_layer_value({layer}, false)", "",
-		[F.make_param("layer", "String", "1", "Layer", layer_note, hint).with_lens(hint)],
-		"Collisions", "Leave layer {layer}", host_class)
-		.described("Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves."))
-	descriptors.append(F.make_descriptor("Core", "IsSetToCollideWithLayer%s" % suffix,
-		"Is Set To Collide With Layer%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
-		"get_collision_mask_value({layer})", "",
-		[F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)],
-		"Collisions", "is set to collide with {layer}", host_class)
-		.described("True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now."))
+	descriptors.append(F.act("CollideWithLayer%s" % suffix, "Collide With Layer%s" % name_suffix, "set_collision_mask_value({layer}, true)", "Collisions", "Collide with {layer}", "Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.", host_class).param_built(F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)).featured())
+	descriptors.append(F.act("StopCollidingWithLayer%s" % suffix, "Stop Colliding With Layer%s" % name_suffix, "set_collision_mask_value({layer}, false)", "Collisions", "Stop colliding with {layer}", "Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.", host_class).param_built(F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)))
+	descriptors.append(F.act("BeOnLayer%s" % suffix, "Be On Layer%s" % name_suffix, "set_collision_layer_value({layer}, true)", "Collisions", "Be on layer {layer}", "Puts this object on one named collision layer, so everything watching that layer starts noticing it.", host_class).param_built(F.make_param("layer", "String", "1", "Layer", layer_note, hint).with_lens(hint)))
+	descriptors.append(F.act("LeaveLayer%s" % suffix, "Leave Layer%s" % name_suffix, "set_collision_layer_value({layer}, false)", "Collisions", "Leave layer {layer}", "Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.", host_class).param_built(F.make_param("layer", "String", "1", "Layer", layer_note, hint).with_lens(hint)))
+	descriptors.append(F.cond("IsSetToCollideWithLayer%s" % suffix, "Is Set To Collide With Layer%s" % name_suffix, "get_collision_mask_value({layer})", "Collisions", "is set to collide with {layer}", "True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.", host_class).param_built(F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)))
 	return descriptors
 
 
@@ -243,24 +187,10 @@ const LEAVING_NOTE: String = "The body that left. Filled in for you when the tri
 static func _floor_rows(suffix: String, host_class: String) -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
-	descriptors.append(F.make_descriptor("Core", "OnLanded%s" % suffix,
-		"On Landed%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "", [],
-		CATEGORY, "On landed", host_class)
-		.described("Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnLeftTheGround%s" % suffix,
-		"On Left The Ground%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "", [],
-		CATEGORY, "On left the ground", host_class)
-		.described("Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on."))
-	descriptors.append(F.make_descriptor("Core", "JustLanded%s" % suffix,
-		"Just Landed%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
-		"self.__just_landed_{uid}()", "", [], CATEGORY, "just landed", host_class)
-		.described("True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.")
-		.stateful("var __was_on_floor_{uid}: bool = false\n\nfunc __just_landed_{uid}() -> bool:\n\tvar on_floor: bool = is_on_floor()\n\tvar landed: bool = on_floor and not __was_on_floor_{uid}\n\t__was_on_floor_{uid} = on_floor\n\treturn landed"))
-	descriptors.append(F.make_descriptor("Core", "JustLeftTheGround%s" % suffix,
-		"Just Left The Ground%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
-		"self.__just_left_the_ground_{uid}()", "", [], CATEGORY, "just left the ground", host_class)
-		.described("True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.")
-		.stateful("var __was_on_floor_{uid}: bool = false\n\nfunc __just_left_the_ground_{uid}() -> bool:\n\tvar on_floor: bool = is_on_floor()\n\tvar left: bool = __was_on_floor_{uid} and not on_floor\n\t__was_on_floor_{uid} = on_floor\n\treturn left"))
+	descriptors.append(F.trig("OnLanded%s" % suffix, "On Landed%s" % name_suffix, "", CATEGORY, "On landed", "Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.", host_class).featured())
+	descriptors.append(F.trig("OnLeftTheGround%s" % suffix, "On Left The Ground%s" % name_suffix, "", CATEGORY, "On left the ground", "Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.", host_class))
+	descriptors.append(F.cond("JustLanded%s" % suffix, "Just Landed%s" % name_suffix, "self.__just_landed_{uid}()", CATEGORY, "just landed", "True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.", host_class).stateful("var __was_on_floor_{uid}: bool = false\n\nfunc __just_landed_{uid}() -> bool:\n\tvar on_floor: bool = is_on_floor()\n\tvar landed: bool = on_floor and not __was_on_floor_{uid}\n\t__was_on_floor_{uid} = on_floor\n\treturn landed"))
+	descriptors.append(F.cond("JustLeftTheGround%s" % suffix, "Just Left The Ground%s" % name_suffix, "self.__just_left_the_ground_{uid}()", CATEGORY, "just left the ground", "True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.", host_class).stateful("var __was_on_floor_{uid}: bool = false\n\nfunc __just_left_the_ground_{uid}() -> bool:\n\tvar on_floor: bool = is_on_floor()\n\tvar left: bool = __was_on_floor_{uid} and not on_floor\n\t__was_on_floor_{uid} = on_floor\n\treturn left"))
 	return descriptors
 
 
@@ -269,24 +199,10 @@ static func _floor_rows(suffix: String, host_class: String) -> Array[ACEDescript
 static func _area_rows(suffix: String, host_class: String) -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
-	descriptors.append(F.make_descriptor("Core", "OnFirstOverlap%s" % suffix,
-		"On First Overlap%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "body_entered",
-		[_payload_param("body", ARRIVING_NOTE)],
-		CATEGORY, "On first overlap", host_class)
-		.described("Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnLastOverlapEnded%s" % suffix,
-		"On Last Overlap Ended%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "body_exited",
-		[_payload_param("body", LEAVING_NOTE)],
-		CATEGORY, "On last overlap ended", host_class)
-		.described("Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from."))
-	descriptors.append(F.make_descriptor("Core", "IsTheFirstOneIn%s" % suffix,
-		"Is The First One In%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
-		"get_overlapping_bodies().size() == 1", "", [], CATEGORY, "is the first one in", host_class)
-		.described("True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago."))
-	descriptors.append(F.make_descriptor("Core", "WasTheLastOneOut%s" % suffix,
-		"Was The Last One Out%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
-		"get_overlapping_bodies().is_empty()", "", [], CATEGORY, "was the last one out", host_class)
-		.described("True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one."))
+	descriptors.append(F.trig("OnFirstOverlap%s" % suffix, "On First Overlap%s" % name_suffix, "body_entered", CATEGORY, "On first overlap", "Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.", host_class).param_built(_payload_param("body", ARRIVING_NOTE)).featured())
+	descriptors.append(F.trig("OnLastOverlapEnded%s" % suffix, "On Last Overlap Ended%s" % name_suffix, "body_exited", CATEGORY, "On last overlap ended", "Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.", host_class).param_built(_payload_param("body", LEAVING_NOTE)))
+	descriptors.append(F.cond("IsTheFirstOneIn%s" % suffix, "Is The First One In%s" % name_suffix, "get_overlapping_bodies().size() == 1", CATEGORY, "is the first one in", "True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.", host_class))
+	descriptors.append(F.cond("WasTheLastOneOut%s" % suffix, "Was The Last One Out%s" % name_suffix, "get_overlapping_bodies().is_empty()", CATEGORY, "was the last one out", "True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.", host_class))
 	return descriptors
 
 
@@ -337,16 +253,8 @@ const FILTERED_LEAVING_NOTE: String = "The body that left, already known to be i
 static func _body_triggers(suffix: String, host_class: String) -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
-	descriptors.append(F.make_descriptor("Core", "OnCollisionWithGroup%s" % suffix,
-		"On Collision With Group%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "body_entered",
-		[_group_param(GROUP_NOTE), _payload_param("body", FILTERED_ARRIVING_NOTE)],
-		CATEGORY, "On collision with {group}", host_class)
-		.described("Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnStoppedCollidingWithGroup%s" % suffix,
-		"On Stopped Colliding With Group%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "body_exited",
-		[_group_param(GROUP_NOTE), _payload_param("body", FILTERED_LEAVING_NOTE)],
-		CATEGORY, "On stopped colliding with {group}", host_class)
-		.described("Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does."))
+	descriptors.append(F.trig("OnCollisionWithGroup%s" % suffix, "On Collision With Group%s" % name_suffix, "body_entered", CATEGORY, "On collision with {group}", "Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.", host_class).param_built(_group_param(GROUP_NOTE)).param_built(_payload_param("body", FILTERED_ARRIVING_NOTE)).featured())
+	descriptors.append(F.trig("OnStoppedCollidingWithGroup%s" % suffix, "On Stopped Colliding With Group%s" % name_suffix, "body_exited", CATEGORY, "On stopped colliding with {group}", "Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.", host_class).param_built(_group_param(GROUP_NOTE)).param_built(_payload_param("body", FILTERED_LEAVING_NOTE)))
 	return descriptors
 
 
@@ -354,16 +262,8 @@ static func _body_triggers(suffix: String, host_class: String) -> Array[ACEDescr
 static func _area_triggers(suffix: String, host_class: String) -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
-	descriptors.append(F.make_descriptor("Core", "OnOverlapWithGroup%s" % suffix,
-		"On Overlap With Group%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "body_entered",
-		[_group_param(GROUP_NOTE), _payload_param("body", FILTERED_ARRIVING_NOTE)],
-		CATEGORY, "On overlap with {group}", host_class)
-		.described("Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnOverlapEndedWithGroup%s" % suffix,
-		"On Overlap Ended With Group%s" % name_suffix, ACEDescriptor.ACEType.TRIGGER, "", "body_exited",
-		[_group_param(GROUP_NOTE), _payload_param("body", FILTERED_LEAVING_NOTE)],
-		CATEGORY, "On overlap ended with {group}", host_class)
-		.described("Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap."))
+	descriptors.append(F.trig("OnOverlapWithGroup%s" % suffix, "On Overlap With Group%s" % name_suffix, "body_entered", CATEGORY, "On overlap with {group}", "Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.", host_class).param_built(_group_param(GROUP_NOTE)).param_built(_payload_param("body", FILTERED_ARRIVING_NOTE)).featured())
+	descriptors.append(F.trig("OnOverlapEndedWithGroup%s" % suffix, "On Overlap Ended With Group%s" % name_suffix, "body_exited", CATEGORY, "On overlap ended with {group}", "Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.", host_class).param_built(_group_param(GROUP_NOTE)).param_built(_payload_param("body", FILTERED_LEAVING_NOTE)))
 	return descriptors
 
 
@@ -375,11 +275,7 @@ static func _area_triggers(suffix: String, host_class: String) -> Array[ACEDescr
 ## touching" needs no second ace_id, it is this one asked the other way.
 static func _is_touching(suffix: String, host_class: String) -> ACEDescriptor:
 	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
-	return F.make_descriptor("Core", "IsTouchingGroup%s" % suffix,
-		"Is Touching Group%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
-		"get_overlapping_bodies().any(func(__body: Node) -> bool: return __body.is_in_group({group}))",
-		"", [_group_param(TOUCHING_NOTE)], CATEGORY, "is touching {group}", host_class)\
-		.described("True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.").featured()
+	return F.cond("IsTouchingGroup%s" % suffix, "Is Touching Group%s" % name_suffix, "get_overlapping_bodies().any(func(__body: Node) -> bool: return __body.is_in_group({group}))", CATEGORY, "is touching {group}", "True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.", host_class).param_built(_group_param(TOUCHING_NOTE)).featured()
 
 
 ## The With field: a live picker over the project's own node groups, which is the same field the

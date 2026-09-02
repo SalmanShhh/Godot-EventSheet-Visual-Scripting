@@ -27,43 +27,22 @@ static func _text_param() -> ACEParam:
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "RegexMatches", "Text Matches Regex", ACEDescriptor.ACEType.CONDITION,
-		"RegEx.create_from_string({pattern}).search({text}) != null", "",
-		[_pattern_param(), _text_param()], "Text: RegEx", "{text} matches {pattern}")
-		.described("True when the text matches the regular expression anywhere (e.g. \"^[0-9]+$\" tests for digits only)."))
+	descriptors.append(F.cond("RegexMatches", "Text Matches Regex", "RegEx.create_from_string({pattern}).search({text}) != null", "Text: RegEx", "{text} matches {pattern}", "True when the text matches the regular expression anywhere (e.g. \"^[0-9]+$\" tests for digits only).").param_built(_pattern_param()).param_built(_text_param()))
 
-	descriptors.append(F.make_descriptor("Core", "RegexReplace", "Regex Replace", ACEDescriptor.ACEType.EXPRESSION,
-		"RegEx.create_from_string({pattern}).sub({text}, {replacement}, true)", "",
-		[_pattern_param(), _text_param(), F.make_param("replacement", "String", "\"#\"", "Replacement", "Text to substitute for each match ($1, $2… reuse capture groups).", "expression")], "Text: RegEx", "replace {pattern} in {text}")
-		.described("Returns the text with EVERY match of the pattern replaced. Use $1/$2 in the replacement to reuse capture groups."))
+	descriptors.append(F.expr("RegexReplace", "Regex Replace", "RegEx.create_from_string({pattern}).sub({text}, {replacement}, true)", "Text: RegEx", "replace {pattern} in {text}", "Returns the text with EVERY match of the pattern replaced. Use $1/$2 in the replacement to reuse capture groups.").param_built(_pattern_param()).param_built(_text_param()).param("replacement", "\"#\"", "Replacement", "Text to substitute for each match ($1, $2… reuse capture groups).", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "RegexFirstMatch", "Regex First Match", ACEDescriptor.ACEType.EXPRESSION,
-		"(RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string()) + [\"\"]).front()", "",
-		[_pattern_param(), _text_param()], "Text: RegEx", "first {pattern} in {text}")
-		.described("Returns the first substring that matches the pattern, or an empty string when there's no match (never errors)."))
+	descriptors.append(F.expr("RegexFirstMatch", "Regex First Match", "(RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string()) + [\"\"]).front()", "Text: RegEx", "first {pattern} in {text}", "Returns the first substring that matches the pattern, or an empty string when there's no match (never errors).").param_built(_pattern_param()).param_built(_text_param()))
 
-	descriptors.append(F.make_descriptor("Core", "RegexMatchCount", "Regex Match Count", ACEDescriptor.ACEType.EXPRESSION,
-		"RegEx.create_from_string({pattern}).search_all({text}).size()", "",
-		[_pattern_param(), _text_param()], "Text: RegEx", "count {pattern} in {text}")
-		.described("Returns how many times the pattern matches in the text (0 if none)."))
+	descriptors.append(F.expr("RegexMatchCount", "Regex Match Count", "RegEx.create_from_string({pattern}).search_all({text}).size()", "Text: RegEx", "count {pattern} in {text}", "Returns how many times the pattern matches in the text (0 if none).").param_built(_pattern_param()).param_built(_text_param()))
 
-	descriptors.append(F.make_descriptor("Core", "RegexAllMatches", "Regex All Matches", ACEDescriptor.ACEType.EXPRESSION,
-		"RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string())", "",
-		[_pattern_param(), _text_param()], "Text: RegEx", "all {pattern} in {text}")
-		.described("Returns an array of every substring that matches the pattern (an empty array if none)."))
+	descriptors.append(F.expr("RegexAllMatches", "Regex All Matches", "RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string())", "Text: RegEx", "all {pattern} in {text}", "Returns an array of every substring that matches the pattern (an empty array if none).").param_built(_pattern_param()).param_built(_text_param()))
 
-	descriptors.append(F.make_descriptor("Core", "RegexCaptureGroup", "Regex Capture Group", ACEDescriptor.ACEType.EXPRESSION,
-		"(RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string({group})) + [\"\"]).front()", "",
-		[_pattern_param(), _text_param(), F.make_param("group", "String", "1", "Group", "Which ( ) capture group to return (1 = the first parentheses).", "expression")], "Text: RegEx", "group {group} of {pattern} in {text}")
-		.described("Returns capture group N from the first match - the text inside the Nth pair of parentheses - or empty if none."))
+	descriptors.append(F.expr("RegexCaptureGroup", "Regex Capture Group", "(RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string({group})) + [\"\"]).front()", "Text: RegEx", "group {group} of {pattern} in {text}", "Returns capture group N from the first match - the text inside the Nth pair of parentheses - or empty if none.").param_built(_pattern_param()).param_built(_text_param()).param("group", "1", "Group", "Which ( ) capture group to return (1 = the first parentheses).", "expression"))
 
 	# Godot format strings (the linked doc): a number to a fixed number of decimal places - the common
 	# score/money/percentage display. The plain text verbs (upper/lower/split/pad-zeros/Format String)
 	# already exist elsewhere; this fills the decimal-places gap.
-	descriptors.append(F.make_descriptor("Core", "FormatDecimals", "Format Decimals", ACEDescriptor.ACEType.EXPRESSION,
-		"String.num({value}, {decimals})", "",
-		[F.make_param("value", "String", "3.14159", "Value", "Number to format.", "expression"), F.make_param("decimals", "String", "2", "Decimals", "Digits after the decimal point.", "expression")], "Text", "format {value} to {decimals} dp")
-		.described("Returns a number as text with a fixed number of decimal places, e.g. 3.14159 → \"3.14\"."))
+	descriptors.append(F.expr("FormatDecimals", "Format Decimals", "String.num({value}, {decimals})", "Text", "format {value} to {decimals} dp", "Returns a number as text with a fixed number of decimal places, e.g. 3.14159 → \"3.14\".").param("value", "3.14159", "Value", "Number to format.", "expression").param("decimals", "2", "Decimals", "Digits after the decimal point.", "expression"))
 
 	# ── the same questions asked of a pattern you KEEP ───────
 	# The verbs above compile the pattern afresh every time they run, which is what a one-off match
@@ -71,25 +50,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# already reads as "Set pattern rx to …" / "first match of rx in text" - so a picked row and a
 	# hand-written one are the same bytes. Point "Pattern" at your own variable; the default builds a
 	# throwaway pattern so the row still runs the moment it is dropped.
-	descriptors.append(F.make_descriptor("Core", "SetTextPattern", "Set Pattern", ACEDescriptor.ACEType.ACTION,
-		"{holder}.compile({pattern})", "",
-		[_holder_param(), _pattern_param()], "Text: RegEx", "Set pattern {holder} to {pattern}")
-		.described("Gives a kept pattern variable the regular expression it should match from now on."))
+	descriptors.append(F.act("SetTextPattern", "Set Pattern", "{holder}.compile({pattern})", "Text: RegEx", "Set pattern {holder} to {pattern}", "Gives a kept pattern variable the regular expression it should match from now on.").param_built(_holder_param()).param_built(_pattern_param()))
 
-	descriptors.append(F.make_descriptor("Core", "MatchPattern", "Match Pattern", ACEDescriptor.ACEType.EXPRESSION,
-		"{holder}.search({text})", "",
-		[_holder_param(), _text_param()], "Text: RegEx", "first match of {holder} in {text}")
-		.described("Returns the first match a kept pattern finds in the text, or nothing when it finds none."))
+	descriptors.append(F.expr("MatchPattern", "Match Pattern", "{holder}.search({text})", "Text: RegEx", "first match of {holder} in {text}", "Returns the first match a kept pattern finds in the text, or nothing when it finds none.").param_built(_holder_param()).param_built(_text_param()))
 
-	descriptors.append(F.make_descriptor("Core", "AllMatches", "All Matches", ACEDescriptor.ACEType.EXPRESSION,
-		"{holder}.search_all({text})", "",
-		[_holder_param(), _text_param()], "Text: RegEx", "all matches of {holder} in {text}")
-		.described("Returns every match a kept pattern finds in the text, as a list."))
+	descriptors.append(F.expr("AllMatches", "All Matches", "{holder}.search_all({text})", "Text: RegEx", "all matches of {holder} in {text}", "Returns every match a kept pattern finds in the text, as a list.").param_built(_holder_param()).param_built(_text_param()))
 
-	descriptors.append(F.make_descriptor("Core", "ReplaceMatches", "Replace Matches", ACEDescriptor.ACEType.EXPRESSION,
-		"{holder}.sub({text}, {replacement}, true)", "",
-		[_holder_param(), _text_param(), F.make_param("replacement", "String", "\"#\"", "Replacement", "Text to substitute for each match ($1, $2… reuse capture groups).", "expression")], "Text: RegEx", "replace matches of {holder} in {text} with {replacement}")
-		.described("Returns the text with every match of a kept pattern replaced."))
+	descriptors.append(F.expr("ReplaceMatches", "Replace Matches", "{holder}.sub({text}, {replacement}, true)", "Text: RegEx", "replace matches of {holder} in {text} with {replacement}", "Returns the text with every match of a kept pattern replaced.").param_built(_holder_param()).param_built(_text_param()).param("replacement", "\"#\"", "Replacement", "Text to substitute for each match ($1, $2… reuse capture groups).", "expression"))
 
 	return descriptors
 

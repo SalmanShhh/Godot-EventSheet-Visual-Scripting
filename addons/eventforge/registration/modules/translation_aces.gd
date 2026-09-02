@@ -107,49 +107,19 @@ const _FILL_COUNT := ".replace(\"%d\", str(int({count})))"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "SetLocale", "Set Language", ACEDescriptor.ACEType.ACTION,
-		"TranslationServer.set_locale({locale})", "",
-		[F.make_param("locale", "String", "\"en\"", "Locale", "Language code to switch to, e.g. \"en\", \"es\", \"ja\".", "expression")],
-		CAT, "set language to {locale}")
-		.described("Switches the game's language live. Auto-translated Controls and every later tr() lookup follow immediately."))
+	descriptors.append(F.act("SetLocale", "Set Language", "TranslationServer.set_locale({locale})", CAT, "set language to {locale}", "Switches the game's language live. Auto-translated Controls and every later tr() lookup follow immediately.").param("locale", "\"en\"", "Locale", "Language code to switch to, e.g. \"en\", \"es\", \"ja\".", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "GetLocale", "Current Language", ACEDescriptor.ACEType.EXPRESSION,
-		"TranslationServer.get_locale()", "", [],
-		CAT, "current language")
-		.described("The active locale code, e.g. \"en\" or \"es\"."))
+	descriptors.append(F.expr("GetLocale", "Current Language", "TranslationServer.get_locale()", CAT, "current language", "The active locale code, e.g. \"en\" or \"es\"."))
 
-	descriptors.append(F.make_descriptor("Core", "Translate", "Translate", ACEDescriptor.ACEType.EXPRESSION,
-		"tr({text})", "",
-		[F.make_param("text", "String", "\"HELLO\"", "Text", "The source string (or key) to look up.", "expression")],
-		CAT, "translate {text}")
-		.described("Looks the text up in the current language (tr). For a fixed label, the field's globe toggle does this without an expression."))
+	descriptors.append(F.expr("Translate", "Translate", "tr({text})", CAT, "translate {text}", "Looks the text up in the current language (tr). For a fixed label, the field's globe toggle does this without an expression.").param("text", "\"HELLO\"", "Text", "The source string (or key) to look up.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TranslateWithContext", "Translate With Context", ACEDescriptor.ACEType.EXPRESSION,
-		"tr({text}, {context})", "",
-		[
-			F.make_param("text", "String", "\"May\"", "Text", "The source string (or key) to look up.", "expression"),
-			F.make_param("context", "String", "\"month\"", "Context", "Disambiguates identical strings, e.g. \"May\" the month vs the verb.", "expression"),
-		], CAT, "translate {text} as {context}")
-		.described("tr() with a translation context, for strings that read the same but translate differently."))
+	descriptors.append(F.expr("TranslateWithContext", "Translate With Context", "tr({text}, {context})", CAT, "translate {text} as {context}", "tr() with a translation context, for strings that read the same but translate differently.").param("text", "\"May\"", "Text", "The source string (or key) to look up.", "expression").param("context", "\"month\"", "Context", "Disambiguates identical strings, e.g. \"May\" the month vs the verb.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TranslatePlural", "Translate Plural", ACEDescriptor.ACEType.EXPRESSION,
-		"tr_n({singular}, {plural}, {count})", "",
-		[
-			F.make_param("singular", "String", "\"%d apple\"", "Singular", "The one-item form.", "expression"),
-			F.make_param("plural", "String", "\"%d apples\"", "Plural", "The many-items form.", "expression"),
-			F.make_param("count", "String", "2", "Count", "How many - picks the right form per language.", "expression"),
-		], CAT, "translate plural for {count}")
-		.described("Picks the singular or plural form for the count in the current language (tr_n); languages with more plural forms use their catalog's rules. It returns the chosen form as it stands, so a \"%d apples\" form still carries its %d - Counted Text is the one that fills the number in."))
+	descriptors.append(F.expr("TranslatePlural", "Translate Plural", "tr_n({singular}, {plural}, {count})", CAT, "translate plural for {count}", "Picks the singular or plural form for the count in the current language (tr_n); languages with more plural forms use their catalog's rules. It returns the chosen form as it stands, so a \"%d apples\" form still carries its %d - Counted Text is the one that fills the number in.").param("singular", "\"%d apple\"", "Singular", "The one-item form.", "expression").param("plural", "\"%d apples\"", "Plural", "The many-items form.", "expression").param("count", "2", "Count", "How many - picks the right form per language.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "IsLocaleChangeNotification", "Language Just Changed", ACEDescriptor.ACEType.CONDITION,
-		"what == NOTIFICATION_TRANSLATION_CHANGED", "", [],
-		CAT, "language just changed")
-		.described("The gate under On Language Changed: true only for the engine's translation-changed notification."))
+	descriptors.append(F.cond("IsLocaleChangeNotification", "Language Just Changed", "what == NOTIFICATION_TRANSLATION_CHANGED", CAT, "language just changed", "The gate under On Language Changed: true only for the engine's translation-changed notification."))
 
-	descriptors.append(F.make_descriptor("Core", "OnLocaleChanged", "On Language Changed", ACEDescriptor.ACEType.TRIGGER,
-		"", "", [],
-		CAT, "on language changed")
-		.described("Runs when the game's language switches. Compiles to the _notification virtual with the Language Just Changed gate added for you."))
+	descriptors.append(F.trig("OnLocaleChanged", "On Language Changed", "", CAT, "on language changed", "Runs when the game's language switches. Compiles to the _notification virtual with the Language Just Changed gate added for you."))
 
 	descriptors.append_array(_menu_descriptors())
 	descriptors.append_array(_matching_descriptors())
@@ -175,29 +145,13 @@ static func section_descriptions() -> Dictionary:
 static func _menu_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "ForEachLanguage", "For Each Language", ACEDescriptor.ACEType.CONDITION,
-		"TranslationServer.get_loaded_locales()", "", [],
-		CAT_LOOPS, "for each language")
-		.described("Runs this event's actions once per language your project actually ships - the catalogs Godot loaded from Project Settings > Localization. Read the current one as `language`. A language you add later joins the menu with no sheet edit, and a demo build that ships fewer catalogs shows fewer entries. Only languages WITH a catalog are listed, so English usually appears only when it has one of its own.")
-		.looping("language").featured())
+	descriptors.append(F.cond("ForEachLanguage", "For Each Language", "TranslationServer.get_loaded_locales()", CAT_LOOPS, "for each language", "Runs this event's actions once per language your project actually ships - the catalogs Godot loaded from Project Settings > Localization. Read the current one as `language`. A language you add later joins the menu with no sheet edit, and a demo build that ships fewer catalogs shows fewer entries. Only languages WITH a catalog are listed, so English usually appears only when it has one of its own.").looping("language").featured())
 
-	descriptors.append(F.make_descriptor("Core", "LanguageOwnName", "Language Name In Its Own Language", ACEDescriptor.ACEType.EXPRESSION,
-		"(%s if %s and not %s.is_empty() else TranslationServer.get_locale_name({locale}))" % [_OWN_NAME, _EXACT_CATALOG, _OWN_NAME], "",
-		[F.make_param("locale", "String", "\"de\"", "Language", "A locale code, e.g. \"de\" - usually the loop's `language`.", "expression")],
-		CAT, "name of [b]{locale}[/b] in its own language")
-		.described("The language's name as its own speakers write it: put a LANGUAGE_NAME row in each catalog (LANGUAGE_NAME,Deutsch,Espanol) and a German player reads \"Deutsch\". It reads THAT language's own catalog and no other, so a build shipping only pt_BR does not label a pt_PT entry with the Brazilian name. Falls back to Godot's English name when the row is missing, and to the bare code when the language has no catalog of its own, so a menu entry is never blank."))
+	descriptors.append(F.expr("LanguageOwnName", "Language Name In Its Own Language", "(%s if %s and not %s.is_empty() else TranslationServer.get_locale_name({locale}))" % [_OWN_NAME, _EXACT_CATALOG, _OWN_NAME], CAT, "name of [b]{locale}[/b] in its own language", "The language's name as its own speakers write it: put a LANGUAGE_NAME row in each catalog (LANGUAGE_NAME,Deutsch,Espanol) and a German player reads \"Deutsch\". It reads THAT language's own catalog and no other, so a build shipping only pt_BR does not label a pt_PT entry with the Brazilian name. Falls back to Godot's English name when the row is missing, and to the bare code when the language has no catalog of its own, so a menu entry is never blank.").param("locale", "\"de\"", "Language", "A locale code, e.g. \"de\" - usually the loop's `language`.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "LanguageIsAvailable", "Language Is Available", ACEDescriptor.ACEType.CONDITION,
-		"TranslationServer.has_translation_for_locale({locale}, false)", "",
-		[F.make_param("locale", "String", "\"es\"", "Language", "The locale code to check for.", "expression")],
-		CAT, "[b]{locale}[/b] is available")
-		.described("True when a catalog for that language is registered in this build. Gate a flag button on it and a demo build hides the languages it did not ship. Matched the way Godot matches, not letter for letter, so a build that ships pt_BR answers true for \"pt\" as well - ask Language Has Text For when you need one exact catalog."))
+	descriptors.append(F.cond("LanguageIsAvailable", "Language Is Available", "TranslationServer.has_translation_for_locale({locale}, false)", CAT, "[b]{locale}[/b] is available", "True when a catalog for that language is registered in this build. Gate a flag button on it and a demo build hides the languages it did not ship. Matched the way Godot matches, not letter for letter, so a build that ships pt_BR answers true for \"pt\" as well - ask Language Has Text For when you need one exact catalog.").param("locale", "\"es\"", "Language", "The locale code to check for.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "UseSavedLanguage", "Use Saved Language", ACEDescriptor.ACEType.ACTION,
-		"var __lang_cfg_{uid} = ConfigFile.new()\n__lang_cfg_{uid}.load(\"user://settings.cfg\")\nTranslationServer.set_locale(str(__lang_cfg_{uid}.get_value(\"game\", \"language\", {fallback})))", "",
-		[F.make_param("fallback", "String", "OS.get_locale()", "Otherwise", "What to use on a first run, before the player has chosen - the system locale is the friendly default.", "expression")],
-		CAT, "use the saved language, otherwise [b]{fallback}[/b]")
-		.described("Applies the language the player picked last time, reading the same user://settings.cfg the Save Setting action writes - section \"game\", key \"language\". A first run has no file yet and falls back to whatever you pass, so pair it with a Save Setting on the button that switches."))
+	descriptors.append(F.act("UseSavedLanguage", "Use Saved Language", "var __lang_cfg_{uid} = ConfigFile.new()\n__lang_cfg_{uid}.load(\"user://settings.cfg\")\nTranslationServer.set_locale(str(__lang_cfg_{uid}.get_value(\"game\", \"language\", {fallback})))", CAT, "use the saved language, otherwise [b]{fallback}[/b]", "Applies the language the player picked last time, reading the same user://settings.cfg the Save Setting action writes - section \"game\", key \"language\". A first run has no file yet and falls back to whatever you pass, so pair it with a Save Setting on the button that switches.").param("fallback", "OS.get_locale()", "Otherwise", "What to use on a first run, before the player has chosen - the system locale is the friendly default.", "expression"))
 
 	return descriptors
 
@@ -209,36 +163,15 @@ static func _menu_descriptors() -> Array[ACEDescriptor]:
 static func _matching_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "LanguageMatches", "Language Matches", ACEDescriptor.ACEType.CONDITION,
-		"TranslationServer.compare_locales(TranslationServer.get_locale(), {locale}) > 0", "",
-		[F.make_param("locale", "String", "\"ja\"", "Language", "A locale code: \"ja\", \"pt\", or a full \"pt_BR\" when the region matters.", "expression")],
-		CAT, "language matches [b]{locale}[/b]")
-		.described("True when the game is running in that language, region or not - \"en\" matches a player on en_US and on en_GB, which is what a content branch almost always wants. Comparing Current Language to a string by hand is right for \"en\" exactly and wrong for every regional player.").featured())
+	descriptors.append(F.cond("LanguageMatches", "Language Matches", "TranslationServer.compare_locales(TranslationServer.get_locale(), {locale}) > 0", CAT, "language matches [b]{locale}[/b]", "True when the game is running in that language, region or not - \"en\" matches a player on en_US and on en_GB, which is what a content branch almost always wants. Comparing Current Language to a string by hand is right for \"en\" exactly and wrong for every regional player.").param("locale", "\"ja\"", "Language", "A locale code: \"ja\", \"pt\", or a full \"pt_BR\" when the region matters.", "expression").featured())
 
-	descriptors.append(F.make_descriptor("Core", "RegionIs", "Region Is", ACEDescriptor.ACEType.CONDITION,
-		"(str({country}) == str({country}).to_upper() and Array(TranslationServer.get_locale().split(\"_\")).slice(1).has({country}))", "",
-		[F.make_param("country", "String", "\"BR\"", "Region", "A country code in capitals: \"BR\", \"DE\", \"US\".", "expression")],
-		CAT, "region is [b]{country}[/b]")
-		.described("True when the active locale names that country - pt_BR is region BR, plain pt is no region at all and answers false. It looks at every subtag after the language rather than only the last one, so sr_Latn_RS reads RS and a locale carrying a variant (ca_ES_valencia) still reads ES; and a country code is capitals, so a script subtag like the Hans in zh_Hans can never be mistaken for one. For a region-gated screen (an imprint page, an age gate, a storefront link) rather than a translation."))
+	descriptors.append(F.cond("RegionIs", "Region Is", "(str({country}) == str({country}).to_upper() and Array(TranslationServer.get_locale().split(\"_\")).slice(1).has({country}))", CAT, "region is [b]{country}[/b]", "True when the active locale names that country - pt_BR is region BR, plain pt is no region at all and answers false. It looks at every subtag after the language rather than only the last one, so sr_Latn_RS reads RS and a locale carrying a variant (ca_ES_valencia) still reads ES; and a country code is capitals, so a script subtag like the Hans in zh_Hans can never be mistaken for one. For a region-gated screen (an imprint page, an age gate, a storefront link) rather than a translation.").param("country", "\"BR\"", "Region", "A country code in capitals: \"BR\", \"DE\", \"US\".", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "ValueForLanguage", "Value For Language", ACEDescriptor.ACEType.EXPRESSION,
-		"{choices}.get({choices}.keys().reduce(func(__best, __key): return __key if TranslationServer.compare_locales(TranslationServer.get_locale(), str(__key)) > TranslationServer.compare_locales(TranslationServer.get_locale(), str(__best)) else __best, \"\"), {fallback})", "",
-		[
-			F.make_param("choices", "Dictionary", "{\"ja\": 0, \"pt\": 1}", "Choices", "A record keyed by locale code: {\"ja\": JP_SPLASH, \"zh\": CN_SPLASH}. Values can be anything - a texture, a folder, a number.", "expression"),
-			F.make_param("fallback", "Variant", "null", "Otherwise", "What to use when no entry is close enough to the player's language.", "expression"),
-		], CAT, "value for the language from [b]{choices}[/b]")
-		.described("Picks the entry whose language BEST matches the player's, not the one that matches exactly - so a pt_BR player gets the \"pt\" entry and a zh_Hans player gets \"zh\". One row for a splash image, a voice folder, a name order, a currency shape or a regional variant. An entry that scores nothing leaves the fallback standing, so an unlisted language is never a wrong pick."))
+	descriptors.append(F.expr("ValueForLanguage", "Value For Language", "{choices}.get({choices}.keys().reduce(func(__best, __key): return __key if TranslationServer.compare_locales(TranslationServer.get_locale(), str(__key)) > TranslationServer.compare_locales(TranslationServer.get_locale(), str(__best)) else __best, \"\"), {fallback})", CAT, "value for the language from [b]{choices}[/b]", "Picks the entry whose language BEST matches the player's, not the one that matches exactly - so a pt_BR player gets the \"pt\" entry and a zh_Hans player gets \"zh\". One row for a splash image, a voice folder, a name order, a currency shape or a regional variant. An entry that scores nothing leaves the fallback standing, so an unlisted language is never a wrong pick.").param_typed("Dictionary", "choices", "{\"ja\": 0, \"pt\": 1}", "Choices", "A record keyed by locale code: {\"ja\": JP_SPLASH, \"zh\": CN_SPLASH}. Values can be anything - a texture, a folder, a number.", "expression").param_typed("Variant", "fallback", "null", "Otherwise", "What to use when no entry is close enough to the player's language.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "CurrentLanguageName", "Current Language Name", ACEDescriptor.ACEType.EXPRESSION,
-		"TranslationServer.get_locale_name(TranslationServer.get_locale())", "", [],
-		CAT, "current language name")
-		.described("The language the game is running in, written out in ENGLISH - \"Russian\", or \"Portuguese, Brazil\" when the locale carries a region. For the name its own speakers would recognise, use Language Name In Its Own Language."))
+	descriptors.append(F.expr("CurrentLanguageName", "Current Language Name", "TranslationServer.get_locale_name(TranslationServer.get_locale())", CAT, "current language name", "The language the game is running in, written out in ENGLISH - \"Russian\", or \"Portuguese, Brazil\" when the locale carries a region. For the name its own speakers would recognise, use Language Name In Its Own Language."))
 
-	descriptors.append(F.make_descriptor("Core", "CountryName", "Country Name", ACEDescriptor.ACEType.EXPRESSION,
-		"TranslationServer.get_country_name({country})", "",
-		[F.make_param("country", "String", "\"DE\"", "Region", "A country code in capitals, e.g. \"DE\" or \"BR\".", "expression")],
-		CAT, "name of country [b]{country}[/b]")
-		.described("Turns a country code into its readable name in English - \"DE\" reads \"Germany\". Pair it with Region Is when a screen has to name the region it is showing."))
+	descriptors.append(F.expr("CountryName", "Country Name", "TranslationServer.get_country_name({country})", CAT, "name of country [b]{country}[/b]", "Turns a country code into its readable name in English - \"DE\" reads \"Germany\". Pair it with Region Is when a screen has to name the region it is showing.").param("country", "\"DE\"", "Region", "A country code in capitals, e.g. \"DE\" or \"BR\".", "expression"))
 
 	return descriptors
 
@@ -250,21 +183,11 @@ static func _matching_descriptors() -> Array[ACEDescriptor]:
 static func _following_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "SetTextFollowsLanguage", "Set Text (follows language)", ACEDescriptor.ACEType.ACTION,
-		"set_meta(%s, {key})\nadd_to_group(%s, true)\ntext = tr({key})" % [FOLLOWS_META, FOLLOWS_GROUP], "",
-		[F.make_param("key", "String", "\"MENU_TITLE\"", "Key", "The source string or key. It is remembered ON this node, so a language switch can re-apply it.", "expression")],
-		CAT, "set text to [b]{key}[/b], following the language", "Label")
-		.described("Sets the text AND remembers which key it came from, so one Refresh row re-applies it when the language switches. Godot only re-renders text a Control still HOLDS as its source string; the moment a sheet looks a key up and assigns the result, that node stops following - this is the fix. The key is kept in the node's \"follows_language_key\" meta and the node joins the \"follows_language\" group. Plain keys only: for a sentence with values in it use Set Text (translated pattern) and re-run it from a function."))
+	descriptors.append(F.act("SetTextFollowsLanguage", "Set Text (follows language)", "set_meta(%s, {key})\nadd_to_group(%s, true)\ntext = tr({key})" % [FOLLOWS_META, FOLLOWS_GROUP], CAT, "set text to [b]{key}[/b], following the language", "Sets the text AND remembers which key it came from, so one Refresh row re-applies it when the language switches. Godot only re-renders text a Control still HOLDS as its source string; the moment a sheet looks a key up and assigns the result, that node stops following - this is the fix. The key is kept in the node's \"follows_language_key\" meta and the node joins the \"follows_language\" group. Plain keys only: for a sentence with values in it use Set Text (translated pattern) and re-run it from a function.", "Label").param("key", "\"MENU_TITLE\"", "Key", "The source string or key. It is remembered ON this node, so a language switch can re-apply it.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "RefreshFollowingText", "Refresh Text That Follows Language", ACEDescriptor.ACEType.ACTION,
-		"for __text_{uid}: Node in get_tree().get_nodes_in_group(%s):\n\tif is_instance_valid(__text_{uid}) and __text_{uid}.has_meta(%s):\n\t\t__text_{uid}.text = tr(str(__text_{uid}.get_meta(%s)))" % [FOLLOWS_GROUP, FOLLOWS_META, FOLLOWS_META], "", [],
-		CAT, "refresh text that follows the language")
-		.described("Re-applies every remembered key in the current language. One row under On Language Changed and every label written by Set Text (follows language) switches in place - no scene reload, no per-label wiring. Nodes are found through the \"follows_language\" group, so a node you tagged yourself is refreshed too."))
+	descriptors.append(F.act("RefreshFollowingText", "Refresh Text That Follows Language", "for __text_{uid}: Node in get_tree().get_nodes_in_group(%s):\n\tif is_instance_valid(__text_{uid}) and __text_{uid}.has_meta(%s):\n\t\t__text_{uid}.text = tr(str(__text_{uid}.get_meta(%s)))" % [FOLLOWS_GROUP, FOLLOWS_META, FOLLOWS_META], CAT, "refresh text that follows the language", "Re-applies every remembered key in the current language. One row under On Language Changed and every label written by Set Text (follows language) switches in place - no scene reload, no per-label wiring. Nodes are found through the \"follows_language\" group, so a node you tagged yourself is refreshed too."))
 
-	descriptors.append(F.make_descriptor("Core", "KeepTextUntranslated", "Keep This Text Untranslated", ACEDescriptor.ACEType.ACTION,
-		"auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED", "", [],
-		CAT, "keep this text untranslated", "Control")
-		.described("Stops Godot auto-translating this Control and everything under it - for text that is DATA, not writing: a player's name, chat, a save-slot label, a mod's item name, a debug overlay. Without it a save named \"Play\" turns into \"Jouer\" the moment a catalog happens to contain that word."))
+	descriptors.append(F.act("KeepTextUntranslated", "Keep This Text Untranslated", "auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED", CAT, "keep this text untranslated", "Stops Godot auto-translating this Control and everything under it - for text that is DATA, not writing: a player's name, chat, a save-slot label, a mod's item name, a debug overlay. Without it a save named \"Play\" turns into \"Jouer\" the moment a catalog happens to contain that word.", "Control"))
 
 	return descriptors
 
@@ -276,33 +199,11 @@ static func _following_descriptors() -> Array[ACEDescriptor]:
 static func _counted_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "CountedText", "Counted Text", ACEDescriptor.ACEType.EXPRESSION,
-		_PLURAL_FORM + _FILL_COUNT, "",
-		[
-			_singular_param("\"%d apple\"", "The one-item form, with %d where the number goes. This exact string is the catalog key."),
-			_plural_param("\"%d apples\"", "The many-items form."),
-			_count_param("How many - picks the form AND fills the number in."),
-		], CAT, "[b]{count}[/b] as counted text")
-		.described("Picks the form the player's language uses for this count AND fills the number into it, so \"%d apple\" / \"%d apples\" reads \"3 apples\". Translate Plural stops one step short: it returns the chosen form with the %d still in it, which is why a label built from it reads \"%d apples\". A gettext (.po) catalog carrying three Russian forms uses all three; a CSV catalog holds the two forms as two ordinary rows and the count picks between them, which is as far as that file format can go. Both forms must keep their %d - a translation that drops it comes back unfilled, and nothing errors.").featured())
+	descriptors.append(F.expr("CountedText", "Counted Text", _PLURAL_FORM + _FILL_COUNT, CAT, "[b]{count}[/b] as counted text", "Picks the form the player's language uses for this count AND fills the number into it, so \"%d apple\" / \"%d apples\" reads \"3 apples\". Translate Plural stops one step short: it returns the chosen form with the %d still in it, which is why a label built from it reads \"%d apples\". A gettext (.po) catalog carrying three Russian forms uses all three; a CSV catalog holds the two forms as two ordinary rows and the count picks between them, which is as far as that file format can go. Both forms must keep their %d - a translation that drops it comes back unfilled, and nothing errors.").param_built(_singular_param("\"%d apple\"", "The one-item form, with %d where the number goes. This exact string is the catalog key.")).param_built(_plural_param("\"%d apples\"", "The many-items form.")).param_built(_count_param("How many - picks the form AND fills the number in.")).featured())
 
-	descriptors.append(F.make_descriptor("Core", "CountedTextFromPattern", "Counted Text From Pattern", ACEDescriptor.ACEType.EXPRESSION,
-		_PLURAL_FORM + ".format({values})", "",
-		[
-			_singular_param("\"{n} chapter left\"", "The one-item sentence, with {name} slots. Slots and all, it is the catalog key."),
-			_plural_param("\"{n} chapters left\"", "The many-items sentence."),
-			_count_param("How many - picks which sentence the language uses."),
-			F.make_param("values", "String", "{\"n\": 1}", "Values", "What fills the slots: {\"n\": left, \"total\": total}.", "expression"),
-		], CAT, "counted text from [b]{singular}[/b]")
-		.described("The plural twin of Translated Text From Pattern: the language picks the form FIRST, then the slots fill. Use it when the sentence carries more than the count, so a translator can move {n} and {total} where their grammar wants them."))
+	descriptors.append(F.expr("CountedTextFromPattern", "Counted Text From Pattern", _PLURAL_FORM + ".format({values})", CAT, "counted text from [b]{singular}[/b]", "The plural twin of Translated Text From Pattern: the language picks the form FIRST, then the slots fill. Use it when the sentence carries more than the count, so a translator can move {n} and {total} where their grammar wants them.").param_built(_singular_param("\"{n} chapter left\"", "The one-item sentence, with {name} slots. Slots and all, it is the catalog key.")).param_built(_plural_param("\"{n} chapters left\"", "The many-items sentence.")).param_built(_count_param("How many - picks which sentence the language uses.")).param("values", "{\"n\": 1}", "Values", "What fills the slots: {\"n\": left, \"total\": total}.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "SetTextCounted", "Set Text (counted)", ACEDescriptor.ACEType.ACTION,
-		"text = " + _PLURAL_FORM + _FILL_COUNT, "",
-		[
-			_singular_param("\"%d apple\"", "The one-item form, with %d where the number goes. This exact string is the catalog key."),
-			_plural_param("\"%d apples\"", "The many-items form."),
-			_count_param("How many - picks the form AND fills the number in."),
-		], CAT, "set text to [b]{singular}[/b] / [b]{plural}[/b] for [b]{count}[/b]", "Label")
-		.described("Sets this Label to the counted sentence in one row: the language picks the form and the number is filled in. The same action as Counted Text without an expression to nest, down to keeping both forms' %d - a form that lost its %d comes back unfilled rather than erroring. Re-run it under On Language Changed so the line follows a live switch."))
+	descriptors.append(F.act("SetTextCounted", "Set Text (counted)", "text = " + _PLURAL_FORM + _FILL_COUNT, CAT, "set text to [b]{singular}[/b] / [b]{plural}[/b] for [b]{count}[/b]", "Sets this Label to the counted sentence in one row: the language picks the form and the number is filled in. The same action as Counted Text without an expression to nest, down to keeping both forms' %d - a form that lost its %d comes back unfilled rather than erroring. Re-run it under On Language Changed so the line follows a live switch.", "Label").param_built(_singular_param("\"%d apple\"", "The one-item form, with %d where the number goes. This exact string is the catalog key.")).param_built(_plural_param("\"%d apples\"", "The many-items form.")).param_built(_count_param("How many - picks the form AND fills the number in.")))
 
 	return descriptors
 
@@ -314,33 +215,13 @@ static func _counted_descriptors() -> Array[ACEDescriptor]:
 static func _missing_key_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "TextIsTranslated", "Text Is Translated", ACEDescriptor.ACEType.CONDITION,
-		"tr({key}) != {key}", "",
-		[F.make_param("key", "String", "\"MENU_TITLE\"", "Key", "The source string or key to look for.", "expression")],
-		CAT, "[b]{key}[/b] is translated")
-		.described("True when the active language has text for this key. A key with no entry comes back unchanged from tr(), which is exactly what a player then sees on screen - this is the row that catches it first. Note that a translation IDENTICAL to the source reads as untranslated; use Language Has Text For when that matters."))
+	descriptors.append(F.cond("TextIsTranslated", "Text Is Translated", "tr({key}) != {key}", CAT, "[b]{key}[/b] is translated", "True when the active language has text for this key. A key with no entry comes back unchanged from tr(), which is exactly what a player then sees on screen - this is the row that catches it first. Note that a translation IDENTICAL to the source reads as untranslated; use Language Has Text For when that matters.").param("key", "\"MENU_TITLE\"", "Key", "The source string or key to look for.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "LanguageHasTextFor", "Language Has Text For", ACEDescriptor.ACEType.CONDITION,
-		"(%s and not str(TranslationServer.get_translation_object({locale}).get_message({key})).is_empty())" % _EXACT_CATALOG, "",
-		[
-			F.make_param("locale", "String", "\"ja\"", "Language", "The locale code to ask.", "expression"),
-			F.make_param("key", "String", "\"MENU_TITLE\"", "Key", "The source string or key.", "expression"),
-		], CAT, "[b]{locale}[/b] has text for [b]{key}[/b]")
-		.described("Asks one language's catalog directly, without switching to it - the exact check, so a translation identical to its source still counts. Exact in the OTHER sense too: it answers about the catalog for that very locale, so a build shipping pt_BR answers false for \"pt_PT\" rather than handing back Brazilian text. A language with no catalog of its own answers false. Use it to offer a language only when the screen the player is about to see is actually translated."))
+	descriptors.append(F.cond("LanguageHasTextFor", "Language Has Text For", "(%s and not str(TranslationServer.get_translation_object({locale}).get_message({key})).is_empty())" % _EXACT_CATALOG, CAT, "[b]{locale}[/b] has text for [b]{key}[/b]", "Asks one language's catalog directly, without switching to it - the exact check, so a translation identical to its source still counts. Exact in the OTHER sense too: it answers about the catalog for that very locale, so a build shipping pt_BR answers false for \"pt_PT\" rather than handing back Brazilian text. A language with no catalog of its own answers false. Use it to offer a language only when the screen the player is about to see is actually translated.").param("locale", "\"ja\"", "Language", "The locale code to ask.", "expression").param("key", "\"MENU_TITLE\"", "Key", "The source string or key.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TranslatedTextOrFallback", "Translated Text Or Fallback", ACEDescriptor.ACEType.EXPRESSION,
-		"(tr({key}) if tr({key}) != {key} else {fallback})", "",
-		[
-			F.make_param("key", "String", "\"TUTORIAL_HINT\"", "Key", "The key to look up first.", "expression"),
-			F.make_param("fallback", "String", "tr(\"HINT_GENERIC\")", "Otherwise", "What to show when the key is missing - another translated key, a plain English line, or \"\" to show nothing.", "expression"),
-		], CAT, "[b]{key}[/b], or [b]{fallback}[/b]")
-		.described("Looks the key up and falls back when the active language has no entry, so a half-finished catalog never shows a raw key to a player. Chain them by putting another Translated Text Or Fallback in the Otherwise field."))
+	descriptors.append(F.expr("TranslatedTextOrFallback", "Translated Text Or Fallback", "(tr({key}) if tr({key}) != {key} else {fallback})", CAT, "[b]{key}[/b], or [b]{fallback}[/b]", "Looks the key up and falls back when the active language has no entry, so a half-finished catalog never shows a raw key to a player. Chain them by putting another Translated Text Or Fallback in the Otherwise field.").param("key", "\"TUTORIAL_HINT\"", "Key", "The key to look up first.", "expression").param("fallback", "tr(\"HINT_GENERIC\")", "Otherwise", "What to show when the key is missing - another translated key, a plain English line, or \"\" to show nothing.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TestWithFakeTranslation", "Test With Fake Translation", ACEDescriptor.ACEType.ACTION,
-		"TranslationServer.set_pseudolocalization_enabled({on})", "",
-		[F.make_param("on", "bool", "true", "On", "Turn the test mode on or off.", "expression")],
-		CAT, "test with fake translation: [b]{on}[/b]")
-		.described("Turns Godot's pseudolocalization on: every translatable string comes back accented and bracketed (\"Ready\" reads \"[Ready]\" with accents on every letter), so text that stays PLAIN is text you never marked. Length expansion is a separate Project Settings knob under Internationalization > Pseudolocalization - turn it up and a layout that overflows here will overflow in German. Gate it on a debug build."))
+	descriptors.append(F.act("TestWithFakeTranslation", "Test With Fake Translation", "TranslationServer.set_pseudolocalization_enabled({on})", CAT, "test with fake translation: [b]{on}[/b]", "Turns Godot's pseudolocalization on: every translatable string comes back accented and bracketed (\"Ready\" reads \"[Ready]\" with accents on every letter), so text that stays PLAIN is text you never marked. Length expansion is a separate Project Settings knob under Internationalization > Pseudolocalization - turn it up and a layout that overflows here will overflow in German. Gate it on a debug build.").param_typed("bool", "on", "true", "On", "Turn the test mode on or off.", "expression"))
 
 	return descriptors
 
@@ -352,23 +233,9 @@ static func _missing_key_descriptors() -> Array[ACEDescriptor]:
 static func _sentence_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "TranslatedTextFromPatternInContext", "Translated Text From Pattern In Context", ACEDescriptor.ACEType.EXPRESSION,
-		"tr({pattern}, {context}).format({values})", "",
-		[
-			F.make_param("pattern", "String", "\"{name} is ready.\"", "Pattern", "The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.", "expression"),
-			F.make_param("context", "String", "\"f\"", "Context", "Which variant to look up - \"f\" / \"m\" / \"n\" for a speaker's gender, \"formal\" / \"casual\" for register. It is an expression, so a variable works.", "expression"),
-			F.make_param("values", "String", "{\"name\": \"Ilsa\"}", "Values", "What fills the slots: {\"name\": value, ...} - e.g. {\"name\": hero_name}.", "expression"),
-		], CAT, "translated [b]{pattern}[/b] as [b]{context}[/b]")
-		.described("The two shipped halves in one row: the whole sentence is looked up in the current language WITH a context, then its {slots} fill. One key can hold a masculine, feminine and neutral translation, and the context can be read from a variable at runtime. A context with no entry falls back to the source sentence, so an unwritten variant still reads."))
+	descriptors.append(F.expr("TranslatedTextFromPatternInContext", "Translated Text From Pattern In Context", "tr({pattern}, {context}).format({values})", CAT, "translated [b]{pattern}[/b] as [b]{context}[/b]", "The two shipped halves in one row: the whole sentence is looked up in the current language WITH a context, then its {slots} fill. One key can hold a masculine, feminine and neutral translation, and the context can be read from a variable at runtime. A context with no entry falls back to the source sentence, so an unwritten variant still reads.").param("pattern", "\"{name} is ready.\"", "Pattern", "The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.", "expression").param("context", "\"f\"", "Context", "Which variant to look up - \"f\" / \"m\" / \"n\" for a speaker's gender, \"formal\" / \"casual\" for register. It is an expression, so a variable works.", "expression").param("values", "{\"name\": \"Ilsa\"}", "Values", "What fills the slots: {\"name\": value, ...} - e.g. {\"name\": hero_name}.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TranslatedTextWithWords", "Translated Text With Words", ACEDescriptor.ACEType.EXPRESSION,
-		"tr({pattern}).format({words}.merged({values}, true))", "",
-		[
-			F.make_param("pattern", "String", "\"{name} drew {their} sword.\"", "Pattern", "The source sentence with {name} slots. This exact string, slots and all, is the translation key.", "expression"),
-			F.make_param("words", "String", "{\"they\": \"she\", \"them\": \"her\", \"their\": \"her\"}", "Standing words", "A dictionary of words that stay the same all game - a character's pronouns, their title, their home town. Usually a sheet variable.", "expression"),
-			F.make_param("values", "String", "{\"name\": \"Ilsa\"}", "This line's values", "What this line adds, e.g. {\"name\": hero_name}. Same-named entries win over the standing words.", "expression"),
-		], CAT, "translated [b]{pattern}[/b] with the character's words")
-		.described("Fills a translated sentence from a standing word set plus this line's values, so a player-named, player-gendered character reads correctly everywhere without an if-chain per line. Keep the word set in one variable and every line follows a change to it. The translator receives one key with {name} and {they} slots and decides where they land in their own grammar."))
+	descriptors.append(F.expr("TranslatedTextWithWords", "Translated Text With Words", "tr({pattern}).format({words}.merged({values}, true))", CAT, "translated [b]{pattern}[/b] with the character's words", "Fills a translated sentence from a standing word set plus this line's values, so a player-named, player-gendered character reads correctly everywhere without an if-chain per line. Keep the word set in one variable and every line follows a change to it. The translator receives one key with {name} and {they} slots and decides where they land in their own grammar.").param("pattern", "\"{name} drew {their} sword.\"", "Pattern", "The source sentence with {name} slots. This exact string, slots and all, is the translation key.", "expression").param("words", "{\"they\": \"she\", \"them\": \"her\", \"their\": \"her\"}", "Standing words", "A dictionary of words that stay the same all game - a character's pronouns, their title, their home town. Usually a sheet variable.", "expression").param("values", "{\"name\": \"Ilsa\"}", "This line's values", "What this line adds, e.g. {\"name\": hero_name}. Same-named entries win over the standing words.", "expression"))
 
 	return descriptors
 
@@ -380,33 +247,13 @@ static func _sentence_descriptors() -> Array[ACEDescriptor]:
 static func _number_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "NumberInLocalDigits", "Number In Local Digits", ACEDescriptor.ACEType.EXPRESSION,
-		"TranslationServer.format_number(str({value}), {locale})", "",
-		[
-			F.make_param("value", "String", "1234", "Value", "The number to write out.", "expression"),
-			_in_language_param("Which language's digits. Leave it as the active language."),
-		], CAT, "[b]{value}[/b] in local digits")
-		.described("Writes a number in the digits the language uses, so an Arabic player reads Arabic-Indic numerals and an English one reads 1234. Digits ONLY - it does not group thousands (that is With Thousands Separators, which is comma-only). A language Godot has no digit set for comes back unchanged, which is most of them, so this is safe to leave on everywhere."))
+	descriptors.append(F.expr("NumberInLocalDigits", "Number In Local Digits", "TranslationServer.format_number(str({value}), {locale})", CAT, "[b]{value}[/b] in local digits", "Writes a number in the digits the language uses, so an Arabic player reads Arabic-Indic numerals and an English one reads 1234. Digits ONLY - it does not group thousands (that is With Thousands Separators, which is comma-only). A language Godot has no digit set for comes back unchanged, which is most of them, so this is safe to leave on everywhere.").param("value", "1234", "Value", "The number to write out.", "expression").param_built(_in_language_param("Which language's digits. Leave it as the active language.")))
 
-	descriptors.append(F.make_descriptor("Core", "NumberFromLocalDigits", "Number From Local Digits", ACEDescriptor.ACEType.EXPRESSION,
-		"TranslationServer.parse_number({text}, {locale})", "",
-		[
-			F.make_param("text", "String", "\"\"", "Text", "What the player typed - a field's text.", "expression"),
-			_in_language_param("Which language's digits it is written in."),
-		], CAT, "[b]{text}[/b] from local digits")
-		.described("Turns digits the player typed in their own numeral system back into plain ASCII ones you can put through Whole Number From Text - the return trip for Number In Local Digits, so a quantity field works for every player."))
+	descriptors.append(F.expr("NumberFromLocalDigits", "Number From Local Digits", "TranslationServer.parse_number({text}, {locale})", CAT, "[b]{text}[/b] from local digits", "Turns digits the player typed in their own numeral system back into plain ASCII ones you can put through Whole Number From Text - the return trip for Number In Local Digits, so a quantity field works for every player.").param("text", "\"\"", "Text", "What the player typed - a field's text.", "expression").param_built(_in_language_param("Which language's digits it is written in.")))
 
-	descriptors.append(F.make_descriptor("Core", "PercentSign", "Percent Sign", ACEDescriptor.ACEType.EXPRESSION,
-		"TranslationServer.get_percent_sign({locale})", "",
-		[_in_language_param("Which language's percent sign. Leave it as the active language.")],
-		CAT, "percent sign")
-		.described("The percent sign the language writes - Arabic and Persian use their own. Pair it with Number In Local Digits instead of typing \"%\" into a label."))
+	descriptors.append(F.expr("PercentSign", "Percent Sign", "TranslationServer.get_percent_sign({locale})", CAT, "percent sign", "The percent sign the language writes - Arabic and Persian use their own. Pair it with Number In Local Digits instead of typing \"%\" into a label.").param_built(_in_language_param("Which language's percent sign. Leave it as the active language.")))
 
-	descriptors.append(F.make_descriptor("Core", "DateParts", "Date Parts", ACEDescriptor.ACEType.EXPRESSION,
-		"Time.get_datetime_dict_from_unix_time(int({unix}))", "",
-		[F.make_param("unix", "String", "Time.get_unix_time_from_system()", "Unix time", "A timestamp in seconds, e.g. the shipped Unix Time expression or one you saved.", "expression")],
-		CAT, "date parts of [b]{unix}[/b]")
-		.described("A date broken into {year}, {month}, {day}, {hour}, {minute}, {second} and {weekday}, ready to fill a translated pattern - so DATE_FORMAT reads \"{month}/{day}/{year}\" in English and \"{day}.{month}.{year}\" in German, and a translator fixes the order without a build. Drop it into the Values field of Set Text (translated pattern). The parts are UTC, the same clock Unix Time reads."))
+	descriptors.append(F.expr("DateParts", "Date Parts", "Time.get_datetime_dict_from_unix_time(int({unix}))", CAT, "date parts of [b]{unix}[/b]", "A date broken into {year}, {month}, {day}, {hour}, {minute}, {second} and {weekday}, ready to fill a translated pattern - so DATE_FORMAT reads \"{month}/{day}/{year}\" in English and \"{day}.{month}.{year}\" in German, and a translator fixes the order without a build. Drop it into the Values field of Set Text (translated pattern). The parts are UTC, the same clock Unix Time reads.").param("unix", "Time.get_unix_time_from_system()", "Unix time", "A timestamp in seconds, e.g. the shipped Unix Time expression or one you saved.", "expression"))
 
 	return descriptors
 

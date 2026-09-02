@@ -20,15 +20,10 @@ const CATEGORY := "Follow a Path"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "MoveAlongPathAt", "Move Along Path", ACEDescriptor.ACEType.ACTION, "progress += {speed} * get_process_delta_time()", "", [F.make_param("speed", "String", "80.0", "Speed", "How far along the route it travels each second.", "expression")], CATEGORY, "Move along path at {speed}", "PathFollow2D")
-		.described("Walks this follower along its route at a steady speed, whatever the frame rate."))
-	descriptors.append(F.make_descriptor("Core", "PathReachedEnd", "Has Reached The End", ACEDescriptor.ACEType.CONDITION, "progress_ratio >= 1.0", "", [], CATEGORY, "Has reached the end", "PathFollow2D")
-		.described("True once this follower has travelled the whole route."))
-	descriptors.append(F.make_descriptor("Core", "PathGoToStart", "Go To Start", ACEDescriptor.ACEType.ACTION, "progress = 0.0", "", [], CATEGORY, "Go to start", "PathFollow2D")
-		.described("Sends this follower back to the beginning of its route."))
-	descriptors.append(F.make_descriptor("Core", "SetPathLooping", "Set Looping", ACEDescriptor.ACEType.ACTION, "loop = {looping}", "", [F.make_param("looping", "String", "true", "Looping", "Start again at the beginning on reaching the end?", "", ["true", "false"])], CATEGORY, "Set looping {looping}", "PathFollow2D")
-		.described("Decides whether a follower that reaches the end starts again at the beginning."))
-	descriptors.append(F.make_descriptor("Core", "SetPathRotates", "Set Rotate With Path", ACEDescriptor.ACEType.ACTION, "rotates = {rotating}", "", [F.make_param("rotating", "String", "true", "Rotate", "Turn to face the way the route is heading?", "", ["true", "false"])], CATEGORY, "Set rotate with path {rotating}", "PathFollow2D")
-		.described("Decides whether a follower turns to face the way its route is heading."))
+	descriptors.append(F.act("MoveAlongPathAt", "Move Along Path", "progress += {speed} * get_process_delta_time()", CATEGORY, "Move along path at {speed}", "Walks this follower along its route at a steady speed, whatever the frame rate.", "PathFollow2D").param("speed", "80.0", "Speed", "How far along the route it travels each second.", "expression"))
+	descriptors.append(F.cond("PathReachedEnd", "Has Reached The End", "progress_ratio >= 1.0", CATEGORY, "Has reached the end", "True once this follower has travelled the whole route.", "PathFollow2D"))
+	descriptors.append(F.act("PathGoToStart", "Go To Start", "progress = 0.0", CATEGORY, "Go to start", "Sends this follower back to the beginning of its route.", "PathFollow2D"))
+	descriptors.append(F.act("SetPathLooping", "Set Looping", "loop = {looping}", CATEGORY, "Set looping {looping}", "Decides whether a follower that reaches the end starts again at the beginning.", "PathFollow2D").param_choice("looping", "true", "Looping", "Start again at the beginning on reaching the end?", ["true", "false"]))
+	descriptors.append(F.act("SetPathRotates", "Set Rotate With Path", "rotates = {rotating}", CATEGORY, "Set rotate with path {rotating}", "Decides whether a follower turns to face the way its route is heading.", "PathFollow2D").param_choice("rotating", "true", "Rotate", "Turn to face the way the route is heading?", ["true", "false"]))
 
 	return descriptors

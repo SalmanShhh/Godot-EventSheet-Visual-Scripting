@@ -62,71 +62,23 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# -- An asset that has a language --
-	descriptors.append(F.make_descriptor("Core", "LocalizedFile", "Localized File", ACEDescriptor.ACEType.EXPRESSION,
-		localized_path_expression("{path}"), "",
-		[_path_param()],
-		CAT_TRANSLATION, "localized file for [b]{path}[/b]")
-		.described("The path that exists for the player's language. A language variant sits beside the base file as <name>.<locale>.<ext> - sign.ja.png, sign.pt_BR.png - and a player on pt_BR falls back to sign.pt.png and then to the base file, so no variant on disk simply means the base file rather than a missing-file error. Use it when you want the PATH; Load For Language when you want the asset."))
+	descriptors.append(F.expr("LocalizedFile", "Localized File", localized_path_expression("{path}"), CAT_TRANSLATION, "localized file for [b]{path}[/b]", "The path that exists for the player's language. A language variant sits beside the base file as <name>.<locale>.<ext> - sign.ja.png, sign.pt_BR.png - and a player on pt_BR falls back to sign.pt.png and then to the base file, so no variant on disk simply means the base file rather than a missing-file error. Use it when you want the PATH; Load For Language when you want the asset.").param_built(_path_param()))
 
-	descriptors.append(F.make_descriptor("Core", "LoadLocalized", "Load For Language", ACEDescriptor.ACEType.EXPRESSION,
-		"load(%s)" % localized_path_expression("{path}"), "",
-		[_path_param()],
-		CAT_TRANSLATION, "load [b]{path}[/b] for the current language")
-		.described("Loads the variant of an asset that matches the player's language - a translated sign, a dubbed line, a font with the glyphs that language needs, a re-lettered scene. Name the variant <name>.<locale>.<ext> beside the base file and nothing else has to change. Run it under On Language Changed: a preload freezes its choice when the script loads and never follows a live switch. A project that uses Project Settings > Localization > Remaps instead still gets its remap here, because the no-variant answer is the plain base path.").featured())
+	descriptors.append(F.expr("LoadLocalized", "Load For Language", "load(%s)" % localized_path_expression("{path}"), CAT_TRANSLATION, "load [b]{path}[/b] for the current language", "Loads the variant of an asset that matches the player's language - a translated sign, a dubbed line, a font with the glyphs that language needs, a re-lettered scene. Name the variant <name>.<locale>.<ext> beside the base file and nothing else has to change. Run it under On Language Changed: a preload freezes its choice when the script loads and never follows a live switch. A project that uses Project Settings > Localization > Remaps instead still gets its remap here, because the no-variant answer is the plain base path.").param_built(_path_param()).featured())
 
 	# -- A voice line that cannot out-run its subtitle --
-	descriptors.append(F.make_descriptor("Core", "SayLine", "Say Line", ACEDescriptor.ACEType.ACTION,
-		_say_line_template(), "",
-		[
-			_voice_key_param(),
-			_voice_folder_param(),
-			_clip_format_param(),
-			F.make_param("caption", "String", "null", "Caption on", "The label the subtitle lands on, e.g. $HUD/Subtitle - a Label, a RichTextLabel, anything with text. Leave it null for voice with no caption.", "expression"),
-			_target_param(),
-		],
-		CAT_VOICE, "say [b]{key}[/b] with its subtitle", "AudioStreamPlayer")
-		.described("Plays this key's clip in the player's language and holds the translated line on a label for exactly as long as the clip runs, so a longer translation is never cut off and a shorter one never lingers. A language with no clip holds the caption for its own reading time instead (about 14 characters a second, never under 1.2s), which is also the whole accessibility-subtitle path. The caption goes up with the line and comes down with it, so the two can never drift apart.").featured())
+	descriptors.append(F.act("SayLine", "Say Line", _say_line_template(), CAT_VOICE, "say [b]{key}[/b] with its subtitle", "Plays this key's clip in the player's language and holds the translated line on a label for exactly as long as the clip runs, so a longer translation is never cut off and a shorter one never lingers. A language with no clip holds the caption for its own reading time instead (about 14 characters a second, never under 1.2s), which is also the whole accessibility-subtitle path. The caption goes up with the line and comes down with it, so the two can never drift apart.", "AudioStreamPlayer").param_built(_voice_key_param()).param_built(_voice_folder_param()).param_built(_clip_format_param()).param("caption", "null", "Caption on", "The label the subtitle lands on, e.g. $HUD/Subtitle - a Label, a RichTextLabel, anything with text. Leave it null for voice with no caption.", "expression").param_built(_target_param()).featured())
 
-	descriptors.append(F.make_descriptor("Core", "HasVoiceForLanguage", "Has Voice For Language", ACEDescriptor.ACEType.CONDITION,
-		"not %s.is_empty()" % voice_clip_expression("{folder}", "{key}", "{extension}"), "",
-		[_voice_key_param(), _voice_folder_param(), _clip_format_param()],
-		CAT_VOICE, "there is a voice line for [b]{key}[/b] in this language")
-		.described("True when the player's language actually ships a clip for this key - the gate under \"dub it if we have it, subtitle it if we do not\", so a partly dubbed build degrades on purpose instead of going silent. A player on de_AT counts the de folder as theirs."))
+	descriptors.append(F.cond("HasVoiceForLanguage", "Has Voice For Language", "not %s.is_empty()" % voice_clip_expression("{folder}", "{key}", "{extension}"), CAT_VOICE, "there is a voice line for [b]{key}[/b] in this language", "True when the player's language actually ships a clip for this key - the gate under \"dub it if we have it, subtitle it if we do not\", so a partly dubbed build degrades on purpose instead of going silent. A player on de_AT counts the de folder as theirs.").param_built(_voice_key_param()).param_built(_voice_folder_param()).param_built(_clip_format_param()))
 
-	descriptors.append(F.make_descriptor("Core", "VoiceLineLength", "Voice Line Length", ACEDescriptor.ACEType.EXPRESSION,
-		_voice_length_expression("{folder}", "{key}", "{extension}"), "",
-		[_voice_key_param(), _voice_folder_param(), _clip_format_param()],
-		CAT_VOICE, "length of the voice line for [b]{key}[/b]")
-		.described("How many seconds this key's clip runs in the player's language, for pacing a cutscene off the audio rather than off a guess. A language that ships no clip answers 0.0, so a Wait built on it does not stall a subtitle-only build."))
+	descriptors.append(F.expr("VoiceLineLength", "Voice Line Length", _voice_length_expression("{folder}", "{key}", "{extension}"), CAT_VOICE, "length of the voice line for [b]{key}[/b]", "How many seconds this key's clip runs in the player's language, for pacing a cutscene off the audio rather than off a guess. A language that ships no clip answers 0.0, so a Wait built on it does not stall a subtitle-only build.").param_built(_voice_key_param()).param_built(_voice_folder_param()).param_built(_clip_format_param()))
 
-	descriptors.append(F.make_descriptor("Core", "ReadingTimeOf", "Reading Time Of", ACEDescriptor.ACEType.EXPRESSION,
-		reading_time_expression("{text}", "{chars_per_second}", "{minimum_seconds}"), "",
-		[
-			F.make_param("text", "String", "\"You there! Over here!\"", "Text", "The text that has to be read - usually an already translated line, since a translation is a different LENGTH in every language.", "expression"),
-			F.make_param("chars_per_second", "String", DEFAULT_READING_SPEED, "Characters per second", "How fast a reader gets through it. 14 is a comfortable subtitle pace; lower it for a young audience, or for a language whose characters each carry a whole word.", "expression"),
-			F.make_param("minimum_seconds", "String", DEFAULT_READING_FLOOR, "Never shorter than", "The floor, so a two-word line is still readable rather than a flash.", "expression"),
-		],
-		CAT_TEXT, "reading time of [b]{text}[/b]")
-		.described("How long a caption should stay up for text this long, with a floor so a short line is still readable. Feed it the TRANSLATED text and every language gets the time it needs - the honest answer for a toast, a tutorial hint, a bark, or a subtitle in a language you never dubbed."))
+	descriptors.append(F.expr("ReadingTimeOf", "Reading Time Of", reading_time_expression("{text}", "{chars_per_second}", "{minimum_seconds}"), CAT_TEXT, "reading time of [b]{text}[/b]", "How long a caption should stay up for text this long, with a floor so a short line is still readable. Feed it the TRANSLATED text and every language gets the time it needs - the honest answer for a toast, a tutorial hint, a bark, or a subtitle in a language you never dubbed.").param("text", "\"You there! Over here!\"", "Text", "The text that has to be read - usually an already translated line, since a translation is a different LENGTH in every language.", "expression").param_typed("String", "chars_per_second", DEFAULT_READING_SPEED, "Characters per second", "How fast a reader gets through it. 14 is a comfortable subtitle pace; lower it for a young audience, or for a language whose characters each carry a whole word.", "expression").param_typed("String", "minimum_seconds", DEFAULT_READING_FLOOR, "Never shorter than", "The floor, so a two-word line is still readable rather than a flash.", "expression"))
 
 	# -- A data cell that holds a key --
-	descriptors.append(F.make_descriptor("Core", "TranslatedField", "Translated Field Of", ACEDescriptor.ACEType.EXPRESSION,
-		translated_field_expression("{record}", "{field}"), "",
-		[
-			F.make_param("record", "String", "item", "Record", "One record: a table row (Table From File, Row Where), a data asset (a Quest, a price entry, a storylet), or the current item of a For Each.", "expression"),
-			F.make_param("field", "String", "\"title\"", "Field", "Which field holds the text. Reading a field on a data asset and on a table row is the same row here.", "expression"),
-		],
-		CAT_TRANSLATION, "translated [b]{field}[/b] of [b]{record}[/b]")
-		.described("Reads a field as a translation KEY and hands back the player's language, so one .tres serves every language and the grid never needs a column per locale. It is safe to put on a pack that still stores plain English in that cell: an entry no catalog contains comes back exactly as it was written. A key with no entry comes back as the key itself, which is how a missing translation should show up - a visible \"quest.bridge.title\" rather than blank text."))
+	descriptors.append(F.expr("TranslatedField", "Translated Field Of", translated_field_expression("{record}", "{field}"), CAT_TRANSLATION, "translated [b]{field}[/b] of [b]{record}[/b]", "Reads a field as a translation KEY and hands back the player's language, so one .tres serves every language and the grid never needs a column per locale. It is safe to put on a pack that still stores plain English in that cell: an entry no catalog contains comes back exactly as it was written. A key with no entry comes back as the key itself, which is how a missing translation should show up - a visible \"quest.bridge.title\" rather than blank text.").param("record", "item", "Record", "One record: a table row (Table From File, Row Where), a data asset (a Quest, a price entry, a storylet), or the current item of a For Each.", "expression").param("field", "\"title\"", "Field", "Which field holds the text. Reading a field on a data asset and on a table row is the same row here.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "TranslatedColumn", "Translated Column Of Table", ACEDescriptor.ACEType.EXPRESSION,
-		"{table}.map(func(__record): return %s)" % translated_field_expression("__record", "{column}"), "",
-		[
-			F.make_param("table", "String", "table", "Table", "The rows-of-records variable a Table From File (or Table From Text) expression filled, or a list of data assets.", "variable_reference:Array"),
-			F.make_param("column", "String", "\"label\"", "Column", "The field holding the text, spelled as it is in the header row.", "expression"),
-		],
-		CAT_TRANSLATION, "translated column [b]{column}[/b] of [b]{table}[/b]")
-		.described("A whole column read as translated text, in row order - a dropdown's items, a quest log, a shop list. Column Of Table gives you the cells; this gives you the words. A row missing that field contributes empty text rather than dropping out, so the list stays the same length as the table."))
+	descriptors.append(F.expr("TranslatedColumn", "Translated Column Of Table", "{table}.map(func(__record): return %s)" % translated_field_expression("__record", "{column}"), CAT_TRANSLATION, "translated column [b]{column}[/b] of [b]{table}[/b]", "A whole column read as translated text, in row order - a dropdown's items, a quest log, a shop list. Column Of Table gives you the cells; this gives you the words. A row missing that field contributes empty text rather than dropping out, so the list stays the same length as the table.").param("table", "table", "Table", "The rows-of-records variable a Table From File (or Table From Text) expression filled, or a list of data assets.", "variable_reference:Array").param("column", "\"label\"", "Column", "The field holding the text, spelled as it is in the header row.", "expression"))
 
 	return descriptors
 

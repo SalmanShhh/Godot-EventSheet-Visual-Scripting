@@ -26,21 +26,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── Actions ──
-	descriptors.append(F.make_descriptor("Core", "AjaxRequest", "Request", ACEDescriptor.ACEType.ACTION, "{node}.request({url})", "", [F.make_param("node", "String", NODE_DEFAULT, "Request node", "The HTTPRequest node that does the asking.", "expression"), F.make_param("url", "String", "\"https://example.com/scores\"", "URL", "The address to ask.", "expression")], CAT, "Request {url}")
-		.described("Asks a server for something. The answer arrives on the request node's completed signal, not on this row.").featured())
-	descriptors.append(F.make_descriptor("Core", "AjaxPost", "Post", ACEDescriptor.ACEType.ACTION, "{node}.request({url}, [], HTTPClient.METHOD_POST, {data})", "", [F.make_param("node", "String", NODE_DEFAULT, "Request node", "The HTTPRequest node that does the sending.", "expression"), F.make_param("data", "String", "\"{}\"", "Data", "The body to send, as text. Build it with JSON ToString.", "expression"), F.make_param("url", "String", "\"https://example.com/post\"", "URL", "The address to send it to.", "expression")], CAT, "Post {data} to {url}")
-		.described("Sends something to a server. The answer arrives the same way a Request's does.").featured())
-	descriptors.append(F.make_descriptor("Core", "AjaxCancel", "Cancel Request", ACEDescriptor.ACEType.ACTION, "{node}.cancel_request()", "", [F.make_param("node", "String", NODE_DEFAULT, "Request node", "The HTTPRequest node to stop.", "expression")], CAT, "Cancel request")
-		.described("Stops a request that is still in flight. Safe to call when nothing is in flight."))
+	descriptors.append(F.act("AjaxRequest", "Request", "{node}.request({url})", CAT, "Request {url}", "Asks a server for something. The answer arrives on the request node's completed signal, not on this row.").param_typed("String", "node", NODE_DEFAULT, "Request node", "The HTTPRequest node that does the asking.", "expression").param("url", "\"https://example.com/scores\"", "URL", "The address to ask.", "expression").featured())
+	descriptors.append(F.act("AjaxPost", "Post", "{node}.request({url}, [], HTTPClient.METHOD_POST, {data})", CAT, "Post {data} to {url}", "Sends something to a server. The answer arrives the same way a Request's does.").param_typed("String", "node", NODE_DEFAULT, "Request node", "The HTTPRequest node that does the sending.", "expression").param("data", "\"{}\"", "Data", "The body to send, as text. Build it with JSON ToString.", "expression").param("url", "\"https://example.com/post\"", "URL", "The address to send it to.", "expression").featured())
+	descriptors.append(F.act("AjaxCancel", "Cancel Request", "{node}.cancel_request()", CAT, "Cancel request", "Stops a request that is still in flight. Safe to call when nothing is in flight.").param_typed("String", "node", NODE_DEFAULT, "Request node", "The HTTPRequest node to stop.", "expression"))
 
 	# ── Conditions ──
-	descriptors.append(F.make_descriptor("Core", "AjaxRequestSucceeded", "Request Succeeded", ACEDescriptor.ACEType.CONDITION, "{result} == HTTPRequest.RESULT_SUCCESS", "", [F.make_param("result", "String", "0", "Result", "The result value the completed signal handed over.", "expression")], CAT, "request succeeded")
-		.described("True when the request reached the server and came back. Invert it for the early return every handler starts with.").featured())
-	descriptors.append(F.make_descriptor("Core", "AjaxStatusIsOk", "Status Is OK", ACEDescriptor.ACEType.CONDITION, "{code} == 200", "", [F.make_param("code", "String", "200", "Status code", "The HTTP status the completed signal handed over.", "expression")], CAT, "status is OK")
-		.described("True when the server answered 200. A request can succeed and still be answered with a 404."))
+	descriptors.append(F.cond("AjaxRequestSucceeded", "Request Succeeded", "{result} == HTTPRequest.RESULT_SUCCESS", CAT, "request succeeded", "True when the request reached the server and came back. Invert it for the early return every handler starts with.").param("result", "0", "Result", "The result value the completed signal handed over.", "expression").featured())
+	descriptors.append(F.cond("AjaxStatusIsOk", "Status Is OK", "{code} == 200", CAT, "status is OK", "True when the server answered 200. A request can succeed and still be answered with a 404.").param("code", "200", "Status code", "The HTTP status the completed signal handed over.", "expression"))
 
 	# ── Expressions ──
-	descriptors.append(F.make_descriptor("Core", "AjaxLastData", "Last Data", ACEDescriptor.ACEType.EXPRESSION, "{body}.get_string_from_utf8()", "", [F.make_param("body", "String", "PackedByteArray()", "Body", "The bytes the completed signal handed over.", "expression")], CAT, "AJAX.LastData")
-		.described("The answer that just arrived, as text. Feed it to JSON Parse when the server speaks JSON.").featured())
+	descriptors.append(F.expr("AjaxLastData", "Last Data", "{body}.get_string_from_utf8()", CAT, "AJAX.LastData", "The answer that just arrived, as text. Feed it to JSON Parse when the server speaks JSON.").param("body", "PackedByteArray()", "Body", "The bytes the completed signal handed over.", "expression").featured())
 
 	return descriptors

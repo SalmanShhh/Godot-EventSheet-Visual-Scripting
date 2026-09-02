@@ -27,64 +27,24 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var d: Array[ACEDescriptor] = []
 
 	# --- Higher-order functions (the author names the element; the body is a plain expression) ---
-	d.append(F.make_descriptor("Core", "ArrayFilter", "Filter", ACEDescriptor.ACEType.EXPRESSION,
-		"{var_name}.filter(func({element}): return {predicate})", "",
-		[_arr(), _predicate("Keep where", "x > 0", "A test on the current element; an element is KEPT when it is true (e.g. x > 0, x.alive, x.health < 50)."), _element()],
-		CAT, "filter {var_name} where {predicate}")
-		.described("Returns a NEW array with only the elements where the test is true (the original is unchanged). The current element is named by the Element field - `x` unless you rename it. Godot's Array.filter()."))
+	d.append(F.expr("ArrayFilter", "Filter", "{var_name}.filter(func({element}): return {predicate})", CAT, "filter {var_name} where {predicate}", "Returns a NEW array with only the elements where the test is true (the original is unchanged). The current element is named by the Element field - `x` unless you rename it. Godot's Array.filter().").param_built(_arr()).param_built(_predicate("Keep where", "x > 0", "A test on the current element; an element is KEPT when it is true (e.g. x > 0, x.alive, x.health < 50).")).param_built(_element()))
 
-	d.append(F.make_descriptor("Core", "ArrayMap", "Map", ACEDescriptor.ACEType.EXPRESSION,
-		"{var_name}.map(func({element}): return {expression})", "",
-		[_arr(), F.make_param("expression", "String", "x * 2", "Transform to", "What each element becomes (e.g. x * 2, x.name, str(x)).", "expression"), _element()],
-		CAT, "map {var_name} with {expression}")
-		.described("Returns a NEW array with every element transformed by the expression (the original is unchanged). The current element is named by the Element field - `x` unless you rename it. Godot's Array.map()."))
+	d.append(F.expr("ArrayMap", "Map", "{var_name}.map(func({element}): return {expression})", CAT, "map {var_name} with {expression}", "Returns a NEW array with every element transformed by the expression (the original is unchanged). The current element is named by the Element field - `x` unless you rename it. Godot's Array.map().").param_built(_arr()).param("expression", "x * 2", "Transform to", "What each element becomes (e.g. x * 2, x.name, str(x)).", "expression").param_built(_element()))
 
-	d.append(F.make_descriptor("Core", "ArrayReduce", "Reduce", ACEDescriptor.ACEType.EXPRESSION,
-		"{var_name}.reduce(func({accumulator}, {element}): return {expression}, {seed})", "",
-		[_arr(),
-			F.make_param("expression", "String", "acc + x", "Combine", "How to fold the current element into the running result (e.g. acc + x to sum, max(acc, x) for the biggest).", "expression"),
-			F.make_param("seed", "String", "0", "Starting value", "The initial running result, before the first element (e.g. 0 to sum, 1 to multiply, [] to build an array). Required - Reduce always starts from a value here.", "expression"),
-			_element(),
-			F.make_param("accumulator", "String", "acc", "Accumulator name", "What to call the running result inside the Combine expression. Rename it if your sheet already has a variable called acc.", "expression")],
-		CAT, "reduce {var_name} with {expression} from {seed}")
-		.described("Folds the whole array down to a SINGLE value: the accumulator holds the running result (starting at the seed) and is combined with each element in turn - e.g. acc + x from 0 sums the array. Godot's Array.reduce()."))
+	d.append(F.expr("ArrayReduce", "Reduce", "{var_name}.reduce(func({accumulator}, {element}): return {expression}, {seed})", CAT, "reduce {var_name} with {expression} from {seed}", "Folds the whole array down to a SINGLE value: the accumulator holds the running result (starting at the seed) and is combined with each element in turn - e.g. acc + x from 0 sums the array. Godot's Array.reduce().").param_built(_arr()).param("expression", "acc + x", "Combine", "How to fold the current element into the running result (e.g. acc + x to sum, max(acc, x) for the biggest).", "expression").param("seed", "0", "Starting value", "The initial running result, before the first element (e.g. 0 to sum, 1 to multiply, [] to build an array). Required - Reduce always starts from a value here.", "expression").param_built(_element()).param("accumulator", "acc", "Accumulator name", "What to call the running result inside the Combine expression. Rename it if your sheet already has a variable called acc.", "expression"))
 
-	d.append(F.make_descriptor("Core", "ArrayAny", "Any Match", ACEDescriptor.ACEType.CONDITION,
-		"{var_name}.any(func({element}): return {predicate})", "",
-		[_arr(), _predicate("Where", "x > 0", "A test on the current element."), _element()],
-		CAT, "any of {var_name} where {predicate}")
-		.described("True when AT LEAST ONE element satisfies the test; FALSE for an empty array. The current element is named by the Element field - `x` unless you rename it. Godot's Array.any()."))
+	d.append(F.cond("ArrayAny", "Any Match", "{var_name}.any(func({element}): return {predicate})", CAT, "any of {var_name} where {predicate}", "True when AT LEAST ONE element satisfies the test; FALSE for an empty array. The current element is named by the Element field - `x` unless you rename it. Godot's Array.any().").param_built(_arr()).param_built(_predicate("Where", "x > 0", "A test on the current element.")).param_built(_element()))
 
-	d.append(F.make_descriptor("Core", "ArrayAll", "All Match", ACEDescriptor.ACEType.CONDITION,
-		"{var_name}.all(func({element}): return {predicate})", "",
-		[_arr(), _predicate("Where", "x > 0", "A test on the current element."), _element()],
-		CAT, "all of {var_name} where {predicate}")
-		.described("True when EVERY element satisfies the test; also TRUE for an empty array (there is nothing that fails). The current element is named by the Element field - `x` unless you rename it. Godot's Array.all()."))
+	d.append(F.cond("ArrayAll", "All Match", "{var_name}.all(func({element}): return {predicate})", CAT, "all of {var_name} where {predicate}", "True when EVERY element satisfies the test; also TRUE for an empty array (there is nothing that fails). The current element is named by the Element field - `x` unless you rename it. Godot's Array.all().").param_built(_arr()).param_built(_predicate("Where", "x > 0", "A test on the current element.")).param_built(_element()))
 
 	# --- Typed arrays (Array[int], Array[String], ...) ---
-	d.append(F.make_descriptor("Core", "ArrayIsTyped", "Is Typed", ACEDescriptor.ACEType.CONDITION,
-		"{var_name}.is_typed()", "",
-		[_arr()],
-		CAT, "{var_name} is a typed array")
-		.described("True when the array is a typed container (e.g. Array[int]) rather than a plain untyped Array. Godot's Array.is_typed()."))
+	d.append(F.cond("ArrayIsTyped", "Is Typed", "{var_name}.is_typed()", CAT, "{var_name} is a typed array", "True when the array is a typed container (e.g. Array[int]) rather than a plain untyped Array. Godot's Array.is_typed().").param_built(_arr()))
 
-	d.append(F.make_descriptor("Core", "ArrayAssign", "Assign (Type-Converting)", ACEDescriptor.ACEType.ACTION,
-		"{var_name}.assign({source})", "",
-		[_arr("The destination array (often a typed one, e.g. an Array[int])."), F.make_param("source", "String", "other", "From array", "The array to copy elements from.", "variable_reference:Array")],
-		CAT, "assign {source} into {var_name}")
-		.described("Replaces this array's contents with a COPY of the source array, converting each element to this array's element type - the type-safe way to fill a typed array (Array[int], ...) from another array. Converting values that fit is silent (a float 2.7 into an Array[int] truncates to 2); a value that cannot convert at all leaves the destination EMPTY and pushes an error. Godot's Array.assign()."))
+	d.append(F.act("ArrayAssign", "Assign (Type-Converting)", "{var_name}.assign({source})", CAT, "assign {source} into {var_name}", "Replaces this array's contents with a COPY of the source array, converting each element to this array's element type - the type-safe way to fill a typed array (Array[int], ...) from another array. Converting values that fit is silent (a float 2.7 into an Array[int] truncates to 2); a value that cannot convert at all leaves the destination EMPTY and pushes an error. Godot's Array.assign().").param_built(_arr("The destination array (often a typed one, e.g. an Array[int]).")).param("source", "other", "From array", "The array to copy elements from.", "variable_reference:Array"))
 
-	d.append(F.make_descriptor("Core", "ArrayTypedBuiltin", "Element Type", ACEDescriptor.ACEType.EXPRESSION,
-		"{var_name}.get_typed_builtin()", "",
-		[_arr()],
-		CAT, "{var_name} element type")
-		.described("The element type a typed array holds, as a Variant.Type value (TYPE_INT, TYPE_STRING, ...); TYPE_NIL (0) when the array is untyped. Godot's Array.get_typed_builtin()."))
+	d.append(F.expr("ArrayTypedBuiltin", "Element Type", "{var_name}.get_typed_builtin()", CAT, "{var_name} element type", "The element type a typed array holds, as a Variant.Type value (TYPE_INT, TYPE_STRING, ...); TYPE_NIL (0) when the array is untyped. Godot's Array.get_typed_builtin().").param_built(_arr()))
 
-	d.append(F.make_descriptor("Core", "ArrayTypedClassName", "Element Class", ACEDescriptor.ACEType.EXPRESSION,
-		"{var_name}.get_typed_class_name()", "",
-		[_arr()],
-		CAT, "{var_name} element class")
-		.described("For an array typed to a class (e.g. Array[Node]), the element class name as a StringName; \"\" for a builtin-typed or untyped array. Godot's Array.get_typed_class_name()."))
+	d.append(F.expr("ArrayTypedClassName", "Element Class", "{var_name}.get_typed_class_name()", CAT, "{var_name} element class", "For an array typed to a class (e.g. Array[Node]), the element class name as a StringName; \"\" for a builtin-typed or untyped array. Godot's Array.get_typed_class_name().").param_built(_arr()))
 
 	return d
 

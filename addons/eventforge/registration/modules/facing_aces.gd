@@ -57,114 +57,40 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## own row - which is exactly what makes the picker offer it only where the host can do it.
 static func _flag_hosts(descriptors: Array[ACEDescriptor]) -> void:
 	for host: String in ["Sprite2D", "Sprite3D", "TextureRect"]:
-		descriptors.append(F.make_descriptor("Core", "SetMirrored" + host, "Set Mirrored",
-			ACEDescriptor.ACEType.ACTION, "flip_h = {mirrored}", "",
-			[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"])],
-			PAGE, "Set mirrored {mirrored}", host)
-			.described("Mirrors this node's picture left-to-right - the way a 2D character faces."))
+		descriptors.append(F.act("SetMirrored" + host, "Set Mirrored", "flip_h = {mirrored}", PAGE, "Set mirrored {mirrored}", "Mirrors this node's picture left-to-right - the way a 2D character faces.", host).param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]))
 	for host: String in ["Sprite3D", "TextureRect", "AnimatedSprite2D"]:
-		descriptors.append(F.make_descriptor("Core", "SetFlipped" + host, "Set Flipped",
-			ACEDescriptor.ACEType.ACTION, "flip_v = {flipped}", "",
-			[F.make_param("flipped", "String", "true", "Flipped", FLIPPED_HELP, "", ["true", "false"])],
-			PAGE, "Set flipped {flipped}", host)
-			.described("Turns this node's picture upside down, or puts it back the right way up."))
+		descriptors.append(F.act("SetFlipped" + host, "Set Flipped", "flip_v = {flipped}", PAGE, "Set flipped {flipped}", "Turns this node's picture upside down, or puts it back the right way up.", host).param_choice("flipped", "true", "Flipped", FLIPPED_HELP, ["true", "false"]))
 	for host: String in ["Sprite2D", "AnimatedSprite2D", "Sprite3D", "TextureRect"]:
-		descriptors.append(F.make_descriptor("Core", "IsMirrored" + host, "Is Mirrored",
-			ACEDescriptor.ACEType.CONDITION, "flip_h", "", [], PAGE, "Is mirrored", host)
-			.described("True while this node's picture is mirrored - which way the character is facing."))
-		descriptors.append(F.make_descriptor("Core", "IsFlipped" + host, "Is Flipped",
-			ACEDescriptor.ACEType.CONDITION, "flip_v", "", [], PAGE, "Is flipped", host)
-			.described("True while this node's picture is upside down."))
+		descriptors.append(F.cond("IsMirrored" + host, "Is Mirrored", "flip_h", PAGE, "Is mirrored", "True while this node's picture is mirrored - which way the character is facing.", host))
+		descriptors.append(F.cond("IsFlipped" + host, "Is Flipped", "flip_v", PAGE, "Is flipped", "True while this node's picture is upside down.", host))
 
 
 ## The hosts with no flag, where mirroring is the object's own X scale. The whole object turns, which
 ## is the point: its children - the hitbox, the muzzle, the ray - turn with it.
 static func _scale_hosts(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "SetMirroredObject", "Set Mirrored (whole object)",
-		ACEDescriptor.ACEType.ACTION, "scale.x = -1.0 if {mirrored} else 1.0", "",
-		[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"])],
-		PAGE, "Set mirrored {mirrored} (whole object)", "Node2D")
-		.described("Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.").featured())
-	descriptors.append(F.make_descriptor("Core", "IsMirroredObject", "Is Mirrored",
-		ACEDescriptor.ACEType.CONDITION, "scale.x < 0.0", "", [], PAGE, "Is mirrored", "Node2D")
-		.described("True while this object is mirrored, read off its own X scale."))
-	descriptors.append(F.make_descriptor("Core", "SetMirroredSpatial", "Set Mirrored",
-		ACEDescriptor.ACEType.ACTION, "scale.x = -absf(scale.x) if {mirrored} else absf(scale.x)", "",
-		[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"])],
-		PAGE, "Set mirrored {mirrored}", "Node3D")
-		.described("Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead."))
-	descriptors.append(F.make_descriptor("Core", "SetMirroredLabel3D", "Set Mirrored",
-		ACEDescriptor.ACEType.ACTION, "scale.x = -absf(scale.x) if {mirrored} else absf(scale.x)", "",
-		[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"])],
-		PAGE, "Set mirrored {mirrored}", "Label3D")
-		.described("Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind."))
-	descriptors.append(F.make_descriptor("Core", "IsMirroredSpatial", "Is Mirrored",
-		ACEDescriptor.ACEType.CONDITION, "scale.x < 0.0", "", [], PAGE, "Is mirrored", "Node3D")
-		.described("True while this 3D object is mirrored along X."))
-	descriptors.append(F.make_descriptor("Core", "TurnAround", "Turn Around",
-		ACEDescriptor.ACEType.ACTION, "rotate_y(PI)", "", [], PAGE, "Turn around", "Node3D")
-		.described("Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.").featured())
+	descriptors.append(F.act("SetMirroredObject", "Set Mirrored (whole object)", "scale.x = -1.0 if {mirrored} else 1.0", PAGE, "Set mirrored {mirrored} (whole object)", "Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.", "Node2D").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]).featured())
+	descriptors.append(F.cond("IsMirroredObject", "Is Mirrored", "scale.x < 0.0", PAGE, "Is mirrored", "True while this object is mirrored, read off its own X scale.", "Node2D"))
+	descriptors.append(F.act("SetMirroredSpatial", "Set Mirrored", "scale.x = -absf(scale.x) if {mirrored} else absf(scale.x)", PAGE, "Set mirrored {mirrored}", "Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.", "Node3D").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]))
+	descriptors.append(F.act("SetMirroredLabel3D", "Set Mirrored", "scale.x = -absf(scale.x) if {mirrored} else absf(scale.x)", PAGE, "Set mirrored {mirrored}", "Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.", "Label3D").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]))
+	descriptors.append(F.cond("IsMirroredSpatial", "Is Mirrored", "scale.x < 0.0", PAGE, "Is mirrored", "True while this 3D object is mirrored along X.", "Node3D"))
+	descriptors.append(F.act("TurnAround", "Turn Around", "rotate_y(PI)", PAGE, "Turn around", "Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.", "Node3D").featured())
 
 
 ## The two lines the scale row is nearly always written for, and the child that must not come along.
 static func _idioms(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "FaceDirectionOfMovement", "Face Direction Of Movement",
-		ACEDescriptor.ACEType.ACTION,
-		"if {velocity}.x != 0.0:\n\t{target.}scale.x = -1.0 if {velocity}.x < 0.0 else 1.0", "",
-		[F.make_param("velocity", "String", "velocity", "Velocity", "The value holding how fast this object is moving.", "expression"),
-		F.make_param("target", "String", "", "On node", ON_NODE_HELP, "expression")],
-		PAGE, "Face direction of movement", "CharacterBody2D")
-		.described("Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.").featured())
-	descriptors.append(F.make_descriptor("Core", "FaceObject", "Face Object",
-		ACEDescriptor.ACEType.ACTION,
-		"scale.x = -1.0 if {object}.global_position.x < global_position.x else 1.0", "",
-		[F.make_param("object", "String", "self", "Object", "The object to turn toward.", "expression")],
-		PAGE, "Face {object}", "Node2D")
-		.described("Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in."))
-	descriptors.append(F.make_descriptor("Core", "KeepUpright", "Keep Upright",
-		ACEDescriptor.ACEType.ACTION, "{target}.scale.x = signf(scale.x)", "",
-		[F.make_param("target", "String", "$Label", "Child", "The child that must stay readable - a name plate, a health bar, a damage number.", "expression")],
-		PAGE, "Keep {target} upright", "Node2D")
-		.described("Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards."))
+	descriptors.append(F.act("FaceDirectionOfMovement", "Face Direction Of Movement", "if {velocity}.x != 0.0:\n\t{target.}scale.x = -1.0 if {velocity}.x < 0.0 else 1.0", PAGE, "Face direction of movement", "Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.", "CharacterBody2D").param("velocity", "velocity", "Velocity", "The value holding how fast this object is moving.", "expression").param("target", "", "On node", ON_NODE_HELP, "expression").featured())
+	descriptors.append(F.act("FaceObject", "Face Object", "scale.x = -1.0 if {object}.global_position.x < global_position.x else 1.0", PAGE, "Face {object}", "Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.", "Node2D").param("object", "self", "Object", "The object to turn toward.", "expression"))
+	descriptors.append(F.act("KeepUpright", "Keep Upright", "{target}.scale.x = signf(scale.x)", PAGE, "Keep {target} upright", "Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.", "Node2D").param("target", "$Label", "Child", "The child that must stay readable - a name plate, a health bar, a damage number.", "expression"))
 
 
 ## Everything else that can mirror: the UI, the view, one tile, and a path.
 static func _other_hosts(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "SetMirroredControl", "Set Mirrored",
-		ACEDescriptor.ACEType.ACTION,
-		"{target.}pivot_offset.x = {target.}size.x * 0.5\n{target.}scale.x = -1.0 if {mirrored} else 1.0", "",
-		[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"]),
-		F.make_param("target", "String", "", "On node", ON_NODE_HELP, "expression")],
-		PAGE, "Set mirrored {mirrored}", "Control")
-		.described("Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways."))
-	descriptors.append(F.make_descriptor("Core", "IsMirroredControl", "Is Mirrored",
-		ACEDescriptor.ACEType.CONDITION, "scale.x < 0.0", "", [], PAGE, "Is mirrored", "Control")
-		.described("True while this UI element is mirrored."))
-	descriptors.append(F.make_descriptor("Core", "MirrorTheView", "Mirror The View",
-		ACEDescriptor.ACEType.ACTION, "zoom.x = -absf(zoom.x) if {mirrored} else absf(zoom.x)", "",
-		[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"])],
-		PAGE, "Mirror the view {mirrored}", "Camera2D")
-		.described("Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards."))
-	descriptors.append(F.make_descriptor("Core", "MirrorViewportView", "Mirror The View",
-		ACEDescriptor.ACEType.ACTION,
-		"{target.}pivot_offset.x = {target.}size.x * 0.5\n{target.}scale.x = -1.0 if {mirrored} else 1.0", "",
-		[F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"]),
-		F.make_param("target", "String", "", "On node", ON_NODE_HELP, "expression")],
-		PAGE, "Mirror the view {mirrored}", "SubViewportContainer")
-		.described("Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water."))
-	descriptors.append(F.make_descriptor("Core", "SetTileFlipped", "Set Tile Flipped",
-		ACEDescriptor.ACEType.ACTION,
-		"{target.}set_cell({coords}, {target.}get_cell_source_id({coords}), {target.}get_cell_atlas_coords({coords}), TileSetAtlasSource.TRANSFORM_FLIP_H if {mirrored} else 0)", "",
-		[F.make_param("coords", "String", "Vector2i(0, 0)", "Cell", "Cell coordinates (Vector2i).", "expression"),
-		F.make_param("mirrored", "String", "true", "Mirrored", MIRRORED_HELP, "", ["true", "false"]),
-		F.make_param("target", "String", "", "On node", ON_NODE_HELP, "expression")],
-		PAGE, "Set tile at {coords} flipped {mirrored}", "TileMapLayer")
-		.described("Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor."))
-	descriptors.append(F.make_descriptor("Core", "MirrorPath", "Mirror Path",
-		ACEDescriptor.ACEType.ACTION,
-		"for __point_{uid}: int in curve.point_count:\n\tcurve.set_point_position(__point_{uid}, Vector2(-curve.get_point_position(__point_{uid}).x, curve.get_point_position(__point_{uid}).y))", "",
-		[], PAGE, "Mirror path", "Path2D")
-		.described("Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way."))
+	descriptors.append(F.act("SetMirroredControl", "Set Mirrored", "{target.}pivot_offset.x = {target.}size.x * 0.5\n{target.}scale.x = -1.0 if {mirrored} else 1.0", PAGE, "Set mirrored {mirrored}", "Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.", "Control").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]).param("target", "", "On node", ON_NODE_HELP, "expression"))
+	descriptors.append(F.cond("IsMirroredControl", "Is Mirrored", "scale.x < 0.0", PAGE, "Is mirrored", "True while this UI element is mirrored.", "Control"))
+	descriptors.append(F.act("MirrorTheView", "Mirror The View", "zoom.x = -absf(zoom.x) if {mirrored} else absf(zoom.x)", PAGE, "Mirror the view {mirrored}", "Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.", "Camera2D").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]))
+	descriptors.append(F.act("MirrorViewportView", "Mirror The View", "{target.}pivot_offset.x = {target.}size.x * 0.5\n{target.}scale.x = -1.0 if {mirrored} else 1.0", PAGE, "Mirror the view {mirrored}", "Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.", "SubViewportContainer").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]).param("target", "", "On node", ON_NODE_HELP, "expression"))
+	descriptors.append(F.act("SetTileFlipped", "Set Tile Flipped", "{target.}set_cell({coords}, {target.}get_cell_source_id({coords}), {target.}get_cell_atlas_coords({coords}), TileSetAtlasSource.TRANSFORM_FLIP_H if {mirrored} else 0)", PAGE, "Set tile at {coords} flipped {mirrored}", "Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.", "TileMapLayer").param("coords", "Vector2i(0, 0)", "Cell", "Cell coordinates (Vector2i).", "expression").param_choice("mirrored", "true", "Mirrored", MIRRORED_HELP, ["true", "false"]).param("target", "", "On node", ON_NODE_HELP, "expression"))
+	descriptors.append(F.act("MirrorPath", "Mirror Path", "for __point_{uid}: int in curve.point_count:\n\tcurve.set_point_position(__point_{uid}, Vector2(-curve.get_point_position(__point_{uid}).x, curve.get_point_position(__point_{uid}).y))", PAGE, "Mirror path", "Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.", "Path2D"))
 
 
 

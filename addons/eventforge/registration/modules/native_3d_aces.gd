@@ -19,159 +19,65 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# ── 3D vocabulary (same lane-1 rule: wrap native nodes; Tween/visibility/math/
 	# input/scene-flow ACEs above are already dimension-agnostic) ──
-	descriptors.append(F.make_descriptor("Core", "SetPosition3D", "Set Position (3D)", ACEDescriptor.ACEType.ACTION, "position = {pos}", "", [F.make_param("pos", "String", "Vector3(0, 0, 0)", "Position", "Target position as a Vector3 expression.", "expression")], "General Actions", "Set position to {pos}", "Node3D")
-		.described("Teleports a 3D node to an exact world position."))
-	descriptors.append(F.make_descriptor("Core", "TranslateNode3D", "Move By (3D)", ACEDescriptor.ACEType.ACTION, "translate({offset})", "", [F.make_param("offset", "String", "Vector3(0, 0, 0)", "Offset", "Local-space offset.", "expression")], "General Actions", "Move by {offset}", "Node3D")
-		.described("Nudges a 3D node by an offset relative to its own facing (local space)."))
-	descriptors.append(F.make_descriptor("Core", "RotateNode3D", "Rotate (3D)", ACEDescriptor.ACEType.ACTION, "rotate({axis}, {radians})", "", [F.make_param("axis", "String", "Vector3.UP", "Axis", "Rotation axis (must be normalized), e.g. Vector3.UP for yaw.", "expression"), F.make_param("radians", "String", "0.0", "Radians", "Angle to rotate by, in radians (often speed * delta).", "expression")], "General Actions", "Rotate {radians} rad around {axis}", "Node3D")
-		.described("Spins a 3D node around an axis by an angle, often using speed times delta."))
-	descriptors.append(F.make_descriptor("Core", "SetRotationDeg3D", "Set Rotation (3D, Degrees)", ACEDescriptor.ACEType.ACTION, "rotation_degrees = {degrees}", "", [F.make_param("degrees", "String", "Vector3(0, 0, 0)", "Degrees", "Euler angles in degrees.", "expression")], "General Actions", "Set rotation to {degrees}", "Node3D")
-		.described("Sets a 3D node's rotation directly using degree angles."))
-	descriptors.append(F.make_descriptor("Core", "LookAt3D", "Look At", ACEDescriptor.ACEType.ACTION, "look_at({target})", "", [F.make_param("target", "String", "Vector3(0, 0, -1)", "Target", "World position to face. Must differ from this node's own position (and not be vertically aligned with it).", "expression")], "General Actions", "Look at [i]{target}[/i]", "Node3D")
-		.described("Turns a 3D node to face a world position (e.g. an enemy facing the player)."))
-	descriptors.append(F.make_descriptor("Core", "SetScale3D", "Set Scale (3D)", ACEDescriptor.ACEType.ACTION, "scale = {scale}", "", [F.make_param("scale", "String", "Vector3(1, 1, 1)", "Scale", "Scale factor.", "expression")], "General Actions", "Set scale to {scale}", "Node3D")
-		.described("Sets how big a 3D node is by changing its scale."))
-	descriptors.append(F.make_descriptor("Core", "GetPosition3D", "Get Position (3D)", ACEDescriptor.ACEType.EXPRESSION, "position", "", [], "General Expressions", "position", "Node3D")
-		.described("Returns a 3D node's current world position as a Vector3."))
-	descriptors.append(F.make_descriptor("Core", "IsOnFloor3D", "Is On Floor (3D)", ACEDescriptor.ACEType.CONDITION, "is_on_floor()", "", [], "General Conditions", "Is on floor", "CharacterBody3D")
-		.described("True when a 3D character body is standing on the ground (check before jumping)."))
-	descriptors.append(F.make_descriptor("Core", "MoveAndSlide3D", "Move And Slide (3D)", ACEDescriptor.ACEType.ACTION, "move_and_slide()", "", [], "General Actions", "Move and slide", "CharacterBody3D")
-		.described("Moves a 3D character body by its velocity, sliding smoothly along walls and slopes."))
-	descriptors.append(F.make_descriptor("Core", "SetVelocity3D", "Set Velocity (3D)", ACEDescriptor.ACEType.ACTION, "velocity = {vel}", "", [F.make_param("vel", "String", "Vector3(0, 0, 0)", "Velocity", "Velocity vector as a Vector3 expression.", "expression")], "General Actions", "Set velocity to {vel}", "CharacterBody3D")
-		.described("Sets a 3D character body's velocity, which Move And Slide then uses to move it."))
-	descriptors.append(F.make_descriptor("Core", "GetVelocity3D", "Get Velocity (3D)", ACEDescriptor.ACEType.EXPRESSION, "velocity", "", [], "General Expressions", "velocity", "CharacterBody3D")
-		.described("Returns a 3D character body's current velocity vector."))
-	descriptors.append(F.make_descriptor("Core", "ApplyCentralImpulse3D", "Apply Central Impulse (3D)", ACEDescriptor.ACEType.ACTION, "apply_central_impulse({impulse})", "", [F.make_param("impulse", "String", "Vector3(0, 0, 0)", "Impulse", "Impulse vector.", "expression")], "General Actions", "Apply impulse {impulse}", "RigidBody3D")
-		.described("Gives a 3D physics body a sudden push (e.g. a knockback or launch)."))
-	descriptors.append(F.make_descriptor("Core", "MakeCamera3DCurrent", "Make Camera Current (3D)", ACEDescriptor.ACEType.ACTION, "make_current()", "", [], "General Actions", "Make current", "Camera3D")
-		.described("Switches the view to this 3D camera, making it the active one."))
-	descriptors.append(F.make_descriptor("Core", "SetCameraFov", "Set Camera FOV", ACEDescriptor.ACEType.ACTION, "fov = {degrees}", "", [F.make_param("degrees", "String", "75.0", "Degrees", "Field of view.", "expression")], "General Actions", "Set FOV to {degrees}", "Camera3D")
-		.described("Sets a 3D camera's field of view in degrees (lower zooms in, higher widens)."))
-	descriptors.append(F.make_descriptor("Core", "GetInputVector", "Input Vector", ACEDescriptor.ACEType.EXPRESSION, "Input.get_vector(&{left}, &{right}, &{up}, &{down})", "", [F.make_param("left", "String", F.default_input_action(), "Left", "Negative X action.", "input_action", F.input_action_options()), F.make_param("right", "String", F.default_input_action(), "Right", "Positive X action.", "input_action", F.input_action_options()), F.make_param("up", "String", F.default_input_action(), "Up", "Negative Y action.", "input_action", F.input_action_options()), F.make_param("down", "String", F.default_input_action(), "Down", "Positive Y action.", "input_action", F.input_action_options())], "Input", "input vector {left}/{right}/{up}/{down}")
-		.described("Returns a movement direction from four input actions, ideal for player movement."))
+	descriptors.append(F.act("SetPosition3D", "Set Position (3D)", "position = {pos}", "General Actions", "Set position to {pos}", "Teleports a 3D node to an exact world position.", "Node3D").param("pos", "Vector3(0, 0, 0)", "Position", "Target position as a Vector3 expression.", "expression"))
+	descriptors.append(F.act("TranslateNode3D", "Move By (3D)", "translate({offset})", "General Actions", "Move by {offset}", "Nudges a 3D node by an offset relative to its own facing (local space).", "Node3D").param("offset", "Vector3(0, 0, 0)", "Offset", "Local-space offset.", "expression"))
+	descriptors.append(F.act("RotateNode3D", "Rotate (3D)", "rotate({axis}, {radians})", "General Actions", "Rotate {radians} rad around {axis}", "Spins a 3D node around an axis by an angle, often using speed times delta.", "Node3D").param("axis", "Vector3.UP", "Axis", "Rotation axis (must be normalized), e.g. Vector3.UP for yaw.", "expression").param("radians", "0.0", "Radians", "Angle to rotate by, in radians (often speed * delta).", "expression"))
+	descriptors.append(F.act("SetRotationDeg3D", "Set Rotation (3D, Degrees)", "rotation_degrees = {degrees}", "General Actions", "Set rotation to {degrees}", "Sets a 3D node's rotation directly using degree angles.", "Node3D").param("degrees", "Vector3(0, 0, 0)", "Degrees", "Euler angles in degrees.", "expression"))
+	descriptors.append(F.act("LookAt3D", "Look At", "look_at({target})", "General Actions", "Look at [i]{target}[/i]", "Turns a 3D node to face a world position (e.g. an enemy facing the player).", "Node3D").param("target", "Vector3(0, 0, -1)", "Target", "World position to face. Must differ from this node's own position (and not be vertically aligned with it).", "expression"))
+	descriptors.append(F.act("SetScale3D", "Set Scale (3D)", "scale = {scale}", "General Actions", "Set scale to {scale}", "Sets how big a 3D node is by changing its scale.", "Node3D").param("scale", "Vector3(1, 1, 1)", "Scale", "Scale factor.", "expression"))
+	descriptors.append(F.expr("GetPosition3D", "Get Position (3D)", "position", "General Expressions", "position", "Returns a 3D node's current world position as a Vector3.", "Node3D"))
+	descriptors.append(F.cond("IsOnFloor3D", "Is On Floor (3D)", "is_on_floor()", "General Conditions", "Is on floor", "True when a 3D character body is standing on the ground (check before jumping).", "CharacterBody3D"))
+	descriptors.append(F.act("MoveAndSlide3D", "Move And Slide (3D)", "move_and_slide()", "General Actions", "Move and slide", "Moves a 3D character body by its velocity, sliding smoothly along walls and slopes.", "CharacterBody3D"))
+	descriptors.append(F.act("SetVelocity3D", "Set Velocity (3D)", "velocity = {vel}", "General Actions", "Set velocity to {vel}", "Sets a 3D character body's velocity, which Move And Slide then uses to move it.", "CharacterBody3D").param("vel", "Vector3(0, 0, 0)", "Velocity", "Velocity vector as a Vector3 expression.", "expression"))
+	descriptors.append(F.expr("GetVelocity3D", "Get Velocity (3D)", "velocity", "General Expressions", "velocity", "Returns a 3D character body's current velocity vector.", "CharacterBody3D"))
+	descriptors.append(F.act("ApplyCentralImpulse3D", "Apply Central Impulse (3D)", "apply_central_impulse({impulse})", "General Actions", "Apply impulse {impulse}", "Gives a 3D physics body a sudden push (e.g. a knockback or launch).", "RigidBody3D").param("impulse", "Vector3(0, 0, 0)", "Impulse", "Impulse vector.", "expression"))
+	descriptors.append(F.act("MakeCamera3DCurrent", "Make Camera Current (3D)", "make_current()", "General Actions", "Make current", "Switches the view to this 3D camera, making it the active one.", "Camera3D"))
+	descriptors.append(F.act("SetCameraFov", "Set Camera FOV", "fov = {degrees}", "General Actions", "Set FOV to {degrees}", "Sets a 3D camera's field of view in degrees (lower zooms in, higher widens).", "Camera3D").param("degrees", "75.0", "Degrees", "Field of view.", "expression"))
+	descriptors.append(F.expr("GetInputVector", "Input Vector", "Input.get_vector(&{left}, &{right}, &{up}, &{down})", "Input", "input vector {left}/{right}/{up}/{down}", "Returns a movement direction from four input actions, ideal for player movement.").param_built(F.make_param("left", "String", F.default_input_action(), "Left", "Negative X action.", "input_action", F.input_action_options())).param_built(F.make_param("right", "String", F.default_input_action(), "Right", "Positive X action.", "input_action", F.input_action_options())).param_built(F.make_param("up", "String", F.default_input_action(), "Up", "Negative Y action.", "input_action", F.input_action_options())).param_built(F.make_param("down", "String", F.default_input_action(), "Down", "Positive Y action.", "input_action", F.input_action_options())))
 
 	# ── 3D spatial queries (the biggest functional 3D gap: shooting, interaction, AI
 	# vision, ground-snap are all raycast-centric). Two flavors, both single-line per
 	# the parity contract: a RayCast3D node set, and a host-agnostic Node3D world query. ──
-	descriptors.append(F.make_descriptor("Core", "RayCast3DIsColliding", "RayCast Is Colliding (3D)", ACEDescriptor.ACEType.CONDITION, "is_colliding()", "", [], "Raycast 3D", "RayCast is colliding", "RayCast3D")
-		.described("True when a RayCast3D is currently hitting something in front of it."))
-	descriptors.append(F.make_descriptor("Core", "RayCast3DForceUpdate", "Force RayCast Update (3D)", ACEDescriptor.ACEType.ACTION, "force_raycast_update()", "", [], "Raycast 3D", "Force raycast update", "RayCast3D")
-		.described("Forces a RayCast3D to recheck immediately instead of waiting for the next frame."))
-	descriptors.append(F.make_descriptor("Core", "RayCast3DGetCollider", "RayCast Collider (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_collider()", "", [], "Raycast 3D", "raycast collider", "RayCast3D")
-		.described("Returns the object a RayCast3D is currently hitting."))
-	descriptors.append(F.make_descriptor("Core", "RayCast3DGetPoint", "RayCast Hit Point (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_collision_point()", "", [], "Raycast 3D", "raycast hit point", "RayCast3D")
-		.described("Returns the exact world point where a RayCast3D hits something."))
-	descriptors.append(F.make_descriptor("Core", "RayCast3DGetNormal", "RayCast Hit Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_collision_normal()", "", [], "Raycast 3D", "raycast hit normal", "RayCast3D")
-		.described("Returns the surface direction at the point a RayCast3D hits."))
-	descriptors.append(F.make_descriptor("Core", "WorldRaycastHit3D", "World Raycast Hits? (3D)", ACEDescriptor.ACEType.CONDITION, "not get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to})).is_empty()", "", [F.make_param("from", "String", "Vector3(0, 0, 0)", "From", "Ray start (Vector3 expression).", "expression"), F.make_param("to", "String", "Vector3(0, 0, 0)", "To", "Ray end (Vector3 expression).", "expression")], "Raycast 3D", "world raycast {from} -> {to} hits", "Node3D")
-		.described("True when a ray cast between two points hits anything in the 3D world."))
-	descriptors.append(F.make_descriptor("Core", "WorldRaycastPoint3D", "World Raycast Point (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to})).get(\"position\", Vector3.ZERO)", "", [F.make_param("from", "String", "Vector3(0, 0, 0)", "From", "Ray start (Vector3 expression).", "expression"), F.make_param("to", "String", "Vector3(0, 0, 0)", "To", "Ray end (Vector3 expression).", "expression")], "Raycast 3D", "world raycast point {from} -> {to}", "Node3D")
-		.described("Returns the world point where a ray between two points first hits something."))
+	descriptors.append(F.cond("RayCast3DIsColliding", "RayCast Is Colliding (3D)", "is_colliding()", "Raycast 3D", "RayCast is colliding", "True when a RayCast3D is currently hitting something in front of it.", "RayCast3D"))
+	descriptors.append(F.act("RayCast3DForceUpdate", "Force RayCast Update (3D)", "force_raycast_update()", "Raycast 3D", "Force raycast update", "Forces a RayCast3D to recheck immediately instead of waiting for the next frame.", "RayCast3D"))
+	descriptors.append(F.expr("RayCast3DGetCollider", "RayCast Collider (3D)", "get_collider()", "Raycast 3D", "raycast collider", "Returns the object a RayCast3D is currently hitting.", "RayCast3D"))
+	descriptors.append(F.expr("RayCast3DGetPoint", "RayCast Hit Point (3D)", "get_collision_point()", "Raycast 3D", "raycast hit point", "Returns the exact world point where a RayCast3D hits something.", "RayCast3D"))
+	descriptors.append(F.expr("RayCast3DGetNormal", "RayCast Hit Normal (3D)", "get_collision_normal()", "Raycast 3D", "raycast hit normal", "Returns the surface direction at the point a RayCast3D hits.", "RayCast3D"))
+	descriptors.append(F.cond("WorldRaycastHit3D", "World Raycast Hits? (3D)", "not get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to})).is_empty()", "Raycast 3D", "world raycast {from} -> {to} hits", "True when a ray cast between two points hits anything in the 3D world.", "Node3D").param("from", "Vector3(0, 0, 0)", "From", "Ray start (Vector3 expression).", "expression").param("to", "Vector3(0, 0, 0)", "To", "Ray end (Vector3 expression).", "expression"))
+	descriptors.append(F.expr("WorldRaycastPoint3D", "World Raycast Point (3D)", "get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to})).get(\"position\", Vector3.ZERO)", "Raycast 3D", "world raycast point {from} -> {to}", "Returns the world point where a ray between two points first hits something.", "Node3D").param("from", "Vector3(0, 0, 0)", "From", "Ray start (Vector3 expression).", "expression").param("to", "Vector3(0, 0, 0)", "To", "Ray end (Vector3 expression).", "expression"))
 
 	# ── the first-person block, and the three directions an object's own axes point in ───────
-	descriptors.append(F.make_descriptor("Core", "MouseLook", "Mouse Look", ACEDescriptor.ACEType.ACTION,
-		"rotate_y(-{relative}.x * {sensitivity})\n{camera}.rotate_x(-{relative}.y * {sensitivity})\n{camera}.rotation.x = clamp({camera}.rotation.x, -{limit}, {limit})", "",
-		[F.make_param("relative", "String", "Vector2.ZERO", "Movement", "How far the pointer moved this frame.", "expression"),
-			F.make_param("sensitivity", "String", "0.002", "Sensitivity", "How far the view turns per pixel of pointer movement.", "expression"),
-			F.make_param("camera", "String", "$Camera3D", "Camera", "The camera that looks up and down while the body turns.", "expression"),
-			F.make_param("limit", "String", "1.2", "Limit", "How far up or down the camera may look, in radians.", "expression")],
-		"Native 3D", "Mouse look", "Node3D")
-		.described("Turns the body left and right and the camera up and down from one pointer movement, keeping the camera from looking through the floor. Put it under a pointer-movement event.").featured())
-	descriptors.append(F.make_descriptor("Core", "ObjectForward", "Forward Direction", ACEDescriptor.ACEType.EXPRESSION, "-{node}.global_transform.basis.z", "", [F.make_param("node", "String", "self", "Object", "The object whose own axes are asked about.", "expression")], "Native 3D", "forward", "Node3D")
-		.described("The direction an object is facing, as a unit vector. Multiply it by a speed to move that way.").featured())
-	descriptors.append(F.make_descriptor("Core", "ObjectRight", "Right Direction", ACEDescriptor.ACEType.EXPRESSION, "{node}.global_transform.basis.x", "", [F.make_param("node", "String", "self", "Object", "The object whose own axes are asked about.", "expression")], "Native 3D", "right", "Node3D")
-		.described("The direction to an object's right, as a unit vector - what strafing moves along."))
-	descriptors.append(F.make_descriptor("Core", "ObjectUp", "Up Direction", ACEDescriptor.ACEType.EXPRESSION, "{node}.global_transform.basis.y", "", [F.make_param("node", "String", "self", "Object", "The object whose own axes are asked about.", "expression")], "Native 3D", "up", "Node3D")
-		.described("The direction out of an object's own top, as a unit vector."))
+	descriptors.append(F.act("MouseLook", "Mouse Look", "rotate_y(-{relative}.x * {sensitivity})\n{camera}.rotate_x(-{relative}.y * {sensitivity})\n{camera}.rotation.x = clamp({camera}.rotation.x, -{limit}, {limit})", "Native 3D", "Mouse look", "Turns the body left and right and the camera up and down from one pointer movement, keeping the camera from looking through the floor. Put it under a pointer-movement event.", "Node3D").param("relative", "Vector2.ZERO", "Movement", "How far the pointer moved this frame.", "expression").param("sensitivity", "0.002", "Sensitivity", "How far the view turns per pixel of pointer movement.", "expression").param("camera", "$Camera3D", "Camera", "The camera that looks up and down while the body turns.", "expression").param("limit", "1.2", "Limit", "How far up or down the camera may look, in radians.", "expression").featured())
+	descriptors.append(F.expr("ObjectForward", "Forward Direction", "-{node}.global_transform.basis.z", "Native 3D", "forward", "The direction an object is facing, as a unit vector. Multiply it by a speed to move that way.", "Node3D").param("node", "self", "Object", "The object whose own axes are asked about.", "expression").featured())
+	descriptors.append(F.expr("ObjectRight", "Right Direction", "{node}.global_transform.basis.x", "Native 3D", "right", "The direction to an object's right, as a unit vector - what strafing moves along.", "Node3D").param("node", "self", "Object", "The object whose own axes are asked about.", "expression"))
+	descriptors.append(F.expr("ObjectUp", "Up Direction", "{node}.global_transform.basis.y", "Native 3D", "up", "The direction out of an object's own top, as a unit vector.", "Node3D").param("node", "self", "Object", "The object whose own axes are asked about.", "expression"))
 
 	# ── orbiting, the camera arm, and the third-person run ────────────
 	#
 	# Each template writes the EXACT shape the reading recognises, so a row dropped from the picker
 	# and the same shape typed by hand are the same bytes and read as the same row.
-	descriptors.append(F.make_descriptor("Core", "OrbitAtRadius", "Orbit At Radius", ACEDescriptor.ACEType.ACTION,
-		"global_position = {centre}.global_position + Vector3(cos({angle}), 0.0, sin({angle})) * {radius}", "",
-		[F.make_param("centre", "String", "self", "Centre", "The object to go round.", "expression"),
-			F.make_param("radius", "String", "8.0", "Radius", "How far out the circle is.", "expression"),
-			F.make_param("angle", "String", "0.0", "Angle", "Where on the circle this object is, in radians. Add to it every tick to make it go round.", "expression")],
-		"Native 3D", "Orbit [i]{centre}[/i] at radius [i]{radius}[/i] angle [i]{angle}[/i]", "Node3D")
-		.described("Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.").featured())
-	descriptors.append(F.make_descriptor("Core", "SetCameraDistance", "Set Camera Distance", ACEDescriptor.ACEType.ACTION,
-		"spring_length = {value}", "",
-		[F.make_param("value", "String", "6.0", "Distance", "How far the camera sits from what the arm is mounted on.", "expression")],
-		"Native 3D", "Set camera distance to {value}", "SpringArm3D")
-		.described("Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way."))
-	descriptors.append(F.make_descriptor("Core", "MoveRelativeToCamera", "Move Relative To Camera", ACEDescriptor.ACEType.ACTION,
-		"var _cam_basis_{uid} := {camera}.global_transform.basis\nvar _dir_{uid} := _cam_basis_{uid}.x * {input}.x + _cam_basis_{uid}.z * {input}.y\n_dir_{uid}.y = 0.0\n_dir_{uid} = _dir_{uid}.normalized()\nvelocity.x = _dir_{uid}.x * {speed}\nvelocity.z = _dir_{uid}.z * {speed}", "",
-		[F.make_param("camera", "String", "get_viewport().get_camera_3d()", "Camera", "The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.", "expression"),
-			F.make_param("input", "String", "Vector2.ZERO", "Input", "The two numbers of steering input, from an Input Vector.", "expression"),
-			F.make_param("speed", "String", "6.0", "Speed", "How fast to move, in units per second.", "expression")],
-		"Native 3D", "Move relative to the camera along [i]{input}[/i] at [i]{speed}[/i]", "CharacterBody3D")
-		.described("Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.").featured())
+	descriptors.append(F.act("OrbitAtRadius", "Orbit At Radius", "global_position = {centre}.global_position + Vector3(cos({angle}), 0.0, sin({angle})) * {radius}", "Native 3D", "Orbit [i]{centre}[/i] at radius [i]{radius}[/i] angle [i]{angle}[/i]", "Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.", "Node3D").param("centre", "self", "Centre", "The object to go round.", "expression").param("radius", "8.0", "Radius", "How far out the circle is.", "expression").param("angle", "0.0", "Angle", "Where on the circle this object is, in radians. Add to it every tick to make it go round.", "expression").featured())
+	descriptors.append(F.act("SetCameraDistance", "Set Camera Distance", "spring_length = {value}", "Native 3D", "Set camera distance to {value}", "Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.", "SpringArm3D").param("value", "6.0", "Distance", "How far the camera sits from what the arm is mounted on.", "expression"))
+	descriptors.append(F.act("MoveRelativeToCamera", "Move Relative To Camera", "var _cam_basis_{uid} := {camera}.global_transform.basis\nvar _dir_{uid} := _cam_basis_{uid}.x * {input}.x + _cam_basis_{uid}.z * {input}.y\n_dir_{uid}.y = 0.0\n_dir_{uid} = _dir_{uid}.normalized()\nvelocity.x = _dir_{uid}.x * {speed}\nvelocity.z = _dir_{uid}.z * {speed}", "Native 3D", "Move relative to the camera along [i]{input}[/i] at [i]{speed}[/i]", "Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.", "CharacterBody3D").param("camera", "get_viewport().get_camera_3d()", "Camera", "The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.", "expression").param("input", "Vector2.ZERO", "Input", "The two numbers of steering input, from an Input Vector.", "expression").param("speed", "6.0", "Speed", "How fast to move, in units per second.", "expression").featured())
 
 	# ── what a mesh lets through: how far away it is still drawn, how see-through it is, and
 	# whether it casts a shadow at all. The three knobs a reader tunes by eye. ──
-	descriptors.append(F.make_descriptor("Core", "SetVisibleRange", "Set Visible Range", ACEDescriptor.ACEType.ACTION,
-		"visibility_range_begin = {near}\nvisibility_range_end = {far}", "",
-		[F.make_param("near", "String", "0.0", "From", "How close the camera has to be before this is drawn. 0 means always.", "expression"),
-			F.make_param("far", "String", "100.0", "To", "How far away the camera may get before this stops being drawn. 0 means never stop.", "expression")],
-		"Native 3D", "Visible from {near} to {far}", "GeometryInstance3D")
-		.described("Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.").featured())
-	descriptors.append(F.make_descriptor("Core", "SetSeeThrough", "Set See-Through", ACEDescriptor.ACEType.ACTION,
-		"transparency = {value}", "",
-		[F.make_param("value", "String", "0.5", "See-through", "0 is solid, 1 is invisible. The row shows the fraction as a percentage.", "expression")],
-		"Native 3D", "Set see-through to {value}", "GeometryInstance3D")
-		.described("Fades a 3D object out without hiding it - what a wall between the camera and the player does."))
-	descriptors.append(F.make_descriptor("Core", "SetShadowsOff3D", "Set Shadows Off (3D)", ACEDescriptor.ACEType.ACTION,
-		"cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF", "", [],
-		"Native 3D", "Set shadows off", "GeometryInstance3D")
-		.described("Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes."))
-	descriptors.append(F.make_descriptor("Core", "SetShadowsOn3D", "Set Shadows On (3D)", ACEDescriptor.ACEType.ACTION,
-		"cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON", "", [],
-		"Native 3D", "Set shadows on", "GeometryInstance3D")
-		.described("Makes a 3D object cast a shadow again after Set Shadows Off."))
+	descriptors.append(F.act("SetVisibleRange", "Set Visible Range", "visibility_range_begin = {near}\nvisibility_range_end = {far}", "Native 3D", "Visible from {near} to {far}", "Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.", "GeometryInstance3D").param("near", "0.0", "From", "How close the camera has to be before this is drawn. 0 means always.", "expression").param("far", "100.0", "To", "How far away the camera may get before this stops being drawn. 0 means never stop.", "expression").featured())
+	descriptors.append(F.act("SetSeeThrough", "Set See-Through", "transparency = {value}", "Native 3D", "Set see-through to {value}", "Fades a 3D object out without hiding it - what a wall between the camera and the player does.", "GeometryInstance3D").param("value", "0.5", "See-through", "0 is solid, 1 is invisible. The row shows the fraction as a percentage.", "expression"))
+	descriptors.append(F.act("SetShadowsOff3D", "Set Shadows Off (3D)", "cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF", "Native 3D", "Set shadows off", "Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.", "GeometryInstance3D"))
+	descriptors.append(F.act("SetShadowsOn3D", "Set Shadows On (3D)", "cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON", "Native 3D", "Set shadows on", "Makes a 3D object cast a shadow again after Set Shadows Off.", "GeometryInstance3D"))
 
 	# ── UI that lives in the world: name tags, health bars over heads, and the screens a
 	# SubViewport paints onto a surface. ──
 	# The first five take the node the way the Lighting rows do rather than being host-scoped: the
 	# three knobs live on Label3D and on SpriteBase3D, which share no base class that HAS them, so a
 	# host-scoped row would be a row that cannot compile in the class it was filed under.
-	descriptors.append(F.make_descriptor("Core", "SetFaceTheCamera", "Set Always Face The Camera", ACEDescriptor.ACEType.ACTION,
-		"{node}.billboard = BaseMaterial3D.BILLBOARD_ENABLED", "",
-		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to turn.", "expression")],
-		UI_CAT, "Set always face the camera on")
-		.described("Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.").featured())
-	descriptors.append(F.make_descriptor("Core", "SetFaceTheCameraUpright", "Set Always Face The Camera (Upright)", ACEDescriptor.ACEType.ACTION,
-		"{node}.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y", "",
-		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to turn.", "expression")],
-		UI_CAT, "Set always face the camera on (upright)")
-		.described("Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it."))
-	descriptors.append(F.make_descriptor("Core", "SetShowThroughWalls", "Set Show Through Walls", ACEDescriptor.ACEType.ACTION,
-		"{node}.no_depth_test = {on}", "",
-		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to change.", "expression"),
-			F.make_param("on", "bool", "true", "On", "true draws it over everything; false lets walls hide it.", "", ["true", "false"])],
-		UI_CAT, "Set show through walls {on}")
-		.described("Draws a world-space label or icon over whatever is in front of it - what an objective marker needs."))
-	descriptors.append(F.make_descriptor("Core", "SetWorldSize", "Set World Size", ACEDescriptor.ACEType.ACTION,
-		"{node}.pixel_size = {value}", "",
-		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to resize.", "expression"),
-			F.make_param("value", "String", "0.004", "Size", "How many world units one pixel of the label or sprite is. Smaller means smaller.", "expression")],
-		UI_CAT, "Set world size to {value}")
-		.described("Sets how big a world-space label or sprite is, measured in world units per pixel."))
-	descriptors.append(F.make_descriptor("Core", "SetBarWidth", "Set Bar Width", ACEDescriptor.ACEType.ACTION,
-		"{node}.region_rect.size.x = {width}", "",
-		[F.make_param("node", "String", "$HpBar", "Bar", "The world-space sprite the bar is drawn on.", "expression"),
-			F.make_param("width", "String", "100.0", "Width", "How wide the visible slice of the image is, in pixels.", "expression")],
-		UI_CAT, "Set bar width to {width}")
-		.described("Cuts a sprite off at a width - how a health bar over a head is driven from a number.").featured())
-	descriptors.append(F.make_descriptor("Core", "SendInputToSurface", "Send Input To Surface", ACEDescriptor.ACEType.ACTION,
-		"push_input({event})", "",
-		[F.make_param("event", "String", "InputEventMouseButton.new()", "Input", "The input to hand to the UI painted on the surface.", "expression")],
-		UI_CAT, "Send input [i]{event}[/i]", "SubViewport")
-		.described("Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used."))
-	descriptors.append(F.make_descriptor("Core", "SetSurfaceRedraw", "Set Surface Redraw", ACEDescriptor.ACEType.ACTION,
-		"render_target_update_mode = SubViewport.{mode}", "",
-		[F.make_param("mode", "String", "UPDATE_WHEN_VISIBLE", "When", "How often the surface is redrawn.", "", ["UPDATE_WHEN_VISIBLE", "UPDATE_ALWAYS", "UPDATE_DISABLED"])],
-		UI_CAT, "Set surface redraw to {mode}", "SubViewport")
-		.described("Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default."))
+	descriptors.append(F.act("SetFaceTheCamera", "Set Always Face The Camera", "{node}.billboard = BaseMaterial3D.BILLBOARD_ENABLED", UI_CAT, "Set always face the camera on", "Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.").param("node", "$Label3D", "Label or sprite", "The world-space label or sprite to turn.", "expression").featured())
+	descriptors.append(F.act("SetFaceTheCameraUpright", "Set Always Face The Camera (Upright)", "{node}.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y", UI_CAT, "Set always face the camera on (upright)", "Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.").param("node", "$Label3D", "Label or sprite", "The world-space label or sprite to turn.", "expression"))
+	descriptors.append(F.act("SetShowThroughWalls", "Set Show Through Walls", "{node}.no_depth_test = {on}", UI_CAT, "Set show through walls {on}", "Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.").param("node", "$Label3D", "Label or sprite", "The world-space label or sprite to change.", "expression").param_built(F.make_param("on", "bool", "true", "On", "true draws it over everything; false lets walls hide it.", "", ["true", "false"])))
+	descriptors.append(F.act("SetWorldSize", "Set World Size", "{node}.pixel_size = {value}", UI_CAT, "Set world size to {value}", "Sets how big a world-space label or sprite is, measured in world units per pixel.").param("node", "$Label3D", "Label or sprite", "The world-space label or sprite to resize.", "expression").param("value", "0.004", "Size", "How many world units one pixel of the label or sprite is. Smaller means smaller.", "expression"))
+	descriptors.append(F.act("SetBarWidth", "Set Bar Width", "{node}.region_rect.size.x = {width}", UI_CAT, "Set bar width to {width}", "Cuts a sprite off at a width - how a health bar over a head is driven from a number.").param("node", "$HpBar", "Bar", "The world-space sprite the bar is drawn on.", "expression").param("width", "100.0", "Width", "How wide the visible slice of the image is, in pixels.", "expression").featured())
+	descriptors.append(F.act("SendInputToSurface", "Send Input To Surface", "push_input({event})", UI_CAT, "Send input [i]{event}[/i]", "Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.", "SubViewport").param("event", "InputEventMouseButton.new()", "Input", "The input to hand to the UI painted on the surface.", "expression"))
+	descriptors.append(F.act("SetSurfaceRedraw", "Set Surface Redraw", "render_target_update_mode = SubViewport.{mode}", UI_CAT, "Set surface redraw to {mode}", "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.", "SubViewport").param_choice("mode", "UPDATE_WHEN_VISIBLE", "When", "How often the surface is redrawn.", ["UPDATE_WHEN_VISIBLE", "UPDATE_ALWAYS", "UPDATE_DISABLED"]))
 
 	return descriptors

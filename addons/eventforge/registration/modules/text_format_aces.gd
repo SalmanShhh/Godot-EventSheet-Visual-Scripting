@@ -51,102 +51,37 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var d: Array[ACEDescriptor] = []
 
 	# ── Fitting text into a fixed width ──
-	d.append(F.make_descriptor("Core", "ShortenToFit", "Shorten To Fit", ACEDescriptor.ACEType.EXPRESSION,
-		"({text} if {text}.length() <= int({max_chars}) else ({text}.left(%s).strip_edges() + {suffix} if %s > 0 else %s))" % [_BUDGET, _BUDGET, _HARD_CUT], "",
-		[
-			_text_param("\"Ancient Sword of Thorns\"", "The text that has to fit."),
-			_max_chars_param("14"),
-			_suffix_param(),
-		], CAT, "shorten [b]{text}[/b] to [b]{max_chars}[/b] characters")
-		.described("Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary."))
+	d.append(F.expr("ShortenToFit", "Shorten To Fit", "({text} if {text}.length() <= int({max_chars}) else ({text}.left(%s).strip_edges() + {suffix} if %s > 0 else %s))" % [_BUDGET, _BUDGET, _HARD_CUT], CAT, "shorten [b]{text}[/b] to [b]{max_chars}[/b] characters", "Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary.").param_built(_text_param("\"Ancient Sword of Thorns\"", "The text that has to fit.")).param_built(_max_chars_param("14")).param_built(_suffix_param()))
 
 	# Three branches, in the order they matter: back up to a word boundary when there IS one AND the
 	# text before it is not empty (a budget window whose only space is its first character would
 	# otherwise leave the marker standing alone), cut by characters when there is not, and hard-cut
 	# with no marker when the budget is zero.
-	d.append(F.make_descriptor("Core", "ShortenToWholeWords", "Shorten To Whole Words", ACEDescriptor.ACEType.EXPRESSION,
-		"({text} if {text}.length() <= int({max_chars}) else (({text}.left(%s + 1).rsplit(\" \", true, 1)[0].strip_edges() + {suffix}) if (%s > 0 and {text}.left(%s + 1).contains(\" \") and not {text}.left(%s + 1).rsplit(\" \", true, 1)[0].strip_edges().is_empty()) else ({text}.left(%s).strip_edges() + {suffix} if %s > 0 else %s)))" % [_BUDGET, _BUDGET, _BUDGET, _BUDGET, _BUDGET, _BUDGET, _HARD_CUT], "",
-		[
-			_text_param("\"Ancient Sword of Thorns\"", "The text that has to fit."),
-			_max_chars_param("20"),
-			_suffix_param(),
-		], CAT, "shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b]")
-		.described("Like Shorten To Fit, but backs up to the last complete word before cutting, so \"Ancient Sword of Thorns\" reads \"Ancient Sword...\" instead of \"Ancient Sword of Th\". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for."))
+	d.append(F.expr("ShortenToWholeWords", "Shorten To Whole Words", "({text} if {text}.length() <= int({max_chars}) else (({text}.left(%s + 1).rsplit(\" \", true, 1)[0].strip_edges() + {suffix}) if (%s > 0 and {text}.left(%s + 1).contains(\" \") and not {text}.left(%s + 1).rsplit(\" \", true, 1)[0].strip_edges().is_empty()) else ({text}.left(%s).strip_edges() + {suffix} if %s > 0 else %s)))" % [_BUDGET, _BUDGET, _BUDGET, _BUDGET, _BUDGET, _BUDGET, _HARD_CUT], CAT, "shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b]", "Like Shorten To Fit, but backs up to the last complete word before cutting, so \"Ancient Sword of Thorns\" reads \"Ancient Sword...\" instead of \"Ancient Sword of Th\". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for.").param_built(_text_param("\"Ancient Sword of Thorns\"", "The text that has to fit.")).param_built(_max_chars_param("20")).param_built(_suffix_param()))
 
 	# ── Readable numbers (the plain-float twins of the Big Numbers pack's idle-scale formatters) ──
-	d.append(F.make_descriptor("Core", "WithThousandsSeparators", "With Thousands Separators", ACEDescriptor.ACEType.EXPRESSION,
-		"((\"-\" if float({value}) < 0.0 else \"\") + RegEx.create_from_string(\"(\\\\d)(?=(\\\\d\\\\d\\\\d)+$)\").sub(str(absi(int({value}))), \"$1,\", true))", "",
-		[F.make_param("value", "String", "1234567", "Value", "The number to make readable. Anything after the decimal point is dropped.", "expression")],
-		CAT, "[b]{value}[/b] with thousands separators")
-		.described("Turns a number into grouped digits a player can take in at a glance: 1234567 reads \"1,234,567\". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, \"1.23 Qa\") reach for the Big Numbers pack instead."))
+	d.append(F.expr("WithThousandsSeparators", "With Thousands Separators", "((\"-\" if float({value}) < 0.0 else \"\") + RegEx.create_from_string(\"(\\\\d)(?=(\\\\d\\\\d\\\\d)+$)\").sub(str(absi(int({value}))), \"$1,\", true))", CAT, "[b]{value}[/b] with thousands separators", "Turns a number into grouped digits a player can take in at a glance: 1234567 reads \"1,234,567\". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, \"1.23 Qa\") reach for the Big Numbers pack instead.").param("value", "1234567", "Value", "The number to make readable. Anything after the decimal point is dropped.", "expression"))
 
-	d.append(F.make_descriptor("Core", "AsPercentText", "As Percent Text", ACEDescriptor.ACEType.EXPRESSION,
-		"(String.num(float({value}) * 100.0, maxi(int({decimals}), 0)) + \"%\")", "",
-		[
-			F.make_param("value", "String", "0.73", "Fraction", "A fraction where 1.0 means full, e.g. health / max_health.", "expression"),
-			F.make_param("decimals", "String", "0", "Decimals", "Digits after the decimal point. 0 gives a whole percent.", "expression"),
-		], CAT, "[b]{value}[/b] as a percent")
-		.described("Turns a fraction into percent TEXT with the sign on it: 0.73 reads \"73%\". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction)."))
+	d.append(F.expr("AsPercentText", "As Percent Text", "(String.num(float({value}) * 100.0, maxi(int({decimals}), 0)) + \"%\")", CAT, "[b]{value}[/b] as a percent", "Turns a fraction into percent TEXT with the sign on it: 0.73 reads \"73%\". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction).").param("value", "0.73", "Fraction", "A fraction where 1.0 means full, e.g. health / max_health.", "expression").param("decimals", "0", "Decimals", "Digits after the decimal point. 0 gives a whole percent.", "expression"))
 
-	d.append(F.make_descriptor("Core", "AsDuration", "As Duration", ACEDescriptor.ACEType.EXPRESSION,
-		"((\"%dh %02dm\" % [int(maxf({seconds}, 0.0)) / 3600, (int(maxf({seconds}, 0.0)) % 3600) / 60]) if int(maxf({seconds}, 0.0)) >= 3600 else (\"%dm %02ds\" % [int(maxf({seconds}, 0.0)) / 60, int(maxf({seconds}, 0.0)) % 60]))", "",
-		[F.make_param("seconds", "String", "3725.0", "Seconds", "A duration in seconds.", "expression")],
-		CAT, "[b]{seconds}[/b] as a duration")
-		.described("Seconds as a duration that survives passing an hour: 3725 reads \"1h 02m\" and 90 reads \"1m 30s\". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into \"60:00\")."))
+	d.append(F.expr("AsDuration", "As Duration", "((\"%dh %02dm\" % [int(maxf({seconds}, 0.0)) / 3600, (int(maxf({seconds}, 0.0)) % 3600) / 60]) if int(maxf({seconds}, 0.0)) >= 3600 else (\"%dm %02ds\" % [int(maxf({seconds}, 0.0)) / 60, int(maxf({seconds}, 0.0)) % 60]))", CAT, "[b]{seconds}[/b] as a duration", "Seconds as a duration that survives passing an hour: 3725 reads \"1h 02m\" and 90 reads \"1m 30s\". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into \"60:00\").").param("seconds", "3725.0", "Seconds", "A duration in seconds.", "expression"))
 
 	# ── Columns (Godot's lpad/rpad; monospace or it still drifts) ──
-	d.append(F.make_descriptor("Core", "AlignLeft", "Align Left", ACEDescriptor.ACEType.EXPRESSION,
-		"{text}.rpad(int({width}), {fill})", "",
-		[
-			_text_param("\"Name\"", "The text to pad out."),
-			_width_param("16"),
-			_fill_param(),
-		], CAT, "[b]{text}[/b] aligned left in [b]{width}[/b]")
-		.described("Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift."))
+	d.append(F.expr("AlignLeft", "Align Left", "{text}.rpad(int({width}), {fill})", CAT, "[b]{text}[/b] aligned left in [b]{width}[/b]", "Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift.").param_built(_text_param("\"Name\"", "The text to pad out.")).param_built(_width_param("16")).param_built(_fill_param()))
 
-	d.append(F.make_descriptor("Core", "AlignRight", "Align Right", ACEDescriptor.ACEType.EXPRESSION,
-		"{text}.lpad(int({width}), {fill})", "",
-		[
-			_text_param("\"1200\"", "The text to pad out - str() a number first."),
-			_width_param("8"),
-			_fill_param(),
-		], CAT, "[b]{text}[/b] aligned right in [b]{width}[/b]")
-		.described("Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift."))
+	d.append(F.expr("AlignRight", "Align Right", "{text}.lpad(int({width}), {fill})", CAT, "[b]{text}[/b] aligned right in [b]{width}[/b]", "Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift.").param_built(_text_param("\"1200\"", "The text to pad out - str() a number first.")).param_built(_width_param("8")).param_built(_fill_param()))
 
-	d.append(F.make_descriptor("Core", "CenterInWidth", "Center In Width", ACEDescriptor.ACEType.EXPRESSION,
-		"{text}.lpad({text}.length() + (int({width}) - {text}.length()) / 2, {fill}).rpad(int({width}), {fill})", "",
-		[
-			_text_param("\"TITLE\"", "The text to center."),
-			_width_param("20"),
-			_fill_param(),
-		], CAT, "[b]{text}[/b] centered in [b]{width}[/b]")
-		.described("Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift."))
+	d.append(F.expr("CenterInWidth", "Center In Width", "{text}.lpad({text}.length() + (int({width}) - {text}.length()) / 2, {fill}).rpad(int({width}), {fill})", CAT, "[b]{text}[/b] centered in [b]{width}[/b]", "Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift.").param_built(_text_param("\"TITLE\"", "The text to center.")).param_built(_width_param("20")).param_built(_fill_param()))
 
 	# ── Case that keeps word shape (Uppercase and Lowercase destroy it) ──
-	d.append(F.make_descriptor("Core", "AsTitleText", "As Title Text", ACEDescriptor.ACEType.EXPRESSION,
-		"{text}.capitalize()", "",
-		[_text_param("\"fire_sword\"", "An id or key, e.g. fire_sword or maxHealth.")],
-		CAT, "[b]{text}[/b] as title text")
-		.described("Turns a machine id into a readable name: \"fire_sword\" reads \"Fire Sword\", \"maxHealth\" reads \"Max Health\". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places."))
+	d.append(F.expr("AsTitleText", "As Title Text", "{text}.capitalize()", CAT, "[b]{text}[/b] as title text", "Turns a machine id into a readable name: \"fire_sword\" reads \"Fire Sword\", \"maxHealth\" reads \"Max Health\". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places.").param_built(_text_param("\"fire_sword\"", "An id or key, e.g. fire_sword or maxHealth.")))
 
-	d.append(F.make_descriptor("Core", "AsSentenceText", "As Sentence Text", ACEDescriptor.ACEType.EXPRESSION,
-		"({text}.substr(0, 1).to_upper() + {text}.substr(1))", "",
-		[_text_param("\"picked up a shield\"", "A sentence that needs its first letter raised.")],
-		CAT, "[b]{text}[/b] as sentence text")
-		.described("Raises the FIRST letter only and leaves the rest of the text exactly as it is, so \"NPC\" and \"HP\" keep their capitals. Empty text stays empty."))
+	d.append(F.expr("AsSentenceText", "As Sentence Text", "({text}.substr(0, 1).to_upper() + {text}.substr(1))", CAT, "[b]{text}[/b] as sentence text", "Raises the FIRST letter only and leaves the rest of the text exactly as it is, so \"NPC\" and \"HP\" keep their capitals. Empty text stays empty.").param_built(_text_param("\"picked up a shield\"", "A sentence that needs its first letter raised.")))
 
 	# ── Translated patterns: look the WHOLE sentence up first, THEN fill its slots ──
-	d.append(F.make_descriptor("Core", "TranslatedTextFromPattern", "Translated Text From Pattern", ACEDescriptor.ACEType.EXPRESSION,
-		"tr({pattern}).format({values})", "",
-		[_pattern_param(), _values_param()],
-		CAT_TRANSLATION, "translated text from [b]{pattern}[/b]")
-		.described("Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates."))
+	d.append(F.expr("TranslatedTextFromPattern", "Translated Text From Pattern", "tr({pattern}).format({values})", CAT_TRANSLATION, "translated text from [b]{pattern}[/b]", "Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates.").param_built(_pattern_param()).param_built(_values_param()))
 
-	d.append(F.make_descriptor("Core", "SetTextTranslatedPattern", "Set Text (translated pattern)", ACEDescriptor.ACEType.ACTION,
-		"text = tr({pattern}).format({values})", "",
-		[_pattern_param(), _values_param()],
-		CAT_TRANSLATION, "set text to translated [b]{pattern}[/b]", "Label")
-		.described("Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch."))
+	d.append(F.act("SetTextTranslatedPattern", "Set Text (translated pattern)", "text = tr({pattern}).format({values})", CAT_TRANSLATION, "set text to translated [b]{pattern}[/b]", "Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch.", "Label").param_built(_pattern_param()).param_built(_values_param()))
 
 	return d
 

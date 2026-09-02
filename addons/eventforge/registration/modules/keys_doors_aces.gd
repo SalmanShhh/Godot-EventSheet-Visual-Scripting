@@ -40,29 +40,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## are the list words, so a reader who already knows Push Back and Contains is not learning a
 ## second vocabulary - they are reading the one they have, about keys.
 static func _keys(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "PickUpKey", "Pick Up Key", ACEDescriptor.ACEType.ACTION,
-		"{keys}.append({key})", "", [
-			F.make_param("key", "String", "\"red_key\"", "Key", "The key that was picked up, as text.", "expression"),
-			F.make_param("keys", "String", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference")
-		], KEYS, "Pick up key [b]{key}[/b]")
-		.described("Adds a key to the list the player carries. Drop it on the keycard's walked-into trigger, beside the row that takes the card off the floor.").featured())
-	descriptors.append(F.make_descriptor("Core", "HasKey", "Has Key", ACEDescriptor.ACEType.CONDITION,
-		"({key} in {keys})", "", [
-			F.make_param("key", "String", "\"red_key\"", "Key", "The key to look for, as text.", "expression"),
-			F.make_param("keys", "String", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference")
-		], KEYS, "Has key [b]{key}[/b]")
-		.described("True while this key is in the list. The prompt on the door, the lit-up icon on the HUD, the shortcut only a keyholder may take.").featured())
-	descriptors.append(F.make_descriptor("Core", "NeedsKey", "Needs Key", ACEDescriptor.ACEType.CONDITION,
-		"(not {key} in {keys})", "", [
-			F.make_param("key", "String", "\"red_key\"", "Key", "The key that is missing, as text.", "expression"),
-			F.make_param("keys", "String", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference")
-		], KEYS, "Needs key [b]{key}[/b]")
-		.described("True while this key is still missing - the other half of Has Key, so a locked-door hint reads as the sentence it is rather than as a negated test."))
-	descriptors.append(F.make_descriptor("Core", "KeysHeld", "Keys Held", ACEDescriptor.ACEType.EXPRESSION,
-		"{keys}.size()", "", [
-			F.make_param("keys", "String", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference")
-		], KEYS, "keys held")
-		.described("How many keys the player is carrying - the number a row of HUD key icons counts up to."))
+	descriptors.append(F.act("PickUpKey", "Pick Up Key", "{keys}.append({key})", KEYS, "Pick up key [b]{key}[/b]", "Adds a key to the list the player carries. Drop it on the keycard's walked-into trigger, beside the row that takes the card off the floor.").param("key", "\"red_key\"", "Key", "The key that was picked up, as text.", "expression").param("keys", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference").featured())
+	descriptors.append(F.cond("HasKey", "Has Key", "({key} in {keys})", KEYS, "Has key [b]{key}[/b]", "True while this key is in the list. The prompt on the door, the lit-up icon on the HUD, the shortcut only a keyholder may take.").param("key", "\"red_key\"", "Key", "The key to look for, as text.", "expression").param("keys", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference").featured())
+	descriptors.append(F.cond("NeedsKey", "Needs Key", "(not {key} in {keys})", KEYS, "Needs key [b]{key}[/b]", "True while this key is still missing - the other half of Has Key, so a locked-door hint reads as the sentence it is rather than as a negated test.").param("key", "\"red_key\"", "Key", "The key that is missing, as text.", "expression").param("keys", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference"))
+	descriptors.append(F.expr("KeysHeld", "Keys Held", "{keys}.size()", KEYS, "keys held", "How many keys the player is carrying - the number a row of HUD key icons counts up to.").param("keys", "keys", "Keys", "The list holding the keys carried so far.", "variable_reference"))
 
 
 ## The door half. Try Door is the whole gesture in one row: the key fits and the door opens, or it
@@ -97,7 +78,4 @@ static func _doors(descriptors: Array[ACEDescriptor]) -> void:
 		F.make_param("seconds", "String", "0.6", "Over seconds", "How long the slide takes.", "expression")
 	], KEYS, "Open door [i]{door}[/i] (stays open)")
 		.described("Slides the door out of the way, stops it blocking, and leaves it open. The flag is what makes it happen once - walking back through an open door does not re-run the slide.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnLockedDoorTried", "On Locked Door Tried",
-		ACEDescriptor.ACEType.TRIGGER, "", "locked_door_tried", [], KEYS,
-		"On locked door tried")
-		.described("Runs on a door that was tried without its key, with the key it wanted. The thud, the red flash, the \"you need the red keycard\" line - all of them go here."))
+	descriptors.append(F.trig("OnLockedDoorTried", "On Locked Door Tried", "locked_door_tried", KEYS, "On locked door tried", "Runs on a door that was tried without its key, with the key it wanted. The thud, the red flash, the \"you need the red keycard\" line - all of them go here."))

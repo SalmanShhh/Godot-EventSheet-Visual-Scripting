@@ -18,20 +18,15 @@ const CAT := "Procedural"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "SeededValue", "Seeded Value", ACEDescriptor.ACEType.EXPRESSION, "(float(absi(hash(str({seed}) + \"#\" + str({index}))) % 1000000) / 1000000.0)", "", [_seed_param(), _index_param()], CAT, "seeded value {seed} #{index}")
-		.described("A stable pseudo-random float in [0, 1) for a seed and an index - the same inputs always give the same value. No autoload, so it works in Editor Tool sheets and while generating Custom Resource data, as well as at runtime.").featured())
+	descriptors.append(F.expr("SeededValue", "Seeded Value", "(float(absi(hash(str({seed}) + \"#\" + str({index}))) % 1000000) / 1000000.0)", CAT, "seeded value {seed} #{index}", "A stable pseudo-random float in [0, 1) for a seed and an index - the same inputs always give the same value. No autoload, so it works in Editor Tool sheets and while generating Custom Resource data, as well as at runtime.").param_built(_seed_param()).param_built(_index_param()).featured())
 
-	descriptors.append(F.make_descriptor("Core", "SeededInt", "Seeded Int", ACEDescriptor.ACEType.EXPRESSION, "({minimum} + absi(hash(str({seed}) + \"#\" + str({index}))) % maxi({maximum} - {minimum} + 1, 1))", "", [_seed_param(), _index_param(), F.make_param("minimum", "int", "0", "Min", "Lowest value (inclusive).", "expression"), F.make_param("maximum", "int", "9", "Max", "Highest value (inclusive).", "expression")], CAT, "seeded int {seed} #{index} in {minimum}..{maximum}")
-		.described("A stable pseudo-random integer between min and max (inclusive) for a seed and an index - deterministic, no autoload."))
+	descriptors.append(F.expr("SeededInt", "Seeded Int", "({minimum} + absi(hash(str({seed}) + \"#\" + str({index}))) % maxi({maximum} - {minimum} + 1, 1))", CAT, "seeded int {seed} #{index} in {minimum}..{maximum}", "A stable pseudo-random integer between min and max (inclusive) for a seed and an index - deterministic, no autoload.").param_built(_seed_param()).param_built(_index_param()).param_typed("int", "minimum", "0", "Min", "Lowest value (inclusive).", "expression").param_typed("int", "maximum", "9", "Max", "Highest value (inclusive).", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "SeededPick", "Seeded Pick", ACEDescriptor.ACEType.EXPRESSION, "(({options} as Array)[absi(hash(str({seed}) + \"#\" + str({index}))) % maxi(({options} as Array).size(), 1)] if not ({options} as Array).is_empty() else null)", "", [_seed_param(), _index_param(), F.make_param("options", "Array", "[]", "Options", "The array to pick from.", "expression")], CAT, "seeded pick from {options} ({seed} #{index})")
-		.described("A stable pseudo-random element of an array for a seed and an index (null if empty) - deterministic, no autoload."))
+	descriptors.append(F.expr("SeededPick", "Seeded Pick", "(({options} as Array)[absi(hash(str({seed}) + \"#\" + str({index}))) % maxi(({options} as Array).size(), 1)] if not ({options} as Array).is_empty() else null)", CAT, "seeded pick from {options} ({seed} #{index})", "A stable pseudo-random element of an array for a seed and an index (null if empty) - deterministic, no autoload.").param_built(_seed_param()).param_built(_index_param()).param_typed("Array", "options", "[]", "Options", "The array to pick from.", "expression"))
 
-	descriptors.append(F.make_descriptor("Core", "SeededSign", "Seeded Sign", ACEDescriptor.ACEType.EXPRESSION, "(1 if (absi(hash(str({seed}) + \"#\" + str({index}))) % 2) == 0 else -1)", "", [_seed_param(), _index_param()], CAT, "seeded sign {seed} #{index}")
-		.described("A stable -1 or +1 for a seed and an index - deterministic, no autoload."))
+	descriptors.append(F.expr("SeededSign", "Seeded Sign", "(1 if (absi(hash(str({seed}) + \"#\" + str({index}))) % 2) == 0 else -1)", CAT, "seeded sign {seed} #{index}", "A stable -1 or +1 for a seed and an index - deterministic, no autoload.").param_built(_seed_param()).param_built(_index_param()))
 
-	descriptors.append(F.make_descriptor("Core", "SeededChance", "Seeded Chance", ACEDescriptor.ACEType.CONDITION, "((float(absi(hash(str({seed}) + \"#\" + str({index}))) % 1000000) / 1000000.0) * 100.0 < {percent})", "", [_seed_param(), _index_param(), F.make_param("percent", "float", "50.0", "Percent", "Chance from 0 to 100.", "expression")], CAT, "seeded chance {percent}% ({seed} #{index})")
-		.described("True for a stable share of seed+index pairs (0-100) - a deterministic Chance you can use in tools and resource generation."))
+	descriptors.append(F.cond("SeededChance", "Seeded Chance", "((float(absi(hash(str({seed}) + \"#\" + str({index}))) % 1000000) / 1000000.0) * 100.0 < {percent})", CAT, "seeded chance {percent}% ({seed} #{index})", "True for a stable share of seed+index pairs (0-100) - a deterministic Chance you can use in tools and resource generation.").param_built(_seed_param()).param_built(_index_param()).param_typed("float", "percent", "50.0", "Percent", "Chance from 0 to 100.", "expression"))
 
 	return descriptors
 

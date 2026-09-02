@@ -66,33 +66,17 @@ const STATE_HINT: String = "state_reference"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	descriptors.append(F.make_descriptor("Core", "InState", "Is In State", ACEDescriptor.ACEType.CONDITION,
-		"state == State.{state}", "", [_state_param()], CAT, "Is in {state}")
-		.described("True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them."))
+	descriptors.append(F.cond("InState", "Is In State", "state == State.{state}", CAT, "Is in {state}", "True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.").param_built(_state_param()))
 
-	descriptors.append(F.make_descriptor("Core", "InStateForOver", "Is In State For Over",
-		ACEDescriptor.ACEType.CONDITION,
-		"state == State.{state} and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > {seconds}",
-		"", [_state_param(), _seconds_param()], CAT, "Is in {state} for over {seconds}s")
-		.described("True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else."))
+	descriptors.append(F.cond("InStateForOver", "Is In State For Over", "state == State.{state} and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > {seconds}", CAT, "Is in {state} for over {seconds}s", "True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.").param_built(_state_param()).param_built(_seconds_param()))
 
-	descriptors.append(F.make_descriptor("Core", "WasInState", "Was In State", ACEDescriptor.ACEType.CONDITION,
-		"previous_state == State.{state}", "", [_state_param()], CAT, "Was in {state}")
-		.described("True while the state this object was in BEFORE the current one is the given state. Answers \"what did we come from\" - the chase that began from patrolling is a different chase from the one that began from being staggered."))
+	descriptors.append(F.cond("WasInState", "Was In State", "previous_state == State.{state}", CAT, "Was in {state}", "True while the state this object was in BEFORE the current one is the given state. Answers \"what did we come from\" - the chase that began from patrolling is a different chase from the one that began from being staggered.").param_built(_state_param()))
 
-	descriptors.append(F.make_descriptor("Core", "GoToState", "Go To State", ACEDescriptor.ACEType.ACTION,
-		"state = State.{state}", "", [_state_param()], CAT, "Go to {state}")
-		.described("Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing."))
+	descriptors.append(F.act("GoToState", "Go To State", "state = State.{state}", CAT, "Go to {state}", "Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.").param_built(_state_param()))
 
-	descriptors.append(F.make_descriptor("Core", "OnEnteringState", "On Entering State",
-		ACEDescriptor.ACEType.TRIGGER, "", "state_changed", [_state_param()],
-		CAT, "On entering {state}")
-		.described("Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left."))
+	descriptors.append(F.trig("OnEnteringState", "On Entering State", "state_changed", CAT, "On entering {state}", "Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.").param_built(_state_param()))
 
-	descriptors.append(F.make_descriptor("Core", "OnLeavingState", "On Leaving State",
-		ACEDescriptor.ACEType.TRIGGER, "", "state_changed", [_state_param()],
-		CAT, "On leaving {state}")
-		.described("Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red."))
+	descriptors.append(F.trig("OnLeavingState", "On Leaving State", "state_changed", CAT, "On leaving {state}", "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.").param_built(_state_param()))
 
 	return descriptors
 

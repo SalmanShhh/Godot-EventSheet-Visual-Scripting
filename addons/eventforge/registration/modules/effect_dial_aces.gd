@@ -79,72 +79,33 @@ static func published_ace_ids() -> PackedStringArray:
 ## `Set effect.dissolve to 0.7`. The one row a dial gets used through most, and the one the health
 ## check offers to re-pick when a shader stops declaring the name it holds.
 static func _set_row() -> ACEDescriptor:
-	return F.make_descriptor("Core", "EffectSetDial", "Set Effect Dial", ACEDescriptor.ACEType.ACTION,
-		"%s.%s(&\"{%s}\", {value})" % [MATERIAL_MEMBER, SET_CALL, DIAL_PARAM], "",
-		[_dial_param("The dial to turn. Picked from the shader this node's material runs, so the name is always one the shader really declares."),
-			F.make_param("value", "String", "1.0", "Value",
-				"What to set it to. The shader says what kind of value the dial takes, and what it starts at.",
-				VALUE_HINT)],
-		CAT, "Set {%s} to {value}" % DIAL_PARAM, HOST) \
-		.described("Turns one dial of the effect this node wears. Writes `ShaderMaterial.set_shader_parameter`, with the name taken from the shader rather than typed - a mistyped name is a call Godot accepts and never acts on.") \
-		.project_scoped() \
-		.featured()
+	return F.act("EffectSetDial", "Set Effect Dial", "%s.%s(&\"{%s}\", {value})" % [MATERIAL_MEMBER, SET_CALL, DIAL_PARAM], CAT, "Set {%s} to {value}" % DIAL_PARAM, "Turns one dial of the effect this node wears. Writes `ShaderMaterial.set_shader_parameter`, with the name taken from the shader rather than typed - a mistyped name is a call Godot accepts and never acts on.", HOST).param_built(_dial_param("The dial to turn. Picked from the shader this node's material runs, so the name is always one the shader really declares.")).param("value", "1.0", "Value", "What to set it to. The shader says what kind of value the dial takes, and what it starts at.", VALUE_HINT).project_scoped().featured()
 
 
 ## `Fade effect.dissolve to 1.0 over 0.8 s`. One tween walks the dial there; nothing is kept between
 ## frames. It carries its own "On node" because the node is named INSIDE the lambda rather than in
 ## front of the call - `create_tween()` belongs to the node running the sheet.
 static func _fade_row() -> ACEDescriptor:
-	return F.make_descriptor("Core", "EffectFadeDial", "Fade Effect Dial", ACEDescriptor.ACEType.ACTION,
-		"create_tween().tween_method(func(v): {target.}%s.%s(&\"{%s}\", v), {from}, {to}, {seconds})" % [
-			MATERIAL_MEMBER, SET_CALL, DIAL_PARAM], "",
-		[_target_param("The node whose effect to fade. Leave it blank for this node."),
-			_dial_param("The dial to walk. Picked from the shader this node's material runs."),
-			F.make_param("from", "String", "0.0", "From", "Where the fade starts.", VALUE_HINT),
-			F.make_param("to", "String", "1.0", "To", "Where the fade ends.", VALUE_HINT),
-			F.make_param("seconds", "String", DEFAULT_FADE_SECONDS, "Seconds",
-				"How long the fade takes.", "expression")],
-		CAT, "Fade {%s} to {to} over {seconds} s" % DIAL_PARAM, HOST) \
-		.described("Walks one dial of this node's effect to a new value over time instead of jumping to it - a dissolve, a freeze setting in, a glow coming up. One tween, no state to keep.") \
-		.project_scoped() \
-		.featured()
+	return F.act("EffectFadeDial", "Fade Effect Dial", "create_tween().tween_method(func(v): {target.}%s.%s(&\"{%s}\", v), {from}, {to}, {seconds})" % [ MATERIAL_MEMBER, SET_CALL, DIAL_PARAM], CAT, "Fade {%s} to {to} over {seconds} s" % DIAL_PARAM, "Walks one dial of this node's effect to a new value over time instead of jumping to it - a dissolve, a freeze setting in, a glow coming up. One tween, no state to keep.", HOST).param_built(_target_param("The node whose effect to fade. Leave it blank for this node.")).param_built(_dial_param("The dial to walk. Picked from the shader this node's material runs.")).param("from", "0.0", "From", "Where the fade starts.", VALUE_HINT).param("to", "1.0", "To", "Where the fade ends.", VALUE_HINT).param_typed("String", "seconds", DEFAULT_FADE_SECONDS, "Seconds", "How long the fade takes.", "expression").project_scoped().featured()
 
 
 ## The dial read back, for any value field. `effect.dissolve` is what the row says and
 ## `material.get_shader_parameter(&"dissolve")` is what it writes.
 static func _read_row() -> ACEDescriptor:
-	return F.make_descriptor("Core", "EffectDial", "Effect Dial", ACEDescriptor.ACEType.EXPRESSION,
-		"%s.%s(&\"{%s}\")" % [MATERIAL_MEMBER, GET_CALL, DIAL_PARAM], "",
-		[_dial_param("The dial to read.")],
-		CAT, "{%s}" % DIAL_PARAM, HOST) \
-		.described("Reads one dial of this node's effect back. Use it in any value field - the name is picked from the shader, so a read can no longer quietly return nothing.") \
-		.project_scoped()
+	return F.expr("EffectDial", "Effect Dial", "%s.%s(&\"{%s}\")" % [MATERIAL_MEMBER, GET_CALL, DIAL_PARAM], CAT, "{%s}" % DIAL_PARAM, "Reads one dial of this node's effect back. Use it in any value field - the name is picked from the shader, so a read can no longer quietly return nothing.", HOST).param_built(_dial_param("The dial to read.")).project_scoped()
 
 
 ## The same read as a question: `effect.dissolve > 0.5`. Its own row rather than the expression
 ## dropped into Compare Values, because what a reader is asking about is the dial.
 static func _ask_row() -> ACEDescriptor:
-	return F.make_descriptor("Core", "EffectDialIs", "Effect Dial Is", ACEDescriptor.ACEType.CONDITION,
-		"%s.%s(&\"{%s}\") {op} {value}" % [MATERIAL_MEMBER, GET_CALL, DIAL_PARAM], "",
-		[_dial_param("The dial to ask about."),
-			F.make_param("op", "String", ">", "Operator", "Comparison.", "", F.COMPARISON_OPTIONS),
-			F.make_param("value", "String", "0.5", "Value", "What to compare the dial against.",
-				VALUE_HINT)],
-		CAT, "{%s} {op} {value}" % DIAL_PARAM, HOST) \
-		.described("True while one dial of this node's effect compares as the row says. Reads `ShaderMaterial.get_shader_parameter`.") \
-		.project_scoped()
+	return F.cond("EffectDialIs", "Effect Dial Is", "%s.%s(&\"{%s}\") {op} {value}" % [MATERIAL_MEMBER, GET_CALL, DIAL_PARAM], CAT, "{%s} {op} {value}" % DIAL_PARAM, "True while one dial of this node's effect compares as the row says. Reads `ShaderMaterial.get_shader_parameter`.", HOST).param_built(_dial_param("The dial to ask about.")).param_choice("op", ">", "Operator", "Comparison.", F.COMPARISON_OPTIONS).param("value", "0.5", "Value", "What to compare the dial against.", VALUE_HINT).project_scoped()
 
 
 ## THE row that is not a dial: a material is a FILE, and two nodes pointing at the same one share
 ## every dial on it. This gives the node its own copy first, which is Godot's own answer and the one
 ## a reader needs before any of the rows above mean only this node.
 static func _own_row() -> ACEDescriptor:
-	return F.make_descriptor("Core", "EffectOwnMaterial", "Make The Effect This Node's Own",
-		ACEDescriptor.ACEType.ACTION,
-		"{target.}%s = {target.}%s.duplicate()" % [MATERIAL_MEMBER, MATERIAL_MEMBER], "",
-		[_target_param("The node to give its own copy. Leave it blank for this node.")],
-		CAT, "Make the effect this node's own", HOST) \
-		.described("Gives this node its own copy of the material before anything turns a dial on it. Without it, every dial row written at run time turns the dial for every other node wearing the same `.tres`.")
+	return F.act("EffectOwnMaterial", "Make The Effect This Node's Own", "{target.}%s = {target.}%s.duplicate()" % [MATERIAL_MEMBER, MATERIAL_MEMBER], CAT, "Make the effect this node's own", "Gives this node its own copy of the material before anything turns a dial on it. Without it, every dial row written at run time turns the dial for every other node wearing the same `.tres`.", HOST).param_built(_target_param("The node to give its own copy. Leave it blank for this node."))
 
 
 ## The dial field, said the same way on every row that has one.

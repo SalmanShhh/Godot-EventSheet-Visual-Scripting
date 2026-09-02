@@ -27,136 +27,48 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# "__last_sfx" meta on the emitting node, so the last-sound ACEs below can retune the
 	# shot that JUST fired (the event-sheet "last played sound" idiom) - still zero plugin
 	# runtime, still self-freeing.
-	descriptors.append(F.make_descriptor("Core", "PlaySound", "Play Sound", ACEDescriptor.ACEType.ACTION,
-		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\tset_meta(\"__last_sfx\", __sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
-		"", [
-			F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file to play once.", "audio_path"),
-			F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression"),
-			F.make_param("volume_db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")
-		], "Audio", "Play sound {path}")
-		.described("Plays a sound file once on a chosen bus and volume, then cleans itself up. Remembers the shot as the LAST SOUND, so Set Last Sound Playback Rate right after can retune it."))
-	descriptors.append(F.make_descriptor("Core", "PlaySoundAt", "Play Sound At (2D)", ACEDescriptor.ACEType.ACTION,
-		"var __sfx_{uid} = AudioStreamPlayer2D.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.global_position = {position}\n\tadd_child(__sfx_{uid})\n\tset_meta(\"__last_sfx\", __sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
-		"", [
-			F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file to play once, positionally.", "audio_path"),
-			F.make_param("position", "String", "global_position", "Position", "World position (2D falloff).", "expression")
-		], "Audio", "Play sound {path} at {position}", "Node2D")
-		.described("Plays a sound at a world position so it gets louder or quieter with distance. Remembers the shot as the LAST SOUND for the last-sound actions."))
+	descriptors.append(F.act("PlaySound", "Play Sound", "var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\tset_meta(\"__last_sfx\", __sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()", "Audio", "Play sound {path}", "Plays a sound file once on a chosen bus and volume, then cleans itself up. Remembers the shot as the LAST SOUND, so Set Last Sound Playback Rate right after can retune it.").param("path", "\"res://sound.ogg\"", "Sound", "Audio file to play once.", "audio_path").param("bus", "\"Master\"", "Bus", "Audio bus name.", "expression").param("volume_db", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression"))
+	descriptors.append(F.act("PlaySoundAt", "Play Sound At (2D)", "var __sfx_{uid} = AudioStreamPlayer2D.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.global_position = {position}\n\tadd_child(__sfx_{uid})\n\tset_meta(\"__last_sfx\", __sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()", "Audio", "Play sound {path} at {position}", "Plays a sound at a world position so it gets louder or quieter with distance. Remembers the shot as the LAST SOUND for the last-sound actions.", "Node2D").param("path", "\"res://sound.ogg\"", "Sound", "Audio file to play once, positionally.", "audio_path").param("position", "global_position", "Position", "World position (2D falloff).", "expression"))
 
 	# 1b - Last-sound control: retune the one-shot that just fired. The classic use is
 	# pitch variation - Play Sound, then Set Last Sound Playback Rate randf_range(0.9, 1.1)
 	# so repeated hits never sound machine-gun identical. Each node remembers ITS OWN last
 	# shot (the meta lives on the emitting node); the guard makes a finished-and-freed shot
 	# a safe no-op.
-	descriptors.append(F.make_descriptor("Core", "SetLastSoundRate", "Set Last Sound Playback Rate", ACEDescriptor.ACEType.ACTION,
-		"var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.pitch_scale = {rate}",
-		"", [
-			F.make_param("rate", "String", "randf_range(0.9, 1.1)", "Rate", "1 = normal speed/pitch; the default randomizes a little for natural variation.", "expression")
-		], "Audio", "Set last sound rate {rate}x")
-		.described("Changes the speed and pitch of the sound the last Play Sound started (1 = normal). Put it right after Play Sound - the default randf_range(0.9, 1.1) gives every shot a slightly different pitch."))
-	descriptors.append(F.make_descriptor("Core", "SetLastSoundVolume", "Set Last Sound Volume", ACEDescriptor.ACEType.ACTION,
-		"var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.volume_db = {db}",
-		"", [
-			F.make_param("db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")
-		], "Audio", "Set last sound volume {db} dB")
-		.described("Changes the volume of the sound the last Play Sound started, in decibels."))
-	descriptors.append(F.make_descriptor("Core", "StopLastSound", "Stop Last Sound", ACEDescriptor.ACEType.ACTION,
-		"var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.queue_free()",
-		"", [], "Audio", "Stop last sound")
-		.described("Silences and frees the sound the last Play Sound started (one-shots are throwaway players, so stopping IS freeing)."))
+	descriptors.append(F.act("SetLastSoundRate", "Set Last Sound Playback Rate", "var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.pitch_scale = {rate}", "Audio", "Set last sound rate {rate}x", "Changes the speed and pitch of the sound the last Play Sound started (1 = normal). Put it right after Play Sound - the default randf_range(0.9, 1.1) gives every shot a slightly different pitch.").param("rate", "randf_range(0.9, 1.1)", "Rate", "1 = normal speed/pitch; the default randomizes a little for natural variation.", "expression"))
+	descriptors.append(F.act("SetLastSoundVolume", "Set Last Sound Volume", "var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.volume_db = {db}", "Audio", "Set last sound volume {db} dB", "Changes the volume of the sound the last Play Sound started, in decibels.").param("db", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression"))
+	descriptors.append(F.act("StopLastSound", "Stop Last Sound", "var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.queue_free()", "Audio", "Stop last sound", "Silences and frees the sound the last Play Sound started (one-shots are throwaway players, so stopping IS freeing)."))
 
 	# 2 - Player-scoped (music & controlled playback; attach to an AudioStreamPlayer).
-	descriptors.append(F.make_descriptor("Core", "AudioPlay", "Play", ACEDescriptor.ACEType.ACTION,
-		"play({from})", "", [F.make_param("from", "String", "0.0", "From (s)", "Start position in seconds.", "expression")],
-		"Audio", "Play from {from}s", "AudioStreamPlayer")
-		.described("Starts this audio player, optionally from a given time in seconds."))
-	descriptors.append(F.make_descriptor("Core", "AudioPlayStream", "Play Sound File", ACEDescriptor.ACEType.ACTION,
-		"stream = load({path})\nplay()", "", [F.make_param("path", "String", "\"res://music.ogg\"", "Sound", "Audio file to load and play.", "audio_path")],
-		"Audio", "Play file {path}", "AudioStreamPlayer")
-		.described("Loads an audio file into this player and starts playing it."))
-	descriptors.append(F.make_descriptor("Core", "AudioStop", "Stop", ACEDescriptor.ACEType.ACTION,
-		"stop()", "", [], "Audio", "Stop", "AudioStreamPlayer")
-		.described("Stops this audio player from playing right now."))
-	descriptors.append(F.make_descriptor("Core", "AudioSeek", "Seek", ACEDescriptor.ACEType.ACTION,
-		"seek({seconds})", "", [F.make_param("seconds", "String", "0.0", "Seconds", "Playback position.", "expression")],
-		"Audio", "Seek to {seconds} seconds", "AudioStreamPlayer")
-		.described("Jumps this audio player's playback to a specific time in seconds."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetVolume", "Set Volume", ACEDescriptor.ACEType.ACTION,
-		"volume_db = {db}", "", [F.make_param("db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")],
-		"Audio", "Set volume to {db} dB", "AudioStreamPlayer")
-		.described("Sets how loud this audio player is, in decibels (0 = full, -80 = silent)."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetPitch", "Set Pitch", ACEDescriptor.ACEType.ACTION,
-		"pitch_scale = {pitch}", "", [F.make_param("pitch", "String", "1.0", "Pitch", "1 = normal speed/pitch.", "expression")],
-		"Audio", "Set pitch to {pitch}", "AudioStreamPlayer")
-		.described("Changes this player's speed and pitch (1 = normal, higher = faster)."))
-	descriptors.append(F.make_descriptor("Core", "AudioIsPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION,
-		"playing", "", [], "Audio", "Is playing", "AudioStreamPlayer")
-		.described("True when this audio player is currently making sound."))
-	descriptors.append(F.make_descriptor("Core", "AudioGetPosition", "Playback Position", ACEDescriptor.ACEType.EXPRESSION,
-		"get_playback_position()", "", [], "Audio", "playback position", "AudioStreamPlayer")
-		.described("Gives the current playback time of this audio player, in seconds."))
+	descriptors.append(F.act("AudioPlay", "Play", "play({from})", "Audio", "Play from {from}s", "Starts this audio player, optionally from a given time in seconds.", "AudioStreamPlayer").param("from", "0.0", "From (s)", "Start position in seconds.", "expression"))
+	descriptors.append(F.act("AudioPlayStream", "Play Sound File", "stream = load({path})\nplay()", "Audio", "Play file {path}", "Loads an audio file into this player and starts playing it.", "AudioStreamPlayer").param("path", "\"res://music.ogg\"", "Sound", "Audio file to load and play.", "audio_path"))
+	descriptors.append(F.act("AudioStop", "Stop", "stop()", "Audio", "Stop", "Stops this audio player from playing right now.", "AudioStreamPlayer"))
+	descriptors.append(F.act("AudioSeek", "Seek", "seek({seconds})", "Audio", "Seek to {seconds} seconds", "Jumps this audio player's playback to a specific time in seconds.", "AudioStreamPlayer").param("seconds", "0.0", "Seconds", "Playback position.", "expression"))
+	descriptors.append(F.act("AudioSetVolume", "Set Volume", "volume_db = {db}", "Audio", "Set volume to {db} dB", "Sets how loud this audio player is, in decibels (0 = full, -80 = silent).", "AudioStreamPlayer").param("db", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression"))
+	descriptors.append(F.act("AudioSetPitch", "Set Pitch", "pitch_scale = {pitch}", "Audio", "Set pitch to {pitch}", "Changes this player's speed and pitch (1 = normal, higher = faster).", "AudioStreamPlayer").param("pitch", "1.0", "Pitch", "1 = normal speed/pitch.", "expression"))
+	descriptors.append(F.cond("AudioIsPlaying", "Is Playing", "playing", "Audio", "Is playing", "True when this audio player is currently making sound.", "AudioStreamPlayer"))
+	descriptors.append(F.expr("AudioGetPosition", "Playback Position", "get_playback_position()", "Audio", "playback position", "Gives the current playback time of this audio player, in seconds.", "AudioStreamPlayer"))
 
 	# 3 - Bus control (Godot extras; event-sheet users fake these with tag groups).
 	var bus_param: ACEParam = F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression")
-	descriptors.append(F.make_descriptor("Core", "SetBusVolume", "Set Bus Volume", ACEDescriptor.ACEType.ACTION,
-		"AudioServer.set_bus_volume_db(AudioServer.get_bus_index({bus}), {db})", "", [
-			bus_param,
-			F.make_param("db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")
-		], "Audio", "Set bus {bus} volume to {db} dB")
-		.described("Sets the volume of a named audio bus, like Music or SFX."))
-	descriptors.append(F.make_descriptor("Core", "SetBusMute", "Mute Bus", ACEDescriptor.ACEType.ACTION,
-		"AudioServer.set_bus_mute(AudioServer.get_bus_index({bus}), {muted})", "", [
-			F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression"),
-			F.make_param("muted", "String", "true", "Muted", "true to silence the bus.", "", ["true", "false"])
-		], "Audio", "Set bus {bus} muted: {muted}")
-		.described("Mutes or unmutes a named audio bus all at once."))
-	descriptors.append(F.make_descriptor("Core", "GetBusVolume", "Bus Volume", ACEDescriptor.ACEType.EXPRESSION,
-		"AudioServer.get_bus_volume_db(AudioServer.get_bus_index({bus}))", "", [
-			F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression")
-		], "Audio", "bus {bus} volume")
-		.described("Gives the current volume of a named audio bus, in decibels."))
+	descriptors.append(F.act("SetBusVolume", "Set Bus Volume", "AudioServer.set_bus_volume_db(AudioServer.get_bus_index({bus}), {db})", "Audio", "Set bus {bus} volume to {db} dB", "Sets the volume of a named audio bus, like Music or SFX.").param_built(bus_param).param("db", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression"))
+	descriptors.append(F.act("SetBusMute", "Mute Bus", "AudioServer.set_bus_mute(AudioServer.get_bus_index({bus}), {muted})", "Audio", "Set bus {bus} muted: {muted}", "Mutes or unmutes a named audio bus all at once.").param("bus", "\"Master\"", "Bus", "Audio bus name.", "expression").param_choice("muted", "true", "Muted", "true to silence the bus.", ["true", "false"]))
+	descriptors.append(F.expr("GetBusVolume", "Bus Volume", "AudioServer.get_bus_volume_db(AudioServer.get_bus_index({bus}))", "Audio", "bus {bus} volume", "Gives the current volume of a named audio bus, in decibels.").param("bus", "\"Master\"", "Bus", "Audio bus name.", "expression"))
 
 	# The sound a player holds, the bus it goes out on, and its volume as the 0-to-1 level a
 	# slider gives rather than as decibels. Each writes the shape the opened-script reading recognises.
-	descriptors.append(F.make_descriptor("Core", "AudioSetStream", "Set Sound", ACEDescriptor.ACEType.ACTION,
-		"stream = load({path})", "", [F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file this player holds.", "audio_path")],
-		"Audio", "Set sound to {path}", "AudioStreamPlayer")
-		.described("Puts a sound file into this player, ready to play."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetBus", "Set Bus", ACEDescriptor.ACEType.ACTION,
-		"bus = {bus}", "", [F.make_param("bus", "String", "\"SFX\"", "Bus", "Audio bus this player goes out on.", "expression")],
-		"Audio", "Set bus to {bus}", "AudioStreamPlayer")
-		.described("Sends this player's sound out on a named bus, like SFX or Music."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetVolumeLevel", "Set Volume (0 to 1)", ACEDescriptor.ACEType.ACTION,
-		"volume_db = linear_to_db({level})", "", [F.make_param("level", "String", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression")],
-		"Audio", "Set volume to {level} (0 to 1)", "AudioStreamPlayer")
-		.described("Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you."))
+	descriptors.append(F.act("AudioSetStream", "Set Sound", "stream = load({path})", "Audio", "Set sound to {path}", "Puts a sound file into this player, ready to play.", "AudioStreamPlayer").param("path", "\"res://sound.ogg\"", "Sound", "Audio file this player holds.", "audio_path"))
+	descriptors.append(F.act("AudioSetBus", "Set Bus", "bus = {bus}", "Audio", "Set bus to {bus}", "Sends this player's sound out on a named bus, like SFX or Music.", "AudioStreamPlayer").param("bus", "\"SFX\"", "Bus", "Audio bus this player goes out on.", "expression"))
+	descriptors.append(F.act("AudioSetVolumeLevel", "Set Volume (0 to 1)", "volume_db = linear_to_db({level})", "Audio", "Set volume to {level} (0 to 1)", "Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you.", "AudioStreamPlayer").param("level", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression"))
 
 	# ── a sound heard FROM a place, and the two faders a music change is made of ────────
-	descriptors.append(F.make_descriptor("Core", "AudioSetHearingDistance", "Set Hearing Distance", ACEDescriptor.ACEType.ACTION,
-		"max_distance = {value}", "", [F.make_param("value", "float", "600.0", "Distance", "How far away the sound can still be heard at all.", "expression")],
-		"Audio", "Set hearing distance to {value}", "AudioStreamPlayer2D")
-		.described("Sets how far a positional sound carries. Past this distance it is silent."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetFalloff", "Set Falloff", ACEDescriptor.ACEType.ACTION,
-		"attenuation = {value}", "", [F.make_param("value", "float", "1.0", "Falloff", "How fast the sound fades with distance: 1 is even, higher drops off sooner.", "expression")],
-		"Audio", "Set falloff to {value}", "AudioStreamPlayer2D")
-		.described("Sets how quickly a positional sound fades as the listener moves away."))
+	descriptors.append(F.act("AudioSetHearingDistance", "Set Hearing Distance", "max_distance = {value}", "Audio", "Set hearing distance to {value}", "Sets how far a positional sound carries. Past this distance it is silent.", "AudioStreamPlayer2D").param_typed("float", "value", "600.0", "Distance", "How far away the sound can still be heard at all.", "expression"))
+	descriptors.append(F.act("AudioSetFalloff", "Set Falloff", "attenuation = {value}", "Audio", "Set falloff to {value}", "Sets how quickly a positional sound fades as the listener moves away.", "AudioStreamPlayer2D").param_typed("float", "value", "1.0", "Falloff", "How fast the sound fades with distance: 1 is even, higher drops off sooner.", "expression"))
 	# ── the same two knobs on a sound heard from a place in 3D. Godot spells the falloff
 	# differently there (`unit_size` rather than `attenuation`), which is why each is its own row
 	# rather than one row that guesses - the same split the 2D and 3D light rows already make. ──
-	descriptors.append(F.make_descriptor("Core", "AudioSetHearingDistance3D", "Set Hearing Distance (3D)", ACEDescriptor.ACEType.ACTION,
-		"max_distance = {value}", "", [F.make_param("value", "float", "40.0", "Distance", "How far away the sound can still be heard at all. 0 means no limit.", "expression")],
-		"Audio", "Set hearing distance to {value}", "AudioStreamPlayer3D")
-		.described("Sets how far a 3D positional sound carries. Past this distance it is silent."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetLoudnessFalloff", "Set Loudness Falloff", ACEDescriptor.ACEType.ACTION,
-		"unit_size = {value}", "", [F.make_param("value", "float", "10.0", "Falloff", "How far the sound stays at full loudness before it starts fading. Bigger carries further.", "expression")],
-		"Audio", "Set falloff to {value}", "AudioStreamPlayer3D")
-		.described("Sets how quickly a 3D positional sound fades as the listener moves away."))
-	descriptors.append(F.make_descriptor("Core", "AudioCrossfade", "Crossfade", ACEDescriptor.ACEType.ACTION,
-		"{from}.volume_db = linear_to_db(1.0 - {amount})\n{to}.volume_db = linear_to_db({amount})", "",
-		[F.make_param("from", "String", "$MusicA", "From", "The player fading out.", "expression"),
-			F.make_param("to", "String", "$MusicB", "To", "The player fading in.", "expression"),
-			F.make_param("amount", "String", "0.5", "Amount", "0 is all the first track, 1 is all the second - drive it from a timer.", "expression")],
-		"Audio", "Crossfade {from} → {to} by {amount}")
-		.described("Fades one music player down while the other comes up, from one 0-to-1 number. Both players must already be playing.").featured())
+	descriptors.append(F.act("AudioSetHearingDistance3D", "Set Hearing Distance (3D)", "max_distance = {value}", "Audio", "Set hearing distance to {value}", "Sets how far a 3D positional sound carries. Past this distance it is silent.", "AudioStreamPlayer3D").param_typed("float", "value", "40.0", "Distance", "How far away the sound can still be heard at all. 0 means no limit.", "expression"))
+	descriptors.append(F.act("AudioSetLoudnessFalloff", "Set Loudness Falloff", "unit_size = {value}", "Audio", "Set falloff to {value}", "Sets how quickly a 3D positional sound fades as the listener moves away.", "AudioStreamPlayer3D").param_typed("float", "value", "10.0", "Falloff", "How far the sound stays at full loudness before it starts fading. Bigger carries further.", "expression"))
+	descriptors.append(F.act("AudioCrossfade", "Crossfade", "{from}.volume_db = linear_to_db(1.0 - {amount})\n{to}.volume_db = linear_to_db({amount})", "Audio", "Crossfade {from} → {to} by {amount}", "Fades one music player down while the other comes up, from one 0-to-1 number. Both players must already be playing.").param("from", "$MusicA", "From", "The player fading out.", "expression").param("to", "$MusicB", "To", "The player fading in.", "expression").param("amount", "0.5", "Amount", "0 is all the first track, 1 is all the second - drive it from a timer.", "expression").featured())
 
 	return descriptors

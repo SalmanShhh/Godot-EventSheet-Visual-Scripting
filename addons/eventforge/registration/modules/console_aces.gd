@@ -44,48 +44,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# (Push Warning's `$`-anchored regex rejects the trailing comment), so a marked line lifts here and a
 	# plain hand-written one still lifts to Push Warning. The call runs untouched in-game - the comment
 	# is inert. The only cost is that one comment in the generated line.
-	descriptors.append(F.make_descriptor("Core", "ConsoleLog", "Log", ACEDescriptor.ACEType.ACTION,
-		"{level}({message})" + LOG_MARKER, "",
-		[
-			F.make_param("message", "String", "\"hello\"", "Message", "Value/expression to write to the console.", "expression"),
-			_level_param(),
-		], "Debug", "log {message}")
-		.described("Writes a message to the console as a Message, Warning, Error, or Rich text - one action for all four.").rich_text_when("level", "print_rich"))
+	descriptors.append(F.act("ConsoleLog", "Log", "{level}({message})" + LOG_MARKER, "Debug", "log {message}", "Writes a message to the console as a Message, Warning, Error, or Rich text - one action for all four.").param("message", "\"hello\"", "Message", "Value/expression to write to the console.", "expression").param_built(_level_param()).rich_text_when("level", "print_rich"))
 
 	# Conditional log - write only when a test holds, without wrapping it in its own event row.
-	descriptors.append(F.make_descriptor("Core", "ConsoleLogIf", "Log If", ACEDescriptor.ACEType.ACTION,
-		"if {condition}: {level}({message})", "",
-		[
-			F.make_param("condition", "String", "true", "If", "Only log when this is true.", "expression"),
-			F.make_param("message", "String", "\"low health\"", "Message", "Value/expression to write to the console.", "expression"),
-			_level_param(),
-		], "Debug", "log {message} if {condition}")
-		.described("Writes a message to the console only when a condition is true - as a Message, Warning, or Error.").rich_text_when("level", "print_rich"))
+	descriptors.append(F.act("ConsoleLogIf", "Log If", "if {condition}: {level}({message})", "Debug", "log {message} if {condition}", "Writes a message to the console only when a condition is true - as a Message, Warning, or Error.").param("condition", "true", "If", "Only log when this is true.", "expression").param("message", "\"low health\"", "Message", "Value/expression to write to the console.", "expression").param_built(_level_param()).rich_text_when("level", "print_rich"))
 
 	# Debug-builds-only log - compiled out of exported release games (the first OS.is_debug_build guard).
-	descriptors.append(F.make_descriptor("Core", "ConsoleDebugLog", "Log (Debug Builds Only)", ACEDescriptor.ACEType.ACTION,
-		"if OS.is_debug_build(): {level}({message})", "",
-		[
-			F.make_param("message", "String", "\"trace\"", "Message", "Value/expression to write to the console.", "expression"),
-			_level_param(),
-		], "Debug", "log {message} (debug only)")
-		.described("Writes to the console only in debug builds - the line is skipped entirely in an exported release game.").rich_text_when("level", "print_rich"))
+	descriptors.append(F.act("ConsoleDebugLog", "Log (Debug Builds Only)", "if OS.is_debug_build(): {level}({message})", "Debug", "log {message} (debug only)", "Writes to the console only in debug builds - the line is skipped entirely in an exported release game.").param("message", "\"trace\"", "Message", "Value/expression to write to the console.", "expression").param_built(_level_param()).rich_text_when("level", "print_rich"))
 
 	# Labeled value dump - "name = value" in one go, to any stream. Distinct `("%s = %s" % …)` shape.
-	descriptors.append(F.make_descriptor("Core", "ConsoleLogValue", "Log Value", ACEDescriptor.ACEType.ACTION,
-		"{level}(\"%s = %s\" % [{label}, {value}])", "",
-		[
-			F.make_param("label", "String", "\"value\"", "Label", "Name shown before the value.", "expression"),
-			F.make_param("value", "String", "0", "Value", "Value/expression to print after the label.", "expression"),
-			_level_param(),
-		], "Debug", "log {label} = {value}")
-		.described("Prints a value tagged with a name, e.g. \"health = 80\", so debug lines are easy to tell apart.").rich_text_when("level", "print_rich"))
+	descriptors.append(F.act("ConsoleLogValue", "Log Value", "{level}(\"%s = %s\" % [{label}, {value}])", "Debug", "log {label} = {value}", "Prints a value tagged with a name, e.g. \"health = 80\", so debug lines are easy to tell apart.").param("label", "\"value\"", "Label", "Name shown before the value.", "expression").param("value", "0", "Value", "Value/expression to print after the label.", "expression").param_built(_level_param()).rich_text_when("level", "print_rich"))
 
 	# Variant -> printable text, for building a readable log line out of any value.
-	descriptors.append(F.make_descriptor("Core", "Stringify", "To Text", ACEDescriptor.ACEType.EXPRESSION,
-		"var_to_str({value})", "",
-		[F.make_param("value", "String", "self", "Value", "Any value to turn into readable text.", "expression")],
-		"Debug", "text of {value}")
-		.described("Turns any value (numbers, vectors, arrays…) into readable text for a log message."))
+	descriptors.append(F.expr("Stringify", "To Text", "var_to_str({value})", "Debug", "text of {value}", "Turns any value (numbers, vectors, arrays…) into readable text for a log message.").param("value", "self", "Value", "Any value to turn into readable text.", "expression"))
 
 	return descriptors

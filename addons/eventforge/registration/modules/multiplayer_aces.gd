@@ -106,18 +106,12 @@ const SPAWN_SCENE_TEMPLATE := "var __spawn_{uid} = load({scene}).instantiate()\n
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "SendMessageToEveryone", "Send Message To Everyone", ACEDescriptor.ACEType.ACTION, "{message}.rpc({args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message. Every peer runs it.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to everyone {args}")
-		.described("Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.").featured())
-	descriptors.append(F.make_descriptor("Core", "SendMessageToHost", "Send Message To The Host", ACEDescriptor.ACEType.ACTION, "{message}.rpc_id(1{, args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message. Only the host runs it.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to the host {args}")
-		.described("Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody."))
-	descriptors.append(F.make_descriptor("Core", "SendMessageToPeer", "Send Message To One Peer", ACEDescriptor.ACEType.ACTION, "{message}.rpc_id({peer}{, args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message. Only the peer you name runs it.", "expression"), F.make_param("peer", "String", "1", "Peer", "Who to send it to: the id an event handed you, or Sender to answer whoever asked.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to {peer} {args}")
-		.described("Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about."))
-	descriptors.append(F.make_descriptor("Core", "IsHost", "Is Host", ACEDescriptor.ACEType.CONDITION, "multiplayer.is_server()", "", [], CATEGORY, "Is host")
-		.described("True on the peer that is hosting the game. Put everything that decides what is true behind this.").featured())
-	descriptors.append(F.make_descriptor("Core", "OwnsThisObject", "Owns This Object", ACEDescriptor.ACEType.CONDITION, "is_multiplayer_authority()", "", [], CATEGORY, "Owns this object")
-		.described("True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it."))
-	descriptors.append(F.make_descriptor("Core", "MyPeerId", "My ID", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.get_unique_id()", "", [], CATEGORY, "MyID")
-		.described("This peer's own id. The host is always 1; everyone else gets a number when they join."))
+	descriptors.append(F.act("SendMessageToEveryone", "Send Message To Everyone", "{message}.rpc({args})", CATEGORY, "Send {message} to everyone {args}", "Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.").param("message", "print", "Message", "The function marked as a message. Every peer runs it.", "expression").param("args", "", "Values", "Values to send with the message, comma separated.", "expression").featured())
+	descriptors.append(F.act("SendMessageToHost", "Send Message To The Host", "{message}.rpc_id(1{, args})", CATEGORY, "Send {message} to the host {args}", "Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.").param("message", "print", "Message", "The function marked as a message. Only the host runs it.", "expression").param("args", "", "Values", "Values to send with the message, comma separated.", "expression"))
+	descriptors.append(F.act("SendMessageToPeer", "Send Message To One Peer", "{message}.rpc_id({peer}{, args})", CATEGORY, "Send {message} to {peer} {args}", "Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.").param("message", "print", "Message", "The function marked as a message. Only the peer you name runs it.", "expression").param("peer", "1", "Peer", "Who to send it to: the id an event handed you, or Sender to answer whoever asked.", "expression").param("args", "", "Values", "Values to send with the message, comma separated.", "expression"))
+	descriptors.append(F.cond("IsHost", "Is Host", "multiplayer.is_server()", CATEGORY, "Is host", "True on the peer that is hosting the game. Put everything that decides what is true behind this.").featured())
+	descriptors.append(F.cond("OwnsThisObject", "Owns This Object", "is_multiplayer_authority()", CATEGORY, "Owns this object", "True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it."))
+	descriptors.append(F.expr("MyPeerId", "My ID", "multiplayer.get_unique_id()", CATEGORY, "MyID", "This peer's own id. The host is always 1; everyone else gets a number when they join."))
 	descriptors.append_array(_connection_descriptors())
 	descriptors.append_array(_transport_descriptors())
 	descriptors.append_array(_lobby_descriptors())
@@ -131,25 +125,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## Hosting, joining, leaving, and the spawner's verb - the actions a lobby is made of.
 static func _connection_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "HostGame", "Host A Game", ACEDescriptor.ACEType.ACTION, HOST_TEMPLATE, "", [
-		F.make_param("port", "String", "7777", "Port", "The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.", "net_port"),
-		F.make_param("max_players", "String", "4", "Players", "How many peers may connect. The host is not one of them, so 4 here means the host plus four others.", "max_players"),
-		F.make_param("peer_kind", "String", "ENetMultiplayerPeer", "Using", "How the game talks over the network. ENet unless the game runs in a browser.", "peer_kind", PEER_KINDS)
-	], CATEGORY, "Host a game on port {port} for up to {max_players} players")
-		.described("Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.").featured())
-	descriptors.append(F.make_descriptor("Core", "JoinGame", "Join A Game", ACEDescriptor.ACEType.ACTION, JOIN_TEMPLATE, "", [
-		F.make_param("address", "String", "\"127.0.0.1\"", "Address", "Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.", "net_address"),
-		F.make_param("port", "String", "7777", "Port", "The port the host opened. It has to be the same number the host used.", "net_port"),
-		F.make_param("peer_kind", "String", "ENetMultiplayerPeer", "Using", "How the game talks over the network. It has to match what the host is using.", "peer_kind", PEER_KINDS)
-	], CATEGORY, "Join a game at {address} port {port}")
-		.described("Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.").featured())
-	descriptors.append(F.make_descriptor("Core", "LeaveGame", "Leave The Game", ACEDescriptor.ACEType.ACTION, "multiplayer.multiplayer_peer = null", "", [], CATEGORY, "Leave the game")
-		.described("Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them."))
-	descriptors.append(F.make_descriptor("Core", "Spawn", "Spawn", ACEDescriptor.ACEType.ACTION, "{target}.spawn({data})", "", [
-		F.make_param("target", "String", "self", "Spawner", "The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.", "expression"),
-		F.make_param("data", "String", "null", "What to send", "What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.", "expression")
-	], CATEGORY, "Spawn {data}", "MultiplayerSpawner")
-		.described("Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy."))
+	descriptors.append(F.act("HostGame", "Host A Game", HOST_TEMPLATE, CATEGORY, "Host a game on port {port} for up to {max_players} players", "Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.").param("port", "7777", "Port", "The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.", "net_port").param("max_players", "4", "Players", "How many peers may connect. The host is not one of them, so 4 here means the host plus four others.", "max_players").param_choice("peer_kind", "ENetMultiplayerPeer", "Using", "How the game talks over the network. ENet unless the game runs in a browser.", PEER_KINDS, "peer_kind").featured())
+	descriptors.append(F.act("JoinGame", "Join A Game", JOIN_TEMPLATE, CATEGORY, "Join a game at {address} port {port}", "Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.").param("address", "\"127.0.0.1\"", "Address", "Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.", "net_address").param("port", "7777", "Port", "The port the host opened. It has to be the same number the host used.", "net_port").param_choice("peer_kind", "ENetMultiplayerPeer", "Using", "How the game talks over the network. It has to match what the host is using.", PEER_KINDS, "peer_kind").featured())
+	descriptors.append(F.act("LeaveGame", "Leave The Game", "multiplayer.multiplayer_peer = null", CATEGORY, "Leave the game", "Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them."))
+	descriptors.append(F.act("Spawn", "Spawn", "{target}.spawn({data})", CATEGORY, "Spawn {data}", "Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.", "MultiplayerSpawner").param("target", "self", "Spawner", "The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.", "expression").param("data", "null", "What to send", "What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.", "expression"))
 	return descriptors
 
 
@@ -158,33 +137,11 @@ static func _connection_descriptors() -> Array[ACEDescriptor]:
 ## the same lines written by hand open on these rows instead of staying script blocks.
 static func _transport_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "HostGameAdvanced", "Host A Game (Advanced)", ACEDescriptor.ACEType.ACTION, ADVANCED_HOST_TEMPLATE, "", [
-		F.make_param("port", "String", "7777", "Port", "The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.", "net_port"),
-		F.make_param("max_players", "String", "4", "Players", "How many peers may connect. The host is not one of them, so 4 here means the host plus four others.", "max_players"),
-		F.make_param("channels", "String", "2", "Channels", "How many independent lanes messages travel down. A big delivery on one lane no longer delays the quick messages on another; both sides should say the same number.", "expression"),
-		F.make_param("in_bandwidth", "String", "0", "Receive limit", "The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.", "expression"),
-		F.make_param("out_bandwidth", "String", "0", "Send limit", "The most this peer will send, in bytes per second. 0 means unlimited; a cap keeps a busy host from flooding a thin connection.", "expression")
-	], CATEGORY, "Host a game on port {port} for up to {max_players} players over {channels} channels")
-		.described("Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these."))
-	descriptors.append(F.make_descriptor("Core", "JoinGameAdvanced", "Join A Game (Advanced)", ACEDescriptor.ACEType.ACTION, ADVANCED_JOIN_TEMPLATE, "", [
-		F.make_param("address", "String", "\"127.0.0.1\"", "Address", "Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.", "net_address"),
-		F.make_param("port", "String", "7777", "Port", "The port the host opened. It has to be the same number the host used.", "net_port"),
-		F.make_param("channels", "String", "2", "Channels", "How many independent lanes messages travel down. Say the same number the host said.", "expression"),
-		F.make_param("in_bandwidth", "String", "0", "Receive limit", "The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.", "expression"),
-		F.make_param("out_bandwidth", "String", "0", "Send limit", "The most this peer will send, in bytes per second. 0 means unlimited.", "expression")
-	], CATEGORY, "Join a game at {address} port {port} over {channels} channels")
-		.described("Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these."))
-	descriptors.append(F.make_descriptor("Core", "SetCompression", "Compress Network Traffic", ACEDescriptor.ACEType.ACTION, "{peer}.host.compress(ENetConnection.{mode})", "", [
-		F.make_param("peer", "String", "(multiplayer.multiplayer_peer as ENetMultiplayerPeer)", "Connection", "The ENet connection to compress. The default reaches the one Host a game or Join a game installed.", "expression"),
-		_compression_param()
-	], CATEGORY, "Compress network traffic {mode}")
-		.described("Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining."))
-	descriptors.append(F.make_descriptor("Core", "SendRawBytes", "Send Raw Bytes", ACEDescriptor.ACEType.ACTION, "multiplayer.multiplayer_peer.put_packet({bytes})", "", [
-		F.make_param("bytes", "String", "PackedByteArray()", "Bytes", "The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.", "expression")
-	], CATEGORY, "Send raw bytes {bytes}")
-		.described("Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself."))
-	descriptors.append(F.make_descriptor("Core", "NextRawPacket", "Next Raw Packet", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.multiplayer_peer.get_packet()", "", [], CATEGORY, "Next raw packet")
-		.described("The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way."))
+	descriptors.append(F.act("HostGameAdvanced", "Host A Game (Advanced)", ADVANCED_HOST_TEMPLATE, CATEGORY, "Host a game on port {port} for up to {max_players} players over {channels} channels", "Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these.").param("port", "7777", "Port", "The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.", "net_port").param("max_players", "4", "Players", "How many peers may connect. The host is not one of them, so 4 here means the host plus four others.", "max_players").param("channels", "2", "Channels", "How many independent lanes messages travel down. A big delivery on one lane no longer delays the quick messages on another; both sides should say the same number.", "expression").param("in_bandwidth", "0", "Receive limit", "The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.", "expression").param("out_bandwidth", "0", "Send limit", "The most this peer will send, in bytes per second. 0 means unlimited; a cap keeps a busy host from flooding a thin connection.", "expression"))
+	descriptors.append(F.act("JoinGameAdvanced", "Join A Game (Advanced)", ADVANCED_JOIN_TEMPLATE, CATEGORY, "Join a game at {address} port {port} over {channels} channels", "Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these.").param("address", "\"127.0.0.1\"", "Address", "Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.", "net_address").param("port", "7777", "Port", "The port the host opened. It has to be the same number the host used.", "net_port").param("channels", "2", "Channels", "How many independent lanes messages travel down. Say the same number the host said.", "expression").param("in_bandwidth", "0", "Receive limit", "The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.", "expression").param("out_bandwidth", "0", "Send limit", "The most this peer will send, in bytes per second. 0 means unlimited.", "expression"))
+	descriptors.append(F.act("SetCompression", "Compress Network Traffic", "{peer}.host.compress(ENetConnection.{mode})", CATEGORY, "Compress network traffic {mode}", "Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining.").param("peer", "(multiplayer.multiplayer_peer as ENetMultiplayerPeer)", "Connection", "The ENet connection to compress. The default reaches the one Host a game or Join a game installed.", "expression").param_built(_compression_param()))
+	descriptors.append(F.act("SendRawBytes", "Send Raw Bytes", "multiplayer.multiplayer_peer.put_packet({bytes})", CATEGORY, "Send raw bytes {bytes}", "Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself.").param("bytes", "PackedByteArray()", "Bytes", "The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.", "expression"))
+	descriptors.append(F.expr("NextRawPacket", "Next Raw Packet", "multiplayer.multiplayer_peer.get_packet()", CATEGORY, "Next raw packet", "The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way."))
 	return descriptors
 
 
@@ -201,22 +158,15 @@ static func _compression_param() -> ACEParam:
 ## the two `SceneMultiplayer` says about the handshake, on the same object, for seven in all.
 static func _connection_triggers() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "OnPlayerJoined", "On Player Joined", ACEDescriptor.ACEType.TRIGGER, "", "peer_connected", [F.make_param("id", "int", "", "Player", "The id of the peer that just joined. Whatever a new player needs is sent to this id.")], CATEGORY, "On player joined {id}")
-		.described("Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnPlayerLeft", "On Player Left", ACEDescriptor.ACEType.TRIGGER, "", "peer_disconnected", [F.make_param("id", "int", "", "Player", "The id of the peer that just left. It is already gone, so nothing can be sent to it.")], CATEGORY, "On player left {id}")
-		.described("Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here."))
-	descriptors.append(F.make_descriptor("Core", "OnJoinedTheHost", "On Joined The Host", ACEDescriptor.ACEType.TRIGGER, "", "connected_to_server", [], CATEGORY, "On joined the host")
-		.described("Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game."))
-	descriptors.append(F.make_descriptor("Core", "OnJoinFailed", "On Join Failed", ACEDescriptor.ACEType.TRIGGER, "", "connection_failed", [], CATEGORY, "On join failed")
-		.described("Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players."))
-	descriptors.append(F.make_descriptor("Core", "OnTheHostLeft", "On The Host Left", ACEDescriptor.ACEType.TRIGGER, "", "server_disconnected", [], CATEGORY, "On the host left")
-		.described("Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here."))
+	descriptors.append(F.trig("OnPlayerJoined", "On Player Joined", "peer_connected", CATEGORY, "On player joined {id}", "Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.").param_typed("int", "id", "", "Player", "The id of the peer that just joined. Whatever a new player needs is sent to this id.").featured())
+	descriptors.append(F.trig("OnPlayerLeft", "On Player Left", "peer_disconnected", CATEGORY, "On player left {id}", "Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.").param_typed("int", "id", "", "Player", "The id of the peer that just left. It is already gone, so nothing can be sent to it."))
+	descriptors.append(F.trig("OnJoinedTheHost", "On Joined The Host", "connected_to_server", CATEGORY, "On joined the host", "Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game."))
+	descriptors.append(F.trig("OnJoinFailed", "On Join Failed", "connection_failed", CATEGORY, "On join failed", "Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players."))
+	descriptors.append(F.trig("OnTheHostLeft", "On The Host Left", "server_disconnected", CATEGORY, "On the host left", "Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here."))
 	# The two the handshake says, off the same object. A game that checks a password or a token
 	# before a peer counts as joined hears about it here; a game that checks nothing never sees either.
-	descriptors.append(F.make_descriptor("Core", "OnPlayerAuthenticating", "On Player Authenticating", ACEDescriptor.ACEType.TRIGGER, "", "peer_authenticating", [F.make_param("id", "int", "", "Player", "The id of the peer that is trying to join. It is not in the game yet.")], CATEGORY, "On player authenticating {id}")
-		.described("Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback."))
-	descriptors.append(F.make_descriptor("Core", "OnAuthenticationFailed", "On Authentication Failed", ACEDescriptor.ACEType.TRIGGER, "", "peer_authentication_failed", [F.make_param("id", "int", "", "Player", "The id of the peer whose handshake did not finish.")], CATEGORY, "On authentication failed {id}")
-		.described("Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown."))
+	descriptors.append(F.trig("OnPlayerAuthenticating", "On Player Authenticating", "peer_authenticating", CATEGORY, "On player authenticating {id}", "Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.").param_typed("int", "id", "", "Player", "The id of the peer that is trying to join. It is not in the game yet."))
+	descriptors.append(F.trig("OnAuthenticationFailed", "On Authentication Failed", "peer_authentication_failed", CATEGORY, "On authentication failed {id}", "Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.").param_typed("int", "id", "", "Player", "The id of the peer whose handshake did not finish."))
 	return descriptors
 
 
@@ -225,34 +175,13 @@ static func _connection_triggers() -> Array[ACEDescriptor]:
 ## the reading recognises when a project wrote it by hand.
 static func _lobby_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "KickPlayer", "Kick Player", ACEDescriptor.ACEType.ACTION, "multiplayer.multiplayer_peer.disconnect_peer({id})", "", [
-		F.make_param("id", "String", "1", "Player", "The peer id to drop. On player left then runs on everybody, the dropped peer included.", "expression")
-	], CATEGORY, "Kick player {id}")
-		.described("Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide."))
-	descriptors.append(F.make_descriptor("Core", "StopAcceptingPlayers", "Stop Accepting Players", ACEDescriptor.ACEType.ACTION, "multiplayer.multiplayer_peer.refuse_new_connections = true", "", [], CATEGORY, "Stop accepting players")
-		.described("Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken."))
-	descriptors.append(F.make_descriptor("Core", "SetRelay", "Relay Messages Between Players", ACEDescriptor.ACEType.ACTION, "multiplayer.server_relay = {on}", "", [
-		_relay_param()
-	], CATEGORY, "Relay messages between players {on}")
-		.described("Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back."))
-	descriptors.append(F.make_descriptor("Core", "AcceptPlayer", "Accept Player", ACEDescriptor.ACEType.ACTION, "multiplayer.complete_auth({id})", "", [
-		F.make_param("id", "String", "1", "Player", "The peer whose handshake is finished - the id On player authenticating gave you.", "expression")
-	], CATEGORY, "Accept player {id}")
-		.described("Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two."))
-	descriptors.append(F.make_descriptor("Core", "RejectPlayer", "Reject Player", ACEDescriptor.ACEType.ACTION, "multiplayer.multiplayer_peer.disconnect_peer({id})", "", [
-		F.make_param("id", "String", "1", "Player", "The peer to turn away. It never counted as joined, so On player left does not run for it.", "expression")
-	], CATEGORY, "Reject player {id}")
-		.described("Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it."))
-	descriptors.append(F.make_descriptor("Core", "SendAuth", "Send Auth", ACEDescriptor.ACEType.ACTION, "multiplayer.send_auth({id}, {data})", "", [
-		F.make_param("id", "String", "1", "Player", "Who to send it to. A client answering the host sends to 1.", "expression"),
-		F.make_param("data", "String", "PackedByteArray()", "Data", "The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.", "expression")
-	], CATEGORY, "Send auth {data} to player {id}")
-		.described("Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message."))
-	descriptors.append(F.make_descriptor("Core", "GiveAuthority", "Give To Player", ACEDescriptor.ACEType.ACTION, "{target}.set_multiplayer_authority({id})", "", [
-		F.make_param("target", "String", "self", "Object", "The node whose owner changes. Its children follow it unless one was given an owner of its own.", "expression"),
-		F.make_param("id", "String", "1", "Player", "The peer that may now move and change it. Everybody else keeps a copy they may only read.", "expression")
-	], CATEGORY, "Give {target} to player {id}")
-		.described("Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what."))
+	descriptors.append(F.act("KickPlayer", "Kick Player", "multiplayer.multiplayer_peer.disconnect_peer({id})", CATEGORY, "Kick player {id}", "Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.").param("id", "1", "Player", "The peer id to drop. On player left then runs on everybody, the dropped peer included.", "expression"))
+	descriptors.append(F.act("StopAcceptingPlayers", "Stop Accepting Players", "multiplayer.multiplayer_peer.refuse_new_connections = true", CATEGORY, "Stop accepting players", "Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken."))
+	descriptors.append(F.act("SetRelay", "Relay Messages Between Players", "multiplayer.server_relay = {on}", CATEGORY, "Relay messages between players {on}", "Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.").param_built(_relay_param()))
+	descriptors.append(F.act("AcceptPlayer", "Accept Player", "multiplayer.complete_auth({id})", CATEGORY, "Accept player {id}", "Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.").param("id", "1", "Player", "The peer whose handshake is finished - the id On player authenticating gave you.", "expression"))
+	descriptors.append(F.act("RejectPlayer", "Reject Player", "multiplayer.multiplayer_peer.disconnect_peer({id})", CATEGORY, "Reject player {id}", "Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.").param("id", "1", "Player", "The peer to turn away. It never counted as joined, so On player left does not run for it.", "expression"))
+	descriptors.append(F.act("SendAuth", "Send Auth", "multiplayer.send_auth({id}, {data})", CATEGORY, "Send auth {data} to player {id}", "Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.").param("id", "1", "Player", "Who to send it to. A client answering the host sends to 1.", "expression").param("data", "PackedByteArray()", "Data", "The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.", "expression"))
+	descriptors.append(F.act("GiveAuthority", "Give To Player", "{target}.set_multiplayer_authority({id})", CATEGORY, "Give {target} to player {id}", "Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.").param("target", "self", "Object", "The node whose owner changes. Its children follow it unless one was given an owner of its own.", "expression").param("id", "1", "Player", "The peer that may now move and change it. Everybody else keeps a copy they may only read.", "expression"))
 	return descriptors
 
 
@@ -270,22 +199,12 @@ static func _state_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	# Parenthesised on purpose: the row is ONE question, and a condition whose text carries a bare
 	# `and` binds wrongly the moment it sits in an Or block beside another condition.
-	descriptors.append(F.make_descriptor("Core", "IsConnected", "Is Connected", ACEDescriptor.ACEType.CONDITION, "(multiplayer.multiplayer_peer != null and multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED)", "", [], CATEGORY, "Is connected")
-		.described("True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.").featured())
-	descriptors.append(F.make_descriptor("Core", "StartedAs", "Started As", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({tag})", "", [
-		F.make_param("tag", "String", "\"dedicated_server\"", "Tag", "The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.", "feature_tag", [], SERVER_ROLE_TAGS)
-	], CATEGORY, "Started as {tag}")
-		.described("True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless."))
-	descriptors.append(F.make_descriptor("Core", "Players", "Players", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.get_peers()", "", [], CATEGORY, "Players")
-		.described("The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one."))
-	descriptors.append(F.make_descriptor("Core", "PlayerCount", "Player Count", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.get_peers().size()", "", [], CATEGORY, "Player count")
-		.described("How many other peers are in the game. Add one for this peer when the number a player reads should include them."))
-	descriptors.append(F.make_descriptor("Core", "Sender", "Sender", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.get_remote_sender_id()", "", [], CATEGORY, "Sender")
-		.described("Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else."))
-	descriptors.append(F.make_descriptor("Core", "OwnerOf", "Owner Of", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_multiplayer_authority()", "", [
-		F.make_param("target", "String", "self", "Object", "The node to ask about. Its owner is the peer allowed to move and change it.", "expression")
-	], CATEGORY, "Owner of {target}")
-		.described("The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with."))
+	descriptors.append(F.cond("IsConnected", "Is Connected", "(multiplayer.multiplayer_peer != null and multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED)", CATEGORY, "Is connected", "True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.").featured())
+	descriptors.append(F.cond("StartedAs", "Started As", "OS.has_feature({tag})", CATEGORY, "Started as {tag}", "True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.").param_suggesting("tag", "\"dedicated_server\"", "Tag", "The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.", SERVER_ROLE_TAGS, "feature_tag"))
+	descriptors.append(F.expr("Players", "Players", "multiplayer.get_peers()", CATEGORY, "Players", "The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one."))
+	descriptors.append(F.expr("PlayerCount", "Player Count", "multiplayer.get_peers().size()", CATEGORY, "Player count", "How many other peers are in the game. Add one for this peer when the number a player reads should include them."))
+	descriptors.append(F.expr("Sender", "Sender", "multiplayer.get_remote_sender_id()", CATEGORY, "Sender", "Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else."))
+	descriptors.append(F.expr("OwnerOf", "Owner Of", "{target}.get_multiplayer_authority()", CATEGORY, "Owner of {target}", "The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.").param("target", "self", "Object", "The node to ask about. Its owner is the peer allowed to move and change it.", "expression"))
 	return descriptors
 
 
@@ -300,29 +219,12 @@ static func _state_descriptors() -> Array[ACEDescriptor]:
 ## was, for a spawner that builds its copies out of a value through its own spawn function.
 static func _scene_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "SpawnReplicatedScene", "Spawn A Scene", ACEDescriptor.ACEType.ACTION, SPAWN_SCENE_TEMPLATE, "", [
-		F.make_param("target", "String", "self", "Spawner", "The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.", "scene_node"),
-		F.make_param("scene", "String", "\"res://player.tscn\"", "Scene", "The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.", "spawn_scene"),
-		F.make_param("name", "String", "\"Player\"", "Name", "What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.", "expression"),
-		F.make_param("at", "String", "Vector2.ZERO", "At", "Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.", "expression")
-	], CATEGORY, "Spawn {scene} named {name} at {at}", "MultiplayerSpawner")
-		.described("Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.").featured())
-	descriptors.append(F.make_descriptor("Core", "Despawn", "Despawn", ACEDescriptor.ACEType.ACTION, "queue_free()", "", [], CATEGORY, "Despawn")
-		.described("Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand."))
-	descriptors.append(F.make_descriptor("Core", "ShowToPlayer", "Show To Player", ACEDescriptor.ACEType.ACTION, "set_visibility_for({id}, true)", "", [
-		F.make_param("id", "String", "1", "Player", "The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.", "expression")
-	], CATEGORY, "Show to player {id}", "MultiplayerSynchronizer")
-		.described("Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to."))
-	descriptors.append(F.make_descriptor("Core", "HideFromPlayer", "Hide From Player", ACEDescriptor.ACEType.ACTION, "set_visibility_for({id}, false)", "", [
-		F.make_param("id", "String", "1", "Player", "The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.", "expression")
-	], CATEGORY, "Hide from player {id}", "MultiplayerSynchronizer")
-		.described("Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either."))
-	descriptors.append(F.make_descriptor("Core", "ShowToEveryone", "Show To Everyone", ACEDescriptor.ACEType.ACTION, "public_visibility = true", "", [], CATEGORY, "Show to everyone", "MultiplayerSynchronizer")
-		.described("Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first."))
-	descriptors.append(F.make_descriptor("Core", "AddVisibilityFilter", "Ask A Function Who May See It", ACEDescriptor.ACEType.ACTION, "add_visibility_filter({filter})", "", [
-		F.make_param("filter", "String", "Callable()", "Function", "The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.", "expression")
-	], CATEGORY, "Ask {filter} who may see it", "MultiplayerSynchronizer")
-		.described("Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so."))
+	descriptors.append(F.act("SpawnReplicatedScene", "Spawn A Scene", SPAWN_SCENE_TEMPLATE, CATEGORY, "Spawn {scene} named {name} at {at}", "Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.", "MultiplayerSpawner").param("target", "self", "Spawner", "The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.", "scene_node").param("scene", "\"res://player.tscn\"", "Scene", "The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.", "spawn_scene").param("name", "\"Player\"", "Name", "What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.", "expression").param("at", "Vector2.ZERO", "At", "Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.", "expression").featured())
+	descriptors.append(F.act("Despawn", "Despawn", "queue_free()", CATEGORY, "Despawn", "Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand."))
+	descriptors.append(F.act("ShowToPlayer", "Show To Player", "set_visibility_for({id}, true)", CATEGORY, "Show to player {id}", "Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.", "MultiplayerSynchronizer").param("id", "1", "Player", "The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.", "expression"))
+	descriptors.append(F.act("HideFromPlayer", "Hide From Player", "set_visibility_for({id}, false)", CATEGORY, "Hide from player {id}", "Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.", "MultiplayerSynchronizer").param("id", "1", "Player", "The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.", "expression"))
+	descriptors.append(F.act("ShowToEveryone", "Show To Everyone", "public_visibility = true", CATEGORY, "Show to everyone", "Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.", "MultiplayerSynchronizer"))
+	descriptors.append(F.act("AddVisibilityFilter", "Ask A Function Who May See It", "add_visibility_filter({filter})", CATEGORY, "Ask {filter} who may see it", "Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.", "MultiplayerSynchronizer").param("filter", "Callable()", "Function", "The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.", "expression"))
 	return descriptors
 
 
@@ -331,16 +233,9 @@ static func _scene_descriptors() -> Array[ACEDescriptor]:
 ## synchronizer the event names, which is the spelling a hand-written project already uses.
 static func _scene_triggers() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "OnSpawned", "On Spawned", ACEDescriptor.ACEType.TRIGGER, "", "spawned", [
-		F.make_param("node", "Node", "", "Copy", "The copy that has just been made - the same node, on every peer that got it.")
-	], CATEGORY, "On spawned {node}", "MultiplayerSpawner")
-		.described("Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnDespawned", "On Despawned", ACEDescriptor.ACEType.TRIGGER, "", "despawned", [
-		F.make_param("node", "Node", "", "Copy", "The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.")
-	], CATEGORY, "On despawned {node}", "MultiplayerSpawner")
-		.described("Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here."))
-	descriptors.append(F.make_descriptor("Core", "OnSynchronized", "On Synchronized", ACEDescriptor.ACEType.TRIGGER, "", "synchronized", [], CATEGORY, "On synchronized", "MultiplayerSynchronizer")
-		.described("Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself."))
+	descriptors.append(F.trig("OnSpawned", "On Spawned", "spawned", CATEGORY, "On spawned {node}", "Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.", "MultiplayerSpawner").param_typed("Node", "node", "", "Copy", "The copy that has just been made - the same node, on every peer that got it.").featured())
+	descriptors.append(F.trig("OnDespawned", "On Despawned", "despawned", CATEGORY, "On despawned {node}", "Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.", "MultiplayerSpawner").param_typed("Node", "node", "", "Copy", "The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was."))
+	descriptors.append(F.trig("OnSynchronized", "On Synchronized", "synchronized", CATEGORY, "On synchronized", "Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.", "MultiplayerSynchronizer"))
 	return descriptors
 
 

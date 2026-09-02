@@ -86,14 +86,8 @@ static func _value_rows(word: Dictionary, row: Dictionary) -> Array[ACEDescripto
 	var host: String = str(row["host"])
 	var initial: String = _default_of(row)
 	var rows: Array[ACEDescriptor] = [
-		F.make_descriptor("Core", "LightSet%s" % stem, str(word["name"]), ACEDescriptor.ACEType.ACTION,
-			"%s = {value}" % property, "",
-			[F.make_param("value", "String", initial, str(word["word"]).capitalize(), str(word["about"]), "expression")],
-			CAT, str(word["verb"]), host)
-			.described(_about(word, row)),
-		F.make_descriptor("Core", "Light%s" % stem, str(word["word"]).capitalize(), ACEDescriptor.ACEType.EXPRESSION,
-			property, "", [], CAT, str(word["reads"]), host)
-			.described("Reads %s back: %s. Use it in any value field." % [str(word["word"]), _echo(row)])
+		F.act("LightSet%s" % stem, str(word["name"]), "%s = {value}" % property, CAT, str(word["verb"]), _about(word, row), host).param_typed("String", "value", initial, str(word["word"]).capitalize(), str(word["about"]), "expression"),
+		F.expr("Light%s" % stem, str(word["word"]).capitalize(), property, CAT, str(word["reads"]), "Reads %s back: %s. Use it in any value field." % [str(word["word"]), _echo(row)], host)
 	]
 	if bool(word.get("fades", false)):
 		rows.append(_fade_row(word, row, initial))
@@ -126,15 +120,8 @@ static func _fade_row(word: Dictionary, row: Dictionary, initial: String) -> ACE
 static func _colour_rows(word: Dictionary, row: Dictionary) -> Array[ACEDescriptor]:
 	var stem: String = str(row["id_stem"])
 	return [
-		F.make_descriptor("Core", "LightSet%s" % stem, str(word["name"]), ACEDescriptor.ACEType.ACTION,
-			"%s = {value}" % str(row["property"]), "",
-			[F.make_param("value", "Color", _default_of(row), str(word["word"]).capitalize(),
-				str(word["about"]), "color")],
-			CAT, str(word["verb"]), str(row["host"]))
-			.described(_about(word, row)),
-		F.make_descriptor("Core", "Light%s" % stem, str(word["word"]).capitalize(),
-			ACEDescriptor.ACEType.EXPRESSION, str(row["property"]), "", [], CAT, str(word["reads"]), str(row["host"]))
-			.described("Reads the light's %s back: %s. Use it in any value field." % [str(word["word"]), _echo(row)])
+		F.act("LightSet%s" % stem, str(word["name"]), "%s = {value}" % str(row["property"]), CAT, str(word["verb"]), _about(word, row), str(row["host"])).param_typed("Color", "value", _default_of(row), str(word["word"]).capitalize(), str(word["about"]), "color"),
+		F.expr("Light%s" % stem, str(word["word"]).capitalize(), str(row["property"]), CAT, str(word["reads"]), "Reads the light's %s back: %s. Use it in any value field." % [str(word["word"]), _echo(row)], str(row["host"]))
 	]
 
 
@@ -146,15 +133,9 @@ static func _switch_rows(word: Dictionary, row: Dictionary) -> Array[ACEDescript
 	var property: String = str(row["property"])
 	var host: String = str(row["host"])
 	return [
-		F.make_descriptor("Core", "Light%sOn" % stem, str(word["on_name"]), ACEDescriptor.ACEType.ACTION,
-			"%s = true" % property, "", [], CAT, str(word["on_verb"]), host)
-			.described(_about(word, row)).featured(),
-		F.make_descriptor("Core", "Light%sOff" % stem, str(word["off_name"]), ACEDescriptor.ACEType.ACTION,
-			"%s = false" % property, "", [], CAT, str(word["off_verb"]), host)
-			.described(_about(word, row)),
-		F.make_descriptor("Core", "LightIs%s" % stem, str(word["asks"]), ACEDescriptor.ACEType.CONDITION,
-			property, "", [], CAT, str(word["ask_verb"]), host)
-			.described("True while %s. Reads %s." % [str(word["ask_verb"]).to_lower(), _echo(row)])
+		F.act("Light%sOn" % stem, str(word["on_name"]), "%s = true" % property, CAT, str(word["on_verb"]), _about(word, row), host).featured(),
+		F.act("Light%sOff" % stem, str(word["off_name"]), "%s = false" % property, CAT, str(word["off_verb"]), _about(word, row), host),
+		F.cond("LightIs%s" % stem, str(word["asks"]), property, CAT, str(word["ask_verb"]), "True while %s. Reads %s." % [str(word["ask_verb"]).to_lower(), _echo(row)], host)
 	]
 
 
@@ -192,71 +173,28 @@ static func _on_off_param(description: String) -> ACEParam:
 ## The lights that take their light as a parameter, then the whole layout, then the world's look.
 static func _append_light_as_parameter(descriptors: Array[ACEDescriptor]) -> void:
 	# ── 2D lights ──
-	descriptors.append(F.make_descriptor("Core", "SetLightEnergy", "Set Light Energy (2D)", ACEDescriptor.ACEType.ACTION, "{node}.energy = {value}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The 2D light to change.", "expression"), F.make_param("value", "float", "1.0", "Energy", "How bright, as a fraction: 0.5 is half, 2.0 is double.", "expression")], CAT, "Set light energy to {value}")
-		.described("Sets how bright a 2D light is. The row shows the fraction as a percentage.").featured())
-	descriptors.append(F.make_descriptor("Core", "SetLightColour", "Set Light Colour (2D)", ACEDescriptor.ACEType.ACTION, "{node}.color = {colour}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The 2D light to change.", "expression"), F.make_param("colour", "Color", "Color.WHITE", "Colour", "The colour the light casts.", "color")], CAT, "Set light colour to {colour}")
-		.described("Sets the colour a 2D light casts."))
-	descriptors.append(F.make_descriptor("Core", "SetLightEnabled", "Set Light On/Off", ACEDescriptor.ACEType.ACTION, "{node}.enabled = {on}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The 2D light to switch.", "expression"), _on_off_param("Whether the light is lit. Off is different from hiding the node, which also hides its children.")], CAT, "Set light {on}")
-		.described("Switches a 2D light on or off. Different from hiding the node, which also hides its children."))
-	descriptors.append(F.make_descriptor("Core", "SetLightShadows", "Set Shadows On/Off", ACEDescriptor.ACEType.ACTION, "{node}.shadow_enabled = {on}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The light to change.", "expression"), _on_off_param("Whether the light casts shadows.")], CAT, "Set shadows {on}")
-		.described("Turns a light's shadows on or off - the cheapest lighting switch there is."))
+	descriptors.append(F.act("SetLightEnergy", "Set Light Energy (2D)", "{node}.energy = {value}", CAT, "Set light energy to {value}", "Sets how bright a 2D light is. The row shows the fraction as a percentage.").param("node", "$PointLight2D", "Light", "The 2D light to change.", "expression").param_typed("float", "value", "1.0", "Energy", "How bright, as a fraction: 0.5 is half, 2.0 is double.", "expression").featured())
+	descriptors.append(F.act("SetLightColour", "Set Light Colour (2D)", "{node}.color = {colour}", CAT, "Set light colour to {colour}", "Sets the colour a 2D light casts.").param("node", "$PointLight2D", "Light", "The 2D light to change.", "expression").param_typed("Color", "colour", "Color.WHITE", "Colour", "The colour the light casts.", "color"))
+	descriptors.append(F.act("SetLightEnabled", "Set Light On/Off", "{node}.enabled = {on}", CAT, "Set light {on}", "Switches a 2D light on or off. Different from hiding the node, which also hides its children.").param("node", "$PointLight2D", "Light", "The 2D light to switch.", "expression").param_built(_on_off_param("Whether the light is lit. Off is different from hiding the node, which also hides its children.")))
+	descriptors.append(F.act("SetLightShadows", "Set Shadows On/Off", "{node}.shadow_enabled = {on}", CAT, "Set shadows {on}", "Turns a light's shadows on or off - the cheapest lighting switch there is.").param("node", "$PointLight2D", "Light", "The light to change.", "expression").param_built(_on_off_param("Whether the light casts shadows.")))
 
 	# ── 3D lights ──
-	descriptors.append(F.make_descriptor("Core", "SetLightEnergy3D", "Set Light Energy (3D)", ACEDescriptor.ACEType.ACTION, "{node}.light_energy = {value}", "", [F.make_param("node", "String", "$DirectionalLight3D", "Light", "The 3D light to change.", "expression"), F.make_param("value", "float", "1.0", "Energy", "How bright, as a fraction: 0.5 is half, 2.0 is double.", "expression")], CAT, "Set light energy to {value}")
-		.described("Sets how bright a 3D light is. The row shows the fraction as a percentage."))
-	descriptors.append(F.make_descriptor("Core", "SetLightColour3D", "Set Light Colour (3D)", ACEDescriptor.ACEType.ACTION, "{node}.light_color = {colour}", "", [F.make_param("node", "String", "$DirectionalLight3D", "Light", "The 3D light to change.", "expression"), F.make_param("colour", "Color", "Color.WHITE", "Colour", "The colour the light casts.", "color")], CAT, "Set light colour to {colour}")
-		.described("Sets the colour a 3D light casts - the one knob that turns midday into sunset."))
+	descriptors.append(F.act("SetLightEnergy3D", "Set Light Energy (3D)", "{node}.light_energy = {value}", CAT, "Set light energy to {value}", "Sets how bright a 3D light is. The row shows the fraction as a percentage.").param("node", "$DirectionalLight3D", "Light", "The 3D light to change.", "expression").param_typed("float", "value", "1.0", "Energy", "How bright, as a fraction: 0.5 is half, 2.0 is double.", "expression"))
+	descriptors.append(F.act("SetLightColour3D", "Set Light Colour (3D)", "{node}.light_color = {colour}", CAT, "Set light colour to {colour}", "Sets the colour a 3D light casts - the one knob that turns midday into sunset.").param("node", "$DirectionalLight3D", "Light", "The 3D light to change.", "expression").param_typed("Color", "colour", "Color.WHITE", "Colour", "The colour the light casts.", "color"))
 
 	# ── The whole layout ──
-	descriptors.append(F.make_descriptor("Core", "SetLayerTint", "Set Layer Tint", ACEDescriptor.ACEType.ACTION, "{node}.color = {colour}", "", [F.make_param("node", "String", "$CanvasModulate", "Canvas modulate", "The CanvasModulate node that tints the layer.", "expression"), F.make_param("colour", "Color", "Color(0.2, 0.2, 0.4)", "Colour", "The tint laid over everything on the layer.", "color")], CAT, "Set layer tint to {colour}")
-		.described("Tints a whole 2D layer at once - the one row that makes a level read as night.").featured())
-	descriptors.append(F.make_descriptor("Core", "SetAmbientLight", "Set Ambient Light", ACEDescriptor.ACEType.ACTION, "{node}.environment.ambient_light_energy = {value}", "", [F.make_param("node", "String", "$WorldEnvironment", "World environment", "The WorldEnvironment node holding the environment.", "expression"), F.make_param("value", "float", "0.3", "Energy", "How much light everything gets regardless of the lights, as a fraction.", "expression")], CAT, "Set ambient light to {value}")
-		.described("Sets how much light a 3D scene has with no light shining on it."))
+	descriptors.append(F.act("SetLayerTint", "Set Layer Tint", "{node}.color = {colour}", CAT, "Set layer tint to {colour}", "Tints a whole 2D layer at once - the one row that makes a level read as night.").param("node", "$CanvasModulate", "Canvas modulate", "The CanvasModulate node that tints the layer.", "expression").param_typed("Color", "colour", "Color(0.2, 0.2, 0.4)", "Colour", "The tint laid over everything on the layer.", "color").featured())
+	descriptors.append(F.act("SetAmbientLight", "Set Ambient Light", "{node}.environment.ambient_light_energy = {value}", CAT, "Set ambient light to {value}", "Sets how much light a 3D scene has with no light shining on it.").param("node", "$WorldEnvironment", "World environment", "The WorldEnvironment node holding the environment.", "expression").param_typed("float", "value", "0.3", "Energy", "How much light everything gets regardless of the lights, as a fraction.", "expression"))
 
 	# ── the Environment: fog, glow, ambient occlusion and the sky ───────
 	#
 	# The world's LOOK, which belongs to no node a reader can point at, so every row here takes the
 	# environment itself. Each template writes the exact shape the Environment reading recognises, so
 	# a mood set from the picker and one typed by hand are the same bytes and read as the same rows.
-	descriptors.append(F.make_descriptor("Core", "SetFog", "Set Fog On/Off", ACEDescriptor.ACEType.ACTION,
-		"{env}.fog_enabled = {on}", "",
-		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
-			F.make_param("on", "bool", "true", "On", "Whether the world has fog at all.", "", ["true", "false"])],
-		ENV_CAT, "Set fog {on}")
-		.described("Switches the world's fog on or off - the one row that turns a clear day into a misty one.").featured())
-	descriptors.append(F.make_descriptor("Core", "SetFogDensity", "Set Fog Density", ACEDescriptor.ACEType.ACTION,
-		"{env}.fog_density = {value}", "",
-		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
-			F.make_param("value", "String", "0.02", "Density", "How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.", "expression")],
-		ENV_CAT, "Set fog thickness to {value}")
-		.described("Sets how thick the world's fog is. Ramp it up over time for a storm rolling in."))
-	descriptors.append(F.make_descriptor("Core", "SetFogColour", "Set Fog Colour", ACEDescriptor.ACEType.ACTION,
-		"{env}.fog_light_color = {colour}", "",
-		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
-			F.make_param("colour", "Color", "Color(0.7, 0.6, 0.8)", "Colour", "The colour the fog picks up from the light.", "color")],
-		ENV_CAT, "Set fog colour to {colour}")
-		.described("Sets the colour of the world's fog - dusk purple, underwater green, dust orange."))
-	descriptors.append(F.make_descriptor("Core", "SetGlow", "Set Glow On/Off", ACEDescriptor.ACEType.ACTION,
-		"{env}.glow_enabled = {on}", "",
-		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
-			F.make_param("on", "bool", "true", "On", "Whether bright things bleed light into what is around them.", "", ["true", "false"])],
-		ENV_CAT, "Set glow {on}")
-		.described("Switches the world's glow on or off - what makes neon, fire and magic read as bright."))
-	descriptors.append(F.make_descriptor("Core", "SetGlowStrength", "Set Glow Strength", ACEDescriptor.ACEType.ACTION,
-		"{env}.glow_intensity = {value}", "",
-		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
-			F.make_param("value", "String", "0.4", "Strength", "How much bright things bleed. Around 1 is strong.", "expression")],
-		ENV_CAT, "Set glow strength to {value}")
-		.described("Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends."))
-	descriptors.append(F.make_descriptor("Core", "SetAmbientOcclusion", "Set Ambient Occlusion On/Off", ACEDescriptor.ACEType.ACTION,
-		"{env}.ssao_enabled = {on}", "",
-		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
-			F.make_param("on", "bool", "true", "On", "Whether corners and creases are darkened.", "", ["true", "false"])],
-		ENV_CAT, "Set ambient occlusion {on}")
-		.described("Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines."))
-	descriptors.append(F.make_descriptor("Core", "SetSkyRotation", "Set Sky Rotation", ACEDescriptor.ACEType.ACTION,
-		"{env}.sky_rotation = {value}", "",
-		[F.make_param("value", "String", "Vector3(0.0, 0.0, 0.0)", "Rotation", "How the sky is turned, in radians on each axis.", "expression"),
-			F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression")],
-		ENV_CAT, "Set sky rotation to {value}")
-		.described("Turns the sky. Advance it slowly every tick and the clouds drift."))
+	descriptors.append(F.act("SetFog", "Set Fog On/Off", "{env}.fog_enabled = {on}", ENV_CAT, "Set fog {on}", "Switches the world's fog on or off - the one row that turns a clear day into a misty one.").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression").param_built(F.make_param("on", "bool", "true", "On", "Whether the world has fog at all.", "", ["true", "false"])).featured())
+	descriptors.append(F.act("SetFogDensity", "Set Fog Density", "{env}.fog_density = {value}", ENV_CAT, "Set fog thickness to {value}", "Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression").param("value", "0.02", "Density", "How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.", "expression"))
+	descriptors.append(F.act("SetFogColour", "Set Fog Colour", "{env}.fog_light_color = {colour}", ENV_CAT, "Set fog colour to {colour}", "Sets the colour of the world's fog - dusk purple, underwater green, dust orange.").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression").param_typed("Color", "colour", "Color(0.7, 0.6, 0.8)", "Colour", "The colour the fog picks up from the light.", "color"))
+	descriptors.append(F.act("SetGlow", "Set Glow On/Off", "{env}.glow_enabled = {on}", ENV_CAT, "Set glow {on}", "Switches the world's glow on or off - what makes neon, fire and magic read as bright.").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression").param_built(F.make_param("on", "bool", "true", "On", "Whether bright things bleed light into what is around them.", "", ["true", "false"])))
+	descriptors.append(F.act("SetGlowStrength", "Set Glow Strength", "{env}.glow_intensity = {value}", ENV_CAT, "Set glow strength to {value}", "Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression").param("value", "0.4", "Strength", "How much bright things bleed. Around 1 is strong.", "expression"))
+	descriptors.append(F.act("SetAmbientOcclusion", "Set Ambient Occlusion On/Off", "{env}.ssao_enabled = {on}", ENV_CAT, "Set ambient occlusion {on}", "Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression").param_built(F.make_param("on", "bool", "true", "On", "Whether corners and creases are darkened.", "", ["true", "false"])))
+	descriptors.append(F.act("SetSkyRotation", "Set Sky Rotation", "{env}.sky_rotation = {value}", ENV_CAT, "Set sky rotation to {value}", "Turns the sky. Advance it slowly every tick and the clouds drift.").param("value", "Vector3(0.0, 0.0, 0.0)", "Rotation", "How the sky is turned, in radians on each axis.", "expression").param_typed("String", "env", ENV, "Environment", "The environment whose look is being changed.", "expression"))
