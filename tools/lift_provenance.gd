@@ -1,7 +1,7 @@
 # Godot EventSheets - WHAT ROW THIS LINE BECAME, and which reading layer would have claimed it.
 #
 # A hand-written line becomes a row through one of several vocabularies, and until now the only way
-# to find out WHICH was to read the importer. The per-line reading beside this file
+# to find out WHICH was to read the importer. The per-line reading the canvas uses
 # (EventSheetLiftReading) answers the question the canvas asks - did anything name this line, and how
 # plainly - which is the right answer for a panel and the wrong one for somebody about to change a
 # table: it says "entry" where the interesting answer is "the lighting family's torch_brightness
@@ -63,6 +63,12 @@
 #
 # Everything is static and pure over the passed source, so the command line over it
 # (tools/explain.gd) runs headless and a test can pin its sentences without a viewport.
+#
+# WHY IT LIVES IN tools/ AND NOT BESIDE THE READERS IT ASKS. Nothing in the plugin calls it: its
+# consumers are the command line and its own test, and an installed user would otherwise ship four
+# hundred lines of maintainer tooling with their game. It reads the shipped readers through their
+# public class names and adds no seam to them, so the distance costs nothing. The day an editor
+# panel wants to answer "why did this line read this way?" in front of a reader, it moves back.
 @tool
 class_name EventSheetLiftProvenance
 extends RefCounted
@@ -241,8 +247,8 @@ static func text(source: String, number: int, script_path: String = "") -> Strin
 # ── the layers ──────────────────────────────────────────────────────────────────
 
 
-## Layers 1 and 2, which are one lookup: the table engine claims the line through the reading beside
-## this file (so a branch is asked as its term and the packs are asked in their own order), and the
+## Layers 1 and 2, which are one lookup: the table engine claims the line through the canvas's own
+## reading (so a branch is asked as its term and the packs are asked in their own order), and the
 ## entry that claimed it says which authoring route it came down. Null when no entry claims it.
 static func _table_answer(statement: String) -> Answer:
 	var claimed: Dictionary = EventSheetLiftReading.table_claim(statement)
