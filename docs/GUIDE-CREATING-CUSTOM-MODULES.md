@@ -71,36 +71,46 @@ Now you have something that already builds and passes the gates. Edit from there
 
 ## 3. The anatomy of an ACE
 
-Every ACE is one `F.make_descriptor(...)` call. Here is the full shape with each argument named:
+Every ACE is ONE CALL, and the call is named after the kind of row it makes:
 
 ```gdscript
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
-F.make_descriptor(
-	"Core",                          # provider_id - always "Core" for a builtin module
+F.act(
 	"SetWindowTitle",                # ace_id - the FROZEN identity string (never reuse or rename)
-	"Set Window Title",              # display_name - the picker label
-	ACEDescriptor.ACEType.ACTION,    # ace_type - ACTION / CONDITION / EXPRESSION / TRIGGER
-	"get_window().title = {title}",  # codegen_template - the GDScript it bakes to
-	"",                              # signal_name - "" except for a TRIGGER
-	[F.make_param("title", "String", "\"My Game\"", "Title", "The new window title.", "expression")],
-	"Game Window",                   # category - the picker section it groups under
-	"set window title {title}",      # display_text - the row summary, with {param} placeholders
-)
+	"Set Window Title",              # label - the picker label
+	"get_window().title = {title}",  # template - the GDScript it bakes to, with {param} slots
+	"Game Window",                   # group - the picker section it groups under
+	"set window title {title}",      # reads_as - the row summary, with {param} placeholders
+	"Sets the title on the game window's own bar.",  # description - the help the info panel shows
+).param("title", "\"My Game\"", "Title", "The new window title.", "expression")
 ```
 
-The four ACE types:
+Written on one line, which is how the built-in modules are written, that is the whole ACE.
 
-| Type | What it is | Example template |
+The four makers, one per kind of row:
+
+| Maker | What it is | Example template |
 |------|-----------|------------------|
-| `ACTION` | Does something (a statement). | `get_window().title = {title}` |
-| `CONDITION` | A boolean test used in an event's condition lane. | `{value} > 0` |
-| `EXPRESSION` | Returns a value you use inside another field. | `absf({value})` |
-| `TRIGGER` | Fires an event when a Godot signal or callback runs. Leave the template `""` and put the signal / callback name in the `signal_name` argument. | signal_name `"ready"` |
+| `F.act` | Does something (a statement). | `get_window().title = {title}` |
+| `F.cond` | A boolean test used in an event's condition lane. | `{value} > 0` |
+| `F.expr` | Returns a value you use inside another field. | `absf({value})` |
+| `F.trig` | Fires an event when a Godot signal or callback runs. It takes the SIGNAL name where the other three take a template, because a trigger emits none. | signal `"ready"` |
 
-Chain these onto the descriptor to shape it:
+Two more arguments follow `description` and are rarely written: `host`, the Godot class this row
+belongs to (the picker files it under that class instead of the group), and `provider`, the name the
+row publishes under - `"Core"` for a builtin module, which is the default.
 
-- `.described("Plain-language help shown in the info panel.")` - always add this.
+**The long form is still there and always will be.** `F.make_descriptor(provider, ace_id, label,
+kind, template, signal, params, category, display_text, node_type)` takes every field in position,
+and the makers compile to it. Reach for it when the row's own shape needs it - when its parameter
+list comes from a shared helper rather than being written out, or when its template is a string with
+a real newline in it that cannot be folded onto one line.
+
+Chain these onto the descriptor to shape it further:
+
+- `.described("Plain-language help shown in the info panel.")` - the same text the maker's
+  `description` argument sets, for a descriptor built with the long form.
 - `.featured()` - bold it and float it to the top of its category (for the one or two rows a beginner reaches for first).
 - `.deprecated("Use X instead.", "Core::NewId")` - hide it from the picker but keep it compiling (see the freeze contract).
 - `.project_scoped()` - this row's CHOICES come out of the open project rather than out of your
@@ -113,18 +123,32 @@ Chain these onto the descriptor to shape it:
 
 ## 4. Parameters
 
-Each parameter is one `F.make_param(...)`:
+Each parameter is one call chained onto the descriptor, in the order the row receives them:
 
 ```gdscript
-F.make_param(
-	"title",        # param_id - the {name} used in the template
-	"String",       # type_name - "String" / "float" / "int" / "bool" / "Vector2" / "Node" / ...
-	"\"My Game\"",  # default_value - MUST make the template compile as-is
-	"Title",        # display_name - the field label
-	"The new title.", # description - the field's help text
-	"expression",   # hint - which dialog widget to use (see below)
+.param(
+	"title",           # param_id - the {name} used in the template
+	"\"My Game\"",     # default_value - MUST make the template compile as-is
+	"Title",           # label - the field label
+	"The new title.",  # words - the field's help text
+	"expression",      # hint - which dialog widget to use (see below)
 )
 ```
+
+The field's TYPE comes from the default's own type - text is a String field, `true` a checkbox, `3`
+an integer spinner, `1.5` a float spinner. Text is right for every parameter whose default is a
+GDScript expression, because an expression's default IS its text. The rest of the family names what
+`.param` cannot:
+
+- `.param_typed("Vector2", "offset", "Vector2.ZERO", "Offset", "...")` - the default is text
+  standing for another type (`Vector2.ZERO`, `self` as a Node), so the type is said out loud.
+- `.param_choice("side", "left", "Side", "...", ["left", "right"])` - a fixed dropdown.
+- `.param_suggesting("action", "\"jump\"", "Action", "...", ["\"ui_accept\""], "input_action")` -
+  an editable combo the reader may type anything into.
+- `.param_built(F.make_param(...))` - a parameter a helper already made, handed over whole.
+
+`F.make_param(param_id, type_name, default_value, display_name, description, hint, options,
+autocomplete)` is the long form behind all of them, and stays as it is.
 
 The `hint` picks the field's editor:
 
@@ -202,46 +226,39 @@ is harmless.
 An **action** (a statement):
 
 ```gdscript
-F.make_descriptor("Core", "PauseGame", "Pause Game", ACEDescriptor.ACEType.ACTION, "get_tree().paused = true", "", [], "Flow", "pause the game")
-	.described("Freezes every node that is not set to run while paused."))
+F.act("PauseGame", "Pause Game", "get_tree().paused = true", "Flow", "pause the game", "Freezes every node that is not set to run while paused.")
 ```
 
 A **condition** (a boolean):
 
 ```gdscript
-F.make_descriptor("Core", "IsGamePaused", "Is Game Paused", ACEDescriptor.ACEType.CONDITION, "get_tree().paused", "", [], "Flow", "the game is paused")
-	.described("True while the game is paused."))
+F.cond("IsGamePaused", "Is Game Paused", "get_tree().paused", "Flow", "the game is paused", "True while the game is paused.")
 ```
 
 An **expression** (returns a value):
 
 ```gdscript
-F.make_descriptor("Core", "ViewportCentre", "Viewport Centre", ACEDescriptor.ACEType.EXPRESSION, "get_viewport().get_visible_rect().size / 2.0", "", [], "Screen", "screen centre")
-	.described("The middle of the screen, in pixels."))
+F.expr("ViewportCentre", "Viewport Centre", "get_viewport().get_visible_rect().size / 2.0", "Screen", "screen centre", "The middle of the screen, in pixels.")
 ```
 
 An action **with a parameter and a dropdown**:
 
 ```gdscript
-F.make_descriptor("Core", "SetMouseShape", "Set Mouse Cursor", ACEDescriptor.ACEType.ACTION, "Input.set_default_cursor_shape({shape})", "",
-	[F.make_param("shape", "int", "Input.CURSOR_ARROW", "Shape", "The cursor to show.", "", ["Input.CURSOR_ARROW", "Input.CURSOR_POINTING_HAND", "Input.CURSOR_CROSS"])], "Input", "set cursor {shape}")
-	.described("Changes the mouse cursor shape."))
+F.act("SetMouseShape", "Set Mouse Cursor", "Input.set_default_cursor_shape({shape})", "Input", "set cursor {shape}", "Changes the mouse cursor shape.")
+	.param_choice("shape", "Input.CURSOR_ARROW", "Shape", "The cursor to show.", ["Input.CURSOR_ARROW", "Input.CURSOR_POINTING_HAND", "Input.CURSOR_CROSS"])
 ```
 
 A **combined** action that folds three lines into one row, using `{uid}`:
 
 ```gdscript
-F.make_descriptor("Core", "PopupLabel", "Popup Floating Label", ACEDescriptor.ACEType.ACTION,
-	"var __lbl_{uid} = Label.new()\n__lbl_{uid}.text = {text}\nadd_child(__lbl_{uid})", "",
-	[F.make_param("text", "String", "\"+100\"", "Text", "What the label says.", "expression")], "UI", "popup label {text}")
-	.described("Spawns a Label with your text as a child of this node."))
+F.act("PopupLabel", "Popup Floating Label", "var __lbl_{uid} = Label.new()\n__lbl_{uid}.text = {text}\nadd_child(__lbl_{uid})", "UI", "popup label {text}", "Spawns a Label with your text as a child of this node.")
+	.param("text", "\"+100\"", "Text", "What the label says.", "expression")
 ```
 
-A **trigger** (leave the template empty, name the signal):
+A **trigger** (name the signal where an action names its template):
 
 ```gdscript
-F.make_descriptor("Core", "OnScreenResized", "On Screen Resized", ACEDescriptor.ACEType.TRIGGER, "", "size_changed", [], "Game Window", "on screen resized", "Window")
-	.described("Runs when the game window changes size."))
+F.trig("OnScreenResized", "On Screen Resized", "size_changed", "Game Window", "on screen resized", "Runs when the game window changes size.", "Window")
 ```
 
 ## 9. Testing your module
