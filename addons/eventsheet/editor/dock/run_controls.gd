@@ -37,9 +37,12 @@ const BUTTONS: Array = [
 	["preview_layout", "▶ Preview layout",
 		"Run the scene this sheet's script is on (F6). The sheet keeps running beside it.",
 		"PlayScene", "preview_layout"],
+	# MainPlay, not MainScene: the editor ships no icon called MainScene (probed against the running
+	# 4.7 editor theme), so this entry arrived iconless on the face, in the dropdown and on the
+	# expanded strip. MainPlay is the icon Godot's own run bar wears for exactly this run.
 	["preview_project", "▶▶ Preview project",
 		"Run the project's main scene (F5) - the whole game from its start, not just this layout.",
-		"MainScene", "preview_project"],
+		"MainPlay", "preview_project"],
 ]
 
 ## The two entries that are pure relabels of Godot's own keys. The play button's dropdown puts them

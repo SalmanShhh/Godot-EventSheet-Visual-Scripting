@@ -8,10 +8,11 @@
   **137 menu commands**, which is a menu bar wearing a toolbar's clothes: everything one click away
   and nothing findable. At rest it is **seven**: one cascading Menu, the Save / Undo / Redo icons,
   the play button, the Quick add field, and a chevron. Measured on the built strip, the resting row
-  is **609 px** wide against a suite-held budget of 640, so it fits the narrowest canvas this suite
-  draws a sheet into and a future pass that wants a resting control has to come and say why. Nothing
-  was removed - every retired control keeps its id, its key, its home in the Menu, and the in-sheet
-  door it already had.
+  is **603 px** wide inside a running editor (**555 px** headless, where the icon faces wear a glyph
+  and the play face has no icon) against a suite-held budget of 640, so it fits the narrowest canvas
+  this suite draws a sheet into and a future pass that wants a resting control has to come and say
+  why. Nothing was removed - every retired control keeps its id, its key, its home in the Menu, and
+  the in-sheet door it already had.
 - **One Menu, five cascading submenus.** Sheet, Add, Edit, View and Tools left the strip and became
   submenus of a single Menu button. They are the very same menus: every item id, every handler and
   every menu that rebuilds itself on open (Language, Sheet theme, Arrange by, Saved Views,
@@ -99,6 +100,23 @@
 
 ### Fixed
 
+- **Undo and Redo are icons now, because Godot has no icon called "Undo".** The strip asked the
+  editor theme for icons named `Save`, `Undo` and `Redo` and kept the words for any that did not
+  arrive - so the resting row read "[save icon] Undo [redo icon]": two pictures and a word. Probed
+  against the running 4.7 editor theme (1045 icons), `Save` and `Redo` exist and `Undo` does not;
+  `UndoRedo` is the history pair rather than an undo arrow, and `Back` / `ArrowLeft` are navigation
+  chevrons that mean somewhere else. The undo arrow is the redo arrow facing the other way, so it is
+  DERIVED from the editor's own `Redo` image rather than hand-drawn - which keeps the pair matched
+  stroke for stroke and following whatever colour the reader's editor theme recoloured it to. Where
+  there is no editor theme to ask at all, an icon-only face now wears a glyph (`↶`, `↷`) instead of
+  falling back to words. Same probe found `MainScene`, which Preview project asked for, does not
+  exist either: it is `MainPlay`, the icon Godot's own run bar wears for that run, so Preview project
+  has an icon on the face, in the dropdown and on the expanded strip.
+- **A toolbar control is addressed by the words it was built with.** "Show me this control" resolved
+  a button by reading its face first, which works only while the face is made of words - it found
+  Undo in the editor (icon, empty face, the built label answers) and missed it everywhere else (the
+  face said `↶`). The built label leads now, and the face is the fallback for anything built
+  elsewhere.
 - **Two labels that named a control the strip no longer has.** The one Menu button's hover said
   "four groups: Sheet, Edit, View and Tools" while the button cascaded five - Add joined them when
   the strip stopped fronting the adding - so the only button on a resting strip described a menu

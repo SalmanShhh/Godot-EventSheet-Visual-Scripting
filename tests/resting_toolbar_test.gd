@@ -23,12 +23,18 @@ extends RefCounted
 ## It was 520 while the play slot stood empty - the narrowest canvas any layout test here draws a
 ## sheet into (event_cell_wrap_test builds its viewport at 520 wide) - and the row measured 494.
 ## The slot is full now: the play button is a face Button wearing the chosen run's own words beside
-## a narrow dropdown, and that pair is 115 px of the row. Headless is the widest the face ever gets,
-## because no editor icon arrives here and the words carry it alone.
+## a narrow dropdown, and that pair is 115 px of the row.
 ##
-## 609 measured, 640 budgeted: room for one more icon-sized control, so the next pass that puts
-## something on the resting strip comes here, re-measures, and says why - rather than finding out
-## by watching the row wrap.
+## THIS IS A HEADLESS NUMBER, and it is not the widest the row ever gets. It was written down as if
+## it were: "headless is the widest the face ever gets, because no editor icon arrives here". That
+## is false - in the editor the play face wears an icon AND its words, so the real strip is WIDER
+## than what this measures, while the three history icons are NARROWER (they wear a one-character
+## glyph here and an editor icon there). Nothing measures the strip inside a running editor; the
+## preview harness prints its width when it renders, and that is the number to compare against.
+##
+## 555 measured headless, 640 budgeted: room for one more icon-sized control, so the next pass that
+## puts something on the resting strip comes here, re-measures, and says why - rather than finding
+## out by watching the row wrap.
 const RESTING_WIDTH_BUDGET: float = 640.0
 
 
@@ -69,6 +75,7 @@ static func run() -> bool:
 	ok = _test_the_cascade() and ok
 	ok = _test_the_two_states() and ok
 	ok = _test_the_history_icons() and ok
+	ok = _test_the_icon_faces() and ok
 	ok = _test_keys_come_from_the_table() and ok
 	ok = _test_simple_mode_lets_the_strip_alone() and ok
 	ok = _test_the_sheet_theme_menu() and ok
@@ -83,6 +90,10 @@ static func run() -> bool:
 ## and forgets the guide fails this check by name instead of shipping a guide that is quietly short
 ## one row. The names are compared with their leading glyph stripped, because the guide writes
 ## "Debug layout" where the button wears an emoji in front of it.
+##
+## Each button is asked for the words it was BUILT with rather than for what is on its face: an
+## icon-only face carries an icon in the editor and a glyph here, and reading the face meant the
+## three icon buttons quietly dropped out of this sweep the moment they stopped saying their names.
 static func _test_the_guide_names_every_control() -> bool:
 	var guide: String = FileAccess.get_file_as_string("res://docs/GUIDE-THE-TOOLBAR.md")
 	var ok: bool = _check("the toolbar guide reads", guide.is_empty(), false)
@@ -94,7 +105,7 @@ static func _test_the_guide_names_every_control() -> bool:
 	for child: Node in editor._toolbar.get_children():
 		if not (child is Button):
 			continue
-		var label: String = _plain_label(str((child as Button).text))
+		var label: String = _plain_label(editor._toolbar_control_label(child as Button))
 		if label.is_empty():
 			continue
 		checked += 1
@@ -295,6 +306,53 @@ static func _test_the_history_icons() -> bool:
 	ok = _check("and Redo calls its own",
 		redo_button.pressed.is_connected(editor._on_redo_requested), true) and ok
 	editor.free()
+	return ok
+
+
+## THE THREE ICON FACES. Save, Undo and Redo are icon-only buttons, and the strip shipped reading
+## "[save icon] Undo [redo icon]" - two pictures and a word - because the factory asked the editor
+## theme for an icon called "Undo" and Godot 4.7 does not ship one. Probed against the RUNNING
+## editor theme (1045 icons): Save true, Redo true, Undo FALSE, UndoRedo true (that is the history
+## pair, not an undo arrow), MainScene FALSE, MainPlay true.
+##
+## Two halves are pinned here. Headlessly - where there is no editor theme at all - each icon-only
+## face falls back to a GLYPH rather than to the words, so the row still reads as a row of icons.
+## And the names the strip asks for are pinned against the answers above: the one Godot does not
+## ship is derived from its twin, and the run that asked for a name that does not exist asks for the
+## one that does. The live has_icon sweep is the preview harness's job, because it needs an editor.
+static func _test_the_icon_faces() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var undo_button: Button = editor._toolbar.find_child("EventSheetUndoButton", true, false) as Button
+	var redo_button: Button = editor._toolbar.find_child("EventSheetRedoButton", true, false) as Button
+	var save_button: Button = editor._toolbar.find_child("EventSheetSaveButton", true, false) as Button
+	var ok: bool = _check("with no editor theme, Undo wears a glyph", undo_button.text, "↶")
+	ok = _check("and Redo wears its own", redo_button.text, "↷") and ok
+	ok = _check("neither invents an icon out of nothing", undo_button.icon == null and redo_button.icon == null, true) and ok
+	# Save keeps its word here: its icon is one the editor has always carried, so there is no glyph
+	# to fall back to and nothing to fall back from.
+	ok = _check("Save keeps the word every reader knows", save_button.text, "Save") and ok
+	# The words are still what the strip is addressed BY, whatever the face wears - a tutorial step
+	# that says "pulse Undo" names the gesture, not the glyph.
+	ok = _check("the face still answers to its words",
+		str(undo_button.get_meta(EventSheetMenuBar.LABEL_META_KEY, "")), "Undo") and ok
+	ok = _check("and the dock resolves it by them",
+		editor._toolbar_control_label(undo_button), "Undo") and ok
+	editor.free()
+	# The one arrow Godot ships without a twin is DERIVED from the twin rather than hand-drawn, so
+	# both arrows keep the editor's own stroke weight and its own recoloured palette.
+	ok = _check("Undo is mirrored from Redo", str(EventSheetEditorIcons.MIRRORED.get("Undo", "")), "Redo") and ok
+	# Preview project asked for "MainScene", which is not an icon name in this editor, so it arrived
+	# iconless on the face, in the dropdown and on the expanded strip.
+	ok = _check("Preview project asks for the icon Godot's own run bar wears",
+		EventSheetRunControls.icon_for("preview_project"), "MainPlay") and ok
+	var strip_sources: String = ""
+	for path: String in ["res://addons/eventsheet/editor/dock/menu_bar.gd",
+			"res://addons/eventsheet/editor/dock/run_controls.gd",
+			"res://addons/eventsheet/editor/dock/play_button.gd"]:
+		strip_sources += FileAccess.get_file_as_string(path)
+	ok = _check("the sources were actually read", strip_sources.length() > 1000, true) and ok
+	ok = _check("and no control asks for MainScene again",
+		strip_sources.contains("\"MainScene\""), false) and ok
 	return ok
 
 

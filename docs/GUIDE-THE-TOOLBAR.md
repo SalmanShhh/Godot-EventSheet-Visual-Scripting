@@ -39,13 +39,24 @@ In reading order, left to right:
 | 6 | **Quick add or find** | Type a whole row (`heal 5`, `boss fla 0.4`) and press Enter, or read the answers underneath: the states, rows, variables, functions, signals, modes and Doctor findings that match what you typed |  |
 | 7 | **The chevron** | Expands the strip to every button it has, and back |  |
 
+![The resting strip drawn with the editor's own icons: the Menu, the Save / Undo / Redo icons, the play button, Quick add and the chevron](images/resting-toolbar-icons.png)
+
+The three icons are the editor's own. Godot ships a `Redo` arrow but no `Undo` one, so the undo
+arrow you see is the redo arrow mirrored - which is why the pair matches stroke for stroke and takes
+its colour from whatever editor theme you are running. On a build with no icon to lend, the two wear
+`↶` and `↷` instead.
+
 Every key printed on the strip and in its menus is read from **your** bindings, not typed into the
 editor's source. Rebind one in *Menu > Tools > Keyboard Shortcuts* and the tooltip and the menu item
 say the new key with nothing else to change. The keys quoted on this page are the shipped defaults.
 
-The row measures **609 px** at its narrowest, which is the whole point of it fitting: a suite test
-builds the strip, measures it, and fails if it grows past 640 px, so a future pass that wants a
-resting control has to come here, re-measure, and say why.
+The row measures **603 px** at its narrowest inside a running editor, which is the whole point of it
+fitting: a suite test builds the strip, measures it, and fails if it grows past 640 px, so a future
+pass that wants a resting control has to come here, re-measure, and say why. The suite's own
+measurement is **555 px**, and it is smaller for a reason worth knowing: a headless run has no
+editor theme to lend an icon, so the icon faces wear a one-character glyph and the play face wears
+no icon at all. The editor number is the one that matters, and the preview harness
+(`tools/render_toolbar_icons_preview.gd`) is what prints it.
 
 ## The Menu, group by group
 

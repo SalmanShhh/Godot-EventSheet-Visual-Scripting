@@ -168,11 +168,7 @@ func _on_main_chosen(id: int) -> void:
 
 ## An icon from the running editor theme, or null. Null is a normal answer: a headless run has no
 ## editor theme at all, and an editor theme without that icon is not an error either - the words on
-## the control carry it on their own.
+## the control carry it on their own. Asked through the strip's one icon seam, so a name the theme
+## does not ship is handled in exactly one place rather than once per control that wanted it.
 static func _editor_icon(icon_name: String) -> Texture2D:
-	if icon_name.is_empty() or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_theme: Theme = EditorInterface.get_editor_theme()
-	if editor_theme == null or not editor_theme.has_icon(icon_name, "EditorIcons"):
-		return null
-	return editor_theme.get_icon(icon_name, "EditorIcons")
+	return EventSheetEditorIcons.icon(icon_name)

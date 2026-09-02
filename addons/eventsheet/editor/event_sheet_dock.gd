@@ -772,13 +772,16 @@ func pulse_control(control_label: String) -> bool:
 	return false
 
 
-## The words a toolbar control stands for: what is written on its face, or - once an icon has taken
-## the words off the face - the label it was built with, which it keeps in its own meta.
+## The words a toolbar control stands for: the label it was BUILT with, which every toolbar button
+## keeps in its own meta, and what is written on its face for anything built elsewhere.
+##
+## The meta leads because a face is not reliably made of words: an icon takes them off entirely, and
+## where there is no editor theme to lend one an icon-only face wears a glyph instead. Reading the
+## face first meant "pulse Undo" found the button in the editor (empty face, meta answers) and
+## missed it everywhere else (the face said "↶").
 func _toolbar_control_label(button: Button) -> String:
-	var face: String = button.text.strip_edges()
-	if not face.is_empty():
-		return face
-	return str(button.get_meta(EventSheetMenuBar.LABEL_META_KEY, "")).strip_edges()
+	var built_as: String = str(button.get_meta(EventSheetMenuBar.LABEL_META_KEY, "")).strip_edges()
+	return built_as if not built_as.is_empty() else button.text.strip_edges()
 
 
 ## Persists the live active-tab state (_current_sheet/path/dirty) back into _open_tabs.

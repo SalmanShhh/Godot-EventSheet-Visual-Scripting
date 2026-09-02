@@ -214,15 +214,20 @@ func build(root: Node) -> void:
 	# key from the ONE shortcut table, so a rebound key shows its new binding here without an edit.
 	# Undo and Redo are new controls, not new powers: both gestures already existed on their keys and
 	# on the Edit menu, and both call the dock's undo funnel, exactly as those do.
+	#
+	# Godot 4.7 ships Save and Redo but NO Undo, so the strip read "[save icon] Undo [redo icon]"
+	# until the icon seam started deriving the missing arrow from its twin. Undo and Redo also name
+	# the glyph they wear where there is no editor theme to ask at all; Save does not, because its
+	# icon is one the editor has always carried and its word is the one every reader knows.
 	var save_button: Button = _add_toolbar_button(_toolbar, "Save", _dock._on_save_requested,
 		_with_key("Save the sheet - compile-on-save keeps its generated script fresh.", "save"),
 		"Save", true)
 	save_button.name = "EventSheetSaveButton"
 	_undo_button = _add_toolbar_button(_toolbar, "Undo", _dock._on_undo_requested,
-		_with_key("Undo the last edit to this sheet.", "undo"), "Undo", true)
+		_with_key("Undo the last edit to this sheet.", "undo"), "Undo", true, "↶")
 	_undo_button.name = "EventSheetUndoButton"
 	_redo_button = _add_toolbar_button(_toolbar, "Redo", _dock._on_redo_requested,
-		_with_key("Redo the edit you just undid.", "redo"), "Redo", true)
+		_with_key("Redo the edit you just undid.", "redo"), "Redo", true, "↷")
 	_redo_button.name = "EventSheetRedoButton"
 	# ── THE PLAY BUTTON ────────────────────────────────────────────────────────────────────────
 	# Godot has no split button, so the resting play control is a face Button beside a narrow
@@ -1239,21 +1244,26 @@ const LABEL_META_KEY: String = "eventsheets_toolbar_label"
 ## (Moved verbatim from the dock; targets the toolbar passed in rather than a member.)
 ##
 ## `icon_only` drops the words from the face and leaves the icon to carry it - and only when the icon
-## actually arrived. A headless run and an editor theme without that icon both keep the text, so a
-## button never becomes a blank rectangle nobody can name.
-func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "", icon_only: bool = false) -> Button:
+## actually arrived. `glyph` is what an icon-only face falls back to when no icon did: a headless run
+## has no editor theme at all, and a one-character glyph keeps a row of icons reading as a row of
+## icons instead of as two pictures and a word. A face with neither an icon nor a glyph keeps its
+## words, so a button never becomes a blank rectangle nobody can name.
+func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "", icon_only: bool = false, glyph: String = "") -> Button:
 	var button: Button = Button.new()
 	button.text = text
 	button.tooltip_text = tooltip
+	# The words stay on the button's own meta whatever the face ends up wearing, so anything that
+	# addresses a toolbar control by its label (a tutorial's pulse) still finds it.
 	button.set_meta(LABEL_META_KEY, text)
-	# Editor icons make the toolbar read as part of Godot (no-op headless / pre-1.0
-	# editor theme without the icon).
-	if not editor_icon.is_empty() and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var editor_theme: Theme = EditorInterface.get_editor_theme()
-		if editor_theme != null and editor_theme.has_icon(editor_icon, "EditorIcons"):
-			button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
-			if icon_only:
-				button.text = ""
+	# Editor icons make the toolbar read as part of Godot. The seam answers null headlessly and for
+	# a name the running theme does not carry, and derives the one arrow Godot ships without a twin.
+	var icon: Texture2D = EventSheetEditorIcons.icon(editor_icon)
+	if icon != null:
+		button.icon = icon
+		if icon_only:
+			button.text = ""
+	elif icon_only and not glyph.is_empty():
+		button.text = glyph
 	button.pressed.connect(callable)
 	# The button remembers which of the editor's files made it, so Ctrl+Shift+Alt on it opens
 	# that file as a sheet at the row that names these words. Nothing is written outside the editor's
