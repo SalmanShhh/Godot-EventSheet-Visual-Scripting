@@ -213,7 +213,7 @@ $Instrument = @(
 # distinction a reviewer of a shipped copy needs and a line of `+102/-0` cannot make.
 function Get-FunctionMoves($BaseSha, $File) {
 	$moved = New-Object System.Collections.ArrayList
-	$diff = & git -C $repo diff -U0 $BaseSha -- $File
+	$diff = & git -C $repo diff --unified=0 $BaseSha -- $File
 	foreach ($line in $diff) {
 		if ($line -match '^[+-](static )?func ') {
 			[void]$moved.Add($line.Trim())
