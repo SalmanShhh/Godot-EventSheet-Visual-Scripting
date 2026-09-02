@@ -104,8 +104,8 @@
 This section is for whoever works on the plugin. Nothing in it changes what a project compiles to,
 what a sheet reads like, or one user-visible string, which is why the What's new page a reader opens
 now drops a Maintenance section whole rather than showing somebody a shrink they cannot see.
-Measured across the wave, outside the three generated trees: **-950 lines** of hand-written GDScript
-(**+3,376 / -4,326**), of which `tests/` is **-1,484** and the installed plugin - everything under
+Measured across the wave, outside the three generated trees: **-966 lines** of hand-written GDScript
+(**+3,360 / -4,326**), of which `tests/` is **-1,484** and the installed plugin - everything under
 `addons/` except the doc bundle - is **-6**.
 
 - **Five hundred copies of one assertion become one call, and there is one assertion file.** Nearly

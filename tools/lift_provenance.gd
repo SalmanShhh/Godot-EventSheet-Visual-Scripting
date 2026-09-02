@@ -17,11 +17,15 @@
 #    read as SetLocalVarTyped, CallMethod and AddVelocity - three confident wrong answers. So the
 #    claim is asked of the row builder itself: reopen the file, re-emit it, and look the line up in
 #    the source map the compiler hands back (EventSheetLineRowMapper). That answer is the editor's,
-#    because it IS the editor's - the same import and the same emission a save performs.
+#    because it IS the editor's - the same import and the same emitter a save runs.
 #
 #    It is gated on the round trip being LOSSLESS. Line N of the re-emission is line N of the file
 #    only when the two are byte-identical, so a file that does not reproduce itself is told that
-#    rather than answered by a line number that means something else.
+#    rather than answered by a line number that means something else. The re-emission goes to the
+#    shared round-trip probe path under `user://`, NEVER to the file's own: the compiler writes its
+#    output to the path it is given, so re-emitting a file over itself would let a read-only tool
+#    rewrite the very file it was asked about, in exactly the case where the answer is "this does not
+#    reproduce itself". It also makes "lossless" here mean what `EventSheets.round_trips` means.
 #
 #    THE GRAIN IS THE ROW THAT OWNS THE EMISSION, which for a line inside an event is the EVENT: the
 #    source map is keyed per emitting resource, and an event emits the lines of every condition and
@@ -61,8 +65,10 @@
 # exactly the case where the lifter's answer IS the index's. Nothing is guessed and nothing is
 # reimplemented: every answer here comes from the reader that actually produces it when a file opens.
 #
-# Everything is static and pure over the passed source, so the command line over it
-# (tools/explain.gd) runs headless and a test can pin its sentences without a viewport.
+# Everything is static and answers over the passed source, so the command line over it
+# (tools/explain.gd) runs headless and a test can pin its sentences without a viewport. The one thing
+# that is not pure is the round-trip check, which writes its re-emission to the throwaway probe path
+# under `user://` - nothing under `res://` is read for it and nothing anywhere is changed by it.
 #
 # WHY IT LIVES IN tools/ AND NOT BESIDE THE READERS IT ASKS. Nothing in the plugin calls it: its
 # consumers are the command line and its own test, and an installed user would otherwise ship four
@@ -178,8 +184,9 @@ class RowClaim extends RefCounted:
 ## and a connect inside a bare `_ready` is a signal trigger, neither of which the per-line layers
 ## below can see.
 ##
-## `script_path` is the path the source came from. It matters twice: the readings that resolve a
-## receiver against the project use it, and so does any emission that depends on where the file lands.
+## `script_path` is the path the source came from, and is used ONLY to resolve a receiver against the
+## project (an Autoload, a class name, the host class of `self`). It is never compiled to: the round
+## trip goes to PROBE_PATH, so nothing here can write to the file it is asked about.
 static func row_claim(source: String, number: int, script_path: String = "") -> RowClaim:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
 		script_path)
