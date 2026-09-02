@@ -249,9 +249,15 @@ says once where everything went and that no key changed:
 
 ![The editor with the strip at rest and the status bar along its foot reading: The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.](images/resting-toolbar-note.png)
 
-It is remembered per project, so it is never said twice. A brand-new project never sees it at all,
-because it never saw the old strip, and a reader who has already expanded the strip is not told it
-is resting, because it is not.
+It is remembered per project, so it is never said twice. A project whose first opened sheet is the
+blank one the workspace seeds is not told, because it never saw the old strip, and a reader who has
+already expanded the strip is not told it is resting, because it is not.
+
+It is a status line, which means it is said once and fades a few seconds later - **this page is the
+permanent copy of it**, and it is what to come back to rather than the note. Everything the note
+points at is here: the Menu holds every command, the chevron and *View > Full toolbar* bring the
+whole strip back, and the [where-did-it-go table](#where-did-it-go-the-whole-table) names every
+button that left along with where it went. No key changed.
 
 ## Why the strip is shaped this way
 
