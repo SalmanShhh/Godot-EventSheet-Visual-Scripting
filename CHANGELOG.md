@@ -114,9 +114,10 @@ the installed plugin was **-7** - because three of the four things in that step 
 that must exist before a big migration can be trusted (a ledger that reproduces, a second dump the
 gate compares, and a translation ratchet that measures verbs instead of filenames), and a dev tool
 is paid for in full by the figure it measures. The vocabulary migration then turned the wave
-around. Measured across the second wave to date: **-2,607 lines** of hand-written GDScript
-(**+3,130 / -5,737**), of which the installed plugin is **-3,112**. Every one of those numbers
-comes from `tools/measure_ledger.ps1`, at the two commits named in it.
+around, and the Doctor's own copies after it. Measured across the second wave to date:
+**-2,815 lines** of hand-written GDScript (**+3,291 / -6,106**), of which the installed plugin is
+**-3,320**. Every one of those numbers comes from `tools/measure_ledger.ps1`, at the two commits
+named in it.
 
 - **A built-in verb is one line, and the line says which kind of verb it is.** The 1,783 built-in
   ACEs were each written as ten positional arguments with the kind spelled out in the middle of
@@ -316,6 +317,18 @@ comes from `tools/measure_ledger.ps1`, at the two commits named in it.
   filesystem order, and forty-odd checks derive their order and their "first user" picks from these
   lists) is written once instead of three times. Same findings-identity proof: 275 before, 275
   byte-identical after.
+- **The Doctor's section register, surveyed and deliberately not built.** A typed
+  `register_doctor_section(id, checks)` beside the frozen `register_doctor_check`, where each check
+  declares its pre-read words and hands the survivors to one bespoke finder, was the obvious next
+  seam - so all fifteen sections were held up against it, and not one of them fits. Every section
+  either reads a corpus that is not the project's scripts (four read scenes, three read sheets, two
+  read Project Settings and the guides), or narrows the scripts by something no word list can say
+  (a `@tool` script that ALSO reaches for the edited scene, a touch signal on a node that ALSO
+  collides, a per-frame function that ALSO holds one of six shapes), or spends a time-and-count
+  budget on the candidates in an order the section itself chooses. Shipping the seam anyway would
+  have frozen a public API shape with zero users in it, which is the one thing the freeze rule
+  cannot undo. The four beats the sections DO share live in `EventSheetDoctorSection` above, and the
+  registration each section already has is one line.
 
 ### Fixed
 
