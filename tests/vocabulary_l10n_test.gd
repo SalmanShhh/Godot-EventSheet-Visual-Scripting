@@ -74,15 +74,15 @@ const NEW_MODULES: Array[String] = [
 	# The copies said in the plural: joining a group on the way in, the cap with its policy on the
 	# row, the count, and the trigger that answers a crowd emptying. One module, shipped whole.
 	"res://addons/eventforge/registration/modules/crowd_aces.gd",
+	# The questions a handler asks the ONE event it was handed, filed apart from the polled Input
+	# rows on purpose. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/input_event_aces.gd",
 	# The touch said with a filter on it: the four group-filtered triggers and the standing
 	# question beside them. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/collision_filter_aces.gd",
 	# The step a standing state changed: the two floor edges, the two overlap edges, and the four
 	# gates that go under them. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/collision_edge_aces.gd",
-	# The questions a handler asks the ONE event it was handed, filed apart from the polled Input
-	# rows on purpose. One module, shipped whole, so the whole of it is owed.
-	"res://addons/eventforge/registration/modules/input_event_aces.gd",
 	# The four things the engine tells a node through its notification callback. One module,
 	# shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/notification_aces.gd",
@@ -323,18 +323,24 @@ static func _collect(path: String, only_ids: PackedStringArray, seen: Dictionary
 	for descriptor: ACEDescriptor in script.get_descriptors():
 		if not only_ids.is_empty() and not only_ids.has(descriptor.ace_id):
 			continue
-		_add(descriptor.display_name, seen, strings)
-		_add(descriptor.description, seen, strings)
-		_add(descriptor.category, seen, strings)
-		_add(descriptor.get_display_text(), seen, strings)
-		for parameter: ACEParam in descriptor.params:
-			if parameter == null:
-				continue
-			_add(parameter.get_param_name(), seen, strings)
-			_add(parameter.get_param_description(), seen, strings)
-			for option: Variant in parameter.options:
-				if option is Dictionary:
-					_add(str((option as Dictionary).get("label", "")), seen, strings)
+		_collect_descriptor(descriptor, seen, strings)
+
+
+## The seven roles ONE verb routes through the translation layer. The wave sweep above and the
+## per-verb ratchet below ask the same question of a descriptor, so they ask it in one place.
+static func _collect_descriptor(descriptor: ACEDescriptor, seen: Dictionary, strings: PackedStringArray) -> void:
+	_add(descriptor.display_name, seen, strings)
+	_add(descriptor.description, seen, strings)
+	_add(descriptor.category, seen, strings)
+	_add(descriptor.get_display_text(), seen, strings)
+	for parameter: ACEParam in descriptor.params:
+		if parameter == null:
+			continue
+		_add(parameter.get_param_name(), seen, strings)
+		_add(parameter.get_param_description(), seen, strings)
+		for option: Variant in parameter.options:
+			if option is Dictionary:
+				_add(str((option as Dictionary).get("label", "")), seen, strings)
 
 
 static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> void:
@@ -345,29 +351,145 @@ static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> 
 	strings.append(trimmed)
 
 
-# ── 3b. The ratchet: a module that is wholly keyed stays wholly keyed ──
+# ── 3b. The ratchet: a verb that is wholly keyed stays wholly keyed ──
 
 
-## The vocabulary modules whose EVERY user-facing string - display name, description, category,
-## reads-as sentence, parameter label, parameter description and dropdown option label - is a key
-## today. MEASURED, not declared: the check below computes the set and compares it to this list, so
-## the list can only ever be edited in two directions, and both are deliberate. A module that gains
-## an untranslated verb drops OUT and fails here, naming itself; a module that becomes covered turns
-## up as a surplus and is added, which is the moment the wave list above stops needing hand-editing.
+## The VERBS whose every user-facing string - display name, description, category, reads-as sentence,
+## parameter label, parameter description and dropdown option label - is a key today. MEASURED, not
+## declared: the check below computes the set and compares it to this list, so the list can only ever
+## be edited in two directions, and both are deliberate. A verb that gains an untranslated word drops
+## OUT and fails here, naming itself; a verb that becomes covered turns up as a surplus and is added,
+## which is the moment the wave list above stops needing hand-editing.
+##
+## THE UNIT IS THE VERB, NOT THE FILE IT LIVES IN, and that is what the length of this list buys. A
+## ratchet held per module file says "these files are covered", which is a statement about where
+## vocabulary happens to be STORED rather than about the vocabulary - so moving a covered verb into a
+## file that is not covered failed this test with nothing translated and nothing untranslated, and a
+## refactor stood blocked by a gate measuring the wrong thing. Held per verb, that move is silent,
+## because the same verbs are covered on both sides of it. An `ace_id` is unique across every module
+## (nothing else would register), so the id alone names the verb.
 ##
 ## The rest of the vocabulary is not keyed yet (about three in ten of the shipped sentences are), and
-## a floor on a PERCENTAGE would not notice a new sentence added to a covered module - which is the
+## a floor on a PERCENTAGE would not notice a new sentence added to a covered verb - which is the
 ## regression that actually happens. This is that gate.
-const FULLY_KEYED_MODULES: Array[String] = [
-	"clipboard_aces.gd", "collision_edge_aces.gd", "collision_filter_aces.gd", "crowd_aces.gd",
-	"cursor_canvas_aces.gd",
-	"editor_author_aces.gd", "facing_aces.gd", "group_arrival_aces.gd",
-	"game_mechanics_aces.gd", "game_state_aces.gd", "input_event_aces.gd",
-	"lighting_aces.gd", "notification_aces.gd",
-	"math_words_aces.gd", "multiplayer_aces.gd", "object_state_aces.gd", "resource_aces.gd",
-	"scene_lighting_aces.gd",
-	"removal_aces.gd", "spatial_aces.gd", "space_words_aces.gd",
-	"table_aces.gd", "spawn_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"
+const FULLY_KEYED_ACES: Array[String] = [
+	"AcceptPlayer", "AddBottomPanel", "AddCommandPaletteCommand", "AddEditorWindow",
+	"AddLayoutOnTop", "AddMissionTime", "AddNodeUndoable", "AddVisibilityFilter",
+	"AimAtMovingTarget", "AimedFloorObject", "AimedFloorPoint", "AimedFloorSlope", "AlignLeft",
+	"AlignRight", "AlignToGroundSlope3D", "AngleReflected", "AnimationIsBetween",
+	"AnimationPastMarker", "ApplyPresetToNode", "ApplyRadialImpulse", "ArrayDeepDuplicate",
+	"AsDuration", "AsPercentText", "AsSentenceText", "AsTitleText", "AskForAFileToOpen",
+	"AskWhereToSave", "AtMostEvery", "AudioSetHearingDistance3D", "AudioSetLoudnessFalloff",
+	"BeOnLayer", "BeOnLayer3D", "BossPhaseStarts", "BounceOffSurface", "BufferInput",
+	"BufferInputFrames", "CallLater", "CanvasCentre", "CanvasX2D", "CanvasX3D", "CanvasY2D",
+	"CanvasY3D", "CellDistance", "CellOfPoint", "CellsInLine", "CellsInRadius", "CellsInRectangle",
+	"CenterInWidth", "CenterOfCell", "ClearMeasurements", "ClearPoke", "ClearTrail",
+	"ClipboardHasImage", "ClipboardHasText", "ClipboardImage", "ClipboardTextIs", "CloneInto",
+	"CollideWithLayer", "CollideWithLayer3D", "ConsumeBufferedInput", "ConsumeBufferedInputFrames",
+	"ContainsAllOf", "ContainsAnyOf", "ContainsNoneOf", "CopyPlaceTo", "CopyResourceDeep",
+	"CopyResourceShallow", "CopyShareCode", "CopyValuesFrom", "CountResourcesInFolder",
+	"CreateAroundCircle", "CrowdCount", "CrowdIsDownToThisOne", "CursorIsOverObject3D",
+	"DarknessFade", "DarknessSet", "DataAsset", "DataFolderIsValid", "DataFolderProblems",
+	"DataIsOlderThanVersion", "Despawn", "DestroyAfterSeconds", "DestroyNow", "DictDeepDuplicate",
+	"DoAfterFrame", "DrainMeter", "DuplicateNodeChoosing", "EditorIcon", "EditorMainScreen",
+	"EditorPreference", "EventActionStrength", "EventIsAction", "EventIsActionPressed",
+	"EventIsActionPressedRepeating", "EventIsActionReleased", "ExplainJsonProblem",
+	"ExplainTableProblem", "FaceAlongVelocity", "FaceDirectionOfMovement", "FaceObject",
+	"FaceTargetAtSpeed", "FacingAlong3D", "FadeOutAndDestroy", "FalloffAtDistance", "FileTable",
+	"FillBlanksFrom", "FillMeter", "FirstToFinish", "ForEachCellInRadius", "ForEachChildOf",
+	"ForEachLineInFile", "ForEachLineInText", "ForEachNodeThatCan", "ForEachPartInText",
+	"ForEachResourceInFolder", "ForgetOnceFor", "ForgetRemembered", "FpsBelowFor", "FrameOverBudget",
+	"FrameRecovered", "FrameRunningLong", "FreeFilePath", "GiveAuthority", "GoBackMode", "GoToMode",
+	"GoToState", "HasAnimation", "HasBeenQuiet", "HasRemembered", "HasService", "HasSomething",
+	"HideFromPlayer", "HierarchyAddChild", "HierarchyRemoveFromParent", "HostGame",
+	"HostGameAdvanced", "InMode", "InState", "InStateForOver", "IsBehindCamera3D",
+	"IsBehindObject3D", "IsCellInBounds", "IsConnected", "IsFlippedAnimatedSprite2D",
+	"IsFlippedSprite2D", "IsFlippedSprite3D", "IsFlippedTextureRect", "IsHost",
+	"IsInFrontOfObject3D", "IsInputBuffered", "IsInputBufferedFrames", "IsMirroredAnimatedSprite2D",
+	"IsMirroredControl", "IsMirroredObject", "IsMirroredSpatial", "IsMirroredSprite2D",
+	"IsMirroredSprite3D", "IsMirroredTextureRect", "IsNothing", "IsPointOnScreen",
+	"IsSetToCollideWithLayer", "IsSetToCollideWithLayer3D", "IsStillHere", "IsTheFirstOneIn",
+	"IsTheFirstOneIn3D", "IsToTheLeftOfObject3D", "IsToTheRightOfObject3D", "IsTouchingGroup",
+	"IsTouchingGroup3D", "IsWithinAngleOfFacing3D", "IsWithinConeOf", "JitterValue", "JoinGame",
+	"JoinGameAdvanced", "JustLanded", "JustLanded3D", "JustLeftTheGround", "JustLeftTheGround3D",
+	"KeepBetween", "KeepUpright", "KickPlayer", "LaunchAngleForArc", "LayoutIsOnTop", "LeaveGame",
+	"LeaveLayer", "LeaveLayer3D", "LightBrightness", "LightBrightness3D", "LightColour",
+	"LightColour3D", "LightConeAngle", "LightFadeBrightness", "LightFadeBrightness3D", "LightIsLit",
+	"LightIsLit3D", "LightIsShadows", "LightIsShadows3D", "LightLit3DOff", "LightLit3DOn",
+	"LightLitOff", "LightLitOn", "LightReach", "LightReachOmni", "LightReachSpot",
+	"LightSetBrightness", "LightSetBrightness3D", "LightSetColour", "LightSetColour3D",
+	"LightSetConeAngle", "LightSetReach", "LightSetReachOmni", "LightSetReachSpot",
+	"LightShadows3DOff", "LightShadows3DOn", "LightShadowsOff", "LightShadowsOn", "ListOr",
+	"LoadImageFile", "LoadResourceOrDefault", "LoadSoundFile", "LogMeasurements", "LogTrail",
+	"LookAtFlat", "LookAtSafeUp", "MakeNewCopy", "MakeNoise", "MarkerAngleToward",
+	"MatchesPropertiesOf", "MeasuredAverage", "MeasuredLast", "MeasuredPeak", "MenuAddItem",
+	"MirrorPath", "MirrorTheView", "MirrorViewportView", "MissingFields", "MissionTimeLeft",
+	"MouseFloorObject", "MouseFloorPoint", "MouseFloorSlope", "MoveChild", "MoveForwardOwnFacing",
+	"MoveInDirection3D", "MoveTheWorldsWay", "MoveTowardEachTick", "MyPeerId", "NeighboursOfCell",
+	"NextRawPacket", "NumberFromText", "NumberInText", "NumberOr", "ObjectUnderCursor2D",
+	"OnAnimationEvent", "OnAnimationFrame", "OnAskCancelled", "OnAuthenticationFailed",
+	"OnChildEnteredTree", "OnChildExitingTree", "OnCollisionWithGroup", "OnCollisionWithGroup3D",
+	"OnControlInput", "OnDespawned", "OnEnteringMode", "OnEnteringState", "OnFileChosen",
+	"OnFilesDropped", "OnFirstOverlap", "OnFirstOverlap3D", "OnJoinFailed", "OnJoinedTheHost",
+	"OnLanded", "OnLanded3D", "OnLastOfCrowdDestroyed", "OnLastOverlapEnded", "OnLastOverlapEnded3D",
+	"OnLeavingMode", "OnLeavingState", "OnLeftTheGround", "OnLeftTheGround3D", "OnMenuItemChosen",
+	"OnNodeJoinsGroup", "OnNodeLeavesGroup", "OnNoiseHeard", "OnNotification:NOTIFICATION_PAUSED",
+	"OnNotification:NOTIFICATION_PREDELETE", "OnNotification:NOTIFICATION_UNPAUSED",
+	"OnNotification:NOTIFICATION_WM_CLOSE_REQUEST", "OnObjectClicked3D", "OnOverlapEndedWithGroup",
+	"OnOverlapEndedWithGroup3D", "OnOverlapWithGroup", "OnOverlapWithGroup3D",
+	"OnPlayerAuthenticating", "OnPlayerJoined", "OnPlayerLeft", "OnPreferencesChanged",
+	"OnProjectFilesChanged", "OnSomethingWentWrong", "OnSpawned", "OnStoppedCollidingWithGroup",
+	"OnStoppedCollidingWithGroup3D", "OnSynchronized", "OnTheHostLeft", "OnUnpackFinished",
+	"OnUnpackProgress", "OnUnpackRefused", "OnceThisFrame", "OnlyOncePerName", "OnlyOncePerNode",
+	"OnlyOnceThisSceneLoad", "OpenScriptAtLine", "OpenUserDataFolder", "OwnerOf", "OwnsThisObject",
+	"PackFolderIntoZip", "PartOf", "PauseAnimationFor", "PickNearestToCanvasPoint", "PlaceAlongPath",
+	"PlaceAroundNode3D", "PlaceAtNode", "PlaceAtNode3D", "PlaceAtScreenEdge", "PlaceInsideBox3D",
+	"PlaceInsideShape", "PlaceInsideSphere3D", "PlaceOnGround3D", "PlayThenQueue", "PlayerCount",
+	"Players", "PointAtAngle", "Poke", "ProjectSetting", "ProjectToScreen3D", "PushGroupAwayFrom",
+	"PushMode", "PushOutOfSurface", "QueueAnimation", "QueueFreeNode", "RandomDirection2D",
+	"RandomDirection3D", "RandomPointAround", "RandomPointInBox", "RandomPointInCircle",
+	"RandomPointInCone", "RandomPointInRectangle", "RandomPointInRing", "RandomPointInSphere",
+	"RandomPointOnCircle", "RandomPointOnScreenEdge", "ReadTextFileOr", "RecordOr",
+	"RegisterAsService", "RejectPlayer", "ReloadDataAsset", "RememberInTrail", "RememberValueAs",
+	"RememberedValue", "RemoveBottomPanel", "RemoveChild", "RemoveLayoutOnTop", "RemoveNodeUndoable",
+	"RenameField", "RenderingDrawInFrontOf", "RenderingIsOnScreen", "RenderingShowOnlyTo",
+	"ReparentToChoosing", "ReportFailure", "ReportSuccess", "RescaleInto", "ResourceInFolder",
+	"ResourcesInFolder", "RestoreValueInto", "RetriesExhausted", "RetryAttemptNumber", "RetryUpTo",
+	"Roll3D", "RotateClockwise3D", "RotatePitch3D", "RotateToward3DFacing", "SafeFileName",
+	"SaveBranchAsSceneFile", "SaveDataAsset", "SaveProjectSettings", "SaveTrailCsv",
+	"SceneFileIsDataOnly", "ScreenEdgePositionFor", "ScreenPointToWorld", "SendAuth",
+	"SendMessageToEveryone", "SendMessageToHost", "SendMessageToPeer", "SendRawBytes", "Sender",
+	"ServiceNamed", "SetAmbientLight", "SetAmbientOcclusion", "SetAnimationTime",
+	"SetCameraDistance", "SetCompression", "SetFaceTheCamera", "SetFlippedAnimatedSprite2D",
+	"SetFlippedSprite3D", "SetFlippedTextureRect", "SetFog", "SetFogColour", "SetFogDensity",
+	"SetGlow", "SetGlowStrength", "SetIgnoreParentMovement", "SetInvulnerableFor", "SetLayerTint",
+	"SetLightColour", "SetLightColour3D", "SetLightEnabled", "SetLightEnergy", "SetLightEnergy3D",
+	"SetLightShadows", "SetMirroredControl", "SetMirroredLabel3D", "SetMirroredObject",
+	"SetMirroredSpatial", "SetMirroredSprite2D", "SetMirroredSprite3D", "SetMirroredTextureRect",
+	"SetPartOf", "SetPositionToObject3D", "SetProjectSetting", "SetPropertyDeferred",
+	"SetPropertyUndoable", "SetRelay", "SetSceneOwner", "SetSeeThrough", "SetShadowsOff3D",
+	"SetShadowsOn3D", "SetSkyRotation", "SetSurfaceRedraw", "SetTextTranslatedPattern",
+	"SetTileFlipped", "SetVisibleRange", "SetWorldSize", "ShareCodeFor", "ShareCodeIsValid",
+	"ShortenToFit", "ShortenToWholeWords", "ShowInFileManager", "ShowInProjectBar", "ShowToEveryone",
+	"ShowToPlayer", "SlideAlongSurface", "SlopeSteeperThan", "SnapPointToGrid", "SnapPointToGrid3D",
+	"Spawn", "SpawnIntoCrowd", "SpawnIntoCrowdOldestFirst", "SpawnIntoCrowdUnlessFull",
+	"SpawnIsAlive", "SpawnNewCopy", "SpawnNewCopy3D", "SpawnNewCopyDeferred",
+	"SpawnNewCopyDeferred3D", "SpawnReplicatedScene", "SpawnSceneAs", "SplitKeepingQuotes",
+	"SpriteAnimationFrameIs", "StampDataVersion", "StartMeasuring", "StartMissionTimer", "StartedAs",
+	"StopAcceptingPlayers", "StopCollidingWithLayer", "StopCollidingWithLayer3D", "StopCopyingPlace",
+	"StopMeasuring", "StopRetrying", "StoreAsAngleAndDistance", "StrengthToward", "SwingOnHinge",
+	"SwitchToWorkspace", "TableColumn", "TableFromFile", "TableFromText", "TableRowWhere",
+	"TextAfter", "TextBefore", "TextBetween", "TextIsANumber", "TextIsAWholeNumber", "TextOr",
+	"TheSpawned", "TileUnderCursor", "TimeToReach", "TrailAverage", "TrailHighest", "TrailLength",
+	"TrailLowest", "TrailNewest", "TrailValues", "TranslatedTextFromPattern", "TurnAround",
+	"TurnAroundPoint", "UnpackZipIntoFolder", "ValidateDataFolder", "ValueFromShareCode", "ValueOr",
+	"VisibleWorldRect", "WaitBeforeNextTry", "WaitForAllOf", "WaitForAnyOf", "WaitSucceeded",
+	"WaitTimedOut", "WaitUntil", "WasInState", "WasTheLastOneOut", "WasTheLastOneOut3D",
+	"WatchDataFile", "WholeNumberFromText", "WithThousandsSeparators", "WorldFadeGlow",
+	"WorldFogOff", "WorldFogOn", "WorldGlowOff", "WorldGlowOn", "WorldOwnEnvironment",
+	"WorldPointToScreen", "WorldSetAmbientLight", "WorldSetFogThickness", "WrapAround",
+	"WrapInsideView3D", "WriteFileTable", "WriteTextFileInFolder", "signal:data_file_changed",
+	"signal:scene_spawned", "signal:verb_failed", "signal:verb_succeeded"
 ]
 
 
@@ -377,21 +499,25 @@ static func _test_covered_modules_stay_covered() -> bool:
 		keys[key] = true
 	var covered: Array[String] = []
 	for path: String in _module_paths():
-		var seen: Dictionary = {}
-		var strings: PackedStringArray = PackedStringArray()
-		_collect(path, PackedStringArray(), seen, strings)
-		if strings.is_empty():
+		var script: GDScript = load(path)
+		if script == null:
 			continue
-		var missing: int = 0
-		for text: String in strings:
-			if not keys.has(text):
-				missing += 1
-		if missing == 0:
-			covered.append(path.get_file())
+		for descriptor: ACEDescriptor in script.get_descriptors():
+			var seen: Dictionary = {}
+			var strings: PackedStringArray = PackedStringArray()
+			_collect_descriptor(descriptor, seen, strings)
+			if strings.is_empty():
+				continue
+			var missing: int = 0
+			for text: String in strings:
+				if not keys.has(text):
+					missing += 1
+			if missing == 0:
+				covered.append(descriptor.ace_id)
 	covered.sort()
-	var expected: Array[String] = FULLY_KEYED_MODULES.duplicate()
+	var expected: Array[String] = FULLY_KEYED_ACES.duplicate()
 	expected.sort()
-	return _check("the vocabulary modules whose every word is keyed", covered, expected)
+	return _check("the verbs whose every word is keyed", covered, expected)
 
 
 ## Every vocabulary module, found by scanning rather than listed, so a module added tomorrow is
