@@ -71,9 +71,20 @@ func _process(delta: float) -> void:
 
 const MEMBER_LINE: int = 3
 
+## A third buffer that cannot round-trip, for the read-only proof: it ends without a last newline
+## and the emitter always writes one, so re-emitting it can never reproduce it. The closing quotes
+## sit against `pass` for that reason - a newline before them would make this file round-trip and
+## the proof vacuous.
+const NO_LAST_NEWLINE: String = """extends Node
+
+
+func _ready() -> void:
+	pass"""
+
 
 static func run() -> bool:
 	var ok: bool = _test_the_row_the_line_became()
+	ok = _test_the_claim_never_writes_to_the_file_it_asks_about() and ok
 	ok = _test_the_three_known_lines() and ok
 	ok = _test_the_by_example_layer_is_told_apart() and ok
 	ok = _test_the_printed_shape() and ok
@@ -95,6 +106,34 @@ static func _test_the_row_the_line_became() -> bool:
 	# exists to replace: a statement layer sees a typed assignment on that line.
 	ok = _check("...while the statement layers, asked the line alone, say something else entirely",
 		_claims_of(MEMBERS, MEMBER_LINE, "res://members.gd").is_empty(), false) and ok
+	return ok
+
+
+## A READ-ONLY TOOL HAS TO BE READ-ONLY, and this is the one place it could stop being one.
+## `SheetCompiler.compile` writes its output to the path it is given whenever that differs from what
+## is already there, so a claim that re-emitted a file back over its own path would rewrite the file
+## somebody asked it about - and would do it in exactly the case where the answer is "this does not
+## reproduce itself". The claim compiles to the shared round-trip probe path under `user://`
+## instead, which also makes "lossless" here mean what the public seam and the repository gate mean.
+##
+## The buffer below ends without a newline, which the emitter always writes, so it cannot round-trip:
+## the destructive case and the refusing case are the same case.
+static func _test_the_claim_never_writes_to_the_file_it_asks_about() -> bool:
+	var path: String = "user://lift_provenance_read_only_probe.gd"
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return _check("the probe file could be written", false, true)
+	file.store_string(NO_LAST_NEWLINE)
+	file.close()
+	var claim: EventSheetLiftProvenance.RowClaim = EventSheetLiftProvenance.row_claim(NO_LAST_NEWLINE,
+		1, path)
+	var ok: bool = _check("a file that does not reproduce itself is told so, not answered anyway",
+		claim.kind, EventSheetLiftProvenance.Row.NOT_REPRODUCIBLE)
+	ok = _check("...and the file it was asked about is exactly as it was",
+		FileAccess.get_file_as_string(path), NO_LAST_NEWLINE) and ok
+	ok = _check("...because the round trip is compiled to the shared probe path, never to res://",
+		EventSheetLiftProvenance.PROBE_PATH, EventSheets.ROUND_TRIP_PROBE_PATH) and ok
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	return ok
 
 

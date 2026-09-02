@@ -122,9 +122,13 @@ const NO_ROW: String = "no row emits this line"
 const NOT_LOSSLESS: String = "this file does not re-emit byte for byte, so no line number maps"
 const NOT_A_SHEET: String = "this file does not open as a sheet"
 
-## The path a buffer with no home of its own is compiled to while the round trip is checked. Nothing
-## is written: the compiler only needs a path for the emission that depends on where a file lands.
-const BUFFER_PATH: String = "res://event_sheet_provenance_buffer.gd"
+## The path the re-emission is compiled to while the round trip is checked. NEVER the file's own:
+## `SheetCompiler.compile` writes its output to the path it is given whenever that differs from
+## what is on disk, so compiling a file back over itself would let a read-only tool rewrite the very
+## file somebody asked it about - and it would do it exactly in the case the answer is "this does
+## not reproduce itself". It is the probe path the public round-trip seam already uses, which also
+## makes "lossless" here mean what `EventSheets.round_trips` and the repository gate mean by it.
+const PROBE_PATH: String = EventSheets.ROUND_TRIP_PROBE_PATH
 
 ## The properties a row is named by in the claim line, tried in this order and first non-empty one
 ## used. A row kind that names itself some other way falls back to its class, which is still an
@@ -177,13 +181,12 @@ class RowClaim extends RefCounted:
 ## `script_path` is the path the source came from. It matters twice: the readings that resolve a
 ## receiver against the project use it, and so does any emission that depends on where the file lands.
 static func row_claim(source: String, number: int, script_path: String = "") -> RowClaim:
-	var path: String = script_path if not script_path.is_empty() else BUFFER_PATH
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
 		script_path)
 	if sheet == null:
 		return RowClaim.new(Row.UNREADABLE, NOT_A_SHEET)
-	sheet.external_source_path = path
-	var emitted: Dictionary = SheetCompiler.compile(sheet, path)
+	sheet.external_source_path = PROBE_PATH
+	var emitted: Dictionary = SheetCompiler.compile(sheet, PROBE_PATH)
 	if str(emitted.get("output", "")) != source:
 		return RowClaim.new(Row.NOT_REPRODUCIBLE, NOT_LOSSLESS)
 	var row: Resource = EventSheetLineRowMapper.resource_for_line(
