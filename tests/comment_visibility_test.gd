@@ -18,6 +18,7 @@
 class_name CommentVisibilityTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A word no ACE, no descriptor and no fixture name contains, written into every private note the
 ## leak fixture carries. Searching a composed page for it is a stronger check than asserting a walk
 ## skipped something: if any reader ever starts including private notes, this word appears.
@@ -172,10 +173,4 @@ static func _group_named(sheet: EventSheetResource, name: String) -> EventGroup:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] comment_visibility_test: %s" % label)
-		return true
-	print("[FAIL] comment_visibility_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("comment_visibility_test", label, actual, expected)

@@ -26,6 +26,7 @@
 class_name BuiltinACECompileTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Correct ACEs that cannot compile in ISOLATION - they need surrounding context this harness
 ## intentionally does not build: a loop (break/continue), a return-typed function (return X),
 ## compiler-injected companion state (frame-budget / every-N-seconds accumulators emitted as
@@ -357,10 +358,4 @@ static func _type_name(ace_type: int) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] builtin_ace_compile_test: %s" % label)
-		return true
-	print("[FAIL] builtin_ace_compile_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("builtin_ace_compile_test", label, actual, expected)

@@ -13,6 +13,9 @@ class_name ReadingBoundariesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_enum_shapes() and ok
@@ -103,10 +106,4 @@ static func _file(declaration: PackedStringArray) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] reading_boundaries_test: %s" % label)
-		return true
-	print("[FAIL] reading_boundaries_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("reading_boundaries_test", label, actual, expected)

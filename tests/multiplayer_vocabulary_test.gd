@@ -13,6 +13,7 @@ extends RefCounted
 #   Its whole contract is that a sheet WITHOUT it compiles to exactly what it compiled to before,
 #   and a sheet with it round-trips through the .gd byte for byte, guard and all.
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const FieldFactory := preload("res://addons/eventsheet/editor/ace_dialog/param_field_factory.gd")
 
@@ -375,10 +376,4 @@ static func _sheet(group: EventGroup) -> EventSheetResource:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] multiplayer_vocabulary_test: %s" % label)
-		return true
-	print("[FAIL] multiplayer_vocabulary_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("multiplayer_vocabulary_test", label, actual, expected)

@@ -14,6 +14,7 @@
 class_name MultiplayerTestingTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The scene half of the fixture: a Player whose synchronizer keeps position, hp, stamina and
 ## nickname in step. The findings that ask "does anybody else ever see this?" are answered from it.
 const PLAYER_SCRIPT: String = "res://tests/fixtures/multiplayer_scene_player.gd"
@@ -433,10 +434,4 @@ static func _fix_of(found: Array[Dictionary], kind: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] multiplayer_testing_test: %s" % label)
-		return true
-	print("[FAIL] multiplayer_testing_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("multiplayer_testing_test", label, actual, expected)

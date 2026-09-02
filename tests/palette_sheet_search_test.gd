@@ -6,6 +6,9 @@ class_name PaletteSheetSearchTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func _paths() -> PackedStringArray:
 	return PackedStringArray(["res://a/player.gd", "res://b/enemy.tres", "res://c/player_ui.gd"])
 
@@ -44,10 +47,4 @@ static func _has(matches: Array, title: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] palette_sheet_search_test: %s" % label)
-		return true
-	print("[FAIL] palette_sheet_search_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("palette_sheet_search_test", label, actual, expected)

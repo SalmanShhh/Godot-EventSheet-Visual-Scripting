@@ -10,6 +10,7 @@ extends RefCounted
 # row nothing here spells, a script block, a group, a comment, a variable, an include and a
 # function - so the counts below are the honesty contract, not a smoke test.
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE: String = "res://tests/fixtures/foreign_event_sheet.json"
 
 const OBJECT_MAP: Dictionary = {
@@ -214,10 +215,4 @@ static func _labels(entries: Array) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] foreign_sheet_import_test: %s" % label)
-		return true
-	print("[FAIL] foreign_sheet_import_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("foreign_sheet_import_test", label, actual, expected)

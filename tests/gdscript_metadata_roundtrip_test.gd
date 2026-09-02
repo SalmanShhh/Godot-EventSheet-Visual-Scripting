@@ -9,6 +9,7 @@
 class_name GDScriptMetadataRoundtripTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TAGGED_SOURCE := "@tool\n## @ace_tags(movement, retro, jam)\n@icon(\"res://icon.svg\")\nclass_name Patrol\nextends CharacterBody2D\n"
 const PROBE_PATH := "res://__eventsheet_metadata_probe.gd"
 const PROBE_AUTOLOAD := "autoload/__EventSheetProbeAutoload"
@@ -73,10 +74,4 @@ static func _remove_probe_file() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] gdscript_metadata_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] gdscript_metadata_roundtrip_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("gdscript_metadata_roundtrip_test", label, actual, expected)

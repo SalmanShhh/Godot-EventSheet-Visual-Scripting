@@ -8,6 +8,9 @@ class_name TemplateSubstitutionTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	# A value containing {b} must NOT be re-substituted by a later key.
@@ -32,10 +35,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] template_substitution_test: %s" % label)
-		return true
-	print("[FAIL] template_substitution_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("template_substitution_test", label, actual, expected)

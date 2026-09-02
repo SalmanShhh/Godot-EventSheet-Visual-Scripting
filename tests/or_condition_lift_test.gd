@@ -11,6 +11,9 @@ class_name OrConditionLiftTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	# label, body, expected condition count, expected OR mode, expect a negated term
@@ -79,10 +82,4 @@ static func _first_conditioned(rows: Array) -> EventRow:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] or_condition_lift_test: %s" % label)
-		return true
-	print("[FAIL] or_condition_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("or_condition_lift_test", label, actual, expected)

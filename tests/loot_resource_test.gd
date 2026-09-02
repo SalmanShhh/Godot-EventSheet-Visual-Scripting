@@ -8,6 +8,7 @@
 class_name LootResourceTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const LOOTBOX := "res://eventsheet_addons/loot_table/loot_table_addon.gd"
 const RES := "res://eventsheet_addons/loot_table_resource/loot_table_resource.gd"
 
@@ -54,10 +55,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] loot_resource_test: %s" % label)
-		return true
-	print("[FAIL] loot_resource_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("loot_resource_test", label, actual, expected)

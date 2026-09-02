@@ -10,6 +10,9 @@ class_name TreeTriggersTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var by_id: Dictionary = {}
@@ -63,10 +66,4 @@ static func _compile_tree_trigger(trigger_id: String, source_path: String) -> St
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] tree_triggers_test: %s" % label)
-		return true
-	print("[FAIL] tree_triggers_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("tree_triggers_test", label, actual, expected)

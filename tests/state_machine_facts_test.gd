@@ -5,6 +5,7 @@
 class_name StateMachineFactsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SOURCE: PackedStringArray = [
 	"@export var jump_force := 600.0",
 	"enum State { IDLE, RUN, JUMP, WALL_SLIDE }",
@@ -101,10 +102,4 @@ static func _words(reading: Dictionary) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] state_machine_facts_test: %s" % label)
-		return true
-	print("[FAIL] state_machine_facts_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("state_machine_facts_test", label, actual, expected)

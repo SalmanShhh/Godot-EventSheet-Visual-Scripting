@@ -16,6 +16,7 @@
 class_name FactCacheInvalidationTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const DOCK_PATH := "res://addons/eventsheet/editor/event_sheet_dock.gd"
 
 ## The audit, read as text for the same reason the dock is: what is pinned is that its run names the
@@ -233,10 +234,4 @@ static func _read(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] fact_cache_invalidation_test: %s" % label)
-		return true
-	print("[FAIL] fact_cache_invalidation_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("fact_cache_invalidation_test", label, actual, expected)

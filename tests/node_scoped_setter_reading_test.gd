@@ -9,6 +9,7 @@
 class_name NodeScopedSetterReadingTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const EDITOR_SCRIPT := "@tool\nextends EditorScript\n\n\nfunc _run() -> void:\n\tfor n in EditorInterface.get_selection().get_selected_nodes():\n\t\tn.position = n.position.snapped(Vector2(8, 8))\n"
 const LOOP := "extends Node2D\n\n\nfunc _ready() -> void:\n\tfor n in get_children():\n\t\tn.position = n.position.snapped(Vector2(8, 8))\n"
 const OWN := "extends Node2D\n\n\nfunc _ready() -> void:\n\tposition = position.snapped(Vector2(8, 8))\n"
@@ -71,10 +72,4 @@ static func _roundtrip(source: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] node_scoped_setter_reading_test: %s" % label)
-		return true
-	print("[FAIL] node_scoped_setter_reading_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("node_scoped_setter_reading_test", label, actual, expected)

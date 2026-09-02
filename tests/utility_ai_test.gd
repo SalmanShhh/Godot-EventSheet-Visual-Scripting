@@ -8,6 +8,7 @@
 class_name UtilityAiTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/utility_ai/utility_ai_addon.gd"
 
 
@@ -140,10 +141,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] utility_ai_test: %s" % label)
-		return true
-	print("[FAIL] utility_ai_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("utility_ai_test", label, actual, expected)

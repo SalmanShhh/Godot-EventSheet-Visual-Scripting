@@ -8,6 +8,7 @@
 class_name CurrencyLedgerTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/currency_ledger/currency_ledger_addon.gd"
 
 
@@ -95,10 +96,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] currency_ledger_test: %s" % label)
-		return true
-	print("[FAIL] currency_ledger_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("currency_ledger_test", label, actual, expected)

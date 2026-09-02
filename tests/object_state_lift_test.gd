@@ -20,6 +20,7 @@
 class_name ObjectStateLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The three hand-written machines, and what each is here to prove.
 const PATROL: String = "res://tests/fixtures/handwritten_state_patrol.gd"
 const ANNOUNCED: String = "res://tests/fixtures/handwritten_state_announced.gd"
@@ -393,10 +394,4 @@ static func _first_match(items: Array) -> MatchRow:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] object_state_lift_test: %s" % label)
-		return true
-	print("[FAIL] object_state_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("object_state_lift_test", label, actual, expected)

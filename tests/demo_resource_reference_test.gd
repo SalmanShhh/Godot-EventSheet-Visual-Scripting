@@ -3,6 +3,7 @@
 class_name DemoResourceReferenceTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const DEMO_SHEET_PATH := "res://tests/fixtures/compiler_golden_sheet.tres"
 const INVALID_PARENT_DIR_PATH := "res://../addons/"
 
@@ -47,10 +48,4 @@ static func _check_row_scripts(entry: Resource, label: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] demo_resource_reference_test: %s" % label)
-		return true
-	print("[FAIL] demo_resource_reference_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("demo_resource_reference_test", label, actual, expected)

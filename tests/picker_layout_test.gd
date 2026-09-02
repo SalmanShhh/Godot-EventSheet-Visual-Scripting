@@ -9,6 +9,9 @@ class_name PickerLayoutTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -74,10 +77,4 @@ static func _first_section_header(item: TreeItem) -> TreeItem:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] picker_layout_test: %s" % label)
-		return true
-	print("[FAIL] picker_layout_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("picker_layout_test", label, actual, expected)

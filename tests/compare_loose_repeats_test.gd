@@ -10,6 +10,7 @@
 class_name CompareLooseRepeatsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SIDE_PATH := "user://eventforge_compare_test_side.gd"
 
 
@@ -360,10 +361,4 @@ static func _call_sites(sheet: EventSheetResource) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] compare_loose_repeats_test: %s" % label)
-		return true
-	print("[FAIL] compare_loose_repeats_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("compare_loose_repeats_test", label, actual, expected)

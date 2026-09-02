@@ -15,6 +15,7 @@
 class_name NamedScenesPackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/named_scenes/named_scenes_addon.gd"
 const SCENE_DIR := "user://named_scenes_test"
 
@@ -256,10 +257,4 @@ static func _harness_script() -> GDScript:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] named_scenes_pack_test: %s" % label)
-		return true
-	print("[FAIL] named_scenes_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("named_scenes_pack_test", label, actual, expected)

@@ -9,6 +9,7 @@
 class_name FullExportCoverageTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Canonical source: one variable per hint family, exactly as the emitter spells them.
 const COVERAGE_SOURCE := """extends Node
 
@@ -142,10 +143,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] full_export_coverage_test: %s" % label)
-		return true
-	print("[FAIL] full_export_coverage_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("full_export_coverage_test", label, actual, expected)

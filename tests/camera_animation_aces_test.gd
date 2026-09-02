@@ -6,6 +6,9 @@ class_name CameraAnimationAcesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -69,10 +72,4 @@ static func _has_target_param(descriptor: ACEDescriptor) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] camera_animation_aces_test: %s" % label)
-		return true
-	print("[FAIL] camera_animation_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("camera_animation_aces_test", label, actual, expected)

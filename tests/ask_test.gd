@@ -11,6 +11,9 @@ class_name AskTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var previous_mode: Variant = ProjectSettings.get_setting(EventSheetAsk.SETTING_MODE, null)
@@ -159,10 +162,4 @@ static func _definition(provider: String, id: String, words: String, ace_type: i
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] ask_test: %s" % label)
-		return true
-	print("[FAIL] ask_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("ask_test", label, actual, expected)

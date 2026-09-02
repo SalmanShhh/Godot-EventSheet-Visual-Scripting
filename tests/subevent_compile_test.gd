@@ -9,6 +9,9 @@ class_name SubeventCompileTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -125,10 +128,4 @@ static func _action(template: String) -> ACEAction:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] subevent_compile_test: %s" % label)
-		return true
-	print("[FAIL] subevent_compile_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("subevent_compile_test", label, actual, expected)

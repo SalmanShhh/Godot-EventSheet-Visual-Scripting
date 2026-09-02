@@ -9,6 +9,7 @@
 class_name ExposeAllNodeTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SAMPLE := preload("res://tests/fixtures/expose_all_node_sample.gd")
 
 
@@ -50,10 +51,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] expose_all_node_test: %s" % label)
-		return true
-	print("[FAIL] expose_all_node_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("expose_all_node_test", label, actual, expected)

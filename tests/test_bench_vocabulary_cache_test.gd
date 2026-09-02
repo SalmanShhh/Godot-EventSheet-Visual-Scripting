@@ -18,6 +18,7 @@
 class_name TestBenchVocabularyCacheTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BENCH_SCENE_PATH := "user://eventsheets_vocab_bench.tscn"
 const SUBJECT_PATH := "user://eventsheets_vocab_subject.gd"
 
@@ -122,10 +123,4 @@ static func _unlifted_action_count(sheet: EventSheetResource) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] test_bench_vocabulary_cache_test: %s" % label)
-		return true
-	print("[FAIL] test_bench_vocabulary_cache_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("test_bench_vocabulary_cache_test", label, actual, expected)

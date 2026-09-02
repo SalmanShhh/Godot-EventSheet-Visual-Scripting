@@ -8,6 +8,7 @@
 class_name CleanRemovalTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BANNED: Array[String] = ["EventForge", "EventSheet", "addons/eventforge", "addons/eventsheet"]
 
 
@@ -66,10 +67,4 @@ static func _collect(out: Array[String], root: String, suffix: String) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] clean_removal_test: %s" % label)
-		return true
-	print("[FAIL] clean_removal_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("clean_removal_test", label, actual, expected)

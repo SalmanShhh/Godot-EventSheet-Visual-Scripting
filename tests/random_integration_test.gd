@@ -9,6 +9,7 @@
 class_name RandomIntegrationTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const ABILITY_SET := "res://eventsheet_addons/ability_set_resource/ability_set_resource.gd"
 const ABILITIES := "res://eventsheet_addons/abilities/abilities_behavior.gd"
 const PROC_ROOM := "res://eventsheet_addons/proc_room/proc_room_addon.gd"
@@ -124,10 +125,4 @@ static func _near(actual: float, expected: float, tolerance: float) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] random_integration_test: %s" % label)
-		return true
-	print("[FAIL] random_integration_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("random_integration_test", label, actual, expected)

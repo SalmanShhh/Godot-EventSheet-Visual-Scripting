@@ -8,6 +8,9 @@ class_name SwitchCaseAutocompleteTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -96,10 +99,4 @@ static func _fill_again(dialogs: EventSheetStructRowDialogs) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] switch_case_autocomplete_test: %s" % label)
-		return true
-	print("[FAIL] switch_case_autocomplete_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("switch_case_autocomplete_test", label, actual, expected)

@@ -13,6 +13,7 @@
 class_name ShardSplitTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A stand-in file list: enough names to shard, in the order the runner hands them over.
 const SAMPLE_FILES: PackedStringArray = [
 	"a_test.gd", "b_test.gd", "c_test.gd", "d_test.gd", "e_test.gd",
@@ -111,10 +112,4 @@ static func _sorted(files: PackedStringArray) -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] shard_split_test: %s" % label)
-		return true
-	print("[FAIL] shard_split_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("shard_split_test", label, actual, expected)

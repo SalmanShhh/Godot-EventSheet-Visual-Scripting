@@ -13,6 +13,7 @@
 class_name MigrationGoneVerbTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The verb the vocabulary has lost, spelled once so every test below asks about the same row.
 const GONE_PROVIDER := "LightFlicker"
 const GONE_ACE := "FlickerLight"
@@ -507,10 +508,4 @@ static func _write(path: String, text: String) -> Error:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] migration_gone_verb_test: %s" % label)
-		return true
-	print("[FAIL] migration_gone_verb_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("migration_gone_verb_test", label, actual, expected)

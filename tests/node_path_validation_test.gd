@@ -10,6 +10,9 @@ class_name NodePathValidationTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -75,10 +78,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] node_path_validation_test: %s" % label)
-		return true
-	print("[FAIL] node_path_validation_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("node_path_validation_test", label, actual, expected)

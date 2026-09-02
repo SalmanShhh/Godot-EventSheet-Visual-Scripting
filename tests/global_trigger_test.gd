@@ -7,6 +7,7 @@ extends RefCounted
 # compiles to a `<global>.<signal>.connect(<handler>)` in _ready + the handler func, and round-trips
 # byte-exact (lifted or, worst case, verbatim - the lossless rule holds either way).
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
@@ -52,10 +53,4 @@ static func _compile_trigger(trigger_id: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] global_trigger_test: %s" % label)
-		return true
-	print("[FAIL] global_trigger_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("global_trigger_test", label, actual, expected)

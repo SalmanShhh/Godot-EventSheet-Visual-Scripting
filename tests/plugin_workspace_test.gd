@@ -4,6 +4,9 @@ class_name PluginWorkspaceTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 ## Runs basic plugin helper checks for EventSheet workspace handling.
 static func run() -> bool:
 	var all_passed: bool = true
@@ -25,10 +28,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] plugin_workspace_test: %s" % label)
-		return true
-	print("[FAIL] plugin_workspace_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("plugin_workspace_test", label, actual, expected)

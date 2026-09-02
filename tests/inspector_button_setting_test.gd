@@ -12,6 +12,7 @@
 class_name InspectorButtonSettingTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TWO_ARGUMENTS := "@tool\nclass_name BakerTwo\nextends Node\n\n@export_tool_button(\"Bake\", \"Bake\") var bake = _bake\n\n\nfunc _bake() -> void:\n\tpass\n"
 const ONE_ARGUMENT := "@tool\nclass_name BakerOne\nextends Node\n\n@export_tool_button(\"Rebuild\") var rebuild = _rebuild\n\n\nfunc _rebuild() -> void:\n\tpass\n"
 const PROBE_PATH := "user://eventforge_inspector_button_probe.gd"
@@ -103,10 +104,4 @@ static func _roundtrip(source: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] inspector_button_setting_test: %s" % label)
-		return true
-	print("[FAIL] inspector_button_setting_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("inspector_button_setting_test", label, actual, expected)

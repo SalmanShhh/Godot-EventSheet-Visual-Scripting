@@ -7,6 +7,7 @@
 class_name PluginTeardownTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PLUGIN_PATH: String = "res://addons/eventforge/plugin.gd"
 
 # EditorPlugin add_/remove_ pairs the plugin uses (the lifecycle resources it registers).
@@ -37,10 +38,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] plugin_teardown_test: %s" % label)
-		return true
-	print("[FAIL] plugin_teardown_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("plugin_teardown_test", label, actual, expected)

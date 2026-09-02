@@ -12,6 +12,7 @@
 class_name VariableOwnersTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const EXPRESSION_PICKER := preload("res://addons/eventsheet/editor/ace_params_expression_picker.gd")
 const INSPECTOR_PLUGIN := preload("res://addons/eventforge/editor/sheet_edit_inspector_plugin.gd")
 
@@ -540,10 +541,4 @@ static func _object_label_of(row: EventRowData) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] variable_owners_test: %s" % label)
-		return true
-	print("[FAIL] variable_owners_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("variable_owners_test", label, actual, expected)

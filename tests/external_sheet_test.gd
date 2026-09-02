@@ -9,6 +9,7 @@
 class_name ExternalSheetTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Deliberately hostile sample: prelude annotations, comments, a canonical (liftable) var,
 ## non-canonical vars (inferred type / unusual spacing), signal, enum, const, non-void
 ## function, default-param function, and blank-line structure that must all survive.
@@ -131,10 +132,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] external_sheet_test: %s" % label)
-		return true
-	print("[FAIL] external_sheet_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("external_sheet_test", label, actual, expected)

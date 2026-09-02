@@ -18,6 +18,7 @@
 class_name ThemeTokensTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The presets that must dress every token. All of them: the six generated from well-known palettes,
 ## the three hand-written ones, and the bundled Mockup Slate.
 const PRESET_PATHS := [
@@ -240,10 +241,4 @@ static func _token_names(style_resource: Resource) -> Array:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] theme_tokens_test: %s" % label)
-		return true
-	print("[FAIL] theme_tokens_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("theme_tokens_test", label, actual, expected)

@@ -27,6 +27,7 @@
 class_name TextFitACEsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## U+3042 HIRAGANA A: present in the built fallback font, absent from the bundled default font.
 const CJK_CHAR_CODE := 0x3042
 
@@ -671,10 +672,4 @@ static func _kind(ace_type: int) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] text_fit_aces_test: %s" % label)
-		return true
-	print("[FAIL] text_fit_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("text_fit_aces_test", label, actual, expected)

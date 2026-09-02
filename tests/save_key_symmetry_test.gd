@@ -23,6 +23,9 @@ class_name SaveKeySymmetryTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _run_against_compiler_output() and all_passed
@@ -400,10 +403,4 @@ static func _severity_count(findings: Array[Dictionary], severity: String) -> in
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] save_key_symmetry_test: %s" % label)
-		return true
-	print("[FAIL] save_key_symmetry_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("save_key_symmetry_test", label, actual, expected)

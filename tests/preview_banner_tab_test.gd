@@ -5,6 +5,7 @@
 class_name PreviewBannerTabTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const CAR := "res://eventsheet_addons/car/car_behavior.gd"
 const TIMER := "res://eventsheet_addons/timer/timer_behavior.gd"
 
@@ -41,10 +42,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] preview_banner_tab_test: %s" % label)
-		return true
-	print("[FAIL] preview_banner_tab_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("preview_banner_tab_test", label, actual, expected)

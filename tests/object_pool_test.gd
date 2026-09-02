@@ -8,6 +8,7 @@
 class_name ObjectPoolTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/object_pool/object_pool_addon.gd"
 const SCENE_PATH := "user://__objpool_test.tscn"
 
@@ -65,10 +66,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] object_pool_test: %s" % label)
-		return true
-	print("[FAIL] object_pool_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("object_pool_test", label, actual, expected)

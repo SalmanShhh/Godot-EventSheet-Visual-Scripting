@@ -8,6 +8,9 @@ class_name LocalConstLiftTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -123,10 +126,4 @@ static func _by_id(actions: Array, ace_id: String) -> ACEAction:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] local_const_lift_test: %s" % label)
-		return true
-	print("[FAIL] local_const_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("local_const_lift_test", label, actual, expected)

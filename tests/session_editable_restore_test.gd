@@ -15,6 +15,7 @@
 class_name SessionEditableRestoreTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Runs in the serial tail rather than in a shard: it hands a file in user:// from one dock to
 ## another, and a neighbouring process deletes that same file.
 const PARALLEL_UNSAFE: bool = true
@@ -70,10 +71,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] session_editable_restore_test: %s" % label)
-		return true
-	print("[FAIL] session_editable_restore_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("session_editable_restore_test", label, actual, expected)

@@ -10,6 +10,9 @@ class_name DocPageChromeTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_sidebar_kinds() and all_passed
@@ -177,10 +180,4 @@ static func _blocks(chapters: int, paragraphs: int) -> Array[Dictionary]:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_page_chrome_test: %s" % label)
-		return true
-	print("[FAIL] doc_page_chrome_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_page_chrome_test", label, actual, expected)

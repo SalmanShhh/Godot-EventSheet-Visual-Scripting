@@ -26,6 +26,7 @@
 class_name ClipboardACEsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The uid the dock would bake into a row; fixed here so the emitted locals are pinnable.
 const UID := "t"
 
@@ -560,10 +561,4 @@ static func _instantiate(source: String, node: Node) -> Node:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] clipboard_aces_test: %s" % label)
-		return true
-	print("[FAIL] clipboard_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("clipboard_aces_test", label, actual, expected)

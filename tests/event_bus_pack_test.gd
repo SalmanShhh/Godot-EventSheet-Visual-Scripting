@@ -14,6 +14,7 @@
 class_name EventBusPackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/event_bus/event_bus_addon.gd"
 
 
@@ -306,10 +307,4 @@ static func _harness_script() -> GDScript:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] event_bus_pack_test: %s" % label)
-		return true
-	print("[FAIL] event_bus_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("event_bus_pack_test", label, actual, expected)

@@ -14,6 +14,7 @@
 class_name SafeNamesAndOutsideContentTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TEST_DIR := "user://__safe_name_test"
 
 
@@ -366,10 +367,4 @@ static func _cleanup() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] safe_names_and_outside_content_test: %s" % label)
-		return true
-	print("[FAIL] safe_names_and_outside_content_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("safe_names_and_outside_content_test", label, actual, expected)

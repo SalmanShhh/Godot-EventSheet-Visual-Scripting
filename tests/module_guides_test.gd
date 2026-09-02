@@ -16,6 +16,7 @@
 class_name ModuleGuidesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const GUIDE_DIR := "res://docs/Modules"
 const GUIDE_INDEX := "res://docs/Modules/README.md"
 const DOCS_INDEX := "res://docs/README.md"
@@ -215,10 +216,4 @@ static func _guide_files() -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] module_guides_test: %s" % label)
-		return true
-	print("[FAIL] module_guides_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("module_guides_test", label, actual, expected)

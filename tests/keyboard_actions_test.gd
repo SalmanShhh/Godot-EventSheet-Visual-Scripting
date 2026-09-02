@@ -8,6 +8,9 @@ class_name KeyboardActionsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 # No-op undo manager matching the EditorUndoRedoManager call shape the dock uses
 # (add_do_method(target, method, ...args)). The dock's default plain UndoRedo rejects that
 # arg shape; the real editor injects an EditorUndoRedoManager. This keeps the headless test
@@ -90,10 +93,4 @@ static func _flat_index_of(viewport: EventSheetViewport, resource: Resource) -> 
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] keyboard_actions_test: %s" % label)
-		return true
-	print("[FAIL] keyboard_actions_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("keyboard_actions_test", label, actual, expected)

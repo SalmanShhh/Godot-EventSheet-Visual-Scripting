@@ -8,6 +8,7 @@
 class_name NearestPickingTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const LOS_PACK := "res://eventsheet_addons/line_of_sight/line_of_sight_behavior.gd"
 const LOS3D_PACK := "res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.gd"
 
@@ -63,10 +64,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] nearest_picking_test: %s" % label)
-		return true
-	print("[FAIL] nearest_picking_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("nearest_picking_test", label, actual, expected)

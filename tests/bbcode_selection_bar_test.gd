@@ -6,6 +6,9 @@ class_name BBCodeSelectionBarTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -81,10 +84,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] bbcode_selection_bar_test: %s" % label)
-		return true
-	print("[FAIL] bbcode_selection_bar_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("bbcode_selection_bar_test", label, actual, expected)

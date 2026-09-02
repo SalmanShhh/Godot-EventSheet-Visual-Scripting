@@ -21,6 +21,7 @@
 class_name DocSearchTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The fixture tree, written under user:// on purpose: writing a guide.md into a real pack would
 ## be indistinguishable from a shipped one and would break the addon drift gate for whoever ran it
 ## next.
@@ -511,10 +512,4 @@ static func _write(path: String, text: String) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_search_test: %s" % label)
-		return true
-	print("[FAIL] doc_search_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_search_test", label, actual, expected)

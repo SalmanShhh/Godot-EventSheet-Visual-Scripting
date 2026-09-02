@@ -24,6 +24,7 @@
 class_name FilePlacesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const P := preload("res://addons/eventforge/registration/file_places.gd")
 
 ## Where the round-trip half writes. Under user:// because that is the only place a test may write,
@@ -574,10 +575,4 @@ static func _sorted(source: Dictionary) -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] file_places_test: %s" % label)
-		return true
-	print("[FAIL] file_places_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("file_places_test", label, actual, expected)

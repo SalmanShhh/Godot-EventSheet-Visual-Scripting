@@ -9,6 +9,9 @@ class_name TimingAbstractionACEsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_has_changed_emits_member_and_helper() and passed
@@ -194,10 +197,4 @@ static func _instantiate(source: String) -> Node:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] timing_abstraction_aces_test: %s" % label)
-		return true
-	print("[FAIL] timing_abstraction_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("timing_abstraction_aces_test", label, actual, expected)

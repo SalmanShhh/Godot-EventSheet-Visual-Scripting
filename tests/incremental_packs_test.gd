@@ -9,6 +9,7 @@
 class_name IncrementalPacksTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BIG_NUMBER := "res://eventsheet_addons/big_number/big_number_addon.gd"
 const IDLE_GENERATOR := "res://eventsheet_addons/idle_generator/idle_generator_behavior.gd"
 const PRESTIGE := "res://eventsheet_addons/prestige/prestige_addon.gd"
@@ -273,10 +274,4 @@ static func _near(actual: float, expected: float, tolerance: float) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] incremental_packs_test: %s" % label)
-		return true
-	print("[FAIL] incremental_packs_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("incremental_packs_test", label, actual, expected)

@@ -11,6 +11,7 @@
 class_name ExposeAllPropertiesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const NODE_SAMPLE := preload("res://tests/fixtures/auto_ace_sample.gd")
 const UTILITY_SAMPLE := preload("res://tests/fixtures/utility_provider_fixture.gd")
 
@@ -125,10 +126,4 @@ static func _param_default(definition: ACEDefinition, param_id: String) -> Strin
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] expose_all_properties_test: %s" % label)
-		return true
-	print("[FAIL] expose_all_properties_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("expose_all_properties_test", label, actual, expected)

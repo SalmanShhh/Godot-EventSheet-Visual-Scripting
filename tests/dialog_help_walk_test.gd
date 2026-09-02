@@ -20,6 +20,7 @@
 class_name DialogHelpWalkTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Where the editor's dialogs live, and the call that makes a strip.
 const EDITOR_DIR: String = "res://addons/eventsheet/editor"
 const STRIP_CALL: String = "EventSheetPopupUI.help_strip("
@@ -191,10 +192,4 @@ static func _mentions_any(source: String, calls: Array[String]) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] dialog_help_walk_test: %s" % label)
-		return true
-	print("[FAIL] dialog_help_walk_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("dialog_help_walk_test", label, actual, expected)

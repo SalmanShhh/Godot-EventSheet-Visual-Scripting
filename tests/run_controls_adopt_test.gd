@@ -9,6 +9,9 @@ extends RefCounted
 # rather than crashed on, and re-adopting the same button does not double it.
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var controls: EventSheetRunControls = EventSheetRunControls.new()
@@ -36,10 +39,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] run_controls_adopt_test: %s" % label)
-		return true
-	print("[FAIL] run_controls_adopt_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("run_controls_adopt_test", label, actual, expected)

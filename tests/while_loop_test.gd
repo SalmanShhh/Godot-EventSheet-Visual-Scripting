@@ -7,6 +7,7 @@ class_name WhileLoopTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Where this test's compiles land. `compile()` always WRITES its result somewhere, and with no path
 ## given it writes to `res://event_sheet_generated.gd` at the project root - a script left in the
 ## repository, which the gates that sweep every file of it then report as a real one. Under `user://`
@@ -51,10 +52,4 @@ static func _compile_loop(kind: int, collection_value: String, iterator_name: St
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] while_loop_test: %s" % label)
-		return true
-	print("[FAIL] while_loop_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("while_loop_test", label, actual, expected)

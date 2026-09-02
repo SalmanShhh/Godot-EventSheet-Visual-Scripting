@@ -10,6 +10,7 @@
 class_name MidFileFunctionLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The `if true:` block after the helper is deliberately unliftable at top level, so the helper
 ## can never be part of a trailing run - only the anchor path can claim it.
 const MID_SOURCE := """extends Node2D
@@ -103,10 +104,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] mid_file_function_lift_test: %s" % label)
-		return true
-	print("[FAIL] mid_file_function_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("mid_file_function_lift_test", label, actual, expected)

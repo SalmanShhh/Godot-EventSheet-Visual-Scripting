@@ -11,6 +11,7 @@
 class_name DrawingPrefabPerfTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## This test MEASURES (the cached path against the re-parsing one), so it has to have the machine to
 ## itself: the sharded runner reads this marker and keeps the file out of every parallel shard.
 const PARALLEL_UNSAFE := true
@@ -69,10 +70,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] drawing_prefab_perf_test: %s" % label)
-		return true
-	print("[FAIL] drawing_prefab_perf_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("drawing_prefab_perf_test", label, actual, expected)

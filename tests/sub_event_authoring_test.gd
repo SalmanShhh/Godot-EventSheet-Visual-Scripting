@@ -7,6 +7,9 @@ class_name SubEventAuthoringTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 # No-op undo manager matching the dock's EditorUndoRedoManager call shape.
 class NoopUndoManager:
 	extends RefCounted
@@ -72,10 +75,4 @@ static func _select_resource(viewport: EventSheetViewport, resource: Resource) -
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] sub_event_authoring_test: %s" % label)
-		return true
-	print("[FAIL] sub_event_authoring_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("sub_event_authoring_test", label, actual, expected)

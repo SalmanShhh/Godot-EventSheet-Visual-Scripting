@@ -14,6 +14,9 @@ class_name OpenInGodotTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -65,10 +68,4 @@ static func _find_button(root: Node, text: String) -> Button:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] open_in_godot_test: %s" % label)
-		return true
-	print("[FAIL] open_in_godot_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("open_in_godot_test", label, actual, expected)

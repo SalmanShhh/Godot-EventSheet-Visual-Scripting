@@ -14,6 +14,7 @@
 class_name DocManualTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A pack that ships in this repo, for the behavior-reference assertions.
 const SAMPLE_PACK := "quest"
 
@@ -358,10 +359,4 @@ static func _read(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_manual_test: %s" % label)
-		return true
-	print("[FAIL] doc_manual_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_manual_test", label, actual, expected)

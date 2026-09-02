@@ -10,6 +10,9 @@ class_name BehaviorStarterTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var sheet: EventSheetResource = EventSheetStarterTemplates._build_behavior_component_starter()
@@ -34,10 +37,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] behavior_starter_test: %s" % label)
-		return true
-	print("[FAIL] behavior_starter_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("behavior_starter_test", label, actual, expected)

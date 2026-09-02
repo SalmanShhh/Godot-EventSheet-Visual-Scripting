@@ -10,6 +10,7 @@
 class_name AnnotationWriterTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SOURCE: String = """@tool
 class_name WaveDirector
 extends Node
@@ -269,10 +270,4 @@ static func _code_lines(source: String) -> Array:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] annotation_writer_test: %s" % label)
-		return true
-	print("[FAIL] annotation_writer_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("annotation_writer_test", label, actual, expected)

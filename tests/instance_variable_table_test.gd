@@ -9,6 +9,9 @@ class_name InstanceVariableTableTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -102,10 +105,4 @@ static func _names(rows: Array[Dictionary]) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] instance_variable_table_test: %s" % label)
-		return true
-	print("[FAIL] instance_variable_table_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("instance_variable_table_test", label, actual, expected)

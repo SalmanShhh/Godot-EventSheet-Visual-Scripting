@@ -16,6 +16,7 @@
 class_name SaveSlotsAndRunsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/save_system/save_system_addon.gd"
 const RESOURCE_ACES := preload("res://addons/eventforge/registration/modules/resource_aces.gd")
 # The tiny stateful node the addon walk is driven against: the same duck-typed save_state /
@@ -736,10 +737,4 @@ static func _cleanup(system: Node, slots: Array) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] save_slots_and_runs_test: %s" % label)
-		return true
-	print("[FAIL] save_slots_and_runs_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("save_slots_and_runs_test", label, actual, expected)

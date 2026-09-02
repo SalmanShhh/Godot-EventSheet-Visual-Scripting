@@ -6,6 +6,9 @@ class_name MeshGradientAcesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -75,10 +78,4 @@ static func _templates_parse_in(host_class: String, ace_ids: Array, by_id: Dicti
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] mesh_gradient_aces_test: %s" % label)
-		return true
-	print("[FAIL] mesh_gradient_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("mesh_gradient_aces_test", label, actual, expected)

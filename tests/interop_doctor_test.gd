@@ -10,6 +10,7 @@
 class_name InteropDoctorTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const CORPUS: Array[String] = [
 	"res://tests/fixtures/interop_corpus/player.gd",
 	"res://tests/fixtures/interop_corpus/pickup.gd",
@@ -115,10 +116,4 @@ static func _paths_of(findings: Array[Dictionary], check_id: String) -> PackedSt
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] interop_doctor_test: %s" % label)
-		return true
-	print("[FAIL] interop_doctor_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("interop_doctor_test", label, actual, expected)

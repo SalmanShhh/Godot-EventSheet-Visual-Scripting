@@ -8,6 +8,7 @@
 class_name FileAcesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TEST_DIR := "user://__fileace_test"
 
 
@@ -76,10 +77,4 @@ static func _cleanup() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] file_aces_test: %s" % label)
-		return true
-	print("[FAIL] file_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("file_aces_test", label, actual, expected)

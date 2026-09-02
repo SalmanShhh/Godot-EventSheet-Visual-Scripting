@@ -11,6 +11,7 @@
 class_name ACEAutocompleteTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 
@@ -94,10 +95,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] ace_autocomplete_test: %s" % label)
-		return true
-	print("[FAIL] ace_autocomplete_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("ace_autocomplete_test", label, actual, expected)

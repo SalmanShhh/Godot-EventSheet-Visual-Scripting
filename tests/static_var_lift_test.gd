@@ -8,6 +8,9 @@ class_name StaticVarLiftTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -143,10 +146,4 @@ static func _all_local_vars(sheet: EventSheetResource) -> Array:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] static_var_lift_test: %s" % label)
-		return true
-	print("[FAIL] static_var_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("static_var_lift_test", label, actual, expected)

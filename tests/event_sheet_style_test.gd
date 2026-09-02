@@ -3,6 +3,7 @@
 class_name EventSheetStyleTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TEST_LONG_CONDITION_PROVIDER := "TestLongCondition"
 const TEST_LONG_ACTION_PROVIDER := "TestLongAction"
 const EXAMPLE_THEME_PATHS := [
@@ -390,10 +391,4 @@ static func _find_span_index_by_text(row_data: EventRowData, expected_text: Stri
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] event_sheet_style_test: %s" % label)
-		return true
-	print("[FAIL] event_sheet_style_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("event_sheet_style_test", label, actual, expected)

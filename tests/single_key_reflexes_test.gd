@@ -7,6 +7,9 @@ class_name SingleKeyReflexesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -117,10 +120,4 @@ static func _select_condition(view: EventSheetViewport, event: EventRow) -> bool
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] single_key_reflexes_test: %s" % label)
-		return true
-	print("[FAIL] single_key_reflexes_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("single_key_reflexes_test", label, actual, expected)

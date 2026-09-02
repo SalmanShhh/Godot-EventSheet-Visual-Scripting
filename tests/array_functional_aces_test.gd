@@ -7,6 +7,9 @@ class_name ArrayFunctionalAcesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -97,10 +100,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] array_functional_aces_test: %s" % label)
-		return true
-	print("[FAIL] array_functional_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("array_functional_aces_test", label, actual, expected)

@@ -8,6 +8,7 @@
 class_name PhysicsCarTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/physics_car/physics_car_behavior.gd"
 
 
@@ -95,10 +96,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] physics_car_test: %s" % label)
-		return true
-	print("[FAIL] physics_car_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("physics_car_test", label, actual, expected)

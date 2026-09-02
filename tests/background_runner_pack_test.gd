@@ -7,6 +7,7 @@
 class_name BackgroundRunnerPackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/background_runner/background_runner_behavior.gd"
 
 
@@ -45,10 +46,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] background_runner_pack_test: %s" % label)
-		return true
-	print("[FAIL] background_runner_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("background_runner_pack_test", label, actual, expected)

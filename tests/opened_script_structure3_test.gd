@@ -13,6 +13,7 @@
 class_name OpenedScriptStructure3Test
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const ARENA_PATH: String = "res://tests/fixtures/opened_script_structure3.gd"
 const MENU_PATH: String = "res://tests/fixtures/opened_script_structure3_menu.gd"
 
@@ -236,10 +237,4 @@ static func _row_containing(rows: PackedStringArray, needle: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_script_structure3_test: %s" % label)
-		return true
-	print("[FAIL] opened_script_structure3_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_script_structure3_test", label, actual, expected)

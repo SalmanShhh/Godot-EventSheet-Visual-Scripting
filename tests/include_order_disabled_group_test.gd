@@ -8,6 +8,9 @@ extends RefCounted
 #      comment so the omission is visible in the generated .gd (its events still don't run).
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -69,10 +72,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] include_order_disabled_group_test: %s" % label)
-		return true
-	print("[FAIL] include_order_disabled_group_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("include_order_disabled_group_test", label, actual, expected)

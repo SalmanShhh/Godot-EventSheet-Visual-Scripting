@@ -7,6 +7,7 @@
 class_name ProcRoomTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/proc_room/proc_room_addon.gd"
 
 
@@ -83,10 +84,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] proc_room_test: %s" % label)
-		return true
-	print("[FAIL] proc_room_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("proc_room_test", label, actual, expected)

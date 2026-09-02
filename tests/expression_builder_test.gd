@@ -7,6 +7,9 @@ extends RefCounted
 # nothing. These pin the shared helper for both the CodeEdit (the real case) and a LineEdit fallback.
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var host: Node = Node.new()
@@ -122,10 +125,4 @@ static func _walk_item(item: TreeItem, text: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] expression_builder_test: %s" % label)
-		return true
-	print("[FAIL] expression_builder_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("expression_builder_test", label, actual, expected)

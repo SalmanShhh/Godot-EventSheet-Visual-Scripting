@@ -18,6 +18,7 @@
 class_name WorkingWithSheetsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const COMPILE_PATH := "user://ef_working_with_sheets_compile.gd"
 
 
@@ -366,10 +367,4 @@ static func _compile(sheet: EventSheetResource) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] working_with_sheets_test: %s" % label)
-		return true
-	print("[FAIL] working_with_sheets_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("working_with_sheets_test", label, actual, expected)

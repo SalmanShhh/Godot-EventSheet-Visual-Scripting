@@ -14,6 +14,9 @@ class_name RawCallNamerTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -132,10 +135,4 @@ static func _set_last_action_code(sheet: EventSheetResource, code: String) -> vo
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] raw_call_namer_test: %s" % label)
-		return true
-	print("[FAIL] raw_call_namer_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("raw_call_namer_test", label, actual, expected)

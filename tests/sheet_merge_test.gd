@@ -6,6 +6,7 @@
 class_name SheetMergeTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const Merge := preload("res://tools/sheet_merge.gd")
 
 
@@ -101,10 +102,4 @@ static func _param_of(sheet: EventSheetResource, uid: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] sheet_merge_test: %s" % label)
-		return true
-	print("[FAIL] sheet_merge_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("sheet_merge_test", label, actual, expected)

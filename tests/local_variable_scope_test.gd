@@ -11,6 +11,9 @@ class_name LocalVariableScopeTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
@@ -201,10 +204,4 @@ static func _event_with_action(sheet: EventSheetResource, ace_id: String, name: 
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] local_variable_scope_test: %s" % label)
-		return true
-	print("[FAIL] local_variable_scope_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("local_variable_scope_test", label, actual, expected)

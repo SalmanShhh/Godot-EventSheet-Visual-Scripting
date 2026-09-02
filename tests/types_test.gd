@@ -22,6 +22,9 @@ class_name TypesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_registry_shape() and ok
@@ -378,10 +381,4 @@ static func _instantiate(source: String) -> Node:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] types_test: %s" % label)
-		return true
-	print("[FAIL] types_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("types_test", label, actual, expected)

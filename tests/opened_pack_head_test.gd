@@ -26,6 +26,7 @@
 class_name OpenedPackHeadTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK_PATH := "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
 
 
@@ -309,13 +310,7 @@ static func _count_about_rows(rows: Array) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_pack_head_test: %s" % label)
-		return true
-	print("[FAIL] opened_pack_head_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_pack_head_test", label, actual, expected)
 
 
 ## Every span's text as a list - for asking whether the row carries one exact word, which a joined

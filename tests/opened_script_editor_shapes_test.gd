@@ -22,6 +22,7 @@
 class_name OpenedScriptEditorShapesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const HELPER_PATH := "res://tests/fixtures/opened_script_batch12_helper.gd"
 const UNDO_PATH := "res://tests/fixtures/opened_script_batch12_undo.gd"
 const SHARED_PATH := "res://tests/fixtures/opened_script_batch12_shared.gd"
@@ -319,10 +320,4 @@ static func _joined(reading: Dictionary) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_script_editor_shapes_test: %s" % label)
-		return true
-	print("[FAIL] opened_script_editor_shapes_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_script_editor_shapes_test", label, actual, expected)

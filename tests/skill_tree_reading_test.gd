@@ -8,6 +8,7 @@
 class_name SkillTreeReadingTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE := "res://tests/fixtures/opened_script_skill_tree.gd"
 const UPGRADES_PACK := "res://eventsheet_addons/upgrades/upgrades_addon.gd"
 const ABILITIES_PACK := "res://eventsheet_addons/abilities/abilities_behavior.gd"
@@ -297,10 +298,4 @@ static func _words(reading: Dictionary) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] skill_tree_reading_test: %s" % label)
-		return true
-	print("[FAIL] skill_tree_reading_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("skill_tree_reading_test", label, actual, expected)

@@ -8,6 +8,7 @@
 class_name GlobalVariablesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PROBE_PATH := "user://eventforge_global_variables_probe.gd"
 
 
@@ -99,10 +100,4 @@ static func _entry(entries: Array[Dictionary], wanted: String) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] global_variables_test: %s" % label)
-		return true
-	print("[FAIL] global_variables_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("global_variables_test", label, actual, expected)

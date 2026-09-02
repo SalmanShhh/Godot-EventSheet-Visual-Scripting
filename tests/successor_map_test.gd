@@ -24,6 +24,7 @@
 class_name SuccessorMapTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The token a parameter the old verb asks the author to fill gets in the generated fixture. An
 ## identifier rather than prose, so the emitted line is a line somebody could have written.
 const SAMPLE_PREFIX: String = "mg_"
@@ -557,10 +558,4 @@ static func _entry(key: String, params: Array, map: Dictionary) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] successor_map_test: %s" % label)
-		return true
-	print("[FAIL] successor_map_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("successor_map_test", label, actual, expected)

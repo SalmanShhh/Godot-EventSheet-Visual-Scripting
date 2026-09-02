@@ -18,6 +18,7 @@
 class_name DocEngineFetchTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_ROOT := "user://doc_engine_fetch_test"
 
 ## The two states a class file is in: written by `--doctool` on the reader's machine (structure, no
@@ -171,10 +172,4 @@ static func _remove_tree(directory: String) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_engine_fetch_test: %s" % label)
-		return true
-	print("[FAIL] doc_engine_fetch_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_engine_fetch_test", label, actual, expected)

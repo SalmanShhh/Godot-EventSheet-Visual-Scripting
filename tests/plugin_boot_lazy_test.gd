@@ -15,6 +15,7 @@
 class_name PluginBootLazyTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## file -> the class identifiers that must never appear in its code lines.
 const FORBIDDEN := {
 	"res://addons/eventforge/plugin.gd": [
@@ -194,10 +195,4 @@ static func _code_only(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] plugin_boot_lazy_test: %s" % label)
-		return true
-	print("[FAIL] plugin_boot_lazy_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("plugin_boot_lazy_test", label, actual, expected)

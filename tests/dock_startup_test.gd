@@ -9,6 +9,9 @@ class_name DockStartupTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -32,10 +35,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] dock_startup_test: %s" % label)
-		return true
-	print("[FAIL] dock_startup_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("dock_startup_test", label, actual, expected)

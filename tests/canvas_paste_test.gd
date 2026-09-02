@@ -10,6 +10,7 @@
 class_name CanvasPasteTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SURFACE := "res://eventsheet_addons/canvas_surface/canvas_surface.gd"
 
 
@@ -128,10 +129,4 @@ static func _solid(color: Color, w: int, h: int) -> ImageTexture:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] canvas_paste_test: %s" % label)
-		return true
-	print("[FAIL] canvas_paste_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("canvas_paste_test", label, actual, expected)

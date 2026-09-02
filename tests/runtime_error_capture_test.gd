@@ -11,6 +11,9 @@ class_name RuntimeErrorCaptureTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -120,10 +123,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] runtime_error_capture_test: %s" % label)
-		return true
-	print("[FAIL] runtime_error_capture_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("runtime_error_capture_test", label, actual, expected)

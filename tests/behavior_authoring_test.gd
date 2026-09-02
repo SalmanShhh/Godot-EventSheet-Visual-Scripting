@@ -9,6 +9,9 @@ class_name BehaviorAuthoringTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 class NoopUndoManager:
 	extends RefCounted
 	func create_action(_a = null) -> void: pass
@@ -114,10 +117,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] behavior_authoring_test: %s" % label)
-		return true
-	print("[FAIL] behavior_authoring_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("behavior_authoring_test", label, actual, expected)

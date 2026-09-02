@@ -9,6 +9,9 @@ class_name BBCodeAndPillTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
@@ -121,10 +124,4 @@ static func _has_scope_pill(rows: Array) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] bbcode_and_pill_test: %s" % label)
-		return true
-	print("[FAIL] bbcode_and_pill_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("bbcode_and_pill_test", label, actual, expected)

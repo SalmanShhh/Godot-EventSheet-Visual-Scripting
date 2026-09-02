@@ -13,6 +13,7 @@
 class_name LiftWorkbenchTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A buffer with one of each answer in it: a spelling a shipped table entry claims by name, lines
 ## that arrive as rows without one, and a lambda that stays honest code (Callables-as-data have no
 ## structured equivalent, and are meant not to).
@@ -166,10 +167,4 @@ static func _one_reader() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] lift_workbench_test: %s" % label)
-		return true
-	print("[FAIL] lift_workbench_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("lift_workbench_test", label, actual, expected)

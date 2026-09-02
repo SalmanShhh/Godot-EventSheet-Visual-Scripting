@@ -8,6 +8,7 @@
 class_name AbilitiesPackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/abilities/abilities_behavior.gd"
 
 
@@ -52,10 +53,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] abilities_pack_test: %s" % label)
-		return true
-	print("[FAIL] abilities_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("abilities_pack_test", label, actual, expected)

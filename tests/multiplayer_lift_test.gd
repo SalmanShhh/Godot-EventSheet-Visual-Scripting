@@ -16,6 +16,7 @@
 class_name MultiplayerLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 
 ## Every ace_id the networking vocabulary adds. Checked for collisions against the WHOLE registry, because an id is a
@@ -440,10 +441,4 @@ static func _template_of(action: ACEAction) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] multiplayer_lift_test: %s" % label)
-		return true
-	print("[FAIL] multiplayer_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("multiplayer_lift_test", label, actual, expected)

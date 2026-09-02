@@ -17,6 +17,9 @@ class_name ThirdWaveSpatialTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -140,10 +143,4 @@ static func _action(shipped: Dictionary, ace_id: String, params: Dictionary, uid
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] third_wave_spatial_test: %s" % label)
-		return true
-	print("[FAIL] third_wave_spatial_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("third_wave_spatial_test", label, actual, expected)

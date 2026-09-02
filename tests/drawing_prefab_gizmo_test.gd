@@ -10,6 +10,7 @@
 class_name DrawingPrefabGizmoTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const STAMP_PATH: String = "res://eventsheet_addons/drawing_prefab_stamp/drawing_prefab_stamp.gd"
 const PREFAB_PATH: String = "res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd"
 
@@ -90,10 +91,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] drawing_prefab_gizmo_test: %s" % label)
-		return true
-	print("[FAIL] drawing_prefab_gizmo_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("drawing_prefab_gizmo_test", label, actual, expected)

@@ -13,6 +13,7 @@ class_name EventCellWrapTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
 const LONG_TEXT: String = "only once ever ( \"first_flight_hint_shown_to_the_player\" ) across every run of the game"
 
 
@@ -118,10 +119,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] event_cell_wrap_test: %s" % label)
-		return true
-	print("[FAIL] event_cell_wrap_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("event_cell_wrap_test", label, actual, expected)

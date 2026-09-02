@@ -28,6 +28,7 @@
 class_name PluginReadsItselfTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## When a round-trip is refused, the evidence goes on disk rather than into a rebuild by hand.
 const Repro := preload("res://tests/repro_bundle.gd")
 
@@ -337,10 +338,4 @@ static func sample_for_day(paths: PackedStringArray, seed_value: int, count: int
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] plugin_reads_itself_test: %s" % label)
-		return true
-	print("[FAIL] plugin_reads_itself_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("plugin_reads_itself_test", label, actual, expected)

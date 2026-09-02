@@ -46,6 +46,7 @@
 class_name CorpusTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Where the corpus lives. Walked and SORTED rather than listed, so a file added to the folder is
 ## measured the moment it exists, and the order is the same on every machine.
 const CORPUS_DIR: String = "res://tests/corpus/"
@@ -146,10 +147,4 @@ static func _corpus_files() -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] corpus_test: %s" % label)
-		return true
-	print("[FAIL] corpus_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("corpus_test", label, actual, expected)

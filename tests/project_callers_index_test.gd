@@ -12,6 +12,7 @@
 class_name ProjectCallersIndexTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Two beginner-shaped scripts of the corpus: `progress.gd` declares `grant_xp` and calls it from its
 ## own `complete_quest`, and nothing else in the project calls it. `collect` is called from
 ## `pickup.gd` and from a shipped pack, which is what makes the "and N more" wording testable.
@@ -98,10 +99,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] project_callers_index_test: %s" % label)
-		return true
-	print("[FAIL] project_callers_index_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("project_callers_index_test", label, actual, expected)

@@ -9,6 +9,7 @@
 class_name PreviewAutounlockTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PROBE := "user://__eventsheet_autounlock_probe.gd"
 const SOURCE := "extends Node\nvar hp: int = 100\nfunc _ready() -> void:\n\tprint(hp)\n"
 
@@ -37,10 +38,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] preview_autounlock_test: %s" % label)
-		return true
-	print("[FAIL] preview_autounlock_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("preview_autounlock_test", label, actual, expected)

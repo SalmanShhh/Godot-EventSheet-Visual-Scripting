@@ -29,6 +29,7 @@
 class_name HugeProjectBudgetTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const HugeProject := preload("res://tests/huge_project_fixture.gd")
 const Pins := preload("res://tests/pin_table.gd")
 
@@ -476,10 +477,4 @@ static func _pin_the_shader_corpus(project: Dictionary) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] huge_project_budget_test: %s" % label)
-		return true
-	print("[FAIL] huge_project_budget_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("huge_project_budget_test", label, actual, expected)

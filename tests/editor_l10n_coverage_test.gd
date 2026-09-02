@@ -14,6 +14,7 @@
 class_name EditorL10nCoverageTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Every spelling of the call, matched by its tail. `EventSheetL10n.translate` reads the catalog;
 ## `EventSheetSentence.translate` and `EventSheets.translate` are one-line aliases of it, and a gate
 ## keyed to the first class name alone walked straight past them - ten of the row grammar's own
@@ -212,10 +213,4 @@ static func _csv_rows(path: String) -> Array:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] editor_l10n_coverage_test: %s" % label)
-		return true
-	print("[FAIL] editor_l10n_coverage_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("editor_l10n_coverage_test", label, actual, expected)

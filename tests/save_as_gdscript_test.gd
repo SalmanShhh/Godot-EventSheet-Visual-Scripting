@@ -8,6 +8,7 @@
 class_name SaveAsGDScriptTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PROBE_PATH := "res://__eventsheet_save_gd_probe.gd"
 
 
@@ -69,10 +70,4 @@ static func _remove_probe() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] save_as_gdscript_test: %s" % label)
-		return true
-	print("[FAIL] save_as_gdscript_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("save_as_gdscript_test", label, actual, expected)

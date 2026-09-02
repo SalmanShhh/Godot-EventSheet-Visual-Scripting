@@ -5,6 +5,9 @@ class_name UnsavedCloseTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -54,10 +57,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] unsaved_close_test: %s" % label)
-		return true
-	print("[FAIL] unsaved_close_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("unsaved_close_test", label, actual, expected)

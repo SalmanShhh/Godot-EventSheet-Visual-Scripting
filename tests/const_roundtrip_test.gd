@@ -6,6 +6,7 @@ extends RefCounted
 # not a verbatim GDScript block. Byte-verify-gated: a const line whose canonical re-emission doesn't
 # match the source stays verbatim, so this can never corrupt the round-trip.
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
@@ -44,10 +45,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] const_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] const_roundtrip_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("const_roundtrip_test", label, actual, expected)

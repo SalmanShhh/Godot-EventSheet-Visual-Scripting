@@ -12,6 +12,7 @@
 class_name ImpactedTestsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PICKER_PATH: String = "res://tools/pick_tests.gd"
 
 
@@ -97,10 +98,4 @@ static func _pick(changed: Array) -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] impacted_tests_test: %s" % label)
-		return true
-	print("[FAIL] impacted_tests_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("impacted_tests_test", label, actual, expected)

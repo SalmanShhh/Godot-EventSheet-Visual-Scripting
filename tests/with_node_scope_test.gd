@@ -10,6 +10,9 @@ class_name WithNodeScopeTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -87,10 +90,4 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] with_node_scope_test: %s" % label)
-		return true
-	print("[FAIL] with_node_scope_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("with_node_scope_test", label, actual, expected)

@@ -16,6 +16,7 @@
 class_name MultiplayerScenesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 const FieldFactory := preload("res://addons/eventsheet/editor/ace_dialog/param_field_factory.gd")
 
@@ -428,10 +429,4 @@ static func _template_of(action: ACEAction) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] multiplayer_scenes_test: %s" % label)
-		return true
-	print("[FAIL] multiplayer_scenes_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("multiplayer_scenes_test", label, actual, expected)

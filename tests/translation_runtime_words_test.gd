@@ -31,6 +31,9 @@ class_name TranslationRuntimeWordsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 ## Stands in for the SceneTree the emitted Refresh row asks for. It answers the group query for
 ## real - a node only comes back if it actually joined the group - so the pairing between
 ## Set Text (follows language) and the refresh loop is what is under test, not a hand-fed list.
@@ -699,10 +702,4 @@ static func _indent(statements: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] translation_runtime_words_test: %s" % label)
-		return true
-	print("[FAIL] translation_runtime_words_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("translation_runtime_words_test", label, actual, expected)

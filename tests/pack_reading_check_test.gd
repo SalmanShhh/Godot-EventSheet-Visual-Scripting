@@ -14,6 +14,9 @@ class_name PackReadingCheckTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("a bare snake_case member is not a sentence",
@@ -90,10 +93,4 @@ static func _definition(display_name: String, description: String, parameter_id:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] pack_reading_check_test: %s" % label)
-		return true
-	print("[FAIL] pack_reading_check_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("pack_reading_check_test", label, actual, expected)

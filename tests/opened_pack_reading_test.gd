@@ -18,6 +18,9 @@ class_name OpenedPackReadingTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	# The pinned headers carry no "called by" chips - a cold share index's rendering. Earlier
 	# tests legitimately build that index, so the cold start is made here, not assumed.
@@ -302,10 +305,4 @@ static func _panel_has_text(node: Node, needle: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_pack_reading_test: %s" % label)
-		return true
-	print("[FAIL] opened_pack_reading_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_pack_reading_test", label, actual, expected)

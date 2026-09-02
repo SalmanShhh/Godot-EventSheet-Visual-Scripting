@@ -10,6 +10,9 @@ class_name ViewportHitSelectTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	# Two event blocks: row 0 spans y[0,40), a 6px inter-block gap, row 1 spans y[46,86).
@@ -24,10 +27,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] viewport_hit_select_test: %s" % label)
-		return true
-	print("[FAIL] viewport_hit_select_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("viewport_hit_select_test", label, actual, expected)

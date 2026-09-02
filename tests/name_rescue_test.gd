@@ -13,6 +13,9 @@ class_name NameRescueTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_near_names() and ok
@@ -104,10 +107,4 @@ static func _test_input_action_fix() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] name_rescue_test: %s" % label)
-		return true
-	print("[FAIL] name_rescue_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("name_rescue_test", label, actual, expected)

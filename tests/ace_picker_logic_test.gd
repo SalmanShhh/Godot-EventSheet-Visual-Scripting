@@ -7,6 +7,9 @@ class_name ACEPickerLogicTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var picker: ACEPickerDialog = ACEPickerDialog.new()
@@ -192,10 +195,4 @@ static func _make_def(ace_type: int) -> ACEDefinition:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] ace_picker_logic_test: %s" % label)
-		return true
-	print("[FAIL] ace_picker_logic_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("ace_picker_logic_test", label, actual, expected)

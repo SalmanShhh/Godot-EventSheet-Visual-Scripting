@@ -5,6 +5,7 @@
 class_name EditorParamExposureTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SAMPLE_SCRIPT := preload("res://tests/fixtures/auto_ace_sample.gd")
 
 
@@ -318,10 +319,4 @@ static func _test_exposed_node_scope_and_undo() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] editor_param_exposure_test: %s" % label)
-		return true
-	print("[FAIL] editor_param_exposure_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("editor_param_exposure_test", label, actual, expected)

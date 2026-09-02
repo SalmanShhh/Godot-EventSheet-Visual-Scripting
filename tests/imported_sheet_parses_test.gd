@@ -11,6 +11,9 @@ extends RefCounted
 # hand-made rows, so the whole path from the other editor's words to a loadable file is under test.
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _comparisons() and all_passed
@@ -180,10 +183,4 @@ static func _parses(source: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] imported_sheet_parses_test: %s" % label)
-		return true
-	print("[FAIL] imported_sheet_parses_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("imported_sheet_parses_test", label, actual, expected)

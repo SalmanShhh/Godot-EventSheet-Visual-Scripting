@@ -7,6 +7,7 @@
 class_name BeginnerStyleLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SOURCE_PATH := "user://beginner_style_lift.gd"
 const SOURCE := """extends CharacterBody2D
 
@@ -76,10 +77,4 @@ static func _find_variable(sheet: EventSheetResource, variable_name: String) -> 
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] beginner_style_lift_test: %s" % label)
-		return true
-	print("[FAIL] beginner_style_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("beginner_style_lift_test", label, actual, expected)

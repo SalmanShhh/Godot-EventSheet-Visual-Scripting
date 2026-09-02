@@ -8,6 +8,7 @@
 class_name SaveStateTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const STATEFUL_PACKS: Dictionary = {
 	"stat_forge": "res://eventsheet_addons/stat_forge/stat_forge_behavior.gd",
 	"health": "res://eventsheet_addons/health/health_behavior.gd",
@@ -437,10 +438,4 @@ static func _emission_survival() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] save_state_test: %s" % label)
-		return true
-	print("[FAIL] save_state_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("save_state_test", label, actual, expected)

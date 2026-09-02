@@ -5,6 +5,7 @@ extends RefCounted
 # the Inspector) and round-trips STRUCTURALLY - reopening the .gd recovers the no_alpha attribute (so the
 # dialog tick is re-checked + survives editing), not a verbatim hint. Verify-lift-gated like the drawers.
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
@@ -78,10 +79,4 @@ static func _find_var(sheet: EventSheetResource, name: String) -> LocalVariable:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] color_no_alpha_test: %s" % label)
-		return true
-	print("[FAIL] color_no_alpha_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("color_no_alpha_test", label, actual, expected)

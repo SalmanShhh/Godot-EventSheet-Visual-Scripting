@@ -7,6 +7,9 @@ class_name TypedValueTintTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -37,10 +40,4 @@ static func _kind(label: String, text: String, expected_kind: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] typed_value_tint_test: %s" % label)
-		return true
-	print("[FAIL] typed_value_tint_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("typed_value_tint_test", label, actual, expected)

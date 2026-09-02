@@ -13,6 +13,9 @@ class_name VocabularyRecordTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_record() and ok
@@ -130,10 +133,4 @@ static func _setting_is_registered(name: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] vocabulary_record_test: %s" % label)
-		return true
-	print("[FAIL] vocabulary_record_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("vocabulary_record_test", label, actual, expected)

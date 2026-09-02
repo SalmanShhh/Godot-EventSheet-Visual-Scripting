@@ -23,6 +23,7 @@
 class_name DocLibraryTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BUILDER_PATH := "res://tools/build_help_bundle.gd"
 
 ## The whole corpus, parsed. Measured at roughly 1.5 s on the development machine for 129 pages;
@@ -361,10 +362,4 @@ static func _read(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_library_test: %s" % label)
-		return true
-	print("[FAIL] doc_library_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_library_test", label, actual, expected)

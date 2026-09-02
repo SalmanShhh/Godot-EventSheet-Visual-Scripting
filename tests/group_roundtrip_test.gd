@@ -7,6 +7,7 @@ extends RefCounted
 # The whole thing is gated by the lift's byte-verify, so a sheet that can't round-trip stays verbatim
 # rather than corrupting - these assertions pin the happy path.
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 
@@ -117,10 +118,4 @@ static func _event(negated: bool) -> EventRow:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] group_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] group_roundtrip_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("group_roundtrip_test", label, actual, expected)

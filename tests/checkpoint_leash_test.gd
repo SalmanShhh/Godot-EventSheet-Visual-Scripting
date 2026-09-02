@@ -9,6 +9,7 @@
 class_name CheckpointLeashTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const CHECKPOINT_PACK := "res://eventsheet_addons/checkpoint/checkpoint_behavior.gd"
 const LEASH_PACK := "res://eventsheet_addons/home_leash/home_leash_behavior.gd"
 
@@ -155,10 +156,4 @@ static func _run_leash() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] checkpoint_leash_test: %s" % label)
-		return true
-	print("[FAIL] checkpoint_leash_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("checkpoint_leash_test", label, actual, expected)

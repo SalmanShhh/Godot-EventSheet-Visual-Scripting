@@ -9,6 +9,7 @@
 class_name TweenOneLineChainTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const HEAD := "extends Node2D\n\n\nfunc _ready() -> void:\n"
 const ONE_LINE_LOOPS := HEAD + "\tcreate_tween().set_loops(3).tween_property(self, \"position\", p, 0.5)\n"
 const ONE_LINE_FOREVER := HEAD + "\tcreate_tween().set_loops().tween_property(self, \"modulate:a\", 0.0, 0.3)\n"
@@ -78,10 +79,4 @@ static func _roundtrip(source: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] tween_one_line_chain_test: %s" % label)
-		return true
-	print("[FAIL] tween_one_line_chain_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("tween_one_line_chain_test", label, actual, expected)

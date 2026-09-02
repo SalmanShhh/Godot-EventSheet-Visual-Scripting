@@ -9,6 +9,9 @@ class_name TimerReadingTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var context: Dictionary = {
@@ -86,10 +89,4 @@ static func _read(result: Dictionary) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] timer_reading_test: %s" % label)
-		return true
-	print("[FAIL] timer_reading_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("timer_reading_test", label, actual, expected)

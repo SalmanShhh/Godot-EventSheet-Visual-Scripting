@@ -30,6 +30,7 @@
 class_name VocabularyL10nTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TRANSLATIONS_DIR := "res://addons/eventsheet/translations"
 const TEMPLATE_FILE := "TEMPLATE.csv"
 
@@ -492,10 +493,4 @@ static func _read_keys(file_name: String) -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] vocabulary_l10n_test: %s" % label)
-		return true
-	print("[FAIL] vocabulary_l10n_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("vocabulary_l10n_test", label, actual, expected)

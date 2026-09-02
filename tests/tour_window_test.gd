@@ -8,6 +8,9 @@ class_name TourWindowTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var passed: bool = true
 	var steps: Array[Dictionary] = EventSheetTourWindow.steps()
@@ -67,10 +70,4 @@ static func _test_no_step_points_at_a_retired_button(steps: Array[Dictionary]) -
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] tour_window_test: %s" % label)
-		return true
-	print("[FAIL] tour_window_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("tour_window_test", label, actual, expected)

@@ -11,6 +11,7 @@
 class_name AutoloadProviderCodegenTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BUS_PATH := "res://tests/fixtures/bus_fixture.gd"
 const AUTOLOAD_SETTING := "autoload/TestBus"
 
@@ -76,10 +77,4 @@ static func _has_param(definitions: Array[ACEDefinition], definition_id: String,
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] autoload_provider_codegen_test: %s" % label)
-		return true
-	print("[FAIL] autoload_provider_codegen_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("autoload_provider_codegen_test", label, actual, expected)

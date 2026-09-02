@@ -22,6 +22,7 @@
 class_name SaveKeyEventsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/save_system/save_system_addon.gd"
 
 
@@ -282,10 +283,4 @@ static func _cleanup(system: Node) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] save_key_events_test: %s" % label)
-		return true
-	print("[FAIL] save_key_events_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("save_key_events_test", label, actual, expected)

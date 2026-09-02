@@ -21,6 +21,7 @@
 class_name DocFiguresTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const DOC_DIRS := ["res://docs", "res://docs/Addons", "res://docs/Modules"]
 
 ## A whole little script: a header, a lifecycle function, one verb. This is the shape the module
@@ -338,10 +339,4 @@ static func _fence(language: String, body: String) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_figures_test: %s" % label)
-		return true
-	print("[FAIL] doc_figures_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_figures_test", label, actual, expected)

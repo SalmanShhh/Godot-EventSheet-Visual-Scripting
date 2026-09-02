@@ -22,6 +22,7 @@
 class_name StyleGuideLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Style-guide spacing: two blank lines between top-level functions, each with a `##` doc
 ## comment. Before the fix this lifted 0 functions and stayed 5 verbatim blocks.
 const DOC_GAP_SOURCE := """extends Node
@@ -483,10 +484,4 @@ static func _raw_block_count(items: Array) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] style_guide_lift_test: %s" % label)
-		return true
-	print("[FAIL] style_guide_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("style_guide_lift_test", label, actual, expected)

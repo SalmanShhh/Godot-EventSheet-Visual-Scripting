@@ -7,6 +7,7 @@
 class_name TimeSlicerPackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/time_slicer/time_slicer_behavior.gd"
 
 
@@ -60,10 +61,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] time_slicer_pack_test: %s" % label)
-		return true
-	print("[FAIL] time_slicer_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("time_slicer_pack_test", label, actual, expected)

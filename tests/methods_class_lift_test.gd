@@ -8,6 +8,7 @@
 class_name MethodsClassLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const WEAPON := "class Weapon:\n\tvar ammo: int = 6\n\tvar max_ammo: int = 6\n\tfunc fire() -> void:\n\t\tammo -= 1\n\tfunc reload() -> void:\n\t\tammo = max_ammo"
 
 
@@ -84,10 +85,4 @@ static func _first_method_child(class_row: EventRowData) -> EventRowData:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] methods_class_lift_test: %s" % label)
-		return true
-	print("[FAIL] methods_class_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("methods_class_lift_test", label, actual, expected)

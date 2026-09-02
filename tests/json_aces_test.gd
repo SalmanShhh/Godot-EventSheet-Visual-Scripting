@@ -9,6 +9,7 @@
 class_name JsonAcesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TEST_FILE := "user://__json_aces_test.json"
 
 
@@ -75,10 +76,4 @@ static func _action(ace_id: String, by_id: Dictionary, params: Dictionary) -> AC
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] json_aces_test: %s" % label)
-		return true
-	print("[FAIL] json_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("json_aces_test", label, actual, expected)

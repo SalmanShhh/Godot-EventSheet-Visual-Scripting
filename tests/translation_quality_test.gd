@@ -30,6 +30,7 @@
 class_name TranslationQualityTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const CATALOG_MAIN := "user://translation_quality_main.csv"
 const CATALOG_QUOTED := "user://translation_quality_quoted.csv"
 const CATALOG_SEMICOLON := "user://translation_quality_semicolon.csv"
@@ -716,10 +717,4 @@ static func _reload(source: String) -> GDScript:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] translation_quality_test: %s" % label)
-		return true
-	print("[FAIL] translation_quality_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("translation_quality_test", label, actual, expected)

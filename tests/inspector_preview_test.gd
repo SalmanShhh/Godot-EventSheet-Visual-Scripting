@@ -7,6 +7,9 @@ class_name InspectorPreviewTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _pin("plain exported int", "int", {}, true, false,
@@ -51,10 +54,4 @@ static func _pin(label: String, type_name: String, attributes: Dictionary, expor
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] inspector_preview_test: %s" % label)
-		return true
-	print("[FAIL] inspector_preview_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("inspector_preview_test", label, actual, expected)

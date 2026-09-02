@@ -18,6 +18,7 @@
 class_name StyleGuideTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SCAN_ROOTS: Array[String] = ["res://addons", "res://tests", "res://tools"]
 
 ## Public-API resource properties frozen for compatibility (saved .tres files + pack authors
@@ -99,10 +100,4 @@ static func _scan_file(path: String, violations: PackedStringArray) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] style_guide_test: %s" % label)
-		return true
-	print("[FAIL] style_guide_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("style_guide_test", label, actual, expected)

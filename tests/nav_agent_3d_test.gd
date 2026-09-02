@@ -9,6 +9,7 @@
 class_name NavAgent3DTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd"
 const PACK_2D := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
 const FPS := "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
@@ -61,10 +62,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] nav_agent_3d_test: %s" % label)
-		return true
-	print("[FAIL] nav_agent_3d_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("nav_agent_3d_test", label, actual, expected)

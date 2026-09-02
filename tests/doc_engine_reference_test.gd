@@ -20,6 +20,7 @@
 class_name DocEngineReferenceTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Where the fixture harvest is written. Under user:// on purpose: a fixture XML inside the repo
 ## would be indistinguishable from a harvested one to anybody reading the folder later.
 const FIXTURE_ROOT := "user://doc_engine_reference_test"
@@ -516,10 +517,4 @@ static func _remove_tree(directory: String) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_engine_reference_test: %s" % label)
-		return true
-	print("[FAIL] doc_engine_reference_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_engine_reference_test", label, actual, expected)

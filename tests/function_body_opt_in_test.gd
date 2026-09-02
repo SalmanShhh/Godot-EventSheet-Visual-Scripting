@@ -8,6 +8,9 @@ class_name FunctionBodyOptInTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -148,10 +151,4 @@ static func _define_row(view: EventSheetViewport, fn_name: String) -> EventRowDa
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] function_body_opt_in_test: %s" % label)
-		return true
-	print("[FAIL] function_body_opt_in_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("function_body_opt_in_test", label, actual, expected)

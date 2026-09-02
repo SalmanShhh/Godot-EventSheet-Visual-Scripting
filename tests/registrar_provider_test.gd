@@ -9,6 +9,7 @@
 class_name RegistrarProviderTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const COMMENT_TWIN := preload("res://tests/fixtures/terse_provider_sample.gd")
 const REGISTRAR_TWIN := preload("res://tests/fixtures/registrar_provider_sample.gd")
 
@@ -81,10 +82,4 @@ static func _parameter_signature(definition: ACEDefinition) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] registrar_provider_test: %s" % label)
-		return true
-	print("[FAIL] registrar_provider_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("registrar_provider_test", label, actual, expected)

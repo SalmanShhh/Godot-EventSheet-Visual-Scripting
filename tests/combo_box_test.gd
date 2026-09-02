@@ -8,6 +8,7 @@
 class_name ComboBoxTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/combo_box/combo_box_addon.gd"
 
 
@@ -165,10 +166,4 @@ static func _reset(cb: Node) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] combo_box_test: %s" % label)
-		return true
-	print("[FAIL] combo_box_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("combo_box_test", label, actual, expected)

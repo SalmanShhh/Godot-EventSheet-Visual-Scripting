@@ -6,6 +6,7 @@
 class_name NavigateTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const CAR_PATH := "res://eventsheet_addons/car/car_behavior.gd"
 
 
@@ -71,10 +72,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] navigate_test: %s" % label)
-		return true
-	print("[FAIL] navigate_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("navigate_test", label, actual, expected)

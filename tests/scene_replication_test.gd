@@ -14,6 +14,7 @@
 class_name SceneReplicationTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PLAYER_SCRIPT: String = "res://tests/fixtures/multiplayer_scene_player.gd"
 const PLAYER_SCENE: String = "res://tests/fixtures/multiplayer_scene_player.tscn"
 const LEVEL_SCRIPT: String = "res://tests/fixtures/multiplayer_scene_level.gd"
@@ -331,10 +332,4 @@ static func _modes(entries: Array) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] scene_replication_test: %s" % label)
-		return true
-	print("[FAIL] scene_replication_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("scene_replication_test", label, actual, expected)

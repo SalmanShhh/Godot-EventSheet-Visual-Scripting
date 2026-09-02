@@ -10,6 +10,9 @@ class_name RegionFoldingTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
@@ -264,10 +267,4 @@ static func _last_comment_text_in(rows: Array) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] region_folding_test: %s" % label)
-		return true
-	print("[FAIL] region_folding_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("region_folding_test", label, actual, expected)

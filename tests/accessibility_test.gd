@@ -8,6 +8,7 @@
 class_name AccessibilityTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The preset the sweep is about. High Contrast is not a taste, it is a way of seeing.
 const HIGH_CONTRAST_PATH := "res://demo/themes/high_contrast_theme.tres"
 
@@ -103,10 +104,4 @@ static func _test_preferences_headless() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] accessibility_test: %s" % label)
-		return true
-	print("[FAIL] accessibility_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("accessibility_test", label, actual, expected)

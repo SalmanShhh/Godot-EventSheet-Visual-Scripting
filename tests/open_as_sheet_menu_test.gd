@@ -9,6 +9,9 @@ class_name OpenAsSheetMenuTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var fs_slot: int = EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM
@@ -43,10 +46,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] open_as_sheet_menu_test: %s" % label)
-		return true
-	print("[FAIL] open_as_sheet_menu_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("open_as_sheet_menu_test", label, actual, expected)

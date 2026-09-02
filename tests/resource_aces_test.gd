@@ -21,6 +21,7 @@
 class_name ResourceACEsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SANDBOX := "user://eventforge_resource_aces_test"
 
 
@@ -731,10 +732,4 @@ static func _save_curve(path: String, resolution: int) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] resource_aces_test: %s" % label)
-		return true
-	print("[FAIL] resource_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("resource_aces_test", label, actual, expected)

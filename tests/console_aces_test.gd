@@ -7,6 +7,7 @@ extends RefCounted
 # label↔value split into the dialog-facing param dict, and the stored KEY is what lands in the
 # generated code (so the dropdown reads "Warning" while the line is push_warning(...)).
 
+const SUPPORT := preload("res://tests/support.gd")
 const ConsoleACEs := preload("res://addons/eventforge/registration/modules/console_aces.gd")
 const Adapter := preload("res://addons/eventsheet/ace/ace_adapter.gd")
 const ActionCodegenLib := preload("res://addons/eventforge/compiler/action_codegen.gd")
@@ -111,10 +112,4 @@ static func _find_action(rows: Array, ace_id: String) -> ACEAction:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] console_aces_test: %s" % label)
-		return true
-	print("[FAIL] console_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("console_aces_test", label, actual, expected)

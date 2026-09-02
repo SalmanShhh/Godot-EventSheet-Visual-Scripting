@@ -10,6 +10,7 @@
 class_name CustomBlockTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BLOCK_SOURCE := """extends Node
 
 const Sfx := preload("res://sfx/jump.ogg")
@@ -288,10 +289,4 @@ class RogueKind:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] custom_block_test: %s" % label)
-		return true
-	print("[FAIL] custom_block_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("custom_block_test", label, actual, expected)

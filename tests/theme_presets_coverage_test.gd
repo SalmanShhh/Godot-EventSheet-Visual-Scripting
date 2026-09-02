@@ -25,6 +25,7 @@
 class_name ThemePresetsCoverageTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Every bundled preset: the six generated from well-known palettes, the three hand-written ones,
 ## and the Mockup Slate that ships inside the addon.
 const PRESET_PATHS := [
@@ -169,10 +170,4 @@ static func _as_string_array(values: Array) -> Array[String]:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] theme_presets_coverage_test: %s" % label)
-		return true
-	print("[FAIL] theme_presets_coverage_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("theme_presets_coverage_test", label, actual, expected)

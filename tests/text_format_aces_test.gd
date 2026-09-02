@@ -16,6 +16,9 @@ class_name TextFormatACEsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_registry_shape() and ok
@@ -396,10 +399,4 @@ static func _instantiate(source: String, host_class: String) -> Node:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] text_format_aces_test: %s" % label)
-		return true
-	print("[FAIL] text_format_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("text_format_aces_test", label, actual, expected)

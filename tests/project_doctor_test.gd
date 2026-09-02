@@ -6,6 +6,7 @@
 class_name ProjectDoctorTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The whole audit, over this whole repository: 112 packs, every demo, every committed sheet, and
 ## the fifty-odd checks the union runs. Measured 81-92 seconds across four runs before three things
 ## were fixed: a pin reading that ran three times over every file that had no pin in it, a read of
@@ -271,10 +272,4 @@ static func _has(findings: Array[Dictionary], severity: String, check: String) -
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] project_doctor_test: %s" % label)
-		return true
-	print("[FAIL] project_doctor_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("project_doctor_test", label, actual, expected)

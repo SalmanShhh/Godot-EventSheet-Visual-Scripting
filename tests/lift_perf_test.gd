@@ -19,6 +19,7 @@
 class_name LiftPerfTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A real shipped pack with many functions - the shape that exposed the per-function rebuild.
 const SAMPLE_PACK: String = "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
 ## Measured 1143 ms after the fix; 6769 ms before it. Generous enough not to flap under load.
@@ -213,10 +214,4 @@ static func _pin_row_rebuild(sheet: EventSheetResource) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] lift_perf_test: %s" % label)
-		return true
-	print("[FAIL] lift_perf_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("lift_perf_test", label, actual, expected)

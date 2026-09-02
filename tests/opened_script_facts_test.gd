@@ -26,6 +26,7 @@
 class_name OpenedScriptFactsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const SETTINGS_PATH := "res://tests/fixtures/opened_script_settings.gd"
 const COVERAGE_PATH := "res://tests/fixtures/opened_script_coverage.gd"
 const PLAYER_PATH := "res://tests/fixtures/opened_script_head_player.gd"
@@ -286,10 +287,4 @@ static func _bar_titled(rows: Array, title: String) -> EventRowData:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_script_facts_test: %s" % label)
-		return true
-	print("[FAIL] opened_script_facts_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_script_facts_test", label, actual, expected)

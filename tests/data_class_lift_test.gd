@@ -8,6 +8,7 @@
 class_name DataClassLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 # The AbilityData holder exactly as the importer chunks it (leading blank + doc block + typed fields),
 # captured from the real `abilities` pack. This is the ground truth the byte-gate must reproduce.
 const ABILITY_DATA := "\n## One ability's runtime state - typed so the cooldown / stack / expiration hot paths read\n## fields directly instead of float()/int()/bool()-casting an untyped Dictionary every frame.\nclass AbilityData:\n\tvar cooldown: float = 0.0\n\tvar max_cooldown: float = 0.0\n\tvar stacks: int = 1\n\tvar max_stacks: int = 1\n\tvar enabled: bool = true\n\tvar active: bool = false\n\tvar data: Dictionary = {}\n\tvar tags: Array = []\n\tvar expiration: float = 0.0\n\tvar max_expiration: float = 0.0"
@@ -107,10 +108,4 @@ static func _has_class_span(view: EventSheetViewport) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] data_class_lift_test: %s" % label)
-		return true
-	print("[FAIL] data_class_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("data_class_lift_test", label, actual, expected)

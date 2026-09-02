@@ -14,6 +14,7 @@
 class_name UntypedFunctionHeadLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The corpus, and what each file opens as. Beginner-shaped scripts nobody wrote for a lifter:
 ## untyped heads, inferred variables, connect lambdas, `##` docs. The VALUES are pinned rather than
 ## a count, so a regression says which function stopped opening rather than that a number moved.
@@ -143,10 +144,4 @@ static func _param_ids(event_function: EventFunction) -> Array:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] untyped_function_head_lift_test: %s" % label)
-		return true
-	print("[FAIL] untyped_function_head_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("untyped_function_head_lift_test", label, actual, expected)

@@ -9,6 +9,7 @@
 class_name PackRawcodeBudgetTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const BUDGETS := {
 	"res://eventsheet_addons/flash/flash_behavior.gd": 0,
 	"res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd": 0,
@@ -61,10 +62,4 @@ static func _count_rawcode(rows: Array) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] pack_rawcode_budget_test: %s" % label)
-		return true
-	print("[FAIL] pack_rawcode_budget_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("pack_rawcode_budget_test", label, actual, expected)

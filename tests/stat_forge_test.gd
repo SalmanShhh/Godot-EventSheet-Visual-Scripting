@@ -7,6 +7,9 @@ class_name StatForgeTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var forge: Node = (load("res://eventsheet_addons/stat_forge/stat_forge_behavior.gd") as GDScript).new()
@@ -130,10 +133,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] stat_forge_test: %s" % label)
-		return true
-	print("[FAIL] stat_forge_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("stat_forge_test", label, actual, expected)

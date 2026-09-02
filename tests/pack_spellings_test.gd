@@ -18,6 +18,7 @@
 class_name PackSpellingsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The pack that teaches the first shipped spellings, and the verb they are written on.
 const FLICKER_PACK: String = "res://eventsheet_addons/light_flicker/light_flicker_behavior.gd"
 const FLICKER_VERB: String = "start_flickering"
@@ -231,10 +232,4 @@ static func _test_shadowing_and_collisions() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] pack_spellings_test: %s" % label)
-		return true
-	print("[FAIL] pack_spellings_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("pack_spellings_test", label, actual, expected)

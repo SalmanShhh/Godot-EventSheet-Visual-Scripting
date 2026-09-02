@@ -14,6 +14,9 @@ class_name OnrampAffordancesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -75,10 +78,4 @@ static func _find_span_metadata(spans: Array, kind: String) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] onramp_affordances_test: %s" % label)
-		return true
-	print("[FAIL] onramp_affordances_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("onramp_affordances_test", label, actual, expected)

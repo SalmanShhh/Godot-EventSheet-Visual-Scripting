@@ -11,6 +11,7 @@
 class_name GroupAggregatesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const GROUP_CALL := "get_tree().get_nodes_in_group({group})"
 
 
@@ -111,10 +112,4 @@ static func _set_var(var_name: String, value_expr: String) -> ACEAction:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] group_aggregates_test: %s" % label)
-		return true
-	print("[FAIL] group_aggregates_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("group_aggregates_test", label, actual, expected)

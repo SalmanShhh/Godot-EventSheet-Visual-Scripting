@@ -19,6 +19,7 @@
 class_name LiftTableTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## When a re-emission is refused, the evidence goes on disk instead of into a rebuild by hand.
 const Repro := preload("res://tests/repro_bundle.gd")
 
@@ -231,10 +232,4 @@ static func _emit(template: String, params: Dictionary) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] lift_table_test: %s" % label)
-		return true
-	print("[FAIL] lift_table_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("lift_table_test", label, actual, expected)

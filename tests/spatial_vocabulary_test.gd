@@ -23,6 +23,7 @@
 class_name SpatialVocabularyTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK_PATH := "res://eventsheet_addons/follow_path/path_follow_behavior.gd"
 
 ## Loaded by PATH, not by class name: a module added in this same change is not in the editor's
@@ -905,10 +906,4 @@ static func _fraction(values: Array, predicate: Callable) -> float:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] spatial_vocabulary_test: %s" % label)
-		return true
-	print("[FAIL] spatial_vocabulary_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("spatial_vocabulary_test", label, actual, expected)

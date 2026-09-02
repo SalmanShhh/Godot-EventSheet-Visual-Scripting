@@ -6,6 +6,7 @@
 class_name HTNAgentTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
 
 
@@ -66,10 +67,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] htn_agent_test: %s" % label)
-		return true
-	print("[FAIL] htn_agent_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("htn_agent_test", label, actual, expected)

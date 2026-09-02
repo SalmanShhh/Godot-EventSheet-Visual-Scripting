@@ -11,6 +11,7 @@
 class_name DocTutorialsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A pack that ships in this repo, for the property-table assertions.
 const SAMPLE_PACK := "health"
 
@@ -453,10 +454,4 @@ static func _test_locale_fallback() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_tutorials_test: %s" % label)
-		return true
-	print("[FAIL] doc_tutorials_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_tutorials_test", label, actual, expected)

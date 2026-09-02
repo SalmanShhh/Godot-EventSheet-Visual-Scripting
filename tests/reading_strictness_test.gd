@@ -24,6 +24,7 @@
 class_name ReadingStrictnessTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Shapes one edit away from a pattern, and the two that ARE one (the positive controls, which is
 ## what stops the near-miss pins passing because the readings stopped working altogether).
 const CASES: Dictionary = {
@@ -167,10 +168,4 @@ static func _open(sheet: EventSheetResource) -> EventSheetViewport:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] reading_strictness_test: %s" % label)
-		return true
-	print("[FAIL] reading_strictness_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("reading_strictness_test", label, actual, expected)

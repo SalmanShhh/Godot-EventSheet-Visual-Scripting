@@ -16,6 +16,7 @@
 class_name EncounterTimelinePackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/encounter_timeline/encounter_timeline_behavior.gd"
 const RESOURCE_PACK := "res://eventsheet_addons/encounter_resource/encounter_resource.gd"
 const PROBE_SCENE := "user://eventsheets_encounter_probe.tscn"
@@ -281,10 +282,4 @@ static func _forget_probe_files() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] encounter_timeline_pack_test: %s" % label)
-		return true
-	print("[FAIL] encounter_timeline_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("encounter_timeline_pack_test", label, actual, expected)

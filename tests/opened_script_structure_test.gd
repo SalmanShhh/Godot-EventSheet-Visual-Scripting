@@ -13,6 +13,7 @@
 class_name OpenedScriptStructureTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_PATH := "res://tests/fixtures/opened_script_structure_fixture.gd"
 const BASE_PATH := "res://tests/fixtures/opened_script_structure_base.gd"
 
@@ -248,10 +249,4 @@ static func _round_trip_is_byte_identical() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_script_structure_test: %s" % label)
-		return true
-	print("[FAIL] opened_script_structure_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_script_structure_test", label, actual, expected)

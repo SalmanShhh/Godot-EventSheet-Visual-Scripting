@@ -21,6 +21,9 @@ class_name FlowVocabularyTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_wait_until_succeeds_and_reads_back() and passed
@@ -722,10 +725,4 @@ static func _instantiate(source: String) -> Node:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] flow_vocabulary_test: %s" % label)
-		return true
-	print("[FAIL] flow_vocabulary_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("flow_vocabulary_test", label, actual, expected)

@@ -6,6 +6,7 @@
 class_name SheetFunctionTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const OUTPUT_PATH := "user://eventforge_sheet_function_test.gd"
 
 
@@ -65,10 +66,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] sheet_function_test: %s" % label)
-		return true
-	print("[FAIL] sheet_function_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("sheet_function_test", label, actual, expected)

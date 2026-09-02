@@ -8,6 +8,7 @@
 class_name SaveSystemPackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/save_system/save_system_addon.gd"
 
 
@@ -40,10 +41,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] save_system_pack_test: %s" % label)
-		return true
-	print("[FAIL] save_system_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("save_system_pack_test", label, actual, expected)

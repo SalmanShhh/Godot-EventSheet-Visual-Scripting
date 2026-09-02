@@ -16,6 +16,7 @@
 class_name ValueLiteralRowsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## A function body holding the four shapes a table can be written as: a returned table, a table passed to a
 ## call, a nested table, and a declared list. Every one of them is written over several lines, which
 ## is what the importer splits into one verbatim row per line.
@@ -343,10 +344,4 @@ static func _sentence_text(code: String, context: Dictionary) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] value_literal_rows_test: %s" % label)
-		return true
-	print("[FAIL] value_literal_rows_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("value_literal_rows_test", label, actual, expected)

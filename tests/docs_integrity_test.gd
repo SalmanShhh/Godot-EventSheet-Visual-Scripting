@@ -3,6 +3,7 @@
 class_name DocsIntegrityTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const REQUIRED_DOCS := {
 	"res://docs/GUIDE-THEMING.md": [
 		"# EventSheet Theme + Editability Guide",
@@ -186,10 +187,4 @@ static func _images_embedded_in(body: String) -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] docs_integrity_test: %s" % label)
-		return true
-	print("[FAIL] docs_integrity_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("docs_integrity_test", label, actual, expected)

@@ -11,6 +11,7 @@
 class_name GroupPickingAcesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const STATE_MACHINE_PACK := "res://eventsheet_addons/state_machine/state_machine_behavior"
 
 
@@ -110,10 +111,4 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] group_picking_aces_test: %s" % label)
-		return true
-	print("[FAIL] group_picking_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("group_picking_aces_test", label, actual, expected)

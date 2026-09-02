@@ -18,6 +18,7 @@
 class_name OrphanedVerbTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const STAT_FORGE := "res://eventsheet_addons/stat_forge/stat_forge_behavior.gd"
 const PACK := "Stat" + "Forge"
 
@@ -85,10 +86,4 @@ static func _count(source: String, providers: Dictionary) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] orphaned_verb_test: %s" % label)
-		return true
-	print("[FAIL] orphaned_verb_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("orphaned_verb_test", label, actual, expected)

@@ -7,6 +7,9 @@ class_name GhostRowTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	# The learned tie-break reads the usage store; earlier tests in the same run may have
@@ -99,10 +102,4 @@ static func _count_event_rows(sheet: EventSheetResource) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] ghost_row_test: %s" % label)
-		return true
-	print("[FAIL] ghost_row_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("ghost_row_test", label, actual, expected)

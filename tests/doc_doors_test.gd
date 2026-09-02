@@ -24,6 +24,7 @@
 class_name DocDoorsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PROVIDER := "Core"
 const ACE_ID := "TestVerb"
 const PANEL_PATH := "res://addons/eventsheet/editor/docs/doc_panel.gd"
@@ -273,10 +274,4 @@ static func _read(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_doors_test: %s" % label)
-		return true
-	print("[FAIL] doc_doors_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_doors_test", label, actual, expected)

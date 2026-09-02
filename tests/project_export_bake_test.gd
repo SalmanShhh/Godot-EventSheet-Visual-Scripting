@@ -22,6 +22,7 @@
 class_name ProjectExportBakeTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const EXPORT_TOOLS := preload("res://addons/eventforge/editor/export_tools_plugin.gd")
 const CODEGEN := preload("res://addons/eventforge/compiler/action_codegen.gd")
 const TEMP_DIR := "user://eventforge_export_bake_test"
@@ -342,10 +343,4 @@ static func _clear_temp_dirs() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] project_export_bake_test: %s" % label)
-		return true
-	print("[FAIL] project_export_bake_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("project_export_bake_test", label, actual, expected)

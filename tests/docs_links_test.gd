@@ -27,6 +27,7 @@
 class_name DocsLinksTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const STAGING_SCRIPT_PATH: String = "res://tools/stage_readme_links.gd"
 const ADDON_ROOT: String = "res://eventsheet_addons"
 const ADDON_GUIDE_DIR: String = "res://docs/Addons"
@@ -383,10 +384,4 @@ static func _read(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] docs_links_test: %s" % label)
-		return true
-	print("[FAIL] docs_links_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("docs_links_test", label, actual, expected)

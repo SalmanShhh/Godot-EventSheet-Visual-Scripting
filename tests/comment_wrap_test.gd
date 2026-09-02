@@ -9,6 +9,7 @@
 class_name CommentWrapTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const LONG_COMMENT := "Platformer movement: attach under a CharacterBody2D. Run with ui_left/ui_right, call Jump (with coyote time + buffering), and turn on wall slide / wall jump / double jump in the Inspector. Call Jump Released when the player lets go of the jump button for variable jump height."
 
 
@@ -64,10 +65,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] comment_wrap_test: %s" % label)
-		return true
-	print("[FAIL] comment_wrap_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("comment_wrap_test", label, actual, expected)

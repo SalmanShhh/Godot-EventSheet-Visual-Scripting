@@ -9,6 +9,9 @@ class_name RawShellRenderTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -306,13 +309,7 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] raw_shell_render_test: %s" % label)
-		return true
-	print("[FAIL] raw_shell_render_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("raw_shell_render_test", label, actual, expected)
 
 
 ## The sentence a statement reads as, segments joined - one VALUE to compare per check.

@@ -33,6 +33,9 @@ extends RefCounted
 #                                                            "Kills 0 of 2   Secrets 0 of 1   Time 00:01 of 01:00"
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _keycard_vocabulary() and ok
@@ -410,10 +413,4 @@ static func _param_default(by_id: Dictionary, ace_id: String, param_id: String) 
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] keys_doors_and_boomer_feel_test: %s" % label)
-		return true
-	print("[FAIL] keys_doors_and_boomer_feel_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("keys_doors_and_boomer_feel_test", label, actual, expected)

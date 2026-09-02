@@ -7,6 +7,9 @@ class_name ServerAcesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -86,10 +89,4 @@ static func _action(by_id: Dictionary, ace_id: String, params: Dictionary) -> AC
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] server_aces_test: %s" % label)
-		return true
-	print("[FAIL] server_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("server_aces_test", label, actual, expected)

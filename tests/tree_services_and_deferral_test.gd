@@ -19,6 +19,9 @@ class_name TreeServicesAndDeferralTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_emission() and ok
@@ -315,10 +318,4 @@ static func _baked_act(ace_id: String, params: Dictionary, uid: String) -> ACEAc
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] tree_services_and_deferral_test: %s" % label)
-		return true
-	print("[FAIL] tree_services_and_deferral_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("tree_services_and_deferral_test", label, actual, expected)

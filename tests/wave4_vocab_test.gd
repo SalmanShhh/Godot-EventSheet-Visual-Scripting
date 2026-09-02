@@ -7,6 +7,9 @@ class_name Wave4VocabTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -111,10 +114,4 @@ static func _baked_act(ace_id: String, params: Dictionary, uid: String) -> ACEAc
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] wave4_vocab_test: %s" % label)
-		return true
-	print("[FAIL] wave4_vocab_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("wave4_vocab_test", label, actual, expected)

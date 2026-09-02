@@ -14,6 +14,7 @@
 class_name RenameReceiptsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The rename the fixtures act out, spelled once so every test below asks about the same names.
 const OLD_NAME := "sound_alarm"
 const NEW_NAME := "ring_alarm"
@@ -471,10 +472,4 @@ static func _write(path: String, text: String) -> Error:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] rename_receipts_test: %s" % label)
-		return true
-	print("[FAIL] rename_receipts_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("rename_receipts_test", label, actual, expected)

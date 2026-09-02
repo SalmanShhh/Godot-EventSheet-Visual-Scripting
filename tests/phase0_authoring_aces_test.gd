@@ -6,6 +6,9 @@ class_name Phase0AuthoringAcesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -48,10 +51,4 @@ static func _condition(ace_id: String, params: Dictionary, expected: String) -> 
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] phase0_authoring_aces_test: %s" % label)
-		return true
-	print("[FAIL] phase0_authoring_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("phase0_authoring_aces_test", label, actual, expected)

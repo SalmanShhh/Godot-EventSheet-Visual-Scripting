@@ -19,6 +19,7 @@
 class_name CompilerStateLeakTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## The scripts whose statics are swept. The compiler and everything it emits through: a cache in the
 ## action emitter would leak exactly as far as one in the compiler itself.
 const EMITTER_SCRIPTS: Array[String] = [
@@ -308,10 +309,4 @@ static func _compile_a_behaviour_sheet() -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] compiler_state_leak_test: %s" % label)
-		return true
-	print("[FAIL] compiler_state_leak_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("compiler_state_leak_test", label, actual, expected)

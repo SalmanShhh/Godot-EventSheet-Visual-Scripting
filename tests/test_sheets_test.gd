@@ -17,6 +17,7 @@
 class_name TestSheetsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const RUNNER_PATH := "res://addons/eventsheet/editor/test_sheet_runner.gd"
 const FIXTURE_DIR := "user://ef_test_sheet_fixtures"
 const TEMP_COMPILE_PATH := "user://ef_test_sheet_compile.gd"
@@ -443,10 +444,4 @@ static func _write(path: String, contents: String) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] test_sheets_test: %s" % label)
-		return true
-	print("[FAIL] test_sheets_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("test_sheets_test", label, actual, expected)

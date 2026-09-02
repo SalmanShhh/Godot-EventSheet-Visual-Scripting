@@ -9,6 +9,9 @@ class_name ParamHopTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -103,10 +106,4 @@ static func _live_comment(dock: EventSheetDock) -> CommentRow:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] param_hop_test: %s" % label)
-		return true
-	print("[FAIL] param_hop_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("param_hop_test", label, actual, expected)

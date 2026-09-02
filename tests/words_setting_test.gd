@@ -11,6 +11,9 @@ class_name WordsSettingTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("an inheritance set reads as Family with Familiar Words on",
@@ -74,10 +77,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] words_setting_test: %s" % label)
-		return true
-	print("[FAIL] words_setting_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("words_setting_test", label, actual, expected)

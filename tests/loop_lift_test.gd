@@ -8,6 +8,9 @@ class_name LoopLiftTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -89,10 +92,4 @@ static func _has_raw_loop_header(rows: Array) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] loop_lift_test: %s" % label)
-		return true
-	print("[FAIL] loop_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("loop_lift_test", label, actual, expected)

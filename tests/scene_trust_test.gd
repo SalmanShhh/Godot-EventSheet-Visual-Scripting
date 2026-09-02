@@ -27,6 +27,7 @@
 class_name SceneTrustTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 const FIXTURE: String = "scene_save_branch.gd"
 
@@ -637,10 +638,4 @@ static func _template_of(action: ACEAction) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] scene_trust_test: %s" % label)
-		return true
-	print("[FAIL] scene_trust_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("scene_trust_test", label, actual, expected)

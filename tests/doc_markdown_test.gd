@@ -14,6 +14,9 @@ class_name DocMarkdownTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_slugs() and all_passed
@@ -199,10 +202,4 @@ static func _test_links() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_markdown_test: %s" % label)
-		return true
-	print("[FAIL] doc_markdown_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_markdown_test", label, actual, expected)

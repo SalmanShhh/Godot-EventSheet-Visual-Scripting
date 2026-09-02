@@ -14,6 +14,7 @@
 class_name PricedTablePackTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/priced_table/priced_table_behavior.gd"
 const RESOURCE_PACK := "res://eventsheet_addons/price_table_resource/price_table_resource.gd"
 
@@ -218,10 +219,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] priced_table_pack_test: %s" % label)
-		return true
-	print("[FAIL] priced_table_pack_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("priced_table_pack_test", label, actual, expected)

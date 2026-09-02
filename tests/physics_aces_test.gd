@@ -8,6 +8,9 @@ class_name PhysicsAcesTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -55,10 +58,4 @@ static func _emit(ace_id: String, params: Dictionary, host: String, expected: St
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] physics_aces_test: %s" % label)
-		return true
-	print("[FAIL] physics_aces_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("physics_aces_test", label, actual, expected)

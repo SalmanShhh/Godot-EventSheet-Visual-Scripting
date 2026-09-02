@@ -13,6 +13,9 @@ class_name VariableRowSentenceTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_tokeniser_names_every_part_of_a_declaration() and ok
@@ -549,10 +552,4 @@ static func _scope_word(rows: Array, var_name: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] variable_row_sentence_test: %s" % label)
-		return true
-	print("[FAIL] variable_row_sentence_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("variable_row_sentence_test", label, actual, expected)

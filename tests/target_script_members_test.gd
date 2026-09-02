@@ -13,6 +13,7 @@
 class_name TargetScriptMembersTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PROGRESS: String = "res://tests/fixtures/interop_corpus/progress.gd"
 const ROOM: String = "res://tests/fixtures/interop_corpus/room.gd"
 
@@ -153,10 +154,4 @@ static func _definition_for(offered: Array[ACEDefinition], signal_name: String) 
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] target_script_members_test: %s" % label)
-		return true
-	print("[FAIL] target_script_members_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("target_script_members_test", label, actual, expected)

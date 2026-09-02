@@ -21,6 +21,7 @@
 class_name LayoutOnTopLiftTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 const FIXTURE: String = "layout_on_top_pause_menu.gd"
 
@@ -290,10 +291,4 @@ static func _template_of(action: ACEAction) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] layout_on_top_lift_test: %s" % label)
-		return true
-	print("[FAIL] layout_on_top_lift_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("layout_on_top_lift_test", label, actual, expected)

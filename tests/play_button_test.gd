@@ -20,6 +20,9 @@ extends RefCounted
 # toolbar's own children - which no longer include a way to start a game.
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_dropdown() and ok
@@ -222,10 +225,4 @@ static func _editor() -> EventSheetEditor:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] play_button_test: %s" % label)
-		return true
-	print("[FAIL] play_button_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("play_button_test", label, actual, expected)

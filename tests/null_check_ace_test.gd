@@ -8,6 +8,9 @@ class_name NullCheckAceTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var descriptors: Array[ACEDescriptor] = EventForgeBuiltinACEs.get_descriptors()
@@ -47,10 +50,4 @@ static func _compiles(condition_expr: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] null_check_ace_test: %s" % label)
-		return true
-	print("[FAIL] null_check_ace_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("null_check_ace_test", label, actual, expected)

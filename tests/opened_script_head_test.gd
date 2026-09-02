@@ -26,6 +26,7 @@
 class_name OpenedScriptHeadTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PLAYER_PATH := "res://tests/fixtures/opened_script_head_player.gd"
 const PAD_PATH := "res://tests/fixtures/opened_script_head_pad.gd"
 
@@ -306,10 +307,4 @@ static func _bar_titled(rows: Array, title: String) -> EventRowData:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] opened_script_head_test: %s" % label)
-		return true
-	print("[FAIL] opened_script_head_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("opened_script_head_test", label, actual, expected)

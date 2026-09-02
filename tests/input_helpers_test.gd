@@ -10,6 +10,9 @@ class_name InputHelpersTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var descriptors: Array[ACEDescriptor] = EventForgeBuiltinACEs.get_descriptors()
@@ -105,10 +108,4 @@ static func _unique_count(values: Array) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] input_helpers_test: %s" % label)
-		return true
-	print("[FAIL] input_helpers_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("input_helpers_test", label, actual, expected)

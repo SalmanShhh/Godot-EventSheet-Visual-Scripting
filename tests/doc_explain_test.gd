@@ -21,6 +21,7 @@
 class_name DocExplainTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const QUEST_ADDON_PATH: String = "res://eventsheet_addons/quest/quest_addon.gd"
 const QUEST_PROVIDER: String = "QuestPackAddon"
 const QUEST_ACE_ID: String = "method:advance_objective"
@@ -358,10 +359,4 @@ static func _read(path: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] doc_explain_test: %s" % label)
-		return true
-	print("[FAIL] doc_explain_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("doc_explain_test", label, actual, expected)

@@ -8,6 +8,7 @@
 class_name BehaviourAddonScaffoldTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 # preload (not the global class_name) so the test parses even before a project re-import registers the
 # freshly-added EventSheetBehaviourAddonScaffold in the global class cache.
 const Scaffold := preload("res://addons/eventsheet/editor/behaviour_addon_scaffold.gd")
@@ -71,10 +72,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] behaviour_addon_scaffold_test: %s" % label)
-		return true
-	print("[FAIL] behaviour_addon_scaffold_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("behaviour_addon_scaffold_test", label, actual, expected)

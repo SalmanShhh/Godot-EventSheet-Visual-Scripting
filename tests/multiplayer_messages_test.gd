@@ -15,6 +15,7 @@ extends RefCounted
 #   compiler's own codegen off the frozen templates), and the fact that the list a Send row picks
 #   from holds only functions that are actually marked.
 
+const SUPPORT := preload("res://tests/support.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 
 ## A hand-written source with one message and one plain helper - the shape a project that already
@@ -327,10 +328,4 @@ static func _function(sheet: EventSheetResource, function_name: String) -> Event
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] multiplayer_messages_test: %s" % label)
-		return true
-	print("[FAIL] multiplayer_messages_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("multiplayer_messages_test", label, actual, expected)

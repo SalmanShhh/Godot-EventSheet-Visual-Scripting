@@ -12,6 +12,7 @@
 class_name PerfSmokeTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const EVENT_COUNT := 10000
 const NEST_EVERY := 25           # every Nth root event nests two sub-events
 const SETUP_BUDGET_MS := 15000   # generous; catches O(n^2), not micro-regressions
@@ -96,10 +97,4 @@ static func _build_event_row(value_seed: int) -> EventRow:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] perf_smoke_test: %s" % label)
-		return true
-	print("[FAIL] perf_smoke_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("perf_smoke_test", label, actual, expected)

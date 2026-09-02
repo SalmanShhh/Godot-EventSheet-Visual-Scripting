@@ -10,6 +10,9 @@ class_name VariableAliasRowsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var aliases: Array[Dictionary] = ACEPickerDialog.VARIABLE_ALIASES
@@ -69,10 +72,4 @@ static func _alias(aliases: Array[Dictionary], display: String) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] variable_alias_rows_test: %s" % label)
-		return true
-	print("[FAIL] variable_alias_rows_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("variable_alias_rows_test", label, actual, expected)

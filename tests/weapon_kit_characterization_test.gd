@@ -13,6 +13,7 @@
 class_name WeaponKitCharacterizationTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## Every definition the pack publishes, "id|ace_type|display_name|category|codegen_template",
 ## sorted by id. A row changing here is a compatibility event: ids and shipped shapes are
 ## promises, so a diff must be a deliberate, changelog-noted decision - never refactor fallout.
@@ -103,10 +104,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] weapon_kit_characterization_test: %s" % label)
-		return true
-	print("[FAIL] weapon_kit_characterization_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("weapon_kit_characterization_test", label, actual, expected)

@@ -6,6 +6,9 @@ class_name OnreadyVariableTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_compiler_emits_onready() and passed
@@ -229,10 +232,4 @@ static func _test_raw_block_drop_converter() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] onready_variable_test: %s" % label)
-		return true
-	print("[FAIL] onready_variable_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("onready_variable_test", label, actual, expected)

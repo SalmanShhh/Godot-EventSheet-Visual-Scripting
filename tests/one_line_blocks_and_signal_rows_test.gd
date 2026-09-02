@@ -19,6 +19,7 @@
 class_name OneLineBlocksAndSignalRowsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_PATH: String = "user://eventsheets_one_line_blocks_fixture.gd"
 const FPS_PACK: String = "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
 const HEALTH_PACK: String = "res://eventsheet_addons/health/health_behavior.gd"
@@ -361,10 +362,4 @@ static func _connect_parts(code: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] one_line_blocks_and_signal_rows_test: %s" % label)
-		return true
-	print("[FAIL] one_line_blocks_and_signal_rows_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("one_line_blocks_and_signal_rows_test", label, actual, expected)

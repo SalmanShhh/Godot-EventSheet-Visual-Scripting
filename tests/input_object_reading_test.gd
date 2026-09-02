@@ -9,6 +9,7 @@
 class_name InputObjectReadingTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const MOUSE_ENTERED := "extends Area2D\n\n\nfunc _ready() -> void:\n\tmouse_entered.connect(_on_mouse_entered)\n\n\nfunc _on_mouse_entered() -> void:\n\thighlight()\n"
 const MOUSE_EXITED := "extends Area2D\n\n\nfunc _ready() -> void:\n\tmouse_exited.connect(_on_mouse_exited)\n\n\nfunc _on_mouse_exited() -> void:\n\thighlight()\n"
 const JOY_CONNECTION := "extends Node\n\n\nfunc _ready() -> void:\n\tInput.joy_connection_changed.connect(_on_pad)\n\n\nfunc _on_pad(device: int, connected: bool) -> void:\n\trefresh()\n"
@@ -80,10 +81,4 @@ static func _roundtrip(source: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] input_object_reading_test: %s" % label)
-		return true
-	print("[FAIL] input_object_reading_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("input_object_reading_test", label, actual, expected)

@@ -17,6 +17,7 @@
 class_name PickerNoWallsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const TEMPLATE_PATH := "res://addons/eventsheet/translations/TEMPLATE.csv"
 const TRANSLATIONS_DIR := "res://addons/eventsheet/translations"
 const SHIPPED_LOCALES: PackedStringArray = ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]
@@ -303,10 +304,4 @@ static func _csv_translations(path: String) -> Dictionary:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] picker_no_walls_test: %s" % label)
-		return true
-	print("[FAIL] picker_no_walls_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("picker_no_walls_test", label, actual, expected)

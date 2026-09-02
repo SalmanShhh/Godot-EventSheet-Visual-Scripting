@@ -8,6 +8,9 @@ class_name ApiConditionActionRowTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -79,10 +82,4 @@ static func _lane_text(row: EventRowData, lane: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] api_condition_action_row_test: %s" % label)
-		return true
-	print("[FAIL] api_condition_action_row_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("api_condition_action_row_test", label, actual, expected)

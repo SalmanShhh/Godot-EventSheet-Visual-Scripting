@@ -6,6 +6,7 @@
 class_name TriggerTempoTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 # The full id census of TriggerResolver.resolve_trigger, grouped by expected tempo. Kept in lock-step
 # with resolve_trigger's match (both live in trigger_resolver.gd) - a new trigger id must land here too.
 const EVERY_TICK := ["OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick"]
@@ -51,10 +52,4 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] trigger_tempo_test: %s" % label)
-		return true
-	print("[FAIL] trigger_tempo_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("trigger_tempo_test", label, actual, expected)

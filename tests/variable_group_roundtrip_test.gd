@@ -10,6 +10,9 @@ class_name VariableGroupRoundtripTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -177,13 +180,7 @@ static func run() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] variable_group_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] variable_group_roundtrip_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("variable_group_roundtrip_test", label, actual, expected)
 
 
 ## True when the row carries a BADGE span whose text is `text` - the pill shape a variable row no

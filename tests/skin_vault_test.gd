@@ -7,6 +7,7 @@
 class_name SkinVaultTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PACK := "res://eventsheet_addons/skin_vault/skin_vault_addon.gd"
 
 
@@ -114,10 +115,4 @@ static func _reset(sv: Node) -> void:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] skin_vault_test: %s" % label)
-		return true
-	print("[FAIL] skin_vault_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("skin_vault_test", label, actual, expected)

@@ -11,6 +11,9 @@ class_name BlocksScaffoldingTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -182,10 +185,4 @@ static func _has_raw_row_with(rows: Array, needle: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] blocks_scaffolding_test: %s" % label)
-		return true
-	print("[FAIL] blocks_scaffolding_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("blocks_scaffolding_test", label, actual, expected)

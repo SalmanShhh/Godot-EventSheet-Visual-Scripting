@@ -20,6 +20,7 @@
 class_name HandwrittenLiftGateTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 ## When a round-trip is refused, the evidence goes on disk rather than into a rebuild by hand:
 ## the source, what came back, and the two lined up. See tests/repro_bundle.gd.
 const Repro := preload("res://tests/repro_bundle.gd")
@@ -135,10 +136,4 @@ static func _block_line_count(items: Array, top_level: bool) -> int:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] handwritten_lift_gate_test: %s" % label)
-		return true
-	print("[FAIL] handwritten_lift_gate_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("handwritten_lift_gate_test", label, actual, expected)

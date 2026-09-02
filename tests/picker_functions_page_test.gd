@@ -20,6 +20,7 @@
 class_name PickerFunctionsPageTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const FIXTURE_PATH := "res://tests/fixtures/picker_functions_fixture.gd"
 const ROUND_TRIP_PATH := "user://picker_functions_round_trip.gd"
 
@@ -247,10 +248,4 @@ static func _matches(definitions: Array[ACEDefinition], query: String) -> String
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] picker_functions_page_test: %s" % label)
-		return true
-	print("[FAIL] picker_functions_page_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("picker_functions_page_test", label, actual, expected)

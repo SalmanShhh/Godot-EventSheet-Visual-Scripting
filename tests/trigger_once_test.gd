@@ -9,6 +9,9 @@ class_name TriggerOnceTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_emits_helper_and_prelude() and passed
@@ -260,10 +263,4 @@ static func _instantiate_source(source: String) -> Node:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] trigger_once_test: %s" % label)
-		return true
-	print("[FAIL] trigger_once_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("trigger_once_test", label, actual, expected)

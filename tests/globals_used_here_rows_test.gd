@@ -16,6 +16,7 @@
 class_name GlobalsUsedHereRowsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const PROBE_SCRIPT := "user://eventforge_used_here_rows_probe.gd"
 const PROBE_AUTOLOAD := "autoload/EventSheetsUsedHereGame"
 const PROBE_NAME := "EventSheetsUsedHereGame"
@@ -163,10 +164,4 @@ static func _has_uid_prefix(rows: Array, prefix: String) -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] globals_used_here_rows_test: %s" % label)
-		return true
-	print("[FAIL] globals_used_here_rows_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("globals_used_here_rows_test", label, actual, expected)

@@ -17,6 +17,9 @@ extends RefCounted
 # This sweep keeps both regressions out rather than testing the fix by hand each time.
 
 
+const SUPPORT := preload("res://tests/support.gd")
+
+
 static func run() -> bool:
 	var ok: bool = true
 	var offenders_popup: PackedStringArray = PackedStringArray()
@@ -56,10 +59,4 @@ static func _editor_sources() -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] editor_popup_idiom_test: %s" % label)
-		return true
-	print("[FAIL] editor_popup_idiom_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("editor_popup_idiom_test", label, actual, expected)
