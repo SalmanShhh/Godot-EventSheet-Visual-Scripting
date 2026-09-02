@@ -40,20 +40,61 @@ static func make_descriptor(provider_id: String, ace_id: String, display_name: S
 ## `options` entries are either a plain value string (label == value) or a {"key": <inserted value>,
 ## "label": <shown text>} dict, so a dropdown can read "Warning" while inserting `push_warning`.
 static func make_param(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "", options: Array = [], autocomplete: Array[String] = []) -> ACEParam:
-	var parameter: ACEParam = ACEParam.new()
-	parameter.id = param_id
-	parameter.name = param_id
-	parameter.display_name = display_name if not display_name.is_empty() else param_id
-	parameter.description = description
-	parameter.desc = description
-	parameter.type_name = type_name
-	parameter.default_value = default_value
-	parameter.initial_value = default_value
-	parameter.initialValue = default_value
-	parameter.hint = hint
-	parameter.options = options.duplicate()
-	parameter.autocomplete = autocomplete.duplicate()
-	return parameter
+	return ACEParam.of(param_id, type_name, default_value, display_name, description, hint, options, autocomplete)
+
+
+## The name the whole builtin vocabulary publishes under. One constant, because it IS one provider:
+## the makers below default to it, so no module types it again, and a module publishing under
+## another name passes its own as the last argument.
+const BUILTIN_PROVIDER: String = "Core"
+
+
+## THE FOUR MAKERS - one call per KIND of row, so the kind is the method rather than a constant
+## spelled out in the middle of an argument list, and what is left to write is what actually differs
+## between two verbs. Each returns the descriptor, so the chained calls finish the row:
+## `.param(...)` for a field, then `.featured()`, `.stateful(...)`, `.looping(...)`,
+## `.succeeded_by(...)` exactly as before.
+##
+##   ace_id       the frozen key this verb is known by forever
+##   label        the name the picker lists
+##   template     the GDScript this row emits, with {param} slots
+##   group        the shelf the picker files it under (make_descriptor's `category`)
+##   reads_as     the sentence the row shows (make_descriptor's `display_text`); blank reads as label
+##   description  the plain-language help, the same text `.described(...)` sets
+##   host         the Godot class this row belongs to, when it belongs to one (`node_type`)
+##   provider     who publishes it
+##
+## They COMPILE TO make_descriptor - same fields, same legacy aliases, descriptors indistinguishable
+## from the ones the long form builds. make_descriptor stays forever, and is still the call for a
+## descriptor whose kind is a variable rather than a word.
+## An ACTION: a row that DOES something.
+static func act(ace_id: String, label: String, template: String, group: String = "", reads_as: String = "", description: String = "", host: String = "", provider: String = BUILTIN_PROVIDER) -> ACEDescriptor:
+	return _verb(provider, ace_id, label, ACEDescriptor.ACEType.ACTION, template, "", group, reads_as, description, host)
+
+
+## A CONDITION: a row that asks a question the actions run behind.
+static func cond(ace_id: String, label: String, template: String, group: String = "", reads_as: String = "", description: String = "", host: String = "", provider: String = BUILTIN_PROVIDER) -> ACEDescriptor:
+	return _verb(provider, ace_id, label, ACEDescriptor.ACEType.CONDITION, template, "", group, reads_as, description, host)
+
+
+## An EXPRESSION: a row that reads as a VALUE, dropped into any other row's field.
+static func expr(ace_id: String, label: String, template: String, group: String = "", reads_as: String = "", description: String = "", host: String = "", provider: String = BUILTIN_PROVIDER) -> ACEDescriptor:
+	return _verb(provider, ace_id, label, ACEDescriptor.ACEType.EXPRESSION, template, "", group, reads_as, description, host)
+
+
+## A TRIGGER: a row the engine runs, rather than one the sheet asks. `signal_name` is the Godot
+## signal it hangs off; a trigger that is a MOMENT OF THE PHYSICS STEP rather than a signal (landing,
+## leaving the ground) leaves it blank. A trigger emits no expression of its own, which is why there
+## is no template here.
+static func trig(ace_id: String, label: String, signal_name: String, group: String = "", reads_as: String = "", description: String = "", host: String = "", provider: String = BUILTIN_PROVIDER) -> ACEDescriptor:
+	return _verb(provider, ace_id, label, ACEDescriptor.ACEType.TRIGGER, "", signal_name, group, reads_as, description, host)
+
+
+## The one body behind the four makers, so they differ in exactly the word that names them.
+static func _verb(provider: String, ace_id: String, label: String, kind: ACEDescriptor.ACEType, template: String, signal_name: String, group: String, reads_as: String, description: String, host: String) -> ACEDescriptor:
+	var descriptor: ACEDescriptor = make_descriptor(provider, ace_id, label, kind, template, signal_name, [] as Array[ACEParam], group, reads_as, host)
+	descriptor.description = description
+	return descriptor
 
 
 ## One class property's ENGINE default, as the literal a row starts on - asked of ClassDB rather than

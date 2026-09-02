@@ -50,6 +50,32 @@ const DESCRIPTOR_POSITIONS: Dictionary = {
 	"provider": 0, "id": 1, "name": 2, "kind": 3, "template": 4, "params": 6, "category": 7
 }
 
+## THE TERSE SPELLING of the same publish: the KIND is the call itself, and the row's fields are
+## chained after it rather than threaded through its argument list. Read beside the positional form
+## so a vocabulary module written either way opens as the same Define rows.
+const MAKER_CALLS: Dictionary = {
+	"act": "action", "cond": "condition", "expr": "expression", "trig": "trigger"
+}
+
+## Where a maker carries each field. A TRIGGER's third argument is the SIGNAL it hangs off rather
+## than a template, so its template is read as the empty one it is; the provider is the last argument
+## and is almost never written, because a vocabulary is published under one name.
+const MAKER_POSITIONS: Dictionary = {
+	"id": 0, "name": 1, "template": 2, "category": 3, "provider": 6
+}
+
+## The provider a maker publishes under when its call does not name one.
+const MAKER_PROVIDER := "Core"
+
+## The chained calls that add ONE field, and where each carries the field's id and its type. A type
+## position of -1 means the call names no type, because the field's default says what it is.
+const PARAM_CALLS: Dictionary = {
+	"param": {"id": 0, "type": -1},
+	"param_typed": {"id": 1, "type": 0},
+	"param_choice": {"id": 0, "type": -1},
+	"param_suggesting": {"id": 0, "type": -1}
+}
+
 ## The kind word behind each spelling of the descriptor's type argument.
 const DESCRIPTOR_KINDS: Dictionary = {
 	"CONDITION": "condition", "ACTION": "action", "EXPRESSION": "expression", "TRIGGER": "trigger"
@@ -393,6 +419,7 @@ static func vocabulary_rows(lines: PackedStringArray) -> Array:
 			})
 			break
 	rows.append_array(_descriptor_rows(lines))
+	rows.append_array(_maker_rows(lines))
 	return rows
 
 
@@ -435,6 +462,123 @@ static func _descriptor_rows(lines: PackedStringArray) -> Array:
 			"template": _positional(arguments, "template", constants)
 		})
 	return rows
+
+
+## The same rows written the TERSE way: the kind is the call, the row's first fields are its
+## arguments, and its parameters are the calls chained after it. One row per maker call, read with
+## the same string-aware bracket walk the positional form uses.
+static func _maker_rows(lines: PackedStringArray) -> Array:
+	var rows: Array = []
+	var constants: Dictionary = _string_constants(lines)
+	for line: String in lines:
+		for maker: String in MAKER_CALLS:
+			var head: String = ".%s(" % maker
+			var at: int = line.find(head)
+			if at < 0:
+				continue
+			var open_at: int = at + head.length() - 1
+			var close_at: int = _matching_bracket(line, open_at)
+			if close_at < 0:
+				continue
+			var arguments: PackedStringArray = _top_level_arguments(
+				line.substr(open_at + 1, close_at - open_at - 1))
+			# A published row hands over a quoted id and a name. Insisting on both is what keeps an
+			# ordinary call that happens to share one of these short words from reading as a row
+			# nobody published.
+			if arguments.size() < 3 or not arguments[0].strip_edges().begins_with("\""):
+				continue
+			var row_id: String = _maker_positional(arguments, "id", constants)
+			var row_name: String = _maker_positional(arguments, "name", constants)
+			if row_id.is_empty() or row_name.is_empty():
+				continue
+			var provider: String = _maker_positional(arguments, "provider", constants)
+			rows.append({
+				"kind": str(MAKER_CALLS[maker]),
+				"provider": provider if not provider.is_empty() else MAKER_PROVIDER,
+				"id": row_id,
+				"name": row_name,
+				"category": _maker_positional(arguments, "category", constants),
+				"inputs": ", ".join(_chained_param_words(line.substr(close_at + 1))),
+				"template": "" if maker == "trig" else _maker_positional(arguments, "template", constants)
+			})
+			break
+	return rows
+
+
+## One of a maker's positional arguments, unquoted, with a named constant resolved to the text it
+## holds - the same reading the positional form gets, off its own table of positions.
+static func _maker_positional(arguments: PackedStringArray, field: String, constants: Dictionary) -> String:
+	var index: int = int(MAKER_POSITIONS.get(field, -1))
+	if index < 0 or index >= arguments.size():
+		return ""
+	var text: String = arguments[index].strip_edges()
+	if constants.has(text):
+		return str(constants[text])
+	return _unquoted(text)
+
+
+## "action: String" for each field chained after a maker, IN FILE ORDER - which is the order the row
+## receives them. A field handed over whole (`.param_built(F.make_param(...))`) is read at the
+## spelling inside it, so the two routes to one parameter say the same words.
+static func _chained_param_words(text: String) -> PackedStringArray:
+	var words: PackedStringArray = PackedStringArray()
+	var rest: String = text
+	while true:
+		var found_at: int = -1
+		var found_call: String = ""
+		for call_name: String in PARAM_CALLS:
+			var at: int = rest.find(".%s(" % call_name)
+			if at >= 0 and (found_at < 0 or at < found_at):
+				found_at = at
+				found_call = call_name
+		var made_at: int = rest.find("make_param(")
+		if made_at >= 0 and (found_at < 0 or made_at < found_at):
+			found_at = made_at
+			found_call = ""
+		if found_at < 0:
+			break
+		var head: String = "make_param(" if found_call.is_empty() else ".%s(" % found_call
+		var open_at: int = found_at + head.length() - 1
+		var close_at: int = _matching_bracket(rest, open_at)
+		if close_at < 0:
+			break
+		var arguments: PackedStringArray = _top_level_arguments(
+			rest.substr(open_at + 1, close_at - open_at - 1))
+		rest = rest.substr(close_at + 1)
+		if arguments.is_empty():
+			continue
+		var id_index: int = 0
+		var type_index: int = 1
+		if not found_call.is_empty():
+			var places: Dictionary = PARAM_CALLS[found_call] as Dictionary
+			id_index = int(places.get("id", 0))
+			type_index = int(places.get("type", -1))
+		if id_index >= arguments.size():
+			continue
+		var id_text: String = _unquoted(arguments[id_index])
+		if id_text.is_empty():
+			continue
+		var type_text: String = ""
+		if type_index >= 0 and type_index < arguments.size():
+			type_text = _unquoted(arguments[type_index])
+		elif type_index < 0:
+			type_text = _default_type_word(arguments[1] if arguments.size() > 1 else "")
+		words.append(id_text if type_text.is_empty() else "%s: %s" % [id_text, type_text])
+	return words
+
+
+## The type a field's DEFAULT says it is, for the chained calls that name no type: a literal `true`,
+## a whole number and a decimal say themselves, and everything else is the String a GDScript
+## expression default always is.
+static func _default_type_word(default_text: String) -> String:
+	var text: String = default_text.strip_edges()
+	if text == "true" or text == "false":
+		return "bool"
+	if text.is_valid_int():
+		return "int"
+	if text.is_valid_float():
+		return "float"
+	return "String"
 
 
 ## One positional argument, unquoted, with a named constant resolved to the text it holds.

@@ -146,6 +146,55 @@ func get_display_text() -> String:
 	return get_list_name()
 
 
+## THE PARAMETER CHAIN - a row's fields written in the row's own call, one chained sentence per
+## field, instead of an array of builder calls threaded through the middle of the argument list.
+## Each returns the descriptor, so fields, help and the rest of the chain read in one line:
+## `F.act("SetNodeName", "Set Node Name", "{target}.name = {name}", "Nodes", "rename [i]{target}[/i]", "Renames a node at runtime.").param("target", "self", "Target", "Node to rename.", "expression")`
+##
+## `param_id` is the {slot} the template substitutes; `default_value` is the literal the row starts
+## on; `label` is the field's name in the dialog (blank reads as the id); `words` is the sentence
+## under the field; `hint` picks the field's control ("expression" for the fx button, "file_path",
+## "color", "scene_node", ...).
+##
+## The parameter's TYPE comes from the default's own type - text is a String field, `true` a
+## checkbox, `3` an integer spinner - which is right for every parameter whose default is a
+## GDScript expression, because an expression's default IS its text. A parameter whose default is
+## text standing for another type (`Vector2.ZERO`, `self` as a Node) names that type with
+## `param_typed(...)`.
+func param(param_id: String, default_value: Variant = "", label: String = "", words: String = "", hint: String = "") -> ACEDescriptor:
+	return param_typed(ACEParam.type_name_for(default_value), param_id, default_value, label, words, hint)
+
+
+## The same field with its TYPE named, for the defaults whose text cannot say what it stands for -
+## `Vector2.ZERO` is a Vector2 written as an expression, `self` is a Node written as one.
+func param_typed(type_name: String, param_id: String, default_value: Variant = "", label: String = "", words: String = "", hint: String = "") -> ACEDescriptor:
+	params.append(ACEParam.of(param_id, type_name, default_value, label, words, hint))
+	return self
+
+
+## A field that is a FIXED DROPDOWN: `choices` are the only values it takes. An entry is either a
+## plain value string (shown as itself) or a {"key": <inserted value>, "label": <shown text>} dict,
+## so a choice can read "Warning" while inserting `push_warning`.
+func param_choice(param_id: String, default_value: Variant, label: String, words: String, choices: Array, hint: String = "") -> ACEDescriptor:
+	params.append(ACEParam.of(param_id, ACEParam.type_name_for(default_value), default_value, label, words, hint, choices))
+	return self
+
+
+## A field that SUGGESTS: an editable combo the reader may type anything into, with `suggestions`
+## offered and filtered as they type. The open twin of param_choice's closed list.
+func param_suggesting(param_id: String, default_value: Variant, label: String, words: String, suggestions: Array[String], hint: String = "") -> ACEDescriptor:
+	params.append(ACEParam.of(param_id, ACEParam.type_name_for(default_value), default_value, label, words, hint, [], suggestions))
+	return self
+
+
+## A field a helper already built - the way a parameter carrying something the chain above does not
+## spell (a reading lens, a shared payload parameter several triggers hand out) joins the row
+## without the row leaving its own line.
+func param_built(parameter: ACEParam) -> ACEDescriptor:
+	params.append(parameter)
+	return self
+
+
 ## Sets the plain-language description and returns self, so a module authors help INLINE, right next to the
 ## descriptor: `F.make_descriptor(...).described("What it does, in friendly English.")`. This keeps every
 ## ACE's help in its own file - the same self-contained way custom addons use `## @ace_description(...)` -

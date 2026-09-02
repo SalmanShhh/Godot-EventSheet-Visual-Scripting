@@ -153,6 +153,15 @@ static func _test_vocabulary_module() -> bool:
 	ok = _check("a descriptor built in positions reads as the same Define row",
 		_joined(EventSheetSentence.statement(descriptor, {})),
 		"Core ▸ Define action Add Input Action   InputAddAction · category Input · input action: String   Writes InputMap.add_action({action})") and ok
+	# THE THIRD SPELLING, and the reason this pin exists beside the one above: the same verb written
+	# with the maker whose NAME is its kind, its fields chained after it. The vocabulary modules are
+	# written this way now, so a reader opening one must still meet the Define rows it publishes -
+	# the reading is a shape the editor promises, not a shape one authoring style happens to have.
+	# Pinned as the SAME string as the positional form, because the two spellings publish one verb.
+	var terse: String = "\tdescriptors.append(F.act(\"InputAddAction\", \"Add Input Action\", \"InputMap.add_action({action})\", \"Input\").param(\"action\", \"\\\"jump\\\"\"))"
+	ok = _check("and the same verb written with the maker reads as that row too",
+		_joined(EventSheetSentence.statement(terse, {})),
+		"Core ▸ Define action Add Input Action   InputAddAction · category Input · input action: String   Writes InputMap.add_action({action})") and ok
 	return ok
 
 

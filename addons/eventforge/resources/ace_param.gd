@@ -59,6 +59,59 @@ extends Resource
 @export var display_lens: String = ""
 
 
+## ONE PARAMETER, BUILT. The single place an ACEParam's fields are filled in, so a parameter means
+## the same thing wherever it was authored from: the factory's `make_param`, a descriptor's chained
+## `.param(...)`, and any pack builder reaching for a parameter directly all land here.
+##
+## `hint` selects the dialog field ("expression" = the fx button, "key_capture" = press-a-key,
+## "audio_path" = path + preview, "color", ...); `options` makes it a fixed dropdown; `autocomplete`
+## makes it an editable suggest combo (type freely + filter/pick). `options` entries are either a
+## plain value string (label == value) or a {"key": <inserted value>, "label": <shown text>} dict, so
+## a dropdown can read "Warning" while inserting `push_warning`.
+static func of(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "", options: Array = [], autocomplete: Array[String] = []) -> ACEParam:
+	var parameter: ACEParam = ACEParam.new()
+	parameter.id = param_id
+	parameter.name = param_id
+	parameter.display_name = display_name if not display_name.is_empty() else param_id
+	parameter.description = description
+	parameter.desc = description
+	parameter.type_name = type_name
+	parameter.default_value = default_value
+	parameter.initial_value = default_value
+	parameter.initialValue = default_value
+	parameter.hint = hint
+	parameter.options = options.duplicate()
+	parameter.autocomplete = autocomplete.duplicate()
+	return parameter
+
+
+## THE TYPE A DEFAULT SAYS IT IS - the answer behind a descriptor's `.param(...)`, which names no
+## type at all because the value a row starts on already names one: `true` is a checkbox, `3` an
+## integer spinner, `1.5` a float spinner, and text is a String field (the ordinary case, and the
+## one every GDScript-expression parameter is in - its default is the expression's own text).
+##
+## A default whose TEXT stands for a value of another type - `Vector2.ZERO`, `self`, a Color
+## constructor - is text as far as this question goes, which is exactly why a descriptor spells
+## those out with `.param_typed(...)` instead.
+static func type_name_for(default_value: Variant) -> String:
+	match typeof(default_value):
+		TYPE_BOOL:
+			return "bool"
+		TYPE_INT:
+			return "int"
+		TYPE_FLOAT:
+			return "float"
+		TYPE_VECTOR2:
+			return "Vector2"
+		TYPE_VECTOR2I:
+			return "Vector2i"
+		TYPE_VECTOR3:
+			return "Vector3"
+		TYPE_COLOR:
+			return "Color"
+	return "String"
+
+
 ## The same field, set inline and handed back - so a parameter that wants a lens can be written in
 ## the descriptor's own argument list rather than pulled out into a variable first, exactly as
 ## `described()` and `featured()` are written on a descriptor.
