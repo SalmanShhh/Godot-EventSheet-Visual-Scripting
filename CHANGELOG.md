@@ -196,6 +196,67 @@ source (**+8,374 / -8,391**) and **-2,941** in the installed plugin, which is **
 **235,693** in **608**. The wave has so far paid for its own instruments almost exactly and taken
 the whole of its shrink out of the tree that ships, which is the figure a shrink must not grow.
 
+The fourth wave's first measured step is an INSTRUMENT and is priced as one. The two reading files -
+`viewport_row_builder.gd` and `sentence_grammar.gd`, **32,653** lines between them and 18.6% of the
+editor - carry a standing claim that much of both re-says what the ACE descriptor already says, and
+that claim had never been measured. Projected before the work: an instrument, paid for in full, on
+the order of the **+354** the second wave's instruments cost, with the shipped plugin unmoved.
+Measured under format 3 at `7f27ed33..739cfb8e`: **+1,735 lines** of hand-written source
+(**+1,735 / -0**), of which `tests/` is **+298** and the installed plugin is **+7** - a repair in a
+mega-file, described below. The projection lost on the total by a factor of five and held on the
+figure that matters: the dump and the census are 1,430 lines between them because the population is
+25,873 readings and each one has to be built through a live viewport, classified against a second
+assembly of the same row, and written down in a form two runs agree on byte for byte. Nothing of it
+ships.
+
+What it bought is the answer, and the answer is NO. Of the **2,485** cells a reading branch shaped
+across every builtin descriptor and every row of every sheet under `demo/showcase/` and
+`eventsheet_addons/`, the generic assembly out of the descriptor reproduces **340** - **13.7%**.
+Priced the way a deletion would actually work, in whole match arms: **111** arms carrying **469**
+lines were reached by a cell, **3** of them (**13 lines**) are wholly reproduced, absorption
+**2.8%**, band **-13** because all three were judged on one cell each. Per-vocabulary special-casing
+is only **4.1%** of each file to begin with; the other **12,917** and **9,855** lines are bands,
+region heads, the extents walk, operators and wraps, which no descriptor can say anything about. The
+fifth wave was going to delete reading code in favour of the generic assembly. On this measurement it
+buys thirteen lines and costs 2,145 readings, so it will not.
+
+- **A row's spans are data, and now they are written down.** `tools/reading_dump.gd` writes every row
+  reading as one sorted, format-versioned text - the cell's origin, its lane, its object word, its
+  spans with their role and style marks, and the builder path that shaped it - over every builtin
+  descriptor filled with its own defaults and every row of every sheet under the showcases and the
+  shipped packs. **25,873** cells over **152** files, byte-identical across two runs. Until now a
+  refactor of the reading files could move a sentence in a corner of the vocabulary without moving an
+  emitted byte, a descriptor field or a translation key, and no gate here could see it. The gate is a
+  diff of a run before a change against a run after it. Its suite test pins the shape, the stability,
+  and the sensitivity that makes stability worth anything: a seeded display word and a seeded
+  parameter value each move exactly one line.
+
+- **The census says which path shaped every reading, and what deleting it would buy.**
+  `tools/reading_census.gd` classifies the same population by the path that produced it - the generic
+  assembly alone, the shared grammar, a derived layer, a named per-vocabulary branch, verbatim code,
+  or chrome - asking the real readers rather than reimplementing their decision tree, and builds the
+  generic reading of every ACE cell beside the real one so the two can be compared. It prints the
+  anatomy of both files, thirty of those comparisons in full so the share is a number somebody can
+  check, and a projection priced in whole arms. Reach is decided statically by name, which
+  over-estimates reach and therefore under-estimates what is dead: **33 lines** over 5 functions in
+  the row builder that nothing in the tree names, and **97 lines** of match arm no row in that whole
+  population reached, are the leads the next wave actually has.
+
+- **`explain` says which builder path shaped the row's reading.** One more line between the row a
+  line became and the layers that would have claimed it, in the same words the census counts in and
+  from the same classifier, so the door and the figure can never say different things about one row.
+
+- **A value whose only branch is the value itself no longer nests for ever.** Opening
+  `demo/showcase/hierarchy_playground/hierarchy_playground.gd` as a sheet never finished. Its one
+  format list holds a ternary, the grammar hoists the whole bracket group because the branch is
+  inside it, the group's own top level does not split - so the arm the hoist produced was the value
+  again, and the branch-row builder stepped into an arm identical to the text it came from, building
+  a row at every level. Exponential rows and a stack overflow per level, which from the outside is a
+  hang. A single arm that reproduces the value it came from is not a branch a row can draw, and is
+  now no branch at all; every case that terminates today has strictly shorter arms and is untouched.
+  Found by the census, whose population is the first walk in this tree that has ever asked the row
+  builder for every row of every committed sheet.
+
 - **The showcase gate is green on both runners.** Its first day on CI it named
   `pin_modes/pin_modes_3d.tscn` as drifted on Linux while the same rebuild was byte-identical on
   Windows: the scene's sun and camera were turned with `rotation_degrees`, which goes through the

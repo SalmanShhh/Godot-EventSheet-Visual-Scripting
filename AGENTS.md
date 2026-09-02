@@ -131,6 +131,20 @@ from `tools/build_help_bundle.gd`).
   migrated module ships only when all four are byte-identical to the verbose form's -
   `prove_registry_identity.ps1 -Base <sha>` runs that gate through a detached worktree, and names
   the instrument files it copied into the base, because those are the one thing it cannot see);
+  `reading_dump.gd` (every ROW READING as one sorted, format-versioned text - a cell's origin, lane,
+  object word, spans with their role and style marks, and the builder path that shaped it - over both
+  halves of what the builder reads: every builtin descriptor filled with its own defaults, and every
+  row of every sheet under `demo/showcase/` and `eventsheet_addons/`. Byte-stable across runs; the
+  gate is a diff of a run before a change against one after it, because a row's spans are data and
+  nothing else in the tree writes them down. `reading_lines.gd` beside it is the writer and the path
+  classifier, shared with `reading_census.gd` and `lift_provenance.gd` so the three can never say a
+  row was shaped by two different things - every answer comes from the shipped row builder through a
+  live viewport, and no seam is added to the files being measured); `reading_census.gd` (what the two
+  reading files actually hold: rows by path, the anatomy of both files - reachable, harness-only,
+  named by nothing, and the name-dispatch arms that are the per-vocabulary special-casing - the share
+  of branch-shaped cells the generic assembly would reproduce, thirty of those comparisons printed in
+  full, and a wave-priced projection in whole match arms. Reach is decided STATICALLY by name, which
+  over-estimates reach and so under-estimates what is dead);
   `measure_ledger.ps1` (the maintainability campaign's ledger: every hand-maintained language the
   tree holds - GDScript, PowerShell, the two shell shims and the shader fixtures, listed in its
   header where `git ls-files` can check the claim - and the shipped plugin, sized and diffed over

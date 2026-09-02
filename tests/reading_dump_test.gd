@@ -57,7 +57,7 @@ static func _line_shape() -> bool:
 	])
 
 
-## Two dumps of one unchanged sheet are the same bytes. The sheet is rebuilt from scratch for the
+## Two dumps of one unchanged sheet are the same bytes. The sheet is built again from nothing for the
 ## second dump, so anything that leaked from the first build would show here.
 static func _stable_bytes() -> bool:
 	var first: String = _dump(_sheet("Retired verb {amount}", "1"))
