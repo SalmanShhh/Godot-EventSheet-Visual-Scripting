@@ -31,7 +31,6 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const HugeProject := preload("res://tests/huge_project_fixture.gd")
-const Pins := preload("res://tests/pin_table.gd")
 
 ## The probe that answers what a cold editor start costs, run in a process of its own.
 const COLD_BOOT_PROBE: String = "res://tests/cold_boot_probe.gd"
@@ -180,7 +179,7 @@ static func _pin_the_corpus(project: Dictionary) -> bool:
 		"the big script is at least two thousand lines": big_script_lines >= HugeProject.BIG_SCRIPT_LINES,
 		"the big scene is at least two thousand nodes": big_scene_nodes >= HugeProject.BIG_SCENE_NODES,
 	}
-	return Pins.check("huge_project_corpus", {
+	return SUPPORT.pin_table("huge_project_corpus", {
 		"scripts": HugeProject.SCRIPT_COUNT,
 		"scenes": HugeProject.SCENE_COUNT,
 		"shaders": HugeProject.SHADER_COUNT,

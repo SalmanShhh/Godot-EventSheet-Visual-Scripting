@@ -21,7 +21,7 @@
 class_name CompletionsSeamTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 ## The seam's own script object. Statics are reached through the script rather than the class name,
 ## and the cache is what says whether a list was rebuilt or handed back.
@@ -63,7 +63,7 @@ static func _test_an_edit_drops_the_lists_of_the_sheet_it_replaced() -> bool:
 	var held_before: int = _lists_held_for(edited)
 	# What the funnel does on commit, and on every undo and redo after it.
 	dock._restore_sheet_snapshot(edited.duplicate(true))
-	var ok: bool = Pins.check_value("completions_invalidation",
+	var ok: bool = SUPPORT.pin_value("completions_invalidation",
 		"an edit drops the lists of the sheet it replaced",
 		PackedStringArray([str(held_before), str(_lists_held_for(edited))]),
 		PackedStringArray(["1", "0"]))
@@ -89,26 +89,26 @@ static func _lists_held_for(sheet: EventSheetResource) -> int:
 ## typed as documented, and answers the same thing the seam does.
 static func _test_the_public_surface() -> bool:
 	var sheet: EventSheetResource = _fixture()
-	var ok: bool = Pins.check_value("completions_public_api", "completions_for answers the seam",
+	var ok: bool = SUPPORT.pin_value("completions_public_api", "completions_for answers the seam",
 		EventSheets.completions_for(sheet, EventSheetCompletions.FIELD_VARIABLE, "hp"),
 		EventSheetCompletions.for_field(sheet, EventSheetCompletions.FIELD_VARIABLE, "hp"))
 	EventSheets.register_completion_source("a_public_kind", func(_sheet: EventSheetResource,
 			_kind: String) -> Array:
 		return ["one", "two"])
-	ok = Pins.check_value("completions_public_api", "a registered source answers",
+	ok = SUPPORT.pin_value("completions_public_api", "a registered source answers",
 		EventSheets.completions_for(sheet, "a_public_kind", "tw"),
 		[{"text": "two", "detail": "", "kind": "variable"}]) and ok
 	EventSheets.unregister_completion_source("a_public_kind")
-	ok = Pins.check_value("completions_public_api", "and stops when it is removed",
+	ok = SUPPORT.pin_value("completions_public_api", "and stops when it is removed",
 		EventSheets.completions_for(sheet, "a_public_kind", "tw"), []) and ok
 	# The popup rides a field, marks it as completing, and answers for that kind. Built with no
 	# window, which is the point of the model living apart from the widget.
 	var field: LineEdit = LineEdit.new()
 	var popup: EventSheetCompletionPopup = EventSheets.attach_completions(field,
 		EventSheetCompletions.FIELD_CLASS)
-	ok = Pins.check_value("completions_public_api", "attach_completions marks the field",
+	ok = SUPPORT.pin_value("completions_public_api", "attach_completions marks the field",
 		EventSheetCompletionPopup.rides(field), true) and ok
-	ok = Pins.check_value("completions_public_api", "and a class field is replaced whole",
+	ok = SUPPORT.pin_value("completions_public_api", "and a class field is replaced whole",
 		popup.replaces_word, false) and ok
 	field.free()
 	return ok
@@ -144,7 +144,7 @@ static func _fixture() -> EventSheetResource:
 ## its explaining line is exactly the half-answer this seam exists to replace.
 static func _test_the_seam_answers_per_field_kind() -> bool:
 	var sheet: EventSheetResource = _fixture()
-	return Pins.check("completions_per_field_kind", {
+	return SUPPORT.pin_table("completions_per_field_kind", {
 		EventSheetCompletions.FIELD_VARIABLE: {"text": "hp",
 			"detail": "Player · Instance whole number hp = 100", "kind": "variable"},
 		EventSheetCompletions.FIELD_FUNCTION: {"text": "take_damage",
@@ -161,7 +161,7 @@ static func _test_the_seam_answers_per_field_kind() -> bool:
 ## scene's nodes. The readings that decide which are pinned first, because they are what a wrong
 ## answer would come from.
 static func _test_the_expression_field_reads_the_caret() -> bool:
-	var ok: bool = Pins.check("completions_caret_reading", {
+	var ok: bool = SUPPORT.pin_table("completions_caret_reading", {
 		"health + ma": "ma",
 		"hp": "hp",
 		"": "",
@@ -170,7 +170,7 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 	}, func(text: String) -> Variant: return EventSheetCompletions.trailing_word(text))
 	# The receiver is what the caret sits BEHIND, and the word being typed after the dot is no part
 	# of it: `hp.` and `hp.hea` reach through the same `hp`.
-	ok = Pins.check("completions_member_receiver", {
+	ok = SUPPORT.pin_table("completions_member_receiver", {
 		"hp.": "hp",
 		"hp.hea": "hp",
 		"if body.": "body",
@@ -180,7 +180,7 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 		"health + ": "",
 		"hp": "",
 	}, func(text: String) -> Variant: return EventSheetCompletions.member_receiver(text)) and ok
-	ok = Pins.check("completions_modulo_reading", {
+	ok = SUPPORT.pin_table("completions_modulo_reading", {
 		"score %": true,
 		"\"%d\" %": true,
 		"target = %": false,
@@ -189,7 +189,7 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 	# Which sigil the caret sits behind, which is the whole of "am I addressing a node". A typed
 	# name does not move the caret out of that position, and a `%` after a value is a modulo however
 	# much is typed after it.
-	ok = Pins.check("completions_node_sigil", {
+	ok = SUPPORT.pin_table("completions_node_sigil", {
 		"$": "$",
 		"$Spr": "$",
 		"= %": "%",
@@ -201,7 +201,7 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 	var sheet: EventSheetResource = _fixture()
 	# The sheet's own variable leads its host class's members, and a function's parameter is offered
 	# by name - the one thing the flat vocabulary used to be missing.
-	ok = Pins.check("completions_expression_first_answer", {
+	ok = SUPPORT.pin_table("completions_expression_first_answer", {
 		"hp": {"text": "hp", "detail": "Player · Instance whole number hp = 100", "kind": "variable"},
 		"take": {"text": "take_damage", "detail": "function(amount)", "kind": "function"},
 		"amou": {"text": "amount", "detail": "take_damage · parameter", "kind": "variable"},
@@ -228,7 +228,7 @@ static func _test_a_position_survives_the_next_keystroke(sheet: EventSheetResour
 	sprite.unique_name_in_owner = true
 	EventSheetCompletions.scene_root_override = scene_root
 	EventSheetCompletions.clear_cache()
-	var ok: bool = Pins.check("completions_position_survives_typing", {
+	var ok: bool = SUPPORT.pin_table("completions_position_survives_typing", {
 		"State.": "member:IDLE,member:RUN",
 		"State.R": "member:RUN",
 		"if State.": "member:IDLE,member:RUN",
@@ -266,14 +266,14 @@ static func _test_ranking_puts_the_answer_first() -> bool:
 	# `hitpoints` and `show_behind_parent` are not here on purpose: neither contains "hp", and two
 	# letters do not reach the letters-in-order tier. That floor is what keeps a short query from
 	# burying its own answer.
-	var ok: bool = Pins.check_value("completions_ranking", "hp over a list of six", ranked,
+	var ok: bool = SUPPORT.pin_value("completions_ranking", "hp over a list of six", ranked,
 		PackedStringArray(["hp", "player_hp", "max_hp_bonus", "armour"]))
 	# An empty query is not a ranking at all: everything is offered, in the order the source built
 	# it, so a field opened with nothing typed reads as the source meant it to.
 	var untyped: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in EventSheetCompletions.rank(pool, ""):
 		untyped.append(str(entry["text"]))
-	return Pins.check_value("completions_ranking", "an empty query keeps the source's order", untyped,
+	return SUPPORT.pin_value("completions_ranking", "an empty query keeps the source's order", untyped,
 		PackedStringArray(["show_behind_parent", "hitpoints", "player_hp", "hp", "max_hp_bonus",
 			"armour"])) and ok
 
@@ -283,7 +283,7 @@ static func _test_ranking_puts_the_answer_first() -> bool:
 ## belonging to something else.
 static func _test_an_unknown_kind_answers_nothing() -> bool:
 	var sheet: EventSheetResource = _fixture()
-	return Pins.check("completions_unknown_kind", {
+	return SUPPORT.pin_table("completions_unknown_kind", {
 		"a_hint_from_a_pack_that_is_not_installed": [],
 		"": [],
 	}, func(kind: String) -> Variant:
@@ -293,7 +293,7 @@ static func _test_an_unknown_kind_answers_nothing() -> bool:
 ## One keyboard model, decided without a window: this is what makes the popup behave the same in a
 ## dialog, in an inline row edit and in a pack's own field.
 static func _test_the_keyboard_model() -> bool:
-	return Pins.check("completion_popup_keys", {
+	return SUPPORT.pin_table("completion_popup_keys", {
 		KEY_TAB: EventSheetCompletionPopup.ACT_ACCEPT,
 		KEY_ENTER: EventSheetCompletionPopup.ACT_ACCEPT,
 		KEY_KP_ENTER: EventSheetCompletionPopup.ACT_ACCEPT,
@@ -315,19 +315,19 @@ static func _test_accepting_replaces_the_right_thing() -> bool:
 	var popup: EventSheetCompletionPopup = EventSheetCompletionPopup.new()
 	popup.entries = [{"text": "hitpoints", "detail": "", "kind": "variable"}]
 	popup.replaces_word = true
-	var ok: bool = Pins.check("completion_popup_accepts", {
+	var ok: bool = SUPPORT.pin_table("completion_popup_accepts", {
 		"health + hi": "health + hitpoints",
 		"hi": "hitpoints",
 		"health + ": "health + hitpoints",
 	}, func(current: String) -> Variant: return popup.accepted_text(current))
 	popup.replaces_word = false
-	ok = Pins.check("completion_popup_accepts", {
+	ok = SUPPORT.pin_table("completion_popup_accepts", {
 		"Char": "hitpoints",
 		"": "hitpoints",
 	}, func(current: String) -> Variant: return popup.accepted_text(current)) and ok
 	# Nothing on offer means nothing to accept, and the field is left exactly as it is.
 	popup.entries = []
-	return Pins.check_value("completion_popup_accepts", "an empty list changes nothing",
+	return SUPPORT.pin_value("completion_popup_accepts", "an empty list changes nothing",
 		popup.accepted_text("half typed"), "half typed") and ok
 
 
@@ -340,12 +340,12 @@ static func _test_the_popup_moves_and_closes() -> bool:
 	for step: int in [1, 1, 1, -1]:
 		popup.move(step)
 		walked.append(str(popup.entries[popup.index]["text"]))
-	var ok: bool = Pins.check_value("completion_popup_moves", "down three then up once", walked,
+	var ok: bool = SUPPORT.pin_value("completion_popup_moves", "down three then up once", walked,
 		PackedStringArray(["two", "three", "one", "three"]))
 	popup.close()
-	ok = Pins.check_value("completion_popup_moves", "closing leaves nothing on offer",
+	ok = SUPPORT.pin_value("completion_popup_moves", "closing leaves nothing on offer",
 		popup.entries.size(), 0) and ok
-	return Pins.check_value("completion_popup_moves", "and nothing to accept",
+	return SUPPORT.pin_value("completion_popup_moves", "and nothing to accept",
 		popup.accept(), false) and ok
 
 
@@ -353,7 +353,7 @@ static func _test_the_popup_moves_and_closes() -> bool:
 ## and is taken out of the filter, because no row's name contains 0.4 and leaving it in is what
 ## made the whole query find nothing.
 static func _test_quick_add_reads_the_sentence() -> bool:
-	var ok: bool = Pins.check("quick_add_splits", {
+	var ok: bool = SUPPORT.pin_table("quick_add_splits", {
 		"boss fla 0.4": ["boss fla", "0.4"],
 		"flash white": ["flash white", ""],
 		"say \"hello\"": ["say", "\"hello\""],
@@ -379,12 +379,12 @@ static func _test_quick_add_reads_the_sentence() -> bool:
 			str(row["name"]), str(row["object"]), str(row["keywords"]))})
 	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["score"]) > int(b["score"]))
 	var best: String = str(scored[0]["name"])
-	ok = Pins.check_value("quick_add_ranks", "boss fla 0.4 lands on the flash", best, "Flash white") and ok
+	ok = SUPPORT.pin_value("quick_add_ranks", "boss fla 0.4 lands on the flash", best, "Flash white") and ok
 	var reached: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in scored:
 		if int(entry["score"]) > 0:
 			reached.append(str(entry["name"]))
-	return Pins.check_value("quick_add_ranks", "and only the rows the words reach are offered",
+	return SUPPORT.pin_value("quick_add_ranks", "and only the rows the words reach are offered",
 		reached, PackedStringArray(["Flash white"])) and ok
 
 
@@ -400,19 +400,19 @@ static func _test_quick_add_fills_the_first_parameter() -> bool:
 		{"id": "channel", "type_name": "String", "hint": "", "options": ["a", "b"]},
 		{"id": "text", "type_name": "String", "hint": ""},
 	]
-	var ok: bool = Pins.check("quick_add_prefill", {
+	var ok: bool = SUPPORT.pin_table("quick_add_prefill", {
 		"boss fla 0.4": {"seconds": "0.4"},
 		"boss fla": {},
 		"fla 0.4 2": {"seconds": "0.4"},
 	}, func(query: String) -> Variant:
 		return EventSheetQuickAdd.prefill(query, flash_params))
-	ok = Pins.check("quick_add_prefill_text", {
+	ok = SUPPORT.pin_table("quick_add_prefill_text", {
 		"say \"hello\"": {"text": "\"hello\""},
 		"say 12": {},
 	}, func(query: String) -> Variant: return EventSheetQuickAdd.prefill(query, say_params)) and ok
 	# A parameter something else already answered - the node a picker shelf chose - is never
 	# overwritten by a value from the query.
-	return Pins.check_value("quick_add_prefill", "an answered parameter is left alone",
+	return SUPPORT.pin_value("quick_add_prefill", "an answered parameter is left alone",
 		EventSheetQuickAdd.prefill("0.4", flash_params, {"seconds": "1.0"}), {}) and ok
 
 
@@ -428,15 +428,15 @@ static func _test_a_list_is_built_once_and_only_filtered() -> bool:
 		return ["alpha", "beta", "gamma"])
 	for typed: String in ["a", "al", "alp", "b", "be"]:
 		EventSheetCompletions.for_field(sheet, "a_counted_kind", typed)
-	var ok: bool = Pins.check_value("completions_cache", "five keystrokes ask the source once",
+	var ok: bool = SUPPORT.pin_value("completions_cache", "five keystrokes ask the source once",
 		int(asks["count"]), 1)
 	# The edit that changed the sheet is what drops it - and nothing else does.
 	EventSheetCompletions.invalidate(sheet)
 	EventSheetCompletions.for_field(sheet, "a_counted_kind", "a")
-	ok = Pins.check_value("completions_cache", "an edit to the sheet asks it again",
+	ok = SUPPORT.pin_value("completions_cache", "an edit to the sheet asks it again",
 		int(asks["count"]), 2) and ok
 	EventSheetCompletions.for_field(sheet, "a_counted_kind", "g")
-	ok = Pins.check_value("completions_cache", "and typing after that does not",
+	ok = SUPPORT.pin_value("completions_cache", "and typing after that does not",
 		int(asks["count"]), 2) and ok
 	EventSheetCompletions.unregister_source("a_counted_kind")
 	return ok
@@ -450,11 +450,11 @@ static func _test_a_pack_can_add_a_source() -> bool:
 			_kind: String) -> Array:
 		return ["quest_start", "quest_end", {"text": "quest_fail", "detail": "the losing branch",
 			"kind": "variable"}])
-	var ok: bool = Pins.check("completions_pack_source", {
+	var ok: bool = SUPPORT.pin_table("completions_pack_source", {
 		"quest_s": [{"text": "quest_start", "detail": "", "kind": "variable"}],
 		"losing": [{"text": "quest_fail", "detail": "the losing branch", "kind": "variable"}],
 	}, func(typed: String) -> Variant:
 		return EventSheetCompletions.for_field(sheet, "a_pack_kind", typed))
 	EventSheetCompletions.unregister_source("a_pack_kind")
-	return Pins.check_value("completions_pack_source", "and it stops answering once removed",
+	return SUPPORT.pin_value("completions_pack_source", "and it stops answering once removed",
 		EventSheetCompletions.for_field(sheet, "a_pack_kind", "quest"), []) and ok

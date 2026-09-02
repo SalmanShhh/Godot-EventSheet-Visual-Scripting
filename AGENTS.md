@@ -94,6 +94,15 @@ from `tools/build_help_bundle.gd`).
   `tools/test_daemon.ps1` answers a single test in under a second while iterating;
   `tools/test_report.gd` pre-investigates a red run. A tail segfault AFTER the verdict line is a
   known harmless teardown flake.
+- The assertion vocabulary is ONE file, `tests/support.gd` (`EventSheetTestSupport`): `check` and
+  `pins` print the suite's `[PASS]` / `[FAIL]` lines and the `expected:` / `actual:` pair the
+  report tool parses, `pin_table` / `pin_value` are the quieter table form, and `compile_output` /
+  `reopen` / `reemit` are the compile-and-round-trip trio. Extend it rather than adding a second
+  reporter - the printed shapes are a contract, so a new shape needs the readers changed first.
+- `tools/explain.gd -- <res://file.gd> <line>` says what one hand-written line became: the row the
+  row builder makes of it (reopen, re-emit, source map) and then which reading layer would have
+  claimed it. `EVENTFORGE_LIFT_ONLY=<entry ids>` narrows the lift-table harness to named entries,
+  spelled after `EVENTFORGE_TEST_ONLY` so the two compose.
 - Maintenance tools: `tools/` - pack builders in `tools/pack_builders/` (auto-registered by glob,
   no list to maintain; run by `build_sample_behaviors.gd`, which regenerates EVERY pack - prefer
   a single-builder throwaway script for one pack); `build_examples.gd` (showcases, byte-stable);

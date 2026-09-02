@@ -10,6 +10,23 @@
 # failure, with `actual:` padded to line its value up under the expected one. Changing any of those
 # shapes breaks the readers, so change the readers first or not at all.
 #
+# THERE IS ONE ASSERTION FILE, AND THIS IS IT. `pin_table.gd` used to be a second one beside it,
+# with its own equality and its own failure line; its two functions moved here verbatim as
+# `pin_table` and `pin_value` rather than being folded into `check`, because the line THEY print is
+# a contract in the same way, and normalising it would be a behaviour change rather than a shrink.
+# So there are two failure shapes and one file, and the next slice extends this file rather than
+# starting a third:
+#
+#   check / pins        `[PASS] <prefix>: <label>`, and on a failure the `expected:` / `actual:`
+#                       pair the report tool reads. Reach for these. `check` is one assertion,
+#                       `pins` a table of `[label, actual, expected]` rows.
+#   pin_table / pin_value
+#                       silent on a pass, and one line on a failure:
+#                       `[FAIL] <name>: "<input>" - expected <x>, got <y>`. `pin_table` walks a
+#                       whole `{input: expected}` dictionary through one callable; `pin_value` is
+#                       the single-value form. Both compare a PackedStringArray against a plain
+#                       Array of the same strings as equal, which `==` does not.
+#
 # This file is not a test. `run_tests.gd` loads every `.gd` under `tests/` and skips the ones with
 # no `static func run()`, which is exactly what a shared helper living here should be.
 @tool
@@ -84,3 +101,48 @@ static func reemit(source: String, verify_path: String, lift: bool = true) -> St
 		return ""
 	reopened.external_source_path = verify_path
 	return compile_output(reopened, verify_path)
+
+
+## Every pin in `pins`, asked of `answer` and compared by VALUE. Returns true when every one held.
+## `answer` takes the key and returns what the code says; anything comparable with `==` works, so a
+## pin can be a String, a number, an Array or a Dictionary.
+##
+## Silent on a pass and one line on a failure, and the whole table is walked whether the first pin
+## fails or not, because the second failure is usually what says which of the two ideas is wrong.
+static func pin_table(test_name: String, pins_table: Dictionary, answer: Callable) -> bool:
+	var passed: bool = true
+	for key: Variant in pins_table.keys():
+		var expected: Variant = pins_table[key]
+		var actual: Variant = answer.call(key)
+		if _same(actual, expected):
+			continue
+		print("[FAIL] %s: %s - expected %s, got %s"
+			% [test_name, _shown(key), _shown(expected), _shown(actual)])
+		passed = false
+	return passed
+
+
+## One value, pinned, for the assertions that are not a table. Same failure line, same rule: this
+## takes VALUES, so `pin_value(name, label, a and b, "text")` cannot be written by accident.
+static func pin_value(test_name: String, label: String, actual: Variant, expected: Variant) -> bool:
+	if _same(actual, expected):
+		return true
+	print("[FAIL] %s: %s - expected %s, got %s"
+		% [test_name, label, _shown(expected), _shown(actual)])
+	return false
+
+
+## Equality that means what a table pin means by it. `==` on two Arrays or two Dictionaries compares
+## their CONTENTS in GDScript, which is what a pin wants; the one case worth naming is a typed
+## PackedStringArray against an untyped Array of the same strings, which `==` calls different.
+static func _same(actual: Variant, expected: Variant) -> bool:
+	if actual is PackedStringArray or expected is PackedStringArray:
+		return Array(actual) == Array(expected)
+	return actual == expected
+
+
+## A value as a table pin's failure line should show it: quoted when it is text, so an empty answer
+## and a missing one look different, and short enough that a table of forty does not bury the report.
+static func _shown(value: Variant) -> String:
+	var text: String = "\"%s\"" % value if value is String or value is StringName else str(value)
+	return text if text.length() <= 200 else text.substr(0, 197) + "..."

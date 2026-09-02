@@ -19,7 +19,7 @@
 class_name EffectLiftTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 const Repro := preload("res://tests/repro_bundle.gd")
 
 const FIXTURE_DIR: String = "res://tests/fixtures/"
@@ -219,4 +219,4 @@ static func _rows_of(sheet: EventSheetResource) -> Array[String]:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return Pins.check_value("effect_lift_test", label, actual, expected)
+	return SUPPORT.pin_value("effect_lift_test", label, actual, expected)

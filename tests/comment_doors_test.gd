@@ -12,7 +12,7 @@
 class_name CommentDoorsTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 
 static func run() -> bool:
@@ -88,7 +88,7 @@ static func _read(line: String, table: Dictionary) -> PackedStringArray:
 static func _test_a_proven_noun_is_a_door() -> bool:
 	var scene_root: Node = _scene()
 	var table: Dictionary = _live_table(_sheet(), scene_root)
-	var ok: bool = Pins.check("comment_doors", {
+	var ok: bool = SUPPORT.pin_table("comment_doors", {
 		"Patrol until %HealthBar drops, then begin_chase and hunt them down":
 			PackedStringArray(["state:Patrol", "node:%HealthBar", "function:begin_chase"]),
 		"the $Sprite flips when it turns around":
@@ -99,9 +99,9 @@ static func _test_a_proven_noun_is_a_door() -> bool:
 	# And the door SAYS where it leads, which is the whole difference between an underline and a
 	# jump: a state's target is the enum member a declaration can be found by, never the word.
 	var doors: Array[Dictionary] = EventSheetCommentDoors.doors_in("back to Patrol", table)
-	ok = Pins.check_value("comment_doors", "the state door carries the member it was declared as",
+	ok = SUPPORT.pin_value("comment_doors", "the state door carries the member it was declared as",
 		str(doors[0].get("target", "")), "PATROL") and ok
-	ok = Pins.check_value("comment_doors", "and the offsets are where the word really is",
+	ok = SUPPORT.pin_value("comment_doors", "and the offsets are where the word really is",
 		[int(doors[0]["start"]), int(doors[0]["length"])], [8, 6]) and ok
 	EventSheetCompletions.scene_root_override = null
 	scene_root.free()
@@ -113,7 +113,7 @@ static func _test_a_proven_noun_is_a_door() -> bool:
 static func _test_prose_that_proves_nothing_stays_prose() -> bool:
 	var scene_root: Node = _scene()
 	var table: Dictionary = _live_table(_sheet(), scene_root)
-	var ok: bool = Pins.check("comment_doors", {
+	var ok: bool = SUPPORT.pin_table("comment_doors", {
 		"the enemy wanders about for a while and then gives up": PackedStringArray(),
 		# A name this project does not have, spelled exactly like one it might: still prose.
 		"then Retreat until it is safe": PackedStringArray(),
@@ -137,7 +137,7 @@ static func _test_prose_that_proves_nothing_stays_prose() -> bool:
 static func _test_a_state_spelled_as_two_words_is_one_door() -> bool:
 	var scene_root: Node = _scene()
 	var table: Dictionary = _live_table(_sheet(), scene_root)
-	var ok: bool = Pins.check("comment_doors", {
+	var ok: bool = SUPPORT.pin_table("comment_doors", {
 		"it has Gave Up written all over it": PackedStringArray(["state:Gave Up"]),
 		"GAVE_UP is the member behind it": PackedStringArray(["state:GAVE_UP"]),
 		"Gave Upwards is nothing at all": PackedStringArray(),
@@ -158,7 +158,7 @@ static func _test_a_name_two_files_answer_to_is_not_a_door() -> bool:
 	]
 	var table: Dictionary = EventSheetCommentDoors.build_table([[] as Array[Dictionary],
 		[] as Array[Dictionary], [] as Array[Dictionary], [] as Array[Dictionary], files])
-	return Pins.check("comment_doors", {
+	return SUPPORT.pin_table("comment_doors", {
 		"the rest is in hud.gd": PackedStringArray(),
 		"the rest is in spine.gd": PackedStringArray(["file:spine.gd"]),
 		"see logo.png for the mark": PackedStringArray(),
@@ -172,7 +172,7 @@ static func _test_the_first_claim_on_a_name_wins() -> bool:
 	var functions: Array[Dictionary] = [{"text": "Chase"}]
 	var table: Dictionary = EventSheetCommentDoors.build_table([[] as Array[Dictionary],
 		states, [] as Array[Dictionary], functions, [] as Array[Dictionary]])
-	return Pins.check_value("comment_doors", "the state's word beats the function of the same name",
+	return SUPPORT.pin_value("comment_doors", "the state's word beats the function of the same name",
 		_read("go back to Chase", table), PackedStringArray(["state:Chase"]))
 
 
@@ -182,12 +182,12 @@ static func _test_the_table_is_held_until_an_index_is_rebuilt() -> bool:
 	var sheet: EventSheetResource = _sheet()
 	var scene_root: Node = _scene()
 	var first: Dictionary = _live_table(sheet, scene_root)
-	var ok: bool = Pins.check_value("comment_doors", "the second ask is the very same table",
+	var ok: bool = SUPPORT.pin_value("comment_doors", "the second ask is the very same table",
 		is_same(EventSheetCommentDoors.table_for(sheet), first), true)
 	# The completion seam hands back fresh arrays once its own caches are dropped, and that is the
 	# whole invalidation: nothing else has to be told.
 	EventSheetCompletions.clear_cache()
-	ok = Pins.check_value("comment_doors", "a dropped index rebuilds the table",
+	ok = SUPPORT.pin_value("comment_doors", "a dropped index rebuilds the table",
 		is_same(EventSheetCommentDoors.table_for(sheet), first), false) and ok
 	EventSheetCompletions.scene_root_override = null
 	scene_root.free()
@@ -206,13 +206,13 @@ static func _test_the_comment_and_the_line_it_writes_are_untouched() -> bool:
 	var before: String = note.text
 	var table: Dictionary = _live_table(sheet, scene_root)
 	var doors: Array[Dictionary] = EventSheetCommentDoors.doors_in(note.text, table)
-	var ok: bool = Pins.check_value("comment_doors", "the sentence really did hold doors",
+	var ok: bool = SUPPORT.pin_value("comment_doors", "the sentence really did hold doors",
 		doors.size(), 3)
-	ok = Pins.check_value("comment_doors", "and the comment's text is the string it was",
+	ok = SUPPORT.pin_value("comment_doors", "and the comment's text is the string it was",
 		note.text, before) and ok
 	sheet.external_source_path = "user://comment_doors_rt.gd"
 	var emitted: String = str(SheetCompiler.compile(sheet, "user://comment_doors_rt.gd").get("output", ""))
-	ok = Pins.check_value("comment_doors", "the emitted line is the plain comment it always was",
+	ok = SUPPORT.pin_value("comment_doors", "the emitted line is the plain comment it always was",
 		emitted.contains("# Patrol until %HealthBar drops, then begin_chase"), true) and ok
 	EventSheetCompletions.scene_root_override = null
 	scene_root.free()
@@ -232,13 +232,13 @@ static func _test_a_door_is_measured_on_the_line_it_wrapped_onto() -> bool:
 		"kind": EventSheetCommentDoors.KIND_STATE, "target": "PATROL"}]
 	var boxes: Array[Dictionary] = EventSheetCommentDoors.door_boxes(
 		text, doors, PackedInt32Array([0, 8]), font, 14)
-	var ok: bool = Pins.check_value("comment_doors", "the door is on the second visual line",
+	var ok: bool = SUPPORT.pin_value("comment_doors", "the door is on the second visual line",
 		int(boxes[0]["line"]), 1)
-	ok = Pins.check_value("comment_doors", "and it starts at that line's own left edge",
+	ok = SUPPORT.pin_value("comment_doors", "and it starts at that line's own left edge",
 		is_zero_approx(float(boxes[0]["x"])), true) and ok
 	# A word the wrap cut in half is left alone: half an underline under half a word says less than
 	# none, and the word is still perfectly readable prose.
 	var straddling: Array[Dictionary] = EventSheetCommentDoors.door_boxes(
 		text, doors, PackedInt32Array([0, 10]), font, 14)
-	return Pins.check_value("comment_doors", "a door across a wrap break is not drawn",
+	return SUPPORT.pin_value("comment_doors", "a door across a wrap break is not drawn",
 		straddling.size(), 0) and ok

@@ -17,7 +17,7 @@ class_name RedRunReportTest
 extends RefCounted
 
 ## The shared pin helper: a table of input to expected, and one failure line for all of them.
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 ## The report tool, loaded by path (it is a SceneTree script, so it is never instanced here - only
 ## its pure statics are asked).
@@ -71,20 +71,20 @@ static func run() -> bool:
 ## names the first line that differs, and the changed run is bracketed by the lines around it.
 static func _test_a_refused_byte_gate_leaves_its_evidence() -> bool:
 	var ok: bool = true
-	ok = Pins.check_value("red_run_report_test", "matching bytes have no diff",
+	ok = SUPPORT.pin_value("red_run_report_test", "matching bytes have no diff",
 		Repro.diff("a\nb\n", "a\nb\n"), "no difference - the bytes match.\n") and ok
-	ok = Pins.check_value("red_run_report_test", "one changed line, with its context",
+	ok = SUPPORT.pin_value("red_run_report_test", "one changed line, with its context",
 		Repro.diff("one\ntwo\nthree\n", "one\nTWO\nthree\n"),
 		"--- expected (3 lines)\n+++ actual   (3 lines)\n@@ first difference at line 2 @@\n"
 		+ "  one\n- two\n+ TWO\n  three\n") and ok
-	ok = Pins.check_value("red_run_report_test", "a line that was dropped shows as one side only",
+	ok = SUPPORT.pin_value("red_run_report_test", "a line that was dropped shows as one side only",
 		Repro.diff("one\ntwo\nthree\n", "one\nthree\n"),
 		"--- expected (3 lines)\n+++ actual   (2 lines)\n@@ first difference at line 2 @@\n"
 		+ "  one\n- two\n  three\n") and ok
 	var report: String = Repro.dump("red_run_report_test", "res://a/probe.gd", "one\n", "two\n")
-	ok = Pins.check_value("red_run_report_test", "and the bundle says where it put the evidence",
+	ok = SUPPORT.pin_value("red_run_report_test", "and the bundle says where it put the evidence",
 		report.begins_with("repro bundle: res://.godot/repro/red_run_report_test/a_probe.gd/"), true) and ok
-	ok = Pins.check_value("red_run_report_test", "with the two sides in it",
+	ok = SUPPORT.pin_value("red_run_report_test", "with the two sides in it",
 		FileAccess.get_file_as_string("res://.godot/repro/red_run_report_test/a_probe.gd/actual.txt"),
 		"two\n") and ok
 	return ok
@@ -92,13 +92,13 @@ static func _test_a_refused_byte_gate_leaves_its_evidence() -> bool:
 
 ## The whole point of the trail: a crashed test is NAMED, where before it was invisible.
 static func _test_the_crash_trail_names_the_test_that_never_finished() -> bool:
-	return Pins.check("red_run_report_test", TRAILS, func(trail: String) -> Variant:
+	return SUPPORT.pin_table("red_run_report_test", TRAILS, func(trail: String) -> Variant:
 		return Report.unfinished_in(trail))
 
 
 ## One `[FAIL]` line, filed under the test that printed it. "" means the reader must not claim it.
 static func _test_the_log_reader_files_every_failure_under_its_test() -> bool:
-	return Pins.check("red_run_report_test", LOG_LINES, func(line: String) -> Variant:
+	return SUPPORT.pin_table("red_run_report_test", LOG_LINES, func(line: String) -> Variant:
 		var failures: Dictionary = {}
 		Report._collect_failures(line, failures)
 		return "" if failures.is_empty() else str(failures.keys()[0]))
@@ -110,15 +110,15 @@ static func _test_the_blame_is_the_pick_mapping_asked_backwards() -> bool:
 	var ok: bool = true
 	var changed: PackedStringArray = PackedStringArray([
 		"tests/shard_split_test.gd", "addons/eventforge/importer/lighting_lift.gd", "README.md"])
-	ok = Pins.check_value("red_run_report_test", "a changed test file blames itself",
+	ok = SUPPORT.pin_value("red_run_report_test", "a changed test file blames itself",
 		Picker.blamed_files("shard_split_test", changed),
 		PackedStringArray(["tests/shard_split_test.gd"])) and ok
-	ok = Pins.check_value("red_run_report_test", "and the file a test is named after blames it",
+	ok = SUPPORT.pin_value("red_run_report_test", "and the file a test is named after blames it",
 		Picker.blamed_files("lighting_lift_test", changed),
 		PackedStringArray(["addons/eventforge/importer/lighting_lift.gd"])) and ok
-	ok = Pins.check_value("red_run_report_test", "a test nothing changed reaches is blamed on nothing",
+	ok = SUPPORT.pin_value("red_run_report_test", "a test nothing changed reaches is blamed on nothing",
 		Picker.blamed_files("audio_aces_test", changed), PackedStringArray()) and ok
-	ok = Pins.check_value("red_run_report_test", "the trailing .gd is accepted, since a trail carries one",
+	ok = SUPPORT.pin_value("red_run_report_test", "the trailing .gd is accepted, since a trail carries one",
 		Picker.blamed_files("shard_split_test.gd", changed),
 		PackedStringArray(["tests/shard_split_test.gd"])) and ok
 	return ok
@@ -128,15 +128,15 @@ static func _test_the_blame_is_the_pick_mapping_asked_backwards() -> bool:
 ## the first failure, and a typed array equals the plain one with the same strings in it.
 static func _test_the_pin_helper_reports_the_way_it_promises() -> bool:
 	var ok: bool = true
-	ok = Pins.check_value("red_run_report_test", "a table where every pin holds passes",
-		Pins.check("deliberate_probe_not_a_failure", {"a": 1, "b": 2},
+	ok = SUPPORT.pin_value("red_run_report_test", "a table where every pin holds passes",
+		SUPPORT.pin_table("deliberate_probe_not_a_failure", {"a": 1, "b": 2},
 			func(key: String) -> Variant: return 1 if key == "a" else 2), true) and ok
 	# The two [FAIL] lines this prints are the helper failing ON PURPOSE, so they carry a name that
 	# says so - a red-run report reads names out of the logs, and "probe" in one would be a lead
 	# somebody follows.
-	ok = Pins.check_value("red_run_report_test", "a table with two wrong pins fails, having walked both",
-		Pins.check("deliberate_probe_not_a_failure", {"a": 1, "b": 2},
+	ok = SUPPORT.pin_value("red_run_report_test", "a table with two wrong pins fails, having walked both",
+		SUPPORT.pin_table("deliberate_probe_not_a_failure", {"a": 1, "b": 2},
 			func(_key: String) -> Variant: return 9), false) and ok
-	ok = Pins.check_value("red_run_report_test", "a typed array equals the plain one beside it",
-		Pins.check_value("deliberate_probe_not_a_failure", "same strings", PackedStringArray(["x"]), ["x"]), true) and ok
+	ok = SUPPORT.pin_value("red_run_report_test", "a typed array equals the plain one beside it",
+		SUPPORT.pin_value("deliberate_probe_not_a_failure", "same strings", PackedStringArray(["x"]), ["x"]), true) and ok
 	return ok

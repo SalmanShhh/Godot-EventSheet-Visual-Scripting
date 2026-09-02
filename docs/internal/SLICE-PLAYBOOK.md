@@ -127,7 +127,9 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | A new behaviour or pack | A builder in `tools/pack_builders/` (auto-registered by glob), never a standalone addon |
 | A non-ACE row kind | The Custom Block API (`registration/block_kind.gd`), see the block guide |
 | Anything a pack should be able to do too | `addons/eventsheet/api/eventsheets.gd` - extend it, document it in the API guide, and add a test. Shapes freeze once shipped |
-| To pin a table of input to expected | `tests/pin_table.gd` - `Pins.check(name, {input: expected}, callable)`, one failure line for all of them, whole table walked |
+| To assert anything at all | `tests/support.gd` - THE assertion file, and the only one. `SUPPORT.check(prefix, label, actual, expected)` prints the suite's `[PASS]` / `[FAIL]` lines and the `expected:` / `actual:` pair the report tool reads; `SUPPORT.pins(prefix, [[label, actual, expected], ...])` is the same over a table of rows. Extend this file rather than starting a second one |
+| To pin a table of input to expected | `tests/support.gd` - `SUPPORT.pin_table(name, {input: expected}, callable)`, silent on a pass and one failure line per pin, whole table walked. `SUPPORT.pin_value(name, label, actual, expected)` is its single-value form |
+| To compile, reopen or round-trip a sheet in a test | `tests/support.gd` - `compile_output(sheet, path)`, `reopen(source, lift, path)`, `reemit(source, verify_path)`. The last one IS the lossless contract in one call |
 | To leave evidence when a byte gate refuses | `tests/repro_bundle.gd` - `Repro.dump(test, case, expected, actual, input_path)` |
 | To know why a run was red | `tools/test_report.gd` - the assertion, the changed files that map to it, the rerun line, and any test that crashed |
 | To cache anything you read out of a file | `EventForgeFileStamp.of(path)` - the `path\|mtime\|size` identity, worked out once per file per session and dropped on the editor's filesystem ping. Never stat the file yourself: doing it per question means a warm cache still costs I/O |

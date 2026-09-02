@@ -18,7 +18,7 @@
 class_name SceneUniqueNamesTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 ## The fixture scene that already carries a marked node: `Aura`, a Sprite2D, beside an unmarked
 ## `Plain` of the same class. Reused rather than duplicated, because a second scene saying the same
@@ -302,4 +302,4 @@ static func _test_the_door() -> bool:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return Pins.check_value("scene_unique_names_test", label, actual, expected)
+	return SUPPORT.pin_value("scene_unique_names_test", label, actual, expected)

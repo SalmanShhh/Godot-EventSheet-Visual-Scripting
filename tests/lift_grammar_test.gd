@@ -15,7 +15,7 @@
 class_name LiftGrammarTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 const G := preload("res://addons/eventforge/importer/lift_grammar.gd")
 
 ## What a fragment table answers when the text is not that fragment at all. A sentinel rather than
@@ -57,7 +57,7 @@ static func run() -> bool:
 ## fragment captures, so a table that accepted the right text for the wrong reason (the whole literal
 ## where the row wants the name inside it) still fails here.
 static func _test_the_fragments() -> bool:
-	var ok: bool = Pins.check("lift_grammar_test/receiver", {
+	var ok: bool = SUPPORT.pin_table("lift_grammar_test/receiver", {
 		"$Torch.": "$Torch",
 		"%Hud.": "%Hud",
 		"get_node(\"Room/Lamp\").": "get_node(\"Room/Lamp\")",
@@ -71,7 +71,7 @@ static func _test_the_fragments() -> bool:
 	# with no second way to be sure takes this one, because a bare identifier matches every receiver in
 	# the language and claiming those on a call name alone takes lines away from readings that already
 	# say more about them.
-	ok = Pins.check("lift_grammar_test/node", {
+	ok = SUPPORT.pin_table("lift_grammar_test/node", {
 		"$Torch.": "$Torch",
 		"%Hud.": "%Hud",
 		"get_node(\"Room/Lamp\").": "get_node(\"Room/Lamp\")",
@@ -83,14 +83,14 @@ static func _test_the_fragments() -> bool:
 		return _captured(G.fragment_pattern(G.FRAGMENT_NODE, "target"), "target", text)) and ok
 	# The widest receiver, taken where nothing has to be true about it: a chain matches, and captures
 	# nothing, because the row never shows it.
-	ok = Pins.check("lift_grammar_test/receiver_chain", {
+	ok = SUPPORT.pin_table("lift_grammar_test/receiver_chain", {
 		"state.machine.": "",
 		"$Ui/Panel.": "",
 		"": "",
 		"2 + 2.": NO_MATCH
 	}, func(text: String) -> String:
 		return _captured(G.receiver("", G.NODE_CHAIN), "target", text)) and ok
-	ok = Pins.check("lift_grammar_test/name", {
+	ok = SUPPORT.pin_table("lift_grammar_test/name", {
 		"\"take_damage\"": "take_damage",
 		"&\"take_damage\"": "take_damage",
 		"\"take-damage\"": NO_MATCH,
@@ -98,7 +98,7 @@ static func _test_the_fragments() -> bool:
 		"take_damage": NO_MATCH,
 		"&take_damage": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.quoted_name("m"), "m", text)) and ok
-	ok = Pins.check("lift_grammar_test/literal", {
+	ok = SUPPORT.pin_table("lift_grammar_test/literal", {
 		"\"attack\"": "\"attack\"",
 		"&\"idle\"": "&\"idle\"",
 		"\"\"": "\"\"",
@@ -108,7 +108,7 @@ static func _test_the_fragments() -> bool:
 	# Between the two above, and the difference is the whole reason it exists: the value is the quoted
 	# text WITH its quotes and WITHOUT the ampersand, because that is what an `&{action}` template
 	# writes back and what the action field's own dropdown offers.
-	ok = Pins.check("lift_grammar_test/text", {
+	ok = SUPPORT.pin_table("lift_grammar_test/text", {
 		"\"jump\"": "\"jump\"",
 		"&\"jump\"": "\"jump\"",
 		"\"ui_page_down\"": "\"ui_page_down\"",
@@ -117,14 +117,14 @@ static func _test_the_fragments() -> bool:
 		"jump": NO_MATCH,
 		"&jump": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.quoted_text("a"), "a", text)) and ok
-	ok = Pins.check("lift_grammar_test/word", {
+	ok = SUPPORT.pin_table("lift_grammar_test/word", {
 		"peer": "peer",
 		"_was_on_floor": "_was_on_floor",
 		"2peer": NO_MATCH,
 		"peer.host": NO_MATCH,
 		"": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.word("w"), "w", text)) and ok
-	ok = Pins.check("lift_grammar_test/argument", {
+	ok = SUPPORT.pin_table("lift_grammar_test/argument", {
 		"2.0": "2.0",
 		"fuse": "fuse",
 		"a + b": "a + b",
@@ -132,7 +132,7 @@ static func _test_the_fragments() -> bool:
 		"a, b": NO_MATCH,
 		"": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.argument("v"), "v", text)) and ok
-	ok = Pins.check("lift_grammar_test/expression", {
+	ok = SUPPORT.pin_table("lift_grammar_test/expression", {
 		"10": "10",
 		"Color(0.3, 0.3, 0.36)": "Color(0.3, 0.3, 0.36)",
 		"a, b": "a, b",
@@ -144,7 +144,7 @@ static func _test_the_fragments() -> bool:
 ## The author's own text as a pattern: metacharacters escaped so a dot means a dot, and a comma
 ## widened to the separator so the spacing after it is matched rather than demanded.
 static func _test_a_literal_run() -> bool:
-	return Pins.check("lift_grammar_test/escaped_run", {
+	return SUPPORT.pin_table("lift_grammar_test/escaped_run", {
 		"create_timer(": "create_timer\\(",
 		"a.b": "a\\.b",
 		", ": ",[ \\t]*",
@@ -161,7 +161,7 @@ static func _test_a_literal_run() -> bool:
 static func _test_an_example_becomes_an_entry() -> bool:
 	var entry: Dictionary = EventForgeLiftExample.entry("torch_brightness", "LightSetBrightness",
 		"[[target|receiver: $Torch]].energy = [[value: 1.2]]")
-	var ok: bool = Pins.check("lift_grammar_test/derived", {
+	var ok: bool = SUPPORT.pin_table("lift_grammar_test/derived", {
 		"pattern": "^(?:(?<target>%s)\\.)?energy = (?<value>.+)$" % G.NODE_REFERENCE,
 		"shape": "{target.}energy = {value}",
 		"slots": {"target": "$Torch", "value": "1.2"},
@@ -169,20 +169,20 @@ static func _test_an_example_becomes_an_entry() -> bool:
 		"params": PackedStringArray(["target", "value"]),
 		"ace_id": "LightSetBrightness"
 	}, func(key: String) -> Variant: return entry.get(key, "(missing)"))
-	ok = Pins.check_value("lift_grammar_test", "a derived entry is a sound table entry",
+	ok = SUPPORT.pin_value("lift_grammar_test", "a derived entry is a sound table entry",
 		EventForgeLiftTable.validate([entry]), PackedStringArray()) and ok
 	# The fixture the harness would generate from it, and the row that line means - the same walk the
 	# shipped entries take, on an entry nobody wrote a pattern for.
 	var line: String = _emit(str(entry["shape"]), entry["slots"] as Dictionary)
-	ok = Pins.check_value("lift_grammar_test", "its fixture line", line, "$Torch.energy = 1.2") and ok
-	ok = Pins.check_value("lift_grammar_test", "which it claims, with the values the line says",
+	ok = SUPPORT.pin_value("lift_grammar_test", "its fixture line", line, "$Torch.energy = 1.2") and ok
+	ok = SUPPORT.pin_value("lift_grammar_test", "which it claims, with the values the line says",
 		EventForgeLiftTable.match_line([entry], line), {
 			"entry_id": "torch_brightness", "ace_id": "LightSetBrightness", "provider": "Core",
 			"params": {"target": "$Torch", "value": "1.2"}, "template": "{target.}energy = {value}"
 		}) and ok
 	# And the spelling that leaves the optional span out, which is the commonest one a sheet attached
 	# to its own node writes.
-	ok = Pins.check_value("lift_grammar_test", "the receiver-less spelling is the same row",
+	ok = SUPPORT.pin_value("lift_grammar_test", "the receiver-less spelling is the same row",
 		EventForgeLiftTable.match_line([entry], "energy = 3.0"), {
 			"entry_id": "torch_brightness", "ace_id": "LightSetBrightness", "provider": "Core",
 			"params": {"target": "", "value": "3.0"}, "template": "{target.}energy = {value}"
@@ -193,7 +193,7 @@ static func _test_an_example_becomes_an_entry() -> bool:
 ## Every question the builder cannot answer mechanically, and the sentence it refuses with. A builder
 ## that guessed once would be a builder nobody could trust with the other fifteen families.
 static func _test_a_bad_example_is_refused() -> bool:
-	return Pins.check("lift_grammar_test/refusals", {
+	return SUPPORT.pin_table("lift_grammar_test/refusals", {
 		"": "the example is empty",
 		"rpc([[message: \"x\"]": "a span is never closed: [[message: \"x\"]",
 		"rpc([[me[[ss: x]])": "a span opens inside another: me[[ss: x",
@@ -223,11 +223,11 @@ static func _test_derived_entries_behave_like_the_shipped_ones() -> bool:
 		var id: String = str(proof["id"])
 		var hand_written: Dictionary = shipped.get(id, {})
 		if hand_written.is_empty():
-			ok = Pins.check_value("lift_grammar_test", "%s is a shipped entry" % id, false, true)
+			ok = SUPPORT.pin_value("lift_grammar_test", "%s is a shipped entry" % id, false, true)
 			continue
 		var derived: Dictionary = EventForgeLiftExample.entry(id, str(hand_written["ace_id"]),
 			str(proof["example"]))
-		ok = Pins.check("lift_grammar_test/%s" % id, {
+		ok = SUPPORT.pin_table("lift_grammar_test/%s" % id, {
 			"shape": str(hand_written["shape"]),
 			"slots": hand_written["slots"],
 			"defaults": hand_written.get("defaults", {}),
@@ -236,7 +236,7 @@ static func _test_derived_entries_behave_like_the_shipped_ones() -> bool:
 			if key == "params":
 				return _sorted(EventForgeLiftTable.param_names(derived))
 			return derived.get(key, {} if key != "shape" else "")) and ok
-		ok = Pins.check_value("lift_grammar_test", "%s derives a sound entry" % id,
+		ok = SUPPORT.pin_value("lift_grammar_test", "%s derives a sound entry" % id,
 			EventForgeLiftTable.validate([derived]), PackedStringArray()) and ok
 		for line: String in proof["lines"] as Array:
 			ok = _same_reading(id, hand_written, derived, line) and ok
@@ -250,11 +250,11 @@ static func _same_reading(id: String, hand_written: Dictionary, derived: Diction
 		line: String) -> bool:
 	var by_hand: Dictionary = _reading(hand_written, line)
 	var by_example: Dictionary = _reading(derived, line)
-	var ok: bool = Pins.check_value("lift_grammar_test", "%s reads %s the same way" % [id, line],
+	var ok: bool = SUPPORT.pin_value("lift_grammar_test", "%s reads %s the same way" % [id, line],
 		by_example, by_hand)
 	if by_hand.is_empty():
 		return ok
-	return Pins.check_value("lift_grammar_test", "%s re-emits %s byte for byte" % [id, line],
+	return SUPPORT.pin_value("lift_grammar_test", "%s re-emits %s byte for byte" % [id, line],
 		_emit(str(by_hand["template"]), by_hand["params"] as Dictionary), line) and ok
 
 

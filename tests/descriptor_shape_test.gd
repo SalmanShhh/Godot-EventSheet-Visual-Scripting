@@ -25,7 +25,7 @@ class_name DescriptorShapeTest
 extends RefCounted
 
 ## The shared pin helper: one failure line, whatever failed.
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 ## Slots that are filled by the EMITTER rather than by a parameter, so a template carrying one is
 ## complete without a parameter of that name:
@@ -79,7 +79,7 @@ static func run() -> bool:
 ## has stopped working cannot report a clean vocabulary.
 static func _test_the_reader_can_fail() -> bool:
 	var ok: bool = true
-	ok = Pins.check("descriptor_shape_test", {
+	ok = SUPPORT.pin_table("descriptor_shape_test", {
 		"a slot no parameter fills": _problems_of(_probe("{missing} = 1", "set it", [])).size() > 0,
 		"a sentence naming a parameter nobody has": _problems_of(
 			_probe("x = 1", "set x to {nope}", [])).size() > 0,
@@ -106,9 +106,9 @@ static func _test_every_published_row_holds_its_shape() -> bool:
 			problems.append("%s/%s: %s" % [descriptor.provider_id, descriptor.ace_id, problem])
 	for problem: String in problems:
 		print("  descriptor: %s" % problem)
-	var ok: bool = Pins.check_value("descriptor_shape_test",
+	var ok: bool = SUPPORT.pin_value("descriptor_shape_test",
 		"the sweep reads the whole vocabulary", descriptors.size() > 500, true)
-	return Pins.check_value("descriptor_shape_test",
+	return SUPPORT.pin_value("descriptor_shape_test",
 		"every published row's template, sentence, parameters and host agree (%d rows)"
 		% descriptors.size(), problems.size(), 0) and ok
 

@@ -16,7 +16,7 @@
 class_name AskFieldTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 
 static func run() -> bool:
@@ -92,7 +92,7 @@ static func _groups(page: Array[Dictionary]) -> PackedStringArray:
 ## is and where it lives, which is the whole difference between a list of hits and an answer.
 static func _test_the_shelf_is_read_as_kinds() -> bool:
 	var page: Array[Dictionary] = EventSheetAskAnswers.answers("chase", _shelf(_sheet()))
-	var ok: bool = Pins.check("ask_field", {
+	var ok: bool = SUPPORT.pin_table("ask_field", {
 		EventSheetCompletions.KIND_STATE: PackedStringArray(["Chase"]),
 		EventSheetCompletions.KIND_VARIABLE: PackedStringArray(["chase_speed"]),
 		EventSheetCompletions.KIND_FUNCTION: PackedStringArray(["begin_chase"]),
@@ -103,9 +103,9 @@ static func _test_the_shelf_is_read_as_kinds() -> bool:
 	for entry: Dictionary in page:
 		if not bool(entry.get("heading", false)):
 			labels[str(entry.get("text", ""))] = str(entry.get("detail", ""))
-	ok = Pins.check_value("ask_field", "the state says its kind and its home",
+	ok = SUPPORT.pin_value("ask_field", "the state says its kind and its home",
 		str(labels.get("Chase", "")), "State · Enemy") and ok
-	ok = Pins.check_value("ask_field", "and so does the row",
+	ok = SUPPORT.pin_value("ask_field", "and so does the row",
 		str(labels.get("chase the player harder", "")), "Row · Enemy") and ok
 	return ok
 
@@ -124,11 +124,11 @@ static func _test_names_beat_prose() -> bool:
 			first_prose = at
 		if first_name < 0 and EventSheetAskAnswers.NAME_KINDS.has(kind):
 			first_name = at
-	var ok: bool = Pins.check_value("ask_field", "the first name answer stands above the first prose one",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the first name answer stands above the first prose one",
 		first_name >= 0 and first_prose > first_name, true)
 	# And it is the band that puts it there rather than the scores happening to fall that way: the
 	# weakest name a ranker can report still has to beat the strongest sentence it can.
-	return Pins.check_value("ask_field", "the band clears the ranker's own ceiling",
+	return SUPPORT.pin_value("ask_field", "the band clears the ranker's own ceiling",
 		EventSheetAskAnswers.NAME_BAND > 1000, true) and ok
 
 
@@ -136,7 +136,7 @@ static func _test_names_beat_prose() -> bool:
 ## state's own name leads when a state is named, and the row leads when the words are a row's.
 static func _test_the_leading_group_follows_the_best_answer() -> bool:
 	var sheet: EventSheetResource = _sheet()
-	return Pins.check("ask_field", {
+	return SUPPORT.pin_table("ask_field", {
 		"chase": EventSheetCompletions.KIND_STATE,
 		"player harder": EventSheetCompletions.KIND_ROW,
 		"gave": EventSheetCompletions.KIND_SIGNAL,
@@ -162,12 +162,12 @@ static func _test_a_group_says_how_much_it_holds() -> bool:
 	for entry: Dictionary in page:
 		if bool(entry.get("heading", false)):
 			headings[str(entry.get("kind", ""))] = str(entry.get("text", ""))
-	var ok: bool = Pins.check_value("ask_field", "the capped group says how much of it is shown",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the capped group says how much of it is shown",
 		str(headings.get(EventSheetCompletions.KIND_ROW, "")),
 		"Rows - %d of 9" % EventSheetAskAnswers.GROUP_LIMIT)
-	ok = Pins.check_value("ask_field", "a group that fits says only what it is",
+	ok = SUPPORT.pin_value("ask_field", "a group that fits says only what it is",
 		str(headings.get(EventSheetCompletions.KIND_STATE, "")), "States") and ok
-	return Pins.check_value("ask_field", "and the group really is capped at the stated number",
+	return SUPPORT.pin_value("ask_field", "and the group really is capped at the stated number",
 		_texts(page, EventSheetCompletions.KIND_ROW).size(), EventSheetAskAnswers.GROUP_LIMIT) and ok
 
 
@@ -187,14 +187,14 @@ static func _test_findings_are_searchable() -> bool:
 		if str(entry.get("kind", "")) == EventSheetCompletions.KIND_FINDING \
 				and not bool(entry.get("heading", false)):
 			found = entry
-	var ok: bool = Pins.check_value("ask_field", "the finding is answered by its own words",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the finding is answered by its own words",
 		str(found.get("text", "")), "Panic is entered but never left.")
-	ok = Pins.check_value("ask_field", "labelled with its severity and the file it is about",
+	ok = SUPPORT.pin_value("ask_field", "labelled with its severity and the file it is about",
 		str(found.get("detail", "")), "Error · boss.gd") and ok
-	ok = Pins.check_value("ask_field", "and it carries the path its door needs",
+	ok = SUPPORT.pin_value("ask_field", "and it carries the path its door needs",
 		str(found.get("path", "")), "res://boss.gd") and ok
 	# And nothing runs an audit to answer: with no findings recorded there is simply no group.
-	ok = Pins.check_value("ask_field", "no audit means no Findings group",
+	ok = SUPPORT.pin_value("ask_field", "no audit means no Findings group",
 		_groups(EventSheetAskAnswers.answers("panic", _shelf(_sheet()))).has(
 			EventSheetCompletions.KIND_FINDING), false) and ok
 	return ok
@@ -204,7 +204,7 @@ static func _test_findings_are_searchable() -> bool:
 ## always been until there are two.
 static func _test_the_floor() -> bool:
 	var sheet: EventSheetResource = _sheet()
-	return Pins.check("ask_field", {
+	return SUPPORT.pin_table("ask_field", {
 		"c": 0,
 		"ch": 1,
 	}, func(query: String) -> Variant:
@@ -220,20 +220,20 @@ static func _test_the_add_is_still_first() -> bool:
 	EventSheetCompletions.clear_cache()
 	var list: Array[Dictionary] = dock._ask_field.entries("chase")
 	var first: Dictionary = list[0] if not list.is_empty() else {}
-	var ok: bool = Pins.check_value("ask_field", "the add line is first",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the add line is first",
 		str(first.get("kind", "")), EventSheetAskField.KIND_ADD)
-	ok = Pins.check_value("ask_field", "and it is the sentence as typed",
+	ok = SUPPORT.pin_value("ask_field", "and it is the sentence as typed",
 		str(first.get("text", "")), "chase") and ok
-	ok = Pins.check_value("ask_field", "and it says what it will do and where",
+	ok = SUPPORT.pin_value("ask_field", "and it says what it will do and where",
 		str(first.get("detail", "")), "Add row · Enemy") and ok
-	ok = Pins.check_value("ask_field", "and it is a door, not text to insert",
+	ok = SUPPORT.pin_value("ask_field", "and it is a door, not text to insert",
 		first.get("open") is Callable, true) and ok
 	# An empty field offers nothing at all - not even the add line, which would be an add of nothing.
-	ok = Pins.check_value("ask_field", "an empty field answers nothing",
+	ok = SUPPORT.pin_value("ask_field", "an empty field answers nothing",
 		dock._ask_field.entries("   ").size(), 0) and ok
 	# And the Rows group ends in the door to the window that reaches the sheets this list does not.
 	var rows_end: int = EventSheetAskField.last_of_kind(list, EventSheetCompletions.KIND_ROW)
-	ok = Pins.check_value("ask_field", "the Rows group ends in the project-wide door",
+	ok = SUPPORT.pin_value("ask_field", "the Rows group ends in the project-wide door",
 		str(list[rows_end + 1].get("kind", "")) if rows_end >= 0 and rows_end + 1 < list.size() else "",
 		EventSheetAskField.KIND_FIND) and ok
 	dock.free()
@@ -251,9 +251,9 @@ static func _test_the_row_door_names_its_event() -> bool:
 	var by_text: Dictionary = {}
 	for entry: Dictionary in page:
 		by_text[str(entry.get("text", ""))] = str(entry.get("uid", ""))
-	var ok: bool = Pins.check_value("ask_field", "the row inside an event names it",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the row inside an event names it",
 		str(by_text.get("chase the player harder", "!")), "ask-row-1")
-	return Pins.check_value("ask_field", "the comment outside one names nothing",
+	return SUPPORT.pin_value("ask_field", "the comment outside one names nothing",
 		str(by_text.get("chase notes for later", "!")), "") and ok
 
 
@@ -267,9 +267,9 @@ static func _test_the_pools_are_built_once() -> bool:
 	var again: Array[Dictionary] = EventSheetCompletions.candidates(sheet,
 		EventSheetCompletions.FIELD_ASK_ROW)
 	# Identity rather than equality: two equal lists would still mean the sheet was walked twice.
-	var ok: bool = Pins.check_value("ask_field", "the second ask is the SAME list, not an equal one",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the second ask is the SAME list, not an equal one",
 		is_same(first, again), true)
-	ok = Pins.check_value("ask_field", "a symbol pool carries the states as words, then the names",
+	ok = SUPPORT.pin_value("ask_field", "a symbol pool carries the states as words, then the names",
 		_symbol_texts(sheet), PackedStringArray(["Patrol", "Chase", "Stagger",
 			"begin_chase", "chase_speed", "gave_up"])) and ok
 	# Every entry carries its own lowered text, which is what keeps a keystroke off the allocator.
@@ -278,7 +278,7 @@ static func _test_the_pools_are_built_once() -> bool:
 			EventSheetCompletions.FIELD_ASK_ROW):
 		if not entry.has("lower"):
 			lowered = false
-	ok = Pins.check_value("ask_field", "and every row candidate is pre-lowered", lowered, true) and ok
+	ok = SUPPORT.pin_value("ask_field", "and every row candidate is pre-lowered", lowered, true) and ok
 	return ok
 
 
@@ -298,9 +298,9 @@ static func _test_find_and_ask_read_one_collection() -> bool:
 	var found: Array = EventSheetProjectFind.find_in_sheet(sheet, "chase")
 	var asked: PackedStringArray = _texts(EventSheetAskAnswers.answers("chase", _shelf(sheet)),
 		EventSheetCompletions.KIND_ROW)
-	var ok: bool = Pins.check_value("ask_field", "the window finds the row", found.size(), 1)
-	ok = Pins.check_value("ask_field", "the field answers with it", asked.size(), 1) and ok
-	return Pins.check_value("ask_field", "and the window now names the event too",
+	var ok: bool = SUPPORT.pin_value("ask_field", "the window finds the row", found.size(), 1)
+	ok = SUPPORT.pin_value("ask_field", "the field answers with it", asked.size(), 1) and ok
+	return SUPPORT.pin_value("ask_field", "and the window now names the event too",
 		str((found[0] as Dictionary).get("uid", "")) if not found.is_empty() else "",
 		"ask-row-1") and ok
 
@@ -317,9 +317,9 @@ static func _test_the_popup_opens_a_door() -> bool:
 	popup.entries = popup._ask("chase")
 	popup.index = 0
 	field.text = "chase"
-	var ok: bool = Pins.check_value("ask_field", "accepting a door runs it", popup.accept(), true)
-	ok = Pins.check_value("ask_field", "and writes nothing into the field", field.text, "chase") and ok
-	ok = Pins.check_value("ask_field", "and it ran exactly once", int(opened["count"]), 1) and ok
+	var ok: bool = SUPPORT.pin_value("ask_field", "accepting a door runs it", popup.accept(), true)
+	ok = SUPPORT.pin_value("ask_field", "and writes nothing into the field", field.text, "chase") and ok
+	ok = SUPPORT.pin_value("ask_field", "and it ran exactly once", int(opened["count"]), 1) and ok
 	field.free()
 	return ok
 
@@ -340,13 +340,13 @@ static func _test_headings_are_not_answers() -> bool:
 	var stepped: int = popup.index
 	popup.move(1)
 	var wrapped: int = popup.index
-	var ok: bool = Pins.check_value("ask_field",
+	var ok: bool = SUPPORT.pin_value("ask_field",
 		"the highlight lands on the first answer, not the heading", landed, 1)
-	ok = Pins.check_value("ask_field", "and Down steps over the next heading", stepped, 3) and ok
-	ok = Pins.check_value("ask_field", "and wraps back to the first answer", wrapped, 1) and ok
+	ok = SUPPORT.pin_value("ask_field", "and Down steps over the next heading", stepped, 3) and ok
+	ok = SUPPORT.pin_value("ask_field", "and wraps back to the first answer", wrapped, 1) and ok
 	popup.index = 0
 	popup.entries[0] = {"text": "States", "detail": "", "kind": "state", "heading": true}
-	ok = Pins.check_value("ask_field", "accepting a heading does nothing at all",
+	ok = SUPPORT.pin_value("ask_field", "accepting a heading does nothing at all",
 		popup.accept(), false) and ok
 	field.free()
 	return ok

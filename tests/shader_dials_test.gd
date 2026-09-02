@@ -17,7 +17,7 @@
 class_name ShaderDialsTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 const BOSS: String = "effect_scene_boss.gd"
@@ -129,7 +129,7 @@ static func _test_the_cache() -> bool:
 ## rather than to a variable, and the lead is MARKED so the canvas draws it quietly - the same device
 ## an autoload's name is read with, not a pill.
 static func _test_the_reading() -> bool:
-	var ok: bool = Pins.check("shader_dials_test", {
+	var ok: bool = SUPPORT.pin_table("shader_dials_test", {
 		"dissolve": "effect.dissolve",
 		"edge_tint": "effect.edge_tint",
 		"": "",
@@ -155,7 +155,7 @@ static func _test_the_reading() -> bool:
 ## is what gets emitted, so it is pinned here rather than described: these are the lines a project
 ## ends up holding.
 static func _test_the_rows() -> bool:
-	var ok: bool = Pins.check("shader_dials_test", {
+	var ok: bool = SUPPORT.pin_table("shader_dials_test", {
 		"EffectSetDial": "{target.}material.set_shader_parameter(&\"{dial}\", {value})",
 		"EffectFadeDial": "create_tween().tween_method(func(v): {target.}material.set_shader_parameter(&\"{dial}\", v), {from}, {to}, {seconds})",
 		"EffectDial": "{target.}material.get_shader_parameter(&\"{dial}\")",
@@ -166,14 +166,14 @@ static func _test_the_rows() -> bool:
 		return descriptor.codegen_template if descriptor != null else "")
 	# The four dial rows are the project's to name, so neither the picker's browse nor the reverse
 	# index may offer them; the copy row names nothing and stays an ordinary browsable verb.
-	ok = Pins.check("shader_dials_test", {
+	ok = SUPPORT.pin_table("shader_dials_test", {
 		"EffectSetDial": true, "EffectFadeDial": true, "EffectDial": true, "EffectDialIs": true,
 		"EffectOwnMaterial": false, "SetShaderParameter": false
 	}, func(ace_id: String) -> Variant:
 		var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 		return descriptor != null and descriptor.is_project_scoped) and ok
 	# The four shipped rows are frozen API and keep their own templates, beside the new ones.
-	return Pins.check("shader_dials_test", {
+	return SUPPORT.pin_table("shader_dials_test", {
 		"SetShaderParameter": "{target.}material.set_shader_parameter(&{param}, {value})",
 		"GetShaderParameter": "{target.}material.get_shader_parameter(&{param})",
 		"SetShaderMaterial": "{target.}material = {material}",
@@ -235,7 +235,7 @@ static func _test_the_picker() -> bool:
 ## as a text box here. Pinned by value because the derivation IS the feature - a hint read wrong is a
 ## field a reader cannot answer.
 static func _test_the_editors() -> bool:
-	var ok: bool = Pins.check("shader_dials_test", {
+	var ok: bool = SUPPORT.pin_table("shader_dials_test", {
 		"dissolve": "slider", "edge_tint": "color", "burn_noise": "texture", "steps": "stepper"
 	}, func(dial: String) -> Variant:
 		return EventForgeShaderUniforms.editor_kind(
@@ -257,7 +257,7 @@ static func _test_the_editors() -> bool:
 	# The value a field OPENS on when the row has none: the shader's own starting value, written as
 	# the GDScript the row emits. `vec4` is not GDScript; `Color(…)` is the same value in the language
 	# the line is in, and a single component fills the rest exactly as GLSL fills it.
-	ok = Pins.check("shader_dials_test", {
+	ok = SUPPORT.pin_table("shader_dials_test", {
 		"uniform float a = 0.0;": "0.0",
 		"uniform int b = 8;": "8",
 		"uniform bool c = true;": "true",
@@ -272,12 +272,12 @@ static func _test_the_editors() -> bool:
 	# A texture dial is a FILE in the field and a `preload` in the line, and the two are exact
 	# inverses - a hand-written `load(…)` opens in the field as its own path rather than being
 	# refused, because somebody really does write that.
-	ok = Pins.check("shader_dials_test", {
+	ok = SUPPORT.pin_table("shader_dials_test", {
 		"res://noise.png": "preload(\"res://noise.png\")",
 		"\"res://noise.png\"": "preload(\"res://noise.png\")",
 		"": ""
 	}, func(path: String) -> Variant: return ACEParamsDialog.texture_literal(path)) and ok
-	ok = Pins.check("shader_dials_test", {
+	ok = SUPPORT.pin_table("shader_dials_test", {
 		"preload(\"res://noise.png\")": "res://noise.png",
 		"load(\"res://noise.png\")": "res://noise.png",
 		"hp / 100.0": ""
@@ -285,7 +285,7 @@ static func _test_the_editors() -> bool:
 	# And the chain the field walks to find any of that: the row's "On node", the material that node
 	# wears, the shader behind it, and the dial by name. A blank node is the node the sheet is on.
 	EventSheetSceneEffects.clear_cache()
-	return Pins.check("shader_dials_test", {
+	return SUPPORT.pin_table("shader_dials_test", {
 		"|dissolve": "slider", "|burn_noise": "texture", "$Aura|glow": "slider",
 		"$Plain|glow": "expression", "|nothing_like_it": "expression"
 	}, func(asked: String) -> Variant:
@@ -335,4 +335,4 @@ static func _description_of(offered: Array[ACEDefinition], target: String, verb:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return Pins.check_value("shader_dials_test", label, actual, expected)
+	return SUPPORT.pin_value("shader_dials_test", label, actual, expected)

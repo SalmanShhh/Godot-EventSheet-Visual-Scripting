@@ -29,7 +29,7 @@
 class_name IdiomFamiliesTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 const HANDLER := "extends Node\n\n\nfunc _unhandled_input(event: InputEvent) -> void:\n"
 
@@ -101,7 +101,7 @@ static func run() -> bool:
 ## because the `&` is the author's spelling rather than the row's value - which is the whole reason
 ## the capture grammar grew a fragment for it.
 static func _test_the_input_event_questions() -> bool:
-	var ok: bool = Pins.check("idiom_families_test/input_event_entries", {
+	var ok: bool = SUPPORT.pin_table("idiom_families_test/input_event_entries", {
 		"event.is_action_pressed(\"jump\")": "event_action_pressed",
 		"event.is_action_pressed(&\"jump\")": "event_action_pressed",
 		"event.is_action_pressed(\"ui_down\", true)": "event_action_pressed_repeating",
@@ -119,11 +119,11 @@ static func _test_the_input_event_questions() -> bool:
 	# And the same four in a real handler, in file order, as the reading itself attributes them - so
 	# the entry that claims a term on its own and the entry that claims it inside a branch are pinned
 	# to be the same entry.
-	ok = Pins.check_value("idiom_families_test", "the four questions are claimed by name, in order",
+	ok = SUPPORT.pin_value("idiom_families_test", "the four questions are claimed by name, in order",
 		_entry_claims(INPUT_HANDLER),
 		"event_action_pressed | event_action_pressed_repeating | event_action_released"
 		+ " | event_is_action") and ok
-	ok = Pins.check_value("idiom_families_test", "the handler saves back byte for byte",
+	ok = SUPPORT.pin_value("idiom_families_test", "the handler saves back byte for byte",
 		_round_trips(INPUT_HANDLER), true) and ok
 	return ok
 
@@ -139,18 +139,18 @@ static func _test_the_named_property() -> bool:
 		if entry is LocalVariable:
 			var variable: LocalVariable = entry
 			found[variable.name] = "%s / %s" % [variable.setter_name, variable.getter_name]
-	var ok: bool = Pins.check("idiom_families_test/named_property", {
+	var ok: bool = SUPPORT.pin_table("idiom_families_test/named_property", {
 		"health": "_set_health / _get_health",
 		"armour": "_set_armour / "
 	}, func(name: String) -> String: return str(found.get(name, "MISSING")))
 	var health: LocalVariable = _variable_named(sheet, "health")
-	ok = Pins.check_value("idiom_families_test", "the named property saves back byte for byte",
+	ok = SUPPORT.pin_value("idiom_families_test", "the named property saves back byte for byte",
 		_round_trips(NAMED_PROPERTY), true) and ok
-	ok = Pins.check_value("idiom_families_test", "a property is a property under either spelling",
+	ok = SUPPORT.pin_value("idiom_families_test", "a property is a property under either spelling",
 		health.has_property_accessors(), true) and ok
-	ok = Pins.check_value("idiom_families_test", "and this one is the named spelling",
+	ok = SUPPORT.pin_value("idiom_families_test", "and this one is the named spelling",
 		health.has_named_accessors(), true) and ok
-	ok = Pins.check_value("idiom_families_test", "which is not the inline one",
+	ok = SUPPORT.pin_value("idiom_families_test", "which is not the inline one",
 		health.has_accessor_bodies(), false) and ok
 	return ok
 
@@ -158,7 +158,7 @@ static func _test_the_named_property() -> bool:
 ## The bound connect: the values are read back off the line the lift kept verbatim, and the handlers
 ## lift to their triggers rather than staying helper functions nobody can see the caller of.
 static func _test_the_bound_connect() -> bool:
-	var ok: bool = Pins.check("idiom_families_test/bound_values", {
+	var ok: bool = SUPPORT.pin_table("idiom_families_test/bound_values", {
 		"\t$Button.pressed.connect(_on_pressed.bind(3))": "3",
 		"\t$Timer.timeout.connect(_on_timeout.bind(\"door\", Vector2(0, 1)))":
 			"\"door\" | Vector2(0, 1)",
@@ -170,9 +170,9 @@ static func _test_the_bound_connect() -> bool:
 		"\tprint(_on_pressed.bind(3))": ""
 	}, func(line: String) -> String:
 		return " | ".join(EventSheetACELifter.bound_arguments(line)))
-	ok = Pins.check_value("idiom_families_test", "a bound handler is a trigger, not a helper",
+	ok = SUPPORT.pin_value("idiom_families_test", "a bound handler is a trigger, not a helper",
 		_claims(BOUND_CONNECTS).contains("function _on_"), false) and ok
-	ok = Pins.check_value("idiom_families_test", "the bound connects save back byte for byte",
+	ok = SUPPORT.pin_value("idiom_families_test", "the bound connects save back byte for byte",
 		_round_trips(BOUND_CONNECTS), true) and ok
 	return ok
 
@@ -183,7 +183,7 @@ static func _test_the_bound_connect() -> bool:
 ## is which. Pinned as a COMPARISON of the two sources rather than as two separate pins, because two
 ## pins can both be edited and still disagree.
 static func _test_the_notification_triggers() -> bool:
-	return Pins.check("idiom_families_test/notification_triggers", {
+	return SUPPORT.pin_table("idiom_families_test/notification_triggers", {
 		"NOTIFICATION_PAUSED": "On paused",
 		"NOTIFICATION_UNPAUSED": "On unpaused",
 		"NOTIFICATION_PREDELETE": "On object freed",
@@ -205,7 +205,7 @@ static func _test_the_notification_triggers() -> bool:
 ## code: every shape here is one the emitter would not write back the same way, so it stays the
 ## verbatim block it always was.
 static func _test_the_property_refusals() -> bool:
-	return Pins.check("idiom_families_test/property_refusals", {
+	return SUPPORT.pin_table("idiom_families_test/property_refusals", {
 		# The emitter writes setter then getter, so the other order is a shape it could not put back.
 		"\tget = _get_health,\n\tset = _set_health": false,
 		# A comma with nothing after it.

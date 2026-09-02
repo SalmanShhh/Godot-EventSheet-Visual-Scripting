@@ -18,7 +18,7 @@
 class_name EffectFactsTest
 extends RefCounted
 
-const Pins := preload("res://tests/pin_table.gd")
+const SUPPORT := preload("res://tests/support.gd")
 
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 const BOSS: String = FIXTURE_DIR + "effect_scene_boss.gd"
@@ -308,4 +308,4 @@ static func _kinds(found: Array[Dictionary]) -> PackedStringArray:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	return Pins.check_value("effect_facts_test", label, actual, expected)
+	return SUPPORT.pin_value("effect_facts_test", label, actual, expected)
