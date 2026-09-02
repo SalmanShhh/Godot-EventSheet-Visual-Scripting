@@ -330,7 +330,7 @@ static func _test_whats_new() -> bool:
 		EventSheetDocReference.title_for(EventSheetDocReference.KIND_WHATS_NEW, ""),
 		"What's new") and all_passed
 	# The extraction, over a fixture changelog rather than over whatever the repo says this week.
-	var changelog: String = "# Changelog\n\n## [Unreleased]\n\n### Added\n\nA thing.\n\n## [1.2.0] - 2026-01-01\n\n### Fixed\n\nAnother thing.\n\n## [1.1.0] - 2025-12-01\n\n### Fixed\n\nOld news.\n"
+	var changelog: String = "# Changelog\n\n## [Unreleased]\n\n### Added\n\nA thing.\n\n### Maintenance: the copies\n\nA fold nobody can see.\n\n## [1.2.0] - 2026-01-01\n\n### Fixed\n\nAnother thing.\n\n## [1.1.0] - 2025-12-01\n\n### Fixed\n\nOld news.\n"
 	var page: String = EventSheetDocWhatsNew.page_markdown(changelog, "1.2.0")
 	all_passed = _check("the page is titled What's new",
 		page.begins_with("# What's new"), true) and all_passed
@@ -342,6 +342,15 @@ static func _test_whats_new() -> bool:
 		page.contains("Another thing."), true) and all_passed
 	all_passed = _check("and nothing older than that",
 		page.contains("Old news."), false) and all_passed
+	# A release's Maintenance notes are written for whoever works on the plugin, and an installed
+	# reader can neither see nor decide anything about them, so the page drops the section whole -
+	# heading included, or the chapter would end on a title with nothing under it.
+	all_passed = _check("a maintainer-only section is not on the reader's page",
+		page.contains("A fold nobody can see."), false) and all_passed
+	all_passed = _check("...nor is the heading it sat under",
+		page.contains("Maintenance"), false) and all_passed
+	all_passed = _check("...while the section beside it is untouched",
+		page.contains("A thing."), true) and all_passed
 	all_passed = _check("the baked file carries its frozen header",
 		EventSheetDocWhatsNew.bundle_text(changelog, "1.2.0").begins_with(
 			EventSheetDocWhatsNew.BUNDLE_HEADER), true) and all_passed

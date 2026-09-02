@@ -41,6 +41,19 @@ const SEEN_KEY := "whats_new_seen_version"
 ## reformat it.
 const RELEASE_PREFIX := "## ["
 
+## Where a subsection of a release starts. The page shows subsections at their own level.
+const SUBSECTION_PREFIX := "### "
+
+## The one subsection a reader is NOT shown. A release's Maintenance notes are written for whoever
+## works on the plugin - copies folded into one, a helper that moved, a dev tool that answers a
+## question about the importer - and none of it is something an installed reader can see, do or
+## decide about. It stays in the CHANGELOG, which is where a maintainer reads; this page is the
+## editor telling its reader what it just did to THEM, so it drops the section whole.
+##
+## Matched on the heading's opening words, so a section may title itself
+## "### Maintenance: the copies that had no reason to be copies" and still be recognised.
+const MAINTAINER_SUBSECTION := "### Maintenance"
+
 static var _markdown: String = ""
 static var _loaded: bool = false
 
@@ -108,10 +121,27 @@ static func page_markdown(changelog: String, version: String) -> String:
 		# The subsections are left at their own level rather than promoted: the page folds at H2, so
 		# a release stays ONE chapter a reader can close, and "Unreleased" keeps its own notes under
 		# it instead of becoming an empty heading with its contents beside it.
-		for line: String in (section.get("body", []) as Array):
+		for line: String in _reader_lines(section.get("body", []) as Array):
 			out.append(line)
 	out.append("")
 	return "\n".join(out)
+
+
+## One release's body with its maintainer-only subsections dropped: from a `### Maintenance` heading
+## up to the next subsection heading, whole. Trailing blank lines go with it, so removing the last
+## subsection of a release does not leave the page ending in a gap that grows per run.
+static func _reader_lines(body: Array) -> Array:
+	var kept: Array = []
+	var skipping: bool = false
+	for entry: Variant in body:
+		var line: String = str(entry)
+		if line.begins_with(SUBSECTION_PREFIX):
+			skipping = line.begins_with(MAINTAINER_SUBSECTION)
+		if not skipping:
+			kept.append(line)
+	while kept.size() > 0 and str(kept[kept.size() - 1]).strip_edges().is_empty():
+		kept.remove_at(kept.size() - 1)
+	return kept
 
 
 ## The CHANGELOG split into its release sections, newest first, as {title, body}. `title` is the
