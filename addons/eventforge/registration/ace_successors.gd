@@ -153,6 +153,15 @@ static func clear_cache() -> void:
 ## parameter's GDScript type name beside it, for the same reason: a blank number field holds `0`,
 ## not an empty string.
 ##
+## `declared_options`, `declared_autocomplete`, `declared_required`, `declared_option_labels` and
+## `declared_lenses` are the rest of what a PARAMETER declares, and `node_type`, `signal_name`,
+## `return_type`, `is_featured`, `is_project_scoped` and `is_deprecated` are the rest of what a
+## DESCRIPTOR declares. None of them changes an emitted byte, so none is on the identity dump's line;
+## every one of them decides what a picker puts in front of a person, which is why they ride here for
+## the fields dump to walk. A dropdown that lost its options, a required flag that went false or a
+## project-scoped verb that stopped being project-scoped is a refactor that broke the editor while
+## both of the older texts said `same`.
+##
 ## `name`, `description`, `declared_labels` and `declared_descriptions` are the WORDING - the words a
 ## picker reads out. Nothing that resolves a rewrite reads them, and the registry dump's line leaves
 ## them off on purpose, because a reworded verb is the same verb. They ride along here so the wording
@@ -167,6 +176,11 @@ static func entry_of(source: Variant) -> Dictionary:
 		var descriptor_types: Dictionary = {}
 		var descriptor_labels: Dictionary = {}
 		var descriptor_descriptions: Dictionary = {}
+		var descriptor_options: Dictionary = {}
+		var descriptor_autocomplete: Dictionary = {}
+		var descriptor_required: Dictionary = {}
+		var descriptor_option_labels: Dictionary = {}
+		var descriptor_lenses: Dictionary = {}
 		for param: ACEParam in descriptor.params:
 			if param == null:
 				continue
@@ -179,6 +193,11 @@ static func entry_of(source: Variant) -> Dictionary:
 			descriptor_types[param_id] = param.type_name
 			descriptor_labels[param_id] = param.get_param_name()
 			descriptor_descriptions[param_id] = param.get_param_description()
+			descriptor_options[param_id] = spell_options(param.options)
+			descriptor_autocomplete[param_id] = spell_suggestions(param.autocomplete)
+			descriptor_required[param_id] = param.required
+			descriptor_option_labels[param_id] = param.display_option_labels
+			descriptor_lenses[param_id] = param.display_lens
 			if not str(param.get_initial_value()).strip_edges().is_empty():
 				descriptor_answered.append(param_id)
 		return {
@@ -216,6 +235,17 @@ static func entry_of(source: Variant) -> Dictionary:
 			"declared_types": descriptor_types,
 			"declared_labels": descriptor_labels,
 			"declared_descriptions": descriptor_descriptions,
+			"declared_options": descriptor_options,
+			"declared_autocomplete": descriptor_autocomplete,
+			"declared_required": descriptor_required,
+			"declared_option_labels": descriptor_option_labels,
+			"declared_lenses": descriptor_lenses,
+			"node_type": descriptor.node_type,
+			"signal_name": descriptor.signal_name,
+			"return_type": int(descriptor.return_type),
+			"is_featured": descriptor.is_featured,
+			"is_project_scoped": descriptor.is_project_scoped,
+			"is_deprecated": descriptor.is_deprecated,
 			"answered_by_default": descriptor_answered,
 			"map": descriptor.successor_map(),
 		}
@@ -228,6 +258,11 @@ static func entry_of(source: Variant) -> Dictionary:
 		var definition_types: Dictionary = {}
 		var definition_labels: Dictionary = {}
 		var definition_descriptions: Dictionary = {}
+		var definition_options: Dictionary = {}
+		var definition_autocomplete: Dictionary = {}
+		var definition_required: Dictionary = {}
+		var definition_option_labels: Dictionary = {}
+		var definition_lenses: Dictionary = {}
 		for parameter: Variant in definition.parameters:
 			if not (parameter is Dictionary):
 				continue
@@ -241,6 +276,11 @@ static func entry_of(source: Variant) -> Dictionary:
 			definition_types[parameter_id] = type_name_of(parameter_dict.get("type", TYPE_NIL))
 			definition_labels[parameter_id] = str(parameter_dict.get("display_name", parameter_dict.get("name", "")))
 			definition_descriptions[parameter_id] = str(parameter_dict.get("description", ""))
+			definition_options[parameter_id] = spell_options(parameter_dict.get("options", []))
+			definition_autocomplete[parameter_id] = spell_suggestions(parameter_dict.get("autocomplete", []))
+			definition_required[parameter_id] = bool(parameter_dict.get("required", false))
+			definition_option_labels[parameter_id] = bool(parameter_dict.get("display_option_labels", false))
+			definition_lenses[parameter_id] = str(parameter_dict.get("display_lens", ""))
 			if not str(parameter_dict.get("default_value", "")).strip_edges().is_empty():
 				definition_answered.append(parameter_id)
 		var pack_template: String = str(definition.metadata.get("codegen_template", ""))
@@ -265,10 +305,50 @@ static func entry_of(source: Variant) -> Dictionary:
 			"declared_types": definition_types,
 			"declared_labels": definition_labels,
 			"declared_descriptions": definition_descriptions,
+			"declared_options": definition_options,
+			"declared_autocomplete": definition_autocomplete,
+			"declared_required": definition_required,
+			"declared_option_labels": definition_option_labels,
+			"declared_lenses": definition_lenses,
+			"node_type": str(definition.metadata.get("node_type", "")),
+			"signal_name": str(definition.metadata.get("signal_name", "")),
+			"return_type": int(definition.return_type),
+			"is_featured": bool(definition.metadata.get("featured", false)),
+			"is_project_scoped": bool(definition.metadata.get("project_scoped", false)),
+			"is_deprecated": bool(definition.metadata.get("deprecated", false)),
 			"answered_by_default": definition_answered,
 			"map": map_of(definition),
 		}
 	return {}
+
+
+## One parameter's dropdown as one stable string: the options in the order the parameter declares
+## them, joined by `|`, each spelled `key=label` - or just the key where the two are the same word,
+## which is what a plain-string option means. The order is the parameter's own, never sorted: a
+## dropdown reshuffled is a different dropdown to the person reading it.
+static func spell_options(options: Variant) -> String:
+	if not (options is Array):
+		return ""
+	var spelled: PackedStringArray = PackedStringArray()
+	for option: Variant in (options as Array):
+		if option is Dictionary:
+			var key: String = str((option as Dictionary).get("key", ""))
+			var label: String = str((option as Dictionary).get("label", key))
+			spelled.append(key if key == label else "%s=%s" % [key, label])
+			continue
+		spelled.append(str(option))
+	return "|".join(spelled)
+
+
+## One parameter's autocomplete suggestions as one stable string, joined by `|`, in the order the
+## parameter declares them - the order they are offered in, and so the order that matters.
+static func spell_suggestions(suggestions: Variant) -> String:
+	if not (suggestions is Array):
+		return ""
+	var spelled: PackedStringArray = PackedStringArray()
+	for suggestion: Variant in (suggestions as Array):
+		spelled.append(str(suggestion))
+	return "|".join(spelled)
 
 
 # ── Resolution ────────────────────────────────────────────────────────────────────────────────

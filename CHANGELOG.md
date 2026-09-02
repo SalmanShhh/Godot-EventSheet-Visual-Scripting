@@ -127,6 +127,26 @@ read **-2,063** (**+4,230 / -6,293**) - the shipped-plugin figure is untouched a
 nothing under `addons/` is PowerShell. The wave was 319 lines better than it said and is 319 lines
 worse than it said; the number below it is the honest one.
 
+- **The identity gate is four texts, and the two new ones watch what sorting destroys.** Identity
+  and wording between them sign off two changes that break the editor in front of a user. `fields`
+  is what a verb OFFERS - every parameter's hint, dropdown options, autocomplete suggestions, reading
+  lens, option-label flag and required flag, plus the descriptor's own node type, signal, return type
+  and its featured / project-scoped / deprecated flags. Not one of those moves an emitted byte or a
+  printed word, so a comparison parameter that lost its options, a required flag that went false or a
+  dial verb that stopped being project-scoped reads as `same` on both older texts. `order` is the
+  SEQUENCE, and it is the one text deliberately not sorted: the other three sort by key, which is
+  what makes them diffable and what makes them blind to the thing sorting destroys. Registration
+  order decides which of two verbs sharing an id shadows the other in the picker index, and it is the
+  reverse-lifter's tie-break - the lifter takes the first entry whose template matches, orders its
+  index by literal-character count, and settles a tie by registration order alone, which a dozen
+  shipped comments in the lifter turn on. Split a module in three and a hand-written line can come
+  back as a different row: identical bytes, a different sentence, three sorted texts saying nothing
+  moved. `tools/prove_registry_identity.ps1` now diffs all four and prints a verdict for each; its
+  instrument list gains the two new formatters, and the blind-spot report it prints stopped calling a
+  brand-new instrument "unchanged" (`git diff` says nothing about a path the base does not have, so
+  it now asks whether the base has the path before it asks what moved in it). Proved at
+  `57588286..HEAD`: `registry=same words=same fields=same order=same verbs=5324`.
+
 - **The ledger can see its own instruments.** Its universe was `*.gd`, and two of the things the
   second wave built - the ledger itself and the descriptor-identity gate - are PowerShell, so 416
   lines of tooling at the base and 735 at this commit were spent by the campaign and counted by
