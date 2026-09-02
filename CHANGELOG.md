@@ -120,7 +120,24 @@ Measured across the second wave at the last commit in it that moves a `.gd`, `57
 **-2,382 lines** of hand-written GDScript (**+3,911 / -6,293**), of which the installed plugin is
 **-3,056**. Every one of those numbers comes from `tools/measure_ledger.ps1`, at the commits named
 beside it; the entry you are reading and the doc-bundle bake after it move no `.gd`, so the figure
-is the tree that ships.
+is the tree that ships. Those are format-1 figures, and the third wave found them flattering: the
+ledger's universe was `*.gd`, so the two instruments that wave built in PowerShell were spent and
+never counted. Under format 2, which counts every hand-maintained language, the same two commits
+read **-2,063** (**+4,230 / -6,293**) - the shipped-plugin figure is untouched at **-3,056**, because
+nothing under `addons/` is PowerShell. The wave was 319 lines better than it said and is 319 lines
+worse than it said; the number below it is the honest one.
+
+- **The ledger can see its own instruments.** Its universe was `*.gd`, and two of the things the
+  second wave built - the ledger itself and the descriptor-identity gate - are PowerShell, so 416
+  lines of tooling at the base and 735 at this commit were spent by the campaign and counted by
+  nobody. That is the one direction a ledger must never be wrong in: it made the campaign's own
+  overheads look free. The universe is now every hand-maintained language in the repository, which
+  is GDScript and PowerShell and nothing else, the instruments have a row of their own so "a tool is
+  paid for in full" is a claim a reader can check, and the `doctors` area reads `*doctor*` on both
+  halves rather than `*_doctor.gd` on one, which had been hiding the Doctor's own section, inbox and
+  tidiness classes from the area named after them. `FormatVersion` is **2** and prints in the header,
+  because a figure from format 1 and a figure from format 2 are not comparable; the base commit is
+  restated under the new definition in the same breath as the old one everywhere it is quoted.
 
 - **A built-in verb is one line, and the line says which kind of verb it is.** The 1,783 built-in
   ACEs were each written as ten positional arguments with the kind spelled out in the middle of
@@ -243,7 +260,11 @@ is the tree that ships.
   pack builders **29,338**, dialogs **19,080**, the registration modules **16,779**, doctors
   **8,300**, the hand-written lift matchers **3,976**, and the two mega-files **32,646** between
   them. The tool itself is hand-written and counts against that first figure in full - the campaign
-  pays for its own instruments.
+  pays for its own instruments. (Format 1. The third wave widened the universe and RESTATED this
+  same commit under format 2, which is the line every figure from here on is quoted against:
+  **434,002** hand-written lines in **1,783** files - the 416 lines of PowerShell format 1 could not
+  see - with the shipped plugin unmoved at **235,693** in **608** and doctors reading **9,076** in
+  **21** rather than **8,300**, because the area's pathspec had been missing its own classes.)
 - **The vocabulary has a second text, and the identity gate is both.** `tools/dump_registry.gd`
   carries no wording at all, and that is right: a reworded verb is the same verb, and the pack update
   dialog diffs that text in front of a user to say what a version retires, so a description typo
