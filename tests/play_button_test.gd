@@ -25,6 +25,7 @@ static func run() -> bool:
 	ok = _test_the_dropdown() and ok
 	ok = _test_the_chosen_face() and ok
 	ok = _test_the_face_says_stop() and ok
+	ok = _test_the_watch_keeps_the_face_honest() and ok
 	ok = _test_the_add_toolbar_only_adds() and ok
 	return ok
 
@@ -141,6 +142,48 @@ static func _test_the_face_says_stop() -> bool:
 	ok = _check("and the run it left has no adopters holding it",
 		(controls._buttons["run_scene"] as Array).size(), 0) and ok
 	face.free()
+	return ok
+
+
+## THE WATCH. The face's words used to be recomputed only when the SHEET started a run or the choice
+## changed, so a game closed from its own window - or played and stopped from Godot's own play bar -
+## left the strip's one primary control reading "■ Stop" while nothing was running. Clicking still
+## did the right thing, because activate() re-asks, but a button that says Stop when nothing is
+## running is a button that lies.
+##
+## The transition is driven through poll_step rather than through a real game, so the whole
+## start/stop/start cycle is pinned by VALUE without an editor behind it: a tick that finds nothing
+## changed relabels nothing, and a tick that finds a change relabels everything adopted.
+static func _test_the_watch_keeps_the_face_honest() -> bool:
+	var controls: EventSheetRunControls = EventSheetRunControls.new()
+	var face: Button = Button.new()
+	var expanded: Button = Button.new()
+	controls.adopt("run_scene", face)
+	controls.adopt("preview_project", expanded)
+	controls.refresh()
+	var ok: bool = _check("a tick that finds nothing running changes nothing",
+		controls.poll_step(false), false)
+	ok = _check("a game started outside the sheet is noticed", controls.poll_step(true), true) and ok
+	ok = _check("and the face says Stop without anyone pressing it", face.text, _t("■ Stop")) and ok
+	ok = _check("every adopted button hears the same news", expanded.text, _t("↻ Restart")) and ok
+	ok = _check("a second tick while it still runs relabels nothing",
+		controls.poll_step(true), false) and ok
+	ok = _check("and a game closed from its own window puts the words back",
+		controls.poll_step(false), true) and ok
+	ok = _check("the face is itself again", face.text, _t("Run Scene")) and ok
+	ok = _check("and so is the one beside it", expanded.text, _t("▶▶ Preview project")) and ok
+	# The watch itself: one timer, on the DOCK rather than among the strip's pinned children, and a
+	# second build never leaves two of them ticking.
+	var host: Node = Node.new()
+	controls.watch(host)
+	var first: Node = controls._poll_timer
+	controls.watch(host)
+	ok = _check("the watch is a timer on the host", first is Timer, true) and ok
+	ok = _check("and re-building the strip replaces it rather than adding a second",
+		controls._poll_timer != first, true) and ok
+	face.free()
+	expanded.free()
+	host.free()
 	return ok
 
 

@@ -100,6 +100,13 @@
 
 ### Fixed
 
+- **The play button stops lying about what it will do.** Nothing re-asked the editor whether a game
+  was running: the face's words were recomputed only when the sheet itself started a run or the
+  choice changed. So a game closed from its own window, or started and stopped from Godot's own play
+  bar, left the strip's one primary control reading "■ Stop" or "↻ Restart" while nothing ran (or
+  "Run Scene" while a game did). Pressing it still did the right thing, because the press re-asks -
+  but the guide promises this button never lies. It asks twice a second now and relabels only when
+  the answer changed, from a timer on the dock rather than among the strip's own children.
 - **A key printed on a menu is a hint, not a second listener.** Teaching the Menu its keys hung a
   real `Shortcut` on each hinted item, and a `Shortcut` on a menu item under a visible `MenuButton`
   is not a label - it is a listener, and one that wins. A `MenuButton` forwards every key press it

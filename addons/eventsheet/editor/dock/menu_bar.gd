@@ -251,6 +251,12 @@ func build(root: Node) -> void:
 			str(run[1]), func() -> void: _dock._run_controls.activate(run_id),
 			EventSheetRunControls.tooltip_for(run_id), str(run[3])))
 	_dock._run_controls.refresh()
+	# And the watch that keeps those labels honest. A game can start and stop without this dock
+	# hearing about it - closed from its own window, or played and stopped from Godot's own play bar
+	# - and the face is the strip's one primary control, so it must never be the last to know. The
+	# timer lives on the DOCK, never on the toolbar: the strip's children are a pinned list, and a
+	# Timer among them is not a control anybody meant to put there.
+	_dock._run_controls.watch(_dock)
 	_add_toolbar_separator(_toolbar)
 	# The core reflexes stay one click (E / C / A on the keyboard).
 	_add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")

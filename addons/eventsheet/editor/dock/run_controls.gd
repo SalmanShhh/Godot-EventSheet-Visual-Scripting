@@ -68,9 +68,22 @@ const MAIN_RUN_META_KEY: String = "eventsheets_play_main"
 ## What the face does in a project that has never chosen.
 const DEFAULT_MAIN_RUN: String = "run_scene"
 
+## How often the strip re-asks the editor whether a game is running, in seconds. A game can start
+## and stop without this dock hearing about it - closed from its own window, or played and stopped
+## from Godot's own play bar - and the one primary control on the strip must never be the last to
+## know. One boolean read per tick, and a relabel only when the answer CHANGED.
+const POLL_SECONDS: float = 0.5
+
 var _dock: Control = null
 var _buttons: Dictionary = {}
 var _main_run: String = ""
+
+## The run state the last relabel was made for. Kept so a poll that finds nothing changed costs one
+## comparison rather than a walk over every adopted button.
+var _labelled_running: bool = false
+
+## The timer that asks. Held so a second build cannot leave two of them ticking.
+var _poll_timer: Timer = null
 
 
 func init(dock: Control) -> void:
@@ -185,7 +198,49 @@ func set_main_run(run_id: String) -> void:
 ## Relabels every adopted button for the current run state. Cheap enough to call on a timer or on
 ## any dock refresh.
 func refresh() -> void:
-	var running: bool = is_playing()
+	refresh_as(is_playing())
+
+
+## Starts (or restarts) the watch that keeps the labels honest. `host` is the node the timer lives
+## on - the dock itself, never the toolbar, because the strip's children are a pinned list and a
+## Timer among them is not a control anybody meant to put there.
+##
+## Without this, the face's words were only ever recomputed when the SHEET started a run or the
+## choice changed: a game closed from its own window, or started and stopped from Godot's play bar,
+## left the face reading "■ Stop" while nothing ran. Clicking still did the right thing (activate
+## re-asks), but the one primary control on the strip was saying something untrue.
+func watch(host: Node) -> void:
+	if host == null:
+		return
+	if _poll_timer != null and is_instance_valid(_poll_timer):
+		_poll_timer.queue_free()
+	_poll_timer = Timer.new()
+	_poll_timer.name = "EventSheetRunWatch"
+	_poll_timer.wait_time = POLL_SECONDS
+	_poll_timer.autostart = true
+	_poll_timer.timeout.connect(poll)
+	host.add_child(_poll_timer)
+
+
+## One tick of the watch: relabel only if the editor's answer changed since the last relabel.
+func poll() -> void:
+	poll_step(is_playing())
+
+
+## Whether a tick that found `running` should relabel, and the bookkeeping that goes with it. Pure
+## enough to pin without an editor behind it: the suite drives the whole start/stop transition
+## through this rather than through a running game.
+func poll_step(running: bool) -> bool:
+	if running == _labelled_running:
+		return false
+	refresh_as(running)
+	return true
+
+
+## Relabel every adopted button for a KNOWN run state, rather than for the one the editor reports.
+## The watch owns this: it has already asked, and asking twice invites the two answers to disagree.
+func refresh_as(running: bool) -> void:
+	_labelled_running = running
 	for button_id: Variant in _buttons:
 		for button: Variant in _buttons[button_id]:
 			if is_instance_valid(button):
