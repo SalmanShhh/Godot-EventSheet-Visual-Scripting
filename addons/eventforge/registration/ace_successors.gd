@@ -152,6 +152,11 @@ static func clear_cache() -> void:
 ## real row would carry has to ask this rather than the type alone. `declared_types` is each
 ## parameter's GDScript type name beside it, for the same reason: a blank number field holds `0`,
 ## not an empty string.
+##
+## `name`, `description`, `declared_labels` and `declared_descriptions` are the WORDING - the words a
+## picker reads out. Nothing that resolves a rewrite reads them, and the registry dump's line leaves
+## them off on purpose, because a reworded verb is the same verb. They ride along here so the wording
+## dump walks this one reduction rather than opening a second reflection pass that could disagree.
 static func entry_of(source: Variant) -> Dictionary:
 	if source is ACEDescriptor:
 		var descriptor: ACEDescriptor = source
@@ -160,6 +165,8 @@ static func entry_of(source: Variant) -> Dictionary:
 		var descriptor_defaults: Dictionary = {}
 		var descriptor_hints: Dictionary = {}
 		var descriptor_types: Dictionary = {}
+		var descriptor_labels: Dictionary = {}
+		var descriptor_descriptions: Dictionary = {}
 		for param: ACEParam in descriptor.params:
 			if param == null:
 				continue
@@ -170,11 +177,17 @@ static func entry_of(source: Variant) -> Dictionary:
 			descriptor_defaults[param_id] = param.get_initial_value()
 			descriptor_hints[param_id] = param.hint
 			descriptor_types[param_id] = param.type_name
+			descriptor_labels[param_id] = param.get_param_name()
+			descriptor_descriptions[param_id] = param.get_param_description()
 			if not str(param.get_initial_value()).strip_edges().is_empty():
 				descriptor_answered.append(param_id)
 		return {
 			"key": key_of(descriptor.provider_id, descriptor.ace_id),
 			"name": descriptor.get_list_name(),
+			# The sentence a picker shows UNDER the name. Wording, like the three fields below it -
+			# read by the wording dump, never by anything that resolves a rewrite, and deliberately
+			# absent from the registry dump's line, where a changed word would read as a changed verb.
+			"description": descriptor.description,
 			# The shelf the picker files this verb under. Nothing here resolves anything with it - it
 			# rides along because the registry dump is written off this same reduction, and a second
 			# reflection pass purely to read one string is a second answer waiting to disagree.
@@ -201,6 +214,8 @@ static func entry_of(source: Variant) -> Dictionary:
 			"declared_defaults": descriptor_defaults,
 			"declared_hints": descriptor_hints,
 			"declared_types": descriptor_types,
+			"declared_labels": descriptor_labels,
+			"declared_descriptions": descriptor_descriptions,
 			"answered_by_default": descriptor_answered,
 			"map": descriptor.successor_map(),
 		}
@@ -211,6 +226,8 @@ static func entry_of(source: Variant) -> Dictionary:
 		var definition_defaults: Dictionary = {}
 		var definition_hints: Dictionary = {}
 		var definition_types: Dictionary = {}
+		var definition_labels: Dictionary = {}
+		var definition_descriptions: Dictionary = {}
 		for parameter: Variant in definition.parameters:
 			if not (parameter is Dictionary):
 				continue
@@ -222,12 +239,15 @@ static func entry_of(source: Variant) -> Dictionary:
 			definition_defaults[parameter_id] = parameter_dict.get("default_value", "")
 			definition_hints[parameter_id] = str(parameter_dict.get("hint", ""))
 			definition_types[parameter_id] = type_name_of(parameter_dict.get("type", TYPE_NIL))
+			definition_labels[parameter_id] = str(parameter_dict.get("display_name", parameter_dict.get("name", "")))
+			definition_descriptions[parameter_id] = str(parameter_dict.get("description", ""))
 			if not str(parameter_dict.get("default_value", "")).strip_edges().is_empty():
 				definition_answered.append(parameter_id)
 		var pack_template: String = str(definition.metadata.get("codegen_template", ""))
 		return {
 			"key": key_of(definition.provider_id, definition.id),
 			"name": definition.display_name,
+			"description": definition.description,
 			"category": definition.category,
 			"template": pack_template,
 			"display_template": str(definition.metadata.get("display_template", "")) \
@@ -243,6 +263,8 @@ static func entry_of(source: Variant) -> Dictionary:
 			"declared_defaults": definition_defaults,
 			"declared_hints": definition_hints,
 			"declared_types": definition_types,
+			"declared_labels": definition_labels,
+			"declared_descriptions": definition_descriptions,
 			"answered_by_default": definition_answered,
 			"map": map_of(definition),
 		}

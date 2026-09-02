@@ -82,14 +82,14 @@ static func line_for(key: String, entry: Dictionary) -> String:
 		defaults.append("%s=%s" % [param, str(declared_defaults.get(param, ""))])
 	var successor: Dictionary = EventForgeSuccessors.normalize_map(entry.get("map", {}))
 	var fields: PackedStringArray = PackedStringArray([
-		_escape(key),
+		escape_field(key),
 		type_name(int(entry.get("ace_type", ACEDefinition.ACEType.ACTION))),
-		_escape(str(entry.get("category", ""))),
-		_escape(",".join(params)),
-		_escape(",".join(types)),
-		_escape(",".join(defaults)),
-		_escape(str(successor.get(EventForgeSuccessors.KEY_ID, ""))),
-		_escape(str(entry.get("template", ""))),
+		escape_field(str(entry.get("category", ""))),
+		escape_field(",".join(params)),
+		escape_field(",".join(types)),
+		escape_field(",".join(defaults)),
+		escape_field(str(successor.get(EventForgeSuccessors.KEY_ID, ""))),
+		escape_field(str(entry.get("template", ""))),
 	])
 	return SEPARATOR.join(fields)
 
@@ -237,7 +237,10 @@ static func for_script(script_path: String) -> String:
 # ── Escaping ──────────────────────────────────────────────────────────────────────────────────
 
 
-static func _escape(value: String) -> String:
+## One field made safe to sit on a tab-separated line: backslash, tab, carriage return and newline
+## are spelled rather than written. PUBLIC because the wording dump writes the same shape of line and
+## must escape it identically - two escapings would be two formats wearing one name.
+static func escape_field(value: String) -> String:
 	return value.replace("\\", "\\\\").replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n")
 
 

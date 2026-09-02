@@ -110,7 +110,11 @@ from `tools/build_help_bundle.gd`).
   `project_doctor.gd` (CLI shim); `verify_sheets.gd` (the four-contract repository gate: parses,
   round-trips, unique tokens, no unanswered migrations - read-only, exit-coded, wired into CI);
   `dump_registry.gd` (every descriptor in one sorted text form - the diff receipt for pack
-  updates and the identity proof for vocabulary-touching refactors).
+  updates and the identity proof for vocabulary-touching refactors; `-- words` prints the WORDING
+  as a second text, and a migrated module ships only when BOTH are byte-identical to the verbose
+  form's - `prove_registry_identity.ps1 -Base <sha>` runs that gate through a detached worktree);
+  `measure_ledger.ps1` (the maintainability campaign's ledger: hand-written GDScript and the shipped
+  plugin, sized and diffed over pinned pathspecs, per area).
 
 ## EventSheet editor structure
 

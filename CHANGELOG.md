@@ -199,6 +199,28 @@ Measured across the wave, outside the three generated trees: **-966 lines** of h
   **8,300**, the hand-written lift matchers **3,976**, and the two mega-files **32,646** between
   them. The tool itself is hand-written and counts against that first figure in full - the campaign
   pays for its own instruments.
+- **The vocabulary has a second text, and the identity gate is both.** `tools/dump_registry.gd`
+  carries no wording at all, and that is right: a reworded verb is the same verb, and the pack update
+  dialog diffs that text in front of a user to say what a version retires, so a description typo
+  fixed must not read there as a retired verb. It leaves a hole a refactor falls through - a module
+  rewritten in a terser form can reproduce every identity line and drop every description, and the
+  plugin goes on compiling byte-identical code with every picker in it gone blank. `dump_registry.gd
+  -- words` is that hole closed: name, description, the reads-as sentence, and every parameter as
+  `id=label|description` in the descriptor's own order, sorted by key, tab separated, with its own
+  format version and the identity dump's own escaping - one escaping, not two wearing one name. The
+  frozen text is untouched to the byte. Both texts read the ONE reduction that already puts built-in
+  descriptors and installed packs into the same shape, which gained the four wording fields it did
+  not carry; nothing that resolves a rewrite reads them.
+- **The gate runs as one command.** `tools/prove_registry_identity.ps1 -Base <sha>` dumps both texts
+  at a base commit and both at the working tree in front of you and reports
+  `identity: registry=same words=same verbs=5324`, naming the lines that moved when they moved. The
+  base is read through a DETACHED WORKTREE, never `git stash` and never `git checkout --`, because
+  other work may be in flight in the checkout and a gate that moves the tree it measures is a gate
+  that loses somebody's edits. Two worktrees of one project share one `user://`, so every dump is
+  written to an absolute path instead. The worktree is cached per base commit, because the first run
+  pays for a whole project import and a migration proves one module at a time. The three files that
+  FORMAT a dump are copied into the worktree first, so both halves are written by one instrument and
+  a base older than the wording dump cannot answer `words` with the identity text.
 
 ### Fixed
 
