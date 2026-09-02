@@ -65,17 +65,25 @@
 # THE WORKTREE IS CACHED per base commit and kept, because a first run pays for a full project
 # import and a migration proves one module at a time. `-Clean` removes it when the wave is done.
 #
-# THE INSTRUMENT IS THE SAME ON BOTH SIDES. Before the base is read, the three files that FORMAT a
-# dump - the two tools and EventForgeRegistryDump - are copied from the working tree into the
-# worktree, so both halves are written by one formatter. Without that, a base older than the wording
-# dump would answer `words` with the identity text and the gate would report every verb reworded.
-# It cannot hide anything the gate is for: what is being measured is the VOCABULARY the registration
-# modules publish, and none of the copied files publishes a verb. It IS a blind spot all the same -
-# a change to one of them between the base and the tree is a change both halves are read through, so
-# the gate can no longer see it. The run therefore PRINTS what each copied file did between the two,
-# as added and removed lines, so the one thing the gate cannot measure is the one thing it says out
-# loud. A reviewer reads that list; a copied file that grew a rule rather than a field is a gate
-# result to distrust.
+# THE INSTRUMENT IS THE SAME ON BOTH SIDES. Before the base is read, the files that FORMAT a dump
+# are copied from the working tree into the worktree, so both halves are written by one formatter.
+# Without that, a base older than the wording dump would answer `words` with the identity text and
+# the gate would report every verb reworded. None of the copied files publishes a verb, so copying
+# them hides no vocabulary. It IS a blind spot all the same - a change to one of them between the
+# base and the tree is a change both halves are read through, so the gate can no longer see it. The
+# run therefore PRINTS what each copied file did between the two, as added and removed lines, so the
+# one thing the gate cannot measure is the one thing it says out loud.
+#
+# AND TWO OF THE COPIES ARE SHIPPED PLUGIN FILES, which is a sharper blind spot than the formatters
+# and used to be reported in the same quiet line as them. `registry_dump.gd` and `ace_successors.gd`
+# live under `addons/`: they are what a USER's editor runs, and `ace_successors.gd` also holds
+# `map_of` and the resolution a pack's forwarding address is worked out by. A change to THAT is read
+# through the tree's copy on both sides and can never move any of the four texts - the gate would
+# print `same` over it. So a shipped copy is reported as its own kind, loudly, and when one has
+# changed the run also names the functions that APPEARED or VANISHED in it, because that is the
+# difference between an instrument that gained a field the dump prints and one that grew a rule the
+# plugin obeys. A reviewer reads that list; a shipped copy that grew a rule is a gate result to
+# distrust, and the reduction behind it belongs in the dev tool that reads it.
 #
 # USAGE (from the repository root)
 #   $env:GODOT = "<path to the Godot 4.7 console binary>"
@@ -180,20 +188,39 @@ function Show-Moves($Name, $Moves) {
 }
 
 
-# The formatter, not the vocabulary - see THE INSTRUMENT IS THE SAME ON BOTH SIDES above.
+# The formatter, not the vocabulary - see THE INSTRUMENT IS THE SAME ON BOTH SIDES above. `Shipped`
+# marks a copy that is part of the plugin a user installs rather than a dev tool under tools/: the
+# gate is blind to those over a wider surface, so they are reported apart and in more detail.
 $Instrument = @(
-	'tools/dump_registry.gd',
-	'tools/registry_wording.gd',
-	'tools/registry_fields.gd',
-	'tools/registry_order.gd',
-	'addons/eventforge/registration/registry_dump.gd',
+	@{ Path = 'tools/dump_registry.gd';    Shipped = $false },
+	@{ Path = 'tools/registry_wording.gd'; Shipped = $false },
+	@{ Path = 'tools/registry_fields.gd';  Shipped = $false },
+	@{ Path = 'tools/registry_order.gd';   Shipped = $false },
+	@{ Path = 'addons/eventforge/registration/registry_dump.gd'; Shipped = $true },
 	# The reduction three of the four texts are written off. It gained the four WORDING fields when
 	# the wording dump landed and the eleven FIELDS facts when the fields dump did, so a base older
 	# than either answers that text with a text of blanks - which is not a vocabulary that lost its
 	# words or its dropdowns, it is an instrument that cannot read them. It publishes no verb, so
-	# copying it hides nothing this gate is for.
-	'addons/eventforge/registration/ace_successors.gd'
+	# copying it hides no vocabulary - but it is also where a pack's forwarding address is worked
+	# out, and THAT is hidden, which is what the shipped mark is for.
+	@{ Path = 'addons/eventforge/registration/ace_successors.gd'; Shipped = $true }
 )
+
+
+# The functions that APPEARED or VANISHED in a file between the base and the working tree, as the
+# declaration lines themselves. A copied instrument that only gained fields on a record the dump
+# prints reads as nothing here; one that grew a rule usually reads as a new function, which is the
+# distinction a reviewer of a shipped copy needs and a line of `+102/-0` cannot make.
+function Get-FunctionMoves($BaseSha, $File) {
+	$moved = New-Object System.Collections.ArrayList
+	$diff = & git -C $repo diff -U0 $BaseSha -- $File
+	foreach ($line in $diff) {
+		if ($line -match '^[+-](static )?func ') {
+			[void]$moved.Add($line.Trim())
+		}
+	}
+	return , $moved.ToArray()
+}
 
 if (-not (Test-Path $tree)) {
 	Write-Output "preparing a detached worktree at $baseShort (first run also imports the project)"
@@ -201,31 +228,52 @@ if (-not (Test-Path $tree)) {
 	& $godot --headless --path $tree --import | Out-Null
 }
 
-foreach ($file in $Instrument) {
-	Copy-Item -LiteralPath (Join-Path $repo $file) -Destination (Join-Path $tree $file) -Force
+foreach ($entry in $Instrument) {
+	Copy-Item -LiteralPath (Join-Path $repo $entry.Path) -Destination (Join-Path $tree $entry.Path) -Force
 }
 
 # The blind spot, named. `git diff <base>` reads the base against the WORKING TREE, which is the
-# half the copies come from, so this is exactly what the gate is reading both sides through.
-Write-Output "instrument (copied into the base worktree, so the gate reads both sides through the tree's copy):"
-foreach ($file in $Instrument) {
-	# A FILE THE BASE DOES NOT HAVE IS NOT AN UNCHANGED FILE. `git diff --numstat <sha> -- <path>`
-	# prints nothing for a path that is untracked in the working tree, which is exactly what a
-	# newly written instrument is - so the honest-blind-spot report used to say `unchanged` about the
-	# two files that had just been invented. Ask the base whether it has the path at all first.
-	$atBase = (& git -C $repo ls-tree -r --name-only $baseSha -- $file) | Select-Object -First 1
-	if ([string]::IsNullOrWhiteSpace($atBase)) {
-		$lines = @(Get-Content -LiteralPath (Join-Path $repo $file)).Count
-		Write-Output ("  {0}  NEW since {1} ({2} lines, and the base is read through it)" -f $file, $baseShort, $lines)
-		continue
+# half the copies come from, so this is exactly what the gate is reading both sides through. The
+# dev-tool formatters first, then the shipped copies, which are the wider blind spot of the two.
+foreach ($shipped in @($false, $true)) {
+	$group = @($Instrument | Where-Object { $_.Shipped -eq $shipped })
+	if ($group.Count -eq 0) { continue }
+	if ($shipped) {
+		Write-Output "SHIPPED PLUGIN FILES copied in too - the gate reads both sides through the tree's copy, so nothing either of these decides can move any of the four texts:"
+	} else {
+		Write-Output "instrument (copied into the base worktree, so the gate reads both sides through the tree's copy):"
 	}
-	$stat = (& git -C $repo diff --numstat $baseSha -- $file) | Select-Object -First 1
-	if ([string]::IsNullOrWhiteSpace($stat)) {
-		Write-Output ("  {0}  unchanged since {1}" -f $file, $baseShort)
-		continue
+	foreach ($entry in $group) {
+		$file = $entry.Path
+		# A FILE THE BASE DOES NOT HAVE IS NOT AN UNCHANGED FILE. `git diff --numstat <sha> -- <path>`
+		# prints nothing for a path that is untracked in the working tree, which is exactly what a
+		# newly written instrument is - so the honest-blind-spot report used to say `unchanged` about
+		# the two files that had just been invented. Ask the base whether it has the path at all.
+		$atBase = (& git -C $repo ls-tree -r --name-only $baseSha -- $file) | Select-Object -First 1
+		if ([string]::IsNullOrWhiteSpace($atBase)) {
+			$lines = @(Get-Content -LiteralPath (Join-Path $repo $file)).Count
+			Write-Output ("  {0}  NEW since {1} ({2} lines, and the base is read through it)" -f $file, $baseShort, $lines)
+			continue
+		}
+		$stat = (& git -C $repo diff --numstat $baseSha -- $file) | Select-Object -First 1
+		if ([string]::IsNullOrWhiteSpace($stat)) {
+			Write-Output ("  {0}  unchanged since {1}" -f $file, $baseShort)
+			continue
+		}
+		$parts = $stat -split "`t"
+		Write-Output ("  {0}  +{1}/-{2} since {3}" -f $file, $parts[0], $parts[1], $baseShort)
+		if (-not $shipped) { continue }
+		$functions = Get-FunctionMoves $baseSha $file
+		if ($functions.Count -eq 0) {
+			Write-Output "    no function appeared or vanished in it - fields on a record the dump prints, not a rule the plugin obeys"
+			continue
+		}
+		Write-Output "    functions that appeared or vanished in it (read these before believing the verdict):"
+		foreach ($moved in ($functions | Select-Object -First 12)) {
+			Write-Output ("      {0}" -f $moved)
+		}
+		if ($functions.Count -gt 12) { Write-Output ("      ... and {0} more" -f ($functions.Count - 12)) }
 	}
-	$parts = $stat -split "`t"
-	Write-Output ("  {0}  +{1}/-{2} since {3}" -f $file, $parts[0], $parts[1], $baseShort)
 }
 
 $verdicts = @()
