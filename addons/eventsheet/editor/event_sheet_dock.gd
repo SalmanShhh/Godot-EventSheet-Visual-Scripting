@@ -2518,7 +2518,10 @@ func _apply_simple_mode_gates() -> void:
 		var code_index: int = _add_menu_popup.get_item_index(4)
 		if code_index >= 0:
 			_add_menu_popup.set_item_disabled(code_index, _simple_mode)
-			_add_menu_popup.set_item_tooltip(code_index, "Turn off Simple Mode (toolbar) to add script blocks." if _simple_mode else "")
+			# The pointer names where the flag actually lives. It said "(toolbar)" back when Simple
+			# Mode was a pill on the strip; the pill left, so a reader following that word looked
+			# for a control the strip does not have.
+			_add_menu_popup.set_item_tooltip(code_index, "Turn off Simple Mode (Menu ▸ View ▸ Simple Mode) to add script blocks." if _simple_mode else "")
 
 
 func _load_simple_mode_preference() -> void:

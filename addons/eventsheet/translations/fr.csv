@@ -5981,7 +5981,7 @@ lines %s and %s%s,lignes %s et %s%s
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d feuille(s) qui incluent celle-ci sont reecrites et ENREGISTREES, ce qu'un Ctrl+Z ici n'annule pas."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Egalement ecrites et enregistrees - ces feuilles incluent celle-ci, un Ctrl+Z ici ne les annule donc pas"
 ☰ Menu,☰ Menu
-"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","Toutes les commandes de l'éditeur, en quatre groupes : Feuille, Édition, Affichage et Outils."
+"Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools.","Toutes les commandes de l'éditeur, en cinq groupes : Feuille, Ajouter, Édition, Affichage et Outils."
 Save the sheet - compile-on-save keeps its generated script fresh.,Enregistrer la feuille - la compilation à l'enregistrement garde le script généré à jour.
 Undo the last edit to this sheet.,Annuler la dernière modification de cette feuille.
 Redo the edit you just undid.,Rétablir la modification que vous venez d'annuler.

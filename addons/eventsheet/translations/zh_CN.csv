@@ -5981,7 +5981,7 @@ lines %s and %s%s,第 %s 和 %s 行%s
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", 有 %d 张包含本表的表会被重写并保存，此处的 Ctrl+Z 不会撤销它们。
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",同样会被写入并保存 - 这些表包含本表，因此此处的 Ctrl+Z 不会撤销它们
 ☰ Menu,☰ 菜单
-"Every command in the editor, in four groups: Sheet, Edit, View and Tools.",编辑器的全部命令，分为四组：表、编辑、视图和工具。
+"Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools.",编辑器的全部命令，分为五组：事件表、添加、编辑、视图和工具。
 Save the sheet - compile-on-save keeps its generated script fresh.,保存表 - 保存时编译使生成的脚本保持最新。
 Undo the last edit to this sheet.,撤销对本表的上一次编辑。
 Redo the edit you just undid.,重做刚刚撤销的编辑。

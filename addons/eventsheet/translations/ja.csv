@@ -5981,7 +5981,7 @@ lines %s and %s%s,%s および %s 行目%s
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", このシートを取り込んでいる %d 枚のシートが書き換えられ、保存されます。ここでの Ctrl+Z では元に戻りません。
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",あわせて書き込み、保存されるもの - これらのシートはこのシートを取り込んでいるため、ここでの Ctrl+Z では戻りません
 ☰ Menu,☰ メニュー
-"Every command in the editor, in four groups: Sheet, Edit, View and Tools.",エディタのすべてのコマンドを 4 つのグループに。シート、編集、表示、ツール。
+"Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools.",エディタのすべてのコマンドを 5 つのグループに。シート、追加、編集、表示、ツール。
 Save the sheet - compile-on-save keeps its generated script fresh.,シートを保存 - 保存時コンパイルが生成スクリプトを最新に保ちます。
 Undo the last edit to this sheet.,このシートへの直前の編集を元に戻します。
 Redo the edit you just undid.,元に戻した編集をやり直します。

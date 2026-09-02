@@ -99,6 +99,14 @@
 
 ### Fixed
 
+- **Two labels that named a control the strip no longer has.** The one Menu button's hover said
+  "four groups: Sheet, Edit, View and Tools" while the button cascaded five - Add joined them when
+  the strip stopped fronting the adding - so the only button on a resting strip described a menu
+  that was not the one underneath it. And the Add menu's code item, greyed out in Simple Mode, still
+  told the reader to turn Simple Mode off "(toolbar)", where its pill has not been since the strip
+  came to rest; it now names Menu ▸ View ▸ Simple Mode. The hover is held by a check that derives
+  the group list from the Menu's own submenus, so the next group to join fails it by name rather
+  than shipping a count nobody re-read.
 - **Menus open where the mouse is.** The "New from template…" menu (and the Run Scene and batch-edit
   menus, which carried the same fault unnoticed) positioned themselves with canvas coordinates, so
   they appeared offset by the editor window's own position on screen - as far away as the screen's

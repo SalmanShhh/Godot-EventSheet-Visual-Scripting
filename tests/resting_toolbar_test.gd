@@ -110,6 +110,17 @@ static func _test_the_guide_names_every_control() -> bool:
 	return ok
 
 
+## Whether the item at `index` is one of the Menu's cascading groups rather than a plain command or
+## a separator. The cascade is built with add_submenu_node_item, which names the popup NODE, so the
+## submenu is asked for by node first and by name second.
+static func _submenu_label_at(popup: PopupMenu, index: int) -> bool:
+	if popup.is_item_separator(index):
+		return false
+	if not popup.get_item_submenu(index).is_empty():
+		return true
+	return popup.get_item_submenu_node(index) != null
+
+
 ## A button's words with any leading icon glyph and spacing removed, so "🐞 Debug layout" compares as
 ## "Debug layout". Returns "" for a control whose whole label is a glyph (the chevron), which the
 ## guide names in prose rather than by its character.
@@ -172,6 +183,21 @@ static func _test_the_cascade() -> bool:
 	# changed.
 	ok = _check("the Menu cascades the five groups, then the two doors", labels,
 		PackedStringArray(["Sheet", "Add", "Edit", "View", "Tools", "", "Manual…", "What's new…"])) and ok
+	# THE HOVER NAMES THE MENU IT OPENS. It said "four groups: Sheet, Edit, View and Tools" while the
+	# button cascaded five - Add joined after those words were written - so the one control on the
+	# strip described a menu that is not the one underneath it. Derived from the popup's own submenu
+	# labels rather than typed here, so the next group to join fails this by name.
+	var groups: PackedStringArray = PackedStringArray()
+	for index: int in popup.item_count:
+		if _submenu_label_at(popup, index):
+			groups.append(popup.get_item_text(index))
+	var unnamed: PackedStringArray = PackedStringArray()
+	for group: String in groups:
+		if not menu.tooltip_text.contains(group):
+			unnamed.append(group)
+	ok = _check("the Menu's hover was asked about every group it opens", groups.size(), 5) and ok
+	ok = _check("and it names each one", unnamed, PackedStringArray()) and ok
+	ok = _check("and counts them", menu.tooltip_text.contains("five groups"), true) and ok
 	# The submenus are the SAME menus, so their contents are pinned here as well as in the workflow
 	# test: a cascade that quietly rebuilt a menu would pass a "there are four submenus" check.
 	var counts: Dictionary = {}

@@ -5981,7 +5981,7 @@ lines %s and %s%s,строки %s и %s%s
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d лист(ов), включающих этот, будут переписаны и СОХРАНЕНЫ, чего Ctrl+Z здесь не отменит."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Также записаны и сохранены - эти листы включают этот, поэтому Ctrl+Z здесь их не отменит"
 ☰ Menu,☰ Меню
-"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","Все команды редактора в четырёх группах: Лист, Правка, Вид и Инструменты."
+"Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools.","Все команды редактора в пяти группах: Лист, Добавить, Правка, Вид и Инструменты."
 Save the sheet - compile-on-save keeps its generated script fresh.,Сохранить лист - компиляция при сохранении держит сгенерированный скрипт актуальным.
 Undo the last edit to this sheet.,Отменить последнее изменение этого листа.
 Redo the edit you just undid.,Вернуть только что отменённое изменение.

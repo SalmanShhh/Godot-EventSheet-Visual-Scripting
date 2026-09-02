@@ -5981,7 +5981,7 @@ lines %s and %s%s,%s 및 %s번 줄%s
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", 이 시트를 포함하는 %d개의 시트가 다시 쓰이고 저장됩니다. 여기서의 Ctrl+Z 로는 되돌아가지 않습니다.
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",함께 쓰이고 저장되는 것 - 이 시트들은 이 시트를 포함하므로 여기서의 Ctrl+Z 로는 되돌아가지 않습니다
 ☰ Menu,☰ 메뉴
-"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","에디터의 모든 명령을 네 그룹으로: 시트, 편집, 보기, 도구."
+"Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools.","에디터의 모든 명령을 다섯 그룹으로: 시트, 추가, 편집, 보기, 도구."
 Save the sheet - compile-on-save keeps its generated script fresh.,시트 저장 - 저장 시 컴파일이 생성된 스크립트를 최신으로 유지합니다.
 Undo the last edit to this sheet.,이 시트의 마지막 편집을 되돌립니다.
 Redo the edit you just undid.,방금 되돌린 편집을 다시 실행합니다.

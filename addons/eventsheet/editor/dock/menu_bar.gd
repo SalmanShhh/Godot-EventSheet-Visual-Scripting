@@ -95,7 +95,11 @@ func build(root: Node) -> void:
 	var menu_button: MenuButton = MenuButton.new()
 	menu_button.name = "EventSheetMenu"
 	menu_button.text = "☰ Menu"
-	menu_button.tooltip_text = "Every command in the editor, in four groups: Sheet, Edit, View and Tools."
+	# The hover names the groups the button actually opens. It said "four groups" and left Add out,
+	# because Add joined the cascade after this line was written - so a reader hovering the one
+	# button on the strip was told about a menu that is not the one underneath it. The suite derives
+	# the list from this popup's own submenus, so the next group to join fails that check by name.
+	menu_button.tooltip_text = "Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools."
 	menu_button.flat = false
 	var menu_popup: PopupMenu = menu_button.get_popup()
 	_toolbar.add_child(menu_button)
