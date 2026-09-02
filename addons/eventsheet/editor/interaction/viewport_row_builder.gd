@@ -13292,6 +13292,13 @@ func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dic
 	var branches: Array = _ternary_arms(found)
 	if branches.is_empty():
 		return []
+	# A value whose ONE arm reproduces the value itself has no branch a row could draw. It happens
+	# when the branch lives inside a bracketed group that is not itself a ternary - the arguments of
+	# a format list, say - so hoisting the group out of the value hands the whole value back
+	# unchanged. Drawing that would put an Else under a row that never branches, and stepping into it
+	# would never end, because the arm and the text it came from are the same text.
+	if branches.size() == 1 			and str((branches[0] as Dictionary).get("code", "")) == str(found.get("text", "")):
+		return []
 	var rows: Array[EventRowData] = []
 	for branch_index: int in branches.size():
 		var branch: Dictionary = branches[branch_index]
