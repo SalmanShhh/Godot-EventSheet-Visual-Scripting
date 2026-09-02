@@ -59,6 +59,21 @@ static func _test_the_overrides() -> bool:
 	# Without this the check above passes vacuously the day the table is renamed out from under it.
 	var ok: bool = _check("the override table was actually read", overrides.size() > 5, true)
 	ok = _check("every test the overrides name is a real one", missing, PackedStringArray()) and ok
+	# The two the campaign's own gates needed. A change to the pack assembler, or to a source file a
+	# builder assembles, has to reach the seam's own tests and the shipped-bytes gate; a change to
+	# the translation deriver has to reach the two l10n gates that read their obligation table out
+	# of it. Neither is anything a file name can say, which is what the override list is for.
+	ok = _check("a change to the pack assembler reaches the seam and the shipped bytes",
+		_pick(["tools/pack_builders/_lib.gd"]),
+		PackedStringArray(["addon_composition_test", "behavior_index_test",
+			"pack_builder_matches_shipped_test", "pack_source_test", "personal_paths_test",
+			"style_guide_test"])) and ok
+	ok = _check("and a pack's own source file reaches them too",
+		_pick(["tools/pack_builders/src/wrap/wrap.gd"]).has("pack_source_test"), true) and ok
+	ok = _check("a change to the translation deriver reaches both l10n gates",
+		_pick(["tools/harvest_translations.gd"]),
+		PackedStringArray(["editor_l10n_coverage_test", "personal_paths_test", "style_guide_test",
+			"translation_harvest_test", "vocabulary_l10n_test"])) and ok
 	ok = _check("a documentation change picks the documentation gates, and no code gate",
 		_pick(["docs/GUIDE-THEMING.md"]),
 		PackedStringArray(["doc_library_test", "docs_integrity_test", "docs_links_test",

@@ -55,7 +55,16 @@ const OVERRIDES: Dictionary = {
 	"addons/eventsheet/editor/": ["event_sheet_editor_test"],
 	"addons/eventsheet/theme/": ["event_sheet_style_test", "ui_scale_test"],
 	"addons/eventsheet/api/": ["api_extension_seams_test"],
-	"tools/pack_builders/": ["addon_composition_test", "behavior_index_test"],
+	# The pack tree answers to four tests, and two of them are about the SEAM rather than the packs:
+	# a builder assembles its pack out of real `.gd` files under `src/`, and the shipped bytes are
+	# gated against what the builders make of them. A change to the assembler used to pick neither.
+	"tools/pack_builders/": ["addon_composition_test", "behavior_index_test",
+		"pack_builder_matches_shipped_test", "pack_source_test"],
+	# The translation harvester is the DERIVER the nine CSVs are held to: it owns the reader that
+	# finds a translate() literal, the obligation table, and the live-editor walk, and both l10n
+	# gates read them out of it. Nothing in its name says any of that.
+	"tools/harvest_translations.gd": ["editor_l10n_coverage_test", "translation_harvest_test",
+		"vocabulary_l10n_test"],
 	"docs/": ["doc_library_test", "docs_integrity_test", "docs_links_test"],
 	"CHANGELOG.md": ["docs_integrity_test"]
 }
