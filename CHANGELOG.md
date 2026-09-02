@@ -190,11 +190,22 @@ walk the contract gate needed. The projection lost by 96 lines, a third over on 
 five on the figure that matters; the tests are where it went, because four of the eight fixes are
 only fixed once something pins them.
 
-Where the third wave stands after that, under format 3 and at the last commit in it that moves a
-line of source, `57588286..7fb7961b`: **-17 lines** of hand-written source (**+8,374 / -8,391**) and
-**-2,941** in the installed plugin, which is **232,752** lines in **605** files against the base's
+Where the third wave stands after that, under format 3 at `57588286..7fb7961b` (one later commit,
+`3cfb4966`, swaps a flag's spelling on one line and moves nothing net): **-17 lines** of hand-written
+source (**+8,374 / -8,391**) and **-2,941** in the installed plugin, which is **232,752** lines in **605** files against the base's
 **235,693** in **608**. The wave has so far paid for its own instruments almost exactly and taken
 the whole of its shrink out of the tree that ships, which is the figure a shrink must not grow.
+
+- **The three wave-3 gates cannot say same over nothing.** A boundary review of the third wave read
+  its instruments the way it had read the code: the identity gate discarded the dump tool's exit code
+  and kept last run's dump files, so a parse error in the tree would have compared the base against a
+  STALE tree text and printed same; two header-only texts agreed perfectly, so a stale class cache
+  was a green verdict too; and the harvester skipped a locale it could not read and still appended
+  to the other eight. Now the dump file is removed before every run and a red or missing dump is a
+  red gate, a whole-registry run refuses fewer than a thousand verbs as a vocabulary, and the
+  harvester reads all nine files before it writes one and refuses the apply if any is missing. Two
+  piece-reader holes name themselves (a `#region` with no name, a `func` line with no parameter
+  list), and the map's one-sentence description of the ledger's universe says what format 3 counts.
 
 - **A pack declares itself by name, and a misspelling is a parse error.** The manifest a
   source-folder builder hands `pack_from_source` was an untyped `Dictionary` keyed by strings
@@ -240,7 +251,7 @@ the whole of its shrink out of the tree that ships, which is the figure a shrink
   campaign did not write - a bisect wrapper, the parallel launcher, the daemon and its client - so
   **416** lines of somebody else's work were being read as the campaign's spend; the row is
   `powershell tooling` now, named after its SIZE, with the campaign's bill being its DELTA (**+467**
-  at this commit). And "the only two hand-maintained languages are GDScript and PowerShell" was
+  at `7fb7961b`). And "the only two hand-maintained languages are GDScript and PowerShell" was
   false: two merge-driver shims are shell and three shader fixtures are hand-written. **Format 3**
   adds `*.sh` and `*.gdshader`, so that claim is one `git ls-files` can check rather than one the
   header asserts. The base restated under format 3: **434,060** hand-written lines in **1,788**
@@ -350,7 +361,8 @@ the whole of its shrink out of the tree that ships, which is the figure a shrink
   each new definition in the same breath as the old one everywhere it is quoted. (Corrected later in
   this wave: that row's SIZE at the base is **416** lines the campaign did not write - the bisect
   wrapper, the parallel launcher, the test daemon and its client all predate it - so the row is
-  named `powershell tooling` after what it measures, and the campaign's bill is its DELTA, **+407**.)
+  named `powershell tooling` after what it measures, and the campaign's bill is its DELTA, **+407**
+  at `a20b42dd`.)
 
 - **A pack's behaviour code is a real file, and the measurement says that costs lines rather than
   saving them.** A pack builder held the code its pack ships as arrays of quoted, backslash-escaped

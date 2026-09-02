@@ -137,8 +137,17 @@ function Write-Dump($ProjectDir, $OutFile, $Text) {
 	$userArgs = @("--headless", "--path", $ProjectDir, "--script", "tools/dump_registry.gd", "--", "out=$OutFile")
 	if (-not $Text.Whole) { $userArgs += $packArg }
 	if (-not [string]::IsNullOrWhiteSpace($Text.Word)) { $userArgs += $Text.Word }
+	# The dumps folder outlives a run, so a dump that fails to write would otherwise leave LAST run's
+	# text in place and the gate would compare the base against a stale tree and print same. The
+	# file is removed first, and a dump that exits red or writes nothing is a red gate, never a same.
+	if (Test-Path -LiteralPath $OutFile) { Remove-Item -LiteralPath $OutFile -Force }
 	& $godot @userArgs | Out-Null
-	if (-not (Test-Path $OutFile)) {
+	$dumpExit = $LASTEXITCODE
+	if ($dumpExit -ne 0) {
+		Write-Output "dump of $ProjectDir ($($Text.Name)) exited $dumpExit - not a verdict"
+		exit 1
+	}
+	if (-not (Test-Path -LiteralPath $OutFile)) {
 		Write-Output "no dump written for $ProjectDir ($($Text.Name))"
 		exit 1
 	}
@@ -294,6 +303,16 @@ foreach ($text in $Texts) {
 }
 
 $verbs = (Get-Content -LiteralPath (Join-Path $dumps "tree-registry.txt")).Count - 1
+
+# Two header-only texts agree perfectly, and a stale class cache or a parse error in the tree is
+# exactly what dumps one. A whole-registry run therefore refuses to call fewer than a thousand verbs
+# a vocabulary (the real one is over five thousand), and a -Pack run refuses an empty one.
+$floor = 1000
+if (-not [string]::IsNullOrWhiteSpace($Pack)) { $floor = 1 }
+if ($verbs -lt $floor) {
+	Write-Output "identity: REFUSED - the tree text carries $verbs verb(s), which is not a vocabulary (a stale class cache or a parse error dumps a header alone) base=$baseShort"
+	exit 1
+}
 
 Write-Output "identity: $($verdicts -join ' ') verbs=$verbs base=$baseShort"
 

@@ -867,6 +867,9 @@ static func _read_file_pieces(file_path: String, pieces: Dictionary) -> void:
 			_store_piece(file_path, pieces, open_name, collected, true)
 			open_name = ""
 			in_function = false
+		if trimmed == "#region":
+			_source_problem("pack source %s: a #region with no name cannot be asked for by name" % file_path)
+			return
 		if trimmed.begins_with("#region "):
 			open_name = trimmed.substr(8).strip_edges()
 			open_indent = line.substr(0, line.length() - line.lstrip("\t ").length())
@@ -877,7 +880,11 @@ static func _read_file_pieces(file_path: String, pieces: Dictionary) -> void:
 				_source_problem("pack source %s: '%s' spreads its signature over more than one line" % [
 					file_path, trimmed])
 				return
-			open_name = line.substr(5, line.find("(") - 5).strip_edges()
+			var paren: int = line.find("(")
+			if paren < 0:
+				_source_problem("pack source %s: '%s' is a func line with no parameter list" % [file_path, trimmed])
+				return
+			open_name = line.substr(5, paren - 5).strip_edges()
 			in_function = true
 			collected = PackedStringArray()
 	if in_function:

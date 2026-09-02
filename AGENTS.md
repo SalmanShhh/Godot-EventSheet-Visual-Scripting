@@ -125,9 +125,10 @@ from `tools/build_help_bundle.gd`).
   migrated module ships only when all four are byte-identical to the verbose form's -
   `prove_registry_identity.ps1 -Base <sha>` runs that gate through a detached worktree, and names
   the instrument files it copied into the base, because those are the one thing it cannot see);
-  `measure_ledger.ps1` (the maintainability campaign's ledger: every hand-maintained language -
-  GDScript and PowerShell - and the shipped plugin, sized and diffed over pinned pathspecs, per
-  area).
+  `measure_ledger.ps1` (the maintainability campaign's ledger: every hand-maintained language the
+  tree holds - GDScript, PowerShell, the two shell shims and the shader fixtures, listed in its
+  header where `git ls-files` can check the claim - and the shipped plugin, sized and diffed over
+  pinned pathspecs, per area).
 - A pack builder may hold its behaviour code as a folder of REAL `.gd` files under
   `tools/pack_builders/src/<pack>/`, assembled with `Lib.pack_from_source` - a piece is a `#region`
   pair around top-level code or the body of a top-level `func`, so the code is highlighted,

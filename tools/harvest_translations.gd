@@ -373,21 +373,32 @@ static func apply(harvest: Plan) -> PackedStringArray:
 	var file_names: PackedStringArray = PackedStringArray([TEMPLATE_FILE])
 	for locale: String in LOCALES:
 		file_names.append("%s.csv" % locale)
+	# Lockstep is all nine files or none of them. Every file is read BEFORE the first write, so a
+	# locale that is missing or unreadable refuses the whole apply instead of leaving eight files one
+	# row longer than the ninth under a green exit.
+	var texts: Dictionary = {}
 	for file_name: String in file_names:
 		var path: String = "%s/%s" % [TRANSLATIONS_DIR, file_name]
 		var text: String = FileAccess.get_file_as_string(path)
 		if text.is_empty():
-			continue
-		if not text.ends_with("\n"):
-			text += "\n"
+			push_error("harvest: %s is missing or empty - nothing written, lockstep needs all nine" % path)
+			return PackedStringArray()
+		texts[file_name] = text if text.ends_with("
+") else text + "
+"
+	for file_name: String in file_names:
+		var path: String = "%s/%s" % [TRANSLATIONS_DIR, file_name]
 		var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 		if file == null:
-			continue
-		file.store_string(text)
+			push_error("harvest: cannot write %s - the nine files are no longer in lockstep, restore them from git" % path)
+			return written
+		file.store_string(texts[file_name])
 		for key: String in harvest.append:
 			file.store_csv_line(PackedStringArray([key, ""]))
 		file.close()
 		written.append(file_name)
+	if written.size() != file_names.size():
+		push_error("harvest: wrote %d of %d files - lockstep is broken, restore them from git" % [written.size(), file_names.size()])
 	return written
 
 
