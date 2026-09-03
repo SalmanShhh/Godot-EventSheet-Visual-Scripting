@@ -1305,6 +1305,27 @@ const SEARCH_SYNONYMS := {
 	"set master volume": "bus volume",
 	"audio": "audio",
 	"playback time": "playback position",
+	# HOW TWO PICTURES MEET. Almost nobody searches for "blend mode": they search for the look they
+	# want (a glow, a stain, a tint) or for the word the drawing tool they already use calls it
+	# (additive, screen, multiply). All of those land on Blend As, and the strip in its own field
+	# then shows what each one does - so the search only has to get the reader to the row.
+	"blend mode": "blend",
+	"additive": "blend",
+	"glow": "blend",
+	"screen": "blend",
+	"multiply": "blend",
+	"overlay": "blend",
+	"darken": "blend",
+	"lighten": "blend",
+	"stain": "blend",
+	# A mask is the other half of the same question, and the two words people reach for first are
+	# neither of them "mask".
+	"cut out": "mask",
+	"cutout": "mask",
+	"stencil": "mask",
+	# And clipping is the one that needs no shader at all, which is why it is worth finding.
+	"crop": "clip",
+	"clip to shape": "clip",
 }
 
 

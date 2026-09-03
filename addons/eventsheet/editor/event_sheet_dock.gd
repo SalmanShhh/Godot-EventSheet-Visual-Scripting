@@ -442,6 +442,11 @@ func _init() -> void:
 	# the region fold commands register through it as living proof the extension point
 	# works - delete these four lines and only extensions lose their entries.
 	EventSheets._register_dock(self)
+	# The blend-mode strip registers through the same public seam a pack's own field would
+	# (EventSheets.register_param_editor), rather than through the dialog's private hint table: a
+	# parameter whose words nobody can picture is exactly the case that seam exists for, and using it
+	# here is what keeps it working.
+	EventSheetBlendModeField.ensure_registered()
 	EventSheets.register_palette_command("Collapse All Regions", func() -> void: _viewport.set_region_folds(true))
 	EventSheets.register_palette_command("Expand All Regions", func() -> void: _viewport.set_region_folds(false))
 	# The global "don't offer tips" switch for the once-per-session rescue offers (the profiler on
