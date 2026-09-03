@@ -1262,6 +1262,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Play Sound With Intensity** (`path: String, intensity: float`) - Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.
 - **Count To** (`ticker_name: String, target: float, duration: float`) - Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.
 - **Set Ticker** (`ticker_name: String, value: float`) - Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.
+- **Moment** (`moment_name: String, strength: float`) - Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.
+- **Define Moment** (`moment_name: String, moment: Resource`) - Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.
 - **Set Host Tint** (`color: Color, strength: float`) - Tints the HOST object: blends its color toward the tint by Strength (0 = its own colors untouched, 1 = fully the tint color) - the classic object tint, with the strength as your opacity dial. Children inherit (modulate).
 - **Clear Host Tint** - Removes the host tint (back to its own colors).
 - **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red, poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.
@@ -2084,15 +2086,39 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_tags(effects, shader, juice, camera, visual) @ace_category("Screen FX") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Conditions
+- **Post Effect Is On** (`called: String = "vignette"`)
+- **Look Is** (`look: Resource`)
 - **Screen Effect Is Running** - True while any effect is running - a fade held on, a blur, a ring still travelling.
 
 #### Actions
+- **Add Post Effect** (`effect: String = "vignette", called: String = "", strength: float = 0.6`)
+- **Remove Post Effect** (`called: String = "vignette"`)
+- **Enable Post Effect** (`called: String = "vignette"`)
+- **Disable Post Effect** (`called: String = "vignette"`)
+- **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`)
+- **Fade Post Strength**
+- **Pulse Post Effect**
+- **Move Post Effect Before** (`called: String = "vignette", before: String = ""`)
+- **Draw Post Effects Below** (`other: CanvasLayer`)
+- **Draw Post Effects Above** (`other: CanvasLayer`)
+- **See As** (`vision: String = "deuteranopia"`)
+- **Correct Colours For** (`vision: String = "deuteranopia"`)
+- **Save Look** (`path: String = "user://looks/my_look.tres", called: String = "My look"`)
+- **Use Look** (`look: Resource`)
+- **Blend To Look** (`look: Resource, seconds: float = 1.0`)
 - **Shockwave** (`at: Vector2 = Vector2.ZERO, strength: float = 1.0`) - Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a landing. The camera transform is applied, so the ring stays on the thing that caused it however the camera is moving.
 - **Fade To** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what happens next: change the scene, show the credits, start the level. That is the scene transition, spelled as two rows in one event.
 - **Fade Back** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the screen back from a colour to the game, and waits for that too - the other half of a transition, run once the new scene is up.
 - **Blur** (`amount: float = 2.0, seconds: float = 0.3`) - Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout, a dream. 0 is sharp again.
 - **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`) - Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.
 - **Clear Screen Effects** - Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.
+- **Clear Look** - Takes every effect off the stack at once and puts the screen back the way the game drew it. The empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.
+
+#### Expressions
+- **Post Strength** (`called: String = "vignette"`)
+- **Post Effect Words**
+- **Post Effect Count** - How many effects the stack is drawing right now - the number a reader wants when the frame rate has gone, because every one of them reads the whole screen back.
+- **Current Look** - The name of the look on the screen, or "" when the stack was built row by row rather than worn from a file.
 
 ### SecondViewPackAddon (`res://eventsheet_addons/second_view/second_view_addon.gd`)
 @ace_tags(camera, viewport, minimap, ui) @ace_category("Second View") @ace_version(1.0.0)
@@ -3926,6 +3952,97 @@ the DIAL is the thing the row names, and the shader says what it is called.
 #### Expressions
 - **Effect Dial** (`dial: String, target: String`) - Reads one dial of this node's effect back. Use it in any value field - the name is picked from the shader, so a read can no longer quietly return nothing.
 
+### Environment (`res://addons/eventforge/registration/modules/environment_aces.gd`)
+the ENVIRONMENT vocabulary: what the whole world looks like, said in words.
+
+#### Conditions
+- **Is Volumetric Fog On** (`target: String`) - True while Volumetric fog is on. Reads `Environment.volumetric_fog_enabled`.
+- **Are Reflections On** (`target: String`) - True while reflections are on. Reads `Environment.ssr_enabled`.
+- **Is Indirect Light On** (`target: String`) - True while indirect light is on. Reads `Environment.ssil_enabled`.
+- **Is Global Illumination On** (`target: String`) - True while global illumination is on. Reads `Environment.sdfgi_enabled`.
+- **Is Occlusion On** (`target: String`) - True while the corners and creases of the scene are being darkened. Reads `Environment.ssao_enabled`.
+
+#### Actions
+- **Set Saturation** (`value: String`) - How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_saturation`.
+- **Fade Saturation** (`value: String, seconds: String`) - Walks the world's saturation to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_saturation` on this scene's own copy of the environment.
+- **Set Contrast** (`value: String`) - How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_contrast`.
+- **Fade Contrast** (`value: String, seconds: String`) - Walks the world's contrast to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_contrast` on this scene's own copy of the environment.
+- **Set Picture Brightness** (`value: String`) - How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_brightness`.
+- **Fade Picture Brightness** (`value: String, seconds: String`) - Walks the world's picture brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_brightness` on this scene's own copy of the environment.
+- **Set Exposure** (`value: String`) - How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_exposure`.
+- **Fade Exposure** (`value: String, seconds: String`) - Walks the world's exposure to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.tonemap_exposure` on this scene's own copy of the environment.
+- **Set Glow Bloom** (`value: String`) - How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_bloom`.
+- **Fade Glow Bloom** (`value: String, seconds: String`) - Walks the world's glow bloom to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.glow_bloom` on this scene's own copy of the environment.
+- **Set Glow Threshold** (`value: String`) - How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_hdr_threshold`.
+- **Set Fog Floor** (`value: String`) - The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height`.
+- **Set Fog Floor Thickness** (`value: String`) - How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height_density`.
+- **Fade Fog Floor Thickness** (`value: String, seconds: String`) - Walks the world's fog floor thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_height_density` on this scene's own copy of the environment.
+- **Set Aerial Perspective** (`value: String`) - How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_aerial_perspective`.
+- **Fade Aerial Perspective** (`value: String, seconds: String`) - Walks the world's aerial perspective to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_aerial_perspective` on this scene's own copy of the environment.
+- **Set Fog Sun Glow** (`value: String`) - How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_sun_scatter`.
+- **Fade Fog Sun Glow** (`value: String, seconds: String`) - Walks the world's fog sun glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_sun_scatter` on this scene's own copy of the environment.
+- **Set Volumetric Thickness** (`value: String`) - How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_density`.
+- **Fade Volumetric Thickness** (`value: String, seconds: String`) - Walks the world's volumetric thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_density` on this scene's own copy of the environment.
+- **Set Volumetric Colour** (`value: Color`) - The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_albedo`.
+- **Fade Volumetric Colour** (`value: Color, seconds: String`) - Walks the world's volumetric colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_albedo` on this scene's own copy of the environment.
+- **Set Volumetric Reach** (`value: String`) - How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_length`.
+- **Fade Volumetric Reach** (`value: String, seconds: String`) - Walks the world's volumetric reach to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_length` on this scene's own copy of the environment.
+- **Turn Volumetric Fog On** - The fog that fills the air rather than sitting flat over the picture - it lights up where a lamp shines through it and goes dark where something blocks it. Costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_enabled`.
+- **Turn Volumetric Fog Off** - The fog that fills the air rather than sitting flat over the picture - it lights up where a lamp shines through it and goes dark where something blocks it. Costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_enabled`.
+- **Turn Reflections On** - Whether shiny surfaces reflect what is already on the screen - the wet floor that shows the room above it. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled`.
+- **Turn Reflections Off** - Whether shiny surfaces reflect what is already on the screen - the wet floor that shows the room above it. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled`.
+- **Turn Indirect Light On** - Whether a lit surface throws its own colour onto what is beside it - the red wall that makes the white floor beside it pink. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled`.
+- **Turn Indirect Light Off** - Whether a lit surface throws its own colour onto what is beside it - the red wall that makes the white floor beside it pink. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled`.
+- **Turn Global Illumination On** - Whether light bounces around the whole scene by itself, so a room with one window is lit rather than black in the corners. The most expensive switch here. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled`.
+- **Turn Global Illumination Off** - Whether light bounces around the whole scene by itself, so a room with one window is lit rather than black in the corners. The most expensive switch here. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled`.
+- **Set Backdrop** (`value: String, colour: Color`) - What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.background_mode`.
+- **Set Tone Map** (`value: String, white: String, agx_contrast: String`) - How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_mode`.
+- **Set Glow Blend** (`value: String`) - How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_blend_mode`.
+- **Set Colour Grade** (`value: String`) - A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_color_correction`.
+- **Set Glow Levels** (`spread: String`) - Lays down all seven of the glow's blur levels at once. Level 1 is the sharpest and finest, level 7 the widest and softest, so a shape leaning on the low numbers keeps the glow around what is glowing and one leaning on the high numbers washes it across the screen. Switches the glow on as well. Set Glow Level sets any single level by hand.
+- **Set Glow Level** (`level: String, amount: String`) - Sets ONE of the glow's seven blur levels, for a project spelling its own shape rather than taking one of the three the row above offers. Level 1 is the sharpest and finest blur, level 7 the widest and softest. Switches the glow on as well.
+- **Turn Occlusion On At Quality** (`quality: String`) - Darkens the corners and creases of a 3D scene, which is what makes it look solid, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssao_enabled` and `RenderingServer.environment_set_ssao_quality`.
+- **Turn Occlusion Off** - Switches the darkened corners off again, and gives the frames back. Forward+ only - on Mobile and Compatibility the row does nothing. Writes `Environment.ssao_enabled`.
+- **Turn Indirect Light On At Quality** (`quality: String`) - Lets a lit surface throw its own colour onto what is beside it, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled` and `RenderingServer.environment_set_ssil_quality`.
+- **Turn Global Illumination On At Quality** (`quality: String`) - Lets light bounce around the whole scene by itself, and says how many rays are traced to work it out. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled` and `RenderingServer.environment_set_sdfgi_ray_count`.
+- **Turn Reflections On At Quality** (`quality: String`) - Lets shiny surfaces reflect what is already on the screen, and says how carefully a rough surface blurs its reflection. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled` and `RenderingServer.environment_set_ssr_roughness_quality`.
+- **Set Sky Top** (`value: Color`) - The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_top_color`.
+- **Fade Sky Top** (`value: Color, seconds: String`) - Walks the sky's sky top to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.
+- **Set Sky Horizon** (`value: Color`) - The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_horizon_color`.
+- **Fade Sky Horizon** (`value: Color, seconds: String`) - Walks the sky's sky horizon to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.
+- **Set Sky Ground** (`value: Color`) - The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.ground_bottom_color`.
+- **Fade Sky Ground** (`value: Color, seconds: String`) - Walks the sky's sky ground to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.
+- **Set Sun Size** (`value: String`) - How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sun_angle_max`.
+- **Fade Sun Size** (`value: String, seconds: String`) - Walks the sky's sun size to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.
+- **Set Sky Energy** (`value: String`) - How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.energy_multiplier`.
+- **Fade Sky Energy** (`value: String, seconds: String`) - Walks the sky's sky energy to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.
+- **Use Procedural Sky** - Puts Godot's own drawn sky behind everything - a gradient from the top colour down through the horizon to the ground, with the sun of any DirectionalLight3D in the scene painted on it - and sets the backdrop to sky so it is actually drawn. This is the sky the five sky words move; a scene without it is what makes them quietly do nothing.
+- **Use Panorama Sky** (`image: String`) - Wraps one picture around the whole world as the sky - a photographed or painted panorama, which is what a stylised or a photoreal scene wants instead of a drawn gradient. Sets the backdrop to sky so it is actually drawn. The five sky words do not reach a panorama: those are the drawn sky's own colours.
+
+#### Expressions
+- **Saturation** (`target: String`) - Reads the world's saturation back: `Environment.adjustment_saturation`. Use it in any value field.
+- **Contrast** (`target: String`) - Reads the world's contrast back: `Environment.adjustment_contrast`. Use it in any value field.
+- **Picture Brightness** (`target: String`) - Reads the world's picture brightness back: `Environment.adjustment_brightness`. Use it in any value field.
+- **Exposure** (`target: String`) - Reads the world's exposure back: `Environment.tonemap_exposure`. Use it in any value field.
+- **Glow Bloom** (`target: String`) - Reads the world's glow bloom back: `Environment.glow_bloom`. Use it in any value field.
+- **Glow Threshold** (`target: String`) - Reads the world's glow threshold back: `Environment.glow_hdr_threshold`. Use it in any value field.
+- **Fog Floor** (`target: String`) - Reads the world's fog floor back: `Environment.fog_height`. Use it in any value field.
+- **Fog Floor Thickness** (`target: String`) - Reads the world's fog floor thickness back: `Environment.fog_height_density`. Use it in any value field.
+- **Aerial Perspective** (`target: String`) - Reads the world's aerial perspective back: `Environment.fog_aerial_perspective`. Use it in any value field.
+- **Fog Sun Glow** (`target: String`) - Reads the world's fog sun glow back: `Environment.fog_sun_scatter`. Use it in any value field.
+- **Volumetric Thickness** (`target: String`) - Reads the world's volumetric thickness back: `Environment.volumetric_fog_density`. Use it in any value field.
+- **Volumetric Colour** (`target: String`) - Reads the world's volumetric colour back: `Environment.volumetric_fog_albedo`. Use it in any value field.
+- **Volumetric Reach** (`target: String`) - Reads the world's volumetric reach back: `Environment.volumetric_fog_length`. Use it in any value field.
+- **Backdrop** (`target: String`) - Reads the world's backdrop back: `Environment.background_mode`. Use it in any value field.
+- **Tone Map** (`target: String`) - Reads the world's tone map back: `Environment.tonemap_mode`. Use it in any value field.
+- **Glow Blend** (`target: String`) - Reads the world's glow blend back: `Environment.glow_blend_mode`. Use it in any value field.
+- **Colour Grade** (`target: String`) - Reads the world's colour grade back: `Environment.adjustment_color_correction`. Use it in any value field.
+- **Sky Top** - Reads the sky's sky top back: `ProceduralSkyMaterial.sky_top_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
+- **Sky Horizon** - Reads the sky's sky horizon back: `ProceduralSkyMaterial.sky_horizon_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
+- **Sky Ground** - Reads the sky's sky ground back: `ProceduralSkyMaterial.ground_bottom_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
+- **Sun Size** - Reads the sky's sun size back: `ProceduralSkyMaterial.sun_angle_max`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
+- **Sky Energy** - Reads the sky's sky energy back: `ProceduralSkyMaterial.energy_multiplier`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
+
 ### Facing (`res://addons/eventforge/registration/modules/facing_aces.gd`)
 Facing: mirror and flip, on every host that can do it
 
@@ -4243,6 +4360,24 @@ Keys and doors: the coloured keycard, said as the sheet's list words.
 #### Expressions
 - **Keys Held** (`keys: String`) - How many keys the player is carrying - the number a row of HUD key icons counts up to.
 
+### Layer (`res://addons/eventforge/registration/modules/layer_aces.gd`)
+layers: what a layer does with the camera, and how far behind it scrolls.
+
+#### Actions
+- **Stay Fixed On Screen** (`target: String`) - Pins this whole layer to the screen, so the camera moving through the world leaves it exactly where it is. What a HUD, a pause menu or a letterbox border wants, and what a CanvasLayer does out of the box.
+- **Move With The World** (`target: String`) - Lets the camera move this layer, so everything on it sits in the world rather than on the screen. The other half of the switch above: a layer of scenery drawn behind the level, a layer of effects drawn over it, both moving with the view.
+- **Draw Above** (`other: String, target: String`) - Puts this layer one step in front of another one, whatever number that other layer happens to be on. Relative on purpose: insert a layer between them later and the pair keeps its order, where two hand-typed numbers quietly stop meaning what they meant.
+- **Draw Below** (`other: String, target: String`) - The other end: puts this layer one step behind another one, whatever number that other layer is on. The backdrop that must stay behind the world however the world's own layer is numbered.
+- **Offset Layer** (`by: Vector2, target: String`) - Nudges the whole layer, without touching a single thing on it. A HUD sliding in from the edge, a background pushed a little to one side, a shake that leaves the world alone.
+- **Scroll At** (`factor: Vector2, target: String`) - How much of the camera's movement this layer takes. Below 1 is behind the action and moves slower, which is what reads as distance; 1 moves exactly with the world; above 1 is in front of it. Each axis on its own, so a sky can drift sideways without sliding up and down.
+- **Repeat Every** (`size: Vector2, target: String`) - Tiles this layer forever, one copy every so many pixels, so a scrolling level never runs off the end of the artwork. Set the distance to the artwork's own width to make the seam invisible; a zero on an axis means no repeating along it.
+- **Drift** (`speed: Vector2, target: String`) - Moves this layer on its own, whether the camera moves or not - clouds crossing the sky, mist over water, a starfield behind a menu that has no camera at all. Pixels per second, per axis; negative goes the other way.
+- **Scroll At (Background Layer)** (`factor: Vector2, target: String`) - The same fraction on the older parallax node: how much of the camera's movement this layer takes, below 1 for distance and above 1 for the foreground. This is the row for a ParallaxLayer inside a ParallaxBackground, which is how a project built before Parallax2D arrived is put together.
+- **Repeat Every (Background Layer)** (`size: Vector2, target: String`) - The same tiling on the older parallax node: one copy of this layer every so many pixels, so the level never runs off the end of the artwork. Set it to the artwork's own width; a zero on an axis means no repeating along it.
+
+#### Expressions
+- **Scroll Offset** (`target: String`) - How far this layer has scrolled, in pixels. The number to read when something on the layer has to line up with it - a marker on a distant hill, a sound that fades with the drift.
+
 ### Lighting (`res://addons/eventforge/registration/modules/lighting_aces.gd`)
 the Lighting vocabulary: lights, the world's look, and the light as an object.
 
@@ -4271,6 +4406,7 @@ the Lighting vocabulary: lights, the world's look, and the light as an object.
 - **Turn Shadows Off** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.
 - **Turn Shadows On** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.
 - **Turn Shadows Off** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.
+- **Blend Light As** (`value: String, target: String`) - How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants. Writes `Light2D.blend_mode`.
 - **Set Light Energy (2D)** (`node: String, value: float`) - Sets how bright a 2D light is. The row shows the fraction as a percentage.
 - **Set Light Colour (2D)** (`node: String, colour: Color`) - Sets the colour a 2D light casts.
 - **Set Light On/Off** (`node: String, on: bool`) - Switches a 2D light on or off. Different from hiding the node, which also hides its children.
@@ -4296,6 +4432,7 @@ the Lighting vocabulary: lights, the world's look, and the light as an object.
 - **Reach** (`target: String`) - Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.
 - **Reach** (`target: String`) - Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.
 - **Cone Angle** (`target: String`) - Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.
+- **Blend Light As** (`target: String`) - Reads the light's light blend back: `Light2D.blend_mode`. Use it in any value field.
 
 ### Locale Asset (`res://addons/eventforge/registration/modules/locale_asset_aces.gd`)
 the parts of a localised game that are NOT strings: files, voice, data cells.
@@ -4483,7 +4620,7 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **Set World Size** (`node: String, value: String`) - Sets how big a world-space label or sprite is, measured in world units per pixel.
 - **Set Bar Width** (`node: String, width: String`) - Cuts a sprite off at a width - how a health bar over a head is driven from a number.
 - **Send Input To Surface** (`event: String, target: String`) - Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.
-- **Set Surface Redraw** (`mode: String, target: String`) - Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.
+- **Set Surface Redraw** (`mode: String, target: String`) - Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.
 
 #### Expressions
 - **Get Position (3D)** (`target: String`) - Returns a 3D node's current world position as a Vector3.
@@ -4872,6 +5009,7 @@ Rendering vocabulary (the RenderingServer from events).
 #### Conditions
 - **Is On Screen** (`node: String`) - True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.
 - **Uses Modern Renderer** - True on the Forward+ / Mobile renderers, false on Compatibility (old GPUs, web) - gate fancy effects on it.
+- **Renderer Is** (`method: String`) - True when the game is running on the renderer named - Godot's own three. Forward+ is the only one that draws screen-space reflections, indirect light, global illumination and volumetric fog, so this is the question a graphics menu asks before it offers them.
 
 #### Actions
 - **Set Clear Color** (`color: Color`) - Sets the default background color of the whole game - the color you see where nothing is drawn.
@@ -4879,10 +5017,18 @@ Rendering vocabulary (the RenderingServer from events).
 - **Set MSAA (2D)** (`level: String`) - Sets multisample antialiasing for 2D rendering on the current viewport - a standard graphics-options switch.
 - **Set MSAA (3D)** (`level: String`) - Sets multisample antialiasing for 3D rendering on the current viewport - a standard graphics-options switch.
 - **Set Screen-Space AA** (`mode: String`) - Turns FXAA on or off for the current viewport - cheaper than MSAA, softer result.
+- **Upscale With** (`method: String`) - How a 3D scene rendered smaller than the window is stretched back up. Plain is the cheapest and the softest; the sharpening upscalers cost a little more and give most of the detail back, which is why a resolution slider is worth having at all.
+- **Set Temporal AA** (`enabled: bool`) - Turns temporal antialiasing on or off for the current viewport - it borrows detail from the frames before this one, which is sharper than FXAA on a still image and can shimmer while the camera moves.
 - **Set 3D Resolution Scale** (`scale: float`) - Renders the 3D scene at a fraction of the window resolution and upscales - the classic performance slider.
 - **Set Debug Draw Mode** (`mode: String`) - Switches the viewport to a diagnostic view - wireframe, overdraw heat, or unshaded - and back. Great on a debug hotkey.
 - **Set Occlusion Culling** (`enabled: bool`) - Toggles occlusion culling on the current viewport - big scenes skip drawing what walls already hide.
 - **Set Debanding** (`enabled: bool`) - Toggles debanding - removes the visible stripes in smooth dark gradients for a tiny cost.
+- **Render 3D At** (`percent: float, method: String`) - Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.
+- **Smooth Edges With** (`how: String`) - The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.
+- **Scale The Game** (`mode: String`) - What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.
+- **Fit The Shape** (`aspect: String`) - What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.
+- **Keep Pixels Sharp** (`stretch: String`) - Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.
+- **Pixel Size** (`factor: float`) - How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.
 - **Draw In Front Of** (`other: String, target: String`) - Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.
 - **Show Only To** (`layers: String, target: String`) - Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else.
 
@@ -5029,6 +5175,9 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 ### Spawn (`res://addons/eventforge/registration/modules/spawn_aces.gd`)
 Spawn (the spawn sentence, the name it leaves behind, and where it lands)
 
+#### Triggers
+- **On Spawn Skipped** - Runs when a Spawn A Copy In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.
+
 #### Actions
 - **Spawn A Copy** (`scene: String, name: String, at: String, parent: String`) - Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.
 - **Spawn A Copy Safely** (`scene: String, name: String, at: String, parent: String`) - The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.
@@ -5039,6 +5188,10 @@ Spawn (the spawn sentence, the name it leaves behind, and where it lands)
 - **Spawn A Copy, Facing And Moving** (`scene: String, name: String, at: String, facing: String, toward: String, angle: String, speed: String, carry: bool, moves: String, parent: String`) - Spawns one copy the way Spawn A Copy does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.
 - **Spawn In A Formation (3D)** (`scene: String, name: String, formation: String, count: String, around: String, inside: String, size: String, to: String, start: String, sweep: String, across: String, crowd: String, parent: String, when: String`) - Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.
 - **Spawn A Copy, Facing And Moving (3D)** (`scene: String, name: String, at: String, facing: String, toward: String, angle: String, speed: String, carry: bool, moves: String, parent: String`) - Spawns one copy the way Spawn A Copy (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.
+- **Spawn A Copy Of Myself** (`name: String, at: String, parent: String`) - Makes one more copy of the scene THIS node came from, and puts it where you say. Nothing has to name the scene: the node knows which file it was built from, so a scene renamed or moved keeps working. The copy is added on the next idle moment, which is what makes the row safe inside the collision handler a splitting boss usually lives in. A node that was built in code rather than from a scene file has no file to copy, and the Doctor says so on the row.
+- **Spawn A Copy Of Myself (3D)** (`name: String, at: String, parent: String`) - The same row on a 3D node: one more copy of the scene this node came from, added on the next idle moment. The line it writes is the same line its 2D twin writes, because scene_file_path and position are the node's own words in both dimensions - the twin exists so the picker offers the row on a 3D host at all.
+- **Spawn A Copy In A Free Spot** (`scene: String, name: String, inside: String, clear_of: String, gap: String, tries: String, parent: String`) - Spawns one copy somewhere inside a shape you drew that nothing is already standing in - and spawns NOTHING when there is nowhere left, rather than stacking copies on top of each other. When it finds no room it raises this node's spawn_skipped signal with the scene it could not place, which On Spawn Skipped listens to: add a signal block saying spawn_skipped(scene) and the row underneath can end the wave, play a full-up sound, or make more room. The copy is added on the next idle moment, so the row is safe inside a collision handler.
+- **Spawn A Copy In A Free Spot (3D)** (`scene: String, name: String, inside: String, clear_of: String, gap: String, tries: String, parent: String`) - The same row in three dimensions, with the gap measured in metres: one copy somewhere inside a box or a sphere you drew that nothing is already standing in, and nothing at all when there is nowhere left. A skipped spawn raises this node's spawn_skipped signal with the scene it could not place.
 
 #### Expressions
 - **Place Of** (`node: String`) - Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.
@@ -5049,6 +5202,8 @@ Spawn (the spawn sentence, the name it leaves behind, and where it lands)
 - **Random Place Inside Box** (`box: String`) - Gives a random point inside a box - the Area3D you drew around a spawn zone, or a CSG box you blocked the space out with. The box is measured directly and scattered through evenly in one step, with no rejection sampling and no retries. The measurement is in the box's own space and is handed back through to_global, so a rotated or scaled box scatters inside the box you drew rather than inside an upright one of the same size.
 - **Random Place Inside Sphere** (`ball: String`) - Gives a random point inside a sphere, spread evenly through it rather than bunched in the middle: the radius is pulled back by the cube root of the roll, which is what an even scatter through a volume needs - the same correction the 2D disc makes with a square root, one dimension up. The point is measured in the sphere's own space and handed back through to_global.
 - **Random Place Around (3D)** (`node: String, radius: String`) - Gives a random point on a ring around a node, at the height that node is standing at - an enemy arriving from any direction, a pickup dropped nearby. The ring lies on the ground plane, so the point is level with the node rather than above or below it; add to its Y yourself when you want it dropped in from above.
+- **Free Spot In** (`inside: String, scene: String, clear_of: String, gap: String, tries: String`) - Gives a point inside a shape you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of - where to put the next crate, the next mine, the next enemy in a room that is filling up. Clear is asked as a real physics test, with the spawned scene's OWN collision shape put at the point, so a wall is a wall whatever drew it; a group whose members carry no shape at all is answered by distance instead. A full arena answers NOTHING, and Spawn A Copy In A Free Spot is the row that knows what to do about that.
+- **Free Spot In (3D)** (`inside: String, scene: String, clear_of: String, gap: String, tries: String`) - The same question in three dimensions, with the gap measured in metres: a point inside a box or a sphere you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of. A full space answers nothing.
 
 ### System (`res://addons/eventforge/registration/modules/system_aces.gd`)
 System (event-sheet System parity)
@@ -5472,6 +5627,18 @@ the Video object (playing a film in the layout).
 - **Play Video** (`node: String`) - Starts the film from where it stands.
 - **Pause Video** (`node: String, paused: bool`) - Holds the film on its current frame, or lets it run on again.
 - **Stop Video** (`node: String`) - Stops the film and rewinds it to the beginning.
+
+### Viewport (`res://addons/eventforge/registration/modules/viewport_aces.gd`)
+the knobs of a view (a SubViewport, and the window's own viewport).
+
+#### Actions
+- **Set View Size** (`size: Vector2i, target: String`) - How many pixels a view renders. This is the cost of the view: a minimap drawn into a 200 by 120 panel should render 200 by 120, not the whole window and then a squeeze. Whole pixels only, which is what a view is measured in.
+- **Share The World (2D)** (`other: String, target: String`) - Points a view at the same 2D world another viewport is already drawing, so it shows the running game rather than an empty stage. This is the line a minimap needs: without it the second view has a world of its own and renders nothing.
+- **Share The World (3D)** (`other: String, target: String`) - The 3D twin: points a view at the same 3D world another viewport is drawing, so a rear-view mirror or a security monitor shows the level everybody is standing in rather than an empty one.
+- **Save A Still Of A View** (`view: String, path: String`) - Writes what a view is drawing to a PNG file, after waiting for the frame to finish. A photo mode, a level thumbnail, a save-slot picture, the postcard a player shares. The event pauses for the rest of that frame, so keep it off a per-frame trigger.
+
+#### Expressions
+- **Mouse Position In View** (`view: String`) - Where the pointer is inside one view, in that view's own pixels. A view has its own coordinate space, so this is the answer an in-world screen or a magnifier needs - the window's own answer is somewhere else entirely.
 
 ### Window (`res://addons/eventforge/registration/modules/window_aces.gd`)
 Game Window vocabulary (control the OS window from events).
