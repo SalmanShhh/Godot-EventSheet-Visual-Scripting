@@ -45,6 +45,8 @@ const CHECK_TRANSLATION := "ship-translation-coverage"
 const CHECK_FRAME_BUDGET := "ship-frame-budget"
 const CHECK_WHAT_GETS_SAVED := "ship-what-gets-saved"
 const CHECK_PIXEL_SCALE := "ship-pixel-scale"
+const CHECK_RENDERER := "ship-renderer-only"
+const CHECK_SKY_BACKDROP := "ship-sky-backdrop"
 
 ## Where Godot keeps the export presets, and the header a preset is one of.
 const EXPORT_PRESETS_PATH := "res://export_presets.cfg"
@@ -112,6 +114,10 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(frame_budget_findings(measured_costs(sources)))
 	out.append_array(what_gets_saved_findings(save_usage(sources)))
 	out.append_array(pixel_scale_findings(sources))
+	out.append_array(renderer_findings(sources, str(ProjectSettings.get_setting(
+		EventForgeEnvironmentWords.RENDERING_METHOD_SETTING,
+		EventForgeEnvironmentWords.FORWARD_PLUS))))
+	out.append_array(sky_backdrop_findings(sources))
 	return out
 
 
@@ -556,6 +562,84 @@ static func fractional_pixel_size(source: String) -> String:
 		if not is_equal_approx(asked, floorf(asked)):
 			return written
 	return ""
+
+
+# ── A look the renderer will not draw ─────────────────────────────────────────
+
+## The three words Godot's own Project Settings spell a rendering method with, in the plain word a
+## finding says out loud. Only Forward+ draws screen-space reflections, indirect light, global
+## illumination and volumetric fog; the other two set the flag and ignore it, which is why nothing
+## errors and nothing appears.
+const RENDERER_WORDS: Dictionary = {
+	"mobile": "mobile",
+	"gl_compatibility": "compatibility",
+}
+
+
+## A row that only works on Forward+, in a project that is not built for it. One quiet note per
+## file, naming the first such row it holds and the renderer this project actually ships with -
+## because the row does not error, does not warn and does not draw, which is the worst kind of
+## nothing there is. An info note rather than a warning: both halves are deliberate settings, and
+## the fix is a decision (build for Forward+, or drop the row) rather than a defect.
+##
+## The rows it knows are DERIVED from the environment word table, so a word marked Forward+ there is
+## noticed here with nothing added, and a word that stops being one stops being named.
+static func renderer_findings(sources: Dictionary, rendering_method: String) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var renderer: String = str(RENDERER_WORDS.get(rendering_method.strip_edges(), ""))
+	if renderer.is_empty():
+		return findings
+	for script_path: String in _sorted_keys(sources):
+		var asked: String = forward_plus_asked_for(str(sources[script_path]))
+		if asked.is_empty():
+			continue
+		findings.append(_finding("info", CHECK_RENDERER, script_path,
+			EventSheetL10n.translate("%s asks for %s, which only the Forward+ renderer draws - this row does nothing on %s. Either build for Forward+, or drop the row.") % [
+				script_path.get_file(), asked, renderer], asked))
+	return findings
+
+
+## The first Forward+-only thing one source asks for, in the plain word a reader knows it by, or ""
+## when it asks for none of them. The table's own order, so two files holding the same rows are
+## reported the same way round.
+static func forward_plus_asked_for(source: String) -> String:
+	for reason: Array in EventForgeEnvironmentWords.forward_plus_reasons():
+		if source.contains(str(reason[0])):
+			return str(reason[1])
+	return ""
+
+
+# ── A sky nothing is drawing ──────────────────────────────────────────────────
+
+## What makes the sky the thing behind everything, in the exact bytes both rows that do it write.
+const SKY_BACKDROP_LINE := "background_mode = Environment.BG_SKY"
+
+
+## A file that sets the sky's colours and never makes the sky the backdrop. The sky words are written
+## to do nothing rather than to error when the world is drawing a flat colour, so the rows run, cost
+## nothing and change nothing - and the only place that can be said is here. An info note, with the
+## door that fixes it in the words.
+static func sky_backdrop_findings(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		var text: String = str(sources[script_path])
+		if text.contains(SKY_BACKDROP_LINE) or not _writes_a_sky_word(text):
+			continue
+		findings.append(_finding("info", CHECK_SKY_BACKDROP, script_path,
+			EventSheetL10n.translate("%s sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky.") % script_path.get_file(),
+			script_path.get_file()))
+	return findings
+
+
+## True when a source writes any of the five procedural-sky words, by the whole three-deep path they
+## are reached through. Derived from the sky word table, so a word added there is noticed with
+## nothing added here.
+static func _writes_a_sky_word(source: String) -> bool:
+	for word: String in EventForgeSkyWords.words():
+		if source.contains("%s.%s = " % [EventForgeSkyWords.SKY_MATERIAL_PATH,
+				EventForgeSkyWords.property_of(word)]):
+			return true
+	return false
 
 
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────
