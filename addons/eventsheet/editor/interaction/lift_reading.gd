@@ -452,3 +452,8 @@ static func _family_paths() -> PackedStringArray:
 static func clear_cache() -> void:
 	_family_cache = {}
 	_family_order = PackedStringArray()
+	# The "have they been read" flag has to come down WITH the tables it is about. Left standing
+	# over an emptied cache it says the families were read and there are none of them, so every
+	# line after a drop falls past the curated table layer and is answered by whichever plainer
+	# reader is willing - permanently, for the life of the process, with nothing failing to say so.
+	_family_cache_built = false

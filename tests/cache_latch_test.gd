@@ -94,17 +94,20 @@ static func _pin_curated_templates() -> bool:
 ## The reading panel's family tables. The walk behind them answers {} whenever its folder cannot be
 ## opened, and the question is asked per family, per line, per refresh.
 static func _pin_lift_families() -> bool:
-	EventSheetLiftReading._family_cache.clear()
-	EventSheetLiftReading._family_cache_built = false
+	EventSheetLiftReading.clear_cache()
 	var derived: int = EventSheetLiftReading._families().size()
 	EventSheetLiftReading._family_cache.clear()
 	var after_emptying: int = EventSheetLiftReading._families().size()
-	EventSheetLiftReading._family_cache_built = false
+	# THROUGH THE REAL DOOR. clear_cache() is what the reading panel calls when a developer appends
+	# a draft, and a latch that stayed up over the emptied tables would answer "no families, and
+	# yes I looked" for the rest of the session - so the flag has to come down with them, and the
+	# pin has to drive the door rather than reach past it.
+	EventSheetLiftReading.clear_cache()
 	var rebuilt: int = EventSheetLiftReading._families().size()
 	return SUPPORT.pins(TEST_NAME, [
 		["the lift families derive", derived > 0, true],
 		["an empty family table is not re-read behind the latch", after_emptying, 0],
-		["dropping the latch reads the folder again", rebuilt, derived],
+		["clear_cache() drops the latch as well as the tables", rebuilt, derived],
 	])
 
 
