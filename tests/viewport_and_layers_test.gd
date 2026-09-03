@@ -30,13 +30,13 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 
-## The five view rows, the five scaling rows, and the eleven layer rows, in the order they are
+## The five view rows, the nine rendering rows, and the eleven layer rows, in the order they are
 ## authored.
 const VIEW_ROWS: Array[String] = ["ViewSetSize", "ViewShareWorld2D", "ViewShareWorld3D",
 	"ViewSaveStill", "ViewMousePosition"]
 const SCALING_ROWS: Array[String] = ["RenderingRender3DAt", "RenderingUpscaleWith",
 	"RenderingSmoothEdgesWith", "RenderingSetTaa", "RenderingScaleTheGame", "RenderingFitTheShape",
-	"RenderingKeepPixelsSharp", "RenderingPixelSize"]
+	"RenderingKeepPixelsSharp", "RenderingPixelSize", "RenderingRendererIs"]
 const LAYER_ROWS: Array[String] = ["LayerStayFixedOnScreen", "LayerMoveWithTheWorld",
 	"LayerDrawAbove", "LayerDrawBelow", "LayerOffset", "ParallaxScrollAt", "ParallaxRepeatEvery",
 	"ParallaxDrift", "ParallaxScrollOffset", "ParallaxLayerScrollAt", "ParallaxLayerRepeatEvery"]
@@ -93,6 +93,7 @@ static func _pin_authored(authored: Dictionary) -> bool:
 		"RenderingFitTheShape": ["Fit The Shape", "Rendering", ""],
 		"RenderingKeepPixelsSharp": ["Keep Pixels Sharp", "Rendering", ""],
 		"RenderingPixelSize": ["Pixel Size", "Rendering", ""],
+		"RenderingRendererIs": ["Renderer Is", "Rendering", ""],
 		"LayerStayFixedOnScreen": ["Stay Fixed On Screen", "Layers", "CanvasLayer"],
 		"LayerMoveWithTheWorld": ["Move With The World", "Layers", "CanvasLayer"],
 		"LayerDrawAbove": ["Draw Above", "Layers", "CanvasLayer"],
@@ -107,7 +108,8 @@ static func _pin_authored(authored: Dictionary) -> bool:
 	}
 	var kinds: Dictionary = {
 		"ViewMousePosition": ACEDescriptor.ACEType.EXPRESSION,
-		"ParallaxScrollOffset": ACEDescriptor.ACEType.EXPRESSION
+		"ParallaxScrollOffset": ACEDescriptor.ACEType.EXPRESSION,
+		"RenderingRendererIs": ACEDescriptor.ACEType.CONDITION
 	}
 	var detail: Array = []
 	var undescribed: PackedStringArray = PackedStringArray()
@@ -200,6 +202,13 @@ static func _pin_shipped(shipped: Dictionary) -> bool:
 			_template(shipped, "RenderingKeepPixelsSharp"), "get_window().content_scale_stretch = Window.{stretch}"],
 		["Pixel Size writes the one factor", _template(shipped, "RenderingPixelSize"),
 			"get_window().content_scale_factor = {factor}"],
+		["Renderer Is asks the server which of the three is drawing",
+			_template(shipped, "RenderingRendererIs"),
+			"RenderingServer.get_current_rendering_method() == {method}"],
+		["Renderer Is offers Godot's own three and opens on the one with everything",
+			[_choice_keys(shipped["RenderingRendererIs"], "method"),
+				_default_of(shipped["RenderingRendererIs"], "method")],
+			["\"forward_plus\",\"mobile\",\"gl_compatibility\"", "\"forward_plus\""]],
 		["Staying fixed on screen turns the camera follow off",
 			_template(shipped, "LayerStayFixedOnScreen"), "{target.}follow_viewport_enabled = false"],
 		["Moving with the world turns it on",

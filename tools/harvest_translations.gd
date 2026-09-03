@@ -226,6 +226,9 @@ const OWED_VERBS_IN_MODULE: Dictionary = {
 		"RenderingRender3DAt", "RenderingUpscaleWith", "RenderingSmoothEdgesWith", "RenderingSetTaa",
 		"RenderingScaleTheGame", "RenderingFitTheShape", "RenderingKeepPixelsSharp",
 		"RenderingPixelSize",
+		# Which of Godot's three renderers the game is on - the question a graphics menu asks before
+		# it offers the settings only one of them draws.
+		"RenderingRendererIs",
 	],
 	# The flow wave: the service registry, the capability loop and the deferral verbs.
 	"res://addons/eventforge/registration/modules/node_aces.gd": [
