@@ -509,8 +509,9 @@ lines that come back as rows rather than as verbatim code.
 **A run of statements is claimed narrowly, on purpose.** `near` and `far` are ordinary words, and a
 project could have two adjacent lines setting two variables by those names. What makes the pair a
 Set Clip Range is that they are adjacent, at the same indentation, in that order, and that either
-both carry a receiver or neither does. Anything looser is claimed by nothing and keeps the reading it
-already had. The bytes are unaffected either way: a run is spliced back exactly as it came in.
+both carry the SAME receiver or neither carries one - a run whose two lines address different nodes
+is two lines about two nodes, and is claimed by nothing. Anything looser keeps the reading it already
+had. The bytes are unaffected either way: a run is spliced back exactly as it came in.
 
 **Two rows are authoring words only, and that is deliberate.** **Set View Size** writes `size = ...`,
 which is also a Control's size, a box shape's size and a dozen more; **Offset Layer** writes
