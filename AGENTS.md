@@ -87,8 +87,13 @@ from `tools/build_help_bundle.gd`).
   declared instead of built: `EventSheetFieldSpec` (a kind is a MAKER METHOD on `EventSheetPopupUI`,
   never a string; the modifiers chain) plus `form(host, specs)`, which builds through those same
   helpers, and `EventSheetFieldForm`, which reads the fields back by id from the table the build
-  came from. An unknown id is an error naming it. The raw path stays legal and is still the right
-  one for a field with live gating or a widget of its own.
+  came from. Five kinds, and each is a field some dialog here has; a kind with no caller is not
+  declared in advance. NOTHING IS A SILENT NO-OP: an unknown id is an error naming it, a modifier
+  applied to a kind that does not wear it is refused by name (the restricted ones are the
+  `KIND_ONLY_MODIFIERS` table, and a modifier absent from it fits every kind), and every match over
+  the kind names its arms so a kind added without them errors rather than falling through to a line
+  edit. The raw path stays legal and is still the right one for a field with live gating or a widget
+  of its own; `ace_params_dialog.gd` is exempt by design, its field factory being the product.
 - MCP server (AI tooling, policy-aware): `res://addons/eventsheet/mcp/mcp_server.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
 - Test harness: `tests/run_tests.gd` auto-discovers `tests/*_test.gd` files exposing
@@ -106,14 +111,23 @@ from `tools/build_help_bundle.gd`).
   reporter - the printed shapes are a contract, so a new shape needs the readers changed first.
 - `tools/explain.gd -- <res://file.gd> <line>` says what one hand-written line became: the row the
   row builder makes of it (reopen, re-emit, source map) and then which reading layer would have
-  claimed it. `EVENTFORGE_LIFT_ONLY=<entry ids>` narrows the lift-table harness to named entries,
+  claimed it. A row the canvas draws no cell for is answered with WHICH of the reasons it is - a
+  pick-filter shell another reading replaces, a body a published verb draws, a row that is not an
+  event, or a row that was dropped, which is the only fault of the four - from the same shared answer
+  (`reading_lines.events_without_cells`) the dump and the census count with.
+  `EVENTFORGE_LIFT_ONLY=<entry ids>` narrows the lift-table harness to named entries,
   spelled after `EVENTFORGE_TEST_ONLY` so the two compose.
 - Maintenance tools: `tools/` - pack builders in `tools/pack_builders/` (auto-registered by glob,
   no list to maintain; run by `build_sample_behaviors.gd`, which regenerates EVERY pack - prefer
   a single-builder throwaway script for one pack); `build_examples.gd` (showcases, byte-stable -
   and its own drift gate under `-- --check`, which snapshots `demo/showcase/`, runs the ORDINARY
   build over it, compares every byte and puts the committed bytes back, printing
-  `showcases=N drifted=M`. It rebuilds in place rather than into a safe corner because showcase
+  `showcases=N drifted=M`. The comparison asks what the build WROTE, not what the tree holds
+  afterwards - every generated file goes out through `_write_text`, `_save_resource` or
+  `_save_scene`, which record it - because the builder never deletes, so a retired showcase would
+  otherwise sit on disk and be compared against itself for ever. Godot's `.uid` / `.import` sidecars
+  are outside the gate: not builder output, not committed. It rebuilds in place rather than into a
+  safe corner because showcase
   paths are written into the showcases themselves, so a redirected build is a different build; the
   gate and the release ritual are therefore one code path. A pack member-order change drifts this
   tree without touching it, which is how five `.tscn` files once went stale unnoticed);
@@ -137,19 +151,26 @@ from `tools/build_help_bundle.gd`).
   `prove_registry_identity.ps1 -Base <sha>` runs that gate through a detached worktree, and names
   the instrument files it copied into the base, because those are the one thing it cannot see);
   `reading_dump.gd` (every ROW READING as one sorted, format-versioned text - a cell's origin, lane,
-  object word, spans with their role and style marks, and the builder path that shaped it - over both
-  halves of what the builder reads: every builtin descriptor filled with its own defaults, and every
+  object word, spans with their role and STYLE MARKS (the chip, the kind, the badge, the per-part
+  bold / italic / colour, the object icon and the muted note - the things a reader sees that are not
+  words), and the builder path that shaped it - over both halves of what the builder reads: every
+  builtin descriptor filled with its own defaults, and every
   row of every sheet under `demo/showcase/` and `eventsheet_addons/`. Byte-stable across runs; the
   gate is a diff of a run before a change against one after it, because a row's spans are data and
-  nothing else in the tree writes them down. `reading_lines.gd` beside it is the writer and the path
+  nothing else in the tree writes them down; there is deliberately NO committed golden (5.5 MB that
+  moves with every showcase regeneration), so each run prints `sha=` as the line a commit message
+  quotes instead. A run that finds an event the canvas built nothing for REFUSES to be a baseline.
+  `reading_lines.gd` beside it is the writer and the path
   classifier, shared with `reading_census.gd` and `lift_provenance.gd` so the three can never say a
   row was shaped by two different things - every answer comes from the shipped row builder through a
   live viewport, and no seam is added to the files being measured); `reading_census.gd` (what the two
   reading files actually hold: rows by path, the anatomy of both files - reachable, harness-only,
   named by nothing, and the name-dispatch arms that are the per-vocabulary special-casing - the share
   of branch-shaped cells the generic assembly would reproduce, thirty of those comparisons printed in
-  full, and a wave-priced projection in whole match arms. Reach is decided STATICALLY by name, which
-  over-estimates reach and so under-estimates what is dead);
+  full, and a projection priced in whole match arms - where an arm is credited as `<router>::<verb>`,
+  because the row builder holds four tables dispatching on `ace_id` and only two are the grammar's
+  routers. Reach is decided STATICALLY by name, which over-estimates reach and so under-estimates
+  what is dead);
   `measure_ledger.ps1` (the maintainability campaign's ledger: every hand-maintained language the
   tree holds - GDScript, PowerShell, the two shell shims and the shader fixtures, listed in its
   header where `git ls-files` can check the claim - and the shipped plugin, sized and diffed over

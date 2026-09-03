@@ -240,7 +240,10 @@ figure that matters: the dump and the census are 1,430 lines between them becaus
 assembly of the same row, and written down in a form two runs agree on byte for byte. Nothing of it
 ships.
 
-What it bought is the answer, and the answer is NO. Of the **2,485** cells a reading branch shaped
+What it bought is the answer, and the answer is NO. (The figures in this paragraph were measured
+over a population that was missing two whole events and over a comparison that could not see two of
+the builder's own passes; both are repaired further down and every figure here is restated there.
+The answer did not change - it got stronger.) Of the **2,485** cells a reading branch shaped
 across every builtin descriptor and every row of every sheet under `demo/showcase/` and
 `eventsheet_addons/`, the generic assembly out of the descriptor reproduces **340** - **13.7%**.
 Priced the way a deletion would actually work, in whole match arms: **111** arms carrying **469**
@@ -286,7 +289,163 @@ buys thirteen lines and costs 2,145 readings, so it will not.
   hang. A single arm that reproduces the value it came from is not a branch a row can draw, and is
   now no branch at all; every case that terminates today has strictly shorter arms and is untouched.
   Found by the census, whose population is the first walk in this tree that has ever asked the row
-  builder for every row of every committed sheet.
+  builder for every row of every committed sheet. (That guard fixed the hang and opened a worse
+  hole, which the next bullet is about.)
+
+- **An event whose value stops branching keeps its place on the canvas.** The guard above made a
+  return reachable that had never run before, and what was waiting there was a conditional
+  expression - `[row] if ... else [head]`. A conditional is an untyped Array whatever its arms hold,
+  so assigning it to the typed array the caller declares failed at RUNTIME: the caller was left
+  holding nothing and the WHOLE EVENT disappeared from the canvas. Two of them -
+  `hierarchy_playground.gd` and `raycast_lab_3d.gd`, eight actions and one - with two script errors
+  per open and no gate anywhere that could see it. A hang is reported by whoever waits for it; a
+  silent drop is not, so this was the worse of the two. The array is built typed now, one element at
+  a time, and both files draw their events again.
+
+  Nothing under `tests/` opened either file through a viewport, and the reading instruments walk the
+  rows that EXIST - a row that was never built is not a row they can miss - so the answer is shared
+  rather than written down per tool. `reading_lines.events_without_cells` holds every `EventRow` of a
+  sheet up against the cells the canvas walk produced and names the three reasons a row can own no
+  cell apart: a pick-filter shell another reading replaces, a body a published verb draws, and a row
+  that was dropped, which is the only fault of the three. `tests/event_cells_test.gd` pins the two
+  repaired files at zero dropped events and pins the shooter's picking shell as EXPLAINED, so a pin
+  that passed by calling every missing row harmless fails too.
+
+- **The reading gate sees the marks that are not words.** A segment line carried a span's role, its
+  chip, its kind and its badge and stopped there, so un-bolding a value, dropping an object's class
+  picture or losing the muted word beside the object would have moved rendered pixels and moved no
+  line of the text - and a gate read off it would have printed `same` over that change. The marks now
+  carry the per-part emphasis a BBCode-drawn span wears (bold, italic and colour, positionally, so a
+  sentence re-split into different pieces moves the line too), the icon named by the file it came
+  from, the object note and a span's own tint. **Format 2**, so a text written by the old writer
+  cannot read as "every reading moved".
+
+- **`verbatim` was an assumption, and now it is a claim that gets checked.** Every raw code row was
+  classified `verbatim` on sight, before a reader was asked - and `verbatim` is defined as "the line
+  stays the code it is". For **44** cells of the shipped population that was false: `$Label.text =
+  "..."` is drawn as `Set text to "..."` by the statement grammar and the derived-property layer, and
+  the figure was calling those untouched code. The claim is checked against the cell the canvas DREW
+  now: a cell whose words hold the row's own code is the code, a comment row is the code with the
+  `#` the card strips, and anything else is a reading. `verbatim` falls from **521** to **477** and
+  the 44 move to the layer that shaped them.
+
+- **The two passes the comparison could not see.** The census compares a cell's base text against
+  the text the descriptor's own template would give it - and the two passes that humanise input-event
+  words and re-say a sentence WRAP that base text rather than living inside it. So a cell whose words
+  they moved compared equal to the descriptor's and counted as reproducible: **400** cells were in
+  that state, and `bespoke:_reading_sentence` could not fire for the cause its own name gives. Both
+  are asked separately now, and a cell they moved is not a cell the descriptor alone reproduces.
+
+- **An arm is credited from the table it sits in.** The row builder holds four `match ... ace_id:`
+  tables and only two are the grammar's routers; the other two dispatch on the same keys for their
+  own reasons. Arm credit was keyed by the VERB alone, so a cell that went through a router marked an
+  arm of a table it never entered as reached, and one of those could be listed "wholly reproduced" on
+  evidence gathered in a different function. A cell credits `<router>::<verb>` now and an arm is
+  looked up by the same pair.
+
+- **The census restated, with all four repairs in it - and the answer is the same answer, harder.**
+  Population **25,883** cells (the two dropped events are back), **0** files that do not open as
+  sheets, **0** events that reached the canvas as nothing - a line the report prints now, and refuses
+  to be read as a baseline while it is above zero. Of **4,115** ACE cells the generic assembly
+  reproduces **1,279** (**31.1%**), which is almost entirely the cells it already drew: of the
+  **2,891** cells a BRANCH shaped it reproduces **55**, or **1.9%** - the earlier **13.7%** was that
+  number measured before the two post-passes were visible. Grammar **50 of 1,774** (**2.8%**),
+  bespoke **5 of 1,117** (**0.4%**). Priced the way a deletion works, in whole match arms: **109**
+  arms carrying **464** lines were reached by a cell, **3** of them (**13 lines**) are wholly
+  reproduced, absorption **2.8%**, band **-13** because all three were judged on one cell each; **30**
+  arms carrying **102** lines were reached by nothing at all and are projected at zero, because
+  nothing was measured about them. The next wave was going to delete reading code in favour of the
+  generic assembly. On the corrected measurement it buys **thirteen lines** against **2,891**
+  readings, so it will not, and the leads that remain are the **33 lines** over 5 functions in the
+  row builder that nothing in the tree names and the **102 lines** of match arm no row reached.
+
+- **`explain` says WHICH of the reasons a row draws no cell.** It answered every such row with one
+  sentence naming one cause, "the usual cause is a row inside a published verb". There are four, and
+  three trigger-less rows in the shipped tree are a different one - pick-filter shells another
+  reading replaces - so the door sent a reader looking for a verb that was not there. The reason
+  comes from the same shared answer the dump and the census count with.
+
+- **The showcase gate can name a file its builder no longer writes.** It named three kinds of drift
+  and the middle one could not fire: the check read the tree back AFTER the build, and the builder
+  never deletes, so a retired showcase sat on disk, was found by that read, and was compared byte for
+  byte against itself - and passed. A showcase could have been dropped from the builder and left
+  committed for ever behind a green gate, which is the same debt the gate was written to catch. What
+  the builder WROTE is a fact only the builder has, so it records it, and the comparison asks that
+  record. Godot's own `.uid` and `.import` sidecars drop out with it - not builder output, not
+  committed, never showcase drift - so the gate compares **74** generated files rather than 74 plus
+  their sidecars. Pinned by planting the case: the test writes one stale file under the tree for the
+  length of its run and pins that the gate names it, names it as THAT kind, and that nothing else
+  drifted beside it - the zero it used to pin, said in a way that also proves the kind works. One
+  gate run, not two, so the test costs what it always did. The eight showcases that each re-spaced
+  their emitted sheet by hand share one helper now, the same two replacements in the same order, and
+  the tree does not move by a byte: `showcases=28 drifted=0`, clean.
+
+- **A dialog field spec refuses what its kind cannot wear.** `number_field(...).placeholder("x")`,
+  `text_field(...).at_least(1)` and `check_field(...).options(...)` all compiled, built, and dropped
+  the modifier without a word - the spec looked as though it had been told something it had not been
+  told, which is the silent no-op the typed-shape rule exists to forbid. Which modifiers belong to
+  which kinds is a five-row TABLE now, and one that does not fit says which field, which modifier and
+  which kind. Every match over the kind names its arms as well, so a kind added tomorrow is an error
+  naming the field and the function with no arm for it rather than a LineEdit nobody asked for.
+
+- **And the two field kinds nobody asked for are gone.** A code box and a picker-backed choice field
+  were declared with the rest and NOTHING in the tree asked for either, while carrying the most
+  machinery of any kind. The rollout that would have found them a caller was stopped on a measurement
+  in this same wave, so no second caller was queued either. Five kinds remain and every one is a
+  field a dialog in this tree actually has; adding one back is an enum entry, a maker and its arms.
+  The New Event Sheet dialog's control tree is IDENTICAL across both changes - class, minimum size,
+  size flags, mouse filter, focus mode, visibility, tooltip, theme overrides, label text and wrapping
+  and modulate, line-edit text and prompt, every dropdown item with its metadata and type, and every
+  signal connection, dumped at `ad3f110f` and at this tree and diffed empty.
+
+- **The two generated trees nobody was watching on a runner.** CI ran the Doctor, both forms of the
+  contracts gate, the fast gate and the full suite. The behaviour packs' drift audit and the
+  translation harvester had no step of their own and ran only when somebody remembered - and this
+  wave's own showcase-gate repair exists precisely because a gate behaved differently on the Linux
+  runner. The audit is greped for its printed `drifted=0`; the harvester is checked BOTH ways,
+  because it APPENDS what is owed rather than reporting it, so a run that quietly added a key would
+  pass a verdict grep on its own.
+
+- **The reading dump has no committed baseline, and that is a decision.** The text is 5.5 MB and
+  moves the day any showcase is regenerated or any verb is added, so a copy in the repository would
+  be stale more often than right - and a stale golden fails for the wrong reason and teaches its
+  readers to update it without looking. What is worth keeping is the one line that identifies a text,
+  so every run prints `sha=` beside its receipt.
+
+- **Fourteen wrapped lines stop spelling their gap in tabs.** A tab in the middle of an expression is
+  indentation in the wrong place: it renders at a different width in every reader and makes the
+  second half of a condition look like a new statement. Two of the fourteen are in the row builder,
+  which is a reading file, so the sweep was PROVED rather than asserted: the whole reading dump before
+  and after is **5,569,761 bytes** both times, byte for byte identical, sha256
+  `75b9d1b64e8c971db35850e6006760f1eb8326ad08414722d0648fcc581d6677`. The one line whose string
+  literal holds real tabs is untouched, which is why this was a walk that tracks quoting rather than a
+  search and replace.
+
+- **What the fourth wave did to the campaign line, said at the headline rather than per step.** Every
+  step above is priced against its projection, and the totals were owed the same treatment. Measured
+  under format 3 at the wave base `f4a64613..HEAD`: **+3,258 lines** of hand-written source
+  (**+3,362 / -104**), of which `tests/` is **+817** and the installed plugin is **+559**. Against
+  the campaign base `57588286..HEAD`: hand-written **+3,278** (**437,338** lines in **1,810** files)
+  and the installed plugin **-2,382** (**233,311** in **607**), where three waves in it stood at
+  **-17** and **-2,941**. So this wave gave back **559** of the campaign's shipped-plugin win, about
+  a fifth of it, and turned a flat hand-written total into a growth of three thousand lines. Almost
+  all of it is instruments and their pins - the dump, the census, the shared no-cell answer, the
+  planted-case gate, and the tests that hold them - and a dev tool is charged at full price by the
+  figure it protects. The part that genuinely ships is **+559**, of which the field seam is the bulk;
+  the campaign's one hard constraint is that figure, and this wave moved it the wrong way. The next
+  wave opens on that sentence.
+
+- **One defect this wave found and did NOT fix, because fixing it was outside what it was allowed to
+  touch.** `EventSheetSentence.condition("self == null", {})` throws `Out of bounds get index 0 (on
+  base: PackedStringArray)` in `sentence_grammar.gd`: `"self".substr(5)` is empty and splitting an
+  empty string gives an empty array. Any bare-self comparison hits it - `self == null`, `self !=
+  null`, `self > 1` - and those are exactly what the exists / does not exist readings answer, so it
+  is a live path rather than a corner. The reading still comes out with the right words and nothing
+  user-visible is wrong; a shipped path simply throws, six times per full census run and once per
+  redraw of such a row in a running editor. It is byte-identical at the wave base, so it is not a
+  regression of this wave, and the fix is a one-line guard on the empty tail. It is written down here
+  so the next pass through that file starts with it.
+
 
 - **The showcase gate is green on both runners.** Its first day on CI it named
   `pin_modes/pin_modes_3d.tscn` as drifted on Linux while the same rebuild was byte-identical on
