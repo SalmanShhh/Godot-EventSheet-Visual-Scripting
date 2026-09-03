@@ -49,6 +49,23 @@ jobs:
       - name: Project Doctor (committed generated scripts must match their sheets)
         run: ~/godot/godot --headless --path . --script tools/project_doctor.gd
 
+      # The behaviour packs are compiler output and have had a drift gate for a long time; it had
+      # no CI step of its own, so it ran only when somebody remembered. The verdict is a printed
+      # line rather than an exit code alone, so the line is what this greps.
+      - name: Behaviour packs must match their builders
+        run: |
+          ~/godot/godot --headless --path . --script tools/audit_addons.gd 2>&1 | tee audit.log
+          grep -qE 'drifted=0' audit.log
+
+      # The nine translation CSVs are derived the same way, and the harvester APPENDS what is owed
+      # rather than reporting it - so the proof is both halves: it said nothing was owed, and it
+      # left the nine files untouched. A run that quietly appended a key would pass the first half.
+      - name: Translations must owe nothing
+        run: |
+          ~/godot/godot --headless --path . --script tools/harvest_translations.gd 2>&1 | tee harvest.log
+          grep -qi 'nothing owed' harvest.log
+          git diff --exit-code -- addons/eventsheet/translations/
+
       # The branch gate the guide hands to teams, run on this repository as the proof that the
       # recipe works. A game project runs the whole-project form (no arguments after the --); this
       # repository is not a game, and most of its .gd files are the plugin's own test harnesses and

@@ -24,8 +24,15 @@
 #      about 150 files and 34,000 lines of real game code, which is where the readings that only
 #      happen to a lifted line live.
 #
-# THE GATE IS A DIFF, not a committed golden: the text is far too long to keep beside the tree and
-# would go stale the day a showcase is regenerated. Run it before a change and after it, and compare:
+# THE GATE IS A DIFF, not a committed golden - and that is a DECISION, not an omission. The text is
+# 4-5 MB and it moves the day any showcase is regenerated or any verb is added, so a copy committed
+# beside the tree would be stale more often than it was right, and a stale golden is worse than none:
+# it fails for the wrong reason and teaches a reader to update it without looking. What IS worth
+# keeping is the one line that identifies a text, so every run prints `sha=` beside its receipt. A
+# change that means to move no reading quotes that line before and after; a change that means to move
+# one says which lines. Neither needs a 5 MB file in the repository.
+#
+# Run it before a change and after it, and compare:
 #
 #     "$GODOT" --headless --path . --script tools/reading_dump.gd -- out=user://before.txt
 #     ... make the change ...
@@ -91,6 +98,7 @@ func _init() -> void:
 		print("written=%s" % output_path)
 	# The tail is the receipt, not the text: counted on stderr's side of the line so a redirected
 	# `out=` run still says what it walked, and a piped run can drop it.
+	print("sha=%s" % text.sha256_text())
 	print("readings=%d unreadable=%d dropped=%d" % [readings.size(), unreadable.size(), dropped.size()])
 	for path: String in unreadable:
 		print("  does not open as a sheet: %s" % path)
