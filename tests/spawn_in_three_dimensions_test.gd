@@ -57,10 +57,17 @@ static func _test_the_twins_emit_the_same_three_lines_on_a_3d_host() -> bool:
 	passed = _check("the row opens adding the copy under the spawning node",
 		_default_of(by_id.get("SpawnNewCopy3D", null), "parent"), "self") and passed
 	# The 3D field offers 3D starters. A Vector2 in a Node3D row's At field is the one mistake this
-	# list exists to stop, so the third starter is pinned as the literal it must be.
+	# list exists to stop, so the question is asked of the whole list rather than of one position in
+	# it: the 3D literal is there, and nothing two-dimensional is.
 	var starters: Array = _module().get("PLACEMENT_STARTERS_3D")
-	passed = _check("the At field offers a Vector3 rather than a Vector2",
-		starters[starters.size() - 1], "Vector3(0, 0, 0)") and passed
+	var two_dimensional: PackedStringArray = PackedStringArray()
+	for starter: Variant in starters:
+		if str(starter).contains("Vector2") or str(starter).contains("in_2d"):
+			two_dimensional.append(str(starter))
+	passed = _check("the At field offers a Vector3",
+		starters.has("Vector3(0, 0, 0)"), true) and passed
+	passed = _check("and nothing two-dimensional at all",
+		two_dimensional, PackedStringArray()) and passed
 	return passed
 
 

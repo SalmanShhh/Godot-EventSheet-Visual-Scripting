@@ -1,12 +1,14 @@
-# EventForge - the two spawn runs that are several statements and one sentence.
+# EventForge - the spawn runs that are several statements and one sentence.
 #
-# Most of the spawn vocabulary is one statement per row, and the general index reads those back. Two
-# rows are not: a formation is a loop with a place expression in it, and a launched copy is a spawn
-# with a facing and a speed under it. Neither means anything a line at a time - a `for` that
-# instantiates is a loop to any reader, and a `rotation =` beside a `velocity =` is two ordinary
-# property writes - so both are claimed as RUNS, before any single line of them is looked at.
+# Most of the spawn vocabulary is one statement per row, and the general index reads those back.
+# Three rows are not: a formation is a loop with a place expression in it, a launched copy is a spawn
+# with a facing and a speed under it, and a copy of the node's OWN scene is a spawn whose scene field
+# is a property rather than a file. None means anything a line at a time - a `for` that instantiates
+# is a loop to any reader, a `rotation =` beside a `velocity =` is two ordinary property writes, and
+# a `load()` of a property is a load - so all three are claimed as RUNS, before any single line of
+# them is looked at.
 #
-# THE ENTRIES ARE DERIVED, not written out. Each of the two rows carries its template with a branch
+# THE ENTRIES ARE DERIVED, not written out. Each of the two branching rows carries its template with a branch
 # per formation, per timing, per facing and per way of moving; an entry here is that template with
 # those branches collapsed to ONE combination, turned into patterns mechanically: every character
 # outside a `{slot}` escaped verbatim, every slot a named capture, and a slot spelled twice in one
@@ -25,6 +27,14 @@
 # shape, the group join and the placement local included, and anything short of it keeps the reading
 # it already had. That is the intended failure - a run nothing here claims is an honest loop with
 # honest rows in it, never a mangled formation.
+#
+# AND THE FREE-SPOT SPAWN IS DELIBERATELY NOT CLAIMED. Its first line hands a LIST of group names to
+# the free-spot query, and a list with two names in it has a comma in the middle of one argument -
+# which is the one thing a run of patterns cannot read, because the captures between two literal
+# commas would split it in the wrong place. The run would still re-emit the same bytes, so the byte
+# gate would pass while the row showed the wrong fields, and a lift that is right about the bytes
+# and wrong about the meaning is worse than no lift at all. The row's lines therefore read as the
+# lines they are, which is the honest outcome for a shape this table cannot promise.
 @tool
 class_name EventForgeSpawnRunLift
 extends RefCounted
@@ -37,11 +47,13 @@ const FORMATION_ACE_ID: String = "SpawnFormation"
 const FORMATION_ACE_ID_3D: String = "SpawnFormation3D"
 const LAUNCHED_ACE_ID: String = "SpawnFacingAndMoving"
 const LAUNCHED_ACE_ID_3D: String = "SpawnFacingAndMoving3D"
+const SELF_COPY_ACE_ID: String = "SpawnCopyOfSelf"
 
 ## The cheap first refusal each family of entries opens with - one `contains` that rules out nearly
 ## every statement in a project before a pattern is compiled, let alone run.
 const FORMATION_MARK: String = "_scene = "
 const LAUNCHED_MARK: String = ".instantiate()"
+const SELF_COPY_MARK: String = "scene_file_path"
 
 ## The one slot whose value is always a GDScript identifier: the name the row gives the copy, which
 ## the run then spells four more times. Captured as an identifier rather than as an expression so the
@@ -65,7 +77,7 @@ static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dicti
 	return EventForgeLiftTable.match_run(lift_entries(), lines, index, depth)
 
 
-## Every spelling the two rows write, as table entries. The launched entries that CARRY the spawner's
+## Every spelling the three rows write, as table entries. The launched entries that CARRY the spawner's
 ## speed come first, for the reason the layout family states about its own pair: their run is the
 ## shorter one with a line inside it, so asked the other way round the shorter entry would claim the
 ## first six statements of the longer one and leave its last line stranded.
@@ -83,6 +95,7 @@ static func lift_entries() -> Array[Dictionary]:
 	_add_launched(built, LAUNCHED_ACE_ID_3D, SPAWN.launched_template(SPAWN.facing_lines_3d(),
 		"-{name}.global_transform.basis.z", SPAWN.move_lines(SPAWN.BULLET_CHILD_3D),
 		SPAWN.FACING_ORDER_3D), SPAWN.FACING_ORDER_3D, "3d_")
+	_add_self_copy(built)
 	_entries = built
 	return _entries
 
@@ -111,7 +124,7 @@ static func statement_pattern(line: String) -> String:
 	return "^%s$" % pattern
 
 
-# ── the two families ─────────────────────────────────────────────────────────────────────────────
+# ── the three families ─────────────────────────────────────────────────────────────────────────────
 
 
 ## The formation entries: one per shape word per timing. Ten of them per dimension, and every one is
@@ -148,6 +161,22 @@ static func _add_launched(into: Array[Dictionary], ace_id: String, template: Str
 				into.append(_entry("spawn_launched_%s%s_%s%s" % [tag, word, moved,
 					"_carried" if carried else ""], ace_id, template, chosen, defaults, defaults,
 					LAUNCHED_MARK))
+
+
+## The self copy: the safe spawn with the node's own scene file where the scene field goes. ONE
+## entry, because the row has no branch in it, and only the 2D row is claimed - for exactly the
+## reason the line formation states about its twin. The 3D row writes the identical three
+## statements, character for character, because `scene_file_path` and `position` are the node's own
+## words in both dimensions, and two entries for one spelling would split every such run between
+## them by table order alone.
+##
+## The first statement is what makes the run findable: `load(scene_file_path)` is literal text in
+## the pattern rather than a slot, so this claims a spawn of the node's own scene and nothing else.
+## A deferred spawn of any OTHER scene keeps the reading it already had.
+static func _add_self_copy(into: Array[Dictionary]) -> void:
+	var defaults: Dictionary = _defaults_of(SELF_COPY_ACE_ID)
+	into.append(_entry("spawn_self_copy", SELF_COPY_ACE_ID, SPAWN.self_copy_template(), {},
+		defaults, defaults, SELF_COPY_MARK))
 
 
 ## One entry, from the row's template with its branches collapsed to one combination. The shape IS

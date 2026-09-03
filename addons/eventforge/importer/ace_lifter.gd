@@ -68,9 +68,9 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# an undo half that only mean a change together; the create_action/commit_action bracket around
 	# them is the COMPILER's, and is consumed rather than lifted - see _parse_body.
 	preload("res://addons/eventforge/importer/undoable_edit_lift.gd"),
-	# The two spawn runs that are several statements and one sentence: the formation loop, and the
-	# copy that is spawned already facing somewhere and already moving. Asked last of the run
-	# families because both open on shapes the others have already refused.
+	# The spawn runs that are several statements and one sentence: the formation loop, the copy that
+	# is spawned already facing somewhere and already moving, and the copy of the node's own scene.
+	# Asked last of the run families because all three open on shapes the others have already refused.
 	preload("res://addons/eventforge/importer/spawn_run_lift.gd"),
 ]
 

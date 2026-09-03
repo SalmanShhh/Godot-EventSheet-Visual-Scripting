@@ -66,10 +66,16 @@ const CATEGORY: String = "Spawn"
 ## spawner's own place first (what the row opens on), then the shapes the placement expressions take.
 ## An editable suggest list rather than a fixed dropdown, because "where" is an expression and a fixed
 ## list would be a smaller language than the field really speaks.
+## The last entry is longer than the three above it on purpose: a free spot is a QUESTION rather
+## than a place, so the starter has to carry the four things the question is about - what to roll
+## inside, what is being put there, what it has to keep away from, and how far. It is a starting
+## point like the others and is edited in the field, and Spawn A Copy In A Free Spot is the row that
+## also knows what to do when the answer is nothing.
 const PLACEMENT_STARTERS: Array[String] = [
 	"global_position",
 	"$SpawnPoint.global_position",
 	"Vector2(0, 0)",
+	"FreeSpot.in_2d($SpawnZone, load(\"res://enemy.tscn\"), [\"walls\"], 32.0, 24)",
 ]
 
 ## The same list for a Node3D host. Kept beside its 2D twin rather than derived from it, because the
@@ -78,7 +84,17 @@ const PLACEMENT_STARTERS_3D: Array[String] = [
 	"global_position",
 	"$SpawnPoint.global_position",
 	"Vector3(0, 0, 0)",
+	"FreeSpot.in_3d($SpawnBox, load(\"res://enemy.tscn\"), [\"walls\"], 1.0, 24)",
 ]
+
+## The runtime file the free-spot word calls, by the name emitted code says. One spelling, named
+## here, because two rows and a starter all write it.
+const FREE_SPOT_CALL: String = "FreeSpot"
+
+## The signal a spawn row raises when the arena had no room in it. A PLAIN signal the sheet declares
+## for itself, which is why it is a name here and not a mechanism: the row emits it and On Spawn
+## Skipped connects to it, exactly as any other signal a sheet declares.
+const SKIPPED_SIGNAL: String = "spawn_skipped"
 
 ## The five shapes a formation puts its copies in, as the WORD the dropdown inserts. The word is the
 ## choice: the row's template carries one branch per shape and keeps the branch whose word the row
@@ -273,7 +289,57 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.act("SpawnFormation3D", "Spawn In A Formation (3D)", formation_template(formation_places_3d(), FORMATION_ORDER_3D), CATEGORY, "Spawn [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b]", "Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_choice("formation", FORMATION_RING, "Formation", "The shape the copies land in. Each one reads a different handful of the fields below, and writes only the ones it reads.", FORMATION_CHOICES_3D).param_built(_count_param()).param_built(_around_param(PLACEMENT_STARTERS_3D)).param_built(_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D, or a CSGBox3D you blocked the space out with")).param_built(_size_param("5.0")).param_built(_to_param("global_position + Vector3(10, 0, 0)")).param_built(_start_param()).param_built(_sweep_param()).param_built(_across_param()).param_built(_crowd_param()).param_built(_parent_param()).param_choice("when", WHEN_NOW, "Added", "When the copies join the tree. Pick the next idle moment inside a collision or body handler: Godot refuses to add a child while the physics server is busy.", WHEN_CHOICES))
 	descriptors.append(F.act("SpawnFacingAndMoving3D", "Spawn A Copy, Facing And Moving (3D)", launched_template(facing_lines_3d(), "-{name}.global_transform.basis.z", move_lines(BULLET_CHILD_3D), FACING_ORDER_3D), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b], facing [b]{facing}[/b], moving at [b]{speed}[/b]", "Spawns one copy the way Spawn A Copy (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.", "Node3D").param_built(_scene_param()).param_built(_name_param("new_bullet")).param_built(_at_param_3d()).param_choice("facing", FACE_SPAWNER, "Facing", "Which way the copy is turned before it is launched. Toward A Node reads the Toward field and is a look_at, so the node has to be somewhere other than where the copy landed; At An Angle turns it around the up axis.", FACING_CHOICES_3D).param_built(_toward_param()).param_built(_angle_param()).param_built(_speed_param("12.0", "How fast the copy travels along its facing, in metres per second.")).param_built(_carry_param("velocity")).param_choice("moves", MOVE_VELOCITY, "Moves By", "Where the copy's speed is written. It is a fact about the scene, not about this row - the dialog reads the scene file and says which of the three it is.", MOVE_CHOICES).param_built(_parent_param()))
 
+	# ── A copy of this very scene ──────────────────────────────────────────────────────
+	# The safe spawn with the scene slot answered by the node's OWN scene file. `scene_file_path` is
+	# a property Godot fills in for anything that came out of a `.tscn`, so there is nothing to pick
+	# and nothing to keep in step: a boss that splits, a blob that divides, a firework that throws
+	# smaller fireworks. Deferred by default because the moment a thing copies itself is nearly
+	# always a hit, and a hit is a physics callback.
+	descriptors.append(F.act("SpawnCopyOfSelf", "Spawn A Copy Of Myself", self_copy_template(), CATEGORY, "Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "Makes one more copy of the scene THIS node came from, and puts it where you say. Nothing has to name the scene: the node knows which file it was built from, so a scene renamed or moved keeps working. The copy is added on the next idle moment, which is what makes the row safe inside the collision handler a splitting boss usually lives in. A node that was built in code rather than from a scene file has no file to copy, and the Doctor says so on the row.", "Node2D").param_built(_name_param("new_copy")).param_built(_at_param()).param_built(_parent_param()).featured())
+	descriptors.append(F.act("SpawnCopyOfSelf3D", "Spawn A Copy Of Myself (3D)", self_copy_template(), CATEGORY, "Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "The same row on a 3D node: one more copy of the scene this node came from, added on the next idle moment. The line it writes is the same line its 2D twin writes, because scene_file_path and position are the node's own words in both dimensions - the twin exists so the picker offers the row on a 3D host at all.", "Node3D").param_built(_name_param("new_copy")).param_built(_at_param_3d()).param_built(_parent_param()))
+
+	# ── Somewhere nothing is standing ──────────────────────────────────────────────────
+	# "Where" with a question in it. The other placement words measure something and answer; this one
+	# rolls a point, asks whether the copy would fit there, and rolls again - so it is a call rather
+	# than a line, and it can answer NOTHING, which no other placement word can. It carries no host
+	# class for a reason worth writing down: the cross-node prefix is added to any template whose
+	# lines are all member operations, and this one opens on the runtime file's own name, so a host
+	# would have the picker rewrite it into somebody else's node.
+	descriptors.append(F.expr("PlaceInFreeSpot", "Free Spot In", "%s.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})" % FREE_SPOT_CALL, CATEGORY, "a free spot in [i]{inside}[/i], clear of {clear_of}, {gap} px apart", "Gives a point inside a shape you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of - where to put the next crate, the next mine, the next enemy in a room that is filling up. Clear is asked as a real physics test, with the spawned scene's OWN collision shape put at the point, so a wall is a wall whatever drew it; a group whose members carry no shape at all is answered by distance instead. A full arena answers NOTHING, and Spawn A Copy In A Free Spot is the row that knows what to do about that.").param_built(_free_inside_param("$SpawnZone", "CollisionShape2D holding a RectangleShape2D or a CircleShape2D, the Area2D around it, or a Control's own rectangle")).param_built(_scene_param()).param_built(_clear_of_param()).param_built(_gap_param("32.0", "pixels")).param_built(_tries_param()))
+	descriptors.append(F.expr("PlaceInFreeSpot3D", "Free Spot In (3D)", "%s.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})" % FREE_SPOT_CALL, CATEGORY, "a free spot in [i]{inside}[/i], clear of {clear_of}, {gap} m apart", "The same question in three dimensions, with the gap measured in metres: a point inside a box or a sphere you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of. A full space answers nothing.").param_built(_free_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D or a SphereShape3D, or the Area3D around it")).param_built(_scene_param()).param_built(_clear_of_param()).param_built(_gap_param("1.0", "metres")).param_built(_tries_param()))
+	# And the row that spends the answer. It is a spawn with an `if` in it, because "nothing" is a
+	# real answer to "where" and a row that wrote it into a position would put the copy at the origin.
+	descriptors.append(F.act("SpawnInFreeSpot", "Spawn A Copy In A Free Spot", free_spot_spawn_template("in_2d"), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]", "Spawns one copy somewhere inside a shape you drew that nothing is already standing in - and spawns NOTHING when there is nowhere left, rather than stacking copies on top of each other. When it finds no room it raises this node's spawn_skipped signal with the scene it could not place, which On Spawn Skipped listens to: add a signal block saying spawn_skipped(scene) and the row underneath can end the wave, play a full-up sound, or make more room. The copy is added on the next idle moment, so the row is safe inside a collision handler.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_free_inside_param("$SpawnZone", "CollisionShape2D holding a RectangleShape2D or a CircleShape2D, the Area2D around it, or a Control's own rectangle")).param_built(_clear_of_param()).param_built(_gap_param("32.0", "pixels")).param_built(_tries_param()).param_built(_parent_param()).featured())
+	descriptors.append(F.act("SpawnInFreeSpot3D", "Spawn A Copy In A Free Spot (3D)", free_spot_spawn_template("in_3d"), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]", "The same row in three dimensions, with the gap measured in metres: one copy somewhere inside a box or a sphere you drew that nothing is already standing in, and nothing at all when there is nowhere left. A skipped spawn raises this node's spawn_skipped signal with the scene it could not place.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_built(_free_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D or a SphereShape3D, or the Area3D around it")).param_built(_clear_of_param()).param_built(_gap_param("1.0", "metres")).param_built(_tries_param()).param_built(_parent_param()))
+	# The other half of the skip, and a plain signal on purpose: the sheet declares it, the spawn row
+	# raises it, and this connects to it. Nothing here is special machinery.
+	descriptors.append(F.trig("OnSpawnSkipped", "On Spawn Skipped", SKIPPED_SIGNAL, CATEGORY, "On a spawn skipped", "Runs when a Spawn A Copy In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.", "Node"))
+
 	return descriptors
+
+
+## The three statements a copy of THIS node's own scene is: read the file the node came out of,
+## place the copy relative to the parent it is about to join, and hand the parenting to the next
+## idle moment. The same three the shipped safe spawn writes, with `scene_file_path` where its scene
+## field goes - which is why an opened file holding this shape reads back as this row.
+static func self_copy_template() -> String:
+	return "var {name} = load(scene_file_path).instantiate()\n{name}.position = {at}\n" \
+		+ "{parent}.call_deferred(\"add_child\", {name})"
+
+
+## The spawn that may not happen, with `query` naming which of the two free-spot calls it asks. The
+## copy's name is bound at the top rather than inside the branch so the rows underneath can still
+## say it - it is simply nothing when the arena was full, which is what Is Still Here asks about.
+static func free_spot_spawn_template(query: String) -> String:
+	return "var {name}_spot = %s.%s({inside}, {scene}, {clear_of}, {gap}, {tries})\n" % [FREE_SPOT_CALL, query] \
+		+ "var {name} = null\n" \
+		+ "if {name}_spot == null:\n" \
+		+ "\tif has_signal(&\"%s\"):\n" % SKIPPED_SIGNAL \
+		+ "\t\temit_signal(&\"%s\", {scene})\n" % SKIPPED_SIGNAL \
+		+ "else:\n" \
+		+ "\t{name} = {scene}.instantiate()\n" \
+		+ "\t{name}.position = {name}_spot\n" \
+		+ "\t{parent}.call_deferred(\"add_child\", {name})"
 
 
 ## The random point inside a 2D collision shape, with the node written wherever `slot` says - ONE
@@ -474,6 +540,39 @@ static func _inside_param(default_node: String, kind: String) -> ACEParam:
 	return F.make_param("inside", "String", default_node, "Inside",
 		"The node a scattering formation spreads its copies through - a %s. Only the two scattering formations read it; the other three are measured from Around instead." % kind,
 		"scene_node")
+
+
+## The node a free spot is rolled inside. A field of its own rather than the formation's Inside,
+## because the two ask for different things: a formation scatters through a shape and this one also
+## needs the shape to be one a point can be tested against.
+static func _free_inside_param(default_node: String, kind: String) -> ACEParam:
+	return F.make_param("inside", "String", default_node, "Inside",
+		"The node whose shape the point is rolled inside - a %s. Nothing outside it is ever offered." % kind,
+		"scene_node")
+
+
+## The groups a free spot has to keep out of. A list expression, because "clear of" is nearly always
+## more than one thing by the second level - walls and water, walls and the player's own start.
+static func _clear_of_param() -> ACEParam:
+	return F.make_param("clear_of", "String", "[\"walls\"]", "Clear Of",
+		"The groups the copy must not land in, as a list of group names. Members that carry a collision shape are tested against the copy's own shape; members that carry none are answered by distance, using the gap below.",
+		"expression")
+
+
+## How far apart copies of the same scene have to be, and how far from a shapeless group member.
+static func _gap_param(default_gap: String, units: String) -> ACEParam:
+	return F.make_param("gap", "String", default_gap, "Gap",
+		"How far apart copies of the same scene have to be, in %s. It is also the distance kept from any member of the named groups that carries no collision shape - a marker, a waypoint, a bare node somebody dropped to say not here. Nought asks neither question and leaves only the overlap test." % units,
+		"expression")
+
+
+## How many points to roll before answering nothing. In the dialog and not in the sentence: it is a
+## dial on how hard to look, and a reader of the row wants to know WHERE and WHAT, not how many
+## times it asked.
+static func _tries_param() -> ACEParam:
+	return F.make_param("tries", "String", "24", "Tries",
+		"How many points to roll before giving up and answering nothing. More tries find a spot in a crowded arena more often and cost more when there is genuinely no room left.",
+		"expression")
 
 
 ## The one number a shape is sized by.

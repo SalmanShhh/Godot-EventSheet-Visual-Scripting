@@ -242,6 +242,19 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_enter_tree", "")
 		"OnExitTree":
 			return _lifecycle("_exit_tree", "")
+		"OnRetired":
+			# Retiring and destroying leave by the same door: a pool takes a node back by removing it
+			# from the tree, and a free takes it out of the tree as well, so the node's own
+			# `tree_exiting` is raised exactly once for either. A connection rather than the
+			# `_exit_tree` virtual beside it, so a sheet can hear about its retirement without
+			# spending the one override every script has.
+			return _signal_backed("_on%s_retired" % source_token, "", "tree_exiting", source_path)
+		"OnSpawnSkipped":
+			# The answer a spawn row gives when the arena was full. A plain signal the sheet declares
+			# for itself (`signal spawn_skipped(scene)`), which is why nothing here invents a name:
+			# the spawn row emits it and this connects the handler to it.
+			return _signal_backed("_on%s_spawn_skipped" % source_token, "scene: PackedScene",
+				"spawn_skipped", source_path)
 		"OnEditorRun":
 			return _lifecycle("_run", "")
 		"OnCommandToolRun":

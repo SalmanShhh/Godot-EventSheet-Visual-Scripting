@@ -31,6 +31,34 @@
 # shipped condition and stays there too; the question below is its sentence beside it, for a sheet
 # that reads in these words.
 #
+# ── AND BESIDE THE THREE, THE SAME THREE THAT DO NOT THROW THE THING AWAY ───────────────────────
+#
+# RETIRING is destroying's other answer. A game that pools its bullets does not want them freed - it
+# wants them handed back to the pool that made them, to be given out again - and a game that does not
+# pool anything wants exactly what Destroy already does. Which of the two a node is, is written ON
+# the node: a pool stamps every copy it hands out, so the retire verbs ask the node rather than
+# asking the sheet to remember. No pool, or no stamp, and the line frees, which is why Retire is
+# always a safe swap for Destroy and never the other way round.
+#
+# The three verbs are the three above, WORD for word, differing only in the call at the end - now,
+# after a wait, after a fade - because the thing a reader needs to know is still WHEN it happens.
+# Two of them are the same sentence in every dimension, because a node is a node and neither a timer
+# nor a pool cares how many axes it has. The fade is the one that cannot be: fading a 2D thing walks
+# `modulate:a` down to nothing and fading a 3D one walks `transparency` up to one, which is two
+# lines and therefore two rows.
+#
+# WHY THE POOL IS LOOKED UP AT RUN TIME. It is an autoload, so a template naming it would put an
+# identifier into every generated script that only parses in a project which installed the pool
+# pack. PooledNodes resolves it by path when the line runs, which is what lets one row work in both
+# kinds of project - and it is plain GDScript, so the generated game carries it like any other
+# runtime file and needs no plugin to run.
+#
+# ON RETIRED IS ONE SIGNAL AND NOT TWO. Both retirements pass through the same moment: a pool takes
+# a node back by removing it from the tree, and a destroy takes it out of the tree as well, so
+# `tree_exiting` is raised exactly once either way. Hanging the trigger off the pool's own despawn
+# signal AS WELL would fire the body twice for one retirement, because the pool raises that signal
+# after the node has already left - so the trigger is the one signal that is true in both cases.
+#
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant); this file
 # only changes where the descriptors are AUTHORED.
 @tool
@@ -46,6 +74,16 @@ const CATEGORY: String = "Destroy"
 ## Color, so a sprite that is already tinted fades from ITS colour instead of snapping to white on
 ## the first frame of the tween.
 const FADE_PROPERTY: String = "modulate:a"
+
+## The same walk in three dimensions. A Node3D has no modulate; what it has is `transparency`, which
+## runs the other way - 0 is solid and 1 is gone - so the twin walks UP to one where the 2D row walks
+## down to nothing.
+const FADE_PROPERTY_3D: String = "transparency"
+const FADE_TARGET_3D: String = "1.0"
+
+## The runtime file the retire verbs call, by the name emitted code says. Named here because three
+## templates write it and one spelling is what keeps them one idea.
+const RETIRE_CALL: String = "PooledNodes.retire"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
@@ -74,6 +112,26 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# in these words gets a row that reads in them too.
 	descriptors.append(F.cond("IsStillHere", "Is Still Here", "is_instance_valid({object})", CATEGORY, "[i]{object}[/i] is still here", "True while the object has not been destroyed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN destruction uses the On Exit Tree trigger instead, which fires as it leaves.").param_built(_object_param()))
 
+	# ── The same three, without throwing the thing away ────────────────────────────────
+	# One call each, and the call decides for itself: a node a pool stamped goes back to that pool,
+	# and everything else is freed exactly as Destroy Now frees it.
+	descriptors.append(F.act("Retire", "Retire", "%s({object})" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] now", "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Safe to run twice: something already on its way out is left alone.").param_built(_retired_object_param()).featured())
+	# The timer form. Same one-shot scene-tree timer the destroy twin uses, with the retiring call
+	# bound to the object instead of the object's own queue_free hung off it - so it still books
+	# nothing, blocks nothing and needs no bookkeeping.
+	descriptors.append(F.act("RetireAfterSeconds", "Retire After Seconds", "get_tree().create_timer({seconds}).timeout.connect(%s.bind({object}))" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] after {seconds}s", "Retires the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. Whether the object goes back to a pool or is destroyed is decided when the wait ends, which is the moment that knows.").param_built(_retired_object_param()).param_built(_after_param()))
+	# Fade, wait, retire - with the guard the wait needs written into the row, exactly as the destroy
+	# twin writes it. The await is a real gap in game time and the row says so.
+	descriptors.append(F.act("FadeOutAndRetire", "Fade Out Then Retire", "await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY + "if is_instance_valid({object}):\n\t%s({object})" % RETIRE_CALL, CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it", "Fades the object's transparency to nothing over a number of seconds and then retires it - back to its pool, or destroyed. The event WAITS here, so the rows after this one run once the fade has finished, and because that wait is a real gap the row asks whether the object is still there before touching it.").param_built(_retired_object_param()).param_built(_over_param()))
+	# The 3D twin, which exists because the LINE is different: a Node3D has no modulate, and the
+	# property that hides one runs from solid to gone rather than the other way about.
+	descriptors.append(F.act("FadeOutAndRetire3D", "Fade Out Then Retire (3D)", "await {object}.create_tween().tween_property({object}, \"%s\", %s, {seconds}).finished\n" % [FADE_PROPERTY_3D, FADE_TARGET_3D] + "if is_instance_valid({object}):\n\t%s({object})" % RETIRE_CALL, CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it (3D)", "The same fade and retire on a 3D object. A Node3D has no modulate to walk down, so this walks its transparency up instead - 0 is solid and 1 is gone - which is the property a MeshInstance3D and everything else drawn in the world already carries. The event waits for the fade, and asks whether the object is still there before touching it.").param_built(_retired_object_param()).param_built(_over_param()))
+
+	# ── Hearing about it ───────────────────────────────────────────────────────────────
+	# One signal, because both retirements pass through it: a pool takes a node back by removing it
+	# from the tree, and a destroy takes it out of the tree too.
+	descriptors.append(F.trig("OnRetired", "On Retired", "tree_exiting", CATEGORY, "On retired", "Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.", "Node"))
+
 	return descriptors
 
 
@@ -81,7 +139,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## for rather than leaving the reader to infer it from four names.
 static func section_descriptions() -> Dictionary:
 	return {
-		CATEGORY: "Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens."
+		CATEGORY: "Taking a thing out of the world: right now, after a wait, or after a fade. Each row says when the call happens. The destroy verbs free the thing; the retire verbs beside them hand it back to the pool that made it when it came from one, and free it when it did not."
 	}
 
 
@@ -91,6 +149,14 @@ static func section_descriptions() -> Dictionary:
 static func _object_param() -> ACEParam:
 	return F.make_param("object", "String", "self", "Object",
 		"The object to destroy, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",
+		"expression")
+
+
+## The thing being retired. The same field as the one above, with the one sentence that differs said
+## where a reader meets it: retiring reads the object to decide what happens to it.
+static func _retired_object_param() -> ACEParam:
+	return F.make_param("object", "String", "self", "Object",
+		"The object to retire, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node. A copy an object pool handed out goes back to that pool; anything else is destroyed.",
 		"expression")
 
 

@@ -1,7 +1,7 @@
-# Godot EventSheets - the four crashes a spawning sheet earns, found by reading the sheet.
+# Godot EventSheets - the crashes a spawning sheet earns, found by reading the sheet.
 #
-# Spawning is three lines of Godot and none of them is hard. What IS hard is the four ways those
-# three lines go wrong, every one of which is silent in the editor and loud at run time:
+# Spawning is three lines of Godot and none of them is hard. What IS hard is the ways those three
+# lines go wrong, every one of which is silent in the editor and loud at run time:
 #
 #   added while physics is busy - a node parented inside a collision or physics callback. Godot
 #                                 refuses to add a child while the physics server is flushing its
@@ -13,6 +13,9 @@
 #                                 fine with all of it.
 #   freed, and still booked      - a row that destroys a node, and a later row in the SAME event that
 #                                 hangs a timer or a tween off the node it just destroyed.
+#   no scene file to copy        - a row that copies the scene this node came from, in a script that
+#                                 belongs to no scene. There is no file to load, so the copy never
+#                                 appears and nothing says why.
 #
 # NOTHING IS STORED. Every finding is derived from the rows, so a fixed sheet stops reporting with
 # nothing to clean up. A sheet that never spawns and never destroys gets no findings at all - the
@@ -22,8 +25,10 @@
 # every sheet that merely holds a node is the kind a reader learns to scroll past.
 #
 # THE RULES ARE READ OFF THE EMITTED LINE, not off a list of ace_ids, which is why a pack's own
-# spawn verb is caught by the same rule and no table has to learn about it. The one place ace_ids
-# ARE named is where a row has a DEFERRED TWIN to swap to - a repair cannot be derived, only offered.
+# spawn verb is caught by the same rule and no table has to learn about it. Two places name ace_ids,
+# and each says why: a row with a DEFERRED TWIN to swap to, because a repair cannot be derived only
+# offered; and the rows that copy the node's own scene, because what they name is a PROPERTY rather
+# than a scene expression and there is nothing in the line for a rule to read.
 #
 # The same list feeds both surfaces: the note rows under the offending row, and the Doctor's
 # Spawning section. One wording, one rule, two places to read it.
@@ -33,11 +38,12 @@
 class_name EventSheetSpawnFindings
 extends RefCounted
 
-## The four findings, by id. Frozen: the note rows, the Doctor and the tests address one by these.
+## The findings, by id. Frozen: the note rows, the Doctor and the tests address one by these.
 const KIND_ADDED_DURING_PHYSICS := "added-during-physics"
 const KIND_MAYBE_FREED := "maybe-freed-reference"
 const KIND_SPAWNS_ITSELF := "spawns-itself"
 const KIND_FREED_STILL_BOOKED := "freed-still-booked"
+const KIND_NO_SCENE_FILE := "no-scene-file"
 
 ## The one-click repairs a note offers. "" on a finding whose repair is a decision rather than a
 ## step - a scene that spawns itself is a design question, and no rewrite can answer it.
@@ -94,6 +100,12 @@ const GUARD_PARAM := "object"
 ## act of spawning, which is what turns a spawn of this scene into a loop rather than into a game.
 const CREATED_TRIGGER_ID := "OnReady"
 
+## The rows that copy the scene THIS node came from. They name no scene, because the scene they copy
+## is a property of the node - which is exactly what makes them worth naming here: a node built in
+## code has no such file, and the row is then a load of nothing. Two rows because there are two
+## dimensions; one list because the question is the same in both.
+const SELF_COPY_ACE_IDS: PackedStringArray = ["SpawnCopyOfSelf", "SpawnCopyOfSelf3D"]
+
 ## The rows that already carry their own guard, so a note about them would be a note about a line the
 ## compiler is about to write anyway. The three destroy verbs, which is exactly the set the removal
 ## guard protects.
@@ -102,7 +114,7 @@ const SELF_GUARDING_ACE_IDS: PackedStringArray = ["DestroyNow", "DestroyAfterSec
 ## The words a sheet has to say before any of this is asked of it. A sheet that neither parents a
 ## node nor frees one cannot earn a single finding here, and a project full of them should not pay
 ## to have that proved row by row.
-const GATE_WORDS: PackedStringArray = ["add_child", "instantiate(", "queue_free"]
+const GATE_WORDS: PackedStringArray = ["add_child", "instantiate(", "queue_free", "scene_file_path"]
 
 
 ## Every finding this sheet earns, in the order the rules run. `scene_path` is the scene this sheet's
@@ -119,6 +131,7 @@ static func findings(sheet: EventSheetResource, scene_path: String = "") -> Arra
 	_maybe_freed_reference(sheet, rows, found)
 	_spawns_itself(rows, scene_path, found)
 	_freed_but_still_booked(rows, found)
+	_copies_a_scene_it_came_from(rows, scene_path, found)
 	return found
 
 
@@ -285,7 +298,9 @@ static func _spawns_itself(rows: Array[Dictionary], scene_path: String,
 			continue
 		if str(context.get("trigger", "")) != CREATED_TRIGGER_ID:
 			continue
-		if not _names_scene(str(context.get("scene", "")), own_scene):
+		# A row that copies the node's OWN scene always names this scene - that is the whole of what
+		# it is - so it is asked about by id rather than by the scene field it does not have.
+		if not SELF_COPY_ACE_IDS.has(str(context.get("ace_id", ""))) 				and not _names_scene(str(context.get("scene", "")), own_scene):
 			continue
 		found.append(_finding(KIND_SPAWNS_ITSELF, "error", context.get("event") as EventRow,
 			own_scene.get_file(),
@@ -326,6 +341,25 @@ static func _freed_but_still_booked(rows: Array[Dictionary], found: Array[Dictio
 			EventSheetL10n.translate("%s is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.") % subject,
 			FIX_REMOVE_LAST, EventSheetL10n.translate("Move the destroy last"), removal))
 		freed_in_event.erase(key)
+
+
+## A row that copies the scene this node came from, in a sheet whose script belongs to NO scene. The
+## row reads `scene_file_path`, which Godot fills in for anything instanced from a `.tscn` and leaves
+## empty for a node somebody built in code - so the line loads nothing and the copy never appears.
+## Nothing about that is visible in the editor, which is why it is a finding rather than a run-time
+## surprise. A sheet nobody passed a scene for is not asked, because "no scene" would then mean
+## "nobody looked" rather than "there is none".
+static func _copies_a_scene_it_came_from(rows: Array[Dictionary], scene_path: String,
+		found: Array[Dictionary]) -> void:
+	if not scene_path.strip_edges().is_empty():
+		return
+	for context: Dictionary in rows:
+		if not SELF_COPY_ACE_IDS.has(str(context.get("ace_id", ""))):
+			continue
+		found.append(_finding(KIND_NO_SCENE_FILE, "warning", context.get("event") as EventRow, "",
+			EventSheetL10n.translate("This node was not made from a scene file, so there is nothing to copy. Save it as a scene and instance that, or spawn a scene this row names outright."),
+			"", "", context))
+		return
 
 
 # -- What one row says --------------------------------------------------------------------------
