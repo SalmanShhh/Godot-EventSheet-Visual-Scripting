@@ -25,14 +25,19 @@ const _SOURCES := ["internal=Internal seeded", "shared=Shared Advanced Random", 
 ## position. You read the results through triggers and expressions and drive your own TileMapLayer
 ## or scenes, which is exactly why it works with any art pipeline.
 ##
+## It ships as the DrunkenWalkers AUTOLOAD, exactly like every other generator here (ProcRoom,
+## AdvancedRandom, LootBox, Storylets, SkinVault): a generator is a project-wide service reached
+## from any sheet without a node path, and one seed driving one grid is what makes a run
+## reproducible. The cost is honest - one grid per project - and the pack says so where it bites.
+##
 ## Ported from a well-known event-sheet engine's generator addon, with its determinism contract
 ## kept intact: same seed plus same action order gives identical output, a weighted pick spends
 ## exactly one random value whether or not weights are set, Create Grid does not reset the seed,
 ## and Set Seed does not clear the grid.
 static func build() -> bool:
-	var src: Lib.PackSource = Lib.pack_from_source("drunken_walkers", "Node", "DrunkenWalkers",
-		"A seeded grid generator on any node: register walkers that stagger across a grid of integers carving caves, corridors, rivers and ore veins, scatter tagged marks with real spacing and placement rules, then read the result back as cells and marks. One seed string reproduces the whole map, placement included, on every machine.",
-		Lib.manifest().behavior().category("Drunken Walkers").tags(["procedural", "generation", "random", "grid"]).expose_all_verbs_on_a_node())
+	var src: Lib.PackSource = Lib.pack_from_source("drunken_walkers", "Node", "DrunkenWalkersAddon",
+		"A seeded grid generator as the DrunkenWalkers autoload: register walkers that stagger across a grid of integers carving caves, corridors, rivers and ore veins, scatter tagged marks with real spacing and placement rules, then read the result back as cells and marks. One seed string reproduces the whole map, placement included, on every machine.",
+		Lib.manifest().autoload("DrunkenWalkers").category("Drunken Walkers").tags(["procedural", "generation", "random", "grid"]))
 	# Property ORDER is part of the pack: these emit in the order they are declared here.
 	src.sheet.variables = {
 		"grid_width": {"type": "int", "default": 64, "exported": true,
@@ -56,7 +61,7 @@ static func build() -> bool:
 		"debug_mode": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "Warns about walker lifecycles, clamped grid sizes, scatters that could not fit, an injected queue running dry, and the four common reasons a map comes out empty. On while you build, off for release."}},
 	}
-	src.note("Drunken Walkers: size a grid, set a seed, register walkers, run them. The pack owns the grid and the marks; you paint the tiles and spawn the objects from the results. Same seed plus same action order = the same map every time. This pack is an event sheet - extend it by editing it.")
+	src.note("Drunken Walkers (autoload): register as the DrunkenWalkers autoload, then size a grid, set a seed, register walkers and run them from any sheet. The pack owns the grid and the marks; you paint the tiles and spawn the objects from the results. Same seed plus same action order = the same map every time. This pack is an event sheet - extend it by editing it.")
 	src.block("block_1")
 	src.on_ready()
 

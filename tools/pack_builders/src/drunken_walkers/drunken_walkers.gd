@@ -580,10 +580,10 @@ func _register(id: String) -> Walker:
 	_walkers[id] = walker
 	return walker
 
-## The whole generator as one Dictionary, and the door a save pack comes in through: any node or
-## behavior child answering save_state / load_state is snapshotted with no registration and no base
-## class, so a generator parked under a node the game saves travels with it for free. Save State As
-## Text is this same record, stringified.
+## The whole generator as one Dictionary, and the door a save pack comes in through: any node
+## answering save_state / load_state is snapshotted with no registration and no base class, and an
+## autoload is walked by name, so a save pack picks this generator up as "DrunkenWalkers" the
+## moment it is registered. Save State As Text is this same record, stringified.
 ##
 ## The RNG seed and state travel as TEXT: they are 64-bit integers, and a JSON number is a double,
 ## which would quietly round the biggest of them and land the reload on a different stream.

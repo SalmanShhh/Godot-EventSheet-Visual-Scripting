@@ -9,6 +9,7 @@
 #
 # The traps it exists to catch, each one a rule the source guide states and a reader would
 # otherwise have to trust:
+#   - the pack is the DrunkenWalkers autoload, and every row it emits addresses it by that name;
 #   - two directions cannot turn unless the max turn is 180, so a smaller one draws a line;
 #   - a diagonal walk leaves holes that thickness, not direction, fixes;
 #   - a border repels rather than traps, and a walker with no legal heading still FINISHES;
@@ -34,6 +35,7 @@ static func run() -> bool:
 	var passed: bool = SUPPORT.check(TEST, "the pack loads and parses", script != null, true)
 	if script == null:
 		return passed
+	passed = _the_pack_ships_as_the_autoload(script) and passed
 	passed = _seed_reproduces_the_map(script) and passed
 	passed = _grid_and_seed_are_independent(script) and passed
 	passed = _two_directions_cannot_turn_without_180(script) and passed
@@ -51,6 +53,37 @@ static func run() -> bool:
 	passed = _the_six_presets_carry_their_recipe(script) and passed
 	passed = _define_walker_reads_a_whole_definition(script) and passed
 	return passed
+
+
+# ── One generator, reached from anywhere ──────────────────────────────────────────────────────
+
+
+## A generator is a project-wide service, so this pack ships as the DrunkenWalkers AUTOLOAD, the
+## way every other generator here does. That is not a remark about the file: it is what every row
+## the pack emits ADDRESSES, so it is pinned against the shipped bytes rather than against the
+## builder's intent. The seam it has to keep answering is the save one - a save pack walks the
+## autoloads by name and asks each of them for save_state, with no parent in the picture.
+static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
+	var source: String = FileAccess.get_file_as_string(PACK)
+	var templates: int = 0
+	var not_the_autoload: int = 0
+	for line: String in source.split("\n"):
+		if not line.begins_with("## @ace_codegen_template("):
+			continue
+		templates += 1
+		if not line.begins_with("## @ace_codegen_template(\"DrunkenWalkers."):
+			not_the_autoload += 1
+	var pack: Node = script.new()
+	var answers_the_save_seam: bool = pack.has_method("save_state") and pack.has_method("load_state")
+	pack.free()
+	return SUPPORT.pins(TEST, [
+		["every published verb addresses the autoload by name", not_the_autoload, 0],
+		["and all sixty-three of them are published", templates, 63],
+		["nothing is scoped to a node, because an autoload has no host to act on",
+			source.contains("var host: Node"), false],
+		["and the save seam still answers, which is how a save pack finds an autoload",
+			answers_the_save_seam, true],
+	])
 
 
 # ── The seed is the map ───────────────────────────────────────────────────────────────────────
@@ -500,9 +533,9 @@ static func _a_saved_state_resumes_the_identical_path(script: GDScript) -> bool:
 	var restored_seed: String = restored.current_seed()
 	restored.free()
 
-	# The save-pack seam: any node or behavior child answering save_state / load_state is
-	# snapshotted with no registration and no base class, so the same record travels through a
-	# Dictionary as well as through text.
+	# The save-pack seam: any node answering save_state / load_state is snapshotted with no
+	# registration and no base class - and a save pack walks the autoloads by name - so the same
+	# record travels through a Dictionary as well as through text.
 	var through_seam: Node = script.new()
 	through_seam.load_state(JSON.parse_string(state) as Dictionary)
 	var seam_map: String = through_seam.as_text(".#")

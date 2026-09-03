@@ -29,22 +29,27 @@ event-sheet engine's addon, with its determinism contract kept intact.
 
 ## Setup
 
-1. Attach **DrunkenWalkers** as a child of any node - it is invisible and draws nothing, so it
-   does not matter where it sits.
+There is nothing to attach and nothing to place in a scene. Drunken Walkers registers itself as
+the **`DrunkenWalkers`** autoload - the same shape as every other generator here - so the
+generator exists from the first frame and every sheet reaches it by name, with no node path.
+
+1. Register the pack as the `DrunkenWalkers` autoload (Tools > Register Autoload, or Project
+   Settings > Globals). One autoload means **one grid for the project**, which is what makes a
+   seed the whole description of a run.
 2. Decide what your cell values mean and stick to it. A common convention is 0 empty rock,
    1 floor, 2 water, 3 wall.
-3. Set **Cell Size** to your tile size and leave **Empty Value** at 0. Tick **Debug Mode**
-   while you build so the pack says what it is doing.
-4. A grid already exists at **Grid Width** x **Grid Height** from the moment the node does, so
-   if those are the size you want you never need Create Grid at all. Seed, register, run.
+3. Select the `DrunkenWalkers` autoload and set **Cell Size** to your tile size, leaving
+   **Empty Value** at 0. Tick **Debug Mode** while you build so the pack says what it is doing.
+4. A grid already exists at **Grid Width** x **Grid Height** from the first frame, so if those
+   are the size you want you never need Create Grid at all. Seed, register, run.
 
 ```
-On Ready -> Map | Drunken Walkers: Set Seed  "hello-world"
-         -> Map | Drunken Walkers: Add Walker  "cave", 20, 15, 400, 8, 180, "", 1
-         -> Map | Drunken Walkers: Run All Walkers
+On Ready -> Drunken Walkers: Set Seed  "hello-world"
+         -> Drunken Walkers: Add Walker  "cave", 20, 15, 400, 8, 180, "", 1
+         -> Drunken Walkers: Run All Walkers
 ```
 
-Before you have a tilemap at all, put `Map.As Text(".#")` in a Label: one character per cell,
+Before you have a tilemap at all, put `DrunkenWalkers.As Text(".#")` in a Label: one character per cell,
 one line per row, and the whole map is on screen in one row of event sheet.
 
 ## ACE reference
@@ -56,8 +61,8 @@ references in *italic*, exactly as the rows draw them:
 - add walker **id** at (**start_x**, **start_y**) - **steps** steps, **directions** headings, turning up to **max_turn**, tagged **tag**, carving **carve_value**
 - scatter **count** **tag** marks on **value** cells, **placement**, spacing **min_spacing**
 
-Every verb is scoped to a node, so a row names which generator it is talking to - which is how
-two independent generators live in one scene.
+No verb takes a node: every row addresses the `DrunkenWalkers` autoload by name, and every
+expression reads back as `DrunkenWalkers.<Name>(args)` from any sheet in the project.
 
 ### Actions
 
@@ -210,21 +215,20 @@ start angle. That is why `1,5,9,5,1,0,0,0` peaks straight down and can never cli
 | `random_source` | `internal` | `internal`, `shared` (the Advanced Random autoload) or `injected`. |
 | `debug_mode` | `false` | Warns about walker lifecycles, clamped grids, scatters that could not fit, a dry injected queue, and the four common reasons a map comes out empty. |
 
-## Reading it from expressions - the Self section
+## Reading it from expressions
 
-Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is
-attached:
+Because the pack is an autoload there is no node to target and no `$Name` to retarget: every
+reading is the singleton's own name followed by the expression, and it is the same sentence from
+every sheet in the project.
 
-- `$DrunkenWalkers.empty_value` inserts the **Empty Value** entry straight into any expression
-- `$DrunkenWalkers.cell_size` inserts the **Cell Size** entry straight into any expression
+- `DrunkenWalkers.Cell Value(x, y)` reads one cell
+- `DrunkenWalkers.Count Cells(1)` and `DrunkenWalkers.Cell X By Index(1, i)` walk the whole set
+- `DrunkenWalkers.cell_size` and `DrunkenWalkers.empty_value` read the Inspector knobs
 
-The `$DrunkenWalkers` token stays selected after insert, so retargeting to your child's actual
-name is one keystroke, or a node drag. Attaching this pack at runtime instead? Tick **Robust
-behaviour lookups** in the dictionary and the same entries insert as
-`get_node_or_null("DrunkenWalkers")` chains, which survive auto-named children. While **Live
-Values** streams from a running game, the group upgrades to *Behaviours (live - on your node)*
-and reads the RUNNING instance, so you can watch `Count Cells` climb while a walker digs.
+Open the ƒx **Expressions dictionary** and the autoload's own variables are listed under a
+`DrunkenWalkers` group, inserting `DrunkenWalkers.cell_size` at the caret rather than a bare
+name, because the prefix is the part that cannot be dropped. The expressions themselves are in
+the picker under **Drunken Walkers**, and insert the same way.
 
 ## Use cases
 
@@ -233,10 +237,10 @@ and reads the RUNNING instance, so you can watch `Count Cells` climb while a wal
 Four rows and a Label, before any art exists.
 
 ```
-On Ready -> Map | Drunken Walkers: Set Seed  "first-cave"
-         -> Map | Drunken Walkers: Add Walker From Preset  "cave", "main", 32, 32, "", 1
-         -> Map | Drunken Walkers: Run All Walkers
-         -> Preview | set text to Map.As Text(".#")
+On Ready -> Drunken Walkers: Set Seed  "first-cave"
+         -> Drunken Walkers: Add Walker From Preset  "cave", "main", 32, 32, "", 1
+         -> Drunken Walkers: Run All Walkers
+         -> Preview | set text to DrunkenWalkers.As Text(".#")
 ```
 
 ### 2. Painting it into a TileMapLayer
@@ -244,8 +248,8 @@ On Ready -> Map | Drunken Walkers: Set Seed  "first-cave"
 One row per value, no loop at all.
 
 ```
-On Generation Complete -> Map | Drunken Walkers: Draw Cells To Tilemap  Ground, 1, 0, 0, 0
-                       -> Map | Drunken Walkers: Draw Cells To Tilemap  Ground, 3, 0, 1, 0
+On Generation Complete -> Drunken Walkers: Draw Cells To Tilemap  Ground, 1, 0, 0, 0
+                       -> Drunken Walkers: Draw Cells To Tilemap  Ground, 3, 0, 1, 0
 ```
 
 ### 3. Walls around the floor
@@ -253,16 +257,16 @@ On Generation Complete -> Map | Drunken Walkers: Draw Cells To Tilemap  Ground, 
 Outline last, because it only ever overwrites empty cells and so cannot eat your water or ore.
 
 ```
-On Generation Complete -> Map | Drunken Walkers: Outline Cells  1, 3
-                       -> Map | Drunken Walkers: Outline Cells  3, 4   (a shadow ring outside the wall)
+On Generation Complete -> Drunken Walkers: Outline Cells  1, 3
+                       -> Drunken Walkers: Outline Cells  3, 4   (a shadow ring outside the wall)
 ```
 
 ### 4. Widening a cave that came out spindly
 
 ```
-On Function "WidenCaves" -> Map | Drunken Walkers: Run Walkers By Tag  "cave"
-                         -> Map | Drunken Walkers: Dilate Cells  1, 1
-                         -> Map | Drunken Walkers: Run Walkers By Tag  "water"
+On Function "WidenCaves" -> Drunken Walkers: Run Walkers By Tag  "cave"
+                         -> Drunken Walkers: Dilate Cells  1, 1
+                         -> Drunken Walkers: Run Walkers By Tag  "water"
 ```
 
 The rivers run after the dilation, so they survive it intact. Two iterations turn a one-cell
@@ -273,16 +277,16 @@ corridor into a five-cell hall, so raise that number carefully.
 The placement rule is the whole feature: no distance checks, no nested rows.
 
 ```
-On Generation Complete -> Map | Drunken Walkers: Scatter Marks  12, "enemy", 1, interior, 6
-                       -> Map | Drunken Walkers: Scatter Marks  30, "torch", 1, edge, 2
-                       -> Map | Drunken Walkers: Scatter Marks  1, "exit", 1, interior, 0
+On Generation Complete -> Drunken Walkers: Scatter Marks  12, "enemy", 1, interior, 6
+                       -> Drunken Walkers: Scatter Marks  30, "torch", 1, edge, 2
+                       -> Drunken Walkers: Scatter Marks  1, "exit", 1, interior, 0
 ```
 
 ### 6. Spawning what the marks stand for
 
 ```
 On Mark Placed  tag
-  Condition: tag = "enemy" -> spawn Grunt at (Map.Cell To World X(Map.Mark X), Map.Cell To World Y(Map.Mark Y))
+  Condition: tag = "enemy" -> spawn Grunt at (DrunkenWalkers.Cell To World X(DrunkenWalkers.Mark X), DrunkenWalkers.Cell To World Y(DrunkenWalkers.Mark Y))
 ```
 
 Cell centres, so the sprite lands centred in its tile whatever the origin is.
@@ -290,7 +294,7 @@ Cell centres, so the sprite lands centred in its tile whatever the origin is.
 ### 7. Ammo along the path, never two clumped together
 
 ```
-On Generation Complete -> Map | Drunken Walkers: Drop Marks Along Walk  "main", "ammo", 10, 0.5, 4
+On Generation Complete -> Drunken Walkers: Drop Marks Along Walk  "main", "ammo", 10, 0.5, 4
 ```
 
 A candidate every ten steps, half of them kept, and never two within four cells.
@@ -300,12 +304,12 @@ A candidate every ten steps, half of them kept, and never two within four cells.
 Tags let you stage generation in passes, and a later pass sees what an earlier one carved.
 
 ```
-On Function "Generate" -> Map | Drunken Walkers: Add Walker  "cave1", 20, 20, 500, 8, 180, "cave", 1
-                       -> Map | Drunken Walkers: Add Walker  "cave2", 40, 30, 500, 8, 180, "cave", 1
-                       -> Map | Drunken Walkers: Add Walker  "river", 0, 5, 200, 3, 45, "water", 2
-                       -> Map | Drunken Walkers: Run Walkers By Tag  "cave"
-                       -> Map | Drunken Walkers: Outline Cells  1, 3
-                       -> Map | Drunken Walkers: Run Walkers By Tag  "water"
+On Function "Generate" -> Drunken Walkers: Add Walker  "cave1", 20, 20, 500, 8, 180, "cave", 1
+                       -> Drunken Walkers: Add Walker  "cave2", 40, 30, 500, 8, 180, "cave", 1
+                       -> Drunken Walkers: Add Walker  "river", 0, 5, 200, 3, 45, "water", 2
+                       -> Drunken Walkers: Run Walkers By Tag  "cave"
+                       -> Drunken Walkers: Outline Cells  1, 3
+                       -> Drunken Walkers: Run Walkers By Tag  "water"
 ```
 
 ### 9. A tunnel that keeps its width around every corner
@@ -313,9 +317,9 @@ On Function "Generate" -> Map | Drunken Walkers: Add Walker  "cave1", 20, 20, 50
 The square brush pinches at corners; the dig size turns with the walker and does not.
 
 ```
-On Function "DigTunnel" -> Map | Drunken Walkers: Add Walker  "tunnel", 4, 20, 300, 4, 90, "", 1
-                        -> Map | Drunken Walkers: Set Walker Dig Size  "tunnel", 5, 1
-                        -> Map | Drunken Walkers: Run Walker  "tunnel"
+On Function "DigTunnel" -> Drunken Walkers: Add Walker  "tunnel", 4, 20, 300, 4, 90, "", 1
+                        -> Drunken Walkers: Set Walker Dig Size  "tunnel", 5, 1
+                        -> Drunken Walkers: Run Walker  "tunnel"
 ```
 
 ### 10. A shaft that starts wide and tapers to a crawlspace
@@ -323,13 +327,13 @@ On Function "DigTunnel" -> Map | Drunken Walkers: Add Walker  "tunnel", 4, 20, 3
 Dig size is live state, so change it partway through the walk.
 
 ```
-On Function "NarrowingShaft" -> Map | Drunken Walkers: Add Walker  "shaft", 30, 2, 180, 8, 90, "", 1
-                             -> Map | Drunken Walkers: Set Walker Dig Size  "shaft", 7, 1
-                             -> Map | Drunken Walkers: Step Walker  "shaft", 40
-                             -> Map | Drunken Walkers: Set Walker Dig Size  "shaft", 3, 1
-                             -> Map | Drunken Walkers: Step Walker  "shaft", 40
-                             -> Map | Drunken Walkers: Set Walker Dig Size  "shaft", 1, 1
-                             -> Map | Drunken Walkers: Run Walker  "shaft"
+On Function "NarrowingShaft" -> Drunken Walkers: Add Walker  "shaft", 30, 2, 180, 8, 90, "", 1
+                             -> Drunken Walkers: Set Walker Dig Size  "shaft", 7, 1
+                             -> Drunken Walkers: Step Walker  "shaft", 40
+                             -> Drunken Walkers: Set Walker Dig Size  "shaft", 3, 1
+                             -> Drunken Walkers: Step Walker  "shaft", 40
+                             -> Drunken Walkers: Set Walker Dig Size  "shaft", 1, 1
+                             -> Drunken Walkers: Run Walker  "shaft"
 ```
 
 A negative depth digs behind the walker instead, which is how a tunnel mouth flares out.
@@ -337,9 +341,9 @@ A negative depth digs behind the walker instead, which is how a tunnel mouth fla
 ### 11. An ore vein that can only descend
 
 ```
-On Function "BuildVein" -> Map | Drunken Walkers: Add Walker  "vein", 30, 0, 400, 8, 180, "ore", 2
-                        -> Map | Drunken Walkers: Set Walker Direction Weights  "vein", "1,4,9,4,1,0,0,0"
-                        -> Map | Drunken Walkers: Run Walker  "vein"
+On Function "BuildVein" -> Drunken Walkers: Add Walker  "vein", 30, 0, 400, 8, 180, "ore", 2
+                        -> Drunken Walkers: Set Walker Direction Weights  "vein", "1,4,9,4,1,0,0,0"
+                        -> Drunken Walkers: Run Walker  "vein"
 ```
 
 Entry 2 is straight down and carries the heaviest weight; the three zeros rule out every
@@ -348,15 +352,15 @@ upward heading, so the vein can never climb back toward the surface.
 ### 12. The map draws itself on the title screen
 
 ```
-On Ready -> Map | Drunken Walkers: Create Grid  60, 40
-         -> Map | Drunken Walkers: Set Seed  "title-screen"
-         -> Map | Drunken Walkers: Add Walker  "show", 30, 20, 900, 8, 180, "", 1
+On Ready -> Drunken Walkers: Create Grid  60, 40
+         -> Drunken Walkers: Set Seed  "title-screen"
+         -> Drunken Walkers: Add Walker  "show", 30, 20, 900, 8, 180, "", 1
 
-On Every Tick -> Map | Drunken Walkers: Step Walker  "show", 3
+On Every Tick -> Drunken Walkers: Step Walker  "show", 3
 
-On Walker Stepped -> Digger | set position to (Map.Cell To World X(Map.Walker X), Map.Cell To World Y(Map.Walker Y))
-                  -> Digger | set rotation to Map.Walker Angle
-                  -> Progress | set value to 100 * (1 - Map.Walker Steps Left / 900.0)
+On Walker Stepped -> Digger | set position to (DrunkenWalkers.Cell To World X(DrunkenWalkers.Walker X), DrunkenWalkers.Cell To World Y(DrunkenWalkers.Walker Y))
+                  -> Digger | set rotation to DrunkenWalkers.Walker Angle
+                  -> Progress | set value to 100 * (1 - DrunkenWalkers.Walker Steps Left / 900.0)
 ```
 
 ### 13. A branch that starts where the trunk stopped
@@ -367,8 +371,8 @@ idiomatic way to grow branching structures.
 ```
 On Walker Finished  walker_id
   Condition: walker_id = "trunk"
-    -> Map | Drunken Walkers: Add Walker  "branch", Map.Walker X, Map.Walker Y, 120, 8, 180, "branch", 1
-    -> Map | Drunken Walkers: Run Walker  "branch"
+    -> Drunken Walkers: Add Walker  "branch", DrunkenWalkers.Walker X, DrunkenWalkers.Walker Y, 120, 8, 180, "branch", 1
+    -> Drunken Walkers: Run Walker  "branch"
 ```
 
 ### 14. Autotiling from the neighbour count
@@ -378,17 +382,17 @@ border needs no special case because off-grid neighbours never match.
 
 ```
 On Generation Complete
-  Repeat Map.Count Cells(1) times
-    -> Ground | set cell (Map.Cell X By Index(1, index), Map.Cell Y By Index(1, index))
-               to tile Map.Neighbour Count(Map.Cell X By Index(1, index), Map.Cell Y By Index(1, index), 1)
+  Repeat DrunkenWalkers.Count Cells(1) times
+    -> Ground | set cell (DrunkenWalkers.Cell X By Index(1, index), DrunkenWalkers.Cell Y By Index(1, index))
+               to tile DrunkenWalkers.Neighbour Count(DrunkenWalkers.Cell X By Index(1, index), DrunkenWalkers.Cell Y By Index(1, index), 1)
 ```
 
 ### 15. Clicking a cell to ask what is there
 
 ```
 On Mouse Clicked
-  Condition: Map | Is Inside Grid  Map.World To Cell X(mouse.x), Map.World To Cell Y(mouse.y)
-  Condition: Map | Is Cell Value  Map.World To Cell X(mouse.x), Map.World To Cell Y(mouse.y), 1
+  Condition: Drunken Walkers  Is Inside Grid  DrunkenWalkers.World To Cell X(mouse.x), DrunkenWalkers.World To Cell Y(mouse.y)
+  Condition: Drunken Walkers  Is Cell Value  DrunkenWalkers.World To Cell X(mouse.x), DrunkenWalkers.World To Cell Y(mouse.y), 1
     -> Selected | set text to "walkable floor"
 ```
 
@@ -398,19 +402,19 @@ The saved state carries the random stream's own position, so the remaining walk 
 that would have happened without the save.
 
 ```
-On Function "QuickSave" -> SaveSystem | Save Value  "map", Map.Save State As Text
+On Function "QuickSave" -> SaveSystem | Save Value  "map", DrunkenWalkers.Save State As Text
 
-On After Load -> Map | Drunken Walkers: Load State From Text  SaveSystem.Load Value("map", "")
-              -> Map | Drunken Walkers: Draw Cells To Tilemap  Ground, 1, 0, 0, 0
+On After Load -> Drunken Walkers: Load State From Text  SaveSystem.Load Value("map", "")
+              -> Drunken Walkers: Draw Cells To Tilemap  Ground, 1, 0, 0, 0
 ```
 
 Repaint from the grid rather than waiting for triggers: loading is silent by design.
 
 You often do not have to write either row. The pack answers the save seam every persistence pack
-here uses - a node or behavior child exposing `save_state` and `load_state` is snapshotted with no
-registration and no base class - so a generator parked under a node in your persist group travels
-with the save on its own, and the two actions above are for the times you want the record in your
-own hands.
+here uses - a node exposing `save_state` and `load_state` is snapshotted with no registration and
+no base class - and Save System walks the autoloads by name, so the generator rides into the save
+as `DrunkenWalkers` the moment it is registered. The two actions above are for the times you want
+the record in your own hands.
 
 ### 17. Regenerating instead of saving
 
@@ -418,23 +422,36 @@ For a game that can rebuild its world, two numbers are a smaller save than a gri
 determinism makes it possible.
 
 ```
-On After Load -> Map | Drunken Walkers: Create Grid  64, 64
-              -> Map | Drunken Walkers: Set Seed  RunSeed & "-floor-" & FloorNumber
+On After Load -> Drunken Walkers: Create Grid  64, 64
+              -> Drunken Walkers: Set Seed  RunSeed & "-floor-" & FloorNumber
               -> call function "RegisterWalkers"
-              -> Map | Drunken Walkers: Run All Walkers
+              -> Drunken Walkers: Run All Walkers
 ```
 
-### 18. Two independent generators in one scene
+### 18. Two worlds from one generator
 
-Because every verb names its node, an overworld and a dungeon can generate side by side
-without sharing a single value.
+The autoload owns **one grid**, so an overworld and a dungeon are two passes rather than two
+nodes. Generate the first, paint it or read it out, then start the second - Create Grid is
+"start a new level", and it destroys the previous grid, its walkers and its marks for you.
 
 ```
-On Ready -> Overworld | Drunken Walkers: Set Seed  MasterSeed & "-world"
-         -> Dungeon   | Drunken Walkers: Set Seed  MasterSeed & "-crypt"
-         -> Overworld | Drunken Walkers: Run All Walkers
-         -> Dungeon   | Drunken Walkers: Run All Walkers
+On Function "BuildWorld" -> Drunken Walkers: Create Grid  96, 96
+                         -> Drunken Walkers: Set Seed  MasterSeed & "-world"
+                         -> call function "RegisterOverworldWalkers"
+                         -> Drunken Walkers: Run All Walkers
+                         -> Drunken Walkers: Draw Cells To Tilemap  Overworld, 1, 0, 0, 0
+
+On Function "BuildCrypt" -> Drunken Walkers: Create Grid  48, 48
+                         -> Drunken Walkers: Set Seed  MasterSeed & "-crypt"
+                         -> call function "RegisterCryptWalkers"
+                         -> Drunken Walkers: Run All Walkers
+                         -> Drunken Walkers: Draw Cells To Tilemap  Crypt, 1, 0, 0, 0
 ```
+
+Two sub-seeds off one master seed keep both worlds reproducible and unrelated to each other, and
+because each pass paints its result into its own TileMapLayer, both survive the next Create Grid.
+Need the earlier world back rather than repainted? Save State As Text before you rebuild, and
+Load State From Text puts it back cell for cell.
 
 ### Other use cases
 
@@ -459,6 +476,9 @@ the terrain values at all.
 
 ## Tips and common mistakes
 
+- **One autoload means one grid.** The generator is a project-wide service, like every other
+  generator here, so two maps are two passes over it rather than two nodes. Paint or save the
+  first before Create Grid starts the second.
 - **Set the seed before you generate, not after.** Set Seed resets the stream, so calling it
   after Run All Walkers changes nothing about the map you just built. It is the single most
   common reason a map is not reproducible.
