@@ -91,7 +91,7 @@ func _process(delta: float) -> void:
 ## @ace_featured
 ## @ace_name("Fly Along")
 ## @ace_category("Camera Rail 3D")
-## @ace_description("Flies the rail's camera along a drawn Path3D, start to end, over a number of seconds - the dolly shot. Name a node to keep in frame and the camera turns to face it the whole way; leave it empty and the camera keeps the heading it was left with. Leave the path empty to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.")
+## @ace_description("Flies the rail's camera along a drawn Path3D, start to end, over a number of seconds - the dolly shot. Name a node to keep in frame and the camera turns to face it the whole way; write null and the camera keeps the heading it was left with. The rail's own camera takes the view as the flight starts, so a flight begun after a Cut To is seen rather than played off screen. Write null for the path to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.")
 ## @ace_display_template("fly along [i]{path}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b], watching [i]{look_at}[/i]")
 ## @ace_param_options(ease linear=Linear, ease_in=Ease in, ease_out=Ease out, ease_in_out=Ease in and out)
 ## @ace_icon("res://eventsheet_addons/camera_rail_3d/icon.svg")
@@ -111,6 +111,9 @@ func fly_along(path: Path3D, seconds: float, ease: String, look_at: Node3D) -> v
 	_progress = 0.0
 	_mode = "fly"
 	set_process(true)
+	# A flight the player cannot see is not a flight: the rail's own camera takes the view before
+	# the first frame of it, whoever was holding the picture a moment ago.
+	_take_the_view()
 	# The first frame of the shot is the START of the route, not wherever the camera was parked.
 	_apply_flight(0.0)
 
@@ -137,7 +140,7 @@ func cut_to(camera: Camera3D) -> void:
 ## @ace_featured
 ## @ace_name("Blend To")
 ## @ace_category("Camera Rail 3D")
-## @ace_description("Travels the rail's camera onto another camera - position, rotation and field of view together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. On Blend Finished fires at the handover.")
+## @ace_description("Travels the rail's camera onto another camera - position, rotation and field of view together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. The travel starts from whatever shot is on screen: if the rail had handed the view away, its own camera stands on that shot first and takes the view back, so the blend is continuous rather than a jump. On Blend Finished fires at the handover.")
 ## @ace_display_template("blend onto [i]{camera}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b]")
 ## @ace_param_options(ease linear=Linear, ease_in=Ease in, ease_out=Ease out, ease_in_out=Ease in and out)
 ## @ace_icon("res://eventsheet_addons/camera_rail_3d/icon.svg")
@@ -145,6 +148,9 @@ func cut_to(camera: Camera3D) -> void:
 func blend_to(camera: Camera3D, seconds: float, ease: String) -> void:
 	if camera == null or host == null:
 		return
+	# The blend has to start from what is ON SCREEN, or the travel happens to a camera nobody is
+	# watching and the handover at the end reads as the hard cut this row exists to avoid.
+	_take_the_view()
 	_blend_target = camera
 	_blend_from_transform = host.global_transform
 	_blend_from_fov = host.fov
@@ -158,7 +164,7 @@ func blend_to(camera: Camera3D, seconds: float, ease: String) -> void:
 ## @ace_action
 ## @ace_name("Hold")
 ## @ace_category("Camera Rail 3D")
-## @ace_description("Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. 0 seconds falls back to the rail's default pace.")
+## @ace_description("Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. It leaves the view exactly where it is, so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to the rail's default pace.")
 ## @ace_display_template("hold this shot for [b]{seconds}[/b]s")
 ## @ace_icon("res://eventsheet_addons/camera_rail_3d/icon.svg")
 ## @ace_codegen_template("$CameraRail3DBehavior.hold({seconds})")
@@ -239,6 +245,17 @@ func _apply_blend(eased_fraction: float) -> void:
 		return
 	host.global_transform = _blend_from_transform.interpolate_with(_blend_target.global_transform, eased_fraction)
 	host.fov = lerpf(_blend_from_fov, _blend_target.fov, eased_fraction)
+
+## @ace_hidden
+func _take_the_view() -> void:
+	if host == null:
+		return
+	if _handed_to != null and _handed_to != host and is_instance_valid(_handed_to):
+		host.global_transform = _handed_to.global_transform
+		host.fov = _handed_to.fov
+	_handed_to = host
+	if host.is_inside_tree():
+		host.make_current()
 
 ## @ace_hidden
 func _park() -> void:

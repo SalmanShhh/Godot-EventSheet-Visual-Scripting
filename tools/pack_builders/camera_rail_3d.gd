@@ -26,18 +26,18 @@ static func build() -> bool:
 	src.on_ready()
 	src.on_process()
 	src.verb("fly_along", "Fly Along",
-		"Flies the rail's camera along a drawn Path3D, start to end, over a number of seconds - the dolly shot. Name a node to keep in frame and the camera turns to face it the whole way; leave it empty and the camera keeps the heading it was left with. Leave the path empty to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.",
+		"Flies the rail's camera along a drawn Path3D, start to end, over a number of seconds - the dolly shot. Name a node to keep in frame and the camera turns to face it the whole way; write null and the camera keeps the heading it was left with. The rail's own camera takes the view as the flight starts, so a flight begun after a Cut To is seen rather than played off screen. Write null for the path to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.",
 		[["path", "Path3D"], ["seconds", "float"], ["ease", "String"], ["look_at", "Node3D"]])
 	_options(src.sheet, "ease", _EASES)
 	src.verb("cut_to", "Cut To",
 		"Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.",
 		[["camera", "Camera3D"]])
 	src.verb("blend_to", "Blend To",
-		"Travels the rail's camera onto another camera - position, rotation and field of view together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. On Blend Finished fires at the handover.",
+		"Travels the rail's camera onto another camera - position, rotation and field of view together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. The travel starts from whatever shot is on screen: if the rail had handed the view away, its own camera stands on that shot first and takes the view back, so the blend is continuous rather than a jump. On Blend Finished fires at the handover.",
 		[["camera", "Camera3D"], ["seconds", "float"], ["ease", "String"]])
 	_options(src.sheet, "ease", _EASES)
 	src.verb("hold", "Hold",
-		"Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. 0 seconds falls back to the rail's default pace.",
+		"Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. It leaves the view exactly where it is, so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to the rail's default pace.",
 		[["seconds", "float"]])
 	src.verb("stop_rail", "Stop Rail",
 		"Halts the shot where it stands, WITHOUT firing On Shot Finished - a cutscene the player skipped, a chase that ended early. The next Fly Along, Hold or Blend To starts a fresh shot.",

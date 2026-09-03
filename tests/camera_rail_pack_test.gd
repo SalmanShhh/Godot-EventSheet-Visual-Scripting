@@ -122,6 +122,35 @@ static func _test_the_2d_rail() -> bool:
 	all_passed = _check("a cut to nothing is refused, not obeyed",
 		_cut_to_null_keeps(rail, third), true) and all_passed
 
+	# ── The view a shot runs on. make_current does nothing outside a scene tree, so what is read
+	# here is the pack's own record of who holds the view - which is written whether or not there is
+	# a tree, precisely so this question can be asked at all. The rule: a MOVING shot takes the view
+	# (a flight or a blend nobody can see is not a shot), and a Hold leaves it exactly where it is,
+	# because a hold after a cut is the beat on THAT camera.
+	rail.cut_to(third)
+	rail.fly_along(path, 4.0, "linear")
+	all_passed = _check("a flight takes the view back for the rail's own camera",
+		rail.get("_handed_to") == camera, true) and all_passed
+	rail.stop_rail()
+	rail.cut_to(third)
+	rail.hold(1.0)
+	all_passed = _check("a hold leaves the view where the cut put it",
+		rail.get("_handed_to") == third, true) and all_passed
+	rail.stop_rail()
+	# A blend started while another camera holds the view stands ON that shot first, so the travel
+	# is continuous instead of a jump to wherever the rail's camera was parked.
+	third.global_position = Vector2(500.0, 300.0)
+	third.zoom = Vector2(3.0, 3.0)
+	camera.global_position = Vector2.ZERO
+	camera.zoom = Vector2.ONE
+	rail.cut_to(third)
+	rail.blend_to(target, 2.0, "linear")
+	all_passed = _check("a blend takes the view", rail.get("_handed_to") == camera, true) and all_passed
+	all_passed = _check("and starts from the shot that was on screen",
+		camera.global_position.distance_to(third.global_position) < 0.001, true) and all_passed
+	all_passed = _check("zoom included", camera.zoom.distance_to(third.zoom) < 0.001, true) and all_passed
+	rail.stop_rail()
+
 	# ── Hold: the beat between two moves, and the one shot with nothing to move.
 	rail.hold(0.5)
 	rail._process(0.25)
@@ -264,6 +293,30 @@ static func _test_the_3d_rail() -> bool:
 	rail.fly_along(path, 4.0, "linear", null)
 	rail.stop_rail()
 	all_passed = _check("stopping announces nothing", shots[0], 2) and all_passed
+
+	# ── The view a shot runs on, exactly as in 2D: a moving shot takes it, a hold leaves it, and a
+	# blend stands on the shot that was up before it travels - the field of view with it.
+	third.position = Vector3(0.0, 8.0, 12.0)
+	third.fov = 40.0
+	camera.transform = Transform3D.IDENTITY
+	camera.fov = 60.0
+	rail.cut_to(third)
+	rail.hold(1.0)
+	all_passed = _check("a hold leaves the view where the cut put it",
+		rail.get("_handed_to") == third, true) and all_passed
+	rail.stop_rail()
+	rail.cut_to(third)
+	rail.blend_to(target, 2.0, "linear")
+	all_passed = _check("a blend takes the view", rail.get("_handed_to") == camera, true) and all_passed
+	all_passed = _check("and starts from the shot that was on screen",
+		camera.position.distance_to(third.position) < 0.001, true) and all_passed
+	all_passed = _check("field of view included", absf(camera.fov - third.fov) < 0.001, true) and all_passed
+	rail.stop_rail()
+	rail.cut_to(third)
+	rail.fly_along(path, 4.0, "linear", null)
+	all_passed = _check("a flight takes the view back for the rail's own camera",
+		rail.get("_handed_to") == camera, true) and all_passed
+	rail.stop_rail()
 
 	camera.free()
 	target.free()

@@ -108,6 +108,25 @@ func _apply_blend(eased_fraction: float) -> void:
 	host.global_transform = _blend_from_transform.interpolate_with(_blend_target.global_transform, eased_fraction)
 	host.fov = lerpf(_blend_from_fov, _blend_target.fov, eased_fraction)
 
+## Puts the rail's camera where the view already is and gives it the view back - what every MOVING
+## shot starts with. A rail drives ONE camera, its own; the moment a Cut To or a finished blend
+## handed the view to another, the rail's camera is parked somewhere nobody is looking, and a shot
+## started there would animate off screen and land as a hard cut. Standing on the shot the player
+## can actually see and taking the view from there is what makes the next move a move.
+##
+## Hold deliberately does NOT do this: a hold is the beat on whatever shot is up, which after a cut
+## is the OTHER camera's, and snatching the view back would make that cut one frame long.
+## @ace_hidden
+func _take_the_view() -> void:
+	if host == null:
+		return
+	if _handed_to != null and _handed_to != host and is_instance_valid(_handed_to):
+		host.global_transform = _handed_to.global_transform
+		host.fov = _handed_to.fov
+	_handed_to = host
+	if host.is_inside_tree():
+		host.make_current()
+
 ## Ends whatever shot is running, silently. No trigger fires here - the callers that SHOULD
 ## announce an ending fire their own, which is what keeps Stop quiet and Hold loud.
 ## @ace_hidden
@@ -176,6 +195,9 @@ func fly_along(path: Path3D, seconds: float, ease: String, look_at: Node3D) -> v
 	_progress = 0.0
 	_mode = "fly"
 	set_process(true)
+	# A flight the player cannot see is not a flight: the rail's own camera takes the view before
+	# the first frame of it, whoever was holding the picture a moment ago.
+	_take_the_view()
 	# The first frame of the shot is the START of the route, not wherever the camera was parked.
 	_apply_flight(0.0)
 
@@ -193,6 +215,9 @@ func cut_to(camera: Camera3D) -> void:
 func blend_to(camera: Camera3D, seconds: float, ease: String) -> void:
 	if camera == null or host == null:
 		return
+	# The blend has to start from what is ON SCREEN, or the travel happens to a camera nobody is
+	# watching and the handover at the end reads as the hard cut this row exists to avoid.
+	_take_the_view()
 	_blend_target = camera
 	_blend_from_transform = host.global_transform
 	_blend_from_fov = host.fov
