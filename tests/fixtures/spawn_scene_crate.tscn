@@ -1,0 +1,5 @@
+[gd_scene format=3]
+
+[node name="Crate" type="RigidBody2D"]
+
+[node name="Body" type="CollisionShape2D" parent="."]

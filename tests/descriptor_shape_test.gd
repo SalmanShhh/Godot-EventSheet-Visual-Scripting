@@ -50,6 +50,13 @@ const PARAMS_THE_ROW_CARRIES: Array[String] = ["target", "host", "on_node"]
 ## parameter nothing uses.
 const SLOT_PATTERN: String = "\\{,?[ \\t]*([A-Za-z_][A-Za-z0-9_]*\\.?)\\}"
 
+## And a fourth idiom, which fills no hole but CHOOSES A SHAPE: `{?name}…{/name}` keeps a run of the
+## template when the field has an answer, and `{?name=word}…{/name}` keeps it when the field reads
+## that word. A dropdown whose answers are whole lines rather than values is spelled that way, so a
+## rule that read only the three above reported its field as one nothing uses - which is how a row
+## with a formation in it and a row with a timing in it both look wrong while emitting perfectly.
+const SEGMENT_PATTERN: String = "\\{\\?([A-Za-z_][A-Za-z0-9_]*)(?:=[^}]*)?\\}"
+
 ## Parameters whose EMPTY value is a real answer rather than a missing one:
 ##   args     no arguments at all - `f()` is as valid a call as `f(1)`;
 ##   prompt   the optional label a timed input window shows, off when it is blank.
@@ -130,9 +137,13 @@ static func _problems_of(descriptor: ACEDescriptor) -> PackedStringArray:
 		# peer that joined - so they are named rather than filled in, and have no default to have.
 		problems.append_array(_problems_of_param(id, param,
 			descriptor.ace_type != ACEDescriptor.ACEType.TRIGGER))
-	var template_slots: PackedStringArray = _slots_in(descriptor.codegen_template
-		+ "\n" + descriptor.member_template + "\n" + descriptor.codegen_prelude
-		+ "\n" + descriptor.codegen_on_true + "\n" + descriptor.codegen_on_exit)
+	var written: String = descriptor.codegen_template \
+		+ "\n" + descriptor.member_template + "\n" + descriptor.codegen_prelude \
+		+ "\n" + descriptor.codegen_on_true + "\n" + descriptor.codegen_on_exit
+	var template_slots: PackedStringArray = _slots_in(written)
+	for chosen: String in _segments_in(written):
+		if not template_slots.has(chosen):
+			template_slots.append(chosen)
 	var sentence_slots: PackedStringArray = _slots_in(descriptor.display_text)
 	for slot: String in template_slots:
 		if not names.has(slot) and not EXEMPT_SLOTS.has(slot):
@@ -178,6 +189,21 @@ static func _problems_of_param(id: String, param: ACEParam, wants_default: bool)
 
 
 ## The `{slot}` names in a text, without repeats.
+## The fields a template CHOOSES A SHAPE by: every `{?name}` / `{?name=word}` segment mark in it.
+## Read with the emitter's own spelling of the idiom, so a field the emitter would branch on and this
+## would not see cannot exist.
+static func _segments_in(text: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var pattern: RegEx = RegEx.create_from_string(SEGMENT_PATTERN)
+	if pattern == null:
+		return found
+	for hit: RegExMatch in pattern.search_all(text):
+		var name: String = hit.get_string(1)
+		if not found.has(name):
+			found.append(name)
+	return found
+
+
 static func _slots_in(text: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var pattern: RegEx = RegEx.create_from_string(SLOT_PATTERN)
