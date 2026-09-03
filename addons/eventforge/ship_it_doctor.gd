@@ -599,13 +599,30 @@ static func renderer_findings(sources: Dictionary, rendering_method: String) -> 
 	return findings
 
 
+## The other half of the same question, which the environment word table cannot know: a COMPOSITOR.
+## Only Forward+ has one, so every row of the camera's post stack draws nothing on the other two
+## renderers - and this note has to carry its own door, because the answer there is not "build for
+## Forward+" but "the 2D packs do the same looks on any renderer".
+##
+## One fragment covers the whole pack: every one of its rows is emitted through the behavior node's
+## own path, so a file holding any of them holds this.
+const COMPOSITOR_SPELLINGS: Array[Array] = [
+	["$PostKitBehavior.",
+		"a camera post effect (the Screen FX and Blend Modes packs do the same looks on any renderer)"],
+]
+
+
 ## The first Forward+-only thing one source asks for, in the plain word a reader knows it by, or ""
 ## when it asks for none of them. The table's own order, so two files holding the same rows are
-## reported the same way round.
+## reported the same way round; the compositor spellings are asked last, so a file holding both an
+## environment word and a post-stack row still answers with the word it always did.
 static func forward_plus_asked_for(source: String) -> String:
 	for reason: Array in EventForgeEnvironmentWords.forward_plus_reasons():
 		if source.contains(str(reason[0])):
 			return str(reason[1])
+	for spelling: Array in COMPOSITOR_SPELLINGS:
+		if source.contains(str(spelling[0])):
+			return str(spelling[1])
 	return ""
 
 
