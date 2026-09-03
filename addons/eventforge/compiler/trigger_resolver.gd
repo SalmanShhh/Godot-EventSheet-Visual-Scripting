@@ -255,6 +255,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# the spawn row emits it and this connects the handler to it.
 			return _signal_backed("_on%s_spawn_skipped" % source_token, "scene: PackedScene",
 				"spawn_skipped", source_path)
+		"OnWorldLookBlended":
+			# The moment a whole world finished crossing over to a saved look. Built exactly like the
+			# skipped spawn above and for the same reason: a plain signal the sheet declares for
+			# itself (`signal world_look_blended(look)`), raised by the blend and connected here, so
+			# nothing invents a name and both halves are ordinary Godot.
+			return _signal_backed("_on%s_world_look_blended" % source_token, "look: String",
+				"world_look_blended", source_path)
 		"OnEditorRun":
 			return _lifecycle("_run", "")
 		"OnCommandToolRun":
