@@ -71,7 +71,8 @@ static func run() -> bool:
 	# Rendering: the Quality Preset data asset (+1). Same recomputation.
 	# Files: the Folder Watcher (+1). Same recomputation.
 	# Scenes: the Second View pack (+1). Same recomputation.
-	all_passed = _check("the fleet was scanned (114 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1) and all_passed
+	# Generation: the Drunken Walkers pack (+1). Same recomputation.
+	all_passed = _check("the fleet was scanned (115 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1 + 1) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
@@ -102,10 +103,17 @@ static func run() -> bool:
 	# two readings of the last look - how many files and which names).
 	# scenes: +5 Second View verbs (make a view, show it in a frame, set its zoom, stop it, and the
 	# expression that hands its picture out).
+	# generation: +63 Drunken Walkers verbs - 29 actions (five for the grid, three for the random
+	# stream, fifteen for the walkers and how they run, three for the marks, two post-processing
+	# passes and the state loader), 4 conditions (a cell's value, inside the grid, a mark here, a
+	# walker registered) and 30 expressions (the grid readings, the two coordinate pairs, the count
+	# and index pairs for cells and marks, the seed, the injected headroom, the saved state, and the
+	# twelve context readings the triggers answer with). Its six triggers are signals, not declared
+	# verbs, so they are not in this number.
 	# Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
 		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
-		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5) and all_passed
+		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5 + 63) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
