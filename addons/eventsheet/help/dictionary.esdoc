@@ -98,7 +98,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `atan2` | [Angle Of (atan2)](ace:Core/Atan2) | Math & Random | Vocabulary |
 | `atr` | [Text Overflows](ace:Core/TextOverflows) | Text | Vocabulary |
 | `attenuation` | [Set Falloff](ace:Core/AudioSetFalloff) | Audio | Vocabulary |
+| `attributes` | [Camera Exposure](ace:Core/CamExposure) | Camera | Vocabulary |
 | `auto_clear` | [Is Auto Clear](ace:Core/DrawIsAutoClear) | Drawing | Vocabulary |
+| `auto_exposure_enabled` | [Is Auto Exposure On](ace:Core/CamIsAutoExposureOn) | Camera | Vocabulary |
+| `auto_exposure_max_sensitivity` | [Turn Auto Exposure On](ace:Core/CamAutoExposureOn) | Camera | Vocabulary |
+| `auto_exposure_min_sensitivity` | [Turn Auto Exposure On](ace:Core/CamAutoExposureOn) | Camera | Vocabulary |
+| `auto_exposure_speed` | [Turn Auto Exposure On](ace:Core/CamAutoExposureOn) | Camera | Vocabulary |
 | `auto_translate_mode` | [Keep This Text Untranslated](ace:Core/KeepTextUntranslated) | Translation | Vocabulary |
 | `autoscroll` | [Drift](ace:Core/ParallaxDrift) | Layers | Vocabulary |
 | `autowrap_mode` | [Set Word Wrap On](ace:Core/SetWordWrapOn) | Text | Vocabulary |
@@ -110,6 +115,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
 | `billboard` | [Set Always Face The Camera](ace:Core/SetFaceTheCamera) | World-space UI | Vocabulary |
 | `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
+| `blend` | [Blend To World Look](ace:Core/WorldBlendToLook) | Environment | Vocabulary |
 | `blend_mode` | [Blend Light As](ace:Core/LightSetBlend) | Lighting | Vocabulary |
 | `bool` | [No Flashing](ace:Core/NoFlashing) | Accessibility | Vocabulary |
 | `bottom_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
@@ -120,6 +126,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `call` | [Loading Progress](ace:Core/LoadingProgress) | Scene | Vocabulary |
 | `call_deferred` | [Do After This Frame](ace:Core/DoAfterFrame) | Time | Vocabulary |
 | `call_group` | [Call Method On Group](ace:Core/CallGroup) | Groups | Vocabulary |
+| `came_from` | [Current World Look](ace:Core/WorldCurrentLook) | Environment | Vocabulary |
+| `camera_attributes` | [Camera Exposure](ace:Core/CamExposureWorld) | Camera | Vocabulary |
 | `can_process` | [Node Is Running](ace:Core/NodeIsActive) | Nodes: Activation | Vocabulary |
 | `cancel_request` | [Cancel Request](ace:Core/AjaxCancel) | AJAX | Vocabulary |
 | `canceled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
@@ -200,6 +208,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `distance_squared_to` | [Look At (flat)](ace:Core/LookAtFlat) | Movement | Vocabulary |
 | `distance_to` | [Distance To](ace:Core/DistanceTo) | Math & Random | Vocabulary |
 | `distance_to_target` | [Distance To Target](ace:Core/GetNavDistance) | General Expressions | Vocabulary |
+| `dof_blur_amount` | [Focus Everywhere](ace:Core/CamFocusEverywhere) | Camera | Vocabulary |
+| `dof_blur_far_distance` | [Focus Distance](ace:Core/CamFocusDistance) | Camera | Vocabulary |
+| `dof_blur_far_enabled` | [Focus On](ace:Core/CamFocusOn) | Camera | Vocabulary |
 | `dot` | [Dot Product](ace:Core/VectorDot) | Variables: Vector | Vocabulary |
 | `double_click` | [On Double-Click](ace:Core/MouseDoubleClickEvent) | Mouse | Vocabulary |
 | `drag_bottom_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
@@ -235,6 +246,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `exclude_parent` | [RayCast Ignores Its Parent (2D)](ace:Core/RayCast2DSetExcludeParent) | Raycast 2D | Vocabulary |
 | `exists` | [Resource Exists](ace:Core/ResourceFileExists) | Editor Tools: Files & folders | Vocabulary |
 | `exp` | [Exponential](ace:Core/MathExp) | Math & Random | Vocabulary |
+| `exposure_multiplier` | [Camera Exposure](ace:Core/CamExposure) | Camera | Vocabulary |
 | `factor` | [Pinch Factor](ace:Core/TouchPinchFactor) | Touch | Vocabulary |
 | `fallbacks` | [Add Font Fallback](ace:Core/AddFontFallback) | UI | Vocabulary |
 | `far` | [Set Clip Range](ace:Core/CameraSetClipRange) | Camera | Vocabulary |
@@ -503,6 +515,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `in_2d` | [Free Spot In](ace:Core/PlaceInFreeSpot) | Spawn | Vocabulary |
 | `in_3d` | [Free Spot In (3D)](ace:Core/PlaceInFreeSpot3D) | Spawn | Vocabulary |
 | `index` | [Touch Index](ace:Core/TouchIndexOf) | Touch | Vocabulary |
+| `initial_velocity_max` | [Fastest Particle Speed](ace:Core/ParticleSpeedMost) | Particles | Vocabulary |
+| `initial_velocity_min` | [Slowest Particle Speed](ace:Core/ParticleSpeed) | Particles | Vocabulary |
 | `inner_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
 | `insert` | [Insert At](ace:Core/ArrayInsert) | Variables: Array | Vocabulary |
 | `inspect_object` | [Inspect In Editor](ace:Core/InspectInEditor) | Editor Tools | Vocabulary |
@@ -573,6 +587,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `lerp` | [Lerp Color](ace:Core/ColorLerp) | Color | Vocabulary |
 | `lerp_angle` | [Lerp Angle](ace:Core/LerpAngle) | Math & Random | Vocabulary |
 | `lerpf` | [Lerp](ace:Core/LerpValue) | Math & Random | Vocabulary |
+| `lifetime` | [Set Particle Lifetime](ace:Core/ParticleSetLifetime) | Particles | Vocabulary |
 | `light_color` | [Set Colour](ace:Core/LightSetColour3D) | Lighting | Vocabulary |
 | `light_energy` | [Set Brightness](ace:Core/LightSetBrightness3D) | Lighting | Vocabulary |
 | `light_mode` | [Light Response](ace:Core/MaterialLightResponse) | Material | Vocabulary |
@@ -764,7 +779,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `res` | [For Each Resource In Folder](ace:Core/ForEachResourceInFolder) | Loops | Vocabulary |
 | `reset_smoothing` | [Snap To Target Now](ace:Core/CameraSnapToTarget) | Camera | Vocabulary |
 | `resize` | [Resize Array](ace:Core/ArrayResize) | Variables: Array | Vocabulary |
-| `resource_path` | [Set Exposure](ace:Core/EnvSetExposure) | Environment | Vocabulary |
+| `resource_path` | [Set Camera Exposure](ace:Core/CamSetExposure) | Camera | Vocabulary |
 | `rest_length` | [Set Spring Rest Length](ace:Core/SetDampedSpringLength) | Joints | Vocabulary |
 | `restart` | [Restart / Burst](ace:Core/RestartParticles) | Particles | Vocabulary |
 | `retire` | [Retire](ace:Core/Retire) | Destroy | Vocabulary |
@@ -799,6 +814,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `save_scene` | [Save Current Scene](ace:Core/SaveEditedScene) | Editor Tools | Vocabulary |
 | `save_scene_as` | [Save Scene As](ace:Core/SaveEditedSceneAs) | Editor Tools | Vocabulary |
 | `scale` | [Set Scale (3D)](ace:Core/SetScale3D) | General Actions | Vocabulary |
+| `scale_max` | [Biggest Particle Size](ace:Core/ParticleSizeMost) | Particles | Vocabulary |
+| `scale_min` | [Smallest Particle Size](ace:Core/ParticleSize) | Particles | Vocabulary |
 | `scan` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
 | `screen_get_size` | [Screen Size](ace:Core/GetScreenSize) | Utility: Window | Vocabulary |
 | `scroll_offset` | [Scroll Offset](ace:Core/ParallaxScrollOffset) | Layers | Vocabulary |
@@ -891,6 +908,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
 | `spot_angle` | [Set Cone Angle](ace:Core/LightSetConeAngle) | Lighting | Vocabulary |
 | `spot_range` | [Set Reach](ace:Core/LightSetReachSpot) | Lighting | Vocabulary |
+| `spread` | [Particle Spread](ace:Core/ParticleSpread) | Particles | Vocabulary |
 | `spring_length` | [Set Camera Distance](ace:Core/SetCameraDistance) | Native 3D | Vocabulary |
 | `sqrt` | [Square Root](ace:Core/MathSqrt) | Math & Random | Vocabulary |
 | `ssao_enabled` | [Set Ambient Occlusion On/Off](ace:Core/SetAmbientOcclusion) | Environment | Vocabulary |
@@ -967,6 +985,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `unit_size` | [Set Loudness Falloff](ace:Core/AudioSetLoudnessFalloff) | Audio | Vocabulary |
 | `unproject_position` | [Project To Screen (3D)](ace:Core/ProjectToScreen3D) | Math & Random | Vocabulary |
 | `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools: Plugin lifecycle | Vocabulary |
+| `use` | [Use World Look](ace:Core/WorldUseLook) | Environment | Vocabulary |
 | `validate_filename` | [Safe File Name](ace:Core/SafeFileName) | Files | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
 | `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |

@@ -135,7 +135,9 @@ Attach to a node to move it.
 - [Outline](Outline.md) - a border around what the sprite actually is, following its own alpha rather than its rectangle: the selection ring, the interactable marker, the rarity colour, the accessibility highlight.
 - [Grayscale](Grayscale.md) - drain the colour out of one node, all the way or part of it, for a disabled button, a dead unit still on the board or a whole world paused behind a menu. The grey takes a tint, so sepia and frozen are the same two rows.
 - [Wave](Wave.md) - ripple the picture without moving the node: water, heat haze, flags and dizziness, with collisions and positions untouched because only the drawing sways.
-- [Screen FX](Screen-FX.md) - full-screen effects as four rows on one rectangle: a shockwave ring from a world point, an awaited fade you build a scene transition out of, a blur and a chromatic pulse. The rectangle hides itself whenever every effect is idle.
+- [Screen FX](Screen-FX.md) - full-screen effects as ordinary rows: a shockwave ring from a world point, an awaited fade you build a scene transition out of, a blur and a chromatic pulse on one rectangle - and on top of them the post stack, a named list of twelve shipped full-screen effects drawn in order, with Pulse Post Effect as the one-row form that needs no setup. See As and Correct Colours For answer the colour-vision question, and a look is the whole live stack saved as a file you own.
+- [Blend Modes](Blend-Modes.md) - the twenty ways one picture meets the one behind it: the five Godot draws by itself and the fifteen that need a shader reading the screen back, one shader file each, picked from a strip that draws every mode rather than naming it. Plus masks, so a second picture decides where the first is allowed to be, and Blend As One for a node's children drawn as a single picture.
+- [Post Kit](Post-Kit.md) - the camera's own post stack, on Forward+: vignette, desaturate, pixelate, tint and fade as CompositorEffects, wearing the same words the 2D stack uses so a row reads alike on the screen and on the camera. Plus the thing only a 3D camera can do - an outline or a silhouette drawn through whatever is in front of it. On Mobile and Compatibility every row does nothing rather than erroring, and the Doctor says so once with the door.
 - [Fade](Fade.md) - fade any sprite or UI in and out by animating its transparency.
 - [Spring](Spring.md) - springy, bouncy motion toward a target value.
 - [Tween](Tween.md) - animate a property to a value over time with easing.
@@ -143,7 +145,7 @@ Attach to a node to move it.
 ## UI and flow
 
 - [HUD Kit](HUD-Kit.md) - drive menus and HUDs by name with zero wiring.
-- [Scene Flow](Scene-Flow.md) - fades and scene changes.
+- [Scene Flow](Scene-Flow.md) - fades and scene changes, and the seven shapes one can wear: a wipe following a picture you painted, a dissolve, an iris, blinds, pixelate or a page curl, each one shader file with one progress dial. The cover walks on, the scene is swapped underneath it, and On Transition Finished arrives in the new scene.
 - [Dialogue Kit](Dialogue-Kit.md) - typewriter conversations with named UI.
 - [Virtual Cursor](Virtual-Cursor.md) - a gamepad-driven pointer for controller UI.
 - [Anchor](Anchor.md) - where a panel sits when the window resizes: anchor a Control to a corner, an edge or the full rect as one row, nudge it with pixel margins, and let it place itself again on every resize.

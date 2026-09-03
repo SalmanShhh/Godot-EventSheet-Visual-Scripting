@@ -13,6 +13,7 @@ Everything here is a builtin ACE, so it is in the picker of every sheet with no 
 5. [Camera field of view (Camera)](#camera-field-of-view-camera)
 6. [Animation playback (Animation)](#animation-playback-animation)
 7. [Gradients and curves](#gradients-and-curves)
+8. [Clipping a node's children (Blend Modes)](#clipping-a-nodes-children-blend-modes)
 
 ---
 
@@ -207,6 +208,23 @@ Picker category: **Gradients & Curves**. Turn a designer-drawn ramp or curve int
 | **Sample Curve** | Expression | A curve's value at a 0-to-1 position - turn a designer-drawn easing, falloff or difficulty curve into a number. |
 
 For a gradient or curve with many stops, author it as a Gradient variable (Godot's own ramp editor opens in the Inspector) or a Curve variable with the Curve drawer, and sample it here.
+
+---
+
+## Clipping a node's children (Blend Modes)
+
+Picker category: **Blend Modes**, shared with the Blend Modes pack's own verbs, because clipping, masking and blending are one reader's question: how do two pictures meet. These two rows need nothing installed - `clip_children` is a field on every `CanvasItem`, and setting it costs nothing at all.
+
+Whatever the node draws becomes the SHAPE its children are allowed to draw inside: a portrait cut to its frame, a bar that fills a heart rather than a rectangle, water that stops at the edge of the pool.
+
+| Name | Parameters | What it does |
+| --- | --- | --- |
+| **Clip My Children** | `mode` (draw me too / clip only) | Makes what this node draws the shape its children draw inside. Choose whether the node is drawn as well as being the shape (a frame you can see) or is only the shape (an invisible cutter). |
+| **Stop Clipping** | - | Puts the node back to drawing normally: its children draw wherever they like again. |
+
+Two rows and not one, because the field has three values and a reader means only two of them. **Stop Clipping** owns the disabled value alone, so no written line can be spelled by both rows - which is what makes an opened file read back as the row that wrote it.
+
+The rest of that shelf - twenty blend modes, masks, and a node's children merged into one picture - comes from the Blend Modes pack rather than from the engine, because fifteen of the twenty modes need a shader that reads the screen back.
 
 ---
 
