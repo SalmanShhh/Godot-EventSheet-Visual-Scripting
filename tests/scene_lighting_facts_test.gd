@@ -320,11 +320,24 @@ static func _test_the_picker_shelves() -> bool:
 	ok = _check("the darkness shelf offers the two rows a CanvasModulate answers to",
 		shelves.get("Darkness in this scene: Level   CanvasModulate", PackedStringArray()),
 		PackedStringArray(["DarknessSet", "DarknessFade"])) and ok
-	return _check("and the atmosphere shelf the world's own words",
-		shelves.get("Atmosphere in this scene: World   WorldEnvironment", PackedStringArray()),
+	# The atmosphere shelf is the whole WorldEnvironment vocabulary: the environment and sky words in
+	# registration order, then the eight frozen node-scoped World rows they landed beside. It is
+	# pinned by its ENDS rather than as a ninety-row wall, because the wall is a list nobody reads
+	# and the two things that must never move are what it opens with and the frozen tail it keeps.
+	var atmosphere: PackedStringArray = shelves.get(
+		"Atmosphere in this scene: World   WorldEnvironment", PackedStringArray())
+	var frozen_tail: PackedStringArray = PackedStringArray()
+	for index: int in range(maxi(atmosphere.size() - 8, 0), atmosphere.size()):
+		frozen_tail.append(atmosphere[index])
+	ok = _check("the atmosphere shelf still ends with the eight frozen World rows", frozen_tail,
 		PackedStringArray(["WorldFogOn", "WorldFogOff", "WorldGlowOn", "WorldGlowOff",
 			"WorldSetFogThickness", "WorldSetAmbientLight", "WorldFadeGlow",
 			"WorldOwnEnvironment"])) and ok
+	return _check("and opens with the world's own words, the sky's last of them",
+		PackedStringArray([
+			"" if atmosphere.is_empty() else atmosphere[0],
+			"" if atmosphere.size() < 9 else atmosphere[atmosphere.size() - 9]]),
+		PackedStringArray(["EnvSetSaturation", "SkyUsePanorama"])) and ok
 
 
 # ── the walk ────────────────────────────────────────────────────────────────────
