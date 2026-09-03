@@ -6783,3 +6783,22 @@ set pixel size to {factor},définir la taille de pixel à {factor}
 Factor,Facteur
 1 is the size the game was drawn at. 2 is twice as big.,1 correspond à la taille pour laquelle le jeu a été dessiné. 2 est deux fois plus grand.
 "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","Décide à quelle fréquence un écran dans le monde est redessiné. Seulement quand il est vu est le réglage peu coûteux et la bonne valeur par défaut ; une fois maintenant dessine une seule image puis s'arrête, ce que veut une vignette ou une image fixe ; jamais met la vue en sommeil sans la libérer."
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.","Choisis le rendu en le regardant : le bouton montre une forme sur un fond, dessinée dans chaque mode. Les cinq sous Native sont ceux que le moteur de rendu dessine lui-même et ne coûtent rien ; les autres relisent l'écran, ce qui coûte une lecture d'écran par pixel couvert par l'élément. Tu peux aussi taper le nom d'un mode, ou une expression qui en calcule un pendant que le jeu tourne."
+Pick a blend mode by looking at it,Choisir un mode de fusion en le regardant
+Drawn by the renderer itself - costs nothing,Dessiné par le moteur de rendu lui-même - ne coûte rien
+Reads the screen back through a shader - one screen read per pixel this item covers,Relit l'écran via un shader - une lecture d'écran par pixel couvert par cet élément
+"Draw ""%s"" children as one picture","Dessiner les enfants de ""%s"" comme une seule image"
+Draw %s's children as one,Dessiner les enfants de %s comme un seul
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.","%s porte déjà %s, et un élément ne porte qu'un seul matériau - le mélange %s est donc refusé quand le jeu tourne et le rendu n'apparaît jamais. Mélange plutôt un parent ou un enfant, ou retire le shader."
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.","Un effet de post-traitement couvre toute la fenêtre d'affichage, et %s porte l'interface de cette scène - savoir si l'interface est étalonnée et assombrie en même temps que le jeu se décide donc à deux numéros de calque que personne n'a choisis pour ça. Draw Post Effects Below %s la garde nette ; Draw Post Effects Above %s la couvre aussi."
+Clip My Children,Découper mes enfants
+"Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.","Fait de ce que dessine ce nœud la FORME dans laquelle ses enfants ont le droit de dessiner - un portrait découpé à un cadre, une barre qui remplit une forme, de l'eau qui s'arrête au bord du bassin. Choisis si ce nœud est dessiné en plus d'être la forme, ou s'il n'est que la forme."
+Blend Modes,Modes de fusion
+"Clip my children, {mode}","Découper mes enfants, {mode}"
+Draw this node,Dessiner ce nœud
+"Whether this node is drawn as well as being the shape (a frame you can see), or is only the shape (an invisible cutter).","Si ce nœud est dessiné en plus d'être la forme (un cadre visible), ou s'il n'est que la forme (un emporte-pièce invisible)."
+draw me too,me dessiner aussi
+clip only,découper seulement
+Stop Clipping,Arrêter le découpage
+"Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.","Remet ce nœud à dessiner normalement : ses enfants dessinent de nouveau où ils veulent, et le nœud lui-même est dessiné comme toujours."
+Stop clipping my children,Arrêter de découper mes enfants

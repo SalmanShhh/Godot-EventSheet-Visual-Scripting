@@ -6783,3 +6783,22 @@ set pixel size to {factor},把像素大小设为 {factor}
 Factor,倍数
 1 is the size the game was drawn at. 2 is twice as big.,1 是游戏绘制时的大小。2 是它的两倍。
 "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.",决定世界里的屏幕多久重绘一次。只在被看到时是最省的设置，也是正确的默认值；立刻一次只画一帧然后停下，这正是缩略图或静帧想要的；从不则把视图停在那里而不释放它。
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.",看着选：按钮会显示同一个形状叠在同一个背景上、以每种模式绘制的效果。Native 下的五种由渲染器自己绘制，不花任何代价；其余的会把屏幕读回来，该项覆盖多少像素就要读多少次屏幕。你也可以直接输入模式名称，或写一个在游戏运行时算出模式的表达式。
+Pick a blend mode by looking at it,看着选择混合模式
+Drawn by the renderer itself - costs nothing,由渲染器自己绘制 - 没有开销
+Reads the screen back through a shader - one screen read per pixel this item covers,通过着色器把屏幕读回来 - 该项覆盖多少像素就读多少次屏幕
+"Draw ""%s"" children as one picture",把“%s”的子节点画成一张图
+Draw %s's children as one,把 %s 的子节点画成一个整体
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.",%s 已经带着 %s，而一个项只能带一个材质 - 所以 %s 混合在游戏运行时会被拒绝，效果永远不会出现。改为混合父节点或子节点，或者把着色器去掉。
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.",后期效果会覆盖整个视口，而 %s 承载着这个场景的界面 - 所以界面会不会跟游戏一起被调色和压暗，是由两个没有人为此选过的图层编号决定的。Draw Post Effects Below %s 能让它保持清晰；Draw Post Effects Above %s 则连它一起覆盖。
+Clip My Children,把子节点裁进我的形状
+"Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.",把这个节点画出来的东西变成它的子节点只能在里面绘制的“形状” - 裁进相框的头像、填满某个形状的进度条、到池边就停住的水面，都是这一个字段。可以选择这个节点本身是否也被画出来，还是只当形状。
+Blend Modes,混合模式
+"Clip my children, {mode}",把子节点裁进我的形状，{mode}
+Draw this node,绘制该节点
+"Whether this node is drawn as well as being the shape (a frame you can see), or is only the shape (an invisible cutter).",这个节点在充当形状的同时是否也被画出来（看得见的相框），还是只当形状（看不见的模具）。
+draw me too,也画出我
+clip only,只做裁剪
+Stop Clipping,停止裁剪
+"Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.",让这个节点恢复正常绘制：它的子节点又可以画在任何地方，节点本身也照旧被画出来。
+Stop clipping my children,不再裁剪子节点

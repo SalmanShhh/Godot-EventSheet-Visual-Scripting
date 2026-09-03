@@ -6783,3 +6783,22 @@ set pixel size to {factor},задать размер пикселя {factor}
 Factor,Множитель
 1 is the size the game was drawn at. 2 is twice as big.,"1 - это размер, под который нарисована игра. 2 - вдвое крупнее."
 "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","Решает, как часто перерисовывается экран внутри мира. Только когда виден - дешёвая настройка и верное значение по умолчанию; один раз сейчас рисует единственный кадр и останавливается, чего и хочет миниатюра или снимок; никогда паркует вид, не освобождая его."
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.","Выбирайте вид, глядя на него: кнопка показывает одну фигуру на одном фоне, нарисованную каждым режимом. Пять режимов под Native рисует сам рендерер, и они ничего не стоят; остальные читают экран обратно, что стоит одного чтения экрана на каждый пиксель, который закрывает элемент. Можно также ввести название режима или выражение, вычисляющее его во время игры."
+Pick a blend mode by looking at it,"Выбрать режим смешивания, глядя на него"
+Drawn by the renderer itself - costs nothing,Рисует сам рендерер - ничего не стоит
+Reads the screen back through a shader - one screen read per pixel this item covers,"Читает экран обратно через шейдер - одно чтение экрана на каждый пиксель, который закрывает этот элемент"
+"Draw ""%s"" children as one picture","Рисовать потомков ""%s"" как одну картинку"
+Draw %s's children as one,Рисовать потомков %s как одно целое
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.","%s уже носит %s, а элемент носит один материал - поэтому смешивание %s отклоняется во время игры, и вид так и не появляется. Смешивайте вместо этого родителя или потомка либо снимите шейдер."
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.","Постэффект закрывает весь вьюпорт, а %s несёт интерфейс этой сцены - так что будет ли интерфейс тонирован и затемнён вместе с игрой, решают два номера слоёв, которые никто для этого не выбирал. Draw Post Effects Below %s сохраняет его чётким; Draw Post Effects Above %s закрывает и его."
+Clip My Children,Обрезать потомков по моей форме
+"Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.","Делает то, что рисует этот узел, ФОРМОЙ, внутри которой разрешено рисовать его потомкам - портрет, обрезанный по рамке, полоса, заполняющая фигуру, вода, которая заканчивается у края бассейна. Выберите, рисуется ли сам узел вдобавок к тому, что он задаёт форму, или он только форма."
+Blend Modes,Режимы смешивания
+"Clip my children, {mode}","Обрезать потомков по моей форме, {mode}"
+Draw this node,Рисовать этот узел
+"Whether this node is drawn as well as being the shape (a frame you can see), or is only the shape (an invisible cutter).","Рисуется ли этот узел вдобавок к тому, что он задаёт форму (видимая рамка), или он только форма (невидимая вырубка)."
+draw me too,рисовать и меня
+clip only,только обрезать
+Stop Clipping,Прекратить обрезку
+"Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.","Возвращает узел к обычному рисованию: его потомки снова рисуют где угодно, а сам узел рисуется как всегда."
+Stop clipping my children,Больше не обрезать потомков

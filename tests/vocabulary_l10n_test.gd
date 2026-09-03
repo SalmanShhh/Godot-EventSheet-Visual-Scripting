@@ -324,7 +324,11 @@ const FULLY_KEYED_ACES: Array[String] = [
 	"ParallaxScrollOffset", "ParallaxLayerScrollAt", "ParallaxLayerRepeatEvery",
 	"RenderingRender3DAt", "RenderingUpscaleWith", "RenderingSmoothEdgesWith", "RenderingSetTaa",
 	"RenderingScaleTheGame", "RenderingFitTheShape", "RenderingKeepPixelsSharp",
-	"RenderingPixelSize"
+	"RenderingPixelSize",
+	# How two pictures meet: the two rows that make what a node draws the shape its children draw
+	# inside. Its own group for the same reason the one above is - a wave appends rather than
+	# rewrapping the lines of the wave beside it.
+	"ClipMyChildren", "StopClipping"
 ]
 
 

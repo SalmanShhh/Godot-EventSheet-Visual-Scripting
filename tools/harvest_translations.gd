@@ -161,6 +161,9 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# nodes. Two modules, each shipped whole, so the whole of each is owed.
 	"res://addons/eventforge/registration/modules/viewport_aces.gd",
 	"res://addons/eventforge/registration/modules/layer_aces.gd",
+	# How two pictures meet: the two rows that make what a node draws the shape its children draw
+	# inside. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/canvas_clip_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files

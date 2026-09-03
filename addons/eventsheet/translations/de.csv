@@ -6783,3 +6783,22 @@ set pixel size to {factor},Pixelgröße auf {factor} setzen
 Factor,Faktor
 1 is the size the game was drawn at. 2 is twice as big.,"1 ist die Größe, in der das Spiel gezeichnet wurde. 2 ist doppelt so groß."
 "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","Entscheidet, wie oft ein Bildschirm in der Welt neu gezeichnet wird. Nur wenn zu sehen ist die billige Einstellung und die richtige Voreinstellung; einmal jetzt zeichnet ein einziges Bild und hört auf, was ein Vorschaubild oder ein Standbild will; nie parkt die Ansicht, ohne sie freizugeben."
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.","Wähle den Look, indem du ihn ansiehst: Die Schaltfläche zeigt eine Form über einem Hintergrund, gezeichnet durch jeden Modus. Die fünf unter Native zeichnet der Renderer selbst und sie kosten nichts; der Rest liest den Bildschirm zurück, was einen Bildschirmlesevorgang pro Pixel kostet, das dieses Element bedeckt. Du kannst auch ein Moduswort eingeben oder einen Ausdruck, der eines zur Laufzeit ermittelt."
+Pick a blend mode by looking at it,"Einen Mischmodus auswählen, indem man ihn ansieht"
+Drawn by the renderer itself - costs nothing,Vom Renderer selbst gezeichnet - kostet nichts
+Reads the screen back through a shader - one screen read per pixel this item covers,"Liest den Bildschirm über einen Shader zurück - ein Bildschirmlesevorgang pro Pixel, das dieses Element bedeckt"
+"Draw ""%s"" children as one picture","Kinder von ""%s"" als ein Bild zeichnen"
+Draw %s's children as one,Kinder von %s als eines zeichnen
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.","%s trägt bereits %s, und ein Element trägt genau ein Material - deshalb wird die Mischung %s zur Laufzeit abgelehnt und der Look erscheint nie. Mische stattdessen ein Eltern- oder ein Kindelement, oder nimm den Shader ab."
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.","Ein Post-Effekt bedeckt das gesamte Ansichtsfenster, und %s trägt die Oberfläche dieser Szene - ob die Oberfläche zusammen mit dem Spiel eingefärbt und abgedunkelt wird, entscheiden also zwei Ebenennummern, die niemand dafür gewählt hat. Draw Post Effects Below %s hält sie scharf; Draw Post Effects Above %s bedeckt sie mit."
+Clip My Children,Meine Kinder beschneiden
+"Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.","Macht das, was dieser Knoten zeichnet, zur FORM, innerhalb derer seine Kinder zeichnen dürfen - ein Porträt, das auf einen Rahmen zugeschnitten ist, ein Balken, der eine Form füllt, Wasser, das am Beckenrand aufhört. Wähle, ob dieser Knoten zusätzlich zur Form auch gezeichnet wird oder nur die Form ist."
+Blend Modes,Mischmodi
+"Clip my children, {mode}","Meine Kinder beschneiden, {mode}"
+Draw this node,Diesen Knoten zeichnen
+"Whether this node is drawn as well as being the shape (a frame you can see), or is only the shape (an invisible cutter).",Ob dieser Knoten zusätzlich zur Form auch gezeichnet wird (ein sichtbarer Rahmen) oder nur die Form ist (ein unsichtbarer Ausstecher).
+draw me too,mich auch zeichnen
+clip only,nur beschneiden
+Stop Clipping,Beschneiden beenden
+"Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.","Setzt diesen Knoten wieder auf normales Zeichnen: Seine Kinder zeichnen wieder, wo sie wollen, und der Knoten selbst wird gezeichnet wie eh und je."
+Stop clipping my children,Meine Kinder nicht mehr beschneiden

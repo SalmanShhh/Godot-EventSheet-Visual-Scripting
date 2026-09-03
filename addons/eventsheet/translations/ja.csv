@@ -6783,3 +6783,22 @@ set pixel size to {factor},ドットの大きさを {factor} にする
 Factor,倍率
 1 is the size the game was drawn at. 2 is twice as big.,1 はゲームを描いたときの大きさ。2 はその二倍です。
 "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.",ワールド内のスクリーンをどれくらいの頻度で描き直すかを決めます。見えているときだけが安上がりで、既定として正しい設定です。いま一度は一フレームだけ描いて止まるもので、サムネイルや静止画が求めるのはこれです。描き直さないは、ビューを解放せずに止めておきます。
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.",見た目を見て選べます: ボタンには 1 つの図形を 1 つの背景の上に各モードで描いた絵が表示されます。Native の 5 つはレンダラー自身が描くもので、負荷はありません。残りは画面を読み戻すため、その項目が覆うピクセルごとに画面読み取りが 1 回かかります。モード名を直接入力することも、ゲームの実行中にモードを求める式を書くこともできます。
+Pick a blend mode by looking at it,見た目でブレンドモードを選ぶ
+Drawn by the renderer itself - costs nothing,レンダラー自身が描画 - 負荷なし
+Reads the screen back through a shader - one screen read per pixel this item covers,シェーダーで画面を読み戻す - この項目が覆うピクセルごとに画面読み取り 1 回
+"Draw ""%s"" children as one picture",「%s」の子を 1 枚の絵として描画
+Draw %s's children as one,%s の子をひとつとして描画
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.",%s はすでに %s を身につけており、1 つの項目が持てるマテリアルは 1 つだけです。そのため %s のブレンドはゲーム実行時に拒否され、その見た目は現れません。代わりに親か子をブレンドするか、シェーダーを外してください。
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.",ポストエフェクトはビューポート全体を覆い、%s はこのシーンのインターフェースを抱えています。つまりインターフェースがゲームと一緒に色調補正され暗くなるかどうかは、誰もそのために選んでいない 2 つのレイヤー番号が決めています。Draw Post Effects Below %s なら鮮明なままで、Draw Post Effects Above %s ならそれも覆います。
+Clip My Children,子をこの形で切り抜く
+"Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.",このノードが描くものを、その子が描いてよい「形」にします。額縁に合わせて切り抜いた肖像、形を満たすバー、プールの縁で止まる水などがこれです。このノード自体も描くのか、形だけにするのかを選べます。
+Blend Modes,ブレンドモード
+"Clip my children, {mode}",子をこの形で切り抜く、{mode}
+Draw this node,このノードを描く
+"Whether this node is drawn as well as being the shape (a frame you can see), or is only the shape (an invisible cutter).",このノードを形として使いつつ描画もするか（見える額縁）、形だけにするか（見えない型抜き）。
+draw me too,自分も描く
+clip only,切り抜きだけ
+Stop Clipping,切り抜きをやめる
+"Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.",このノードを通常の描画に戻します。子は再びどこにでも描けるようになり、ノード自体もこれまでどおり描かれます。
+Stop clipping my children,子の切り抜きをやめる

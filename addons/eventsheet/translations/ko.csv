@@ -6783,3 +6783,22 @@ set pixel size to {factor},픽셀 크기를 {factor} 로 설정
 Factor,배수
 1 is the size the game was drawn at. 2 is twice as big.,1은 게임을 그린 크기입니다. 2는 그 두 배입니다.
 "Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","월드 안의 화면을 얼마나 자주 다시 그릴지 정합니다. 보일 때만이 저렴한 설정이자 올바른 기본값입니다. 지금 한 번은 한 프레임만 그리고 멈추며, 썸네일이나 정지 화면이 원하는 것이 이것입니다. 안 함은 뷰를 해제하지 않은 채 세워 둡니다."
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.","보면서 고르세요: 버튼에는 하나의 도형을 하나의 배경 위에 각 모드로 그린 그림이 표시됩니다. Native 아래의 다섯 가지는 렌더러가 직접 그리므로 비용이 없고, 나머지는 화면을 다시 읽으므로 이 항목이 덮는 픽셀마다 화면 읽기가 한 번씩 듭니다. 모드 이름을 직접 입력하거나, 게임이 실행되는 동안 모드를 계산하는 식을 쓸 수도 있습니다."
+Pick a blend mode by looking at it,보면서 블렌드 모드 고르기
+Drawn by the renderer itself - costs nothing,렌더러가 직접 그림 - 비용 없음
+Reads the screen back through a shader - one screen read per pixel this item covers,셰이더로 화면을 다시 읽음 - 이 항목이 덮는 픽셀마다 화면 읽기 한 번
+"Draw ""%s"" children as one picture","""%s""의 자식을 한 장의 그림으로 그리기"
+Draw %s's children as one,%s의 자식을 하나로 그리기
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.","%s은(는) 이미 %s을(를) 입고 있고, 한 항목은 머티리얼을 하나만 입습니다. 그래서 %s 블렌드는 게임이 실행될 때 거부되고 그 모습은 나타나지 않습니다. 대신 부모나 자식을 블렌드하거나, 셰이더를 벗기세요."
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.","포스트 이펙트는 뷰포트 전체를 덮고, %s은(는) 이 장면의 인터페이스를 들고 있습니다. 그래서 인터페이스가 게임과 함께 색보정되고 어두워지는지는 아무도 그 용도로 고르지 않은 두 개의 레이어 번호가 결정합니다. Draw Post Effects Below %s는 선명하게 유지하고, Draw Post Effects Above %s는 그것까지 덮습니다."
+Clip My Children,자식을 내 모양으로 자르기
+"Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.","이 노드가 그리는 것을 자식이 그릴 수 있는 '모양'으로 만듭니다. 액자에 맞춰 잘린 초상화, 모양을 채우는 막대, 수영장 가장자리에서 멈추는 물이 모두 이것입니다. 이 노드 자체도 그릴지, 모양 역할만 할지 고르세요."
+Blend Modes,블렌드 모드
+"Clip my children, {mode}","자식을 내 모양으로 자르기, {mode}"
+Draw this node,이 노드를 그리기
+"Whether this node is drawn as well as being the shape (a frame you can see), or is only the shape (an invisible cutter).","이 노드를 모양으로 쓰면서 함께 그릴지(보이는 액자), 모양 역할만 할지(보이지 않는 커터)."
+draw me too,나도 그리기
+clip only,자르기만
+Stop Clipping,자르기 그만두기
+"Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.","이 노드를 보통의 그리기로 되돌립니다. 자식은 다시 원하는 곳에 그리고, 노드 자체도 늘 그랬듯이 그려집니다."
+Stop clipping my children,자식 자르기 그만두기
