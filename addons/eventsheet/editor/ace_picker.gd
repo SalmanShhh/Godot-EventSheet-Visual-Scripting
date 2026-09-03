@@ -1119,6 +1119,13 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	_tree.clear()
 	if _objects_tree != null:
 		_objects_tree.clear()
+	# The two side panes too: their rows are filtered by the MODE of the open that built them, and a
+	# double-click on a stale Recents row in the loading frame would commit an action under a
+	# condition open.
+	if _favorites_list != null:
+		_favorites_list.clear()
+	if _recent_list != null:
+		_recent_list.clear()
 	# Guarded on the window being in a tree: showing it and moving focus are questions for a live
 	# editor, and a picker built in a test hangs off a bare Node, where each of them is an engine
 	# error rather than a no-op. Nothing else about the open changes.
