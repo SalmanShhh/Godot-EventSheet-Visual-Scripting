@@ -6142,349 +6142,349 @@ Light Response,Risposta alla luce
 light response,risposta alla luce
 "%s wears %s, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader.","%s porta %s, e mescolanza e illuminazione vivono dentro uno shader invece che su una proprietà - questa riga quindi lascia in pace lo shader e il valore non va da nessuna parte. Impostalo nello shader, oppure sposta la riga su un figlio che non porta shader."
 "%s is worn by %s as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.","%s è portato anche da %s, e un materiale è un solo oggetto. Ogni parola di materiale qui dà a questa mesh la propria copia prima di scrivere, quindi le altre restano come sono - questo è solo da sapere."
-"%s asks for %s, which only the Forward+ renderer draws - this row does nothing on %s. Either build for Forward+, or drop the row.",
-"%s sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky.",
-Blend Light As,
-"How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants. Writes `Light2D.blend_mode`.",
-Blend light as {value},
-"How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants.",
-Reads the light's light blend back: `Light2D.blend_mode`. Use it in any value field.,
-light blend,
-Set Saturation,
-"How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_saturation`.",
-Set saturation to {value},
-Saturation,
-"How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish.",
-Reads the world's saturation back: `Environment.adjustment_saturation`. Use it in any value field.,
-saturation,
-Fade Saturation,
-"Walks the world's saturation to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_saturation` on this scene's own copy of the environment.",
-Fade saturation to {value} over {seconds} s,
-The saturation to arrive at.,
-Set Contrast,
-"How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_contrast`.",
-Set contrast to {value},
-Contrast,
-"How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard.",
-Reads the world's contrast back: `Environment.adjustment_contrast`. Use it in any value field.,
-contrast,
-Fade Contrast,
-"Walks the world's contrast to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_contrast` on this scene's own copy of the environment.",
-Fade contrast to {value} over {seconds} s,
-The contrast to arrive at.,
-Set Picture Brightness,
-"How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_brightness`.",
-Set picture brightness to {value},
-Picture brightness,
-"How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does.",
-Picture Brightness,
-Reads the world's picture brightness back: `Environment.adjustment_brightness`. Use it in any value field.,
-picture brightness,
-Fade Picture Brightness,
-"Walks the world's picture brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_brightness` on this scene's own copy of the environment.",
-Fade picture brightness to {value} over {seconds} s,
-The picture brightness to arrive at.,
-Set Exposure,
-"How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_exposure`.",
-Set exposure to {value},
-Exposure,
-"How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need.",
-Reads the world's exposure back: `Environment.tonemap_exposure`. Use it in any value field.,
-exposure,
-Fade Exposure,
-"Walks the world's exposure to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.tonemap_exposure` on this scene's own copy of the environment.",
-Fade exposure to {value} over {seconds} s,
-The exposure to arrive at.,
-Set Glow Bloom,
-"How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_bloom`.",
-Bloom,
-"How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it.",
-Glow Bloom,
-Reads the world's glow bloom back: `Environment.glow_bloom`. Use it in any value field.,
-glow bloom,
-Fade Glow Bloom,
-"Walks the world's glow bloom to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.glow_bloom` on this scene's own copy of the environment.",
-Fade glow bloom to {value} over {seconds} s,
-The glow bloom to arrive at.,
-Set Glow Threshold,
-"How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_hdr_threshold`.",
-Set glow threshold to {value},
-Threshold,
-"How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well.",
-Glow Threshold,
-Reads the world's glow threshold back: `Environment.glow_hdr_threshold`. Use it in any value field.,
-glow threshold,
-Set Fog Floor,
-"The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height`.",
-Set fog floor to {value},
-Floor height,
-"The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it.",
-Fog Floor,
-Reads the world's fog floor back: `Environment.fog_height`. Use it in any value field.,
-fog floor,
-Set Fog Floor Thickness,
-"How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height_density`.",
-Set fog floor thickness to {value},
-Floor thickness,
-How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does.,
-Fog Floor Thickness,
-Reads the world's fog floor thickness back: `Environment.fog_height_density`. Use it in any value field.,
-fog floor thickness,
-Fade Fog Floor Thickness,
-"Walks the world's fog floor thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_height_density` on this scene's own copy of the environment.",
-Fade fog floor thickness to {value} over {seconds} s,
-The fog floor thickness to arrive at.,
-Set Aerial Perspective,
-"How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_aerial_perspective`.",
-Set aerial perspective to {value},
-Aerial perspective,
-"How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres.",
-Aerial Perspective,
-Reads the world's aerial perspective back: `Environment.fog_aerial_perspective`. Use it in any value field.,
-aerial perspective,
-Fade Aerial Perspective,
-"Walks the world's aerial perspective to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_aerial_perspective` on this scene's own copy of the environment.",
-Fade aerial perspective to {value} over {seconds} s,
-The aerial perspective to arrive at.,
-Set Fog Sun Glow,
-"How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_sun_scatter`.",
-Set fog sun glow to {value},
-Sun glow,
-"How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun.",
-Fog Sun Glow,
-Reads the world's fog sun glow back: `Environment.fog_sun_scatter`. Use it in any value field.,
-fog sun glow,
-Fade Fog Sun Glow,
-"Walks the world's fog sun glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_sun_scatter` on this scene's own copy of the environment.",
-Fade fog sun glow to {value} over {seconds} s,
-The fog sun glow to arrive at.,
-Set Volumetric Thickness,
-"How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_density`.",
-Set volumetric thickness to {value},
-"How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing.",
-Volumetric Thickness,
-Reads the world's volumetric thickness back: `Environment.volumetric_fog_density`. Use it in any value field.,
-volumetric thickness,
-Fade Volumetric Thickness,
-"Walks the world's volumetric thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_density` on this scene's own copy of the environment.",
-Fade volumetric thickness to {value} over {seconds} s,
-The volumetric thickness to arrive at.,
-Set Volumetric Colour,
-"The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_albedo`.",
-Set volumetric colour to {value},
-"The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing.",
-Volumetric Colour,
-Reads the world's volumetric colour back: `Environment.volumetric_fog_albedo`. Use it in any value field.,
-volumetric colour,
-Fade Volumetric Colour,
-"Walks the world's volumetric colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_albedo` on this scene's own copy of the environment.",
-Fade volumetric colour to {value} over {seconds} s,
-The volumetric colour to arrive at.,
-Set Volumetric Reach,
-"How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_length`.",
-Set volumetric reach to {value},
-"How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing.",
-Volumetric Reach,
-Reads the world's volumetric reach back: `Environment.volumetric_fog_length`. Use it in any value field.,
-volumetric reach,
-Fade Volumetric Reach,
-"Walks the world's volumetric reach to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_length` on this scene's own copy of the environment.",
-Fade volumetric reach to {value} over {seconds} s,
-The volumetric reach to arrive at.,
-Turn Volumetric Fog On,
-"The fog that fills the air rather than sitting flat over the picture - it lights up where a lamp shines through it and goes dark where something blocks it. Costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_enabled`.",
-Turn volumetric fog on,
-Turn Volumetric Fog Off,
-Turn volumetric fog off,
-Is Volumetric Fog On,
-True while Volumetric fog is on. Reads `Environment.volumetric_fog_enabled`.,
-Volumetric fog is on,
-Turn Reflections On,
-"Whether shiny surfaces reflect what is already on the screen - the wet floor that shows the room above it. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled`.",
-Turn reflections on,
-Turn Reflections Off,
-Turn reflections off,
-Are Reflections On,
-True while reflections are on. Reads `Environment.ssr_enabled`.,
-reflections are on,
-Turn Indirect Light On,
-"Whether a lit surface throws its own colour onto what is beside it - the red wall that makes the white floor beside it pink. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled`.",
-Turn indirect light on,
-Turn Indirect Light Off,
-Turn indirect light off,
-Is Indirect Light On,
-True while indirect light is on. Reads `Environment.ssil_enabled`.,
-indirect light is on,
-Turn Global Illumination On,
-"Whether light bounces around the whole scene by itself, so a room with one window is lit rather than black in the corners. The most expensive switch here. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled`.",
-Turn global illumination on,
-Turn Global Illumination Off,
-Turn global illumination off,
-Is Global Illumination On,
-True while global illumination is on. Reads `Environment.sdfgi_enabled`.,
-global illumination is on,
-Set Backdrop,
-"What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.background_mode`.",
-Set backdrop to {value},
-Backdrop,
-"What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it.",
-sky,
-keep what was there,
-The flat colour drawn behind everything. Only the colour backdrop reads it.,
-Reads the world's backdrop back: `Environment.background_mode`. Use it in any value field.,
-backdrop,
-Set Tone Map,
-"How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_mode`.",
-Set tone map to {value},
-Tone map,
-How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white.,
-linear,
-reinhard,
-filmic,
-ACES,
-AgX,
-White at,
-The brightness that comes out pure white. Read by every tone map except linear and AgX.,
-AgX contrast,
-How hard AgX pushes the darks and lights apart. Only AgX reads it.,
-Tone Map,
-Reads the world's tone map back: `Environment.tonemap_mode`. Use it in any value field.,
-tone map,
-Set Glow Blend,
-"How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_blend_mode`.",
-Set glow blend to {value},
-Glow blend,
-"How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well.",
-additive,
-screen,
-soft light,
-replace,
-Glow Blend,
-Reads the world's glow blend back: `Environment.glow_blend_mode`. Use it in any value field.,
-glow blend,
-Set Colour Grade,
-"A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_color_correction`.",
-Set colour grade to {value},
-Colour grade,
-"A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well.",
-Colour Grade,
-Reads the world's colour grade back: `Environment.adjustment_color_correction`. Use it in any value field.,
-colour grade,
-Set Glow Levels,
-"Lays down all seven of the glow's blur levels at once. Level 1 is the sharpest and finest, level 7 the widest and softest, so a shape leaning on the low numbers keeps the glow around what is glowing and one leaning on the high numbers washes it across the screen. Switches the glow on as well. Set Glow Level sets any single level by hand.",
-Set glow levels to {spread},
-Which of the three written-down shapes the seven levels take. Set Glow Level sets any one of them to any number instead.,
-tight - close to what is glowing,
-balanced - Godot's own shape,
-wide - over the whole screen,
-Set Glow Level,
-"Sets ONE of the glow's seven blur levels, for a project spelling its own shape rather than taking one of the three the row above offers. Level 1 is the sharpest and finest blur, level 7 the widest and softest. Switches the glow on as well.",
-Set glow level {level} to {amount},
-Level,
-"Which blur level to set, 1 to 7. 1 is the sharpest, 7 the widest.",
-Amount,
-How much this level contributes. 0 leaves it out entirely.,
-Turn Occlusion On At Quality,
-"Darkens the corners and creases of a 3D scene, which is what makes it look solid, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssao_enabled` and `RenderingServer.environment_set_ssao_quality`.",
-Turn occlusion on at {quality},
-Quality,
-How carefully this is worked out. Higher looks better and costs more frames.,
-very low,
-low,
-medium,
-high,
-ultra,
-Turn Occlusion Off,
-"Switches the darkened corners off again, and gives the frames back. Forward+ only - on Mobile and Compatibility the row does nothing. Writes `Environment.ssao_enabled`.",
-Turn occlusion off,
-Is Occlusion On,
-True while the corners and creases of the scene are being darkened. Reads `Environment.ssao_enabled`.,
-occlusion is on,
-Turn Indirect Light On At Quality,
-"Lets a lit surface throw its own colour onto what is beside it, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled` and `RenderingServer.environment_set_ssil_quality`.",
-Turn indirect light on at {quality},
-Turn Global Illumination On At Quality,
-"Lets light bounce around the whole scene by itself, and says how many rays are traced to work it out. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled` and `RenderingServer.environment_set_sdfgi_ray_count`.",
-Turn global illumination on at {quality},
-"4 rays - cheapest, noisiest",
-8 rays,
-16 rays,
-32 rays,
-64 rays,
-96 rays,
-"128 rays - cleanest, dearest",
-Turn Reflections On At Quality,
-"Lets shiny surfaces reflect what is already on the screen, and says how carefully a rough surface blurs its reflection. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled` and `RenderingServer.environment_set_ssr_roughness_quality`.",
-Turn reflections on at {quality},
-no roughness - sharpest and cheapest,
-Set Sky Top,
-"The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_top_color`.",
-Set sky top to {value},
-Sky top,
-"The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night.",
-Sky Top,
-"Reads the sky's sky top back: `ProceduralSkyMaterial.sky_top_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
-sky top,
-Fade Sky Top,
-"Walks the sky's sky top to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
-Fade sky top to {value} over {seconds} s,
-The sky top to arrive at.,
-Set Sky Horizon,
-"The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_horizon_color`.",
-Set sky horizon to {value},
-Horizon,
-The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark.,
-Sky Horizon,
-"Reads the sky's sky horizon back: `ProceduralSkyMaterial.sky_horizon_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
-sky horizon,
-Fade Sky Horizon,
-"Walks the sky's sky horizon to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
-Fade sky horizon to {value} over {seconds} s,
-The sky horizon to arrive at.,
-Set Sky Ground,
-"The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.ground_bottom_color`.",
-Set sky ground to {value},
-Ground,
-"The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene.",
-Sky Ground,
-"Reads the sky's sky ground back: `ProceduralSkyMaterial.ground_bottom_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
-sky ground,
-Fade Sky Ground,
-"Walks the sky's sky ground to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
-Fade sky ground to {value} over {seconds} s,
-The sky ground to arrive at.,
-Set Sun Size,
-"How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sun_angle_max`.",
-Set sun size to {value},
-Sun size,
-"How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all.",
-Sun Size,
-"Reads the sky's sun size back: `ProceduralSkyMaterial.sun_angle_max`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
-sun size,
-Fade Sun Size,
-"Walks the sky's sun size to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
-Fade sun size to {value} over {seconds} s,
-The sun size to arrive at.,
-Set Sky Energy,
-"How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.energy_multiplier`.",
-Set sky energy to {value},
-Sky energy,
-"How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting.",
-Sky Energy,
-"Reads the sky's sky energy back: `ProceduralSkyMaterial.energy_multiplier`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
-sky energy,
-Fade Sky Energy,
-"Walks the sky's sky energy to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
-Fade sky energy to {value} over {seconds} s,
-The sky energy to arrive at.,
-Use Procedural Sky,
-"Puts Godot's own drawn sky behind everything - a gradient from the top colour down through the horizon to the ground, with the sun of any DirectionalLight3D in the scene painted on it - and sets the backdrop to sky so it is actually drawn. This is the sky the five sky words move; a scene without it is what makes them quietly do nothing.",
-Use a procedural sky,
-Use Panorama Sky,
-"Wraps one picture around the whole world as the sky - a photographed or painted panorama, which is what a stylised or a photoreal scene wants instead of a drawn gradient. Sets the backdrop to sky so it is actually drawn. The five sky words do not reach a panorama: those are the drawn sky's own colours.",
-Use {image} as the sky,
-Picture,
-"The panorama image, as an equirectangular picture in the project.",
+"%s asks for %s, which only the Forward+ renderer draws - this row does nothing on %s. Either build for Forward+, or drop the row.","%s chiede %s, che solo il renderer Forward+ disegna - questa riga non fa nulla su %s. O compili per Forward+, o togli la riga."
+"%s sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky.","%s imposta i colori del cielo, e niente al suo interno rende il cielo lo sfondo - le righe non fanno nulla finché il mondo disegna un colore piatto. Usa ""Usa un cielo procedurale"" oppure imposta lo sfondo su cielo."
+Blend Light As,Fondi la luce come
+"How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants. Writes `Light2D.blend_mode`.","Come la luce si mescola con quello che è già disegnato sotto. Sommare è luce ed è quello che vogliono una torcia, un fuoco e una lampada; sottrarre toglie luce, ed è così che si fa un proiettore d'ombra o un campo di buio; miscelare sostituisce del tutto quello che sta sotto, ed è quello che vuole un lavaggio da vetrata colorata. Scrive `Light2D.blend_mode`."
+Blend light as {value},Fondi la luce come {value}
+"How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants.","Come la luce si mescola con quello che è già disegnato sotto. Sommare è luce ed è quello che vogliono una torcia, un fuoco e una lampada; sottrarre toglie luce, ed è così che si fa un proiettore d'ombra o un campo di buio; miscelare sostituisce del tutto quello che sta sotto, ed è quello che vuole un lavaggio da vetrata colorata."
+Reads the light's light blend back: `Light2D.blend_mode`. Use it in any value field.,Rilegge la fusione della luce della luce: `Light2D.blend_mode`. Usalo in qualsiasi campo valore.
+light blend,fusione della luce
+Set Saturation,Imposta la saturazione
+"How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_saturation`.","Quanto è colorata tutta l'immagine: 1 non tocca nulla, 0 è grigio, sopra 1 è più squillante. L'unica riga che rende grigio un flashback e sgargiante un potenziamento. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.adjustment_saturation`."
+Set saturation to {value},Imposta la saturazione a {value}
+Saturation,Saturazione
+"How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish.","Quanto è colorata tutta l'immagine: 1 non tocca nulla, 0 è grigio, sopra 1 è più squillante. L'unica riga che rende grigio un flashback e sgargiante un potenziamento."
+Reads the world's saturation back: `Environment.adjustment_saturation`. Use it in any value field.,Rilegge la saturazione del mondo: `Environment.adjustment_saturation`. Usalo in qualsiasi campo valore.
+saturation,saturazione
+Fade Saturation,Dissolvi la saturazione
+"Walks the world's saturation to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_saturation` on this scene's own copy of the environment.","Porta la saturazione del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.adjustment_saturation` sulla copia propria dell'ambiente di questa scena."
+Fade saturation to {value} over {seconds} s,Dissolvi la saturazione a {value} in {seconds} s
+The saturation to arrive at.,La saturazione a cui arrivare.
+Set Contrast,Imposta il contrasto
+"How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_contrast`.","Quanto vengono allontanati gli scuri e i chiari: 1 non tocca nulla, sotto 1 è piatto e velato, sopra 1 è duro. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.adjustment_contrast`."
+Set contrast to {value},Imposta il contrasto a {value}
+Contrast,Contrasto
+"How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard.","Quanto vengono allontanati gli scuri e i chiari: 1 non tocca nulla, sotto 1 è piatto e velato, sopra 1 è duro."
+Reads the world's contrast back: `Environment.adjustment_contrast`. Use it in any value field.,Rilegge il contrasto del mondo: `Environment.adjustment_contrast`. Usalo in qualsiasi campo valore.
+contrast,contrasto
+Fade Contrast,Dissolvi il contrasto
+"Walks the world's contrast to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_contrast` on this scene's own copy of the environment.","Porta il contrasto del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.adjustment_contrast` sulla copia propria dell'ambiente di questa scena."
+Fade contrast to {value} over {seconds} s,Dissolvi il contrasto a {value} in {seconds} s
+The contrast to arrive at.,Il contrasto a cui arrivare.
+Set Picture Brightness,Imposta la luminosità dell'immagine
+"How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_brightness`.","Quanto è luminosa l'immagine finita, dopo che ogni luce della scena ha detto la sua: 1 non tocca nulla. Diverso dalla luminosità di una luce, che cambia quello che fa una singola lampada. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.adjustment_brightness`."
+Set picture brightness to {value},Imposta la luminosità dell'immagine a {value}
+Picture brightness,Luminosità dell'immagine
+"How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does.","Quanto è luminosa l'immagine finita, dopo che ogni luce della scena ha detto la sua: 1 non tocca nulla. Diverso dalla luminosità di una luce, che cambia quello che fa una singola lampada."
+Picture Brightness,Luminosità dell'immagine
+Reads the world's picture brightness back: `Environment.adjustment_brightness`. Use it in any value field.,Rilegge la luminosità dell'immagine del mondo: `Environment.adjustment_brightness`. Usalo in qualsiasi campo valore.
+picture brightness,luminosità dell'immagine
+Fade Picture Brightness,Dissolvi la luminosità dell'immagine
+"Walks the world's picture brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_brightness` on this scene's own copy of the environment.","Porta la luminosità dell'immagine del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.adjustment_brightness` sulla copia propria dell'ambiente di questa scena."
+Fade picture brightness to {value} over {seconds} s,Dissolvi la luminosità dell'immagine a {value} in {seconds} s
+The picture brightness to arrive at.,La luminosità dell'immagine a cui arrivare.
+Set Exposure,Imposta l'esposizione
+"How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_exposure`.","Quanta luce lascia entrare la camera prima di formare l'immagine: 1 non tocca nulla, più alto brucia le alte luci, più basso affonda tutto nel buio. Quello che servono sia una granata accecante sia una lenta uscita da una grotta. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.tonemap_exposure`."
+Set exposure to {value},Imposta l'esposizione a {value}
+Exposure,Esposizione
+"How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need.","Quanta luce lascia entrare la camera prima di formare l'immagine: 1 non tocca nulla, più alto brucia le alte luci, più basso affonda tutto nel buio. Quello che servono sia una granata accecante sia una lenta uscita da una grotta."
+Reads the world's exposure back: `Environment.tonemap_exposure`. Use it in any value field.,Rilegge l'esposizione del mondo: `Environment.tonemap_exposure`. Usalo in qualsiasi campo valore.
+exposure,esposizione
+Fade Exposure,Dissolvi l'esposizione
+"Walks the world's exposure to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.tonemap_exposure` on this scene's own copy of the environment.","Porta l'esposizione del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.tonemap_exposure` sulla copia propria dell'ambiente di questa scena."
+Fade exposure to {value} over {seconds} s,Dissolvi l'esposizione a {value} in {seconds} s
+The exposure to arrive at.,L'esposizione a cui arrivare.
+Set Glow Bloom,Imposta il bloom del bagliore
+"How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_bloom`.","Quanta parte dell'immagine sborda nel bagliore, non solo le zone chiare: 0 è solo ciò che supera la soglia, 1 è tutto. Accende anche il bagliore, perché senza non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.glow_bloom`."
+Bloom,Bloom
+"How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it.","Quanta parte dell'immagine sborda nel bagliore, non solo le zone chiare: 0 è solo ciò che supera la soglia, 1 è tutto. Accende anche il bagliore, perché senza non fa nulla."
+Glow Bloom,Bloom del bagliore
+Reads the world's glow bloom back: `Environment.glow_bloom`. Use it in any value field.,Rilegge il bloom del bagliore del mondo: `Environment.glow_bloom`. Usalo in qualsiasi campo valore.
+glow bloom,bloom del bagliore
+Fade Glow Bloom,Dissolvi il bloom del bagliore
+"Walks the world's glow bloom to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.glow_bloom` on this scene's own copy of the environment.","Porta il bloom del bagliore del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.glow_bloom` sulla copia propria dell'ambiente di questa scena."
+Fade glow bloom to {value} over {seconds} s,Dissolvi il bloom del bagliore a {value} in {seconds} s
+The glow bloom to arrive at.,Il bloom del bagliore a cui arrivare.
+Set Glow Threshold,Imposta la soglia del bagliore
+"How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_hdr_threshold`.","Quanto deve essere chiara una cosa perché brilli affatto: 1 è la linea di sempre, più basso fa sbordare più scena, più alto tiene il bagliore solo per il neon e il fuoco. Accende anche il bagliore. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.glow_hdr_threshold`."
+Set glow threshold to {value},Imposta la soglia del bagliore a {value}
+Threshold,Soglia
+"How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well.","Quanto deve essere chiara una cosa perché brilli affatto: 1 è la linea di sempre, più basso fa sbordare più scena, più alto tiene il bagliore solo per il neon e il fuoco. Accende anche il bagliore."
+Glow Threshold,Soglia del bagliore
+Reads the world's glow threshold back: `Environment.glow_hdr_threshold`. Use it in any value field.,Rilegge la soglia del bagliore del mondo: `Environment.glow_hdr_threshold`. Usalo in qualsiasi campo valore.
+glow threshold,soglia del bagliore
+Set Fog Floor,Imposta il fondo della nebbia
+"The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height`.","A che altezza si posa la nebbia, in metri, così che si raccolga in una valle e si assottigli su una collina. Accende anche la nebbia, perché senza non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.fog_height`."
+Set fog floor to {value},Imposta il fondo della nebbia a {value}
+Floor height,Altezza del fondo
+"The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it.","A che altezza si posa la nebbia, in metri, così che si raccolga in una valle e si assottigli su una collina. Accende anche la nebbia, perché senza non fa nulla."
+Fog Floor,Fondo della nebbia
+Reads the world's fog floor back: `Environment.fog_height`. Use it in any value field.,Rilegge il fondo della nebbia del mondo: `Environment.fog_height`. Usalo in qualsiasi campo valore.
+fog floor,fondo della nebbia
+Set Fog Floor Thickness,Imposta lo spessore del fondo della nebbia
+"How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height_density`.","Quanto in fretta la nebbia si assottiglia sopra il suo fondo. 0 la lascia uguale fino in cima; un numero piccolo la tiene distesa a terra, come fa la foschia del mattino. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.fog_height_density`."
+Set fog floor thickness to {value},Imposta lo spessore del fondo della nebbia a {value}
+Floor thickness,Spessore del fondo
+How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does.,"Quanto in fretta la nebbia si assottiglia sopra il suo fondo. 0 la lascia uguale fino in cima; un numero piccolo la tiene distesa a terra, come fa la foschia del mattino."
+Fog Floor Thickness,Spessore del fondo della nebbia
+Reads the world's fog floor thickness back: `Environment.fog_height_density`. Use it in any value field.,Rilegge lo spessore del fondo della nebbia del mondo: `Environment.fog_height_density`. Usalo in qualsiasi campo valore.
+fog floor thickness,spessore del fondo della nebbia
+Fade Fog Floor Thickness,Dissolvi lo spessore del fondo della nebbia
+"Walks the world's fog floor thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_height_density` on this scene's own copy of the environment.","Porta lo spessore del fondo della nebbia del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.fog_height_density` sulla copia propria dell'ambiente di questa scena."
+Fade fog floor thickness to {value} over {seconds} s,Dissolvi lo spessore del fondo della nebbia a {value} in {seconds} s
+The fog floor thickness to arrive at.,Lo spessore del fondo della nebbia a cui arrivare.
+Set Aerial Perspective,Imposta la prospettiva aerea
+"How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_aerial_perspective`.","Quanto del colore proprio del cielo raccoglie la lontananza, come frazione: 0 niente, 1 le colline lontane dello stesso colore del cielo dietro di loro. Quello che fa leggere un panorama in chilometri invece che in metri. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.fog_aerial_perspective`."
+Set aerial perspective to {value},Imposta la prospettiva aerea a {value}
+Aerial perspective,Prospettiva aerea
+"How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres.","Quanto del colore proprio del cielo raccoglie la lontananza, come frazione: 0 niente, 1 le colline lontane dello stesso colore del cielo dietro di loro. Quello che fa leggere un panorama in chilometri invece che in metri."
+Aerial Perspective,Prospettiva aerea
+Reads the world's aerial perspective back: `Environment.fog_aerial_perspective`. Use it in any value field.,Rilegge la prospettiva aerea del mondo: `Environment.fog_aerial_perspective`. Usalo in qualsiasi campo valore.
+aerial perspective,prospettiva aerea
+Fade Aerial Perspective,Dissolvi la prospettiva aerea
+"Walks the world's aerial perspective to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_aerial_perspective` on this scene's own copy of the environment.","Porta la prospettiva aerea del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.fog_aerial_perspective` sulla copia propria dell'ambiente di questa scena."
+Fade aerial perspective to {value} over {seconds} s,Dissolvi la prospettiva aerea a {value} in {seconds} s
+The aerial perspective to arrive at.,La prospettiva aerea a cui arrivare.
+Set Fog Sun Glow,Imposta il bagliore del sole nella nebbia
+"How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_sun_scatter`.","Quanto si illumina la nebbia intorno al sole, come frazione: 0 è nebbia piatta, 1 è il bagliore da cui distogli lo sguardo quando guardi un sole basso. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.fog_sun_scatter`."
+Set fog sun glow to {value},Imposta il bagliore del sole nella nebbia a {value}
+Sun glow,Bagliore del sole
+"How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun.","Quanto si illumina la nebbia intorno al sole, come frazione: 0 è nebbia piatta, 1 è il bagliore da cui distogli lo sguardo quando guardi un sole basso."
+Fog Sun Glow,Bagliore del sole nella nebbia
+Reads the world's fog sun glow back: `Environment.fog_sun_scatter`. Use it in any value field.,Rilegge il bagliore del sole nella nebbia del mondo: `Environment.fog_sun_scatter`. Usalo in qualsiasi campo valore.
+fog sun glow,bagliore del sole nella nebbia
+Fade Fog Sun Glow,Dissolvi il bagliore del sole nella nebbia
+"Walks the world's fog sun glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_sun_scatter` on this scene's own copy of the environment.","Porta il bagliore del sole nella nebbia del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.fog_sun_scatter` sulla copia propria dell'ambiente di questa scena."
+Fade fog sun glow to {value} over {seconds} s,Dissolvi il bagliore del sole nella nebbia a {value} in {seconds} s
+The fog sun glow to arrive at.,Il bagliore del sole nella nebbia a cui arrivare.
+Set Volumetric Thickness,Imposta la densità volumetrica
+"How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_density`.","Quanto è densa l'aria stessa, per la nebbia che si illumina e proietta ombre, non quella piatta. Numeri piccoli: 0.05 è una stanza con polvere nella luce, 0.5 è una palude. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.volumetric_fog_density`."
+Set volumetric thickness to {value},Imposta la densità volumetrica a {value}
+"How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing.","Quanto è densa l'aria stessa, per la nebbia che si illumina e proietta ombre, non quella piatta. Numeri piccoli: 0.05 è una stanza con polvere nella luce, 0.5 è una palude. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla."
+Volumetric Thickness,Densità volumetrica
+Reads the world's volumetric thickness back: `Environment.volumetric_fog_density`. Use it in any value field.,Rilegge la densità volumetrica del mondo: `Environment.volumetric_fog_density`. Usalo in qualsiasi campo valore.
+volumetric thickness,densità volumetrica
+Fade Volumetric Thickness,Dissolvi la densità volumetrica
+"Walks the world's volumetric thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_density` on this scene's own copy of the environment.","Porta la densità volumetrica del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.volumetric_fog_density` sulla copia propria dell'ambiente di questa scena."
+Fade volumetric thickness to {value} over {seconds} s,Dissolvi la densità volumetrica a {value} in {seconds} s
+The volumetric thickness to arrive at.,La densità volumetrica a cui arrivare.
+Set Volumetric Colour,Imposta il colore volumetrico
+"The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_albedo`.","Il colore dell'aria densa, prima che ci cada dentro qualsiasi luce - verde per una palude, marrone per una tempesta di polvere, bianco per il vapore. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.volumetric_fog_albedo`."
+Set volumetric colour to {value},Imposta il colore volumetrico a {value}
+"The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing.","Il colore dell'aria densa, prima che ci cada dentro qualsiasi luce - verde per una palude, marrone per una tempesta di polvere, bianco per il vapore. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla."
+Volumetric Colour,Colore volumetrico
+Reads the world's volumetric colour back: `Environment.volumetric_fog_albedo`. Use it in any value field.,Rilegge il colore volumetrico del mondo: `Environment.volumetric_fog_albedo`. Usalo in qualsiasi campo valore.
+volumetric colour,colore volumetrico
+Fade Volumetric Colour,Dissolvi il colore volumetrico
+"Walks the world's volumetric colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_albedo` on this scene's own copy of the environment.","Porta il colore volumetrico del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.volumetric_fog_albedo` sulla copia propria dell'ambiente di questa scena."
+Fade volumetric colour to {value} over {seconds} s,Dissolvi il colore volumetrico a {value} in {seconds} s
+The volumetric colour to arrive at.,Il colore volumetrico a cui arrivare.
+Set Volumetric Reach,Imposta la portata volumetrica
+"How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_length`.","Fino a che distanza dalla camera viene calcolata l'aria densa, in metri. Più corto costa meno e finisce in un bordo visibile; più lungo costa fotogrammi. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.volumetric_fog_length`."
+Set volumetric reach to {value},Imposta la portata volumetrica a {value}
+"How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing.","Fino a che distanza dalla camera viene calcolata l'aria densa, in metri. Più corto costa meno e finisce in un bordo visibile; più lungo costa fotogrammi. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla."
+Volumetric Reach,Portata volumetrica
+Reads the world's volumetric reach back: `Environment.volumetric_fog_length`. Use it in any value field.,Rilegge la portata volumetrica del mondo: `Environment.volumetric_fog_length`. Usalo in qualsiasi campo valore.
+volumetric reach,portata volumetrica
+Fade Volumetric Reach,Dissolvi la portata volumetrica
+"Walks the world's volumetric reach to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_length` on this scene's own copy of the environment.","Porta la portata volumetrica del mondo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere. Scrive `Environment.volumetric_fog_length` sulla copia propria dell'ambiente di questa scena."
+Fade volumetric reach to {value} over {seconds} s,Dissolvi la portata volumetrica a {value} in {seconds} s
+The volumetric reach to arrive at.,La portata volumetrica a cui arrivare.
+Turn Volumetric Fog On,Accendi la nebbia volumetrica
+"The fog that fills the air rather than sitting flat over the picture - it lights up where a lamp shines through it and goes dark where something blocks it. Costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_enabled`.","La nebbia che riempie l'aria invece di posarsi piatta sull'immagine - si illumina dove una lampada la attraversa e si scurisce dove qualcosa la blocca. Costa fotogrammi. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.volumetric_fog_enabled`."
+Turn volumetric fog on,Accendi la nebbia volumetrica
+Turn Volumetric Fog Off,Spegni la nebbia volumetrica
+Turn volumetric fog off,Spegni la nebbia volumetrica
+Is Volumetric Fog On,La nebbia volumetrica è accesa
+True while Volumetric fog is on. Reads `Environment.volumetric_fog_enabled`.,Vero finché la nebbia volumetrica è accesa. Legge `Environment.volumetric_fog_enabled`.
+Volumetric fog is on,la nebbia volumetrica è accesa
+Turn Reflections On,Accendi i riflessi
+"Whether shiny surfaces reflect what is already on the screen - the wet floor that shows the room above it. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled`.","Se le superfici lucide riflettono quello che è già sullo schermo - il pavimento bagnato in cui si vede la stanza sopra. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.ssr_enabled`."
+Turn reflections on,Accendi i riflessi
+Turn Reflections Off,Spegni i riflessi
+Turn reflections off,Spegni i riflessi
+Are Reflections On,I riflessi sono accesi
+True while reflections are on. Reads `Environment.ssr_enabled`.,Vero finché i riflessi sono accesi. Legge `Environment.ssr_enabled`.
+reflections are on,i riflessi sono accesi
+Turn Indirect Light On,Accendi la luce indiretta
+"Whether a lit surface throws its own colour onto what is beside it - the red wall that makes the white floor beside it pink. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled`.","Se una superficie illuminata getta il proprio colore su quello che le sta accanto - la parete rossa che fa diventare rosa il pavimento bianco lì vicino. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.ssil_enabled`."
+Turn indirect light on,Accendi la luce indiretta
+Turn Indirect Light Off,Spegni la luce indiretta
+Turn indirect light off,Spegni la luce indiretta
+Is Indirect Light On,La luce indiretta è accesa
+True while indirect light is on. Reads `Environment.ssil_enabled`.,Vero finché la luce indiretta è accesa. Legge `Environment.ssil_enabled`.
+indirect light is on,la luce indiretta è accesa
+Turn Global Illumination On,Accendi l'illuminazione globale
+"Whether light bounces around the whole scene by itself, so a room with one window is lit rather than black in the corners. The most expensive switch here. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled`.","Se la luce rimbalza da sola per tutta la scena, così che una stanza con una sola finestra risulti illuminata invece che nera negli angoli. L'interruttore più caro che c'è qui. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.sdfgi_enabled`."
+Turn global illumination on,Accendi l'illuminazione globale
+Turn Global Illumination Off,Spegni l'illuminazione globale
+Turn global illumination off,Spegni l'illuminazione globale
+Is Global Illumination On,L'illuminazione globale è accesa
+True while global illumination is on. Reads `Environment.sdfgi_enabled`.,Vero finché l'illuminazione globale è accesa. Legge `Environment.sdfgi_enabled`.
+global illumination is on,l'illuminazione globale è accesa
+Set Backdrop,Imposta lo sfondo
+"What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.background_mode`.","Quello che viene disegnato dietro a tutto il resto. Un cielo è ciò che vuole una scena all'aperto; un colore piatto è ciò che vogliono un menu e un livello stilizzato; trasparente disegna il colore di pulizia del progetto, quello che lascia a una finestra traslucida mostrare il desktop dietro. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.background_mode`."
+Set backdrop to {value},Imposta lo sfondo a {value}
+Backdrop,Sfondo
+"What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it.","Quello che viene disegnato dietro a tutto il resto. Un cielo è ciò che vuole una scena all'aperto; un colore piatto è ciò che vogliono un menu e un livello stilizzato; trasparente disegna il colore di pulizia del progetto, quello che lascia a una finestra traslucida mostrare il desktop dietro."
+sky,cielo
+keep what was there,tieni quello che c'era
+The flat colour drawn behind everything. Only the colour backdrop reads it.,Il colore piatto disegnato dietro a tutto. Lo legge solo lo sfondo a colore.
+Reads the world's backdrop back: `Environment.background_mode`. Use it in any value field.,Rilegge lo sfondo del mondo: `Environment.background_mode`. Usalo in qualsiasi campo valore.
+backdrop,sfondo
+Set Tone Map,Imposta il tone mapping
+"How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_mode`.","Come la luminosità che la scena ha davvero viene compressa nell'intervallo che uno schermo può mostrare. Lineare non comprime nulla e brucia; filmic e ACES ammorbidiscono le alte luci come fa una camera; AgX tiene il colore in una luce molto forte invece di lasciarla diventare bianca. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.tonemap_mode`."
+Set tone map to {value},Imposta il tone mapping a {value}
+Tone map,Tone mapping
+How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white.,Come la luminosità che la scena ha davvero viene compressa nell'intervallo che uno schermo può mostrare. Lineare non comprime nulla e brucia; filmic e ACES ammorbidiscono le alte luci come fa una camera; AgX tiene il colore in una luce molto forte invece di lasciarla diventare bianca.
+linear,lineare
+reinhard,Reinhard
+filmic,filmico
+ACES,ACES
+AgX,AgX
+White at,Bianco a
+The brightness that comes out pure white. Read by every tone map except linear and AgX.,La luminosità che esce bianco puro. La leggono tutti i tone mapping tranne lineare e AgX.
+AgX contrast,Contrasto AgX
+How hard AgX pushes the darks and lights apart. Only AgX reads it.,Con quanta forza AgX allontana gli scuri e i chiari. Lo legge solo AgX.
+Tone Map,Tone mapping
+Reads the world's tone map back: `Environment.tonemap_mode`. Use it in any value field.,Rilegge il tone mapping del mondo: `Environment.tonemap_mode`. Usalo in qualsiasi campo valore.
+tone map,tone mapping
+Set Glow Blend,Imposta la fusione del bagliore
+"How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_blend_mode`.","Come il bagliore viene rimescolato sopra l'immagine. Additivo è il più luminoso e brucia prima; scherma tiene a bada le parti chiare; luce soffusa è il più delicato; sostituisci mostra solo il bagliore, che è quello che vuole una sequenza onirica. Accende anche il bagliore. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.glow_blend_mode`."
+Set glow blend to {value},Imposta la fusione del bagliore a {value}
+Glow blend,Fusione del bagliore
+"How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well.","Come il bagliore viene rimescolato sopra l'immagine. Additivo è il più luminoso e brucia prima; scherma tiene a bada le parti chiare; luce soffusa è il più delicato; sostituisci mostra solo il bagliore, che è quello che vuole una sequenza onirica. Accende anche il bagliore."
+additive,additivo
+screen,scherma
+soft light,luce soffusa
+replace,sostituisci
+Glow Blend,Fusione del bagliore
+Reads the world's glow blend back: `Environment.glow_blend_mode`. Use it in any value field.,Rilegge la fusione del bagliore del mondo: `Environment.glow_blend_mode`. Usalo in qualsiasi campo valore.
+glow blend,fusione del bagliore
+Set Colour Grade,Imposta la correzione colore
+"A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_color_correction`.","Un'immagine che dice in cosa si trasforma ogni colore della scena - il file che fa leggere un livello come un ricordo, una foschia velenosa o un visore notturno. Svuotalo con null per tornare ai colori come sono. Accende anche le regolazioni dell'immagine. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.adjustment_color_correction`."
+Set colour grade to {value},Imposta la correzione colore a {value}
+Colour grade,Correzione colore
+"A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well.","Un'immagine che dice in cosa si trasforma ogni colore della scena - il file che fa leggere un livello come un ricordo, una foschia velenosa o un visore notturno. Svuotalo con null per tornare ai colori come sono. Accende anche le regolazioni dell'immagine."
+Colour Grade,Correzione colore
+Reads the world's colour grade back: `Environment.adjustment_color_correction`. Use it in any value field.,Rilegge la correzione colore del mondo: `Environment.adjustment_color_correction`. Usalo in qualsiasi campo valore.
+colour grade,correzione colore
+Set Glow Levels,Imposta i livelli del bagliore
+"Lays down all seven of the glow's blur levels at once. Level 1 is the sharpest and finest, level 7 the widest and softest, so a shape leaning on the low numbers keeps the glow around what is glowing and one leaning on the high numbers washes it across the screen. Switches the glow on as well. Set Glow Level sets any single level by hand.","Mette giù in una volta tutti e sette i livelli di sfocatura del bagliore. Il livello 1 è il più nitido e fine, il 7 il più largo e morbido, quindi una forma appoggiata sui numeri bassi tiene il bagliore intorno a ciò che brilla e una appoggiata sugli alti lo spande su tutto lo schermo. Accende anche il bagliore. ""Imposta il livello del bagliore"" mette a mano un singolo livello."
+Set glow levels to {spread},Imposta i livelli del bagliore a {spread}
+Which of the three written-down shapes the seven levels take. Set Glow Level sets any one of them to any number instead.,"Quale delle tre forme scritte prendono i sette livelli. ""Imposta il livello del bagliore"" mette invece uno qualsiasi di essi a qualsiasi numero."
+tight - close to what is glowing,stretto - vicino a ciò che brilla
+balanced - Godot's own shape,equilibrato - la forma propria di Godot
+wide - over the whole screen,largo - su tutto lo schermo
+Set Glow Level,Imposta il livello del bagliore
+"Sets ONE of the glow's seven blur levels, for a project spelling its own shape rather than taking one of the three the row above offers. Level 1 is the sharpest and finest blur, level 7 the widest and softest. Switches the glow on as well.","Imposta UNO dei sette livelli di sfocatura del bagliore, per un progetto che compita la propria forma invece di prendere una delle tre che offre la riga sopra. Il livello 1 è la sfocatura più nitida e fine, il 7 la più larga e morbida. Accende anche il bagliore."
+Set glow level {level} to {amount},Imposta il livello {level} del bagliore a {amount}
+Level,Livello
+"Which blur level to set, 1 to 7. 1 is the sharpest, 7 the widest.","Quale livello di sfocatura viene impostato, da 1 a 7. 1 è il più nitido, 7 il più largo."
+Amount,Quantità
+How much this level contributes. 0 leaves it out entirely.,Quanto contribuisce questo livello. 0 lo lascia fuori del tutto.
+Turn Occlusion On At Quality,Accendi l'occlusione con qualità
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssao_enabled` and `RenderingServer.environment_set_ssao_quality`.","Scurisce gli angoli e le pieghe di una scena 3D, che è quello che la fa sembrare solida, e dice allo stesso tempo con quanta cura. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.ssao_enabled` e `RenderingServer.environment_set_ssao_quality`."
+Turn occlusion on at {quality},Accendi l'occlusione a {quality}
+Quality,Qualità
+How carefully this is worked out. Higher looks better and costs more frames.,Con quanta cura viene calcolato. Più alto è più bello e costa più fotogrammi.
+very low,molto bassa
+low,bassa
+medium,media
+high,alta
+ultra,ultra
+Turn Occlusion Off,Spegni l'occlusione
+"Switches the darkened corners off again, and gives the frames back. Forward+ only - on Mobile and Compatibility the row does nothing. Writes `Environment.ssao_enabled`.",Spegne di nuovo gli angoli scuriti e restituisce i fotogrammi. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Scrive `Environment.ssao_enabled`.
+Turn occlusion off,Spegni l'occlusione
+Is Occlusion On,L'occlusione è accesa
+True while the corners and creases of the scene are being darkened. Reads `Environment.ssao_enabled`.,Vero finché gli angoli e le pieghe della scena vengono scuriti. Legge `Environment.ssao_enabled`.
+occlusion is on,l'occlusione è accesa
+Turn Indirect Light On At Quality,Accendi la luce indiretta con qualità
+"Lets a lit surface throw its own colour onto what is beside it, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled` and `RenderingServer.environment_set_ssil_quality`.","Lascia che una superficie illuminata getti il proprio colore su quello che le sta accanto, e dice allo stesso tempo con quanta cura. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.ssil_enabled` e `RenderingServer.environment_set_ssil_quality`."
+Turn indirect light on at {quality},Accendi la luce indiretta a {quality}
+Turn Global Illumination On At Quality,Accendi l'illuminazione globale con qualità
+"Lets light bounce around the whole scene by itself, and says how many rays are traced to work it out. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled` and `RenderingServer.environment_set_sdfgi_ray_count`.","Lascia che la luce rimbalzi da sola per tutta la scena, e dice quanti raggi vengono tracciati per calcolarlo. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.sdfgi_enabled` e `RenderingServer.environment_set_sdfgi_ray_count`."
+Turn global illumination on at {quality},Accendi l'illuminazione globale a {quality}
+"4 rays - cheapest, noisiest","4 raggi - il più economico, il più rumoroso"
+8 rays,8 raggi
+16 rays,16 raggi
+32 rays,32 raggi
+64 rays,64 raggi
+96 rays,96 raggi
+"128 rays - cleanest, dearest","128 raggi - il più pulito, il più caro"
+Turn Reflections On At Quality,Accendi i riflessi con qualità
+"Lets shiny surfaces reflect what is already on the screen, and says how carefully a rough surface blurs its reflection. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled` and `RenderingServer.environment_set_ssr_roughness_quality`.","Lascia che le superfici lucide riflettano quello che è già sullo schermo, e dice con quanta cura una superficie ruvida sfoca il proprio riflesso. Solo Forward+ - su Mobile e Compatibility la riga non fa nulla. Dà prima a questa scena la sua copia dell'ambiente, così un file di ambiente condiviso con altre scene non cambia mai sotto di loro. Scrive `Environment.ssr_enabled` e `RenderingServer.environment_set_ssr_roughness_quality`."
+Turn reflections on at {quality},Accendi i riflessi a {quality}
+no roughness - sharpest and cheapest,senza ruvidità - il più nitido ed economico
+Set Sky Top,Imposta il cielo in alto
+"The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_top_color`.","Il colore del cielo proprio sopra la testa. Blu profondo a mezzogiorno, indaco al crepuscolo, nero con un accenno di blu di notte. Dà prima a questa scena la sua copia del materiale di cielo, così un file di cielo condiviso con altre scene non cambia mai sotto di loro. Una scena il cui sfondo non è un cielo procedurale viene lasciata del tutto in pace - la riga non fa nulla invece di dare errore, e il Doctor lo dice. Scrive `ProceduralSkyMaterial.sky_top_color`."
+Set sky top to {value},Imposta il cielo in alto a {value}
+Sky top,Cielo in alto
+"The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night.","Il colore del cielo proprio sopra la testa. Blu profondo a mezzogiorno, indaco al crepuscolo, nero con un accenno di blu di notte."
+Sky Top,Cielo in alto
+"Reads the sky's sky top back: `ProceduralSkyMaterial.sky_top_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.","Rilegge il cielo in alto: `ProceduralSkyMaterial.sky_top_color`. Una scena senza cielo, o con un panorama o uno shader di cielo, risponde con il valore da cui parte un cielo nuovo. Usalo in qualsiasi campo valore."
+sky top,cielo in alto
+Fade Sky Top,Dissolvi il cielo in alto
+"Walks the sky's sky top to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.","Porta il cielo in alto a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere, e un intero tramonto. Dà prima a questa scena la sua copia del materiale di cielo. Non fa nulla in una scena il cui sfondo non è un cielo procedurale."
+Fade sky top to {value} over {seconds} s,Dissolvi il cielo in alto a {value} in {seconds} s
+The sky top to arrive at.,Il cielo in alto a cui arrivare.
+Set Sky Horizon,Imposta l'orizzonte del cielo
+"The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_horizon_color`.","Il colore verso cui sfuma il cielo dove incontra il terreno. Un intero tramonto è questo solo colore che vira all'arancio mentre in alto si fa buio. Dà prima a questa scena la sua copia del materiale di cielo, così un file di cielo condiviso con altre scene non cambia mai sotto di loro. Una scena il cui sfondo non è un cielo procedurale viene lasciata del tutto in pace - la riga non fa nulla invece di dare errore, e il Doctor lo dice. Scrive `ProceduralSkyMaterial.sky_horizon_color`."
+Set sky horizon to {value},Imposta l'orizzonte del cielo a {value}
+Horizon,Orizzonte
+The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark.,Il colore verso cui sfuma il cielo dove incontra il terreno. Un intero tramonto è questo solo colore che vira all'arancio mentre in alto si fa buio.
+Sky Horizon,Orizzonte del cielo
+"Reads the sky's sky horizon back: `ProceduralSkyMaterial.sky_horizon_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.","Rilegge l'orizzonte del cielo: `ProceduralSkyMaterial.sky_horizon_color`. Una scena senza cielo, o con un panorama o uno shader di cielo, risponde con il valore da cui parte un cielo nuovo. Usalo in qualsiasi campo valore."
+sky horizon,orizzonte del cielo
+Fade Sky Horizon,Dissolvi l'orizzonte del cielo
+"Walks the sky's sky horizon to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.","Porta l'orizzonte del cielo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere, e un intero tramonto. Dà prima a questa scena la sua copia del materiale di cielo. Non fa nulla in una scena il cui sfondo non è un cielo procedurale."
+Fade sky horizon to {value} over {seconds} s,Dissolvi l'orizzonte del cielo a {value} in {seconds} s
+The sky horizon to arrive at.,L'orizzonte del cielo a cui arrivare.
+Set Sky Ground,Imposta il terreno del cielo
+"The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.ground_bottom_color`.","Il colore disegnato sotto l'orizzonte, sotto tutto quello che il livello stesso ci mette. Marrone per la terra, verde grigio per una brughiera, quasi nero per una scena notturna. Dà prima a questa scena la sua copia del materiale di cielo, così un file di cielo condiviso con altre scene non cambia mai sotto di loro. Una scena il cui sfondo non è un cielo procedurale viene lasciata del tutto in pace - la riga non fa nulla invece di dare errore, e il Doctor lo dice. Scrive `ProceduralSkyMaterial.ground_bottom_color`."
+Set sky ground to {value},Imposta il terreno del cielo a {value}
+Ground,Terreno
+"The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene.","Il colore disegnato sotto l'orizzonte, sotto tutto quello che il livello stesso ci mette. Marrone per la terra, verde grigio per una brughiera, quasi nero per una scena notturna."
+Sky Ground,Terreno del cielo
+"Reads the sky's sky ground back: `ProceduralSkyMaterial.ground_bottom_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.","Rilegge il terreno del cielo: `ProceduralSkyMaterial.ground_bottom_color`. Una scena senza cielo, o con un panorama o uno shader di cielo, risponde con il valore da cui parte un cielo nuovo. Usalo in qualsiasi campo valore."
+sky ground,terreno del cielo
+Fade Sky Ground,Dissolvi il terreno del cielo
+"Walks the sky's sky ground to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.","Porta il terreno del cielo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere, e un intero tramonto. Dà prima a questa scena la sua copia del materiale di cielo. Non fa nulla in una scena il cui sfondo non è un cielo procedurale."
+Fade sky ground to {value} over {seconds} s,Dissolvi il terreno del cielo a {value} in {seconds} s
+The sky ground to arrive at.,Il terreno del cielo a cui arrivare.
+Set Sun Size,Imposta la dimensione del sole
+"How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sun_angle_max`.","Quanto largo viene disegnato il disco del sole, in gradi. Il nostro sole misura circa mezzo grado; un sole grosso, basso e velato ne misura parecchi. Serve un DirectionalLight3D nella scena perché ci sia un sole. Dà prima a questa scena la sua copia del materiale di cielo, così un file di cielo condiviso con altre scene non cambia mai sotto di loro. Una scena il cui sfondo non è un cielo procedurale viene lasciata del tutto in pace - la riga non fa nulla invece di dare errore, e il Doctor lo dice. Scrive `ProceduralSkyMaterial.sun_angle_max`."
+Set sun size to {value},Imposta la dimensione del sole a {value}
+Sun size,Dimensione del sole
+"How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all.","Quanto largo viene disegnato il disco del sole, in gradi. Il nostro sole misura circa mezzo grado; un sole grosso, basso e velato ne misura parecchi. Serve un DirectionalLight3D nella scena perché ci sia un sole."
+Sun Size,Dimensione del sole
+"Reads the sky's sun size back: `ProceduralSkyMaterial.sun_angle_max`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.","Rilegge la dimensione del sole: `ProceduralSkyMaterial.sun_angle_max`. Una scena senza cielo, o con un panorama o uno shader di cielo, risponde con il valore da cui parte un cielo nuovo. Usalo in qualsiasi campo valore."
+sun size,dimensione del sole
+Fade Sun Size,Dissolvi la dimensione del sole
+"Walks the sky's sun size to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.","Porta la dimensione del sole a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere, e un intero tramonto. Dà prima a questa scena la sua copia del materiale di cielo. Non fa nulla in una scena il cui sfondo non è un cielo procedurale."
+Fade sun size to {value} over {seconds} s,Dissolvi la dimensione del sole a {value} in {seconds} s
+The sun size to arrive at.,La dimensione del sole a cui arrivare.
+Set Sky Energy,Imposta l'energia del cielo
+"How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.energy_multiplier`.","Quanto è luminoso tutto il cielo, come frazione: 1 non tocca nulla. Oltre a riempire l'immagine illumina la scena, quindi abbassarlo scurisce tutto quello che il cielo stava illuminando. Dà prima a questa scena la sua copia del materiale di cielo, così un file di cielo condiviso con altre scene non cambia mai sotto di loro. Una scena il cui sfondo non è un cielo procedurale viene lasciata del tutto in pace - la riga non fa nulla invece di dare errore, e il Doctor lo dice. Scrive `ProceduralSkyMaterial.energy_multiplier`."
+Set sky energy to {value},Imposta l'energia del cielo a {value}
+Sky energy,Energia del cielo
+"How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting.","Quanto è luminoso tutto il cielo, come frazione: 1 non tocca nulla. Oltre a riempire l'immagine illumina la scena, quindi abbassarlo scurisce tutto quello che il cielo stava illuminando."
+Sky Energy,Energia del cielo
+"Reads the sky's sky energy back: `ProceduralSkyMaterial.energy_multiplier`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.","Rilegge l'energia del cielo: `ProceduralSkyMaterial.energy_multiplier`. Una scena senza cielo, o con un panorama o uno shader di cielo, risponde con il valore da cui parte un cielo nuovo. Usalo in qualsiasi campo valore."
+sky energy,energia del cielo
+Fade Sky Energy,Dissolvi l'energia del cielo
+"Walks the sky's sky energy to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.","Porta l'energia del cielo a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da tenere, e un intero tramonto. Dà prima a questa scena la sua copia del materiale di cielo. Non fa nulla in una scena il cui sfondo non è un cielo procedurale."
+Fade sky energy to {value} over {seconds} s,Dissolvi l'energia del cielo a {value} in {seconds} s
+The sky energy to arrive at.,L'energia del cielo a cui arrivare.
+Use Procedural Sky,Usa un cielo procedurale
+"Puts Godot's own drawn sky behind everything - a gradient from the top colour down through the horizon to the ground, with the sun of any DirectionalLight3D in the scene painted on it - and sets the backdrop to sky so it is actually drawn. This is the sky the five sky words move; a scene without it is what makes them quietly do nothing.","Mette il cielo disegnato di Godot dietro a tutto - una sfumatura dal colore in alto, attraverso l'orizzonte, fino al terreno, con il sole di qualsiasi DirectionalLight3D della scena dipinto sopra - e imposta lo sfondo su cielo perché venga davvero disegnato. È il cielo che muovono le cinque parole del cielo; una scena senza di esso è proprio ciò che le fa non fare nulla in silenzio."
+Use a procedural sky,Usa un cielo procedurale
+Use Panorama Sky,Usa un cielo panoramico
+"Wraps one picture around the whole world as the sky - a photographed or painted panorama, which is what a stylised or a photoreal scene wants instead of a drawn gradient. Sets the backdrop to sky so it is actually drawn. The five sky words do not reach a panorama: those are the drawn sky's own colours.","Avvolge tutto il mondo con una sola immagine come cielo - un panorama fotografato o dipinto, che è quello che vuole una scena stilizzata o fotorealistica al posto di una sfumatura disegnata. Imposta lo sfondo su cielo perché venga davvero disegnato. Le cinque parole del cielo non arrivano a un panorama: quelli sono i colori propri del cielo disegnato."
+Use {image} as the sky,Usa {image} come cielo
+Picture,Immagine
+"The panorama image, as an equirectangular picture in the project.","L'immagine del panorama, come immagine equirettangolare nel progetto."
 "%s wears the Bullet behaviour, so a copy of it flies along its own facing and its speed is written to that behaviour rather than to a velocity.","%s indossa il comportamento Bullet, quindi una sua copia vola lungo il proprio orientamento e la sua velocità viene scritta in quel comportamento invece che in un velocity."
 "%s is driven by %s, so that is where a copy of it keeps the speed this row gives it.","%s è mosso da %s, quindi è lì che una sua copia tiene la velocità che questa riga le dà."
 "This node was not made from a scene file, so there is nothing to copy. Save it as a scene and instance that, or spawn a scene this row names outright.","Questo nodo non è stato creato da un file di scena, quindi non c'è nulla da copiare. Salvalo come scena e istanzia quella, oppure genera una scena che questa riga nomini esplicitamente."
@@ -6588,3 +6588,205 @@ Fade Out Then Retire (3D),Dissolvi e poi ritira (3D)
 On Retired,Quando viene ritirato
 "Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.","Si esegue nel momento in cui questo oggetto viene ritirato - restituito al suo pool, oppure distrutto. Entrambi escono dalla stessa porta: un pool riprende un nodo togliendolo dall'albero, quindi questo unico segnale viene alzato esattamente una volta qualunque delle due cose sia successa. L'oggetto qui è ancora valido, ed è questo che ne fa il posto per lasciare ciò che teneva, toglierlo da un elenco, o dire a qualcun altro che se n'è andato."
 On retired,Quando viene ritirato
+"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.",
+Pick a blend mode by looking at it,
+Drawn by the renderer itself - costs nothing,
+Reads the screen back through a shader - one screen read per pixel this item covers,
+"Draw ""%s"" children as one picture",
+Draw %s's children as one,
+"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.",
+"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.",
+"%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.",
+Let The Target Drift,
+"Gives the camera a dead zone: the thing it follows may wander this far from the middle before the camera moves at all. The numbers are fractions of the view, so 0.2 is a fifth of the screen, and the same slack is used on both sides. This is what stops a platformer camera twitching under every small jump.",
+"Let the target drift {across} across, {down} down",
+"How far the target may drift left or right before the camera follows, as a fraction of the view.",
+Down,
+"How far the target may drift up or down before the camera follows, as a fraction of the view.",
+Follow Tightly,
+"Turns the dead zone off, so the camera keeps its target exactly in the middle. The other half of Let The Target Drift - reach for it when a boss arrives, when a cutscene starts, or any time the shot has to be exact.",
+Follow tightly,
+Snap To Target Now,
+"Puts the camera where it is heading, this frame, instead of easing there. The fix for the long pan across the level on the first frame after a respawn or a scene change: smoothing stays on, it just stops owing you a journey.",
+Snap to the target now,
+Smooth Turns,
+"Eases the camera's ROTATION the way Set Smoothing eases its position, so a camera that follows a tilting ship or a rotating gravity field turns instead of snapping. Higher speeds catch up sooner.",
+Smooth turns {enabled} at {speed},
+true / false.,
+How quickly the camera catches up with the angle it is turning to.,
+View Rectangle,
+"What this camera is showing right now, as a rectangle in world units - zoom included. The frame to measure an off-screen cull, a minimap box or a spawn-just-outside-the-view against, and a value you can print while you work out why something is not where you expected.",
+the view rectangle,
+Is Inside Camera View,
+"True when a node's own position sits inside what a camera is showing, with an optional margin so something can count as visible slightly before or after it really is. Reads false when there is no camera, so a scene change cannot fault it. This is the rectangle test - the shipped Is On Screen asks the engine's visibility notifier about the node's whole drawn shape instead, which is the better question for a large sprite.",
+[i]{node}[/i] is inside the view of [i]{camera}[/i],
+The camera whose view is being asked about. The default is whichever camera is looking at the scene right now.,
+"How far outside the view still counts as inside, in world units. Negative shrinks the test area.",
+Fit Limits To,
+"Sets the four scroll limits from a rectangle, so the camera stops at the edges of the level instead of showing the void beyond them. Fill it with Tiled Area to fit the tiles somebody painted, or with a rectangle you chose. The limits are whole pixels, which is what Godot stores them as.",
+Fit limits to {area},
+Area,
+The level's extent as a rectangle in world units. Tiled Area gives you the one the painted tiles make.,
+Tiled Area,
+"The rectangle the painted tiles cover, in world units - the level's own edges, measured rather than typed in. Feed it to Fit Limits To and the camera stops where the level does, however much the level grows. An unpainted layer measures nothing, so the answer is an empty rectangle rather than a wrong one.",
+the tiled area of [i]{layer}[/i],
+The TileMapLayer the level is painted on.,
+Current Camera,
+"The Camera2D the player is looking through right now, or nothing when there is none. Feed it to Is Inside Camera View, read its zoom, or shake whichever camera happens to be live without naming it by tree path.",
+the current camera,
+Look At Over Seconds,
+"Turns the camera to face a node over time instead of snapping to it - the difference between a cut and a shot. It walks the shortest rotation between where the camera is looking and where it should look, so it never rolls sideways on the way and never tips over when the target is nearly overhead. A target sitting exactly where the camera is has no direction to face, so the row does nothing at all rather than erroring.",
+Look at [i]{at}[/i] over {seconds}s,
+The node to turn towards.,
+How long the turn takes.,
+Switch To Perspective,
+"Puts the camera into the ordinary shot, where things further away look smaller, and sets how wide it sees. This is the projection a first- or third-person game uses.",
+Switch to perspective at {degrees},
+Field Of View,
+"How wide the camera sees, in degrees. Lower zooms in.",
+Switch To Orthogonal,
+"Puts the camera into the flat shot, where distance does not shrink anything - the projection an isometric strategy game, a builder's blueprint view or a 2.5D platformer wants. The size is how many world units tall the view is, so a smaller number zooms in.",
+Switch to orthogonal at {size},
+Height,
+How many world units tall the view is. Smaller zooms in.,
+Set Clip Range,
+"Sets how close and how far the camera can see. Nothing nearer than the near value or further than the far value is drawn at all. Push the far value out for a long view, and keep the near value as large as the game allows - a very small near value is the usual cause of surfaces flickering against each other in the distance.",
+Set clip range {near} to {far},
+Near,
+"The closest distance the camera draws, in metres.",
+Far,
+"The furthest distance the camera draws, in metres.",
+Current Camera (3D),
+"The Camera3D the player is looking through right now, or nothing when there is none. The twin of Current Camera, for the dimension where the active camera changes on every cutscene and every vehicle you climb into.",
+the current camera (3D),
+Something Is Under The Cursor,
+"True when the cursor is pointing at something solid, asked by THIS camera of its own viewport - which is the question a split-screen game or a picture-in-picture view has to ask, because the active camera is not the camera the pointer is in. Name the collision layers to keep scenery, triggers or the player's own body out of the answer. For the object itself use Mouse Ray Collider, and for several facts about one hit use Cast Ray From Mouse Into.",
+something is under the cursor within {reach},
+"How far into the scene to look, in metres.",
+"Collision layers to test against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5; the default sees every layer.",
+Point Under The Cursor,
+"Where in the world the cursor is pointing: the surface it lands on, or the far end of the ray when it lands on nothing. It answers with somewhere the player is actually pointing rather than with the origin of the world, which is what a build ghost, a move-order marker or a camera pan needs - a marker that teleports to zero looks like a physics bug and is not one.",
+the point under the cursor within {reach},
+Set View Size,
+"How many pixels a view renders. This is the cost of the view: a minimap drawn into a 200 by 120 panel should render 200 by 120, not the whole window and then a squeeze. Whole pixels only, which is what a view is measured in.",
+Views,
+set view size to [b]{size}[/b],
+"The width and height the view renders at, in pixels.",
+Share The World (2D),
+"Points a view at the same 2D world another viewport is already drawing, so it shows the running game rather than an empty stage. This is the line a minimap needs: without it the second view has a world of its own and renders nothing.",
+share the 2D world of [b]{other}[/b],
+Same world as,
+The viewport whose world this view should show. Leave it on the game's own viewport for a second view of the running game.,
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%Minimap"").",
+Share The World (3D),
+"The 3D twin: points a view at the same 3D world another viewport is drawing, so a rear-view mirror or a security monitor shows the level everybody is standing in rather than an empty one.",
+share the 3D world of [b]{other}[/b],
+The viewport whose world this view should show. Leave it on the game's own viewport for a second camera on the running level.,
+Save A Still Of A View,
+"Writes what a view is drawing to a PNG file, after waiting for the frame to finish. A photo mode, a level thumbnail, a save-slot picture, the postcard a player shares. The event pauses for the rest of that frame, so keep it off a per-frame trigger.",
+save a still of [b]{view}[/b] to [b]{path}[/b],
+"The viewport to photograph. Leave it on the game's own viewport for what the player is looking at, or name a SubViewport for an off-screen one.",
+Where to write the PNG. user:// is the writable folder on every platform.,
+Mouse Position In View,
+"Where the pointer is inside one view, in that view's own pixels. A view has its own coordinate space, so this is the answer an in-world screen or a magnifier needs - the window's own answer is somewhere else entirely.",
+mouse position in [b]{view}[/b],
+The viewport to ask. Name a SubViewport for a picture drawn off screen.,
+Stay Fixed On Screen,
+"Pins this whole layer to the screen, so the camera moving through the world leaves it exactly where it is. What a HUD, a pause menu or a letterbox border wants, and what a CanvasLayer does out of the box.",
+stay fixed on screen,
+Move With The World,
+"Lets the camera move this layer, so everything on it sits in the world rather than on the screen. The other half of the switch above: a layer of scenery drawn behind the level, a layer of effects drawn over it, both moving with the view.",
+move with the world,
+Draw Above,
+"Puts this layer one step in front of another one, whatever number that other layer happens to be on. Relative on purpose: insert a layer between them later and the pair keeps its order, where two hand-typed numbers quietly stop meaning what they meant.",
+draw above [b]{other}[/b],
+Above,
+The layer to draw over - this one takes its order plus one.,
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%HUD"").",
+Draw Below,
+"The other end: puts this layer one step behind another one, whatever number that other layer is on. The backdrop that must stay behind the world however the world's own layer is numbered.",
+draw below [b]{other}[/b],
+Below,
+The layer to draw behind - this one takes its order minus one.,
+Offset Layer,
+"Nudges the whole layer, without touching a single thing on it. A HUD sliding in from the edge, a background pushed a little to one side, a shake that leaves the world alone.",
+offset layer by [b]{by}[/b],
+"How far to move the layer, in pixels.",
+Scroll At,
+"How much of the camera's movement this layer takes. Below 1 is behind the action and moves slower, which is what reads as distance; 1 moves exactly with the world; above 1 is in front of it. Each axis on its own, so a sky can drift sideways without sliding up and down.",
+scroll at [b]{factor}[/b] of the camera,
+"The share of the camera's movement this layer takes, per axis. 0.5 is half speed.",
+Repeat Every,
+"Tiles this layer forever, one copy every so many pixels, so a scrolling level never runs off the end of the artwork. Set the distance to the artwork's own width to make the seam invisible; a zero on an axis means no repeating along it.",
+repeat every [b]{size}[/b],
+Every,
+"How far apart the copies sit, in pixels. Zero on an axis means it does not repeat that way.",
+Drift,
+"Moves this layer on its own, whether the camera moves or not - clouds crossing the sky, mist over water, a starfield behind a menu that has no camera at all. Pixels per second, per axis; negative goes the other way.",
+drift at [b]{speed}[/b],
+"How fast the layer drifts by itself, in pixels per second, per axis.",
+Scroll Offset,
+"How far this layer has scrolled, in pixels. The number to read when something on the layer has to line up with it - a marker on a distant hill, a sound that fades with the drift.",
+scroll offset,
+Scroll At (Background Layer),
+"The same fraction on the older parallax node: how much of the camera's movement this layer takes, below 1 for distance and above 1 for the foreground. This is the row for a ParallaxLayer inside a ParallaxBackground, which is how a project built before Parallax2D arrived is put together.",
+Repeat Every (Background Layer),
+"The same tiling on the older parallax node: one copy of this layer every so many pixels, so the level never runs off the end of the artwork. Set it to the artwork's own width; a zero on an axis means no repeating along it.",
+Upscale With,
+"How a 3D scene rendered smaller than the window is stretched back up. Plain is the cheapest and the softest; the sharpening upscalers cost a little more and give most of the detail back, which is why a resolution slider is worth having at all.",
+upscale 3D with {method},
+Upscale with,
+How the smaller picture is stretched back up.,
+Bilinear - plain and cheapest,
+"FSR - sharper, still cheap",
+"FSR 2 - sharpest, costs the most",
+Set Temporal AA,
+"Turns temporal antialiasing on or off for the current viewport - it borrows detail from the frames before this one, which is sharper than FXAA on a still image and can shimmer while the camera moves.",
+set temporal AA {enabled},
+Smooth edges by reusing what the last frames drew.,
+Render 3D At,
+"Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.",
+render 3D at {percent}% with {method},
+Percent,
+How much of the window the 3D scene is rendered at. 100 is full resolution; 70 renders about half the pixels.,
+Smooth Edges With,
+"The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.",
+smooth edges with {how},
+Smooth with,
+The one technique in force. Everything else is switched off.,
+"Nothing - hard edges, cheapest",
+"FXAA - cheap, a little soft",
+"Temporal - sharp, can shimmer",
+2 samples,
+4 samples,
+"8 samples - cleanest, dearest",
+Scale The Game,
+"What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.",
+scale the game to {mode},
+Scale,
+What gets stretched when the window is not the size the game was drawn for.,
+"Fit - scale the layout, keep text crisp",
+Stretch - scale the whole picture,
+"Free - no scaling, show more or less",
+Fit The Shape,
+"What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.",
+fit a different shape by {aspect},
+When the shape differs,
+What the extra space becomes when the window is a different shape from the game.,
+"Keep the shape, bars at the edges",
+"Fill the window, shape and all",
+"Keep the width, show more height",
+"Keep the height, show more width",
+Expand - show more either way,
+Keep Pixels Sharp,
+"Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.",
+keep pixels sharp: {stretch},
+Whole pixels,
+Whether the scale is rounded down to a whole number.,
+Yes - whole numbers only,
+No - any fraction,
+Pixel Size,
+"How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.",
+set pixel size to {factor},
+Factor,
+1 is the size the game was drawn at. 2 is twice as big.,

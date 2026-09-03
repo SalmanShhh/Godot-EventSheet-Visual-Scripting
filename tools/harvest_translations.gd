@@ -147,6 +147,20 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# What a surface looks like, said in words: the nine material words, the surface slots beside
 	# them and the two a sprite has. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/material_aces.gd",
+	# What the whole world looks like, said in words: the environment words, the glow's seven blur
+	# levels, the quality dials beside the four switches that have one, and the five sky words. One
+	# module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/environment_aces.gd",
+	# The camera said in full, in both dimensions: the dead zone and the snap, the view rectangle
+	# asked from both ends, the level edges, the timed look-at, the projections and the clip range.
+	# Two modules, each shipped whole, so the whole of each is owed.
+	"res://addons/eventforge/registration/modules/camera_2d_aces.gd",
+	"res://addons/eventforge/registration/modules/camera_3d_aces.gd",
+	# A second picture of the game, and what a layer does with the camera: how big a view renders,
+	# which world it shows, the still it writes, and the parallax words on both of Godot's parallax
+	# nodes. Two modules, each shipped whole, so the whole of each is owed.
+	"res://addons/eventforge/registration/modules/viewport_aces.gd",
+	"res://addons/eventforge/registration/modules/layer_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files
@@ -202,6 +216,13 @@ const OWED_VERBS_IN_MODULE: Dictionary = {
 	# Drawing order as a sentence, and the on-screen question.
 	"res://addons/eventforge/registration/modules/rendering_aces.gd": [
 		"RenderingDrawInFrontOf", "RenderingShowOnlyTo", "RenderingIsOnScreen",
+		# How the game meets a screen it was not drawn for, and how much work it does drawing it:
+		# the resolution percentage with its upscaler, the one antialiasing word and the four
+		# content-scale rows. Every one of them carries dropdown labels a reader chooses between,
+		# which is where most of the words in this group are.
+		"RenderingRender3DAt", "RenderingUpscaleWith", "RenderingSmoothEdgesWith", "RenderingSetTaa",
+		"RenderingScaleTheGame", "RenderingFitTheShape", "RenderingKeepPixelsSharp",
+		"RenderingPixelSize",
 	],
 	# The flow wave: the service registry, the capability loop and the deferral verbs.
 	"res://addons/eventforge/registration/modules/node_aces.gd": [
