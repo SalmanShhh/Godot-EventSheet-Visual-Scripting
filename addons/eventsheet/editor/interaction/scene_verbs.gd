@@ -167,6 +167,89 @@ static func filter_of(sheet: EventSheetResource, function_name: String) -> Dicti
 	return {}
 
 
+## The two rows that launch a spawned copy, and the field of theirs that says WHERE the copy's speed
+## is written. Frozen with the descriptors: the dialog addresses this field by name to say what the
+## scene it is about really is.
+const LAUNCH_ACE_IDS: PackedStringArray = ["SpawnFacingAndMoving", "SpawnFacingAndMoving3D"]
+const LAUNCH_PARAM := "moves"
+const LAUNCH_SCENE_PARAM := "scene"
+
+## The three answers that field takes, as the row's own words for them. Named here because this file
+## decides which of them a scene is, and a second spelling of "velocity" between the row and the
+## reading is how the note and the line stop agreeing.
+const LAUNCH_VELOCITY := "velocity"
+const LAUNCH_LINEAR := "linear_velocity"
+const LAUNCH_BULLET := "bullet"
+
+## The behaviour scripts that make a scene fly along its own facing at a speed of its own. Matched by
+## FILE rather than by class name, because the class cache is an editor thing and this reading is
+## asked headless as often as it is asked in a dialog.
+const BULLET_BEHAVIOUR_FILES: PackedStringArray = ["bullet_behavior.gd", "bullet_3d_behavior.gd"]
+
+## The body classes whose speed the engine drives from a property of their own, and the property it
+## is. Asked through ClassDB so a project's own subclass of one of them answers the same way its
+## parent does.
+const LAUNCH_BODY_PROPERTIES: Dictionary = {
+	"CharacterBody2D": LAUNCH_VELOCITY,
+	"CharacterBody3D": LAUNCH_VELOCITY,
+	"RigidBody2D": LAUNCH_LINEAR,
+	"RigidBody3D": LAUNCH_LINEAR,
+}
+
+
+## The scene path a spawn row's *Scene* field names, or "" when the field holds something no file can
+## be read out of. `load("res://shot.tscn")`, `preload(...)` and a bare quoted path all answer; a
+## declared constant (`Shot`) and a path built at run time do not, and answering "" for those is the
+## point - a guess here would put a sentence about the wrong scene in front of a reader.
+static func scene_path_in(scene_expression: String) -> String:
+	var text: String = scene_expression.strip_edges()
+	var opened: int = text.find("\"")
+	var closed: int = text.rfind("\"")
+	if opened < 0 or closed <= opened:
+		return ""
+	var path: String = text.substr(opened + 1, closed - opened - 1)
+	return path if path.begins_with("res://") and ResourceLoader.exists(path) else ""
+
+
+## Where a scene's own speed is written, read off the `.tscn`: LAUNCH_BULLET when any node in it
+## wears one of the Bullet behaviours, otherwise the property the root's class is driven by, and ""
+## when the scene cannot be read or is neither. Pure over the scene file, so the dialog states a fact
+## rather than deciding one.
+static func launch_write_for_scene(scene_expression: String) -> String:
+	var path: String = scene_path_in(scene_expression)
+	if path.is_empty():
+		return ""
+	var nodes: Array = EventSheetSceneConnections.nodes_of_scene(path)
+	if nodes.is_empty():
+		return ""
+	for entry: Variant in nodes:
+		var script_file: String = str((entry as Dictionary).get("script_path", "")).get_file()
+		if BULLET_BEHAVIOUR_FILES.has(script_file):
+			return LAUNCH_BULLET
+	var root_type: String = str((nodes[0] as Dictionary).get("type", ""))
+	if root_type.is_empty() or not ClassDB.class_exists(root_type):
+		return ""
+	for body_class: String in LAUNCH_BODY_PROPERTIES.keys():
+		if root_type == body_class or ClassDB.is_parent_class(root_type, body_class):
+			return str(LAUNCH_BODY_PROPERTIES[body_class])
+	return ""
+
+
+## The line the *Moves By* field's help strip adds: what the named scene turns out to be, and where
+## a copy of it therefore keeps its speed. "" when the field names a scene this cannot read, which is
+## every scene named by a constant or built at run time - the dropdown still says all three answers
+## and the author still picks one, they simply do not get told which.
+static func launch_note(scene_expression: String) -> String:
+	var written: String = launch_write_for_scene(scene_expression)
+	if written.is_empty():
+		return ""
+	var scene_name: String = scene_path_in(scene_expression).get_file()
+	if written == LAUNCH_BULLET:
+		return EventSheetL10n.translate("%s wears the Bullet behaviour, so a copy of it flies along its own facing and its speed is written to that behaviour rather than to a velocity.") % scene_name
+	return EventSheetL10n.translate("%s is driven by %s, so that is where a copy of it keeps the speed this row gives it.") \
+		% [scene_name, written]
+
+
 ## Every ACE action of a sheet, its functions and its nested events included. One walk, so a row
 ## nested three deep inside a function is as visible to this reading as one at the top.
 static func _actions_in(sheet: EventSheetResource) -> Array[ACEAction]:

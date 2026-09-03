@@ -818,6 +818,12 @@ const SPAWN_NAME_PARAMS: Dictionary = {
 	"SpawnIntoCrowd": "name",
 	"SpawnIntoCrowdOldestFirst": "name",
 	"SpawnIntoCrowdUnlessFull": "name",
+	# The launched twin, which declares its local exactly as its frozen neighbour does. Its formation
+	# sibling is deliberately NOT here: the name a formation gives a copy lives INSIDE the loop the
+	# row writes, so it is gone by the time the next row runs and offering it would be offering a
+	# name that cannot be said. The whole formation is addressed by its crowd instead.
+	"SpawnFacingAndMoving": "name",
+	"SpawnFacingAndMoving3D": "name",
 }
 
 

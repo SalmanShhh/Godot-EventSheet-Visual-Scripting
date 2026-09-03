@@ -3797,6 +3797,17 @@ func _node_kind_note() -> String:
 ## the `.tscn` through EventSheetSceneVerbs, so the dialog states a fact rather than deciding one.
 func _scene_verb_note(key: String, param: Dictionary) -> Dictionary:
 	var sheet: EventSheetResource = _lint_sheet()
+	# Where a launched copy keeps its speed is a fact about the SCENE, not about the row: the field
+	# offers all three answers and this says which one the named scene turns out to be. Asked first
+	# because it is about a field of its own rows and nothing else reaches it.
+	if _definition != null and EventSheetSceneVerbs.LAUNCH_ACE_IDS.has(_definition.id) \
+			and key == EventSheetSceneVerbs.LAUNCH_PARAM:
+		var launch: String = EventSheetSceneVerbs.launch_note(
+			str(_current_values().get(EventSheetSceneVerbs.LAUNCH_SCENE_PARAM, "")))
+		return {} if launch.is_empty() else {
+			"body": "%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), launch],
+			"level": EventSheetPopupUI.HelpStrip.TONE_NORMAL
+		}
 	if str(param.get("hint", "")) == EventSheetSceneVerbs.SCENE_HINT:
 		var unlisted: String = EventSheetSceneVerbs.unlisted_scene_note(
 			EventSheetSceneVerbs.unlisted_spawn_scene(sheet, _current_values()))
