@@ -6,7 +6,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Added
+### A grid that walks itself into a level
 
 - **Drunken Walkers, a seeded grid generator you drive from rows.** Walkers stagger across a grid
   of integers carving caves, corridors, rivers and ore veins; tagged **marks** land on the result
@@ -25,15 +25,24 @@ What changed in the build you have installed (v0.17.0), in the words the release
   size, the seed, every walker with its progress and recorded path, every mark, and the random
   stream's own position; Load State From Text puts them back, silently and with no trigger replayed.
   A half-finished Step Walker animation resumes and produces the identical remaining path. The
-  same record is what the pack hands the save seam every persistence pack here already uses, so a
-  generator parked under a node in the persist group travels with the save with no rows at all.
+  same record is what the pack hands the save seam every persistence pack here already uses, and
+  Save System walks the autoloads by name, so the generator travels with the save with no rows at
+  all.
 - **Randomness that can borrow the project's stream.** Set Random Source switches between the
   pack's own seeded generator, the shared Advanced Random autoload (one seed for every procedural
   system at once) and an injected queue Inject Random fills for a single audited stream, which falls
   back rather than failing when it runs dry.
+- **It is the DrunkenWalkers autoload, and its borders follow the addon it came from.** A
+  generator is a project-wide service, so the pack ships as an autoload exactly like ProcRoom,
+  Advanced Random, Loot Table, Storylet Weaver and Skin Vault: every row addresses
+  `DrunkenWalkers` by name, no verb takes a node, and one grid belongs to the project - which the
+  guide says out loud rather than hiding. The border rule follows the source too: a step that
+  would leave the grid re-rolls among the headings that stay IN BOUNDS, widening past Max Turn
+  when every heading it allows is blocked, so a cornered walker turns as sharply as it must
+  instead of ending its walk there. It still spends exactly one random value doing it.
 - **Guide:** [docs/Addons/Drunken-Walkers.md](docs/Addons/Drunken-Walkers.md) - the full ACE
   reference, the shape-recipe table, the which-trigger-fires-when matrix, and eighteen worked use
-  cases from a four-row first cave to two independent generators in one scene.
+  cases from a four-row first cave to two worlds off one master seed.
 
 ### Fixed
 
