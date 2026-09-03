@@ -6142,3 +6142,449 @@ Light Response,受光反应
 light response,受光反应
 "%s wears %s, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader.",%s 穿着 %s，而混合与光照住在着色器里，不是某个属性上 - 所以这一行会让着色器保持不动，值也就哪儿都到不了。请在着色器里设置，或者把这一行移到不穿着色器的子节点上。
 "%s is worn by %s as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.",%s 也被 %s 穿着，而材质就是一个对象。这里的每个材质词在写入前都会先给这个网格一份自己的副本，所以其他的保持原样 - 这只是值得知道一下。
+"%s asks for %s, which only the Forward+ renderer draws - this row does nothing on %s. Either build for Forward+, or drop the row.",
+"%s sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky.",
+Blend Light As,
+"How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants. Writes `Light2D.blend_mode`.",
+Blend light as {value},
+"How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants.",
+Reads the light's light blend back: `Light2D.blend_mode`. Use it in any value field.,
+light blend,
+Set Saturation,
+"How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_saturation`.",
+Set saturation to {value},
+Saturation,
+"How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish.",
+Reads the world's saturation back: `Environment.adjustment_saturation`. Use it in any value field.,
+saturation,
+Fade Saturation,
+"Walks the world's saturation to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_saturation` on this scene's own copy of the environment.",
+Fade saturation to {value} over {seconds} s,
+The saturation to arrive at.,
+Set Contrast,
+"How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_contrast`.",
+Set contrast to {value},
+Contrast,
+"How far the darks and the lights are pushed apart: 1 is untouched, below 1 is flat and hazy, above 1 is hard.",
+Reads the world's contrast back: `Environment.adjustment_contrast`. Use it in any value field.,
+contrast,
+Fade Contrast,
+"Walks the world's contrast to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_contrast` on this scene's own copy of the environment.",
+Fade contrast to {value} over {seconds} s,
+The contrast to arrive at.,
+Set Picture Brightness,
+"How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_brightness`.",
+Set picture brightness to {value},
+Picture brightness,
+"How bright the finished picture is, after every light in the scene has had its say: 1 is untouched. Different from a light's brightness, which changes what one lamp does.",
+Picture Brightness,
+Reads the world's picture brightness back: `Environment.adjustment_brightness`. Use it in any value field.,
+picture brightness,
+Fade Picture Brightness,
+"Walks the world's picture brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.adjustment_brightness` on this scene's own copy of the environment.",
+Fade picture brightness to {value} over {seconds} s,
+The picture brightness to arrive at.,
+Set Exposure,
+"How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_exposure`.",
+Set exposure to {value},
+Exposure,
+"How much light the camera lets in before the picture is made: 1 is untouched, higher blows the highlights out, lower sinks everything into the dark. What a flashbang and a slow walk out of a cave both need.",
+Reads the world's exposure back: `Environment.tonemap_exposure`. Use it in any value field.,
+exposure,
+Fade Exposure,
+"Walks the world's exposure to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.tonemap_exposure` on this scene's own copy of the environment.",
+Fade exposure to {value} over {seconds} s,
+The exposure to arrive at.,
+Set Glow Bloom,
+"How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_bloom`.",
+Bloom,
+"How much of the picture bleeds into the glow, not just the bright parts: 0 is only what is over the threshold, 1 is everything. Switches the glow on as well, because it does nothing without it.",
+Glow Bloom,
+Reads the world's glow bloom back: `Environment.glow_bloom`. Use it in any value field.,
+glow bloom,
+Fade Glow Bloom,
+"Walks the world's glow bloom to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.glow_bloom` on this scene's own copy of the environment.",
+Fade glow bloom to {value} over {seconds} s,
+The glow bloom to arrive at.,
+Set Glow Threshold,
+"How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_hdr_threshold`.",
+Set glow threshold to {value},
+Threshold,
+"How bright a thing has to be before it glows at all: 1 is the usual line, lower makes more of the scene bleed, higher keeps the glow for the neon and the fire only. Switches the glow on as well.",
+Glow Threshold,
+Reads the world's glow threshold back: `Environment.glow_hdr_threshold`. Use it in any value field.,
+glow threshold,
+Set Fog Floor,
+"The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height`.",
+Set fog floor to {value},
+Floor height,
+"The height the fog lies at, in metres, so it pools in a valley and thins out over a hill. Switches the fog on as well, because it does nothing without it.",
+Fog Floor,
+Reads the world's fog floor back: `Environment.fog_height`. Use it in any value field.,
+fog floor,
+Set Fog Floor Thickness,
+"How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_height_density`.",
+Set fog floor thickness to {value},
+Floor thickness,
+How fast the fog thins out above its floor. 0 leaves the fog the same all the way up; a small number keeps it lying on the ground the way a morning mist does.,
+Fog Floor Thickness,
+Reads the world's fog floor thickness back: `Environment.fog_height_density`. Use it in any value field.,
+fog floor thickness,
+Fade Fog Floor Thickness,
+"Walks the world's fog floor thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_height_density` on this scene's own copy of the environment.",
+Fade fog floor thickness to {value} over {seconds} s,
+The fog floor thickness to arrive at.,
+Set Aerial Perspective,
+"How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_aerial_perspective`.",
+Set aerial perspective to {value},
+Aerial perspective,
+"How much of the sky's own colour the far distance picks up, as a fraction: 0 is none, 1 is the far hills the same colour as the sky behind them. The thing that makes a view read as miles rather than metres.",
+Aerial Perspective,
+Reads the world's aerial perspective back: `Environment.fog_aerial_perspective`. Use it in any value field.,
+aerial perspective,
+Fade Aerial Perspective,
+"Walks the world's aerial perspective to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_aerial_perspective` on this scene's own copy of the environment.",
+Fade aerial perspective to {value} over {seconds} s,
+The aerial perspective to arrive at.,
+Set Fog Sun Glow,
+"How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.fog_sun_scatter`.",
+Set fog sun glow to {value},
+Sun glow,
+"How much the fog lights up around the sun, as a fraction: 0 is flat fog, 1 is the glare you look away from when you face into a low sun.",
+Fog Sun Glow,
+Reads the world's fog sun glow back: `Environment.fog_sun_scatter`. Use it in any value field.,
+fog sun glow,
+Fade Fog Sun Glow,
+"Walks the world's fog sun glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.fog_sun_scatter` on this scene's own copy of the environment.",
+Fade fog sun glow to {value} over {seconds} s,
+The fog sun glow to arrive at.,
+Set Volumetric Thickness,
+"How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_density`.",
+Set volumetric thickness to {value},
+"How thick the air itself is, for the fog that lights up and casts shadows rather than the flat kind. Small numbers: 0.05 is a room with dust in the light, 0.5 is a swamp. Forward+ only - on Mobile and Compatibility the row does nothing.",
+Volumetric Thickness,
+Reads the world's volumetric thickness back: `Environment.volumetric_fog_density`. Use it in any value field.,
+volumetric thickness,
+Fade Volumetric Thickness,
+"Walks the world's volumetric thickness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_density` on this scene's own copy of the environment.",
+Fade volumetric thickness to {value} over {seconds} s,
+The volumetric thickness to arrive at.,
+Set Volumetric Colour,
+"The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_albedo`.",
+Set volumetric colour to {value},
+"The colour the thick air is, before any light falls through it - green for a swamp, brown for a dust storm, white for steam. Forward+ only - on Mobile and Compatibility the row does nothing.",
+Volumetric Colour,
+Reads the world's volumetric colour back: `Environment.volumetric_fog_albedo`. Use it in any value field.,
+volumetric colour,
+Fade Volumetric Colour,
+"Walks the world's volumetric colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_albedo` on this scene's own copy of the environment.",
+Fade volumetric colour to {value} over {seconds} s,
+The volumetric colour to arrive at.,
+Set Volumetric Reach,
+"How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_length`.",
+Set volumetric reach to {value},
+"How far from the camera the thick air is worked out at all, in metres. Shorter is cheaper and ends in a visible edge; longer costs frames. Forward+ only - on Mobile and Compatibility the row does nothing.",
+Volumetric Reach,
+Reads the world's volumetric reach back: `Environment.volumetric_fog_length`. Use it in any value field.,
+volumetric reach,
+Fade Volumetric Reach,
+"Walks the world's volumetric reach to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Environment.volumetric_fog_length` on this scene's own copy of the environment.",
+Fade volumetric reach to {value} over {seconds} s,
+The volumetric reach to arrive at.,
+Turn Volumetric Fog On,
+"The fog that fills the air rather than sitting flat over the picture - it lights up where a lamp shines through it and goes dark where something blocks it. Costs frames. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.volumetric_fog_enabled`.",
+Turn volumetric fog on,
+Turn Volumetric Fog Off,
+Turn volumetric fog off,
+Is Volumetric Fog On,
+True while Volumetric fog is on. Reads `Environment.volumetric_fog_enabled`.,
+Volumetric fog is on,
+Turn Reflections On,
+"Whether shiny surfaces reflect what is already on the screen - the wet floor that shows the room above it. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled`.",
+Turn reflections on,
+Turn Reflections Off,
+Turn reflections off,
+Are Reflections On,
+True while reflections are on. Reads `Environment.ssr_enabled`.,
+reflections are on,
+Turn Indirect Light On,
+"Whether a lit surface throws its own colour onto what is beside it - the red wall that makes the white floor beside it pink. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled`.",
+Turn indirect light on,
+Turn Indirect Light Off,
+Turn indirect light off,
+Is Indirect Light On,
+True while indirect light is on. Reads `Environment.ssil_enabled`.,
+indirect light is on,
+Turn Global Illumination On,
+"Whether light bounces around the whole scene by itself, so a room with one window is lit rather than black in the corners. The most expensive switch here. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled`.",
+Turn global illumination on,
+Turn Global Illumination Off,
+Turn global illumination off,
+Is Global Illumination On,
+True while global illumination is on. Reads `Environment.sdfgi_enabled`.,
+global illumination is on,
+Set Backdrop,
+"What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.background_mode`.",
+Set backdrop to {value},
+Backdrop,
+"What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it.",
+sky,
+keep what was there,
+The flat colour drawn behind everything. Only the colour backdrop reads it.,
+Reads the world's backdrop back: `Environment.background_mode`. Use it in any value field.,
+backdrop,
+Set Tone Map,
+"How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.tonemap_mode`.",
+Set tone map to {value},
+Tone map,
+How the brightness the scene really has is squeezed into the range a screen can show. Linear is no squeezing at all and blows out; filmic and ACES roll the highlights off the way a camera does; AgX keeps the colour in a very bright highlight instead of letting it go white.,
+linear,
+reinhard,
+filmic,
+ACES,
+AgX,
+White at,
+The brightness that comes out pure white. Read by every tone map except linear and AgX.,
+AgX contrast,
+How hard AgX pushes the darks and lights apart. Only AgX reads it.,
+Tone Map,
+Reads the world's tone map back: `Environment.tonemap_mode`. Use it in any value field.,
+tone map,
+Set Glow Blend,
+"How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.glow_blend_mode`.",
+Set glow blend to {value},
+Glow blend,
+"How the glow is mixed back over the picture. Additive is the brightest and blows out fastest; screen keeps the bright parts under control; soft light is the gentlest; replace shows the glow alone, which is what a dream sequence wants. Switches the glow on as well.",
+additive,
+screen,
+soft light,
+replace,
+Glow Blend,
+Reads the world's glow blend back: `Environment.glow_blend_mode`. Use it in any value field.,
+glow blend,
+Set Colour Grade,
+"A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_color_correction`.",
+Set colour grade to {value},
+Colour grade,
+"A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well.",
+Colour Grade,
+Reads the world's colour grade back: `Environment.adjustment_color_correction`. Use it in any value field.,
+colour grade,
+Set Glow Levels,
+"Lays down all seven of the glow's blur levels at once. Level 1 is the sharpest and finest, level 7 the widest and softest, so a shape leaning on the low numbers keeps the glow around what is glowing and one leaning on the high numbers washes it across the screen. Switches the glow on as well. Set Glow Level sets any single level by hand.",
+Set glow levels to {spread},
+Which of the three written-down shapes the seven levels take. Set Glow Level sets any one of them to any number instead.,
+tight - close to what is glowing,
+balanced - Godot's own shape,
+wide - over the whole screen,
+Set Glow Level,
+"Sets ONE of the glow's seven blur levels, for a project spelling its own shape rather than taking one of the three the row above offers. Level 1 is the sharpest and finest blur, level 7 the widest and softest. Switches the glow on as well.",
+Set glow level {level} to {amount},
+Level,
+"Which blur level to set, 1 to 7. 1 is the sharpest, 7 the widest.",
+Amount,
+How much this level contributes. 0 leaves it out entirely.,
+Turn Occlusion On At Quality,
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssao_enabled` and `RenderingServer.environment_set_ssao_quality`.",
+Turn occlusion on at {quality},
+Quality,
+How carefully this is worked out. Higher looks better and costs more frames.,
+very low,
+low,
+medium,
+high,
+ultra,
+Turn Occlusion Off,
+"Switches the darkened corners off again, and gives the frames back. Forward+ only - on Mobile and Compatibility the row does nothing. Writes `Environment.ssao_enabled`.",
+Turn occlusion off,
+Is Occlusion On,
+True while the corners and creases of the scene are being darkened. Reads `Environment.ssao_enabled`.,
+occlusion is on,
+Turn Indirect Light On At Quality,
+"Lets a lit surface throw its own colour onto what is beside it, and says how carefully at the same time. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssil_enabled` and `RenderingServer.environment_set_ssil_quality`.",
+Turn indirect light on at {quality},
+Turn Global Illumination On At Quality,
+"Lets light bounce around the whole scene by itself, and says how many rays are traced to work it out. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.sdfgi_enabled` and `RenderingServer.environment_set_sdfgi_ray_count`.",
+Turn global illumination on at {quality},
+"4 rays - cheapest, noisiest",
+8 rays,
+16 rays,
+32 rays,
+64 rays,
+96 rays,
+"128 rays - cleanest, dearest",
+Turn Reflections On At Quality,
+"Lets shiny surfaces reflect what is already on the screen, and says how carefully a rough surface blurs its reflection. Forward+ only - on Mobile and Compatibility the row does nothing. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.ssr_enabled` and `RenderingServer.environment_set_ssr_roughness_quality`.",
+Turn reflections on at {quality},
+no roughness - sharpest and cheapest,
+Set Sky Top,
+"The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_top_color`.",
+Set sky top to {value},
+Sky top,
+"The colour of the sky straight overhead. Deep blue at noon, indigo at dusk, black with a hint of blue at night.",
+Sky Top,
+"Reads the sky's sky top back: `ProceduralSkyMaterial.sky_top_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
+sky top,
+Fade Sky Top,
+"Walks the sky's sky top to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
+Fade sky top to {value} over {seconds} s,
+The sky top to arrive at.,
+Set Sky Horizon,
+"The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sky_horizon_color`.",
+Set sky horizon to {value},
+Horizon,
+The colour the sky fades to where it meets the ground. The whole of a sunset is this one colour going orange while the top goes dark.,
+Sky Horizon,
+"Reads the sky's sky horizon back: `ProceduralSkyMaterial.sky_horizon_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
+sky horizon,
+Fade Sky Horizon,
+"Walks the sky's sky horizon to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
+Fade sky horizon to {value} over {seconds} s,
+The sky horizon to arrive at.,
+Set Sky Ground,
+"The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.ground_bottom_color`.",
+Set sky ground to {value},
+Ground,
+"The colour drawn below the horizon, under everything the level itself puts there. Brown for earth, grey-green for a moor, near-black for a night scene.",
+Sky Ground,
+"Reads the sky's sky ground back: `ProceduralSkyMaterial.ground_bottom_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
+sky ground,
+Fade Sky Ground,
+"Walks the sky's sky ground to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
+Fade sky ground to {value} over {seconds} s,
+The sky ground to arrive at.,
+Set Sun Size,
+"How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.sun_angle_max`.",
+Set sun size to {value},
+Sun size,
+"How wide the sun's disc is drawn, in degrees. Our own sun is about half a degree; a fat, low, hazy sun is several. Needs a DirectionalLight3D in the scene for there to be a sun at all.",
+Sun Size,
+"Reads the sky's sun size back: `ProceduralSkyMaterial.sun_angle_max`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
+sun size,
+Fade Sun Size,
+"Walks the sky's sun size to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
+Fade sun size to {value} over {seconds} s,
+The sun size to arrive at.,
+Set Sky Energy,
+"How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting. Gives this scene its own copy of the sky material first, so a sky file shared with other scenes never changes under them. A scene whose backdrop is not a procedural sky is left completely alone - the row does nothing rather than erroring, and the Doctor says so. Writes `ProceduralSkyMaterial.energy_multiplier`.",
+Set sky energy to {value},
+Sky energy,
+"How bright the whole sky is, as a fraction: 1 is untouched. It lights the scene as well as filling the picture, so turning it down darkens everything the sky was lighting.",
+Sky Energy,
+"Reads the sky's sky energy back: `ProceduralSkyMaterial.energy_multiplier`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.",
+sky energy,
+Fade Sky Energy,
+"Walks the sky's sky energy to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a sunset. Gives this scene its own copy of the sky material first. Does nothing on a scene whose backdrop is not a procedural sky.",
+Fade sky energy to {value} over {seconds} s,
+The sky energy to arrive at.,
+Use Procedural Sky,
+"Puts Godot's own drawn sky behind everything - a gradient from the top colour down through the horizon to the ground, with the sun of any DirectionalLight3D in the scene painted on it - and sets the backdrop to sky so it is actually drawn. This is the sky the five sky words move; a scene without it is what makes them quietly do nothing.",
+Use a procedural sky,
+Use Panorama Sky,
+"Wraps one picture around the whole world as the sky - a photographed or painted panorama, which is what a stylised or a photoreal scene wants instead of a drawn gradient. Sets the backdrop to sky so it is actually drawn. The five sky words do not reach a panorama: those are the drawn sky's own colours.",
+Use {image} as the sky,
+Picture,
+"The panorama image, as an equirectangular picture in the project.",
+"%s wears the Bullet behaviour, so a copy of it flies along its own facing and its speed is written to that behaviour rather than to a velocity.",%s 穿戴了 Bullet 行为，所以它的副本会沿着自己的朝向飞行，速度写入该行为而不是 velocity。
+"%s is driven by %s, so that is where a copy of it keeps the speed this row gives it.",%s 由 %s 驱动，所以它的副本把这一行给的速度存在那里。
+"This node was not made from a scene file, so there is nothing to copy. Save it as a scene and instance that, or spawn a scene this row names outright.",这个节点不是从场景文件生成的，所以没有东西可以复制。把它另存为场景再实例化，或者让这一行直接指名一个场景来生成。
+Spawn In A Formation,按队形生成
+"Spawns several copies at once and puts each one somewhere in a shape you pick - a ring, an arc, a line, a grid, or scattered inside a collision shape. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The fields a shape does not use are left out of the code it writes: a ring reads Around and Size, an arc adds Start Angle and Sweep, a line reads Around and To, a grid reads Around, Size and Across, and scattering reads Inside.",一次生成多个副本，并把每一个放到你挑选的形状上的某处 - 圆环、圆弧、直线、网格，或者散布在一个碰撞形状里。每个副本都会加入你指定的群体，所以下面那一行可以用「对组内每一个」处理整支队形。某个形状用不到的字段不会出现在它写下的代码里：圆环读取「中心」和「大小」，圆弧再加上「起始角」和「扫过角度」，直线读取「中心」和「终点」，网格读取「中心」「大小」和「每行个数」，散布读取「内部」。
+Spawn [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b],以 [b]{formation}[/b] 生成 [b]{count}[/b] 个 [b]{scene}[/b] 的副本
+Formation,队形
+"The shape the copies land in. Each one reads a different handful of the fields below, and writes only the ones it reads.",副本落成的形状。每种形状读取下面字段中的不同几个，并且只写出它读取的那些。
+ring - evenly all the way around a point,圆环 - 绕一个点均匀排一整圈
+"arc - part of a ring, from an angle",圆弧 - 圆环的一段，从某个角度开始
+line - evenly from one point to another,直线 - 从一点到另一点均匀排列
+grid - rows and columns out from a corner,网格 - 从一个角开始的行与列
+inside a shape - scattered in a collision shape,形状内 - 散布在一个碰撞形状里
+How Many,数量
+How many copies to make. The formation spreads exactly this many out across its shape.,要生成多少个副本。队形正好把这么多个铺开在它的形状上。
+"The place the formation is measured from: the centre of a ring or an arc, the first end of a line, the near corner of a grid. The two scattering formations do not read it - what they scatter inside is a node, which is the field below.",队形从哪里量起：圆环或圆弧的中心、直线的起点、网格的近角。两种散布队形不读取它 - 它们散布在其中的是一个节点，也就是下面那个字段。
+Inside,内部
+The node a scattering formation spreads its copies through - a CollisionShape2D holding a RectangleShape2D or a CircleShape2D - the one on the Area2D marking the spawn zone. Only the two scattering formations read it; the other three are measured from Around instead.,散布队形把副本铺开所用的节点 - 一个装着 RectangleShape2D 或 CircleShape2D 的 CollisionShape2D，也就是标出生成区域的那个 Area2D 上的形状。只有两种散布队形读取它；另外三种改从「中心」量起。
+"How big the formation is: the radius of a ring or an arc, or the gap between neighbours in a grid. The line and the shape formations do not read it - a line is measured by its two ends and a shape by the shape you drew.",队形有多大：圆环或圆弧的半径，或者网格中相邻两个之间的间距。直线和形状不读取它 - 直线由两端量出，形状由你画的那个形状量出。
+The far end of a line formation - the first copy lands on Around and the last one lands here. Only the line formation reads it.,直线队形的远端 - 第一个副本落在「中心」，最后一个落在这里。只有直线队形读取它。
+Start Angle,起始角
+"Which angle an arc formation begins at, in degrees - 0 is to the right, 90 is down in 2D. Only the arc reads it.",圆弧队形从哪个角度开始，单位是度 - 0 朝右，2D 中 90 朝下。只有圆弧读取它。
+Sweep,扫过角度
+"How far an arc formation turns from its start angle, in degrees. 360 makes a full turn with the first and last copy on top of each other, which is what the ring formation is for instead. Only the arc reads it.",圆弧队形从起始角转过多少，单位是度。360 会转满一圈，第一个和最后一个副本重叠 - 想要那样应该改用圆环队形。只有圆弧读取它。
+Across,每行个数
+"How many copies stand side by side in one row of a grid, before the next row starts. It has to be a whole number - the line that lays the grid out divides by it. Only the grid reads it.",网格中一行里并排站多少个副本，然后才开始下一行。必须是整数 - 铺开网格的那一行代码要除以它。只有网格读取它。
+Into The Crowd,加入群体
+"The group every copy joins, named after the scene they are copies of. It is an ordinary Godot group, so the row underneath can address the whole formation with For Each In Group - and so can anything else in the project.",每个副本都会加入的组，以它们所复制的场景命名。它是普通的 Godot 组，所以下面那一行可以用「对组内每一个」处理整支队形 - 项目里的其他东西也一样可以。
+Added,添加时机
+When the copies join the tree. Pick the next idle moment inside a collision or body handler: Godot refuses to add a child while the physics server is busy.,副本何时进入场景树。在碰撞或物体回调里请选「下一个空闲时刻」：物理服务器忙碌时，Godot 会拒绝添加子节点。
+now,立即
+on the next idle moment,在下一个空闲时刻
+"Spawn A Copy, Facing And Moving",生成一个副本，带朝向并移动
+"Spawns one copy the way Spawn A Copy does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.",像「生成一个副本」那样生成一个副本，然后把它转向某处，并沿着这个朝向给它一个速度 - 出膛的子弹、轮子甩出的火花、冲过来的敌人。速度写到哪里取决于场景是什么：CharacterBody 写 velocity，RigidBody 写 linear_velocity，穿戴了 Bullet 行为的场景则写该行为自己的速度。对话框会读取场景文件并告诉你它找到的是哪一种。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b], facing [b]{facing}[/b], moving at [b]{speed}[/b]",生成 [b]{scene}[/b] 的副本 [b]{name}[/b]，朝向 [b]{facing}[/b]，以 [b]{speed}[/b] 移动
+Which way the copy is turned before it is launched. Toward A Node reads the Toward field; At An Angle reads the Angle field.,副本在被射出前朝向哪里。「朝向某个节点」读取「朝向」字段；「按指定角度」读取「角度」字段。
+the same way this node faces,与本节点朝向相同
+toward a node,朝向某个节点
+toward the mouse,朝向鼠标
+at an angle you say,按你指定的角度
+"The node the copy is turned toward - the player, a target, a marker. Only the Toward A Node facing reads it.",副本转向的那个节点 - 玩家、目标、标记点。只有「朝向某个节点」这种朝向读取它。
+"The angle the copy is turned to, in degrees - 0 is to the right in 2D, and a turn around the up axis in 3D. Only the At An Angle facing reads it.",副本被转到的角度，单位是度 - 2D 中 0 朝右，3D 中是绕上方轴的旋转。只有「按指定角度」这种朝向读取它。
+Moving At,移动速度
+"How fast the copy travels along its facing, in pixels per second.",副本沿着自己的朝向前进的速度，单位是像素每秒。
+Plus This Node's Speed,加上本节点的速度
+"Adds this node's own speed to the launch, so a shot fired from a moving ship leaves it faster and one fired backwards leaves it slower. It reads this node's velocity, which only a body that moves has - leave it off on a node that does not.",把本节点自己的速度加到发射上，于是从行进中的飞船打出的子弹离开得更快，往后打的更慢。它读取本节点的 velocity，只有会移动的物体才有 - 没有的节点请保持关闭。
+Moves By,速度写在
+"Where the copy's speed is written. It is a fact about the scene, not about this row - the dialog reads the scene file and says which of the three it is.",副本的速度写到哪里。这是关于场景的事实，不是关于这一行的 - 对话框会读取场景文件并告诉你是三者中的哪一个。
+velocity - a CharacterBody,velocity - CharacterBody
+linear_velocity - a RigidBody,linear_velocity - RigidBody
+the Bullet behaviour's own speed,Bullet 行为自己的速度
+Spawn In A Formation (3D),按队形生成 (3D)
+"Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.",一次生成多个副本，并把每一个放到你挑选的形状上的某处，在三维中 - 圆环、圆弧、直线、地面上的网格，或者散布在一个盒子里。每个副本都会加入你指定的群体，所以下面那一行可以用「对组内每一个」处理整支队形。圆环、圆弧和网格都躺在地面平面上，与你围绕生成的那个点同高；散布读取「内部」而不是「中心」。
+inside a box - scattered in a box you drew,盒子内 - 散布在你画的盒子里
+"The node a scattering formation spreads its copies through - a CollisionShape3D holding a BoxShape3D, or a CSGBox3D you blocked the space out with. Only the two scattering formations read it; the other three are measured from Around instead.",散布队形把副本铺开所用的节点 - 一个装着 BoxShape3D 的 CollisionShape3D，或者你用来划出空间的 CSGBox3D。只有两种散布队形读取它；另外三种改从「中心」量起。
+"Spawn A Copy, Facing And Moving (3D)",生成一个副本，带朝向并移动 (3D)
+"Spawns one copy the way Spawn A Copy (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.",像「生成一个副本 (3D)」那样生成一个副本，然后把它转向某处，并沿着这个朝向给它一个速度。三维里的「前」是副本自己的 -Z，这也是 Godot 在别处所说的前方，所以「朝向某个节点」就是一句普通的 look_at。速度写到哪里取决于场景是什么：CharacterBody 写 velocity，RigidBody 写 linear_velocity，穿戴了 Bullet 行为的场景则写该行为自己的速度。
+"Which way the copy is turned before it is launched. Toward A Node reads the Toward field and is a look_at, so the node has to be somewhere other than where the copy landed; At An Angle turns it around the up axis.",副本在被射出前朝向哪里。「朝向某个节点」读取「朝向」字段，它是一句 look_at，所以那个节点必须位于副本落点以外的地方；「按指定角度」则绕上方轴旋转它。
+"How fast the copy travels along its facing, in metres per second.",副本沿着自己的朝向前进的速度，单位是米每秒。
+Spawn A Copy Of Myself,生成一个自己的副本
+"Makes one more copy of the scene THIS node came from, and puts it where you say. Nothing has to name the scene: the node knows which file it was built from, so a scene renamed or moved keeps working. The copy is added on the next idle moment, which is what makes the row safe inside the collision handler a splitting boss usually lives in. A node that was built in code rather than from a scene file has no file to copy, and the Doctor says so on the row.",再复制一份本节点所来自的那个场景，并放到你说的位置。不需要任何地方指名这个场景：节点知道自己是从哪个文件建出来的，所以场景改名或移动之后依然可用。副本在下一个空闲时刻添加，正因如此，这一行在会分裂的 Boss 通常所处的碰撞回调里也是安全的。用代码而不是场景文件建出来的节点没有文件可以复制，医生会在这一行说明。
+"Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",在 {at} 生成 [b]自己[/b] 的副本，命名为 [b]{name}[/b]，放在 [i]{parent}[/i] 下，在下一个空闲时刻添加
+Spawn A Copy Of Myself (3D),生成一个自己的副本 (3D)
+"The same row on a 3D node: one more copy of the scene this node came from, added on the next idle moment. The line it writes is the same line its 2D twin writes, because scene_file_path and position are the node's own words in both dimensions - the twin exists so the picker offers the row on a 3D host at all.",同一行在 3D 节点上的版本：再复制一份本节点所来自的场景，在下一个空闲时刻添加。它写下的代码和 2D 孪生行完全一样，因为 scene_file_path 和 position 在两个维度里都是节点自己的词 - 孪生行存在，只是为了让选择器在 3D 宿主上也能提供这一行。
+Free Spot In,空位于
+"Gives a point inside a shape you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of - where to put the next crate, the next mine, the next enemy in a room that is filling up. Clear is asked as a real physics test, with the spawned scene's OWN collision shape put at the point, so a wall is a wall whatever drew it; a group whose members carry no shape at all is answered by distance instead. A full arena answers NOTHING, and Spawn A Copy In A Free Spot is the row that knows what to do about that.",在你画的形状里给出一个点：指定的那些组里没有任何东西站在那儿，同一场景的其他副本也都不在这个间距之内 - 也就是在越来越满的房间里，下一个箱子、下一颗地雷、下一个敌人该放哪儿。「空着」是用真正的物理检测来问的，把要生成的那个场景自己的碰撞形状放到该点去试，所以墙就是墙，无论是谁画的；成员完全没有碰撞形状的组，则改用距离来回答。挤满的竞技场什么也不给，而知道该拿这种情况怎么办的，是「在空位生成一个副本」这一行。
+"a free spot in [i]{inside}[/i], clear of {clear_of}, {gap} px apart",[i]{inside}[/i] 内的一个空位，避开 {clear_of}，相隔 {gap} 像素
+"The node whose shape the point is rolled inside - a CollisionShape2D holding a RectangleShape2D or a CircleShape2D, the Area2D around it, or a Control's own rectangle. Nothing outside it is ever offered.",在其形状内掷出这个点的节点 - 一个装着 RectangleShape2D 或 CircleShape2D 的 CollisionShape2D、围着它的 Area2D，或者一个 Control 自己的矩形。它之外的地方永远不会被给出。
+Clear Of,避开
+"The groups the copy must not land in, as a list of group names. Members that carry a collision shape are tested against the copy's own shape; members that carry none are answered by distance, using the gap below.",副本不得落入的那些组，写成一串组名。带碰撞形状的成员会与副本自己的形状做检测；不带形状的成员则用下面的间距按距离来判断。
+Gap,间距
+"How far apart copies of the same scene have to be, in pixels. It is also the distance kept from any member of the named groups that carries no collision shape - a marker, a waypoint, a bare node somebody dropped to say not here. Nought asks neither question and leaves only the overlap test.",同一场景的副本之间必须相隔多远，单位是像素。它同时也是与指定组中任何不带碰撞形状的成员保持的距离 - 标记点、路点，或有人放下来表示「此处不行」的裸节点。设为 0 则两件事都不问，只剩下重叠检测。
+Tries,尝试次数
+How many points to roll before giving up and answering nothing. More tries find a spot in a crowded arena more often and cost more when there is genuinely no room left.,在放弃并什么都不给之前要掷多少个点。次数越多，在拥挤的竞技场里越容易找到位置；而当真的没地方了，代价也越大。
+Free Spot In (3D),空位于 (3D)
+"The same question in three dimensions, with the gap measured in metres: a point inside a box or a sphere you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of. A full space answers nothing.",同一个问题在三维中的版本，间距以米计：在你画的盒子或球体里，一个指定组中没有任何东西站着、同一场景的其他副本也都不在该间距之内的点。空间满了就什么也不给。
+"a free spot in [i]{inside}[/i], clear of {clear_of}, {gap} m apart",[i]{inside}[/i] 内的一个空位，避开 {clear_of}，相隔 {gap} 米
+"The node whose shape the point is rolled inside - a CollisionShape3D holding a BoxShape3D or a SphereShape3D, or the Area3D around it. Nothing outside it is ever offered.",在其形状内掷出这个点的节点 - 一个装着 BoxShape3D 或 SphereShape3D 的 CollisionShape3D，或者围着它的 Area3D。它之外的地方永远不会被给出。
+"How far apart copies of the same scene have to be, in metres. It is also the distance kept from any member of the named groups that carries no collision shape - a marker, a waypoint, a bare node somebody dropped to say not here. Nought asks neither question and leaves only the overlap test.",同一场景的副本之间必须相隔多远，单位是米。它同时也是与指定组中任何不带碰撞形状的成员保持的距离 - 标记点、路点，或有人放下来表示「此处不行」的裸节点。设为 0 则两件事都不问，只剩下重叠检测。
+Spawn A Copy In A Free Spot,在空位生成一个副本
+"Spawns one copy somewhere inside a shape you drew that nothing is already standing in - and spawns NOTHING when there is nowhere left, rather than stacking copies on top of each other. When it finds no room it raises this node's spawn_skipped signal with the scene it could not place, which On Spawn Skipped listens to: add a signal block saying spawn_skipped(scene) and the row underneath can end the wave, play a full-up sound, or make more room. The copy is added on the next idle moment, so the row is safe inside a collision handler.",在你画的形状里，找一个还没有东西站着的地方生成一个副本 - 没地方了就什么都不生成，而不是把副本叠在一起。找不到位置时，它会带着没能放下的那个场景发出本节点的 spawn_skipped 信号，「当生成被跳过时」正是在听它：加一个写着 spawn_skipped(scene) 的信号块，下面那一行就可以结束这一波、播放「满了」的提示音，或者腾出空间。副本在下一个空闲时刻添加，所以这一行在碰撞回调里也是安全的。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]",在 [i]{inside}[/i] 的空位生成 [b]{scene}[/b] 的副本 [b]{name}[/b]，放在 [i]{parent}[/i] 下
+Spawn A Copy In A Free Spot (3D),在空位生成一个副本 (3D)
+"The same row in three dimensions, with the gap measured in metres: one copy somewhere inside a box or a sphere you drew that nothing is already standing in, and nothing at all when there is nowhere left. A skipped spawn raises this node's spawn_skipped signal with the scene it could not place.",同一行在三维中的版本，间距以米计：在你画的盒子或球体里，找一个还没有东西站着的地方生成一个副本；没地方了就完全不生成。被跳过的生成会带着没能放下的那个场景发出本节点的 spawn_skipped 信号。
+On Spawn Skipped,当生成被跳过时
+"Runs when a Spawn A Copy In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.",当一行「在空位生成一个副本」找不到地方放副本时运行，并把它没能放下的那个场景交给你。这个信号由本表自己声明 - 加一个写着 spawn_skipped(scene) 的信号块，两边就都是普通的 Godot - 于是「场地满了」变成游戏可以回应的事：结束这一波、提示房间已满，或者腾出空间。
+On a spawn skipped,当一次生成被跳过时
+Retire,回收
+"Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Safe to run twice: something already on its way out is left alone.",回收对象：如果它来自某个对象池，就交还给那个池；如果不是，就销毁它。是哪一种，是从对象自己身上读出来的，所以事件表永远不必记住某个副本是哪来的 - 而在没有对象池的游戏里，它的行为和「立即销毁」完全一样。执行两次也安全：已经在离场途中的东西会被放过。
+retire [i]{object}[/i] now,立即回收 [i]{object}[/i]
+"The object to retire, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node. A copy an object pool handed out goes back to that pool; anything else is destroyed.",要回收的对象，写成一个表达式 - 生成行给某个副本取的名字、装着节点的变量，或者一条节点路径。要指本节点就保持 self。对象池发出去的副本会回到那个池，其他的一律销毁。
+Retire After Seconds,若干秒后回收
+"Retires the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. Whether the object goes back to a pool or is destroyed is decided when the wait ends, which is the moment that knows.",在若干秒之后回收对象，这期间事件继续往下走。等待用的是场景树计时器，所以这一行不会阻塞任何东西。对象是回到池里还是被销毁，在等待结束时才决定 - 那一刻才知道答案。
+retire [i]{object}[/i] after {seconds}s,{seconds} 秒后回收 [i]{object}[/i]
+Fade Out Then Retire,淡出后回收
+"Fades the object's transparency to nothing over a number of seconds and then retires it - back to its pool, or destroyed. The event WAITS here, so the rows after this one run once the fade has finished, and because that wait is a real gap the row asks whether the object is still there before touching it.",用若干秒把对象的透明度淡到没有，然后回收它 - 回到它的池里，或者被销毁。事件在这里会等待，所以后面的行要等淡出结束才运行；因为这段等待是真正的空隙，这一行在动它之前会先问对象是否还在。
+"fade [i]{object}[/i] out over {seconds}s, then retire it",用 {seconds} 秒淡出 [i]{object}[/i]，然后回收
+Fade Out Then Retire (3D),淡出后回收 (3D)
+"The same fade and retire on a 3D object. A Node3D has no modulate to walk down, so this walks its transparency up instead - 0 is solid and 1 is gone - which is the property a MeshInstance3D and everything else drawn in the world already carries. The event waits for the fade, and asks whether the object is still there before touching it.",同样的淡出与回收，作用在 3D 对象上。Node3D 没有可以往下走的 modulate，所以这里改为把它的 transparency 往上走 - 0 是不透明，1 就看不见了 - 这正是 MeshInstance3D 以及世界中一切被绘制之物本来就带的属性。事件会等待淡出，并在动它之前先问对象是否还在。
+"fade [i]{object}[/i] out over {seconds}s, then retire it (3D)",用 {seconds} 秒淡出 [i]{object}[/i]，然后回收 (3D)
+On Retired,当被回收时
+"Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.",在这个对象被回收的那一刻运行 - 交还给它的池，或者被销毁。两者从同一道门出去：池是把节点从树上摘下来收回的，所以无论发生的是哪一种，这一个信号都恰好被发出一次。对象在这里仍然有效，正因如此，这里是放开它所持有之物、把它从列表里划掉、或者告诉别人它已经不在的地方。
+On retired,当被回收时
