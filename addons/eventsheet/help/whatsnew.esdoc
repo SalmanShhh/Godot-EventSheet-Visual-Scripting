@@ -30,8 +30,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
   alpha with depth pre-pass and carries the scissor threshold on the same row, and sides reads front
   / back / both. The words are what a reader sees; the `BaseMaterial3D` constant is what the row
   writes, so the sheet and the emitted GDScript never disagree.
-- The nine words land in all nine translation CSVs (**93 new keys**), and the vocabulary doc is
-  regenerated.
+- **The visor and not the helmet: four rows for one surface slot.** A mesh imported from a model
+  wears a material per surface, and the frozen Set Mesh Material paints all of them at once. Set
+  Material Of Surface, the Material Of Surface expression, Layer Over Surface (a second material
+  drawn over the first through `next_pass`) and Remove Layer say which. The two that write give that
+  slot its own copy first; Remove Layer deliberately leaves a slot still drawing with a shared file
+  alone, because the layer on it belongs to every mesh wearing that file. The slot is a plain number
+  and the help says why: a surface's name lives in the imported mesh resource rather than in the
+  scene, and a mesh built at run time by the primitive builders has no names at all.
+- **The other surface: what a 2D item blends and lights like.** A sprite's look is not a
+  `BaseMaterial3D` with nine knobs, it is a `CanvasItemMaterial` with two. Set Blending (mix / add /
+  subtract / multiply / premultiplied alpha) and Set Light Response (normal / unshaded / light only)
+  say them, and Blending and Light Response read them back - hosted on `CanvasItem`, so a sprite, a
+  Control and a TileMapLayer all get them. Three promises in the write, in order: an item drawing
+  with nothing is given a material, one drawing with a material FILE is given its own copy first
+  (and the copy has no path of its own, so a row that runs every frame takes one copy and not
+  sixty), and an item wearing a SHADER is left completely alone. The reads are written as a cast for
+  the same reason, so an item wearing a shader answers with the value a new material starts on
+  rather than reaching through something that is not there. **The Material section now publishes 31
+  rows.**
+- **\"Who else wears this material\" now answers for a mesh.** The project index read `material`, the
+  CanvasItem member, and stopped there - so the question answered nothing at all for a 3D scene
+  however many meshes were sharing one `.tres`. It now reads `material_override` and
+  `surface_material_override/N` off the node headers the parse cache already holds, and follows
+  `next_pass` through the material reader's own chain walk, so a layer laid over a surface counts
+  its wearers too. Two quiet notes fall out of it, both filed in the Doctor's Effects section: a
+  material word on a mesh whose file other meshes wear is **information** and carries no fix door,
+  because every material word takes its own copy before it writes; a blending or lighting word on a
+  2D item wearing a shader is the older kind of silence, since those two live inside the shader and
+  the row is written to leave it alone. The section also asks the scripts their own cheap question
+  now rather than riding on a scene having answered first, because a 3D project can have no scene
+  wearing a `material` at all and still have sheets worth reading.
+- **A surface written by hand reads as the word.** `material_override.albedo_color = Color.RED` used
+  to open as \"material_override - Set albedo_color to red\"; it now reads \"Crate - Set colour to red\",
+  the promise a light's `energy` already keeps by reading as brightness. Two reaches and only two,
+  because only these two are unambiguous: `material_override` is GeometryInstance3D's and
+  `get_active_material(N)` is MeshInstance3D's. A 2D item's `material.blend_mode` is deliberately not
+  claimed - a mesh's material spells `blend_mode` too, and a bare `material.` line cannot say which
+  of the two words it means.
+- The nine words land in all nine translation CSVs (**93 new keys**), the surface slots, the two 2D
+  words and the two notes add **39 more**, and the vocabulary doc is regenerated.
 
 ### A grid that walks itself into a level
 

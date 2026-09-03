@@ -184,6 +184,26 @@ Node script extending `CharacterBody2D`.
 - **Compare** (`a: Array, b: Array`) - Compares two Decimals: -1 if a < b, 0 if equal, 1 if a > b.
 - **Format Big** (`decimal: Array, decimals: int`) - Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".
 
+### BlendModesAddon (`res://eventsheet_addons/blend_modes/blend_modes_addon.gd`)
+@ace_tags(visual, shader, juice, effects, blend) @ace_category("Blend Modes") @ace_version(1.0.0)
+
+#### Conditions
+- **Blend Mode Is** (`item: CanvasItem, mode: String = "screen"`)
+- **Is Blended As One** (`item: CanvasItem`)
+
+#### Actions
+- **Blend As** (`item: CanvasItem, mode: String = "screen", strength: float = 1.0`)
+- **Set Blend Strength** (`item: CanvasItem, strength: float = 1.0`)
+- **Fade Blend Strength** (`item: CanvasItem, strength: float = 0.0, seconds: float = 0.4`)
+- **Mask With** (`item: CanvasItem, shape: Texture2D = null, mode: String = "inside"`)
+- **Mask With Node** (`item: CanvasItem, shape_node: CanvasItem = null, mode: String = "inside"`)
+- **Unmask** (`item: CanvasItem`)
+- **Blend As One** (`item: CanvasItem`)
+- **Blend Separately** (`item: CanvasItem`)
+
+#### Expressions
+- **Blend Mode** (`item: CanvasItem`)
+
 ### BoostAddon (`res://eventsheet_addons/boosts/boosts_addon.gd`)
 @ace_tags(incremental, idle, boost) @ace_category("Boosts") @ace_version(1.0.0)
 
@@ -247,6 +267,46 @@ Node script extending `CharacterBody2D`.
 - **Launch Forward** - (Re)launches along the host's current forward direction.
 - **Set Bullet 3D Speed** (`value: float`) - Changes speed, keeping the current direction.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X.
+
+### CameraRailBehavior (`res://eventsheet_addons/camera_rail/camera_rail_behavior.gd`)
+@ace_tags(camera, cinematic, path) @ace_category("Camera Rail") @ace_version(1.0.0)
+
+#### Triggers
+- **On Shot Finished**
+- **On Blend Finished**
+
+#### Conditions
+- **Is Flying** - True while a Fly Along run is actually travelling. A Hold and a blend are not flights, so this stays false through both - the gate for a skip prompt or a letterbox that only belongs on a dolly.
+
+#### Actions
+- **Fly Along** (`path: Path2D, seconds: float, ease: String`) - Flies the rail's camera along a drawn Path2D, start to end, over a number of seconds - the dolly shot. Leave the path empty to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.
+- **Cut To** (`camera: Camera2D`) - Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.
+- **Blend To** (`camera: Camera2D, seconds: float, ease: String`) - Travels the rail's camera onto another camera - position, rotation and zoom together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. On Blend Finished fires at the handover.
+- **Hold** (`seconds: float`) - Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. 0 seconds falls back to the rail's default pace.
+- **Stop Rail** - Halts the shot where it stands, WITHOUT firing On Shot Finished - a cutscene the player skipped, a chase that ended early. The next Fly Along, Hold or Blend To starts a fresh shot.
+
+#### Expressions
+- **Rail Progress** - How far through the current shot the rail has come, from 0 at its start to 1 when it finished - the progress bar of a cutscene, or the driver for a fade that tracks the move. It is the time through the shot, before the ease bends it, and it keeps its last value once the shot ends.
+
+### CameraRail3DBehavior (`res://eventsheet_addons/camera_rail_3d/camera_rail_3d_behavior.gd`)
+@ace_tags(camera, cinematic, path) @ace_category("Camera Rail 3D") @ace_version(1.0.0)
+
+#### Triggers
+- **On Shot Finished**
+- **On Blend Finished**
+
+#### Conditions
+- **Is Flying** - True while a Fly Along run is actually travelling. A Hold and a blend are not flights, so this stays false through both - the gate for a skip prompt or a letterbox that only belongs on a dolly.
+
+#### Actions
+- **Fly Along** (`path: Path3D, seconds: float, ease: String, look_at: Node3D`) - Flies the rail's camera along a drawn Path3D, start to end, over a number of seconds - the dolly shot. Name a node to keep in frame and the camera turns to face it the whole way; leave it empty and the camera keeps the heading it was left with. Leave the path empty to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.
+- **Cut To** (`camera: Camera3D`) - Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.
+- **Blend To** (`camera: Camera3D, seconds: float, ease: String`) - Travels the rail's camera onto another camera - position, rotation and field of view together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. On Blend Finished fires at the handover.
+- **Hold** (`seconds: float`) - Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. 0 seconds falls back to the rail's default pace.
+- **Stop Rail** - Halts the shot where it stands, WITHOUT firing On Shot Finished - a cutscene the player skipped, a chase that ended early. The next Fly Along, Hold or Blend To starts a fresh shot.
+
+#### Expressions
+- **Rail Progress** - How far through the current shot the rail has come, from 0 at its start to 1 when it finished - the progress bar of a cutscene, or the driver for a fade that tracks the move. It is the time through the shot, before the ease bends it, and it keeps its last value once the shot ends.
 
 ### CarBehavior (`res://eventsheet_addons/car/car_behavior.gd`)
 @ace_category("Car") @ace_expose_all(node) @ace_version(1.0.0)
@@ -3034,6 +3094,40 @@ Weapons in 3D: hitscan, explosions, an arsenal and the secrets counter.
 - **Current Weapon** (`weapons: String, index: String`) - The weapon that is out right now - the name to look ammo up by and to show on the HUD.
 - **Secrets Found** (`found: String`) - How many secrets the player has found - the left-hand number of the end-of-level screen.
 
+### Camera 2d (`res://addons/eventforge/registration/modules/camera_2d_aces.gd`)
+the rest of the Camera2D shelf (drift, snap, turns, the view, the limits).
+
+#### Conditions
+- **Is Inside Camera View** (`node: String, camera: String, margin: float`) - True when a node's own position sits inside what a camera is showing, with an optional margin so something can count as visible slightly before or after it really is. Reads false when there is no camera, so a scene change cannot fault it. This is the rectangle test - the shipped Is On Screen asks the engine's visibility notifier about the node's whole drawn shape instead, which is the better question for a large sprite.
+
+#### Actions
+- **Let The Target Drift** (`across: float, down: float, target: String`) - Gives the camera a dead zone: the thing it follows may wander this far from the middle before the camera moves at all. The numbers are fractions of the view, so 0.2 is a fifth of the screen, and the same slack is used on both sides. This is what stops a platformer camera twitching under every small jump.
+- **Follow Tightly** (`target: String`) - Turns the dead zone off, so the camera keeps its target exactly in the middle. The other half of Let The Target Drift - reach for it when a boss arrives, when a cutscene starts, or any time the shot has to be exact.
+- **Snap To Target Now** (`target: String`) - Puts the camera where it is heading, this frame, instead of easing there. The fix for the long pan across the level on the first frame after a respawn or a scene change: smoothing stays on, it just stops owing you a journey.
+- **Smooth Turns** (`enabled: String, speed: float, target: String`) - Eases the camera's ROTATION the way Set Smoothing eases its position, so a camera that follows a tilting ship or a rotating gravity field turns instead of snapping. Higher speeds catch up sooner.
+- **Fit Limits To** (`area: String, target: String`) - Sets the four scroll limits from a rectangle, so the camera stops at the edges of the level instead of showing the void beyond them. Fill it with Tiled Area to fit the tiles somebody painted, or with a rectangle you chose. The limits are whole pixels, which is what Godot stores them as.
+
+#### Expressions
+- **View Rectangle** - What this camera is showing right now, as a rectangle in world units - zoom included. The frame to measure an off-screen cull, a minimap box or a spawn-just-outside-the-view against, and a value you can print while you work out why something is not where you expected.
+- **Tiled Area** (`layer: String`) - The rectangle the painted tiles cover, in world units - the level's own edges, measured rather than typed in. Feed it to Fit Limits To and the camera stops where the level does, however much the level grows. An unpainted layer measures nothing, so the answer is an empty rectangle rather than a wrong one.
+- **Current Camera** - The Camera2D the player is looking through right now, or nothing when there is none. Feed it to Is Inside Camera View, read its zoom, or shake whichever camera happens to be live without naming it by tree path.
+
+### Camera 3d (`res://addons/eventforge/registration/modules/camera_3d_aces.gd`)
+the rest of the Camera3D shelf (aim, projection, clip range, the cursor ray).
+
+#### Conditions
+- **Something Is Under The Cursor** (`reach: float, layers: String`) - True when the cursor is pointing at something solid, asked by THIS camera of its own viewport - which is the question a split-screen game or a picture-in-picture view has to ask, because the active camera is not the camera the pointer is in. Name the collision layers to keep scenery, triggers or the player's own body out of the answer. For the object itself use Mouse Ray Collider, and for several facts about one hit use Cast Ray From Mouse Into.
+
+#### Actions
+- **Look At Over Seconds** (`at: String, seconds: float`) - Turns the camera to face a node over time instead of snapping to it - the difference between a cut and a shot. It walks the shortest rotation between where the camera is looking and where it should look, so it never rolls sideways on the way and never tips over when the target is nearly overhead. A target sitting exactly where the camera is has no direction to face, so the row does nothing at all rather than erroring.
+- **Switch To Perspective** (`degrees: float, target: String`) - Puts the camera into the ordinary shot, where things further away look smaller, and sets how wide it sees. This is the projection a first- or third-person game uses.
+- **Switch To Orthogonal** (`size: float, target: String`) - Puts the camera into the flat shot, where distance does not shrink anything - the projection an isometric strategy game, a builder's blueprint view or a 2.5D platformer wants. The size is how many world units tall the view is, so a smaller number zooms in.
+- **Set Clip Range** (`near: float, far: float, target: String`) - Sets how close and how far the camera can see. Nothing nearer than the near value or further than the far value is drawn at all. Push the far value out for a long view, and keep the near value as large as the game allows - a very small near value is the usual cause of surfaces flickering against each other in the distance.
+
+#### Expressions
+- **Current Camera (3D)** - The Camera3D the player is looking through right now, or nothing when there is none. The twin of Current Camera, for the dimension where the active camera changes on every cutscene and every vehicle you climb into.
+- **Point Under The Cursor** (`reach: float, layers: String`) - Where in the world the cursor is pointing: the surface it lands on, or the far end of the ray when it lands on nothing. It answers with somewhere the player is actually pointing rather than with the origin of the world, which is what a build ghost, a move-order marker or a camera pan needs - a marker that teleports to zero looks like a physics bug and is not one.
+
 ### Camera Fov (`res://addons/eventforge/registration/modules/camera_fov_aces.gd`)
 Camera FOV vocabulary (field of view from events).
 
@@ -3043,6 +3137,13 @@ Camera FOV vocabulary (field of view from events).
 
 #### Expressions
 - **Camera FOV** (`target: String`) - A 3D camera's current field of view in degrees - read it for a HUD zoom indicator or a dynamic-FOV rig.
+
+### Canvas Clip (`res://addons/eventforge/registration/modules/canvas_clip_aces.gd`)
+drawing a node's children INSIDE its own shape, and the two rows that say so.
+
+#### Actions
+- **Clip My Children** (`mode: String, target: String`) - Makes whatever this node draws the SHAPE its children are allowed to draw inside - a portrait cut to a frame, a bar that fills a shape, water that stops at the edge of the pool. Choose whether this node is drawn as well as being the shape, or is only the shape.
+- **Stop Clipping** (`target: String`) - Puts this node back to drawing normally: its children draw wherever they like again, and the node itself is drawn as it always was.
 
 ### Clipboard (`res://addons/eventforge/registration/modules/clipboard_aces.gd`)
 Copying: share codes, the OS clipboard both ways, cloning a node, and
@@ -4243,6 +4344,11 @@ the MATERIAL vocabulary: what a surface looks like, said in words.
 - **Set Blend** (`value: String`) - How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.
 - **Set Transparency** (`value: String, threshold: String`) - How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.
 - **Set Sides** (`value: String`) - Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.
+- **Set Material Of Surface** (`surface: String, material: String, target: String`) - Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.
+- **Layer Over Surface** (`surface: String, material: String`) - Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.
+- **Remove Layer** (`surface: String`) - Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.
+- **Set Blending** (`value: String`) - How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.blend_mode`.
+- **Set Light Response** (`value: String`) - How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.light_mode`.
 
 #### Expressions
 - **Colour** (`target: String`) - Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.
@@ -4254,6 +4360,9 @@ the MATERIAL vocabulary: what a surface looks like, said in words.
 - **Blend** (`target: String`) - Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.
 - **Transparency** (`target: String`) - Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.
 - **Sides** (`target: String`) - Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.
+- **Material Of Surface** (`surface: String, target: String`) - The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.
+- **Blending** - Reads the sprite's blending back: `CanvasItemMaterial.blend_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.
+- **Light Response** - Reads the sprite's light response back: `CanvasItemMaterial.light_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.
 
 ### Math Words (`res://addons/eventforge/registration/modules/math_words_aces.gd`)
 the four value-shaping words, with the call in the echo.
@@ -4742,6 +4851,9 @@ RegEx text matching (the Regex* verbs event-sheet authors expect, Godot-native).
 ### Removal (`res://addons/eventforge/registration/modules/removal_aces.gd`)
 Destroy (taking a thing out of the world, without leaving a ghost behind)
 
+#### Triggers
+- **On Retired** - Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.
+
 #### Conditions
 - **Is Still Here** (`object: String`) - True while the object has not been destroyed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN destruction uses the On Exit Tree trigger instead, which fires as it leaves.
 
@@ -4749,6 +4861,10 @@ Destroy (taking a thing out of the world, without leaving a ghost behind)
 - **Destroy Now** (`object: String`) - Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.
 - **Destroy After Seconds** (`object: String, seconds: String`) - Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.
 - **Fade Out Then Destroy** (`object: String, seconds: String`) - Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly.
+- **Retire** (`object: String`) - Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Safe to run twice: something already on its way out is left alone.
+- **Retire After Seconds** (`object: String, seconds: String`) - Retires the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. Whether the object goes back to a pool or is destroyed is decided when the wait ends, which is the moment that knows.
+- **Fade Out Then Retire** (`object: String, seconds: String`) - Fades the object's transparency to nothing over a number of seconds and then retires it - back to its pool, or destroyed. The event WAITS here, so the rows after this one run once the fade has finished, and because that wait is a real gap the row asks whether the object is still there before touching it.
+- **Fade Out Then Retire (3D)** (`object: String, seconds: String`) - The same fade and retire on a 3D object. A Node3D has no modulate to walk down, so this walks its transparency up instead - 0 is solid and 1 is gone - which is the property a MeshInstance3D and everything else drawn in the world already carries. The event waits for the fade, and asks whether the object is still there before touching it.
 
 ### Rendering (`res://addons/eventforge/registration/modules/rendering_aces.gd`)
 Rendering vocabulary (the RenderingServer from events).
@@ -4919,6 +5035,10 @@ Spawn (the spawn sentence, the name it leaves behind, and where it lands)
 - **Make A Copy** (`scene: String, name: String`) - Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.
 - **Spawn A Copy (3D)** (`scene: String, name: String, at: String, parent: String`) - Makes one copy of a scene, adds it under a parent and puts it where you say, in three dimensions. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.
 - **Spawn A Copy Safely (3D)** (`scene: String, name: String, at: String, parent: String`) - The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.
+- **Spawn In A Formation** (`scene: String, name: String, formation: String, count: String, around: String, inside: String, size: String, to: String, start: String, sweep: String, across: String, crowd: String, parent: String, when: String`) - Spawns several copies at once and puts each one somewhere in a shape you pick - a ring, an arc, a line, a grid, or scattered inside a collision shape. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The fields a shape does not use are left out of the code it writes: a ring reads Around and Size, an arc adds Start Angle and Sweep, a line reads Around and To, a grid reads Around, Size and Across, and scattering reads Inside.
+- **Spawn A Copy, Facing And Moving** (`scene: String, name: String, at: String, facing: String, toward: String, angle: String, speed: String, carry: bool, moves: String, parent: String`) - Spawns one copy the way Spawn A Copy does, then turns it to face something and gives it a speed along that facing - a bullet leaving a barrel, a spark thrown off a wheel, an enemy charging in. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it. The dialog reads the scene file and says which one it found.
+- **Spawn In A Formation (3D)** (`scene: String, name: String, formation: String, count: String, around: String, inside: String, size: String, to: String, start: String, sweep: String, across: String, crowd: String, parent: String, when: String`) - Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.
+- **Spawn A Copy, Facing And Moving (3D)** (`scene: String, name: String, at: String, facing: String, toward: String, angle: String, speed: String, carry: bool, moves: String, parent: String`) - Spawns one copy the way Spawn A Copy (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.
 
 #### Expressions
 - **Place Of** (`node: String`) - Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.
