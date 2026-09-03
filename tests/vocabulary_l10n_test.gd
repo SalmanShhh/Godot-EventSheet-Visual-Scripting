@@ -309,7 +309,22 @@ const FULLY_KEYED_ACES: Array[String] = [
 	"WorldFogOff", "WorldFogOn", "WorldGlowOff", "WorldGlowOn", "WorldOwnEnvironment",
 	"WorldPointToScreen", "WorldSetAmbientLight", "WorldSetFogThickness", "WrapAround",
 	"WrapInsideView3D", "WriteFileTable", "WriteTextFileInFolder", "signal:data_file_changed",
-	"signal:scene_spawned", "signal:verb_failed", "signal:verb_succeeded"
+	"signal:scene_spawned", "signal:verb_failed", "signal:verb_succeeded",
+	# The camera wave: the rest of both camera shelves, the views, the layers with both parallax
+	# nodes, and the eight rendering rows that wave added to a module older than it. Appended as a
+	# group rather than merged into the sort above, so a wave landing beside this one adds its own
+	# group without either rewrapping the other's lines. The assertion sorts, so order is free.
+	"CameraDriftMargins", "CameraFollowTightly", "CameraSnapToTarget", "CameraSmoothTurns",
+	"CameraViewRect", "IsInsideCameraView", "CameraFitLimits", "TiledArea", "CurrentCamera2D",
+	"CameraLookAtOverSeconds", "CameraSwitchToPerspective", "CameraSwitchToOrthogonal",
+	"CameraSetClipRange", "CurrentCamera3D", "CameraCursorOverSomething", "CameraPointUnderCursor",
+	"ViewSetSize", "ViewShareWorld2D", "ViewShareWorld3D", "ViewSaveStill", "ViewMousePosition",
+	"LayerStayFixedOnScreen", "LayerMoveWithTheWorld", "LayerDrawAbove", "LayerDrawBelow",
+	"LayerOffset", "ParallaxScrollAt", "ParallaxRepeatEvery", "ParallaxDrift",
+	"ParallaxScrollOffset", "ParallaxLayerScrollAt", "ParallaxLayerRepeatEvery",
+	"RenderingRender3DAt", "RenderingUpscaleWith", "RenderingSmoothEdgesWith", "RenderingSetTaa",
+	"RenderingScaleTheGame", "RenderingFitTheShape", "RenderingKeepPixelsSharp",
+	"RenderingPixelSize"
 ]
 
 

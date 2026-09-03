@@ -6782,3 +6782,4 @@ Pixel Size,Pixelgröße
 set pixel size to {factor},Pixelgröße auf {factor} setzen
 Factor,Faktor
 1 is the size the game was drawn at. 2 is twice as big.,"1 ist die Größe, in der das Spiel gezeichnet wurde. 2 ist doppelt so groß."
+"Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","Entscheidet, wie oft ein Bildschirm in der Welt neu gezeichnet wird. Nur wenn zu sehen ist die billige Einstellung und die richtige Voreinstellung; einmal jetzt zeichnet ein einziges Bild und hört auf, was ein Vorschaubild oder ein Standbild will; nie parkt die Ansicht, ohne sie freizugeben."

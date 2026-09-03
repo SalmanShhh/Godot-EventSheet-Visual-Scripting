@@ -6782,3 +6782,4 @@ Pixel Size,픽셀 크기
 set pixel size to {factor},픽셀 크기를 {factor} 로 설정
 Factor,배수
 1 is the size the game was drawn at. 2 is twice as big.,1은 게임을 그린 크기입니다. 2는 그 두 배입니다.
+"Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","월드 안의 화면을 얼마나 자주 다시 그릴지 정합니다. 보일 때만이 저렴한 설정이자 올바른 기본값입니다. 지금 한 번은 한 프레임만 그리고 멈추며, 썸네일이나 정지 화면이 원하는 것이 이것입니다. 안 함은 뷰를 해제하지 않은 채 세워 둡니다."

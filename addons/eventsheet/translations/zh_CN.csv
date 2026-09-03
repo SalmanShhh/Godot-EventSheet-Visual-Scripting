@@ -6782,3 +6782,4 @@ Pixel Size,像素大小
 set pixel size to {factor},把像素大小设为 {factor}
 Factor,倍数
 1 is the size the game was drawn at. 2 is twice as big.,1 是游戏绘制时的大小。2 是它的两倍。
+"Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.",决定世界里的屏幕多久重绘一次。只在被看到时是最省的设置，也是正确的默认值；立刻一次只画一帧然后停下，这正是缩略图或静帧想要的；从不则把视图停在那里而不释放它。

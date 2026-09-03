@@ -6782,3 +6782,4 @@ Pixel Size,Размер пикселя
 set pixel size to {factor},задать размер пикселя {factor}
 Factor,Множитель
 1 is the size the game was drawn at. 2 is twice as big.,"1 - это размер, под который нарисована игра. 2 - вдвое крупнее."
+"Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.","Решает, как часто перерисовывается экран внутри мира. Только когда виден - дешёвая настройка и верное значение по умолчанию; один раз сейчас рисует единственный кадр и останавливается, чего и хочет миниатюра или снимок; никогда паркует вид, не освобождая его."

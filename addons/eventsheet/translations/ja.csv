@@ -6782,3 +6782,4 @@ Pixel Size,ドットの大きさ
 set pixel size to {factor},ドットの大きさを {factor} にする
 Factor,倍率
 1 is the size the game was drawn at. 2 is twice as big.,1 はゲームを描いたときの大きさ。2 はその二倍です。
+"Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default; once now draws a single frame and stops, which is what a thumbnail or a still wants; never parks the view without freeing it.",ワールド内のスクリーンをどれくらいの頻度で描き直すかを決めます。見えているときだけが安上がりで、既定として正しい設定です。いま一度は一フレームだけ描いて止まるもので、サムネイルや静止画が求めるのはこれです。描き直さないは、ビューを解放せずに止めておきます。
