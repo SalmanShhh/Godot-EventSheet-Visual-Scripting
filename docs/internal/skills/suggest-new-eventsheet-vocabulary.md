@@ -18,18 +18,40 @@ Before inventing any vocabulary, grep the repo so nothing already-shipped is pre
 new, and so authoring snippets use REAL names:
 
 - `addons/eventforge/registration/modules/*.gd` - builtin ACE vocabulary (ace_ids AND
-  display names; both must be collision-checked before minting).
-- `tools/pack_builders/*.gd` - how packs author ACEs in code.
-- `addons/eventsheet/api/eventsheets.gd` - the public API (register_simple_ace,
-  register_doctor_check, register_palette_command, register_editor_preview,
-  register_editor_gizmo, register_asset_drop_handler, register_row_menu_item, ...).
+  display names; both must be collision-checked before minting). A verb is ONE LINE there, and
+  the first two arguments are the two names: `F.act` / `F.cond` / `F.expr` / `F.trig(ace_id,
+  label, template_or_signal, group, reads_as, description, host, provider)` on
+  `addons/eventforge/registration/ace_factory.gd`, with fields chained as
+  `.param(id, default, label, words, hint)` (and `.param_typed` / `.param_choice` /
+  `.param_suggesting`). `F.make_descriptor` is the long form and still ships in eleven places.
+- `tools/pack_builders/*.gd` - how packs author ACEs in code, with the behaviour code itself in
+  real `.gd` files under `tools/pack_builders/src/<pack>/`, assembled by `Lib.pack_from_source`
+  (`tools/pack_builders/_lib.gd`). `wrap.gd` over `src/wrap/wrap.gd` is the shortest example.
+- `addons/eventsheet/api/eventsheets.gd` - the public API. Nineteen `register_*` statics, among
+  them register_provider_script, register_block_kind, register_palette_command,
+  register_completion_source, register_translation_file, register_doctor_check,
+  register_row_menu_item, register_starter, register_quick_add_synonyms, register_param_editor,
+  register_param_help, register_preference, register_simple_ace, register_tour,
+  register_editor_preview, register_editor_gizmo, register_asset_drop_handler. Their shapes
+  FREEZE once shipped, so never propose a variant of one that exists.
 - `docs/GUIDE-CUSTOM-ACES.md` - the real annotation set: @ace_name, @ace_description,
   @ace_category, @ace_condition, @ace_action, @ace_trigger, @ace_expression,
-  @ace_looping(iterator), @ace_codegen_template, @ace_param(name, hint:, default:,
-  options:), @ace_expose_all, @ace_hidden.
+  @ace_looping(iterator), @ace_codegen_template, @ace_display_template, @ace_param(name, hint:,
+  default:, options:), @ace_expose_all, @ace_hidden, @ace_featured, @ace_deprecated,
+  @ace_succeeded_by. The authoritative list is `EventSheetSemanticAnalyzer.KNOWN_ANNOTATIONS`;
+  anything not in it warns as a typo and does nothing.
 - `addons/eventsheet/editor/dock/menu_bar.gd` + `context_menus.gd` - real menu labels for
-  click paths.
+  click paths. Note the toolbar rests at seven controls with one cascading Menu over Sheet /
+  Add / Edit / View / Tools submenus, so a click path reads `Menu > Tools > Item`.
 - Any theme-relevant guides in `docs/` (e.g. GUIDE-EDITOR-TOOLS.md for tool-dev themes).
+
+A suggestion that wants a DOCTOR check is a "needs editor seam" only for its finder, not for its
+registration: `EventSheets.register_doctor_check(check_id, callable)` already exists and each
+section is one `ensure_registered()` line. The section files under `addons/eventforge/*_doctor.gd`
+EXTEND `EventSheetDoctorSection` (`addons/eventforge/doctor_section.gd`) for the four beats they
+share - `_finding`, `_filed`, `_says_any`, `_ordered_paths` - which is a helper base, not a
+register. There is no `register_doctor_section`: it was surveyed against all fifteen sections, not
+one fitted, and shipping it would have frozen a public shape with no users in it. Do not propose it.
 
 Tag every suggestion honestly: green "NEW VERBS" (pure vocabulary), blue "NEEDS EDITOR
 SEAM" (requires new plugin support), gray "EXTENDS EXISTING" (a seam exists - name the
@@ -64,9 +86,13 @@ where the idea is sound and only the shape is wrong.
 1. **The rows**: how the pattern reads as event-sheet rows (condition lane | action lane).
 2. **Author via eventsheets**: the click path, as `<span class="ui">Menu > Item</span>`
    chips inside an `.author` box labeled "HOW YOU'D AUTHOR IT (EDITOR)".
-3. **Author via code**: a small GDScript snippet (doc-comment @ace_* annotations, or an
-   EventSheets.register_* call, or a pack-builder descriptor) in a second `.author` box
-   labeled "HOW YOU'D AUTHOR IT (CODE)" with a `<pre>` block.
+3. **Author via code**: a small GDScript snippet in a second `.author` box labeled
+   "HOW YOU'D AUTHOR IT (CODE)" with a `<pre>` block. Pick the route the suggestion actually
+   takes: doc-comment `@ace_*` annotations over a member; an `EventSheets.register_*` call; a
+   builtin descriptor written in the ONE-LINE MAKER form (`F.act(...)`, `.param(...)`,
+   `.stateful(...)`), never the ten-argument `make_descriptor` positional form; or, for a
+   shippable behaviour, a pack builder over real source (`Lib.pack_from_source("<pack>", ...)`
+   plus `src.verb(...)`, with the body a piece in `tools/pack_builders/src/<pack>/`).
 
 Group suggestions under h2 headers (A., B., C., ...) with the tier tag beside the title.
 

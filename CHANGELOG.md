@@ -1042,6 +1042,21 @@ buys thirteen lines and costs 2,145 readings, so it will not.
   the base and the tree now, under a heading that says why, so the one thing the gate cannot measure
   is the one thing it names. This wave's four read `+21/-4`, `+92/-0`, `+11/-8` and `+22/-0`, all of
   them fields added to a record, beside `identity: registry=same words=same verbs=5324`.
+- **The two authoring skills were taught the tree the waves left behind.** The pages under
+  `docs/internal/skills/` still showed built-in vocabulary as ten-argument `make_descriptor` calls,
+  still said a new pack's behaviour code was authored as quoted strings, and still told a reader
+  that "there is no single-test filter flag" and to hand-roll a per-file `_check`. They are checked
+  against the code again: the four one-line makers and the parameter chain with the type read off
+  the default, `Lib.pack_from_source` over real `.gd` files with the manifest, the piece rules and
+  the refusal that makes a hole in a pack fail the build, `tests/support.gd` as the ONE assertion
+  vocabulary, `EVENTFORGE_TEST_ONLY` and the iterate / daemon / report / bisect tools around it, and
+  the gates a vocabulary change actually owes - the four-text identity proof, the pack and showcase
+  drift checks, the translation harvest, the reading dump and `explain`, `verify_sheets`, and the
+  help bake last. The lift table's `statements` runs and its `mark` pre-filter are named as the
+  route a multi-statement spelling takes, with `EVENTFORGE_LIFT_ONLY` and the generated-fixture
+  harness beside them, and the Doctor paragraph now says what is true: sections EXTEND
+  `EventSheetDoctorSection` for the beats they share and register through the frozen
+  `register_doctor_check`, and `register_doctor_section` does not exist and is not to be proposed.
 
 ### Fixed
 

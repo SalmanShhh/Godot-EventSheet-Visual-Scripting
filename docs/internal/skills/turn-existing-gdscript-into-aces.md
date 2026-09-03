@@ -95,11 +95,12 @@ Two names must be unique: the `ace_id` (hard requirement) and the display name (
 duplicate is a silent-wrong-answer trap - two identical rows in the picker, one of which
 does something else).
 
-Built-in ids and names are POSITIONAL arguments, not keyed fields:
+Built-in ids and names are POSITIONAL arguments, not keyed fields. A built-in verb is one line,
+and the first two arguments of that line are the two names:
 
 ```gdscript
-F.make_descriptor("Core", "StartCooldown", "Start Cooldown", ACEDescriptor.ACEType.ACTION, ...)
-#                 provider  ace_id          display_name
+F.act("StartCooldown", "Start Cooldown", "set_meta(...)", "Time", "start cooldown {name} for {seconds}s", "Starts …")
+#     ace_id           label
 ```
 
 So grep for the candidate STRINGS, never for the words "ace_id" or "display_name":
@@ -110,7 +111,8 @@ grep -rn '"StartCooldown"\|"Start Cooldown"' addons/eventforge/registration/modu
 
 - `addons/eventforge/registration/modules/*.gd` - the built-in vocabulary.
 - `tools/pack_builders/*.gd` - the behaviour packs' SOURCE (`eventsheet_addons/` is their
-  compiler output; a pack edit belongs in the builder).
+  compiler output; a pack edit belongs in the builder). A pack whose behaviour code lives in
+  real files keeps it under `tools/pack_builders/src/<pack>/`, so grep both.
 - `eventsheet_addons/**` - shipped packs, whose names live in `## @ace_name(...)` lines.
 
 What the suite catches for you, and what it does not:
@@ -136,7 +138,8 @@ by `tools/vocabulary_doc.gd`) before writing anything.
 | The same script, and you want autocomplete | `static func _eventforge_register(reg: EventForgeRegistrar)` | typed chained calls | as above, minus starting values and looping |
 | Third-party, generated, or otherwise un-annotatable | `EventSheets.register_simple_ace({...})` | a Dictionary from any `@tool` script | template + params only, session-scoped |
 | Already a function in a sheet | publish the verb (ACE Studio / the verb row) | no code | full annotation set, written for you |
-| Vocabulary that needs per-row state, `node_type`, or an edge gate | a descriptor: a module under `addons/eventforge/registration/modules/`, or an `EventForgeBridge` autoload | `F.make_descriptor(...)` chains | everything |
+| A behaviour you want to SHIP with the plugin | a pack builder, `tools/pack_builders/<pack>.gd`, over real `.gd` source in `tools/pack_builders/src/<pack>/` | `Lib.pack_from_source(...)` + `src.verb` / `src.condition` / `src.expression` naming pieces | everything a published sheet function can do |
+| Vocabulary that needs per-row state, `node_type`, or an edge gate | a descriptor: a module under `addons/eventforge/registration/modules/`, or an `EventForgeBridge` autoload | `F.act` / `F.cond` / `F.expr` / `F.trig` chains | everything |
 
 Details that decide the choice:
 
@@ -159,6 +162,71 @@ Details that decide the choice:
   `@ace_codegen_template("$Class.fn({args})")`. A compiled pack IS a provider script, which
   is why publishing needs no separate registration step. An unexposed function emits
   `## @ace_hidden`, because reflection would otherwise publish every public method.
+- **A NEW PACK is authored as real GDScript, not as quoted strings.** `Lib.pack_from_source`
+  (`tools/pack_builders/_lib.gd`) reads a folder of ordinary `.gd` files under
+  `tools/pack_builders/src/<pack>/`; the builder names the pieces it wants. A PIECE is either a
+  `#region <name>` … `#endregion` pair around top-level code (exports, signals, helpers, emitted
+  verbatim) or the BODY of a top-level `func`, dedented by one tab and named after the function.
+  Everything else outside a region is scaffolding - the `extends`, the host var, the members the
+  pack declares for itself at build time - which is what lets the editor parse-check the file and
+  never reaches the pack. `static func` is scaffolding too: only a plain `func` at column 0 opens
+  a piece. A func piece ENDS AT THE FIRST LINE THAT IS NOT BLANK AND NOT INDENTED, so a `#`
+  comment written at column 0 inside a body silently truncates the piece; comment at the body's
+  own indentation. Piece names are unique across the folder, files are read in sorted order, and
+  regions may not nest. `tools/pack_builders/wrap.gd` over `tools/pack_builders/src/wrap/wrap.gd`
+  is the template to copy.
+- **What a source file cannot carry is declared on a typed manifest**, one setter per fact:
+  `Lib.manifest().behavior().category("Wrap").tags([...])`, plus `.autoload`, `.verb_category`,
+  `.version`, `.variables`, `.expose_all_verbs` / `.expose_all_verbs_on_a_node`. Never a
+  dictionary of magic strings - the shape it replaced accepted a key nobody knew and built the
+  wrong pack silently.
+- **A hole in a pack FAILS the build.** `PackSource.code()` records a piece asked for by a name
+  the folder does not hold, and `Lib.publish` refuses a pack with any problem on it rather than
+  writing an empty body. Before that guard a NEW pack with a hole shipped green: `save_pack`
+  returned true, the exit code was 0, and only the drift gate could notice - and only for a pack
+  that was already committed.
+- **Unquoting does not shrink line counts, and that is not the point.** The first four
+  conversions (`wrap`, `skin_catalog_loader`, `weapon_kit`, `save_system`) came to **+88 lines**
+  over 1,771 lines of builder and 75 verbs; lines per verb went 23.6 -> 24.8. The escaped form
+  was already one line per line of code, so what it charged was characters, not lines. What the
+  real-file form buys is highlighting, a parse check, a breakpoint and no doubled quotes - which
+  is why it is the door every NEW pack comes through and not a rewrite of the other 110.
+- **Those source files are exempt from ONE style rule and no others.** They are scanned like the
+  rest of `tools/`, with the two-blank rule alone lifted (`SINGLE_BLANK_TREE` in
+  `tests/style_guide_test.gd`), because a blank line in a source file is a blank line in a
+  drift-gated emitted pack. The gate prints how many exemptions it took. Do not re-space one by
+  hand.
+- **A BUILT-IN VERB IS ONE LINE, and the line says which kind of verb it is.** There are four
+  makers on `EventForgeACEFactory` (`addons/eventforge/registration/ace_factory.gd`), aliased `F`
+  in every module: `F.act` / `F.cond` / `F.expr` for a row that DOES / ASKS / READS AS A VALUE,
+  and `F.trig` for one the engine runs. The kind is the method, so it is never a constant spelled
+  out in the middle of an argument list:
+
+  `F.act(ace_id, label, template, group, reads_as, description, host, provider)`, with `F.trig`
+  taking `signal_name` where the other three take `template` - a trigger emits no expression of
+  its own. `provider` defaults to `F.BUILTIN_PROVIDER` (`"Core"`), and `host` is the Godot class
+  the row belongs on (`make_descriptor`'s `node_type`). A trigger that is a MOMENT OF THE PHYSICS
+  STEP rather than a signal leaves `signal_name` blank.
+- **A field is a typed chained call, never a mini-language inside a string.** On the descriptor
+  (`addons/eventforge/resources/ace_descriptor.gd`): `.param(id, default, label, words, hint)`,
+  and where the chain cannot say it, `.param_typed(type_name, id, ...)`,
+  `.param_choice(id, default, label, words, choices, hint)`,
+  `.param_suggesting(id, default, label, words, suggestions, hint)` and `.param_built(ACEParam)`.
+  Then the rest of the row: `.described`, `.featured`, `.stateful`, `.looping`,
+  `.evaluated_last`, `.project_scoped`, `.rich_text_when`, `.deprecated`, `.succeeded_by`.
+
+  **The type comes from the DEFAULT's own type** (`ACEParam.type_name_for`, in
+  `addons/eventforge/resources/ace_param.gd`): bool, int, float, Vector2, Vector2i, Vector3 and
+  Color map to themselves and EVERYTHING ELSE is `"String"`. So a default that is text standing
+  for another type - `Vector2.ZERO` written as an expression, `self` standing for a Node - must
+  name its type with `.param_typed`, or the field is a String field.
+- **`F.make_descriptor` and `F.make_param` stay forever**, because every shipped `ace_id`,
+  template and parameter default is a compatibility promise and the makers compile to them. It is
+  still the right call in four narrow places, which is the whole of what is left verbose across
+  the built-in modules: a parameter list built by a shared helper, a comment sitting INSIDE the
+  argument list explaining the argument under it, a template that is a two-line string with a real
+  newline in it, and a descriptor whose KIND is a variable rather than a word. Eleven sites, and
+  they are the right eleven; do not add a twelfth for style.
 - **Only descriptors carry `.stateful(...)`, `.evaluated_last()` and `node_type`.** No
   annotation and no registrar verb exists for any of them (checked against
   `EventSheetSemanticAnalyzer.KNOWN_ANNOTATIONS` and `EventForgeRegistrar`).
@@ -192,6 +260,8 @@ re-reflects them, so "the stub works when pasted" is a gate, not a hope.
 | `@ace_hidden` | Hide from the picker. |
 | `@ace_featured` | Bold, floated to the top of its category. |
 | `@ace_deprecated("why", "successor_ace_id")` | Keeps compiling in existing sheets, hidden from the picker, flagged on hover. |
+| `@ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` | The FORWARDING ADDRESS - where the newer spelling lives, what this row's parameters are called over there, and a value for each parameter the old row never had. It is NOT deprecation: the verb keeps its id, its template and its place in the picker. The compiler emits this line (`SheetCompiler._emit_expose_annotations`) and the importer reads it back. |
+| `@ace_lift_example("…[[slot\|node: $X]]…")` | One spelling this verb is written as BY HAND, marked up. Read by the importer (`addons/eventforge/importer/pack_spellings.gd`), never by the generator: it changes how an opened file READS, never what a row emits. |
 | `@ace_icon(path)` | Picker icon. |
 
 ### Class-level (above `class_name` / `extends`)
@@ -286,11 +356,14 @@ Time.get_ticks_msec() >= int(get_meta(&"__ef_cool_" + str({name}), 0))
 An unset key reads as ready because `get_meta` takes a default. The state is per node and
 addressed by a name the user types, so two cooldowns never collide.
 
-**Stateful members** - descriptors only, `.stateful(member, prelude, on_true)`:
+**Stateful members** - descriptors only, `.stateful(member, prelude, on_true, on_exit)`. This is the
+shipped `EveryXSeconds`, wrapped for the page; in `system_aces.gd` it is one line:
 
 ```gdscript
-F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds", ACEDescriptor.ACEType.CONDITION,
-	"__every_{uid} >= maxf({seconds}, 0.001)", "", [...], "Time", "Every {seconds} seconds")
+F.cond("EveryXSeconds", "Every X Seconds", "__every_{uid} >= maxf({seconds}, 0.001)",
+		"Time", "Every {seconds} seconds",
+		"True once each time the chosen number of seconds passes, for repeating timers.")
+	.param("seconds", "1.0", "Seconds", "Interval between runs (needs a per-frame trigger).", "expression")
 	.stateful("var __every_{uid}: float = 0.0",
 		"__every_{uid} += get_process_delta_time()",
 		"__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))")
@@ -310,6 +383,33 @@ Three rules come with it:
 An edge gate ("was I reached last tick?") adds `.evaluated_last()`, which hoists the term to
 the end of the emitted `and` chain wherever the user puts the cell. A stateful condition can
 never be inverted, and only makes sense under a per-frame trigger.
+
+### Code that should SHIP as a behaviour pack
+
+The builder holds the pack's shape; the code stays real GDScript in its own file. From
+`tools/pack_builders/wrap.gd`, trimmed:
+
+```gdscript
+static func build() -> bool:
+	var src: Lib.PackSource = Lib.pack_from_source("wrap", "Node2D", "WrapBehavior",
+		"Asteroids-style screen wrapping: …",
+		Lib.manifest().behavior().category("Wrap").tags(["movement", "screen"]))
+	src.note("Wrap behavior … This pack is an event sheet - extend it by editing it.")
+	src.block("block_1")
+	src.on_ready()
+	src.on_physics_process()
+	src.verb("set_wrap_enabled", "Set Wrap Enabled", "Turns wrapping on or off at runtime.",
+		[["enabled", "bool"]])
+	return Lib.publish(src, "res://eventsheet_addons/wrap/wrap_behavior")
+```
+
+`src.verb` is an Action, `src.condition` a Condition, `src.expression(..., ret)` a value-returning
+Expression, and `src.object_expression(..., returns_class)` one that returns a Texture2D, a Node or
+a Resource - Godot's `TYPE_*` numbers only reach as far as "an object". Each takes its body from the
+piece NAMED AFTER THE FUNCTION, so `set_wrap_enabled` in the builder is `func set_wrap_enabled(...)`
+in `tools/pack_builders/src/wrap/wrap.gd`, where the `## @ace_*` annotations live too. `src.block`
+emits a named `#region` verbatim; `src.on_ready` / `on_process` / `on_physics_process` /
+`on_tree_exiting` hang a piece off the engine callback of the same shape.
 
 ### Dropdowns, and the single-pass rule
 
@@ -413,6 +513,37 @@ treeless in tests because `ConfigFile` does.
   this only bites hand-assembled test sources - which is where it bit
   (`tests/array_functional_aces_test.gd`).
 
+### The other direction: making the hand-written line READ as your verb
+
+Wrapping publishes the verb; it does not make the line somebody ALREADY wrote open as that row.
+That is the lifter's job, and the route is a TABLE ENTRY, not a matcher.
+
+An entry in `addons/eventforge/importer/lift_table.gd` is data: `id`, `ace_id`, `pattern`,
+`shape`, `slots`, plus the optional `provider`, `params`, `defaults`, `guard`, `error`, `origin`,
+`statements` and `mark`. Families are found by SCANNING for a `lift_entries` static under
+`addons/eventforge/importer/` - there is no list to join.
+
+- **A run of statements is an entry too.** Instead of one `pattern`, give an ordered `statements`
+  list, each with the `indent` it is written at. They SHARE THEIR CAPTURES: a name spelled by more
+  than one statement has to read the same text in all of them, which is how a run says "the local
+  made on the first line is the one named on the second and placed on the third" without that
+  local becoming a value of the row. `addons/eventforge/importer/layout_on_top_lift.gd` is the
+  worked example.
+- **`mark` is the cheap pre-filter**: the substring an entry's OPENING statement must contain
+  before any pattern of it is run.
+- **Hand-written matchers still exist and are not the route.** `ace_lifter.gd` keeps
+  `SPELLING_FAMILIES` (one line each) and `RUN_FAMILIES` (`match_run`), and the two that stayed
+  hand-written say WHY in their own headers - independent optional statement pairs, or a claim
+  that spans a statement and then a region and hands back no template at all. Everything else is
+  an entry, because an entry gets a generated byte test and a matcher gets none.
+- **The harness is `tests/lift_table_test.gd`.** Per entry it generates the fixture line from the
+  entry's own `shape` and `slots` through the real emitter, asks the engine what the line means,
+  pins the row and its values, then re-emits and asserts byte identity.
+  `EVENTFORGE_LIFT_ONLY=<entry ids>` narrows it to named entries (comma-separated, snake_case ids
+  like `layout_on_top_written`).
+- **Provenance is a command**, not a guess: `tools/explain.gd -- <res://file.gd> <line>` reports a
+  run the table claims at the `table` layer, naming the entry.
+
 ---
 
 ## Step 5 - Verify the way the project verifies
@@ -420,30 +551,115 @@ treeless in tests because `ConfigFile` does.
 1. **Defaults must stand alone.** `tests/builtin_ace_compile_test.gd` fills every parameter
    with its DEFAULT and compiles the ACE inside its declared host class. A default naming
    `global_position` on a plain `Node`, a bare `target`, or `velocity` fails - correctly,
-   because the default is what the row shows the moment it is dropped.
+   because the default is what the row shows the moment it is dropped. An ACE that genuinely
+   cannot compile alone (sheet-synthesized state, a user-chosen call target) belongs in that
+   file's `NOT_STANDALONE` list, and nowhere else.
 2. **Parse-check anything generated.** `"$GODOT" --headless --path . --check-only --script <file>`.
    The pack build and the drift audit do NOT parse-check their output.
 3. **Read the literal verdict line.** A test that crashes or returns a non-bool prints ZERO
    `[FAIL]` lines. Only `All tests passed.` means passed; a tail segfault AFTER the verdict
-   is a known harmless teardown flake.
-4. **One value per check.** `_check(a and b, "expected")` compares a bool to a String, which
-   is a runtime error in GDScript and produces exactly the silent failure above. Pin VALUES,
-   not counts.
-5. **Run the ACE end to end where you can.** Compile a sheet that uses it, assert the emitted
+   is a known harmless teardown flake. A `[FAIL]` line can be INDENTED, and one can sit under a
+   green verdict (a probe printing a deliberate failure it does not count), so the verdict is
+   the answer in both directions.
+4. **Write assertions in the ONE assertion vocabulary**, `tests/support.gd`
+   (`class_name EventSheetTestSupport`). Preload it - `const SUPPORT := preload("res://tests/support.gd")` -
+   and call:
+   - `SUPPORT.check(label_prefix, label, actual, expected)` - one assertion, printing the
+     suite's `[PASS]` / `[FAIL]` line plus the `expected:` / `actual:` pair the report tool parses;
+   - `SUPPORT.pins(label_prefix, rows)` - a table of `[label, actual, expected]` rows;
+   - `SUPPORT.pin_table(test_name, pins, answer)` / `SUPPORT.pin_value(test_name, label, actual, expected)` -
+     the quieter input-to-expected form, silent on a pass;
+   - `SUPPORT.compile_output(sheet, output_path)` / `SUPPORT.reopen(source, lift, script_path)` /
+     `SUPPORT.reemit(source, verify_path, lift)` - the compile-and-round-trip trio.
+
+   Do not hand-roll a per-file `_check`: the printed shapes are parsed by the runner, the report
+   tool, the parallel launcher and CI, so a second reporter is a contract change. Extend
+   `support.gd` instead. And compare VALUES, never boolean-and chains - `_check(a and b, "expected")`
+   compares a bool to a String, which is a GDScript runtime error and produces exactly the silent
+   failure above. Pin values, not counts.
+5. **Run one test alone; there IS a filter.** `EVENTFORGE_TEST_ONLY=<name>` (comma-separated for
+   several) in the environment of the normal runner command,
+   `"$GODOT" --headless --path . --script tests/run_tests.gd`. Around it:
+   - `powershell -File tools/run_tests_parallel.ps1 -Iterate` runs what `tools/pick_tests.gd`
+     says your change could have broken, first, and stops on the first red. NEVER a verdict.
+   - `powershell -File tools/test_daemon.ps1` in one terminal plus
+     `powershell -File tools/test_daemon_client.ps1 <tests...>` answers a single test in about a
+     second instead of twenty-five.
+   - `"$GODOT" --headless --path . --script tools/test_report.gd` pre-investigates a red run:
+     the assertion with its expected and its got, the changed files that map to it, and the line
+     that reruns it alone. `tools/bisect_test.ps1 <test>` wraps the same for `git bisect run`.
+   - `EVENTFORGE_TEST_SHARD=k/n` (or `tail`) runs one shard by hand; `EVENTFORGE_LIFT_ONLY=<entry ids>`
+     narrows the lift-table harness to named entries and is spelled after `EVENTFORGE_TEST_ONLY`
+     so the two compose.
+   - **A brand-new test file is invisible until the project is imported.** Discovery is through
+     the resource filesystem, so run `"$GODOT" --headless --path . --import` first (plus one
+     headless editor boot when the file declares a new `class_name`), and remember a new file
+     RESHARDS the parallel suite. The launcher names both silent states -
+     `CRASHED (started, never finished): <test>` and
+     `NEVER RAN (on disk, in no shard's trail): <test>` - and fails the run on either.
+6. **Run the ACE end to end where you can.** Compile a sheet that uses it, assert the emitted
    GDScript parses, then instantiate and run it. A wrong native method name is a valid string
-   until the player triggers it.
-6. **Sweep translations** when a string enters a menu or becomes a display name. A pack ships
-   `eventsheet_addons/<pack>/translations.csv` keyed by the English source text
-   (`tests/pack_translations_test.gd`); editor UI strings live in
-   `addons/eventsheet/translations/*.csv`.
-7. **Prove byte-stable regeneration** if you touched a pack builder: rebuild
-   (`tools/build_sample_behaviors.gd`), then the drift audit (`tools/audit_addons.gd`) must
-   print `drifted=0`. Regenerate `docs/REFERENCE-ENGINE-ACES.md` with `tools/vocabulary_doc.gd`
-   when you add built-in vocabulary.
-8. **There is no single-test filter flag.** Run a throwaway SceneTree script that loads the test
-   script and calls `run()`, then `quit(0)`. If you added a `class_name`, the headless
-   `--script` run will not see it until the class cache is regenerated, so `load()` the test
-   by path instead.
+   until the player triggers it. Physics does NOT step inside `run_tests.gd`; a behaviour that
+   needs frames wants a temporary non-headless SceneTree harness.
+7. **Prove the vocabulary did not move, when you touched a builtin module.**
+   `powershell -File tools/prove_registry_identity.ps1 -Base <sha>` runs `tools/dump_registry.gd`
+   over a detached worktree of the base commit and over your tree, and prints
+   `identity: registry=same words=same fields=same order=same verbs=<n> base=<sha>`. THE GATE IS
+   ALL FOUR TEXTS, because each is blind to what the others carry:
+   - `registry` - key, kind, shelf, parameters with types and defaults, forwarding address and
+     the emitted template. A move here is a frozen-contract break.
+   - `words` - name, description, reads-as sentence, and every parameter's label and description.
+     Catches a migration that keeps every identity line and empties every picker.
+   - `fields` - what a verb OFFERS: each parameter's hint, options, autocomplete, lens, option-label
+     and required flags, plus the descriptor's node type, signal, return type and the featured /
+     project-scoped / deprecated flags. None of it moves an emitted byte, so the first two texts
+     cannot see a vanished dropdown or a lost `.project_scoped()`.
+   - `order` - the registration SEQUENCE and the lifter's reverse index. The other three are
+     sorted by key and structurally blind to it, and registry order is what breaks ties in the
+     reverse-lifter and decides picker shadowing.
+
+   Comparison is case-sensitive and positional. The run also names the instrument files it copied
+   into the base worktree, because those are the one thing it cannot measure.
+8. **Rebuild and re-gate the packs**, if you touched `tools/pack_builders/` (the builder OR its
+   `src/` files): `"$GODOT" --headless --path . --script tools/build_sample_behaviors.gd`, then
+   `"$GODOT" --headless --path . --script tools/audit_addons.gd` must print `audited=N drifted=0`,
+   then `--check-only --script` the emitted pack yourself - neither the build nor the audit parses
+   its own output. Regenerate `docs/REFERENCE-ENGINE-ACES.md` with `tools/vocabulary_doc.gd` when
+   you add built-in vocabulary.
+9. **Re-check the showcases after a PACK change, not only after a builder change.**
+   `"$GODOT" --headless --path . --script tools/build_examples.gd -- --check` must print
+   `showcases=N drifted=0`. A change to a pack's MEMBER ORDER drifts `demo/showcase/` without
+   anyone touching it, which is how five `.tscn` files once went stale unnoticed. A check killed
+   half way leaves the tree REGENERATED, which is the correct tree; `git status` names it.
+10. **Sweep translations** when a string enters a menu or becomes a display name.
+    `"$GODOT" --headless --path . --script tools/harvest_translations.gd` must print
+    `harvest: nothing owed`; `-- --dry-run` shows what it would write. The engine errors it prints
+    between `walking the live editor` and `live editor walked` are EXPECTED and say so - the
+    advisory half opens real dialogs with no editor around them. Its two owed sources are scoped to
+    `addons/eventsheet` and `addons/eventforge`, so a PACK's own catalog is outside its world: a
+    pack ships `eventsheet_addons/<pack>/translations.csv` keyed by the English source text, read
+    by `addons/eventsheet/editor/l10n.gd` and pinned by `tests/pack_translations_test.gd` (packs
+    ADD, they never re-word an editor string). Editor UI strings live in the nine
+    `addons/eventsheet/translations/*.csv` files, in lockstep.
+11. **Diff the readings if you changed how a row READS.** A row's spans are data and nothing else
+    writes them down, so the gate is a before/after diff, not a golden:
+    `"$GODOT" --headless --path . --script tools/reading_dump.gd -- out=user://before.txt`, make the
+    change, dump to `after.txt`, diff. `only=builtin` answers in seconds.
+    `"$GODOT" --headless --path . --script tools/explain.gd -- res://path/to/file.gd 42` says what
+    one line became - the row, then `shaped` (which builder path shaped its reading), then the
+    `read by:` list of layers that would claim it (`table`, `example`, `matcher`, `index`, `call`,
+    `property`, `verbatim`). `tools/reading_census.gd` reads the same population and reports what
+    the two reading files actually hold.
+12. **Run the standing-contract gate over what you changed.**
+    `"$GODOT" --headless --path . --script tools/verify_sheets.gd -- <paths...>` - parse, byte-exact
+    round trip, doubled baked locals, and migration rows still waiting on a human. With no paths it
+    walks the whole project (~1,300 files at ~0.4 s each), so pass the paths you touched, or
+    `--skip res://tests/fixtures/` for the deliberately broken ones.
+13. **Re-bake the help bundle LAST**, after the CHANGELOG entry:
+    `"$GODOT" --headless --path . --script tools/build_help_bundle.gd`, then `-- --check` must print
+    `help: pages=N drifted=0`. The bundle mirrors `docs/*.md`, `docs/Addons/`, `docs/Modules/` and
+    the locale sets; `docs/internal/` never ships, so a change confined to it bakes nothing - run
+    the check anyway.
 
 ---
 
