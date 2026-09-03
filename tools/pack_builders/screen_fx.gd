@@ -14,22 +14,31 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## COSTING NOTHING AT REST is a property, not a hope. A rectangle covering the viewport redraws every
 ## pixel of it through the shader every frame, so the pack hides the rectangle whenever every effect
 ## has finished, and shows it again the moment one starts. A hidden Control is not drawn at all.
+##
+## AND THEN THE POST STACK, which is the rest of what a screen wants: a named list of effects, each
+## its own full-screen rectangle and shader, drawn in order. Nine shaders ship beside the first one -
+## vignette, film grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox - plus
+## the two the colour-vision rows wear. A whole stack saves as ONE look file the project owns, and
+## the only look shipped beside them is an empty one called Clean. The six verbs above are frozen and
+## go on working exactly as they did, on their own rectangle, underneath the stack.
+##
+## The stack's code and every shader are REAL FILES in the pack's source folder, so they are
+## highlighted, parse-checked on import and breakpointable; the builder assembles the code and copies
+## the shaders the way any pack ships a companion file.
 static func build() -> bool:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.host_class = "CanvasLayer"
-	sheet.custom_class_name = "ScreenFx"
-	sheet.class_description = "Full-screen effects on one rectangle: a shockwave ring from a point in the world, a fade to a colour you can wait on, a blur, and a chromatic pulse. Add the pack's own scene to a scene once and the verbs are ordinary rows. The rectangle hides itself whenever every effect is idle, so a layer nobody is using costs nothing."
-	sheet.addon_category = "Screen FX"
-	sheet.addon_tags = PackedStringArray(["effects", "shader", "juice", "camera", "visual"])
-	sheet.ace_expose_all_mode = "node"
+	var src: Lib.PackSource = Lib.pack_from_source("screen_fx", "CanvasLayer", "ScreenFx",
+		"Full-screen effects on one rectangle: a shockwave ring from a point in the world, a fade to a colour you can wait on, a blur, and a chromatic pulse. Add the pack's own scene to a scene once and the verbs are ordinary rows. The rectangle hides itself whenever every effect is idle, so a layer nobody is using costs nothing.",
+		Lib.manifest().category("Screen FX").tags(PackedStringArray([
+			"effects", "shader", "juice", "camera", "visual"])).expose_all_verbs_on_a_node())
+	var sheet: EventSheetResource = src.sheet
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. This pack is an event sheet - extend it by editing it."
-	sheet.events.append(about)
+	src.note("Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of nine shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.")
 
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(_runtime_lines())
 	sheet.events.append(block)
+
+	src.block("stack")
 
 	var ready_row: EventRow = EventRow.new()
 	ready_row.trigger_provider_id = "Core"
@@ -49,7 +58,13 @@ static func build() -> bool:
 	ready_row.actions.append(ready_body)
 	sheet.events.append(ready_row)
 
-	return Lib.save_pack(sheet, "res://eventsheet_addons/screen_fx/screen_fx")
+	if not Lib.publish(src, "res://eventsheet_addons/screen_fx/screen_fx"):
+		return false
+	# The shaders ARE the effects: an entry the pack cannot find a file for draws nothing, so a pack
+	# folder without them is a pack that silently does nothing. They ship in the same build, along
+	# with the empty Clean look - the ONE starter, and the only look this plugin ever names.
+	return Lib.ship_files("screen_fx", "res://eventsheet_addons/screen_fx/screen_fx",
+		PackedStringArray(["gdshader", "tres"]))
 
 
 ## The whole runtime: the rest state, the rectangle, the four verbs and the switch that keeps an

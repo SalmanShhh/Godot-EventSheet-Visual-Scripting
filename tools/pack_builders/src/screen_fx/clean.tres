@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="ScreenLookResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/screen_look_resource/screen_look_resource.gd" id="1_screen_look"]
+
+[resource]
+script = ExtResource("1_screen_look")
+look_name = "Clean"
+rows = []

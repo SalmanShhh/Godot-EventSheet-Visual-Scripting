@@ -1882,6 +1882,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"quality_preset_resource": "Game-Settings",
 	"quest_resource": "Quest",
 	"random_table_resource": "Advanced-Random",
+	"screen_look_resource": "Screen-FX",
 	"skill_tree_resource": "Upgrades",
 	"skin_catalog_loader": "SkinVault",
 	"skin_catalog_resource": "SkinVault",

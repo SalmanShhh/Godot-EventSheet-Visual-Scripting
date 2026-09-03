@@ -1,49 +1,10 @@
-## @ace_tags(effects, shader, juice, camera, visual)
-## @ace_category("Screen FX")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/screen_fx/icon.svg")
-class_name ScreenFx
+# Pack source - screen_fx, the post stack. The behaviour the pack grew on top of its six frozen
+# verbs, as real GDScript: highlighted, parse-checked and breakpointable here, and assembled into the
+# pack by Lib.pack_from_source. The #region below is one piece of the sheet; everything outside it is
+# scaffolding the pack declares for itself at build time and never reads from here.
 extends CanvasLayer
-## Full-screen effects on one rectangle: a shockwave ring from a point in the world, a fade to a colour you can wait on, a blur, and a chromatic pulse. Add the pack's own scene to a scene once and the verbs are ordinary rows. The rectangle hides itself whenever every effect is idle, so a layer nobody is using costs nothing.
 
-## The ColorRect the effects are drawn on, by the name the shipped scene gives it.
-const RECT_NAME: String = "Screen"
-
-## Every dial screen_fx.gdshader declares that can be RUNNING, with the value that means it is
-## not. A rectangle whose dials all read these draws the screen back exactly as it arrived,
-## which is the moment it is worth switching off. fade_color and shock_center are not here:
-## they say what an effect looks like rather than whether one is happening.
-const AT_REST: Dictionary = {"blur": 0.0, "fade_amount": 0.0, "shock_strength": 0.0, "chromatic": 0.0}
-
-## How long a shockwave ring takes to cross the screen. A ring is a moment rather than a state,
-## so it times itself instead of asking every row how long it should last.
-@export_range(0.05, 3.0, 0.05) var ring_seconds: float = 0.55
-
-var _rect: ColorRect = null
-var _screen: ShaderMaterial = null
-
-## The walks running right now, keyed by the dial they move, so a second call on the same dial
-## replaces the first rather than the two of them fighting over it.
-var _walks: Dictionary = {}
-## Walks one dial to a value over a number of seconds, hands the tween back, and re-checks the
-## rectangle when it lands. No time at all is a straight set rather than a tween nobody sees.
-func _walk_dial(dial: String, to_value: float, seconds: float) -> Tween:
-	if _screen == null:
-		return null
-	_stop_walk(dial)
-	if seconds <= 0.0 or not is_inside_tree():
-		_screen.set_shader_parameter(dial, to_value)
-		_settle()
-		return null
-	if _rect != null:
-		_rect.visible = true
-	var walk: Tween = create_tween()
-	walk.tween_property(_screen, "shader_parameter/" + dial, to_value, seconds)
-	walk.finished.connect(_settle)
-	_walks[dial] = walk
-	return walk
-
+#region stack
 ## Where the pack's own shaders live once it is installed. The pack builder copies them here beside
 ## the script, so an effect is a file on disk rather than a string compiled at run time.
 const POST_DIRECTORY: String = "res://eventsheet_addons/screen_fx/"
@@ -117,6 +78,8 @@ var _stack_walks: Dictionary = {}
 ## What Current Look reads back: the name of the look last worn, or "" when the stack was built row
 ## by row. Save Look does not change it, because saving is not wearing.
 var _look_name: String = ""
+
+
 ## Adds one effect to the top of the post stack and turns it on. The nine words are vignette, film
 ## grain, scanlines, pixelate, colour grade, dither, fisheye, glitch and letterbox; leave the name
 ## empty and the entry is called after its effect, which is what one of each wants.
@@ -150,6 +113,8 @@ func add_post_effect(effect: String = "vignette", called: String = "", strength:
 		"enabled": true, "params": {}, "rect": null})
 	_apply(_stack.size() - 1)
 	_reorder()
+
+
 ## Takes one effect off the stack and frees its rectangle, so it stops costing anything at all.
 ## @ace_action
 ## @ace_name("Remove Post Effect")
@@ -165,6 +130,8 @@ func remove_post_effect(called: String = "vignette") -> void:
 	if rect != null and is_instance_valid(rect):
 		rect.queue_free()
 	_stack.remove_at(at)
+
+
 ## Turns one entry back on at the strength it already holds - the other half of Disable, for an
 ## effect a look should keep but a moment should hide.
 ## @ace_action
@@ -174,6 +141,8 @@ func remove_post_effect(called: String = "vignette") -> void:
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
 func enable_post_effect(called: String = "vignette") -> void:
 	_set_enabled(called, true)
+
+
 ## Turns one entry off without forgetting it: its rectangle stops drawing, its strength is kept, and
 ## Enable brings it back exactly as it was.
 ## @ace_action
@@ -183,6 +152,8 @@ func enable_post_effect(called: String = "vignette") -> void:
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
 func disable_post_effect(called: String = "vignette") -> void:
 	_set_enabled(called, false)
+
+
 ## Sets how far one entry goes, at once. The effect-strength dial scales it and the no-flashing
 ## ceiling holds it down, so the number a row asks for is a request rather than a command.
 ## @ace_action
@@ -194,6 +165,8 @@ func disable_post_effect(called: String = "vignette") -> void:
 func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
 	_stop_walk_on(called.strip_edges().to_lower())
 	_write_strength(called, strength)
+
+
 ## Walks one entry's strength to a value over a time, and back again afterwards if a second time is
 ## given - which is the shape of a held breath: in, hold, out, all in one row.
 ## @ace_action
@@ -251,6 +224,8 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
 	if seconds <= 0.0:
 		return
 	_walk_strength(word, _allowed(strength), 0.0, falls_back_to, _slowed(seconds), borrowed)
+
+
 ## Moves one entry so it is drawn BEFORE another - which is what decides whose look wins. A grade
 ## under a vignette grades the game; a grade over one grades the vignette too.
 ## @ace_action
@@ -271,6 +246,8 @@ func move_post_effect_before(called: String = "vignette", before: String = "") -
 	else:
 		_stack.insert(landing, moved)
 	_reorder()
+
+
 ## Draws the whole post stack UNDER this layer, so the interface on it stays sharp and unfiltered
 ## while the game behind it is graded, blurred or dimmed. This is the row a health-bar layer wants.
 ## @ace_action
@@ -282,6 +259,8 @@ func draw_post_effects_below(other: CanvasLayer) -> void:
 	if other == null:
 		return
 	layer = other.layer - 1
+
+
 ## Draws the whole post stack OVER this layer, so the interface is graded and dimmed along with the
 ## game. That is what a cutscene letterbox or a full-screen colour change usually wants.
 ## @ace_action
@@ -293,6 +272,8 @@ func draw_post_effects_above(other: CanvasLayer) -> void:
 	if other == null:
 		return
 	layer = other.layer + 1
+
+
 ## True while that entry is on the stack, enabled and actually drawing something.
 ## @ace_condition
 ## @ace_name("Post Effect Is On")
@@ -304,6 +285,8 @@ func post_effect_is_on(called: String = "vignette") -> bool:
 	if at < 0:
 		return false
 	return bool(_stack[at].get("enabled", true)) and float(_stack[at].get("strength", 0.0)) > 0.001
+
+
 ## How far one entry currently goes, 0 to 1 - after the effect-strength dial and the no-flashing
 ## ceiling, so it is what is on the screen rather than what was asked for. 0 for one that is not
 ## there.
@@ -316,6 +299,21 @@ func post_strength(called: String = "vignette") -> float:
 	if at < 0:
 		return 0.0
 	return float(_stack[at].get("strength", 0.0))
+
+
+## How many effects the stack is drawing right now - the number a reader wants when the frame rate
+## has gone, because every one of them reads the whole screen back.
+## @ace_expression
+## @ace_name("Post Effect Count")
+## @ace_codegen_template("$ScreenFx.post_effect_count()")
+func post_effect_count() -> int:
+	var drawing: int = 0
+	for entry: Dictionary in _stack:
+		if bool(entry.get("enabled", true)) and float(entry.get("strength", 0.0)) > 0.001:
+			drawing += 1
+	return drawing
+
+
 ## SHOWS YOU what a player with one of the three common kinds of colour blindness sees. This is the
 ## designer's row: turn it on, walk the level, and the health bar that vanishes into the background
 ## is the bug you came to find. Normal takes it off again.
@@ -326,6 +324,8 @@ func post_strength(called: String = "vignette") -> float:
 ## @ace_param(vision, default: deuteranopia, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, desc: "Which kind of vision to simulate. Normal turns the simulation off.")
 func see_as(vision: String = "deuteranopia") -> void:
 	_wear_vision(SEE_AS_EFFECT, vision, "See As")
+
+
 ## CORRECTS the screen so a player with one of the three common kinds of colour blindness can tell
 ## apart the colours that would otherwise land on top of each other. This is the player's row, and it
 ## belongs behind a settings choice rather than on by default. Normal takes it off again.
@@ -336,6 +336,8 @@ func see_as(vision: String = "deuteranopia") -> void:
 ## @ace_param(vision, default: deuteranopia, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, desc: "Which kind of vision to correct for. Normal turns the correction off.")
 func correct_colours_for(vision: String = "deuteranopia") -> void:
 	_wear_vision(CORRECT_EFFECT, vision, "Correct Colours For")
+
+
 ## Writes the LIVE stack out as a look file: every entry, in order, with its strength and its own
 ## dials. That is how a look is authored - build it with rows until the screen is right, save it
 ## once, and every later row picks it by file.
@@ -357,6 +359,8 @@ func save_look(path: String = "user://looks/my_look.tres", called: String = "My 
 		DirAccess.make_dir_recursive_absolute(folder)
 	if ResourceSaver.save(made, path) != OK:
 		push_warning("Save Look could not write %s." % path)
+
+
 ## Wears a look at once: the stack becomes exactly what the look says, in the look's own order.
 ## @ace_action
 ## @ace_featured
@@ -379,6 +383,8 @@ func use_look(look: Resource) -> void:
 		add_post_effect(word, name_of_it, float(entry.get("strength", 0.0)))
 		_write_params(name_of_it, entry.get("params", {}) as Dictionary)
 	_look_name = str(look.get("look_name"))
+
+
 ## Walks from the look on the screen to another one over a time: the effects both looks hold fade
 ## from one strength to the other, the ones only the old look had fade out and go, and the ones only
 ## the new look has fade in from nothing. Nothing cuts.
@@ -420,6 +426,19 @@ func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
 	_look_name = str(look.get("look_name"))
 	if span > 0.0 and is_inside_tree():
 		await get_tree().create_timer(span).timeout
+
+
+## Takes every effect off the stack at once and puts the screen back the way the game drew it. The
+## empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.
+## @ace_action
+## @ace_name("Clear Look")
+## @ace_codegen_template("$ScreenFx.clear_look()")
+func clear_look() -> void:
+	for entry: Dictionary in _stack.duplicate():
+		remove_post_effect(str(entry.get("called", "")))
+	_look_name = ""
+
+
 ## True while that look is the one on the screen - compared by the look's own name, so a look
 ## reloaded from disk is still the same look.
 ## @ace_condition
@@ -431,6 +450,17 @@ func look_is(look: Resource) -> bool:
 	if look == null:
 		return _look_name.is_empty()
 	return _look_name == str(look.get("look_name"))
+
+
+## The name of the look on the screen, or "" when the stack was built row by row rather than worn
+## from a file.
+## @ace_expression
+## @ace_name("Current Look")
+## @ace_codegen_template("$ScreenFx.current_look()")
+func current_look() -> String:
+	return _look_name
+
+
 ## Every effect word the stack knows, in the order the picker offers them - what a warning prints,
 ## and what a settings screen can list without keeping a second copy of the list.
 ## @ace_expression
@@ -441,249 +471,13 @@ func effect_words() -> PackedStringArray:
 	words.append(SEE_AS_EFFECT)
 	words.append(CORRECT_EFFECT)
 	return words
-## The stack as look rows: what Save Look writes and what Use Look reads back, in stack order.
-func _look_rows() -> Array[Dictionary]:
-	var rows: Array[Dictionary] = []
-	for entry: Dictionary in _stack:
-		rows.append({
-			"called": str(entry.get("called", "")),
-			"effect": str(entry.get("effect", "")),
-			"strength": float(entry.get("strength", 0.0)),
-			"params": (entry.get("params", {}) as Dictionary).duplicate(true)
-		})
-	return rows
-## The shader one effect wears, loaded once and kept. A project that only ever uses a vignette loads
-## one file.
-func _shader_for(effect: String) -> Shader:
-	if _shaders.has(effect):
-		return _shaders[effect] as Shader
-	var path: String = POST_DIRECTORY + POST_PREFIX + effect.replace(" ", "_") + ".gdshader"
-	var found: Shader = null
-	if ResourceLoader.exists(path):
-		found = load(path) as Shader
-	else:
-		push_warning("Screen FX has no shader file for the \"%s\" effect at %s." % [effect, path])
-	_shaders[effect] = found
-	return found
-## Walks one entry's strength - there, and optionally back - and takes it off the stack afterwards
-## when it was only borrowed for a moment.
-##
-## WITH NO TREE TO RUN A TWEEN IN (a headless run, a layer built but not added yet) the walk lands on
-## its final value at once, which is the same answer a moment later.
-func _walk_strength(called: String, to_value: float, seconds: float, back_to: float,
-		back_seconds: float, drop_after: bool) -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	_stop_walk_on(called)
-	var ends_at: float = back_to if back_seconds > 0.0 else to_value
-	if not is_inside_tree() or (seconds <= 0.0 and back_seconds <= 0.0):
-		_write_strength(called, ends_at)
-		if drop_after:
-			remove_post_effect(called)
-		return
-	var walk: Tween = create_tween()
-	if seconds > 0.0:
-		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			float(_stack[at].get("strength", 0.0)), to_value, seconds)
-	if back_seconds > 0.0:
-		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			to_value, back_to, back_seconds)
-	if drop_after:
-		walk.finished.connect(func() -> void: remove_post_effect(called))
-	_stack_walks[called] = walk
 
-func _ready() -> void:
-	_rect = get_node_or_null(RECT_NAME) as ColorRect
-	if _rect == null:
-		push_warning("Screen FX expects a ColorRect named %s under it - add the pack's own screen_fx.tscn rather than a bare CanvasLayer." % RECT_NAME)
-		return
-	_screen = _rect.material as ShaderMaterial
-	_seed_dials()
-	# Whatever the scene was saved with, a layer starts at rest: nothing is running yet, so
-	# nothing should be drawing.
-	_rect.visible = false
-
-## @ace_action
-## @ace_featured
-## @ace_name("Shockwave")
-## @ace_description("Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a landing. The camera transform is applied, so the ring stays on the thing that caused it however the camera is moving.")
-## @ace_display_template("Shockwave at [b]{at}[/b], strength [b]{strength}[/b]")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.shockwave({at}, {strength})")
-func shockwave(at: Vector2 = Vector2.ZERO, strength: float = 1.0) -> void:
-	if _screen == null:
-		return
-	_screen.set_shader_parameter("shock_center", _screen_point(at))
-	_screen.set_shader_parameter("shock_radius", 0.0)
-	_set_dial("shock_strength", clampf(strength, 0.0, 1.0))
-	# The ring travels and fades at once, which is why the two walks are parallel: a ring that
-	# faded after it had arrived would sit at the edge of the screen for half its life.
-	var ring: Tween = _walk_dial("shock_radius", 1.4, ring_seconds)
-	if ring != null:
-		ring.set_parallel(true)
-		ring.tween_property(_screen, "shader_parameter/shock_strength", 0.0, ring_seconds)
-
-## @ace_action
-## @ace_featured
-## @ace_name("Fade To")
-## @ace_description("Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what happens next: change the scene, show the credits, start the level. That is the scene transition, spelled as two rows in one event.")
-## @ace_display_template("Fade to [b]{colour}[/b] over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("await $ScreenFx.fade_to({colour}, {seconds})")
-func fade_to(colour: Color = Color.BLACK, seconds: float = 1.0) -> void:
-	if _screen == null:
-		return
-	_screen.set_shader_parameter("fade_color", colour)
-	var walk: Tween = _walk_dial("fade_amount", 1.0, maxf(seconds, 0.0))
-	if walk != null:
-		await walk.finished
-
-## @ace_action
-## @ace_name("Fade Back")
-## @ace_description("Fades the screen back from a colour to the game, and waits for that too - the other half of a transition, run once the new scene is up.")
-## @ace_display_template("Fade back from [b]{colour}[/b] over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("await $ScreenFx.fade_back({colour}, {seconds})")
-func fade_back(colour: Color = Color.BLACK, seconds: float = 1.0) -> void:
-	if _screen == null:
-		return
-	_screen.set_shader_parameter("fade_color", colour)
-	_set_dial("fade_amount", 1.0)
-	var walk: Tween = _walk_dial("fade_amount", 0.0, maxf(seconds, 0.0))
-	if walk != null:
-		await walk.finished
-
-## @ace_action
-## @ace_name("Blur")
-## @ace_description("Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout, a dream. 0 is sharp again.")
-## @ace_display_template("Blur to [b]{amount}[/b] over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.blur({amount}, {seconds})")
-func blur(amount: float = 2.0, seconds: float = 0.3) -> void:
-	_walk_dial("blur", maxf(amount, 0.0), maxf(seconds, 0.0))
-
-## @ace_action
-## @ace_name("Chromatic Pulse")
-## @ace_description("Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.")
-## @ace_display_template("Chromatic pulse at [b]{strength}[/b]")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.chromatic_pulse({strength}, {seconds})")
-func chromatic_pulse(strength: float = 0.6, seconds: float = 0.35) -> void:
-	_set_dial("chromatic", clampf(strength, 0.0, 1.0))
-	_walk_dial("chromatic", 0.0, maxf(seconds, 0.0))
-
-## @ace_action
-## @ace_name("Clear Screen Effects")
-## @ace_description("Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.clear_screen_effects()")
-func clear_screen_effects() -> void:
-	for dial: String in AT_REST:
-		_set_dial(dial, float(AT_REST[dial]))
-
-## @ace_condition
-## @ace_name("Screen Effect Is Running")
-## @ace_description("True while any effect is running - a fade held on, a blur, a ring still travelling.")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.screen_effect_is_running()")
-func screen_effect_is_running() -> bool:
-	if _screen == null:
-		return false
-	for dial: String in AT_REST:
-		var held: Variant = _screen.get_shader_parameter(dial)
-		if held != null and absf(float(held) - float(AT_REST[dial])) > 0.001:
-			return true
-	return false
-
-## A world point as the shader wants it: 0 to 1 across the viewport. The canvas transform is
-## whatever the camera did, so the ring lands where the thing was on screen.
-func _screen_point(world: Vector2) -> Vector2:
-	var view: Viewport = get_viewport()
-	if view == null:
-		return Vector2(0.5, 0.5)
-	var size: Vector2 = view.get_visible_rect().size
-	if size.x <= 0.0 or size.y <= 0.0:
-		return Vector2(0.5, 0.5)
-	return (view.get_canvas_transform() * world) / size
-
-## Turns one dial straight away and wakes the rectangle if the dial says something is running.
-func _set_dial(dial: String, value: float) -> void:
-	if _screen == null:
-		return
-	_stop_walk(dial)
-	_screen.set_shader_parameter(dial, value)
-	_settle()
-
-## Ends the walk on one dial, if there is one, leaving the dial wherever it had got to.
-func _stop_walk(dial: String) -> void:
-	var walk: Tween = _walks.get(dial, null)
-	if walk != null and walk.is_valid():
-		walk.kill()
-	_walks.erase(dial)
-
-## THE SWITCH. A rectangle covering the viewport redraws every pixel of it through the shader
-## every frame, so one left on with nothing to do is a whole screen of work for no change at
-## all. Asked after every change and at the end of every walk: running means visible, at rest
-## means hidden, and a hidden Control is not drawn.
-func _settle() -> void:
-	if _rect != null:
-		_rect.visible = screen_effect_is_running()
-
-## Writes every dial the shader declares, once, before anything reads or walks one. An un-set
-## uniform reads back as null rather than as the shader's own value, and a tween cannot even
-## address `shader_parameter/<dial>` until it has been written.
-func _seed_dials() -> void:
-	if _screen == null or _screen.shader == null:
-		return
-	for declared: Dictionary in _screen.shader.get_shader_uniform_list():
-		var dial: String = str(declared.get("name", ""))
-		if dial.is_empty() or _screen.get_shader_parameter(dial) != null:
-			continue
-		var starts_at: Variant = RenderingServer.shader_get_parameter_default(
-			_screen.shader.get_rid(), dial)
-		# A renderer that draws nothing - a headless run, a dedicated server - knows no shader
-		# defaults and answers null. The declared TYPE is still known, so an empty one of that is
-		# written instead: the dial is addressable, and its value is never seen because nothing
-		# is being drawn.
-		if starts_at == null:
-			starts_at = type_convert(starts_at, int(declared.get("type", TYPE_NIL)))
-		_screen.set_shader_parameter(dial, starts_at)
-
-## @ace_expression
-## @ace_name("Post Effect Count")
-## @ace_description("How many effects the stack is drawing right now - the number a reader wants when the frame rate has gone, because every one of them reads the whole screen back.")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.post_effect_count()")
-func post_effect_count() -> int:
-	var drawing: int = 0
-	for entry: Dictionary in _stack:
-		if bool(entry.get("enabled", true)) and float(entry.get("strength", 0.0)) > 0.001:
-			drawing += 1
-	return drawing
-
-## @ace_action
-## @ace_name("Clear Look")
-## @ace_description("Takes every effect off the stack at once and puts the screen back the way the game drew it. The empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.clear_look()")
-func clear_look() -> void:
-	for entry: Dictionary in _stack.duplicate():
-		remove_post_effect(str(entry.get("called", "")))
-	_look_name = ""
-
-## @ace_expression
-## @ace_name("Current Look")
-## @ace_description("The name of the look on the screen, or "" when the stack was built row by row rather than worn from a file.")
-## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
-## @ace_codegen_template("$ScreenFx.current_look()")
-func current_look() -> String:
-	return _look_name
 
 ## Whether this word is one of the effects the pack ships - the nine, plus the two the colour-vision
 ## rows wear.
 func _is_an_effect(word: String) -> bool:
 	return POST_EFFECTS.has(word) or word == SEE_AS_EFFECT or word == CORRECT_EFFECT
+
 
 ## Where an entry sits in the stack, or -1. Names are compared trimmed and lower-cased, so a row that
 ## says "Vignette" and one that says "vignette" mean the same entry.
@@ -696,6 +490,7 @@ func _find(called: String) -> int:
 			return at
 	return -1
 
+
 ## What a row's requested strength really becomes: scaled by the effect-strength dial the whole
 ## project shares, then held under the ceiling while no flashing is on. ONE function, so no row can
 ## be the one that forgot.
@@ -706,12 +501,14 @@ func _allowed(strength: float) -> float:
 		wanted = minf(wanted, FLASH_CEILING)
 	return wanted
 
+
 ## And what a row's requested TIME really becomes: never quicker than the floor while no flashing is
 ## on, because a small amplitude arriving ten times a second is still a strobe.
 func _slowed(seconds: float) -> float:
 	if bool(Engine.get_meta(NO_FLASHING_META, false)):
 		return maxf(seconds, FLASH_FLOOR_SECONDS)
 	return maxf(seconds, 0.0)
+
 
 ## Writes one entry's strength through the accessibility dials and pushes it at the screen.
 func _write_strength(called: String, strength: float) -> void:
@@ -720,6 +517,7 @@ func _write_strength(called: String, strength: float) -> void:
 		return
 	_stack[at]["strength"] = _allowed(strength)
 	_apply(at)
+
 
 ## Writes an entry's own dials - the vignette's colour, the grade's table, the letterbox's depth -
 ## and pushes them at the screen. A dial the shader does not declare is kept anyway: a look saved by
@@ -734,6 +532,7 @@ func _write_params(called: String, dials: Dictionary) -> void:
 	_stack[at]["params"] = held
 	_apply(at)
 
+
 ## Turns one entry on or off without forgetting how far up it was.
 func _set_enabled(called: String, on: bool) -> void:
 	var at: int = _find(called)
@@ -741,6 +540,7 @@ func _set_enabled(called: String, on: bool) -> void:
 		return
 	_stack[at]["enabled"] = on
 	_apply(at)
+
 
 ## One of the two colour-vision entries, wearing a kind of vision - or gone, when the kind is normal.
 func _wear_vision(effect: String, vision: String, row_name: String) -> void:
@@ -758,6 +558,20 @@ func _wear_vision(effect: String, vision: String, row_name: String) -> void:
 	_write_params(effect, {VISION_DIAL: which})
 	_write_strength(effect, 1.0)
 
+
+## The stack as look rows: what Save Look writes and what Use Look reads back, in stack order.
+func _look_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for entry: Dictionary in _stack:
+		rows.append({
+			"called": str(entry.get("called", "")),
+			"effect": str(entry.get("effect", "")),
+			"strength": float(entry.get("strength", 0.0)),
+			"params": (entry.get("params", {}) as Dictionary).duplicate(true)
+		})
+	return rows
+
+
 ## A look's rows, whatever it was made of - the pack's own resource class, or anything else carrying
 ## a `rows` array of the same shape. Read through `get` so this pack never has to name that class.
 func _rows_of(look: Resource) -> Array:
@@ -767,6 +581,22 @@ func _rows_of(look: Resource) -> Array:
 	if rows is Array:
 		return rows as Array
 	return []
+
+
+## The shader one effect wears, loaded once and kept. A project that only ever uses a vignette loads
+## one file.
+func _shader_for(effect: String) -> Shader:
+	if _shaders.has(effect):
+		return _shaders[effect] as Shader
+	var path: String = POST_DIRECTORY + POST_PREFIX + effect.replace(" ", "_") + ".gdshader"
+	var found: Shader = null
+	if ResourceLoader.exists(path):
+		found = load(path) as Shader
+	else:
+		push_warning("Screen FX has no shader file for the \"%s\" effect at %s." % [effect, path])
+	_shaders[effect] = found
+	return found
+
 
 ## Pushes one entry at the screen: the rectangle it is drawn on, the shader it wears, its strength
 ## and its own dials - and then the switch, because an entry at rest should not be drawn at all.
@@ -798,6 +628,7 @@ func _apply(at: int) -> void:
 		worn.set_shader_parameter(str(dial), dials[dial])
 	rect.visible = shader != null and showing > 0.001
 
+
 ## Puts the rectangles back in stack order. Each one is moved to the end in turn, so the stack's own
 ## order becomes the tail of this layer's children - and the pack's Screen rectangle, which the six
 ## older verbs draw on, keeps its place underneath them all.
@@ -807,6 +638,7 @@ func _reorder() -> void:
 		if rect != null and is_instance_valid(rect) and rect.get_parent() == self:
 			move_child(rect, get_child_count() - 1)
 
+
 ## Ends the walk on one entry, if there is one, leaving it wherever it had got to.
 func _stop_walk_on(called: String) -> void:
 	var walk: Tween = _stack_walks.get(called, null)
@@ -814,4 +646,32 @@ func _stop_walk_on(called: String) -> void:
 		walk.kill()
 	_stack_walks.erase(called)
 
-# Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of nine shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.
+
+## Walks one entry's strength - there, and optionally back - and takes it off the stack afterwards
+## when it was only borrowed for a moment.
+##
+## WITH NO TREE TO RUN A TWEEN IN (a headless run, a layer built but not added yet) the walk lands on
+## its final value at once, which is the same answer a moment later.
+func _walk_strength(called: String, to_value: float, seconds: float, back_to: float,
+		back_seconds: float, drop_after: bool) -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	_stop_walk_on(called)
+	var ends_at: float = back_to if back_seconds > 0.0 else to_value
+	if not is_inside_tree() or (seconds <= 0.0 and back_seconds <= 0.0):
+		_write_strength(called, ends_at)
+		if drop_after:
+			remove_post_effect(called)
+		return
+	var walk: Tween = create_tween()
+	if seconds > 0.0:
+		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
+			float(_stack[at].get("strength", 0.0)), to_value, seconds)
+	if back_seconds > 0.0:
+		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
+			to_value, back_to, back_seconds)
+	if drop_after:
+		walk.finished.connect(func() -> void: remove_post_effect(called))
+	_stack_walks[called] = walk
+#endregion
