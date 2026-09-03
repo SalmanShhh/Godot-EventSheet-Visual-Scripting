@@ -69,6 +69,9 @@ static func run() -> bool:
 	counting_host.free()
 	picker._host_node = null
 
+	all_passed = _test_the_deferred_fill() and all_passed
+	all_passed = _test_the_warm() and all_passed
+
 	# Per-item type labels (the type tint was removed - Favorites/Recent now render plain like the
 	# main tree and the native Create-New-Node dialog; the per-row icon carries the type).
 	all_passed = _check("type label trigger", picker._ace_type_label(ACEDefinition.ACEType.TRIGGER), "Trigger") and all_passed
@@ -238,6 +241,74 @@ static func _make_def(ace_type: int) -> ACEDefinition:
 	definition.ace_type = ace_type
 	definition.provider_id = "Core"
 	return definition
+
+
+## THE WINDOW COMES UP BEFORE THE LIST DOES. open() shows the shell and posts the fill for the next
+## idle frame, so a cold session paints a dialog within a frame instead of after the whole
+## vocabulary has been built into tree items. There are no frames in a headless run, which is what
+## makes this pinnable: the fill is still pending when open() returns, and calling it by hand is
+## the frame arriving.
+static func _test_the_deferred_fill() -> bool:
+	var all_passed: bool = true
+	var host: Node = Node.new()
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	var picker: ACEPickerDialog = ACEPickerDialog.new()
+	picker.init_dialog(host, registry)
+	picker.open("append_action", false, null, {})
+	# Whether the window PAINTED is a display-server question and there is no display here. What is
+	# pinnable headless is what open() left behind: a shell with its search field ready, one line
+	# saying what is happening, and no tree yet.
+	all_passed = _check("with the search field ready for the first keystroke",
+		picker._search.text, "") and all_passed
+	all_passed = _check("and one line saying what is happening",
+		picker._hint.text, "Loading the vocabulary...") and all_passed
+	all_passed = _check("the tree is not built yet - that is the point",
+		picker._tree.get_root() == null, true) and all_passed
+	var token: int = picker._fill_token
+	picker._fill_after_popup(token)
+	all_passed = _check("the frame arrives and the tree is built",
+		picker._tree.get_root() != null and picker._tree.get_root().get_child_count() > 0, true) and all_passed
+	all_passed = _check("and the hint is the mode's own words again",
+		picker._hint.text, picker._build_hint_text("append_action", false)) and all_passed
+
+	# A fill posted for a dialog that has since been closed, or reopened, must do nothing at all.
+	picker.open("append_action", false, null, {})
+	var stale_token: int = picker._fill_token
+	picker.close()
+	picker._fill_after_popup(stale_token)
+	all_passed = _check("a fill for a closed dialog does not fill it",
+		picker._tree.get_root() == null, true) and all_passed
+	picker.open("append_action", false, null, {})
+	picker.open("append_action", false, null, {})
+	picker._fill_after_popup(stale_token)
+	all_passed = _check("and neither does one from the open before this one",
+		picker._tree.get_root() == null, true) and all_passed
+	picker._fill_after_popup(picker._fill_token)
+	all_passed = _check("while this open\'s own fill still works",
+		picker._tree.get_root() != null, true) and all_passed
+	picker.close()
+	host.free()
+	return all_passed
+
+
+## THE IDLE WARM. It asks the questions the first click would otherwise pay for, and it asks NONE
+## of them outside the editor - a suite whose answers depend on whether an idle frame arrived is a
+## suite that passes differently on a slower machine.
+static func _test_the_warm() -> bool:
+	var all_passed: bool = true
+	EventSheetPickerWarmup.reset_for_tests()
+	EventSheetPickerWarmup.request()
+	all_passed = _check("a headless run schedules no warm at all",
+		EventSheetPickerWarmup.is_warm(), false) and all_passed
+	EventSheetPickerWarmup.reset_for_tests()
+	EventSheetPickerWarmup.warm_now()
+	all_passed = _check("asked by hand, it finishes", EventSheetPickerWarmup.is_warm(), true) and all_passed
+	all_passed = _check("and it covers every installed pack",
+		EventSheetPickerWarmup._steps.size(),
+		EventSheetEditorToolCensus.pack_directories().size() + 2 + EventSheetPickerWarmup.ICON_SLICES) and all_passed
+	EventSheetPickerWarmup.reset_for_tests()
+	return all_passed
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

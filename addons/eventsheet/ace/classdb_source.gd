@@ -283,7 +283,10 @@ static func _ensure_curated_templates() -> void:
 	if _curated_templates_built:
 		return
 	_curated_templates_built = true
-	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+	# Through the registry's CACHE rather than through a fresh module walk. Building the builtin
+	# vocabulary costs about 330 ms and the registry has already paid it by the time anything asks
+	# this - three separate readers were each paying it again for a set they all agree on.
+	for descriptor: ACEDescriptor in ACERegistry.get_builtin_descriptors():
 		var template: String = str(descriptor.codegen_template).strip_edges()
 		if not template.is_empty():
 			_curated_templates[template] = true

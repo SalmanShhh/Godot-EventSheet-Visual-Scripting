@@ -90,6 +90,10 @@ static func from_pack(pack_dir: String) -> Array[Dictionary]:
 	var directory: String = "res://eventsheet_addons".path_join(key)
 	var dir: DirAccess = DirAccess.open(directory)
 	if key.is_empty() or dir == null:
+		# Remembered like any other answer. A provider with no pack folder of its own - Core, and
+		# every runtime-registered one - is asked this once per card of the object page, and every
+		# one of those asks was opening a directory to find out there was nothing there.
+		_pack_cache[key] = found
 		return found
 	var files: PackedStringArray = dir.get_files()
 	files.sort()
@@ -98,6 +102,21 @@ static func from_pack(pack_dir: String) -> Array[Dictionary]:
 			found.append_array(from_source(FileAccess.get_file_as_string(directory.path_join(file_name))))
 	_pack_cache[key] = found
 	return found.duplicate(true)
+
+
+## Every installed pack's folder name, sorted. The census's own idea of where packs live, so a
+## caller that wants to read them all - the picker's idle warm - does not have to keep a second
+## one. Empty when the packs folder is not there.
+static func pack_directories() -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var dir: DirAccess = DirAccess.open("res://eventsheet_addons")
+	if dir == null:
+		return names
+	for entry: String in dir.get_directories():
+		if not entry.begins_with("."):
+			names.append(entry)
+	names.sort()
+	return names
 
 
 ## Drops the remembered per-pack censuses. The editor calls this when the filesystem changes.

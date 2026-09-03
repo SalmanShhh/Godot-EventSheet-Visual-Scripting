@@ -559,6 +559,10 @@ func _ready() -> void:
 	# is worked out while its rows are BUILT, so the scan finishing has to reach back here or the
 	# first sheet of a session goes on counting for as long as it is open.
 	EventSheetProjectShareIndex.when_counted(_on_shared_resources_counted)
+	# The Add picker's first click of a session used to pay for a pile of answers that had nothing
+	# to do with what was clicked. They are asked here instead, a few milliseconds per idle frame,
+	# and the warm schedules nothing at all outside the editor.
+	EventSheetPickerWarmup.request()
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()

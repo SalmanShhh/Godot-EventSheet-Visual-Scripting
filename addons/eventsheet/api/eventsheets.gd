@@ -1706,7 +1706,10 @@ static var _builtin_descriptor_index_built: bool = false
 static func _builtin_descriptor(ace_id: String) -> Variant:
 	if not _builtin_descriptor_index_built:
 		_builtin_descriptor_index_built = true
-		for descriptor in EventForgeBuiltinACEs.get_descriptors():
+		# The registry's cached builtins. This index exists to stop a multi-file asset drop paying
+		# for the whole vocabulary per file, and reading it out of the registry means the build is
+		# not paid a second time at all.
+		for descriptor in ACERegistry.get_builtin_descriptors():
 			_builtin_descriptor_index[descriptor.ace_id] = descriptor
 	return _builtin_descriptor_index.get(ace_id, null)
 

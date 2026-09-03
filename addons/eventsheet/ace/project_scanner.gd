@@ -44,6 +44,11 @@ static func list_project_classes() -> Array:
 		return _cache.duplicate(true)
 	var by_path: Dictionary = {}
 	var bases: Dictionary = base_map()
+	# The published-provider paths, gathered ONCE for the whole scan. Asking per class meant asking
+	# the addon scanner per class, and its answer is keyed on the modification times of every pack
+	# folder - so a cache HIT still stat-ed a hundred-odd directories. That is where this scan's
+	# cold 440 ms went, and it grows with the class count times the pack count.
+	var published: Dictionary = published_provider_paths()
 	for class_info: Dictionary in ProjectSettings.get_global_class_list():
 		var path: String = str(class_info.get("path", ""))
 		var declared: String = str(class_info.get("class", ""))
@@ -51,7 +56,7 @@ static func list_project_classes() -> Array:
 			continue
 		if not is_scene_class(str(class_info.get("base", "")), bases):
 			continue
-		if is_published_provider(path):
+		if published.has(path):
 			continue
 		by_path[path] = {"name": declared, "path": path, "kind": "class", "autoload": ""}
 	# Autoloads win over the plain-class entry for the same script: a singleton emits
@@ -109,13 +114,20 @@ static func list_autoloads() -> Array:
 ## publish NOTHING (they only take effect for scanned providers), and excluding those left
 ## such a class reachable from nowhere at all.
 static func is_published_provider(path: String) -> bool:
+	return published_provider_paths().has(path)
+
+
+## Every script path the provider system already publishes, as a set. Built in one pass so a
+## caller with a LIST of paths to test asks the addon scanner once rather than once per path -
+## the scanner's answer is cheap to re-derive but never free, being keyed on the modification
+## time of every pack folder.
+static func published_provider_paths() -> Dictionary:
+	var published: Dictionary = {}
 	for provider_path: String in EventSheetAddonScanner.list_addon_scripts():
-		if provider_path == path:
-			return true
+		published[provider_path] = true
 	for taught: Variant in ProjectSettings.get_setting(TAUGHT_PROVIDERS_SETTING, PackedStringArray()):
-		if str(taught) == path:
-			return true
-	return false
+		published[str(taught)] = true
+	return published
 
 
 ## class_name -> its declared base, for resolving a custom base chain to an engine class.

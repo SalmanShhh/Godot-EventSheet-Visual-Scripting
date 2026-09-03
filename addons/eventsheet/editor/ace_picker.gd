@@ -611,6 +611,9 @@ var _usage_counts: Dictionary = {}
 ## uses no verb at all counts nothing, and reading that as "not counted yet" is the bug this whole
 ## sweep is about.
 var _usage_counts_derived: bool = false
+## Which open a deferred fill belongs to. Bumped by every open() and by close(), so a fill posted
+## for a dialog that has since been closed or reopened recognises itself as stale and returns.
+var _fill_token: int = 0
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
@@ -1081,7 +1084,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 			]
 		_show_classic(true)
 	elif bool(_context.get("object_first", false)) and not signals_only and mode in ["new_event", "new_condition_event", "new_sub_condition_event"]:
-		_show_objects_page()
+		_reveal_objects_page()
 	else:
 		_show_classic(false)
 	var title: String = _title_for_mode(mode, signals_only)
@@ -1097,16 +1100,51 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
 	_update_info_panel(null)
-	_refresh_tree()
-	_refresh_side_panes()
-	_select_first_match()
+	# ─────────────────────────────────────────────────────────────────────────────────────────────
+	# THE WINDOW COMES UP FIRST, THE LIST ARRIVES A FRAME LATER.
+	#
+	# Filling the tree is the expensive half of an open, and doing it before the popup meant the
+	# click that asked for the picker painted nothing at all until the whole vocabulary had been
+	# built into tree items. Now the shell is shown with the search field already focused and one
+	# line saying what is happening, and the fill runs on the next idle frame - so the reader sees
+	# the dialog within a frame however cold the session is, and can start typing into it straight
+	# away (a keystroke that lands first builds the tree itself, and the deferred fill then agrees
+	# with it rather than fighting it).
+	#
+	# The token is what makes closing the dialog in between safe: a fill whose token has moved on -
+	# a second open, or a close - is a fill for a dialog that is no longer there, and it returns.
+	_hint.text = EventSheetL10n.translate("Loading the vocabulary...")
+	# EMPTIED, not left holding the last open's rows. A stale tree would be the wrong list for one
+	# frame, and Enter on the wrong list adds the wrong verb.
+	_tree.clear()
+	if _objects_tree != null:
+		_objects_tree.clear()
 	_window.popup_centered(Vector2i(720, 520))
 	_window.grab_focus()
 	_search.grab_focus()
-	# Deferred so it lands AFTER the popup and any visibility-driven refresh -
-	# callers preselect via context instead of racing the open sequence.
+	_fill_token += 1
+	call_deferred("_fill_after_popup", _fill_token)
+
+
+## The expensive half of an open, one frame after the window came up. `token` is the open this
+## fill belongs to: anything else means the dialog was closed or reopened in between and there is
+## nothing left to fill.
+func _fill_after_popup(token: int) -> void:
+	# The token alone is the guard. Every way the dialog closes - the X, Escape, the Add button -
+	# reaches close(), which bumps it, and so does a second open; and window VISIBILITY is a
+	# display-server question that a headless run cannot answer at all.
+	if token != _fill_token or _window == null:
+		return
+	_hint.text = _build_hint_text(str(_context.get("mode", "new_event")), bool(_context.get("signals_only", false)))
+	if _objects_page != null and _objects_page.visible:
+		_populate_object_cards()
+	_refresh_tree()
+	_refresh_side_panes()
+	_select_first_match()
+	# Lands AFTER the fill, which is the whole reason it was deferred in the first place - callers
+	# preselect via context instead of racing the open sequence.
 	if _context.has("preselect_ace_id"):
-		call_deferred("preselect", str(_context.get("preselect_ace_id")))
+		preselect(str(_context.get("preselect_ace_id")))
 
 
 func _title_for_mode(mode: String, signals_only: bool) -> String:
@@ -1272,6 +1310,15 @@ func _show_objects_page() -> void:
 	if _objects_page == null:
 		return
 	_populate_object_cards()
+	_reveal_objects_page()
+
+
+## The object cards' page WITHOUT building the cards - which page is in front, and nothing else.
+## open() shows the shell this way and fills it a frame later, so the window paints immediately
+## rather than after the cards are built.
+func _reveal_objects_page() -> void:
+	if _objects_page == null:
+		return
 	_objects_page.visible = true
 	_objects_back.visible = false
 	if _body_holder != null:
@@ -2248,7 +2295,9 @@ static func _category_host_classes() -> Dictionary:
 		return _category_hosts
 	_category_hosts_derived = true
 	var counts: Dictionary = {}
-	for entry: Variant in EventForgeBuiltinACEs.get_descriptors():
+	# The registry's cached builtins, not a fresh module walk: the same descriptors, already built,
+	# and already reconciled - a descriptor that spells its host `nodeType` counts here too.
+	for entry: Variant in ACERegistry.get_builtin_descriptors():
 		var host: String = host_class_of(entry)
 		if host.is_empty() or not ClassDB.class_exists(host):
 			continue
@@ -3402,6 +3451,8 @@ func _commit_definition(definition: ACEDefinition) -> void:
 func close() -> void:
 	if _window == null:
 		return
+	# Any fill still in flight is for a dialog that is going away.
+	_fill_token += 1
 	_window.hide()
 
 
