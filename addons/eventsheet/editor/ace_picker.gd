@@ -1326,6 +1326,40 @@ const SEARCH_SYNONYMS := {
 	# And clipping is the one that needs no shader at all, which is why it is worth finding.
 	"crop": "clip",
 	"clip to shape": "clip",
+	# WHAT HAPPENS TO THE WHOLE SCREEN. Nobody searches for "post effect" either: they search for the
+	# thing they saw somewhere and want - a vignette, grain, scanlines, a glitch, a letterbox - and
+	# every one of those is one row on the same stack. The row's own field then shows the rest of the
+	# list, so the search only has to get the reader there.
+	"vignette": "post effect",
+	"grain": "post effect",
+	"film grain": "post effect",
+	"scanlines": "post effect",
+	"crt": "post effect",
+	"pixelate": "post effect",
+	"pixellate": "post effect",
+	"dither": "post effect",
+	"fisheye": "post effect",
+	"glitch": "post effect",
+	"letterbox": "post effect",
+	"colour grade": "post effect",
+	"color grade": "post effect",
+	"post processing": "post effect",
+	"screen effect": "post effect",
+	"pulse": "pulse post effect",
+	# A whole screen saved as one file, which people call a look, a filter or a grade.
+	"looks": "look",
+	"screen look": "look",
+	"filter": "look",
+	# The two accessibility questions, which have shipped rows already: the flashing one is the
+	# built-in No Flashing pair, and the colour one is the pack's own correction.
+	"reduce flashing": "no flashing",
+	"photosensitive": "no flashing",
+	"strobe": "no flashing",
+	"colour blind": "correct colours",
+	"color blind": "correct colours",
+	"colourblind": "correct colours",
+	"colorblind": "correct colours",
+	"daltonism": "correct colours",
 }
 
 
