@@ -14435,12 +14435,18 @@ func _action_without_trailing_notes(action: ACEAction) -> Dictionary:
 ## Whether an action suspends the handler: the awaited-call flags, an `await` anywhere in
 ## its baked template, or a builtin coroutine id (a lifted builtin action carries only its
 ## ace_id - the template re-resolves at compile time).
+##
+## THE ID LIST IS ONE OF THREE and they have to agree: the compiler's `_COROUTINE_ACE_IDS`
+## decides whether the emitted handler is a coroutine, the Doctor's `COROUTINE_ACE_IDS`
+## decides whether it warns about one under a per-frame trigger, and this one decides
+## whether the canvas draws the hourglass. A row in two of them and not the third is a row
+## that suspends without saying so, which is exactly how Save A Still landed here late.
 static func action_awaits(action: ACEAction) -> bool:
 	if action == null:
 		return false
 	if action.is_awaited or action.await_call:
 		return true
-	if ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"].has(action.ace_id):
+	if ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill"].has(action.ace_id):
 		return true
 	return action.codegen_template.contains("await ")
 

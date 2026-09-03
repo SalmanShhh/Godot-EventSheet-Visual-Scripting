@@ -72,6 +72,9 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# is spawned already facing somewhere and already moving, and the copy of the node's own scene.
 	# Asked last of the run families because all three open on shapes the others have already refused.
 	preload("res://addons/eventforge/importer/spawn_run_lift.gd"),
+	# The still a view is asked for: a wait and a write, whose two lines are each already claimed by
+	# an older row on their own. Asked here so the pair reads as the one row that emits it.
+	preload("res://addons/eventforge/importer/view_lift.gd"),
 ]
 
 ## The spawn runs again, named on its own because the file is told which dimension it is reading

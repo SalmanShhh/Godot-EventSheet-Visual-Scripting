@@ -23,6 +23,15 @@
 #   * THE LIVE PICTURE is Rendered As An Image (window_aces.gd), which is `{viewport}.get_texture()`
 #     already and reads the same way pointed at a SubViewport.
 #
+# AND THE TWO NEIGHBOURS THE STILL DOES HAVE, named here because a row minted next to a row it
+# overlaps is how a reading gets taken away quietly. Take Screenshot (system_aces.gd) is
+# `get_viewport().get_texture().get_image().save_png({path})` - the still's SECOND line, character
+# for character - and Save Image As (window_aces.gd) is the same write with the picture named. Both
+# stay: they are the one-line spelling for code that has already waited, or has no frame to wait
+# for. Save A Still is the two-line one that waits first, and because both of its lines were
+# already claimed on their own, it needs a RUN entry to read back as itself (view_lift.gd). That
+# entry is the whole reason this row is allowed to exist beside those two.
+#
 # Everything compiles to plain Godot calls with zero plugin references, honouring the parity
 # covenant.
 @tool

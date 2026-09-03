@@ -1178,6 +1178,11 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 
 ## ACE ids whose codegen `await`s - they suspend the handler into a coroutine (Begin Frame Budget alone
 ## does not await, so it is intentionally absent).
+##
+## One of THREE lists of the same ids, which have to agree: the compiler's `_COROUTINE_ACE_IDS`
+## decides whether the emitted handler is a coroutine at all, and the row builder's `action_awaits`
+## draws the hourglass on the canvas. Adding a row to two of them and not the third is the failure
+## this comment exists to stop.
 const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill"]
 
 

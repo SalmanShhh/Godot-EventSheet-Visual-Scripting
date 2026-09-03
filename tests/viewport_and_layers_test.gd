@@ -155,13 +155,16 @@ static func _pin_shipped(shipped: Dictionary) -> bool:
 			_param_ids(shipped["ViewSaveStill"]), "view,path"],
 		["Save A Still writes where a player can write",
 			_default_of(shipped["ViewSaveStill"], "path"), "\"user://still.png\""],
-		# A lifted row carries only its ace_id, so an awaiting builtin is recognised by two
-		# hand-kept lists as well as by the word in its template. Both are pinned here: a row added
-		# to one list and not the other compiles a coroutine the Doctor cannot see, or the reverse.
+		# A lifted row carries only its ace_id, so an awaiting builtin is recognised by THREE
+		# hand-kept lists as well as by the word in its template - and all three are pinned here,
+		# because a row in two of them and not the third compiles a coroutine the Doctor cannot see,
+		# or one the canvas draws no hourglass on.
 		["the compiler knows Save A Still suspends the event",
 			SheetCompiler._COROUTINE_ACE_IDS.has("ViewSaveStill"), true],
 		["and so does the Doctor",
 			EventSheetProjectDoctor.COROUTINE_ACE_IDS.has("ViewSaveStill"), true],
+		["and so does the canvas, which draws the hourglass",
+			ViewportRowBuilder.action_awaits(_still_row()), true],
 		["Mouse Position In View asks one view for its own pointer",
 			_template(shipped, "ViewMousePosition"), "{view}.get_mouse_position()"],
 		["Render 3D At writes the fraction and then how it is upscaled",
@@ -268,20 +271,22 @@ static func _pin_emitted_views(shipped: Dictionary) -> bool:
 		["the compiled view sheet is valid GDScript", _parses(output), true]
 	]
 	var passed: bool = SUPPORT.pins("viewport_and_layers_test", rows)
-	# Two deliberate readings are pinned here beside the rows that do read back as themselves.
-	# The STILL is a several-line row, so it degrades the honest way: the wait reads back as Wait For
-	# Signal and the write as Take Screenshot, which is exactly what those two lines are.
+	# One deliberate reading is pinned here beside the rows that read back as themselves.
 	# SET VIEW SIZE is kept out of the reverse index on purpose (ace_lifter's excluded ids): `size =
 	# ...` is a Control's size, a shape's size and a viewport's size all at once, so the row authors
 	# and the sentence grammar keeps the reading of that line for every class that has one.
+	#
+	# THE STILL used to be the second of those: its two lines are each claimed by an older row on
+	# their own (the wait by Wait For Signal, the write by Take Screenshot, whose template it is
+	# character for character), so a hand-written still opened as two rows and the row that emits it
+	# could never read back as itself. It is a RUN now - view_lift.gd - and the pin says so.
 	passed = SUPPORT.pins("viewport_and_layers_test", [
-		["the size line keeps the reading every class with a size already had, and the still reads back as the wait and the write it is made of",
+		["the size line keeps the reading every class with a size already had, and the still is one row again",
 			_lifted_ids(output),
-			PackedStringArray(["SetVar", "ViewShareWorld2D", "ViewShareWorld3D", "AwaitSignal",
-				"TakeScreenshot"])]
+			PackedStringArray(["SetVar", "ViewShareWorld2D", "ViewShareWorld3D", "ViewSaveStill"])]
 	]) and passed
 	return _pin_lift("views", output, "user://viewport_views_roundtrip.gd",
-		["ViewShareWorld2D", "ViewShareWorld3D"]) and passed
+		["ViewShareWorld2D", "ViewShareWorld3D", "ViewSaveStill"]) and passed
 
 
 ## The scaling sheet: every rendering row this slice added, on a plain Node.
@@ -674,6 +679,16 @@ static func _parses(source: String) -> bool:
 
 ## An ACEAction on the SHIPPED template, baking {uid} into a per-row token exactly as the dock does
 ## at apply time. An empty uid leaves the registry template in charge (there is no {uid} to bake).
+## A Save A Still row carrying nothing but its id - the shape a LIFTED builtin action has, with no
+## baked template for the word "await" to be found in. It is the only shape the three id lists
+## actually decide anything for, so it is the shape the canvas pin is asked about.
+static func _still_row() -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "ViewSaveStill"
+	return action
+
+
 static func _action(shipped: Dictionary, ace_id: String, params: Dictionary, uid: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"

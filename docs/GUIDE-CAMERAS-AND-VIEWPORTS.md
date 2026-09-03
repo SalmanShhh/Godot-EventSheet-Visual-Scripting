@@ -333,9 +333,14 @@ func snapshot() -> void:
 ```
 
 Because it awaits, the event holding it suspends. The Doctor knows: a coroutine action under a
-per-frame trigger is flagged, because the next tick fires while the first one is still waiting.
-`user://` is the writable folder on every platform, and it is what the field opens on - a `res://`
-path works in the editor and is read-only in an exported game.
+per-frame trigger is flagged, because the next tick fires while the first one is still waiting. The
+canvas knows too, and draws the hourglass on the row. `user://` is the writable folder on every
+platform, and it is what the field opens on - a `res://` path works in the editor and is read-only
+in an exported game.
+
+Written by hand, those two lines open as the one row, not as a wait and a write: they are only a
+still TOGETHER, so they are recognised together. Either line on its own keeps the reading it always
+had - the wait is Wait For Signal, and the save is Take Screenshot or Save Image As.
 
 ## How the game fills a window it was not drawn for
 

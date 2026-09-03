@@ -2644,6 +2644,11 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 ## handler can suspend mid-loop and picked objects may be freed before it resumes. Checks
 ## the baked template AND the builtin coroutine ids: a lifted builtin action carries only
 ## its ace_id (the template re-resolves at emit), so the id list is load-bearing here.
+##
+## It is one of THREE lists of the same ids, and they have to agree: the Doctor's
+## COROUTINE_ACE_IDS warns about one under a per-frame trigger, and the row builder's
+## `action_awaits` draws the hourglass on the canvas. A row added to two of them and not
+## the third suspends the handler without saying so anywhere a reader looks.
 const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill"]
 
 
