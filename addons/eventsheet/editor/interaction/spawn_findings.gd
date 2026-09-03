@@ -154,18 +154,27 @@ static func row_contexts(sheet: EventSheetResource) -> Array[Dictionary]:
 ## ACE), the registry's otherwise, and the verbatim code of a block that never lifted. The same order
 ## the compiler resolves in, so a rule can never read a different line than the one that gets
 ## emitted.
+##
+## AND THE ROW'S OWN CHOICES ARE COLLAPSED FIRST. A template may carry a branch per answer to a
+## dropdown - a formation row writes its copies in now or on the next idle moment, and both spellings
+## sit in the one template with marks around them. Reading the template with the marks still in it
+## sees BOTH branches, so a row set to the safe answer would be reported for the parenting the other
+## branch writes and never emits. Collapsing is what the compiler does with the same row's values a
+## moment later, through the same call, so this reads the line that really gets written.
 static func emitted_lines(entry: Variant) -> String:
 	if entry is RawCodeRow:
 		return (entry as RawCodeRow).code
 	var ace: Resource = entry as Resource
 	if ace == null:
 		return ""
-	var baked: String = str(ace.get("codegen_template"))
-	if not baked.strip_edges().is_empty():
-		return baked
-	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
-		str(ace.get("provider_id")), str(ace.get("ace_id")))
-	return "" if descriptor == null else descriptor.codegen_template
+	var template: String = str(ace.get("codegen_template"))
+	if template.strip_edges().is_empty():
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
+			str(ace.get("provider_id")), str(ace.get("ace_id")))
+		if descriptor == null:
+			return ""
+		template = descriptor.codegen_template
+	return ActionCodegen.collapse_optional_segments(template, _params_of(ace))
 
 
 ## True when a line parents a node WITHOUT deferring it. Anchored on the call rather than on the
