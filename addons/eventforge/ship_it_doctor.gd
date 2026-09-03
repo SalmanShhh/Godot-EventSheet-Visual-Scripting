@@ -44,6 +44,7 @@ const CHECK_IDENTITY := "ship-default-identity"
 const CHECK_TRANSLATION := "ship-translation-coverage"
 const CHECK_FRAME_BUDGET := "ship-frame-budget"
 const CHECK_WHAT_GETS_SAVED := "ship-what-gets-saved"
+const CHECK_PIXEL_SCALE := "ship-pixel-scale"
 
 ## Where Godot keeps the export presets, and the header a preset is one of.
 const EXPORT_PRESETS_PATH := "res://export_presets.cfg"
@@ -110,6 +111,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(translation_findings(used_translation_keys(sources), catalog_keys()))
 	out.append_array(frame_budget_findings(measured_costs(sources)))
 	out.append_array(what_gets_saved_findings(save_usage(sources)))
+	out.append_array(pixel_scale_findings(sources))
 	return out
 
 
@@ -506,6 +508,54 @@ static func what_gets_saved_findings(usage: Dictionary) -> Array[Dictionary]:
 	return [_finding("info", CHECK_WHAT_GETS_SAVED, _sorted_keys(usage)[0],
 		EventSheetL10n.translate("A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.") % [
 			keys.size(), usage.size(), _named_then_counted(keys)], "")]
+
+
+# ── Sharp pixels, asked for by a fraction ─────────────────────────────────────
+
+
+## The line every Keep Pixels Sharp row writes when the answer is yes, and the line every Pixel Size
+## row writes. Matched as text because the Doctor reads emitted SCRIPTS: `.gd` is the default sheet
+## format, so a walk of sheet resources would miss most real projects.
+const SHARP_PIXELS_LINE := "content_scale_stretch = Window.CONTENT_SCALE_STRETCH_INTEGER"
+const PIXEL_SIZE_LINE := "content_scale_factor = "
+
+
+## Whole pixels and a fraction asked for in the same file. Godot rounds the scale DOWN to a whole
+## number while whole pixels are being kept, so a game asking for 2.5 gets 2 and the row that asked
+## is not the size the player sees. An info note rather than a warning, because both halves are
+## deliberate settings and the fix is a decision (round the number, or let the fraction through)
+## rather than a defect - and silent unless the number is really a literal fraction, since a factor
+## computed at run time is nobody's business to guess at.
+static func pixel_scale_findings(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		var text: String = str(sources[script_path])
+		if not text.contains(SHARP_PIXELS_LINE):
+			continue
+		var fraction: String = fractional_pixel_size(text)
+		if fraction.is_empty():
+			continue
+		findings.append(_finding("info", CHECK_PIXEL_SCALE, script_path,
+			EventSheetL10n.translate("%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.") % [
+				script_path.get_file(), fraction], fraction))
+	return findings
+
+
+## The first fractional pixel size this source asks for, as the reader wrote it, or "" when every
+## size in it is a whole number (or is not a literal at all).
+static func fractional_pixel_size(source: String) -> String:
+	for raw_line: String in source.split("\n"):
+		var line: String = raw_line.strip_edges()
+		var at: int = line.find(PIXEL_SIZE_LINE)
+		if at < 0 or line.begins_with("#"):
+			continue
+		var written: String = line.substr(at + PIXEL_SIZE_LINE.length()).strip_edges()
+		if not written.is_valid_float():
+			continue
+		var asked: float = written.to_float()
+		if not is_equal_approx(asked, floorf(asked)):
+			return written
+	return ""
 
 
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────
