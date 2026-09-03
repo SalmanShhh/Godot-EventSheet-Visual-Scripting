@@ -38,6 +38,10 @@ const CHECK_BLEND := "effects-blend-over-shader"
 const CHECK_MESH_SHARED := "effects-shared-mesh-material"
 const CHECK_MATERIAL_ON_SHADER := "effects-material-word-on-a-shader"
 
+## And the one the POST STACK earns: effects that cover the whole viewport in a scene that also
+## carries an interface layer, with no row saying which side of it they belong on.
+const CHECK_POST_ORDER := "effects-post-stack-order-unsaid"
+
 ## Which check id each finding reports as. One table, so the note on the row and the line in the
 ## report are the same finding under two roofs.
 const CHECK_FOR_KIND: Dictionary = {
@@ -49,6 +53,7 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetEffectFindings.KIND_BLEND_OVER_SHADER: CHECK_BLEND,
 	EventSheetEffectFindings.KIND_MESH_SHARED_MATERIAL: CHECK_MESH_SHARED,
 	EventSheetEffectFindings.KIND_MATERIAL_WORD_ON_A_SHADER: CHECK_MATERIAL_ON_SHADER,
+	EventSheetEffectFindings.KIND_POST_ORDER_UNSAID: CHECK_POST_ORDER,
 }
 
 ## The cheap first question asked of a scene's text before anything is parsed - a scene with no
@@ -61,9 +66,11 @@ const MATERIAL_WORD := "material = "
 ## sheets.
 ## And the two the MATERIAL WORDS reach through: the override every mesh word writes its copy onto,
 ## and the class the two 2D words make when an item has none.
+## And the one the post-stack rows reach through, which is a word of its own rather than a dial call:
+## a sheet that never says "post effect" cannot be one of these sheets.
 const SHEET_WORDS: PackedStringArray = ["set_shader_parameter", "get_shader_parameter",
 	"global_shader_parameter", EventSheetEffectFindings.BLEND_CALL, "material_override",
-	"CanvasItemMaterial"]
+	"CanvasItemMaterial", "post_effect", "use_look(", "blend_to_look("]
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor

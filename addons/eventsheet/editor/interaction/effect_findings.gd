@@ -66,6 +66,18 @@ const KIND_BLEND_OVER_SHADER := "blend-mode-on-an-item-already-wearing-a-shader"
 const KIND_MESH_SHARED_MATERIAL := "material-word-on-a-material-other-meshes-wear"
 const KIND_MATERIAL_WORD_ON_A_SHADER := "material-word-on-an-item-wearing-a-shader"
 
+## AND THE ONE THE POST STACK EARNS, which is about ORDER rather than about a material at all. A post
+## effect covers the whole viewport, so whether the interface is graded, blurred and dimmed along
+## with the game comes down to which of two CanvasLayers has the higher number - and neither of them
+## was chosen for that. A sheet that puts something on the post stack in a scene that also carries an
+## interface layer, and never says which side of it the effects belong on, has left the look of its
+## own interface to two numbers picked for other reasons.
+##
+## No fix door: below and above are both right answers to different scenes (a health bar wants to
+## stay readable; a cutscene letterbox wants the whole screen), and a wrong guess in a button costs
+## more than no guess at all. The row that settles it is named in the words instead.
+const KIND_POST_ORDER_UNSAID := "post-effects-and-an-interface-layer-in-no-set-order"
+
 ## Which half of the material vocabulary a row belongs to, as the module files its own writing rows.
 const MATERIAL_MESH_ROWS := "mesh"
 const MATERIAL_SPRITE_ROWS := "sprite"
@@ -114,6 +126,14 @@ const BLEND_CALL := ".blend_as("
 const BLEND_NATIVE_MODES: PackedStringArray = ["normal", "add", "subtract", "multiply",
 	"premultiplied"]
 
+## How a row that puts something on the POST STACK is recognised, and the two rows that settle which
+## side of a layer the stack is drawn on. Matched in the line for the same reason as everything above
+## it: a picked row, a pack's own wrapper and a hand-written line are all the same finding.
+const POST_CALLS: PackedStringArray = [".add_post_effect(", ".pulse_post_effect(", ".use_look(",
+	".blend_to_look("]
+const POST_ORDER_CALLS: PackedStringArray = [".draw_post_effects_below(",
+	".draw_post_effects_above("]
+
 ## Where the FROZEN free-string rows keep the dial's name - quoted, and typed rather than picked.
 ## Kept because a hand-written line naming a dial the shader does not declare lifts to one of those
 ## by design: there was no dial to pick, so the row that stands for it is the one that takes a name.
@@ -146,6 +166,11 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 		# from the project index - which is also the one place "who else wears this" is answered.
 		"meshes": mesh_wearers_of_script(script_path),
 		"scene_path": EventSheetSceneLightingFacts.attached_scene(script_path),
+		# The interface layer of the attached scene, and whether this sheet ever says which side of
+		# it the post stack belongs on. Both are whole-sheet facts, so both are read once here rather
+		# than re-derived per row.
+		"interface_layer": interface_layer_of(EventSheetSceneLightingFacts.attached_scene(script_path)),
+		"orders_the_post_stack": orders_the_post_stack(sheet),
 		# One finding per NODE, not per row: twelve rows turning dials on one shared material are one
 		# problem with one fix, and twelve identical notes is how a note stops being read.
 		"said": PackedStringArray(),
@@ -356,6 +381,11 @@ static func _finding_for(ace: Resource, judged: Dictionary, event_row: EventRow,
 	var about_blend: Dictionary = _blend_over_shader(ace, judged, event_row, lane, slot)
 	if not about_blend.is_empty():
 		return about_blend
+	# And the post-stack rows, for the same reason again: a row that adds an effect to the stack
+	# names neither a dial nor a material, so it would fall through every check below it.
+	var about_order: Dictionary = _post_order_unsaid(ace, judged, event_row, lane, slot)
+	if not about_order.is_empty():
+		return about_order
 	# And the material words, for the same reason: they name no dial either, so a row about a
 	# mesh's colour would fall straight through the three checks below and be judged as nothing.
 	var about_material: Dictionary = _material_word_finding(ace, judged, event_row, lane, slot)
@@ -603,6 +633,96 @@ static func global_of(ace: Resource) -> String:
 ## global name is: it is the one thing every spelling of the row has in common.
 static func writes_a_dial(ace: Resource) -> bool:
 	return EventSheetLightingFindings.compiled_line(ace).contains(WRITE_CALL)
+
+
+## A post effect put on the screen in a scene that also carries an interface layer, with no row
+## anywhere in the sheet saying which side of that layer the effects are drawn on.
+##
+## Nothing here is broken and nothing errors: the effects land wherever two CanvasLayer numbers put
+## them, and the reader finds out which when they see their own health bar go dark. One row settles
+## it for the whole stack, which is why this is worth saying before the game is run.
+##
+## Only ever said when the scene really carries such a layer, so a sheet with no interface, a
+## behaviour five scenes wear, and a project whose interface is not on a CanvasLayer at all are all
+## said nothing about.
+static func _post_order_unsaid(ace: Resource, judged: Dictionary, event_row: EventRow, lane: String,
+		slot: int) -> Dictionary:
+	var layer_name: String = str(judged.get("interface_layer", ""))
+	if layer_name.is_empty() or bool(judged.get("orders_the_post_stack", false)):
+		return {}
+	if not _says_any_call(EventSheetLightingFindings.compiled_line(ace), POST_CALLS):
+		return {}
+	if _already_said(judged, KIND_POST_ORDER_UNSAID, layer_name):
+		return {}
+	return _row_finding(KIND_POST_ORDER_UNSAID, layer_name, EventSheetL10n.translate(
+		"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.") % [
+			layer_name, layer_name, layer_name], event_row, lane, slot, {})
+
+
+## True when this sheet says, anywhere, which side of a layer the post stack is drawn on. One row is
+## enough for a whole sheet, which is why this is a whole-sheet question rather than a per-row one.
+static func orders_the_post_stack(sheet: EventSheetResource) -> bool:
+	if sheet == null:
+		return false
+	if _orders_the_stack_in(sheet.events):
+		return true
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null and _orders_the_stack_in(event_function.events):
+			return true
+	return false
+
+
+## The walk under the question above: every row of every event, groups and sub-events included.
+static func _orders_the_stack_in(items: Array) -> bool:
+	for item: Variant in items:
+		if item is EventGroup:
+			if _orders_the_stack_in(EventSheetGroupFacts.children(item as EventGroup)):
+				return true
+			continue
+		var event_row: EventRow = item as EventRow
+		if event_row == null:
+			continue
+		for lane_rows: Array in [event_row.conditions, event_row.actions]:
+			for entry: Variant in lane_rows:
+				if entry is Resource and _says_any_call(
+						EventSheetLightingFindings.compiled_line(entry as Resource),
+						POST_ORDER_CALLS):
+					return true
+		if _orders_the_stack_in(event_row.sub_events):
+			return true
+	return false
+
+
+## The name of the scene's INTERFACE LAYER: the first CanvasLayer with a Control under it, in the
+## order the scene file writes its nodes. "" for a scene with no such layer, which is most scenes and
+## every scene this check then says nothing about.
+static func interface_layer_of(scene_path: String) -> String:
+	if scene_path.strip_edges().is_empty():
+		return ""
+	var nodes: Array = EventSheetSceneConnections.nodes_of_scene(scene_path)
+	for entry: Variant in nodes:
+		var node: Dictionary = entry as Dictionary
+		if node == null or str(node.get("type", "")) != "CanvasLayer":
+			continue
+		var under: String = str(node.get("path", "")) + "/"
+		for child_entry: Variant in nodes:
+			var child: Dictionary = child_entry as Dictionary
+			if child == null or not str(child.get("path", "")).begins_with(under):
+				continue
+			var kind: String = str(child.get("type", ""))
+			if ClassDB.class_exists(kind) and ClassDB.is_parent_class(kind, "Control"):
+				return str(node.get("name", ""))
+	return ""
+
+
+## True when the line makes one of these calls. Kept beside the tables it is asked with, so a table
+## and its test are one thing.
+static func _says_any_call(line: String, calls: PackedStringArray) -> bool:
+	for call: String in calls:
+		if line.contains(call):
+			return true
+	return false
 
 
 ## One row finding with its defaults filled in, so every reader of a finding can address every key.
