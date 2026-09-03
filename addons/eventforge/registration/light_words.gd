@@ -31,10 +31,12 @@ const ROOT_3D: String = "Light3D"
 
 ## What kind of row a word makes. A VALUE word is set to a number and can be read back; a SWITCH is
 ## turned on or off and can be asked about; a COLOUR is a value with a colour field rather than an
-## expression one. One builder per kind, in lighting_aces.gd.
+## expression one; a CHOICE is one of a fixed list of engine constants, offered as a dropdown that
+## reads the plain word while writing the constant. One builder per kind, in lighting_aces.gd.
 const KIND_VALUE: String = "value"
 const KIND_COLOUR: String = "colour"
 const KIND_SWITCH: String = "switch"
+const KIND_CHOICE: String = "choice"
 
 ## THE WORDS. One entry per thing a game touches, and for each one the spellings it can take in
 ## preference order, as `property -> ace_id stem`. Preference order is what makes `enabled` beat
@@ -102,6 +104,29 @@ const WORDS: Array[Dictionary] = [
 		"ask_verb": "Is casting shadows",
 		"about": "Whether the light casts shadows - the cheapest lighting switch there is.",
 		"spellings": {"shadow_enabled": "Shadows"}
+	},
+	# APPENDED, and appended for a reason: the rows of a word are built in this table's order, and
+	# registration order is the reverse-lifter's tie-break. A new word goes on the end so no shipped
+	# row moves under one.
+	#
+	# The first CHOICE word here, and 2D-only: a 2D light decides how it is mixed with what is
+	# already drawn, and a 3D light has no such property at all - so the 3D dimension resolves none
+	# of its spellings and builds no row, which is exactly what the derivation is for.
+	{
+		"word": "light blend",
+		"kind": KIND_CHOICE,
+		"name": "Blend Light As",
+		"verb": "Blend light as {value}",
+		"reads": "light blend",
+		"label": "Blend",
+		"about": "How the light is mixed with what is already drawn under it. Add is light and is what a torch, a fire and a lamp want; subtract takes light away, which is how a shadow caster or a darkness field is made; mix replaces what is under it entirely, which is what a coloured stained-glass wash wants.",
+		"choices": [
+			{"key": "Light2D.BLEND_MODE_ADD", "label": "add"},
+			{"key": "Light2D.BLEND_MODE_SUB", "label": "subtract"},
+			{"key": "Light2D.BLEND_MODE_MIX", "label": "mix"}
+		],
+		"default": "Light2D.BLEND_MODE_ADD",
+		"spellings": {"blend_mode": "Blend"}
 	}
 ]
 

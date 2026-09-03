@@ -88,8 +88,9 @@ static func _test_the_picker_shelf() -> bool:
 		ACEPickerDialog.scene_lighting_definitions(EventSheetResource.new(), registry).size(), 0) and ok
 
 
-## The whole map, as one table of answers: for every light class, the property each of the five
-## words resolves to. This is the file's headline claim, and it is pinned as VALUES so a change in
+## The whole map, as one table of answers: for every light class, the property each word resolves
+## to - and the blank for a word that class has no spelling of, which is the derivation refusing to
+## offer a 3D light a 2D light's blend mode. This is the file's headline claim, and it is pinned as VALUES so a change in
 ## the derivation shows up here as the wrong property rather than as a silently missing row.
 static func _test_the_word_map() -> bool:
 	var answers: Dictionary = {}
@@ -98,12 +99,12 @@ static func _test_the_word_map() -> bool:
 		for word: Dictionary in W.WORDS:
 			per_word.append("%s=%s" % [str(word["word"]), W.property_of(class_text, str(word["word"]))])
 		answers[class_text] = " ".join(per_word)
-	return _check("every light class answers the five words with its own properties", answers, {
-		"PointLight2D": "brightness=energy colour=color reach=texture_scale cone angle= on=enabled shadows=shadow_enabled",
-		"DirectionalLight2D": "brightness=energy colour=color reach= cone angle= on=enabled shadows=shadow_enabled",
-		"OmniLight3D": "brightness=light_energy colour=light_color reach=omni_range cone angle= on=visible shadows=shadow_enabled",
-		"SpotLight3D": "brightness=light_energy colour=light_color reach=spot_range cone angle=spot_angle on=visible shadows=shadow_enabled",
-		"DirectionalLight3D": "brightness=light_energy colour=light_color reach= cone angle= on=visible shadows=shadow_enabled"
+	return _check("every light class answers the words it has with its own properties", answers, {
+		"PointLight2D": "brightness=energy colour=color reach=texture_scale cone angle= on=enabled shadows=shadow_enabled light blend=blend_mode",
+		"DirectionalLight2D": "brightness=energy colour=color reach= cone angle= on=enabled shadows=shadow_enabled light blend=blend_mode",
+		"OmniLight3D": "brightness=light_energy colour=light_color reach=omni_range cone angle= on=visible shadows=shadow_enabled light blend=",
+		"SpotLight3D": "brightness=light_energy colour=light_color reach=spot_range cone angle=spot_angle on=visible shadows=shadow_enabled light blend=",
+		"DirectionalLight3D": "brightness=light_energy colour=light_color reach= cone angle= on=visible shadows=shadow_enabled light blend="
 	})
 
 
@@ -149,7 +150,9 @@ static func _test_the_rows() -> bool:
 		"LightIsShadows": "Light2D | shadow_enabled",
 		"LightShadows3DOn": "Light3D | shadow_enabled = true",
 		"LightShadows3DOff": "Light3D | shadow_enabled = false",
-		"LightIsShadows3D": "Light3D | shadow_enabled"
+		"LightIsShadows3D": "Light3D | shadow_enabled",
+		"LightSetBlend": "Light2D | blend_mode = {value}",
+		"LightBlend": "Light2D | blend_mode"
 	})
 
 

@@ -74,6 +74,8 @@ static func _append_light_as_object(descriptors: Array[ACEDescriptor]) -> void:
 						descriptors.append_array(_switch_rows(word, row))
 					W.KIND_COLOUR:
 						descriptors.append_array(_colour_rows(word, row))
+					W.KIND_CHOICE:
+						descriptors.append_array(_choice_rows(word, row))
 					_:
 						descriptors.append_array(_value_rows(word, row))
 
@@ -122,6 +124,27 @@ static func _colour_rows(word: Dictionary, row: Dictionary) -> Array[ACEDescript
 	return [
 		F.act("LightSet%s" % stem, str(word["name"]), "%s = {value}" % str(row["property"]), CAT, str(word["verb"]), _about(word, row), str(row["host"])).param_typed("Color", "value", _default_of(row), str(word["word"]).capitalize(), str(word["about"]), "color"),
 		F.expr("Light%s" % stem, str(word["word"]).capitalize(), str(row["property"]), CAT, str(word["reads"]), "Reads the light's %s back: %s. Use it in any value field." % [str(word["word"]), _echo(row)], str(row["host"]))
+	]
+
+
+## A word that is one of a FIXED LIST of engine constants: the Set row with a dropdown, and the
+## expression that reads it back. No fade - there is nothing between add and subtract to walk
+## through - and no engine default asked for either, because ClassDB answers a choice property with
+## the integer the enum really is and a dropdown whose keys are constants cannot open on `0`. The
+## table writes the constant that integer names, which is still the engine's own value.
+##
+## `display_option_labels` is what makes the ROW read "Blend light as add" instead of "Blend light as
+## Light2D.BLEND_MODE_ADD": the KEY is still the constant (it is what the template writes and what
+## every saved row holds, both frozen), and only the word a reader sees changes.
+static func _choice_rows(word: Dictionary, row: Dictionary) -> Array[ACEDescriptor]:
+	var stem: String = str(row["id_stem"])
+	var chosen: ACEParam = F.make_param("value", "String", str(word["default"]),
+		str(word.get("label", str(word["word"]).capitalize())), str(word["about"]), "",
+		word["choices"] as Array)
+	chosen.display_option_labels = true
+	return [
+		F.act("LightSet%s" % stem, str(word["name"]), "%s = {value}" % str(row["property"]), CAT, str(word["verb"]), _about(word, row), str(row["host"])).param_built(chosen),
+		F.expr("Light%s" % stem, str(word["name"]).trim_prefix("Set "), str(row["property"]), CAT, str(word["reads"]), "Reads the light's %s back: %s. Use it in any value field." % [str(word["word"]), _echo(row)], str(row["host"]))
 	]
 
 

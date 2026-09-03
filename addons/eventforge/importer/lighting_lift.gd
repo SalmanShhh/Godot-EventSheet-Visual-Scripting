@@ -275,9 +275,22 @@ static func _value_entry(word: Dictionary, row: Dictionary) -> Dictionary:
 		"shape": "%s%s = {value}" % [EventForgeLiftTable.optional_prefix_slot("target"), property],
 		"slots": {
 			"target": _fixture_target(row),
-			"value": FIXTURE_COLOUR if str(word["kind"]) == W.KIND_COLOUR else FIXTURE_VALUE
+			"value": _fixture_value(word)
 		}
 	}
+
+
+## What a generated fixture writes for one word: a colour where the word is one, the word's own
+## constant where the word is a fixed list (`blend_mode = 1.2` parses, but it is not a line anybody
+## would write, and a generated example is read by people), and a plain number for everything else.
+static func _fixture_value(word: Dictionary) -> String:
+	match str(word["kind"]):
+		W.KIND_COLOUR:
+			return FIXTURE_COLOUR
+		W.KIND_CHOICE:
+			return str(word["default"])
+		_:
+			return FIXTURE_VALUE
 
 
 ## `<light>.enabled = false` - a switch, whose two answers are two rows. The value is not a param:
