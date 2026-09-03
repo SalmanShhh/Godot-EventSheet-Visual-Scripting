@@ -38,6 +38,24 @@ const SLICE_BUDGET_MSEC: int = 4
 ## The node member a shader material is worn on, kept beside the walk that reads it.
 const MATERIAL_KEY: String = "material_path"
 
+## THE OTHER THREE PLACES A MATERIAL IS WORN, and the reason the scan reads them itself rather than
+## asking the effects walk. That walk answers one question - `material`, the CanvasItem member every
+## 2D effect row spells - and deliberately stops there. A MESH wears its material somewhere else
+## entirely: on `material_override` for the whole mesh, or on `surface_material_override/N` for one
+## surface slot of it. Without those two, "who else wears this material" answered nothing at all for
+## a 3D scene, however many meshes were sharing one `.tres`.
+##
+## And `next_pass` is the third: a material that hands the drawing on to another one makes its wearer
+## a wearer of that one too, which is what makes the question answerable for a layer laid over a
+## surface. It is a property of the MATERIAL rather than of the node, so it is followed through the
+## material reader's own chain walk instead of read off a node header.
+const MESH_OVERRIDE_KEY: String = "material_override"
+const SURFACE_OVERRIDE_PREFIX: String = "surface_material_override/"
+
+## How the scene file spells a pointer at a file. A `SubResource(...)` is a material the scene keeps
+## inside itself, which by definition nobody else is wearing, so it is not filed as shared.
+const EXT_RESOURCE_HEAD: String = "ExtResource("
+
 ## resource path -> the scenes holding it, in path order. Every ext_resource of every scene, so one
 ## scan answers the material question and the environment one and whatever the next one is.
 static var _holders: Dictionary = {}
@@ -46,6 +64,12 @@ static var _holders: Dictionary = {}
 ## head band shows: a material worn twice in one scene is shared with one other node, which counting
 ## scenes could never say.
 static var _wearers: Dictionary = {}
+
+## scene path -> the MESHES of that scene that wear a material file, each {"name", "path", "class",
+## "materials"}. The wearer map above answers "who else wears this file"; this answers the other half
+## of the same question - "what does this mesh wear" - which is what a row about a mesh's colour has
+## to know before anything can be said about who else that colour moves.
+static var _mesh_wearers: Dictionary = {}
 
 ## function name -> the project scripts that call it, in path order. The answer to "who else calls
 ## this?", which a function's own head band says and a rename has to say before it changes anything.
@@ -108,6 +132,7 @@ static func request() -> bool:
 		_next_script = 0
 		_holders.clear()
 		_wearers.clear()
+		_mesh_wearers.clear()
 		_callers.clear()
 	if is_ready():
 		return true
@@ -239,6 +264,7 @@ static func callers_of(function_name: String, own_script: String = "") -> Packed
 static func clear_cache() -> void:
 	_holders.clear()
 	_wearers.clear()
+	_mesh_wearers.clear()
 	_callers.clear()
 	_pending = PackedStringArray()
 	_pending_scripts = PackedStringArray()
@@ -260,14 +286,79 @@ static func _read_scene(scene_path: String) -> void:
 			holders.append(scene_path)
 			_holders[resource_path] = holders
 	for node: Dictionary in EventSheetSceneEffects.for_scene(scene_path):
-		var material_path: String = str(node.get(MATERIAL_KEY, ""))
-		if material_path.is_empty():
+		_file_wearer(str(node.get(MATERIAL_KEY, "")), scene_path, str(node.get("path", "")),
+			str(node.get("name", "")))
+	_read_mesh_wearers(scene_path)
+
+
+## The MESHES of one scene that wear a material file, filed both ways at once: under the material,
+## so "who else wears this" answers for a 3D scene, and under the scene, so "what does this mesh
+## wear" answers for a row about one mesh's colour. Both halves come off the same node headers the
+## parse cache already holds, so the second question costs no second read of the file.
+static func _read_mesh_wearers(scene_path: String) -> void:
+	var files: Dictionary = EventSheetSceneConnections.resource_paths_of_scene(scene_path)
+	if files.is_empty():
+		return
+	var found: Array[Dictionary] = []
+	for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
+		var node: Dictionary = entry
+		var worn: PackedStringArray = PackedStringArray()
+		for key: Variant in (node.get("properties", {}) as Dictionary):
+			var member: String = str(key)
+			if member != MESH_OVERRIDE_KEY and not member.begins_with(SURFACE_OVERRIDE_PREFIX):
+				continue
+			var material_path: String = _file_behind(
+				str((node.get("properties", {}) as Dictionary)[key]), files)
+			if material_path.is_empty() or worn.has(material_path):
+				continue
+			worn.append(material_path)
+			_file_wearer(material_path, scene_path, str(node.get("path", "")),
+				str(node.get("name", "")))
+		if worn.is_empty():
 			continue
-		if not _wearers.has(material_path):
-			_wearers[material_path] = [] as Array[Dictionary]
-		(_wearers[material_path] as Array[Dictionary]).append({
-			"scene_path": scene_path, "path": str(node.get("path", "")),
-			"name": str(node.get("name", ""))})
+		found.append({"name": str(node.get("name", "")), "path": str(node.get("path", "")),
+			"class": str(node.get("type", "")), "materials": worn})
+	if not found.is_empty():
+		_mesh_wearers[scene_path] = found
+
+
+## One node filed as a wearer of one material, and of every material that one hands the drawing on
+## to. The chain matters because a layer laid over a surface is a second material the same node is
+## wearing - a row that changes it changes it for every other node down the same chain, and a count
+## that stopped at the first material would say nobody else was there.
+static func _file_wearer(material_path: String, scene_path: String, node_path: String,
+		node_name: String) -> void:
+	if material_path.strip_edges().is_empty():
+		return
+	var chain: Array[Dictionary] = EventSheetSceneEffects.pass_chain(material_path)
+	var worn: PackedStringArray = PackedStringArray()
+	for pass_entry: Dictionary in chain:
+		var passed: String = str(pass_entry.get(MATERIAL_KEY, ""))
+		if not passed.is_empty() and not worn.has(passed):
+			worn.append(passed)
+	if worn.is_empty():
+		worn.append(material_path)
+	for held: String in worn:
+		if not _wearers.has(held):
+			_wearers[held] = [] as Array[Dictionary]
+		(_wearers[held] as Array[Dictionary]).append({
+			"scene_path": scene_path, "path": node_path, "name": node_name})
+
+
+## The `res://` file behind a node property, or "" when the property points at a resource the scene
+## keeps inside itself (which nobody else can be wearing) or at nothing at all.
+static func _file_behind(held: String, files: Dictionary) -> String:
+	var text: String = held.strip_edges()
+	if not text.begins_with(EXT_RESOURCE_HEAD):
+		return ""
+	return str(files.get(text.get_slice("\"", 1), ""))
+
+
+## Every mesh of one scene that wears a material file, in scene order. Empty for a scene with no
+## meshes in it, and while the scan is still running - which is why `scenes_ready()` is asked beside
+## it rather than an empty answer being read as "this scene has none".
+static func mesh_wearers_in(scene_path: String) -> Array[Dictionary]:
+	return _mesh_wearers.get(scene_path, [] as Array[Dictionary])
 
 
 ## Every name ONE script calls, filed under that name. A declaration is not a call - `func hurt(` and

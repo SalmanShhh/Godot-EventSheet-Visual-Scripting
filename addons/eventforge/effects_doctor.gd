@@ -32,6 +32,12 @@ const CHECK_GLOBAL := "effects-undeclared-global"
 const CHECK_SCREEN := "effects-screen-effect-idle"
 const CHECK_BLEND := "effects-blend-over-shader"
 
+## And the two the material words earn: a mesh whose material file other meshes wear (information -
+## every material word takes its own copy first, so nothing needs fixing), and a blending or lighting
+## word on a 2D item wearing a shader, where the value has nowhere to go.
+const CHECK_MESH_SHARED := "effects-shared-mesh-material"
+const CHECK_MATERIAL_ON_SHADER := "effects-material-word-on-a-shader"
+
 ## Which check id each finding reports as. One table, so the note on the row and the line in the
 ## report are the same finding under two roofs.
 const CHECK_FOR_KIND: Dictionary = {
@@ -41,6 +47,8 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetEffectFindings.KIND_UNDECLARED_GLOBAL: CHECK_GLOBAL,
 	EventSheetEffectFindings.KIND_IDLE_SCREEN_EFFECT: CHECK_SCREEN,
 	EventSheetEffectFindings.KIND_BLEND_OVER_SHADER: CHECK_BLEND,
+	EventSheetEffectFindings.KIND_MESH_SHARED_MATERIAL: CHECK_MESH_SHARED,
+	EventSheetEffectFindings.KIND_MATERIAL_WORD_ON_A_SHADER: CHECK_MATERIAL_ON_SHADER,
 }
 
 ## The cheap first question asked of a scene's text before anything is parsed - a scene with no
@@ -51,8 +59,11 @@ const MATERIAL_WORD := "material = "
 ## And of a script's text: the member every dial row reaches through, the call every global one
 ## makes, and the call a blend row makes. A script that says none of them cannot be one of these
 ## sheets.
+## And the two the MATERIAL WORDS reach through: the override every mesh word writes its copy onto,
+## and the class the two 2D words make when an item has none.
 const SHEET_WORDS: PackedStringArray = ["set_shader_parameter", "get_shader_parameter",
-	"global_shader_parameter", EventSheetEffectFindings.BLEND_CALL]
+	"global_shader_parameter", EventSheetEffectFindings.BLEND_CALL, "material_override",
+	"CanvasItemMaterial"]
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
@@ -88,7 +99,12 @@ static func scenes_with_effects() -> PackedStringArray:
 ## two corpora, so a test can hand it a scene and a script.
 static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
-	if scenes.is_empty():
+	# TWO CORPORA, and either one on its own is enough to have something to say. A 3D project can
+	# have no scene wearing a `material` at all - a mesh wears its material somewhere else - and its
+	# sheets still say things about materials worth reading, so the sweep over the scripts is asked
+	# its own cheap question rather than riding on the scenes having answered first.
+	var sheets: PackedStringArray = _sheets_reaching_a_material(scripts)
+	if scenes.is_empty() and sheets.is_empty():
 		return findings
 	# The counts the section is about are project-wide questions, and the one that answers them is the
 	# shared index. A Doctor run has no frames to spread it over, so it is built here, once, before
@@ -97,7 +113,7 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 	var troubled: int = 0
 	# The summary points at the FIRST scene with something wrong, because that is the one worth
 	# opening - double-clicking the line in the panel is what takes the reader there.
-	var worst_path: String = scenes[0]
+	var worst_path: String = scenes[0] if not scenes.is_empty() else sheets[0]
 	for scene_path: String in scenes:
 		var found: Array[Dictionary] = EventSheetEffectFindings.scene_findings(scene_path)
 		if found.is_empty():
@@ -106,12 +122,22 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 			worst_path = scene_path
 		troubled += 1
 		findings.append_array(_filed(scene_path, found, CHECK_FOR_KIND, CHECK_ID))
-	for script_path: String in scripts:
+	for script_path: String in sheets:
 		findings.append_array(sheet_findings(script_path))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		EventSheetL10n.translate("Effects: %d scene(s) wearing a material, %d with something that will not show at run time.") % [
 			scenes.size(), troubled], ""))
 	return findings
+
+
+## The scripts worth opening as sheets - the substring sweep, asked once so the two callers of it
+## cannot drift. A project with no shaders and no material words pays one test per file and stops.
+static func _sheets_reaching_a_material(scripts: PackedStringArray) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for script_path: String in scripts:
+		if _says_any(EventSheetProjectDoctor.source_of(script_path), SHEET_WORDS):
+			found.append(script_path)
+	return found
 
 
 ## What one script contributes: the four findings that need the rows as well as the scene. The script

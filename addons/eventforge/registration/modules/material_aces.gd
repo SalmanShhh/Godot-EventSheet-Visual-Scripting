@@ -156,6 +156,30 @@ static func _surface_param(about: String) -> ACEParam:
 		"expression")
 
 
+## The rows of this module that WRITE, by ace_id and by which surface they write - `{"mesh": [...],
+## "sprite": [...]}`. What the Doctor's effects section asks a row about before it says anything
+## about the material underneath it, and derived from the descriptors published above rather than
+## listed by hand, so a word added to the table is asked about with nothing added here. Built once
+## for the life of the process: an ace_id is frozen and this answer never changes.
+static var _writing_ids: Dictionary = {}
+
+
+static func writing_ids() -> Dictionary:
+	if not _writing_ids.is_empty():
+		return _writing_ids
+	var mesh: PackedStringArray = PackedStringArray()
+	var sprite: PackedStringArray = PackedStringArray()
+	for row: ACEDescriptor in get_descriptors():
+		if row.ace_type != ACEDescriptor.ACEType.ACTION:
+			continue
+		if str(row.node_type) == W.SPRITE_HOST:
+			sprite.append(row.ace_id)
+		else:
+			mesh.append(row.ace_id)
+	_writing_ids = {"mesh": mesh, "sprite": sprite}
+	return _writing_ids
+
+
 static func section_descriptions() -> Dictionary:
 	return {CAT: "What a surface looks like, said in words. On a mesh: its colour, glow, roughness, metal, see-through, texture, blend, transparency, which of its sides are drawn, and the material of one surface slot. On a 2D item: how it blends and how the lights reach it. Every write gives the node its own copy of the material first, so a material shared between nodes never changes under the others."}
 

@@ -35,7 +35,83 @@ static func run() -> bool:
 	all_passed = _clipping_rows() and all_passed
 	all_passed = _the_field() and all_passed
 	all_passed = _the_quiet_finding() and all_passed
+	all_passed = _the_scene_door() and all_passed
 	return all_passed
+
+
+## THE COURTESY DOOR: the Blend As One row does it at run time, which is right for something that
+## happens during a game - but a reader looking at a node that should ALWAYS be drawn that way wants
+## the scene to say so rather than a row. The row's own node field offers exactly that, and this is
+## the edit behind the offer.
+##
+## There is no editor in a headless run, so what is driven here is the door with no editor around it:
+## the same tree afterwards, which is what the undo action builds up in the editor and what a project
+## without one would get. What the offer REFUSES is pinned beside it, because a door that appears
+## where there is nothing to do is worse than no door.
+static func _the_scene_door() -> bool:
+	var root: Node2D = Node2D.new()
+	var character: Node2D = Node2D.new()
+	character.name = "Character"
+	root.add_child(character)
+	character.owner = root
+	for piece_name: String in ["Body", "Cloak"]:
+		var piece: Sprite2D = Sprite2D.new()
+		piece.name = piece_name
+		character.add_child(piece)
+		piece.owner = root
+	# A child that does not DRAW is not part of the picture, and is left exactly where it is.
+	var clock: Timer = Timer.new()
+	clock.name = "Cooldown"
+	character.add_child(clock)
+	clock.owner = root
+
+	var lonely: Node2D = Node2D.new()
+	lonely.name = "Lonely"
+	root.add_child(lonely)
+	lonely.owner = root
+	var only_child: Sprite2D = Sprite2D.new()
+	lonely.add_child(only_child)
+	only_child.owner = root
+
+	var already: CanvasGroup = CanvasGroup.new()
+	already.name = "Already"
+	root.add_child(already)
+	already.owner = root
+
+	var rows: Array = [
+		["a node with two drawing children can be grouped",
+			EventSheetCanvasGroupDoor.can_group(root, "Character"), true],
+		["a node with one cannot, because one child cannot overlap itself",
+			EventSheetCanvasGroupDoor.can_group(root, "Lonely"), false],
+		["a node that is already a CanvasGroup cannot, because it already does this",
+			EventSheetCanvasGroupDoor.can_group(root, "Already"), false],
+		["a value this cannot follow to a node is refused rather than guessed at",
+			EventSheetCanvasGroupDoor.can_group(root, "::"), false],
+		["and the door says which node it is about",
+			EventSheetCanvasGroupDoor.offer_text("Character"), "Draw Character's children as one"]
+	]
+
+	rows.append(["the edit happens", EventSheetCanvasGroupDoor.group_children(root, "Character"), true])
+	var group: Node = character.get_node_or_null(NodePath(EventSheetCanvasGroupDoor.GROUP_NAME))
+	rows.append(["a CanvasGroup arrives under the node", group is CanvasGroup, true])
+	var moved: PackedStringArray = PackedStringArray()
+	if group != null:
+		for child: Node in group.get_children():
+			moved.append(str(child.name))
+	rows.append(["and the drawing children are under it, in the order they were in",
+		",".join(moved), "Body,Cloak"])
+	var left: PackedStringArray = PackedStringArray()
+	for child: Node in character.get_children():
+		left.append(str(child.name))
+	rows.append(["while everything that does not draw stays exactly where it was",
+		",".join(left), "Cooldown,%s" % EventSheetCanvasGroupDoor.GROUP_NAME])
+	rows.append(["the group belongs to the scene, so it saves with it",
+		group != null and group.owner == root, true])
+	rows.append(["and the door refuses a second time, because the node already has one",
+		EventSheetCanvasGroupDoor.can_group(root, "Character"), false])
+
+	root.free()
+	return SUPPORT.pins(P, rows)
 
 
 ## THE QUIET FINDING: a screen-reading blend aimed at an item the scene already gives a shader. The

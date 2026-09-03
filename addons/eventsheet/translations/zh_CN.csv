@@ -6140,3 +6140,5 @@ light only,仅光照
 Light Response,受光反应
 "Reads the sprite's light response back: `CanvasItemMaterial.light_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.",读回精灵的受光反应：`CanvasItemMaterial.light_mode`。穿着着色器的精灵，或者完全没有材质的精灵，会返回新材质的起始值。可用于任何取值字段。
 light response,受光反应
+"%s wears %s, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader.",%s 穿着 %s，而混合与光照住在着色器里，不是某个属性上 - 所以这一行会让着色器保持不动，值也就哪儿都到不了。请在着色器里设置，或者把这一行移到不穿着色器的子节点上。
+"%s is worn by %s as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.",%s 也被 %s 穿着，而材质就是一个对象。这里的每个材质词在写入前都会先给这个网格一份自己的副本，所以其他的保持原样 - 这只是值得知道一下。

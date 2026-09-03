@@ -18,6 +18,15 @@ const SUPPORT := preload("res://tests/support.gd")
 const W := preload("res://addons/eventforge/registration/material_words.gd")
 const MODULE := preload("res://addons/eventforge/registration/modules/material_aces.gd")
 
+## The fixture behind the sharing question and the two findings: a crate and a barrel wearing one
+## stone material between them - one on the whole mesh, one on a surface slot - and a banner wearing
+## a shader.
+const FIXTURE_DIR: String = "res://tests/fixtures/"
+const CRATE: String = FIXTURE_DIR + "material_scene_crate.gd"
+const CRATE_SCENE: String = FIXTURE_DIR + "material_scene_crate.tscn"
+const STONE: String = FIXTURE_DIR + "material_shared_stone.tres"
+const BANNER_MATERIAL: String = FIXTURE_DIR + "material_banner_shader.tres"
+
 ## The two lines every write opens with, written out here rather than read from the file under test:
 ## a test that builds its expectation from the same constant proves only that a constant equals
 ## itself.
@@ -37,7 +46,85 @@ static func run() -> bool:
 	ok = _test_ids_are_unique() and ok
 	ok = _test_every_row_carries_help() and ok
 	ok = _test_mesh_classes() and ok
+	ok = _test_who_else_wears_it() and ok
+	ok = _test_the_two_quiet_findings() and ok
+	# Dropped on the way out: a share index left warm here answers questions later tests never
+	# asked, which a serial run notices and a sharded one hides.
+	_fresh()
 	return ok
+
+
+## WHO ELSE WEARS IT, answered for a 3D scene. A mesh wears its material on `material_override` or on
+## `surface_material_override/N`, and neither is the `material` the 2D walk reads - so before this,
+## "who else wears this file" answered nothing at all however many meshes were sharing one `.tres`.
+## Pinned by the NAMES that come back, over a fixture whose two meshes wear one file two different
+## ways, because reading only one of the two spellings would still have looked like it worked.
+static func _test_who_else_wears_it() -> bool:
+	_fresh()
+	EventSheetProjectShareIndex.build_scenes_now()
+	var worn: PackedStringArray = PackedStringArray()
+	for wearer: Dictionary in EventSheetProjectShareIndex.wearers_of(STONE):
+		worn.append("%s in %s" % [str(wearer["name"]), str(wearer["scene_path"]).get_file()])
+	var ok: bool = SUPPORT.check("material_words_test",
+		"both spellings of a mesh's material are read", worn,
+		PackedStringArray(["Crate in material_scene_crate.tscn",
+			"Barrel in material_scene_crate.tscn"]))
+	var meshes: PackedStringArray = PackedStringArray()
+	for mesh: Dictionary in EventSheetProjectShareIndex.mesh_wearers_in(CRATE_SCENE):
+		meshes.append("%s (%s) wears %s" % [str(mesh["name"]), str(mesh["class"]),
+			", ".join(mesh["materials"] as PackedStringArray).get_file()])
+	ok = SUPPORT.check("material_words_test", "and the other half of the question, per mesh", meshes,
+		PackedStringArray(["Crate (MeshInstance3D) wears material_shared_stone.tres",
+			"Barrel (MeshInstance3D) wears material_shared_stone.tres"])) and ok
+	# The banner is a Sprite2D and wears its material the 2D way, so it is not a mesh wearer - but it
+	# IS a wearer of its own file, which is what the sprite finding below is asked about.
+	return SUPPORT.check("material_words_test", "a 2D item is not filed as a mesh",
+		EventSheetProjectShareIndex.wearers_of(BANNER_MATERIAL).size(), 1) and ok
+
+
+## THE TWO QUIET FINDINGS, pinned as the SENTENCES a reader meets. One is information and says so -
+## every material word takes its own copy before it writes, so the other wearers are safe and the
+## note carries no fix. The other is a row that really does nothing: blend on a 2D item lives inside
+## its shader, and the row is written to leave that shader alone.
+static func _test_the_two_quiet_findings() -> bool:
+	_fresh()
+	EventSheetProjectShareIndex.build_scenes_now()
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.external_source_path = CRATE
+	sheet.events.append(_word_event("MaterialSetColour", "", "Color.RED"))
+	sheet.events.append(_word_event("MaterialSetBlending", "Banner",
+		"CanvasItemMaterial.BLEND_MODE_ADD"))
+	var found: Array[Dictionary] = EventSheetEffectFindings.findings(sheet)
+	var said: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in found:
+		said.append("%s [%s] %s" % [str(finding["kind"]), str(finding["severity"]),
+			str(finding["message"])])
+	return SUPPORT.check("material_words_test", "the words a reader meets under the two rows", said,
+		PackedStringArray([
+			"material-word-on-a-material-other-meshes-wear [info] material_shared_stone.tres is worn by Barrel as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.",
+			"material-word-on-an-item-wearing-a-shader [warning] Banner wears effect_dissolve.gdshader, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader."
+		]))
+
+
+## One event holding one material word aimed at `target`. Built here rather than lifted, because
+## these rows are picked rather than typed: their templates are three lines, and a hand-written line
+## that is only the last of the three is not one of them.
+static func _word_event(ace_id: String, target: String, value: String) -> EventRow:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = {"target": target, "value": value}
+	var event_row: EventRow = EventRow.new()
+	event_row.actions.append(action)
+	return event_row
+
+
+## Every reader dropped, so one test's scan cannot answer the next one's question. The same call the
+## editor makes when the filesystem changes.
+static func _fresh() -> void:
+	EventSheetProjectShareIndex.clear_cache()
+	EventSheetSceneEffects.clear_cache()
+	EventForgeShaderUniforms.clear_cache()
 
 
 ## Every word resolves to a property BaseMaterial3D really has - which is the one thing the whole

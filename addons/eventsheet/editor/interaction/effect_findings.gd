@@ -50,6 +50,26 @@ const KIND_IDLE_SCREEN_EFFECT := "screen-effect-drawing-while-idle"
 ## appeared. So it is said here, before the game is run once.
 const KIND_BLEND_OVER_SHADER := "blend-mode-on-an-item-already-wearing-a-shader"
 
+## AND THE TWO THE MATERIAL WORDS EARN, which are the same fact under two more roofs: a material is
+## one object, and the sheet has to say who else is wearing it before a reader believes a row only
+## moved the thing they were looking at.
+##
+## The first is INFORMATION and nothing else, because the words already do the right thing. Every
+## material word emits the own-it lines before it writes, so a mesh sharing a `.tres` with eleven
+## others is not a problem to fix - it is a fact worth knowing, and the note says how many and who.
+## There is no fix door on it because there is nothing left to do.
+##
+## The second is a row that really does nothing: blending and lighting on a 2D item live on a
+## CanvasItemMaterial, and an item wearing a SHADER has none. The material words are written to leave
+## that shader alone rather than to overwrite somebody's effect, so the value goes nowhere - which is
+## exactly the silent kind of nothing this whole file exists to say out loud.
+const KIND_MESH_SHARED_MATERIAL := "material-word-on-a-material-other-meshes-wear"
+const KIND_MATERIAL_WORD_ON_A_SHADER := "material-word-on-an-item-wearing-a-shader"
+
+## Which half of the material vocabulary a row belongs to, as the module files its own writing rows.
+const MATERIAL_MESH_ROWS := "mesh"
+const MATERIAL_SPRITE_ROWS := "sprite"
+
 ## The two one-click repairs: rewrite the row's dial to the declared name it was nearly, and insert
 ## the row that gives this node its own copy of the material before anything turns a dial on it.
 const FIX_PICK_DIAL := "pick_dial"
@@ -94,8 +114,7 @@ const BLEND_CALL := ".blend_as("
 const BLEND_NATIVE_MODES: PackedStringArray = ["normal", "add", "subtract", "multiply",
 	"premultiplied"]
 
-## Where the FROZEN free-string rows keep the dial's name
- - quoted, and typed rather than picked.
+## Where the FROZEN free-string rows keep the dial's name - quoted, and typed rather than picked.
 ## Kept because a hand-written line naming a dial the shader does not declare lifts to one of those
 ## by design: there was no dial to pick, so the row that stands for it is the one that takes a name.
 const FREE_STRING_PARAM := "param"
@@ -122,6 +141,11 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 		"nodes": EventSheetSceneLights.classes_for_script(script_path),
 		"copied": nodes_given_their_own_copy(sheet),
 		"attached": not EventSheetSceneLightingFacts.attached_scene(script_path).is_empty(),
+		# The MESHES of the attached scene, under the same keys a row's own spelling reduces to. The
+		# effects walk beside it answers for CanvasItems only, by design, so a mesh's material comes
+		# from the project index - which is also the one place "who else wears this" is answered.
+		"meshes": mesh_wearers_of_script(script_path),
+		"scene_path": EventSheetSceneLightingFacts.attached_scene(script_path),
 		# One finding per NODE, not per row: twelve rows turning dials on one shared material are one
 		# problem with one fix, and twelve identical notes is how a note stops being read.
 		"said": PackedStringArray(),
@@ -332,6 +356,11 @@ static func _finding_for(ace: Resource, judged: Dictionary, event_row: EventRow,
 	var about_blend: Dictionary = _blend_over_shader(ace, judged, event_row, lane, slot)
 	if not about_blend.is_empty():
 		return about_blend
+	# And the material words, for the same reason: they name no dial either, so a row about a
+	# mesh's colour would fall straight through the three checks below and be judged as nothing.
+	var about_material: Dictionary = _material_word_finding(ace, judged, event_row, lane, slot)
+	if not about_material.is_empty():
+		return about_material
 	var dial: String = dial_of(ace)
 	if dial.is_empty():
 		return {}
@@ -392,8 +421,7 @@ static func _first_quoted(text: String) -> String:
 	return "" if closed < 0 else text.substr(opened + 1, closed - opened - 1)
 
 
-## A dial the shader does not declare, and the declared name it was nearly
- - the whole of the fix,
+## A dial the shader does not declare, and the declared name it was nearly - the whole of the fix,
 ## because a name close enough to be a typo is close enough to offer as one click. It carries the
 ## parameter the name sits in, so the re-pick writes into the slot this particular row keeps it in.
 static func _unknown_dial(shader_path: String, dial: String, dial_param: String, event_row: EventRow,
@@ -453,6 +481,92 @@ static func _shared_material(wearer: Dictionary, reference: String, ace: Resourc
 		event_row, lane, slot, {"fix": FIX_OWN_MATERIAL,
 			"fix_label": EventSheetL10n.translate("Make the effect this node's own"),
 			"material_path": material_path})
+
+
+## The MESHES of a script's attached scene, under the keys a row's own "On node" reduces to - the
+## bare name, the node path, and `self` for the node the script is on. The same map shape the effects
+## walk builds for CanvasItems, filled from the project index instead, because a mesh wears its
+## material somewhere the effects walk deliberately does not read.
+static func mesh_wearers_of_script(script_path: String) -> Dictionary:
+	var found: Dictionary = {}
+	var scene_path: String = EventSheetSceneLightingFacts.attached_scene(script_path)
+	if scene_path.is_empty() or not EventSheetProjectShareIndex.scenes_ready():
+		return found
+	var host: String = str(EventSheetSceneReplication.host_node(script_path).get("node_path", "."))
+	for mesh: Dictionary in EventSheetProjectShareIndex.mesh_wearers_in(scene_path):
+		for spelling: String in [str(mesh["name"]), str(mesh["path"])]:
+			if not spelling.is_empty():
+				found[spelling] = mesh
+		if EventSheetSceneLights.reference_of(str(mesh["path"]), host) \
+				== EventSheetSceneLights.SELF_REFERENCE:
+			found[EventSheetSceneLights.SELF_REFERENCE] = mesh
+	return found
+
+
+## What a MATERIAL WORD row earns, or {} for a row that is not one and for one there is nothing to
+## say about. Two shapes, and which of them depends only on which half of the vocabulary the row is
+## from - a mesh word writes through a copy the row itself takes, and a 2D word cannot write at all
+## through somebody's shader.
+static func _material_word_finding(ace: Resource, judged: Dictionary, event_row: EventRow,
+		lane: String, slot: int) -> Dictionary:
+	if ace == null:
+		return {}
+	var ace_id: String = str(ace.get("ace_id"))
+	if ace_id.is_empty():
+		return {}
+	var writing: Dictionary = EventForgeMaterialACEs.writing_ids()
+	var reference: String = EventSheetSceneEffects.reference_key_of(target_of(ace))
+	if (writing.get(MATERIAL_SPRITE_ROWS, PackedStringArray()) as PackedStringArray).has(ace_id):
+		return _material_word_on_a_shader(reference, judged, event_row, lane, slot)
+	if (writing.get(MATERIAL_MESH_ROWS, PackedStringArray()) as PackedStringArray).has(ace_id):
+		return _mesh_material_is_shared(reference, judged, event_row, lane, slot)
+	return {}
+
+
+## A blending or lighting word on a 2D item that wears a SHADER. The row is written to leave that shader
+## alone - overwriting somebody's effect to set a blend would be worse than doing nothing - so the
+## value it carries goes nowhere, and this is where that is said. Only ever said of an item the
+## attached scene really carries and really gives a shader: a row aimed at a variable, at a node made
+## at run time, or at a name nothing in the scene has is a row nothing here can establish.
+static func _material_word_on_a_shader(reference: String, judged: Dictionary, event_row: EventRow,
+		lane: String, slot: int) -> Dictionary:
+	var wearer: Dictionary = (judged["wearers"] as Dictionary).get(reference, {})
+	var shader_path: String = str(wearer.get("shader_path", ""))
+	if shader_path.is_empty() or _already_said(judged, KIND_MATERIAL_WORD_ON_A_SHADER, reference):
+		return {}
+	return _row_finding(KIND_MATERIAL_WORD_ON_A_SHADER, reference, EventSheetL10n.translate(
+		"%s wears %s, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader.") % [
+			reference, shader_path.get_file()], event_row, lane, slot,
+		{"shader_path": shader_path})
+
+
+## A material word on a mesh whose material file other meshes wear too. INFORMATION, not a warning:
+## every material word gives this mesh its own copy before it writes, so the other wearers are safe
+## and there is nothing to fix - which is why the note carries no fix door. It is worth saying all
+## the same, because "one .tres, twelve meshes" is the fact a reader has to hold to believe that a
+## row about one crate only moved that crate.
+static func _mesh_material_is_shared(reference: String, judged: Dictionary, event_row: EventRow,
+		lane: String, slot: int) -> Dictionary:
+	var mesh: Dictionary = (judged["meshes"] as Dictionary).get(reference, {})
+	if mesh.is_empty() or not EventSheetProjectShareIndex.scenes_ready():
+		return {}
+	if _already_said(judged, KIND_MESH_SHARED_MATERIAL, reference):
+		return {}
+	var own: String = "%s|%s" % [str(judged["scene_path"]), str(mesh.get("path", ""))]
+	var names: PackedStringArray = PackedStringArray()
+	var shared: String = ""
+	for material_path: String in (mesh.get("materials", PackedStringArray()) as PackedStringArray):
+		for other: Dictionary in EventSheetProjectShareIndex.other_wearers(material_path, own):
+			var other_name: String = str(other.get("name", ""))
+			if not other_name.is_empty() and not names.has(other_name):
+				names.append(other_name)
+				shared = material_path
+	if names.is_empty():
+		return {}
+	return _row_finding(KIND_MESH_SHARED_MATERIAL, reference, EventSheetL10n.translate(
+		"%s is worn by %s as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.") % [
+			shared.get_file(), ", ".join(names)], event_row, lane, slot,
+		{"severity": "info", "material_path": shared})
 
 
 ## A global uniform Project Settings does not declare. Godot hands every shader reading it a zero and

@@ -6140,3 +6140,5 @@ light only,ライトのみ
 Light Response,ライトへの反応
 "Reads the sprite's light response back: `CanvasItemMaterial.light_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.",スプライトのライトへの反応を読み取ります: `CanvasItemMaterial.light_mode`。シェーダーを着ているスプライトや、マテリアルをまったく持たないスプライトは、新しいマテリアルの初期値を返します。任意の値フィールドで使えます。
 light response,ライトへの反応
+"%s wears %s, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader.",%s は %s を着ています。ブレンドとライティングはプロパティではなくシェーダーの中にあるので、この行はシェーダーをそのままにし、値はどこにも届きません。シェーダー側で設定するか、シェーダーを着ていない子ノードにこの行を移してください。
+"%s is worn by %s as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.",%s は %s も着ていて、マテリアルはひとつのオブジェクトです。ここのマテリアルの言葉はどれも書き込む前にこのメッシュへ専用のコピーを与えるので、ほかはそのままです - 知っておくだけの話です。

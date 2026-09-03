@@ -3725,7 +3725,8 @@ func _describe_field(key: String) -> void:
 		# node reached by path, a shorter way to say WHICH node.
 		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 			EventSheetParamFieldFactory.strip_body(param, _row_owner),
-			EventSheetPopupUI.HelpStrip.TONE_NORMAL, reading_offers() + _unique_name_offers(key))
+			EventSheetPopupUI.HelpStrip.TONE_NORMAL,
+			reading_offers() + _unique_name_offers(key) + _canvas_group_offers(key))
 		return
 	_help_strip.show_note(str(note.get("heading", "")), str(note.get("body", "")),
 		str(note.get("level", "")), _fix_offers(key, note))
@@ -3922,6 +3923,53 @@ func _unique_name_offers(key: String) -> Array:
 		"text": EventSheetUniqueNameDoor.offer_text(EventSheetUniqueNameDoor.node_name_of_path(path)),
 		"pressed": func() -> void: _mark_field_node_unique(key, path),
 	}]
+
+
+## The courtesy a row about drawing a node's children TOGETHER is offered: "Draw Character's children
+## as one". The row itself does it at run time, which is right for something that happens during a
+## game - but a reader looking at a node that should ALWAYS be drawn that way wants the scene to say
+## so, not a row. One click puts a CanvasGroup under the node and moves its drawing children into it.
+##
+## Like the unique-name door beside it, this is a SCENE edit applied through the editor's own undo
+## (EventSheetCanvasGroupDoor), never through the sheet's - so Ctrl+Z in the scene puts the children
+## back. [] whenever there is nothing to offer: a field that is not this row's node field, a node the
+## open scene does not own, one that is already a CanvasGroup or already has the group, one with
+## fewer than two drawing children, or no open scene at all.
+func _canvas_group_offers(key: String) -> Array:
+	if not Engine.is_editor_hint() \
+			or str(_param_dict(key).get("hint", "")) != EventSheetCanvasGroupDoor.HINT:
+		return []
+	var scene_root: Node = EditorInterface.get_edited_scene_root()
+	var path: String = _scene_path_in_field(key)
+	if not EventSheetCanvasGroupDoor.can_group(scene_root, path):
+		return []
+	var node: Node = scene_root if path.is_empty() else scene_root.get_node_or_null(NodePath(path))
+	return [{
+		"text": EventSheetCanvasGroupDoor.offer_text(str(node.name)),
+		"pressed": func() -> void: EventSheetCanvasGroupDoor.group_children(scene_root, path),
+	}]
+
+
+## The node one field names, as a path inside the open scene: "" for `self` and for a blank field
+## (both of which mean the node the sheet is on, which is the scene root here), the path for a `$Path`
+## reference, and "::" for anything this cannot follow - a variable, a call, an expression - so the
+## door refuses it rather than guessing which node it meant.
+func _scene_path_in_field(key: String) -> String:
+	var field: Variant = _fields.get(key, null)
+	if not is_instance_valid(field):
+		return "::"
+	var text: String = str((field as TextEdit).text) if field is TextEdit \
+		else (str((field as LineEdit).text) if field is LineEdit else "")
+	text = text.strip_edges()
+	if text.is_empty() or text == "self":
+		return ""
+	var path: String = EventSheetUniqueNameDoor.path_in_reference(text)
+	if not path.is_empty():
+		return path
+	# A `%name` is already a node path Godot resolves, sigil and all, so it is handed over whole.
+	if text.begins_with(EventSheetSceneUniqueNames.SIGIL) and text.length() > 1:
+		return text
+	return "::"
 
 
 ## The door pressed: the scene edit happens, and only then does the field become the `%name`. A mark

@@ -237,7 +237,7 @@ func unmask(item: CanvasItem) -> void:
 ## @ace_category("Blend Modes")
 ## @ace_codegen_template("BlendModes.blend_as_one({item})")
 ## @ace_display_template("Blend [i]{item}[/i] children as one")
-## @ace_param(item, hint: expression, default: self, desc: "The node whose children to draw as one picture.")
+## @ace_param(item, hint: blend_group_target, default: self, desc: "The node whose children to draw as one picture. The field offers to do it in the scene instead, if you want it always drawn that way.")
 func blend_as_one(item: CanvasItem) -> void:
 	if item == null or is_blended_as_one(item):
 		return

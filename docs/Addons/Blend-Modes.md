@@ -302,6 +302,10 @@ reflection is allowed to be, with no second texture to keep in step.
 - **Blend As One changes the tree.** It puts a `CanvasGroup` between the node and its
   children at run time. If the node is already a `CanvasGroup` in the scene, nothing is added
   and the condition still answers yes.
+- **If it should ALWAYS be drawn that way, do it in the scene instead.** Open the Blend As One
+  row's parameters and its node field offers **Draw <node>'s children as one** - one click puts
+  the `CanvasGroup` in the scene, where it saves with the file and costs no row at all. It is a
+  scene edit, so Ctrl+Z in the scene puts the children back.
 - **Clip before you reach for a mask.** `Clip My Children` costs nothing and answers most of
   the "cut this to that shape" questions on its own.
 

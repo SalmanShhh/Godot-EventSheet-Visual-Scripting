@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/material_scene_crate.gd" id="1_crate"]
+[ext_resource type="Material" path="res://tests/fixtures/material_shared_stone.tres" id="2_stone"]
+[ext_resource type="Material" path="res://tests/fixtures/material_banner_shader.tres" id="3_banner"]
+
+[node name="Crate" type="MeshInstance3D"]
+material_override = ExtResource("2_stone")
+script = ExtResource("1_crate")
+
+[node name="Barrel" type="MeshInstance3D" parent="."]
+surface_material_override/0 = ExtResource("2_stone")
+
+[node name="Banner" type="Sprite2D" parent="."]
+material = ExtResource("3_banner")
