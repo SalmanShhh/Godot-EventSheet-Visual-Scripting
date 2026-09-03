@@ -88,13 +88,19 @@ func draw_empty_state(width: float) -> void:
 	var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)
 	var tip_size: int = EventSheetPalette.resolve_font_size(font_size, -1)
 	var y: float = 52.0 + float(heading_size)
-	_draw_centered_line(font, heading, heading_size, center_x, y, max_w, EventSheetPalette.TEXT_PRIMARY)
+	# Every line takes its colour from the live reading style, so a preset recolours the getting-started
+	# state along with the rows it sits where.
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var primary_color: Color = reading_style.primary_text_color if reading_style != null else EventSheetPalette.TEXT_PRIMARY
+	var secondary_color: Color = reading_style.secondary_text_color if reading_style != null else EventSheetPalette.TEXT_SECONDARY
+	var muted_color: Color = reading_style.muted_text_color if reading_style != null else EventSheetPalette.TEXT_MUTED
+	_draw_centered_line(font, heading, heading_size, center_x, y, max_w, primary_color)
 	y += float(font_size) + 16.0
-	_draw_centered_line(font, primary, font_size, center_x, y, max_w, EventSheetPalette.TEXT_SECONDARY)
+	_draw_centered_line(font, primary, font_size, center_x, y, max_w, secondary_color)
 	y += float(font_size) + 18.0
 	y = _draw_cta_buttons(font, font_size, center_x, y)
 	y += float(tip_size) + 22.0
-	_draw_centered_line(font, tip, tip_size, center_x, y, max_w, EventSheetPalette.TEXT_MUTED)
+	_draw_centered_line(font, tip, tip_size, center_x, y, max_w, muted_color)
 
 
 func _draw_centered_line(font: Font, text: String, size: int, center_x: float, baseline_y: float, max_w: float, color: Color) -> void:
@@ -121,6 +127,11 @@ func _draw_cta_buttons(font: Font, font_size: int, center_x: float, top_y: float
 	total_w += gap * float(maxi(specs.size() - 1, 0))
 	var x: float = center_x - total_w * 0.5
 	var accent: Color = EventSheetPalette.COLOR_ACTION
+	# The secondary button is tinted from the theme's own secondary text colour, never from white:
+	# a white wash is invisible on a light preset, and the theme editor's colours have to reach every
+	# painted pixel of the canvas or a preset is a lie.
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var secondary: Color = reading_style.secondary_text_color if reading_style != null else EventSheetPalette.TEXT_SECONDARY
 	for spec_index: int in range(specs.size()):
 		var spec: Dictionary = specs[spec_index]
 		var rect: Rect2 = Rect2(x, top_y, widths[spec_index], height)
@@ -132,12 +143,12 @@ func _draw_cta_buttons(font: Font, font_size: int, center_x: float, top_y: float
 			pill.bg_color = Color(accent.r, accent.g, accent.b, 0.20)
 			pill.border_color = Color(accent.r, accent.g, accent.b, 0.65)
 		else:
-			pill.bg_color = Color(1.0, 1.0, 1.0, 0.05)
-			pill.border_color = Color(1.0, 1.0, 1.0, 0.22)
+			pill.bg_color = Color(secondary.r, secondary.g, secondary.b, 0.08)
+			pill.border_color = Color(secondary.r, secondary.g, secondary.b, 0.35)
 		_viewport.draw_style_box(pill, rect)
 		var label: String = EventSheetL10n.translate(str(spec["label"]))
 		var label_w: float = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-		var label_color: Color = EventSheetPalette.TEXT_PRIMARY if primary_button else EventSheetPalette.TEXT_SECONDARY
+		var label_color: Color = (reading_style.primary_text_color if reading_style != null else EventSheetPalette.TEXT_PRIMARY) if primary_button else secondary
 		var baseline: float = rect.position.y + rect.size.y * 0.5 + float(font_size) * 0.36
 		_viewport.draw_string(font, Vector2(rect.position.x + (rect.size.x - label_w) * 0.5, baseline), label, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, font_size, label_color)
 		_cta_rects[str(spec["action"])] = rect
