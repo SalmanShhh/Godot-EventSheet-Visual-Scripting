@@ -2,6 +2,140 @@
 
 ## [Unreleased]
 
+### Making it feel like something: how pictures meet, and the beat a hit is made of
+
+- **Twenty ways one picture meets the one behind it, as one row.** Godot draws five blend modes by
+  itself - normal, add, subtract, multiply and premultiplied are a field on a `CanvasItemMaterial`,
+  and a sprite set to one of them costs exactly what a sprite costs. The other fifteen every drawing
+  tool has (screen, overlay, the light-and-dark family, difference, and the four that take a colour
+  apart) have no field at all, because they need the pixels already on the screen. The **Blend Modes
+  pack** ships them: **11 rows** over **16 shader files** - fifteen modes with one strength dial
+  each, plus a mask shader whose five modes let a second picture decide where the first is allowed
+  to be. **Blend As** picks a mode by its ordinary name, **Mask With** and **Mask With Node** hand
+  the shape over, and **Blend As One** wraps a node's children under a `CanvasGroup` so overlaps stop
+  showing through each other while they fade. An item already wearing somebody else's shader is
+  NEVER quietly replaced: both the blend and the mask refuse and say why, because throwing an effect
+  away is not what "blend as multiply" meant.
+- **A blend mode is chosen by looking at it.** It is the one parameter in the vocabulary whose words
+  do not tell a reader what they will get - "overlay", "hard light" and "luminosity" are names from a
+  trade, and a dropdown of twenty of them is a list to try one at a time rather than a choice. So the
+  field draws them: one shape over one backdrop, through every mode, in five groups, with the button
+  wearing the picture of whatever the box currently says. Typing a mode word or a whole expression
+  goes on working. It registers through the public parameter-editor seam rather than the dialog's own
+  hint table, and the pictures are drawn on the processor and mirror the shaders' arithmetic - the
+  suite pins them against values worked out by hand, because a preview that drifts from its shader is
+  a preview that lies.
+- **A node's children, drawn inside its own shape - built in, and free.** `clip_children` is one
+  field on every `CanvasItem` and it does something no arrangement of nodes can: a portrait cut to
+  its frame, a bar that fills a heart, water that stops at the edge of the pool. **2 new rows**, and
+  two rather than one because the field has two answers a reader means and one they do not: **Clip My
+  Children** owns the two that draw and **Stop Clipping** owns the disabled value alone, so no
+  written line can be spelled by both rows and an opened file reads back as the row that wrote it.
+  They shelve under Blend Modes with the pack's own verbs, because clipping, masking and blending are
+  one reader's question. And the row's own node field offers the scene-level answer beside it: one
+  click puts a `CanvasGroup` under a node and moves its drawing children into it, as a SCENE edit
+  through the editor's own undo manager, so Ctrl+Z in the scene puts them back.
+- **The whole screen as a named list: the post stack, 22 new rows on Screen FX.** Twelve full-screen
+  effects ship as shader files beside the pack - vignette, film grain, scanlines, pixelate, colour
+  grade, dither, fisheye, glitch, letterbox, bloom, saturate and desaturate - each on its own
+  rectangle, each with the one strength dial the rows turn, drawn in the order the list holds them.
+  **Pulse Post Effect is the row to reach for first**: one word, no setup, and it borrows an entry
+  and gives it back, so a hit or a win leaves the screen exactly as it found it. Add / Remove /
+  Enable / Disable / Set / Fade / Move Before are the careful half. An entry at strength 0 hides its
+  own rectangle, so a stack at rest costs nothing, and **Post Effect Count** is the number to look at
+  when the frame rate has gone. The six frozen Screen FX verbs keep their bytes; the pack changes
+  only by what was added.
+- **Which side of the interface the stack draws on, said once.** A post effect covers the whole
+  viewport, so whether the health bar is graded and dimmed along with the game comes down to which of
+  two `CanvasLayer`s has the higher number - and neither of them was picked for that. **Draw Post
+  Effects Below** and **Draw Post Effects Above** settle it, and the Doctor's Effects section says so
+  once per scene as an amber note with no fix door, because below keeps a health bar readable and
+  above covers it for a cutscene and both are right answers to different scenes. The interface layer
+  is read straight off the scene - the first `CanvasLayer` with a `Control` under it - so a sheet with
+  no interface and a project whose interface is not on a layer are said nothing about.
+- **Colour vision, and NOT a second flashing setting.** **See As** simulates protanopia, deuteranopia
+  or tritanopia for the designer walking the level; **Correct Colours For** pushes what would be lost
+  into the channels the viewer can still tell apart, for the player, behind a settings row. Neither
+  mints a reduced-flashing dial: the built-in **Set No Flashing** action and **No Flashing** condition
+  are the one answer the whole project shares, and the new layer reads it - every amplitude held under
+  a ceiling and every walk over a floor. A slow-motion time scale, a hit-stop freeze and a zoom
+  percentage are left alone, because they are not amplitudes. The clamp lives in the new layer and
+  never inside the verbs that shipped before it.
+- **A look is a file the project owns, not a house style.** A `ScreenLookResource` is the live stack
+  written down: which effects, in which order, how far each one goes, and its own dials. Build it with
+  rows while looking at the game, **Save Look** once, then **Use Look** wears it and **Blend To Look**
+  walks to it, crossing rather than cutting. Edit it in the Inspector, rename it, put it in version
+  control, send it to somebody else. **The only look shipped is an empty one called Clean.** No
+  presets, and no dropdown of named looks anywhere.
+- **A felt beat of the game, written down as a file.** A hit does not feel like a hit because of one
+  effect: the camera kicks, time stops for a few frames, the colour splits and the edges darken, all
+  at once. A `MomentResource` is that beat written once - a list of steps, each one of **10 words**
+  plus how much and how long - and Juice gains **2 rows** for it: **Moment** plays a name at a
+  strength that scales every amount a player sees (a graze is the same file at 0.4), and **Define
+  Moment** points a name at any file, for the whole game. **Six starters** ship beside the pack -
+  impact, kill, triumph, danger, calm, cut - and they are files a game is meant to open: retune them,
+  duplicate one, delete the ones it has no use for. Nothing in the plugin depends on any of them.
+  The screen steps draw on the Screen FX post stack when the scene has one, so a hit never builds a
+  second full-screen rectangle to fight with the one already there.
+- **A scene change with a shape drawn over it: 3 new rows on Scene Flow.** **Go To Scene With** and
+  **Reload Scene With** are the same swap the pack always did with one of **seven shapes** over it -
+  fade, a wipe following any greyscale picture, a dissolve of speckles, an iris, blinds, the picture
+  coming apart into blocks, or a page turning - each one shader file with one progress dial, so a
+  shape is a file rather than a branch. Under all seven is ONE walk: the cover comes on over the
+  first half, the scene is exchanged at the midpoint where nobody can see it, and the cover comes off
+  over the second. The runner parents itself to the tree root and survives the swap, and it draws in
+  the top slot above every post effect, because a transition is the one thing that should not itself
+  be graded by the look the game is wearing. **On Transition Finished** arrives on the Scene Flow node
+  in the scene it landed in, carrying the shape it was. Fade To Scene and Go To Scene are untouched.
+- **The camera's own post stack: the Post Kit, 14 rows.** Godot gives a 3D camera a Compositor and a
+  Compositor a list of CompositorEffects, which is the right seam and one almost nobody reaches,
+  because reaching it means a compute shader, a rendering device, a uniform set and a dispatch before
+  a game gets its first vignette. Nine rows are the stack - add, remove, enable, disable, set, fade,
+  pulse, has, strength - wearing the SAME WORDS the 2D stack uses where the two overlap (vignette,
+  desaturate, pixelate), so a row reads alike on the screen and on the camera and a project that moves
+  renderer keeps its sheet. Five are the thing only a 3D camera can do: a group marked on one visual
+  layer, drawn by a second camera into a transparent viewport, edge-detected over the finished frame -
+  the outline never asks what is in the way, which is the whole of "through walls". The effects are
+  **7 real scripts and 6 compute shaders** in a folder beside the pack, so one can be dragged onto a
+  Compositor in the Inspector with no pack at all; their dials are Inspector fields rather than
+  thirty-two more entries in every project's picker.
+- **Forward+ only, obeyed rather than errored.** No compositor means no rendering device, so every
+  Post Kit row does nothing at all on Mobile and Compatibility: no error, no warning in the player's
+  face, no frame drawn differently. The ship-it check names it once per file and carries its own door,
+  because the answer is not "build for Forward+" but "the Screen FX and Blend Modes packs do the same
+  looks on any renderer" - a sentence the reader can act on today. It is asked after the environment
+  words, so a file holding both still answers with the word it always did.
+- **Two more quiet notes, and a check that pays for itself.** A screen-reading blend aimed at an item
+  that already wears a shader is the amber row state and a line in the inbox naming the shader it
+  clashes with and the mode that was asked for - recognised in the LINE rather than by `ace_id`, so a
+  picked row, a pack's wrapper and a hand-written line are all the same finding, and a native mode is
+  never one because it sets a field and replaces nothing. The post-stack order note is the other. And
+  both halves of that second check - the scene's interface layer and a walk of every row - were being
+  read up front for every sheet that turns any dial at all; they are now worked out on the first row
+  that could earn the finding, so a sheet with no post row pays one substring test and stops.
+- **A pack may now ship files that are not scripts.** The blend shaders, the transition shaders and
+  the Post Kit's effects are real files in each pack's source folder - highlighted, parse-checked on
+  import - and `Lib.ship_files` copies them into the pack folder as part of the build, following the
+  output override folder and rewriting only what differs, so a rebuild is byte-stable and a gate that
+  builds into a temporary folder gets the companions there too. Nothing in the tree copied a
+  non-script file into a pack before this.
+- **The picker learns 60 phrases people actually type.** Almost nobody searches for "blend mode",
+  "post effect", "compositor", "moment" or "transition". They search for the look (a glow, a stain),
+  for the name their drawing tool gives it (additive, screen, multiply), for the thing they saw (a
+  vignette, grain, scanlines, a glitch, a letterbox), for what just happened in the game (hit, impact,
+  boom, win, danger, calm), for the shape the change makes (wipe, dissolve, iris, blinds, page curl,
+  crossfade), for being able to see the enemy behind the crate (x ray, see through, through walls,
+  highlight, occluded), or for the accessibility question they have (colour blind, reduce flashing,
+  photosensitive). All of them land on the row that does it. The synonym guard drops from four letters
+  to three, because hit, win and boom are whole words here rather than somebody still typing.
+- **Guide:** [docs/GUIDE-POST-PROCESSING-AND-JUICE.md](docs/GUIDE-POST-PROCESSING-AND-JUICE.md) - the
+  jam rule and the five one-row forms, blending and masks and clipping, the post stack and the
+  interface layer, colour vision and the flashing setting that already existed, looks and moments as
+  files the reader authors, the seven shapes, the camera's compositor, the renderer table, and what a
+  project that already wrote these lines by hand opens as. The addon index gains Blend Modes and Post
+  Kit, the engine-level reference gains the two clipping rows, the pack count is re-measured at
+  **121**, and the words land in all nine translation CSVs (**19 new keys**).
+
 ### The camera, the view, and how the game meets the screen
 
 - **The Camera shelf finished: 16 rows beside the nine that shipped.** The first nine (Make
