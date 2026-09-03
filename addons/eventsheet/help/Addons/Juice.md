@@ -9,10 +9,11 @@ Juice is a Godot EventSheets behavior pack that adds game feel to a scene withou
 1. [Where this pack shines](#where-this-pack-shines)
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
-4. [ACE reference](#ace-reference)
-5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-6. [Use cases](#use-cases)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [Moments - a whole beat in one row](#moments---a-whole-beat-in-one-row)
+5. [ACE reference](#ace-reference)
+6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+7. [Use cases](#use-cases)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -86,6 +87,103 @@ Shake adds trauma to the auto-found camera and it decays by itself; Spring Squas
 
 ---
 
+## Moments - a whole beat in one row
+
+A hit does not feel like a hit because of one effect. It feels like a hit because four things happen
+at once: the camera kicks, time stops for a few frames, the colour splits, and the edges of the
+screen darken. Writing those four rows out is easy. Writing them out again in the ten other places
+something can be hit, and keeping all ten in step when the feel changes, is not.
+
+A **moment** is that beat written down once, as a file. It is a list of steps - each step one word,
+how much, and how long - and the **Moment** action plays it:
+
+```
+On Enemy Hit
+  -> Enemy | JuiceBehavior: Moment  "impact"  1.0
+```
+
+The second parameter is the strength, and it scales every amount a player SEES. A glancing blow is
+`Moment "impact" 0.4`; a critical is `Moment "impact" 1.5`. One file, one number, and every hit in
+the game shares a feel you can retune in one place.
+
+### The six starters
+
+Six moment files ship beside this pack, in `res://eventsheet_addons/juice/`. They are not a house
+style and nothing in the plugin depends on them: they are ordinary resources, and you are expected
+to open them. Retune the numbers, duplicate one into a moment of your own, rename it, or delete the
+ones your game has no use for.
+
+| Moment | What it is | The steps it holds |
+|---|---|---|
+| `impact` | A hit that landed. | shake 0.45, hitstop 0.06 s, chromatic 0.55, vignette pulse 0.5 |
+| `kill` | The same, bigger, with a ring and a beat of slow motion. | shake 0.7, hitstop 0.12 s, shockwave at the object, chromatic 0.7, vignette pulse 0.7, slowmo to 0.35 for 0.25 s |
+| `triumph` | A win: the screen swells and brightens. | bloom pulse 0.8, saturate pulse 0.6, white flash 0.5 |
+| `danger` | Held, not fired: the edges close in and the colour drains. | vignette held at 0.55 over 0.8 s, desaturate held at 0.7 over 1.2 s |
+| `calm` | Everything back over a second - the other half of `danger`. | vignette, desaturate, bloom and saturate all walked to 0 over 1 s |
+| `cut` | A single white frame and a snap zoom. | white flash for 0.06 s, zoom to 115% over 0.12 s |
+
+`danger` and `calm` are a pair on purpose: one moment turns the pressure on and holds it there, and
+the other takes it off. That is how a low-health state, a boss phase or a storm is authored - two
+rows, no per-frame logic.
+
+### The step words
+
+A step is a dictionary with four keys: `verb`, `amount`, `effect` and `seconds`. These are the words
+a `verb` may be, and what its `amount` means:
+
+| Word | What it does | `amount` | `seconds` | `effect` |
+|---|---|---|---|---|
+| `shake` | Screenshake on the active camera. | trauma added, 0 to 1 | - | - |
+| `hitstop` | The hit-pause: freezes time and lets go. | the freeze scale (0 is a full stop) | how long the freeze lasts | - |
+| `slowmo` | Slow motion, held and eased back. | the time scale to fall to | how long it is held | - |
+| `flash` | Pops the host towards a colour and fades back. | how far towards it, 0 to 1 | how long the fade back takes | the colour, by name or hex |
+| `punch` | Kicks the host's scale and springs it back. | how hard | how long | - |
+| `zoom` | Zooms the camera. | per cent (100 is no change) | how long the glide takes | - |
+| `shockwave` | A ring from the object the behaviour is on. | how strong, 0 to 1 | - | - |
+| `chromatic` | The colour channels split and snap back. | how far, 0 to 1 | how long the settle takes | - |
+| `pulse` | A screen effect flashed up and let fall. | how far, 0 to 1 | how long it falls over | which effect |
+| `hold` | A screen effect walked to a strength and LEFT there. | where it lands, 0 to 1 | how long the walk takes | which effect |
+
+The `pulse` and `hold` words take one of the Screen FX post-stack effects in `effect`: vignette, film
+grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox, bloom, saturate,
+desaturate. They draw on the Screen FX layer if the scene has one, so a moment never builds a second
+full-screen rectangle to fight with the one already there. Without a Screen FX layer, a vignette
+pulse falls back to this pack's own overlay and the other screen effects quietly do nothing - add
+`screen_fx.tscn` to the scene and they all light up.
+
+### Making your own
+
+Two ways, and neither of them is code:
+
+1. **Duplicate a starter.** Copy `impact.tres`, rename it `boss_hit.tres`, open it in the Inspector
+   and change the numbers. `Moment "boss_hit"` finds it by file name, because the Moment row looks in
+   the pack folder for a file of that name.
+2. **Keep it wherever you like and name it once.** Make a new `MomentResource` in your own folder
+   (right-click, New Resource, MomentResource), fill in its steps, and point a name at it:
+
+```
+On Ready
+  -> Game | JuiceBehavior: Define Moment  "hit"  res://feel/my_hit.tres
+
+On Enemy Hit
+  -> Enemy | JuiceBehavior: Moment  "hit"  1.0
+```
+
+Define Moment is game-wide: one row at startup and every Juice node's Moment row finds that name.
+Point the same name at a different file later - during a boss fight, in a nightmare level - and every
+row that plays it changes with it.
+
+### Moments and Reduce Flashing
+
+Every moment obeys the player's accessibility answer. When the built-in **Set No Flashing** row has
+turned it on, a moment still plays - the hit still hits - but every amount a player sees is held
+under a ceiling and every time is held over a floor, so nothing a moment does can strobe. A slowmo's
+time scale, a hitstop's freeze and a zoom's percentage are left alone, because they are not
+amplitudes: half a zoom is not half of anything. You do not have to author a second set of moments
+for it.
+
+---
+
 ## ACE reference
 
 On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
@@ -138,6 +236,8 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Play Sound With Intensity | `path` (String), `intensity` (float) | Plays a sound scaled by a 0-1 intensity: quiet and low when light, full and bright when heavy - drive it, Shake, and Punch Scale from ONE hit-power value. Opens at 0.5. |
 | Count To | `ticker_name` (String), `target` (float), `duration` (float) | Eases a named display value toward a target - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression. Opens at score, 100, 0.6. |
 | Set Ticker | `ticker_name` (String), `value` (float) | Sets a display value instantly (cancelling any roll) - initialise at 0, or snap on reset. |
+| Moment | `moment_name` (String), `strength` (float) | Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount a player sees, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack. Opens at impact, 1. |
+| Define Moment | `moment_name` (String), `moment` (Resource) | Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it for a moment kept elsewhere in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again. |
 
 ### Conditions
 
@@ -464,6 +564,36 @@ On Health Changed
     -> Player | Juice: Stop Jitter
 ```
 
+### 21. One row for every hit in the game
+
+Instead of four rows on each of ten hit events, play the same moment and change one number.
+
+```
+On Enemy Hit
+  -> Enemy | JuiceBehavior: Moment  "impact"  1.0
+
+On Enemy Grazed
+  -> Enemy | JuiceBehavior: Moment  "impact"  0.35
+```
+
+When the game's feel changes, you retune `impact.tres` once instead of editing twenty rows.
+
+### 22. Danger held, then let go
+
+The pressure comes on while the player is in trouble, and comes off when they are not - two rows and
+no per-frame logic.
+
+```
+On Health Dropped Below 25
+  -> Player | JuiceBehavior: Moment  "danger"  1.0
+
+On Health Healed Above 25
+  -> Player | JuiceBehavior: Moment  "calm"  1.0
+```
+
+`danger` holds the vignette and the drained colour where they land; `calm` walks all of it back over
+a second.
+
 ### Other use cases
 
 **Rhythm-synced pulses.** Fire a small Spring Squash on the album art or the whole HUD panel on every beat, and a slightly larger one on downbeats. The spring settles before the next beat at sensible tempos, so the interface breathes with the music using no tween code.
@@ -478,6 +608,19 @@ On Health Changed
 
 ## Tips and common mistakes
 
+- **A moment is a file, so edit the file.** The six starters are yours: open `impact.tres` and change
+  the numbers rather than adding rows around the Moment call. If you want two feels, duplicate the
+  file rather than branching in the sheet.
+- **Strength scales what a player sees, and only that.** A shake, a flash, a pulse and a punch all
+  scale with the number on the row. A slowmo's time scale, a hitstop's freeze and a zoom's percentage
+  do not - doubling those would not mean twice as much of anything, and a moment at 0.5 would break
+  in a way you could not read off the file.
+- **The screen steps want a Screen FX layer.** `pulse` and `hold` draw on the Screen FX post stack.
+  Add `screen_fx.tscn` to the scene once and every moment that touches the screen works; without it a
+  vignette pulse falls back to this pack's own overlay and the rest go quiet.
+- **`hold` leaves the effect where it lands.** That is the point of it - `danger` is meant to stay on.
+  Play `calm` (or your own version of it) to take it off again; a held effect at strength 0 costs
+  nothing, so there is no need to remove it by hand.
 - **Camera effects need an active Camera2D.** Shake and the three Zoom actions drive `get_viewport().get_camera_2d()`. If nothing is happening on Shake, confirm a `Camera2D` in the scene is set as current (or pin one with Use Camera). No camera means the action quietly does nothing.
 - **Squash acts on the host, not the camera.** Squash & Stretch and Spring Squash scale the node the behavior is attached to. Put the behavior on the exact sprite or `Control` you want to pop - attaching it to a parent and expecting a child to move will not work.
 - **Do not fight the shake by writing camera offset yourself.** The shake is additive on the camera's own offset and rotation and restores them when it settles. If your own code also writes `camera.offset` every frame, the two will overwrite each other. Let the follow logic set the base and let Juice add the shake on top.

@@ -4,7 +4,7 @@
 "ids": ["README"],
 "title": "Documentation index"
 }, {
-"ids": ["GUIDE-RECIPES", "GUIDE-COMMON-GAME-PATTERNS", "EVERYDAY-PATTERNS-AS-VOCABULARY", "GUIDE-BLOCK-STYLES", "GUIDE-VARIABLES-GROUPS-AND-THE-SHEET-HEAD", "GUIDE-STATES", "GUIDE-WORKING-WITH-LISTS", "GUIDE-WORKING-WITH-TEXT", "GUIDE-WORKING-WITH-VALUES", "GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING", "GUIDE-COLLISIONS-WHAT-TOUCHES-WHAT", "GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE", "GUIDE-SAVING-AND-LOADING", "GUIDE-FILES-AND-FOLDERS", "GUIDE-SCENES", "GUIDE-LIGHTING-YOUR-GAME", "GUIDE-VISUAL-EFFECTS-AND-SHADERS", "GUIDE-MULTIPLAYER-WITH-GODOTS-BUILT-IN-TOOLS"],
+"ids": ["GUIDE-RECIPES", "GUIDE-COMMON-GAME-PATTERNS", "EVERYDAY-PATTERNS-AS-VOCABULARY", "GUIDE-BLOCK-STYLES", "GUIDE-VARIABLES-GROUPS-AND-THE-SHEET-HEAD", "GUIDE-STATES", "GUIDE-WORKING-WITH-LISTS", "GUIDE-WORKING-WITH-TEXT", "GUIDE-WORKING-WITH-VALUES", "GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING", "GUIDE-COLLISIONS-WHAT-TOUCHES-WHAT", "GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE", "GUIDE-SAVING-AND-LOADING", "GUIDE-FILES-AND-FOLDERS", "GUIDE-SCENES", "GUIDE-LIGHTING-YOUR-GAME", "GUIDE-CAMERAS-AND-VIEWPORTS", "GUIDE-VISUAL-EFFECTS-AND-SHADERS", "GUIDE-MULTIPLAYER-WITH-GODOTS-BUILT-IN-TOOLS"],
 "title": "Learn by doing"
 }, {
 "ids": ["GUIDE-USING-THE-ACE-STUDIO", "GUIDE-USING-THE-SAVE-STUDIO"],
@@ -110,7 +110,7 @@
 "Addons/Run-In-Background": "Run In Background - Heavy Compute Off the Main Thread",
 "Addons/Save-System": "Save System - Slot-Based Persistence Any Sheet Can Write To",
 "Addons/Scene-Flow": "Scene Flow - Polished Scene Changes From One Node",
-"Addons/Screen-FX": "Screen FX - Full-Screen Effects as Four Ordinary Rows",
+"Addons/Screen-FX": "Screen FX - Full-Screen Effects as Ordinary Rows",
 "Addons/Second-View": "Second View",
 "Addons/Simple-Abilities": "Simple Abilities - Cooldowns, Charges, and Tags, One Behavior Per Node",
 "Addons/Sine": "Sine - Wave-Driven Motion on Any Node2D",
@@ -144,6 +144,7 @@
 "GUIDE-BLOCK-STYLES": "Block Styles - How To Read Every Row",
 "GUIDE-BUILDING-EDITOR-TOOLS": "Making Custom Editor Tools with Event Sheets",
 "GUIDE-BUILDING-ON-EVENTSHEETS": "Building on EventSheets",
+"GUIDE-CAMERAS-AND-VIEWPORTS": "Cameras, Views and How The Game Fills The Screen",
 "GUIDE-COLLISIONS-WHAT-TOUCHES-WHAT": "Collisions: what touches what",
 "GUIDE-COMING-FROM-GDSCRIPT": "Coming from GDScript",
 "GUIDE-COMMON-GAME-PATTERNS": "Common Game Patterns Without Code",

@@ -28,7 +28,15 @@ Picker category: **Rendering**. This is the whole of a standard graphics options
 | **Set Global Shader Parameter** | `name`, `value` | Drives a global shader uniform (Project Settings > Shader Globals). Every material reading it updates at once - the code-free way to animate weather or a world-wide tint. |
 | **Set MSAA (2D)** / **Set MSAA (3D)** | `level` | Multisample antialiasing for 2D / 3D on the current viewport - the standard quality switch. |
 | **Set Screen-Space AA** | `mode` | Turns FXAA on or off - cheaper than MSAA, softer result. |
+| **Set Temporal AA** | `enabled` | Borrows detail from the frames before this one: sharper than FXAA on a still image, and it can shimmer while the camera moves. |
 | **Set 3D Resolution Scale** | `scale` | Renders the 3D scene at a fraction of window resolution and upscales - the classic performance slider. |
+| **Upscale With** | `method` | How a 3D scene rendered smaller than the window is stretched back up: bilinear (plain and cheapest), FSR, or FSR 2. |
+| **Render 3D At** | `percent`, `method` | The two above as one question: render the 3D scene at a percentage of the window and say how it is upscaled. 2D drawing and the interface are untouched. |
+| **Smooth Edges With** | `how` | The one antialiasing switch a graphics menu needs: nothing / FXAA / temporal / 2, 4 or 8 samples. Every technique the chosen word is not is turned off, so nobody pays for two at once. |
+| **Scale The Game** | `mode` | What gets stretched when the window is not the size the game was drawn for: fit the layout (text stays crisp), stretch the whole picture (what pixel art wants), or free. |
+| **Fit The Shape** | `aspect` | What the extra space becomes when the window is a different SHAPE: bars at the edges, fill and distort, keep the width, keep the height, or expand. |
+| **Keep Pixels Sharp** | `stretch` | Whether the scale may be a fraction. Whole numbers only trades the uneven pixel-art shimmer for bars at the edges. |
+| **Pixel Size** | `factor` | How big one drawn pixel is on top of everything else - the accessibility answer for a small interface, and the zoom answer for pixel art on a big monitor. |
 | **Set Debug Draw Mode** | `mode` | Switches the viewport to a diagnostic view (wireframe, overdraw heat, unshaded) and back. |
 | **Set Occlusion Culling** | `enabled` | Big scenes skip drawing what walls already hide. |
 | **Set Debanding** | `enabled` | Removes the visible stripes in smooth dark gradients, for a tiny cost. |
@@ -38,6 +46,7 @@ Picker category: **Rendering**. This is the whole of a standard graphics options
 | Name | Kind | Gives you |
 | --- | --- | --- |
 | **Uses Modern Renderer** | Condition | True on Forward+ / Mobile, false on Compatibility (old GPUs, web) - gate fancy effects on it. |
+| **Renderer Is** | Condition | Which of Godot's three the game is running on. Screen-space reflections, indirect light, global illumination and volumetric fog are Forward+ only, and Mobile answers yes to the row above while drawing none of them. |
 | **Draw Calls (frame)** | Expression | Draw calls issued this frame. |
 | **Objects Drawn (frame)** | Expression | Objects drawn this frame. |
 | **Primitives Drawn (frame)** | Expression | Primitives (triangles) drawn this frame. |
@@ -49,11 +58,21 @@ A quality dropdown is then four rows:
 
 ```
 On quality changed to "Low"
-  -> Set MSAA (3D)            "Disabled"
-  -> Set 3D Resolution Scale  0.75
+  -> Smooth Edges With        "Nothing - hard edges, cheapest"
+  -> Render 3D At             70, "FSR - sharper, still cheap"
   -> Set Occlusion Culling    true
   -> Set Debanding            false
 ```
+
+The per-technique rows above (Set MSAA, Set Screen-Space AA, Set Temporal AA, Set 3D Resolution
+Scale, Upscale With) are still the right rows for a menu that offers the switches separately; the
+two combined rows are for the menu that asks one question per line.
+
+The four content-scale rows are a different job: they are how the game meets a screen it was not
+drawn for, rather than how much work it does drawing it. A file that keeps pixels sharp and then
+asks for a fractional pixel size gets an info note in the Doctor's Ship It section, because whole
+pixels only rounds the scale down. The whole story, with the camera and the views beside it, is in
+[Cameras, Views and How The Game Fills The Screen](GUIDE-CAMERAS-AND-VIEWPORTS.md).
 
 ---
 
@@ -148,6 +167,12 @@ Picker category: **Camera**. Field-of-view control for 3D cameras - the aim-down
 | **Tween Camera FOV** | Action | Smoothly eases the active 3D camera's FOV to a target over a duration. Clamped to the legal range. |
 | **Adjust Camera FOV** | Action | Nudges a camera's FOV by a relative amount, clamped so repeated zooms can never flip the camera inside-out. |
 | **Camera FOV** | Expression | A camera's current field of view in degrees - for a HUD zoom indicator or a dynamic-FOV rig. |
+
+The rest of the Camera shelf talks to a `Camera2D` or a `Camera3D` you placed rather than to the
+engine, so it lives with the rest of that story in
+[Cameras, Views and How The Game Fills The Screen](GUIDE-CAMERAS-AND-VIEWPORTS.md): the dead zone,
+the snap, the view rectangle, the level's own edges, the timed look-at, the projections and the
+clip range.
 
 ---
 

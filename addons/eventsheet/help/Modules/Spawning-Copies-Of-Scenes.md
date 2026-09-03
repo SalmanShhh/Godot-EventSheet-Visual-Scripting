@@ -50,6 +50,20 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 - **On The Last One Destroyed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
   and the question it puts in the sheet underneath itself.
 
+Sixteen more say the wave, the aim and the way back out, and they have a chapter of their own below:
+
+- **Spawn In A Formation** and its 3D twin - several copies at once, in a ring, an arc, a line, a
+  grid, or scattered inside a shape you drew.
+- **Spawn A Copy, Facing And Moving** and its 3D twin - one copy turned to face something and given
+  a speed along that facing.
+- **Spawn A Copy Of Myself** and its 3D twin - one more copy of the scene this node came from, with
+  nothing in the row naming the file.
+- **Free Spot In** and its 3D twin - the placement expression that only ever answers with somewhere
+  nothing is standing. **Spawn A Copy In A Free Spot** and its 3D twin spend it, and **On Spawn
+  Skipped** is what a full arena raises.
+- **Retire**, **Retire After Seconds**, **Fade Out Then Retire** and its 3D twin, and **On
+  Retired** - the removal that hands a pooled copy back to its pool and destroys everything else.
+
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
@@ -59,12 +73,13 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 5. [The crowd](#the-crowd)
 6. [Many kinds from one row - the kinds table](#many-kinds-from-one-row---the-kinds-table)
 7. [Reusing copies instead of making them - routing through a pool](#reusing-copies-instead-of-making-them---routing-through-a-pool)
-8. [The same sentences over the network](#the-same-sentences-over-the-network)
-9. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
-10. [The four things that go wrong](#the-four-things-that-go-wrong)
-11. [Reference tables](#reference-tables)
-12. [Use cases](#use-cases)
-13. [Tips and common mistakes](#tips-and-common-mistakes)
+8. [Waves, aim, free spots and retiring](#waves-aim-free-spots-and-retiring)
+9. [The same sentences over the network](#the-same-sentences-over-the-network)
+10. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
+11. [The five things that go wrong](#the-five-things-that-go-wrong)
+12. [Reference tables](#reference-tables)
+13. [Use cases](#use-cases)
+14. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -509,6 +524,334 @@ Two things do not change when you pool, and both are the point:
 Pool only what a profiler asked you to. A pool is a second lifetime for an object, and the day it
 goes wrong is the day something reappears wearing last life's state.
 
+## Waves, aim, free spots and retiring
+
+Everything above is one copy at a time, put where you say and destroyed when you are done with it.
+Five more sentences answer the questions that arrive next, and every one of them ships in both
+dimensions:
+
+- **Spawn In A Formation** and **Spawn In A Formation (3D)** - several copies at once, arranged in a
+  shape you pick, every one of them joined to a crowd on the way in.
+- **Spawn A Copy, Facing And Moving** and **Spawn A Copy, Facing And Moving (3D)** - one copy turned
+  to face something and given a speed along that facing.
+- **Spawn A Copy Of Myself** and **Spawn A Copy Of Myself (3D)** - one more copy of the scene this
+  node was built from, with nothing in the row naming the file.
+- **Free Spot In** and **Free Spot In (3D)** - the placement expression that only ever answers with
+  somewhere nothing is standing. **Spawn A Copy In A Free Spot** and its 3D twin are the rows that
+  spend it, and **On Spawn Skipped** is the trigger a full arena raises.
+- **Retire**, **Retire After Seconds**, **Fade Out Then Retire**, **Fade Out Then Retire (3D)** and
+  **On Retired** - the destroy verbs' other answer: back to the pool it came out of, or destroyed
+  when it came from anywhere else.
+
+Two of them lean on a file the game carries rather than on a line in the row, and that is worth
+saying before you meet them. A free spot is a roll asked over and over until the answer fits, and a
+retirement is a decision read off the node, so neither is one expression. They compile to
+`FreeSpot.in_2d(…)` and `PooledNodes.retire(…)`, two plain GDScript files under the plugin's runtime
+folder that a built game carries the way it carries any other script. Nothing in them touches the
+editor or the sheet format, so the parity promise holds: uninstall the plugin and the emitted code
+still builds and still runs.
+
+### A whole formation in one row
+
+A wave arranged in a shape is a loop, an index and one piece of arithmetic, and the arithmetic is
+where it goes wrong. Spawn In A Formation is that loop with the arithmetic picked from a dropdown:
+a **ring**, an **arc**, a **line**, a **grid**, or **scattered inside a shape** you drew (a box, in
+three dimensions). The shape word changes exactly one expression - where copy number `i` lands - and
+everything else about the row is the same for all five.
+
+```
+On Timeout
+    -> Spawner  Spawn 6 copies of Enemy in a ring
+    -> Spawner  Set wave to wave + 1
+```
+
+<!-- caption: A ring of six, spawned in one row: the scene is read once above the loop, and every copy joins the crowd as it is made -->
+```gdscript
+extends Node2D
+
+const Enemy := preload("res://enemy.tscn")
+
+var wave: int = 0
+
+
+func _on_timeout() -> void:
+	var enemy_scene = Enemy
+	for enemy_index in range(6):
+		var enemy = enemy_scene.instantiate()
+		enemy.add_to_group("enemies", true)
+		var enemy_place = $Totem.global_position + Vector2.RIGHT.rotated(TAU * enemy_index / 6) * 80.0
+		self.add_child(enemy)
+		enemy.global_position = enemy_place
+	wave += 1
+```
+
+**The fields a shape does not use are left out of the code it writes.** A ring reads Around and
+Size, an arc adds Start Angle and Sweep, a line reads Around and To, a grid reads Around, Size and
+Across, and the two scattering shapes read Inside and nothing else. The row shows every field in its
+dialog and emits only the ones its shape needs, so a line formation's code has no radius in it to
+wonder about.
+
+**The trap this removes is the divisor.** A ring divides the whole turn by the count, so the last
+copy stops one step short of the first and the spacing is even the whole way round. An arc divides
+by one LESS than the count, so the first copy sits on the start angle and the last one on the far
+end of the sweep. Get those two the wrong way round by hand - and nearly everybody does, once - and
+a ring puts its first and last copy on top of each other while an arc never reaches its far end.
+`maxf(count - 1.0, 1.0)` is what keeps a formation of one from dividing by zero: it lands at the
+start, which is the only place a single copy can be.
+
+**The second trap is the crowd flag**, and it is the same one the crowd rows answer. Every copy
+joins the group with Godot's persistent flag passed, so the wave survives its branch being packed
+back into a `.tscn`. That is what makes the row underneath able to say For Each In Group and address
+the whole formation at once, rather than the formation row having to hand anything down.
+
+**And the scene is read once, above the loop.** `var enemy_scene = Enemy` is a lookup saved per copy,
+and it is also the line that lets the run be recognised as one sentence when the file is opened
+again. Inside a collision or body handler, pick the next idle moment in the Added field: the last
+two lines then place before they parent, exactly as Spawn A Copy Safely does and for the same
+reason.
+
+### A copy that leaves already facing and already moving
+
+The frozen spawn sentence puts a copy somewhere. A bullet, a spark off a wheel or an enemy charging
+in needs two more facts: which way it is turned, and how fast it is going that way. Spawn A Copy,
+Facing And Moving is those two on the same row, because they are one decision - the launch is
+computed from the facing the line above just set.
+
+```
+Every tick
+    "shoot" was just pressed
+    cooldown <= 0.0
+    -> Turret  Spawn a copy of Bullet as new_bullet, facing toward the mouse, moving at 900.0
+    -> Turret  Set cooldown to 0.15
+```
+
+<!-- caption: A shot that leaves the barrel already aimed: the facing is written to the copy's own rotation, and the launch is read back off it -->
+```gdscript
+extends Node2D
+
+const Bullet := preload("res://bullet.tscn")
+
+var cooldown: float = 0.0
+
+
+func _physics_process(delta: float) -> void:
+	if Input.is_action_just_pressed("shoot") and cooldown <= 0.0:
+		var new_bullet = Bullet.instantiate()
+		self.add_child(new_bullet)
+		new_bullet.global_position = $Muzzle.global_position
+		new_bullet.rotation = (get_global_mouse_position() - new_bullet.global_position).angle()
+		var new_bullet_launch = Vector2.from_angle(new_bullet.rotation) * 900.0
+		new_bullet.velocity = new_bullet_launch
+		cooldown = 0.15
+```
+
+Facing reads four answers in 2D - **the same way this node faces**, **toward a node**, **toward the
+mouse**, **at an angle you say** - and three in 3D, where the mouse is not a direction in the world.
+Each writes one line, and each writes it to the copy's own rotation, which is why the launch on the
+next line can simply read that rotation back. In three dimensions forward is the copy's own `-Z`,
+which is what Godot means by forward everywhere else, so Toward A Node is a plain `look_at`.
+
+**Where the speed is written is a fact about the SCENE, not about this row.** A CharacterBody keeps
+it in `velocity`, a RigidBody in `linear_velocity`, and a scene wearing the Bullet behaviour keeps
+it as that behaviour's own speed. The Moves By field says which, and the parameters dialog reads the
+`.tscn` you named and tells you which of the three it found rather than making you remember.
+
+**The trap this removes is the order.** Turning the copy toward something means measuring from where
+the copy IS, and a copy that is not in a tree yet has no global position for that measurement to be
+about. Written by hand, the facing line usually ends up above the `add_child` - where it silently
+measures from the origin, and the shots all fly the same way. The row writes the three frozen lines
+first, then the facing, then the launch, in that order, every time.
+
+**Plus This Node's Speed is off to start with, and the reason is worth saying.** Ticking it adds one
+line, `new_bullet_launch += velocity`, so a shot fired from a moving ship leaves it faster and one
+fired backwards leaves it slower. That line reads THIS node's `velocity`, which is what a body that
+moves calls its speed and what a plain Node2D does not have at all - so leave it off on a turret
+bolted to the wall.
+
+### A copy of the scene this node came from
+
+A boss that splits into two smaller bosses, a slime that halves, a crystal that shatters into
+crystals: all of them want one more copy of the very scene they are. Written by hand that means the
+scene preloading its own file, which is a name to keep in step with a filename. Spawn A Copy Of
+Myself names nothing at all - the node already knows which file it was built from.
+
+```
+On Body Entered
+    size > 1
+    -> Slime  Spawn a copy of myself as half at global_position + Vector2(24, 0), under get_parent()
+    -> Slime  Set half's size to size - 1
+```
+
+<!-- caption: A slime that halves: the scene is the node's own scene_file_path, and the copy joins the tree on the next idle moment -->
+```gdscript
+extends Area2D
+
+var size: int = 3
+
+
+func _on_body_entered(body: Node2D) -> void:
+	if size > 1:
+		var half = load(scene_file_path).instantiate()
+		half.position = global_position + Vector2(24, 0)
+		get_parent().call_deferred("add_child", half)
+		half.size = size - 1
+```
+
+**The copy is added on the next idle moment, and that default is not a preference.** A scene that
+splits itself nearly always does it inside a collision handler, and Godot refuses to add a child
+while the physics server is flushing. Placing before parenting is the same swap Spawn A Copy Safely
+makes, so the At field is relative to the parent here as well. The copy itself exists straight away,
+which is why the row after it can set a property on the name.
+
+**The trap this removes is the rename.** `preload("res://slime.tscn")` inside `slime.tscn` is a
+promise that the file will keep that name and that path for ever, and the day somebody moves it into
+a folder the boss stops splitting. `scene_file_path` is the node's own word for where it came from,
+so it follows the file wherever it goes.
+
+**And there are two ways for it to have no answer, both of which the Doctor says out loud.** A node
+built in code rather than instanced from a `.tscn` has no scene file, so the row is a load of
+nothing and the copy never appears - an amber note on the row says so, and the words say to save it
+as a scene and instance that instead. The second is the older one: a copy of this scene made in
+**On Ready** is a scene that spawns itself the instant it is created, which doubles every time and
+is a hang rather than an error. Put the row under a condition - a hit, a timer, a size still above
+one - which is what a splitting boss is anyway.
+
+### A spot nothing is standing in
+
+The other placement words are one measurement each: a node's own place, a point along a path, a
+point inside a shape. "Somewhere free" is not a measurement - it is the same roll asked again until
+the answer fits - so it is the one placement word that is a function.
+
+**Free Spot In** is that function as an expression, usable in any field that takes a position. It
+asks three questions in order: the point is inside a shape somebody drew; it is at least the Gap
+from every other copy of the same scene already in the world; and the copy's OWN collision shape,
+put at that point, overlaps nothing in the groups you named. That third one is a real physics query
+in the space the game runs in, so a wall is a wall whatever drew it. A group whose members carry no
+collision shape at all cannot be asked that question, so those members are answered the only way
+they can be, by distance - which is what makes a bare Marker2D dropped to say "not here" work.
+
+**And it answers nothing when there is nothing to answer.** After the last try it gives `null`,
+which is a real answer rather than a failure: a full arena has no free spot in it. **Spawn A Copy In
+A Free Spot** is the row that knows what to do about that, and what it does is spawn nothing and say
+so.
+
+```
+On Timeout
+    -> Filler  Spawn a copy of Crate as new_crate in a free spot in $Room, under $Props
+
+On a spawn skipped
+    -> Filler  Stop the fill timer
+    -> Label   Set text to "No room left"
+```
+
+<!-- caption: A room filled until it is full: the spot is rolled first, and a roll that answers nothing raises the sheet's own spawn_skipped signal -->
+```gdscript
+extends Node2D
+
+signal spawn_skipped(scene)
+
+const Crate := preload("res://crate.tscn")
+
+
+func _ready() -> void:
+	spawn_skipped.connect(_on_spawn_skipped)
+
+
+func _on_timeout() -> void:
+	var new_crate_spot = FreeSpot.in_2d($Room, Crate, ["walls"], 32.0, 24)
+	var new_crate = null
+	if new_crate_spot == null:
+		if has_signal(&"spawn_skipped"):
+			emit_signal(&"spawn_skipped", Crate)
+	else:
+		new_crate = Crate.instantiate()
+		new_crate.position = new_crate_spot
+		$Props.call_deferred("add_child", new_crate)
+
+
+func _on_spawn_skipped(scene: PackedScene) -> void:
+	$FillTimer.stop()
+	$Label.text = "No room left"
+```
+
+**On Spawn Skipped is an ordinary Godot signal, and the sheet declares it.** Add a signal block
+saying `spawn_skipped(scene)` at the head of the sheet and both halves are plain code: the spawn row
+emits it with the scene it could not place, and the trigger connects a handler to it. The emitted
+`has_signal` guard is what lets the same spawn row work in a sheet that never declared it - a game
+that does not care about a full arena writes no signal block and the row simply spawns nothing.
+
+**The name is bound above the branch on purpose.** `var new_crate = null` is declared before the
+`if`, so rows after the spawn can still say the name whichever way the roll went. What it holds when
+the arena was full is nothing, which an Is Still Here row can ask about - the same promise Spawn A
+Copy Unless The Crowd Is Full makes.
+
+**The trap this removes is the pile.** A minefield laid with Random Place Inside Shape puts two
+mines on the same tile sooner than you would think, and a crate spawned inside a wall is a crate
+nobody can reach. Written by hand the fix is a retry loop, and a retry loop written in a hurry has
+no ceiling on it - which is a hang rather than a wrong answer. Tries is that ceiling, on the row,
+with a default of 24.
+
+**What one call costs, said plainly.** It builds the scene once to read its collision shape and
+frees it again, and walks the running scene once to find the copies already placed. Both happen ONCE
+per call and are reused across every try, so raising Tries costs only the extra rolls. A spawn per
+frame is fine; a thousand spawns in one frame wants a pool.
+
+### Retiring instead of destroying
+
+Destroying is `queue_free()`, and it is the right answer for a copy that came from `instantiate()`.
+It is the WRONG answer for a copy an object pool handed out: freeing a pooled node takes it out of
+the pool's own accounting, and the pool then hands out a node that no longer exists. That is the one
+mistake pooling adds to a project, and it is silent until it is a crash.
+
+**Retire** is the removal that reads which of the two it is off the node itself:
+
+```
+On Body Entered
+    -> Bullet  Retire self now
+
+On retired
+    -> Bullet  Set $Trail's emitting to false
+```
+
+<!-- caption: A shot that goes back where it came from: one line, and it means free in a project with no pools in it -->
+```gdscript
+extends Area2D
+
+
+func _ready() -> void:
+	tree_exiting.connect(_on_retired)
+
+
+func _on_body_entered(body: Node2D) -> void:
+	PooledNodes.retire(self)
+
+
+func _on_retired() -> void:
+	$Trail.emitting = false
+```
+
+**Nothing has to be configured and nothing has to be remembered.** A pool already stamps every copy
+it hands out with the pool's own name, so the decision is read off the node at run time: a stamped
+node whose pool is still in the tree goes back to it, and anything else is freed. A project with no
+pools in it behaves exactly as Destroy Now does, which is what makes Retire safe to reach for before
+you know whether you will pool.
+
+**Four rows and a trigger, matching the destroy verbs one for one.** Retire is now, Retire After
+Seconds hangs the decision off a scene-tree timer, and Fade Out Then Retire walks the object's
+transparency down first and then retires it - in 2D by walking `modulate:a` to nothing, and in 3D by
+walking `transparency` up to one, because a Node3D has no modulate. The fade rows make the event
+wait, and ask whether the object is still there before touching it, exactly as their destroy twins
+do.
+
+**On Retired is one trigger for both endings.** A pool takes a node back by removing it from the
+tree, and a free takes it out of the tree as well, so the node's own `tree_exiting` is raised once
+whichever of the two happened. The object is still valid inside that handler, which is what makes it
+the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.
+
+**Retire is safe to run twice.** Something already on its way out is left alone rather than freed a
+second time - which matters more here than it does for a destroy, because a double `queue_free()` is
+silent while handing one node back to a pool twice puts it in the free list twice.
+
 ## The same sentences over the network
 
 There is no second spawning vocabulary for a networked game. Godot's own answer is a
@@ -567,9 +910,9 @@ Hand-written spawning is on the band too. An opened `.gd` whose lines read
 `var b = Bullet.instantiate()` grows the same band as a picked row, because the band is read off the
 line rather than off a row's name.
 
-## The four things that go wrong
+## The five things that go wrong
 
-Four spawning mistakes are silent in the editor and loud at run time. The Doctor has a **Spawning**
+Five spawning mistakes are silent in the editor and loud at run time. The Doctor has a **Spawning**
 section for them, and each one is also said in place - an amber note under the very row that has it,
 with its one click at the right edge.
 
@@ -607,6 +950,13 @@ a timer or a tween on it are in the wrong order: the destroy is marked at once, 
 booked against something on its way out. "Move the destroy last" puts it after everything that reads
 it; destroying after a delay instead is the other way, and the note says so.
 
+**A copy of a scene the node never came from.** Spawn A Copy Of Myself loads the file this node was
+built from, and a node built in code rather than instanced from a `.tscn` was built from no file at
+all. The row is then a load of nothing: no copy appears, and Godot says nothing about it, because
+loading an empty path is not an error. It is reported as information rather than as a repair,
+because the answer is a decision about the scene - save the branch as a scene file and instance
+that, or spawn a scene the row names outright.
+
 ## Reference tables
 
 | Name | What it does | Ships as |
@@ -636,6 +986,22 @@ it; destroying after a delay instead is the other way, and the note says so.
 | Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
 | On Node Joins Group | Runs as a node belonging to a group enters the world. | `get_tree().node_added.connect(_on_node_joined_group)` |
 | On Node Leaves Group | Runs as a node belonging to a group leaves the world. | `get_tree().node_removed.connect(_on_node_left_group)` |
+| Spawn In A Formation | Spawns several copies at once, arranged in the shape you pick. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, `var {name} = {name}_scene.instantiate()`, `{name}.add_to_group({crowd}, true)`, `var {name}_place = …`, … |
+| Spawn In A Formation (3D) | The same loop with the five shapes measured in three dimensions. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, …, `var {name}_place = …`, … |
+| Spawn A Copy, Facing And Moving | Spawns a copy, turns it to face something, launches it along that facing. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}`, `{name}.rotation = …`, `var {name}_launch = Vector2.from_angle({name}.rotation) * {speed}`, … |
+| Spawn A Copy, Facing And Moving (3D) | The same, with forward being the copy's own -Z. | `var {name} = {scene}.instantiate()`, …, `{name}.look_at({toward}.global_position)`, `var {name}_launch = -{name}.global_transform.basis.z * {speed}`, … |
+| Spawn A Copy Of Myself | Makes one more copy of the scene this node was built from. | `var {name} = load(scene_file_path).instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
+| Spawn A Copy Of Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
+| Free Spot In | Gives a point inside a shape that nothing is standing in, or nothing. | `FreeSpot.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
+| Free Spot In (3D) | The same question in three dimensions, in metres. | `FreeSpot.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
+| Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_spot = FreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {scene})`, `else:`, … |
+| Spawn A Copy In A Free Spot (3D) | The same row in three dimensions. | `var {name}_spot = FreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
+| On Spawn Skipped | Runs when a free-spot spawn found nowhere to put the copy. | `spawn_skipped.connect(_on_spawn_skipped)` |
+| Retire | Hands the object back to its pool, or destroys it when it came from none. | `PooledNodes.retire({object})` |
+| Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(PooledNodes.retire.bind({object}))` |
+| Fade Out Then Retire | Fades the object out, waits, then retires it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `PooledNodes.retire({object})` |
+| Fade Out Then Retire (3D) | The same on a 3D object, walking transparency up instead. | `await {object}.create_tween().tween_property({object}, "transparency", 1.0, {seconds}).finished`, `if is_instance_valid({object}):`, `PooledNodes.retire({object})` |
+| On Retired | Runs as the object is retired, whichever of the two happened. | `tree_exiting.connect(_on_retired)` |
 
 ## Use cases
 
@@ -733,6 +1099,36 @@ spawn a tougher kind while the crowd is thin.
 
 **27. A crate you can clear.** Tag every breakable into a `crates` crowd as it spawns, and let On The
 Last One Destroyed on that crowd drop the key.
+
+**28. A ring of enemies around a totem.** Spawn In A Formation with the ring shape, a count of six
+and the totem in Around. One row, and the row underneath addresses all six with For Each In Group.
+
+**29. A firing arc.** The same row with the arc shape, a start angle and a sweep of 120. The first
+copy sits on the start angle and the last on the far end, which is what "from here to there" means.
+
+**30. An inventory grid that fills itself.** The grid shape with Across set to the number of columns
+and Size set to the spacing. Adding a row of slots is changing one number.
+
+**31. A shot that leaves the barrel aimed.** Spawn A Copy, Facing And Moving with the mouse facing
+and the muzzle in At. The copy is turned and launched in the same row, in the right order.
+
+**32. A shot from a moving ship.** The same row with Plus This Node's Speed ticked, so a shot fired
+forwards leaves the ship faster and one fired backwards leaves it slower.
+
+**33. A slime that halves.** Spawn A Copy Of Myself in the hit event, under a condition on the
+slime's own size, with a property row after it setting the copy's size. No file is named anywhere.
+
+**34. A room that fills until it is full.** Spawn A Copy In A Free Spot on a timer, with the room's
+Area2D in Inside and the walls in Clear Of, and an On Spawn Skipped event that stops the timer.
+
+**35. A minefield with no two mines on one tile.** The same row with a gap of 48, so every mine is
+laid clear of the ones already down rather than on top of one.
+
+**36. A pooled bullet that puts itself away.** Retire on the bullet's own hit event. In a project
+with no pools it is a destroy; the day the bullets are pooled, nothing in the sheet changes.
+
+**37. Letting go of what a copy was holding.** An On Retired event on the copy, which runs whichever
+way it left, with rows that clear its target and drop it from a list.
 
 ### Other use cases
 
@@ -833,6 +1229,42 @@ Last One Destroyed on that crowd drop the key.
   alpha, velocity and any timer the copy was running are exactly as it left them. Set what a fresh
   copy would have had on the rows straight after the pool's Spawn.
 - **Do not free a pooled copy.** Destroy Now on a node that came out of a pool takes it out of the
-  pool's own accounting, and the pool then hands out a freed node. Despawn is its removal.
+  pool's own accounting, and the pool then hands out a freed node. Despawn is its removal, and
+  Retire is the row that picks between the two for you.
+- **A formation of one lands on its start.** Every shape divides by the count, and the arc and the
+  line divide by one less than it, so a count of one is protected rather than a division by zero.
+- **An arc that sweeps 360 puts its first and last copy on top of each other.** That is what the
+  ring shape is for instead: it divides the whole turn by the count, so the spacing is even.
+- **Across has to be a whole number.** The line that lays a grid out divides by it, and integer
+  division is what turns a running count into rows and columns.
+- **Turning a copy needs it in the tree first.** The facing line measures from the copy's own global
+  position, which means nothing until the copy has a parent - which is why the row writes the
+  parenting first and the facing after it, and why writing it the other way by hand aims everything
+  at the origin.
+- **Plus This Node's Speed reads THIS node's velocity.** Only a body that moves has one. Leave it
+  off on a turret bolted to a wall, or the emitted line names a property that is not there.
+- **Spawn A Copy Of Myself in an On Ready event doubles for ever.** It is a scene that spawns itself
+  the instant it is created, which is a hang rather than an error. Put it under a condition.
+- **A node built in code has no scene file to copy.** `scene_file_path` is empty on anything that
+  was never instanced from a `.tscn`, so the row loads nothing and no copy appears. Save the branch
+  as a scene and instance that.
+- **A free spot can answer nothing, and that is the point.** Rows after Spawn A Copy In A Free Spot
+  run either way, so ask Is Still Here before touching the name, or answer On Spawn Skipped.
+- **On Spawn Skipped needs the signal declared.** Add a signal block saying `spawn_skipped(scene)`
+  at the head of the sheet. Without it the emitted guard simply finds no signal and the row spawns
+  nothing quietly, which is the honest behaviour but not the one you wanted.
+- **Free Spot In wants the shape, or the area, or the Control.** In 2D it reads a CollisionShape2D
+  holding a rectangle or a circle, the Area2D around it, or a Control's own rectangle; in 3D a
+  CollisionShape3D holding a box or a sphere, or the Area3D around it. Anything else measures
+  nothing and the call answers nothing.
+- **A gap of nothing asks nothing.** Set Gap to 0 and the only question left is whether the copy's
+  own shape overlaps a member of the named groups. That is right for a scene with a shape, and
+  leaves a shapeless scene with no test at all.
+- **Retire and Destroy Now are the same thing in a project with no pools.** Reach for Retire early:
+  it costs nothing, and it is what saves the sheet being rewritten the day a profiler asks for a
+  pool.
+- **On Retired fires for both endings.** It is the node's own `tree_exiting`, so it runs whether the
+  node was freed or handed back - and it also runs when the whole branch is taken out of the tree,
+  which is usually what you want and occasionally a surprise.
 - **Do not Destroy Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
   other one. Despawn is the removal that travels.

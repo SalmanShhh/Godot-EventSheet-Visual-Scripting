@@ -60,6 +60,11 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_undo_property` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_undo_reference` | [Remove Node (Undoable)](ace:Core/RemoveNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_visibility_filter` | [Ask A Function Who May See It](ace:Core/AddVisibilityFilter) | Multiplayer | Vocabulary |
+| `adjustment_brightness` | [Picture Brightness](ace:Core/EnvPictureBrightness) | Environment | Vocabulary |
+| `adjustment_color_correction` | [Colour Grade](ace:Core/EnvColourGrade) | Environment | Vocabulary |
+| `adjustment_contrast` | [Contrast](ace:Core/EnvContrast) | Environment | Vocabulary |
+| `adjustment_enabled` | [Set Saturation](ace:Core/EnvSetSaturation) | Environment | Vocabulary |
+| `adjustment_saturation` | [Saturation](ace:Core/EnvSaturation) | Environment | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
 | `albedo_color` | [Colour](ace:Core/MaterialColour) | Material | Vocabulary |
 | `albedo_texture` | [Texture](ace:Core/MaterialTexture) | Material | Vocabulary |
@@ -95,14 +100,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `attenuation` | [Set Falloff](ace:Core/AudioSetFalloff) | Audio | Vocabulary |
 | `auto_clear` | [Is Auto Clear](ace:Core/DrawIsAutoClear) | Drawing | Vocabulary |
 | `auto_translate_mode` | [Keep This Text Untranslated](ace:Core/KeepTextUntranslated) | Translation | Vocabulary |
+| `autoscroll` | [Drift](ace:Core/ParallaxDrift) | Layers | Vocabulary |
 | `autowrap_mode` | [Set Word Wrap On](ace:Core/SetWordWrapOn) | Text | Vocabulary |
 | `back` | [Pick Top](ace:Core/PickTop) | Nodes: Picking | Vocabulary |
+| `background_color` | [Set Backdrop](ace:Core/EnvSetBackdrop) | Environment | Vocabulary |
+| `background_mode` | [Backdrop](ace:Core/EnvBackdrop) | Environment | Vocabulary |
 | `base64_to_variant` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
 | `basis` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
 | `billboard` | [Set Always Face The Camera](ace:Core/SetFaceTheCamera) | World-space UI | Vocabulary |
 | `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
-| `blend_mode` | [Blending](ace:Core/MaterialBlending) | Material | Vocabulary |
+| `blend_mode` | [Blend Light As](ace:Core/LightSetBlend) | Lighting | Vocabulary |
 | `bool` | [No Flashing](ace:Core/NoFlashing) | Accessibility | Vocabulary |
 | `bottom_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
 | `bounce` | [Bounce Off Solids](ace:Core/BounceOffSolid) | Bullet | Vocabulary |
@@ -150,6 +158,10 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `configure` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
 | `connect` | [Connect Signal](ace:Core/ConnectSignal) | Helpers | Vocabulary |
 | `contains` | [Text Contains](ace:Core/StringContains) | Variables: String | Vocabulary |
+| `content_scale_aspect` | [Fit The Shape](ace:Core/RenderingFitTheShape) | Rendering | Vocabulary |
+| `content_scale_factor` | [Pixel Size](ace:Core/RenderingPixelSize) | Rendering | Vocabulary |
+| `content_scale_mode` | [Scale The Game](ace:Core/RenderingScaleTheGame) | Rendering | Vocabulary |
+| `content_scale_stretch` | [Keep Pixels Sharp](ace:Core/RenderingKeepPixelsSharp) | Rendering | Vocabulary |
 | `copy_absolute` | [Copy File](ace:Core/CopyFile) | Files | Vocabulary |
 | `cos` | [Cosine](ace:Core/CosValue) | Helpers | Vocabulary |
 | `count` | [Count Of](ace:Core/ArrayCount) | Variables: Array | Vocabulary |
@@ -209,7 +221,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `end` | [Fit Limits To](ace:Core/CameraFitLimits) | Camera | Vocabulary |
 | `ends_with` | [Text Ends With](ace:Core/StringEndsWith) | Variables: String | Vocabulary |
 | `energy` | [Set Brightness](ace:Core/LightSetBrightness) | Lighting | Vocabulary |
-| `environment` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
+| `energy_multiplier` | [Sky Energy](ace:Core/SkySkyEnergy) | Environment | Vocabulary |
+| `environment` | [Saturation](ace:Core/EnvSaturation) | Environment | Vocabulary |
+| `environment_set_sdfgi_ray_count` | [Turn Global Illumination On At Quality](ace:Core/EnvTurnGlobalIlluminationOnAtQuality) | Environment | Vocabulary |
+| `environment_set_ssao_quality` | [Turn Occlusion On At Quality](ace:Core/EnvTurnOcclusionOnAtQuality) | Environment | Vocabulary |
+| `environment_set_ssil_quality` | [Turn Indirect Light On At Quality](ace:Core/EnvTurnIndirectLightOnAtQuality) | Environment | Vocabulary |
+| `environment_set_ssr_roughness_quality` | [Turn Reflections On At Quality](ace:Core/EnvTurnReflectionsOnAtQuality) | Environment | Vocabulary |
 | `eof_reached` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `erase` | [Delete Key](ace:Core/DictDeleteKey) | Variables: Dictionary | Vocabulary |
 | `erase_action` | [Remove Input Action](ace:Core/InputRemoveAction) | Input | Vocabulary |
@@ -244,9 +261,14 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `floori` | [Cell Of Point](ace:Core/CellOfPoint) | Math & Random | Vocabulary |
 | `fmod` | [Float Modulo](ace:Core/FmodValue) | Helpers | Vocabulary |
 | `fms` | [Log Measurements](ace:Core/LogMeasurements) | Debug | Vocabulary |
+| `fog_aerial_perspective` | [Aerial Perspective](ace:Core/EnvAerialPerspective) | Environment | Vocabulary |
 | `fog_density` | [Set Fog Density](ace:Core/SetFogDensity) | Environment | Vocabulary |
 | `fog_enabled` | [Set Fog On/Off](ace:Core/SetFog) | Environment | Vocabulary |
+| `fog_height` | [Fog Floor](ace:Core/EnvFogFloor) | Environment | Vocabulary |
+| `fog_height_density` | [Fog Floor Thickness](ace:Core/EnvFogFloorThickness) | Environment | Vocabulary |
 | `fog_light_color` | [Set Fog Colour](ace:Core/SetFogColour) | Environment | Vocabulary |
+| `fog_sun_scatter` | [Fog Sun Glow](ace:Core/EnvFogSunGlow) | Environment | Vocabulary |
+| `follow_viewport_enabled` | [Stay Fixed On Screen](ace:Core/LayerStayFixedOnScreen) | Layers | Vocabulary |
 | `for_node` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
 | `force_raycast_update` | [Force RayCast Update (2D)](ace:Core/RayCast2DForceUpdate) | Raycast 2D | Vocabulary |
 | `force_shapecast_update` | [Force ShapeCast Update (2D)](ace:Core/ShapeCast2DForceUpdate) | Raycast 2D | Vocabulary |
@@ -254,7 +276,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `format_number` | [Number In Local Digits](ace:Core/NumberInLocalDigits) | Translation | Vocabulary |
 | `fov` | [Camera FOV](ace:Core/GetCameraFov) | Camera | Vocabulary |
 | `frame` | [Set Animation Frame](ace:Core/SetSpriteFrame) | General Actions | Vocabulary |
-| `frame_post_draw` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `frame_post_draw` | [Save A Still Of A View](ace:Core/ViewSaveStill) | Views | Vocabulary |
 | `freeze` | [Set Immovable](ace:Core/SetBodyImmovable) | Physics | Vocabulary |
 | `friction` | [Set Friction](ace:Core/SetBodyFriction) | Physics | Vocabulary |
 | `from_angle` | [Point At Angle](ace:Core/PointAtAngle) | Math & Random | Vocabulary |
@@ -304,6 +326,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
 | `get_csv_line` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `get_current_node` | [Current State Is](ace:Core/AnimationStateIs) | Animation | Vocabulary |
+| `get_current_rendering_method` | [Renderer Is](ace:Core/RenderingRendererIs) | Rendering | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
 | `get_date_string_from_system` | [Date: Today](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
 | `get_datetime_dict_from_system` | [Date: Hour](ace:Core/DateHour) | Time | Vocabulary |
@@ -356,7 +379,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_meta` | [Get Metadata](ace:Core/GetMeta) | Metadata | Vocabulary |
 | `get_modified_time` | [Watch Data File](ace:Core/WatchDataFile) | Files | Vocabulary |
 | `get_monitor` | [Performance Monitor](ace:Core/GetPerfMonitor) | Utility: Debug | Vocabulary |
-| `get_mouse_position` | [Mouse Position (screen)](ace:Core/GetMouseScreenPosition) | Mouse | Vocabulary |
+| `get_mouse_position` | [Mouse Position In View](ace:Core/ViewMousePosition) | Views | Vocabulary |
 | `get_multiline_string_size` | [Wrapped Text Height](ace:Core/WrappedTextHeight) | Text | Vocabulary |
 | `get_multiplayer_authority` | [Owner Of](ace:Core/OwnerOf) | Multiplayer | Vocabulary |
 | `get_name` | [Is Platform](ace:Core/IsPlatform) | Platform | Vocabulary |
@@ -438,13 +461,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `globalize_path` | [Open The Player's Data Folder](ace:Core/OpenUserDataFolder) | Files | Vocabulary |
+| `glow_blend_mode` | [Glow Blend](ace:Core/EnvGlowBlend) | Environment | Vocabulary |
+| `glow_bloom` | [Glow Bloom](ace:Core/EnvGlowBloom) | Environment | Vocabulary |
 | `glow_enabled` | [Set Glow On/Off](ace:Core/SetGlow) | Environment | Vocabulary |
+| `glow_hdr_threshold` | [Glow Threshold](ace:Core/EnvGlowThreshold) | Environment | Vocabulary |
 | `glow_intensity` | [Set Glow Strength](ace:Core/SetGlowStrength) | Environment | Vocabulary |
 | `go_back` | [Go Back](ace:Core/GoBackMode) | Game State | Vocabulary |
 | `goto_line` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `grab_focus` | [Set Focus](ace:Core/GrabFocus) | UI | Vocabulary |
 | `gravity` | [Set World Gravity](ace:Core/SetWorldGravity) | Physics | Vocabulary |
 | `gravity_scale` | [Set Gravity Scale](ace:Core/SetGravityScale) | Physics | Vocabulary |
+| `ground_bottom_color` | [Sky Ground](ace:Core/SkySkyGround) | Environment | Vocabulary |
 | `grow` | [Is Point On Screen](ace:Core/IsPointOnScreen) | Math & Random | Vocabulary |
 | `has` | [Has Key](ace:Core/DictHasKey) | Variables: Dictionary | Vocabulary |
 | `has_action` | [Has Action](ace:Core/InputHasActionNamed) | Keyboard | Vocabulary |
@@ -602,6 +629,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `monitoring` | [Get Monitoring](ace:Core/GetMonitoring) | General Expressions | Vocabulary |
 | `month` | [Date: Month](ace:Core/DateMonth) | Time | Vocabulary |
 | `motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
+| `motion_mirroring` | [Repeat Every (Background Layer)](ace:Core/ParallaxLayerRepeatEvery) | Layers | Vocabulary |
+| `motion_scale` | [Scroll At (Background Layer)](ace:Core/ParallaxLayerScrollAt) | Layers | Vocabulary |
 | `mouse_mode` | [Set Mouse Mode](ace:Core/SetMouseMode) | Mouse | Vocabulary |
 | `move_and_slide` | [Move And Slide](ace:Core/MoveAndSlide) | General Actions | Vocabulary |
 | `move_child` | [Move Child To Index](ace:Core/MoveChild) | Nodes | Vocabulary |
@@ -638,6 +667,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools: Files & folders | Vocabulary |
 | `packed` | [Save Branch As Scene File](ace:Core/SaveBranchAsSceneFile) | Files | Vocabulary |
 | `pad_zeros` | [Pad Number](ace:Core/StringPadZeros) | Variables: String | Vocabulary |
+| `panorama` | [Use Panorama Sky](ace:Core/SkyUsePanorama) | Environment | Vocabulary |
 | `parse` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `parse_input_event` | [Simulate Input](ace:Core/SimulateInputEvent) | General Actions | Vocabulary |
 | `parse_number` | [Number From Local Digits](ace:Core/NumberFromLocalDigits) | Translation | Vocabulary |
@@ -728,12 +758,13 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `render_target_update_mode` | [Set Surface Redraw](ace:Core/SetSurfaceRedraw) | World-space UI | Vocabulary |
 | `reparent` | [Move To Layer](ace:Core/MoveToLayer) | Layers | Vocabulary |
 | `repeat` | [Repeat Text](ace:Core/StringRepeat) | Variables: String | Vocabulary |
+| `repeat_size` | [Repeat Every](ace:Core/ParallaxRepeatEvery) | Layers | Vocabulary |
 | `replace` | [Replace In Text](ace:Core/TextReplace) | Text | Vocabulary |
 | `request` | [Request](ace:Core/AjaxRequest) | AJAX | Vocabulary |
 | `res` | [For Each Resource In Folder](ace:Core/ForEachResourceInFolder) | Loops | Vocabulary |
 | `reset_smoothing` | [Snap To Target Now](ace:Core/CameraSnapToTarget) | Camera | Vocabulary |
 | `resize` | [Resize Array](ace:Core/ArrayResize) | Variables: Array | Vocabulary |
-| `resource_path` | [Set Blending](ace:Core/MaterialSetBlending) | Material | Vocabulary |
+| `resource_path` | [Set Exposure](ace:Core/EnvSetExposure) | Environment | Vocabulary |
 | `rest_length` | [Set Spring Rest Length](ace:Core/SetDampedSpringLength) | Joints | Vocabulary |
 | `restart` | [Restart / Burst](ace:Core/RestartParticles) | Particles | Vocabulary |
 | `retire` | [Retire](ace:Core/Retire) | Destroy | Vocabulary |
@@ -770,6 +801,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `scale` | [Set Scale (3D)](ace:Core/SetScale3D) | General Actions | Vocabulary |
 | `scan` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
 | `screen_get_size` | [Screen Size](ace:Core/GetScreenSize) | Utility: Window | Vocabulary |
+| `scroll_offset` | [Scroll Offset](ace:Core/ParallaxScrollOffset) | Layers | Vocabulary |
+| `scroll_scale` | [Scroll At](ace:Core/ParallaxScrollAt) | Layers | Vocabulary |
+| `sdfgi_enabled` | [Is Global Illumination On](ace:Core/EnvIsGlobalIllumination) | Environment | Vocabulary |
 | `search` | [Match Pattern](ace:Core/MatchPattern) | Text: RegEx | Vocabulary |
 | `search_all` | [All Matches](ace:Core/AllMatches) | Text: RegEx | Vocabulary |
 | `second` | [Date: Second](ace:Core/DateSecond) | Time | Vocabulary |
@@ -799,6 +833,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_delay` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
 | `set_ease` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_focus_neighbor` | [Set Focus Neighbor](ace:Core/SetFocusNeighbor) | UI | Vocabulary |
+| `set_glow_level` | [Set Glow Level](ace:Core/EnvSetGlowLevel) | Environment | Vocabulary |
 | `set_input_as_handled` | [Stop This Input Here](ace:Core/StopInputHere) | General Actions | Vocabulary |
 | `set_locale` | [Set Language](ace:Core/SetLocale) | Translation | Vocabulary |
 | `set_main_screen_editor` | [Switch To Workspace](ace:Core/SwitchToWorkspace) | Editor Tools: Panels & menus | Vocabulary |
@@ -832,7 +867,11 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `simplify_path` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
 | `size` | [Switch To Next Weapon](ace:Core/SwitchToNextWeapon) | Weapons 3D | Vocabulary |
+| `sky` | [Sun Size](ace:Core/SkySunSize) | Environment | Vocabulary |
+| `sky_horizon_color` | [Sky Horizon](ace:Core/SkySkyHorizon) | Environment | Vocabulary |
+| `sky_material` | [Sun Size](ace:Core/SkySunSize) | Environment | Vocabulary |
 | `sky_rotation` | [Set Sky Rotation](ace:Core/SetSkyRotation) | Environment | Vocabulary |
+| `sky_top_color` | [Sky Top](ace:Core/SkySkyTop) | Environment | Vocabulary |
 | `sleeping` | [Is Sleeping](ace:Core/IsBodySleeping) | Physics | Vocabulary |
 | `slerp` | [Rotate Toward Facing](ace:Core/RotateToward3DFacing) | 3D: Move & Turn | Vocabulary |
 | `slice` | [Slice](ace:Core/ArraySlice) | Variables: Array | Vocabulary |
@@ -855,6 +894,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `spring_length` | [Set Camera Distance](ace:Core/SetCameraDistance) | Native 3D | Vocabulary |
 | `sqrt` | [Square Root](ace:Core/MathSqrt) | Math & Random | Vocabulary |
 | `ssao_enabled` | [Set Ambient Occlusion On/Off](ace:Core/SetAmbientOcclusion) | Environment | Vocabulary |
+| `ssil_enabled` | [Is Indirect Light On](ace:Core/EnvIsIndirectLight) | Environment | Vocabulary |
+| `ssr_enabled` | [Are Reflections On](ace:Core/EnvIsReflections) | Environment | Vocabulary |
 | `stamp` | [Draw Stamp](ace:Core/DrawStamp) | Drawing | Vocabulary |
 | `start` | [Start Timer](ace:Core/StartTimer) | General Actions | Vocabulary |
 | `start_file` | [Pack Folder Into Zip](ace:Core/PackFolderIntoZip) | Files: Archives | Vocabulary |
@@ -875,6 +916,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `strip_edges` | [Trim](ace:Core/TextTrim) | Text | Vocabulary |
 | `sub` | [Replace Matches](ace:Core/ReplaceMatches) | Text: RegEx | Vocabulary |
 | `substr` | [Mid](ace:Core/TextMid) | Text | Vocabulary |
+| `sun_angle_max` | [Sun Size](ace:Core/SkySunSize) | Environment | Vocabulary |
 | `take_damage` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
 | `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
 | `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
@@ -895,6 +937,10 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `to_lower` | [Text Equals (ignore case)](ace:Core/TextEqualsIgnoreCase) | Compare: Text | Vocabulary |
 | `to_upper` | [Uppercase](ace:Core/TextUpper) | Text | Vocabulary |
 | `to_utf8_buffer` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
+| `tonemap_agx_contrast` | [Set Tone Map](ace:Core/EnvSetToneMap) | Environment | Vocabulary |
+| `tonemap_exposure` | [Exposure](ace:Core/EnvExposure) | Environment | Vocabulary |
+| `tonemap_mode` | [Tone Map](ace:Core/EnvToneMap) | Environment | Vocabulary |
+| `tonemap_white` | [Set Tone Map](ace:Core/EnvSetToneMap) | Environment | Vocabulary |
 | `tooltip_text` | [Set Tooltip](ace:Core/SetTooltip) | UI | Vocabulary |
 | `top_level` | [Set Ignore Parent's Movement](ace:Core/SetIgnoreParentMovement) | Nodes: Hierarchy | Vocabulary |
 | `top_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
@@ -932,15 +978,21 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `viewport_set_debug_draw` | [Set Debug Draw Mode](ace:Core/RenderingSetDebugDraw) | Rendering | Vocabulary |
 | `viewport_set_msaa_2d` | [Set MSAA (2D)](ace:Core/RenderingSetMsaa2D) | Rendering | Vocabulary |
 | `viewport_set_msaa_3d` | [Set MSAA (3D)](ace:Core/RenderingSetMsaa3D) | Rendering | Vocabulary |
+| `viewport_set_scaling_3d_mode` | [Upscale With](ace:Core/RenderingUpscaleWith) | Rendering | Vocabulary |
 | `viewport_set_scaling_3d_scale` | [Set 3D Resolution Scale](ace:Core/RenderingSetScaling3DScale) | Rendering | Vocabulary |
 | `viewport_set_screen_space_aa` | [Set Screen-Space AA](ace:Core/RenderingSetScreenSpaceAA) | Rendering | Vocabulary |
 | `viewport_set_use_debanding` | [Set Debanding](ace:Core/RenderingSetDebanding) | Rendering | Vocabulary |
 | `viewport_set_use_occlusion_culling` | [Set Occlusion Culling](ace:Core/RenderingSetOcclusionCulling) | Rendering | Vocabulary |
+| `viewport_set_use_taa` | [Set Temporal AA](ace:Core/RenderingSetTaa) | Rendering | Vocabulary |
 | `visibility_layer` | [Show Only To](ace:Core/RenderingShowOnlyTo) | Rendering | Vocabulary |
 | `visibility_range_begin` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visibility_range_end` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visible` | [Is Visible](ace:Core/IsVisible) | General Conditions | Vocabulary |
 | `volume_db` | [Set Volume](ace:Core/AudioSetVolume) | Audio | Vocabulary |
+| `volumetric_fog_albedo` | [Volumetric Colour](ace:Core/EnvVolumetricColour) | Environment | Vocabulary |
+| `volumetric_fog_density` | [Volumetric Thickness](ace:Core/EnvVolumetricThickness) | Environment | Vocabulary |
+| `volumetric_fog_enabled` | [Is Volumetric Fog On](ace:Core/EnvIsVolumetricFog) | Environment | Vocabulary |
+| `volumetric_fog_length` | [Volumetric Reach](ace:Core/EnvVolumetricReach) | Environment | Vocabulary |
 | `warp_mouse` | [Move Cursor To](ace:Core/MouseMoveCursorTo) | Mouse | Vocabulary |
 | `weekday` | [Date: Weekday](ace:Core/DateWeekday) | Time | Vocabulary |
 | `window_get_mode` | [Is Fullscreen](ace:Core/IsFullscreen) | Display | Vocabulary |
@@ -949,6 +1001,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `window_set_mode` | [Set Fullscreen Mode](ace:Core/SetFullscreen) | Display | Vocabulary |
 | `window_set_size` | [Set Window Size](ace:Core/SetWindowSize) | Display | Vocabulary |
 | `window_set_vsync_mode` | [Set VSync Enabled](ace:Core/WindowSetVSync) | Game Window | Vocabulary |
+| `world_2d` | [Share The World (2D)](ace:Core/ViewShareWorld2D) | Views | Vocabulary |
+| `world_3d` | [Share The World (3D)](ace:Core/ViewShareWorld3D) | Views | Vocabulary |
 | `wrapf` | [Wrap Around](ace:Core/WrapAround) | Math & Random | Vocabulary |
 | `wrapi` | [Wrap (int)](ace:Core/WrapIntValue) | Helpers | Vocabulary |
 | `write_file` | [Pack Folder Into Zip](ace:Core/PackFolderIntoZip) | Files: Archives | Vocabulary |
