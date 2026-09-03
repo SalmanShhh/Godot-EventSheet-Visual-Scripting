@@ -33,6 +33,20 @@ What changed in the build you have installed (v0.17.0), in the words the release
   reference, the shape-recipe table, the which-trigger-fires-when matrix, and eighteen worked use
   cases from a four-row first cave to two independent generators in one scene.
 
+### Fixed
+
+- **A dropped family cache stopped the curated reading for good.** The lift-table families are read
+  once and held for the session behind a \"have they been read\" flag, and anything may drop them: the
+  draft panel does it when a spelling is appended, and several tests do it on their way out. The drop
+  emptied the tables without lowering that flag, so the reader went on saying the families had been
+  read and there were none of them - and from that moment, for the life of the process, every line
+  fell past the curated table layer and was answered by whichever plainer reader was willing. Nothing
+  failed to say so, because a plainer reader answering is exactly what an uncurated line looks like.
+  The flag now comes down with the tables it is about; `cache_latch_test` drives the public door
+  rather than reaching past it to reset the flag by hand, which is what let this through, and
+  `lift_provenance_test` asks one curated line twice across a drop and pins that the answer does not
+  move.
+
 ### The Resting Toolbar
 
 - **Seven controls, one row, never wrapping.** The strip fronted **21 interactive controls** over
@@ -131,6 +145,20 @@ What changed in the build you have installed (v0.17.0), in the words the release
   none is blank.
 
 ### Fixed
+
+- **The picker stopped asking the whole project a question per row.** Every row of the Add picker
+  carries a \"used N times in this sheet\" line, and working it out walked the open sheet's whole
+  event tree - once per row, over 1,878 rows, again on every keystroke. The count now comes from
+  ONE walk per open, which the Manual's search box shares (it was walking the sheet per matching
+  verb, per keystroke). Three smaller ones went with it: the picker's row icons resolve a res://
+  path through a cache instead of asking the filesystem per row, the object cards read a
+  provider's icon off one pass rather than scanning the vocabulary per card, and the favorites and
+  recents panes fetch the vocabulary once instead of duplicating the whole array per entry. A code
+  shaped query (\"queue_free\") compiled two regexes per row twice over - those are compiled once
+  now and each template's answer is remembered. Measured headless on an EMPTY sheet, where the
+  sheet walk itself is free: a warm picker open went from 141 ms to 92 ms, and the tree rebuild
+  behind a keystroke from 87 ms to 61 ms. On a sheet with events in it the walk was the dominant
+  cost and is now paid once.
 
 - **Six more caches that read their own emptiness as \"not derived yet\".** The picker freeze was
   one instance of a bug class, and the sweep found it in six more places: the builtin descriptor

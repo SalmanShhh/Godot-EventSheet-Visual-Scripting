@@ -119,6 +119,7 @@ static func run() -> bool:
 	ok = _test_the_printed_shape() and ok
 	ok = _test_which_builder_path_shaped_it() and ok
 	ok = _test_a_line_that_is_not_one() and ok
+	ok = _test_the_table_layer_survives_a_cache_drop() and ok
 	return ok
 
 
@@ -273,6 +274,22 @@ static func _test_a_line_that_is_not_one() -> bool:
 	ok = _check("and a line past the end of the buffer says so", _claims(9999),
 		["  7. verbatim %s" % EventSheetLiftProvenance.OUT_OF_RANGE]) and ok
 	return ok
+
+
+## THE CACHE DROP. The family tables are read once and held for the session behind a "have they
+## been read" flag, and anything may drop them: the draft panel does it when a spelling is appended,
+## and several tests do it on their way out. A drop that emptied the tables without lowering that
+## flag left the reader saying the families had been read and there were none of them - so from that
+## moment on, for the life of the process, every line fell past the curated table layer and was
+## answered by whichever plainer reader was willing. Nothing failed to say so, because a plainer
+## reader answering is exactly what an uncurated line looks like. This asks the same line twice
+## across a drop and pins that the answer does not move.
+static func _test_the_table_layer_survives_a_cache_drop() -> bool:
+	var before: Array = _claims(TABLE_LINE)
+	EventSheetLiftReading.clear_cache()
+	var after: Array = _claims(TABLE_LINE)
+	return _check("a curated line reads the same after the family cache is dropped",
+		str(after), str(before))
 
 
 ## The answers for one line of the shared buffer, as the lines they print, so a pin compares the

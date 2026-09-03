@@ -29,6 +29,20 @@
   reference, the shape-recipe table, the which-trigger-fires-when matrix, and eighteen worked use
   cases from a four-row first cave to two independent generators in one scene.
 
+### Fixed
+
+- **A dropped family cache stopped the curated reading for good.** The lift-table families are read
+  once and held for the session behind a "have they been read" flag, and anything may drop them: the
+  draft panel does it when a spelling is appended, and several tests do it on their way out. The drop
+  emptied the tables without lowering that flag, so the reader went on saying the families had been
+  read and there were none of them - and from that moment, for the life of the process, every line
+  fell past the curated table layer and was answered by whichever plainer reader was willing. Nothing
+  failed to say so, because a plainer reader answering is exactly what an uncurated line looks like.
+  The flag now comes down with the tables it is about; `cache_latch_test` drives the public door
+  rather than reaching past it to reset the flag by hand, which is what let this through, and
+  `lift_provenance_test` asks one curated line twice across a drop and pins that the answer does not
+  move.
+
 ### The Resting Toolbar
 
 - **Seven controls, one row, never wrapping.** The strip fronted **21 interactive controls** over
