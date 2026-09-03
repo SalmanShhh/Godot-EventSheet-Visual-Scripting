@@ -1155,6 +1155,14 @@ buys thirteen lines and costs 2,145 readings, so it will not.
   latch on an explicit flag the deriving function sets, and `cache_latch_test` pins every one of
   them by emptying the cache behind the flag's back and asking again.
 
+- **A guide that writes its verbs in bold is read as a guide.** The pack-guide reference reader
+  stripped the code span a table cell is usually written in, but not the emphasis the parser makes of
+  `**Create Grid**`, so every verb on a bold-columned page matched nothing and was reported twice,
+  as unlisted and as unknown; the ProcRoom guide read as 38 missing and 37 extra when it had one
+  real gap. The reader now sees through bold, italic and underline, a pin holds all four spellings
+  to the same bare name, and the bundle's advisory reads 90 of 96 guides differing (91 before) -
+  the pages still named differ on real name gaps, which the count now measures honestly.
+
 - **The Add picker opens instantly on a fresh sheet.** Clicking Add your first event, the E key,
   the corner link or the footer row froze the editor for five to ten seconds on a sheet with no
   variables in scope. The picker derives the variables a verb can take once per open, and read an

@@ -71,8 +71,24 @@ static func run() -> bool:
 	passed = _both_readers_say_the_same_sentence() and passed
 	passed = _the_page_obeys_the_band_scale_law() and passed
 	passed = _one_verb_in_two_spellings_is_one_verb() and passed
+	passed = _a_bold_name_is_still_a_name() and passed
 	passed = _the_stub_fix_adds_a_section_and_changes_nothing_else() and passed
 	EventSheetDocCoverage.clear_cache()
+	return passed
+
+
+## A guide that writes its first column in bold is a guide, not an empty one. The parser hands the
+## reader `[b]Create Grid[/b]` for `**Create Grid**`, and a reader that could not see through the
+## tags reported every such verb twice - unlisted AND unknown - so a whole page's vocabulary read as
+## missing however complete it was. The name is the name, however it is emphasised.
+static func _a_bold_name_is_still_a_name() -> bool:
+	var guide: String = "# Walkers\n\n## ACE reference\n\n### Actions\n\n| Action | Description |\n|---|---|\n| **Create Grid** | Allocates a fresh grid. |\n| *Clear Grid* | Refills every cell. |\n| `Set Cell` | Writes one cell. |\n| Run Walker | Runs one walker. |\n"
+	var blocks: Array[Dictionary] = EventSheetDocMarkdown.parse(guide, "Packs/walkers")
+	var names: PackedStringArray = EventSheetDocAceReference.markdown_verbs(blocks)
+	var passed: bool = _check("bold, italic, code and plain first columns all read as bare names",
+		names, PackedStringArray(["Create Grid", "Clear Grid", "Set Cell", "Run Walker"]))
+	passed = _check("a bold guide name matches the verb it names",
+		EventSheetDocAceReference.names_match(names, "create_grid"), true) and passed
 	return passed
 
 

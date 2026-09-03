@@ -454,9 +454,16 @@ static func _without_leading_on(normalized: String) -> String:
 	return normalized
 
 
-## A table cell back to a bare verb name: the code span the guides write it in, stripped.
+## A table cell back to a bare verb name: the code span the guides write it in, stripped, and the
+## emphasis too. The parser turns a guide's `**Create Grid**` into `[b]Create Grid[/b]`, and a name
+## read with its tags on matched nothing - so every verb on a page whose first column was bold
+## counted twice against it, once as unlisted and once as unknown, and the advisory could never go
+## quiet for that guide however complete it was.
 static func _bare_name(cell: String) -> String:
-	return cell.replace("[code]", "").replace("[/code]", "").replace("`", "").strip_edges()
+	var bare: String = cell
+	for tag: String in ["[code]", "[/code]", "[b]", "[/b]", "[i]", "[/i]", "[u]", "[/u]", "`"]:
+		bare = bare.replace(tag, "")
+	return bare.strip_edges()
 
 
 static func _section_start(blocks: Array[Dictionary]) -> int:
