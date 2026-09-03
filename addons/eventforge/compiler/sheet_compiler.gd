@@ -2644,7 +2644,7 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 ## handler can suspend mid-loop and picked objects may be freed before it resumes. Checks
 ## the baked template AND the builtin coroutine ids: a lifted builtin action carries only
 ## its ace_id (the template re-resolves at emit), so the id list is load-bearing here.
-const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"]
+const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill"]
 
 
 static func _subtree_awaits(event_row: EventRow) -> bool:

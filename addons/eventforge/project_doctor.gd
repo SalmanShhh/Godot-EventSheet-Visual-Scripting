@@ -1178,7 +1178,7 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 
 ## ACE ids whose codegen `await`s - they suspend the handler into a coroutine (Begin Frame Budget alone
 ## does not await, so it is intentionally absent).
-const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"]
+const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill"]
 
 
 ## Flags a coroutine action (await / Wait / budget-yield) under a per-frame trigger: the next tick fires
