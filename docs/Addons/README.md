@@ -125,6 +125,7 @@ Attach to a node to move it.
 
 - [Juice](Juice.md) - screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, squash and stretch, slowmo, and hitstop (2D).
 - [Juice 3D](Juice-3D.md) - camera shake, weapon recoil, head bob, jitter, lean, and FOV punch/zoom on the active Camera3D.
+- [Camera Rail](Camera-Rail.md) - a shot list for a camera: Fly Along walks it down a drawn path over a number of seconds, Hold parks it on a beat, Blend To travels it onto another camera and hands the view over, and Cut To switches outright. On Shot Finished chains the next shot, so a cutscene is rows rather than a coroutine. Camera Rail 3D is the twin, keeping a node in frame and carrying the lens through a blend.
 - [Light Flicker](Light-Flicker.md) - a flame, as a behaviour: any light's brightness walks between two numbers on a noise field, with the flame's numbers in the Inspector and Start / Stop Flickering as the rows. 2D and 3D both, because it asks the host which property it spells brightness with.
 - [Light Pulse](Light-Pulse.md) - a light that breathes: the same two rows on a smooth wave instead of a noise field, for beacons, pickups, runes and alarms. Period is a rhythm, so two pulses stay in time.
 - [Day/Night Cycle](Day-Night-Cycle.md) - one clock that runs the sky: a whole day every N minutes, the sun turning with the hour, three Inspector curves for sun, ambient and sky, and On Sunrise / Sunset / Midnight / The Hour as the moments. Drives a WorldEnvironment or a 2D CanvasModulate.
