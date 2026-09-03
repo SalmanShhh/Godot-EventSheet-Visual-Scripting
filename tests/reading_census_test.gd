@@ -83,14 +83,18 @@ static func _functions_are_whole_blocks() -> bool:
 
 
 ## A match arm is a block too, and its line count is what deleting it saves. The fall-through arm is
-## reported rather than dropped: it names no verb, and that is a fact about it.
+## reported rather than dropped: it names no verb, and that is a fact about it. Each arm also names
+## the function it sits in, because a file holds several tables that dispatch on the same key and an
+## arm credited by its verb alone can be credited from evidence gathered in a different one.
 static func _arms_are_whole_blocks() -> bool:
 	var arms: Array = LINES.arms_in(BUFFER)
 	var ids: Array = []
 	var held: PackedInt32Array = PackedInt32Array()
+	var functions: PackedStringArray = PackedStringArray()
 	for entry: Variant in arms:
 		ids.append(PackedStringArray((entry as Dictionary).get("ids", PackedStringArray())))
 		held.append(int((entry as Dictionary).get("lines", 0)))
+		functions.append(str((entry as Dictionary).get("func", "")))
 	return SUPPORT.pins(P, [
 		["every arm of the ace_id match is found, the fall-through included", arms.size(), 3],
 		["an arm names the verbs it heads with", ids[1] if ids.size() > 1 else PackedStringArray(),
@@ -99,6 +103,8 @@ static func _arms_are_whole_blocks() -> bool:
 		["a four-line arm holds four", held[1] if held.size() > 1 else -1, 4],
 		["the fall-through names no verb", ids[2] if ids.size() > 2 else PackedStringArray(),
 			PackedStringArray()],
+		["every arm names the function it sits in", functions,
+			PackedStringArray(["second", "second", "second"])],
 	])
 
 

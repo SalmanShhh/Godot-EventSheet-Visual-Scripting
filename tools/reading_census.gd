@@ -28,7 +28,7 @@
 #   can check rather than take. Chosen by an even stride through the sorted population, which is
 #   deterministic and is not the tool picking its own evidence.
 #
-#   THE PROJECTION. What wave 5 can expect: the lines held by arms that are wholly reproduced, with a
+#   THE PROJECTION. What a deletion pass can expect: the lines held by arms wholly reproduced, with a
 #   band for the arms whose evidence is thin, and the order to take the families in. An arm no row in
 #   the population reached is reported apart and counted in NEITHER figure - nothing was measured
 #   about it, and a projection that quietly assumed it would delete cleanly is how a projection loses.
@@ -92,10 +92,11 @@ func _init() -> void:
 	if only != "sheets":
 		readings.append_array(LINES.builtin_readings())
 	var unreadable: PackedStringArray = PackedStringArray()
+	var dropped: PackedStringArray = PackedStringArray()
 	if only != "builtin":
 		readings.append_array(LINES.folder_readings(
-			PackedStringArray(["res://demo/showcase/", "res://eventsheet_addons/"]), unreadable))
-	var report: String = _report(readings, unreadable, sample)
+			PackedStringArray(["res://demo/showcase/", "res://eventsheet_addons/"]), unreadable, dropped))
+	var report: String = _report(readings, unreadable, dropped, sample)
 	if output_path.is_empty():
 		print(report)
 		quit(0)
@@ -112,11 +113,12 @@ func _init() -> void:
 
 
 ## The whole report as one text.
-func _report(readings: Array, unreadable: PackedStringArray, sample: int) -> String:
+func _report(readings: Array, unreadable: PackedStringArray, dropped: PackedStringArray,
+		sample: int) -> String:
 	var out: PackedStringArray = PackedStringArray()
 	out.append("reading census - format %d" % LINES.FORMAT_VERSION)
 	out.append("")
-	out.append_array(_population_lines(readings, unreadable))
+	out.append_array(_population_lines(readings, unreadable, dropped))
 	out.append("")
 	out.append_array(_path_lines(readings))
 	out.append("")
@@ -136,7 +138,8 @@ func _report(readings: Array, unreadable: PackedStringArray, sample: int) -> Str
 
 
 ## What was read, and what could not be.
-func _population_lines(readings: Array, unreadable: PackedStringArray) -> PackedStringArray:
+func _population_lines(readings: Array, unreadable: PackedStringArray,
+		dropped: PackedStringArray) -> PackedStringArray:
 	var builtin: int = 0
 	for entry: Variant in readings:
 		if (entry as LINES.Reading).origin.begins_with("builtin::"):
@@ -149,19 +152,34 @@ func _population_lines(readings: Array, unreadable: PackedStringArray) -> Packed
 	out.append("  files that do not open as sheets %d" % unreadable.size())
 	for path: String in unreadable:
 		out.append("    %s" % path)
+	# THE POPULATION'S OWN HONESTY LINE. An event the canvas built nothing for contributes no cell,
+	# so it cannot lower any share below - it silently shrinks the denominator instead, and every
+	# figure in this report is then measured over a tree the reader thinks was whole.
+	out.append("  events that reached the canvas as nothing %d" % dropped.size())
+	for path: String in dropped:
+		out.append("    %s" % path)
+	if not dropped.is_empty():
+		out.append("  THESE FIGURES ARE NOT A BASELINE while that count is above zero.")
 	return out
 
 
 ## Rows by the path that shaped them, counted and shared.
 func _path_lines(readings: Array) -> PackedStringArray:
 	var counts: Dictionary = {}
+	var asked: int = 0
 	for entry: Variant in readings:
-		var path: int = (entry as LINES.Reading).path
-		counts[path] = int(counts.get(path, 0)) + 1
+		var reading: LINES.Reading = entry as LINES.Reading
+		counts[reading.path] = int(counts.get(reading.path, 0)) + 1
+		if reading.derived_asked:
+			asked += 1
 	var out: PackedStringArray = PackedStringArray(["ROWS BY PATH"])
 	for index: int in range(LINES.PATH_NAMES.size()):
 		out.append("  %-10s %7d  %s" % [LINES.PATH_NAMES[index], int(counts.get(index, 0)),
 			_share(int(counts.get(index, 0)), readings.size())])
+	# A ZERO IS AMBIGUOUS UNTIL THE QUESTION IS COUNTED. `derived 0` could mean the layer declined
+	# every cell or that nothing ever asked it, and those call for opposite conclusions.
+	out.append("  (the derived layer was asked about %d cell(s) and claimed %d)" % [
+		asked, int(counts.get(LINES.Path.DERIVED, 0))])
 	return out
 
 
@@ -472,7 +490,12 @@ func _sample_lines(readings: Array, sample: int) -> PackedStringArray:
 # ── the projection ──────────────────────────────────────────────────────────────
 
 
-## What wave 5 can expect, priced in whole match arms.
+## What a deletion pass can expect, priced in whole match arms.
+##
+## AN ARM'S EVIDENCE IS THE FUNCTION IT SITS IN. The row builder holds four tables that dispatch on
+## `ace_id` and only two of them are the grammar's routers; crediting an arm by its verb alone let a
+## table no cell ever entered be listed as wholly reproduced on evidence gathered somewhere else. A
+## cell therefore credits `<router>::<verb>` and an arm is looked up by the same pair.
 func _projection_lines(readings: Array) -> PackedStringArray:
 	var visited: Dictionary = {}
 	var clean: Dictionary = {}
@@ -480,10 +503,11 @@ func _projection_lines(readings: Array) -> PackedStringArray:
 		var reading: LINES.Reading = entry as LINES.Reading
 		if reading.branch.is_empty() or reading.ace_key.is_empty():
 			continue
-		visited[reading.branch] = int(visited.get(reading.branch, 0)) + 1
+		var credit: String = "%s::%s" % [reading.router, reading.branch]
+		visited[credit] = int(visited.get(credit, 0)) + 1
 		if reading.is_derivable():
-			clean[reading.branch] = int(clean.get(reading.branch, 0)) + 1
-	var out: PackedStringArray = PackedStringArray(["THE WAVE-5 PROJECTION"])
+			clean[credit] = int(clean.get(credit, 0)) + 1
+	var out: PackedStringArray = PackedStringArray(["THE PROJECTION"])
 	var totals: Dictionary = {"visited_arms": 0, "visited_lines": 0, "clean_arms": 0,
 		"clean_lines": 0, "thin_lines": 0, "unvisited_arms": 0, "unvisited_lines": 0}
 	var families: Array = []
@@ -495,8 +519,9 @@ func _projection_lines(readings: Array) -> PackedStringArray:
 			var seen: int = 0
 			var reproduced: int = 0
 			for identifier: String in ids:
-				seen += int(visited.get(identifier, 0))
-				reproduced += int(clean.get(identifier, 0))
+				var credit: String = "%s::%s" % [str(arm.get("func", "")), identifier]
+				seen += int(visited.get(credit, 0))
+				reproduced += int(clean.get(credit, 0))
 			if seen == 0:
 				totals["unvisited_arms"] = int(totals["unvisited_arms"]) + 1
 				totals["unvisited_lines"] = int(totals["unvisited_lines"]) + held
