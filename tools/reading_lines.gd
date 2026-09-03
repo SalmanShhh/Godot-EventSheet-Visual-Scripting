@@ -233,6 +233,91 @@ static func readings_of_sheet(sheet: EventSheetResource, origin_prefix: String) 
 	return readings
 
 
+## Why an event owns no cell, in the three cases that are not a defect and the one that is. A row the
+## canvas draws nothing of is either a shell another reading replaced, a body a published verb draws
+## in its own shape, or a row that was DROPPED - and only the last is a fault, so the three are named
+## apart rather than answered with one string.
+const NO_CELL_PICKING: String = "replaced by the picking reading"
+const NO_CELL_IN_VERB: String = "drawn by the published verb it sits in"
+const NO_CELL_DROPPED: String = "no reading claimed it"
+
+
+## Every `EventRow` of a sheet that owns NO cell on the resting canvas walk, as
+## {"row": EventRow, "reason": String} in walk order.
+##
+## THE ONE FAULT THIS CATCHES: a row the builder drops silently. An event whose expansion fails leaves
+## no row data behind, so every instrument here walks straight over it and reports a clean run - which
+## is exactly what happened once, and is why this answer is shared rather than written down per tool.
+## The two harmless cases are named so the fault is the only thing left unexplained.
+static func events_without_cells(sheet: EventSheetResource, readings: Array) -> Array:
+	var owners: Dictionary = {}
+	for entry: Variant in readings:
+		var owner: Variant = (entry as Reading).owner
+		if owner != null:
+			owners[owner] = true
+	var missing: Array = []
+	for entry: Variant in event_rows_of(sheet):
+		var found: Dictionary = entry as Dictionary
+		var row: Resource = found["row"] as Resource
+		if owners.has(row):
+			continue
+		missing.append({"row": row, "reason": _no_cell_reason(row, bool(found["in_verb"]))})
+	return missing
+
+
+## One row's reason, by the same rule the list above uses, for a caller holding a single row.
+static func no_cell_reason(sheet: EventSheetResource, row: Resource) -> String:
+	for entry: Variant in event_rows_of(sheet):
+		var found: Dictionary = entry as Dictionary
+		if found["row"] == row:
+			return _no_cell_reason(row, bool(found["in_verb"]))
+	return NO_CELL_DROPPED
+
+
+## The reason itself. A pick-filter row with sub-events is the shell `_expand_picking_row` replaces
+## with its own rows; a row inside a published verb is drawn by the verb; anything else was dropped.
+static func _no_cell_reason(row: Resource, in_verb: bool) -> String:
+	var filters: Array = row.get("pick_filters") as Array
+	var sub_events: Array = row.get("sub_events") as Array
+	if filters != null and sub_events != null and not filters.is_empty() and not sub_events.is_empty():
+		return NO_CELL_PICKING
+	return NO_CELL_IN_VERB if in_verb else NO_CELL_DROPPED
+
+
+## Every `EventRow` a sheet holds, as {"row": EventRow, "in_verb": bool} in walk order.
+##
+## Walked over the RESOURCE GRAPH rather than over the sheet's own named lists, because the shapes a
+## sheet can hold rows in are data that grows - a verb, a group, a match case, a timeline step - and a
+## walk written against today's list would go quietly blind the day a new one lands. Every exported
+## Resource and Array-of-Resource property is followed once, so a row reached twice is listed once.
+static func event_rows_of(sheet: EventSheetResource) -> Array:
+	var found: Array = []
+	var seen: Dictionary = {}
+	_walk_resources(sheet, false, found, seen)
+	return found
+
+
+## One resource of that walk. `in_verb` is carried down rather than looked up, because whether a row
+## is a verb body is a fact about the way it was REACHED and about nothing on the row itself.
+static func _walk_resources(here: Variant, in_verb: bool, found: Array, seen: Dictionary) -> void:
+	if not (here is Resource) or seen.has(here):
+		return
+	seen[here] = true
+	var resource: Resource = here as Resource
+	if resource is EventRow:
+		found.append({"row": resource, "in_verb": in_verb})
+	var below: bool = in_verb or resource is EventFunction
+	for property: Dictionary in resource.get_property_list():
+		if int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE == 0:
+			continue
+		var value: Variant = resource.get(str(property.get("name", "")))
+		if value is Resource:
+			_walk_resources(value, below, found, seen)
+		elif value is Array:
+			for element: Variant in (value as Array):
+				_walk_resources(element, below, found, seen)
+
+
 ## Every row of the tree, parents before children, spans built.
 static func _walk_rows(viewport: EventSheetViewport, rows: Array, out: Array) -> void:
 	for row_data: EventRowData in rows:

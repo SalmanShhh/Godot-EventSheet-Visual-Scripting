@@ -13208,7 +13208,14 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 	var branch_rows: Array[EventRowData] = _build_ternary_branch_rows(
 		row, action_index, found, branch_indent, str(action_index))
 	if branch_rows.is_empty():
-		return [row] if (not hide_conditions and from_index == 0) else [head]
+		# Nothing branched after all - the value looked like a pair and was not one, so the row goes
+		# back unsplit. Built into a TYPED array one element at a time rather than returned as a
+		# conditional literal: a conditional expression is an untyped Array whatever its arms hold, and
+		# assigning one to the typed array the caller declares fails at RUNTIME - which leaves the caller
+		# holding nothing and drops the whole event off the canvas without a word.
+		var unsplit: Array[EventRowData] = []
+		unsplit.append(row if (not hide_conditions and from_index == 0) else head)
+		return unsplit
 	var tail_rows: Array[EventRowData] = []
 	if not branch_is_last:
 		# Conditions, once hidden, stay hidden - an event sheet never repeats them further down the event.
