@@ -2,6 +2,90 @@
 
 ## [Unreleased]
 
+### The camera, the view, and how the game meets the screen
+
+- **The Camera shelf finished: 16 rows beside the nine that shipped.** The first nine (Make
+  Current, Set Zoom, Set Offset, Set Scroll Limits, Set Smoothing, Scroll Toward and the three
+  field-of-view rows) cover pointing a camera somewhere. These are what a platformer asks the day
+  after. In 2D: **Let The Target Drift** (a dead zone as two fractions rather than Godot's four
+  margins and two flags, written out as all six plain assignments so a lopsided box is an edit and
+  not a fight), **Follow Tightly** as its off switch, **Snap To Target Now** for the grand pan
+  across the level on the first frame after a respawn, **Smooth Turns**, **View Rectangle**, **Is
+  Inside Camera View**, **Fit Limits To** with **Tiled Area** measuring the level off the painted
+  tiles, and **Current Camera**. In 3D: **Look At Over Seconds**, **Switch To Perspective**,
+  **Switch To Orthogonal**, **Set Clip Range**, **Current Camera (3D)**, and the two cursor rows a
+  named camera asks of its own viewport. Every shipped `ace_id`, template, display name and
+  registration position is byte-identical in all four registry dumps.
+- **A shot, not a cut, and a rectangle test that is not the notifier.** Look At Over Seconds walks
+  the shortest rotation between where the camera is looking and where it should look, so a shot
+  never rolls sideways on the way and never tips over when the target is nearly overhead; the
+  frozen Look At still points a turret this frame. Is Inside Camera View is a point test against a
+  rectangle you can also read, print and grow by a margin; the frozen Is On Screen asks Godot's own
+  visibility notifier about the node's whole drawn shape. Both are honest and they answer different
+  questions, which the help on each says out loud. **Something Is Under The Cursor** and **Point
+  Under The Cursor** ask THIS camera's own viewport, which is the question a split-screen or
+  picture-in-picture view has that the active-camera raycast rows cannot answer.
+- **Camera Rail and Camera Rail 3D: a camera becomes a shot list.** Two packs, **9 rows each** -
+  Fly Along walks the camera down a drawn path over a number of seconds, Hold parks it on a beat,
+  Blend To travels it onto another camera (transform with the zoom in 2D, with the field of view in
+  3D) and hands the view over, Cut To switches outright, Stop Rail halts without an ending, and On
+  Shot Finished / On Blend Finished make a cutscene a chain of rows rather than a coroutine. Is
+  Flying answers the letterbox question and Rail Progress drives the bar. The 3D twin adds the two
+  things only 3D has: a node kept in frame for the whole flight, and a lens that travels with the
+  blend. Both are real-file packs, both park their own tick, and the shake and FOV punch from the
+  Juice packs ride on whichever camera is current - the rail's own included - so the two compose
+  without either knowing about the other.
+- **A second picture of the game: the Views shelf, 5 rows.** How big a view renders, which world it
+  shows in either dimension, where the pointer is inside it, and a still written to a PNG. Sharing
+  the world is the one line between a minimap and a black rectangle: a `SubViewport` gets a world of
+  its own unless something says otherwise, and a world of its own is an empty stage that renders
+  nothing forever with no error anywhere. **Save A Still Of A View awaits the frame** before it
+  reads the texture, which is the difference between a picture and a bug report, so its id joins the
+  compiler's and the Doctor's coroutine lists - a lifted row carries only its id. Two rows are
+  deliberately NOT minted twice: how often a view redraws stays **Set Surface Redraw**, which now
+  also offers drawing once and stopping, and the live picture stays **Rendered As An Image**.
+- **Eight rendering words for the two questions a player actually asks.** **Render 3D At** renders
+  the 3D scene at a percentage of the window and says how it is upscaled on the same row, because
+  70% with a sharpening upscaler often looks better than 70% plain and costs the same; **Upscale
+  With** and **Set Temporal AA** ship as single-line rows of their own beside it. **Smooth Edges
+  With** is the one antialiasing switch a graphics menu needs: pick a word and every other technique
+  is turned off, so a player cannot pay for two at once. And four rows for how the game meets a
+  screen it was not drawn for: **Scale The Game**, **Fit The Shape**, **Keep Pixels Sharp** and
+  **Pixel Size**. The frozen per-technique rows are untouched and are still the right rows for a
+  menu that offers the switches separately.
+- **The Layers shelf, 11 rows, and the two parallax nodes under one set of words.** Whether a
+  `CanvasLayer` follows the camera (**Stay Fixed On Screen** / **Move With The World**, which is the
+  whole difference between a HUD and a layer of world), which layer draws over which said RELATIVE
+  to the other so an inserted layer cannot silently break the pair, and the layer's own offset.
+  Beside them the parallax words - **Scroll At**, **Repeat Every**, **Drift**, **Scroll Offset** -
+  mapped onto `Parallax2D` and, under names that say which node they are for, onto the older
+  `ParallaxLayer` inside a `ParallaxBackground` that every project older than Godot 4.3 is built on.
+  `scroll_scale` and `motion_scale` are one fraction under two spellings. Drift is the exception and
+  says so by being absent: the older node has no autoscroll, so that half ships two rows rather than
+  three. They file under the same Layers shelf as the object-side Z Order, Move To Layer and Set
+  Layer Order, because half a subject under a second heading is a subject nobody finds.
+- **The lift, in both directions.** Eight of these rows are a RUN of statements rather than one
+  line - a dead zone, a projection swap, a clip range, a fit, a timed look-at - so a new lift table
+  reads each run back as its row and re-emits it byte for byte, with the author's own names for the
+  locals kept. The claim is drawn narrowly: `near` and `far` are ordinary words, so the pair is a
+  Set Clip Range only when the two lines are adjacent, at the same indentation, in that order, and
+  either both carry a receiver or neither does. Two rows are **authoring words only**: Set View Size
+  writes `size = ...` and Offset Layer writes `offset = ...`, and admitted to the reverse index the
+  first would relabel every `size = ...` line in every project as a view being resized. The emitted
+  bytes are identical either way.
+- **One quiet note.** A file that keeps pixels sharp and then asks for a pixel size of 2.5 gets 2,
+  because whole pixels only rounds the scale down. It is an **info** line in the Doctor's Ship It
+  section rather than a warning - both halves are deliberate settings and the fix is a decision -
+  and it is silent unless the number is a literal fraction, since a size worked out at run time is
+  nobody's business to guess at.
+- **Guide:**
+  [docs/GUIDE-CAMERAS-AND-VIEWPORTS.md](docs/GUIDE-CAMERAS-AND-VIEWPORTS.md) - the camera in both
+  dimensions, the cursor ray, the rail, views and stills, the scaling words, layers and parallax,
+  and the table of what a project that already wrote these lines by hand opens as. The engine-level
+  reference gains the eight rendering rows, the addon index gains Camera Rail, the pack count is
+  re-measured at **119**, and the words land in all nine translation CSVs (**202 new keys**, most of
+  them the dropdown labels a reader chooses between).
+
 ### What the surface looks like, said in words
 
 - **Nine words for a 3D surface, and not one of them is a property name.** Colour, glow, roughness,
