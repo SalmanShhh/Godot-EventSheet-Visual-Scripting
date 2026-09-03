@@ -303,10 +303,43 @@ static func _pin_the_picker(editor: EventSheetEditor) -> bool:
 		picker._refresh_tree()
 	var per_keystroke_ms: float = float(Time.get_ticks_usec() - typed_start_usec) / 1000.0 \
 		/ float(TYPED_PREFIXES.size())
-	host.free()
-	return _check("a search keystroke rebuilds the tree under %d ms (took %.1f ms)" % [
+	passed = _check("a search keystroke rebuilds the tree under %d ms (took %.1f ms)" % [
 		PICKER_KEYSTROKE_BUDGET_MS, per_keystroke_ms],
 		per_keystroke_ms <= float(PICKER_KEYSTROKE_BUDGET_MS), true) and passed
+	passed = _pin_an_empty_answer(host, registry) and passed
+	host.free()
+	return passed
+
+
+## THE OPEN A SHEET WITH NOTHING IN SCOPE GETS. The measurements above are all made on a picker
+## whose variable catalog answers something, and the freeze that started this was in the branch
+## where it answers NOTHING: an empty catalog read as an underived one, asked again by every row.
+## A budget the bug walked straight past is a budget with a hole in it, so this opens the picker
+## for real - the shell, and then the fill the next frame would have run - over a provider that
+## answers empty and counts how often it was asked.
+static func _pin_an_empty_answer(host: SheetHost, registry: EventSheetACERegistry) -> bool:
+	var picker: ACEPickerDialog = ACEPickerDialog.new()
+	picker.init_dialog(host, registry)
+	var asks: Array[int] = [0]
+	picker.set_variable_catalog_provider(func() -> Array:
+		asks[0] += 1
+		return [])
+	var start_usec: int = Time.get_ticks_usec()
+	picker.open("append_action", false, null, {})
+	picker._fill_after_popup(picker._fill_token)
+	var elapsed_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	var rows: int = 0
+	if picker._tree.get_root() != null:
+		rows = picker._tree.get_root().get_child_count()
+	var passed: bool = _check("the empty-catalog open really built a tree (%d sections)" % rows,
+		rows > 0, true)
+	passed = _check("a catalog that answers nothing is asked ONCE for the whole open (asked %d)" % asks[0],
+		asks[0], 1) and passed
+	passed = _check("and that open still lands under %d ms (took %.1f ms)" % [
+		PICKER_OPEN_BUDGET_MS, elapsed_ms],
+		elapsed_ms <= float(PICKER_OPEN_BUDGET_MS), true) and passed
+	picker.close()
+	return passed
 
 
 ## One keystroke in a completing field. The list is built first, outside the clock, because that is
