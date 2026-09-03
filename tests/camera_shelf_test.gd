@@ -77,7 +77,41 @@ static func run() -> bool:
 	all_passed = _pin_arithmetic(shipped) and all_passed
 	all_passed = _pin_fit_limits(shipped) and all_passed
 	all_passed = _pin_mixed_receivers() and all_passed
+	all_passed = _pin_overhead_look_at(shipped) and all_passed
 	return all_passed
+
+
+## THE UP VECTOR OF THE TIMED LOOK-AT, evaluated for the aim that breaks the naive spelling. A
+## target straight overhead or underfoot - the ordinary top-down shot - gives an aim parallel to
+## Vector3.UP, and `Basis.looking_at` cannot build a rotation from two parallel vectors: it warns
+## and hands back an arbitrary roll. The row's length guard answers a different question entirely
+## (a target the camera is standing on), so it does not cover this one.
+##
+## The choice is lifted out of the shipped template by name rather than retyped, and evaluated for
+## three aims: straight down, straight up, and an ordinary level one that must still take UP.
+static func _pin_overhead_look_at(shipped: Dictionary) -> bool:
+	var template: String = str((shipped["CameraLookAtOverSeconds"] as ACEDescriptor).codegen_template)
+	var opens_at: int = template.find("Vector3.UP if")
+	var closes_at: int = template.find("Vector3.FORWARD", opens_at)
+	var rows: Array = [["the shipped template still spells the swap the pin reads",
+		opens_at > 0 and closes_at > opens_at, true]]
+	if opens_at > 0 and closes_at > opens_at:
+		var choice: String = template.substr(opens_at, closes_at + len("Vector3.FORWARD") - opens_at)
+		# Through a real script rather than an Expression: Expression has no ternary, and the whole
+		# point of the pin is that the shipped text is evaluated rather than a retyped copy of it.
+		var script: GDScript = GDScript.new()
+		var body: String = "extends RefCounted\n\n\nfunc up_for(__aim_pin: Vector3) -> Vector3:\n\treturn %s\n"
+		script.source_code = body % choice.replace("__aim_{uid}", "__aim_pin")
+		rows.append(["the swap compiles as written", script.reload(), OK])
+		var answer: RefCounted = script.new()
+		for aim: Array in [
+			["straight down", Vector3(0.0, -10.0, 0.0), Vector3.FORWARD],
+			["straight up", Vector3(0.0, 10.0, 0.0), Vector3.FORWARD],
+			["level with the camera", Vector3(10.0, 0.0, 0.0), Vector3.UP],
+		]:
+			rows.append(["an aim %s takes %s as its up vector" % [str(aim[0]), str(aim[2])],
+				answer.call("up_for", aim[1]), aim[2]])
+	return SUPPORT.pins("camera_shelf_test", rows)
 
 
 ## THE RECEIVERS OF A RUN HAVE TO AGREE. Every camera run is a handful of member operations, and a

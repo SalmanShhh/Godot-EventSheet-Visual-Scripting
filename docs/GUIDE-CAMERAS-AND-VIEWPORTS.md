@@ -173,8 +173,9 @@ have no direction between them, so the row does nothing at all rather than error
 
 <!-- caption: A camera that turns to the boss over three quarters of a second -->
 ```gdscript
-# The guard is the row's, not yours: a zero-length aim is skipped rather than passed to a Basis
-# that cannot be built from it.
+# Both guards are the row's, not yours: a zero-length aim is skipped rather than passed to a Basis
+# that cannot be built from it, and an aim straight overhead or underfoot swaps the up vector, which
+# is the other pair of vectors a Basis cannot be built from.
 extends Camera3D
 
 
@@ -182,13 +183,18 @@ func face(target: Node3D) -> void:
 	var __aim_a1: Vector3 = target.global_position - global_position
 	if __aim_a1.length_squared() > 0.000001:
 		var __from_a1: Basis = global_basis
-		var __to_a1: Basis = Basis.looking_at(__aim_a1, Vector3.UP)
+		var __to_a1: Basis = Basis.looking_at(__aim_a1, Vector3.UP if absf(__aim_a1.normalized().y) < 0.999 else Vector3.FORWARD)
 		create_tween().tween_method(func(__weight_a1: float) -> void: global_basis = __from_a1.slerp(__to_a1, __weight_a1), 0.0, 1.0, maxf(0.75, 0.001))
 ```
 
 The three locals carry the row's own stable id so that two timed look-ats in one function cannot
 collide. Written by hand, the whole run reads back as the row and re-emits byte for byte, with your
 own names for the locals kept.
+
+The row owns the camera's orientation for the whole of the seconds it names. Two timed look-ats
+running at once are two tweens writing the same basis, and a camera the player is also steering
+will fight the tween every frame - so start the next turn when this one has landed rather than
+on top of it.
 
 **Why the projection is two rows and not one with a mode.** A perspective camera is described by an
 **angle** and a flat one by a **width**. A single row would have to show both fields and mean one of

@@ -222,7 +222,7 @@ static func _look_at_entry() -> Dictionary:
 			{"pattern": "^var[ \\t]+%s: Vector3 = (?<at>.+)\\.global_position - global_position$" % AIM},
 			{"pattern": "^if %s\\.length_squared\\(\\) > 0\\.000001:$" % AIM},
 			{"pattern": "^var[ \\t]+%s: Basis = global_basis$" % FROM, "indent": 1},
-			{"pattern": "^var[ \\t]+%s: Basis = Basis\\.looking_at\\(%s, Vector3\\.UP\\)$" % [TO, AIM],
+			{"pattern": "^var[ \\t]+%s: Basis = Basis\\.looking_at\\(%s, Vector3\\.UP if absf\\(%s\\.normalized\\(\\)\\.y\\) < 0\\.999 else Vector3\\.FORWARD\\)$" % [TO, AIM, AIM],
 				"indent": 1},
 			{"pattern": "^create_tween\\(\\)\\.tween_method\\(func\\(%s: float\\) -> void: global_basis = %s\\.slerp\\(%s, %s\\), 0\\.0, 1\\.0, maxf\\((?<seconds>.+), 0\\.001\\)\\)$"
 				% [WEIGHT, FROM, TO, WEIGHT], "indent": 1}
@@ -231,7 +231,7 @@ static func _look_at_entry() -> Dictionary:
 		"shape": "var __aim_look: Vector3 = {at}.global_position - global_position\n"
 			+ "if __aim_look.length_squared() > 0.000001:\n"
 			+ "\tvar __from_look: Basis = global_basis\n"
-			+ "\tvar __to_look: Basis = Basis.looking_at(__aim_look, Vector3.UP)\n"
+			+ "\tvar __to_look: Basis = Basis.looking_at(__aim_look, Vector3.UP if absf(__aim_look.normalized().y) < 0.999 else Vector3.FORWARD)\n"
 			+ "\tcreate_tween().tween_method(func(__weight_look: float) -> void: global_basis = __from_look.slerp(__to_look, __weight_look), 0.0, 1.0, maxf({seconds}, 0.001))",
 		"slots": {"at": "$Player", "seconds": "0.6"}
 	}
