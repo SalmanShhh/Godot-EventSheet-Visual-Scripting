@@ -582,8 +582,9 @@ const RENDERER_WORDS: Dictionary = {
 ## nothing there is. An info note rather than a warning: both halves are deliberate settings, and
 ## the fix is a decision (build for Forward+, or drop the row) rather than a defect.
 ##
-## The rows it knows are DERIVED from the environment word table, so a word marked Forward+ there is
-## noticed here with nothing added, and a word that stops being one stops being named.
+## The rows it knows are DERIVED from the environment and camera word tables, so a word marked
+## Forward+ in either is noticed here with nothing added, and a word that stops being one stops being
+## named.
 static func renderer_findings(sources: Dictionary, rendering_method: String) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var renderer: String = str(RENDERER_WORDS.get(rendering_method.strip_edges(), ""))
@@ -618,6 +619,13 @@ const COMPOSITOR_SPELLINGS: Array[Array] = [
 ## environment word and a post-stack row still answers with the word it always did.
 static func forward_plus_asked_for(source: String) -> String:
 	for reason: Array in EventForgeEnvironmentWords.forward_plus_reasons():
+		if source.contains(str(reason[0])):
+			return str(reason[1])
+	# The lens has one word of its own with the same problem: a camera that opens and closes itself
+	# adjusts nothing on Mobile or Compatibility. Derived from the camera word table for the same
+	# reason the environment's are derived from theirs - a note must never name a row that has
+	# stopped shipping - and asked after them so a file holding both keeps the answer it always gave.
+	for reason: Array in EventForgeCameraAttributeWords.forward_plus_reasons():
 		if source.contains(str(reason[0])):
 			return str(reason[1])
 	for spelling: Array in COMPOSITOR_SPELLINGS:

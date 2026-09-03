@@ -14509,6 +14509,56 @@ static func _sky_word_assignment(owner_bare: String, member: String, assigned: S
 		_member_line(owner_bare, member, assigned.strip_edges()))
 
 
+## A hand-written write to a camera's LENS, in the sheet's own words for it - so
+## `attributes.exposure_multiplier = 2.0` reads "Camera - Set camera exposure to 2.0" and
+## `attributes.dof_blur_far_distance = 12.0` reads "Camera - Set focus distance to 12.0", rather than
+## as the CameraAttributes property names they are. {} for every line that is not one, which leaves
+## the plain property reading in charge.
+##
+## THE GATE IS THE SLOT, and it has to be: `exposure_multiplier` on its own could belong to anything,
+## while `attributes` and `camera_attributes` are the only two members in Godot that hold a
+## CameraAttributes. The object is whatever stands BEFORE that slot, so a line through another node's
+## camera says that node's name; a bare slot is the node the sheet is on, which is what a blank
+## receiver means everywhere else in this file too.
+##
+## The WORDS come from the same table the rows are built from, so a word added there is read back here
+## with nothing added - plus the two families a table cannot hold: the companion fields the auto
+## exposure row settles on its own row, and the three depth-of-field properties the two focus rows
+## write, which are one sentence a person says rather than three words.
+static func camera_attributes_assignment(member: String, owner_text: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var owner_bare: String = owner_text.strip_edges().trim_prefix("self.")
+	if owner_bare.is_empty():
+		return {}
+	var slot_at: int = owner_bare.rfind(".")
+	var slot: String = owner_bare if slot_at < 0 else owner_bare.substr(slot_at + 1)
+	if not EventForgeCameraAttributeWords.is_attributes_member(slot):
+		return {}
+	var receiver: String = "" if slot_at < 0 else owner_bare.substr(0, slot_at)
+	if not receiver.is_empty() and not is_simple_target(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	var switched: Array = EventForgeCameraAttributeWords.switch_readings_of_property(member)
+	if switched.is_empty():
+		switched = EventForgeCameraAttributeWords.focus_switch_readings(member)
+	if not switched.is_empty():
+		if value != "true" and value != "false":
+			return {}
+		return _with_pattern(_sentence(object_name,
+			str(switched[0] if value == "true" else switched[1]), {}), "camera", line)
+	var said: String = EventForgeCameraAttributeWords.verb_of_property(member)
+	if said.is_empty():
+		said = EventForgeCameraAttributeWords.focus_verb_of_property(member)
+	if said.is_empty():
+		said = EventForgeCameraAttributeWords.companion_verb_of_property(member)
+	if said.is_empty():
+		return {}
+	return _with_pattern(_sentence(object_name, said,
+		{"value": [expression_text(value, context), "value"]}), "camera", line)
+
+
 ## `RenderingServer.global_shader_parameter_set("wind_strength", 2.0)` - one effect parameter set
 ## for every shader at once, in the words the sheet's own effect rows already use.
 static func global_effect_parameter_call(call: Dictionary, context: Dictionary) -> Dictionary:
@@ -14619,6 +14669,12 @@ static func spatial_words_assignment(object_name: String, object_class: String, 
 	var environment: Dictionary = environment_assignment(object_class, member, owner_text, assigned, context)
 	if not environment.is_empty():
 		return environment
+	# The camera's lens, asked before the class-gated readings below because its gate is the SLOT the
+	# attributes hang in rather than the node's class - a WorldEnvironment carries both an environment
+	# and a set of camera attributes, and only the slot says which of the two a line is writing.
+	var lens: Dictionary = camera_attributes_assignment(member, owner_text, assigned, context)
+	if not lens.is_empty():
+		return lens
 	var geometry: Dictionary = geometry_assignment(object_name, object_class, member, owner_text,
 		assigned, context)
 	if not geometry.is_empty():
