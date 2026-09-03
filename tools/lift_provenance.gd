@@ -133,9 +133,11 @@ const OUT_OF_RANGE: String = "there is no such line in this file"
 ## What the three `Row` answers that are not a row are told.
 const NO_ROW: String = "no row emits this line"
 
-## What a row the canvas walk holds no cell for is told. The usual cause is a row inside a published
-## verb: the canvas builds a verb's body when the verb is opened, so a walk of the resting sheet has
-## no cell to attribute for it.
+## What a row the canvas walk holds no cell for is told, with the REASON after it - because there are
+## three of them and they call for three different things. A body a published verb draws is normal
+## (the canvas builds it when the verb is opened). A shell another reading replaces is normal too. A
+## row that was dropped is a defect, and answering all three with one sentence sent a reader looking
+## for a verb that was not there.
 const NO_READING: String = "no cell of that row is on the resting canvas walk"
 const NOT_LOSSLESS: String = "this file does not re-emit byte for byte, so no line number maps"
 const NOT_A_SHEET: String = "this file does not open as a sheet"
@@ -289,7 +291,9 @@ static func shaped_by(source: String, number: int, script_path: String = "") -> 
 			into.append(spelled)
 	if paths.is_empty():
 		paths = chrome
-	return NO_READING if paths.is_empty() else ", ".join(paths)
+	if not paths.is_empty():
+		return ", ".join(paths)
+	return "%s - %s" % [NO_READING, READING.no_cell_reason(sheet, row)]
 
 
 ## The whole answer as the command line prints it and a test pins it: the line itself, then the row it

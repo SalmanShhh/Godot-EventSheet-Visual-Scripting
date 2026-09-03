@@ -30,6 +30,7 @@ class_name LiftProvenanceTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
+const READING := preload("res://tools/reading_lines.gd")
 
 ## One buffer, four lines, four layers. Written out rather than loaded from a fixture so the line
 ## numbers the pins name are visible beside the lines they name.
@@ -90,6 +91,18 @@ const RUN_LINE: int = 5
 ## and the emitter always writes one, so re-emitting it can never reproduce it. The closing quotes
 ## sit against `pass` for that reason - a newline before them would make this file round-trip and
 ## the proof vacuous.
+## A buffer whose first line is a file-level annotation: a row the canvas folds into the sheet's head
+## rather than drawing a cell for. It is here because "no cell on the resting walk" used to be one
+## sentence for three different situations, and the one it named was the one this line is NOT.
+const HEADER_ANNOTATION: String = """## @ace_category("Probe")
+extends Node
+
+
+func _ready() -> void:
+	pass
+"""
+
+
 const NO_LAST_NEWLINE: String = """extends Node
 
 
@@ -223,7 +236,7 @@ static func _test_the_printed_shape() -> bool:
 		EventSheetLiftProvenance.text(SOURCE, TABLE_LINE, "res://buffer.gd"),
 		"res://buffer.gd:8  rpc(&\"take_damage\", 10)\n"
 		+ "  row      EventRow  OnReady\n"
-		+ "  shaped   bespoke:_trigger_sentence, grammar:NodeSetProcessing, template\n"
+		+ "  shaped   bespoke:_trigger_sentence, grammar:NodeSetProcessing, bespoke:_reading_sentence\n"
 		+ "  read by:\n"
 		+ "  1. table    multiplayer_lift.gd  send_everyone_with_arguments -> SendMessageToEveryone\n"
 		+ "  5. call     Node2D.rpc (receiver: self)")
@@ -240,12 +253,15 @@ static func _test_the_printed_shape() -> bool:
 static func _test_which_builder_path_shaped_it() -> bool:
 	var ok: bool = _check("an event's cells name their paths in the order the canvas draws them",
 		EventSheetLiftProvenance.shaped_by(SOURCE, TABLE_LINE, "res://buffer.gd"),
-		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, template")
+		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, bespoke:_reading_sentence")
 	ok = _check("a line of the same event gets the same answer - the grain is the row",
 		EventSheetLiftProvenance.shaped_by(SOURCE, DERIVED_LINE, "res://buffer.gd"),
-		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, template") and ok
+		"bespoke:_trigger_sentence, grammar:NodeSetProcessing, bespoke:_reading_sentence") and ok
 	ok = _check("a row that is only chrome says so rather than naming nothing",
 		EventSheetLiftProvenance.shaped_by(SOURCE, 3, "res://buffer.gd"), "structure") and ok
+	ok = _check("a row the canvas draws no cell for says WHICH of the reasons it is",
+		EventSheetLiftProvenance.shaped_by(HEADER_ANNOTATION, 1, "res://buffer.gd"),
+		"%s - %s" % [EventSheetLiftProvenance.NO_READING, READING.NO_CELL_NOT_AN_EVENT]) and ok
 	return ok
 
 
