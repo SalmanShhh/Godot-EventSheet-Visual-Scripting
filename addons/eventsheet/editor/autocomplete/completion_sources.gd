@@ -824,6 +824,14 @@ const SPAWN_NAME_PARAMS: Dictionary = {
 	# name that cannot be said. The whole formation is addressed by its crowd instead.
 	"SpawnFacingAndMoving": "name",
 	"SpawnFacingAndMoving3D": "name",
+	# A copy of the node's own scene declares its local exactly as the safe spawn it is written from.
+	"SpawnCopyOfSelf": "name",
+	"SpawnCopyOfSelf3D": "name",
+	# And the free-spot spawn, which binds its name ABOVE the branch precisely so the rows underneath
+	# can say it. The name is simply nothing when the arena was full, which is the question Is Still
+	# Here answers - so the name is worth offering and worth guarding, not worth hiding.
+	"SpawnInFreeSpot": "name",
+	"SpawnInFreeSpot3D": "name",
 }
 
 
