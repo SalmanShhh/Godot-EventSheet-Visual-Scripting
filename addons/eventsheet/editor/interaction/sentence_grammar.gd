@@ -14559,6 +14559,45 @@ static func camera_attributes_assignment(member: String, owner_text: String, ass
 		{"value": [expression_text(value, context), "value"]}), "camera", line)
 
 
+## A hand-written write to a PARTICLE EFFECT, in the sheet's own words for it - so
+## `process_material.spread = 20.0` reads "Sparks - Set particle spread to 20" and `lifetime = 2.0` on
+## an emitter reads "Sparks - Set particle lifetime to 2", rather than as the two different objects
+## they are. {} for every line that is not one, which leaves the plain property reading in charge.
+##
+## TWO GATES, because an effect is TWO objects. A write THROUGH `process_material` is one, and the
+## slot is the gate there because nothing else in Godot spells it. A write to the emitter's own
+## `amount` or `lifetime` is the other, and the CLASS is the gate there because both of those words
+## are general spellings a reading has no business claiming anywhere else.
+##
+## The WORDS come from the same table the rows are built from, so a word added there is read back here
+## with nothing added - plus the second half of the two words that are really ranges, which reads in
+## its own words rather than as the property name.
+static func particle_word_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var owner_bare: String = owner_text.strip_edges().trim_prefix("self.")
+	var slot: String = EventForgeParticleWords.MATERIAL_MEMBER
+	var through_material: bool = owner_bare == slot or owner_bare.ends_with(".%s" % slot)
+	var said: String = ""
+	var spoken_for: String = object_name
+	if through_material:
+		var receiver: String = owner_bare.trim_suffix(slot).trim_suffix(".")
+		if not receiver.is_empty() and not is_simple_target(receiver):
+			return {}
+		spoken_for = _receiver_object(receiver, context)
+		said = EventForgeParticleWords.verb_of_property(member,
+			EventForgeParticleWords.ON_MATERIAL)
+		if said.is_empty():
+			said = EventForgeParticleWords.companion_verb_of_property(member)
+	elif owner_bare.is_empty() and EventForgeParticleWords.is_emitter_class(object_class):
+		said = EventForgeParticleWords.verb_of_property(member, EventForgeParticleWords.ON_NODE)
+	if said.is_empty():
+		return {}
+	var value: String = assigned.strip_edges()
+	return _with_pattern(_sentence(spoken_for, said,
+		{"value": [expression_text(value, context), "value"]}), "particles",
+		_member_line(owner_text, member, value))
+
+
 ## `RenderingServer.global_shader_parameter_set("wind_strength", 2.0)` - one effect parameter set
 ## for every shader at once, in the words the sheet's own effect rows already use.
 static func global_effect_parameter_call(call: Dictionary, context: Dictionary) -> Dictionary:
@@ -14675,6 +14714,12 @@ static func spatial_words_assignment(object_name: String, object_class: String, 
 	var lens: Dictionary = camera_attributes_assignment(member, owner_text, assigned, context)
 	if not lens.is_empty():
 		return lens
+	# And the effect, which is two objects the same way the camera is: the process material a slot
+	# names, and the emitter's own amount and lifetime, which are gated on the class instead.
+	var sprayed: Dictionary = particle_word_assignment(object_name, object_class, member, owner_text,
+		assigned, context)
+	if not sprayed.is_empty():
+		return sprayed
 	var geometry: Dictionary = geometry_assignment(object_name, object_class, member, owner_text,
 		assigned, context)
 	if not geometry.is_empty():
