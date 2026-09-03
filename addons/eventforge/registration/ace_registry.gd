@@ -10,14 +10,21 @@ extends RefCounted
 # sheets that reference fallback/unknown ACEs).
 static var _builtin_cache: Array[ACEDescriptor] = []
 static var _builtin_index: Dictionary = {}
+## Whether the two above have been built, kept APART from their own emptiness. A build that comes
+## back with nothing (a stripped install, an unreadable modules folder) leaves an empty cache that
+## an emptiness test reads as "not built yet" - so every find_descriptor() rebuilds the whole
+## vocabulary again, per row of the sheet being drawn. The flag is set by the function that does the
+## full build and cleared only by clear_cache().
+static var _builtin_cache_built: bool = false
 ## The runtime bridge autoload, remembered from the last MAIN-THREAD lookup (see _get_bridge).
 static var _bridge_cache: Node = null
 
 
 ## Builds the builtin descriptor cache + lookup index once.
 static func _ensure_builtin_cache() -> void:
-	if not _builtin_cache.is_empty():
+	if _builtin_cache_built:
 		return
+	_builtin_cache_built = true
 	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
 		var normalized: ACEDescriptor = _normalize_descriptor(descriptor)
 		if normalized != null:
@@ -57,6 +64,7 @@ static func find_duplicate_ids(descriptors: Array = []) -> PackedStringArray:
 static func clear_cache() -> void:
 	_builtin_cache.clear()
 	_builtin_index.clear()
+	_builtin_cache_built = false
 
 
 ## Returns built-in descriptors (cached).

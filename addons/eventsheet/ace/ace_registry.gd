@@ -14,6 +14,10 @@ var _definitions_by_key: Dictionary = {}
 # script-backed sources key on path + file mtime, so SAVING a provider script self-invalidates
 # its entry (no explicit invalidation calls to forget).
 static var _builtin_definition_cache: Array[ACEDefinition] = []
+## Whether the builtin half above has been built, kept APART from its own emptiness: a build that
+## answers nothing would otherwise be read as "not built yet" and re-pay the whole descriptor walk
+## and the adapter allocations on every tab activation.
+static var _builtin_definitions_derived: bool = false
 static var _source_definition_cache: Dictionary = {}
 
 
@@ -25,7 +29,8 @@ func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) 
 	for simple_definition: ACEDefinition in EventSheets.simple_aces():
 		_store_definition(simple_definition)
 	if include_builtin:
-		if _builtin_definition_cache.is_empty():
+		if not _builtin_definitions_derived:
+			_builtin_definitions_derived = true
 			for descriptor in ACERegistry.get_all_descriptors():
 				_builtin_definition_cache.append(EventSheetACEAdapter.from_eventforge_descriptor(descriptor))
 		for builtin_definition in _builtin_definition_cache:

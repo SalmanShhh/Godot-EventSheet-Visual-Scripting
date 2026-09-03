@@ -25,6 +25,11 @@ extends RefCounted
 static var _cache: Dictionary = {}
 ## Every curated builtin codegen template, for the shadow filter (built once).
 static var _curated_templates: Dictionary = {}
+## Whether the needle set above has been built, kept APART from its own emptiness: the set is
+## FILTERED (a descriptor with a blank template contributes nothing), so an emptiness test would
+## read a legitimately empty answer as "not built yet" and walk every vocabulary module again on
+## every shadow-filter question.
+static var _curated_templates_built: bool = false
 
 ## Methods reflection never exposes: Object/Node plumbing that would only add noise.
 const METHOD_SKIP := {
@@ -275,8 +280,9 @@ static func _script_for_class(target_class: String) -> Script:
 
 ## The shadow filter's needle set: every curated builtin codegen template, exact.
 static func _ensure_curated_templates() -> void:
-	if not _curated_templates.is_empty():
+	if _curated_templates_built:
 		return
+	_curated_templates_built = true
 	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
 		var template: String = str(descriptor.codegen_template).strip_edges()
 		if not template.is_empty():

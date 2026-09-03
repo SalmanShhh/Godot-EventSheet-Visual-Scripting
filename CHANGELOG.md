@@ -1060,6 +1060,17 @@ buys thirteen lines and costs 2,145 readings, so it will not.
 
 ### Fixed
 
+- **Six more caches that read their own emptiness as "not derived yet".** The picker freeze was
+  one instance of a bug class, and the sweep found it in six more places: the builtin descriptor
+  cache every row's verb lookup goes through, the definition cache rebuilt on each tab activation,
+  the shadow filter's needle set, the reading panel's lift-family tables, the public API's ace_id
+  index, and the picker's own category-to-host map. Each one guards a walk of every vocabulary
+  module (about 330 ms) or of the importer's family folder, and each one legitimately answers empty
+  in some project - a filtered fill, a host-agnostic vocabulary, a folder that cannot be opened -
+  at which point the walk runs again per row, per header, or per line of a buffer. All six now
+  latch on an explicit flag the deriving function sets, and `cache_latch_test` pins every one of
+  them by emptying the cache behind the flag's back and asking again.
+
 - **The Add picker opens instantly on a fresh sheet.** Clicking Add your first event, the E key,
   the corner link or the footer row froze the editor for five to ten seconds on a sheet with no
   variables in scope. The picker derives the variables a verb can take once per open, and read an

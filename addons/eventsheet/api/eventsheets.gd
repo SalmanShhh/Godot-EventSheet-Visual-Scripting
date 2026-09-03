@@ -1698,10 +1698,14 @@ static func handled_asset_extensions() -> PackedStringArray:
 ## every builtin_action() call re-scanned the modules dir and rebuilt the ENTIRE vocabulary
 ## (hundreds of allocations) just to find one id, so a multi-file drop paid it per file.
 static var _builtin_descriptor_index: Dictionary = {}
+## Whether the index above has been built, kept APART from its own emptiness - an emptiness test
+## puts the re-scan the cache exists to kill straight back on the empty branch.
+static var _builtin_descriptor_index_built: bool = false
 
 
 static func _builtin_descriptor(ace_id: String) -> Variant:
-	if _builtin_descriptor_index.is_empty():
+	if not _builtin_descriptor_index_built:
+		_builtin_descriptor_index_built = true
 		for descriptor in EventForgeBuiltinACEs.get_descriptors():
 			_builtin_descriptor_index[descriptor.ace_id] = descriptor
 	return _builtin_descriptor_index.get(ace_id, null)

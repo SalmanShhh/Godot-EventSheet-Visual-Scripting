@@ -420,10 +420,16 @@ static func _first_difference(source: String, emitted: String) -> Dictionary:
 ## buffer-sized job feel like a project-sized one.
 static var _family_cache: Dictionary = {}
 static var _family_order: PackedStringArray = PackedStringArray()
+## Whether the tables above have been read, kept APART from their own emptiness. The family walk
+## answers {} whenever its folder cannot be opened, and an emptiness test reads that as "not read
+## yet" - so the folder is walked again per family, per line, per refresh, which is exactly the
+## project-sized job this cache exists to prevent.
+static var _family_cache_built: bool = false
 
 
 static func _families() -> Dictionary:
-	if _family_cache.is_empty():
+	if not _family_cache_built:
+		_family_cache_built = true
 		_family_cache = EventForgeLiftTable.families()
 		var paths: PackedStringArray = PackedStringArray()
 		for path: Variant in _family_cache.keys():

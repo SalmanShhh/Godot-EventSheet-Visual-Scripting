@@ -2197,6 +2197,10 @@ static func _class_names_by_lowercase() -> Dictionary:
 ## still covers every hosted verb, so "Raycast 2D" lands on RayCast2D rather than Node2D even
 ## though a few of its world-query verbs are plain Node2D.
 static var _category_hosts: Dictionary = {}
+## Whether the map above has been derived, kept APART from its own emptiness. Every entry is
+## FILTERED on having a real ClassDB host, so a host-agnostic vocabulary derives an empty map - and
+## an emptiness test would then walk every vocabulary module again for every section header drawn.
+static var _category_hosts_derived: bool = false
 
 
 ## The Godot class a vocabulary entry is scoped to, whichever shape the entry is.
@@ -2215,8 +2219,9 @@ static func host_class_of(entry: Variant) -> String:
 
 
 static func _category_host_classes() -> Dictionary:
-	if not _category_hosts.is_empty():
+	if _category_hosts_derived:
 		return _category_hosts
+	_category_hosts_derived = true
 	var counts: Dictionary = {}
 	for entry: Variant in EventForgeBuiltinACEs.get_descriptors():
 		var host: String = host_class_of(entry)
