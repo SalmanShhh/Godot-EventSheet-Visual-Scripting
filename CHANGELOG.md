@@ -67,6 +67,74 @@
 - The nine words land in all nine translation CSVs (**93 new keys**), the surface slots, the two 2D
   words and the two notes add **39 more**, and the vocabulary doc is regenerated.
 
+### The wave, the aim, the free spot and the way back out
+
+- **A whole wave in one row, and the arithmetic is the row's.** Spawn In A Formation and Spawn In A
+  Formation (3D) put several copies at once into a ring, an arc, a line, a grid, or scattered inside
+  a collision shape (a box, in three dimensions) - **2 new rows** that write one loop and change
+  exactly one expression per shape. The fields a shape does not use stay out of the code it writes,
+  so a line formation's emitted lines carry no radius. The divisors are the whole of what a hand
+  gets wrong: a ring divides the turn by the count so the spacing is even all the way round, an arc
+  divides by one less so the first copy sits on the start angle and the last on the far end, and
+  `maxf(count - 1.0, 1.0)` is what keeps a formation of one from dividing by zero. Every copy joins
+  the crowd with Godot's persistent flag passed, so the row underneath addresses the whole wave with
+  For Each In Group.
+- **A copy that leaves already facing and already moving.** Spawn A Copy, Facing And Moving and its
+  3D twin are **2 new rows** that write the frozen spawn's three statements, then the facing, then
+  the launch, in that order - which is the order a hand gets wrong, because turning a copy toward
+  something measures from where the copy is and a copy with no parent has no global position for
+  that measurement to be about. Four facings in 2D and three in 3D, where the mouse is not a
+  direction in the world; forward in three dimensions is the copy's own -Z, so Toward A Node is a
+  plain `look_at`. Where the speed is written is a fact about the SCENE - `velocity`, `linear_velocity`
+  or the Bullet behaviour's own speed - so the parameters dialog reads the `.tscn` and says which of
+  the three it found rather than making a reader remember.
+- **A copy of the scene this node came from, with nothing naming the file.** Spawn A Copy Of Myself
+  and its 3D twin are **2 new rows** built on `scene_file_path`, the node's own word for where it
+  came from, so a splitting boss survives its scene being renamed or moved. The copy joins the tree
+  on the next idle moment because a scene that splits itself nearly always does it inside a collision
+  handler, and that is the one place Godot refuses an immediate `add_child`.
+- **A spot nothing is standing in, and the answer when there is none.** Free Spot In and its 3D twin
+  are placement expressions that only ever answer with somewhere free; Spawn A Copy In A Free Spot
+  and its 3D twin spend one; On Spawn Skipped is the trigger a full arena raises - **5 new rows**.
+  Free is asked as a real physics query with the spawned scene's OWN collision shape put at the
+  point, so a wall is a wall whatever drew it, and a group whose members carry no shape at all is
+  answered by distance instead. After the last try the answer is `null`, which is a real answer: the
+  spawn row then spawns nothing and emits this node's `spawn_skipped` signal with the scene it could
+  not place, so a retry loop with no ceiling on it never has to be written by hand.
+- **Retiring, which is destroying with the pool question already asked.** Retire, Retire After
+  Seconds, Fade Out Then Retire, Fade Out Then Retire (3D) and On Retired are **5 new rows** beside
+  the destroy verbs they match one for one. Freeing a pooled copy takes it out of its pool's own
+  accounting and the pool then hands out a node that no longer exists; Retire reads which of the two
+  a node is off the node itself, so nothing has to be configured and nothing has to be remembered.
+  A project with no pools in it behaves exactly as Destroy Now does. On Retired is one trigger for
+  both endings, because a pool takes a node back by removing it from the tree and a free takes it out
+  of the tree as well.
+- **Two runtime files, and the parity law is why they are files.** `FreeSpot` and `PooledNodes` are
+  plain GDScript under the plugin's runtime folder - **399 lines** that touch no editor class, no
+  sheet format and no EventForge type, so a built game carries them the way it carries any other
+  script. A free spot is a roll asked again until the answer fits and a retirement is a decision read
+  off the node at run time, so neither could be one expression in a template; naming the pool
+  autoload in a template instead would have put an identifier into every generated script that only
+  parses in a project which installed the pool pack.
+- **Every one of them reads back as the row when it is hand-written.** The three multi-statement runs
+  join the lift table as **61 entries** - ten formation spellings in 2D and eight in 3D, twenty-four
+  launched spellings in 2D and eighteen in 3D, and one for the self copy - each with a mark that
+  pre-filters the run before the pattern is tried. Where two dimensions write one spelling character
+  for character the 2D entry keeps the reading and the 3D row stays an authoring word, which is the
+  rule the twin placement expressions already stated: the bytes a sheet emits are identical either
+  way, and two entries for one spelling would split every such line between them by table order
+  alone.
+- **The Doctor's spawning section is five cases now, not four.** A row that copies the scene this
+  node came from, in a script that belongs to no scene, is a load of nothing: no copy appears and
+  Godot says nothing, because loading an empty path is not an error. It is filed as information with
+  no repair, because the answer is a decision about the scene. The pre-read gained the word
+  `load(scene_file_path)` so that a script whose only spawning is a self copy is opened at all -
+  those rows write no `add_child(` of their own.
+- **The record.** The sixteen rows land in all nine translation CSVs (**103 new keys**, filled in
+  eight languages), the spawning guide gains a chapter with a whole two-lane event, the emitted code
+  and the trap removed for each of the five sentences, and its Doctor section, contents and reference
+  table say five and sixteen rather than four and nothing.
+
 ### A grid that walks itself into a level
 
 - **Drunken Walkers, a seeded grid generator you drive from rows.** Walkers stagger across a grid
