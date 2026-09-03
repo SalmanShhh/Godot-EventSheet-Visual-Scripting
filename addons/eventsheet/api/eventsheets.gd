@@ -1930,6 +1930,16 @@ const MODULE_GUIDE_OVERRIDES := {
 	"keys_doors": "Working-In-3D",
 	"audio_server": "Sound-And-Music",
 	"camera_fov": "Cameras-Graphics-And-Screenshots",
+	# The two camera shelves and the view knobs are the same reader's question as the lens and the
+	# screenshot rows already on that page - what the player is looking at, and how it reaches the
+	# screen - so all three land there rather than opening three pages for one subject.
+	"camera_2d": "Cameras-Graphics-And-Screenshots",
+	"camera_3d": "Cameras-Graphics-And-Screenshots",
+	"viewport": "Cameras-Graphics-And-Screenshots",
+	# What a LAYER does with the camera reads beside where an object sits in the drawing order,
+	# because the two halves share one shelf: a reader looking for layers must find all of it in
+	# one place rather than half of it on a second page.
+	"layer": "Around-Objects",
 	"clipboard": "Copying-Sharing-And-Remembering-Values",
 	"collection": "Working-With-Lists",
 	"game_accessibility": "Game-Options-And-The-Window",
@@ -2046,6 +2056,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	"animation": "Animation-And-Sprites",
 	"behavior": "Calling-Your-Own-Code-From-Rows",
 	"camera": "Cameras-Graphics-And-Screenshots",
+	# The two shelves the camera work opened, keyed by their picker spelling as well as by their
+	# module file, so the Explain panel's "read more" lands on the same page from either end.
+	"views": "Cameras-Graphics-And-Screenshots",
+	"layers": "Around-Objects",
 	"collisions": "Collisions-Joints-And-World-Physics",
 	"color": "Colors-Gradients-And-Curves",
 	"compare_numbers": "Comparing-Values",
