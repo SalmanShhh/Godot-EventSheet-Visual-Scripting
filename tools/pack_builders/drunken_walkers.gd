@@ -315,7 +315,7 @@ static func build() -> bool:
 	Lib.feature_verbs(src.sheet, ["create_grid", "set_seed", "add_walker", "add_walker_from_preset",
 		"run_all_walkers", "step_walker", "scatter_marks", "outline_cells", "draw_cells_to_tilemap",
 		"count_cells"])
-	return Lib.publish(src, "res://eventsheet_addons/drunken_walkers/drunken_walkers_behavior")
+	return Lib.publish(src, "res://eventsheet_addons/drunken_walkers/drunken_walkers_addon")
 
 
 ## Sets the dropdown options[] on the last-declared verb's parameter, so the row offers the words

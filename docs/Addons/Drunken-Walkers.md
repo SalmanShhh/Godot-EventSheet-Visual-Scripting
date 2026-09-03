@@ -541,7 +541,7 @@ a second walker, a turn-angle clamp, a minimum spacing rule or a save, you are w
 of this pack one at a time, and the first `randf()` you leave unseeded costs you reproduction.
 
 The pack is itself an event sheet. Open
-`eventsheet_addons/drunken_walkers/drunken_walkers_behavior.gd` in the editor and every walker
+`eventsheet_addons/drunken_walkers/drunken_walkers_addon.gd` in the editor and every walker
 step, every placement rule and every trigger is a row you can read and change - so adopting it
 is not giving up the code you would have written, it is starting from a version of it that
 already reproduces.

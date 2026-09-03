@@ -28,7 +28,7 @@ class_name DrunkenWalkersPackTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-const PACK := "res://eventsheet_addons/drunken_walkers/drunken_walkers_behavior.gd"
+const PACK := "res://eventsheet_addons/drunken_walkers/drunken_walkers_addon.gd"
 const TEST := "drunken_walkers_pack_test"
 
 
