@@ -228,7 +228,7 @@ static func _every_effect_has_a_shader() -> bool:
 	var rows: Array = [
 		["every effect word the pack offers has a shader file", ",".join(missing), ""],
 		["and every one of those declares the dial the rows turn", ",".join(dialless), ""],
-		["the nine looks plus the two the colour-vision rows wear", words.size(), 11],
+		["the twelve looks plus the two the colour-vision rows wear", words.size(), 14],
 		["the two vision shaders take the kind of vision as a dial of their own",
 			"%s %s" % [_declares_in("post_see_as.gdshader", VISION_DIAL),
 				_declares_in("post_correct_colours.gdshader", VISION_DIAL)], "true true"],

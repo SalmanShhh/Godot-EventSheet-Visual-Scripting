@@ -16,9 +16,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## has finished, and shows it again the moment one starts. A hidden Control is not drawn at all.
 ##
 ## AND THEN THE POST STACK, which is the rest of what a screen wants: a named list of effects, each
-## its own full-screen rectangle and shader, drawn in order. Nine shaders ship beside the first one -
-## vignette, film grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox - plus
-## the two the colour-vision rows wear. A whole stack saves as ONE look file the project owns, and
+## its own full-screen rectangle and shader, drawn in order. Twelve shaders ship beside the first
+## one - vignette, film grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox,
+## bloom, saturate, desaturate - plus the two the colour-vision rows wear. A whole stack saves as ONE look file the project owns, and
 ## the only look shipped beside them is an empty one called Clean. The six verbs above are frozen and
 ## go on working exactly as they did, on their own rectangle, underneath the stack.
 ##
@@ -32,7 +32,7 @@ static func build() -> bool:
 			"effects", "shader", "juice", "camera", "visual"])).expose_all_verbs_on_a_node())
 	var sheet: EventSheetResource = src.sheet
 
-	src.note("Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of nine shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.")
+	src.note("Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of twelve shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.")
 
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(_runtime_lines())

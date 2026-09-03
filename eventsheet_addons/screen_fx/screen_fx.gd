@@ -52,12 +52,16 @@ const POST_DIRECTORY: String = "res://eventsheet_addons/screen_fx/"
 ## effect word and its file can therefore never drift apart.
 const POST_PREFIX: String = "post_"
 
-## The nine effects the stack ships, by the word a row uses. Each is one full-screen shader with a
+## The twelve effects the stack ships, by the word a row uses. Each is one full-screen shader with a
 ## `strength` dial and a few of its own. Every one of them READS THE SCREEN BACK, which is one screen
-## read per pixel of the viewport per entry that is on - so a stack of nine is a thing to be
-## deliberate about, and a stack of two costs two.
+## read per pixel of the viewport per entry that is on - so a stack of twelve is a thing to be
+## deliberate about, and a stack of two costs two. Bloom is the dear one: it reads the screen nine
+## times over rather than once, which is what gathering a spill from around each pixel costs.
+##
+## The last three arrived with the moments, because a moment is made of these words: a win swells the
+## bloom and lifts the colour, and danger drains it away again.
 const POST_EFFECTS: PackedStringArray = ["vignette", "film grain", "scanlines", "pixelate",
-	"colour grade", "dither", "fisheye", "glitch", "letterbox"]
+	"colour grade", "dither", "fisheye", "glitch", "letterbox", "bloom", "saturate", "desaturate"]
 
 ## And the two the colour-vision rows use. They are ordinary stack entries under reserved names, so
 ## Save Look records them, Clear Look takes them away, and Move Post Effect Before can put the
@@ -117,18 +121,19 @@ var _stack_walks: Dictionary = {}
 ## What Current Look reads back: the name of the look last worn, or "" when the stack was built row
 ## by row. Save Look does not change it, because saving is not wearing.
 var _look_name: String = ""
-## Adds one effect to the top of the post stack and turns it on. The nine words are vignette, film
-## grain, scanlines, pixelate, colour grade, dither, fisheye, glitch and letterbox; leave the name
-## empty and the entry is called after its effect, which is what one of each wants.
+## Adds one effect to the top of the post stack and turns it on. The twelve words are vignette, film
+## grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox, bloom, saturate and
+## desaturate; leave the name empty and the entry is called after its effect, which is what one of
+## each wants.
 ##
 ## Every entry reads the screen back, so each one costs one screen read per pixel of the viewport
-## while it is on. Two or three is a look; nine is a bill.
+## while it is on. Two or three is a look; twelve is a bill.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Add Post Effect")
 ## @ace_codegen_template("$ScreenFx.add_post_effect("{effect}", "{called}", {strength})")
 ## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
+## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
 ## @ace_param(called, default: , desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
 ## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
 func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
@@ -228,7 +233,7 @@ func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: f
 ## @ace_name("Pulse Post Effect")
 ## @ace_codegen_template("$ScreenFx.pulse_post_effect("{effect}", {strength}, {seconds})")
 ## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox, desc: "Which effect to flash up and let fall.")
+## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, desc: "Which effect to flash up and let fall.")
 ## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
 ## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
 func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
@@ -680,8 +685,8 @@ func clear_look() -> void:
 func current_look() -> String:
 	return _look_name
 
-## Whether this word is one of the effects the pack ships - the nine, plus the two the colour-vision
-## rows wear.
+## Whether this word is one of the effects the pack ships - the twelve, plus the two the
+## colour-vision rows wear.
 func _is_an_effect(word: String) -> bool:
 	return POST_EFFECTS.has(word) or word == SEE_AS_EFFECT or word == CORRECT_EFFECT
 
@@ -814,4 +819,4 @@ func _stop_walk_on(called: String) -> void:
 		walk.kill()
 	_stack_walks.erase(called)
 
-# Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of nine shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.
+# Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of twelve shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.
