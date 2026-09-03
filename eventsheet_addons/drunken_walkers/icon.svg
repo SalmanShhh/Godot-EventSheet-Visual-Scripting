@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the grid -->
+  <g stroke="#64748b" stroke-width="12" opacity="0.35" stroke-linecap="round">
+    <line x1="46" y1="46" x2="46" y2="466"/>
+    <line x1="46" y1="46" x2="466" y2="46"/>
+    <line x1="186" y1="46" x2="186" y2="466"/>
+    <line x1="46" y1="186" x2="466" y2="186"/>
+    <line x1="326" y1="46" x2="326" y2="466"/>
+    <line x1="46" y1="326" x2="466" y2="326"/>
+    <line x1="466" y1="46" x2="466" y2="466"/>
+    <line x1="46" y1="466" x2="466" y2="466"/>
+  </g>
+  <!-- the walk it carved -->
+  <polyline points="116,396 116,256 256,256 396,256 396,116" stroke="#0ea5e9" stroke-width="82" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- a mark dropped along the walk -->
+  <circle cx="256" cy="256" r="20" fill="#ffffff" opacity="0.95"/>
+  <!-- the walker -->
+  <circle cx="396" cy="116" r="54" fill="#f97316"/>
+</svg>
