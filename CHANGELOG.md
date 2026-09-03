@@ -1087,6 +1087,20 @@ buys thirteen lines and costs 2,145 readings, so it will not.
 
 ### Fixed
 
+- **The picker stopped asking the whole project a question per row.** Every row of the Add picker
+  carries a "used N times in this sheet" line, and working it out walked the open sheet's whole
+  event tree - once per row, over 1,878 rows, again on every keystroke. The count now comes from
+  ONE walk per open, which the Manual's search box shares (it was walking the sheet per matching
+  verb, per keystroke). Three smaller ones went with it: the picker's row icons resolve a res://
+  path through a cache instead of asking the filesystem per row, the object cards read a
+  provider's icon off one pass rather than scanning the vocabulary per card, and the favorites and
+  recents panes fetch the vocabulary once instead of duplicating the whole array per entry. A code
+  shaped query ("queue_free") compiled two regexes per row twice over - those are compiled once
+  now and each template's answer is remembered. Measured headless on an EMPTY sheet, where the
+  sheet walk itself is free: a warm picker open went from 141 ms to 92 ms, and the tree rebuild
+  behind a keystroke from 87 ms to 61 ms. On a sheet with events in it the walk was the dominant
+  cost and is now paid once.
+
 - **Six more caches that read their own emptiness as "not derived yet".** The picker freeze was
   one instance of a bug class, and the sweep found it in six more places: the builtin descriptor
   cache every row's verb lookup goes through, the definition cache rebuilt on each tab activation,

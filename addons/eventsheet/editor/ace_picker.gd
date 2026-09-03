@@ -602,6 +602,15 @@ var _variable_catalog: Array[Dictionary] = []
 ## reads of the autoloads' scripts off disk, which is what froze the Add picker for seconds on a
 ## fresh sheet.
 var _variable_catalog_derived: bool = false
+## How often the OPEN SHEET already uses each verb, for the "Used 3x in this sheet" line every
+## row's tooltip carries. One walk of the sheet per open, never one per row: the tooltip is built
+## for all 1,878 rows of the tree and again on every keystroke, and asking the sheet per row turned
+## a list-sized question into a project-sized one on any sheet with events in it.
+var _usage_counts: Dictionary = {}
+## Derived per open, exactly like the catalog above and for exactly the same reason - a sheet that
+## uses no verb at all counts nothing, and reading that as "not counted yet" is the bug this whole
+## sweep is about.
+var _usage_counts_derived: bool = false
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
@@ -612,6 +621,14 @@ func set_simple_mode_provider(provider: Callable) -> void:
 ## description panel can read their sentence. A `-> Array[Dictionary]` of catalog entries.
 func set_variable_catalog_provider(provider: Callable) -> void:
 	_variable_catalog_provider = provider
+
+
+## The open sheet's own usage counts, derived at most once per open.
+func _usage_in_sheet() -> Dictionary:
+	if not _usage_counts_derived:
+		_usage_counts_derived = true
+		_usage_counts = EventSheetDocUsage.counts_for(_open_sheet())
+	return _usage_counts
 
 
 ## The catalog behind the open dialog, derived at most once per open.
@@ -1048,6 +1065,8 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	# never per keystroke: the answer reads the autoloads' scripts off disk.
 	_variable_catalog.clear()
 	_variable_catalog_derived = false
+	_usage_counts.clear()
+	_usage_counts_derived = false
 	_object_filter_provider = ""
 	_unique_scope = {}
 	# "Add condition on Player" opens the picker ALREADY on Player: the object step of the
@@ -1592,6 +1611,17 @@ func _populate_object_cards() -> void:
 	_populate_unique_name_cards(root)
 	_populate_function_cards(root)
 	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
+	# One pass for every card's icon rather than a scan of the whole vocabulary per card: the cards
+	# are the project's providers and the vocabulary is thousands of rows, so the nested form was
+	# the card count times the row count for an answer each row could give on the way past.
+	var provider_icons: Dictionary = {}
+	for definition: ACEDefinition in definitions:
+		var icon_provider: String = str(definition.provider_id)
+		if provider_icons.has(icon_provider) or not definition.icon.strip_edges().begins_with("res://"):
+			continue
+		var resolved: Texture2D = resolve_definition_icon(definition)
+		if resolved != null:
+			provider_icons[icon_provider] = resolved
 	# System is one selectable row at the top (colored like a node-type header, it IS the
 	# whole Core vocabulary); every other object sits under one section header.
 	var objects_header: TreeItem = null
@@ -1623,12 +1653,7 @@ func _populate_object_cards() -> void:
 		item.set_metadata(0, provider)
 		# Same icon discipline as the classic tree: the provider's own icon at 16px, never
 		# scaled up; System gets the Node glyph from the editor theme.
-		var item_icon: Texture2D = null
-		for definition: ACEDefinition in definitions:
-			if str(definition.provider_id) == provider and definition.icon.strip_edges().begins_with("res://"):
-				item_icon = resolve_definition_icon(definition)
-				if item_icon != null:
-					break
+		var item_icon: Texture2D = provider_icons.get(provider, null) as Texture2D
 		if item_icon == null:
 			item_icon = editor_icon("Node" if provider == "Core" else "Script")
 		if item_icon != null:
@@ -2328,11 +2353,32 @@ static func resolve_definition_icon(definition: ACEDefinition) -> Texture2D:
 	if definition == null:
 		return null
 	var icon_hint: String = definition.icon.strip_edges()
-	if icon_hint.begins_with("res://") and ResourceLoader.exists(icon_hint):
-		var loaded: Resource = load(icon_hint)
-		if loaded is Texture2D:
-			return loaded
+	if icon_hint.begins_with("res://"):
+		# Cached per PATH, misses included. `load()` hits Godot's own resource cache after the first
+		# read, but `ResourceLoader.exists()` does not - it is a filesystem question every time, and
+		# this is asked once per row of a tree the search box rebuilds on every keystroke.
+		if not _path_icon_cache.has(icon_hint):
+			var found: Texture2D = null
+			if ResourceLoader.exists(icon_hint):
+				var loaded: Resource = load(icon_hint)
+				if loaded is Texture2D:
+					found = loaded as Texture2D
+			_path_icon_cache[icon_hint] = found
+		var cached: Texture2D = _path_icon_cache[icon_hint] as Texture2D
+		if cached != null:
+			return cached
 	return kind_dot(definition.ace_type)
+
+
+## res:// icon path -> its texture, or null where the path resolves to nothing. Dropped with the
+## other filesystem-derived reads when the editor reports a scan, so a pack dropped into the
+## project (or an icon replaced in place) is picked up without a restart.
+static var _path_icon_cache: Dictionary = {}
+
+
+## Drops the resolved icons. The editor's filesystem ping calls this; nothing else needs to.
+static func clear_icon_cache() -> void:
+	_path_icon_cache.clear()
 
 
 static var _kind_dot_cache: Dictionary = {}
@@ -2512,7 +2558,7 @@ func _item_tooltip(definition: ACEDefinition) -> String:
 	# the tooltip rather than on a popup of its own because a hover that opens a window is a hover
 	# that gets in the way of the arrow keys.
 	var mini: String = mini_page(definition,
-		EventSheetDocUsage.count(_open_sheet(), definition.provider_id, definition.id))
+		EventSheetDocUsage.count_in(_usage_in_sheet(), definition.provider_id, definition.id))
 	if not mini.is_empty():
 		tip += "\n" + mini
 	return tip
@@ -3050,8 +3096,11 @@ func _refresh_side_panes() -> void:
 func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, signals_only: bool) -> void:
 	tree.clear()
 	var root: TreeItem = tree.create_item()
+	# Fetched ONCE: get_all_definitions() hands back a duplicate of the whole vocabulary, and asking
+	# for it inside the key loop copied thousands of entries per favorite.
+	var all_definitions: Array[ACEDefinition] = _registry.get_all_definitions()
 	for key: String in keys:
-		for candidate: ACEDefinition in _registry.get_all_definitions():
+		for candidate: ACEDefinition in all_definitions:
 			if "%s/%s" % [candidate.provider_id, candidate.id] != key:
 				continue
 			if not _is_allowed_for_mode(candidate, mode, signals_only):

@@ -268,6 +268,33 @@ static func _test_usage() -> bool:
 		EventSheetDocUsage.usage_sentence(2), "Used in this sheet: 2 events") and all_passed
 	all_passed = _check("and none says nothing at all",
 		EventSheetDocUsage.usage_sentence(0), "") and all_passed
+	# THE ONE-WALK MAP. A caller holding a LIST of verbs - the picker's 1,878 rows, the Manual's
+	# search hits - asked the walk above once per verb, which is a whole-sheet job per row. The map
+	# is built from one walk and has to answer the same thing the walk does, verb for verb,
+	# including the asks that name no provider and the ones that name the wrong one.
+	var trigger_event: EventRow = EventRow.new()
+	trigger_event.trigger_provider_id = "System"
+	trigger_event.trigger_id = "OnStart"
+	var condition_event: EventRow = EventRow.new()
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "OtherPack"
+	condition.ace_id = "Wait"
+	condition_event.conditions.append(condition)
+	sheet.events.append(trigger_event)
+	sheet.events.append(condition_event)
+	var counts: Dictionary = EventSheetDocUsage.counts_for(sheet)
+	var asks: Array = [
+		["System", "Wait"], ["System", "Print"], ["System", "Vibrate"], ["System", "OnStart"],
+		["OtherPack", "Wait"], ["OtherPack", "OnStart"], ["", "Wait"], ["", "OnStart"], ["", "Nope"],
+	]
+	for ask: Array in asks:
+		all_passed = _check("one walk answers what the per-verb walk answers: %s/%s" % [ask[0], ask[1]],
+			EventSheetDocUsage.count_in(counts, str(ask[0]), str(ask[1])),
+			EventSheetDocUsage.count(sheet, str(ask[0]), str(ask[1]))) and all_passed
+	all_passed = _check("a provider-less ask sees every provider's copy",
+		EventSheetDocUsage.count_in(counts, "", "Wait"), 4) and all_passed
+	all_passed = _check("an empty sheet counts nothing rather than failing",
+		EventSheetDocUsage.counts_for(null).is_empty(), true) and all_passed
 	return all_passed
 
 

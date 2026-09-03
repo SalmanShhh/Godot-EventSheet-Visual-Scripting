@@ -10,6 +10,19 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 
 
+## A dock stand-in that counts how often the picker asks it for the open sheet. The sheet is real
+## but empty: what is being pinned is the number of asks, not what the walk finds.
+class CountingSheetHost:
+	extends Node
+
+	var asks: int = 0
+	var sheet: EventSheetResource = EventSheetResource.new()
+
+	func get_current_sheet() -> EventSheetResource:
+		asks += 1
+		return sheet
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	var picker: ACEPickerDialog = ACEPickerDialog.new()
@@ -39,6 +52,22 @@ static func run() -> bool:
 	picker._variable_catalog_derived = false
 	picker._variables_in_scope()
 	all_passed = _check("the next open derives it again", provider_calls[0], 2) and all_passed
+
+	# And the same shape for the "Used 3x in this sheet" line every tooltip carries: the count comes
+	# from ONE walk of the open sheet per open. It used to be a whole-sheet walk per row of the
+	# tree - free on the empty sheet the picker is usually measured on, and a project-sized job on
+	# any sheet with events in it, paid again on every keystroke.
+	var counting_host: CountingSheetHost = CountingSheetHost.new()
+	picker._host_node = counting_host
+	for repeat in 200:
+		picker._usage_in_sheet()
+	all_passed = _check("two hundred tooltips walk the sheet once", counting_host.asks, 1) and all_passed
+	picker._usage_counts.clear()
+	picker._usage_counts_derived = false
+	picker._usage_in_sheet()
+	all_passed = _check("and the next open walks it again", counting_host.asks, 2) and all_passed
+	counting_host.free()
+	picker._host_node = null
 
 	# Per-item type labels (the type tint was removed - Favorites/Recent now render plain like the
 	# main tree and the native Create-New-Node dialog; the per-row icon carries the type).

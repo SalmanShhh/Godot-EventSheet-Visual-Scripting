@@ -566,6 +566,9 @@ static func kind_label(kind: String) -> String:
 ## when the corpus half of the search is the whole answer.
 static func _vocabulary_hits(wanted: String, sheet: EventSheetResource) -> Array[Dictionary]:
 	var hits: Array[Dictionary] = []
+	# One walk of the sheet for the whole pass. This ran per MATCHING verb, per keystroke, and each
+	# ask walked every event, condition, action and sub-event of the open sheet from the top.
+	var usage: Dictionary = EventSheetDocUsage.counts_for(sheet)
 	for definition: ACEDefinition in EventSheets.all_verbs():
 		var title: String = EventSheetL10n.translate(definition.display_name)
 		var score: int = match_score(title.to_lower(), wanted)
@@ -581,7 +584,7 @@ static func _vocabulary_hits(wanted: String, sheet: EventSheetResource) -> Array
 			"doc_id": EventSheetDocExplain.doc_id_for_definition(definition),
 			"anchor": "",
 			"definition": definition,
-			"used": EventSheetDocUsage.count(sheet, definition.provider_id, definition.id),
+			"used": EventSheetDocUsage.count_in(usage, definition.provider_id, definition.id),
 			"score": score,
 		})
 	return hits

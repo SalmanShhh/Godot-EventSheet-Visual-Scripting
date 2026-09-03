@@ -57,19 +57,42 @@ static func template_calls(template: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	if template.strip_edges().is_empty():
 		return found
-	var call_pattern: RegEx = RegEx.create_from_string("([A-Za-z_][A-Za-z0-9_]*)\\s*\\(")
-	for hit: RegExMatch in call_pattern.search_all(template):
+	# Memoised per template, and the patterns compiled once. A code-shaped query asks this of
+	# every row of the vocabulary, twice - once to match and once to rank - on every keystroke, so
+	# the straight-line version compiled two regexes thousands of times per typed character.
+	# Templates are a frozen compatibility promise, so a template's answer cannot go stale.
+	if _template_calls_cache.has(template):
+		return _template_calls_cache[template]
+	for hit: RegExMatch in _regex(CALL_PATTERN).search_all(template):
 		var name: String = hit.get_string(1)
 		if not found.has(name):
 			found.append(name)
 	# `.position` reads a member, and so does `{target.}position` - a template's target slot ends
 	# with the dot, so the member lands right after the closing brace instead of after a dot.
-	var member_pattern: RegEx = RegEx.create_from_string("[.}]([A-Za-z_][A-Za-z0-9_]*)")
-	for hit: RegExMatch in member_pattern.search_all(template):
-		var name: String = hit.get_string(1)
-		if not found.has(name):
-			found.append(name)
+	for hit: RegExMatch in _regex(MEMBER_PATTERN).search_all(template):
+		var member_name: String = hit.get_string(1)
+		if not found.has(member_name):
+			found.append(member_name)
+	_template_calls_cache[template] = found
 	return found
+
+
+## An identifier being CALLED, and an identifier being READ off a member access or a target slot.
+const CALL_PATTERN := "([A-Za-z_][A-Za-z0-9_]*)\\s*\\("
+const MEMBER_PATTERN := "[.}]([A-Za-z_][A-Za-z0-9_]*)"
+
+## template -> the identifiers it names, and pattern -> its compiled RegEx. Both session-scoped:
+## the templates are frozen and the patterns are constants, so neither answer can change.
+static var _template_calls_cache: Dictionary = {}
+static var _compiled: Dictionary = {}
+
+
+## A compiled pattern, built at most once. RegEx.create_from_string is not free, and every
+## pattern here is either a constant or one short query's.
+static func _regex(pattern: String) -> RegEx:
+	if not _compiled.has(pattern):
+		_compiled[pattern] = RegEx.create_from_string(pattern)
+	return _compiled[pattern]
 
 
 ## The calls one ACE writes. Reads the definition's shipped metadata only - the template is a
@@ -149,7 +172,7 @@ static func gdscript_hint(definition: ACEDefinition, query: String) -> String:
 		return ""
 	var wanted: String = normalize(query)
 	var template: String = str(definition.metadata.get("codegen_template", ""))
-	if RegEx.create_from_string("\\b%s\\s*\\(" % wanted).search(template) != null:
+	if _regex("\\b%s\\s*\\(" % wanted).search(template) != null:
 		return "%s()" % wanted
 	return ".%s" % wanted
 
