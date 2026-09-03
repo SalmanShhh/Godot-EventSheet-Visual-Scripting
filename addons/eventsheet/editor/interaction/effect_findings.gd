@@ -166,11 +166,11 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 		# from the project index - which is also the one place "who else wears this" is answered.
 		"meshes": mesh_wearers_of_script(script_path),
 		"scene_path": EventSheetSceneLightingFacts.attached_scene(script_path),
-		# The interface layer of the attached scene, and whether this sheet ever says which side of
-		# it the post stack belongs on. Both are whole-sheet facts, so both are read once here rather
-		# than re-derived per row.
-		"interface_layer": interface_layer_of(EventSheetSceneLightingFacts.attached_scene(script_path)),
-		"orders_the_post_stack": orders_the_post_stack(sheet),
+		# The sheet itself, for the two whole-sheet facts the post-stack check needs. They are NOT
+		# read here: parsing a scene's nodes and walking every row of a sheet to answer them would be
+		# paid by every sheet that turns any dial at all, and only a sheet with a post row can ever
+		# earn that finding. They are worked out on the first row that could, and kept here after.
+		"sheet": sheet,
 		# One finding per NODE, not per row: twelve rows turning dials on one shared material are one
 		# problem with one fix, and twelve identical notes is how a note stops being read.
 		"said": PackedStringArray(),
@@ -647,10 +647,16 @@ static func writes_a_dial(ace: Resource) -> bool:
 ## said nothing about.
 static func _post_order_unsaid(ace: Resource, judged: Dictionary, event_row: EventRow, lane: String,
 		slot: int) -> Dictionary:
+	# THE ROW FIRST, and the two expensive facts only after it. Almost no sheet has a post row, and
+	# the two questions below cost a scene parse and a walk of every row - so the cheap test that
+	# rules out every other sheet is the one that runs first.
+	if not _says_any_call(EventSheetLightingFindings.compiled_line(ace), POST_CALLS):
+		return {}
+	if not judged.has("interface_layer"):
+		judged["interface_layer"] = interface_layer_of(str(judged.get("scene_path", "")))
+		judged["orders_the_post_stack"] = orders_the_post_stack(judged.get("sheet", null))
 	var layer_name: String = str(judged.get("interface_layer", ""))
 	if layer_name.is_empty() or bool(judged.get("orders_the_post_stack", false)):
-		return {}
-	if not _says_any_call(EventSheetLightingFindings.compiled_line(ace), POST_CALLS):
 		return {}
 	if _already_said(judged, KIND_POST_ORDER_UNSAID, layer_name):
 		return {}
