@@ -692,16 +692,17 @@ var size: int = 3
 func _on_body_entered(body: Node2D) -> void:
 	if size > 1:
 		var half = load(scene_file_path).instantiate()
-		half.position = global_position + Vector2(24, 0)
 		get_parent().call_deferred("add_child", half)
+		half.set_deferred("global_position", global_position + Vector2(24, 0))
 		half.size = size - 1
 ```
 
 **The copy is added on the next idle moment, and that default is not a preference.** A scene that
 splits itself nearly always does it inside a collision handler, and Godot refuses to add a child
-while the physics server is flushing. Placing before parenting is the same swap Spawn A Copy Safely
-makes, so the At field is relative to the parent here as well. The copy itself exists straight away,
-which is why the row after it can set a property on the name.
+while the physics server is flushing. The place is booked with `set_deferred` on the same queue and
+after the add, so the copy has a parent by the time its place is written and At is a place in the
+WORLD - which is what the field opens on. The copy itself exists straight away, which is why the
+row after it can set a property on the name.
 
 **The trap this removes is the rename.** `preload("res://slime.tscn")` inside `slime.tscn` is a
 promise that the file will keep that name and that path for ever, and the day somebody moves it into
@@ -765,8 +766,8 @@ func _on_timeout() -> void:
 			emit_signal(&"spawn_skipped", Crate)
 	else:
 		new_crate = Crate.instantiate()
-		new_crate.position = new_crate_spot
 		$Props.call_deferred("add_child", new_crate)
+		new_crate.set_deferred("global_position", new_crate_spot)
 
 
 func _on_spawn_skipped(scene: PackedScene) -> void:
@@ -843,14 +844,35 @@ walking `transparency` up to one, because a Node3D has no modulate. The fade row
 wait, and ask whether the object is still there before touching it, exactly as their destroy twins
 do.
 
+**The handing back waits for the frame, and that is what makes the swap safe.** A pool takes a node
+back by REPARENTING it, and a reparent inside a physics callback is the very thing Godot refuses -
+which is the collision handler a bullet is retired in. So the pool half is booked on the message
+queue and done at the next idle moment, exactly as `queue_free()` books a deletion for the end of
+the frame. Both answers therefore leave the node in the world for the rest of the event, which is
+the one fact to carry: the rows after a Retire can still read the thing it retired.
+
+**A faded copy is put back solid before it is handed over.** A pool WAKES a node rather than
+rebuilding it, so whatever the fade left on it is what the next spawn of it wears - a copy that went
+back invisible comes out invisible. Both fade rows write the restore themselves, on the line above
+the retire, where a reader can see it. And Fade Out Then Retire (3D) is offered on a
+`GeometryInstance3D` rather than on a body, because `transparency` belongs to what is DRAWN: point
+its Object field at the `MeshInstance3D`, not at the CharacterBody3D it hangs under.
+
+**And one thing Retire After Seconds cannot know.** Godot drops a timer's connection when the
+object at the far end of it is freed, which is what makes the destroy twin need no bookkeeping. A
+POOLED object is never freed, so nothing is dropped: a copy that goes back to its pool early and is
+handed out again inside the wait is retired by that timer in the middle of its NEXT life. Where a
+copy can be retired early, use Retire on its own.
+
 **On Retired is one trigger for both endings.** A pool takes a node back by removing it from the
 tree, and a free takes it out of the tree as well, so the node's own `tree_exiting` is raised once
 whichever of the two happened. The object is still valid inside that handler, which is what makes it
 the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.
 
-**Retire is safe to run twice.** Something already on its way out is left alone rather than freed a
-second time - which matters more here than it does for a destroy, because a double `queue_free()` is
-silent while handing one node back to a pool twice puts it in the free list twice.
+**Retire is safe to run twice.** Something already on its way out, or already parked back in its
+pool, is left alone rather than handed over a second time - and that guard matters more here than it
+does for a destroy, because a double `queue_free()` is silent while a free list holding one node
+twice hands the same node to two callers at once.
 
 ## The same sentences over the network
 
@@ -990,8 +1012,8 @@ that, or spawn a scene the row names outright.
 | Spawn In A Formation (3D) | The same loop with the five shapes measured in three dimensions. | `var {name}_scene = {scene}`, `for {name}_index in range({count}):`, …, `var {name}_place = …`, … |
 | Spawn A Copy, Facing And Moving | Spawns a copy, turns it to face something, launches it along that facing. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}`, `{name}.rotation = …`, `var {name}_launch = Vector2.from_angle({name}.rotation) * {speed}`, … |
 | Spawn A Copy, Facing And Moving (3D) | The same, with forward being the copy's own -Z. | `var {name} = {scene}.instantiate()`, …, `{name}.look_at({toward}.global_position)`, `var {name}_launch = -{name}.global_transform.basis.z * {speed}`, … |
-| Spawn A Copy Of Myself | Makes one more copy of the scene this node was built from. | `var {name} = load(scene_file_path).instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
-| Spawn A Copy Of Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
+| Spawn A Copy Of Myself | Makes one more copy of the scene this node was built from. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
+| Spawn A Copy Of Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
 | Free Spot In | Gives a point inside a shape that nothing is standing in, or nothing. | `FreeSpot.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
 | Free Spot In (3D) | The same question in three dimensions, in metres. | `FreeSpot.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
 | Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_spot = FreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {scene})`, `else:`, … |
@@ -999,8 +1021,8 @@ that, or spawn a scene the row names outright.
 | On Spawn Skipped | Runs when a free-spot spawn found nowhere to put the copy. | `spawn_skipped.connect(_on_spawn_skipped)` |
 | Retire | Hands the object back to its pool, or destroys it when it came from none. | `PooledNodes.retire({object})` |
 | Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(PooledNodes.retire.bind({object}))` |
-| Fade Out Then Retire | Fades the object out, waits, then retires it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `PooledNodes.retire({object})` |
-| Fade Out Then Retire (3D) | The same on a 3D object, walking transparency up instead. | `await {object}.create_tween().tween_property({object}, "transparency", 1.0, {seconds}).finished`, `if is_instance_valid({object}):`, `PooledNodes.retire({object})` |
+| Fade Out Then Retire | Fades the object out, waits, puts its transparency back, then retires it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.modulate.a = 1.0`, `PooledNodes.retire({object})` |
+| Fade Out Then Retire (3D) | The same on a GeometryInstance3D, walking transparency up instead. | `await {object}.create_tween().tween_property({object}, "transparency", 1.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.transparency = 0.0`, `PooledNodes.retire({object})` |
 | On Retired | Runs as the object is retired, whichever of the two happened. | `tree_exiting.connect(_on_retired)` |
 
 ## Use cases
@@ -1188,7 +1210,8 @@ way it left, with rows that clear its target and drop it from a list.
 - **The fade row makes the event wait.** Everything after it in that event runs after the fade. If
   you want the event to carry straight on, use Destroy After Seconds instead.
 - **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
-  CanvasItem. A plain Node has no transparency to walk.
+  CanvasItem. A plain Node has no transparency to walk. The 3D fade needs a `GeometryInstance3D` for
+  the same reason: `transparency` belongs to what is drawn, not to the body it hangs under.
 - **A crowd is a plain Godot group.** Anything else in the project that uses groups sees the same
   members, which is usually what you want and occasionally a surprise. Name crowds after the scene
   they hold and the two stay easy to tell apart.
@@ -1227,7 +1250,13 @@ way it left, with rows that clear its target and drop it from a list.
   same word again in a spawn row.
 - **A despawned copy remembers everything.** Pooling replaces the free, not the reset: health,
   alpha, velocity and any timer the copy was running are exactly as it left them. Set what a fresh
-  copy would have had on the rows straight after the pool's Spawn.
+  copy would have had on the rows straight after the pool's Spawn, or give the scene a `reset()`
+  method, which the pool calls on every spawn. The two fade-then-retire rows put back the one
+  property THEY moved, and nothing else.
+- **A wait booked against a pooled copy outlives the life it was booked in.** Godot drops a timer's
+  connection when the object at the far end is freed, and a pooled object is never freed - so Retire
+  After Seconds, and any delay booked against a copy that can go back to its pool early, can fire in
+  the middle of that copy's next life.
 - **Do not free a pooled copy.** Destroy Now on a node that came out of a pool takes it out of the
   pool's own accounting, and the pool then hands out a freed node. Despawn is its removal, and
   Retire is the row that picks between the two for you.
