@@ -1346,6 +1346,15 @@ const SEARCH_SYNONYMS := {
 	"post processing": "post effect",
 	"screen effect": "post effect",
 	"pulse": "pulse post effect",
+	# SEEING SOMETHING THROUGH A WALL. Nobody searches for "compositor" and almost nobody for
+	# "outline": they search for the thing they want to happen, which is being able to see the enemy
+	# behind the crate. All of these land on the rows that draw a marked group over the frame.
+	"through walls": "through walls",
+	"x ray": "through walls",
+	"xray": "through walls",
+	"see through": "through walls",
+	"highlight": "outline",
+	"occluded": "hidden from view",
 	# A whole screen saved as one file, which people call a look, a filter or a grade.
 	"looks": "look",
 	"screen look": "look",
