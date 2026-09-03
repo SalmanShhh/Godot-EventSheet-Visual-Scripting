@@ -15,6 +15,12 @@ extends RefCounted
 # than an empty row at runtime. The modifiers are chainable methods, so a misspelled modifier is
 # a parse error too, and Godot's own completion lists the whole vocabulary from the dot.
 #
+# A MODIFIER THIS KIND DOES NOT WEAR IS REFUSED BY NAME. `number_field(...).placeholder("x")`
+# used to compile, build and drop the placeholder without a word, which is the silent no-op this
+# shape exists to make impossible: the restricted modifiers are a table below, and one that does
+# not fit says which field, which modifier and which kind. So does an unhandled kind - every match
+# over Kind names its arms and ends in an error rather than in a LineEdit nobody asked for.
+#
 # A spec is inert until build() is called. It holds no tree, reads no global state and touches no
 # editor singleton, so it is unit-testable and safe headless.
 
@@ -23,8 +29,8 @@ extends RefCounted
 enum Kind {
 	## A single line of text. Reads back a String.
 	TEXT,
-	## A number in a SpinBox, bounded by at_least() / at_most(). Reads back a float (an int when
-	## whole() is set).
+	## A number in a SpinBox, bounded by at_least() / at_most(). Reads back a float, or an int when
+	## stepping() was told the field is whole.
 	NUMBER,
 	## A dropdown of fixed choices, filled by options(). Reads back the chosen option's stored
 	## value: its metadata when the choice carries one, its shown words otherwise.
@@ -34,12 +40,20 @@ enum Kind {
 	## A path typed into a line edit. Reads back a String; identical to TEXT but for the
 	## completion the field is offered and the placeholder it defaults to.
 	PATH,
-	## A multi-line GDScript box, hardened the way every editable code field in the plugin is.
-	## Reads back a String.
-	CODE,
-	## Free text with a picker beside it, filled live from a suggestions provider. Reads back a
-	## String - the typed text, whether it came from the list or from the keyboard.
-	CHOICE,
+}
+
+## The modifiers only SOME kinds wear, and which kinds those are. A modifier absent from this table
+## fits every kind; one present here is refused, by name, for any other.
+##
+## A TABLE RATHER THAN A CHECK PER MODIFIER, because the fact is what fits what - and because a
+## modifier added tomorrow is one row here, beside the ones it has to be consistent with, rather
+## than a guard somebody writes from memory.
+const KIND_ONLY_MODIFIERS: Dictionary = {
+	"placeholder": [Kind.TEXT, Kind.PATH],
+	"at_least": [Kind.NUMBER],
+	"at_most": [Kind.NUMBER],
+	"stepping": [Kind.NUMBER],
+	"options": [Kind.OPTIONS],
 }
 
 ## The name this field answers to in values() and control(). Unique within one form; a duplicate
@@ -48,7 +62,7 @@ var id: String = ""
 ## The words at the left of the row. Empty means the field takes the whole row width with no
 ## leading label (a tick that carries its own text, normally).
 var label: String = ""
-## Which of the seven shapes this field is.
+## Which of the five shapes this field is.
 var kind: Kind = Kind.TEXT
 
 ## The grey prompt shown while a text-shaped field is empty.
@@ -78,9 +92,6 @@ var is_required: bool = false
 ## Called with the field's new value whenever it changes. One Callable, so the wiring a dialog
 ## used to spell per control is spelled here beside what it is wiring.
 var change_handler: Callable = Callable()
-## Returns the CURRENT suggestions for a CHOICE field, as a PackedStringArray. A Callable rather
-## than a list, because the interesting lists (project classes, sheet enums) go stale.
-var suggestions_provider: Callable = Callable()
 
 ## The widget this spec built, or null before build(). The hand code that still needs the control
 ## itself - to focus it, to register it for Enter, to gate its visibility - reaches it here rather
@@ -91,8 +102,11 @@ var control: Control = null
 var row: Control = null
 
 
-## The grey prompt shown while the field is empty. Text-shaped kinds only; ignored elsewhere.
+## The grey prompt shown while the field is empty. Text-shaped kinds only; refused by name on any
+## other, because a prompt that silently never appears is a bug that looks like a preference.
 func placeholder(text: String) -> EventSheetFieldSpec:
+	if not _wears("placeholder"):
+		return self
 	placeholder_text = text
 	return self
 
@@ -118,18 +132,24 @@ func default(value: Variant) -> EventSheetFieldSpec:
 
 ## The lower bound of a NUMBER field.
 func at_least(value: float) -> EventSheetFieldSpec:
+	if not _wears("at_least"):
+		return self
 	minimum = value
 	return self
 
 
 ## The upper bound of a NUMBER field.
 func at_most(value: float) -> EventSheetFieldSpec:
+	if not _wears("at_most"):
+		return self
 	maximum = value
 	return self
 
 
 ## The step a NUMBER field moves in, and whether it reads back whole numbers.
 func stepping(value: float, whole: bool = false) -> EventSheetFieldSpec:
+	if not _wears("stepping"):
+		return self
 	step_size = value
 	whole_numbers = whole
 	return self
@@ -151,6 +171,8 @@ func on_change(handler: Callable) -> EventSheetFieldSpec:
 ## stores when the shown words are not it; it must be the same length as `labels` or it is
 ## refused by name rather than half-applied.
 func options(labels: PackedStringArray, stored: Array = []) -> EventSheetFieldSpec:
+	if not _wears("options"):
+		return self
 	if not stored.is_empty() and stored.size() != labels.size():
 		push_error("EventSheetFieldSpec: field \"%s\" was given %d option labels and %d stored values - they must match one for one." % [id, labels.size(), stored.size()])
 		return self
@@ -159,10 +181,33 @@ func options(labels: PackedStringArray, stored: Array = []) -> EventSheetFieldSp
 	return self
 
 
-## Where a CHOICE field's live suggestions come from: a Callable returning a PackedStringArray.
-func suggesting(provider: Callable) -> EventSheetFieldSpec:
-	suggestions_provider = provider
-	return self
+## True when this kind wears `modifier`. False, with an error naming the field, the modifier and
+## the kind, when it does not - so the caller's next line does not quietly build a field that is
+## missing the thing it asked for.
+func _wears(modifier: String) -> bool:
+	var kinds: Array = KIND_ONLY_MODIFIERS.get(modifier, []) as Array
+	if kinds.is_empty() or kinds.has(kind):
+		return true
+	var wearers: PackedStringArray = PackedStringArray()
+	for wearer: Variant in kinds:
+		wearers.append(_kind_name(int(wearer)))
+	push_error("EventSheetFieldSpec: field \"%s\" is a %s field, and %s() belongs to %s. The modifier was NOT applied." % [
+		id, _kind_name(kind), modifier, " / ".join(wearers)])
+	return false
+
+
+## One kind as the word the enum spells it with, for an error a reader can act on.
+func _kind_name(which: int) -> String:
+	var names: Array = Kind.keys()
+	return str(names[which]) if which >= 0 and which < names.size() else str(which)
+
+
+## What is said when a match over Kind reaches an arm nobody wrote: the field, the kind and the
+## place. A kind added to the enum without its arms is a defect and says so the moment it is used,
+## which is the one thing a fall-through arm could never do.
+func _unhandled(where: String) -> void:
+	push_error("EventSheetFieldSpec: field \"%s\" is of kind %s, which %s does not handle. Add its arm there." % [
+		id, _kind_name(kind), where])
 
 
 ## Builds the widget and its row, through the same EventSheetPopupUI helpers a hand-built dialog
@@ -187,7 +232,8 @@ func build() -> Control:
 
 
 ## What the field currently says, typed by its kind: String, float or int, or bool. Null before
-## build(), because a field that was never built has no answer to give.
+## build(), because a field that was never built has no answer to give - and null with a named
+## error for a kind this match has no arm for.
 func value() -> Variant:
 	if control == null:
 		return null
@@ -199,12 +245,10 @@ func value() -> Variant:
 			return int(number) if whole_numbers else number
 		Kind.OPTIONS:
 			return _selected_option_value()
-		Kind.CODE:
-			return (control as CodeEdit).text
-		Kind.CHOICE:
-			return (_choice_edit() as LineEdit).text
-		_:
+		Kind.TEXT, Kind.PATH:
 			return (control as LineEdit).text
+	_unhandled("value()")
+	return null
 
 
 ## Puts a value INTO the field - the other half of value(), for a dialog re-opening on a row it is
@@ -219,22 +263,15 @@ func set_value(new_value: Variant) -> void:
 			(control as SpinBox).value = float(new_value)
 		Kind.OPTIONS:
 			_select_option_value(new_value)
-		Kind.CODE:
-			(control as CodeEdit).text = str(new_value)
-		Kind.CHOICE:
-			(_choice_edit() as LineEdit).text = str(new_value)
-		_:
+		Kind.TEXT, Kind.PATH:
 			(control as LineEdit).text = str(new_value)
+		_:
+			_unhandled("set_value()")
 
 
-## The line edit a CHOICE field types into. A CHOICE builds a box holding the edit and its picker,
-## so the control the caller reaches for is one level in.
-func _choice_edit() -> Control:
-	if kind != Kind.CHOICE or control == null:
-		return control
-	return control.get_child(0) as Control
-
-
+## The widget itself. An unhandled kind is NAMED and still given a line edit, because build() has
+## to hand a row back: the error is the answer, and the empty field beside it is what stops one
+## missing arm from taking a whole dialog down.
 func _build_control() -> Control:
 	match kind:
 		Kind.CHECK:
@@ -258,21 +295,10 @@ func _build_control() -> Control:
 			if dropdown.item_count > 0:
 				dropdown.select(0)
 			return dropdown
-		Kind.CODE:
-			var code: CodeEdit = CodeEdit.new()
-			EventSheetPopupUI.configure_code_editor(code)
-			code.custom_minimum_size = Vector2(0.0, 96.0)
-			return code
-		Kind.CHOICE:
-			var box: HBoxContainer = HBoxContainer.new()
-			var edit: LineEdit = LineEdit.new()
-			edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			box.add_child(edit)
-			if suggestions_provider.is_valid():
-				box.add_child(EventSheetPopupUI.autocomplete_combo(edit, suggestions_provider))
-			return box
-		_:
+		Kind.TEXT, Kind.PATH:
 			return LineEdit.new()
+	_unhandled("_build_control()")
+	return LineEdit.new()
 
 
 ## The configuration every kind shares, applied once instead of per field: the prompt, the hover
@@ -281,19 +307,16 @@ func _apply_common() -> void:
 	if control == null:
 		return
 	control.tooltip_text = tooltip_text
-	var text_field: Control = _choice_edit() if kind == Kind.CHOICE else control
-	if text_field is LineEdit:
-		(text_field as LineEdit).placeholder_text = placeholder_text
-		(text_field as LineEdit).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	elif text_field is CodeEdit:
-		(text_field as CodeEdit).placeholder_text = placeholder_text
+	if control is LineEdit:
+		(control as LineEdit).placeholder_text = placeholder_text
+		(control as LineEdit).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if default_value != null and not (kind == Kind.CHECK and label.is_empty() and default_value is String):
 		set_value(default_value)
-	_wire_change(text_field)
+	_wire_change()
 
 
 ## Wires the one change handler to whichever signal this kind actually emits.
-func _wire_change(text_field: Control) -> void:
+func _wire_change() -> void:
 	if not change_handler.is_valid():
 		return
 	var handler: Callable = change_handler
@@ -304,10 +327,10 @@ func _wire_change(text_field: Control) -> void:
 			(control as SpinBox).value_changed.connect(func(new_value: float) -> void: handler.call(new_value))
 		Kind.OPTIONS:
 			(control as OptionButton).item_selected.connect(func(_index: int) -> void: handler.call(_selected_option_value()))
-		Kind.CODE:
-			(control as CodeEdit).text_changed.connect(func() -> void: handler.call((control as CodeEdit).text))
+		Kind.TEXT, Kind.PATH:
+			(control as LineEdit).text_changed.connect(func(new_text: String) -> void: handler.call(new_text))
 		_:
-			(text_field as LineEdit).text_changed.connect(func(new_text: String) -> void: handler.call(new_text))
+			_unhandled("_wire_change()")
 
 
 ## The chosen option's stored value: its metadata when it carries one, its words otherwise.

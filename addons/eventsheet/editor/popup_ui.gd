@@ -912,6 +912,12 @@ static func sized_list(rows_high: float) -> ItemList:
 # The old raw path stays entirely legal. A field with live gating, a bespoke widget or a picker of
 # its own is still built by hand beside the spec'd ones - a spec is for the fields that are only
 # what they say they are.
+#
+# FIVE KINDS, AND THEY ALL HAVE A CALLER OR AN IMMEDIATE USE. A code box and a picker-backed choice
+# field were declared here too and nothing in the tree asked for either; they cost more machinery
+# than any other kind and answered a question no dialog had put. They are not here. Adding a kind
+# back is one enum entry, one maker and its arms - which is cheap, and is meant to happen the day a
+# dialog needs it rather than the day somebody imagines one might.
 
 
 ## A single line of text. `field_id` is what values() answers under; `label` is the words at the
@@ -941,19 +947,6 @@ static func check_field(field_id: String, label: String = "") -> EventSheetField
 ## later completion source) can tell a path field from a prose one.
 static func path_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
 	return _spec(field_id, label, EventSheetFieldSpec.Kind.PATH)
-
-
-## A multi-line GDScript box, hardened by configure_code_editor the way every editable code field
-## in the plugin is.
-static func code_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
-	return _spec(field_id, label, EventSheetFieldSpec.Kind.CODE)
-
-
-## Free text with the plugin's own ▾ picker beside it. Give it suggesting(provider) - a Callable
-## returning the CURRENT suggestions - and it attaches through autocomplete_combo() above, so it
-## is the same combo the ACE params dialog uses.
-static func choice_field(field_id: String, label: String = "") -> EventSheetFieldSpec:
-	return _spec(field_id, label, EventSheetFieldSpec.Kind.CHOICE)
 
 
 ## Builds `specs` into `host` in order and returns the form that reads them back. `owner_name` is

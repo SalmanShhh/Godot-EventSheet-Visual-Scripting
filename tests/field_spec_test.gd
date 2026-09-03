@@ -21,6 +21,7 @@ static func run() -> bool:
 	ok = _stored_option_values() and ok
 	ok = _change_handlers_fire() and ok
 	ok = _required_and_ids() and ok
+	ok = _a_modifier_a_kind_does_not_wear_is_refused() and ok
 	return ok
 
 
@@ -34,8 +35,6 @@ static func _kinds_build_their_widgets() -> bool:
 		EventSheetPopupUI.options_field("mode", "Mode").options(PackedStringArray(["one", "two"])),
 		EventSheetPopupUI.check_field("keep", "Keep"),
 		EventSheetPopupUI.path_field("where", "Where"),
-		EventSheetPopupUI.code_field("body", "Body"),
-		EventSheetPopupUI.choice_field("pick", "Pick"),
 	], "field spec test")
 	var rows: Array = [
 		["a text field is a LineEdit", form.control("name") is LineEdit, true],
@@ -43,13 +42,9 @@ static func _kinds_build_their_widgets() -> bool:
 		["an options field is an OptionButton", form.control("mode") is OptionButton, true],
 		["a check field is a CheckBox", form.control("keep") is CheckBox, true],
 		["a path field is a LineEdit", form.control("where") is LineEdit, true],
-		["a code field is a CodeEdit", form.control("body") is CodeEdit, true],
-		["a choice field boxes its edit", form.control("pick") is HBoxContainer, true],
-		["a code field is hardened like every editable code box",
-			(form.control("body") as CodeEdit).auto_brace_completion_enabled, true],
 		["the form holds every id in build order", form.field_ids(),
-			PackedStringArray(["name", "count", "mode", "keep", "where", "body", "pick"])],
-		["the host got one row per field", host.get_child_count(), 7],
+			PackedStringArray(["name", "count", "mode", "keep", "where"])],
+		["the host got one row per field", host.get_child_count(), 5],
 	]
 	var ok: bool = SUPPORT.pins("field kinds build the plugin's own widgets", rows)
 	host.free()
@@ -171,6 +166,29 @@ static func _required_and_ids() -> bool:
 	var ok: bool = SUPPORT.pins("required fields and unknown ids", rows)
 	host.free()
 	return ok
+
+
+## THE SILENT NO-OP THIS SEAM MUST NOT HAVE. `number_field(...).placeholder("x")` compiled, built and
+## dropped the placeholder without a word - the modifier looked applied and was not. A modifier a
+## kind does not wear is refused now, and the pin is that the VALUE did not move: an error a nobody
+## reads is not the point, the point is that the spec did not quietly pretend.
+static func _a_modifier_a_kind_does_not_wear_is_refused() -> bool:
+	var number: EventSheetFieldSpec = EventSheetPopupUI.number_field("count", "Count")
+	var text: EventSheetFieldSpec = EventSheetPopupUI.text_field("name", "Name")
+	var check: EventSheetFieldSpec = EventSheetPopupUI.check_field("keep", "Keep")
+	var rows: Array = [
+		["a placeholder on a number field is refused",
+			number.placeholder("nothing").placeholder_text, ""],
+		["a bound on a text field is refused", text.at_least(3.0).minimum, 0.0],
+		["a step on a text field is refused", text.stepping(0.5).step_size, 1.0],
+		["options on a tick are refused",
+			check.options(PackedStringArray(["a"])).option_labels, PackedStringArray()],
+		["and a placeholder on the kinds that DO wear it still lands",
+			text.placeholder("a name").placeholder_text, "a name"],
+		["the table names every restricted modifier once",
+			EventSheetFieldSpec.KIND_ONLY_MODIFIERS.keys().size(), 5],
+	]
+	return SUPPORT.pins("a modifier a kind does not wear", rows)
 
 
 static func _ids_are_a_copy(form: EventSheetFieldForm) -> PackedStringArray:
