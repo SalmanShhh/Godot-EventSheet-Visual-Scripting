@@ -32,6 +32,7 @@ static func run() -> bool:
 	ok = _test_the_id_stems() and ok
 	ok = _test_the_templates() and ok
 	ok = _test_the_choice_words() and ok
+	ok = _test_the_surface_slots() and ok
 	ok = _test_ids_are_unique() and ok
 	ok = _test_every_row_carries_help() and ok
 	ok = _test_mesh_classes() and ok
@@ -168,6 +169,31 @@ static func _test_the_choice_words() -> bool:
 		})
 
 
+## The four rows that mean ONE SURFACE rather than the whole mesh. Two of them own that surface
+## before they write it, and the fourth deliberately does not: a surface still drawing with a shared
+## material file keeps its layer, because taking one off there would take it off every mesh wearing
+## the file.
+static func _test_the_surface_slots() -> bool:
+	var templates: Dictionary = _templates()
+	var own: String = "if get_surface_override_material({surface}) == null:\n" \
+		+ "\tset_surface_override_material({surface}, get_active_material({surface}).duplicate()" \
+		+ " if get_active_material({surface}) != null else StandardMaterial3D.new())\n"
+	return SUPPORT.pins("material_words_test", [
+		["one slot is painted without touching the others",
+			templates.get("MaterialSetSurfaceMaterial", ""),
+			"set_surface_override_material({surface}, {material})"],
+		["a slot's material reads back as what it is drawing with",
+			templates.get("MaterialSurfaceMaterial", ""), "get_active_material({surface})"],
+		["a layer owns the slot before it lays anything over it",
+			templates.get("MaterialLayerOverSurface", ""),
+			own + "get_surface_override_material({surface}).next_pass = {material}"],
+		["removing a layer leaves a shared material alone",
+			templates.get("MaterialRemoveSurfaceLayer", ""),
+			"if get_surface_override_material({surface}) != null:\n"
+				+ "\tget_surface_override_material({surface}).next_pass = null"]
+	])
+
+
 ## Every id this module publishes, once. An ace_id is a compatibility promise the moment it ships, so
 ## two descriptors answering to one id is a silent coin toss over which template a row compiles
 ## through.
@@ -181,7 +207,7 @@ static func _test_ids_are_unique() -> bool:
 	var ok: bool = SUPPORT.check("material_words_test", "no id is published twice", doubled,
 		PackedStringArray())
 	return SUPPORT.check("material_words_test", "the module publishes every word's rows",
-		seen.size(), 23) and ok
+		seen.size(), 27) and ok
 
 
 ## Help on the row and on every field it offers - the words a reader meets before they have run

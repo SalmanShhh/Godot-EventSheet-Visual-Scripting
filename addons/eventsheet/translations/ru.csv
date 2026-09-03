@@ -6103,3 +6103,22 @@ back,изнаночные
 both,обе
 Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,Читает стороны поверхности обратно: `material_override.cull_mode`. Годится в любом поле значения.
 sides,стороны
+Set Material Of Surface,Задать материал поверхности
+"Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.","Даёт ОДНОЙ поверхности меша собственный материал, не трогая остальные - именно это нужно модели с корпусом, забралом и рюкзаком, и именно этого не умеет Задать материал меша, потому что он красит их все сразу. Пишет `MeshInstance3D.set_surface_override_material`."
+Set material of surface {surface} to {material},Задать материал поверхности {surface} равным {material}
+Surface,Поверхность
+"Which surface to paint. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","Какую поверхность красить. Поверхности нумеруются с 0; Число поверхностей меша говорит, сколько их у этого меша, а у меша с одной поверхностью есть только поверхность 0."
+"A Material resource, or a variable holding one.","Ресурс Material или переменная, которая его хранит."
+Material Of Surface,Материал поверхности
+"The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.","Материал, которым поверхность рисует прямо сейчас - её собственное переопределение, если оно есть, и материал меша в противном случае. Используйте в любом поле значения. Пишет `MeshInstance3D.get_active_material`."
+material of surface {surface},материал поверхности {surface}
+"Which surface to ask about. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","О какой поверхности спрашивать. Поверхности нумеруются с 0; Число поверхностей меша говорит, сколько их у этого меша, а у меша с одной поверхностью есть только поверхность 0."
+Layer Over Surface,Наложить на поверхность
+"Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.","Рисует второй материал ПОВЕРХ одной поверхности, не заменяя то, что под ним - контур, иней, мерцание щита поверх кожи, с которой пришла модель. Сначала даёт этой поверхности собственную копию, поэтому слой никогда не появится на всех остальных мешах, носящих тот же файл материала. Пишет `Material.next_pass`."
+Layer {material} over surface {surface},Наложить {material} на поверхность {surface}
+"Which surface to lay the second material over. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","На какую поверхность положить второй материал. Поверхности нумеруются с 0; Число поверхностей меша говорит, сколько их у этого меша, а у меша с одной поверхностью есть только поверхность 0."
+The material drawn over the one already there.,"Материал, который рисуется поверх уже имеющегося."
+Remove Layer,Убрать слой
+"Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.","Снимает второй материал с поверхности, которой владеет этот меш. Поверхность, всё ещё рисующая общим файлом материала, намеренно остаётся нетронутой: слой на ней принадлежит каждому мешу, носящему этот файл, и снять его здесь значило бы снять его у всех."
+Remove the layer over surface {surface},Убрать слой над поверхностью {surface}
+"Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","С какой поверхности снять слой. Поверхности нумеруются с 0; Число поверхностей меша говорит, сколько их у этого меша, а у меша с одной поверхностью есть только поверхность 0."

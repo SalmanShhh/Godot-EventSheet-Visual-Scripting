@@ -6103,3 +6103,22 @@ back,뒷면
 both,양면
 Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,표면의 면 을 다시 읽습니다: `material_override.cull_mode`. 어떤 값 필드에서도 쓸 수 있습니다.
 sides,면
+Set Material Of Surface,표면의 머티리얼 설정
+"Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.","메시의 표면 하나에만 고유한 머티리얼을 주고 나머지는 그대로 둡니다 - 몸통, 바이저, 배낭으로 이루어진 모델에 필요한 일이며, 메시 머티리얼 설정은 모두를 한꺼번에 칠하기 때문에 할 수 없는 일입니다. `MeshInstance3D.set_surface_override_material`을 씁니다."
+Set material of surface {surface} to {material},표면 {surface}의 머티리얼을 {material}(으)로 설정
+Surface,표면
+"Which surface to paint. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","어떤 표면을 칠할지. 표면은 0부터 번호가 매겨집니다. 메시 표면 수가 이 메시에 몇 개가 있는지 알려 주며, 표면이 하나뿐인 메시에는 표면 0만 있습니다."
+"A Material resource, or a variable holding one.","Material 리소스, 또는 그것을 담은 변수."
+Material Of Surface,표면의 머티리얼
+"The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.","그 표면이 지금 그리고 있는 머티리얼 - 고유한 오버라이드가 있으면 그것, 없으면 메시의 것. 어떤 값 필드에서든 쓸 수 있습니다. `MeshInstance3D.get_active_material`을 씁니다."
+material of surface {surface},표면 {surface}의 머티리얼
+"Which surface to ask about. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","어떤 표면에 대해 물을지. 표면은 0부터 번호가 매겨집니다. 메시 표면 수가 이 메시에 몇 개가 있는지 알려 주며, 표면이 하나뿐인 메시에는 표면 0만 있습니다."
+Layer Over Surface,표면 위에 겹치기
+"Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.","아래에 있는 것을 바꾸지 않고 두 번째 머티리얼을 표면 위에 그립니다 - 모델에 원래 있던 피부 위의 외곽선, 서리, 방패의 일렁임. 그 표면에 먼저 고유한 사본을 주므로, 같은 머티리얼 파일을 입은 다른 모든 메시에 그 겹이 나타나지 않습니다. `Material.next_pass`를 씁니다."
+Layer {material} over surface {surface},{material}을(를) 표면 {surface} 위에 겹치기
+"Which surface to lay the second material over. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","어떤 표면 위에 두 번째 머티리얼을 놓을지. 표면은 0부터 번호가 매겨집니다. 메시 표면 수가 이 메시에 몇 개가 있는지 알려 주며, 표면이 하나뿐인 메시에는 표면 0만 있습니다."
+The material drawn over the one already there.,이미 있는 머티리얼 위에 그려지는 머티리얼.
+Remove Layer,겹친 층 제거
+"Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.","이 메시가 소유한 표면에서 두 번째 머티리얼을 다시 떼어냅니다. 아직 공유 머티리얼 파일로 그리고 있는 표면은 일부러 건드리지 않습니다. 그 위의 층은 그 파일을 입은 모든 메시의 것이라, 여기서 떼면 모두에게서 떼어지기 때문입니다."
+Remove the layer over surface {surface},표면 {surface} 위의 층 제거
+"Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","어떤 표면에서 층을 떼어낼지. 표면은 0부터 번호가 매겨집니다. 메시 표면 수가 이 메시에 몇 개가 있는지 알려 주며, 표면이 하나뿐인 메시에는 표면 0만 있습니다."

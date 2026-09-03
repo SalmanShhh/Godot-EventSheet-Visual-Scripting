@@ -6103,3 +6103,22 @@ back,背面
 both,双面
 Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,读回表面的面：`material_override.cull_mode`。可用在任何值字段里。
 sides,面
+Set Material Of Surface,设置表面的材质
+"Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.",只给网格的一个表面自己的材质，其他表面保持不变 - 这正是带身体、面罩和背包的模型需要的，也是设置网格材质做不到的，因为它会一次涂满所有表面。写入 `MeshInstance3D.set_surface_override_material`。
+Set material of surface {surface} to {material},将表面 {surface} 的材质设为 {material}
+Surface,表面
+"Which surface to paint. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",要涂哪个表面。 表面从 0 开始编号；网格表面数会告诉你这个网格有几个表面，只有一个表面的网格只有表面 0。
+"A Material resource, or a variable holding one.",一个 Material 资源，或持有它的变量。
+Material Of Surface,表面的材质
+"The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.",该表面此刻正在用来绘制的材质 - 它有自己的覆盖时就是那个，否则是网格的。可用于任何取值字段。写入 `MeshInstance3D.get_active_material`。
+material of surface {surface},表面 {surface} 的材质
+"Which surface to ask about. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",要询问哪个表面。 表面从 0 开始编号；网格表面数会告诉你这个网格有几个表面，只有一个表面的网格只有表面 0。
+Layer Over Surface,叠加到表面上
+"Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.",在一个表面上再画一层材质，而不替换下面的东西 - 在模型自带的皮肤上加描边、结霜或护盾微光。会先给那个表面一份自己的副本，所以这一层绝不会出现在穿着同一个材质文件的其他网格上。写入 `Material.next_pass`。
+Layer {material} over surface {surface},将 {material} 叠加到表面 {surface} 上
+"Which surface to lay the second material over. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",把第二层材质放到哪个表面上。 表面从 0 开始编号；网格表面数会告诉你这个网格有几个表面，只有一个表面的网格只有表面 0。
+The material drawn over the one already there.,画在已有材质之上的那层材质。
+Remove Layer,移除叠加层
+"Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.",把第二层材质从这个网格自己拥有的表面上取下来。仍在用共享材质文件绘制的表面会被有意留着不动：它上面的那一层属于每一个穿着该文件的网格，在这里取下就等于给所有网格都取下了。
+Remove the layer over surface {surface},移除表面 {surface} 上的叠加层
+"Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",从哪个表面取下叠加层。 表面从 0 开始编号；网格表面数会告诉你这个网格有几个表面，只有一个表面的网格只有表面 0。

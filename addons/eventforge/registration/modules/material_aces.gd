@@ -47,6 +47,10 @@ const DEFAULT_FADE_SECONDS := "0.5"
 ## address them all by it.
 const VALUE_PARAM := "value"
 
+## The two slots the surface rows carry: which surface, and the material the row is about.
+const SURFACE_PARAM := "surface"
+const MATERIAL_PARAM := "material"
+
 ## The field a texture is picked in - a file field over the project's own resources, rather than an
 ## expression box a path has to be typed into by hand.
 const TEXTURE_HINT := "resource_path"
@@ -56,7 +60,58 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	for word: String in W.words():
 		descriptors.append_array(_rows_of(word))
+	descriptors.append_array(_surface_rows())
 	return descriptors
+
+
+## THE SURFACE SLOTS, beside the frozen Set Mesh Material the Mesh section already ships. That row
+## paints the WHOLE mesh with one material; a mesh imported from a model usually has several
+## surfaces, one material each, and a game that wants the visor and not the helmet has to be able to
+## say which. These four say it: set the material of one slot, read it back, lay a second material
+## OVER it as a pass, and take that pass off again.
+##
+## THE SLOT IS A NUMBER, and the help says so rather than the field pretending to offer names. A
+## surface's name lives in the imported mesh resource rather than in the scene, so a picker that
+## listed names would have to load every mesh of every scene to build a dropdown, and would still
+## have nothing to show for a mesh built at run time by the primitive builders. Mesh Surface Count
+## answers how many there are, and slot 0 is the whole of a single-surface mesh.
+static func _surface_rows() -> Array[ACEDescriptor]:
+	return [
+		F.act("MaterialSetSurfaceMaterial", "Set Material Of Surface",
+			"%s({%s}, {%s})" % [W.SURFACE_OVERRIDE_SET, SURFACE_PARAM, MATERIAL_PARAM], CAT,
+			"Set material of surface {%s} to {%s}" % [SURFACE_PARAM, MATERIAL_PARAM],
+			"Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.",
+			W.HOST).param_built(_surface_param("Which surface to paint."))
+			.param("material", "null", "Material", "A Material resource, or a variable holding one.",
+				"expression").featured(),
+		F.expr("MaterialSurfaceMaterial", "Material Of Surface",
+			"%s({%s})" % [W.ACTIVE_CALL, SURFACE_PARAM], CAT,
+			"material of surface {%s}" % SURFACE_PARAM,
+			"The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.",
+			W.HOST).param_built(_surface_param("Which surface to ask about.")),
+		F.act("MaterialLayerOverSurface", "Layer Over Surface",
+			"%s%s({%s}).%s = {%s}" % [W.own_surface_lines("{%s}" % SURFACE_PARAM),
+				W.SURFACE_OVERRIDE_GET, SURFACE_PARAM, W.NEXT_PASS_MEMBER, MATERIAL_PARAM], CAT,
+			"Layer {%s} over surface {%s}" % [MATERIAL_PARAM, SURFACE_PARAM],
+			"Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.",
+			W.HOST).param_built(_surface_param("Which surface to lay the second material over."))
+			.param("material", "null", "Layer", "The material drawn over the one already there.",
+				"expression"),
+		F.act("MaterialRemoveSurfaceLayer", "Remove Layer",
+			"if %s({%s}) != null:\n\t%s({%s}).%s = null" % [W.SURFACE_OVERRIDE_GET, SURFACE_PARAM,
+				W.SURFACE_OVERRIDE_GET, SURFACE_PARAM, W.NEXT_PASS_MEMBER], CAT,
+			"Remove the layer over surface {%s}" % SURFACE_PARAM,
+			"Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.",
+			W.HOST).param_built(_surface_param("Which surface to take the layer off."))
+	]
+
+
+## The slot field, said the same way on every row that has one. A plain expression rather than a
+## dropdown, for the reason the section header gives.
+static func _surface_param(about: String) -> ACEParam:
+	return F.make_param(SURFACE_PARAM, "String", "0", "Surface",
+		"%s Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0." % about,
+		"expression")
 
 
 static func section_descriptions() -> Dictionary:

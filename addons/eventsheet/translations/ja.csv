@@ -6103,3 +6103,22 @@ back,裏
 both,両面
 Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,表面の面を読み返します: `material_override.cull_mode`。どの値フィールドでも使えます。
 sides,面
+Set Material Of Surface,サーフェスのマテリアルを設定
+"Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.",メッシュの1つのサーフェスだけに専用のマテリアルを与え、ほかのサーフェスはそのままにします - 本体・バイザー・バックパックを持つモデルに必要なことで、メッシュマテリアルを設定はすべてを一度に塗ってしまうためこれができません。`MeshInstance3D.set_surface_override_material` を書き込みます。
+Set material of surface {surface} to {material},サーフェス {surface} のマテリアルを {material} に設定
+Surface,サーフェス
+"Which surface to paint. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",どのサーフェスを塗るか。 サーフェスは 0 から番号が付きます。メッシュのサーフェス数がこのメッシュにいくつあるかを答え、サーフェスが1つだけのメッシュにはサーフェス 0 しかありません。
+"A Material resource, or a variable holding one.",Material リソース、またはそれを保持する変数。
+Material Of Surface,サーフェスのマテリアル
+"The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.",そのサーフェスがいま描画に使っているマテリアル - 専用のオーバーライドがあればそれ、なければメッシュのもの。任意の値フィールドで使えます。`MeshInstance3D.get_active_material` を書き込みます。
+material of surface {surface},サーフェス {surface} のマテリアル
+"Which surface to ask about. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",どのサーフェスについて尋ねるか。 サーフェスは 0 から番号が付きます。メッシュのサーフェス数がこのメッシュにいくつあるかを答え、サーフェスが1つだけのメッシュにはサーフェス 0 しかありません。
+Layer Over Surface,サーフェスに重ねる
+"Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.",下にあるものを置き換えずに、2枚目のマテリアルをサーフェスの上に描きます - モデルに元から付いていた肌の上に、輪郭線、霜、シールドの輝きを重ねられます。先にそのサーフェスへ専用のコピーを与えるので、同じマテリアルファイルを着ているほかのメッシュに重ねた層が現れることはありません。`Material.next_pass` を書き込みます。
+Layer {material} over surface {surface},{material} をサーフェス {surface} に重ねる
+"Which surface to lay the second material over. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",どのサーフェスに2枚目のマテリアルを重ねるか。 サーフェスは 0 から番号が付きます。メッシュのサーフェス数がこのメッシュにいくつあるかを答え、サーフェスが1つだけのメッシュにはサーフェス 0 しかありません。
+The material drawn over the one already there.,すでにあるマテリアルの上に描かれるマテリアル。
+Remove Layer,重ねた層を外す
+"Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.",このメッシュが所有しているサーフェスから2枚目のマテリアルを外します。共有のマテリアルファイルでまだ描画しているサーフェスは意図的にそのままにします。その層はそのファイルを着ているすべてのメッシュのものなので、ここで外すとすべてから外れてしまうからです。
+Remove the layer over surface {surface},サーフェス {surface} に重ねた層を外す
+"Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",どのサーフェスから層を外すか。 サーフェスは 0 から番号が付きます。メッシュのサーフェス数がこのメッシュにいくつあるかを答え、サーフェスが1つだけのメッシュにはサーフェス 0 しかありません。

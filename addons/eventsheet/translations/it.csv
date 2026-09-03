@@ -6103,3 +6103,22 @@ back,dietro
 both,entrambe
 Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,Rilegge le facce della superficie: `material_override.cull_mode`. Usalo in qualsiasi campo valore.
 sides,facce
+Set Material Of Surface,Imposta il materiale della superficie
+"Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.","Dà a UNA superficie della mesh il proprio materiale, lasciando in pace le altre - che è quello che serve a un modello con corpo, visiera e zaino, e quello che Imposta materiale della mesh non può fare perché le dipinge tutte insieme. Scrive `MeshInstance3D.set_surface_override_material`."
+Set material of surface {surface} to {material},Imposta il materiale della superficie {surface} a {material}
+Surface,Superficie
+"Which surface to paint. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","Quale superficie dipingere. Le superfici sono numerate da 0; Numero di superfici della mesh dice quante ne ha questa mesh, e una mesh con una sola superficie ha solo la superficie 0."
+"A Material resource, or a variable holding one.","Una risorsa Material, o una variabile che ne contiene una."
+Material Of Surface,Materiale della superficie
+"The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.","Il materiale con cui una superficie sta disegnando adesso - la sua sovrascrittura quando ne ha una, altrimenti quello della mesh. Usalo in qualsiasi campo valore. Scrive `MeshInstance3D.get_active_material`."
+material of surface {surface},materiale della superficie {surface}
+"Which surface to ask about. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","Di quale superficie chiedere. Le superfici sono numerate da 0; Numero di superfici della mesh dice quante ne ha questa mesh, e una mesh con una sola superficie ha solo la superficie 0."
+Layer Over Surface,Sovrapponi alla superficie
+"Draws a second material OVER one surface without replacing what is under it - an outline, a frost, a shield shimmer over the skin the model came with. Gives that surface its own copy first, so the layer never appears on every other mesh wearing the same material file. Writes `Material.next_pass`.","Disegna un secondo materiale SOPRA una superficie senza sostituire quello che c'è sotto - un contorno, una brina, il luccichio di uno scudo sulla pelle con cui è arrivato il modello. Dà prima a quella superficie una copia propria, così lo strato non compare mai su ogni altra mesh che porta lo stesso file di materiale. Scrive `Material.next_pass`."
+Layer {material} over surface {surface},Sovrapponi {material} alla superficie {surface}
+"Which surface to lay the second material over. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","Su quale superficie posare il secondo materiale. Le superfici sono numerate da 0; Numero di superfici della mesh dice quante ne ha questa mesh, e una mesh con una sola superficie ha solo la superficie 0."
+The material drawn over the one already there.,Il materiale disegnato sopra quello già presente.
+Remove Layer,Togli lo strato
+"Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.","Toglie il secondo materiale da una superficie che questa mesh possiede. Una superficie che disegna ancora con un file di materiale condiviso viene lasciata in pace di proposito: lo strato che porta appartiene a ogni mesh che usa quel file, e toglierlo qui lo toglierebbe a tutte."
+Remove the layer over surface {surface},Togli lo strato sulla superficie {surface}
+"Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","Da quale superficie togliere lo strato. Le superfici sono numerate da 0; Numero di superfici della mesh dice quante ne ha questa mesh, e una mesh con una sola superficie ha solo la superficie 0."

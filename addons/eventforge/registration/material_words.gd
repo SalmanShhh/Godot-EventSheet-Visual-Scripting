@@ -301,6 +301,16 @@ static func default_of(word: String) -> String:
 	return "" if property.is_empty() else EventForgeACEFactory.default_literal(MATERIAL_CLASS, property)
 
 
+## The own-it courtesy for ONE SURFACE SLOT rather than for the whole mesh. A mesh with several
+## surfaces has a material per slot, and the whole-mesh override would paint over all of them - so a
+## row that means one slot owns that slot instead. `slot` is the token the row names the surface
+## with, spliced in wherever the guard, the copy and the write each ask about that same slot.
+static func own_surface_lines(slot: String) -> String:
+	return "if %s(%s) == null:\n\t%s(%s, %s(%s).duplicate() if %s(%s) != null else %s.new())\n" % [
+		SURFACE_OVERRIDE_GET, slot, SURFACE_OVERRIDE_SET, slot, ACTIVE_CALL, slot, ACTIVE_CALL,
+		slot, FALLBACK_MATERIAL]
+
+
 ## Every word this vocabulary really resolves, in table order - the one list the rows, the lift and
 ## the tests all walk, so none of them can drift from the others.
 static func words() -> PackedStringArray:
