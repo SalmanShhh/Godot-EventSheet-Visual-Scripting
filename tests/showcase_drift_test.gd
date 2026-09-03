@@ -9,9 +9,18 @@
 # already sitting there.
 #
 # This runs the real gate - `tools/build_examples.gd -- --check`, which snapshots the tree, runs the
-# ORDINARY build over it, compares every byte and puts the committed bytes back - and pins its
-# verdict at zero. Two pins, not one: a run that printed no verdict at all is a gate that did not
-# run, and pinning only the drift count would read that as a pass.
+# ORDINARY build over it, compares every byte and puts the committed bytes back. A run that printed
+# no verdict at all is a gate that did not run, and pinning only the drift count would read that as
+# a pass, so the verdict line itself is pinned first.
+#
+# THE RUN CARRIES A PLANTED STALE FILE, and that is why the verdict pinned below is one rather than
+# zero. The gate names three kinds of drift and one of them - "the tree holds a file the builder does
+# not write" - could not fire at all: the builder never deletes, so a retired showcase stayed on disk
+# and the gate compared it, byte for byte, against itself and passed. A showcase could have been
+# removed from the builder and sat committed for ever behind a green gate. The planted file is that
+# case, made to happen on every run: the pins are that the gate names it, names it as THAT kind, and
+# that nothing else in the tree drifted beside it - which is the original zero, said in a way that
+# also proves the second kind works.
 #
 # WHEN THIS FAILS the builder is the source and the committed tree is stale, so the fix is to
 # regenerate (`godot --headless --path . --script tools/build_examples.gd`) and commit what moves -
@@ -39,23 +48,63 @@ const CHECK_FLAG: String = "--check"
 const VERDICT_PREFIX: String = "showcases="
 const DRIFT_KEY: String = "drifted="
 
+## The file planted under the showcase tree for the length of one gate run: something committed that
+## the builder does not write. A `.txt` so no importer, no class cache and no sheet walk ever looks
+## at it, and a name that says what it is if a killed run ever leaves it behind.
+const STALE_PROBE: String = "res://demo/showcase/gate_probe_retired_showcase.txt"
+const STALE_REASON: String = "the tree holds a file the builder does not write"
+
 
 static func run() -> bool:
+	_plant_probe()
 	var output: Array = []
 	var arguments: PackedStringArray = PackedStringArray(["--headless", "--path",
 		ProjectSettings.globalize_path("res://"), "--script", GATE, "--", CHECK_FLAG])
 	OS.execute(OS.get_executable_path(), arguments, output, true)
+	_remove_probe()
 	var verdict: String = _verdict_line(output)
 	# Every DRIFT line the gate printed, echoed here so a red run in a log names the files rather
 	# than sending a reader to a second log to find out which ones moved.
+	var drifts: PackedStringArray = PackedStringArray()
 	for line: String in _lines(output):
 		if line.begins_with("DRIFT: "):
 			print("  showcase_drift_test: %s" % line)
+			drifts.append(line)
 	return SUPPORT.pins("showcase_drift_test", [
 		["the gate ran and printed its verdict", not verdict.is_empty(), true],
-		["demo/showcase/ is what tools/build_examples.gd emits today (%s)" % verdict,
-			_drift_count(verdict), 0],
+		["the planted stale file is the ONLY drift (%s)" % verdict, _drift_count(verdict), 1],
+		["and it is named as a file the builder does not write", _probe_drift(drifts),
+			"DRIFT: %s (%s)" % [STALE_PROBE, STALE_REASON]],
+		["the planted file is gone again afterwards", FileAccess.file_exists(STALE_PROBE), false],
 	])
+
+
+## The stale file, written before the run. Its CONTENT is irrelevant to the gate - what makes it
+## drift is that nothing in the builder writes this path.
+static func _plant_probe() -> void:
+	var file: FileAccess = FileAccess.open(STALE_PROBE, FileAccess.WRITE)
+	if file == null:
+		push_error("showcase_drift_test: could not plant %s" % STALE_PROBE)
+		return
+	file.store_string("A showcase the builder no longer writes. Planted and removed by showcase_drift_test.\n")
+	file.close()
+
+
+## The probe taken away again. The gate RESTORES a file of this kind rather than deleting it - that
+## is the correct behaviour for a check run, which must leave the tree as it found it - so removing
+## it is this test's own job and happens whether the gate passed or failed.
+static func _remove_probe() -> void:
+	if FileAccess.file_exists(STALE_PROBE):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(STALE_PROBE))
+
+
+## The one DRIFT line that names the probe, or a sentence saying it was not named - which reads in
+## the failure output rather than sending somebody to count lines.
+static func _probe_drift(drifts: PackedStringArray) -> String:
+	for line: String in drifts:
+		if line.contains(STALE_PROBE):
+			return line
+	return "the gate did not name the planted file at all"
 
 
 ## The gate's verdict line, or "" when it printed none - which is what a crashed or unbuilt gate
