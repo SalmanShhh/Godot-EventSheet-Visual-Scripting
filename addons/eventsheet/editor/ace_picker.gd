@@ -596,6 +596,12 @@ var _host_node: Node = null
 var _variable_catalog_provider: Callable = Callable()
 ## Derived once per open (the provider reads the autoloads' scripts), cleared by open().
 var _variable_catalog: Array[Dictionary] = []
+## Whether the catalog above has been derived for this open. Kept apart from the catalog's own
+## emptiness on purpose: a sheet with no variables in scope derives an EMPTY catalog, and reading
+## "empty" as "not yet derived" asked the provider again for every row of the picker - 1,878
+## reads of the autoloads' scripts off disk, which is what froze the Add picker for seconds on a
+## fresh sheet.
+var _variable_catalog_derived: bool = false
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
@@ -610,7 +616,8 @@ func set_variable_catalog_provider(provider: Callable) -> void:
 
 ## The catalog behind the open dialog, derived at most once per open.
 func _variables_in_scope() -> Array[Dictionary]:
-	if _variable_catalog.is_empty() and _variable_catalog_provider.is_valid():
+	if not _variable_catalog_derived and _variable_catalog_provider.is_valid():
+		_variable_catalog_derived = true
 		var provided: Variant = _variable_catalog_provider.call()
 		if provided is Array:
 			for entry: Variant in (provided as Array):
@@ -1040,6 +1047,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	# The variables in scope, re-derived per open (a variable may have been added since) and
 	# never per keystroke: the answer reads the autoloads' scripts off disk.
 	_variable_catalog.clear()
+	_variable_catalog_derived = false
 	_object_filter_provider = ""
 	_unique_scope = {}
 	# "Add condition on Player" opens the picker ALREADY on Player: the object step of the

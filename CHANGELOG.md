@@ -1060,6 +1060,13 @@ buys thirteen lines and costs 2,145 readings, so it will not.
 
 ### Fixed
 
+- **The Add picker opens instantly on a fresh sheet.** Clicking Add your first event, the E key,
+  the corner link or the footer row froze the editor for five to ten seconds on a sheet with no
+  variables in scope. The picker derives the variables a verb can take once per open, and read an
+  EMPTY catalog as one not derived yet - so every one of its 1,878 rows asked the dock again, and
+  each ask read the autoloads' scripts off disk. Measured in the editor: 9.5 s down to 0.16 s once
+  warm, 0.9 s on the first open of a session. A pin holds the provider to one call per open.
+
 - **The Menu's own Manual door says when there is something unread.** Tools ▸ Manual… wears a mark
   when the reader has not opened What's new since the plugin's version changed, and the Menu's foot -
   the door a reader looks for by name rather than by group - did not, so the entry most readers reach

@@ -23,6 +23,23 @@ static func run() -> bool:
 	all_passed = _check("title: replace action", picker._title_for_mode("replace_action", false), "Replace Action") and all_passed
 	all_passed = _check("title: replace trigger", picker._title_for_mode("replace_trigger", false), "Replace Trigger") and all_passed
 
+	# The variable catalog is derived ONCE per open even when it comes back EMPTY. A sheet with no
+	# variables in scope used to read "empty" as "not derived yet" and ask the provider again for
+	# every row the tree built - 1,878 reads of the autoloads' scripts off disk per open, which is
+	# what froze the Add picker for seconds on a fresh sheet.
+	var provider_calls: Array[int] = [0]
+	picker.set_variable_catalog_provider(func() -> Array:
+		provider_calls[0] += 1
+		return [])
+	picker._variables_in_scope()
+	picker._variables_in_scope()
+	picker._variables_in_scope()
+	all_passed = _check("an empty variable catalog is derived once, not once per row", provider_calls[0], 1) and all_passed
+	picker._variable_catalog.clear()
+	picker._variable_catalog_derived = false
+	picker._variables_in_scope()
+	all_passed = _check("the next open derives it again", provider_calls[0], 2) and all_passed
+
 	# Per-item type labels (the type tint was removed - Favorites/Recent now render plain like the
 	# main tree and the native Create-New-Node dialog; the per-row icon carries the type).
 	all_passed = _check("type label trigger", picker._ace_type_label(ACEDefinition.ACEType.TRIGGER), "Trigger") and all_passed
