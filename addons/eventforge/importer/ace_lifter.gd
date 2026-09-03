@@ -3754,6 +3754,15 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# Nothing is lost by it: the sentence the file gets is the same sentence either way, and the
 	# emitted bytes are identical.
 	"PlaceAtNode3D",
+	# The two view-and-layer rows whose template is a bare, very common property write. `size = {size}`
+	# is a Control's size, a box shape's size, a viewport's size and a dozen more, and `offset = {by}`
+	# is a line the shipped Set Offset row already speaks for. Admitted, the first would relabel every
+	# `size = ...` line in every project as a view being resized; the second would split every
+	# `offset = ...` line between two rows by registry order alone. Both are perfectly good AUTHORING
+	# words on their own shelves - a view really is sized this way, a layer really is nudged this way -
+	# and the emitted bytes are identical either way, so nothing is lost by leaving the reading to the
+	# sentence that already covers those lines.
+	"ViewSetSize", "LayerOffset",
 	# The two destroy sentences that stand BESIDE a frozen row writing the identical line: Destroy Now
 	# writes `{object}.queue_free()`, which is Free Node's own template, and Is Still Here writes
 	# `is_instance_valid({object})`, which is Object Still Exists's. Two rows with one template would
