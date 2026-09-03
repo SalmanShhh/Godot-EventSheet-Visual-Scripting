@@ -83,6 +83,8 @@ static func retire_into(node: Node, pool: Node) -> void:
 ## names anything is simply an answer of no.
 static func hand_back_by_id(node_id: int, pool_id: int) -> void:
 	_booked.erase(node_id)
+	if not is_instance_id_valid(node_id) or not is_instance_id_valid(pool_id):
+		return
 	hand_back(instance_from_id(node_id) as Node, instance_from_id(pool_id) as Node)
 
 
