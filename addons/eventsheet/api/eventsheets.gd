@@ -1874,6 +1874,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"home_leash": "Home-And-Leash",
 	"loot_loader": "Loot-Table",
 	"loot_table_resource": "Loot-Table",
+	"moment_resource": "Juice",
 	"object_pool": "ObjectPool",
 	"platformer_movement": "Platformer",
 	"price_table_resource": "Priced-Tables",
