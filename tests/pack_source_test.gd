@@ -219,6 +219,14 @@ static func _every_folder_is_claimed() -> bool:
 			if opened >= 0:
 				var rest: String = text.substr(opened + 18)
 				asked_for.append(rest.substr(0, rest.find("\"")))
+			# A folder may also be claimed by a builder that ships COMPANION FILES out of it - a
+			# pack whose shaders or starter resources are authored there while its code is not.
+			var shipped: int = text.find("ship_files(\"")
+			if shipped >= 0:
+				var tail: String = text.substr(shipped + 12)
+				var claimed: String = tail.substr(0, tail.find("\""))
+				if not asked_for.has(claimed):
+					asked_for.append(claimed)
 	asked_for.sort()
 	var present: PackedStringArray = PackedStringArray()
 	var root: DirAccess = DirAccess.open(SOURCE_ROOT)

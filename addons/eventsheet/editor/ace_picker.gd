@@ -1360,6 +1360,25 @@ const SEARCH_SYNONYMS := {
 	"colourblind": "correct colours",
 	"colorblind": "correct colours",
 	"daltonism": "correct colours",
+	# A WHOLE BEAT OF FEEDBACK. Nobody searches for "moment" either - they search for the thing that
+	# just happened in their game. Each of these lands on the Moment row, whose own field then offers
+	# the moments the project holds, so the search only has to get the reader there.
+	"hit": "moment",
+	"impact": "moment",
+	"boom": "moment",
+	"win": "moment",
+	"danger": "moment",
+	"calm": "moment",
+	# AND THE SCENE CHANGE WITH SOMETHING OVER IT. People name one by the shape it makes rather than
+	# by the word "transition", and all of them are the same two rows - Go To Scene With and Reload
+	# Scene With - whose own field then shows the whole list of shapes.
+	"transition": "scene with",
+	"wipe": "scene with",
+	"dissolve": "scene with",
+	"iris": "scene with",
+	"blinds": "scene with",
+	"page curl": "scene with",
+	"crossfade": "scene with",
 }
 
 
@@ -1376,7 +1395,9 @@ static func register_synonyms(synonyms: Dictionary) -> void:
 static func _c3_synonym_queries(query: String) -> Array[String]:
 	var lowered: String = query.to_lower().strip_edges()
 	var extra: Array[String] = []
-	if lowered.length() < 4:
+	# Two letters is not a search, it is somebody still typing - but THREE is a whole word here: hit,
+	# win and boom are what a person types when they want the row that makes a hit feel like one.
+	if lowered.length() < 3:
 		return extra
 	for table: Dictionary in [SEARCH_SYNONYMS, _extra_synonyms]:
 		for phrase: String in table:
