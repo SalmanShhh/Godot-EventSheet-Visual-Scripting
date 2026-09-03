@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Drunken Walkers, a seeded grid generator you drive from rows.** Walkers stagger across a grid
+  of integers carving caves, corridors, rivers and ore veins; tagged **marks** land on the result
+  with real placement rules (any cell, interior only, edge only) and a Euclidean minimum spacing
+  that applies per tag, spans two passes and at 0 still refuses to stack. **29 actions, 4
+  conditions, 30 expressions and 6 triggers**, six shape presets carrying their recipe numbers
+  exactly, and the pack ships its own icon.
+- **The determinism is the feature, not a footnote.** The whole run draws from ONE seeded stream in
+  a fixed order, so a seed string reproduces a map cell for cell - floors, ore, coins and enemies
+  alike. The turn check is rolled even at a turn chance of 1 and a weighted pick spends exactly one
+  value whether or not weights are set, so tuning one number moves that decision and leaves every
+  later one where it was in the stream. Headings quantise by rounding degrees into the eight grid
+  neighbours rather than by taking a cosine, so an exported build picks the neighbour the editor
+  did. Create Grid does not reset the seed and Set Seed does not clear the grid.
+- **A generation you can save mid-walk.** Save State As Text writes the grid, the origin and cell
+  size, the seed, every walker with its progress and recorded path, every mark, and the random
+  stream's own position; Load State From Text puts them back, silently and with no trigger replayed.
+  A half-finished Step Walker animation resumes and produces the identical remaining path.
+- **Randomness that can borrow the project's stream.** Set Random Source switches between the
+  pack's own seeded generator, the shared Advanced Random autoload (one seed for every procedural
+  system at once) and an injected queue Inject Random fills for a single audited stream, which falls
+  back rather than failing when it runs dry.
+- **Guide:** [docs/Addons/Drunken-Walkers.md](docs/Addons/Drunken-Walkers.md) - the full ACE
+  reference, the shape-recipe table, the which-trigger-fires-when matrix, and eighteen worked use
+  cases from a four-row first cave to two independent generators in one scene.
+
 ### The Resting Toolbar
 
 - **Seven controls, one row, never wrapping.** The strip fronted **21 interactive controls** over
