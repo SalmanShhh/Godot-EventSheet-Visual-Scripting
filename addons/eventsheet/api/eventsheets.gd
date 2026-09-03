@@ -1863,6 +1863,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"ability_set_resource": "Simple-Abilities",
 	"background_runner": "Run-In-Background",
 	"big_number": "Big-Numbers",
+	"camera_rail_3d": "Camera-Rail",
 	"canvas_surface": "Drawing-Canvas",
 	"combo_box": "ComboBox",
 	"drag_drop": "Drag-And-Drop",
