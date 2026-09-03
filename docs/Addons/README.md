@@ -104,6 +104,7 @@ Attach to a node to move it.
 - [UtilityBrain](UtilityBrain.md) - score actions by considerations and response curves, then Evaluate; the best action wins.
 - [HTN Agent](HTN-Agent.md) - hierarchical task-network planning: goals decompose into ordered tasks.
 - [State Machine](State-Machine.md) - named states with enter/exit and transitions.
+- [Drunken Walkers](Drunken-Walkers.md) - seeded grid generation: walkers carve caves, corridors, rivers and ore veins, tagged marks land with real placement and spacing rules, and one seed reproduces the whole map.
 - [Home & Leash](Home-And-Leash.md) - a home point, a leash distance with five geometry metrics, and a return-home walk with its arrival trigger.
 - [Line Of Sight](Line-Of-Sight.md) - can this node see a target (2D raycast, cone, range).
 - [Line Of Sight 3D](Line-Of-Sight-3D.md) - the same question in 3D: raycast, cone of view and range.
