@@ -508,7 +508,7 @@ var _reading_failures: ItemList = null
 func open_publish_version_dialog() -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
 	var sheet_path: String = str(_dock._current_sheet_path)
-	var is_pack: bool = sheet_path.begins_with("res://eventsheet_addons/") 		or (sheet != null and not sheet.addon_version.strip_edges().is_empty())
+	var is_pack: bool = sheet_path.begins_with("res://eventsheet_addons/") or (sheet != null and not sheet.addon_version.strip_edges().is_empty())
 	if not is_pack:
 		_dock._set_status("Publish New Version is for addon packs - this sheet declares no @ace_version and lives outside eventsheet_addons/.", true)
 		return

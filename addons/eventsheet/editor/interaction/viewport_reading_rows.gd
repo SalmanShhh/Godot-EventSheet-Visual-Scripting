@@ -3454,7 +3454,7 @@ static func cursor_ray_facts(sheet: EventSheetResource) -> Dictionary:
 	# taken from one run and drawn beside another would be the confident lie this walk exists to
 	# prevent, and one word may not read two ways on one sheet.
 	for name_text: String in rays:
-		(rays[name_text] as Dictionary)["cleared"] = 			int(cleared_runs.get(name_text, 0)) >= int(total_runs.get(name_text, 0))
+		(rays[name_text] as Dictionary)["cleared"] = int(cleared_runs.get(name_text, 0)) >= int(total_runs.get(name_text, 0))
 	return {"cursor_rays": rays, "canvas_points": canvas_points}
 
 

@@ -19,7 +19,7 @@ const RESERVED: PackedStringArray = [
 static func sanitize(raw_name: String) -> String:
 	var cleaned: String = ""
 	for character in raw_name.strip_edges():
-		if (character >= "a" and character <= "z") or (character >= "A" and character <= "Z") 				or (character >= "0" and character <= "9") or character == "_":
+		if (character >= "a" and character <= "z") or (character >= "A" and character <= "Z") or (character >= "0" and character <= "9") or character == "_":
 			cleaned += character
 		elif character == " " or character == "-":
 			cleaned += "_"

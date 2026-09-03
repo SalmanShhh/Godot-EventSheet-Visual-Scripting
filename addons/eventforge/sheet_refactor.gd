@@ -282,7 +282,7 @@ static func _rename_text(text: String, regex: RegEx, new_name: String, counter: 
 		return text
 	# The mask is only computed when a caller asked for literal-safety, so the everyday rename pays
 	# nothing for it.
-	var mask: PackedByteArray = _string_literal_mask(text) if bool(counter.get("skip_string_literals", false)) 		else PackedByteArray()
+	var mask: PackedByteArray = _string_literal_mask(text) if bool(counter.get("skip_string_literals", false)) else PackedByteArray()
 	# Manual back-to-front splice instead of regex.sub: sub() treats "$" in the
 	# replacement as a backreference marker, which would eat node references like
 	# "$EliteEnemy". Renames are always literal here.

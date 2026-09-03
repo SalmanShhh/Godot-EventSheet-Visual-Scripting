@@ -230,4 +230,4 @@ func _on_confirmed() -> void:
 static func applied_text(done: Dictionary) -> String:
 	return EventSheetL10n.translate("%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.") % [
 		int(done.get("written", 0)), int(done.get("removed", 0)),
-		int(done.get("kept", 0)), int(done.get("backed_up", 0))] 		+ EventSheetPackUpdate.backup_note(done)
+		int(done.get("kept", 0)), int(done.get("backed_up", 0))] + EventSheetPackUpdate.backup_note(done)

@@ -8972,7 +8972,7 @@ func group_variable_rows_by_folder(rows: Array[EventRowData], sheet: EventSheetR
 		var variable: LocalVariable = row_data.source_resource as LocalVariable
 		var is_member: bool = variable != null and row_data.variable_row and row_data.indent == 0
 		if is_member:
-			var declared: String = str((variable.attributes as Dictionary).get("group", "")).strip_edges() 				if variable.attributes is Dictionary else ""
+			var declared: String = str((variable.attributes as Dictionary).get("group", "")).strip_edges() if variable.attributes is Dictionary else ""
 			if not declared.is_empty():
 				declared_group = declared
 		elif not _is_spacing_row(row_data):
@@ -8994,7 +8994,7 @@ func group_variable_rows_by_folder(rows: Array[EventRowData], sheet: EventSheetR
 ## True for a row that is only the blank line the round trip keeps between two declarations - spacing,
 ## which neither belongs to a folder nor ends one.
 static func _is_spacing_row(row_data: EventRowData) -> bool:
-	return row_data != null and row_data.source_resource is RawCodeRow 		and is_blank_block((row_data.source_resource as RawCodeRow).code.split("
+	return row_data != null and row_data.source_resource is RawCodeRow and is_blank_block((row_data.source_resource as RawCodeRow).code.split("
 "))
 
 

@@ -191,7 +191,7 @@ static func _build(example: String) -> Dictionary:
 	# wide claims every statement in every opened file and hands each one back under an id nothing can
 	# render, so it is refused here rather than being left for a caller to notice.
 	if literal.strip_edges().is_empty():
-		return {REFUSED: "the example is all value span and no text of its own, so it would match"			+ " every line - write the line the way a person writes it, with only the values marked"}
+		return {REFUSED: "the example is all value span and no text of its own, so it would match" + " every line - write the line the way a person writes it, with only the values marked"}
 	return {"pattern": pattern, "shape": shape, "params": params, "slots": slots,
 		"defaults": defaults, WIDE: wide}
 

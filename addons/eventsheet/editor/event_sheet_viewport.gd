@@ -1897,7 +1897,7 @@ func jump_to_bookmark(direction: int = 1) -> bool:
 		var marked_row: EventRowData = _row_at(index)
 		# Keyed on the statement, but only the pair's lead row is a jump stop - F4 must never park the
 		# selection on a reading of the row it just left.
-		if marked_row != null and _bookmark_rows.has(marked_row.statement_uid()) 				and (marked_row.ternary_anchor_uid.is_empty() or marked_row.ternary_lead):
+		if marked_row != null and _bookmark_rows.has(marked_row.statement_uid()) and (marked_row.ternary_anchor_uid.is_empty() or marked_row.ternary_lead):
 			marked.append(index)
 	if marked.is_empty():
 		return false
@@ -2237,7 +2237,7 @@ func _gui_input(event: InputEvent) -> void:
 		var mouse_button: InputEventMouseButton = event as InputEventMouseButton
 		# The sticky breadcrumb claims a plain left click on its strip (jump to the group bar)
 		# before the row hit-test can read the same click as a row selection underneath it.
-		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT 				and _group_breadcrumb.handle_click(mouse_button.position):
+		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT and _group_breadcrumb.handle_click(mouse_button.position):
 			accept_event()
 			return
 		# And the two corner links, claimed before the row hit-test for the same reason: they are

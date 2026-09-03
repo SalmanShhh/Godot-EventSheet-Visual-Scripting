@@ -390,7 +390,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# the switch turns the group on and off, the ring before it makes the group switchable at
 		# runtime. Both are marks, so a click on one is never a click on the title.
 		var group_action: String = str(metadata.get("group_action", ""))
-		if not event.double_click and not group_action.is_empty() and row_data != null 				and row_data.source_resource is EventGroup:
+		if not event.double_click and not group_action.is_empty() and row_data != null and row_data.source_resource is EventGroup:
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport.group_action_requested.emit(group_action, row_data.source_resource as EventGroup)
 			_viewport.accept_event()
@@ -421,7 +421,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# carries only ƒ, the name and the input chips, so everything else the verb IS has to be one
 		# click away - and the fold arrow (handled just above) still folds, while a parameter cell keeps
 		# its own kind, and so its own double-click editor.
-		if not event.double_click and not event.ctrl_pressed and not event.meta_pressed and not event.shift_pressed 				and row_data != null and row_data.source_resource is EventFunction 				and row_data.row_type == EventRowData.RowType.EVENT 				and str(metadata.get("kind", "")) == "define_function":
+		if not event.double_click and not event.ctrl_pressed and not event.meta_pressed and not event.shift_pressed and row_data != null and row_data.source_resource is EventFunction and row_data.row_type == EventRowData.RowType.EVENT and str(metadata.get("kind", "")) == "define_function":
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport.verb_properties_requested.emit(row_data.source_resource)
 			_viewport.accept_event()
@@ -444,7 +444,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# Ctrl+Click go-to-definition: when the clicked cell resolves to a jump target (the dock's
 		# probe decides), navigate instead of toggling multi-select - unresolvable cells keep
 		# Ctrl+Click's multi-select meaning, so both gestures coexist.
-		if (event.ctrl_pressed or event.meta_pressed) and not event.double_click and row_data != null 				and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
+		if (event.ctrl_pressed or event.meta_pressed) and not event.double_click and row_data != null and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
 			_viewport.navigate_requested.emit(row_data, span_index, metadata)
 			_viewport.accept_event()
 			return

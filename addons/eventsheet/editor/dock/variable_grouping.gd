@@ -89,7 +89,7 @@ static func _rename_tree_subgroups(rows: Array, from: String, to: String) -> int
 	var changed: int = 0
 	for row: Variant in rows:
 		if row is LocalVariable:
-			if subgroup_of(null, "tree", "", row as LocalVariable) == from 					and set_subgroup(null, "tree", "", row as LocalVariable, to):
+			if subgroup_of(null, "tree", "", row as LocalVariable) == from and set_subgroup(null, "tree", "", row as LocalVariable, to):
 				changed += 1
 		elif row is EventRow:
 			# Tree variables can live under an event's sub-rows too - without this arm a
