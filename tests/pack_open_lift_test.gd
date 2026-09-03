@@ -72,7 +72,8 @@ static func run() -> bool:
 	# Files: the Folder Watcher (+1). Same recomputation.
 	# Scenes: the Second View pack (+1). Same recomputation.
 	# Generation: the Drunken Walkers pack (+1). Same recomputation.
-	all_passed = _check("the fleet was scanned (115 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1 + 1) and all_passed
+	# Camera: the Camera Rail pack and its 3D twin (+2). Same recomputation.
+	all_passed = _check("the fleet was scanned (117 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1 + 1 + 2) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
@@ -110,10 +111,13 @@ static func run() -> bool:
 	# and index pairs for cells and marks, the seed, the injected headroom, the saved state, and the
 	# twelve context readings the triggers answer with). Its six triggers are signals, not declared
 	# verbs, so they are not in this number.
+	# camera: +7 Camera Rail verbs (fly along, cut to, blend to, hold, stop, is flying and the
+	# shot's progress) and +7 on its 3D twin - the same seven, with a node kept in frame on the
+	# flight. The two On Finished triggers of each are signals, so they are not in this number.
 	# Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
 		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
-		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5 + 63) and all_passed
+		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5 + 63 + 7 + 7) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
