@@ -972,22 +972,22 @@ func cell_value(x: int, y: int) -> int:
 	return _cells[y * _width + x]
 
 ## @ace_expression
-## @ace_name("Grid Width")
+## @ace_name("Current Grid Width")
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The current grid width in cells, which is what Create Grid last built rather than the property.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.grid_width_cells()")
-func grid_width_cells() -> int:
+## @ace_codegen_template("$DrunkenWalkers.current_grid_width()")
+func current_grid_width() -> int:
 	_ensure_started()
 	return _width
 
 ## @ace_expression
-## @ace_name("Grid Height")
+## @ace_name("Current Grid Height")
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The current grid height in cells, which is what Create Grid last built rather than the property.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.grid_height_cells()")
-func grid_height_cells() -> int:
+## @ace_codegen_template("$DrunkenWalkers.current_grid_height()")
+func current_grid_height() -> int:
 	_ensure_started()
 	return _height
 
@@ -1023,8 +1023,8 @@ func neighbour_count(x: int, y: int, value: int) -> int:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The world X of that cell's CENTRE, from Origin X and Cell Size - so a sprite placed on it lands centred in its tile whatever the origin is.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.cell_to_layout_x({x})")
-func cell_to_layout_x(x: int) -> float:
+## @ace_codegen_template("$DrunkenWalkers.cell_to_world_x({x})")
+func cell_to_world_x(x: int) -> float:
 	return origin_x + (float(x) + 0.5) * float(cell_size)
 
 ## @ace_expression
@@ -1032,8 +1032,8 @@ func cell_to_layout_x(x: int) -> float:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The world Y of that cell's centre, from Origin Y and Cell Size.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.cell_to_layout_y({y})")
-func cell_to_layout_y(y: int) -> float:
+## @ace_codegen_template("$DrunkenWalkers.cell_to_world_y({y})")
+func cell_to_world_y(y: int) -> float:
 	return origin_y + (float(y) + 0.5) * float(cell_size)
 
 ## @ace_expression
@@ -1041,20 +1041,20 @@ func cell_to_layout_y(y: int) -> float:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The cell X containing that world X. It may fall outside the grid, so guard it with Is Inside Grid.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.layout_to_x({layout_x})")
-func layout_to_x(layout_x: float) -> int:
+## @ace_codegen_template("$DrunkenWalkers.world_to_cell_x({world_x})")
+func world_to_cell_x(world_x: float) -> int:
 	# May land outside the grid, because a point on screen may simply not be over it. Guard the
 	# answer with Is Inside Grid before you use it.
-	return floori((layout_x - origin_x) / float(maxi(1, cell_size)))
+	return floori((world_x - origin_x) / float(maxi(1, cell_size)))
 
 ## @ace_expression
 ## @ace_name("World To Cell Y")
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The cell Y containing that world Y. It may fall outside the grid, so guard it with Is Inside Grid.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.layout_to_y({layout_y})")
-func layout_to_y(layout_y: float) -> int:
-	return floori((layout_y - origin_y) / float(maxi(1, cell_size)))
+## @ace_codegen_template("$DrunkenWalkers.world_to_cell_y({world_y})")
+func world_to_cell_y(world_y: float) -> int:
+	return floori((world_y - origin_y) / float(maxi(1, cell_size)))
 
 ## @ace_expression
 ## @ace_featured
@@ -1072,8 +1072,8 @@ func count_cells(value: int) -> int:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The X of the index-th cell holding the value, counted from 0 in a stable left-to-right, top-to-bottom order. Out of range reads -1 rather than erroring.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.get_cell_x_by_index({value}, {index})")
-func get_cell_x_by_index(value: int, index: int) -> int:
+## @ace_codegen_template("$DrunkenWalkers.cell_x_by_index({value}, {index})")
+func cell_x_by_index(value: int, index: int) -> int:
 	_ensure_started()
 	var found: PackedInt32Array = _cells_holding(value)
 	if index < 0 or index >= found.size():
@@ -1085,8 +1085,8 @@ func get_cell_x_by_index(value: int, index: int) -> int:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The Y of the index-th cell holding the value, in the same stable order. Out of range reads -1.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.get_cell_y_by_index({value}, {index})")
-func get_cell_y_by_index(value: int, index: int) -> int:
+## @ace_codegen_template("$DrunkenWalkers.cell_y_by_index({value}, {index})")
+func cell_y_by_index(value: int, index: int) -> int:
 	_ensure_started()
 	var found: PackedInt32Array = _cells_holding(value)
 	if index < 0 or index >= found.size():
@@ -1113,8 +1113,8 @@ func count_marks(tag: String) -> int:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The X of the index-th mark with the tag, counted from 0 in placement order. Out of range reads -1.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.get_mark_x_by_index({tag}, {index})")
-func get_mark_x_by_index(tag: String, index: int) -> int:
+## @ace_codegen_template("$DrunkenWalkers.mark_x_by_index({tag}, {index})")
+func mark_x_by_index(tag: String, index: int) -> int:
 	var found: int = 0
 	for mark: Dictionary in _marks:
 		if not tag.is_empty() and str(mark["tag"]) != tag:
@@ -1129,8 +1129,8 @@ func get_mark_x_by_index(tag: String, index: int) -> int:
 ## @ace_category("Drunken Walkers")
 ## @ace_description("The Y of the index-th mark with the tag, in placement order. Out of range reads -1.")
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("$DrunkenWalkers.get_mark_y_by_index({tag}, {index})")
-func get_mark_y_by_index(tag: String, index: int) -> int:
+## @ace_codegen_template("$DrunkenWalkers.mark_y_by_index({tag}, {index})")
+func mark_y_by_index(tag: String, index: int) -> int:
 	var found: int = 0
 	for mark: Dictionary in _marks:
 		if not tag.is_empty() and str(mark["tag"]) != tag:

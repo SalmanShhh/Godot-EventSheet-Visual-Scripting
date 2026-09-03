@@ -1029,11 +1029,11 @@ func cell_value(x: int, y: int) -> int:
 		return empty_value
 	return _cells[y * _width + x]
 
-func grid_width_cells() -> int:
+func current_grid_width() -> int:
 	_ensure_started()
 	return _width
 
-func grid_height_cells() -> int:
+func current_grid_height() -> int:
 	_ensure_started()
 	return _height
 
@@ -1052,32 +1052,32 @@ func neighbour_count(x: int, y: int, value: int) -> int:
 	_ensure_started()
 	return _neighbours_holding(x, y, value)
 
-func cell_to_layout_x(x: int) -> float:
+func cell_to_world_x(x: int) -> float:
 	return origin_x + (float(x) + 0.5) * float(cell_size)
 
-func cell_to_layout_y(y: int) -> float:
+func cell_to_world_y(y: int) -> float:
 	return origin_y + (float(y) + 0.5) * float(cell_size)
 
-func layout_to_x(layout_x: float) -> int:
+func world_to_cell_x(world_x: float) -> int:
 	# May land outside the grid, because a point on screen may simply not be over it. Guard the
 	# answer with Is Inside Grid before you use it.
-	return floori((layout_x - origin_x) / float(maxi(1, cell_size)))
+	return floori((world_x - origin_x) / float(maxi(1, cell_size)))
 
-func layout_to_y(layout_y: float) -> int:
-	return floori((layout_y - origin_y) / float(maxi(1, cell_size)))
+func world_to_cell_y(world_y: float) -> int:
+	return floori((world_y - origin_y) / float(maxi(1, cell_size)))
 
 func count_cells(value: int) -> int:
 	_ensure_started()
 	return _cells_holding(value).size()
 
-func get_cell_x_by_index(value: int, index: int) -> int:
+func cell_x_by_index(value: int, index: int) -> int:
 	_ensure_started()
 	var found: PackedInt32Array = _cells_holding(value)
 	if index < 0 or index >= found.size():
 		return -1
 	return found[index] % _width
 
-func get_cell_y_by_index(value: int, index: int) -> int:
+func cell_y_by_index(value: int, index: int) -> int:
 	_ensure_started()
 	var found: PackedInt32Array = _cells_holding(value)
 	if index < 0 or index >= found.size():
@@ -1093,7 +1093,7 @@ func count_marks(tag: String) -> int:
 			found += 1
 	return found
 
-func get_mark_x_by_index(tag: String, index: int) -> int:
+func mark_x_by_index(tag: String, index: int) -> int:
 	var found: int = 0
 	for mark: Dictionary in _marks:
 		if not tag.is_empty() and str(mark["tag"]) != tag:
@@ -1103,7 +1103,7 @@ func get_mark_x_by_index(tag: String, index: int) -> int:
 		found += 1
 	return -1
 
-func get_mark_y_by_index(tag: String, index: int) -> int:
+func mark_y_by_index(tag: String, index: int) -> int:
 	var found: int = 0
 	for mark: Dictionary in _marks:
 		if not tag.is_empty() and str(mark["tag"]) != tag:

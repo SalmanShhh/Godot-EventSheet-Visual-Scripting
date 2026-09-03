@@ -184,10 +184,10 @@ static func build() -> bool:
 	src.expression("cell_value", "Cell Value",
 		"The value at a cell. Asking outside the grid reads the Empty Value rather than erroring, so it is always safe to call.",
 		[["x", "int"], ["y", "int"]], TYPE_INT)
-	src.expression("grid_width_cells", "Grid Width",
+	src.expression("current_grid_width", "Current Grid Width",
 		"The current grid width in cells, which is what Create Grid last built rather than the property.",
 		[], TYPE_INT)
-	src.expression("grid_height_cells", "Grid Height",
+	src.expression("current_grid_height", "Current Grid Height",
 		"The current grid height in cells, which is what Create Grid last built rather than the property.",
 		[], TYPE_INT)
 	src.expression("as_text", "As Text",
@@ -196,34 +196,34 @@ static func build() -> bool:
 	src.expression("neighbour_count", "Neighbour Count",
 		"How many of the eight surrounding cells hold a value. Off-grid neighbours never match, which is what makes border detection and autotiling work without special-casing the edge.",
 		[["x", "int"], ["y", "int"], ["value", "int"]], TYPE_INT)
-	src.expression("cell_to_layout_x", "Cell To World X",
+	src.expression("cell_to_world_x", "Cell To World X",
 		"The world X of that cell's CENTRE, from Origin X and Cell Size - so a sprite placed on it lands centred in its tile whatever the origin is.",
 		[["x", "int"]], TYPE_FLOAT)
-	src.expression("cell_to_layout_y", "Cell To World Y",
+	src.expression("cell_to_world_y", "Cell To World Y",
 		"The world Y of that cell's centre, from Origin Y and Cell Size.",
 		[["y", "int"]], TYPE_FLOAT)
-	src.expression("layout_to_x", "World To Cell X",
+	src.expression("world_to_cell_x", "World To Cell X",
 		"The cell X containing that world X. It may fall outside the grid, so guard it with Is Inside Grid.",
-		[["layout_x", "float"]], TYPE_INT)
-	src.expression("layout_to_y", "World To Cell Y",
+		[["world_x", "float"]], TYPE_INT)
+	src.expression("world_to_cell_y", "World To Cell Y",
 		"The cell Y containing that world Y. It may fall outside the grid, so guard it with Is Inside Grid.",
-		[["layout_y", "float"]], TYPE_INT)
+		[["world_y", "float"]], TYPE_INT)
 	src.expression("count_cells", "Count Cells",
 		"How many cells currently hold the value. Pairs with the two index expressions to walk the whole set, which is the fast way to paint a generated map.",
 		[["value", "int"]], TYPE_INT)
-	src.expression("get_cell_x_by_index", "Cell X By Index",
+	src.expression("cell_x_by_index", "Cell X By Index",
 		"The X of the index-th cell holding the value, counted from 0 in a stable left-to-right, top-to-bottom order. Out of range reads -1 rather than erroring.",
 		[["value", "int"], ["index", "int"]], TYPE_INT)
-	src.expression("get_cell_y_by_index", "Cell Y By Index",
+	src.expression("cell_y_by_index", "Cell Y By Index",
 		"The Y of the index-th cell holding the value, in the same stable order. Out of range reads -1.",
 		[["value", "int"], ["index", "int"]], TYPE_INT)
 	src.expression("count_marks", "Count Marks",
 		"How many marks carry the tag. An empty tag counts every mark, whatever its tag.",
 		[["tag", "String"]], TYPE_INT)
-	src.expression("get_mark_x_by_index", "Mark X By Index",
+	src.expression("mark_x_by_index", "Mark X By Index",
 		"The X of the index-th mark with the tag, counted from 0 in placement order. Out of range reads -1.",
 		[["tag", "String"], ["index", "int"]], TYPE_INT)
-	src.expression("get_mark_y_by_index", "Mark Y By Index",
+	src.expression("mark_y_by_index", "Mark Y By Index",
 		"The Y of the index-th mark with the tag, in placement order. Out of range reads -1.",
 		[["tag", "String"], ["index", "int"]], TYPE_INT)
 	src.expression("current_seed", "Current Seed",

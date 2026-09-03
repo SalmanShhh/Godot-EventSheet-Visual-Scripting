@@ -91,8 +91,8 @@ static func _grid_and_seed_are_independent(script: GDScript) -> bool:
 	pack.set_seed("brand-new")
 	var passed: bool = SUPPORT.pins(TEST, [
 		["Create Grid leaves the seed exactly as it was", seed_after_grid, "keep-me"],
-		["Set Seed leaves the grid's width alone", pack.grid_width_cells(), 7],
-		["Set Seed leaves the grid's height alone", pack.grid_height_cells(), 5],
+		["Set Seed leaves the grid's width alone", pack.current_grid_width(), 7],
+		["Set Seed leaves the grid's height alone", pack.current_grid_height(), 5],
 		["Set Seed leaves a hand-written cell alone", pack.cell_value(1, 1), 4],
 		["an out-of-bounds read is the Empty Value, never an error", pack.cell_value(99, 99), 0],
 		["but the Is Cell Value condition matches nothing out of bounds",
@@ -359,17 +359,17 @@ static func _cells_are_indexed_left_to_right_top_to_bottom(script: GDScript) -> 
 	pack.set_cell(3, 1, 1)
 	pack.set_cell(0, 0, 1)
 	var passed: bool = SUPPORT.pins(TEST, [
-		["the first cell is the top-left one", str([pack.get_cell_x_by_index(1, 0),
-			pack.get_cell_y_by_index(1, 0)]), str([0, 0])],
-		["then the next row's, left to right", str([pack.get_cell_x_by_index(1, 1),
-			pack.get_cell_y_by_index(1, 1)]), str([3, 1])],
-		["then the row after that", str([pack.get_cell_x_by_index(1, 2),
-			pack.get_cell_y_by_index(1, 2)]), str([1, 2])],
+		["the first cell is the top-left one", str([pack.cell_x_by_index(1, 0),
+			pack.cell_y_by_index(1, 0)]), str([0, 0])],
+		["then the next row's, left to right", str([pack.cell_x_by_index(1, 1),
+			pack.cell_y_by_index(1, 1)]), str([3, 1])],
+		["then the row after that", str([pack.cell_x_by_index(1, 2),
+			pack.cell_y_by_index(1, 2)]), str([1, 2])],
 		["how many there are", pack.count_cells(1), 3],
 		["an index past the end reads -1 rather than erroring",
-			pack.get_cell_x_by_index(1, 3), -1],
-		["and so does a negative one", pack.get_cell_y_by_index(1, -1), -1],
-		["a mark index past the end reads -1 too", pack.get_mark_x_by_index("none", 0), -1],
+			pack.cell_x_by_index(1, 3), -1],
+		["and so does a negative one", pack.cell_y_by_index(1, -1), -1],
+		["a mark index past the end reads -1 too", pack.mark_x_by_index("none", 0), -1],
 		["the eight neighbours are counted without the border special case",
 			pack.neighbour_count(0, 0, 1), 0],
 	])
@@ -608,16 +608,16 @@ static func _defines(pack: Node, definition: String) -> bool:
 ## Whether every cell holding the value sits on one row.
 static func _every_cell_on_row(pack: Node, value: int, row: int) -> bool:
 	for index: int in pack.count_cells(value):
-		if pack.get_cell_y_by_index(value, index) != row:
+		if pack.cell_y_by_index(value, index) != row:
 			return false
 	return true
 
 
 ## The topmost row any cell of this value was carved on.
 static func _highest_carved_row(pack: Node, value: int) -> int:
-	var highest: int = pack.grid_height_cells()
+	var highest: int = pack.current_grid_height()
 	for index: int in pack.count_cells(value):
-		highest = mini(highest, pack.get_cell_y_by_index(value, index))
+		highest = mini(highest, pack.cell_y_by_index(value, index))
 	return highest
 
 
@@ -627,9 +627,9 @@ static func _closest_pair(pack: Node, tag: String) -> float:
 	var total: int = pack.count_marks(tag)
 	for first: int in total:
 		for second: int in range(first + 1, total):
-			var dx: float = float(pack.get_mark_x_by_index(tag, first)
-				- pack.get_mark_x_by_index(tag, second))
-			var dy: float = float(pack.get_mark_y_by_index(tag, first)
-				- pack.get_mark_y_by_index(tag, second))
+			var dx: float = float(pack.mark_x_by_index(tag, first)
+				- pack.mark_x_by_index(tag, second))
+			var dy: float = float(pack.mark_y_by_index(tag, first)
+				- pack.mark_y_by_index(tag, second))
 			closest = minf(closest, sqrt(dx * dx + dy * dy))
 	return closest
