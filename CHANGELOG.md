@@ -1101,6 +1101,31 @@ buys thirteen lines and costs 2,145 readings, so it will not.
 
 ### Fixed
 
+- **The first open of a session no longer waits for anything.** Clicking Add on a cold editor cost
+  921 ms before the dialog appeared: 440 ms scanning the project's classes and 395 ms building the
+  whole verb vocabulary a second time, both of them things the click had nothing to do with. Three
+  changes, in that order of size. The project scan asked the addon scanner once per candidate
+  class, and that answer is keyed on the modification time of every pack folder - so a cache HIT
+  still stat-ed a hundred and fifteen directories; asked once for the whole scan instead, the scan
+  went from 440 ms to 21 ms. The three readers that each rebuilt the builtin vocabulary from
+  scratch - the shadow filter, the picker's section icons and the public API's verb index - read
+  the registry's cache, which was already built: 395 ms to 3 ms, with the two descriptor sets
+  proved byte-identical first. And the picker now SHOWS its window before it fills it, with the
+  search field already focused and one line saying the vocabulary is loading, so the click paints a
+  dialog within a frame and the list arrives on the next one.
+
+  Measured in a running editor over 1,878 verbs: the first open of a session went from 921 ms of
+  frozen editor to a window in 20 ms with its list filled 279 ms later, and a warm open from 128 ms
+  to a window in 18 ms with its list 185 ms later. What is left of the first open's extra cost is
+  asked during idle instead, a few milliseconds per frame, by a warm the dock starts once it is up
+  and that a headless run never schedules at all.
+
+- **The budget that the freeze walked past.** Every picker measurement in the huge-project budgets
+  was made on a picker whose variable catalog answers something, and the freeze lived in the branch
+  where it answers NOTHING. That open is now measured too - the shell, then the fill, over a
+  provider that is counted - and pinned to one ask for the whole open and the same 1,500 ms budget
+  the other picker pins use. It lands at 152 ms over 5,441 rows.
+
 - **The picker stopped asking the whole project a question per row.** Every row of the Add picker
   carries a "used N times in this sheet" line, and working it out walked the open sheet's whole
   event tree - once per row, over 1,878 rows, again on every keystroke. The count now comes from
