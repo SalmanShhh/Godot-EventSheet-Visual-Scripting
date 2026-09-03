@@ -1977,6 +1977,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	# a crate to go red is asking how the picture is made, not how a mesh is built. Both spellings of
 	# the unit key it, the module file and the picker category alike.
 	"material": "Cameras-Graphics-And-Screenshots",
+	# And drawing a node's children inside its own shape is the same question again, one step to the
+	# side: a reader cutting a portrait to its frame is asking how the picture is made, not how the
+	# nodes are arranged. It lands on that page rather than opening one of its own for two rows.
+	"canvas_clip": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
 	"video": "Playing-Video",
 	"loop": "Working-With-Lists",

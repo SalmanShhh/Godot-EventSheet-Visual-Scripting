@@ -388,6 +388,27 @@ a null. Nothing is assumed and there is no step to remember.
 
 These are 3D words: they are `BaseMaterial3D`'s, and a `MeshInstance3D` is what wears one.
 
+### Drawing children inside a shape (picker section: Blend Modes)
+
+`clip_children` is one field on every `CanvasItem`, and it does something no arrangement of nodes
+can: whatever the node draws becomes the shape its children are allowed to draw inside. A portrait
+cut to its frame, a bar that fills a heart instead of a rectangle, water that stops at the edge of
+the pool - all of them are this one field, and it costs nothing, because it is a rendering setting
+rather than a shader.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Clip My Children | Makes what this node draws the shape its children draw inside. The dropdown is the only decision: whether the node is drawn as well as being the shape, or is only the shape. | `clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW` (or `CLIP_CHILDREN_ONLY`) |
+| Stop Clipping | Puts the node back to drawing normally, children and all. | `clip_children = CanvasItem.CLIP_CHILDREN_DISABLED` |
+
+The two rows split the field's three values between them on purpose: the clipping row offers only
+the two that turn it ON, and Stop Clipping owns the OFF one alone - so a line written by hand is
+only ever read back as one of them.
+
+They shelve under **Blend Modes** with the Blend Modes pack's own verbs, because clipping, masking
+and blending are one reader's question ("how do these two pictures meet") and a vocabulary that
+answers it from two sections is one you have to already know to search.
+
 ### The screenshot (picker section: General Actions)
 
 | Name | What it does | Ships as |
