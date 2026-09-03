@@ -61,7 +61,49 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	for word: String in W.words():
 		descriptors.append_array(_rows_of(word))
 	descriptors.append_array(_surface_rows())
+	for word: String in W.sprite_words():
+		descriptors.append_array(_sprite_rows(W.sprite_word_entry(word)))
 	return descriptors
+
+
+## THE TWO WORDS A SPRITE HAS, at the foot of the file because they are the other surface: a 2D
+## item's look is a CanvasItemMaterial with two knobs on it, not a BaseMaterial3D with nine. Each is
+## a dropdown that sets it and an expression that reads it back.
+##
+## THREE THINGS THE WRITE DOES, in this order and for a reason each. A sprite drawing with nothing is
+## given a plain material, because there is nothing to copy. One drawing with a material FILE is
+## given its own copy of it first, so a `.tres` worn by every coin in the level never changes under
+## the other coins. And a sprite wearing a SHADER is left completely alone: blend and light live
+## inside that shader, there is no property here to set, and quietly setting nothing is better than a
+## line that would fail - the Doctor's effects section says so where words belong.
+static func _sprite_rows(entry: Dictionary) -> Array[ACEDescriptor]:
+	var property: String = str(entry["property"])
+	var template: String = "%sif %s is %s:\n\t%s.%s = {%s}" % [W.SPRITE_OWN_LINES, W.SPRITE_MEMBER,
+		W.SPRITE_MATERIAL_CLASS, W.SPRITE_MEMBER, property, VALUE_PARAM]
+	var setter: ACEDescriptor = F.act("Material%s" % str(entry["id_stem"]), str(entry["name"]),
+		template, CAT, str(entry["verb"]), _sprite_about(entry), W.SPRITE_HOST).param_built(
+		_choice_param(entry, str(entry["default"])))
+	if bool(entry.get("featured", false)):
+		setter.featured()
+	# The read is written as a CAST rather than a plain member, for the reason the write has an `is`
+	# in it: `material` on a CanvasItem is a Material, and only a CanvasItemMaterial carries these
+	# two. A sprite wearing a shader, or wearing nothing, answers with the value Godot itself starts
+	# a material on rather than reaching through something that is not there.
+	var reader: ACEDescriptor = F.expr("Material%s" % str(entry["read_stem"]),
+		str(entry["read_name"]),
+		"(%s as %s).%s if %s is %s else %s" % [W.SPRITE_MEMBER, W.SPRITE_MATERIAL_CLASS, property,
+			W.SPRITE_MEMBER, W.SPRITE_MATERIAL_CLASS, str(entry["default"])],
+		CAT, str(entry["reads"]),
+		"Reads the sprite's %s back: `%s.%s`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field." % [
+			str(entry["word"]), W.SPRITE_MATERIAL_CLASS, property], W.SPRITE_HOST)
+	return [setter, reader]
+
+
+## What one sprite row does, said once: the word, then the three promises the template keeps.
+static func _sprite_about(entry: Dictionary) -> String:
+	return "%s Gives this item its own %s first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `%s.%s`." % [
+		str(entry["about"]), W.SPRITE_MATERIAL_CLASS, W.SPRITE_MATERIAL_CLASS,
+		str(entry["property"])]
 
 
 ## THE SURFACE SLOTS, beside the frozen Set Mesh Material the Mesh section already ships. That row
@@ -115,7 +157,7 @@ static func _surface_param(about: String) -> ACEParam:
 
 
 static func section_descriptions() -> Dictionary:
-	return {CAT: "What a surface looks like, said in words: its colour, glow, roughness, metal, see-through, texture, blend, transparency and which of its sides are drawn. Every write gives the mesh its own copy of the material first, so a material shared between meshes never changes under the others. Node-scoped to MeshInstance3D."}
+	return {CAT: "What a surface looks like, said in words. On a mesh: its colour, glow, roughness, metal, see-through, texture, blend, transparency, which of its sides are drawn, and the material of one surface slot. On a 2D item: how it blends and how the lights reach it. Every write gives the node its own copy of the material first, so a material shared between nodes never changes under the others."}
 
 
 ## Every row one word makes: the Set row, the expression that reads it back, and - for a word a
@@ -173,7 +215,8 @@ static func _texture_rows(entry: Dictionary) -> Array[ACEDescriptor]:
 ## same row, because it is the same decision.
 static func _choice_rows(entry: Dictionary) -> Array[ACEDescriptor]:
 	var word: String = str(entry["word"])
-	var setter: ACEDescriptor = _set_row(entry).param_built(_choice_param(entry))
+	var setter: ACEDescriptor = _set_row(entry).param_built(
+		_choice_param(entry, W.default_of(word)))
 	var companion: Dictionary = entry.get("companion", {})
 	if not companion.is_empty():
 		setter.param_typed("String", str(companion["param"]), str(companion["default"]),
@@ -184,9 +227,11 @@ static func _choice_rows(entry: Dictionary) -> Array[ACEDescriptor]:
 ## The dropdown one choice word offers. `display_option_labels` is what makes the ROW read "Set blend
 ## to mix" instead of "Set blend to BaseMaterial3D.BLEND_MODE_MIX": the KEY is still the engine
 ## constant (it is what the template writes and what every saved row holds, both frozen), and only
-## the word a reader sees changes.
-static func _choice_param(entry: Dictionary) -> ACEParam:
-	var parameter: ACEParam = F.make_param(VALUE_PARAM, "String", W.default_of(str(entry["word"])),
+## the word a reader sees changes. `opening` is the constant the field starts on, which the 3D words
+## ask ClassDB for and the two sprite words carry in the table - a CanvasItemMaterial's own defaults
+## are the ones Godot hands a new material, and they are written beside the choices they belong to.
+static func _choice_param(entry: Dictionary, opening: String) -> ACEParam:
+	var parameter: ACEParam = F.make_param(VALUE_PARAM, "String", opening,
 		_label(entry), str(entry["about"]), "", entry["choices"] as Array)
 	parameter.display_option_labels = true
 	return parameter

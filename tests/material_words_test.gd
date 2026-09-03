@@ -33,6 +33,7 @@ static func run() -> bool:
 	ok = _test_the_templates() and ok
 	ok = _test_the_choice_words() and ok
 	ok = _test_the_surface_slots() and ok
+	ok = _test_the_sprite_words() and ok
 	ok = _test_ids_are_unique() and ok
 	ok = _test_every_row_carries_help() and ok
 	ok = _test_mesh_classes() and ok
@@ -140,6 +141,10 @@ static func _templates() -> Dictionary:
 static func _test_the_choice_words() -> bool:
 	var spelled: Dictionary = {}
 	for row: ACEDescriptor in MODULE.get_descriptors():
+		# The 3D words only: the two a sprite has are pinned beside them, against their own class's
+		# constants, because a CanvasItemMaterial's blend modes are not a BaseMaterial3D's.
+		if str(row.node_type) != W.HOST:
+			continue
 		for parameter: ACEParam in row.params:
 			if parameter.options.is_empty():
 				continue
@@ -194,6 +199,71 @@ static func _test_the_surface_slots() -> bool:
 	])
 
 
+## THE OTHER SURFACE: the two words a 2D item has. What is pinned is the emitted BYTES, because the
+## three promises those rows make are only kept by what they actually write - a sprite with nothing
+## is given a material, a sprite wearing a shared FILE is given its own copy, and a sprite wearing a
+## SHADER is left completely alone (the `is` guard is what leaves it alone; blend and light live
+## inside the shader there and there is no property here to set).
+const SPRITE_OWN_LINES := "if material == null:\n" \
+	+ "\tmaterial = CanvasItemMaterial.new()\n" \
+	+ "elif material is CanvasItemMaterial and not material.resource_path.is_empty():\n" \
+	+ "\tmaterial = material.duplicate()\n"
+
+
+static func _test_the_sprite_words() -> bool:
+	var templates: Dictionary = _templates()
+	var spelled: Dictionary = {}
+	for row: ACEDescriptor in MODULE.get_descriptors():
+		if row.ace_id != "MaterialSetBlending" and row.ace_id != "MaterialSetLightResponse":
+			continue
+		var pairs: Array = []
+		for option: Variant in (row.params[0] as ACEParam).options:
+			pairs.append("%s = %s" % [str((option as Dictionary)["label"]),
+				str((option as Dictionary)["key"])])
+		spelled[row.ace_id] = pairs
+	var ok: bool = SUPPORT.pins("material_words_test", [
+		["a sprite with no material is given one, a shared file is copied, a shader is untouched",
+			templates.get("MaterialSetBlending", ""),
+			SPRITE_OWN_LINES + "if material is CanvasItemMaterial:\n"
+				+ "\tmaterial.blend_mode = {value}"],
+		["how the lights reach it is the same shape",
+			templates.get("MaterialSetLightResponse", ""),
+			SPRITE_OWN_LINES + "if material is CanvasItemMaterial:\n"
+				+ "\tmaterial.light_mode = {value}"],
+		["a read answers for a sprite wearing a shader instead of reaching through it",
+			templates.get("MaterialBlending", ""),
+			"(material as CanvasItemMaterial).blend_mode if material is CanvasItemMaterial"
+				+ " else CanvasItemMaterial.BLEND_MODE_MIX"],
+		["and for one wearing nothing", templates.get("MaterialLightResponse", ""),
+			"(material as CanvasItemMaterial).light_mode if material is CanvasItemMaterial"
+				+ " else CanvasItemMaterial.LIGHT_MODE_NORMAL"]
+	])
+	ok = SUPPORT.check("material_words_test", "the sprite dropdowns and the constants they write",
+		spelled, {
+			"MaterialSetBlending": [
+				"mix = CanvasItemMaterial.BLEND_MODE_MIX",
+				"add = CanvasItemMaterial.BLEND_MODE_ADD",
+				"subtract = CanvasItemMaterial.BLEND_MODE_SUB",
+				"multiply = CanvasItemMaterial.BLEND_MODE_MUL",
+				"premultiplied alpha = CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA"],
+			"MaterialSetLightResponse": [
+				"normal = CanvasItemMaterial.LIGHT_MODE_NORMAL",
+				"unshaded = CanvasItemMaterial.LIGHT_MODE_UNSHADED",
+				"light only = CanvasItemMaterial.LIGHT_MODE_LIGHT_ONLY"]
+		}) and ok
+	# Both words resolve to a property CanvasItemMaterial really has, which is the one thing the
+	# small table is derived from - and what counts as a sprite is asked through ClassDB.
+	ok = SUPPORT.check("material_words_test", "both sprite words resolve", W.sprite_words(),
+		PackedStringArray(["blending", "light response"])) and ok
+	return SUPPORT.pin_table("material_words_test", {
+		"Sprite2D": true,
+		"Label": true,
+		"MeshInstance3D": false,
+		"Node": false,
+		"": false
+	}, func(class_text: Variant) -> bool: return W.is_sprite_class(str(class_text))) and ok
+
+
 ## Every id this module publishes, once. An ace_id is a compatibility promise the moment it ships, so
 ## two descriptors answering to one id is a silent coin toss over which template a row compiles
 ## through.
@@ -207,7 +277,7 @@ static func _test_ids_are_unique() -> bool:
 	var ok: bool = SUPPORT.check("material_words_test", "no id is published twice", doubled,
 		PackedStringArray())
 	return SUPPORT.check("material_words_test", "the module publishes every word's rows",
-		seen.size(), 27) and ok
+		seen.size(), 31) and ok
 
 
 ## Help on the row and on every field it offers - the words a reader meets before they have run
@@ -221,13 +291,16 @@ static func _test_every_row_carries_help() -> bool:
 			if str(parameter.description).strip_edges().is_empty() \
 					or str(parameter.display_name).strip_edges().is_empty():
 				silent.append("%s.%s" % [row.ace_id, parameter.id])
+	# Every row is hosted on the node it writes THROUGH - the mesh for the nine 3D words and the four
+	# surface rows, the canvas item for the two 2D ones. A row hosted on anything else would offer
+	# itself on nodes whose property it cannot reach.
 	var hosted: PackedStringArray = PackedStringArray()
 	for row: ACEDescriptor in MODULE.get_descriptors():
-		if str(row.node_type) != W.HOST:
+		if str(row.node_type) != W.HOST and str(row.node_type) != W.SPRITE_HOST:
 			hosted.append(row.ace_id)
 	var ok: bool = SUPPORT.check("material_words_test", "every row and field carries help", silent,
 		PackedStringArray())
-	return SUPPORT.check("material_words_test", "every row is hosted on the mesh it writes through",
+	return SUPPORT.check("material_words_test", "every row is hosted on the node it writes through",
 		hosted, PackedStringArray()) and ok
 
 

@@ -227,6 +227,66 @@ const WORDS: Array[Dictionary] = [
 	}
 ]
 
+## 2D IS A DIFFERENT SURFACE, and these are its two words. A sprite's look is a CanvasItemMaterial
+## with two knobs on it - how it mixes with what is behind it, and whether the lights reach it - and
+## neither of them is a BaseMaterial3D property, so they are their own small table rather than two
+## more spellings in the one above.
+##
+## The node class they are hosted on, the material class they resolve against, and the class a
+## sprite drawing with nothing at all is given.
+const SPRITE_HOST: String = "CanvasItem"
+const SPRITE_MATERIAL_CLASS: String = "CanvasItemMaterial"
+
+## The member a sprite's material is worn on - the one every 2D effect row already spells.
+const SPRITE_MEMBER: String = "material"
+
+## THE SPRITE WORDS. The same entry shape as the table above (word, kind, name, verb, choices, the
+## frozen id stem), so one set of builders reads both. Both are CHOICE words: there is no number to
+## walk and no colour to pick, only one of a fixed list of engine constants.
+const SPRITE_WORDS: Array[Dictionary] = [
+	{
+		"word": "blending",
+		"kind": KIND_CHOICE,
+		"name": "Set Blending",
+		"verb": "Set blending to {value}",
+		"reads": "blending",
+		"read_name": "Blending",
+		"label": "Blending",
+		"id_stem": "SetBlending",
+		"read_stem": "Blending",
+		"about": "How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants.",
+		"featured": true,
+		"property": "blend_mode",
+		"choices": [
+			{"key": "CanvasItemMaterial.BLEND_MODE_MIX", "label": "mix"},
+			{"key": "CanvasItemMaterial.BLEND_MODE_ADD", "label": "add"},
+			{"key": "CanvasItemMaterial.BLEND_MODE_SUB", "label": "subtract"},
+			{"key": "CanvasItemMaterial.BLEND_MODE_MUL", "label": "multiply"},
+			{"key": "CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA", "label": "premultiplied alpha"}
+		],
+		"default": "CanvasItemMaterial.BLEND_MODE_MIX"
+	},
+	{
+		"word": "light response",
+		"kind": KIND_CHOICE,
+		"name": "Set Light Response",
+		"verb": "Set light response to {value}",
+		"reads": "light response",
+		"read_name": "Light Response",
+		"label": "Light response",
+		"id_stem": "SetLightResponse",
+		"read_stem": "LightResponse",
+		"about": "How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else.",
+		"property": "light_mode",
+		"choices": [
+			{"key": "CanvasItemMaterial.LIGHT_MODE_NORMAL", "label": "normal"},
+			{"key": "CanvasItemMaterial.LIGHT_MODE_UNSHADED", "label": "unshaded"},
+			{"key": "CanvasItemMaterial.LIGHT_MODE_LIGHT_ONLY", "label": "light only"}
+		],
+		"default": "CanvasItemMaterial.LIGHT_MODE_NORMAL"
+	}
+]
+
 ## Per class, `property -> true`, filled the first time a class is asked about. ClassDB answers the
 ## same thing for the life of the process, and this is asked once per word on every descriptor build.
 static var _properties: Dictionary = {}
@@ -309,6 +369,48 @@ static func own_surface_lines(slot: String) -> String:
 	return "if %s(%s) == null:\n\t%s(%s, %s(%s).duplicate() if %s(%s) != null else %s.new())\n" % [
 		SURFACE_OVERRIDE_GET, slot, SURFACE_OVERRIDE_SET, slot, ACTIVE_CALL, slot, ACTIVE_CALL,
 		slot, FALLBACK_MATERIAL]
+
+
+## THE OWN-IT COURTESY FOR A SPRITE, and the one line of it that is not a courtesy at all. A sprite
+## drawing with nothing is given a plain CanvasItemMaterial, because there is nothing to copy; one
+## drawing with a material FILE is given a copy of it, so a `.tres` worn by every coin in the level
+## never changes under the other coins. A material the scene already keeps inside itself has no
+## `resource_path` and is nobody else's, so it is left exactly as it is - and a copy taken once has
+## no path either, which is what makes a row that runs every frame take one copy and not sixty.
+##
+## THE SHADER IS NOT TOUCHED, here or in the write that follows. A sprite wearing a ShaderMaterial
+## is wearing somebody's shader, and blend and light live inside that shader rather than on a
+## property this could set - so these rows set nothing at all on one, and the Doctor says so quietly
+## rather than a row failing silently.
+const SPRITE_OWN_LINES: String = "if %s == null:\n\t%s = %s.new()\nelif %s is %s and not %s.resource_path.is_empty():\n\t%s = %s.duplicate()\n" % [
+	SPRITE_MEMBER, SPRITE_MEMBER, SPRITE_MATERIAL_CLASS, SPRITE_MEMBER, SPRITE_MATERIAL_CLASS,
+	SPRITE_MEMBER, SPRITE_MEMBER, SPRITE_MEMBER]
+
+
+## The sprite word entry by its word, or {}.
+static func sprite_word_entry(word: String) -> Dictionary:
+	for entry: Dictionary in SPRITE_WORDS:
+		if str(entry["word"]) == word:
+			return entry
+	return {}
+
+
+## Every sprite word the material class really answers, in table order. Derived the same way the 3D
+## words are: the table says what the property would be, ClassDB says whether it is there.
+static func sprite_words() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in SPRITE_WORDS:
+		if has_property(SPRITE_MATERIAL_CLASS, str(entry["property"])):
+			found.append(str(entry["word"]))
+	return found
+
+
+## True when a class is one the sprite rows speak for - any CanvasItem, which is every sprite, every
+## Control and every TileMapLayer. Asked through ClassDB rather than against a list.
+static func is_sprite_class(class_text: String) -> bool:
+	var text: String = class_text.strip_edges()
+	return not text.is_empty() and ClassDB.class_exists(text) \
+		and ClassDB.is_parent_class(text, SPRITE_HOST)
 
 
 ## Every word this vocabulary really resolves, in table order - the one list the rows, the lift and
