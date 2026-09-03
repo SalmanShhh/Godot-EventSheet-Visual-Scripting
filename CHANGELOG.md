@@ -86,6 +86,67 @@
   re-measured at **119**, and the words land in all nine translation CSVs (**202 new keys**, most of
   them the dropdown labels a reader chooses between).
 
+### Lens, sky and surface: what the whole world looks like, said in words
+
+- **Twenty-one words for the world's look, and not one of them is a property name.** Saturation,
+  contrast, picture brightness, exposure, glow bloom, glow threshold, fog floor, fog floor
+  thickness, aerial perspective, fog sun glow, volumetric thickness, volumetric colour, volumetric
+  reach, volumetric fog, reflections, indirect light, global illumination, backdrop, tone map, glow
+  blend and colour grade, on any `WorldEnvironment`: **65 new rows on the Environment shelf**, which
+  now publishes **89** counting the eight frozen Core actions and the seven node-scoped World rows
+  it lands beside, every one of them untouched. A reader never has to know that saturation is
+  `adjustment_saturation` and does nothing until `adjustment_enabled` is true, that the fog's floor
+  is `fog_height`, or that reflections are `ssr_enabled` - each row writes the switch its word needs
+  on the same line. Which property each word resolves to, and the value every field opens on, are
+  asked of ClassDB; the frozen part is the `ace_id` stem, which is the one thing that cannot be
+  derived.
+- **Every write gives the scene its own copy of the environment first, and the emitted code says
+  so.** An Environment is a file: two scenes loading one `.tres` load one object, so turning the fog
+  up in the cave turns it up in the town and the change follows the player out of the room. Each
+  template opens with the four lines that make a copy - a plain `Environment` when the node is
+  holding nothing, a duplicate when it is holding a file, and nothing at all when the environment is
+  already this scene's own, because a copy taken once has no `resource_path`. The frozen "Make The
+  Environment This Scene's Own" row is untouched and is still the right row for a reader who wants
+  the copy taken at a moment they choose; these rows simply never depend on it.
+- **Renderer honesty, in the row's own words and once more in the Doctor.** Reflections, indirect
+  light, global illumination and volumetric fog are Forward+ features: on Mobile and on
+  Compatibility the flag is set, the renderer ignores it, and nothing errors. Every row of those
+  words says so in its description, **Renderer Is** joins the frozen Uses Modern Renderer (which
+  cannot tell Forward+ from Mobile) so a graphics menu can ask before it offers them, and the
+  Doctor's Ship It section carries one **info** note naming the first such row in a file and the
+  renderer the project is actually built for.
+- **The seven numbers nobody can read, and the quality Project Settings writes once.** The glow's
+  blur levels are `glow_levels/1` through `glow_levels/7` and are reached through a call, so **Set
+  Glow Levels** lays a whole shape down from three written-down starting tables (tight, balanced -
+  which is Godot's own - and wide) and **Set Glow Level** sets any single one by hand for a project
+  spelling its own. And four switches have a matching quality that Godot keeps on the
+  RenderingServer rather than on the Environment: occlusion, indirect light, global illumination and
+  reflections each gain a **Turn ... On At Quality** row that writes the flag and the quality call
+  together, with the engine's own remaining arguments after it. Occlusion, the one of the four with
+  no switch word of its own, gains the Off row and the question as well.
+- **The sky is three objects past the node, and every row of it refuses to guess.** Sky top, sky
+  horizon, sky ground, sun size and sky energy - **17 rows**, a Set, a read and a Fade for each,
+  plus **Use Procedural Sky** and **Use Panorama Sky**, which install the sky and set the backdrop
+  that draws it. Each write owns the environment, the `Sky` and the sky material in that order, and
+  each is written as an `is ProceduralSkyMaterial` guard, so a scene drawing a flat colour, a
+  panorama or somebody's own sky shader is left completely alone - the row does nothing rather than
+  erroring. That silence is the Doctor's second new note: a file that sets the sky's colours and
+  never makes the sky the backdrop is told so, with the door that fixes it.
+- **A 2D light gains its first choice word.** **Blend Light As** - add, subtract or mix - on
+  `Light2D.blend_mode`, appended at the end of the light word table so no shipped row moves under
+  it, with the expression that reads it back. 2D only, and the derivation is what says so: a
+  `Light3D` carries no blend mode, so the 3D dimension resolves none of its spellings and builds no
+  row.
+- **Every word reads backwards.** A hand-written `environment.fog_height = 4.0` reads "Set fog floor
+  to 4" and `environment.sky.sky_material.sky_top_color = Color.RED` reads "Set sky top to red",
+  derived from the same tables the rows are built from - so a word added to a table is read back
+  with nothing added. The sentences the world vocabulary already shipped for fog, glow, ambient
+  light and ambient occlusion are kept exactly as an override list, and a value that is one of a
+  fixed list of engine constants reads as the plain word the dropdown shows rather than repeating
+  the constant back.
+- **Words:** the environment module joins the l10n obligation and its **343 owed keys** are filled
+  in all eight locales.
+
 ### What the surface looks like, said in words
 
 - **Nine words for a 3D surface, and not one of them is a property name.** Colour, glow, roughness,
