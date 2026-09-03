@@ -434,6 +434,31 @@ static func properties() -> PackedStringArray:
 	return found
 
 
+## THE TABLE READ BACKWARDS: the word a member path IS, or "" for a path no word here means. What
+## turns a hand-written `material_override.albedo_color = red` back into the sentence the picker
+## would have made - the same job the light words do for `energy`, and the reason both tables say
+## what they mean rather than only how to write it.
+##
+## The FULL PATH is asked first and the bare property second, because one property is two words: the
+## colour is `albedo_color` and see-through is the alpha channel of it, and a line writing
+## `albedo_color.a` means the second one. Asking the other way round would call every see-through
+## line a colour.
+static func word_of_member(member_path: String) -> String:
+	var wanted: String = member_path.strip_edges()
+	if wanted.is_empty():
+		return ""
+	for word: String in words():
+		if member_of(word) == wanted:
+			return word
+	if not wanted.contains("."):
+		return ""
+	var bare: String = wanted.get_slice(".", 0)
+	for word: String in words():
+		if member_of(word) == bare:
+			return word
+	return ""
+
+
 ## True when a class is one these rows speak for - a mesh instance, or a project's own subclass of
 ## one. Asked through ClassDB rather than against a list, so a subclass resolves too.
 static func is_mesh_class(class_text: String) -> bool:

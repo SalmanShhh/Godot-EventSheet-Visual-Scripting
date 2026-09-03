@@ -2117,6 +2117,12 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	var scrolled: Dictionary = _scroll_toward_assignment(target, assigned, context)
 	if not scrolled.is_empty():
 		return scrolled
+	# A surface written by hand reads as the WORD the sheet has for it, the way a light's `energy`
+	# reads as brightness. Asked before the simple-target gate because one of the two ways a mesh's
+	# material is reached is a call (`get_active_material(0).roughness`), which that gate turns down.
+	var surface: Dictionary = material_word_assignment(target, assigned, context)
+	if not surface.is_empty():
+		return surface
 	if not is_simple_target(target):
 		return {}
 	# Writing the clock into a variable is the sheet's "Set ... to now" - the other half of the
@@ -3136,6 +3142,62 @@ static func _behaviour_assignment(object_name: String, member: String, assigned:
 	return {}
 
 
+## A hand-written write to a MESH'S MATERIAL, in the sheet's own word for it - so
+## `material_override.albedo_color = Color.RED` reads "Crate ▸ Set colour to Color(1, 0, 0)" rather
+## than as the property name Godot happens to spell it with, exactly as a light's `energy` reads as
+## brightness. {} for every line that is not one, which leaves the plain property reading in charge.
+##
+## TWO REACHES, and only two, because only these two are unambiguous. `material_override` is
+## GeometryInstance3D's and `get_active_material(N)` is MeshInstance3D's, so a line going through
+## either of them is writing a mesh's material and nothing else. A 2D item's `material.blend_mode`
+## is deliberately NOT claimed: a mesh's material spells `blend_mode` too, and which of the two
+## words a bare `material.` line means cannot be told from the line.
+##
+## The WORD comes from the same table the rows are built from, so a word added there is read back
+## here with nothing added, and a picked row and a typed line say the same sentence.
+static func material_word_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
+	var reached: Dictionary = _material_reach(target)
+	if reached.is_empty():
+		return {}
+	var word: String = EventForgeMaterialWords.word_of_member(str(reached["member"]))
+	if word.is_empty():
+		return {}
+	return _sentence(_receiver_object(str(reached["receiver"]), context), "Set {name} to {value}", {
+		"name": [translate(word), "name"],
+		"value": [expression_text(assigned, context), "value"]
+	})
+
+
+## One write split into the node it is aimed at and the member of the material it writes, or {} when
+## the line does not reach a mesh's material at all. A blank receiver is the node the sheet is on,
+## which is what a blank means everywhere else in this file too.
+static func _material_reach(target: String) -> Dictionary:
+	var text: String = target.strip_edges()
+	var override_at: int = text.find(MATERIAL_OVERRIDE_REACH)
+	if override_at >= 0:
+		return _material_reach_parts(text.substr(0, override_at),
+			text.substr(override_at + MATERIAL_OVERRIDE_REACH.length()))
+	var active_at: int = text.find(MATERIAL_ACTIVE_REACH)
+	if active_at < 0:
+		return {}
+	var after: String = text.substr(active_at + MATERIAL_ACTIVE_REACH.length())
+	var closed: int = after.find(").")
+	if closed < 0:
+		return {}
+	return _material_reach_parts(text.substr(0, active_at), after.substr(closed + 2))
+
+
+## The two halves checked and handed back: a receiver with its trailing dot taken off, and a member
+## that really is one (a line reaching further into something else is nobody's word).
+static func _material_reach_parts(before: String, member: String) -> Dictionary:
+	var receiver: String = before.strip_edges().trim_suffix(".")
+	if not receiver.is_empty() and not is_simple_target(receiver):
+		return {}
+	var written: String = member.strip_edges()
+	return {} if written.is_empty() or written.contains("(") else {
+		"receiver": receiver, "member": written}
+
+
 ## `Vector2(2, 2)` as the 200% a reader means by it. Only an EVEN zoom of two plain numbers is
 ## claimed: a camera squashed on one axis has no single percentage, and printing one would be a lie.
 static func _zoom_percent(value: String) -> String:
@@ -4046,6 +4108,13 @@ static func _existence_condition(text: String) -> Dictionary:
 ## a word of what is drawn: they say only that NOTHING CURATED claimed this line, so the API is free
 ## to be asked whether it knows the property - and, where it does, to say so in its own plainer
 ## style. A curated sentence never reaches either mark, which is the whole ordering.
+## The two ways a hand-written line reaches a MESH'S material - the override every GeometryInstance3D
+## wears, and the call every MeshInstance3D answers "what am I drawing with" through. Both are the
+## exact text the shipped material rows write, so a picked row and a typed line are read by the same
+## two words.
+const MATERIAL_OVERRIDE_REACH := "material_override."
+const MATERIAL_ACTIVE_REACH := "get_active_material("
+
 const GENERIC_PROPERTY_SET := "property_set"
 const GENERIC_PROPERTY_COMPARE := "property_compare"
 

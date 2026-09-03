@@ -48,6 +48,7 @@ static func run() -> bool:
 	ok = _test_mesh_classes() and ok
 	ok = _test_who_else_wears_it() and ok
 	ok = _test_the_two_quiet_findings() and ok
+	ok = _test_a_hand_written_line_reads_as_the_word() and ok
 	# Dropped on the way out: a share index left warm here answers questions later tests never
 	# asked, which a serial run notices and a sharded one hides.
 	_fresh()
@@ -104,6 +105,42 @@ static func _test_the_two_quiet_findings() -> bool:
 			"material-word-on-a-material-other-meshes-wear [info] material_shared_stone.tres is worn by Barrel as well, and a material is one object. Every material word here gives this mesh its own copy before it writes, so the others are left as they are - this is only worth knowing.",
 			"material-word-on-an-item-wearing-a-shader [warning] Banner wears effect_dissolve.gdshader, and blending and lighting live inside a shader rather than on a property - so this row leaves the shader alone and the value goes nowhere. Set it in the shader, or move the row onto a child that wears no shader."
 		]))
+
+
+## WHAT A HAND-WRITTEN LINE READS AS. A project older than this plugin already writes these lines,
+## and every one of them has to open as the WORD the sheet has for it rather than as the property
+## name Godot happens to spell it with - the same promise a light's `energy` keeps by reading as
+## brightness. Pinned as the SENTENCE, because the sentence is the whole of the claim.
+##
+## The refusals are pinned beside them, and they are the more important half: a line that reaches a
+## material some other way, and a 2D item's `material.blend_mode` (which a mesh's material spells
+## too, so a bare `material.` line cannot say which of the two words it means) both keep the plain
+## property reading they already had.
+static func _test_a_hand_written_line_reads_as_the_word() -> bool:
+	var context: Dictionary = {"script_object": "Crate", "object_classes": {}}
+	var read: Dictionary = {
+		"material_override.albedo_color = Color.RED": "Crate ▸ Set colour to red",
+		"material_override.albedo_color.a = 0.5": "Crate ▸ Set see-through to 0.5",
+		"get_active_material(0).roughness = 0.2": "Crate ▸ Set roughness to 0.2",
+		"$Barrel.material_override.metallic = 1.0": "Barrel ▸ Set metal to 1",
+		"get_active_material(1).cull_mode = BaseMaterial3D.CULL_DISABLED":
+			"Crate ▸ Set sides to BaseMaterial3D.CULL_DISABLED",
+		# And the lines this must NOT claim.
+		"material.blend_mode = 1": "material ▸ Set blend_mode to 1",
+		"material_override.some_other_thing = 3": "material_override ▸ Set some_other_thing to 3"
+	}
+	return SUPPORT.pin_table("material_words_test", read, func(line: Variant) -> String:
+		return _joined(EventSheetSentence.statement(str(line), context)))
+
+
+## One statement reading as "object ▸ sentence" - the same shape every reading test joins.
+static func _joined(reading: Dictionary) -> String:
+	var text: String = ""
+	for segment: Variant in (reading.get("segments", []) as Array):
+		text += str((segment as Dictionary).get("text", ""))
+	var object_label: String = str(reading.get("object", ""))
+	return "%s ▸ %s" % [object_label, text.strip_edges()] if not object_label.is_empty() \
+		else text.strip_edges()
 
 
 ## One event holding one material word aimed at `target`. Built here rather than lifted, because
