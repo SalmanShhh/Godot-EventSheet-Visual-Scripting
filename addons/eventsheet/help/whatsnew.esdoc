@@ -179,18 +179,21 @@ What changed in the build you have installed (v0.17.0), in the words the release
   its own unless something says otherwise, and a world of its own is an empty stage that renders
   nothing forever with no error anywhere. **Save A Still Of A View awaits the frame** before it
   reads the texture, which is the difference between a picture and a bug report, so its id joins the
-  compiler's and the Doctor's coroutine lists - a lifted row carries only its id. Two rows are
+  compiler's, the Doctor's and the canvas's coroutine lists - a lifted row carries only its id - and
+  the pair of lines it emits reads back as the one row rather than as the wait and the write. Two rows are
   deliberately NOT minted twice: how often a view redraws stays **Set Surface Redraw**, which now
   also offers drawing once and stopping, and the live picture stays **Rendered As An Image**.
-- **Eight rendering words for the two questions a player actually asks.** **Render 3D At** renders
+- **Nine rendering words for the two questions a player actually asks.** **Render 3D At** renders
   the 3D scene at a percentage of the window and says how it is upscaled on the same row, because
   70% with a sharpening upscaler often looks better than 70% plain and costs the same; **Upscale
   With** and **Set Temporal AA** ship as single-line rows of their own beside it. **Smooth Edges
   With** is the one antialiasing switch a graphics menu needs: pick a word and every other technique
   is turned off, so a player cannot pay for two at once. And four rows for how the game meets a
   screen it was not drawn for: **Scale The Game**, **Fit The Shape**, **Keep Pixels Sharp** and
-  **Pixel Size**. The frozen per-technique rows are untouched and are still the right rows for a
-  menu that offers the switches separately.
+  **Pixel Size**. **Renderer Is** answers which of Godot's three the game is running on, which is
+  what a graphics menu asks before it offers the settings only Forward+ draws. The frozen
+  per-technique rows are untouched and are still the right rows for a menu that offers the switches
+  separately.
 - **The Layers shelf, 11 rows, and the two parallax nodes under one set of words.** Whether a
   `CanvasLayer` follows the camera (**Stay Fixed On Screen** / **Move With The World**, which is the
   whole difference between a HUD and a layer of world), which layer draws over which said RELATIVE
@@ -220,9 +223,53 @@ What changed in the build you have installed (v0.17.0), in the words the release
   [docs/GUIDE-CAMERAS-AND-VIEWPORTS.md](docs/GUIDE-CAMERAS-AND-VIEWPORTS.md) - the camera in both
   dimensions, the cursor ray, the rail, views and stills, the scaling words, layers and parallax,
   and the table of what a project that already wrote these lines by hand opens as. The engine-level
-  reference gains the eight rendering rows, the addon index gains Camera Rail, the pack count is
-  re-measured at **119**, and the words land in all nine translation CSVs (**202 new keys**, most of
+  reference gains the nine rendering rows, the addon index gains Camera Rail, the pack count is
+  re-measured at **119**, and the words land in all nine translation CSVs (**211 new keys**, most of
   them the dropdown labels a reader chooses between).
+
+### Fixed in the camera and viewport pass
+
+- **A rail shot the player could not see.** Blend To and Fly Along drove the rail's own camera
+  without ever making it current, so a shot started while another camera held the view - after a
+  Cut To, or after the previous blend handed over - animated a camera nobody was looking at and
+  landed as a hard cut when the target took the view at the end. The guide's own headline chain
+  (cut to the boss camera, hold, blend back) was the broken one. Both moving shots now take the
+  view as they start, and a blend stands the rail's camera ON the shot that is up before it
+  travels, so the move is continuous. **Hold deliberately does not**: a hold after a cut is the
+  beat on THAT camera.
+- **The ease a row picked was not a word.** The four shot curves are a dropdown on a String
+  argument, and a dropdown key is written into the call verbatim - so picking \"Ease in\" emitted
+  `fly_along($Route, 4, ease_in)`, an identifier nothing declares, and the game did not parse. Both
+  rails now write the quotes in the template, which is the one place the annotation vocabulary can
+  carry them.
+- **Two ways a shot list stopped without saying anything.** Fly Along handed a route with no length
+  in it refused silently, and On Shot Finished never came, so a chain built on that trigger stopped
+  on a beat that never arrived; it now warns and names the trigger that will not fire. A blend
+  whose target was freed part way through kept animating toward a camera that was not there and
+  ended with no On Blend Finished at all; it now ends on the frame the target goes away and still
+  fires the trigger.
+- **A run of camera lines has to be about ONE camera.** The narrow claim - either every statement
+  of a run carries the same receiver or none of them does - was written in three places and
+  enforced in none: an optional capture that matched nothing agreed with whatever the line before
+  it said, so `$Other.near = 0.1` followed by a bare `far = 2000.0` opened as one Set Clip Range on
+  `$Other`. The bytes never moved, which is why nothing caught it, but the first parameter edit
+  would have re-emitted the bare line onto the wrong node. Every statement now captures its own
+  receiver and the six runs refuse a mixed one.
+- **The timed look-at survives a target straight overhead.** Look At Over Seconds guarded only a
+  zero-length aim, so the ordinary top-down shot reached `Basis.looking_at` with an up vector
+  parallel to the aim - a warning and an arbitrary roll. It now carries the same last-moment swap
+  the shipped Look At (safe up) has always had. The row also says out loud that it owns the
+  camera's orientation for the seconds it names.
+- **Save A Still Of A View reads back as itself.** Both of its lines were already claimed by older
+  rows on their own - the wait by Wait For Signal, the write by Take Screenshot, whose template it
+  is character for character - so a hand-written still opened as two rows. The pair is a run now,
+  and neither line alone is claimed, so the two older rows keep everything they had. The row
+  builder's coroutine list, a third list nobody had told, now carries the id too: an id-only still
+  was a coroutine to the compiler and the Doctor and drew no hourglass on the canvas.
+- **Renderer Is was the row nothing was watching.** It shipped as the ninth rendering row with no
+  key in any of the nine CSVs, no entry in the harvester's obligation or the per-verb ratchet, and
+  no pin in the tests that walk the other eight. All three now name it, and its six words are keyed
+  in all eight languages.
 
 ### Lens, sky and surface: what the whole world looks like, said in words
 

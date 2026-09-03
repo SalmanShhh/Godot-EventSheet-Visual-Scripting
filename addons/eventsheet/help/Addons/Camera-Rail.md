@@ -3,7 +3,8 @@
 Attach a rail under a camera and that camera becomes directable from event rows. **Fly Along**
 walks it down a drawn path over a number of seconds, **Hold** parks it on a beat, **Blend To**
 travels it onto another camera and hands the view over, and **Cut To** switches outright.
-Every shot ends in a trigger, so a cutscene is a chain of rows rather than a coroutine.
+Every shot that runs ends in a trigger, so a cutscene is a chain of rows rather than a coroutine
+(the two shots that refuse to start, and Stop Rail, are the deliberate exceptions - see Tips).
 
 Two packs, one vocabulary: `CameraRailBehavior` directs a **Camera2D** along a **Path2D**, and
 `CameraRail3DBehavior` directs a **Camera3D** along a **Path3D**, keeping a node in frame while it
@@ -46,10 +47,10 @@ in *italic*, exactly as the rows draw them:
 
 | Kind | Name | Parameters | Description |
 |---|---|---|---|
-| Action | Fly Along | `path` (Path2D / Path3D), `seconds`, `ease`; 3D also `look_at` (Node3D) | Walks the rail's camera from the start of the drawn route to its end over the seconds given. An empty path walks the Inspector's `route`; 0 seconds takes `shot_seconds`; an empty ease takes `shot_ease`. In 3D, `look_at` is a node the camera turns to face the whole way. |
+| Action | Fly Along | `path` (Path2D / Path3D), `seconds`, `ease`; 3D also `look_at` (Node3D) | Walks the rail's camera from the start of the drawn route to its end over the seconds given, and gives that camera the view as the flight starts. A `null` path walks the Inspector's `route`; 0 seconds takes `shot_seconds`; an empty ease takes `shot_ease`. In 3D, `look_at` is a node the camera turns to face the whole way, or `null` to keep the heading it was left with. |
 | Action | Cut To | `camera` (Camera2D / Camera3D) | The hard cut: the named camera takes the view immediately. Whatever shot was running stops where it stands and On Shot Finished does not fire, because the cut is the ending. |
-| Action | Blend To | `camera`, `seconds`, `ease` | Travels the rail's camera onto the named one - position and rotation together with the zoom (2D) or the field of view (3D) - then hands the view to it. |
-| Action | Hold | `seconds` | Parks the rail for that long and then fires On Shot Finished. 0 seconds falls back to `shot_seconds`. |
+| Action | Blend To | `camera`, `seconds`, `ease` | Travels the rail's camera onto the named one - position and rotation together with the zoom (2D) or the field of view (3D) - then hands the view to it. The travel starts from whatever shot is on screen: if the rail had handed the view away, its own camera stands on that shot first and takes the view back. |
+| Action | Hold | `seconds` | Parks the rail for that long and then fires On Shot Finished, leaving the view exactly where it is - so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to `shot_seconds`. |
 | Action | Stop Rail | - | Halts the shot where it stands, WITHOUT firing On Shot Finished. The next Fly Along, Hold or Blend To starts a fresh shot. |
 | Condition | Is Flying | - | True only while a Fly Along run is travelling. A Hold and a blend are not flights. |
 | Expression | Rail Progress | - | How far through the current shot the rail has come, 0 at its start and 1 when it finished. It is the time through the shot, before the ease bends it, and it keeps its last value once the shot ends. |
@@ -256,9 +257,17 @@ credits sequence with no separate scene to build.
 - **Stop Rail is silent on purpose.** It does not fire On Shot Finished, so a chain built on that
   trigger stops rather than jumping to its next beat. That is what makes it the right row for a
   skip.
-- **A route with nothing drawn on it starts no flight.** A `Path2D` whose curve has no length is
-  refused rather than divided by, so an unfinished route reads as "nothing happened" instead of an
-  error.
+- **A moving shot takes the view; a hold does not.** Fly Along and Blend To make the rail's own
+  camera current as the shot starts, because a move nobody can see is not a move. Hold leaves the
+  view where it is, which is what makes the Cut To - Hold - Blend To chain read: the beat belongs
+  to the camera the cut put up.
+- **A route with nothing drawn on it starts no flight, and says nothing.** A `Path2D` whose curve
+  has no length is refused rather than divided by - but the refusal is silent and On Shot Finished
+  does not fire, so a chain waiting on that trigger stops there. Check the route is drawn before
+  building the rest of the sequence on it.
+- **A blend target freed mid-blend ends the blend quietly.** The shot stops where it stands and On
+  Blend Finished does not fire, because there is no camera left to hand the view to. Keep the
+  cameras a cutscene blends between alive for the length of it.
 - **Turn `current_on_ready` off for a rail that waits.** Two rails both claiming the view on the
   first frame is a coin toss; let the one that opens the scene hold it and have the other cut in.
 - **Blend To hands the view over, Cut To does not blend.** If the two cameras are already framed

@@ -779,7 +779,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `res` | [For Each Resource In Folder](ace:Core/ForEachResourceInFolder) | Loops | Vocabulary |
 | `reset_smoothing` | [Snap To Target Now](ace:Core/CameraSnapToTarget) | Camera | Vocabulary |
 | `resize` | [Resize Array](ace:Core/ArrayResize) | Variables: Array | Vocabulary |
-| `resource_path` | [Set Camera Exposure](ace:Core/CamSetExposure) | Camera | Vocabulary |
+| `resource_path` | [Set Exposure](ace:Core/EnvSetExposure) | Environment | Vocabulary |
 | `rest_length` | [Set Spring Rest Length](ace:Core/SetDampedSpringLength) | Joints | Vocabulary |
 | `restart` | [Restart / Burst](ace:Core/RestartParticles) | Particles | Vocabulary |
 | `retire` | [Retire](ace:Core/Retire) | Destroy | Vocabulary |
