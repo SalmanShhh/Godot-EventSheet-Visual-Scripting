@@ -212,11 +212,27 @@ static func _test_the_2d_rail() -> bool:
 	all_passed = _check("no ease word takes the rail's default curve", rail.get("_ease"), "ease_in_out") and all_passed
 	rail.stop_rail()
 
-	# ── A route with nothing drawn on it is refused rather than dividing by a zero length.
+	# ── A route with nothing drawn on it is refused rather than dividing by a zero length. The
+	# refusal leaves the shot that was running exactly where it was: it does not park it, and it
+	# does not fire anything, which is why the pack warns instead of failing silently.
 	var empty_path: Path2D = Path2D.new()
 	empty_path.curve = Curve2D.new()
 	rail.fly_along(empty_path, 1.0, "linear")
 	all_passed = _check("a route with no length starts no flight", rail.is_flying(), false) and all_passed
+	all_passed = _check("and the refusal is written down where a game can see it",
+		FileAccess.get_file_as_string(PACK_2D).contains("push_warning(\"Camera Rail: Fly Along was handed no route"), true) and all_passed
+
+	# ── A blend target freed mid-blend: the landing is skipped, because there is nothing left to
+	# land on, but On Blend Finished still fires so the rows after it are not stranded.
+	var doomed: Camera2D = Camera2D.new()
+	doomed.position = Vector2(600.0, 0.0)
+	var blends_before: int = blends[0]
+	rail.blend_to(doomed, 2.0, "linear")
+	rail._process(1.0)
+	doomed.free()
+	rail._process(0.1)
+	all_passed = _check("a freed target ends the blend on the spot", rail.get("_mode"), "") and all_passed
+	all_passed = _check("and the blend still announces itself", blends[0], blends_before + 1) and all_passed
 
 	camera.free()
 	target.free()

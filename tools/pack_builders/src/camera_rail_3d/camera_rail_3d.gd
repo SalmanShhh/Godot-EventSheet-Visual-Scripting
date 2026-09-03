@@ -103,7 +103,7 @@ func _apply_flight(eased_fraction: float) -> void:
 ## at a time), and the field of view beside it, because a lens is not part of a transform.
 ## @ace_hidden
 func _apply_blend(eased_fraction: float) -> void:
-	if host == null or _blend_target == null:
+	if host == null or not is_instance_valid(_blend_target):
 		return
 	host.global_transform = _blend_from_transform.interpolate_with(_blend_target.global_transform, eased_fraction)
 	host.fov = lerpf(_blend_from_fov, _blend_target.fov, eased_fraction)
@@ -140,7 +140,10 @@ func _park() -> void:
 ## a float's width away from it, then the target takes the view and On Blend Finished fires.
 ## @ace_hidden
 func _finish_blend() -> void:
-	var handover: Camera3D = _blend_target
+	# A target freed mid-blend leaves nothing to hand the view to, so the landing is skipped -
+	# but the trigger still fires, because the rows after On Blend Finished are the rest of
+	# the cutscene and a sequence that simply stops is the harder failure to see.
+	var handover: Camera3D = _blend_target if is_instance_valid(_blend_target) else null
 	if host != null and handover != null:
 		host.global_transform = handover.global_transform
 		host.fov = handover.fov
@@ -171,6 +174,11 @@ func _process(delta: float) -> void:
 	if _mode == "fly":
 		_apply_flight(_eased(_progress, _ease))
 	elif _mode == "blend":
+		if not is_instance_valid(_blend_target):
+			# The camera being travelled onto has gone. End the blend on this frame rather
+			# than animating nothing for the rest of its seconds.
+			_finish_blend()
+			return
 		_apply_blend(_eased(_progress, _ease))
 	if _progress < 1.0:
 		return
@@ -183,6 +191,10 @@ func _process(delta: float) -> void:
 func fly_along(path: Path3D, seconds: float, ease: String, look_at: Node3D) -> void:
 	var walked: Path3D = path if path != null else route
 	if walked == null or walked.curve == null or walked.curve.get_baked_length() <= 0.0:
+		# Refused rather than divided by a zero length - and SAID OUT LOUD, because a shot
+		# that never starts never fires On Shot Finished, so a chain built on that trigger
+		# stops here with nothing anywhere to say why.
+		push_warning("Camera Rail: Fly Along was handed no route with any length in it, so no flight started and On Shot Finished will not fire.")
 		return
 	route = walked
 	_flight_path = walked
