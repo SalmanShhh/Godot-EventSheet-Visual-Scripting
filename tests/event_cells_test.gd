@@ -30,11 +30,61 @@ const RAYCAST_3D: String = "res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd
 const SHOOTER: String = "res://demo/showcase/platformer_shooter/platformer_shooter.gd"
 
 
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _no_event_is_dropped() and ok
 	ok = _a_shell_says_why() and ok
+	ok = _every_action_after_a_collapsed_ternary_is_drawn() and ok
 	return ok
+
+
+## The shape the first repair missed: a value that LOOKS like a ternary but does not split (a
+## ternary inside a format list) used to stop the scan at that action, so every action after it
+## went undrawn while the event still owned a cell - which is why an event-granular walk printed
+## clean over it. Both orders are pinned by the WORDS each action draws, so a scan that stops early
+## or a real pair that fails to split is named by the cell it did not produce.
+static func _every_action_after_a_collapsed_ternary_is_drawn() -> bool:
+	var source: String = "
+".join(PackedStringArray([
+		"extends Node",
+		"var speed := 0",
+		"var fast := true",
+		"var alive := true",
+		"var hp := 3",
+		"@onready var label: Label = $Label",
+		"",
+		"",
+		"func _process(_delta: float) -> void:",
+		"	if visible:",
+		"		speed = 1 if fast else 2",
+		"		label.text = \"%d\" % [hp if alive else 0]",
+		"		speed += 1",
+		"	if fast:",
+		"		label.text = \"%d\" % [hp if alive else 0]",
+		"		speed = 1 if fast else 2",
+		"",
+	]))
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+		source, true, "res://ternary_orders_fixture.gd")
+	if sheet == null:
+		return SUPPORT.check(P, "the ternary-orders fixture opens as a sheet", false, true)
+	# The cells from the first event on: the file's own header and variable rows are the sheet's
+	# anatomy, pinned elsewhere, and this pin is about what the two EVENTS draw.
+	var cells: PackedStringArray = PackedStringArray()
+	var in_events: bool = false
+	for entry: Variant in LINES.readings_of_sheet(sheet, "fixture"):
+		var words: String = " ".join((entry as LINES.Reading).plain)
+		in_events = in_events or words == "Every tick (draw)"
+		if in_events:
+			cells.append(words)
+	var dropped: PackedStringArray = PackedStringArray()
+	for entry: Variant in LINES.events_without_cells(sheet, LINES.readings_of_sheet(sheet, "fixture")):
+		dropped.append(str((entry as Dictionary)["reason"]))
+	return SUPPORT.pins(P, [
+		["no event of the fixture is dropped", dropped, PackedStringArray()],
+		["every cell the two orders draw, in canvas order", cells, _expected_order_cells()],
+	])
 
 
 ## The repair itself: neither file loses an event, and both hold the bracketed values that made the
@@ -83,3 +133,17 @@ static func _missing_of(path: String) -> Array:
 static func _event_count(path: String) -> int:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
 	return 0 if sheet == null else LINES.event_rows_of(sheet).size()
+
+
+## What the fixture's two events draw, cell by cell: the real pair splits into its arms, the text
+## write after a collapsed value is drawn, and the increment after that is drawn too - in BOTH orders.
+static func _expected_order_cells() -> PackedStringArray:
+	return PackedStringArray([
+		"Every tick (draw)", "Is visible",
+		"fast is true", "Set speed to 1", "Else", "Set speed to 2",
+		"Set text to hp if alive else 0",
+		"Add 1 to speed",
+		"⟳", "Every tick (draw)", "fast is true",
+		"Set text to hp if alive else 0",
+		"fast is true", "Set speed to 1", "Else", "Set speed to 2",
+	])

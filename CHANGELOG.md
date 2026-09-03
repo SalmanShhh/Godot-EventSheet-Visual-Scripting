@@ -447,6 +447,14 @@ buys thirteen lines and costs 2,145 readings, so it will not.
   so the next pass through that file starts with it.
 
 
+- **Every action after a collapsed ternary is drawn again.** The repair that stopped a bracketed
+  ternary (one inside a format list) from recursing for ever asked its question at the SPLIT, after
+  the scan had already chosen that action as the event's branch point - so the head was cut at that
+  action, the split came back empty, and every action after it went undrawn, while a real pair later
+  in the same event never split at all. The event still owned a cell, which is why the per-event
+  walk printed clean over it. The scan now asks the same question and moves on to the next action,
+  and a fixture holding both orders pins every cell the two events draw, word for word.
+
 - **A bare `self` in a comparison no longer indexes past the end.** The engine-property comparison
   reader took `self == null` apart as `self.` plus a property, and asked for the first word of a
   property that was not there - six script errors every time the reading dump walked the showcases,

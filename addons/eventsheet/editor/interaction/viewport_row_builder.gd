@@ -13254,7 +13254,9 @@ func _first_ternary_action(event_row: EventRow, from_index: int = 0) -> Dictiona
 			if not _may_branch(raw.code):
 				continue
 			if is_single_statement(raw.code) and not EventSheetSentence.ternary_branches(raw.code).is_empty():
-				return {"index": action_index, "kind": "code", "param": "", "text": raw.code}
+				var code_found: Dictionary = {"index": action_index, "kind": "code", "param": "", "text": raw.code}
+				if not _ternary_collapses(code_found):
+					return code_found
 			continue
 		if not (action_resource is ACEAction):
 			continue
@@ -13266,7 +13268,10 @@ func _first_ternary_action(event_row: EventRow, from_index: int = 0) -> Dictiona
 				continue
 			if EventSheetSentence.value_branches(value).is_empty():
 				continue
-			return {"index": action_index, "kind": "param", "param": str(param_key), "text": value}
+			var param_found: Dictionary = {"index": action_index, "kind": "param", "param": str(param_key), "text": value}
+			if _ternary_collapses(param_found):
+				continue
+			return param_found
 	return {}
 
 
@@ -13277,6 +13282,21 @@ func _first_ternary_action(event_row: EventRow, from_index: int = 0) -> Dictiona
 ## false negative would silently stop a real branch from reading as a pair.
 func _may_branch(text: String) -> bool:
 	return text.contains(" if ") and text.contains("else")
+
+
+## A candidate whose arms come back empty, or whose ONE arm reproduces the value itself, has no
+## branch a row could draw. It happens when the branch lives inside a bracketed group that is not
+## itself a ternary - the arguments of a format list, say - so hoisting the group out of the value
+## hands the whole value back unchanged; drawing that would put an Else under a row that never
+## branches, and stepping into it would never end. Asked at the SCAN, not only at the split: a scan
+## that stopped at such an action left every action after it undrawn, and a real pair later in the
+## same event never split at all.
+func _ternary_collapses(found: Dictionary) -> bool:
+	var branches: Array = _ternary_arms(found)
+	if branches.is_empty():
+		return true
+	var only_arm: String = str((branches[0] as Dictionary).get("code", ""))
+	return branches.size() == 1 and only_arm == str(found.get("text", ""))
 
 
 ## The arms of one branching action - the statement's for a hand-written line, the parameter value's
@@ -13296,17 +13316,9 @@ func _ternary_arms(found: Dictionary) -> Array:
 ## read as a sibling condition, i.e. as though both arms could fire.
 func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dictionary, indent: int,
 		uid_path: String) -> Array[EventRowData]:
+	if _ternary_collapses(found):
+		return []
 	var branches: Array = _ternary_arms(found)
-	if branches.is_empty():
-		return []
-	# A value whose ONE arm reproduces the value itself has no branch a row could draw. It happens
-	# when the branch lives inside a bracketed group that is not itself a ternary - the arguments of
-	# a format list, say - so hoisting the group out of the value hands the whole value back
-	# unchanged. Drawing that would put an Else under a row that never branches, and stepping into it
-	# would never end, because the arm and the text it came from are the same text.
-	var only_arm: String = str((branches[0] as Dictionary).get("code", ""))
-	if branches.size() == 1 and only_arm == str(found.get("text", "")):
-		return []
 	var rows: Array[EventRowData] = []
 	for branch_index: int in branches.size():
 		var branch: Dictionary = branches[branch_index]
