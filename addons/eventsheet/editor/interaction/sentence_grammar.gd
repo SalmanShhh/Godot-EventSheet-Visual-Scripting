@@ -14438,6 +14438,11 @@ static func environment_assignment(object_class: String, member: String, owner_t
 	# through a WorldEnvironment node's own `environment` slot is the other, and it is recognised by
 	# the slot's name because a node path has no declared type for the lookup to find.
 	var owner_bare: String = owner_text.strip_edges().trim_prefix("self.")
+	# The SKY is three objects past the environment, so it is asked first: its owner ends in
+	# `.sky.sky_material` and could never satisfy the environment gate below.
+	var sky: Dictionary = _sky_word_assignment(owner_bare, member, assigned, context)
+	if not sky.is_empty():
+		return sky
 	var through_node: bool = owner_bare == "environment" or owner_bare.ends_with(".environment")
 	if not through_node and not _class_is_any(object_class, ENVIRONMENT_CLASSES):
 		return {}
@@ -14457,7 +14462,51 @@ static func environment_assignment(object_class: String, member: String, owner_t
 	if ENVIRONMENT_VALUES.has(member):
 		return _with_pattern(_sentence(OBJECT_ENVIRONMENT, str(ENVIRONMENT_VALUES[member]),
 			{"value": [expression_text(value, context), "value"]}), "lighting", line)
-	return {}
+	# ── the environment words ────────────────────────────────────────────────────────────────────
+	#
+	# Everything above is an OVERRIDE list: a member the world vocabulary already had a sentence for
+	# before there was a table, kept in the exact words it shipped in. Everything else is DERIVED
+	# from EventForgeEnvironmentWords, so a word added to that table is read back here with nothing
+	# added, and the row the picker builds and the line a person types say the same thing.
+	var switched: Array = EventForgeEnvironmentWords.switch_readings_of_property(member)
+	if not switched.is_empty():
+		if value != "true" and value != "false":
+			return {}
+		return _with_pattern(_sentence(OBJECT_ENVIRONMENT,
+			str(switched[0] if value == "true" else switched[1]), {}), "lighting", line)
+	var said: String = EventForgeEnvironmentWords.verb_of_property(member)
+	if said.is_empty():
+		return {}
+	# A word whose value is one of a fixed list of engine constants reads as the plain word the
+	# dropdown shows for it - "filmic", not `Environment.TONE_MAPPER_FILMIC`. A constant the table
+	# does not know keeps the expression it is, which is the honest answer for a value computed at
+	# run time.
+	var chosen: String = EventForgeEnvironmentWords.choice_label(member, value)
+	return _with_pattern(_sentence(OBJECT_ENVIRONMENT, said, {"value": [
+		translate(chosen) if not chosen.is_empty() else expression_text(value, context), "value"]}),
+		"lighting", line)
+
+
+## A hand-written write to the SKY the world is drawing, in the sheet's own word for it - so
+## `environment.sky.sky_material.sky_top_color = Color.RED` reads "Environment - Set sky top to
+## Color(1, 0, 0)" rather than as the three-deep property chain it is. {} for every line that is not
+## one, which leaves the plain property reading in charge.
+##
+## The GATE is the whole path, `<something>.sky.sky_material`, because that chain reaches a sky
+## material and nothing else in Godot spells it - a `sky_material` on its own could be any Sky. The
+## WORD comes from the same table the sky rows are built from, so a word added there is read back
+## here with nothing added.
+static func _sky_word_assignment(owner_bare: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	const SKY_REACH := ".sky.sky_material"
+	if owner_bare != "environment" + SKY_REACH and not owner_bare.ends_with(SKY_REACH):
+		return {}
+	var said: String = EventForgeSkyWords.verb_of_property(member)
+	if said.is_empty():
+		return {}
+	return _with_pattern(_sentence(OBJECT_ENVIRONMENT, said,
+		{"value": [expression_text(assigned.strip_edges(), context), "value"]}), "lighting",
+		_member_line(owner_bare, member, assigned.strip_edges()))
 
 
 ## `RenderingServer.global_shader_parameter_set("wind_strength", 2.0)` - one effect parameter set
