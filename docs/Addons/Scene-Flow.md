@@ -9,10 +9,11 @@ Scene Flow is a Godot EventSheets behavior pack that gives a whole menu (or a wh
 1. [Where this pack shines](#where-this-pack-shines)
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
-4. [ACE reference](#ace-reference)
-5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-6. [Use cases](#use-cases)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [Transitions - a shape drawn over the change](#transitions---a-shape-drawn-over-the-change)
+5. [ACE reference](#ace-reference)
+6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+7. [Use cases](#use-cases)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -63,6 +64,7 @@ The pack also surfaces the host node's own properties and methods to the picker 
 |---|---|---|
 | `fade_color` | opaque black | The cover color the screen fades through during faded transitions. |
 | `fade_seconds` | `0.4` | How long the fade-out (and the matching fade-in) each take, in seconds. Range 0.05 to 5. |
+| `wipe_image` | empty | The greyscale picture a `wipe` transition follows. Empty is a plain left-to-right sweep. |
 
 **3. Drop the actions on your events.** Here is a complete first menu - a Play button that fades into level one, and a Quit button:
 
@@ -75,6 +77,71 @@ On Quit Pressed
 ```
 
 That is the entire menu. `Menu` is the node the behavior is attached to; `On Play Pressed` and `On Quit Pressed` are your own button events. The fade color and duration come from the Inspector, so both buttons match the game's look with nothing else to wire.
+
+---
+
+## Transitions - a shape drawn over the change
+
+**Fade To Scene** covers the screen with a colour. **Go To Scene With** covers it with a shape: a
+wipe following a picture you painted, a dissolve of speckles, an iris closing on the middle of the
+screen, blinds, the picture coming apart into blocks, or a page turning.
+
+```
+On Level Complete
+  -> Level | SceneFlowBehavior: Go To Scene With  "res://scenes/level_2.tscn"  iris  0.8  smooth
+```
+
+That is one row for the whole change. Under it, the transition is one walk:
+
+- **out** over the first half - the shape comes on until the screen is fully covered;
+- **the swap** at the midpoint - the scene is exchanged under the cover, where nobody can see it;
+- **in** over the second half - the shape comes off again, over the new scene.
+
+The cover colour is the node's `fade_color`, so a game whose fades are white gets white wipes with
+nothing else to set. The one-at-a-time rule is the same as the shipped fade's, and it is the same
+flag: **Is Transitioning** is true from the first frame of the walk to the last, for a plain fade and
+a page curl alike.
+
+Like the fade, the transition parents itself to the tree root rather than to the scene being
+replaced, so the whole walk survives the swap. It draws in the top slot - above every post effect the
+game is wearing - because a transition is the one thing that should not itself be graded, blurred or
+vignetted by the look of the scene it is leaving.
+
+### The seven shapes
+
+| Shape | What it looks like | Notes |
+|---|---|---|
+| `fade` | The screen goes to the cover colour and comes back. | The cheapest: one flat rectangle, no screen read. |
+| `wipe` | The cover sweeps in following the **Wipe Image** knob. | Dark parts of the picture are covered first, light parts last. With no image it is a plain left-to-right sweep. |
+| `dissolve` | The screen breaks up into speckles that fill in. | The noise is generated, so it needs no image. |
+| `iris` | A circle closes over the picture and opens on the next one. | Round on any window shape. |
+| `blinds` | Bars close across the screen like a shutter. | |
+| `pixelate` | The picture comes apart into blocks and the blocks drain to the cover colour. | Reads the screen while it runs. |
+| `page curl` | The picture peels off the screen like a page being turned. | Reads the screen while it runs. |
+
+The last two read the screen back, which costs one screen read per pixel while the transition is
+running - and only while it is running, so it is a beat of expense rather than a standing one. The
+other five are flat.
+
+### The wipe image
+
+A wipe follows any greyscale picture: it covers the dark parts first and the light parts last. A
+left-to-right ramp is a bar wipe, a radial ramp is a clock, a soft cloud is a smoky dissolve, and a
+shape you painted is that shape appearing. Drop the image on the behaviour's **Wipe Image** property
+and pick `wipe` on the row. There is no list of shipped wipe images: any texture in your project
+works, and a 256x256 gradient PNG is enough.
+
+### Knowing when it landed
+
+The **On Transition Finished** trigger fires when the new scene is up and the cover is off. It
+arrives on the Scene Flow node in the NEW scene - the runner outlives the old one - and carries the
+shape it was, so one handler can tell a wipe from an iris:
+
+```
+On Transition Finished
+  -> Music: play
+  -> Hud | JuiceBehavior: Moment  "calm"  1.0
+```
 
 ---
 
@@ -95,6 +162,8 @@ All ACEs live in the **Scenes** category and target the `SceneFlowBehavior` beha
 | Go To Scene | `path` (String) | Changes to the scene at `path` immediately, with no fade. A blank path does nothing. |
 | Reload Scene | (none) | Reloads the current scene immediately, with no fade. |
 | Quit Game | (none) | Quits the game. A safe no-op on platforms that forbid it, such as web. |
+| Go To Scene With | `path` (String), `transition` (String), `seconds` (float), `ease` (String) | Changes to the scene at `path` with a shape drawn over the change: the cover walks on over the first half, the scene is swapped underneath it, and it walks off again over the second. Shapes are fade, wipe, dissolve, iris, blinds, pixelate and page curl; eases are linear, smooth, in and out. Ignored while a transition is already running; a blank path does nothing. Opens at fade, 0.6, smooth. |
+| Reload Scene With | `transition` (String), `seconds` (float), `ease` (String) | Reloads the current scene with the same shapes, cover colour and one-at-a-time rule as Go To Scene With - the polished retry in whichever shape the game uses everywhere else. Opens at fade, 0.6, smooth. |
 
 ### Conditions
 
@@ -110,7 +179,14 @@ All ACEs live in the **Scenes** category and target the `SceneFlowBehavior` beha
 
 ### Triggers
 
-Scene Flow ships no triggers of its own. You drive it from your own game events instead - a button press, a player-died signal, a level-complete condition, an `On Ready` after a timer. React to a finished transition, if you need to, by watching **Is Transitioning** turn false in your loop.
+| Trigger | Fires when |
+|---|---|
+| On Transition Finished | A transition started by Go To Scene With or Reload Scene With has finished: the new scene is up and the cover is off. It arrives on the Scene Flow node in the NEW scene, carrying the shape the transition was (`fade`, `iris`, and so on), so one handler can tell them apart. |
+
+Everything else you drive from your own game events - a button press, a player-died signal, a
+level-complete condition, an `On Ready` after a timer. The plain **Fade To Scene** and **Fade Reload
+Scene** raise no trigger of their own; watch **Is Transitioning** turn false for those, or use the
+shaded pair above when you want the signal.
 
 ### Inspector properties
 
@@ -118,6 +194,7 @@ Scene Flow ships no triggers of its own. You drive it from your own game events 
 |---|---|---|---|---|
 | `fade_color` | Color | opaque black `Color(0, 0, 0, 1)` | any color | The cover color the screen fades through. |
 | `fade_seconds` | float | `0.4` | 0.05 - 5 (step 0.05) | Fade-out (and fade-in) duration, in seconds. |
+| `wipe_image` | Texture2D | empty | any texture | The greyscale picture a `wipe` transition follows: its dark parts are covered first and its light parts last. Empty is a plain left-to-right sweep. |
 
 ### Inspector properties are ACEs too
 
@@ -325,6 +402,44 @@ On Chapter 2 Pressed
 
 One behavior node serves every button; only the path changes per row.
 
+### 16. A wipe you painted
+
+A game with a look of its own does not want a plain fade. Drop a greyscale picture on the behaviour's
+Wipe Image and the cover follows it.
+
+```
+On Chapter End
+  -> Level | SceneFlowBehavior: Go To Scene With  "res://scenes/chapter_2.tscn"  wipe  1.0  smooth
+```
+
+The dark parts of the picture go first and the light parts last, so a diagonal ramp is a diagonal
+wipe and a painted shape is that shape closing in.
+
+### 17. React to the arrival
+
+The trigger fires on the Scene Flow node in the scene the transition arrived at, so the new scene can
+start itself.
+
+```
+On Transition Finished
+  -> LevelMusic: play
+  -> Player: set process_mode = 0
+```
+
+Use it for anything that should wait until the cover is off: starting the music, unfreezing the
+player, or beginning a cutscene.
+
+### 18. A retry that matches the rest of the game
+
+If the game moves between levels with an iris, the death screen should retry with one too.
+
+```
+On Retry Pressed
+  -> DeathScreen | SceneFlowBehavior: Reload Scene With  iris  0.7  smooth
+```
+
+One shape word per row keeps every change in the game reading as the same game.
+
 ### Other use cases
 
 **Attract mode.** A demo or kiosk build starts an idle timer on the title and gameplay scenes and Fade To Scene back to the intro when nobody touches the controls, keeping a show-floor build presentable on its own.
@@ -349,4 +464,7 @@ One behavior node serves every button; only the path changes per row.
 - **Is Transitioning covers faded flows, not instant ones.** It reports true only while a fade overlay is running. Go To Scene and Reload Scene do not raise it, so do not gate an instant action on it expecting a busy flag that never turns on.
 - **Set the fade look on the node, not per call.** `fade_color` and `fade_seconds` are Inspector properties, not action parameters, so every faded change on that node shares one look. Want two different fade speeds? Use two behavior nodes with different `fade_seconds`.
 - **Quit Game is a no-op on web by design.** Do not treat a "quit did nothing" report on a web build as a bug - the platform forbids it and the action returns quietly. Test quit on a desktop export.
-- **There are no triggers to react to.** Scene Flow does not emit "on faded" events. Drive it from your own button and game events, and if you need to know a fade finished, watch Is Transitioning fall back to false in your loop rather than hunting for a trigger that does not exist.
+- **The shaded transitions have a trigger; the plain fade does not.** Go To Scene With and Reload Scene With emit On Transition Finished when the new scene is up and the cover is off. Fade To Scene and Fade Reload Scene do not - for those, watch Is Transitioning fall back to false, or move the row to the shaded pair when you want the signal.
+- **A transition is measured in seconds the player waits.** The walk ignores `Engine.time_scale`, so a slowmo or a hitstop running underneath it cannot stretch a 0.6 second wipe into three.
+- **Pixelate and page curl read the screen; the other five do not.** They cost one screen read per pixel while the transition runs, and nothing at all when it is over. Reach for them deliberately, and prefer a fade or an iris on a phone.
+- **The wipe image is yours.** No wipe pictures ship with the pack. Any greyscale texture in your project works - dark first, light last - and a small gradient PNG is plenty.
