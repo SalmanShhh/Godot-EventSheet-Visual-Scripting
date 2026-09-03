@@ -592,6 +592,9 @@ func _on_translations_maybe_changed() -> void:
 	# The picker's row icons are the same kind of read - a res:// path resolved to a texture - so an
 	# icon dropped in, replaced or removed is picked up on the next open rather than after a restart.
 	ACEPickerDialog.clear_icon_cache()
+	# And the warm asks for them again during idle, rather than leaving the next open to pay for
+	# everything this ping just dropped.
+	EventSheetPickerWarmup.rearm()
 	# The behaviour-pack index is the same kind of read - the heads of every pack file - so it is
 	# dropped with them; a pack dropped into the project appears on the next row that asks.
 	EventSheetViewportReadingRows.clear_pack_index()

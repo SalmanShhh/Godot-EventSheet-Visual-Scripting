@@ -1119,11 +1119,32 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	_tree.clear()
 	if _objects_tree != null:
 		_objects_tree.clear()
-	_window.popup_centered(Vector2i(720, 520))
-	_window.grab_focus()
-	_search.grab_focus()
+	# Guarded on the window being in a tree: showing it and moving focus are questions for a live
+	# editor, and a picker built in a test hangs off a bare Node, where each of them is an engine
+	# error rather than a no-op. Nothing else about the open changes.
+	if _window.is_inside_tree():
+		_window.popup_centered(Vector2i(720, 520))
+		_window.grab_focus()
+		_search.grab_focus()
 	_fill_token += 1
-	call_deferred("_fill_after_popup", _fill_token)
+	_schedule_fill(_fill_token)
+
+
+## Puts the fill on the NEXT FRAME, so this one can be DRAWN first - which is the whole point.
+##
+## Not `call_deferred`. A deferred call is flushed at the end of the frame that posted it and that
+## flush happens BEFORE the frame is drawn, so a deferred fill is not deferred past anything a
+## reader can see: the click would still wait on the whole tree before a single pixel appeared.
+## The frame signal is the one that lands after the draw, which is why the idle warm uses it too.
+##
+## With no SceneTree there are no frames to wait for - a picker in a test, a headless run - and the
+## fill falls back to a deferred call, which is exactly as deferred as that context can be.
+func _schedule_fill(token: int) -> void:
+	var tree: SceneTree = _window.get_tree()
+	if tree != null:
+		tree.process_frame.connect(_fill_after_popup.bind(token), CONNECT_ONE_SHOT)
+		return
+	call_deferred("_fill_after_popup", token)
 
 
 ## The expensive half of an open, one frame after the window came up. `token` is the open this

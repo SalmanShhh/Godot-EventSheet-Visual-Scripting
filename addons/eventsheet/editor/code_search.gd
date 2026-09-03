@@ -81,8 +81,9 @@ static func template_calls(template: String) -> PackedStringArray:
 const CALL_PATTERN := "([A-Za-z_][A-Za-z0-9_]*)\\s*\\("
 const MEMBER_PATTERN := "[.}]([A-Za-z_][A-Za-z0-9_]*)"
 
-## template -> the identifiers it names, and pattern -> its compiled RegEx. Both session-scoped:
-## the templates are frozen and the patterns are constants, so neither answer can change.
+## template -> the identifiers it names, and pattern -> its compiled RegEx. Both session-scoped and
+## both bounded: the templates are frozen, and the only patterns put in _compiled are the two
+## constants above. A pattern built from a reader's query is compiled fresh instead.
 static var _template_calls_cache: Dictionary = {}
 static var _compiled: Dictionary = {}
 
@@ -172,7 +173,10 @@ static func gdscript_hint(definition: ACEDefinition, query: String) -> String:
 		return ""
 	var wanted: String = normalize(query)
 	var template: String = str(definition.metadata.get("codegen_template", ""))
-	if _regex("\\b%s\\s*\\(" % wanted).search(template) != null:
+	# Compiled fresh, NOT memoised: this pattern carries the reader's query, so remembering one
+	# per distinct prefix ever typed would grow a dictionary for the life of the session. The two
+	# in _compiled are constants; this one is not.
+	if RegEx.create_from_string("\\b%s\\s*\\(" % wanted).search(template) != null:
 		return "%s()" % wanted
 	return ".%s" % wanted
 

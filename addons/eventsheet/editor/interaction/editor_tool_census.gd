@@ -94,7 +94,7 @@ static func from_pack(pack_dir: String) -> Array[Dictionary]:
 		# every runtime-registered one - is asked this once per card of the object page, and every
 		# one of those asks was opening a directory to find out there was nothing there.
 		_pack_cache[key] = found
-		return found
+		return found.duplicate(true)
 	var files: PackedStringArray = dir.get_files()
 	files.sort()
 	for file_name: String in files:

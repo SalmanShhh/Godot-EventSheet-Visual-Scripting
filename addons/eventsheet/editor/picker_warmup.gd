@@ -73,6 +73,18 @@ static func warm_now() -> void:
 		advance(1000000)
 
 
+## Asks the questions again, because the answers were dropped. The editor's filesystem ping drops
+## the pack censuses and the row icons the warm filled, and without this the "first open pays
+## nothing" property would last only until the reader's first save - the warm being a once-a-session
+## static, the second first-open would pay for all of it again on the click.
+static func rearm() -> void:
+	if not _started:
+		return
+	_next = 0
+	_steps = _build_steps()
+	_arm()
+
+
 ## Tests only: forget that a warm ran, so the next request() starts a fresh one.
 static func reset_for_tests() -> void:
 	_steps = []

@@ -12,6 +12,11 @@
 class_name EventSheetDocUsage
 extends RefCounted
 
+## The two buckets of the counts map: verb -> count over every provider, and
+## verb -> provider -> count. Ours, one level above any id, so no id can collide with them.
+const ANY_PROVIDER := "any"
+const PER_PROVIDER := "per_provider"
+
 
 ## Every row of `sheet` that uses the verb, in reading order. The entries are the resources the
 ## viewport can reveal: the EventRow for a trigger, the ACECondition / ACEAction otherwise.
@@ -35,13 +40,17 @@ static func count(sheet: EventSheetResource, provider_id: String, ace_id: String
 ## asks per matching verb per keystroke, and both were paying a whole-sheet walk for each ask - a
 ## project-sized job to answer a list-sized question. Build it once, read it with count_in().
 ##
-## Two keys per row, because a caller may name the provider or leave it out and the answers differ:
-## the ace_id alone counts the verb whoever published it, and "<ace_id>\n<provider_id>" counts the
-## one provider's. That is exactly the rule the single-verb walk applies below.
+## Two counts per row, because a caller may name the provider or leave it out and the answers
+## differ: the verb on its own counts it whoever published it, and the verb under one provider
+## counts only that one's. That is exactly the rule the single-verb walk applies below.
+##
+## The two live in NESTED buckets rather than under a joined key. Nothing stops an ace_id
+## carrying whatever character a joined key would use, and an id that carried one would answer
+## to another verb's key; nesting cannot be spelled into.
 static func counts_for(sheet: EventSheetResource) -> Dictionary:
-	var counts: Dictionary = {}
+	var counts: Dictionary = {ANY_PROVIDER: {}, PER_PROVIDER: {}}
 	if sheet == null:
-		return counts
+		return {}
 	for event: Variant in sheet.events:
 		_tally(event as Resource, counts)
 	return counts
@@ -55,8 +64,9 @@ static func count_in(counts: Dictionary, provider_id: String, ace_id: String) ->
 		return 0
 	var wanted_provider: String = provider_id.strip_edges()
 	if wanted_provider.is_empty():
-		return int(counts.get(wanted_ace, 0))
-	return int(counts.get("%s\n%s" % [wanted_ace, wanted_provider], 0))
+		return int((counts.get(ANY_PROVIDER, {}) as Dictionary).get(wanted_ace, 0))
+	var per_provider: Dictionary = (counts.get(PER_PROVIDER, {}) as Dictionary).get(wanted_ace, {})
+	return int(per_provider.get(wanted_provider, 0))
 
 
 ## The sentence an entry shows, in the sheet's own words. "" when the verb is not used here at
@@ -84,8 +94,8 @@ static func _tally(row: Resource, counts: Dictionary) -> void:
 	_gather_keys(trigger_keys, event.trigger_provider_id, event.trigger_id)
 	if event.trigger != null:
 		_gather_keys(trigger_keys, str(event.trigger.get("provider_id")), str(event.trigger.get("ace_id")))
-	for trigger_key: String in trigger_keys:
-		counts[trigger_key] = int(counts.get(trigger_key, 0)) + 1
+	for trigger_ace: String in trigger_keys:
+		_bump(counts, trigger_ace, (trigger_keys[trigger_ace] as Dictionary))
 	for condition: ACECondition in event.conditions:
 		if condition != null:
 			_count_one(counts, condition.provider_id, condition.ace_id)
@@ -97,22 +107,36 @@ static func _tally(row: Resource, counts: Dictionary) -> void:
 		_tally(sub_event as Resource, counts)
 
 
-## One use, counted under both of its keys.
+## One use, counted in both buckets.
 static func _count_one(counts: Dictionary, provider_id: String, ace_id: String) -> void:
-	var keys: Dictionary = {}
-	_gather_keys(keys, provider_id, ace_id)
-	for key: String in keys:
-		counts[key] = int(counts.get(key, 0)) + 1
+	var gathered: Dictionary = {}
+	_gather_keys(gathered, provider_id, ace_id)
+	for gathered_ace: String in gathered:
+		_bump(counts, gathered_ace, (gathered[gathered_ace] as Dictionary))
 
 
-## The two keys one use answers to: the verb on its own (the ask that names no provider) and the
-## verb under the provider that published it. Nothing at all for a row with no verb.
+## One verb counted once overall, and once for each provider that spelled it here.
+static func _bump(counts: Dictionary, ace_id: String, providers: Dictionary) -> void:
+	var any: Dictionary = counts[ANY_PROVIDER]
+	any[ace_id] = int(any.get(ace_id, 0)) + 1
+	var per: Dictionary = counts[PER_PROVIDER]
+	if not per.has(ace_id):
+		per[ace_id] = {}
+	var by_provider: Dictionary = per[ace_id]
+	for provider_id: String in providers:
+		by_provider[provider_id] = int(by_provider.get(provider_id, 0)) + 1
+
+
+## What one use answers to: the verb, and the set of providers that spelled it. A row with no
+## verb answers to nothing. Gathered into a set first because the trigger's two spellings are ONE
+## use however many of them name the verb.
 static func _gather_keys(into: Dictionary, provider_id: String, ace_id: String) -> void:
 	var row_ace: String = ace_id.strip_edges()
 	if row_ace.is_empty():
 		return
-	into[row_ace] = true
-	into["%s\n%s" % [row_ace, provider_id.strip_edges()]] = true
+	if not into.has(row_ace):
+		into[row_ace] = {}
+	(into[row_ace] as Dictionary)[provider_id.strip_edges()] = true
 
 
 ## One row, and everything nested under it.

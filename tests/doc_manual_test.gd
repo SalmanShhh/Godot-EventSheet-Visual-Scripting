@@ -295,6 +295,16 @@ static func _test_usage() -> bool:
 		EventSheetDocUsage.count_in(counts, "", "Wait"), 4) and all_passed
 	all_passed = _check("an empty sheet counts nothing rather than failing",
 		EventSheetDocUsage.counts_for(null).is_empty(), true) and all_passed
+	# And no id can be spelled into the map's own structure. The two buckets sit one level ABOVE the
+	# ids, so an id that reads like a bucket name - or like a verb joined to a provider - reaches
+	# nothing at all, which is what the walk says too.
+	for forged: String in ["any", "per_provider", "Wait/System", "Wait System"]:
+		all_passed = _check("an id shaped like the map's own keys counts nothing: %s" % forged,
+			EventSheetDocUsage.count_in(counts, "", forged),
+			EventSheetDocUsage.count(sheet, "", forged)) and all_passed
+		all_passed = _check("and neither does it under a provider: %s" % forged,
+			EventSheetDocUsage.count_in(counts, "System", forged),
+			EventSheetDocUsage.count(sheet, "System", forged)) and all_passed
 	return all_passed
 
 
