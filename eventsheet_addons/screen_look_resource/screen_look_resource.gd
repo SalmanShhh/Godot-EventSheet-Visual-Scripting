@@ -1,5 +1,5 @@
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/screen_look_resource/icon.svg")
 class_name ScreenLookResource
 extends Resource
 ## One screen look as a file: which post effects, in which order, how far each goes and what its own dials are set to. Build a look live with Screen FX rows, save it with Save Look, and wear it with Use Look or Blend To Look. It is your file - rename it, edit it in the Inspector, share it.

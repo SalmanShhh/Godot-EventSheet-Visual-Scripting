@@ -19,7 +19,7 @@ const NO_VERB_PACKS: Array[String] = [
 	"random_table_resource.gd", "skin_catalog_loader_behavior.gd", "skin_catalog_resource.gd",
 	"stat_sheet_resource.gd", "storylet_resource.gd", "touch_shape_library_resource.gd",
 	"uhtn_plan_resource.gd", "color_palette_resource.gd", "skill_tree_resource.gd",
-	"quality_preset.gd",
+	"quality_preset.gd", "moment_resource.gd", "screen_look_resource.gd",
 ]
 ## Verbs the lifter still cannot reproduce byte-exactly (one function each - an async loop guard,
 ## an @ace_param header, two Line of Sight helpers, one Drawing Canvas verb). Each stays a raw block
@@ -73,7 +73,9 @@ static func run() -> bool:
 	# Scenes: the Second View pack (+1). Same recomputation.
 	# Generation: the Drunken Walkers pack (+1). Same recomputation.
 	# Camera: the Camera Rail pack and its 3D twin (+2). Same recomputation.
-	all_passed = _check("the fleet was scanned (117 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1 + 1 + 2) and all_passed
+	# Blend and post: the Blend Modes pack, the Post Kit, and the two data assets a moment and a
+	# look are saved as (+4). Same recomputation.
+	all_passed = _check("the fleet was scanned (121 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1 + 1 + 2 + 4) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
@@ -114,10 +116,16 @@ static func run() -> bool:
 	# camera: +7 Camera Rail verbs (fly along, cut to, blend to, hold, stop, is flying and the
 	# shot's progress) and +7 on its 3D twin - the same seven, with a node kept in frame on the
 	# flight. The two On Finished triggers of each are signals, so they are not in this number.
-	# Recomputed as base + every delta at merge.
+	# blend and post: +11 Blend Modes (blend as, the strength pair, the two readings, the two masks
+	# and Unmask, the two grouping rows and the question about them), +14 Post Kit (the six stack
+	# rows, the strength trio, the two questions, and the four outline rows), +22 Screen FX (the
+	# stack's own eleven, the two colour-vision rows, the five look rows and the four readings),
+	# +2 Juice (Moment and Define Moment) and +2 Scene Flow (Go To Scene With, Reload Scene With).
+	# The two On Finished-shaped triggers those packs gained are signals, so they are not in this
+	# number. Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
 		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
-		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5 + 63 + 7 + 7) and all_passed
+		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5 + 63 + 7 + 7 + 11 + 14 + 22 + 2 + 2) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

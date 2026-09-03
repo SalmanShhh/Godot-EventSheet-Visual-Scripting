@@ -250,7 +250,7 @@ func _build_strip() -> PopupPanel:
 	for group: Dictionary in GROUPS:
 		var heading: Label = Label.new()
 		heading.text = EventSheetL10n.translate(str(group["title"]))
-		heading.add_theme_font_size_override("font_size", 11)
+		heading.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		heading.modulate = Color(1.0, 1.0, 1.0, 0.6)
 		column.add_child(heading)
 		var shelf: HFlowContainer = HFlowContainer.new()

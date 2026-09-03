@@ -43,8 +43,12 @@ static func _what_each_pack_ships() -> bool:
 	var screen: Dictionary = EventSheetPackAssets.shipped_by(SCREEN_FX)
 	all_passed = _check("the screen pack ships a scene",
 		str(screen.get("scene", "")), "res://eventsheet_addons/screen_fx/screen_fx.tscn") and all_passed
-	all_passed = _check("and a shader with it",
-		str(screen.get("shader", "")), "res://eventsheet_addons/screen_fx/screen_fx.gdshader") and all_passed
+	# ... and NO single shader to install any more. The pack's folder now holds a whole LIBRARY of
+	# them - one file per post effect - and "the one .gdshader beside the script" is exactly the
+	# question that has no answer once there are fifteen. Answering "" is the honest reading and
+	# costs the pack nothing: a pack that ships a scene installs no shader anyway, because its own
+	# nodes already wear the one it needs - which the next check proves by naming the file.
+	all_passed = _check("and no single shader to install", str(screen.get("shader", "")), "") and all_passed
 	# That shader is worn by the scene's own rectangle, so adding the pack drops the scene in and
 	# copies nothing: the scene has dressed itself, and there is no host that should wear anything.
 	all_passed = _check("the scene it ships really wears its own shader",

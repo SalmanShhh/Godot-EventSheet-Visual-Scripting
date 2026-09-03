@@ -1410,11 +1410,24 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 		return extra
 	for table: Dictionary in [SEARCH_SYNONYMS, _extra_synonyms]:
 		for phrase: String in table:
-			if lowered.contains(phrase) or phrase.contains(lowered):
+			if lowered.contains(phrase) or _phrase_holds_the_words(phrase, lowered):
 				var mapped: String = str(table[phrase])
 				if not extra.has(mapped):
 					extra.append(mapped)
 	return extra
+
+
+## True when a longer phrase holds the typed words WHOLE - "volume" inside "set master volume", but
+## not "process" inside "post processing".
+##
+## The other direction (the typed text holding the whole phrase) needs no such care: a person who
+## typed the phrase meant it. This one is the reverse, where a short common word is being looked for
+## inside a longer entry, and matching it mid-word is how an unrelated entry gets dragged in - which
+## is a real search getting worse the moment somebody adds a longer phrase to the table.
+static func _phrase_holds_the_words(phrase: String, typed: String) -> bool:
+	if phrase == typed:
+		return true
+	return phrase.begins_with(typed + " ") or phrase.ends_with(" " + typed) or phrase.contains(" %s " % typed)
 
 
 ## Shows the object-cards front page (and hides the tree) - the event-sheet "pick the object

@@ -1,5 +1,5 @@
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/moment_resource/icon.svg")
 class_name MomentResource
 extends Resource
 ## One felt beat of a game as a file: the steps a hit, a kill, a win, a danger or a calm is made of, each one a word plus how much and how long. Play it with the Juice pack's Moment row, which scales every amount by one number. It is your file - rename it, retune it in the Inspector, share it.
