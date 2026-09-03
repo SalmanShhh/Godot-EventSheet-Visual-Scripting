@@ -9,8 +9,8 @@ extends RefCounted
 # The two seeds are the two things a reading is made of. A row whose verb the installed vocabulary
 # does not have reads through its own stored reading, `"Retired verb {amount}"` - a display WORD and
 # a param SLOT in one row - so changing the word and changing the value the slot is filled with are
-# two edits of exactly one line each. That is the sensitivity a wave-5 deletion has to be caught by:
-# a word that quietly changed, and a value that quietly stopped reaching its slot.
+# two edits of exactly one line each. That is the sensitivity a deletion in the reading files has to
+# be caught by: a word that quietly changed, and a value that quietly stopped reaching its slot.
 #
 # The population here is a hand-built sheet of three rows rather than the tool's own (every builtin
 # descriptor and every shipped sheet), because that one takes minutes. The tool walks the same writer
@@ -33,6 +33,8 @@ static func run() -> bool:
 	ok = _seeded_word_moves_one_line() and ok
 	ok = _seeded_param_moves_one_line() and ok
 	ok = _paths_are_named() and ok
+	ok = _style_marks_are_written() and ok
+	ok = _verbatim_means_the_line_stayed_code() and ok
 	return ok
 
 
@@ -52,7 +54,7 @@ static func _line_shape() -> bool:
 		["a line is five tab-separated fields", LINES.line_for(reading).split("\t").size(), 5],
 		["the line reads as written", LINES.line_for(reading),
 			"builtin::action::Core::SetVar\taction\tSystem\taction+chip+kind=action=Set score to 1\tgrammar:SetVar"],
-		["the header carries the format version", LINES.HEADER, "# eventsheets reading dump 1"],
+		["the header carries the format version", LINES.HEADER, "# eventsheets reading dump 2"],
 		["a text of this format is recognised", LINES.is_current_format(LINES.text([reading])), true],
 	])
 
@@ -108,6 +110,78 @@ static func _paths_are_named() -> bool:
 		["a row whose verb is gone reads through its stored reading", stored_path,
 			"bespoke:%s" % LINES.BRANCH_STORED],
 	])
+
+
+## THE MARKS A REFACTOR COULD DROP WITHOUT TOUCHING A WORD. Emphasis, a class picture and the muted
+## word beside the object are all things a reader SEES and none of them is a word, so a text that
+## wrote only the words would print `same` over a value that stopped being bold. Each is pinned on a
+## span of its own, and the plain span beside them is pinned as carrying none of the three.
+static func _style_marks_are_written() -> bool:
+	var plain: SemanticSpan = SemanticSpan.new()
+	plain.text = "Set score to 1"
+	plain.type = SemanticSpan.SpanType.VALUE
+	var rich: SemanticSpan = SemanticSpan.new()
+	rich.text = "hp 5"
+	rich.type = SemanticSpan.SpanType.VALUE
+	var marked: Dictionary = {"bbcode_segments": [
+		{"text": "hp ", "color": null, "bold": false, "italic": false},
+		{"text": "5", "color": Color.RED, "bold": true, "italic": false},
+	], "object_note": "Node2D", "text_color": Color.BLUE}
+	return SUPPORT.pins(P, [
+		["a plain span carries no style mark", LINES.segment_text_of(plain, {}), "value=Set score to 1"],
+		["emphasis, the muted note and a tint are all marks",
+			LINES.segment_text_of(rich, marked),
+			"value+rich=-,b#ff0000ff+note=Node2D+tint=#0000ffff=hp 5"],
+		["an object picture is named by the file it came from",
+			LINES.segment_text_of(plain, {"object_icon": _icon()}), "value+icon=probe_icon.png=Set score to 1"],
+	])
+
+
+## A texture standing in for an editor icon, named the way a shipped one is.
+static func _icon() -> Texture2D:
+	var texture: ImageTexture = ImageTexture.create_from_image(
+		Image.create(1, 1, false, Image.FORMAT_RGBA8))
+	texture.resource_path = "res://probe/probe_icon.png"
+	return texture
+
+
+## VERBATIM IS A CLAIM, AND THE CLAIM IS CHECKED. A raw code row was classified verbatim on sight,
+## which said "the line stays the code it is" about lines a reading layer had turned into words -
+## `$Label.text = "hi"` is drawn as `Set text to "hi"` and is no more the code it came from than a
+## picked verb is. Three rows, one of each kind: a line a reading claimed, a line nothing claimed, and
+## a comment, whose words differ from its line only because the card drops the `#` in front of it.
+static func _verbatim_means_the_line_stayed_code() -> bool:
+	var paths: Dictionary = {}
+	for entry: Variant in LINES.readings_of_sheet(_raw_sheet(), "res://probe.gd"):
+		var reading: LINES.Reading = entry as LINES.Reading
+		paths[" ".join(reading.plain)] = reading.path_text()
+	return SUPPORT.pins(P, [
+		["a line a reading turned into words is not verbatim",
+			paths.get("Set text to \"hi\"", "(no such cell)"),
+			"grammar:%s" % LINES.BRANCH_STATEMENT],
+		["a line the card shows as itself is verbatim",
+			paths.get("Script block cheat_helper(1, 2)", "(no such cell)"), "verbatim"],
+		["a comment is code that stays code", paths.get("# just a note", "(no such cell)"), "verbatim"],
+	])
+
+
+## One event holding three raw rows: a property write a reading claims, a card the canvas shows the
+## code of, and a comment.
+static func _raw_sheet() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "ReadingDumpRawProbe"
+	sheet.host_class = "Node2D"
+	var row: EventRow = EventRow.new()
+	row.trigger_id = "OnReady"
+	for code: String in ["$Label.text = \"hi\"", "# just a note"]:
+		var raw: RawCodeRow = RawCodeRow.new()
+		raw.code = code
+		row.actions.append(raw)
+	sheet.events.append(row)
+	var block_row: RawCodeRow = RawCodeRow.new()
+	block_row.code = "cheat_helper(1, 2)"
+	sheet.events.append(block_row)
+	return sheet
 
 
 ## The three-row sheet the seeds are made in: the row with a stored reading, and two ordinary

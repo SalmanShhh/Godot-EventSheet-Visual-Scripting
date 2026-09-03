@@ -15,7 +15,7 @@
 # THE PATH FIELD is the census class (below) plus the branch that answered, which is the whole point
 # of the text: `template` says the generic assembly drew this cell out of the descriptor and nothing
 # else was consulted; `grammar:AddVar` says the shared sentence grammar claimed it through that arm;
-# `bespoke:_function_call_label` names the per-vocabulary branch that did. Wave-by-wave, the share of
+# `bespoke:_function_call_label` names the per-vocabulary branch that did. Run after run, the share of
 # cells that say `template` is the share of the two reading files that is not re-saying what the
 # descriptor already says.
 #
@@ -41,7 +41,12 @@ extends RefCounted
 ## Bumped only when the LINE SHAPE changes, so a text kept beside an older tree cannot quietly report
 ## every reading as moved. Independent of the registry dumps' versions: this text changes for its own
 ## reasons.
-const FORMAT_VERSION: int = 1
+##
+## 2 widened the style marks a segment carries. Format 1 wrote a span's role, its chip, its kind and
+## its badge, and nothing else - so un-bolding a value, dropping a class icon or losing the muted word
+## beside the object moved rendered pixels and moved no line of this text, and a gate read off it
+## would have printed `same` over that change. The emphasis, the icon and the note are marks now.
+const FORMAT_VERSION: int = 2
 
 ## The one line that is not a reading. Comment-led, so a diff can skip it without a special case.
 const HEADER: String = "# eventsheets reading dump %d" % FORMAT_VERSION
@@ -106,10 +111,25 @@ const BRANCH_STATE_HEADER: String = "_is_state_header_condition"
 const BRANCH_OWNER_LABEL: String = "_owner_label"
 const BRANCH_TRIGGER_SENTENCE: String = "_trigger_sentence"
 
-## The branch written down when the generic assembly was reached and something after it still moved
-## the words - the input-event humanising and the reading-sentence pass the two formatters wrap every
-## base text in. Named apart from the owner lenses because it moves the WORDS rather than the object.
+## The branch written down when the generic assembly was reached and one of the two POST-PASSES the
+## formatters wrap every base text in still moved the words - the input-event humanising and the
+## reading-sentence pass. Named apart from the owner lenses because it moves the WORDS, not the object.
+##
+## It could not fire for that cause until the comparison could see it. The base text the census reads
+## is `_format_action_descriptor_base` and its condition twin, which the two passes WRAP rather than
+## live inside, so a cell whose words they moved compared equal to the descriptor's own and counted
+## as reproducible. The wrapping is now asked separately and answered here.
 const BRANCH_POST_PASS: String = "_reading_sentence"
+
+## The branch written down when the BASE formatter itself said something the descriptor's template
+## does not - a rich param, a resolved slot, a note the row carried. Not a post-pass and not an owner
+## lens, and it used to be reported as the first of those.
+const BRANCH_BASE_FORMATTER: String = "(base formatter)"
+
+## The branch written down for a raw code row the reading layer read into words. Not an `ace_id` arm:
+## the statement grammar claims a hand-written line through `_append_sentence_spans`, which has no
+## verb to name it by.
+const BRANCH_STATEMENT: String = "(statement)"
 
 
 ## One cell's reading, as the dump writes it and the census counts it.
@@ -124,8 +144,24 @@ class Reading extends RefCounted:
 	var lane: String = ""
 	var object_label: String = ""
 	var segments: PackedStringArray = PackedStringArray()
+	## The cell's span texts without the style marks, which is what a reader of the CANVAS sees. Kept
+	## beside `segments` rather than parsed back out of it, because a mark's own spelling contains the
+	## separator the parse would split on.
+	var plain: PackedStringArray = PackedStringArray()
 	var path: int = Path.STRUCTURE
 	var branch: String = ""
+	## The grammar router this cell reached its arm through, for a cell the grammar claimed. Two
+	## functions dispatch on `ace_id` in the row builder and two more tables share their shape, so an
+	## arm's evidence has to name the function it sits in or a cell credits an arm it never entered.
+	var router: String = ""
+	## True when the derived layer was ASKED whether it claimed this cell. A path count of zero says
+	## nothing on its own - it could mean the layer declined every time or that nothing ever put the
+	## question - so the question itself is counted.
+	var derived_asked: bool = false
+	## True when one of the two post-passes the formatters wrap the base text in moved the words. The
+	## derivability question has to see it: a cell the passes rewrote is not a cell the descriptor
+	## alone reproduces, however well the two base texts match.
+	var post_moved: bool = false
 	## The base text the row builder actually produced, before the row decorations.
 	var actual: String = ""
 	## The base text the generic assembly would have produced for the same row.
@@ -152,7 +188,7 @@ class Reading extends RefCounted:
 	## bespoke or grammar cell it is the measurement: the branch that shaped it said nothing the
 	## descriptor did not already say.
 	func is_derivable() -> bool:
-		return measured and actual == generic and actual_object == generic_object
+		return measured and not post_moved and actual == generic and actual_object == generic_object
 
 	## The path and its branch as the dump's last field spells it.
 	func path_text() -> String:
@@ -241,6 +277,10 @@ const NO_CELL_PICKING: String = "replaced by the picking reading"
 const NO_CELL_IN_VERB: String = "drawn by the published verb it sits in"
 const NO_CELL_DROPPED: String = "no reading claimed it"
 
+## The fourth answer, for a caller holding a row that is not an event at all: a file-header comment, an
+## annotation, a declaration the canvas folds into the head band rather than drawing a row for.
+const NO_CELL_NOT_AN_EVENT: String = "the canvas draws no cell of its own for a row of this kind"
+
 
 ## Every `EventRow` of a sheet that owns NO cell on the resting canvas walk, as
 ## {"row": EventRow, "reason": String} in walk order.
@@ -267,6 +307,8 @@ static func events_without_cells(sheet: EventSheetResource, readings: Array) -> 
 
 ## One row's reason, by the same rule the list above uses, for a caller holding a single row.
 static func no_cell_reason(sheet: EventSheetResource, row: Resource) -> String:
+	if not (row is EventRow):
+		return NO_CELL_NOT_AN_EVENT
 	for entry: Variant in event_rows_of(sheet):
 		var found: Dictionary = entry as Dictionary
 		if found["row"] == row:
@@ -350,7 +392,8 @@ static func _cells_of_row(row_data: EventRowData) -> Array:
 			current.owner = row_data.source_resource
 			cells.append(current)
 			current_key = key
-		current.segments.append(_segment_text(span, metadata))
+		current.segments.append(segment_text_of(span, metadata))
+		current.plain.append(span.text)
 	return cells
 
 
@@ -378,10 +421,12 @@ static func _cell_resource(row_data: EventRowData, lane: String, kind: String,
 	return null
 
 
-## One span as the segments field spells it: its role, the style marks that change what a reader
+## One span as the segments field spells it - public because it IS the gate's sensitivity and a test
+## pins it directly: its role, the style marks that change what a reader
 ## sees, and the text. The marks are the ones a refactor could drop without touching a word - a chip
-## that stopped being a chip is a moved pixel and has to move a line here too.
-static func _segment_text(span: SemanticSpan, metadata: Dictionary) -> String:
+## that stopped being a chip is a moved pixel and has to move a line here too, and so is a value that
+## stopped being bold, an object that lost its class picture and a muted note that went missing.
+static func segment_text_of(span: SemanticSpan, metadata: Dictionary) -> String:
 	var marks: PackedStringArray = PackedStringArray([_span_type_name(span.type)])
 	if bool(metadata.get("chip", false)):
 		marks.append("chip")
@@ -393,7 +438,49 @@ static func _segment_text(span: SemanticSpan, metadata: Dictionary) -> String:
 		marks.append("badge=%s" % badge)
 	if not span.hoverable:
 		marks.append("flat")
+	var emphasis: String = _emphasis_mark(metadata)
+	if not emphasis.is_empty():
+		marks.append("rich=%s" % emphasis)
+	if metadata.get("object_icon") != null:
+		marks.append("icon=%s" % _icon_name(metadata.get("object_icon")))
+	var note: String = str(metadata.get("object_note", ""))
+	if not note.is_empty():
+		marks.append("note=%s" % note)
+	if metadata.get("text_color") is Color:
+		marks.append("tint=#%s" % (metadata.get("text_color") as Color).to_html())
 	return "%s=%s" % ["+".join(marks), span.text]
+
+
+## The per-part emphasis of a span drawn from BBCode segments, as one token per part in order: `b`
+## for bold, `i` for italic, the colour as `#rrggbbaa`, and `-` for a part wearing none of the three.
+## Positional, so a part that lost its bold and a part that was re-ordered both move this line.
+static func _emphasis_mark(metadata: Dictionary) -> String:
+	var segments: Variant = metadata.get("bbcode_segments")
+	if not (segments is Array) or (segments as Array).is_empty():
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for entry: Variant in (segments as Array):
+		var part: Dictionary = entry as Dictionary
+		var token: String = ""
+		if bool(part.get("bold", false)):
+			token += "b"
+		if bool(part.get("italic", false)):
+			token += "i"
+		if part.get("color") is Color:
+			token += "#%s" % (part.get("color") as Color).to_html()
+		parts.append(token if not token.is_empty() else "-")
+	# Written even when every part is plain: the number of parts is itself a fact a reader sees, so a
+	# sentence re-split into different pieces moves this line as surely as one that lost its bold.
+	return ",".join(parts)
+
+
+## A span icon named by the file it came from, or `yes` for one built in memory. The NAME is what a
+## reader can check; the texture object itself is not a fact a text can hold.
+static func _icon_name(icon: Variant) -> String:
+	if not (icon is Texture2D):
+		return "yes"
+	var path: String = (icon as Texture2D).resource_path
+	return "yes" if path.is_empty() else path.get_file()
 
 
 ## A span type as its own name, from the enum rather than from a list written down twice.
@@ -421,7 +508,7 @@ static func _classify_all(builder: ViewportRowBuilder, readings: Array) -> void:
 static func classify(builder: ViewportRowBuilder, reading: Reading) -> void:
 	var resource: Resource = reading.resource
 	if resource is RawCodeRow:
-		reading.path = Path.VERBATIM
+		_classify_raw(builder, reading, resource as RawCodeRow)
 		return
 	if resource is ACEAction:
 		_classify_action(builder, reading, resource as ACEAction)
@@ -449,6 +536,48 @@ static func classify(builder: ViewportRowBuilder, reading: Reading) -> void:
 	reading.path = Path.STRUCTURE
 
 
+## A raw code row's path: whether the line stayed the code it is, or a reading turned it into words.
+##
+## VERBATIM IS NOT "A RAW ROW". It is the claim that a reader sees the code, and for a raw row that
+## claim has to be CHECKED rather than assumed: the statement grammar and the derived-property layer
+## both read hand-written lines into sentences, so `$Label.text = "..."` is drawn as `Set text to
+## "..."` and is no more the code it came from than a picked verb is. Classifying every raw row as
+## verbatim reported those as untouched code, which is the one thing the figure must not say about
+## a line a reading layer is holding up.
+##
+## The evidence is the cell the canvas DREW, not a second guess at it: a cell whose words contain the
+## row's own code is the code; a cell whose words do not is a reading, and the derived layer is then
+## asked whether it was the one that shaped it.
+static func _classify_raw(builder: ViewportRowBuilder, reading: Reading, raw: RawCodeRow) -> void:
+	var drawn: String = _collapsed(" ".join(reading.plain))
+	var code: String = _collapsed(raw.code)
+	# A comment row is code that stays code even though its words differ from its line: the card draws
+	# the note and drops the `#` in front of it, which is chrome and not a reading.
+	if code.is_empty() or code.begins_with("#") or drawn.contains(code):
+		reading.path = Path.VERBATIM
+		return
+	var sentence: Dictionary = builder.statement_sentence(raw.code, builder.sentence_context())
+	var upgraded: Dictionary = builder._upgraded_by_derived_property(sentence, false)
+	reading.derived_asked = true
+	reading.path = Path.DERIVED if _joined(upgraded) != _joined(sentence) else Path.GRAMMAR
+	reading.branch = BRANCH_STATEMENT
+
+
+## One text with every run of whitespace as a single space, so a reading that re-indented a line or
+## spelled a tab as four spaces is still recognised as the same words.
+static func _collapsed(text: String) -> String:
+	var out: String = ""
+	var spaced: bool = true
+	for character: String in text:
+		var blank: bool = character == " " or character == "	" or character == "
+"
+		if blank and spaced:
+			continue
+		out += " " if blank else character
+		spaced = blank
+	return out.strip_edges()
+
+
 ## An action cell's path.
 static func _classify_action(builder: ViewportRowBuilder, reading: Reading,
 		action: ACEAction) -> void:
@@ -458,10 +587,11 @@ static func _classify_action(builder: ViewportRowBuilder, reading: Reading,
 	reading.generic_object = builder._object_label_for(action.provider_id, action.ace_id)
 	reading.actual = builder._format_action_descriptor_base(action)
 	reading.actual_object = _settled_object(builder, reading)
+	reading.post_moved = _post_pass_moves(builder, reading.actual)
 	reading.measured = true
 	var grammar: Dictionary = builder.grammar_action_sentence(action)
 	if not grammar.is_empty():
-		_grammar_path(builder, reading, grammar, action.ace_id)
+		_grammar_path(builder, reading, grammar, action.ace_id, ROUTER_ACTION)
 		return
 	if builder._is_function_call_action(action):
 		reading.path = Path.BESPOKE
@@ -479,10 +609,11 @@ static func _classify_condition(builder: ViewportRowBuilder, reading: Reading,
 	reading.generic_object = builder._object_label_for(condition.provider_id, condition.ace_id)
 	reading.actual = builder._format_condition_descriptor_base(condition)
 	reading.actual_object = _settled_object(builder, reading)
+	reading.post_moved = _post_pass_moves(builder, reading.actual)
 	reading.measured = true
 	var grammar: Dictionary = builder.grammar_condition_sentence(condition)
 	if not grammar.is_empty():
-		_grammar_path(builder, reading, grammar, condition.ace_id)
+		_grammar_path(builder, reading, grammar, condition.ace_id, ROUTER_CONDITION)
 		return
 	if builder._is_state_header_condition(condition):
 		reading.path = Path.BESPOKE
@@ -494,10 +625,18 @@ static func _classify_condition(builder: ViewportRowBuilder, reading: Reading,
 ## The grammar's own answer, and whether a derived reading rewrote it. Asked of the same upgrade the
 ## formatters run, so a cell the derived layer owns is never counted as the grammar's.
 static func _grammar_path(builder: ViewportRowBuilder, reading: Reading, grammar: Dictionary,
-		ace_id: String) -> void:
+		ace_id: String, router: String) -> void:
 	var upgraded: Dictionary = builder._upgraded_by_derived_property(grammar, true)
+	reading.derived_asked = true
 	reading.path = Path.DERIVED if _joined(upgraded) != _joined(grammar) else Path.GRAMMAR
-	reading.branch = ace_id if _grammar_arm_ids().has(ace_id) else BRANCH_PRE_MATCH
+	reading.router = router
+	reading.branch = ace_id if _grammar_arm_ids(router).has(ace_id) else BRANCH_PRE_MATCH
+
+
+## True when one of the two passes the formatters WRAP the base text in moved its words. Asked of the
+## shipped functions themselves, so a pass that stops moving a word stops being counted the same day.
+static func _post_pass_moves(builder: ViewportRowBuilder, base: String) -> bool:
+	return builder._reading_sentence(builder._humanized_input_event_text(base)) != base
 
 
 ## What is left once the grammar and the two named predicates have declined: the registry-free
@@ -515,6 +654,10 @@ static func _settled_path(builder: ViewportRowBuilder, reading: Reading, ace: Re
 		reading.branch = BRANCH_OWNER_LABEL
 		return
 	if reading.actual != reading.generic:
+		reading.path = Path.BESPOKE
+		reading.branch = BRANCH_BASE_FORMATTER
+		return
+	if reading.post_moved:
 		reading.path = Path.BESPOKE
 		reading.branch = BRANCH_POST_PASS
 		return
@@ -562,18 +705,29 @@ static func _joined(sentence: Dictionary) -> String:
 	return "%s ▸ %s" % [str(sentence.get("object", "")), text_out]
 
 
-## Every `ace_id` the row builder's grammar routers name in an arm of their own, read out of the
-## file itself rather than kept as a second list to maintain. A row whose id is not one of these
-## reached the grammar through one of the hooks that run before the arm table, which is a different
-## fact about it and is written down as one.
-static func _grammar_arm_ids() -> Dictionary:
-	if not _arm_ids.is_empty():
-		return _arm_ids
-	_arm_ids = {"": true}
+## The two functions that ROUTE a picked verb into the shared sentence grammar, one per lane. Named
+## because an arm's evidence is only evidence when it names the function the arm sits in: the row
+## builder holds four `match ... ace_id:` tables and two of them are not routers at all, so crediting
+## an arm by its verb alone lets a table nothing reached be reported as wholly reproduced.
+const ROUTER_ACTION: String = "grammar_action_sentence"
+const ROUTER_CONDITION: String = "grammar_condition_sentence"
+
+
+## Every `ace_id` ONE grammar router names in an arm of its own, read out of the file itself rather
+## than kept as a second list to maintain. A row whose id is not one of its router's arms reached the
+## grammar through one of the hooks that run before the arm table, which is a different fact about it
+## and is written down as one.
+static func _grammar_arm_ids(router: String) -> Dictionary:
+	if _arm_ids.has(router):
+		return _arm_ids[router] as Dictionary
+	var found: Dictionary = {"": true}
 	for arm: Dictionary in arms_of(BUILDER_PATH):
+		if str(arm.get("func", "")) != router:
+			continue
 		for identifier: String in PackedStringArray(arm.get("ids", PackedStringArray())):
-			_arm_ids[identifier] = true
-	return _arm_ids
+			found[identifier] = true
+	_arm_ids[router] = found
+	return found
 
 static var _arm_ids: Dictionary = {}
 
@@ -584,9 +738,11 @@ const BUILDER_PATH: String = "res://addons/eventsheet/editor/interaction/viewpor
 const GRAMMAR_PATH: String = "res://addons/eventsheet/editor/interaction/sentence_grammar.gd"
 
 
-## Every `match <something>ace_id:` arm one file holds, as {"ids", "line", "lines"} - the verbs the
-## arm heads with, the 1-based line the head is on, and how many lines the arm holds, its head
-## included. That last is what deleting the arm would save, which is the only reason it is counted.
+## Every `match <something>ace_id:` arm one file holds, as {"ids", "line", "lines", "func"} - the
+## verbs the arm heads with, the 1-based line the head is on, how many lines the arm holds (its head
+## included), and the top-level function it sits in. The line count is what deleting the arm would
+## save, which is the only reason it is counted; the function is what makes the evidence for it
+## evidence, because the same verb can head an arm in a table nothing routes through.
 ##
 ## This is the per-vocabulary special-casing at the grain a deletion would actually work at: an arm
 ## is a BLOCK a maintainer removes whole, and its line count is what removing it saves. Read out of
@@ -609,12 +765,16 @@ static func arms_in(source: String, only_ace_id: bool = true) -> Array:
 	var lines: PackedStringArray = source.split("\n")
 	var arm_indent: int = -1
 	var open_arm: Dictionary = {}
+	var in_function: String = ""
 	for index: int in range(lines.size()):
 		var line: String = lines[index]
 		var body: String = line.strip_edges()
 		if body.is_empty() or body.begins_with("#"):
 			continue
 		var indent: int = line.length() - line.lstrip("\t").length()
+		var declaration: String = body.trim_prefix("static ")
+		if indent == 0 and declaration.begins_with("func "):
+			in_function = declaration.substr(5).split("(", true, 1)[0].strip_edges()
 		if arm_indent >= 0 and indent < arm_indent and not open_arm.is_empty():
 			open_arm["lines"] = index - int(open_arm.get("line", index)) + 1
 			found.append(open_arm)
@@ -629,7 +789,7 @@ static func arms_in(source: String, only_ace_id: bool = true) -> Array:
 		if not open_arm.is_empty():
 			open_arm["lines"] = index - int(open_arm.get("line", index)) + 1
 			found.append(open_arm)
-		open_arm = {"ids": _arm_ids_of(body), "line": index + 1, "lines": 1}
+		open_arm = {"ids": _arm_ids_of(body), "line": index + 1, "lines": 1, "func": in_function}
 	if not open_arm.is_empty():
 		open_arm["lines"] = lines.size() - int(open_arm.get("line", lines.size())) + 1
 		found.append(open_arm)
@@ -796,7 +956,13 @@ static func scripts_under(root: String) -> PackedStringArray:
 
 ## Every reading of every sheet under the given folders, opened the way the editor opens a `.gd`.
 ## A file the importer cannot open as a sheet contributes nothing and is counted by the caller.
-static func folder_readings(folders: PackedStringArray, unreadable: PackedStringArray) -> Array:
+##
+## `dropped` is filled with one entry per event the canvas built NOTHING for and had no reason to -
+## the fault `events_without_cells` names. An instrument that walked over such a row and printed a
+## clean receipt would be reporting a population it did not have, so the count travels back with the
+## readings rather than being left for somebody to notice.
+static func folder_readings(folders: PackedStringArray, unreadable: PackedStringArray,
+		dropped: PackedStringArray = PackedStringArray()) -> Array:
 	var readings: Array = []
 	for folder: String in folders:
 		var root: String = folder if folder.ends_with("/") else folder + "/"
@@ -805,5 +971,9 @@ static func folder_readings(folders: PackedStringArray, unreadable: PackedString
 			if sheet == null:
 				unreadable.append(path)
 				continue
-			readings.append_array(readings_of_sheet(sheet, path))
+			var of_sheet: Array = readings_of_sheet(sheet, path)
+			for entry: Variant in events_without_cells(sheet, of_sheet):
+				if str((entry as Dictionary)["reason"]) == NO_CELL_DROPPED:
+					dropped.append(path)
+			readings.append_array(of_sheet)
 	return readings

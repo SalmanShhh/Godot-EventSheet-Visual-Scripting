@@ -74,8 +74,9 @@ func _init() -> void:
 	if only != "sheets":
 		readings.append_array(LINES.builtin_readings())
 	var unreadable: PackedStringArray = PackedStringArray()
+	var dropped: PackedStringArray = PackedStringArray()
 	if only != "builtin":
-		readings.append_array(LINES.folder_readings(folders, unreadable))
+		readings.append_array(LINES.folder_readings(folders, unreadable, dropped))
 	var text: String = LINES.text(readings)
 	if output_path.is_empty():
 		print(text)
@@ -90,7 +91,16 @@ func _init() -> void:
 		print("written=%s" % output_path)
 	# The tail is the receipt, not the text: counted on stderr's side of the line so a redirected
 	# `out=` run still says what it walked, and a piped run can drop it.
-	print("readings=%d unreadable=%d" % [readings.size(), unreadable.size()])
+	print("readings=%d unreadable=%d dropped=%d" % [readings.size(), unreadable.size(), dropped.size()])
 	for path: String in unreadable:
 		print("  does not open as a sheet: %s" % path)
+	for path: String in dropped:
+		print("  an event of this sheet reached the canvas as nothing: %s" % path)
+	if not dropped.is_empty():
+		# A REFUSAL, not a warning. A dump taken over a tree that drops rows is a text about a
+		# population this run did not have, and every figure derived from it inherits the gap - which
+		# is what happened once, silently, while the receipt below said all was well.
+		print("REFUSED: this text is not a baseline - %d event(s) reached the canvas as nothing." % dropped.size())
+		quit(1)
+		return
 	quit(0)
