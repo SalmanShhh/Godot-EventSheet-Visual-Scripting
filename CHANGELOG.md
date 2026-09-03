@@ -395,14 +395,15 @@
   off the node at run time, so neither could be one expression in a template; naming the pool
   autoload in a template instead would have put an identifier into every generated script that only
   parses in a project which installed the pool pack.
-- **Every one of them reads back as the row when it is hand-written.** The three multi-statement runs
-  join the lift table as **61 entries** - ten formation spellings in 2D and eight in 3D, twenty-four
-  launched spellings in 2D and eighteen in 3D, and one for the self copy - each with a mark that
-  pre-filters the run before the pattern is tried. Where two dimensions write one spelling character
-  for character the 2D entry keeps the reading and the 3D row stays an authoring word, which is the
-  rule the twin placement expressions already stated: the bytes a sheet emits are identical either
-  way, and two entries for one spelling would split every such line between them by table order
-  alone.
+- **Every one of them re-emits byte for byte, and ten of the sixteen read back as themselves.** The
+  three multi-statement runs join the lift table as **61 entries** - ten formation spellings in 2D
+  and eight in 3D, twenty-four launched spellings in 2D and eighteen in 3D, and one for the self copy
+  - each with a mark that pre-filters the run before the pattern is tried. Where two dimensions write
+  one spelling character for character the table holds ONE entry and the class the file extends says
+  which of the two rows a reader is shown. The six that read as something else read as the lines they
+  are, which is the honest outcome: a free-spot spawn is its own statements (its first line hands a
+  LIST to the query, and a comma inside one argument is the one thing a run of patterns cannot read),
+  and a fade-then-retire is an await beside a retire exactly as its frozen destroy twin is.
 - **The Doctor's spawning section is five cases now, not four.** A row that copies the scene this
   node came from, in a script that belongs to no scene, is a load of nothing: no copy appears and
   Godot says nothing, because loading an empty path is not an error. It is filed as information with
@@ -413,6 +414,63 @@
   eight languages), the spawning guide gains a chapter with a whole two-lane event, the emitted code
   and the trap removed for each of the five sentences, and its Doctor section, contents and reference
   table say five and sixteen rather than four and nothing.
+
+### Fixed in the spawning pass
+
+- **Retiring inside a collision handler is a safe swap for destroying now, and not only nearly one.**
+  A pool takes a node back by REPARENTING it, and Godot refuses a reparent while the physics server
+  is flushing its queries - which is the whole of the body callback a bullet is retired in, and the
+  one place the row is most wanted. The pool half of the verb is now booked on the message queue and
+  done at the next idle moment, exactly as `queue_free()` books a deletion for the end of the frame,
+  so both answers leave the node in the world for the rest of the event and neither can raise an
+  error from inside a callback. The runtime file is pinned against the shipped Object Pool from here
+  on, rather than against a stand-in that could not fail the way it does.
+- **A node goes back to its pool once, however many rows retire it.** A pool's free list is a plain
+  array, and a node appended to it twice is handed out to two callers at once - the worst thing a
+  pool can do. A node with a handing back already booked this frame books no second one, and a node
+  already parked under the pool is left alone.
+- **A faded copy comes back solid.** A pool WAKES a node rather than rebuilding it, so a copy that
+  went back with its transparency walked to nothing came out invisible, and every later spawn of it
+  was a bug with no line to point at. Both fade-then-retire rows now restore the property they moved,
+  on the line above the retire and written into the sheet where a reader can see it. Fade Out Then
+  Retire (3D) also moves to the class it belongs on: `transparency` is declared on
+  `GeometryInstance3D`, so aimed at the CharacterBody3D a game actually retires the tween found no
+  such property, returned nothing, and took the event down with it. And Retire After Seconds says the
+  one thing that is NOT true of its destroy twin - Godot drops a timer's connection when the object
+  at the far end is freed, and a pooled object is never freed.
+- **The deferred spawns land where the row says.** A copy of the node's own scene, a copy in a free
+  spot, and a formation added on the next idle moment all wrote a WORLD point into the
+  parent-relative `position`, which puts the copy at twice the spawner's offset under any parent but
+  the world root - and landing inside the shape is the free-spot row's whole promise. All three now
+  book the place with `set_deferred` beside the deferred add, which runs after it on the same queue,
+  so the copy has a parent by the time its place is written.
+- **The free-spot question leaves the At field's starters.** It had been added to the suggestion
+  lists of seven SHIPPED spawn rows, every one of which writes its answer straight into a position -
+  so a full arena, whose honest answer is nothing, became a run-time error on a line that has already
+  shipped. It belongs to Spawn A Copy In A Free Spot, which is the row that knows what to do when
+  there is no room, and to no other.
+- **A group written on a level's root is still a wall.** A level is drawn as a scene and a scene is
+  put in a group by its ROOT, so the body that answers a physics query is almost never the node the
+  group name was written on. The clearance test walks the collider's ancestors, instead of answering
+  "nothing is standing here" from inside a wall.
+- **On Retired, On Spawn Skipped and the two 3D runs survive being saved.** `.gd` is the sheet
+  format, so a row that does not open as itself is a row a reader sees exactly once. On Retired
+  shares `tree_exiting` with the shipped On Tree Exiting and On Spawn Skipped listens for a signal
+  any project may declare, so the handler's own name now says which reading a connect line is. And
+  where a 3D run writes the same characters as its 2D twin - a line formation, a copy of the node's
+  own scene - the class the file extends decides which row is shown: read as the 2D row they arrived
+  in a Node3D script carrying a size in pixels, a 2D collision shape, and four branches one dropdown
+  click away that write `Vector2`.
+- **Two quiet notes, one added and one taken away.** A row that copies the scene this node came from
+  earned "there is no scene file" in every sheet the scene index had never been asked about, because
+  an empty answer meant both "there is none" and "nobody looked"; only a sheet that is a file on disk
+  is asked now. And an On Spawn Skipped event in a sheet that never declares the signal is a note of
+  its own: the handler is written whatever happens, the connect line can only be written for a signal
+  the sheet has, so the event sits in the file looking finished and never runs once.
+- **The four spawn rows whose name the rows underneath could not say.** A copy of the node's own
+  scene and a copy in a free spot both declare a real local, and neither was offered by the field
+  completion the launched twins had joined - the free-spot row binds its name above the branch
+  precisely so the rows below can still say it.
 
 ### A grid that walks itself into a level
 
