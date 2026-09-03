@@ -12,7 +12,9 @@
 #   - the pack is the DrunkenWalkers autoload, and every row it emits addresses it by that name;
 #   - two directions cannot turn unless the max turn is 180, so a smaller one draws a line;
 #   - a diagonal walk leaves holes that thickness, not direction, fixes;
-#   - a border repels rather than traps, and a walker with no legal heading still FINISHES;
+#   - a border repels rather than traps, re-rolling among the headings that stay IN BOUNDS,
+#     so a corner widens the pool past Max Turn instead of ending the walk;
+#   - a walker with nothing in bounds at all still FINISHES;
 #   - a 0 weight rules a heading out for good, border re-rolls included;
 #   - a cell on the grid border can never be interior, because off-grid neighbours never match;
 #   - spacing is per tag, spans two passes, and at 0 still forbids two marks stacking;
@@ -229,12 +231,34 @@ static func _borders_repel_and_a_boxed_walker_finishes(script: GDScript) -> bool
 	var outside_cells: int = outside.count_cells(1)
 	outside.free()
 
+	# THE CORNER. Four diagonal headings anchored at 225 degrees and a 90 degree max turn: a
+	# walker standing in the top-left cell pointing up-left can reach 225, 135 and 315, and all
+	# three leave the grid. A re-roll narrowed by Max Turn would therefore find nothing and end
+	# the walk on its first step. The re-roll is scoped to the headings that stay IN BOUNDS
+	# instead, widening past Max Turn when it must, so the walker turns as sharply as the corner
+	# demands, takes 45 degrees back into the grid, and spends its whole budget. Turn chance 0
+	# leaves the border as the ONLY thing that can change the heading.
+	var cornered: Node = script.new()
+	cornered.create_grid(12, 12)
+	cornered.set_seed("corner")
+	cornered.add_walker("corner", 0, 0, 40, 4, 90.0, "", 1)
+	cornered.set_walker_start_angle("corner", 225.0)
+	cornered.set_walker_turn_chance("corner", 0.0)
+	cornered.run_all_walkers()
+	var cornered_cells: int = cornered.count_cells(1)
+	var cornered_far_corner: int = cornered.cell_value(11, 11)
+	cornered.free()
+
 	return SUPPORT.pins(TEST, [
 		["a boxed-in walker fills its whole grid rather than sticking to an edge",
 			filled, "#####\n#####\n#####\n#####\n#####"],
 		["a walker with nowhere legal to go still carves its own cell", trapped_cells, 1],
 		["and still fires On Walker Finished", str(finished), str(["stuck"])],
 		["a walker that starts outside the grid carves nothing", outside_cells, 0],
+		["a cornered walker turns past its max turn rather than ending in the corner",
+			cornered_cells, 12],
+		["and walks the whole diagonal rather than stopping on its start cell",
+			cornered_far_corner, 1],
 	])
 
 

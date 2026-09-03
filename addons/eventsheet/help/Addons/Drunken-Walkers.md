@@ -500,9 +500,15 @@ the terrain values at all.
   reverses on the spot and carves eight cells out of sixty steps.
 - **Diagonal movement leaves holes.** A diagonal step moves on both axes at once and never
   touches the cell between. The fix is thickness, not direction: a brush size of 2 is solid.
-- **Borders repel, they do not stop.** A walker that reaches an edge re-rolls inward and tends
-  to run along it, leaving a suspiciously straight line down the side of the map. Give it fewer
-  steps, start it further in, or generate on a grid slightly larger than the area you paint.
+- **Borders repel, they do not stop.** A walker whose next step would leave the grid re-rolls
+  among the headings that stay **in bounds**, so it tends to run along an edge and leave a
+  suspiciously straight line down the side of the map. Give it fewer steps, start it further in,
+  or generate on a grid slightly larger than the area you paint.
+- **A corner turns a walker further than its max turn.** The border re-roll is scoped by what is
+  in bounds, not by Max Turn: when every heading Max Turn allows is blocked, the walker widens to
+  its whole direction set and turns as sharply as it has to. That is deliberate - the alternative
+  is a walk that ends in the first corner it meets - and it costs nothing downstream, because the
+  re-roll spends exactly one random value whichever pool it draws from.
 - **Dig depth is signed, dig width is not.** A negative depth digs behind the walker on
   purpose. A negative width is not an error, but its sign is ignored, because "across the
   heading" has no front and back. Use 0, never a negative, to fall back to the brush size.

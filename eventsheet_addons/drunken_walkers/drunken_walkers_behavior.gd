@@ -221,6 +221,24 @@ func _reachable(walker: Walker, from_heading: float) -> Array[int]:
 		if gap <= walker.max_turn + 0.000001:
 			found.append(index)
 	return found
+## Every member of the walker's direction set, by index. The pool the border re-roll widens to
+## when Max Turn has left it nothing in bounds to pick.
+## @ace_hidden
+func _all_headings(walker: Walker) -> Array[int]:
+	var found: Array[int] = []
+	for index: int in maxi(1, walker.directions):
+		found.append(index)
+	return found
+## Those of `choices` whose step would land inside the grid. Kept apart from the border re-roll
+## so the narrowed pool and the widened one are filtered by one rule rather than two.
+## @ace_hidden
+func _in_bounds(walker: Walker, choices: Array[int]) -> Array[int]:
+	var legal: Array[int] = []
+	for index: int in choices:
+		var candidate: Vector2i = _heading_step(_heading_of(walker, index))
+		if _inside(walker.x + candidate.x, walker.y + candidate.y):
+			legal.append(index)
+	return legal
 ## The cells holding a value, as linear indices in a stable left-to-right, top-to-bottom order.
 ## Cached until the next write, because painting a map asks for this once per cell.
 ## @ace_hidden
@@ -1393,13 +1411,14 @@ func _advance(walker: Walker, emit_stepped: bool) -> bool:
 		walker.heading = _pick(walker, _reachable(walker, walker.heading))
 	var step: Vector2i = _heading_step(walker.heading)
 	if not _inside(walker.x + step.x, walker.y + step.y):
-		# Borders REPEL rather than trap: re-roll among the headings that stay in bounds,
-		# spending one more value. Nothing legal left is the one way a walk ends early.
-		var legal: Array[int] = []
-		for index: int in _reachable(walker, walker.heading):
-			var candidate: Vector2i = _heading_step(_heading_of(walker, index))
-			if _inside(walker.x + candidate.x, walker.y + candidate.y):
-				legal.append(index)
+		# Borders REPEL rather than stop: re-roll among the headings that stay IN BOUNDS,
+		# spending one more value. Max Turn narrows that pool only while it can - a walker
+		# whose every reachable heading is blocked widens to its whole direction set and turns
+		# as sharply as it has to, which is how it leaves a corner instead of ending in one.
+		# Nothing in bounds at all is the one way a walk ends early.
+		var legal: Array[int] = _in_bounds(walker, _reachable(walker, walker.heading))
+		if legal.is_empty():
+			legal = _in_bounds(walker, _all_headings(walker))
 		if legal.is_empty():
 			_finish(walker)
 			return false
