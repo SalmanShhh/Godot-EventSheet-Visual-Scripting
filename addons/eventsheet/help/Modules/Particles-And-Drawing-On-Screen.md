@@ -119,6 +119,52 @@ Every row here takes **On** (the canvas host node).
 | Set Speed Scale (CPU) | Speeds up or slows down a CPU particle effect. | `speed_scale = {scale}` |
 | Emit Particles (in object) | Turns the object's particle emitter on or off, found automatically. | a `GPUParticles2D` lookup under `{target}`, then `.emitting = {emitting}` |
 
+### What an effect looks like, said in words (picker sections: Particles)
+
+The rows above start, stop and restart an emitter. These say what its particles DO, in seven words
+that ship on both `GPUParticles2D` and `GPUParticles3D` - 44 rows in all, because every word is a
+Set, a read-it-back expression and (for the six that can be walked) a Fade, in each dimension.
+
+A particle effect is TWO objects, and that is the difficulty these words exist to hide. How many
+particles there are and how long each one lasts belong to the emitter NODE; how fast they set off,
+how wide they fan out, which way they fall, how big they are and what colour they are belong to a
+`ParticleProcessMaterial` hanging off it. A reader saying "make the sparks fall faster" should not
+have to know which of the two the word is on.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Particle Gravity | Which way the particles fall and how hard, as a direction with a length. | `process_material.gravity = {value}` (after the own-it lines and the guard) |
+| Set Particle Spread | How wide they fan out from the way the emitter points, in degrees. | `process_material.spread = {value}` |
+| Set Particle Speed | How fast a new particle sets off. BOTH ends of the range are on this row. | `process_material.initial_velocity_min = {value}` and `initial_velocity_max = {most}` |
+| Set Particle Size | How big a new particle is. Both ends of the range are on this row too. | `process_material.scale_min = {value}` and `scale_max = {most}` |
+| Set Particle Colour | The colour every particle is tinted, multiplied with the picture it draws with. | `process_material.color = {value}` |
+| Set Particle Lifetime | How many seconds one particle lasts before it goes out. | `lifetime = {value}` |
+| Set Particle Amount | How many the emitter keeps in the air at once. | `amount = {value}` |
+| Particle Gravity / Particle Spread / Particle Colour / Particle Lifetime / Particle Amount | Read the word back. | the same member |
+| Slowest Particle Speed / Fastest Particle Speed | The two ends of the speed range. | `initial_velocity_min` / `initial_velocity_max` |
+| Smallest Particle Size / Biggest Particle Size | The two ends of the size range. | `scale_min` / `scale_max` |
+| Fade Particle Gravity / Spread / Speed / Size / Colour / Lifetime | Walks the word to a new value over Seconds. | one `create_tween().tween_property(...)` line |
+
+The 3D twins of every row above are the same words on a `GPUParticles3D`, and they say so on the
+row rather than in their names.
+
+**Two words are really two numbers.** A speed is `initial_velocity_min` and `initial_velocity_max`; a
+size is `scale_min` and `scale_max`. A row offering one half of either would leave the other one
+wherever it happened to be, which is exactly how an effect ends up with every particle at one
+identical speed - so both ends are fields on the same row, walked by the same fade, and read back by
+expressions of their own.
+
+**Every material write takes this emitter's own copy first**, then asks whether the material really
+is a `ParticleProcessMaterial`. A `.tres` worn by every torch in the level never changes under the
+other torches, and an emitter driven by somebody's particle SHADER is left completely alone, because
+gravity and spread live inside that shader and there is no property here to set. The two node words,
+lifetime and amount, need neither line: they are the emitter's own.
+
+**There is no Fade Particle Amount, on purpose.** Writing `amount` makes the engine throw the whole
+particle buffer away and build a new one, so walking it over half a second would do that thirty times
+and the effect would stutter every one of them. The row says so instead of offering a fade that would
+quietly cost frames.
+
 ## Use cases
 
 **1. A blob shadow under a character.** Auto-clear on, one circle per frame, no shadow sprite anywhere in
@@ -335,6 +381,48 @@ On landed
   -> Emit Particles (in object)  Target: Player, true
 ```
 
+**23. Rain that turns into a gale.** Gravity is a direction with a length, so turning it sideways is
+the whole of "wind":
+
+```gdscript
+if $Rain.process_material == null:
+	$Rain.process_material = ParticleProcessMaterial.new()
+elif $Rain.process_material is ParticleProcessMaterial and not $Rain.process_material.resource_path.is_empty():
+	$Rain.process_material = $Rain.process_material.duplicate()
+if $Rain.process_material is ParticleProcessMaterial:
+	$Rain.process_material.gravity = Vector2(300, 900)
+```
+
+**24. Sparks that answer a hit.** Spread and speed on two rows, with both ends of the speed range on
+the one that sets it:
+
+```gdscript
+$Sparks.process_material.spread = 60.0
+$Sparks.process_material.initial_velocity_min = 180.0
+$Sparks.process_material.initial_velocity_max = 420.0
+```
+
+**25. A torch guttering out.** **Fade Particle Colour** walks the tint rather than cutting it, which
+is what a light dying looks like:
+
+```gdscript
+create_tween().tween_property($Torch.process_material, "color", Color(0.2, 0.1, 0.05, 0.0), 1.5)
+```
+
+**26. Density as a graphics setting.** **Set Particle Amount** is the row a low setting turns down,
+and it is a row to use at a moment rather than every frame:
+
+```gdscript
+$Rain.amount = 400
+```
+
+**27. Read an effect back before changing it.** The expressions answer in any value field, so a row
+can double what is already there rather than replacing it with a number somebody typed:
+
+```gdscript
+$Sparks.process_material.spread = $Sparks.process_material.spread * 2.0
+```
+
 ### Other use cases
 
 **Painting toy.** Persistent canvas plus Draw Circle at the cursor every frame gives you a brush, and Clear Canvas gives you the eraser - a complete drawing game in three rows.
@@ -381,3 +469,16 @@ On landed
 - **Emit Particles (in object) takes the first GPUParticles2D in tree order** and is guarded, so an
   object with no emitter silently does nothing. Target the emitter directly with On node when an object
   carries several.
+- **The seven particle words are two objects.** Gravity, spread, speed, size and colour are the
+  process material's; lifetime and amount are the emitter node's. The rows hide that, and the code
+  echo on each row shows which one it wrote.
+- **A Set Particle row that writes the material has no On node parameter.** Its template opens with
+  the own-it `if`, and a guard cannot be written around a node named in the middle of it, so it acts
+  on the emitter the sheet is attached to. The read-it-back expressions do take the ordinary
+  **On node**.
+- **Setting the amount rebuilds the whole buffer.** Use it at a moment, never every frame, and never
+  in a loop. There is deliberately no fade for it.
+- **An emitter wearing a particle shader ignores these rows entirely.** The properties live inside
+  the shader there, so the rows write nothing rather than failing.
+- **Speed and size are ranges.** Setting only one end is how every particle in an effect ends up
+  moving at exactly the same speed; both ends are on the one row so that cannot happen.

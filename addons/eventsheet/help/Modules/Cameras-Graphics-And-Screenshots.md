@@ -388,6 +388,53 @@ a null. Nothing is assumed and there is no step to remember.
 
 These are 3D words: they are `BaseMaterial3D`'s, and a `MeshInstance3D` is what wears one.
 
+### What the lens lets in (picker section: Camera)
+
+The rows above say where the camera is and how wide its view is. These say what its LENS does. All
+of them write through a `CameraAttributes` resource, which lives on a `Camera3D` in `attributes` and
+on a `WorldEnvironment` in `camera_attributes`, where it answers for every camera that has none of
+its own. Both hosts publish the exposure words; the two focus rows are `Camera3D` only, because the
+distance is measured from the camera's own position and a `WorldEnvironment` is not standing
+anywhere.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Camera Exposure | How much light the lens lets in: 1 is untouched, 2 is twice as bright. | `attributes.exposure_multiplier = {value}` (after the own-it lines) |
+| Camera Exposure | Reads that back. | `attributes.exposure_multiplier` |
+| Fade Camera Exposure | Walks it to a new value over Seconds. | `create_tween().tween_property(attributes, "exposure_multiplier", {value}, {seconds})` |
+| Turn Auto Exposure On | Lets the lens open and close by itself with how bright the picture is, with Speed, Least light and Most light on the same row. | `attributes.auto_exposure_enabled = true` ... (multi-line, use case 26) |
+| Turn Auto Exposure Off | Puts the lens back under the sheet's control at whatever exposure it drifted to. | `attributes.auto_exposure_enabled = false` |
+| Is Auto Exposure On | True while the lens is adjusting itself. | `attributes.auto_exposure_enabled` |
+| Focus On | Keeps a node (or a distance in metres) sharp and lets everything behind it go soft, over Seconds. | `attributes.dof_blur_far_enabled = true` ... (multi-line, use case 27) |
+| Focus Everywhere | Takes the blur off and eases the whole picture back to sharp. | `attributes.dof_blur_amount` walked to 0, then the far blur switched off |
+| Focus Distance | How many metres away the picture stops being sharp. | `attributes.dof_blur_far_distance` |
+
+Every one of the six writing rows opens with the own-it lines, so an attributes file shared between
+the gameplay camera and the cutscene camera never changes under the other one. A slot holding nothing
+is given a `CameraAttributesPractical`, whose blur is metres and whose exposure is a multiplier; a
+slot somebody deliberately filled with a physical lens keeps it, and every line only a practical lens
+can answer sits inside an `is CameraAttributesPractical` guard.
+
+Auto exposure is a Forward+ feature. On Mobile and on Compatibility the flag is set, the renderer
+ignores it, and nothing errors, so the rows say so in their own descriptions and the Doctor's Ship It
+section says it once more for a project whose rendering method is not Forward+.
+
+### A whole world saved as a look (picker section: Environment)
+
+The atmosphere words above say one thing each. These four say all of them at once, from a file.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Use World Look | Puts a whole saved world on at once, deep-copied so the file on disk is untouched. | `WorldLook.use({node}, {look})` |
+| Blend To World Look | Crosses over to one over Seconds instead of cutting to it. | `WorldLook.blend({node}, {look}, {seconds})` |
+| Current World Look | The path of the look this node's world came from, or blank. | `WorldLook.came_from({node})` |
+| On World Look Blended | Runs when a crossing lands, carrying the look it landed on. | the node's `world_look_blended` signal |
+
+A look is an `Environment` resource the project made and saved: nothing named ships with the plugin.
+The crossfade walks every number, vector and colour, and CUTS the switches and modes (glow on or off,
+which tone map, which sky) at the halfway point, where a cut is least visible, because there is
+nothing between two of those to walk through.
+
 ### Drawing children inside a shape (picker section: Blend Modes)
 
 `clip_children` is one field on every `CanvasItem`, and it does something no arrangement of nodes
@@ -631,6 +678,71 @@ func _process(_delta: float) -> void:
 	z_index = $Player.z_index + 1
 ```
 
+**26. The eye adjusting when the player walks out of the cave.** One row, with the three numbers
+that are the same decision on it:
+
+```gdscript
+if attributes == null:
+	attributes = CameraAttributesPractical.new()
+elif not attributes.resource_path.is_empty():
+	attributes = attributes.duplicate()
+attributes.auto_exposure_enabled = true
+attributes.auto_exposure_speed = 0.5
+if attributes is CameraAttributesPractical:
+	attributes.auto_exposure_min_sensitivity = 0.0
+	attributes.auto_exposure_max_sensitivity = 800.0
+```
+
+**27. Focus on the speaker for a line of dialogue, then come back.** **Focus On** takes a node or a
+distance, measures it once into a local of its own, and walks the falloff:
+
+```gdscript
+if attributes == null:
+	attributes = CameraAttributesPractical.new()
+elif not attributes.resource_path.is_empty():
+	attributes = attributes.duplicate()
+var __subject_1 = $Speaker
+if attributes is CameraAttributesPractical:
+	attributes.dof_blur_far_enabled = true
+	attributes.dof_blur_far_distance = global_position.distance_to(__subject_1.global_position) if __subject_1 is Node3D else float(__subject_1)
+	create_tween().tween_property(attributes, "dof_blur_far_transition", 3.0, 0.6)
+```
+
+**Focus Everywhere** is the way out: it remembers the blur amount, walks it to nothing, switches the
+far blur off at the end of the walk, and puts the amount back, so the next **Focus On** starts from
+the lens the first one did.
+
+**28. Two cameras seeing the same room differently.** Because the exposure belongs to the camera
+rather than to the world, a security-monitor camera can be dim while the player's view is not - and
+because every write takes its own copy first, the two never fight over one attributes file:
+
+```gdscript
+$SecurityCam.attributes.exposure_multiplier = 0.4
+```
+
+**29. Cross from the surface into the cave, and let the player move when it lands.** The blend is one
+row, and the trigger that answers it is another:
+
+```gdscript
+WorldLook.blend($WorldEnvironment, "res://looks/cave.tres", 2.0)
+```
+
+```
+On world look blended
+  -> Set can move  true  (On node $Player)
+```
+
+The signal is one the sheet declares for itself - a signal block saying `world_look_blended(look)` -
+so both halves are ordinary Godot.
+
+**30. Ask which look is on before offering to change it.** **Current World Look** answers the path
+the world came from, or blank when the world was built in the scene rather than loaded:
+
+```gdscript
+if WorldLook.came_from($WorldEnvironment) != "res://looks/cave.tres":
+	WorldLook.use($WorldEnvironment, "res://looks/cave.tres")
+```
+
 ### Other use cases
 
 **A dynamic FOV rig.** Read Camera FOV every frame and Tween Camera FOV toward a value derived from speed, so the view widens as the player accelerates and settles when they stop.
@@ -680,3 +792,20 @@ func _process(_delta: float) -> void:
 - **Screenshots go to `user://`.** `res://` is read-only in an exported game. Also remember the shot
   includes the HUD, so hide anything you do not want in the picture and let a frame pass first.
 - **Video Memory Used is in bytes.** Divide by 1048576 before showing it as megabytes.
+- **The lens rows that WRITE have no On node parameter.** Their templates open with the own-it `if`,
+  and a guard cannot be written around a node named in the middle of it, so they act on the camera the
+  sheet is attached to. **Camera Exposure**, **Is Auto Exposure On** and **Focus Distance** are plain
+  member reads and do take the ordinary **On node**.
+- **The world's exposure and the camera's exposure are two different things.** **Set Exposure** on a
+  `WorldEnvironment` grades the finished picture; **Set Camera Exposure** is how much light this lens
+  lets in. A scene can want both, and they multiply.
+- **Auto exposure is Forward+ only.** On Mobile and Compatibility the flag is set and ignored. Ask
+  **Renderer Is** before offering it in a graphics menu.
+- **Focus On needs a practical lens.** A camera somebody deliberately fitted with a
+  `CameraAttributesPhysical` keeps it, and the depth-of-field lines simply do not run. Use the
+  ordinary property rows there.
+- **A look is a file you author, not a preset that ships.** Build a `WorldEnvironment` until the scene
+  looks right, save its `Environment` out, and point the row at it.
+- **Blend To World Look cuts the switches at the halfway point.** Glow on or off, the tone map and the
+  sky have nothing in between to walk through. If a crossing looks like it snapped, that is which
+  half snapped, and it is deliberate.
