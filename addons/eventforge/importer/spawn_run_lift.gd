@@ -48,6 +48,23 @@ const FORMATION_ACE_ID_3D: String = "SpawnFormation3D"
 const LAUNCHED_ACE_ID: String = "SpawnFacingAndMoving"
 const LAUNCHED_ACE_ID_3D: String = "SpawnFacingAndMoving3D"
 const SELF_COPY_ACE_ID: String = "SpawnCopyOfSelf"
+const SELF_COPY_ACE_ID_3D: String = "SpawnCopyOfSelf3D"
+
+## The rows whose 2D spelling and 3D spelling are the same characters, and the twin each becomes on a
+## Node3D. A line formation is `{around}.lerp({to}, ...)` in both dimensions and a copy of the node's
+## own scene is `scene_file_path` in both, so the TABLE can only hold one entry for each - two would
+## split every such run between them by order alone. Which of the two rows a reader is shown is
+## therefore decided after the match, by the class the file extends, and that is the only honest
+## place for it: the line says nothing about its dimension and the file says everything.
+##
+## WHAT THE SWAP IS FOR is the fields, not the name. A 3D line formation read as the 2D row arrived
+## carrying the 2D row's hidden defaults - a size in pixels, a `$SpawnZone` collision shape, a
+## Vector2 To - and one dropdown click away from four branches that write Vector2 into a Node3D.
+## Nothing about the bytes changes either way: the row re-emits the author's own spelling.
+const TWIN_ON_A_3D_HOST: Dictionary = {
+	FORMATION_ACE_ID: FORMATION_ACE_ID_3D,
+	SELF_COPY_ACE_ID: SELF_COPY_ACE_ID_3D
+}
 
 ## The cheap first refusal each family of entries opens with - one `contains` that rules out nearly
 ## every statement in a project before a pattern is compiled, let alone run.
@@ -70,11 +87,71 @@ const UP_TO_NEXT: String = ".+?"
 ## one of them gated by its mark before anything is compiled.
 static var _entries: Array[Dictionary] = []
 
+## Whether the file being read extends a Node3D. Set by the lifter around each file, exactly as the
+## collision-layer reading is told which of a project's two layer lists a file's lines are about, and
+## for the same reason: some lines are spelled identically in both dimensions and only the class the
+## file extends says which one is meant. Display-level attribution only - the row re-emits the
+## author's own spelling either way, so a stale value cannot move a byte.
+static var _host_is_3d: bool = false
+
+
+## What the lifter read off the `extends` line, handed over before a file is walked.
+static func note_host_class(host_class: String) -> void:
+	_host_is_3d = _is_3d(host_class)
+
 
 ## The row a run of statements means, or {} when nothing here claims it. `lines` is the function body
 ## as the lifter holds it, `index` the statement to try, `depth` its indentation.
 static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
-	return EventForgeLiftTable.match_run(lift_entries(), lines, index, depth)
+	var claimed: Dictionary = EventForgeLiftTable.match_run(lift_entries(), lines, index, depth)
+	if claimed.is_empty() or not _host_is_3d:
+		return claimed
+	var twin: String = str(TWIN_ON_A_3D_HOST.get(str(claimed.get("ace_id", "")), ""))
+	if twin.is_empty():
+		return claimed
+	claimed["params"] = _twin_values(str(claimed.get("ace_id", "")), twin,
+		str(claimed.get("entry_id", "")), claimed.get("params", {}) as Dictionary)
+	claimed["ace_id"] = twin
+	return claimed
+
+
+## The row's values with the other dimension's defaults where the line said nothing. A value the
+## LINE spelled is captured and is kept exactly as it was read; a value the line never mentioned is
+## the 2D row's default and is worth nothing on a Node3D, so it becomes the 3D row's. A branch word
+## the author chose - the formation shape, the timing - reads as itself rather than as the default,
+## which is what leaves it alone.
+static func _twin_values(from_ace_id: String, to_ace_id: String, entry_id: String,
+		values: Dictionary) -> Dictionary:
+	var captured: PackedStringArray = _captured_names(entry_id)
+	var was: Dictionary = _defaults_of(from_ace_id)
+	var becomes: Dictionary = _defaults_of(to_ace_id)
+	var swapped: Dictionary = values.duplicate()
+	for key: String in values:
+		if captured.has(key) or not becomes.has(key):
+			continue
+		if str(values[key]) == str(was.get(key, "")):
+			swapped[key] = becomes[key]
+	return swapped
+
+
+## The slot names one entry really captures, off the entry itself - so the question "did the line say
+## this" is answered by the table rather than by a second list of what the shapes hold.
+static func _captured_names(entry_id: String) -> PackedStringArray:
+	for entry: Dictionary in lift_entries():
+		if str(entry.get("id", "")) == entry_id:
+			return entry.get("params", PackedStringArray()) as PackedStringArray
+	return PackedStringArray()
+
+
+## Whether a class the importer read off an `extends` line is drawn in three dimensions. A name the
+## engine has never heard of - a project's own `class_name` - answers no, which leaves the reading
+## exactly where it was before this question was asked.
+static func _is_3d(host_class: String) -> bool:
+	var named: String = host_class.strip_edges()
+	if named.is_empty():
+		return false
+	return ClassDB.class_exists(named) and (named == "Node3D"
+		or ClassDB.is_parent_class(named, "Node3D"))
 
 
 ## Every spelling the three rows write, as table entries. The launched entries that CARRY the spawner's
@@ -134,9 +211,10 @@ static func statement_pattern(line: String) -> String:
 ## already speaks for, character for character. The line formation is the whole of that list: it is
 ## `{around}.lerp({to}, …)` in both dimensions, because lerp is the point's own word whether the point
 ## has two numbers in it or three. Two entries for one spelling would split every such line between
-## them by table order alone, so the 2D one keeps the reading and the 3D row is an authoring word -
-## the same rule, and the same nothing-is-lost, as the twin placement expression the module states it
-## for. The bytes a sheet emits are identical either way.
+## them by table order alone, so the table holds ONE - and which of the two rows the reader is then
+## shown is decided after the match, by the class the file extends (see TWIN_ON_A_3D_HOST). The bytes
+## a sheet emits are identical either way; only the fields the row opens with differ, and on a Node3D
+## the 2D row's are the wrong ones.
 static func _add_formations(into: Array[Dictionary], ace_id: String, template: String,
 		order: Array[String], tag: String, unclaimed: Array[String]) -> void:
 	var defaults: Dictionary = _defaults_of(ace_id)
@@ -164,11 +242,10 @@ static func _add_launched(into: Array[Dictionary], ace_id: String, template: Str
 
 
 ## The self copy: the safe spawn with the node's own scene file where the scene field goes. ONE
-## entry, because the row has no branch in it, and only the 2D row is claimed - for exactly the
-## reason the line formation states about its twin. The 3D row writes the identical three
-## statements, character for character, because `scene_file_path` and `position` are the node's own
-## words in both dimensions, and two entries for one spelling would split every such run between
-## them by table order alone.
+## entry, because the row has no branch in it and because the two dimensions write the identical
+## three statements - `scene_file_path` and `global_position` are the node's own words in both, and
+## two entries for one spelling would split every such run between them by table order alone. Which
+## of the two rows the reader is shown is decided after the match, by the class the file extends.
 ##
 ## The first statement is what makes the run findable: `load(scene_file_path)` is literal text in
 ## the pattern rather than a slot, so this claims a spawn of the node's own scene and nothing else.

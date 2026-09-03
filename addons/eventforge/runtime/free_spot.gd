@@ -11,8 +11,10 @@
 #   apart       the point is at least the gap from every other copy of the same scene already in
 #               the world, which is what keeps a wave from landing on top of itself.
 #   clear of    the copy's OWN collision shape, put at that point, would not overlap anything in
-#               the named groups. That is a real physics query in the same space the game runs in,
-#               so a wall is a wall whatever drew it. A group whose members carry no collision
+#               the named groups, or anything standing under something in them - a level is put in a
+#               group by its ROOT, and the body that answers a physics query is a child of that. That
+#               is a real physics query in the same space the game runs in, so a wall is a wall
+#               whatever drew it. A group whose members carry no collision
 #               shape at all cannot be asked that question, so those members are answered the only
 #               way they can be: the point has to be further than the gap from every one of them.
 #
@@ -221,7 +223,7 @@ static func _clear_2d(space: PhysicsDirectSpaceState2D, shape: Shape2D, point: V
 	query.collide_with_bodies = true
 	query.collide_with_areas = true
 	for hit: Dictionary in space.intersect_shape(query, MAX_HITS):
-		if _in_any_group(hit.get("collider"), clear_of):
+		if in_any_group(hit.get("collider"), clear_of):
 			return false
 	return true
 
@@ -237,7 +239,7 @@ static func _clear_3d(space: PhysicsDirectSpaceState3D, shape: Shape3D, point: V
 	query.collide_with_bodies = true
 	query.collide_with_areas = true
 	for hit: Dictionary in space.intersect_shape(query, MAX_HITS):
-		if _in_any_group(hit.get("collider"), clear_of):
+		if in_any_group(hit.get("collider"), clear_of):
 			return false
 	return true
 
@@ -305,14 +307,21 @@ static func _members_without_shapes(inside: Node, groups: Array,
 	return found
 
 
-## True when the object is a node belonging to any of the named groups.
-static func _in_any_group(collider: Variant, groups: Array) -> bool:
+## True when the object is a node belonging to any of the named groups, or standing UNDER one that
+## does. The walk up is not a nicety: a level is drawn as a scene, and a scene is put in a group by
+## its root, so the thing that answers a physics query - the StaticBody2D two levels down with the
+## shape on it - is almost never the node the group name was written on. Asking only the collider
+## answered "nothing is standing here" inside a wall whose root said otherwise.
+##
+## Public for the reason the two roll loops above are: the clearance test needs a live physics space
+## and this question does not, so this is the half of it that can be held to a value.
+static func in_any_group(collider: Variant, groups: Array) -> bool:
 	var node: Node = collider as Node
-	if node == null:
-		return false
-	for group: Variant in groups:
-		if node.is_in_group(StringName(str(group))):
-			return true
+	while node != null:
+		for group: Variant in groups:
+			if node.is_in_group(StringName(str(group))):
+				return true
+		node = node.get_parent()
 	return false
 
 

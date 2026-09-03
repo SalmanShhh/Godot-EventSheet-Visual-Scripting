@@ -66,16 +66,16 @@ const CATEGORY: String = "Spawn"
 ## spawner's own place first (what the row opens on), then the shapes the placement expressions take.
 ## An editable suggest list rather than a fixed dropdown, because "where" is an expression and a fixed
 ## list would be a smaller language than the field really speaks.
-## The last entry is longer than the three above it on purpose: a free spot is a QUESTION rather
-## than a place, so the starter has to carry the four things the question is about - what to roll
-## inside, what is being put there, what it has to keep away from, and how far. It is a starting
-## point like the others and is edited in the field, and Spawn A Copy In A Free Spot is the row that
+##
+## AND THE FREE-SPOT QUESTION IS NOT ONE OF THEM, deliberately. It is the one placement word that can
+## answer NOTHING, and every row that reads this list writes its answer straight into a position - so
+## a full arena would put `null` where a Vector2 belongs and turn a shipped line into a run-time
+## error. Spawn A Copy In A Free Spot is where that question is asked, because it is the row that
 ## also knows what to do when the answer is nothing.
 const PLACEMENT_STARTERS: Array[String] = [
 	"global_position",
 	"$SpawnPoint.global_position",
 	"Vector2(0, 0)",
-	"FreeSpot.in_2d($SpawnZone, load(\"res://enemy.tscn\"), [\"walls\"], 32.0, 24)",
 ]
 
 ## The same list for a Node3D host. Kept beside its 2D twin rather than derived from it, because the
@@ -84,7 +84,6 @@ const PLACEMENT_STARTERS_3D: Array[String] = [
 	"global_position",
 	"$SpawnPoint.global_position",
 	"Vector3(0, 0, 0)",
-	"FreeSpot.in_3d($SpawnBox, load(\"res://enemy.tscn\"), [\"walls\"], 1.0, 24)",
 ]
 
 ## The runtime file the free-spot word calls, by the name emitted code says. One spelling, named
@@ -267,7 +266,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	#
 	# THE SCENE IS READ ONCE, above the loop. `load()` in the field would otherwise be a lookup per
 	# copy, and the local is also what lets the run be recognised again when it is read back.
-	descriptors.append(F.act("SpawnFormation", "Spawn In A Formation", formation_template(formation_places(), FORMATION_ORDER), CATEGORY, "Spawn [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b]", "Spawns several copies at once and puts each one somewhere in a shape you pick - a ring, an arc, a line, a grid, or scattered inside a collision shape. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The fields a shape does not use are left out of the code it writes: a ring reads Around and Size, an arc adds Start Angle and Sweep, a line reads Around and To, a grid reads Around, Size and Across, and scattering reads Inside.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_choice("formation", FORMATION_RING, "Formation", "The shape the copies land in. Each one reads a different handful of the fields below, and writes only the ones it reads.", FORMATION_CHOICES).param_built(_count_param()).param_built(_around_param(PLACEMENT_STARTERS)).param_built(_inside_param("$SpawnZone", "CollisionShape2D holding a RectangleShape2D or a CircleShape2D - the one on the Area2D marking the spawn zone")).param_built(_size_param()).param_built(_to_param("global_position + Vector2(200, 0)")).param_built(_start_param()).param_built(_sweep_param()).param_built(_across_param()).param_built(_crowd_param()).param_built(_parent_param()).param_choice("when", WHEN_NOW, "Added", "When the copies join the tree. Pick the next idle moment inside a collision or body handler: Godot refuses to add a child while the physics server is busy.", WHEN_CHOICES))
+	descriptors.append(F.act("SpawnFormation", "Spawn In A Formation", formation_template(formation_places(), FORMATION_ORDER), CATEGORY, "Spawn [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b]", "Spawns several copies at once and puts each one somewhere in a shape you pick - a ring, an arc, a line, a grid, or scattered inside a collision shape. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The fields a shape does not use are left out of the code it writes: a ring reads Around and Size, an arc adds Start Angle and Sweep, a line reads Around and To, a grid reads Around, Size and Across, and scattering reads Inside.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_choice("formation", FORMATION_RING, "Formation", "The shape the copies land in. Each one reads a different handful of the fields below, and writes only the ones it reads.", FORMATION_CHOICES).param_built(_count_param()).param_built(_around_param(PLACEMENT_STARTERS)).param_built(_inside_param("$SpawnZone", "CollisionShape2D holding a RectangleShape2D or a CircleShape2D - the one on the Area2D marking the spawn zone")).param_built(_size_param()).param_built(_to_param("global_position + Vector2(200, 0)")).param_built(_start_param()).param_built(_sweep_param()).param_built(_across_param()).param_built(_crowd_param()).param_built(_parent_param()).param_choice("when", WHEN_NOW, "Added", "When the copies join the tree. Pick the next idle moment inside a collision or body handler: Godot refuses to add a child while the physics server is busy. Both answers put the copies in the same places - the shape is measured in the world either way.", WHEN_CHOICES))
 
 	# ── A copy that is pointed somewhere and already moving ────────────────────────────
 	# The frozen Spawn A Copy says where a copy lands and stops there, which is the whole answer for a
@@ -286,7 +285,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# makes: the fifth formation scatters inside a box rather than inside a 2D collision shape, and
 	# there is no "toward the mouse" - a screen point is a ray in three dimensions, which is a
 	# different question and not this row's to answer with one expression.
-	descriptors.append(F.act("SpawnFormation3D", "Spawn In A Formation (3D)", formation_template(formation_places_3d(), FORMATION_ORDER_3D), CATEGORY, "Spawn [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b]", "Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_choice("formation", FORMATION_RING, "Formation", "The shape the copies land in. Each one reads a different handful of the fields below, and writes only the ones it reads.", FORMATION_CHOICES_3D).param_built(_count_param()).param_built(_around_param(PLACEMENT_STARTERS_3D)).param_built(_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D, or a CSGBox3D you blocked the space out with")).param_built(_size_param("5.0")).param_built(_to_param("global_position + Vector3(10, 0, 0)")).param_built(_start_param()).param_built(_sweep_param()).param_built(_across_param()).param_built(_crowd_param()).param_built(_parent_param()).param_choice("when", WHEN_NOW, "Added", "When the copies join the tree. Pick the next idle moment inside a collision or body handler: Godot refuses to add a child while the physics server is busy.", WHEN_CHOICES))
+	descriptors.append(F.act("SpawnFormation3D", "Spawn In A Formation (3D)", formation_template(formation_places_3d(), FORMATION_ORDER_3D), CATEGORY, "Spawn [b]{count}[/b] copies of [b]{scene}[/b] in a [b]{formation}[/b]", "Spawns several copies at once and puts each one somewhere in a shape you pick, in three dimensions - a ring, an arc, a line, a grid on the ground, or scattered inside a box. Every copy joins the crowd you name, so the row underneath can address the whole formation with For Each In Group. The ring, the arc and the grid all lie on the ground plane, level with the point you spawn around, and scattering reads Inside rather than Around.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_choice("formation", FORMATION_RING, "Formation", "The shape the copies land in. Each one reads a different handful of the fields below, and writes only the ones it reads.", FORMATION_CHOICES_3D).param_built(_count_param()).param_built(_around_param(PLACEMENT_STARTERS_3D)).param_built(_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D, or a CSGBox3D you blocked the space out with")).param_built(_size_param("5.0")).param_built(_to_param("global_position + Vector3(10, 0, 0)")).param_built(_start_param()).param_built(_sweep_param()).param_built(_across_param()).param_built(_crowd_param()).param_built(_parent_param()).param_choice("when", WHEN_NOW, "Added", "When the copies join the tree. Pick the next idle moment inside a collision or body handler: Godot refuses to add a child while the physics server is busy. Both answers put the copies in the same places - the shape is measured in the world either way.", WHEN_CHOICES))
 	descriptors.append(F.act("SpawnFacingAndMoving3D", "Spawn A Copy, Facing And Moving (3D)", launched_template(facing_lines_3d(), "-{name}.global_transform.basis.z", move_lines(BULLET_CHILD_3D), FACING_ORDER_3D), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b], facing [b]{facing}[/b], moving at [b]{speed}[/b]", "Spawns one copy the way Spawn A Copy (3D) does, then turns it to face something and gives it a speed along that facing. Forward in three dimensions is the copy's own -Z, which is what Godot means by forward everywhere else, so Toward A Node is a plain look_at. Where the speed is written depends on what the scene is: velocity for a character body, linear_velocity for a rigid body, or the Bullet behaviour's own speed for a scene wearing it.", "Node3D").param_built(_scene_param()).param_built(_name_param("new_bullet")).param_built(_at_param_3d()).param_choice("facing", FACE_SPAWNER, "Facing", "Which way the copy is turned before it is launched. Toward A Node reads the Toward field and is a look_at, so the node has to be somewhere other than where the copy landed; At An Angle turns it around the up axis.", FACING_CHOICES_3D).param_built(_toward_param()).param_built(_angle_param()).param_built(_speed_param("12.0", "How fast the copy travels along its facing, in metres per second.")).param_built(_carry_param("velocity")).param_choice("moves", MOVE_VELOCITY, "Moves By", "Where the copy's speed is written. It is a fact about the scene, not about this row - the dialog reads the scene file and says which of the three it is.", MOVE_CHOICES).param_built(_parent_param()))
 
 	# ── A copy of this very scene ──────────────────────────────────────────────────────
@@ -295,8 +294,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# and nothing to keep in step: a boss that splits, a blob that divides, a firework that throws
 	# smaller fireworks. Deferred by default because the moment a thing copies itself is nearly
 	# always a hit, and a hit is a physics callback.
-	descriptors.append(F.act("SpawnCopyOfSelf", "Spawn A Copy Of Myself", self_copy_template(), CATEGORY, "Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "Makes one more copy of the scene THIS node came from, and puts it where you say. Nothing has to name the scene: the node knows which file it was built from, so a scene renamed or moved keeps working. The copy is added on the next idle moment, which is what makes the row safe inside the collision handler a splitting boss usually lives in. A node that was built in code rather than from a scene file has no file to copy, and the Doctor says so on the row.", "Node2D").param_built(_name_param("new_copy")).param_built(_at_param()).param_built(_parent_param()).featured())
-	descriptors.append(F.act("SpawnCopyOfSelf3D", "Spawn A Copy Of Myself (3D)", self_copy_template(), CATEGORY, "Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "The same row on a 3D node: one more copy of the scene this node came from, added on the next idle moment. The line it writes is the same line its 2D twin writes, because scene_file_path and position are the node's own words in both dimensions - the twin exists so the picker offers the row on a 3D host at all.", "Node3D").param_built(_name_param("new_copy")).param_built(_at_param_3d()).param_built(_parent_param()))
+	descriptors.append(F.act("SpawnCopyOfSelf", "Spawn A Copy Of Myself", self_copy_template(), CATEGORY, "Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "Makes one more copy of the scene THIS node came from, and puts it where you say. Nothing has to name the scene: the node knows which file it was built from, so a scene renamed or moved keeps working. The copy is added on the next idle moment, which is what makes the row safe inside the collision handler a splitting boss usually lives in, and its place is written straight after it joins the tree - so At is a place in the world whatever the copy ends up under. A node that was built in code rather than from a scene file has no file to copy, and the Doctor says so on the row.", "Node2D").param_built(_name_param("new_copy")).param_built(_at_param()).param_built(_parent_param()).featured())
+	descriptors.append(F.act("SpawnCopyOfSelf3D", "Spawn A Copy Of Myself (3D)", self_copy_template(), CATEGORY, "Spawn a copy of [b]myself[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "The same row on a 3D node: one more copy of the scene this node came from, added on the next idle moment, and put where you say once it is in the tree. The lines it writes are the lines its 2D twin writes, because scene_file_path and global_position are the node's own words in both dimensions - the twin exists so the picker offers the row on a 3D host at all.", "Node3D").param_built(_name_param("new_copy")).param_built(_at_param_3d()).param_built(_parent_param()))
 
 	# ── Somewhere nothing is standing ──────────────────────────────────────────────────
 	# "Where" with a question in it. The other placement words measure something and answer; this one
@@ -309,7 +308,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.expr("PlaceInFreeSpot3D", "Free Spot In (3D)", "%s.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})" % FREE_SPOT_CALL, CATEGORY, "a free spot in [i]{inside}[/i], clear of {clear_of}, {gap} m apart", "The same question in three dimensions, with the gap measured in metres: a point inside a box or a sphere you drew that nothing in the named groups is standing in and no other copy of the same scene is within the gap of. A full space answers nothing.").param_built(_free_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D or a SphereShape3D, or the Area3D around it")).param_built(_scene_param()).param_built(_clear_of_param()).param_built(_gap_param("1.0", "metres")).param_built(_tries_param()))
 	# And the row that spends the answer. It is a spawn with an `if` in it, because "nothing" is a
 	# real answer to "where" and a row that wrote it into a position would put the copy at the origin.
-	descriptors.append(F.act("SpawnInFreeSpot", "Spawn A Copy In A Free Spot", free_spot_spawn_template("in_2d"), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]", "Spawns one copy somewhere inside a shape you drew that nothing is already standing in - and spawns NOTHING when there is nowhere left, rather than stacking copies on top of each other. When it finds no room it raises this node's spawn_skipped signal with the scene it could not place, which On Spawn Skipped listens to: add a signal block saying spawn_skipped(scene) and the row underneath can end the wave, play a full-up sound, or make more room. The copy is added on the next idle moment, so the row is safe inside a collision handler.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_free_inside_param("$SpawnZone", "CollisionShape2D holding a RectangleShape2D or a CircleShape2D, the Area2D around it, or a Control's own rectangle")).param_built(_clear_of_param()).param_built(_gap_param("32.0", "pixels")).param_built(_tries_param()).param_built(_parent_param()).featured())
+	descriptors.append(F.act("SpawnInFreeSpot", "Spawn A Copy In A Free Spot", free_spot_spawn_template("in_2d"), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]", "Spawns one copy somewhere inside a shape you drew that nothing is already standing in - and spawns NOTHING when there is nowhere left, rather than stacking copies on top of each other. The spot is a place in the world and the copy is put there once it has joined the tree, so it lands inside the shape whatever it was added under. When it finds no room it raises this node's spawn_skipped signal with the scene it could not place, which On Spawn Skipped listens to: add a signal block saying spawn_skipped(scene) and the row underneath can end the wave, play a full-up sound, or make more room. The copy is added on the next idle moment, so the row is safe inside a collision handler.", "Node2D").param_built(_scene_param()).param_built(_name_param()).param_built(_free_inside_param("$SpawnZone", "CollisionShape2D holding a RectangleShape2D or a CircleShape2D, the Area2D around it, or a Control's own rectangle")).param_built(_clear_of_param()).param_built(_gap_param("32.0", "pixels")).param_built(_tries_param()).param_built(_parent_param()).featured())
 	descriptors.append(F.act("SpawnInFreeSpot3D", "Spawn A Copy In A Free Spot (3D)", free_spot_spawn_template("in_3d"), CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] in a free spot in [i]{inside}[/i], under [i]{parent}[/i]", "The same row in three dimensions, with the gap measured in metres: one copy somewhere inside a box or a sphere you drew that nothing is already standing in, and nothing at all when there is nowhere left. A skipped spawn raises this node's spawn_skipped signal with the scene it could not place.", "Node3D").param_built(_scene_param()).param_built(_name_param()).param_built(_free_inside_param("$SpawnBox", "CollisionShape3D holding a BoxShape3D or a SphereShape3D, or the Area3D around it")).param_built(_clear_of_param()).param_built(_gap_param("1.0", "metres")).param_built(_tries_param()).param_built(_parent_param()))
 	# The other half of the skip, and a plain signal on purpose: the sheet declares it, the spawn row
 	# raises it, and this connects to it. Nothing here is special machinery.
@@ -319,12 +318,20 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 
 ## The three statements a copy of THIS node's own scene is: read the file the node came out of,
-## place the copy relative to the parent it is about to join, and hand the parenting to the next
-## idle moment. The same three the shipped safe spawn writes, with `scene_file_path` where its scene
-## field goes - which is why an opened file holding this shape reads back as this row.
+## hand the parenting to the next idle moment, and put the copy where the row says once it has a
+## parent to be somewhere relative to.
+##
+## THE PLACE IS SET DEFERRED, and that is the one thing this row does not copy from the shipped
+## safe spawn beside it. That row writes `{name}.position = {at}` before the add, which is a place
+## relative to the parent, and its own words say so. The field here opens on `global_position`, so
+## the same spelling would land the copy at twice the spawner's offset the moment Under was
+## anything but the world root - a boss that splits would throw its halves further out with every
+## split. A deferred set is booked on the same queue as the add and after it, so the copy is in the
+## tree by the time the place is written, and a world point means the world.
 static func self_copy_template() -> String:
-	return "var {name} = load(scene_file_path).instantiate()\n{name}.position = {at}\n" \
-		+ "{parent}.call_deferred(\"add_child\", {name})"
+	return "var {name} = load(scene_file_path).instantiate()\n" \
+		+ "{parent}.call_deferred(\"add_child\", {name})\n" \
+		+ "{name}.set_deferred(\"global_position\", {at})"
 
 
 ## The spawn that may not happen, with `query` naming which of the two free-spot calls it asks. The
@@ -338,8 +345,8 @@ static func free_spot_spawn_template(query: String) -> String:
 		+ "\t\temit_signal(&\"%s\", {scene})\n" % SKIPPED_SIGNAL \
 		+ "else:\n" \
 		+ "\t{name} = {scene}.instantiate()\n" \
-		+ "\t{name}.position = {name}_spot\n" \
-		+ "\t{parent}.call_deferred(\"add_child\", {name})"
+		+ "\t{parent}.call_deferred(\"add_child\", {name})\n" \
+		+ "\t{name}.set_deferred(\"global_position\", {name}_spot)"
 
 
 ## The random point inside a 2D collision shape, with the node written wherever `slot` says - ONE
@@ -401,9 +408,15 @@ static func formation_places_3d() -> Dictionary:
 
 ## The whole formation sentence, as the run of statements it emits. The loop is the same for every
 ## shape and every timing; `places` is what changes with the shape, and the last two lines are what
-## changes with the timing - the deferred spelling places BEFORE it parents, for the reason the
-## shipped Spawn A Copy Safely states: a copy that is not in a tree yet has nothing for a global
-## position to be global to.
+## changes with the timing.
+##
+## BOTH TIMINGS PUT THE COPY IN THE SAME PLACE, which takes two spellings to say. Every formation
+## shape answers in the WORLD - a ring around `global_position`, a point handed back through
+## `to_global` - so both branches write that world point into `global_position` rather than into
+## the parent-relative `position`. Now can write it outright, because the copy is in the tree by
+## then; later books it with `set_deferred`, on the same queue as the parenting and after it, so
+## the copy has a parent by the time the place is written. Writing a world point into `position`
+## instead landed the whole wave at twice the spawner's offset under any parent but the root.
 static func formation_template(places: Dictionary, order: Array[String]) -> String:
 	var branches: String = ""
 	for word: String in order:
@@ -414,7 +427,7 @@ static func formation_template(places: Dictionary, order: Array[String]) -> Stri
 		+ "\t{name}.add_to_group({crowd}, true)\n" \
 		+ "\tvar {name}_place = " + branches + "\n" \
 		+ "\t{?when=" + WHEN_NOW + "}{parent}.add_child({name})\n\t{name}.global_position = {name}_place{/when}" \
-		+ "{?when=" + WHEN_LATER + "}{name}.position = {name}_place\n\t{parent}.call_deferred(\"add_child\", {name}){/when}"
+		+ "{?when=" + WHEN_LATER + "}{parent}.call_deferred(\"add_child\", {name})\n\t{name}.set_deferred(\"global_position\", {name}_place){/when}"
 
 
 ## Which way a 2D copy is turned, one line per facing word. Every one of them is an assignment to the

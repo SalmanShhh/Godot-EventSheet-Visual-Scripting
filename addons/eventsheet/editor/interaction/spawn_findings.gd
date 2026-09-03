@@ -16,6 +16,9 @@
 #   no scene file to copy        - a row that copies the scene this node came from, in a script that
 #                                 belongs to no scene. There is no file to load, so the copy never
 #                                 appears and nothing says why.
+#   listening for nothing        - an On Spawn Skipped event in a sheet that never declares the
+#                                 signal. The handler is written, the connect line cannot be, and the
+#                                 event looks finished while never running once.
 #
 # NOTHING IS STORED. Every finding is derived from the rows, so a fixed sheet stops reporting with
 # nothing to clean up. A sheet that never spawns and never destroys gets no findings at all - the
@@ -44,6 +47,7 @@ const KIND_MAYBE_FREED := "maybe-freed-reference"
 const KIND_SPAWNS_ITSELF := "spawns-itself"
 const KIND_FREED_STILL_BOOKED := "freed-still-booked"
 const KIND_NO_SCENE_FILE := "no-scene-file"
+const KIND_SKIP_NOT_DECLARED := "skip-signal-not-declared"
 
 ## The one-click repairs a note offers. "" on a finding whose repair is a decision rather than a
 ## step - a scene that spawns itself is a design question, and no rewrite can answer it.
@@ -111,6 +115,13 @@ const SELF_COPY_ACE_IDS: PackedStringArray = ["SpawnCopyOfSelf", "SpawnCopyOfSel
 ## guard protects.
 const SELF_GUARDING_ACE_IDS: PackedStringArray = ["DestroyNow", "DestroyAfterSeconds", "FadeOutAndDestroy"]
 
+## The trigger that listens for a spawn nobody had room for, and the signal it listens to. The signal
+## is one the SHEET declares - that is the whole design, and it is also the thing that can be left
+## undone: the handler is written either way and the connect line is not, so the event simply never
+## runs and no line is wrong.
+const SKIPPED_TRIGGER_ID := "OnSpawnSkipped"
+const SKIPPED_SIGNAL_NAME := "spawn_skipped"
+
 ## The words a sheet has to say before any of this is asked of it. A sheet that neither parents a
 ## node nor frees one cannot earn a single finding here, and a project full of them should not pay
 ## to have that proved row by row.
@@ -124,6 +135,10 @@ static func findings(sheet: EventSheetResource, scene_path: String = "") -> Arra
 	var found: Array[Dictionary] = []
 	if sheet == null:
 		return found
+	# Asked ahead of the gate below, because this is the one rule about a TRIGGER rather than about a
+	# row: a sheet that only listens for a skipped spawn says none of the spawning words and would be
+	# turned away at the door by a gate that reads actions.
+	_listens_for_a_signal_nobody_declares(sheet, found)
 	var rows: Array[Dictionary] = row_contexts(sheet)
 	if not _says_any_of_the_words(rows):
 		return found
@@ -131,7 +146,7 @@ static func findings(sheet: EventSheetResource, scene_path: String = "") -> Arra
 	_maybe_freed_reference(sheet, rows, found)
 	_spawns_itself(rows, scene_path, found)
 	_freed_but_still_booked(rows, found)
-	_copies_a_scene_it_came_from(rows, scene_path, found)
+	_copies_a_scene_it_came_from(sheet, rows, scene_path, found)
 	return found
 
 
@@ -300,7 +315,8 @@ static func _spawns_itself(rows: Array[Dictionary], scene_path: String,
 			continue
 		# A row that copies the node's OWN scene always names this scene - that is the whole of what
 		# it is - so it is asked about by id rather than by the scene field it does not have.
-		if not SELF_COPY_ACE_IDS.has(str(context.get("ace_id", ""))) 				and not _names_scene(str(context.get("scene", "")), own_scene):
+		if not SELF_COPY_ACE_IDS.has(str(context.get("ace_id", ""))) \
+				and not _names_scene(str(context.get("scene", "")), own_scene):
 			continue
 		found.append(_finding(KIND_SPAWNS_ITSELF, "error", context.get("event") as EventRow,
 			own_scene.get_file(),
@@ -343,15 +359,69 @@ static func _freed_but_still_booked(rows: Array[Dictionary], found: Array[Dictio
 		freed_in_event.erase(key)
 
 
+## An On Spawn Skipped event in a sheet that never declares the signal it listens to. The trigger is
+## deliberately a PLAIN signal - the spawn row raises it, the sheet declares it, and both halves are
+## ordinary Godot - which is what makes this the one way it can be half done: the handler is written
+## whatever happens, but a connect line can only be written for a signal the sheet has, so the event
+## sits in the file looking finished and never runs once. Nothing is wrong enough to be an error, and
+## nothing anywhere says it, which is exactly the shape of a note.
+static func _listens_for_a_signal_nobody_declares(sheet: EventSheetResource,
+		found: Array[Dictionary]) -> void:
+	var listening: Array[EventRow] = []
+	_collect_skip_listeners(sheet.events, listening)
+	if listening.is_empty() or _declares_the_skip_signal(sheet.events):
+		return
+	for event_row: EventRow in listening:
+		found.append(_finding(KIND_SKIP_NOT_DECLARED, "warning", event_row, SKIPPED_SIGNAL_NAME,
+			EventSheetL10n.translate("This listens for %s, and the sheet never declares it, so nothing ever reaches this event. Add a signal block saying %s(scene) above it.") % [
+				SKIPPED_SIGNAL_NAME, SKIPPED_SIGNAL_NAME],
+			"", "", {}))
+
+
+## The events that listen for a skipped spawn, groups walked through. Kept apart from the general row
+## walk because that walk is about ACTIONS and this question is about the trigger on the event itself
+## - an event with no actions in it yet still listens, and is still dead.
+static func _collect_skip_listeners(items: Array, into: Array[EventRow]) -> void:
+	for item: Variant in items:
+		if item is EventGroup:
+			_collect_skip_listeners(EventSheetGroupFacts.children(item as EventGroup), into)
+			continue
+		var event_row: EventRow = item as EventRow
+		if event_row != null and str(event_row.trigger_id) == SKIPPED_TRIGGER_ID:
+			into.append(event_row)
+
+
+## True when the sheet declares the signal somewhere. A signal block is a top-level row, but it is
+## walked the same way for the same reason the listeners are: a sheet folded into groups is still
+## the sheet that declares it.
+static func _declares_the_skip_signal(items: Array) -> bool:
+	for item: Variant in items:
+		if item is EventGroup:
+			if _declares_the_skip_signal(EventSheetGroupFacts.children(item as EventGroup)):
+				return true
+			continue
+		var declared: SignalRow = item as SignalRow
+		if declared != null and str(declared.signal_name).strip_edges() == SKIPPED_SIGNAL_NAME:
+			return true
+	return false
+
+
 ## A row that copies the scene this node came from, in a sheet whose script belongs to NO scene. The
 ## row reads `scene_file_path`, which Godot fills in for anything instanced from a `.tscn` and leaves
 ## empty for a node somebody built in code - so the line loads nothing and the copy never appears.
 ## Nothing about that is visible in the editor, which is why it is a finding rather than a run-time
 ## surprise. A sheet nobody passed a scene for is not asked, because "no scene" would then mean
 ## "nobody looked" rather than "there is none".
-static func _copies_a_scene_it_came_from(rows: Array[Dictionary], scene_path: String,
-		found: Array[Dictionary]) -> void:
+static func _copies_a_scene_it_came_from(sheet: EventSheetResource, rows: Array[Dictionary],
+		scene_path: String, found: Array[Dictionary]) -> void:
 	if not scene_path.strip_edges().is_empty():
+		return
+	# AN EMPTY SCENE PATH IS TWO DIFFERENT ANSWERS, and only one of them is this finding. "This
+	# script is on no scene" is the finding; "nobody asked the scene index about this sheet" is not,
+	# and a sheet that is not a file on disk - anything held as a resource rather than opened from a
+	# script - is always the second. Without this the note appeared under every self-copy row in every
+	# such sheet, which is a warning about a fact the reader was never told.
+	if sheet == null or str(sheet.external_source_path).strip_edges().is_empty():
 		return
 	for context: Dictionary in rows:
 		if not SELF_COPY_ACE_IDS.has(str(context.get("ace_id", ""))):

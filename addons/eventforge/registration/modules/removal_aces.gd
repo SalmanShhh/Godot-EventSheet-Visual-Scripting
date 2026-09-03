@@ -37,8 +37,15 @@
 # wants them handed back to the pool that made them, to be given out again - and a game that does not
 # pool anything wants exactly what Destroy already does. Which of the two a node is, is written ON
 # the node: a pool stamps every copy it hands out, so the retire verbs ask the node rather than
-# asking the sheet to remember. No pool, or no stamp, and the line frees, which is why Retire is
-# always a safe swap for Destroy and never the other way round.
+# asking the sheet to remember. No pool, or no stamp, and the line frees, which is why Retire is a
+# swap for Destroy and never the other way round.
+#
+# AND WHAT IT TAKES FOR THAT SWAP TO BE SAFE, because it is not free. A pool takes a node back by
+# REPARENTING it, and Godot refuses a reparent while the physics server is flushing - which is the
+# whole of the collision handler a bullet is retired in. So the runtime file BOOKS the handing back
+# for the next idle moment, exactly as `queue_free()` books a deletion for the end of the frame:
+# both halves of the verb leave the node in the world for the rest of the event, and neither can
+# raise an error from inside a callback. A node that is retired twice goes back once.
 #
 # The three verbs are the three above, WORD for word, differing only in the call at the end - now,
 # after a wait, after a fade - because the thing a reader needs to know is still WHEN it happens.
@@ -46,6 +53,13 @@
 # nor a pool cares how many axes it has. The fade is the one that cannot be: fading a 2D thing walks
 # `modulate:a` down to nothing and fading a 3D one walks `transparency` up to one, which is two
 # lines and therefore two rows.
+#
+# AND THE FADE PUTS THE THING BACK BEFORE IT LETS GO OF IT. A destroyed node's transparency is
+# nobody's business, but a POOLED one is handed out again exactly as it was parked - the pool wakes
+# a node, it does not rebuild it - so a copy that went back invisible comes out invisible and every
+# later spawn of it is a bug with no line to point at. The row therefore writes the restore itself,
+# on the line above the retire and in the sheet where a reader can see it, which is this module's
+# rule about waits applied to the one property the row moved.
 #
 # WHY THE POOL IS LOOKED UP AT RUN TIME. It is an autoload, so a template naming it would put an
 # identifier into every generated script that only parses in a project which installed the pool
@@ -74,6 +88,10 @@ const CATEGORY: String = "Destroy"
 ## Color, so a sprite that is already tinted fades from ITS colour instead of snapping to white on
 ## the first frame of the tween.
 const FADE_PROPERTY: String = "modulate:a"
+
+## The same property as a real write rather than as a tween's path, which is what the restore line
+## needs: a tween takes `modulate:a` as text and an assignment takes `modulate.a` as code.
+const FADE_RESTORE: String = "modulate.a"
 
 ## The same walk in three dimensions. A Node3D has no modulate; what it has is `transparency`, which
 ## runs the other way - 0 is solid and 1 is gone - so the twin walks UP to one where the 2D row walks
@@ -115,17 +133,28 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── The same three, without throwing the thing away ────────────────────────────────
 	# One call each, and the call decides for itself: a node a pool stamped goes back to that pool,
 	# and everything else is freed exactly as Destroy Now frees it.
-	descriptors.append(F.act("Retire", "Retire", "%s({object})" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] now", "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Safe to run twice: something already on its way out is left alone.").param_built(_retired_object_param()).featured())
+	descriptors.append(F.act("Retire", "Retire", "%s({object})" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] now", "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Like Destroy Now, the object is still there for the rest of this event: a destroy lands at the end of the frame and a handing back lands on the next idle moment, which is what makes this row safe inside a collision handler. Safe to run twice - something already on its way out, or already back in its pool, is left alone.").param_built(_retired_object_param()).featured())
 	# The timer form. Same one-shot scene-tree timer the destroy twin uses, with the retiring call
 	# bound to the object instead of the object's own queue_free hung off it - so it still books
 	# nothing, blocks nothing and needs no bookkeeping.
-	descriptors.append(F.act("RetireAfterSeconds", "Retire After Seconds", "get_tree().create_timer({seconds}).timeout.connect(%s.bind({object}))" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] after {seconds}s", "Retires the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. Whether the object goes back to a pool or is destroyed is decided when the wait ends, which is the moment that knows.").param_built(_retired_object_param()).param_built(_after_param()))
-	# Fade, wait, retire - with the guard the wait needs written into the row, exactly as the destroy
-	# twin writes it. The await is a real gap in game time and the row says so.
-	descriptors.append(F.act("FadeOutAndRetire", "Fade Out Then Retire", "await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY + "if is_instance_valid({object}):\n\t%s({object})" % RETIRE_CALL, CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it", "Fades the object's transparency to nothing over a number of seconds and then retires it - back to its pool, or destroyed. The event WAITS here, so the rows after this one run once the fade has finished, and because that wait is a real gap the row asks whether the object is still there before touching it.").param_built(_retired_object_param()).param_built(_over_param()))
+	#
+	# AND THE ONE THING THAT IS NOT TRUE OF THE DESTROY TWIN. Godot drops a connection when the
+	# object at the far end of it is freed, which is what makes "destroy in two seconds" need no
+	# bookkeeping. A POOLED object is never freed, so nothing is dropped: a copy that goes back to
+	# its pool early and is handed out again inside the wait is retired by this timer in the middle of
+	# its NEXT life. The row's own words say so, because no line here can know which life it is in.
+	descriptors.append(F.act("RetireAfterSeconds", "Retire After Seconds", "get_tree().create_timer({seconds}).timeout.connect(%s.bind({object}))" % RETIRE_CALL, CATEGORY, "retire [i]{object}[/i] after {seconds}s", "Retires the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. Whether the object goes back to a pool or is destroyed is decided when the wait ends, which is the moment that knows. One thing to watch on a POOLED object: it is never destroyed, so a copy that goes back to its pool before the wait ends and is spawned again inside it will be retired by this timer in the middle of that second life. Use Retire on its own where a copy can be retired early.").param_built(_retired_object_param()).param_built(_after_param()))
+	# Fade, wait, put it back, retire - with the guard the wait needs written into the row, exactly as
+	# the destroy twin writes it, and the restore beside it because a pooled object is handed out
+	# again wearing whatever this row left on it. Hosted on CanvasItem: the restore is a real property
+	# write rather than a tween's string path, so the row belongs where `modulate` does.
+	descriptors.append(F.act("FadeOutAndRetire", "Fade Out Then Retire", "await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY + "if is_instance_valid({object}):\n\t{object}.%s = 1.0\n\t%s({object})" % [FADE_RESTORE, RETIRE_CALL], CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it", "Fades the object's transparency to nothing over a number of seconds and then retires it - back to its pool, or destroyed. The event WAITS here, so the rows after this one run once the fade has finished, and because that wait is a real gap the row asks whether the object is still there before touching it. The line above the retire puts the transparency back: a pool hands a copy out again exactly as it was parked, so a copy that went back invisible would come out invisible.", "CanvasItem").param_built(_retired_object_param()).param_built(_over_param()))
 	# The 3D twin, which exists because the LINE is different: a Node3D has no modulate, and the
-	# property that hides one runs from solid to gone rather than the other way about.
-	descriptors.append(F.act("FadeOutAndRetire3D", "Fade Out Then Retire (3D)", "await {object}.create_tween().tween_property({object}, \"%s\", %s, {seconds}).finished\n" % [FADE_PROPERTY_3D, FADE_TARGET_3D] + "if is_instance_valid({object}):\n\t%s({object})" % RETIRE_CALL, CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it (3D)", "The same fade and retire on a 3D object. A Node3D has no modulate to walk down, so this walks its transparency up instead - 0 is solid and 1 is gone - which is the property a MeshInstance3D and everything else drawn in the world already carries. The event waits for the fade, and asks whether the object is still there before touching it.").param_built(_retired_object_param()).param_built(_over_param()))
+	# property that hides one runs from solid to gone rather than the other way about. Hosted on
+	# GeometryInstance3D because that is the class `transparency` is declared on - a CharacterBody3D
+	# has no such property, and a tween aimed at one on a body returns nothing and takes the event
+	# with it. The thing that fades in three dimensions is the mesh, so the row is offered on the mesh.
+	descriptors.append(F.act("FadeOutAndRetire3D", "Fade Out Then Retire (3D)", "await {object}.create_tween().tween_property({object}, \"%s\", %s, {seconds}).finished\n" % [FADE_PROPERTY_3D, FADE_TARGET_3D] + "if is_instance_valid({object}):\n\t{object}.%s = 0.0\n\t%s({object})" % [FADE_PROPERTY_3D, RETIRE_CALL], CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it (3D)", "The same fade and retire on a 3D object. A Node3D has no modulate to walk down, so this walks its transparency up instead - 0 is solid and 1 is gone. That property belongs to what is DRAWN rather than to what moves: point Object at the MeshInstance3D (or another GeometryInstance3D), not at the body it hangs under, or the fade has nothing to walk. The line above the retire puts the transparency back, because a pool hands a copy out again exactly as it was parked.", "GeometryInstance3D").param_built(_retired_object_param()).param_built(_over_param()))
 
 	# ── Hearing about it ───────────────────────────────────────────────────────────────
 	# One signal, because both retirements pass through it: a pool takes a node back by removing it

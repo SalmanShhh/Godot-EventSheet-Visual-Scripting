@@ -110,8 +110,12 @@ static func _test_the_timing_changes_the_last_two_lines() -> bool:
 		immediate.begins_with("var wave_scene = Enemy\nfor wave_index in range(6):\n"), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "added now, the copy is placed after it is in the tree",
 		immediate.ends_with("\tself.add_child(wave)\n\twave.global_position = wave_place"), true) and passed
-	passed = SUPPORT.check(TEST_NAME, "added later, the copy is placed before it is handed over",
-		deferred.ends_with("\twave.position = wave_place\n\tself.call_deferred(\"add_child\", wave)"), true) and passed
+	# The world point goes into global_position in BOTH branches, and later has to book that too:
+	# a deferred set runs after the deferred add on the same queue, so the copy has a parent by
+	# the time its place is written. Writing the world point into `position` instead put the whole
+	# wave at twice the spawner's offset under any parent but the root.
+	passed = SUPPORT.check(TEST_NAME, "added later, the copy is handed over and then placed on the same queue",
+		deferred.ends_with("\tself.call_deferred(\"add_child\", wave)\n\twave.set_deferred(\"global_position\", wave_place)"), true) and passed
 	# The one thing a reader of the collapsed text cannot see: that the OTHER branch is gone rather
 	# than merely further down.
 	passed = SUPPORT.check(TEST_NAME, "the deferred spelling writes no immediate add at all",

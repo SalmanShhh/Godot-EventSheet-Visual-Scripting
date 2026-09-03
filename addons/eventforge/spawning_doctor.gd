@@ -3,7 +3,8 @@
 # Every check here describes a crash, a hang or a silence that the editor is perfectly happy with:
 # a node parented while the physics server is flushing, a reference to something that may already be
 # freed, a scene whose sheet spawns that same scene on creation, a wait booked against a node an
-# earlier row in the same event removed, and a copy of a scene the node never came from.
+# earlier row in the same event removed, a copy of a scene the node never came from, and an event
+# listening for a signal the sheet never declares.
 #
 # All of them are about the ROWS, so they are read out of the project's scripts - opened as sheets in
 # memory, measured, and dropped. What each of them MEANS lives in EventSheetSpawnFindings, which is
@@ -30,6 +31,7 @@ const CHECK_MAYBE_FREED := "spawning-maybe-freed"
 const CHECK_SELF_SPAWN := "spawning-spawns-itself"
 const CHECK_STILL_BOOKED := "spawning-freed-still-booked"
 const CHECK_NO_SCENE_FILE := "spawning-no-scene-file"
+const CHECK_SKIP_NOT_DECLARED := "spawning-skip-not-declared"
 
 ## Which check id each finding reports as. One table, so the note on the row and the line in the
 ## report are the same finding under two roofs.
@@ -39,6 +41,7 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetSpawnFindings.KIND_SPAWNS_ITSELF: CHECK_SELF_SPAWN,
 	EventSheetSpawnFindings.KIND_FREED_STILL_BOOKED: CHECK_STILL_BOOKED,
 	EventSheetSpawnFindings.KIND_NO_SCENE_FILE: CHECK_NO_SCENE_FILE,
+	EventSheetSpawnFindings.KIND_SKIP_NOT_DECLARED: CHECK_SKIP_NOT_DECLARED,
 }
 
 ## The cheap first questions asked of a script's TEXT, one per rule. Reading the rows of a script
@@ -67,6 +70,11 @@ const CREATED_WORD := "_ready"
 ## writes no `add_child(` of its own - it defers the parenting - so a script whose only spawning is a
 ## self copy would otherwise weigh nothing and never be opened.
 const OWN_SCENE_WORD := "load(scene_file_path)"
+
+## The handler an On Spawn Skipped event compiles to. Its own word for the same reason as the one
+## above and one more: a sheet that only LISTENS for a skipped spawn writes no spawning line at all,
+## so nothing else in this pre-read would ever give it a weight.
+const SKIP_HANDLER_WORD := "_on_spawn_skipped"
 
 ## What a function body begins with at the top level of a file. The pre-read splits on it and parses
 ## nothing: a body is the lines from one of these to the next.
@@ -183,6 +191,8 @@ static func evidence(source: String) -> int:
 		if body.contains(MAKING_WORD) and body.contains(CREATED_WORD):
 			weight += 2
 		if body.contains(OWN_SCENE_WORD):
+			weight += 1
+		if body.contains(SKIP_HANDLER_WORD):
 			weight += 1
 	# The maybe-freed rule is the one that SPANS functions - a node stored in one and read in another
 	# - so it is asked of the whole file. What narrows it is the declaration: only a member the file

@@ -74,6 +74,11 @@ const RUN_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/spawn_run_lift.gd"),
 ]
 
+## The spawn runs again, named on its own because the file is told which dimension it is reading
+## before the walk starts - the one fact its two same-in-both-dimensions shapes cannot get from the
+## line. By path, like every other name here, so the importer never waits on the class cache.
+const SpawnRunLift := preload("res://addons/eventforge/importer/spawn_run_lift.gd")
+
 ## The undoable family again, named on its own because the statement loop asks it a second question
 ## the run seam has no shape for: where the gesture opened at this line is committed.
 const UndoableEditLift := preload("res://addons/eventforge/importer/undoable_edit_lift.gd")
@@ -326,6 +331,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# answer), so the guard the compiler wrote in front of each event can be taken back off.
 	_note_group_guards(source)
 	_lift_host_class = str(sheet.host_class).strip_edges()
+	# And which dimension the spawn runs in this file are about. A line formation and a copy of the
+	# node's own scene are the same characters in both dimensions, so the run table holds one entry
+	# for each and the class the file extends is what says which row a reader is shown.
+	SpawnRunLift.note_host_class(_lift_host_class)
 	# The trailing run: function blocks, their @ace annotation blocks, blank separators,
 	# and a final top-level comment block - EventForge's emission layout in row form.
 	var first_run_index: int = sheet.events.size()
@@ -1837,6 +1846,21 @@ const TREE_HANDLER_TRIGGERS: Dictionary = {
 	"_on_node_left_group": {"signal": "node_removed", "trigger": "OnNodeLeavesGroup"}
 }
 
+## The two rows whose signal alone cannot say which reading a handler is, keyed by the END of the
+## handler name for the same reason TREE_HANDLER_TRIGGERS is keyed by the whole of one. `tree_exiting`
+## is wired by two rows - On Tree Exiting, which is the bare lifecycle question, and On Retired, which
+## is the retirement sentence - and `spawn_skipped` is a signal the SHEET declares, so a table keyed
+## on the bare signal would hand every project's own `spawn_skipped` handler the same words. The
+## handler's own ending says which, because the resolver writes it: `_on_retired` off self,
+## `_on_<node>_retired` off another node, and the same pair for a skipped spawn. Unlike the tree
+## table, the source is left exactly as it was read - both signals are raised by the node the connect
+## line names, so there is nothing global to move it to.
+const OWN_SIGNAL_HANDLER_TRIGGERS: Dictionary = {
+	"_retired": {"signal": "tree_exiting", "trigger": "OnRetired"},
+	"_spawn_skipped": {"signal": "spawn_skipped", "trigger": "OnSpawnSkipped"}
+}
+
+
 ## The answers a row calls BY NAME, by the exact header each compiles to: the two endings of an Ask,
 ## and the three an unpack raises as it walks an archive. Plain functions rather than signal handlers
 ## - the emitted line calls them - so they lift from the header alone, the way a lifecycle callback
@@ -1850,6 +1874,19 @@ const ASK_ANSWER_TRIGGERS: Dictionary = {
 	"func _on_unpack_refused(entry: String, reason: String) -> void:": "OnUnpackRefused",
 	"func _on_unpack_finished(entries: int, bytes: int) -> void:": "OnUnpackFinished"
 }
+
+
+## The trigger a handler name and a signal say together, or "" when the pair says nothing. A handler
+## has to be one the resolver could have written - it opens on `_on` - and end on the word the row is
+## named for, which is what keeps a project's own `_retired` helper out of it.
+static func _own_signal_trigger(handler: String, signal_name: String) -> String:
+	if not handler.begins_with("_on"):
+		return ""
+	for ending: String in OWN_SIGNAL_HANDLER_TRIGGERS:
+		var entry: Dictionary = OWN_SIGNAL_HANDLER_TRIGGERS[ending] as Dictionary
+		if handler.ends_with(ending) and str(entry.get("signal", "")) == signal_name:
+			return str(entry.get("trigger", ""))
+	return ""
 
 
 ## One `<something>.<signal>.connect(<handler>)` / `<something>.connect("<signal>", <handler>)` line
@@ -2257,6 +2294,11 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# a leftover path would have emission reach for get_node("multiplayer").
 			trigger_id = str(EventForgeMultiplayerLift.SIGNAL_TRIGGERS[signal_name])
 			trigger_source = TriggerResolver.MULTIPLAYER_SOURCE
+		elif _own_signal_trigger(header_match.get_string(1), signal_name) != "":
+			# A retirement, or a spawn that found no room. Both are ordinary connects on the node the
+			# line names, so nothing is moved: only the trigger id changes, from the reading the bare
+			# signal would have given to the one the handler's own name says it is.
+			trigger_id = _own_signal_trigger(header_match.get_string(1), signal_name)
 		elif CORE_SIGNAL_TRIGGERS.has(signal_name):
 			trigger_id = str(CORE_SIGNAL_TRIGGERS[signal_name])
 		else:
