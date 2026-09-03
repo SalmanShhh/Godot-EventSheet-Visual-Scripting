@@ -32,9 +32,15 @@
 # in the help words a reader meets on the row, and the Doctor's ship-it section says it once more for
 # a project whose rendering method is not Forward+.
 #
+# AND IT REGISTERS AFTER THE WORLD'S OWN WORDS, which is why the file is named for what it holds
+# rather than for the resource it writes through. Module discovery is sorted by file name, and that
+# order is what a node's shelf in the picker is listed in - so a WorldEnvironment must still open with
+# the world's own look (saturation, fog, the sky) and carry the lens after it, rather than leading
+# with an exposure row a reader was not looking for.
+#
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant).
 @tool
-class_name EventForgeCameraAttributesACEs
+class_name EventForgeFocusAndExposureACEs
 extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")

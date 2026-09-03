@@ -321,9 +321,11 @@ static func _test_the_picker_shelves() -> bool:
 		shelves.get("Darkness in this scene: Level   CanvasModulate", PackedStringArray()),
 		PackedStringArray(["DarknessSet", "DarknessFade"])) and ok
 	# The atmosphere shelf is the whole WorldEnvironment vocabulary: the environment and sky words in
-	# registration order, then the eight frozen node-scoped World rows they landed beside. It is
-	# pinned by its ENDS rather than as a ninety-row wall, because the wall is a list nobody reads
-	# and the two things that must never move are what it opens with and the frozen tail it keeps.
+	# registration order, then the lens words a WorldEnvironment carries because it holds a set of
+	# camera attributes as well as an environment, then the eight frozen node-scoped World rows they
+	# all landed beside. It is pinned by its ENDS rather than as a ninety-row wall, because the wall
+	# is a list nobody reads and the two things that must never move are what it opens with and the
+	# frozen tail it keeps.
 	var atmosphere: PackedStringArray = shelves.get(
 		"Atmosphere in this scene: World   WorldEnvironment", PackedStringArray())
 	var frozen_tail: PackedStringArray = PackedStringArray()
@@ -333,11 +335,11 @@ static func _test_the_picker_shelves() -> bool:
 		PackedStringArray(["WorldFogOn", "WorldFogOff", "WorldGlowOn", "WorldGlowOff",
 			"WorldSetFogThickness", "WorldSetAmbientLight", "WorldFadeGlow",
 			"WorldOwnEnvironment"])) and ok
-	return _check("and opens with the world's own words, the sky's last of them",
+	return _check("and opens with the world's own words, the lens last of them",
 		PackedStringArray([
 			"" if atmosphere.is_empty() else atmosphere[0],
 			"" if atmosphere.size() < 9 else atmosphere[atmosphere.size() - 9]]),
-		PackedStringArray(["EnvSetSaturation", "SkyUsePanorama"])) and ok
+		PackedStringArray(["EnvSetSaturation", "CamIsAutoExposureWorldOn"])) and ok
 
 
 # ── the walk ────────────────────────────────────────────────────────────────────

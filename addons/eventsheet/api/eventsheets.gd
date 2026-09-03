@@ -1930,6 +1930,13 @@ const MODULE_GUIDE_OVERRIDES := {
 	"keys_doors": "Working-In-3D",
 	"audio_server": "Sound-And-Music",
 	"camera_fov": "Cameras-Graphics-And-Screenshots",
+	# What the LENS lets in and what it keeps sharp is the same page's subject one step closer in: a
+	# reader who wants the background to go soft behind the speaker is asking what the player is
+	# looking at, not what a camera resource is called. And a whole world saved as a look file is that
+	# question one step further out - what the picture is made of - so both land there rather than
+	# opening two pages for one subject.
+	"focus_and_exposure": "Cameras-Graphics-And-Screenshots",
+	"world_look": "Cameras-Graphics-And-Screenshots",
 	# The two camera shelves and the view knobs are the same reader's question as the lens and the
 	# screenshot rows already on that page - what the player is looking at, and how it reaches the
 	# screen - so all three land there rather than opening three pages for one subject.

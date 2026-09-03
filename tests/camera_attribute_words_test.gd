@@ -18,7 +18,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 const W := preload("res://addons/eventforge/registration/camera_attribute_words.gd")
-const MODULE := preload("res://addons/eventforge/registration/modules/camera_attributes_aces.gd")
+const MODULE := preload("res://addons/eventforge/registration/modules/focus_and_exposure_aces.gd")
 
 ## The four lines every camera write opens with, written out here rather than read from the file
 ## under test: a test that builds its expectation from the same constant proves only that a constant
