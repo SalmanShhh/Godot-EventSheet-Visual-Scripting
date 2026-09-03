@@ -22,7 +22,7 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.)"
+	about.text = "Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.) A whole beat of feedback is one row: Moment plays a file of steps - impact, kill, triumph, danger, calm and cut ship beside this pack as starters to edit."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
@@ -515,6 +515,11 @@ static func build() -> bool:
 	fx_block.code = "\n".join(Lib.juice_fx_overlay_lines())
 	sheet.events.append(fx_block)
 
+	# ── Moments: a hit, a kill, a win, a danger, a calm - each one a file of steps ────
+	var moment_block: RawCodeRow = RawCodeRow.new()
+	moment_block.code = "\n".join(_moment_lines())
+	sheet.events.append(moment_block)
+
 	# Per-frame: blink strobe + ghost-trail stamping (a second _process event; the compiler
 	# appends it after the camera mixer above).
 	var tick_extras: EventRow = EventRow.new()
@@ -713,14 +718,35 @@ static func build() -> bool:
 	_default(sheet, "ticker_name", "score")
 	_default(sheet, "value", "0")
 
+	# ── Moments (one row for a whole beat of feedback) ──
+	Lib.append_function(sheet, "moment", "Moment", "Juice", "Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.",
+		[["moment_name", "String"], ["strength", "float"]],
+		"_moment_screen_searched = false\nvar played: Resource = _moment_named(moment_name)\nif played == null:\n\tpush_warning(\"Moment: nothing is called \\\"%s\\\" - define it with Define Moment, or put a moment file of that name in %s.\" % [moment_name, MOMENT_DIRECTORY])\n\treturn\nfor step: Variant in _moment_steps(played):\n\tif step is Dictionary:\n\t\t_play_moment_step(step as Dictionary, strength)",
+		"Moment [b]{moment_name}[/b] at [b]{strength}[/b]")
+	_default(sheet, "moment_name", "impact")
+	_default(sheet, "strength", "1")
+	Lib.append_function(sheet, "define_moment", "Define Moment", "Juice", "Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.",
+		[["moment_name", "String"], ["moment", "Resource"]],
+		"var word: String = moment_name.strip_edges().to_lower()\nif word.is_empty():\n\treturn\nif moment == null:\n\t_moments.erase(word)\n\treturn\n_moments[word] = moment",
+		"Define moment [b]{moment_name}[/b] as [b]{moment}[/b]")
+	_default(sheet, "moment_name", "impact")
+	_param_hint(sheet, "moment", "resource_path")
+
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"flash": "Flash [b]{color}[/b] for [b]{seconds}[/b] s",
 		"hitstop": "Hitstop for [b]{freeze_duration}[/b] s at scale [b]{freeze_scale}[/b]",
 		"shake": "Shake at [b]{strength}[/b]",
 	})
-	Lib.feature_verbs(sheet, ["shake", "hitstop", "flash"])
-	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior")
+	Lib.feature_verbs(sheet, ["shake", "hitstop", "flash", "moment"])
+	if not Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior"):
+		return false
+	# The six starter moments ship beside the pack, because Moment "impact" looks for impact.tres
+	# there. They are files a game is meant to OPEN: retune them in the Inspector, duplicate one
+	# into a moment of its own, delete the ones it does not want. Nothing in the plugin depends on
+	# any of them existing.
+	return Lib.ship_files("juice", "res://eventsheet_addons/juice/juice_behavior",
+		PackedStringArray(["tres"]))
 
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value
@@ -730,6 +756,200 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## The MOMENTS half of the pack: what a moment is made of, where a name is looked up, and the
+## one clamp every step goes through. Split out so build() reads as the shape of the pack.
+##
+## A moment is a FILE - a list of steps, each one a word plus how much and how long - and this is
+## the player for it. Nothing here knows the name of any moment: the six that ship beside the pack
+## are starters a game edits, duplicates or deletes, and Define Moment points a name at any file.
+static func _moment_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"# --- Moments: one felt beat of the game, played from a file ---",
+		"",
+		"## Where the starter moments ship: beside the pack itself, so Moment \"impact\" finds impact.tres with",
+		"## nothing set up at all. They are ordinary files - retune them in the Inspector, rename them,",
+		"## duplicate them, delete them, or leave them where they are and point Define Moment at your own.",
+		"const MOMENT_DIRECTORY: String = \"res://eventsheet_addons/juice/\"",
+		"",
+		"## THE ACCESSIBILITY CEILING, the same one the post stack holds itself to. A player who has asked for",
+		"## no flashing gets the SAME moments - the hit still hits, the win still lands - with every amount",
+		"## they see held under this and every time held over the floor, so nothing a moment plays can strobe.",
+		"## The clamp lives HERE, in the layer that was added, and never inside the verbs this pack shipped",
+		"## first: their bytes are a promise.",
+		"const MOMENT_FLASH_CEILING: float = 0.3",
+		"const MOMENT_FLASH_FLOOR_SECONDS: float = 0.4",
+		"",
+		"## The Engine meta the whole project keeps that answer in - the one the built-in Set No Flashing row",
+		"## writes. A game carrying that row needs nothing else for its moments to obey it.",
+		"const MOMENT_NO_FLASHING_META: StringName = &\"no_flashing\"",
+		"",
+		"## Every word a step may be, in the order a reader meets them: this pack's own effects first, then",
+		"## the two that reach the screen, then the two that drive the post stack.",
+		"const MOMENT_VERBS: PackedStringArray = [\"shake\", \"hitstop\", \"slowmo\", \"flash\", \"punch\", \"zoom\",",
+		"\t\"shockwave\", \"chromatic\", \"pulse\", \"hold\"]",
+		"",
+		"## The step words whose amount is an AMPLITUDE - how much of something a player sees, 0 to 1. Only",
+		"## these are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,",
+		"## a slowmo's time scale and a zoom's percentage are numbers of a different kind, and doubling one of",
+		"## those would not mean twice as much of anything.",
+		"const MOMENT_AMPLITUDE_VERBS: PackedStringArray = [\"shake\", \"flash\", \"punch\", \"shockwave\",",
+		"\t\"chromatic\", \"pulse\", \"hold\"]",
+		"",
+		"## Moments defined by name, shared by every Juice node in the game, because a moment is a fact about",
+		"## the game rather than about one object: Define Moment once at startup and every node's Moment row",
+		"## finds it. A name nothing was defined under falls through to the file of that name beside the pack.",
+		"static var _moments: Dictionary = {}",
+		"",
+		"## The Screen FX layer this game has, once one has been found, and whether this play has looked yet.",
+		"var _moment_screen: CanvasLayer = null",
+		"var _moment_screen_searched: bool = false",
+		"",
+		"## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.",
+		"## A name that answers to neither plays nothing and says so.",
+		"## @ace_hidden",
+		"func _moment_named(called: String) -> Resource:",
+		"\tvar word: String = called.strip_edges().to_lower()",
+		"\tif word.is_empty():",
+		"\t\treturn null",
+		"\tif _moments.has(word):",
+		"\t\treturn _moments[word] as Resource",
+		"\tvar path: String = MOMENT_DIRECTORY + word.replace(\" \", \"_\") + \".tres\"",
+		"\tif ResourceLoader.exists(path):",
+		"\t\tvar found: Resource = load(path)",
+		"\t\t_moments[word] = found",
+		"\t\treturn found",
+		"\treturn null",
+		"",
+		"## A moment's steps, whatever it was made of - the moment resource class, or anything else carrying a",
+		"## `steps` array of the same shape. Read through `get` so this pack never has to name that class, and",
+		"## goes on working in a game that only installed Juice.",
+		"## @ace_hidden",
+		"func _moment_steps(played: Resource) -> Array:",
+		"\tif played == null:",
+		"\t\treturn []",
+		"\tvar steps: Variant = played.get(\"steps\")",
+		"\tif steps is Array:",
+		"\t\treturn steps as Array",
+		"\treturn []",
+		"",
+		"## One step of a moment. Every arm is one of this pack's own verbs or one row of the post stack, so a",
+		"## moment can do nothing a sheet could not have done by hand - it is those same rows, written down.",
+		"## @ace_hidden",
+		"func _play_moment_step(step: Dictionary, strength: float) -> void:",
+		"\tvar word: String = str(step.get(\"verb\", \"\")).strip_edges().to_lower()",
+		"\tvar effect: String = str(step.get(\"effect\", \"\")).strip_edges().to_lower()",
+		"\tvar amount: float = float(step.get(\"amount\", 1.0))",
+		"\tvar seconds: float = maxf(float(step.get(\"seconds\", 0.0)), 0.0)",
+		"	amount = _moment_amount(word, amount, strength)",
+		"	seconds = _moment_seconds(word, seconds)",
+		"\tvar screen: CanvasLayer = _moment_screen_fx()",
+		"\tmatch word:",
+		"\t\t\"shake\":",
+		"\t\t\tshake(amount)",
+		"\t\t\"hitstop\":",
+		"\t\t\thitstop(seconds, clampf(amount, 0.0, 1.0))",
+		"\t\t\"slowmo\":",
+		"\t\t\tslowmo(clampf(amount, 0.0, 1.0), seconds, \"realtime\")",
+		"\t\t\"flash\":",
+		"\t\t\t# The amount is how far the host goes towards the flash colour, so a light hit tints and",
+		"\t\t\t# a heavy one washes out - and the ceiling above means a player who asked for no",
+		"\t\t\t# flashing gets the tint rather than the wash.",
+		"\t\t\tvar tint: Color = Color.from_string(effect, Color.WHITE)",
+		"\t\t\tif host is CanvasItem:",
+		"\t\t\t\ttint = (host as CanvasItem).modulate.lerp(tint, clampf(amount, 0.0, 1.0))",
+		"\t\t\tflash(tint, maxf(seconds, 0.05))",
+		"\t\t\"punch\":",
+		"\t\t\tpunch_scale(amount, maxf(seconds, 0.05))",
+		"\t\t\"zoom\":",
+		"\t\t\tzoom_by_percent(amount, maxf(seconds, 0.05))",
+		"\t\t\"shockwave\":",
+		"\t\t\tif screen != null:",
+		"\t\t\t\tscreen.call(\"shockwave\", _moment_here(), amount)",
+		"\t\t\"chromatic\":",
+		"\t\t\tif screen != null:",
+		"\t\t\t\tscreen.call(\"chromatic_pulse\", amount, maxf(seconds, 0.05))",
+		"\t\t\telse:",
+		"\t\t\t\tchromatic_kick(amount, maxf(seconds, 0.05))",
+		"\t\t\"pulse\":",
+		"\t\t\tif screen != null:",
+		"\t\t\t\tscreen.call(\"pulse_post_effect\", effect, amount, maxf(seconds, 0.05))",
+		"\t\t\telif effect == \"vignette\":",
+		"\t\t\t\tpulse_vignette(amount, Color.BLACK, maxf(seconds, 0.05))",
+		"\t\t\"hold\":",
+		"\t\t\tif screen != null:",
+		"\t\t\t\t# An effect the stack is not holding yet is added at nothing first, so the walk has",
+		"\t\t\t\t# somewhere to start from; one it already holds keeps its place in the order.",
+		"\t\t\t\tif float(screen.call(\"post_strength\", effect)) <= 0.0001:",
+		"\t\t\t\t\tscreen.call(\"add_post_effect\", effect, effect, 0.0)",
+		"\t\t\t\tscreen.call(\"fade_post_strength\", effect, amount, seconds, 0.0)",
+		"\t\t_:",
+		"\t\t\tpush_warning(\"Moment: no step word is called \\\"%s\\\" - the words are %s.\" % [",
+		"\t\t\t\tword, \", \".join(MOMENT_VERBS)])",
+		"",
+		"## What one step's amount really becomes: the strength on the row scales the amounts a PLAYER",
+		"## SEES, and only those - a hitstop's freeze, a slowmo's time scale and a zoom's percentage are",
+		"## numbers of another kind - and the ceiling then holds down what is left. Its own function",
+		"## because it is the fact a reader can check without a screen, a camera or a frame.",
+		"## @ace_hidden",
+		"func _moment_amount(word: String, amount: float, strength: float) -> float:",
+		"	if not MOMENT_AMPLITUDE_VERBS.has(word):",
+		"		return amount",
+		"	return _moment_allowed(amount * maxf(strength, 0.0))",
+		"",
+		"## And what one step's time really becomes: the floor under the same words, for the same reason.",
+		"## @ace_hidden",
+		"func _moment_seconds(word: String, seconds: float) -> float:",
+		"	if not MOMENT_AMPLITUDE_VERBS.has(word):",
+		"		return maxf(seconds, 0.0)",
+		"	return _moment_slowed(seconds)",
+		"",
+		"## Where the moment happened: the object this behaviour is attached to, in world coordinates, so a",
+		"## shockwave rides the thing that caused it instead of the middle of the screen.",
+		"## @ace_hidden",
+		"func _moment_here() -> Vector2:",
+		"\tif host is Node2D:",
+		"\t\treturn (host as Node2D).global_position",
+		"\tif host is Control:",
+		"\t\treturn (host as Control).global_position",
+		"\treturn Vector2.ZERO",
+		"",
+		"## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a",
+		"## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as",
+		"## much and looks wrong wherever the two overlap. Found once per moment and kept; a game with no",
+		"## Screen FX layer falls back to this pack's own overlay for the two effects it can draw.",
+		"## @ace_hidden",
+		"func _moment_screen_fx() -> CanvasLayer:",
+		"\tif _moment_screen != null and is_instance_valid(_moment_screen):",
+		"\t\treturn _moment_screen",
+		"\tif _moment_screen_searched or not is_inside_tree():",
+		"\t\treturn null",
+		"\t_moment_screen_searched = true",
+		"\tfor found: Node in get_tree().get_root().find_children(\"*\", \"CanvasLayer\", true, false):",
+		"\t\tif found.has_method(\"pulse_post_effect\"):",
+		"\t\t\t_moment_screen = found as CanvasLayer",
+		"\t\t\treturn _moment_screen",
+		"\treturn null",
+		"",
+		"## What a step's amount really becomes: held under the ceiling while no flashing is on. ONE function,",
+		"## so no step can be the one that forgot. The effect-strength dial is deliberately NOT applied here -",
+		"## whichever layer draws applies it (the camera mixer for a shake, the post stack for the screen),",
+		"## and applying it twice over would square it.",
+		"## @ace_hidden",
+		"func _moment_allowed(amount: float) -> float:",
+		"\tif bool(Engine.get_meta(MOMENT_NO_FLASHING_META, false)):",
+		"\t\treturn clampf(amount, -MOMENT_FLASH_CEILING, MOMENT_FLASH_CEILING)",
+		"\treturn amount",
+		"",
+		"## And what a step's TIME really becomes: never quicker than the floor while no flashing is on,",
+		"## because a small amplitude arriving ten times a second is still a strobe.",
+		"## @ace_hidden",
+		"func _moment_slowed(seconds: float) -> float:",
+		"\tif bool(Engine.get_meta(MOMENT_NO_FLASHING_META, false)):",
+		"\t\treturn maxf(seconds, MOMENT_FLASH_FLOOR_SECONDS)",
+		"\treturn maxf(seconds, 0.0)"
+	])
 
 
 ## Sets the dropdown options[] on the last-appended ACE's parameter (append_function only sets id+type),
@@ -742,3 +962,12 @@ static func _param_options(sheet: EventSheetResource, param_id: String, choices:
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.options = typed
+
+
+## Sets a UI hint on the last-appended ACE's parameter - what the dialog offers instead of a plain
+## text field. "resource_path" is the file picker a moment file is chosen with.
+static func _param_hint(sheet: EventSheetResource, param_id: String, hint: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.hint = hint

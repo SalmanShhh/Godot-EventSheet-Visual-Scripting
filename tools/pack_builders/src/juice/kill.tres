@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="MomentResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/moment_resource/moment_resource.gd" id="1_moment"]
+
+[resource]
+script = ExtResource("1_moment")
+moment_name = "Kill"
+steps = Array[Dictionary]([{
+"amount": 0.7,
+"effect": "",
+"seconds": 0.0,
+"verb": "shake"
+}, {
+"amount": 0.0,
+"effect": "",
+"seconds": 0.12,
+"verb": "hitstop"
+}, {
+"amount": 1.0,
+"effect": "",
+"seconds": 0.0,
+"verb": "shockwave"
+}, {
+"amount": 0.7,
+"effect": "",
+"seconds": 0.3,
+"verb": "chromatic"
+}, {
+"amount": 0.7,
+"effect": "vignette",
+"seconds": 0.5,
+"verb": "pulse"
+}, {
+"amount": 0.35,
+"effect": "",
+"seconds": 0.25,
+"verb": "slowmo"
+}])

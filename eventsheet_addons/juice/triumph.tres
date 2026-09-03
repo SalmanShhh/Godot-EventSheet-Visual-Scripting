@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MomentResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/moment_resource/moment_resource.gd" id="1_moment"]
+
+[resource]
+script = ExtResource("1_moment")
+moment_name = "Triumph"
+steps = Array[Dictionary]([{
+"amount": 0.8,
+"effect": "bloom",
+"seconds": 0.9,
+"verb": "pulse"
+}, {
+"amount": 0.6,
+"effect": "saturate",
+"seconds": 1.2,
+"verb": "pulse"
+}, {
+"amount": 0.5,
+"effect": "white",
+"seconds": 0.25,
+"verb": "flash"
+}])

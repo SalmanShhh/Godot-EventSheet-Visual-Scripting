@@ -201,6 +201,77 @@ void fragment() {
 }
 """
 
+# --- Moments: one felt beat of the game, played from a file ---
+
+## Where the starter moments ship: beside the pack itself, so Moment "impact" finds impact.tres with
+## nothing set up at all. They are ordinary files - retune them in the Inspector, rename them,
+## duplicate them, delete them, or leave them where they are and point Define Moment at your own.
+const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
+
+## THE ACCESSIBILITY CEILING, the same one the post stack holds itself to. A player who has asked for
+## no flashing gets the SAME moments - the hit still hits, the win still lands - with every amount
+## they see held under this and every time held over the floor, so nothing a moment plays can strobe.
+## The clamp lives HERE, in the layer that was added, and never inside the verbs this pack shipped
+## first: their bytes are a promise.
+const MOMENT_FLASH_CEILING: float = 0.3
+const MOMENT_FLASH_FLOOR_SECONDS: float = 0.4
+
+## The Engine meta the whole project keeps that answer in - the one the built-in Set No Flashing row
+## writes. A game carrying that row needs nothing else for its moments to obey it.
+const MOMENT_NO_FLASHING_META: StringName = &"no_flashing"
+
+## Every word a step may be, in the order a reader meets them: this pack's own effects first, then
+## the two that reach the screen, then the two that drive the post stack.
+const MOMENT_VERBS: PackedStringArray = ["shake", "hitstop", "slowmo", "flash", "punch", "zoom",
+	"shockwave", "chromatic", "pulse", "hold"]
+
+## The step words whose amount is an AMPLITUDE - how much of something a player sees, 0 to 1. Only
+## these are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,
+## a slowmo's time scale and a zoom's percentage are numbers of a different kind, and doubling one of
+## those would not mean twice as much of anything.
+const MOMENT_AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",
+	"chromatic", "pulse", "hold"]
+
+## Moments defined by name, shared by every Juice node in the game, because a moment is a fact about
+## the game rather than about one object: Define Moment once at startup and every node's Moment row
+## finds it. A name nothing was defined under falls through to the file of that name beside the pack.
+static var _moments: Dictionary = {}
+
+## The Screen FX layer this game has, once one has been found, and whether this play has looked yet.
+var _moment_screen: CanvasLayer = null
+var _moment_screen_searched: bool = false
+## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.
+## A name that answers to neither plays nothing and says so.
+## @ace_hidden
+func _moment_named(called: String) -> Resource:
+	var word: String = called.strip_edges().to_lower()
+	if word.is_empty():
+		return null
+	if _moments.has(word):
+		return _moments[word] as Resource
+	var path: String = MOMENT_DIRECTORY + word.replace(" ", "_") + ".tres"
+	if ResourceLoader.exists(path):
+		var found: Resource = load(path)
+		_moments[word] = found
+		return found
+	return null
+## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a
+## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as
+## much and looks wrong wherever the two overlap. Found once per moment and kept; a game with no
+## Screen FX layer falls back to this pack's own overlay for the two effects it can draw.
+## @ace_hidden
+func _moment_screen_fx() -> CanvasLayer:
+	if _moment_screen != null and is_instance_valid(_moment_screen):
+		return _moment_screen
+	if _moment_screen_searched or not is_inside_tree():
+		return null
+	_moment_screen_searched = true
+	for found: Node in get_tree().get_root().find_children("*", "CanvasLayer", true, false):
+		if found.has_method("pulse_post_effect"):
+			_moment_screen = found as CanvasLayer
+			return _moment_screen
+	return null
+
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
 	_noise = FastNoiseLite.new()
@@ -810,6 +881,41 @@ func set_ticker(ticker_name: String, value: float) -> void:
 	_tickers[ticker_name] = value
 	_ticker_targets[ticker_name] = value
 
+## @ace_action
+## @ace_featured
+## @ace_name("Moment")
+## @ace_category("Juice")
+## @ace_description("Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.")
+## @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b]")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment({moment_name}, {strength})")
+func moment(moment_name: String, strength: float) -> void:
+	_moment_screen_searched = false
+	var played: Resource = _moment_named(moment_name)
+	if played == null:
+		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
+		return
+	for step: Variant in _moment_steps(played):
+		if step is Dictionary:
+			_play_moment_step(step as Dictionary, strength)
+
+## @ace_action
+## @ace_name("Define Moment")
+## @ace_category("Juice")
+## @ace_description("Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.")
+## @ace_display_template("Define moment [b]{moment_name}[/b] as [b]{moment}[/b]")
+## @ace_param_hint(moment resource_path)
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.define_moment({moment_name}, {moment})")
+func define_moment(moment_name: String, moment: Resource) -> void:
+	var word: String = moment_name.strip_edges().to_lower()
+	if word.is_empty():
+		return
+	if moment == null:
+		_moments.erase(word)
+		return
+	_moments[word] = moment
+
 ## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
 ## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
 func _zoom_anchored_step(f: float) -> void:
@@ -1042,4 +1148,97 @@ func _fx_update_visibility() -> void:
 			or float(_fx_material.get_shader_parameter("chroma_strength")) > 0.001 \
 			or float(_fx_material.get_shader_parameter("speed_lines")) > 0.001
 
-# Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.)
+## @ace_hidden
+func _moment_steps(played: Resource) -> Array:
+	if played == null:
+		return []
+	var steps: Variant = played.get("steps")
+	if steps is Array:
+		return steps as Array
+	return []
+
+## @ace_hidden
+func _play_moment_step(step: Dictionary, strength: float) -> void:
+	var word: String = str(step.get("verb", "")).strip_edges().to_lower()
+	var effect: String = str(step.get("effect", "")).strip_edges().to_lower()
+	var amount: float = float(step.get("amount", 1.0))
+	var seconds: float = maxf(float(step.get("seconds", 0.0)), 0.0)
+	amount = _moment_amount(word, amount, strength)
+	seconds = _moment_seconds(word, seconds)
+	var screen: CanvasLayer = _moment_screen_fx()
+	match word:
+		"shake":
+			shake(amount)
+		"hitstop":
+			hitstop(seconds, clampf(amount, 0.0, 1.0))
+		"slowmo":
+			slowmo(clampf(amount, 0.0, 1.0), seconds, "realtime")
+		"flash":
+			# The amount is how far the host goes towards the flash colour, so a light hit tints and
+			# a heavy one washes out - and the ceiling above means a player who asked for no
+			# flashing gets the tint rather than the wash.
+			var tint: Color = Color.from_string(effect, Color.WHITE)
+			if host is CanvasItem:
+				tint = (host as CanvasItem).modulate.lerp(tint, clampf(amount, 0.0, 1.0))
+			flash(tint, maxf(seconds, 0.05))
+		"punch":
+			punch_scale(amount, maxf(seconds, 0.05))
+		"zoom":
+			zoom_by_percent(amount, maxf(seconds, 0.05))
+		"shockwave":
+			if screen != null:
+				screen.call("shockwave", _moment_here(), amount)
+		"chromatic":
+			if screen != null:
+				screen.call("chromatic_pulse", amount, maxf(seconds, 0.05))
+			else:
+				chromatic_kick(amount, maxf(seconds, 0.05))
+		"pulse":
+			if screen != null:
+				screen.call("pulse_post_effect", effect, amount, maxf(seconds, 0.05))
+			elif effect == "vignette":
+				pulse_vignette(amount, Color.BLACK, maxf(seconds, 0.05))
+		"hold":
+			if screen != null:
+				# An effect the stack is not holding yet is added at nothing first, so the walk has
+				# somewhere to start from; one it already holds keeps its place in the order.
+				if float(screen.call("post_strength", effect)) <= 0.0001:
+					screen.call("add_post_effect", effect, effect, 0.0)
+				screen.call("fade_post_strength", effect, amount, seconds, 0.0)
+		_:
+			push_warning("Moment: no step word is called \"%s\" - the words are %s." % [
+				word, ", ".join(MOMENT_VERBS)])
+
+## @ace_hidden
+func _moment_amount(word: String, amount: float, strength: float) -> float:
+	if not MOMENT_AMPLITUDE_VERBS.has(word):
+		return amount
+	return _moment_allowed(amount * maxf(strength, 0.0))
+
+## @ace_hidden
+func _moment_seconds(word: String, seconds: float) -> float:
+	if not MOMENT_AMPLITUDE_VERBS.has(word):
+		return maxf(seconds, 0.0)
+	return _moment_slowed(seconds)
+
+## @ace_hidden
+func _moment_here() -> Vector2:
+	if host is Node2D:
+		return (host as Node2D).global_position
+	if host is Control:
+		return (host as Control).global_position
+	return Vector2.ZERO
+
+## @ace_hidden
+func _moment_allowed(amount: float) -> float:
+	if bool(Engine.get_meta(MOMENT_NO_FLASHING_META, false)):
+		return clampf(amount, -MOMENT_FLASH_CEILING, MOMENT_FLASH_CEILING)
+	return amount
+
+## @ace_hidden
+func _moment_slowed(seconds: float) -> float:
+	if bool(Engine.get_meta(MOMENT_NO_FLASHING_META, false)):
+		return maxf(seconds, MOMENT_FLASH_FLOOR_SECONDS)
+	return maxf(seconds, 0.0)
+
+# Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.) A whole beat of feedback is one row: Moment plays a file of steps - impact, kill, triumph, danger, calm and cut ship beside this pack as starters to edit.
