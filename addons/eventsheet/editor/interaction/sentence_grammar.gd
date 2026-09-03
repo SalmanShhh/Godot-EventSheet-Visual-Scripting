@@ -4333,7 +4333,12 @@ static func _engine_property_condition(text: String, context: Dictionary) -> Dic
 			return {}
 		var head: String = subject.split(".", false)[0] if subject.contains(".") else subject
 		if head == "self":
-			head = subject.substr(5).split(".", false)[0]
+			# A bare `self` compared to something is not a property comparison, and `self.` alone has
+			# no head to look up - both read as nothing here rather than as an index past the end.
+			var after_self: PackedStringArray = subject.substr(5).split(".", false)
+			if after_self.is_empty():
+				return {}
+			head = after_self[0]
 		if not is_engine_property(head, context):
 			return {}
 		# Built directly rather than through a template: a comparison has no words to translate, and

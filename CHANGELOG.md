@@ -447,6 +447,13 @@ buys thirteen lines and costs 2,145 readings, so it will not.
   so the next pass through that file starts with it.
 
 
+- **A bare `self` in a comparison no longer indexes past the end.** The engine-property comparison
+  reader took `self == null` apart as `self.` plus a property, and asked for the first word of a
+  property that was not there - six script errors every time the reading dump walked the showcases,
+  and the same six on every open of a sheet with that line. It now reads a bare `self` as no
+  property comparison at all. The reading dump over all 25,883 cells carries the same sha before and
+  after, so no row's words moved; only the console did.
+
 - **The showcase gate is green on both runners.** Its first day on CI it named
   `pin_modes/pin_modes_3d.tscn` as drifted on Linux while the same rebuild was byte-identical on
   Windows: the scene's sun and camera were turned with `rotation_degrees`, which goes through the
