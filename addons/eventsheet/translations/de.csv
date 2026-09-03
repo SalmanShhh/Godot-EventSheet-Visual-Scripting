@@ -6588,205 +6588,197 @@ Fade Out Then Retire (3D),Ausblenden und dann ausmustern (3D)
 On Retired,Beim Ausmustern
 "Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.","Läuft in dem Moment, in dem dieses Objekt ausgemustert wird - an seinen Pool zurückgegeben oder zerstört. Beide gehen durch dieselbe Tür hinaus: ein Pool nimmt einen Knoten zurück, indem er ihn aus dem Baum entfernt, dieses eine Signal wird also genau einmal ausgelöst, welches von beidem auch geschah. Das Objekt ist hier noch gültig, und genau das macht es zum Ort, um loszulassen, was es gehalten hat, es aus einer Liste zu streichen oder jemand anderem zu sagen, dass es weg ist."
 On retired,Beim Ausmustern
-"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.",
-Pick a blend mode by looking at it,
-Drawn by the renderer itself - costs nothing,
-Reads the screen back through a shader - one screen read per pixel this item covers,
-"Draw ""%s"" children as one picture",
-Draw %s's children as one,
-"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.",
-"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.",
-"%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.",
-Let The Target Drift,
-"Gives the camera a dead zone: the thing it follows may wander this far from the middle before the camera moves at all. The numbers are fractions of the view, so 0.2 is a fifth of the screen, and the same slack is used on both sides. This is what stops a platformer camera twitching under every small jump.",
-"Let the target drift {across} across, {down} down",
-"How far the target may drift left or right before the camera follows, as a fraction of the view.",
-Down,
-"How far the target may drift up or down before the camera follows, as a fraction of the view.",
-Follow Tightly,
-"Turns the dead zone off, so the camera keeps its target exactly in the middle. The other half of Let The Target Drift - reach for it when a boss arrives, when a cutscene starts, or any time the shot has to be exact.",
-Follow tightly,
-Snap To Target Now,
-"Puts the camera where it is heading, this frame, instead of easing there. The fix for the long pan across the level on the first frame after a respawn or a scene change: smoothing stays on, it just stops owing you a journey.",
-Snap to the target now,
-Smooth Turns,
-"Eases the camera's ROTATION the way Set Smoothing eases its position, so a camera that follows a tilting ship or a rotating gravity field turns instead of snapping. Higher speeds catch up sooner.",
-Smooth turns {enabled} at {speed},
-true / false.,
-How quickly the camera catches up with the angle it is turning to.,
-View Rectangle,
-"What this camera is showing right now, as a rectangle in world units - zoom included. The frame to measure an off-screen cull, a minimap box or a spawn-just-outside-the-view against, and a value you can print while you work out why something is not where you expected.",
-the view rectangle,
-Is Inside Camera View,
-"True when a node's own position sits inside what a camera is showing, with an optional margin so something can count as visible slightly before or after it really is. Reads false when there is no camera, so a scene change cannot fault it. This is the rectangle test - the shipped Is On Screen asks the engine's visibility notifier about the node's whole drawn shape instead, which is the better question for a large sprite.",
-[i]{node}[/i] is inside the view of [i]{camera}[/i],
-The camera whose view is being asked about. The default is whichever camera is looking at the scene right now.,
-"How far outside the view still counts as inside, in world units. Negative shrinks the test area.",
-Fit Limits To,
-"Sets the four scroll limits from a rectangle, so the camera stops at the edges of the level instead of showing the void beyond them. Fill it with Tiled Area to fit the tiles somebody painted, or with a rectangle you chose. The limits are whole pixels, which is what Godot stores them as.",
-Fit limits to {area},
-Area,
-The level's extent as a rectangle in world units. Tiled Area gives you the one the painted tiles make.,
-Tiled Area,
-"The rectangle the painted tiles cover, in world units - the level's own edges, measured rather than typed in. Feed it to Fit Limits To and the camera stops where the level does, however much the level grows. An unpainted layer measures nothing, so the answer is an empty rectangle rather than a wrong one.",
-the tiled area of [i]{layer}[/i],
-The TileMapLayer the level is painted on.,
-Current Camera,
-"The Camera2D the player is looking through right now, or nothing when there is none. Feed it to Is Inside Camera View, read its zoom, or shake whichever camera happens to be live without naming it by tree path.",
-the current camera,
-Look At Over Seconds,
-"Turns the camera to face a node over time instead of snapping to it - the difference between a cut and a shot. It walks the shortest rotation between where the camera is looking and where it should look, so it never rolls sideways on the way and never tips over when the target is nearly overhead. A target sitting exactly where the camera is has no direction to face, so the row does nothing at all rather than erroring.",
-Look at [i]{at}[/i] over {seconds}s,
-The node to turn towards.,
-How long the turn takes.,
-Switch To Perspective,
-"Puts the camera into the ordinary shot, where things further away look smaller, and sets how wide it sees. This is the projection a first- or third-person game uses.",
-Switch to perspective at {degrees},
-Field Of View,
-"How wide the camera sees, in degrees. Lower zooms in.",
-Switch To Orthogonal,
-"Puts the camera into the flat shot, where distance does not shrink anything - the projection an isometric strategy game, a builder's blueprint view or a 2.5D platformer wants. The size is how many world units tall the view is, so a smaller number zooms in.",
-Switch to orthogonal at {size},
-Height,
-How many world units tall the view is. Smaller zooms in.,
-Set Clip Range,
-"Sets how close and how far the camera can see. Nothing nearer than the near value or further than the far value is drawn at all. Push the far value out for a long view, and keep the near value as large as the game allows - a very small near value is the usual cause of surfaces flickering against each other in the distance.",
-Set clip range {near} to {far},
-Near,
-"The closest distance the camera draws, in metres.",
-Far,
-"The furthest distance the camera draws, in metres.",
-Current Camera (3D),
-"The Camera3D the player is looking through right now, or nothing when there is none. The twin of Current Camera, for the dimension where the active camera changes on every cutscene and every vehicle you climb into.",
-the current camera (3D),
-Something Is Under The Cursor,
-"True when the cursor is pointing at something solid, asked by THIS camera of its own viewport - which is the question a split-screen game or a picture-in-picture view has to ask, because the active camera is not the camera the pointer is in. Name the collision layers to keep scenery, triggers or the player's own body out of the answer. For the object itself use Mouse Ray Collider, and for several facts about one hit use Cast Ray From Mouse Into.",
-something is under the cursor within {reach},
-"How far into the scene to look, in metres.",
-"Collision layers to test against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5; the default sees every layer.",
-Point Under The Cursor,
-"Where in the world the cursor is pointing: the surface it lands on, or the far end of the ray when it lands on nothing. It answers with somewhere the player is actually pointing rather than with the origin of the world, which is what a build ghost, a move-order marker or a camera pan needs - a marker that teleports to zero looks like a physics bug and is not one.",
-the point under the cursor within {reach},
-Set View Size,
-"How many pixels a view renders. This is the cost of the view: a minimap drawn into a 200 by 120 panel should render 200 by 120, not the whole window and then a squeeze. Whole pixels only, which is what a view is measured in.",
-Views,
-set view size to [b]{size}[/b],
-"The width and height the view renders at, in pixels.",
-Share The World (2D),
-"Points a view at the same 2D world another viewport is already drawing, so it shows the running game rather than an empty stage. This is the line a minimap needs: without it the second view has a world of its own and renders nothing.",
-share the 2D world of [b]{other}[/b],
-Same world as,
-The viewport whose world this view should show. Leave it on the game's own viewport for a second view of the running game.,
-"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%Minimap"").",
-Share The World (3D),
-"The 3D twin: points a view at the same 3D world another viewport is drawing, so a rear-view mirror or a security monitor shows the level everybody is standing in rather than an empty one.",
-share the 3D world of [b]{other}[/b],
-The viewport whose world this view should show. Leave it on the game's own viewport for a second camera on the running level.,
-Save A Still Of A View,
-"Writes what a view is drawing to a PNG file, after waiting for the frame to finish. A photo mode, a level thumbnail, a save-slot picture, the postcard a player shares. The event pauses for the rest of that frame, so keep it off a per-frame trigger.",
-save a still of [b]{view}[/b] to [b]{path}[/b],
-"The viewport to photograph. Leave it on the game's own viewport for what the player is looking at, or name a SubViewport for an off-screen one.",
-Where to write the PNG. user:// is the writable folder on every platform.,
-Mouse Position In View,
-"Where the pointer is inside one view, in that view's own pixels. A view has its own coordinate space, so this is the answer an in-world screen or a magnifier needs - the window's own answer is somewhere else entirely.",
-mouse position in [b]{view}[/b],
-The viewport to ask. Name a SubViewport for a picture drawn off screen.,
-Stay Fixed On Screen,
-"Pins this whole layer to the screen, so the camera moving through the world leaves it exactly where it is. What a HUD, a pause menu or a letterbox border wants, and what a CanvasLayer does out of the box.",
-stay fixed on screen,
-Move With The World,
-"Lets the camera move this layer, so everything on it sits in the world rather than on the screen. The other half of the switch above: a layer of scenery drawn behind the level, a layer of effects drawn over it, both moving with the view.",
-move with the world,
-Draw Above,
-"Puts this layer one step in front of another one, whatever number that other layer happens to be on. Relative on purpose: insert a layer between them later and the pair keeps its order, where two hand-typed numbers quietly stop meaning what they meant.",
-draw above [b]{other}[/b],
-Above,
-The layer to draw over - this one takes its order plus one.,
-"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%HUD"").",
-Draw Below,
-"The other end: puts this layer one step behind another one, whatever number that other layer is on. The backdrop that must stay behind the world however the world's own layer is numbered.",
-draw below [b]{other}[/b],
-Below,
-The layer to draw behind - this one takes its order minus one.,
-Offset Layer,
-"Nudges the whole layer, without touching a single thing on it. A HUD sliding in from the edge, a background pushed a little to one side, a shake that leaves the world alone.",
-offset layer by [b]{by}[/b],
-"How far to move the layer, in pixels.",
-Scroll At,
-"How much of the camera's movement this layer takes. Below 1 is behind the action and moves slower, which is what reads as distance; 1 moves exactly with the world; above 1 is in front of it. Each axis on its own, so a sky can drift sideways without sliding up and down.",
-scroll at [b]{factor}[/b] of the camera,
-"The share of the camera's movement this layer takes, per axis. 0.5 is half speed.",
-Repeat Every,
-"Tiles this layer forever, one copy every so many pixels, so a scrolling level never runs off the end of the artwork. Set the distance to the artwork's own width to make the seam invisible; a zero on an axis means no repeating along it.",
-repeat every [b]{size}[/b],
-Every,
-"How far apart the copies sit, in pixels. Zero on an axis means it does not repeat that way.",
-Drift,
-"Moves this layer on its own, whether the camera moves or not - clouds crossing the sky, mist over water, a starfield behind a menu that has no camera at all. Pixels per second, per axis; negative goes the other way.",
-drift at [b]{speed}[/b],
-"How fast the layer drifts by itself, in pixels per second, per axis.",
-Scroll Offset,
-"How far this layer has scrolled, in pixels. The number to read when something on the layer has to line up with it - a marker on a distant hill, a sound that fades with the drift.",
-scroll offset,
-Scroll At (Background Layer),
-"The same fraction on the older parallax node: how much of the camera's movement this layer takes, below 1 for distance and above 1 for the foreground. This is the row for a ParallaxLayer inside a ParallaxBackground, which is how a project built before Parallax2D arrived is put together.",
-Repeat Every (Background Layer),
-"The same tiling on the older parallax node: one copy of this layer every so many pixels, so the level never runs off the end of the artwork. Set it to the artwork's own width; a zero on an axis means no repeating along it.",
-Upscale With,
-"How a 3D scene rendered smaller than the window is stretched back up. Plain is the cheapest and the softest; the sharpening upscalers cost a little more and give most of the detail back, which is why a resolution slider is worth having at all.",
-upscale 3D with {method},
-Upscale with,
-How the smaller picture is stretched back up.,
-Bilinear - plain and cheapest,
-"FSR - sharper, still cheap",
-"FSR 2 - sharpest, costs the most",
-Set Temporal AA,
-"Turns temporal antialiasing on or off for the current viewport - it borrows detail from the frames before this one, which is sharper than FXAA on a still image and can shimmer while the camera moves.",
-set temporal AA {enabled},
-Smooth edges by reusing what the last frames drew.,
-Render 3D At,
-"Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.",
-render 3D at {percent}% with {method},
-Percent,
-How much of the window the 3D scene is rendered at. 100 is full resolution; 70 renders about half the pixels.,
-Smooth Edges With,
-"The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.",
-smooth edges with {how},
-Smooth with,
-The one technique in force. Everything else is switched off.,
-"Nothing - hard edges, cheapest",
-"FXAA - cheap, a little soft",
-"Temporal - sharp, can shimmer",
-2 samples,
-4 samples,
-"8 samples - cleanest, dearest",
-Scale The Game,
-"What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.",
-scale the game to {mode},
-Scale,
-What gets stretched when the window is not the size the game was drawn for.,
-"Fit - scale the layout, keep text crisp",
-Stretch - scale the whole picture,
-"Free - no scaling, show more or less",
-Fit The Shape,
-"What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.",
-fit a different shape by {aspect},
-When the shape differs,
-What the extra space becomes when the window is a different shape from the game.,
-"Keep the shape, bars at the edges",
-"Fill the window, shape and all",
-"Keep the width, show more height",
-"Keep the height, show more width",
-Expand - show more either way,
-Keep Pixels Sharp,
-"Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.",
-keep pixels sharp: {stretch},
-Whole pixels,
-Whether the scale is rounded down to a whole number.,
-Yes - whole numbers only,
-No - any fraction,
-Pixel Size,
-"How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.",
-set pixel size to {factor},
-Factor,
-1 is the size the game was drawn at. 2 is twice as big.,
+"%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.","%s hält Pixel scharf und verlangt dann eine Pixelgröße von %s. Nur ganze Pixel heißt, dass das Fenster das abrundet, die Größe, die ein Spieler bekommt, ist also nicht die, nach der die Zeile fragt - nehmen Sie eine ganze Zahl, oder lassen Sie den Bruchteil zu."
+Let The Target Drift,Das Ziel driften lassen
+"Gives the camera a dead zone: the thing it follows may wander this far from the middle before the camera moves at all. The numbers are fractions of the view, so 0.2 is a fifth of the screen, and the same slack is used on both sides. This is what stops a platformer camera twitching under every small jump.","Gibt der Kamera eine Totzone: das, dem sie folgt, darf so weit aus der Mitte wandern, bevor sich die Kamera überhaupt bewegt. Die Zahlen sind Anteile des Bildausschnitts, 0,2 ist also ein Fünftel des Bildschirms, und derselbe Spielraum gilt auf beiden Seiten. Das ist es, was eine Platformer-Kamera davon abhält, bei jedem kleinen Sprung zu zucken."
+"Let the target drift {across} across, {down} down","Ziel um {across} seitlich, {down} nach oben und unten driften lassen"
+"How far the target may drift left or right before the camera follows, as a fraction of the view.","Wie weit das Ziel nach links oder rechts driften darf, bevor die Kamera folgt, als Anteil des Bildausschnitts."
+Down,Nach unten
+"How far the target may drift up or down before the camera follows, as a fraction of the view.","Wie weit das Ziel nach oben oder unten driften darf, bevor die Kamera folgt, als Anteil des Bildausschnitts."
+Follow Tightly,Eng folgen
+"Turns the dead zone off, so the camera keeps its target exactly in the middle. The other half of Let The Target Drift - reach for it when a boss arrives, when a cutscene starts, or any time the shot has to be exact.","Schaltet die Totzone ab, sodass die Kamera ihr Ziel genau in der Mitte hält. Die andere Hälfte von Das Ziel driften lassen - dafür da, wenn ein Boss auftaucht, wenn eine Zwischensequenz beginnt oder immer dann, wenn die Einstellung genau sitzen muss."
+Follow tightly,Eng folgen
+Snap To Target Now,Jetzt auf das Ziel springen
+"Puts the camera where it is heading, this frame, instead of easing there. The fix for the long pan across the level on the first frame after a respawn or a scene change: smoothing stays on, it just stops owing you a journey.","Setzt die Kamera dorthin, wohin sie unterwegs ist, in diesem Bild, statt sie hinüberzugleiten. Das Mittel gegen die lange Fahrt quer über den Level im ersten Bild nach einem Wiedereinstieg oder Szenenwechsel: die Glättung bleibt an, sie schuldet einem nur keine Reise mehr."
+Snap to the target now,Jetzt auf das Ziel springen
+Smooth Turns,Drehungen glätten
+"Eases the camera's ROTATION the way Set Smoothing eases its position, so a camera that follows a tilting ship or a rotating gravity field turns instead of snapping. Higher speeds catch up sooner.","Glättet die DREHUNG der Kamera so, wie Glättung setzen ihre Position glättet, sodass eine Kamera, die einem kippenden Schiff oder einem sich drehenden Schwerkraftfeld folgt, sich dreht statt zu springen. Höhere Geschwindigkeiten holen schneller auf."
+Smooth turns {enabled} at {speed},"Drehungen glätten: {enabled}, mit {speed}"
+true / false.,wahr / falsch.
+How quickly the camera catches up with the angle it is turning to.,"Wie schnell die Kamera den Winkel einholt, auf den sie sich dreht."
+View Rectangle,Sichtrechteck
+"What this camera is showing right now, as a rectangle in world units - zoom included. The frame to measure an off-screen cull, a minimap box or a spawn-just-outside-the-view against, and a value you can print while you work out why something is not where you expected.","Was diese Kamera gerade zeigt, als Rechteck in Weltmaßen - der Zoom eingerechnet. Der Rahmen, gegen den man ein Aussortieren außerhalb des Bildes, einen Minimap-Kasten oder ein Erscheinen knapp außerhalb der Sicht misst, und ein Wert, den man ausgeben kann, während man herausfindet, warum etwas nicht dort ist, wo man es erwartet hat."
+the view rectangle,das Sichtrechteck
+Is Inside Camera View,Ist im Sichtfeld der Kamera
+"True when a node's own position sits inside what a camera is showing, with an optional margin so something can count as visible slightly before or after it really is. Reads false when there is no camera, so a scene change cannot fault it. This is the rectangle test - the shipped Is On Screen asks the engine's visibility notifier about the node's whole drawn shape instead, which is the better question for a large sprite.","Wahr, wenn die eigene Position eines Knotens innerhalb dessen liegt, was eine Kamera zeigt, mit einem optionalen Rand, sodass etwas kurz vor oder nach dem tatsächlichen Moment als sichtbar gelten kann. Ergibt falsch, wenn es keine Kamera gibt, ein Szenenwechsel kann also nichts zum Absturz bringen. Das ist der Rechteck-Test - das gelieferte Ist auf dem Bildschirm fragt stattdessen den Sichtbarkeitsmelder der Engine nach der gesamten gezeichneten Form des Knotens, was bei einem großen Sprite die bessere Frage ist."
+[i]{node}[/i] is inside the view of [i]{camera}[/i],[i]{node}[/i] ist im Sichtfeld von [i]{camera}[/i]
+The camera whose view is being asked about. The default is whichever camera is looking at the scene right now.,"Die Kamera, nach deren Sichtfeld gefragt wird. Voreingestellt ist die Kamera, die gerade auf die Szene schaut."
+"How far outside the view still counts as inside, in world units. Negative shrinks the test area.","Wie weit außerhalb des Bildausschnitts noch als innerhalb zählt, in Weltmaßen. Negativ verkleinert die Testfläche."
+Fit Limits To,Grenzen anpassen an
+"Sets the four scroll limits from a rectangle, so the camera stops at the edges of the level instead of showing the void beyond them. Fill it with Tiled Area to fit the tiles somebody painted, or with a rectangle you chose. The limits are whole pixels, which is what Godot stores them as.","Setzt die vier Scroll-Grenzen aus einem Rechteck, sodass die Kamera an den Rändern des Levels stehen bleibt statt die Leere dahinter zu zeigen. Füllen Sie es mit Gekachelte Fläche, um sich an die gesetzten Kacheln anzupassen, oder mit einem Rechteck Ihrer Wahl. Die Grenzen sind ganze Pixel, so speichert Godot sie."
+Fit limits to {area},Grenzen an {area} anpassen
+Area,Fläche
+The level's extent as a rectangle in world units. Tiled Area gives you the one the painted tiles make.,"Die Ausdehnung des Levels als Rechteck in Weltmaßen. Gekachelte Fläche gibt Ihnen das, was die gesetzten Kacheln ergeben."
+Tiled Area,Gekachelte Fläche
+"The rectangle the painted tiles cover, in world units - the level's own edges, measured rather than typed in. Feed it to Fit Limits To and the camera stops where the level does, however much the level grows. An unpainted layer measures nothing, so the answer is an empty rectangle rather than a wrong one.","Das Rechteck, das die gesetzten Kacheln bedecken, in Weltmaßen - die eigenen Ränder des Levels, gemessen statt eingetippt. Geben Sie es an Grenzen anpassen an, und die Kamera hört dort auf, wo der Level aufhört, wie sehr er auch wächst. Eine unbemalte Ebene misst nichts, die Antwort ist also ein leeres Rechteck statt eines falschen."
+the tiled area of [i]{layer}[/i],die gekachelte Fläche von [i]{layer}[/i]
+The TileMapLayer the level is painted on.,"Die TileMapLayer, auf der der Level gemalt ist."
+Current Camera,Aktuelle Kamera
+"The Camera2D the player is looking through right now, or nothing when there is none. Feed it to Is Inside Camera View, read its zoom, or shake whichever camera happens to be live without naming it by tree path.","Die Camera2D, durch die der Spieler gerade schaut, oder nichts, wenn es keine gibt. Geben Sie sie an Ist im Sichtfeld der Kamera, lesen Sie ihren Zoom, oder wackeln Sie mit der gerade aktiven Kamera, ohne sie über einen Baumpfad zu benennen."
+the current camera,die aktuelle Kamera
+Look At Over Seconds,Über Sekunden hinschauen
+"Turns the camera to face a node over time instead of snapping to it - the difference between a cut and a shot. It walks the shortest rotation between where the camera is looking and where it should look, so it never rolls sideways on the way and never tips over when the target is nearly overhead. A target sitting exactly where the camera is has no direction to face, so the row does nothing at all rather than erroring.","Dreht die Kamera über Zeit zu einem Knoten hin, statt zu ihm zu springen - der Unterschied zwischen einem Schnitt und einer Einstellung. Sie geht den kürzesten Weg zwischen dem, wohin die Kamera schaut, und dem, wohin sie schauen soll, rollt dabei also nie zur Seite und kippt nie um, wenn das Ziel fast senkrecht darüber liegt. Ein Ziel, das genau dort steht, wo die Kamera steht, gibt keine Richtung her, die Zeile tut dann also gar nichts, statt einen Fehler zu werfen."
+Look at [i]{at}[/i] over {seconds}s,In {seconds}s auf [i]{at}[/i] schauen
+The node to turn towards.,"Der Knoten, zu dem hin gedreht wird."
+How long the turn takes.,Wie lange die Drehung dauert.
+Switch To Perspective,Auf Perspektive umschalten
+"Puts the camera into the ordinary shot, where things further away look smaller, and sets how wide it sees. This is the projection a first- or third-person game uses.","Versetzt die Kamera in die gewöhnliche Einstellung, in der weiter Entferntes kleiner aussieht, und legt fest, wie weit sie sieht. Das ist die Projektion, die ein Ego- oder Third-Person-Spiel verwendet."
+Switch to perspective at {degrees},Auf Perspektive mit {degrees} umschalten
+Field Of View,Sichtfeld
+"How wide the camera sees, in degrees. Lower zooms in.","Wie weit die Kamera sieht, in Grad. Kleiner heißt näher heran."
+Switch To Orthogonal,Auf Orthogonal umschalten
+"Puts the camera into the flat shot, where distance does not shrink anything - the projection an isometric strategy game, a builder's blueprint view or a 2.5D platformer wants. The size is how many world units tall the view is, so a smaller number zooms in.","Versetzt die Kamera in die flache Einstellung, in der Entfernung nichts kleiner macht - die Projektion, die ein isometrisches Strategiespiel, die Bauplanansicht eines Baumeisters oder ein 2.5D-Platformer will. Die Größe ist, wie viele Welteinheiten hoch der Ausschnitt ist, eine kleinere Zahl geht also näher heran."
+Switch to orthogonal at {size},Auf Orthogonal mit {size} umschalten
+Height,Höhe
+How many world units tall the view is. Smaller zooms in.,Wie viele Welteinheiten hoch der Ausschnitt ist. Kleiner geht näher heran.
+Set Clip Range,Sichtbereich setzen
+"Sets how close and how far the camera can see. Nothing nearer than the near value or further than the far value is drawn at all. Push the far value out for a long view, and keep the near value as large as the game allows - a very small near value is the usual cause of surfaces flickering against each other in the distance.","Legt fest, wie nah und wie weit die Kamera sehen kann. Nichts näher als der Nahwert und nichts weiter als der Fernwert wird überhaupt gezeichnet. Schieben Sie den Fernwert für eine weite Sicht hinaus, und halten Sie den Nahwert so groß, wie das Spiel es erlaubt - ein sehr kleiner Nahwert ist die übliche Ursache dafür, dass Flächen in der Ferne gegeneinander flackern."
+Set clip range {near} to {far},Sichtbereich {near} bis {far} setzen
+Near,Nah
+"The closest distance the camera draws, in metres.","Die nächste Entfernung, die die Kamera zeichnet, in Metern."
+Far,Fern
+"The furthest distance the camera draws, in metres.","Die weiteste Entfernung, die die Kamera zeichnet, in Metern."
+Current Camera (3D),Aktuelle Kamera (3D)
+"The Camera3D the player is looking through right now, or nothing when there is none. The twin of Current Camera, for the dimension where the active camera changes on every cutscene and every vehicle you climb into.","Die Camera3D, durch die der Spieler gerade schaut, oder nichts, wenn es keine gibt. Der Zwilling von Aktuelle Kamera, für die Dimension, in der die aktive Kamera bei jeder Zwischensequenz und jedem Fahrzeug wechselt, in das man einsteigt."
+the current camera (3D),die aktuelle Kamera (3D)
+Something Is Under The Cursor,Etwas ist unter dem Zeiger
+"True when the cursor is pointing at something solid, asked by THIS camera of its own viewport - which is the question a split-screen game or a picture-in-picture view has to ask, because the active camera is not the camera the pointer is in. Name the collision layers to keep scenery, triggers or the player's own body out of the answer. For the object itself use Mouse Ray Collider, and for several facts about one hit use Cast Ray From Mouse Into.","Wahr, wenn der Zeiger auf etwas Festes zeigt, gefragt von DIESER Kamera in ihrem eigenen Ansichtsfenster - was die Frage ist, die ein Splitscreen-Spiel oder eine Bild-im-Bild-Ansicht stellen muss, weil die aktive Kamera nicht die Kamera ist, in der der Zeiger steckt. Benennen Sie die Kollisionsebenen, um Kulisse, Auslöser oder den eigenen Körper des Spielers aus der Antwort herauszuhalten. Für das Objekt selbst nehmen Sie Maus-Strahl-Kollider, und für mehrere Angaben zu einem Treffer Strahl von der Maus werfen in."
+something is under the cursor within {reach},etwas ist innerhalb von {reach} unter dem Zeiger
+"How far into the scene to look, in metres.","Wie weit in die Szene hinein geschaut wird, in Metern."
+"Collision layers to test against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5; the default sees every layer.","Die Kollisionsebenen, gegen die geprüft wird. Jede Ebene ist ein Bit, Ebene 1 und 3 sind also 1 + 4 = 5; die Voreinstellung sieht jede Ebene."
+Point Under The Cursor,Punkt unter dem Zeiger
+"Where in the world the cursor is pointing: the surface it lands on, or the far end of the ray when it lands on nothing. It answers with somewhere the player is actually pointing rather than with the origin of the world, which is what a build ghost, a move-order marker or a camera pan needs - a marker that teleports to zero looks like a physics bug and is not one.","Wohin in der Welt der Zeiger zeigt: die Fläche, auf der er landet, oder das ferne Ende des Strahls, wenn er auf nichts landet. Es antwortet mit einem Ort, auf den der Spieler wirklich zeigt, statt mit dem Ursprung der Welt, und genau das brauchen ein Bau-Geist, eine Bewegungsmarke oder ein Kameraschwenk - eine Marke, die auf null springt, sieht aus wie ein Physikfehler und ist keiner."
+the point under the cursor within {reach},der Punkt innerhalb von {reach} unter dem Zeiger
+Set View Size,Ansichtsgröße setzen
+"How many pixels a view renders. This is the cost of the view: a minimap drawn into a 200 by 120 panel should render 200 by 120, not the whole window and then a squeeze. Whole pixels only, which is what a view is measured in.","Wie viele Pixel eine Ansicht rendert. Das sind die Kosten der Ansicht: eine Minimap, die in ein Feld von 200 mal 120 gezeichnet wird, sollte 200 mal 120 rendern, nicht das ganze Fenster und dann eine Quetschung. Nur ganze Pixel, denn so wird eine Ansicht gemessen."
+Views,Ansichten
+set view size to [b]{size}[/b],Ansichtsgröße auf [b]{size}[/b] setzen
+"The width and height the view renders at, in pixels.","Die Breite und Höhe, in der die Ansicht rendert, in Pixeln."
+Share The World (2D),Die Welt teilen (2D)
+"Points a view at the same 2D world another viewport is already drawing, so it shows the running game rather than an empty stage. This is the line a minimap needs: without it the second view has a world of its own and renders nothing.","Richtet eine Ansicht auf dieselbe 2D-Welt, die ein anderes Ansichtsfenster bereits zeichnet, sodass sie das laufende Spiel zeigt statt einer leeren Bühne. Das ist die Zeile, die eine Minimap braucht: ohne sie hat die zweite Ansicht eine eigene Welt und rendert nichts."
+share the 2D world of [b]{other}[/b],die 2D-Welt von [b]{other}[/b] teilen
+Same world as,Dieselbe Welt wie
+The viewport whose world this view should show. Leave it on the game's own viewport for a second view of the running game.,"Das Ansichtsfenster, dessen Welt diese Ansicht zeigen soll. Belassen Sie es beim Ansichtsfenster des Spiels für eine zweite Ansicht des laufenden Spiels."
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%Minimap"").","Auf einen anderen Knoten statt auf diesen wirken. Leer lassen für diesen Knoten, einen Knoten auswählen oder einen ohne Baumpfad ansprechen - z. B. get_node(""%Minimap"")."
+Share The World (3D),Die Welt teilen (3D)
+"The 3D twin: points a view at the same 3D world another viewport is drawing, so a rear-view mirror or a security monitor shows the level everybody is standing in rather than an empty one.","Der 3D-Zwilling: richtet eine Ansicht auf dieselbe 3D-Welt, die ein anderes Ansichtsfenster zeichnet, sodass ein Rückspiegel oder ein Überwachungsmonitor den Level zeigt, in dem alle stehen, statt eines leeren."
+share the 3D world of [b]{other}[/b],die 3D-Welt von [b]{other}[/b] teilen
+The viewport whose world this view should show. Leave it on the game's own viewport for a second camera on the running level.,"Das Ansichtsfenster, dessen Welt diese Ansicht zeigen soll. Belassen Sie es beim Ansichtsfenster des Spiels für eine zweite Kamera auf den laufenden Level."
+Save A Still Of A View,Standbild einer Ansicht speichern
+"Writes what a view is drawing to a PNG file, after waiting for the frame to finish. A photo mode, a level thumbnail, a save-slot picture, the postcard a player shares. The event pauses for the rest of that frame, so keep it off a per-frame trigger.","Schreibt das, was eine Ansicht zeichnet, in eine PNG-Datei, nachdem es gewartet hat, bis das Bild fertig gezeichnet ist. Ein Fotomodus, ein Level-Vorschaubild, das Bild eines Speicherplatzes, die Postkarte, die ein Spieler teilt. Das Ereignis hält für den Rest dieses Bildes an, halten Sie es also von einem Auslöser fern, der jedes Bild feuert."
+save a still of [b]{view}[/b] to [b]{path}[/b],Standbild von [b]{view}[/b] nach [b]{path}[/b] speichern
+"The viewport to photograph. Leave it on the game's own viewport for what the player is looking at, or name a SubViewport for an off-screen one.","Das Ansichtsfenster, das fotografiert wird. Belassen Sie es beim Ansichtsfenster des Spiels für das, was der Spieler sieht, oder benennen Sie ein SubViewport für eines außerhalb des Bildschirms."
+Where to write the PNG. user:// is the writable folder on every platform.,Wohin das PNG geschrieben wird. user:// ist auf jeder Plattform der beschreibbare Ordner.
+Mouse Position In View,Mausposition in der Ansicht
+"Where the pointer is inside one view, in that view's own pixels. A view has its own coordinate space, so this is the answer an in-world screen or a magnifier needs - the window's own answer is somewhere else entirely.","Wo der Zeiger innerhalb einer Ansicht ist, in deren eigenen Pixeln. Eine Ansicht hat einen eigenen Koordinatenraum, das ist also die Antwort, die ein Bildschirm in der Welt oder eine Lupe braucht - die Antwort des Fensters selbst liegt ganz woanders."
+mouse position in [b]{view}[/b],Mausposition in [b]{view}[/b]
+The viewport to ask. Name a SubViewport for a picture drawn off screen.,"Das Ansichtsfenster, das gefragt wird. Benennen Sie ein SubViewport für ein Bild, das außerhalb des Bildschirms gezeichnet wird."
+Stay Fixed On Screen,Am Bildschirm festhalten
+"Pins this whole layer to the screen, so the camera moving through the world leaves it exactly where it is. What a HUD, a pause menu or a letterbox border wants, and what a CanvasLayer does out of the box.","Heftet diese ganze Ebene an den Bildschirm, sodass die Kamera, die sich durch die Welt bewegt, sie genau dort lässt, wo sie ist. Was ein HUD, ein Pausenmenü oder ein Letterbox-Rand will, und was ein CanvasLayer von Haus aus tut."
+stay fixed on screen,am Bildschirm festhalten
+Move With The World,Mit der Welt mitgehen
+"Lets the camera move this layer, so everything on it sits in the world rather than on the screen. The other half of the switch above: a layer of scenery drawn behind the level, a layer of effects drawn over it, both moving with the view.","Lässt die Kamera diese Ebene bewegen, sodass alles darauf in der Welt sitzt statt auf dem Bildschirm. Die andere Hälfte des Schalters darüber: eine Ebene Kulisse hinter dem Level, eine Ebene Effekte darüber, beide bewegen sich mit dem Blick."
+move with the world,mit der Welt mitgehen
+Draw Above,Darüber zeichnen
+"Puts this layer one step in front of another one, whatever number that other layer happens to be on. Relative on purpose: insert a layer between them later and the pair keeps its order, where two hand-typed numbers quietly stop meaning what they meant.","Setzt diese Ebene eine Stufe vor eine andere, auf welcher Nummer diese andere Ebene auch gerade liegt. Absichtlich relativ: schieben Sie später eine Ebene dazwischen, und das Paar behält seine Reihenfolge, während zwei von Hand eingetippte Zahlen still aufhören zu bedeuten, was sie bedeutet haben."
+draw above [b]{other}[/b],über [b]{other}[/b] zeichnen
+Above,Darüber
+The layer to draw over - this one takes its order plus one.,"Die Ebene, über die gezeichnet wird - diese nimmt deren Reihenfolge plus eins."
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%HUD"").","Auf einen anderen Knoten statt auf diesen wirken. Leer lassen für diesen Knoten, einen Knoten auswählen oder einen ohne Baumpfad ansprechen - z. B. get_node(""%HUD"")."
+Draw Below,Darunter zeichnen
+"The other end: puts this layer one step behind another one, whatever number that other layer is on. The backdrop that must stay behind the world however the world's own layer is numbered.","Das andere Ende: setzt diese Ebene eine Stufe hinter eine andere, auf welcher Nummer diese andere Ebene auch liegt. Der Hintergrund, der hinter der Welt bleiben muss, wie auch immer die eigene Ebene der Welt nummeriert ist."
+draw below [b]{other}[/b],unter [b]{other}[/b] zeichnen
+Below,Darunter
+The layer to draw behind - this one takes its order minus one.,"Die Ebene, hinter der gezeichnet wird - diese nimmt deren Reihenfolge minus eins."
+Offset Layer,Ebene versetzen
+"Nudges the whole layer, without touching a single thing on it. A HUD sliding in from the edge, a background pushed a little to one side, a shake that leaves the world alone.","Schiebt die ganze Ebene, ohne ein einziges Ding darauf anzufassen. Ein HUD, das vom Rand hereingleitet, ein Hintergrund, der ein Stück zur Seite geschoben wird, ein Wackeln, das die Welt in Ruhe lässt."
+offset layer by [b]{by}[/b],Ebene um [b]{by}[/b] versetzen
+"How far to move the layer, in pixels.","Wie weit die Ebene verschoben wird, in Pixeln."
+Scroll At,Mitscrollen mit
+"How much of the camera's movement this layer takes. Below 1 is behind the action and moves slower, which is what reads as distance; 1 moves exactly with the world; above 1 is in front of it. Each axis on its own, so a sky can drift sideways without sliding up and down.","Wie viel von der Bewegung der Kamera diese Ebene übernimmt. Unter 1 liegt hinter dem Geschehen und bewegt sich langsamer, was sich als Entfernung liest; 1 bewegt sich genau mit der Welt; über 1 liegt davor. Jede Achse für sich, sodass ein Himmel seitlich ziehen kann, ohne nach oben und unten zu rutschen."
+scroll at [b]{factor}[/b] of the camera,mit [b]{factor}[/b] der Kamera mitscrollen
+"The share of the camera's movement this layer takes, per axis. 0.5 is half speed.","Der Anteil an der Bewegung der Kamera, den diese Ebene übernimmt, je Achse. 0,5 ist halbe Geschwindigkeit."
+Repeat Every,Alle so oft wiederholen
+"Tiles this layer forever, one copy every so many pixels, so a scrolling level never runs off the end of the artwork. Set the distance to the artwork's own width to make the seam invisible; a zero on an axis means no repeating along it.","Kachelt diese Ebene endlos, eine Kopie alle so viele Pixel, sodass ein scrollender Level nie über das Ende der Grafik hinausläuft. Setzen Sie den Abstand auf die eigene Breite der Grafik, damit die Naht unsichtbar wird; eine Null auf einer Achse heißt, dass in dieser Richtung nicht wiederholt wird."
+repeat every [b]{size}[/b],alle [b]{size}[/b] wiederholen
+Every,Alle
+"How far apart the copies sit, in pixels. Zero on an axis means it does not repeat that way.","Wie weit die Kopien auseinanderliegen, in Pixeln. Null auf einer Achse heißt, dass sie sich in dieser Richtung nicht wiederholt."
+Drift,Ziehen
+"Moves this layer on its own, whether the camera moves or not - clouds crossing the sky, mist over water, a starfield behind a menu that has no camera at all. Pixels per second, per axis; negative goes the other way.","Bewegt diese Ebene von selbst, ob die Kamera sich bewegt oder nicht - Wolken, die über den Himmel ziehen, Nebel über Wasser, ein Sternenfeld hinter einem Menü, das gar keine Kamera hat. Pixel pro Sekunde, je Achse; negativ läuft in die andere Richtung."
+drift at [b]{speed}[/b],mit [b]{speed}[/b] ziehen
+"How fast the layer drifts by itself, in pixels per second, per axis.","Wie schnell die Ebene von selbst zieht, in Pixeln pro Sekunde, je Achse."
+Scroll Offset,Scroll-Versatz
+"How far this layer has scrolled, in pixels. The number to read when something on the layer has to line up with it - a marker on a distant hill, a sound that fades with the drift.","Wie weit diese Ebene gescrollt ist, in Pixeln. Die Zahl, die man liest, wenn etwas auf der Ebene damit übereinstimmen muss - eine Marke auf einem fernen Hügel, ein Klang, der mit dem Ziehen ausblendet."
+scroll offset,Scroll-Versatz
+Scroll At (Background Layer),Mitscrollen mit (Hintergrundebene)
+"The same fraction on the older parallax node: how much of the camera's movement this layer takes, below 1 for distance and above 1 for the foreground. This is the row for a ParallaxLayer inside a ParallaxBackground, which is how a project built before Parallax2D arrived is put together.","Derselbe Anteil auf dem älteren Parallax-Knoten: wie viel von der Bewegung der Kamera diese Ebene übernimmt, unter 1 für Entfernung und über 1 für den Vordergrund. Das ist die Zeile für eine ParallaxLayer in einem ParallaxBackground, so ist ein Projekt aufgebaut, das vor Parallax2D entstanden ist."
+Repeat Every (Background Layer),Alle so oft wiederholen (Hintergrundebene)
+"The same tiling on the older parallax node: one copy of this layer every so many pixels, so the level never runs off the end of the artwork. Set it to the artwork's own width; a zero on an axis means no repeating along it.","Dieselbe Kachelung auf dem älteren Parallax-Knoten: eine Kopie dieser Ebene alle so viele Pixel, sodass der Level nie über das Ende der Grafik hinausläuft. Setzen Sie es auf die eigene Breite der Grafik; eine Null auf einer Achse heißt, dass in dieser Richtung nicht wiederholt wird."
+Upscale With,Hochskalieren mit
+"How a 3D scene rendered smaller than the window is stretched back up. Plain is the cheapest and the softest; the sharpening upscalers cost a little more and give most of the detail back, which is why a resolution slider is worth having at all.","Wie eine 3D-Szene, die kleiner als das Fenster gerendert wurde, wieder hochgezogen wird. Einfach ist am billigsten und am weichsten; die schärfenden Hochskalierer kosten etwas mehr und geben das meiste Detail zurück, weshalb sich ein Auflösungsregler überhaupt lohnt."
+upscale 3D with {method},3D mit {method} hochskalieren
+Upscale with,Hochskalieren mit
+How the smaller picture is stretched back up.,Wie das kleinere Bild wieder hochgezogen wird.
+Bilinear - plain and cheapest,Bilinear - einfach und am billigsten
+"FSR - sharper, still cheap","FSR - schärfer, immer noch billig"
+"FSR 2 - sharpest, costs the most","FSR 2 - am schärfsten, kostet am meisten"
+Set Temporal AA,Zeitliches AA setzen
+"Turns temporal antialiasing on or off for the current viewport - it borrows detail from the frames before this one, which is sharper than FXAA on a still image and can shimmer while the camera moves.","Schaltet zeitliches Antialiasing für das aktuelle Ansichtsfenster ein oder aus - es borgt sich Detail aus den Bildern davor, was auf einem stehenden Bild schärfer ist als FXAA und flimmern kann, während die Kamera sich bewegt."
+set temporal AA {enabled},zeitliches AA {enabled} setzen
+Smooth edges by reusing what the last frames drew.,"Kanten glätten, indem wiederverwendet wird, was die letzten Bilder gezeichnet haben."
+Render 3D At,3D rendern bei
+"Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.","Rendert die 3D-Szene mit einem Anteil des Fensters und zieht sie wieder hoch, wobei Sie wählen, WIE hochskaliert wird. Der Leistungsregler, mit dem ein 3D-Spiel ausgeliefert wird: 70 % mit einem schärfenden Hochskalierer sieht oft besser aus als 70 % einfach und kostet dasselbe. Das 2D-Zeichnen und die Oberfläche bleiben unangetastet - sie bleiben bei voller Auflösung."
+render 3D at {percent}% with {method},3D bei {percent} % mit {method} rendern
+Percent,Prozent
+How much of the window the 3D scene is rendered at. 100 is full resolution; 70 renders about half the pixels.,Mit wie viel des Fensters die 3D-Szene gerendert wird. 100 ist volle Auflösung; 70 rendert etwa die Hälfte der Pixel.
+Smooth Edges With,Kanten glätten mit
+"The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.","Der eine Antialiasing-Schalter, den ein Grafikmenü braucht: wählen Sie ein Verfahren, und jedes andere wird abgeschaltet, sodass ein Spieler nicht am Ende für zwei zugleich zahlt. FXAA ist billig und leicht weich, zeitlich ist schärfer und kann flimmern, während die Kamera sich bewegt, und die Abtastzahlen sind die teure, sauberste Wahl für eine 3D-Szene."
+smooth edges with {how},Kanten mit {how} glätten
+Smooth with,Glätten mit
+The one technique in force. Everything else is switched off.,"Das eine Verfahren, das gilt. Alles andere ist abgeschaltet."
+"Nothing - hard edges, cheapest","Nichts - harte Kanten, am billigsten"
+"FXAA - cheap, a little soft","FXAA - billig, ein wenig weich"
+"Temporal - sharp, can shimmer","Zeitlich - scharf, kann flimmern"
+2 samples,2 Abtastungen
+4 samples,4 Abtastungen
+"8 samples - cleanest, dearest","8 Abtastungen - am saubersten, am teuersten"
+Scale The Game,Das Spiel skalieren
+"What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.","Was mit einem Spiel geschieht, das für eine Größe gezeichnet wurde, wenn das Fenster eine andere hat. Das Layout anzupassen hält Text und Oberfläche knackig und dehnt die Platzierung; das Bild zu dehnen bläst das ganze gerenderte Bild auf, was ein Pixelart-Spiel will; frei lässt alles dort, wo es gezeichnet wurde, und zeigt einfach mehr oder weniger von der Welt."
+scale the game to {mode},Das Spiel auf {mode} skalieren
+Scale,Skalierung
+What gets stretched when the window is not the size the game was drawn for.,"Was gedehnt wird, wenn das Fenster nicht die Größe hat, für die das Spiel gezeichnet wurde."
+"Fit - scale the layout, keep text crisp","Anpassen - Layout skalieren, Text knackig halten"
+Stretch - scale the whole picture,Dehnen - das ganze Bild skalieren
+"Free - no scaling, show more or less","Frei - keine Skalierung, mehr oder weniger zeigen"
+Fit The Shape,An eine andere Form anpassen
+"What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.","Was geschieht, wenn das Fenster eine andere FORM hat als das Spiel - ein Breitbildmonitor für ein quadratisch gezeichnetes Spiel, ein Telefon andersherum gehalten. Die Form zu behalten setzt Balken an die Ränder und verzerrt nie etwas; das Fenster zu füllen dehnt das Bild aus der Form; die drei Antworten, die mehr zeigen, geben den zusätzlichen Platz stattdessen der Welt."
+fit a different shape by {aspect},eine andere Form durch {aspect} ausgleichen
+When the shape differs,Wenn die Form abweicht
+What the extra space becomes when the window is a different shape from the game.,"Was aus dem zusätzlichen Platz wird, wenn das Fenster eine andere Form hat als das Spiel."
+"Keep the shape, bars at the edges","Form behalten, Balken an den Rändern"
+"Fill the window, shape and all","Fenster füllen, samt Form"
+"Keep the width, show more height","Breite behalten, mehr Höhe zeigen"
+"Keep the height, show more width","Höhe behalten, mehr Breite zeigen"
+Expand - show more either way,Erweitern - in beide Richtungen mehr zeigen
+Keep Pixels Sharp,Pixel scharf halten
+"Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.","Ob das Spiel nur um eine ganze Zahl skaliert werden darf. Ein Pixelart-Spiel, das um 2,5 skaliert wird, zeichnet manche Quellpixel zweimal und manche dreimal, und das ist das flimmernde, ungleichmäßige Aussehen, das niemand benennen kann und jeder sieht; nur ganze Zahlen heißt stattdessen Balken an den Rändern. Alles, was keine Pixelart ist, will den Bruchteil."
+keep pixels sharp: {stretch},Pixel scharf halten: {stretch}
+Whole pixels,Ganze Pixel
+Whether the scale is rounded down to a whole number.,Ob der Maßstab auf eine ganze Zahl abgerundet wird.
+Yes - whole numbers only,Ja - nur ganze Zahlen
+No - any fraction,Nein - jeder Bruchteil
+Pixel Size,Pixelgröße
+"How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.","Wie groß ein gezeichnetes Pixel auf dem Bildschirm ist, zusätzlich zu allem anderen. 2 zeichnet das Spiel doppelt so groß, was die Antwort auf eine kleine Oberfläche für die Barrierefreiheit ist und die Zoom-Antwort für ein Pixelart-Spiel auf einem großen Monitor. Nur ganze Zahlen, solange Pixel scharf gehalten werden."
+set pixel size to {factor},Pixelgröße auf {factor} setzen
+Factor,Faktor
+1 is the size the game was drawn at. 2 is twice as big.,"1 ist die Größe, in der das Spiel gezeichnet wurde. 2 ist doppelt so groß."

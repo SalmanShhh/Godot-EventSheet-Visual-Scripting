@@ -6588,205 +6588,197 @@ Fade Out Then Retire (3D),페이드 아웃 후 회수 (3D)
 On Retired,회수되었을 때
 "Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.","이 오브젝트가 회수되는 순간에 실행됩니다 - 풀로 돌아갔거나 파괴되었거나. 둘 다 같은 문으로 나갑니다. 풀은 노드를 트리에서 빼내는 방식으로 되받으므로, 이 하나의 시그널은 어느 쪽이 일어났든 정확히 한 번 올라옵니다. 여기서 오브젝트는 아직 유효하며, 그래서 쥐고 있던 것을 놓아 주고, 목록에서 빼고, 다른 누군가에게 사라졌다고 알리기에 알맞은 자리입니다."
 On retired,회수되었을 때
-"Pick the look by looking at it: the button shows one shape over one backdrop drawn through every mode. The five under Native are the ones the renderer draws by itself and cost nothing; the rest read the screen back, which costs one screen read per pixel the item covers. You can also type a mode word, or an expression that works one out while the game runs.",
-Pick a blend mode by looking at it,
-Drawn by the renderer itself - costs nothing,
-Reads the screen back through a shader - one screen read per pixel this item covers,
-"Draw ""%s"" children as one picture",
-Draw %s's children as one,
-"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.",
-"A post effect covers the whole viewport, and %s carries this scene's interface - so whether the interface is graded and dimmed along with the game is decided by two layer numbers nobody chose it with. Draw Post Effects Below %s keeps it sharp; Draw Post Effects Above %s covers it too.",
-"%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.",
-Let The Target Drift,
-"Gives the camera a dead zone: the thing it follows may wander this far from the middle before the camera moves at all. The numbers are fractions of the view, so 0.2 is a fifth of the screen, and the same slack is used on both sides. This is what stops a platformer camera twitching under every small jump.",
-"Let the target drift {across} across, {down} down",
-"How far the target may drift left or right before the camera follows, as a fraction of the view.",
-Down,
-"How far the target may drift up or down before the camera follows, as a fraction of the view.",
-Follow Tightly,
-"Turns the dead zone off, so the camera keeps its target exactly in the middle. The other half of Let The Target Drift - reach for it when a boss arrives, when a cutscene starts, or any time the shot has to be exact.",
-Follow tightly,
-Snap To Target Now,
-"Puts the camera where it is heading, this frame, instead of easing there. The fix for the long pan across the level on the first frame after a respawn or a scene change: smoothing stays on, it just stops owing you a journey.",
-Snap to the target now,
-Smooth Turns,
-"Eases the camera's ROTATION the way Set Smoothing eases its position, so a camera that follows a tilting ship or a rotating gravity field turns instead of snapping. Higher speeds catch up sooner.",
-Smooth turns {enabled} at {speed},
-true / false.,
-How quickly the camera catches up with the angle it is turning to.,
-View Rectangle,
-"What this camera is showing right now, as a rectangle in world units - zoom included. The frame to measure an off-screen cull, a minimap box or a spawn-just-outside-the-view against, and a value you can print while you work out why something is not where you expected.",
-the view rectangle,
-Is Inside Camera View,
-"True when a node's own position sits inside what a camera is showing, with an optional margin so something can count as visible slightly before or after it really is. Reads false when there is no camera, so a scene change cannot fault it. This is the rectangle test - the shipped Is On Screen asks the engine's visibility notifier about the node's whole drawn shape instead, which is the better question for a large sprite.",
-[i]{node}[/i] is inside the view of [i]{camera}[/i],
-The camera whose view is being asked about. The default is whichever camera is looking at the scene right now.,
-"How far outside the view still counts as inside, in world units. Negative shrinks the test area.",
-Fit Limits To,
-"Sets the four scroll limits from a rectangle, so the camera stops at the edges of the level instead of showing the void beyond them. Fill it with Tiled Area to fit the tiles somebody painted, or with a rectangle you chose. The limits are whole pixels, which is what Godot stores them as.",
-Fit limits to {area},
-Area,
-The level's extent as a rectangle in world units. Tiled Area gives you the one the painted tiles make.,
-Tiled Area,
-"The rectangle the painted tiles cover, in world units - the level's own edges, measured rather than typed in. Feed it to Fit Limits To and the camera stops where the level does, however much the level grows. An unpainted layer measures nothing, so the answer is an empty rectangle rather than a wrong one.",
-the tiled area of [i]{layer}[/i],
-The TileMapLayer the level is painted on.,
-Current Camera,
-"The Camera2D the player is looking through right now, or nothing when there is none. Feed it to Is Inside Camera View, read its zoom, or shake whichever camera happens to be live without naming it by tree path.",
-the current camera,
-Look At Over Seconds,
-"Turns the camera to face a node over time instead of snapping to it - the difference between a cut and a shot. It walks the shortest rotation between where the camera is looking and where it should look, so it never rolls sideways on the way and never tips over when the target is nearly overhead. A target sitting exactly where the camera is has no direction to face, so the row does nothing at all rather than erroring.",
-Look at [i]{at}[/i] over {seconds}s,
-The node to turn towards.,
-How long the turn takes.,
-Switch To Perspective,
-"Puts the camera into the ordinary shot, where things further away look smaller, and sets how wide it sees. This is the projection a first- or third-person game uses.",
-Switch to perspective at {degrees},
-Field Of View,
-"How wide the camera sees, in degrees. Lower zooms in.",
-Switch To Orthogonal,
-"Puts the camera into the flat shot, where distance does not shrink anything - the projection an isometric strategy game, a builder's blueprint view or a 2.5D platformer wants. The size is how many world units tall the view is, so a smaller number zooms in.",
-Switch to orthogonal at {size},
-Height,
-How many world units tall the view is. Smaller zooms in.,
-Set Clip Range,
-"Sets how close and how far the camera can see. Nothing nearer than the near value or further than the far value is drawn at all. Push the far value out for a long view, and keep the near value as large as the game allows - a very small near value is the usual cause of surfaces flickering against each other in the distance.",
-Set clip range {near} to {far},
-Near,
-"The closest distance the camera draws, in metres.",
-Far,
-"The furthest distance the camera draws, in metres.",
-Current Camera (3D),
-"The Camera3D the player is looking through right now, or nothing when there is none. The twin of Current Camera, for the dimension where the active camera changes on every cutscene and every vehicle you climb into.",
-the current camera (3D),
-Something Is Under The Cursor,
-"True when the cursor is pointing at something solid, asked by THIS camera of its own viewport - which is the question a split-screen game or a picture-in-picture view has to ask, because the active camera is not the camera the pointer is in. Name the collision layers to keep scenery, triggers or the player's own body out of the answer. For the object itself use Mouse Ray Collider, and for several facts about one hit use Cast Ray From Mouse Into.",
-something is under the cursor within {reach},
-"How far into the scene to look, in metres.",
-"Collision layers to test against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5; the default sees every layer.",
-Point Under The Cursor,
-"Where in the world the cursor is pointing: the surface it lands on, or the far end of the ray when it lands on nothing. It answers with somewhere the player is actually pointing rather than with the origin of the world, which is what a build ghost, a move-order marker or a camera pan needs - a marker that teleports to zero looks like a physics bug and is not one.",
-the point under the cursor within {reach},
-Set View Size,
-"How many pixels a view renders. This is the cost of the view: a minimap drawn into a 200 by 120 panel should render 200 by 120, not the whole window and then a squeeze. Whole pixels only, which is what a view is measured in.",
-Views,
-set view size to [b]{size}[/b],
-"The width and height the view renders at, in pixels.",
-Share The World (2D),
-"Points a view at the same 2D world another viewport is already drawing, so it shows the running game rather than an empty stage. This is the line a minimap needs: without it the second view has a world of its own and renders nothing.",
-share the 2D world of [b]{other}[/b],
-Same world as,
-The viewport whose world this view should show. Leave it on the game's own viewport for a second view of the running game.,
-"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%Minimap"").",
-Share The World (3D),
-"The 3D twin: points a view at the same 3D world another viewport is drawing, so a rear-view mirror or a security monitor shows the level everybody is standing in rather than an empty one.",
-share the 3D world of [b]{other}[/b],
-The viewport whose world this view should show. Leave it on the game's own viewport for a second camera on the running level.,
-Save A Still Of A View,
-"Writes what a view is drawing to a PNG file, after waiting for the frame to finish. A photo mode, a level thumbnail, a save-slot picture, the postcard a player shares. The event pauses for the rest of that frame, so keep it off a per-frame trigger.",
-save a still of [b]{view}[/b] to [b]{path}[/b],
-"The viewport to photograph. Leave it on the game's own viewport for what the player is looking at, or name a SubViewport for an off-screen one.",
-Where to write the PNG. user:// is the writable folder on every platform.,
-Mouse Position In View,
-"Where the pointer is inside one view, in that view's own pixels. A view has its own coordinate space, so this is the answer an in-world screen or a magnifier needs - the window's own answer is somewhere else entirely.",
-mouse position in [b]{view}[/b],
-The viewport to ask. Name a SubViewport for a picture drawn off screen.,
-Stay Fixed On Screen,
-"Pins this whole layer to the screen, so the camera moving through the world leaves it exactly where it is. What a HUD, a pause menu or a letterbox border wants, and what a CanvasLayer does out of the box.",
-stay fixed on screen,
-Move With The World,
-"Lets the camera move this layer, so everything on it sits in the world rather than on the screen. The other half of the switch above: a layer of scenery drawn behind the level, a layer of effects drawn over it, both moving with the view.",
-move with the world,
-Draw Above,
-"Puts this layer one step in front of another one, whatever number that other layer happens to be on. Relative on purpose: insert a layer between them later and the pair keeps its order, where two hand-typed numbers quietly stop meaning what they meant.",
-draw above [b]{other}[/b],
-Above,
-The layer to draw over - this one takes its order plus one.,
-"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%HUD"").",
-Draw Below,
-"The other end: puts this layer one step behind another one, whatever number that other layer is on. The backdrop that must stay behind the world however the world's own layer is numbered.",
-draw below [b]{other}[/b],
-Below,
-The layer to draw behind - this one takes its order minus one.,
-Offset Layer,
-"Nudges the whole layer, without touching a single thing on it. A HUD sliding in from the edge, a background pushed a little to one side, a shake that leaves the world alone.",
-offset layer by [b]{by}[/b],
-"How far to move the layer, in pixels.",
-Scroll At,
-"How much of the camera's movement this layer takes. Below 1 is behind the action and moves slower, which is what reads as distance; 1 moves exactly with the world; above 1 is in front of it. Each axis on its own, so a sky can drift sideways without sliding up and down.",
-scroll at [b]{factor}[/b] of the camera,
-"The share of the camera's movement this layer takes, per axis. 0.5 is half speed.",
-Repeat Every,
-"Tiles this layer forever, one copy every so many pixels, so a scrolling level never runs off the end of the artwork. Set the distance to the artwork's own width to make the seam invisible; a zero on an axis means no repeating along it.",
-repeat every [b]{size}[/b],
-Every,
-"How far apart the copies sit, in pixels. Zero on an axis means it does not repeat that way.",
-Drift,
-"Moves this layer on its own, whether the camera moves or not - clouds crossing the sky, mist over water, a starfield behind a menu that has no camera at all. Pixels per second, per axis; negative goes the other way.",
-drift at [b]{speed}[/b],
-"How fast the layer drifts by itself, in pixels per second, per axis.",
-Scroll Offset,
-"How far this layer has scrolled, in pixels. The number to read when something on the layer has to line up with it - a marker on a distant hill, a sound that fades with the drift.",
-scroll offset,
-Scroll At (Background Layer),
-"The same fraction on the older parallax node: how much of the camera's movement this layer takes, below 1 for distance and above 1 for the foreground. This is the row for a ParallaxLayer inside a ParallaxBackground, which is how a project built before Parallax2D arrived is put together.",
-Repeat Every (Background Layer),
-"The same tiling on the older parallax node: one copy of this layer every so many pixels, so the level never runs off the end of the artwork. Set it to the artwork's own width; a zero on an axis means no repeating along it.",
-Upscale With,
-"How a 3D scene rendered smaller than the window is stretched back up. Plain is the cheapest and the softest; the sharpening upscalers cost a little more and give most of the detail back, which is why a resolution slider is worth having at all.",
-upscale 3D with {method},
-Upscale with,
-How the smaller picture is stretched back up.,
-Bilinear - plain and cheapest,
-"FSR - sharper, still cheap",
-"FSR 2 - sharpest, costs the most",
-Set Temporal AA,
-"Turns temporal antialiasing on or off for the current viewport - it borrows detail from the frames before this one, which is sharper than FXAA on a still image and can shimmer while the camera moves.",
-set temporal AA {enabled},
-Smooth edges by reusing what the last frames drew.,
-Render 3D At,
-"Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.",
-render 3D at {percent}% with {method},
-Percent,
-How much of the window the 3D scene is rendered at. 100 is full resolution; 70 renders about half the pixels.,
-Smooth Edges With,
-"The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.",
-smooth edges with {how},
-Smooth with,
-The one technique in force. Everything else is switched off.,
-"Nothing - hard edges, cheapest",
-"FXAA - cheap, a little soft",
-"Temporal - sharp, can shimmer",
-2 samples,
-4 samples,
-"8 samples - cleanest, dearest",
-Scale The Game,
-"What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.",
-scale the game to {mode},
-Scale,
-What gets stretched when the window is not the size the game was drawn for.,
-"Fit - scale the layout, keep text crisp",
-Stretch - scale the whole picture,
-"Free - no scaling, show more or less",
-Fit The Shape,
-"What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.",
-fit a different shape by {aspect},
-When the shape differs,
-What the extra space becomes when the window is a different shape from the game.,
-"Keep the shape, bars at the edges",
-"Fill the window, shape and all",
-"Keep the width, show more height",
-"Keep the height, show more width",
-Expand - show more either way,
-Keep Pixels Sharp,
-"Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.",
-keep pixels sharp: {stretch},
-Whole pixels,
-Whether the scale is rounded down to a whole number.,
-Yes - whole numbers only,
-No - any fraction,
-Pixel Size,
-"How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.",
-set pixel size to {factor},
-Factor,
-1 is the size the game was drawn at. 2 is twice as big.,
+"%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.","%s 은(는) 픽셀을 또렷하게 유지하면서 픽셀 크기로 %s 을(를) 요청합니다. 정수 배만 허용하면 창이 이 값을 내림하므로, 플레이어가 얻는 크기는 행이 요청한 크기가 아닙니다. 정수를 쓰거나 소수 배를 허용하세요."
+Let The Target Drift,대상이 벗어나도록 허용
+"Gives the camera a dead zone: the thing it follows may wander this far from the middle before the camera moves at all. The numbers are fractions of the view, so 0.2 is a fifth of the screen, and the same slack is used on both sides. This is what stops a platformer camera twitching under every small jump.","카메라에 여유 구역을 줍니다. 따라가는 대상은 카메라가 움직이기 전까지 중심에서 이만큼 벗어날 수 있습니다. 숫자는 화면에 대한 비율이라 0.2는 화면의 5분의 1이며, 같은 여유가 양쪽에 쓰입니다. 작은 점프마다 플랫포머 카메라가 흔들리는 것을 막아 주는 것이 바로 이것입니다."
+"Let the target drift {across} across, {down} down","대상이 가로 {across}, 세로 {down} 만큼 벗어나도록 허용"
+"How far the target may drift left or right before the camera follows, as a fraction of the view.",카메라가 따라가기 전까지 대상이 좌우로 벗어날 수 있는 정도. 화면에 대한 비율입니다.
+Down,세로
+"How far the target may drift up or down before the camera follows, as a fraction of the view.",카메라가 따라가기 전까지 대상이 위아래로 벗어날 수 있는 정도. 화면에 대한 비율입니다.
+Follow Tightly,바짝 따라가기
+"Turns the dead zone off, so the camera keeps its target exactly in the middle. The other half of Let The Target Drift - reach for it when a boss arrives, when a cutscene starts, or any time the shot has to be exact.","여유 구역을 꺼서 카메라가 대상을 정확히 가운데에 둡니다. '대상이 벗어나도록 허용'의 나머지 절반으로, 보스가 등장할 때, 컷신이 시작될 때, 화면 구도가 정확해야 할 때 쓰는 행입니다."
+Follow tightly,바짝 따라가기
+Snap To Target Now,지금 대상으로 붙이기
+"Puts the camera where it is heading, this frame, instead of easing there. The fix for the long pan across the level on the first frame after a respawn or a scene change: smoothing stays on, it just stops owing you a journey.","카메라를 향하던 자리로 이번 프레임에 곧바로 옮깁니다. 부드럽게 이동시키지 않습니다. 리스폰이나 장면 전환 뒤 첫 프레임에 레벨을 가로질러 길게 흐르는 패닝을 없애는 방법입니다. 스무딩은 그대로 켜져 있고, 다만 이동해야 할 빚이 사라집니다."
+Snap to the target now,지금 대상으로 붙이기
+Smooth Turns,회전 부드럽게
+"Eases the camera's ROTATION the way Set Smoothing eases its position, so a camera that follows a tilting ship or a rotating gravity field turns instead of snapping. Higher speeds catch up sooner.",'스무딩 설정'이 위치를 부드럽게 하듯 카메라의 회전을 부드럽게 합니다. 기우는 배나 회전하는 중력장을 따라가는 카메라가 툭 끊기지 않고 돌아갑니다. 속도가 클수록 더 빨리 따라잡습니다.
+Smooth turns {enabled} at {speed},"회전 부드럽게 {enabled}, 속도 {speed}"
+true / false.,true / false.
+How quickly the camera catches up with the angle it is turning to.,카메라가 향하려는 각도를 얼마나 빨리 따라잡는지.
+View Rectangle,보이는 사각 범위
+"What this camera is showing right now, as a rectangle in world units - zoom included. The frame to measure an off-screen cull, a minimap box or a spawn-just-outside-the-view against, and a value you can print while you work out why something is not where you expected.","이 카메라가 지금 보여 주는 범위를, 줌까지 반영한 월드 단위 사각형으로 돌려줍니다. 화면 밖 정리, 미니맵 상자, 시야 바로 바깥에서의 등장을 재는 기준이며, 무언가가 예상한 자리에 없는 이유를 찾을 때 찍어 볼 수 있는 값이기도 합니다."
+the view rectangle,보이는 사각 범위
+Is Inside Camera View,카메라 시야 안에 있음
+"True when a node's own position sits inside what a camera is showing, with an optional margin so something can count as visible slightly before or after it really is. Reads false when there is no camera, so a scene change cannot fault it. This is the rectangle test - the shipped Is On Screen asks the engine's visibility notifier about the node's whole drawn shape instead, which is the better question for a large sprite.","노드 자신의 위치가 카메라가 보여 주는 범위 안에 있으면 참입니다. 여백을 줄 수 있어 실제보다 조금 이르거나 늦게 보이는 것으로 칠 수 있습니다. 카메라가 없으면 거짓이라 장면 전환으로 깨지지 않습니다. 이것은 사각형 검사입니다. 기존의 '화면에 있음'은 엔진의 가시성 알림에 노드가 그려지는 전체 모양을 묻는 쪽이고, 큰 스프라이트에는 그쪽이 더 알맞은 질문입니다."
+[i]{node}[/i] is inside the view of [i]{camera}[/i],[i]{node}[/i] 이(가) [i]{camera}[/i] 의 시야 안에 있음
+The camera whose view is being asked about. The default is whichever camera is looking at the scene right now.,시야를 물어볼 카메라. 기본값은 지금 장면을 비추고 있는 카메라입니다.
+"How far outside the view still counts as inside, in world units. Negative shrinks the test area.","시야 바깥 어디까지를 안으로 칠지. 월드 단위이며, 음수면 판정 범위가 줄어듭니다."
+Fit Limits To,경계를 맞출 대상
+"Sets the four scroll limits from a rectangle, so the camera stops at the edges of the level instead of showing the void beyond them. Fill it with Tiled Area to fit the tiles somebody painted, or with a rectangle you chose. The limits are whole pixels, which is what Godot stores them as.","네 개의 스크롤 경계를 사각형 하나로 설정해, 카메라가 레벨 가장자리에서 멈추고 그 너머의 빈 곳을 비추지 않게 합니다. 누군가 칠해 둔 타일에 맞추려면 '타일이 덮은 범위'를, 직접 고른 사각형이면 그 값을 넣으세요. 경계는 정수 픽셀이며 Godot도 그렇게 저장합니다."
+Fit limits to {area},경계를 {area} 에 맞추기
+Area,범위
+The level's extent as a rectangle in world units. Tiled Area gives you the one the painted tiles make.,레벨의 범위를 월드 단위 사각형으로. '타일이 덮은 범위'는 칠해 둔 타일이 만드는 사각형을 돌려줍니다.
+Tiled Area,타일이 덮은 범위
+"The rectangle the painted tiles cover, in world units - the level's own edges, measured rather than typed in. Feed it to Fit Limits To and the camera stops where the level does, however much the level grows. An unpainted layer measures nothing, so the answer is an empty rectangle rather than a wrong one.","칠해 둔 타일이 덮는 사각형을 월드 단위로 돌려줍니다. 손으로 적은 값이 아니라 실제로 잰 레벨의 가장자리입니다. 이것을 '경계를 맞출 대상'에 넣으면 레벨이 아무리 커져도 카메라는 레벨이 끝나는 곳에서 멈춥니다. 아무것도 칠하지 않은 레이어는 잴 것이 없으므로, 틀린 사각형 대신 빈 사각형을 돌려줍니다."
+the tiled area of [i]{layer}[/i],[i]{layer}[/i] 의 타일이 덮은 범위
+The TileMapLayer the level is painted on.,레벨이 칠해져 있는 TileMapLayer.
+Current Camera,현재 카메라
+"The Camera2D the player is looking through right now, or nothing when there is none. Feed it to Is Inside Camera View, read its zoom, or shake whichever camera happens to be live without naming it by tree path.","플레이어가 지금 들여다보고 있는 Camera2D. 없으면 아무것도 아닙니다. '카메라 시야 안에 있음'에 넘기거나, 줌을 읽거나, 트리 경로로 이름을 대지 않고 지금 살아 있는 카메라를 흔들 수 있습니다."
+the current camera,현재 카메라
+Look At Over Seconds,몇 초에 걸쳐 바라보기
+"Turns the camera to face a node over time instead of snapping to it - the difference between a cut and a shot. It walks the shortest rotation between where the camera is looking and where it should look, so it never rolls sideways on the way and never tips over when the target is nearly overhead. A target sitting exactly where the camera is has no direction to face, so the row does nothing at all rather than erroring.","카메라를 노드 쪽으로 즉시 꺾지 않고 시간을 들여 돌립니다. 컷과 숏의 차이입니다. 지금 보는 방향과 봐야 할 방향 사이를 가장 짧은 회전으로 지나가므로, 가는 동안 옆으로 구르지 않고 대상이 거의 머리 위에 있을 때도 뒤집히지 않습니다. 카메라와 똑같은 자리에 있는 대상은 향할 방향이 없으므로, 행은 오류를 내지 않고 아무것도 하지 않습니다."
+Look at [i]{at}[/i] over {seconds}s,{seconds}초에 걸쳐 [i]{at}[/i] 바라보기
+The node to turn towards.,향할 노드.
+How long the turn takes.,회전에 걸리는 시간.
+Switch To Perspective,원근 투영으로 전환
+"Puts the camera into the ordinary shot, where things further away look smaller, and sets how wide it sees. This is the projection a first- or third-person game uses.","멀리 있는 것이 작게 보이는 보통의 화면으로 카메라를 바꾸고, 얼마나 넓게 볼지도 정합니다. 1인칭이나 3인칭 게임이 쓰는 투영입니다."
+Switch to perspective at {degrees},원근 투영 {degrees} 로 전환
+Field Of View,시야각
+"How wide the camera sees, in degrees. Lower zooms in.","카메라가 얼마나 넓게 보는지, 도 단위. 값이 작을수록 당겨집니다."
+Switch To Orthogonal,직교 투영으로 전환
+"Puts the camera into the flat shot, where distance does not shrink anything - the projection an isometric strategy game, a builder's blueprint view or a 2.5D platformer wants. The size is how many world units tall the view is, so a smaller number zooms in.","거리에 따라 작아지지 않는 평평한 화면으로 카메라를 바꿉니다. 아이소메트릭 전략 게임, 건축 도면 같은 시점, 2.5D 플랫포머가 원하는 투영입니다. 크기는 화면 높이가 월드 단위로 얼마인지이므로, 작은 값일수록 당겨집니다."
+Switch to orthogonal at {size},직교 투영 {size} 로 전환
+Height,높이
+How many world units tall the view is. Smaller zooms in.,화면 높이가 월드 단위로 얼마인지. 작을수록 당겨집니다.
+Set Clip Range,그리는 거리 설정
+"Sets how close and how far the camera can see. Nothing nearer than the near value or further than the far value is drawn at all. Push the far value out for a long view, and keep the near value as large as the game allows - a very small near value is the usual cause of surfaces flickering against each other in the distance.","카메라가 얼마나 가까이, 얼마나 멀리 볼 수 있는지 정합니다. 가까운 값보다 앞, 먼 값보다 뒤에 있는 것은 아예 그려지지 않습니다. 멀리까지 보이게 하려면 먼 값을 밀어내고, 가까운 값은 게임이 허용하는 한 크게 두세요. 가까운 값이 지나치게 작은 것이 먼 곳에서 면끼리 깜빡이는 흔한 원인입니다."
+Set clip range {near} to {far},그리는 거리를 {near} 부터 {far} 까지 설정
+Near,가까이
+"The closest distance the camera draws, in metres.","카메라가 그리는 가장 가까운 거리, 미터 단위."
+Far,멀리
+"The furthest distance the camera draws, in metres.","카메라가 그리는 가장 먼 거리, 미터 단위."
+Current Camera (3D),현재 카메라 (3D)
+"The Camera3D the player is looking through right now, or nothing when there is none. The twin of Current Camera, for the dimension where the active camera changes on every cutscene and every vehicle you climb into.","플레이어가 지금 들여다보고 있는 Camera3D. 없으면 아무것도 아닙니다. 컷신마다, 올라타는 탈것마다 활성 카메라가 바뀌는 차원을 위한 '현재 카메라'의 쌍둥이입니다."
+the current camera (3D),현재 카메라 (3D)
+Something Is Under The Cursor,커서 아래에 무언가 있음
+"True when the cursor is pointing at something solid, asked by THIS camera of its own viewport - which is the question a split-screen game or a picture-in-picture view has to ask, because the active camera is not the camera the pointer is in. Name the collision layers to keep scenery, triggers or the player's own body out of the answer. For the object itself use Mouse Ray Collider, and for several facts about one hit use Cast Ray From Mouse Into.","커서가 단단한 무언가를 가리키고 있으면 참입니다. 다만 묻는 주체는 '이 카메라'이고, 자기 자신의 뷰포트에 대해 묻습니다. 분할 화면이나 화면 속 화면에서는 활성 카메라와 포인터가 있는 카메라가 다르므로, 거기서 필요한 질문이 바로 이것입니다. 배경이나 트리거, 플레이어 자신의 몸을 답에서 빼려면 충돌 레이어를 지정하세요. 맞은 물체 자체는 '마우스 레이 충돌체'로, 한 번의 명중에 대한 여러 사실은 '마우스에서 광선 쏘기'로 얻습니다."
+something is under the cursor within {reach},{reach} 안에서 커서 아래에 무언가 있음
+"How far into the scene to look, in metres.","장면 안쪽으로 얼마나 멀리 볼지, 미터 단위."
+"Collision layers to test against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5; the default sees every layer.",검사할 충돌 레이어. 레이어 하나가 비트 하나이므로 레이어 1과 3이면 1 + 4 = 5입니다. 기본값은 모든 레이어를 봅니다.
+Point Under The Cursor,커서 아래의 지점
+"Where in the world the cursor is pointing: the surface it lands on, or the far end of the ray when it lands on nothing. It answers with somewhere the player is actually pointing rather than with the origin of the world, which is what a build ghost, a move-order marker or a camera pan needs - a marker that teleports to zero looks like a physics bug and is not one.","커서가 월드의 어디를 가리키는지. 닿은 면의 위치이거나, 아무것도 맞히지 못했을 때는 광선의 끝입니다. 월드 원점이 아니라 플레이어가 실제로 가리키는 자리를 돌려줍니다. 건설 고스트, 이동 명령 표식, 카메라 팬이 필요로 하는 것이 바로 이것이며, 원점으로 순간이동하는 표식은 물리 버그처럼 보이지만 버그가 아닙니다."
+the point under the cursor within {reach},{reach} 안에서 커서 아래에 있는 지점
+Set View Size,뷰 크기 설정
+"How many pixels a view renders. This is the cost of the view: a minimap drawn into a 200 by 120 panel should render 200 by 120, not the whole window and then a squeeze. Whole pixels only, which is what a view is measured in.","뷰가 몇 픽셀로 그리는지. 이것이 그 뷰의 비용입니다. 200×120 패널에 그리는 미니맵은 200×120으로 그려야지, 창 전체를 그린 뒤 눌러 담아서는 안 됩니다. 뷰는 정수 픽셀로 재므로 정수만 받습니다."
+Views,뷰
+set view size to [b]{size}[/b],뷰 크기를 [b]{size}[/b] 로 설정
+"The width and height the view renders at, in pixels.","뷰가 그리는 너비와 높이, 픽셀 단위."
+Share The World (2D),같은 세계 보여 주기 (2D)
+"Points a view at the same 2D world another viewport is already drawing, so it shows the running game rather than an empty stage. This is the line a minimap needs: without it the second view has a world of its own and renders nothing.","다른 뷰포트가 이미 그리고 있는 것과 같은 2D 월드를 이 뷰에 지정합니다. 빈 무대가 아니라 실제로 돌아가는 게임이 보이게 됩니다. 미니맵에 필요한 것이 이 한 줄이며, 없으면 두 번째 뷰는 자기만의 월드를 가지고 아무것도 그리지 않습니다."
+share the 2D world of [b]{other}[/b],[b]{other}[/b] 의 2D 세계 보여 주기
+Same world as,같은 세계로 삼을 대상
+The viewport whose world this view should show. Leave it on the game's own viewport for a second view of the running game.,이 뷰가 보여 줄 월드를 가진 뷰포트. 돌아가는 게임의 두 번째 뷰로 쓰려면 게임 자신의 뷰포트 그대로 두세요.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%Minimap"").","이 노드 대신 다른 노드에 작용합니다. 비워 두면 이 노드이고, 노드를 고르거나 트리 경로 없이 지정할 수도 있습니다 - 예: get_node(""%Minimap"")."
+Share The World (3D),같은 세계 보여 주기 (3D)
+"The 3D twin: points a view at the same 3D world another viewport is drawing, so a rear-view mirror or a security monitor shows the level everybody is standing in rather than an empty one.","3D 쌍둥이입니다. 다른 뷰포트가 그리고 있는 것과 같은 3D 월드를 이 뷰에 지정하므로, 백미러나 감시 모니터에 빈 레벨이 아니라 모두가 서 있는 레벨이 비칩니다."
+share the 3D world of [b]{other}[/b],[b]{other}[/b] 의 3D 세계 보여 주기
+The viewport whose world this view should show. Leave it on the game's own viewport for a second camera on the running level.,이 뷰가 보여 줄 월드를 가진 뷰포트. 돌아가는 레벨을 비추는 두 번째 카메라로 쓰려면 게임 자신의 뷰포트 그대로 두세요.
+Save A Still Of A View,뷰의 정지 화면 저장
+"Writes what a view is drawing to a PNG file, after waiting for the frame to finish. A photo mode, a level thumbnail, a save-slot picture, the postcard a player shares. The event pauses for the rest of that frame, so keep it off a per-frame trigger.","뷰가 그리고 있는 것을, 그 프레임의 그리기가 끝나기를 기다린 뒤 PNG 파일로 씁니다. 포토 모드, 레벨 썸네일, 저장 슬롯 그림, 플레이어가 공유하는 한 장. 이벤트는 그 프레임의 나머지 동안 멈추므로, 매 프레임 발동하는 트리거 아래에는 두지 마세요."
+save a still of [b]{view}[/b] to [b]{path}[/b],[b]{view}[/b] 의 정지 화면을 [b]{path}[/b] 에 저장
+"The viewport to photograph. Leave it on the game's own viewport for what the player is looking at, or name a SubViewport for an off-screen one.","사진으로 찍을 뷰포트. 플레이어가 보고 있는 화면이면 게임 자신의 뷰포트 그대로 두고, 화면 밖의 것이면 SubViewport를 지정하세요."
+Where to write the PNG. user:// is the writable folder on every platform.,PNG를 쓸 위치. user:// 는 모든 플랫폼에서 쓰기가 되는 폴더입니다.
+Mouse Position In View,뷰 안의 마우스 위치
+"Where the pointer is inside one view, in that view's own pixels. A view has its own coordinate space, so this is the answer an in-world screen or a magnifier needs - the window's own answer is somewhere else entirely.","포인터가 그 뷰 안의 어디에 있는지, 그 뷰 자신의 픽셀로. 뷰는 자기만의 좌표 공간을 가지므로, 월드 안의 화면이나 돋보기가 필요로 하는 답이 바로 이것입니다. 창 자신의 답은 전혀 다른 곳을 가리킵니다."
+mouse position in [b]{view}[/b],[b]{view}[/b] 안의 마우스 위치
+The viewport to ask. Name a SubViewport for a picture drawn off screen.,물어볼 뷰포트. 화면 밖에 그려지는 그림이면 SubViewport를 지정하세요.
+Stay Fixed On Screen,화면에 고정하기
+"Pins this whole layer to the screen, so the camera moving through the world leaves it exactly where it is. What a HUD, a pause menu or a letterbox border wants, and what a CanvasLayer does out of the box.","이 레이어 전체를 화면에 붙입니다. 카메라가 월드를 돌아다녀도 레이어는 있던 자리에 그대로 있습니다. HUD, 일시정지 메뉴, 레터박스 띠가 원하는 것이고, CanvasLayer가 기본으로 하는 일이기도 합니다."
+stay fixed on screen,화면에 고정하기
+Move With The World,세계와 함께 움직이기
+"Lets the camera move this layer, so everything on it sits in the world rather than on the screen. The other half of the switch above: a layer of scenery drawn behind the level, a layer of effects drawn over it, both moving with the view.","이 레이어를 카메라가 움직일 수 있게 합니다. 위에 놓인 것들이 화면이 아니라 월드 안에 있게 됩니다. 위 스위치의 나머지 절반으로, 레벨 뒤의 배경 레이어와 앞의 효과 레이어가 모두 시점과 함께 움직입니다."
+move with the world,세계와 함께 움직이기
+Draw Above,위에 그리기
+"Puts this layer one step in front of another one, whatever number that other layer happens to be on. Relative on purpose: insert a layer between them later and the pair keeps its order, where two hand-typed numbers quietly stop meaning what they meant.","이 레이어를 상대 레이어가 지금 몇 번이든 상관없이 그 한 단계 앞에 둡니다. 일부러 상대적으로 만들었습니다. 나중에 사이에 레이어를 끼워 넣어도 두 레이어의 순서는 유지되지만, 손으로 적은 두 숫자는 조용히 의미를 잃습니다."
+draw above [b]{other}[/b],[b]{other}[/b] 위에 그리기
+Above,위로 둘 대상
+The layer to draw over - this one takes its order plus one.,위에 그릴 상대 레이어. 이 레이어는 그 순서에 1을 더한 값을 가집니다.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_node(""%HUD"").","이 노드 대신 다른 노드에 작용합니다. 비워 두면 이 노드이고, 노드를 고르거나 트리 경로 없이 지정할 수도 있습니다 - 예: get_node(""%HUD"")."
+Draw Below,아래에 그리기
+"The other end: puts this layer one step behind another one, whatever number that other layer is on. The backdrop that must stay behind the world however the world's own layer is numbered.",반대쪽입니다. 이 레이어를 상대 레이어가 몇 번이든 그 한 단계 뒤에 둡니다. 월드 자신의 레이어가 어떻게 번호 매겨져 있든 그 뒤에 있어야 하는 배경을 위한 행입니다.
+draw below [b]{other}[/b],[b]{other}[/b] 아래에 그리기
+Below,아래로 둘 대상
+The layer to draw behind - this one takes its order minus one.,뒤에 그릴 상대 레이어. 이 레이어는 그 순서에서 1을 뺀 값을 가집니다.
+Offset Layer,레이어 밀기
+"Nudges the whole layer, without touching a single thing on it. A HUD sliding in from the edge, a background pushed a little to one side, a shake that leaves the world alone.","레이어 전체를 밀어냅니다. 그 위에 놓인 것은 하나도 건드리지 않습니다. 가장자리에서 미끄러져 들어오는 HUD, 살짝 옆으로 민 배경, 월드는 그대로 두는 흔들림에."
+offset layer by [b]{by}[/b],레이어를 [b]{by}[/b] 만큼 밀기
+"How far to move the layer, in pixels.","레이어를 움직일 거리, 픽셀 단위."
+Scroll At,스크롤 비율
+"How much of the camera's movement this layer takes. Below 1 is behind the action and moves slower, which is what reads as distance; 1 moves exactly with the world; above 1 is in front of it. Each axis on its own, so a sky can drift sideways without sliding up and down.","카메라 움직임 가운데 이 레이어가 얼마나 가져갈지. 1보다 작으면 뒤쪽에서 더 느리게 움직이고, 그것이 거리감으로 읽힙니다. 1이면 월드와 똑같이 움직이고, 1보다 크면 앞쪽입니다. 축마다 따로라서 하늘을 옆으로만 흘리고 위아래로는 미끄러지지 않게 할 수 있습니다."
+scroll at [b]{factor}[/b] of the camera,카메라의 [b]{factor}[/b] 로 스크롤
+"The share of the camera's movement this layer takes, per axis. 0.5 is half speed.","이 레이어가 카메라 움직임에서 가져가는 비율, 축마다. 0.5면 절반 속도입니다."
+Repeat Every,반복 간격
+"Tiles this layer forever, one copy every so many pixels, so a scrolling level never runs off the end of the artwork. Set the distance to the artwork's own width to make the seam invisible; a zero on an axis means no repeating along it.","이 레이어를 몇 픽셀마다 한 장씩, 끝없이 이어 붙입니다. 스크롤하는 레벨이 그림 끝을 벗어나는 일이 없어집니다. 간격을 그림 자체의 너비로 맞추면 이음매가 보이지 않습니다. 어떤 축이 0이면 그 방향으로는 반복하지 않습니다."
+repeat every [b]{size}[/b],[b]{size}[/b] 마다 반복
+Every,간격
+"How far apart the copies sit, in pixels. Zero on an axis means it does not repeat that way.","복사본 사이의 간격, 픽셀 단위. 어떤 축이 0이면 그 방향으로는 반복하지 않습니다."
+Drift,자동 흐름
+"Moves this layer on its own, whether the camera moves or not - clouds crossing the sky, mist over water, a starfield behind a menu that has no camera at all. Pixels per second, per axis; negative goes the other way.","카메라가 움직이든 말든 이 레이어를 스스로 움직입니다. 하늘을 가로지르는 구름, 물 위의 안개, 카메라가 아예 없는 메뉴 뒤의 별밭 같은 것들. 초당 픽셀을 축마다 지정하고, 음수면 반대 방향입니다."
+drift at [b]{speed}[/b],[b]{speed}[/b] 로 자동 흐름
+"How fast the layer drifts by itself, in pixels per second, per axis.","레이어가 스스로 흐르는 속도, 축마다 초당 픽셀."
+Scroll Offset,스크롤 누적값
+"How far this layer has scrolled, in pixels. The number to read when something on the layer has to line up with it - a marker on a distant hill, a sound that fades with the drift.","이 레이어가 얼마나 스크롤되었는지, 픽셀 단위. 레이어 위의 무언가를 거기에 맞춰야 할 때 읽는 값으로, 먼 언덕의 표식이나 흐름에 따라 잦아드는 소리에 씁니다."
+scroll offset,스크롤 누적값
+Scroll At (Background Layer),스크롤 비율 (배경 레이어)
+"The same fraction on the older parallax node: how much of the camera's movement this layer takes, below 1 for distance and above 1 for the foreground. This is the row for a ParallaxLayer inside a ParallaxBackground, which is how a project built before Parallax2D arrived is put together.","예전 패럴랙스 노드에서 같은 비율을 지정합니다. 카메라 움직임 가운데 이 레이어가 가져가는 몫이며, 1보다 작으면 원경, 1보다 크면 전경입니다. ParallaxBackground 안의 ParallaxLayer를 위한 행으로, Parallax2D 이전에 만든 프로젝트가 이렇게 구성되어 있습니다."
+Repeat Every (Background Layer),반복 간격 (배경 레이어)
+"The same tiling on the older parallax node: one copy of this layer every so many pixels, so the level never runs off the end of the artwork. Set it to the artwork's own width; a zero on an axis means no repeating along it.",예전 패럴랙스 노드에서 같은 반복을 합니다. 이 레이어를 몇 픽셀마다 한 장씩 놓아 레벨이 그림 끝을 벗어나지 않게 합니다. 그림 자체의 너비로 맞추세요. 어떤 축이 0이면 그 방향으로는 반복하지 않습니다.
+Upscale With,업스케일 방식
+"How a 3D scene rendered smaller than the window is stretched back up. Plain is the cheapest and the softest; the sharpening upscalers cost a little more and give most of the detail back, which is why a resolution slider is worth having at all.","창보다 작게 그린 3D 장면을 어떻게 다시 늘릴지. 평범한 방식이 가장 싸고 가장 부드럽습니다. 선명하게 만드는 업스케일러는 조금 더 비싸지만 세부를 대부분 되돌려 주며, 해상도 슬라이더가 의미 있는 이유가 바로 그것입니다."
+upscale 3D with {method},3D를 {method} 로 업스케일
+Upscale with,업스케일 방식
+How the smaller picture is stretched back up.,작게 그린 그림을 어떻게 늘릴지.
+Bilinear - plain and cheapest,쌍선형 - 평범하고 가장 저렴
+"FSR - sharper, still cheap",FSR - 더 선명하고 여전히 저렴
+"FSR 2 - sharpest, costs the most",FSR 2 - 가장 선명하고 가장 비쌈
+Set Temporal AA,시간적 AA 설정
+"Turns temporal antialiasing on or off for the current viewport - it borrows detail from the frames before this one, which is sharper than FXAA on a still image and can shimmer while the camera moves.","현재 뷰포트의 시간적 안티에일리어싱을 켜거나 끕니다. 앞선 프레임들에서 세부를 빌려 오므로 정지 화면에서는 FXAA보다 선명하지만, 카메라가 움직이는 동안 아른거릴 수 있습니다."
+set temporal AA {enabled},시간적 AA를 {enabled} 로 설정
+Smooth edges by reusing what the last frames drew.,앞선 프레임들이 그린 것을 다시 써서 가장자리를 매끄럽게 합니다.
+Render 3D At,3D 렌더링 비율
+"Renders the 3D scene at a percentage of the window and upscales it back, choosing HOW it is upscaled. The performance slider a 3D game ships with: 70% with a sharpening upscaler often looks better than 70% plain and costs the same. 2D drawing and the interface are untouched - they stay at full resolution.","3D 장면을 창의 몇 퍼센트로 그린 뒤 다시 늘립니다. 어떻게 늘릴지도 같은 행에서 고릅니다. 3D 게임이 함께 내보내는 성능 슬라이더 그 자체로, 선명하게 만드는 업스케일러를 쓴 70 %는 평범한 70 %보다 나아 보이는 경우가 많고 비용은 같습니다. 2D 그리기와 인터페이스는 건드리지 않고 전체 해상도를 유지합니다."
+render 3D at {percent}% with {method},3D를 {percent} % 로 {method} 를 써서 렌더링
+Percent,비율
+How much of the window the 3D scene is rendered at. 100 is full resolution; 70 renders about half the pixels.,"3D 장면을 창의 얼마만큼으로 그릴지. 100이 전체 해상도이고, 70이면 그리는 픽셀 수가 대략 절반입니다."
+Smooth Edges With,가장자리를 매끄럽게 할 방법
+"The one antialiasing switch a graphics menu needs: pick a technique and every other one is turned off, so a player cannot end up paying for two at once. FXAA is cheap and slightly soft, temporal is sharper and can shimmer while the camera moves, and the sample counts are the expensive, cleanest option on a 3D scene.","그래픽 메뉴에 필요한 안티에일리어싱 스위치는 이 하나면 됩니다. 한 가지를 고르면 나머지는 모두 꺼지므로 플레이어가 두 가지 비용을 동시에 치를 일이 없습니다. FXAA는 저렴하고 살짝 부드럽고, 시간적 방식은 선명하지만 카메라가 움직일 때 아른거릴 수 있으며, 샘플 수는 3D 장면에서 가장 깨끗하지만 가장 비싼 선택입니다."
+smooth edges with {how},가장자리를 {how} 로 매끄럽게
+Smooth with,매끄럽게 할 방법
+The one technique in force. Everything else is switched off.,실제로 적용되는 단 하나의 방식. 나머지는 모두 꺼집니다.
+"Nothing - hard edges, cheapest",없음 - 가장자리가 딱딱하고 가장 저렴
+"FXAA - cheap, a little soft",FXAA - 저렴하고 살짝 부드러움
+"Temporal - sharp, can shimmer",시간적 - 선명하지만 아른거릴 수 있음
+2 samples,2 샘플
+4 samples,4 샘플
+"8 samples - cleanest, dearest",8 샘플 - 가장 깨끗하고 가장 비쌈
+Scale The Game,게임 배율 방식
+"What happens to a game drawn for one size when the window is another. Fitting the layout keeps text and interface crisp and stretches the placement; stretching the picture blows the whole rendered frame up, which is what a pixel-art game wants; free leaves everything where it was drawn and simply shows more or less of the world.","한 크기에 맞춰 그린 게임을 다른 크기의 창에 띄웠을 때 어떻게 할지. 레이아웃을 맞추는 방식은 글자와 인터페이스를 또렷하게 유지한 채 배치만 늘립니다. 그림을 늘리는 방식은 완성된 화면 전체를 확대하는 것으로, 픽셀 아트 게임이 원하는 쪽입니다. 자유는 아무것도 늘리지 않고 월드를 더 많이 또는 더 적게 보여 줍니다."
+scale the game to {mode},게임 배율 방식을 {mode} 로
+Scale,배율 대상
+What gets stretched when the window is not the size the game was drawn for.,창이 게임을 그린 크기와 다를 때 무엇을 늘릴지.
+"Fit - scale the layout, keep text crisp",맞추기 - 레이아웃을 늘리고 글자는 또렷하게
+Stretch - scale the whole picture,늘리기 - 화면 전체를 확대
+"Free - no scaling, show more or less","자유 - 배율 없이, 보이는 범위만 늘고 줄기"
+Fit The Shape,화면 비율이 다를 때
+"What happens when the window is a different SHAPE from the game - a widescreen monitor for a game drawn square, a phone held the other way up. Keeping the shape puts bars at the edges and never distorts anything; filling the window stretches the picture out of shape; the three showing-more answers give the extra space to the world instead.","창이 게임과 다른 '모양'일 때 어떻게 할지. 정사각형으로 그린 게임을 와이드 모니터에서, 혹은 반대로 든 휴대폰에서 볼 때입니다. 모양을 지키는 쪽은 가장자리에 띠를 두고 아무것도 일그러뜨리지 않습니다. 창을 채우는 쪽은 그림을 모양째 늘립니다. 더 보여 주는 세 가지 답은 남는 공간을 월드에 줍니다."
+fit a different shape by {aspect},화면 비율이 다르면 {aspect}
+When the shape differs,화면 비율이 다를 때
+What the extra space becomes when the window is a different shape from the game.,창이 게임과 다른 모양일 때 남는 공간을 어떻게 할지.
+"Keep the shape, bars at the edges",모양을 지키고 가장자리에 띠
+"Fill the window, shape and all",모양째 늘려 창을 채우기
+"Keep the width, show more height",너비를 지키고 높이를 더 보여 주기
+"Keep the height, show more width",높이를 지키고 너비를 더 보여 주기
+Expand - show more either way,확장 - 어느 쪽으로든 더 보여 주기
+Keep Pixels Sharp,픽셀을 또렷하게 유지
+"Whether the game may only be scaled by a whole number. A pixel-art game scaled by 2.5 draws some source pixels twice and some three times, which is the shimmering, uneven look nobody can name and everybody sees; whole numbers only means bars at the edges instead. Anything that is not pixel art wants the fraction.",게임을 정수 배로만 확대할지 여부. 픽셀 아트를 2.5배로 늘리면 원본 픽셀이 두 번 그려지는 곳과 세 번 그려지는 곳이 섞입니다. 아무도 이름을 대지 못하지만 모두가 알아채는 그 아른거리고 고르지 않은 모습이 이것입니다. 정수 배만 허용하면 대신 가장자리에 띠가 생깁니다. 픽셀 아트가 아닌 것은 소수 배를 원합니다.
+keep pixels sharp: {stretch},픽셀을 또렷하게 유지: {stretch}
+Whole pixels,정수 배
+Whether the scale is rounded down to a whole number.,배율을 정수로 내림할지 여부.
+Yes - whole numbers only,예 - 정수 배만
+No - any fraction,아니요 - 소수 배도 허용
+Pixel Size,픽셀 크기
+"How big one drawn pixel is on the screen, on top of everything else. 2 draws the game twice the size, which is the accessibility answer for a small interface and the zoom answer for a pixel-art game on a big monitor. Whole numbers only when pixels are being kept sharp.","화면에서 그려지는 픽셀 하나가 얼마나 큰지, 다른 모든 것 위에 얹힙니다. 2면 게임이 두 배 크기로 그려지며, 작은 인터페이스에 대한 접근성의 답이자 큰 모니터에서 픽셀 아트를 볼 때의 확대 답입니다. 픽셀을 또렷하게 유지하는 동안에는 정수만 쓰입니다."
+set pixel size to {factor},픽셀 크기를 {factor} 로 설정
+Factor,배수
+1 is the size the game was drawn at. 2 is twice as big.,1은 게임을 그린 크기입니다. 2는 그 두 배입니다.
