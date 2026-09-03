@@ -8,6 +8,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 const _EASES := ["linear=Linear", "ease_in=Ease in", "ease_out=Ease out",
 	"ease_in_out=Ease in and out"]
 
+## The class the pack ships as - the prefix a row's emitted call opens with.
+const PACK_CLASS := "CameraRailBehavior"
+
 
 ## Camera Rail: a shot list for a Camera2D. Attach it under the camera you want to direct and the
 ## rail flies that camera along a drawn Path2D over a number of seconds, holds on a beat, blends
@@ -29,6 +32,7 @@ static func build() -> bool:
 		"Flies the rail's camera along a drawn Path2D, start to end, over a number of seconds - the dolly shot. The rail's own camera takes the view as the flight starts, so a flight begun after a Cut To is seen rather than played off screen. Write null for the path to walk the route set in the Inspector, and 0 seconds to use the rail's default pace. On Shot Finished fires at the end of the run.",
 		[["path", "Path2D"], ["seconds", "float"], ["ease", "String"]])
 	_options(src.sheet, "ease", _EASES)
+	_quoted_argument(src.sheet, "fly_along({path}, {seconds}, \"{ease}\")")
 	src.verb("cut_to", "Cut To",
 		"Hands the view to another camera immediately - the hard cut. Whatever shot the rail was running stops where it stands, without firing On Shot Finished, because the cut is the ending.",
 		[["camera", "Camera2D"]])
@@ -36,6 +40,7 @@ static func build() -> bool:
 		"Travels the rail's camera onto another camera - position, rotation and zoom together - over a number of seconds, then hands the view to it. The soft cut between two framed shots. The travel starts from whatever shot is on screen: if the rail had handed the view away, its own camera stands on that shot first and takes the view back, so the blend is continuous rather than a jump. On Blend Finished fires at the handover.",
 		[["camera", "Camera2D"], ["seconds", "float"], ["ease", "String"]])
 	_options(src.sheet, "ease", _EASES)
+	_quoted_argument(src.sheet, "blend_to({camera}, {seconds}, \"{ease}\")")
 	src.verb("hold", "Hold",
 		"Parks the rail for a number of seconds and then fires On Shot Finished - the beat between two moves. It leaves the view exactly where it is, so a hold after a Cut To is the beat on THAT camera. 0 seconds falls back to the rail's default pace.",
 		[["seconds", "float"]])
@@ -70,3 +75,14 @@ static func _options(sheet: EventSheetResource, param_id: String, choices: Array
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.options = typed
+
+
+## Rewrites the last-declared verb's emitted call so a slot lands inside GDScript QUOTES. A dropdown
+## key is inserted verbatim, so a String argument picked from a list would otherwise emit
+## `fly_along($Route, 4, ease_in)` - an identifier nothing declares. The four keys are words the
+## behaviour matches, and words in GDScript are written in quotes; the annotation vocabulary carries
+## no quoted dropdown key (the scanner reads the quotes off again), so the template holds them.
+## The call prefix is the pack's own class name, which is the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [PACK_CLASS, call]

@@ -36,6 +36,39 @@ static func run() -> bool:
 	all_passed = _test_the_2d_rail() and all_passed
 	all_passed = _test_the_3d_rail() and all_passed
 	all_passed = _test_the_shared_curves() and all_passed
+	all_passed = _test_the_emitted_calls() and all_passed
+	return all_passed
+
+
+## The call a picked row emits. The ease is a DROPDOWN over four words, and a dropdown key is
+## inserted verbatim - so the shipped template has to write the quotes around it, or a row picking
+## "Ease in" emits `fly_along($Route, 4, ease_in)` and the game will not parse. The four templates
+## are read off the shipped packs and put through the compiler's own emitter, because a pin on the
+## annotation text alone would not notice the emitter changing under it.
+static func _test_the_emitted_calls() -> bool:
+	var all_passed: bool = true
+	for pinned: Array in [
+		[PACK_2D, "$CameraRailBehavior.fly_along({path}, {seconds}, \"{ease}\")",
+			"$CameraRailBehavior.fly_along($Route, 4.0, \"ease_in\")"],
+		[PACK_2D, "$CameraRailBehavior.blend_to({camera}, {seconds}, \"{ease}\")",
+			"$CameraRailBehavior.blend_to($Other, 4.0, \"ease_in\")"],
+		[PACK_3D, "$CameraRail3DBehavior.fly_along({path}, {seconds}, \"{ease}\", {look_at})",
+			"$CameraRail3DBehavior.fly_along($Route, 4.0, \"ease_in\", $Player)"],
+		[PACK_3D, "$CameraRail3DBehavior.blend_to({camera}, {seconds}, \"{ease}\")",
+			"$CameraRail3DBehavior.blend_to($Other, 4.0, \"ease_in\")"],
+	]:
+		var template: String = str(pinned[1])
+		var shipped: String = FileAccess.get_file_as_string(str(pinned[0]))
+		all_passed = _check("the pack ships %s" % template,
+			shipped.contains("## @ace_codegen_template(\"%s\")" % template), true) and all_passed
+		var action: ACEAction = ACEAction.new()
+		action.provider_id = "CameraRail"
+		action.ace_id = "method:pinned"
+		action.codegen_template = template
+		action.params = {"path": "$Route", "camera": "$Other", "seconds": "4.0", "ease": "ease_in",
+			"look_at": "$Player"}
+		all_passed = _check("a picked ease emits a word, not an identifier",
+			ActionCodegen.generate_action(action), str(pinned[2])) and all_passed
 	return all_passed
 
 

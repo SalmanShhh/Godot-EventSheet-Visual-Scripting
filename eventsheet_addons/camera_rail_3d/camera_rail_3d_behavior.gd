@@ -95,7 +95,7 @@ func _process(delta: float) -> void:
 ## @ace_display_template("fly along [i]{path}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b], watching [i]{look_at}[/i]")
 ## @ace_param_options(ease linear=Linear, ease_in=Ease in, ease_out=Ease out, ease_in_out=Ease in and out)
 ## @ace_icon("res://eventsheet_addons/camera_rail_3d/icon.svg")
-## @ace_codegen_template("$CameraRail3DBehavior.fly_along({path}, {seconds}, {ease}, {look_at})")
+## @ace_codegen_template("$CameraRail3DBehavior.fly_along({path}, {seconds}, "{ease}", {look_at})")
 func fly_along(path: Path3D, seconds: float, ease: String, look_at: Node3D) -> void:
 	var walked: Path3D = path if path != null else route
 	if walked == null or walked.curve == null or walked.curve.get_baked_length() <= 0.0:
@@ -144,7 +144,7 @@ func cut_to(camera: Camera3D) -> void:
 ## @ace_display_template("blend onto [i]{camera}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b]")
 ## @ace_param_options(ease linear=Linear, ease_in=Ease in, ease_out=Ease out, ease_in_out=Ease in and out)
 ## @ace_icon("res://eventsheet_addons/camera_rail_3d/icon.svg")
-## @ace_codegen_template("$CameraRail3DBehavior.blend_to({camera}, {seconds}, {ease})")
+## @ace_codegen_template("$CameraRail3DBehavior.blend_to({camera}, {seconds}, "{ease}")")
 func blend_to(camera: Camera3D, seconds: float, ease: String) -> void:
 	if camera == null or host == null:
 		return
