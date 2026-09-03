@@ -818,6 +818,55 @@ static func manifest() -> PackManifest:
 	return PackManifest.new()
 
 
+## Ships a pack's COMPANION FILES: the files a pack needs beside its script that are not GDScript at
+## all - a `.gdshader`, a `.glsl`, a `.tscn`. They are authored in the pack's own source folder,
+## where they are highlighted and (for a shader) parse-checked on import, and copied here to the
+## folder the pack itself is written into, so a shipped pack folder is self-contained.
+##
+## THE COPY IS THE BUILD, so it obeys the same two rules the pack's own bytes do: it follows
+## `output_override_dir` (a gate rebuilding into a temporary folder gets the companions there too,
+## rather than writing into the repository behind the gate's back), and it is byte-stable - a file
+## whose bytes already match is left alone, so a second build changes nothing and `git status` after
+## one is empty.
+##
+## `extensions` names what to copy, without the dot, so a folder may hold both the source `.gd` the
+## pieces come from (never shipped) and the companions that are.
+static func ship_files(source_dir: String, base_path: String, extensions: PackedStringArray) -> bool:
+	var from_dir: String = SOURCE_ROOT.path_join(source_dir)
+	var into_dir: String = base_path.get_base_dir()
+	if not output_override_dir.is_empty():
+		into_dir = output_override_dir
+	var reader: DirAccess = DirAccess.open(from_dir)
+	if reader == null:
+		push_error("pack source folder %s does not exist, so its companion files cannot ship" % from_dir)
+		return false
+	if DirAccess.make_dir_recursive_absolute(into_dir) != OK and not DirAccess.dir_exists_absolute(into_dir):
+		push_error("companion files cannot be written to %s" % into_dir)
+		return false
+	var names: PackedStringArray = PackedStringArray()
+	for entry: String in reader.get_files():
+		if extensions.has(entry.get_extension()):
+			names.append(entry)
+	names.sort()
+	if names.is_empty():
+		push_error("pack source folder %s holds no companion file with one of these extensions: %s" % [
+			from_dir, ", ".join(extensions)])
+		return false
+	for file_name: String in names:
+		var text: String = FileAccess.get_file_as_string(from_dir.path_join(file_name))
+		var into_path: String = into_dir.path_join(file_name)
+		if FileAccess.file_exists(into_path) and FileAccess.get_file_as_string(into_path) == text:
+			continue
+		var handle: FileAccess = FileAccess.open(into_path, FileAccess.WRITE)
+		if handle == null:
+			push_error("companion file %s could not be written" % into_path)
+			return false
+		handle.store_string(text)
+	print("[build_sample_behaviors] shipped %d companion file(s) beside %s" % [
+		names.size(), base_path.get_file()])
+	return true
+
+
 # Every piece in every `.gd` of one source folder, read in sorted file order so a build is
 # deterministic. A duplicate piece name is an error rather than a silent last-one-wins, because the
 # two pieces would be indistinguishable at the call site that asks for one of them.
