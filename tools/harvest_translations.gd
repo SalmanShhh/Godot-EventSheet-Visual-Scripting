@@ -164,6 +164,10 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# How two pictures meet: the two rows that make what a node draws the shape its children draw
 	# inside. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/canvas_clip_aces.gd",
+	# What the lens lets in and what it keeps sharp, and a whole world saved as a file and put on
+	# in one row. Two modules, each shipped whole, so the whole of each is owed.
+	"res://addons/eventforge/registration/modules/focus_and_exposure_aces.gd",
+	"res://addons/eventforge/registration/modules/world_look_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files
@@ -311,6 +315,22 @@ const OWED_VERBS_IN_MODULE: Dictionary = {
 	"res://addons/eventforge/registration/modules/timed_input_aces.gd": [
 		"BufferInput", "IsInputBuffered", "ConsumeBufferedInput",
 		"BufferInputFrames", "IsInputBufferedFrames", "ConsumeBufferedInputFrames",
+	],
+	# What an effect looks like, said in seven words on the two objects a particle system
+	# really is: the sets, the reads and the fades, each in both dimensions. The module
+	# predates the wave, so only what the wave added is owed and it is named here.
+	"res://addons/eventforge/registration/modules/particle_aces.gd": [
+		"ParticleSetGravity", "ParticleSetSpread", "ParticleSetSpeed", "ParticleSetSize",
+		"ParticleSetColour", "ParticleSetLifetime", "ParticleSetAmount", "ParticleGravity",
+		"ParticleSpread", "ParticleSpeed", "ParticleSpeedMost", "ParticleSize", "ParticleSizeMost",
+		"ParticleColour", "ParticleLifetime", "ParticleAmount", "ParticleFadeGravity",
+		"ParticleFadeSpread", "ParticleFadeSpeed", "ParticleFadeSize", "ParticleFadeColour",
+		"ParticleFadeLifetime", "ParticleSetGravity3D", "ParticleSetSpread3D", "ParticleSetSpeed3D",
+		"ParticleSetSize3D", "ParticleSetColour3D", "ParticleSetLifetime3D", "ParticleSetAmount3D",
+		"ParticleGravity3D", "ParticleSpread3D", "ParticleSpeed3D", "ParticleSpeedMost3D",
+		"ParticleSize3D", "ParticleSizeMost3D", "ParticleColour3D", "ParticleLifetime3D",
+		"ParticleAmount3D", "ParticleFadeGravity3D", "ParticleFadeSpread3D", "ParticleFadeSpeed3D",
+		"ParticleFadeSize3D", "ParticleFadeColour3D", "ParticleFadeLifetime3D",
 	],
 }
 

@@ -6820,3 +6820,155 @@ Which renderer to ask about.,どのレンダラーについて尋ねるか。
 "Forward+ - desktop, every feature",Forward+ - デスクトップ、全機能
 Mobile - phones and tablets,Mobile - スマートフォンとタブレット
 Compatibility - old GPUs and the web,Compatibility - 古い GPU とウェブ
+Set Camera Exposure,カメラ露出を設定
+"How much light the lens lets in: 1 is untouched, 2 is twice as bright, 0.5 is half. Different from the world's exposure, which is applied to the finished picture - this one belongs to the camera, so two cameras in one scene can see the same room differently. Applies to this camera. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `attributes.exposure_multiplier`.",レンズが取り込む光の量です。1 はそのまま、2 は倍の明るさ、0.5 は半分です。仕上がった絵にかかるワールドの露出とは別物で、こちらはカメラのものなので、同じ部屋でも 2 台のカメラが違う見え方をします。このカメラに効きます。先にこのノードへカメラ属性の自前のコピーを渡すので、他のカメラと共有している属性ファイルが知らないうちに変わることはありません。空のスロットには実用レンズが入り、誰かが物理レンズを入れたスロットはそのままです。`attributes.exposure_multiplier` に書き込みます。
+Set camera exposure to {value},カメラ露出を {value} に設定
+"How much light the lens lets in: 1 is untouched, 2 is twice as bright, 0.5 is half. Different from the world's exposure, which is applied to the finished picture - this one belongs to the camera, so two cameras in one scene can see the same room differently.",レンズが取り込む光の量です。1 はそのまま、2 は倍の明るさ、0.5 は半分です。仕上がった絵にかかるワールドの露出とは別物で、こちらはカメラのものなので、同じ部屋でも 2 台のカメラが違う見え方をします。
+Camera Exposure,カメラ露出
+Reads the camera exposure back: `attributes.exposure_multiplier`. Answers for this camera. Use it in any value field.,カメラ露出を読み取ります: `attributes.exposure_multiplier`。このカメラについて答えます。どの値フィールドでも使えます。
+camera exposure,カメラ露出
+Fade Camera Exposure,カメラ露出をフェードさせる
+"Walks the camera exposure to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a fade to white. Gives this node its own copy of the camera attributes first. Writes `attributes.exposure_multiplier`.",カメラ露出を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで覚えておく状態はなく、ホワイトアウトもこれだけで足ります。先にこのノードへカメラ属性の自前のコピーを渡します。`attributes.exposure_multiplier` に書き込みます。
+Fade camera exposure to {value} over {seconds} s,カメラ露出を {seconds} 秒かけて {value} へフェード
+The camera exposure to arrive at.,たどり着くカメラ露出。
+Turn Auto Exposure On,自動露出を入れる
+"Lets the lens open and close by itself with how bright the picture is - the eye adjusting when the player walks out of a cave. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Applies to this camera. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `attributes.auto_exposure_enabled`.",絵の明るさに合わせてレンズが自分で開き閉じします。プレイヤーが洞窟から出たときに目が慣れていく、あの動きです。Forward+ 専用です。Mobile と Compatibility ではエラーにならず、この行は何もしません。このカメラに効きます。先にこのノードへカメラ属性の自前のコピーを渡すので、他のカメラと共有している属性ファイルが知らないうちに変わることはありません。空のスロットには実用レンズが入り、誰かが物理レンズを入れたスロットはそのままです。`attributes.auto_exposure_enabled` に書き込みます。
+"Turn auto exposure on, {speed} a second",自動露出を入れる、毎秒 {speed}
+"How fast the lens adjusts, as a share of the way there each second. Small numbers take their time; large ones snap.",レンズが合わせる速さを、毎秒どれだけ近づくかで表します。小さい値はゆっくり、大きい値は一気に合います。
+Least light,最小の明るさ
+"The dimmest the lens will let the picture get, in ISO. 0 leaves the bottom end open.",レンズが許す一番暗いところを ISO で指定します。0 なら下限なしです。
+Most light,最大の明るさ
+"The brightest the lens will let the picture get, in ISO. Lower it to stop a dark room washing out.",レンズが許す一番明るいところを ISO で指定します。暗い部屋が白飛びするなら下げてください。
+Turn Auto Exposure Off,自動露出を切る
+"Puts the lens back under the sheet's control, at whatever exposure it had drifted to. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Writes `attributes.auto_exposure_enabled`.",レンズをシートの手に戻します。露出はそのとき流れ着いていた値のままです。Forward+ 専用です。Mobile と Compatibility ではエラーにならず、この行は何もしません。`attributes.auto_exposure_enabled` に書き込みます。
+Turn auto exposure off,自動露出を切る
+Is Auto Exposure On,自動露出が入っている
+True while the lens is adjusting itself to how bright the picture is. Reads `attributes.auto_exposure_enabled`.,レンズが絵の明るさに合わせて自分で調整している間、真になります。`attributes.auto_exposure_enabled` を読み取ります。
+auto exposure is on,自動露出が入っている
+"How much light the lens lets in: 1 is untouched, 2 is twice as bright, 0.5 is half. Different from the world's exposure, which is applied to the finished picture - this one belongs to the camera, so two cameras in one scene can see the same room differently. Applies to every camera that has none of its own. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `camera_attributes.exposure_multiplier`.",レンズが取り込む光の量です。1 はそのまま、2 は倍の明るさ、0.5 は半分です。仕上がった絵にかかるワールドの露出とは別物で、こちらはカメラのものなので、同じ部屋でも 2 台のカメラが違う見え方をします。自前の属性を持たないすべてのカメラに効きます。先にこのノードへカメラ属性の自前のコピーを渡すので、他のカメラと共有している属性ファイルが知らないうちに変わることはありません。空のスロットには実用レンズが入り、誰かが物理レンズを入れたスロットはそのままです。`camera_attributes.exposure_multiplier` に書き込みます。
+Reads the camera exposure back: `camera_attributes.exposure_multiplier`. Answers for every camera that has none of its own. Use it in any value field.,カメラ露出を読み取ります: `camera_attributes.exposure_multiplier`。自前の属性を持たないすべてのカメラについて答えます。どの値フィールドでも使えます。
+"Walks the camera exposure to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a fade to white. Gives this node its own copy of the camera attributes first. Writes `camera_attributes.exposure_multiplier`.",カメラ露出を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで覚えておく状態はなく、ホワイトアウトもこれだけで足ります。先にこのノードへカメラ属性の自前のコピーを渡します。`camera_attributes.exposure_multiplier` に書き込みます。
+"Lets the lens open and close by itself with how bright the picture is - the eye adjusting when the player walks out of a cave. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Applies to every camera that has none of its own. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `camera_attributes.auto_exposure_enabled`.",絵の明るさに合わせてレンズが自分で開き閉じします。プレイヤーが洞窟から出たときに目が慣れていく、あの動きです。Forward+ 専用です。Mobile と Compatibility ではエラーにならず、この行は何もしません。自前の属性を持たないすべてのカメラに効きます。先にこのノードへカメラ属性の自前のコピーを渡すので、他のカメラと共有している属性ファイルが知らないうちに変わることはありません。空のスロットには実用レンズが入り、誰かが物理レンズを入れたスロットはそのままです。`camera_attributes.auto_exposure_enabled` に書き込みます。
+"Puts the lens back under the sheet's control, at whatever exposure it had drifted to. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Writes `camera_attributes.auto_exposure_enabled`.",レンズをシートの手に戻します。露出はそのとき流れ着いていた値のままです。Forward+ 専用です。Mobile と Compatibility ではエラーにならず、この行は何もしません。`camera_attributes.auto_exposure_enabled` に書き込みます。
+True while the lens is adjusting itself to how bright the picture is. Reads `camera_attributes.auto_exposure_enabled`.,レンズが絵の明るさに合わせて自分で調整している間、真になります。`camera_attributes.auto_exposure_enabled` を読み取ります。
+Focus On,ピントを合わせる
+"Puts the sharp part of the picture on something and lets everything behind it go soft - the shot that says look here. Takes a node to measure the distance to, or the distance itself in metres, so a cutscene can focus on the speaker and a menu can focus on a fixed plane. Gives this camera its own copy of the camera attributes first, and does nothing at all on a camera somebody fitted with a physical lens. Writes `attributes.dof_blur_far_enabled` and `attributes.dof_blur_far_distance`, and walks `attributes.dof_blur_far_transition`.",絵のはっきりした部分を何かに合わせ、その後ろをぼかします。ここを見て、と言うためのショットです。距離を測る相手のノードか、メートル単位の距離そのものを取るので、カットシーンでは話し手に、メニューでは決まった面に合わせられます。先にこのカメラへカメラ属性の自前のコピーを渡し、誰かが物理レンズを入れたカメラでは何もしません。`attributes.dof_blur_far_enabled` と `attributes.dof_blur_far_distance` に書き込み、`attributes.dof_blur_far_transition` を動かします。
+"Focus on {subject}, soft {beyond} m past it, over {seconds} s",{subject} にピントを合わせ、{beyond} m 先からぼかす、{seconds} 秒かけて
+Subject,被写体
+"What to keep sharp: a node to measure the distance to, or a distance in metres.",はっきりさせたいもの。距離を測る相手のノードか、メートル単位の距離です。
+Soft after,ぼけ始め
+How many metres past the subject the picture takes to go fully soft. Small numbers snap out of focus; large ones drift.,被写体の何メートル先で完全にぼけきるかです。小さい値は急にぼけ、大きい値はゆるやかに流れます。
+How long the focus takes to settle.,ピントが落ち着くまでの時間です。
+Focus Everywhere,全体にピントを合わせる
+"Takes the blur off and makes the whole picture sharp again, easing it out rather than cutting - the shot coming back from a close-up. The blur amount is put back where it was once the far blur is off, so the next Focus On starts from the same lens it did the first time. Gives this camera its own copy of the camera attributes first, and does nothing at all on a camera somebody fitted with a physical lens.",ぼけを外して画面全体をまた鮮明にします。切り替えではなくゆっくり戻すので、寄りから引くショットになります。遠景ぼけを切った時点でぼけ量を元に戻すため、次のピント合わせは初回と同じレンズから始まります。先にこのカメラへカメラ属性の自前のコピーを渡し、誰かが物理レンズを入れたカメラでは何もしません。
+Focus everywhere over {seconds} s,{seconds} 秒かけて全体にピントを合わせる
+How long the picture takes to come back sharp.,画面が鮮明に戻るまでの時間です。
+Focus Distance,ピント距離
+"How many metres away the picture stops being sharp, as Focus On last left it. Reads `attributes.dof_blur_far_distance`. Use it in any value field.",何メートル先から絵が鮮明でなくなるかを、直前のピント合わせが残した値で返します。`attributes.dof_blur_far_distance` を読み取ります。どの値フィールドでも使えます。
+focus distance,ピント距離
+Use World Look,ワールドルックを使う
+"Puts a whole saved world on at once - the fog, the glow, the sky, the colour grading and everything else that lives on an Environment - from a file in the project. The file is deep-copied first, so the look on disk is left exactly as it was saved and the world this scene is wearing is this scene's own: turning the fog up afterwards changes nothing anywhere else. Make a look the ordinary Godot way, by setting a WorldEnvironment up the way you want it and saving its Environment out; nothing is shipped for you.",保存されたワールドをまるごと一度に着せます。霧、グロー、空、カラーグレーディングなど Environment にあるものすべてを、プロジェクト内のファイルから読み込みます。先にディープコピーを取るので、ディスク上のルックは保存されたときのままで、このシーンが着ているワールドはこのシーンのものです。あとから霧を濃くしても他のどこにも影響しません。ルックは Godot のふつうのやり方で作ります。WorldEnvironment を好きなように設定して、その Environment を保存するだけです。既製のルックは同梱していません。
+Use world look {look},ワールドルック {look} を使う
+"The node wearing the world: a WorldEnvironment, or a Camera3D with an environment of its own.",ワールドを着ているノードです。WorldEnvironment か、自前の Environment を持つ Camera3D です。
+Look,ルック
+"The look to put on, as an Environment file in the project.",着せるルックを、プロジェクト内の Environment ファイルで指定します。
+Blend To World Look,ワールドルックへブレンド
+"Crosses over to a saved world instead of cutting to it. Every number, vector and colour an Environment holds - fog thickness, saturation, exposure, the sky's colours - is walked from where it is now to where the look has it over the seconds asked for. Everything that is a switch or a mode - glow on or off, which tone map, which sky - has nothing in between to walk through, so it is cut all at once at the HALFWAY point, where a cut is least visible. When the walk lands, this node's world_look_blended signal is raised with the look it landed on, which On World Look Blended listens to.",保存されたワールドへ、切り替えではなくクロスして移ります。Environment が持つ数値・ベクトル・色 - 霧の濃さ、彩度、露出、空の色など - は、指定した秒数をかけて今の値からルックの値まで動きます。スイッチやモード - グローの入切、どのトーンマップ、どの空 - には途中の値がないので、切れ目がいちばん目立たない中間点で一気に切り替わります。到着すると、このノードの world_look_blended シグナルが着いたルックとともに発せられ、それをワールドルック到着時が受け取ります。
+Blend to world look {look} over {seconds} s,{seconds} 秒かけてワールドルック {look} へブレンド
+"The look to cross over to, as an Environment file in the project.",渡っていく先のルックを、プロジェクト内の Environment ファイルで指定します。
+How long the crossfade takes. The switches and modes are cut at half of it.,クロスフェードにかける時間です。スイッチとモードはその半分の時点で切り替わります。
+Current World Look,現在のワールドルック
+"The path of the look file this node's world came from, or blank when it is wearing a world nobody named - one built in the scene rather than loaded. Reads what the last Use World Look or Blend To World Look wrote down, which is the only place the answer can come from: the copy a row put on is a copy, and a copy has no file of its own.",このノードのワールドがどのルックファイルから来たかのパスです。誰も名前を付けていないワールド - 読み込まれたのではなくシーンの中で組まれたもの - を着ているときは空になります。直前のワールドルックを使うかワールドルックへブレンドが書き留めた値を読みます。答えが出せる場所はそこだけです。行が着せたコピーはコピーであり、コピーには自分のファイルがないからです。
+the world look being worn,着ているワールドルック
+On World Look Blended,ワールドルック到着時
+"Runs when a Blend To World Look row finished crossing over, and hands over the look it landed on. The signal is one this sheet declares for itself - add a signal block saying world_look_blended(look) and both halves are ordinary Godot - so the moment the world finished changing becomes something the game can answer: start the scene, let the player move, play the next line.",ワールドルックへブレンドの行が渡り終わったときに走り、着いたルックを渡します。このシグナルはシート自身が宣言します - world_look_blended(look) と書いたシグナルブロックを足せば、どちらの側もふつうの Godot です。こうしてワールドが変わり終わった瞬間が、ゲームの側から応えられるものになります。シーンを始める、プレイヤーを動かせるようにする、次のせりふを流す、といった具合です。
+On the world look landing,ワールドルックが着いたとき
+Set Particle Gravity,パーティクル重力を設定
+"Which way the particles fall and how hard, as a direction with a length. Point it up for smoke and bubbles, leave it at nothing for sparks in space, turn it sideways for rain in a gale. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.gravity`.",パーティクルがどちらへどれくらい強く落ちるかを、長さを持った向きで表します。上に向ければ煙や泡、ゼロのままなら宇宙の火花、横に倒せば横なぐりの雨になります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.gravity` に書き込みます。
+Set gravity to {value},重力を {value} に設定
+"Which way the particles fall and how hard, as a direction with a length. Point it up for smoke and bubbles, leave it at nothing for sparks in space, turn it sideways for rain in a gale.",パーティクルがどちらへどれくらい強く落ちるかを、長さを持った向きで表します。上に向ければ煙や泡、ゼロのままなら宇宙の火花、横に倒せば横なぐりの雨になります。
+Particle Gravity,パーティクル重力
+"Reads the effect's gravity back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.gravity`. Use it in any value field.",エフェクトの重力を読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.gravity` に書き込みます。どの値フィールドでも使えます。
+particle gravity,パーティクル重力
+Fade Particle Gravity,パーティクル重力をフェードさせる
+"Walks the effect's gravity to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.gravity`.",重力を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.gravity` に書き込みます。
+Fade gravity to {value} over {seconds} s,重力を {seconds} 秒かけて {value} へ
+The gravity to arrive at.,たどり着く重力。
+Set Particle Spread,パーティクル拡散角を設定
+"How wide the particles fan out from the way the emitter is pointing, in degrees. 0 is a straight jet, 45 is a cone, 180 is every direction at once. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.spread`.",エミッタの向きからパーティクルがどれだけ広がるかを度で表します。0 はまっすぐな噴射、45 は円錐、180 は全方向です。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.spread` に書き込みます。
+Set spread to {value},拡散角を {value} に設定
+"How wide the particles fan out from the way the emitter is pointing, in degrees. 0 is a straight jet, 45 is a cone, 180 is every direction at once.",エミッタの向きからパーティクルがどれだけ広がるかを度で表します。0 はまっすぐな噴射、45 は円錐、180 は全方向です。
+Particle Spread,パーティクル拡散角
+"Reads the effect's spread back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.spread`. Use it in any value field.",エフェクトの拡散角を読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.spread` に書き込みます。どの値フィールドでも使えます。
+particle spread,パーティクル拡散角
+Fade Particle Spread,パーティクル拡散角をフェードさせる
+"Walks the effect's spread to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.spread`.",拡散角を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.spread` に書き込みます。
+Fade spread to {value} over {seconds} s,拡散角を {seconds} 秒かけて {value} へ
+The spread to arrive at.,たどり着く拡散角。
+Set Particle Speed,パーティクル速度を設定
+"How fast a new particle sets off. Both ends of the range are on this one row, because a range with only one end set is how every particle in an effect ends up at exactly one speed. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_min`.",新しいパーティクルが飛び出す速さです。範囲の両端がこの 1 行に載っています。片方だけ設定した範囲こそ、エフェクトのすべての粒がまったく同じ速さになってしまう原因だからです。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.initial_velocity_min` に書き込みます。
+Set speed to {value} - {most},速度を {value} - {most} に設定
+Slowest,最も遅く
+"How fast a new particle sets off. Both ends of the range are on this one row, because a range with only one end set is how every particle in an effect ends up at exactly one speed.",新しいパーティクルが飛び出す速さです。範囲の両端がこの 1 行に載っています。片方だけ設定した範囲こそ、エフェクトのすべての粒がまったく同じ速さになってしまう原因だからです。
+Fastest,最も速く
+The fastest a new particle sets off. Set it the same as the slowest for an effect where everything moves together.,新しいパーティクルが飛び出す速さの上限です。最も遅い値と同じにすると、全部がそろって動くエフェクトになります。
+Slowest Particle Speed,最も遅いパーティクル速度
+"Reads the effect's speed back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_min`. Use it in any value field.",エフェクトの速度を読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.initial_velocity_min` に書き込みます。どの値フィールドでも使えます。
+slowest particle speed,最も遅いパーティクル速度
+Fastest Particle Speed,最も速いパーティクル速度
+"Reads the other end of the effect's speed back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_max`. Use it in any value field.",範囲のもう一方の端を読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.initial_velocity_max` に書き込みます。どの値フィールドでも使えます。
+fastest particle speed,最も速いパーティクル速度
+Fade Particle Speed,パーティクル速度をフェードさせる
+"Walks the effect's speed to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_min`.",速度を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.initial_velocity_min` に書き込みます。
+Fade speed to {value} over {seconds} s,速度を {seconds} 秒かけて {value} へ
+The speed to arrive at.,たどり着く速度。
+The other end of the range to arrive at.,たどり着く範囲のもう一方の端。
+Set Particle Size,パーティクルサイズを設定
+"How big a new particle is, as a multiple of the picture it is drawn with. Both ends of the range are on this one row, for the same reason speed's are. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_min`.",新しいパーティクルの大きさを、描かれる絵の何倍かで表します。範囲の両端がこの 1 行に載っているのは、速度と同じ理由です。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.scale_min` に書き込みます。
+Set size to {value} - {most},サイズを {value} - {most} に設定
+Smallest,最も小さく
+"How big a new particle is, as a multiple of the picture it is drawn with. Both ends of the range are on this one row, for the same reason speed's are.",新しいパーティクルの大きさを、描かれる絵の何倍かで表します。範囲の両端がこの 1 行に載っているのは、速度と同じ理由です。
+Biggest,最も大きく
+How big the biggest new particle is. Set it the same as the smallest for an effect where everything is one size.,新しいパーティクルの最大の大きさです。最も小さい値と同じにすると、全部が同じ大きさのエフェクトになります。
+Smallest Particle Size,最も小さいパーティクルサイズ
+"Reads the effect's size back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_min`. Use it in any value field.",エフェクトのサイズを読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.scale_min` に書き込みます。どの値フィールドでも使えます。
+smallest particle size,最も小さいパーティクルサイズ
+Biggest Particle Size,最も大きいパーティクルサイズ
+"Reads the other end of the effect's size back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_max`. Use it in any value field.",範囲のもう一方の端を読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.scale_max` に書き込みます。どの値フィールドでも使えます。
+biggest particle size,最も大きいパーティクルサイズ
+Fade Particle Size,パーティクルサイズをフェードさせる
+"Walks the effect's size to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_min`.",サイズを一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.scale_min` に書き込みます。
+Fade size to {value} over {seconds} s,サイズを {seconds} 秒かけて {value} へ
+The size to arrive at.,たどり着くサイズ。
+Set Particle Colour,パーティクル色を設定
+"The colour every particle is tinted. Multiplied with whatever picture the emitter draws with, so white leaves the picture as it is. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.color`.",すべてのパーティクルにかける色です。エミッタが描く絵と掛け合わされるので、白なら絵はそのままです。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.color` に書き込みます。
+"The colour every particle is tinted. Multiplied with whatever picture the emitter draws with, so white leaves the picture as it is.",すべてのパーティクルにかける色です。エミッタが描く絵と掛け合わされるので、白なら絵はそのままです。
+Particle Colour,パーティクル色
+"Reads the effect's colour back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.color`. Use it in any value field.",エフェクトの色を読み取ります。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.color` に書き込みます。どの値フィールドでも使えます。
+particle colour,パーティクル色
+Fade Particle Colour,パーティクル色をフェードさせる
+"Walks the effect's colour to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.color`.",色を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。先にこのエミッタへプロセスマテリアルの自前のコピーを渡すので、他のエミッタと共有しているエフェクトファイルが知らないうちに変わることはありません。パーティクルシェーダーで動いているエミッタには何もしません - そこではこれらの設定はシェーダーの中にあります。`ParticleProcessMaterial.color` に書き込みます。
+Set Particle Lifetime,パーティクル寿命を設定
+"How many seconds one particle lasts before it goes out. Longer lifetimes with the same amount means a thinner, longer trail; shorter ones mean a denser puff. Writes `GPUParticles2D.lifetime`, which is the emitter's own.",1 粒が消えるまで何秒もつかです。個数が同じなら、寿命が長いほど細く長い尾になり、短いほど濃い塊になります。エミッタ自身のプロパティである `GPUParticles2D.lifetime` に書き込みます。
+Set lifetime to {value},寿命を {value} に設定
+"How many seconds one particle lasts before it goes out. Longer lifetimes with the same amount means a thinner, longer trail; shorter ones mean a denser puff.",1 粒が消えるまで何秒もつかです。個数が同じなら、寿命が長いほど細く長い尾になり、短いほど濃い塊になります。
+Particle Lifetime,パーティクル寿命
+"Reads the effect's lifetime back. Writes `GPUParticles2D.lifetime`, which is the emitter's own. Use it in any value field.",エフェクトの寿命を読み取ります。エミッタ自身のプロパティである `GPUParticles2D.lifetime` に書き込みます。どの値フィールドでも使えます。
+particle lifetime,パーティクル寿命
+Fade Particle Lifetime,パーティクル寿命をフェードさせる
+"Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles2D.lifetime`, which is the emitter's own.",寿命を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。エミッタ自身のプロパティである `GPUParticles2D.lifetime` に書き込みます。
+Fade lifetime to {value} over {seconds} s,寿命を {seconds} 秒かけて {value} へ
+The emitter to fade. Leave it as self to fade the one this sheet is on.,フェードさせるエミッタです。self のままなら、このシートが乗っているエミッタになります。
+The lifetime to arrive at.,たどり着く寿命。
+Set Particle Amount,パーティクル個数を設定
+"How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles2D.amount`, which is the emitter's own.",エミッタが同時に空中に保つパーティクルの数です。これを書き込むとエンジンはパーティクルバッファをまるごと捨てて作り直すので、毎フレームではなく「ここぞ」という瞬間に使う行です。フェードが用意されていないのもそのためです。エミッタ自身のプロパティである `GPUParticles2D.amount` に書き込みます。
+Set amount to {value},個数を {value} に設定
+"How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it.",エミッタが同時に空中に保つパーティクルの数です。これを書き込むとエンジンはパーティクルバッファをまるごと捨てて作り直すので、毎フレームではなく「ここぞ」という瞬間に使う行です。フェードが用意されていないのもそのためです。
+Particle Amount,パーティクル個数
+"Reads the effect's amount back. Writes `GPUParticles2D.amount`, which is the emitter's own. Use it in any value field.",エフェクトの個数を読み取ります。エミッタ自身のプロパティである `GPUParticles2D.amount` に書き込みます。どの値フィールドでも使えます。
+particle amount,パーティクル個数
+"How many seconds one particle lasts before it goes out. Longer lifetimes with the same amount means a thinner, longer trail; shorter ones mean a denser puff. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",1 粒が消えるまで何秒もつかです。個数が同じなら、寿命が長いほど細く長い尾になり、短いほど濃い塊になります。エミッタ自身のプロパティである `GPUParticles3D.lifetime` に書き込みます。
+"Reads the effect's lifetime back. Writes `GPUParticles3D.lifetime`, which is the emitter's own. Use it in any value field.",エフェクトの寿命を読み取ります。エミッタ自身のプロパティである `GPUParticles3D.lifetime` に書き込みます。どの値フィールドでも使えます。
+"Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",寿命を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。エミッタ自身のプロパティである `GPUParticles3D.lifetime` に書き込みます。
+"How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.",エミッタが同時に空中に保つパーティクルの数です。これを書き込むとエンジンはパーティクルバッファをまるごと捨てて作り直すので、毎フレームではなく「ここぞ」という瞬間に使う行です。フェードが用意されていないのもそのためです。エミッタ自身のプロパティである `GPUParticles3D.amount` に書き込みます。
+"Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",エフェクトの個数を読み取ります。エミッタ自身のプロパティである `GPUParticles3D.amount` に書き込みます。どの値フィールドでも使えます。

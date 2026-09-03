@@ -328,7 +328,49 @@ const FULLY_KEYED_ACES: Array[String] = [
 	# How two pictures meet: the two rows that make what a node draws the shape its children draw
 	# inside. Its own group for the same reason the one above is - a wave appends rather than
 	# rewrapping the lines of the wave beside it.
-	"ClipMyChildren", "StopClipping"
+	"ClipMyChildren", "StopClipping",
+	# The world's own look and the sky behind it, plus the one blend word a 2D light gained
+	# beside them. They landed keyed and uncounted: the modules joined the l10n obligation and
+	# the nine files were filled, and this ratchet was the one reader nobody told.
+	"EnvSaturation", "EnvSetSaturation", "EnvFadeSaturation", "EnvContrast", "EnvSetContrast",
+	"EnvFadeContrast", "EnvPictureBrightness", "EnvSetPictureBrightness", "EnvFadePictureBrightness",
+	"EnvExposure", "EnvSetExposure", "EnvFadeExposure", "EnvGlowBloom", "EnvSetGlowBloom",
+	"EnvFadeGlowBloom", "EnvGlowThreshold", "EnvSetGlowThreshold", "EnvGlowBlend", "EnvSetGlowBlend",
+	"EnvSetGlowLevel", "EnvSetGlowLevels", "EnvColourGrade", "EnvSetColourGrade", "EnvToneMap",
+	"EnvSetToneMap", "EnvBackdrop", "EnvSetBackdrop", "EnvFogFloor", "EnvSetFogFloor",
+	"EnvFogFloorThickness", "EnvSetFogFloorThickness", "EnvFadeFogFloorThickness",
+	"EnvAerialPerspective", "EnvSetAerialPerspective", "EnvFadeAerialPerspective", "EnvFogSunGlow",
+	"EnvSetFogSunGlow", "EnvFadeFogSunGlow", "EnvVolumetricThickness", "EnvSetVolumetricThickness",
+	"EnvFadeVolumetricThickness", "EnvVolumetricColour", "EnvSetVolumetricColour",
+	"EnvFadeVolumetricColour", "EnvVolumetricReach", "EnvSetVolumetricReach",
+	"EnvFadeVolumetricReach", "EnvVolumetricFogOn", "EnvVolumetricFogOff", "EnvIsVolumetricFog",
+	"EnvReflectionsOn", "EnvReflectionsOff", "EnvIsReflections", "EnvIndirectLightOn",
+	"EnvIndirectLightOff", "EnvIsIndirectLight", "EnvGlobalIlluminationOn",
+	"EnvGlobalIlluminationOff", "EnvIsGlobalIllumination", "EnvTurnOcclusionOnAtQuality",
+	"EnvTurnOcclusionOff", "EnvIsOcclusionOn", "EnvTurnIndirectLightOnAtQuality",
+	"EnvTurnGlobalIlluminationOnAtQuality", "EnvTurnReflectionsOnAtQuality", "SkySkyTop",
+	"SkySetSkyTop", "SkyFadeSkyTop", "SkySkyHorizon", "SkySetSkyHorizon", "SkyFadeSkyHorizon",
+	"SkySkyGround", "SkySetSkyGround", "SkyFadeSkyGround", "SkySunSize", "SkySetSunSize",
+	"SkyFadeSunSize", "SkySkyEnergy", "SkySetSkyEnergy", "SkyFadeSkyEnergy", "SkyUseProcedural",
+	"SkyUsePanorama", "LightSetBlend", "LightBlend",
+	# The lens, the look worn as a file, and the seven particle words on both emitters. Their
+	# own group for the same reason every group above has one - a wave appends rather than
+	# rewrapping the lines of the wave beside it.
+	"CamSetExposure", "CamExposure", "CamFadeExposure", "CamAutoExposureOn", "CamAutoExposureOff",
+	"CamIsAutoExposureOn", "CamSetExposureWorld", "CamExposureWorld", "CamFadeExposureWorld",
+	"CamAutoExposureWorldOn", "CamAutoExposureWorldOff", "CamIsAutoExposureWorldOn", "CamFocusOn",
+	"CamFocusEverywhere", "CamFocusDistance", "WorldUseLook", "WorldBlendToLook", "WorldCurrentLook",
+	"OnWorldLookBlended", "ParticleSetGravity", "ParticleGravity", "ParticleFadeGravity",
+	"ParticleSetSpread", "ParticleSpread", "ParticleFadeSpread", "ParticleSetSpeed", "ParticleSpeed",
+	"ParticleSpeedMost", "ParticleFadeSpeed", "ParticleSetSize", "ParticleSize", "ParticleSizeMost",
+	"ParticleFadeSize", "ParticleSetColour", "ParticleColour", "ParticleFadeColour",
+	"ParticleSetLifetime", "ParticleLifetime", "ParticleFadeLifetime", "ParticleSetAmount",
+	"ParticleAmount", "ParticleSetGravity3D", "ParticleGravity3D", "ParticleFadeGravity3D",
+	"ParticleSetSpread3D", "ParticleSpread3D", "ParticleFadeSpread3D", "ParticleSetSpeed3D",
+	"ParticleSpeed3D", "ParticleSpeedMost3D", "ParticleFadeSpeed3D", "ParticleSetSize3D",
+	"ParticleSize3D", "ParticleSizeMost3D", "ParticleFadeSize3D", "ParticleSetColour3D",
+	"ParticleColour3D", "ParticleFadeColour3D", "ParticleSetLifetime3D", "ParticleLifetime3D",
+	"ParticleFadeLifetime3D", "ParticleSetAmount3D", "ParticleAmount3D",
 ]
 
 

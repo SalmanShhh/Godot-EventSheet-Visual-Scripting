@@ -6820,3 +6820,155 @@ Which renderer to ask about.,要询问哪个渲染器。
 "Forward+ - desktop, every feature",Forward+ - 桌面端，全部功能
 Mobile - phones and tablets,Mobile - 手机和平板
 Compatibility - old GPUs and the web,Compatibility - 老旧 GPU 和网页
+Set Camera Exposure,设置相机曝光
+"How much light the lens lets in: 1 is untouched, 2 is twice as bright, 0.5 is half. Different from the world's exposure, which is applied to the finished picture - this one belongs to the camera, so two cameras in one scene can see the same room differently. Applies to this camera. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `attributes.exposure_multiplier`.",镜头让进来的光量：1 表示原样，2 表示亮一倍，0.5 表示一半。它和作用于成品画面的世界曝光不是一回事 - 这一个属于相机，所以同一个场景里的两台相机可以把同一个房间看成不同的样子。作用于这台相机。会先给这个节点一份属于它自己的相机属性副本，所以与其他相机共用的属性文件不会在它们脚下被改掉 - 空槽位会拿到一支实用镜头，而有人特意放了物理镜头的槽位则保持不变。写入 `attributes.exposure_multiplier`。
+Set camera exposure to {value},把相机曝光设为 {value}
+"How much light the lens lets in: 1 is untouched, 2 is twice as bright, 0.5 is half. Different from the world's exposure, which is applied to the finished picture - this one belongs to the camera, so two cameras in one scene can see the same room differently.",镜头让进来的光量：1 表示原样，2 表示亮一倍，0.5 表示一半。它和作用于成品画面的世界曝光不是一回事 - 这一个属于相机，所以同一个场景里的两台相机可以把同一个房间看成不同的样子。
+Camera Exposure,相机曝光
+Reads the camera exposure back: `attributes.exposure_multiplier`. Answers for this camera. Use it in any value field.,读回相机曝光：`attributes.exposure_multiplier`。回答的是这台相机。可用在任何数值字段里。
+camera exposure,相机曝光
+Fade Camera Exposure,渐变相机曝光
+"Walks the camera exposure to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a fade to white. Gives this node its own copy of the camera attributes first. Writes `attributes.exposure_multiplier`.",让相机曝光随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存状态，整段白场也就是它。会先给这个节点一份属于它自己的相机属性副本。写入 `attributes.exposure_multiplier`。
+Fade camera exposure to {value} over {seconds} s,用 {seconds} 秒把相机曝光渐变到 {value}
+The camera exposure to arrive at.,要到达的相机曝光。
+Turn Auto Exposure On,打开自动曝光
+"Lets the lens open and close by itself with how bright the picture is - the eye adjusting when the player walks out of a cave. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Applies to this camera. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `attributes.auto_exposure_enabled`.",让镜头随画面明暗自己开合 - 就是玩家走出洞穴时眼睛适应的那种感觉。仅限 Forward+：在 Mobile 与 Compatibility 上这一行不会报错，而是什么也不做。作用于这台相机。会先给这个节点一份属于它自己的相机属性副本，所以与其他相机共用的属性文件不会在它们脚下被改掉 - 空槽位会拿到一支实用镜头，而有人特意放了物理镜头的槽位则保持不变。写入 `attributes.auto_exposure_enabled`。
+"Turn auto exposure on, {speed} a second",打开自动曝光，每秒 {speed}
+"How fast the lens adjusts, as a share of the way there each second. Small numbers take their time; large ones snap.",镜头调整的快慢，用每秒走完多少路来表示。数值小就慢慢来，数值大就一下到位。
+Least light,最少光量
+"The dimmest the lens will let the picture get, in ISO. 0 leaves the bottom end open.",镜头允许画面暗到的极限，用 ISO 表示。填 0 表示下限不设。
+Most light,最多光量
+"The brightest the lens will let the picture get, in ISO. Lower it to stop a dark room washing out.",镜头允许画面亮到的极限，用 ISO 表示。暗房间被冲白时把它调低。
+Turn Auto Exposure Off,关闭自动曝光
+"Puts the lens back under the sheet's control, at whatever exposure it had drifted to. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Writes `attributes.auto_exposure_enabled`.",把镜头交回事件表控制，曝光停在它飘到的那个值上。仅限 Forward+：在 Mobile 与 Compatibility 上这一行不会报错，而是什么也不做。写入 `attributes.auto_exposure_enabled`。
+Turn auto exposure off,关闭自动曝光
+Is Auto Exposure On,自动曝光已打开
+True while the lens is adjusting itself to how bright the picture is. Reads `attributes.auto_exposure_enabled`.,当镜头正在自己跟随画面明暗调整时为真。读取 `attributes.auto_exposure_enabled`。
+auto exposure is on,自动曝光已打开
+"How much light the lens lets in: 1 is untouched, 2 is twice as bright, 0.5 is half. Different from the world's exposure, which is applied to the finished picture - this one belongs to the camera, so two cameras in one scene can see the same room differently. Applies to every camera that has none of its own. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `camera_attributes.exposure_multiplier`.",镜头让进来的光量：1 表示原样，2 表示亮一倍，0.5 表示一半。它和作用于成品画面的世界曝光不是一回事 - 这一个属于相机，所以同一个场景里的两台相机可以把同一个房间看成不同的样子。作用于所有没有自己属性的相机。会先给这个节点一份属于它自己的相机属性副本，所以与其他相机共用的属性文件不会在它们脚下被改掉 - 空槽位会拿到一支实用镜头，而有人特意放了物理镜头的槽位则保持不变。写入 `camera_attributes.exposure_multiplier`。
+Reads the camera exposure back: `camera_attributes.exposure_multiplier`. Answers for every camera that has none of its own. Use it in any value field.,读回相机曝光：`camera_attributes.exposure_multiplier`。回答的是所有没有自己属性的相机。可用在任何数值字段里。
+"Walks the camera exposure to a new value over time instead of jumping to it - one tween, no state to keep, and the whole of a fade to white. Gives this node its own copy of the camera attributes first. Writes `camera_attributes.exposure_multiplier`.",让相机曝光随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存状态，整段白场也就是它。会先给这个节点一份属于它自己的相机属性副本。写入 `camera_attributes.exposure_multiplier`。
+"Lets the lens open and close by itself with how bright the picture is - the eye adjusting when the player walks out of a cave. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Applies to every camera that has none of its own. Gives this node its own copy of the camera attributes first, so an attributes file shared with other cameras never changes under them - a slot holding nothing is given a practical lens, and one somebody filled with a physical lens keeps it. Writes `camera_attributes.auto_exposure_enabled`.",让镜头随画面明暗自己开合 - 就是玩家走出洞穴时眼睛适应的那种感觉。仅限 Forward+：在 Mobile 与 Compatibility 上这一行不会报错，而是什么也不做。作用于所有没有自己属性的相机。会先给这个节点一份属于它自己的相机属性副本，所以与其他相机共用的属性文件不会在它们脚下被改掉 - 空槽位会拿到一支实用镜头，而有人特意放了物理镜头的槽位则保持不变。写入 `camera_attributes.auto_exposure_enabled`。
+"Puts the lens back under the sheet's control, at whatever exposure it had drifted to. Forward+ only: on Mobile and Compatibility the row does nothing rather than erroring. Writes `camera_attributes.auto_exposure_enabled`.",把镜头交回事件表控制，曝光停在它飘到的那个值上。仅限 Forward+：在 Mobile 与 Compatibility 上这一行不会报错，而是什么也不做。写入 `camera_attributes.auto_exposure_enabled`。
+True while the lens is adjusting itself to how bright the picture is. Reads `camera_attributes.auto_exposure_enabled`.,当镜头正在自己跟随画面明暗调整时为真。读取 `camera_attributes.auto_exposure_enabled`。
+Focus On,对焦到
+"Puts the sharp part of the picture on something and lets everything behind it go soft - the shot that says look here. Takes a node to measure the distance to, or the distance itself in metres, so a cutscene can focus on the speaker and a menu can focus on a fixed plane. Gives this camera its own copy of the camera attributes first, and does nothing at all on a camera somebody fitted with a physical lens. Writes `attributes.dof_blur_far_enabled` and `attributes.dof_blur_far_distance`, and walks `attributes.dof_blur_far_transition`.",把画面清晰的那一层放到某个东西上，让它后面的一切变虚 - 就是那种在说“看这里”的镜头。可以给一个用来测距的节点，也可以直接给以米为单位的距离，所以过场可以对焦说话的人，菜单可以对焦一个固定的面。会先给这台相机一份属于它自己的相机属性副本；如果有人给相机装了物理镜头，它什么也不做。写入 `attributes.dof_blur_far_enabled` 和 `attributes.dof_blur_far_distance`，并推动 `attributes.dof_blur_far_transition`。
+"Focus on {subject}, soft {beyond} m past it, over {seconds} s",对焦到 {subject}，{beyond} 米之后变虚，用 {seconds} 秒
+Subject,对焦目标
+"What to keep sharp: a node to measure the distance to, or a distance in metres.",要保持清晰的东西：一个用来测距的节点，或者以米为单位的距离。
+Soft after,从多远开始虚
+How many metres past the subject the picture takes to go fully soft. Small numbers snap out of focus; large ones drift.,在被摄物之后多少米画面才彻底虚掉。数值小就一下失焦，数值大则慢慢化开。
+How long the focus takes to settle.,对焦稳定下来需要多久。
+Focus Everywhere,全画面对焦
+"Takes the blur off and makes the whole picture sharp again, easing it out rather than cutting - the shot coming back from a close-up. The blur amount is put back where it was once the far blur is off, so the next Focus On starts from the same lens it did the first time. Gives this camera its own copy of the camera attributes first, and does nothing at all on a camera somebody fitted with a physical lens.",把虚化收掉，让整幅画面重新清晰，而且是缓出而不是硬切 - 就是从特写拉回来的那个镜头。远景虚化一关掉，虚化量就被放回原处，所以下一次对焦是从第一次那支镜头开始的。会先给这台相机一份属于它自己的相机属性副本；如果有人给相机装了物理镜头，它什么也不做。
+Focus everywhere over {seconds} s,用 {seconds} 秒全画面对焦
+How long the picture takes to come back sharp.,画面回到清晰需要多久。
+Focus Distance,对焦距离
+"How many metres away the picture stops being sharp, as Focus On last left it. Reads `attributes.dof_blur_far_distance`. Use it in any value field.",画面从多少米之外开始不再清晰，也就是上一次对焦留下的值。读取 `attributes.dof_blur_far_distance`。可用在任何数值字段里。
+focus distance,对焦距离
+Use World Look,使用世界外观
+"Puts a whole saved world on at once - the fog, the glow, the sky, the colour grading and everything else that lives on an Environment - from a file in the project. The file is deep-copied first, so the look on disk is left exactly as it was saved and the world this scene is wearing is this scene's own: turning the fog up afterwards changes nothing anywhere else. Make a look the ordinary Godot way, by setting a WorldEnvironment up the way you want it and saving its Environment out; nothing is shipped for you.",一次性把整个保存下来的世界穿上 - 雾、辉光、天空、调色，以及 Environment 上的其他一切 - 从项目里的一个文件读入。文件会先被深拷贝，所以磁盘上的外观仍然是保存时的样子，而这个场景穿的世界属于这个场景：之后把雾调浓，别处什么也不会变。外观用 Godot 平常的方式做：把一个 WorldEnvironment 调成你要的样子，再把它的 Environment 存出来。插件不附带任何现成外观。
+Use world look {look},使用世界外观 {look}
+"The node wearing the world: a WorldEnvironment, or a Camera3D with an environment of its own.",穿着这个世界的节点：一个 WorldEnvironment，或者一台自带 Environment 的 Camera3D。
+Look,外观
+"The look to put on, as an Environment file in the project.",要穿上的外观，指向项目里的一个 Environment 文件。
+Blend To World Look,渐变到世界外观
+"Crosses over to a saved world instead of cutting to it. Every number, vector and colour an Environment holds - fog thickness, saturation, exposure, the sky's colours - is walked from where it is now to where the look has it over the seconds asked for. Everything that is a switch or a mode - glow on or off, which tone map, which sky - has nothing in between to walk through, so it is cut all at once at the HALFWAY point, where a cut is least visible. When the walk lands, this node's world_look_blended signal is raised with the look it landed on, which On World Look Blended listens to.",用交叉过渡走到一个保存好的世界，而不是硬切过去。Environment 里的每个数值、向量和颜色 - 雾的浓度、饱和度、曝光、天空的颜色 - 都会在指定的秒数里，从现在的值走到外观里的值。凡是开关和模式 - 辉光开或关、用哪种色调映射、用哪个天空 - 中间没有可走的值，所以会在中点一次性切换，那里最不容易被看出来。走完之后，这个节点的 world_look_blended 信号会带着落到的外观发出，由“世界外观完成时”接住。
+Blend to world look {look} over {seconds} s,用 {seconds} 秒渐变到世界外观 {look}
+"The look to cross over to, as an Environment file in the project.",要渐变过去的外观，指向项目里的一个 Environment 文件。
+How long the crossfade takes. The switches and modes are cut at half of it.,交叉过渡持续多久。开关和模式在它的一半处切换。
+Current World Look,当前世界外观
+"The path of the look file this node's world came from, or blank when it is wearing a world nobody named - one built in the scene rather than loaded. Reads what the last Use World Look or Blend To World Look wrote down, which is the only place the answer can come from: the copy a row put on is a copy, and a copy has no file of its own.",这个节点的世界来自哪个外观文件的路径；如果它穿的是没人命名过的世界 - 在场景里搭出来而不是加载进来的 - 就返回空。它读的是上一次“使用世界外观”或“渐变到世界外观”记下来的东西，而答案也只能从那里来：某一行穿上的副本就是副本，副本没有自己的文件。
+the world look being worn,正在穿的世界外观
+On World Look Blended,世界外观完成时
+"Runs when a Blend To World Look row finished crossing over, and hands over the look it landed on. The signal is one this sheet declares for itself - add a signal block saying world_look_blended(look) and both halves are ordinary Godot - so the moment the world finished changing becomes something the game can answer: start the scene, let the player move, play the next line.",当一行“渐变到世界外观”走完之后运行，并把落到的外观交出来。这个信号由事件表自己声明 - 加一个写着 world_look_blended(look) 的信号块，两头都是普通的 Godot - 于是世界变完的那一刻，就成了游戏可以回应的东西：开始这一场、放开玩家、播下一句台词。
+On the world look landing,当世界外观落定时
+Set Particle Gravity,设置粒子重力
+"Which way the particles fall and how hard, as a direction with a length. Point it up for smoke and bubbles, leave it at nothing for sparks in space, turn it sideways for rain in a gale. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.gravity`.",粒子往哪边掉、掉得多用力，用一个带长度的方向表示。朝上就是烟和气泡，留成零就是太空里的火花，横过来就是斜着打的雨。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.gravity`。
+Set gravity to {value},把重力设为 {value}
+"Which way the particles fall and how hard, as a direction with a length. Point it up for smoke and bubbles, leave it at nothing for sparks in space, turn it sideways for rain in a gale.",粒子往哪边掉、掉得多用力，用一个带长度的方向表示。朝上就是烟和气泡，留成零就是太空里的火花，横过来就是斜着打的雨。
+Particle Gravity,粒子重力
+"Reads the effect's gravity back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.gravity`. Use it in any value field.",读回特效的重力。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.gravity`。可用在任何数值字段里。
+particle gravity,粒子重力
+Fade Particle Gravity,渐变粒子重力
+"Walks the effect's gravity to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.gravity`.",让重力随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.gravity`。
+Fade gravity to {value} over {seconds} s,用 {seconds} 秒把重力渐变到 {value}
+The gravity to arrive at.,要到达的重力。
+Set Particle Spread,设置粒子扩散角
+"How wide the particles fan out from the way the emitter is pointing, in degrees. 0 is a straight jet, 45 is a cone, 180 is every direction at once. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.spread`.",粒子相对发射器朝向张开多大，用角度表示。0 是一道直喷，45 是一个锥，180 就是四面八方。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.spread`。
+Set spread to {value},把扩散角设为 {value}
+"How wide the particles fan out from the way the emitter is pointing, in degrees. 0 is a straight jet, 45 is a cone, 180 is every direction at once.",粒子相对发射器朝向张开多大，用角度表示。0 是一道直喷，45 是一个锥，180 就是四面八方。
+Particle Spread,粒子扩散角
+"Reads the effect's spread back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.spread`. Use it in any value field.",读回特效的扩散角。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.spread`。可用在任何数值字段里。
+particle spread,粒子扩散角
+Fade Particle Spread,渐变粒子扩散角
+"Walks the effect's spread to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.spread`.",让扩散角随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.spread`。
+Fade spread to {value} over {seconds} s,用 {seconds} 秒把扩散角渐变到 {value}
+The spread to arrive at.,要到达的扩散角。
+Set Particle Speed,设置粒子速度
+"How fast a new particle sets off. Both ends of the range are on this one row, because a range with only one end set is how every particle in an effect ends up at exactly one speed. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_min`.",一个新粒子出发时有多快。范围的两端都在这一行上，因为只设一端的范围，正是让整个特效里每颗粒子都变成同一个速度的原因。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.initial_velocity_min`。
+Set speed to {value} - {most},把速度设为 {value} - {most}
+Slowest,最慢
+"How fast a new particle sets off. Both ends of the range are on this one row, because a range with only one end set is how every particle in an effect ends up at exactly one speed.",一个新粒子出发时有多快。范围的两端都在这一行上，因为只设一端的范围，正是让整个特效里每颗粒子都变成同一个速度的原因。
+Fastest,最快
+The fastest a new particle sets off. Set it the same as the slowest for an effect where everything moves together.,新粒子出发速度的上限。把它设成和最慢的一样，整个特效就会齐步走。
+Slowest Particle Speed,最慢粒子速度
+"Reads the effect's speed back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_min`. Use it in any value field.",读回特效的速度。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.initial_velocity_min`。可用在任何数值字段里。
+slowest particle speed,最慢粒子速度
+Fastest Particle Speed,最快粒子速度
+"Reads the other end of the effect's speed back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_max`. Use it in any value field.",读回范围的另一端。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.initial_velocity_max`。可用在任何数值字段里。
+fastest particle speed,最快粒子速度
+Fade Particle Speed,渐变粒子速度
+"Walks the effect's speed to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.initial_velocity_min`.",让速度随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.initial_velocity_min`。
+Fade speed to {value} over {seconds} s,用 {seconds} 秒把速度渐变到 {value}
+The speed to arrive at.,要到达的速度。
+The other end of the range to arrive at.,要到达的范围另一端。
+Set Particle Size,设置粒子大小
+"How big a new particle is, as a multiple of the picture it is drawn with. Both ends of the range are on this one row, for the same reason speed's are. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_min`.",一个新粒子有多大，用它所画图片的倍数表示。范围的两端都在这一行上，理由和速度一样。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.scale_min`。
+Set size to {value} - {most},把大小设为 {value} - {most}
+Smallest,最小
+"How big a new particle is, as a multiple of the picture it is drawn with. Both ends of the range are on this one row, for the same reason speed's are.",一个新粒子有多大，用它所画图片的倍数表示。范围的两端都在这一行上，理由和速度一样。
+Biggest,最大
+How big the biggest new particle is. Set it the same as the smallest for an effect where everything is one size.,最大的新粒子有多大。把它设成和最小的一样，整个特效就都是同一个尺寸。
+Smallest Particle Size,最小粒子大小
+"Reads the effect's size back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_min`. Use it in any value field.",读回特效的大小。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.scale_min`。可用在任何数值字段里。
+smallest particle size,最小粒子大小
+Biggest Particle Size,最大粒子大小
+"Reads the other end of the effect's size back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_max`. Use it in any value field.",读回范围的另一端。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.scale_max`。可用在任何数值字段里。
+biggest particle size,最大粒子大小
+Fade Particle Size,渐变粒子大小
+"Walks the effect's size to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.scale_min`.",让大小随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.scale_min`。
+Fade size to {value} over {seconds} s,用 {seconds} 秒把大小渐变到 {value}
+The size to arrive at.,要到达的大小。
+Set Particle Colour,设置粒子颜色
+"The colour every particle is tinted. Multiplied with whatever picture the emitter draws with, so white leaves the picture as it is. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.color`.",每颗粒子被染上的颜色。它会和发射器所画的图片相乘，所以白色等于原样不动。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.color`。
+"The colour every particle is tinted. Multiplied with whatever picture the emitter draws with, so white leaves the picture as it is.",每颗粒子被染上的颜色。它会和发射器所画的图片相乘，所以白色等于原样不动。
+Particle Colour,粒子颜色
+"Reads the effect's colour back. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.color`. Use it in any value field.",读回特效的颜色。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.color`。可用在任何数值字段里。
+particle colour,粒子颜色
+Fade Particle Colour,渐变粒子颜色
+"Walks the effect's colour to a new value over time instead of jumping to it - one tween, no state to keep. Gives this emitter its own copy of its process material first, so an effect file shared with other emitters never changes under them. An emitter driven by a particle shader is left alone - these settings live inside the shader there. Writes `ParticleProcessMaterial.color`.",让颜色随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。会先给这个发射器一份属于它自己的处理材质副本，所以与其他发射器共用的特效文件不会在它们脚下被改掉。由粒子着色器驱动的发射器则完全不动 - 那里这些设置在着色器里面。写入 `ParticleProcessMaterial.color`。
+Set Particle Lifetime,设置粒子存续时间
+"How many seconds one particle lasts before it goes out. Longer lifetimes with the same amount means a thinner, longer trail; shorter ones mean a denser puff. Writes `GPUParticles2D.lifetime`, which is the emitter's own.",一颗粒子熄灭前能存在多少秒。数量相同的情况下，寿命越长尾迹越细越长，越短则越像一团浓的。写入发射器自己的 `GPUParticles2D.lifetime`。
+Set lifetime to {value},把存续时间设为 {value}
+"How many seconds one particle lasts before it goes out. Longer lifetimes with the same amount means a thinner, longer trail; shorter ones mean a denser puff.",一颗粒子熄灭前能存在多少秒。数量相同的情况下，寿命越长尾迹越细越长，越短则越像一团浓的。
+Particle Lifetime,粒子存续时间
+"Reads the effect's lifetime back. Writes `GPUParticles2D.lifetime`, which is the emitter's own. Use it in any value field.",读回特效的存续时间。写入发射器自己的 `GPUParticles2D.lifetime`。可用在任何数值字段里。
+particle lifetime,粒子存续时间
+Fade Particle Lifetime,渐变粒子存续时间
+"Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles2D.lifetime`, which is the emitter's own.",让存续时间随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。写入发射器自己的 `GPUParticles2D.lifetime`。
+Fade lifetime to {value} over {seconds} s,用 {seconds} 秒把存续时间渐变到 {value}
+The emitter to fade. Leave it as self to fade the one this sheet is on.,要渐变的发射器。保持 self 就是这张事件表所在的那一个。
+The lifetime to arrive at.,要到达的存续时间。
+Set Particle Amount,设置粒子数量
+"How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles2D.amount`, which is the emitter's own.",发射器同时保持在空中的粒子数量。写它会让引擎把整个粒子缓冲丢掉重建，所以这是一行用在某个时刻、而不是每帧都跑的行 - 这也是它没有渐变版本的原因。写入发射器自己的 `GPUParticles2D.amount`。
+Set amount to {value},把数量设为 {value}
+"How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it.",发射器同时保持在空中的粒子数量。写它会让引擎把整个粒子缓冲丢掉重建，所以这是一行用在某个时刻、而不是每帧都跑的行 - 这也是它没有渐变版本的原因。
+Particle Amount,粒子数量
+"Reads the effect's amount back. Writes `GPUParticles2D.amount`, which is the emitter's own. Use it in any value field.",读回特效的数量。写入发射器自己的 `GPUParticles2D.amount`。可用在任何数值字段里。
+particle amount,粒子数量
+"How many seconds one particle lasts before it goes out. Longer lifetimes with the same amount means a thinner, longer trail; shorter ones mean a denser puff. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",一颗粒子熄灭前能存在多少秒。数量相同的情况下，寿命越长尾迹越细越长，越短则越像一团浓的。写入发射器自己的 `GPUParticles3D.lifetime`。
+"Reads the effect's lifetime back. Writes `GPUParticles3D.lifetime`, which is the emitter's own. Use it in any value field.",读回特效的存续时间。写入发射器自己的 `GPUParticles3D.lifetime`。可用在任何数值字段里。
+"Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",让存续时间随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。写入发射器自己的 `GPUParticles3D.lifetime`。
+"How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.",发射器同时保持在空中的粒子数量。写它会让引擎把整个粒子缓冲丢掉重建，所以这是一行用在某个时刻、而不是每帧都跑的行 - 这也是它没有渐变版本的原因。写入发射器自己的 `GPUParticles3D.amount`。
+"Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",读回特效的数量。写入发射器自己的 `GPUParticles3D.amount`。可用在任何数值字段里。
