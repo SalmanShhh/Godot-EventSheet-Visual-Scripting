@@ -500,8 +500,19 @@ static func _a_saved_state_resumes_the_identical_path(script: GDScript) -> bool:
 	var restored_seed: String = restored.current_seed()
 	restored.free()
 
+	# The save-pack seam: any node or behavior child answering save_state / load_state is
+	# snapshotted with no registration and no base class, so the same record travels through a
+	# Dictionary as well as through text.
+	var through_seam: Node = script.new()
+	through_seam.load_state(JSON.parse_string(state) as Dictionary)
+	var seam_map: String = through_seam.as_text(".#")
+	var seam_text: String = through_seam.save_state_as_text()
+	through_seam.free()
+
 	return SUPPORT.pins(TEST, [
 		["the state restores the grid exactly as it was saved", restored_half_way, half_way],
+		["the save-pack seam carries the same record as the text door", seam_map, half_way],
+		["and hands it back byte for byte", seam_text, state],
 		["and every mark with it", restored_marks, finished_marks],
 		["and the seed the run was on", restored_seed, "resume-me"],
 		["loading replays no trigger at all", loading_replayed, 0],

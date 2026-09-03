@@ -406,6 +406,12 @@ On After Load -> Map | Drunken Walkers: Load State From Text  SaveSystem.Load Va
 
 Repaint from the grid rather than waiting for triggers: loading is silent by design.
 
+You often do not have to write either row. The pack answers the save seam every persistence pack
+here uses - a node or behavior child exposing `save_state` and `load_state` is snapshotted with no
+registration and no base class - so a generator parked under a node in your persist group travels
+with the save on its own, and the two actions above are for the times you want the record in your
+own hands.
+
 ### 17. Regenerating instead of saving
 
 For a game that can rebuild its world, two numbers are a smaller save than a grid, and only

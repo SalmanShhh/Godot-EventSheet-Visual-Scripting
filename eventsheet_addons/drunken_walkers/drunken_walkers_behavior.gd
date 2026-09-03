@@ -858,58 +858,7 @@ func load_state_from_text(state: String) -> void:
 		if debug_mode:
 			push_warning("Drunken Walkers: Load State From Text was given something that is not a saved state, so nothing was restored.")
 		return
-	var data: Dictionary = parsed as Dictionary
-	_started = true
-	_width = maxi(1, int(data.get("width", 1)))
-	_height = maxi(1, int(data.get("height", 1)))
-	_cells = PackedInt32Array()
-	_cells.resize(_width * _height)
-	var saved_cells: Array = data.get("cells", []) as Array
-	for index: int in mini(saved_cells.size(), _cells.size()):
-		_cells[index] = int(saved_cells[index])
-	_index_cache.clear()
-	empty_value = int(data.get("emptyValue", empty_value))
-	origin_x = float(data.get("originX", origin_x))
-	origin_y = float(data.get("originY", origin_y))
-	cell_size = int(data.get("cellSize", cell_size))
-	_seed_text = str(data.get("seed", ""))
-	# The seed goes in first and the state after it, because setting a seed RESETS the state.
-	# Restoring both in that order is what puts generation back on the identical stream, so a
-	# half-finished Step Walker animation resumes and produces the identical remaining path.
-	_rng.seed = int(str(data.get("rngSeed", "0")))
-	_rng.state = int(str(data.get("rngState", "0")))
-	random_source = str(data.get("randomSource", random_source))
-	_injected.clear()
-	for value: Variant in data.get("injected", []) as Array:
-		_injected.append(float(value))
-	_injected_head = 0
-	_injected_underran = false
-	_walkers.clear()
-	_order.clear()
-	for entry: Variant in data.get("walkers", []) as Array:
-		var saved: Dictionary = entry as Dictionary
-		var walker: Walker = _register(str(saved.get("id", "")))
-		walker.start_x = int(saved.get("startX", 0))
-		walker.start_y = int(saved.get("startY", 0))
-		walker.steps = int(saved.get("steps", 400))
-		walker.directions = clampi(int(saved.get("directions", 8)), 1, 8)
-		walker.max_turn = float(saved.get("maxTurn", 180.0))
-		walker.start_angle = float(saved.get("startAngle", 0.0))
-		walker.turn_chance = float(saved.get("turnChance", 1.0))
-		walker.carve_value = int(saved.get("carveValue", 1))
-		walker.brush_size = int(saved.get("brushSize", 1))
-		walker.brush_width = int(saved.get("brushWidth", 0))
-		walker.brush_height = int(saved.get("brushHeight", 0))
-		walker.weights = _weights_from_array(saved.get("weights", []) as Array)
-		walker.tag = str(saved.get("tag", ""))
-		walker.apply_progress(saved)
-	_marks.clear()
-	for entry: Variant in data.get("marks", []) as Array:
-		var mark: Dictionary = entry as Dictionary
-		# Restoring is SILENT: no On Cell Carved, no On Mark Placed. Repaint from Count Cells and
-		# the index expressions after a load rather than relying on triggers.
-		_marks.append({"x": int(mark.get("x", 0)), "y": int(mark.get("y", 0)),
-			"tag": str(mark.get("tag", ""))})
+	load_state(parsed as Dictionary)
 
 ## @ace_condition
 ## @ace_name("Is Cell Value")
@@ -1166,25 +1115,7 @@ func injected_remaining() -> int:
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 ## @ace_codegen_template("$DrunkenWalkers.save_state_as_text()")
 func save_state_as_text() -> String:
-	_ensure_started()
-	var saved_walkers: Array[Dictionary] = []
-	for id: String in _order:
-		saved_walkers.append((_walkers[id] as Walker).to_dict())
-	var remaining: Array[float] = []
-	for index: int in range(_injected_head, _injected.size()):
-		remaining.append(_injected[index])
-	# The RNG seed and state travel as TEXT: they are 64-bit integers, and a JSON number is a
-	# double, which would quietly round the biggest of them and land the reload on a different
-	# stream. Text round-trips exactly.
-	return JSON.stringify({
-		"version": STATE_VERSION,
-		"width": _width, "height": _height, "cells": Array(_cells),
-		"emptyValue": empty_value, "originX": origin_x, "originY": origin_y,
-		"cellSize": cell_size, "seed": _seed_text,
-		"rngSeed": str(_rng.seed), "rngState": str(_rng.state),
-		"randomSource": random_source, "injected": remaining,
-		"walkers": saved_walkers, "marks": _marks,
-	})
+	return JSON.stringify(save_state())
 
 ## @ace_expression
 ## @ace_name("Walker X")
@@ -1554,5 +1485,76 @@ func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> 
 	if data.has(alias):
 		return data[alias]
 	return fallback
+
+## @ace_hidden
+func save_state() -> Dictionary:
+	_ensure_started()
+	var saved_walkers: Array[Dictionary] = []
+	for id: String in _order:
+		saved_walkers.append((_walkers[id] as Walker).to_dict())
+	var remaining: Array[float] = []
+	for index: int in range(_injected_head, _injected.size()):
+		remaining.append(_injected[index])
+	return {
+		"version": STATE_VERSION,
+		"width": _width, "height": _height, "cells": Array(_cells),
+		"emptyValue": empty_value, "originX": origin_x, "originY": origin_y,
+		"cellSize": cell_size, "seed": _seed_text,
+		"rngSeed": str(_rng.seed), "rngState": str(_rng.state),
+		"randomSource": random_source, "injected": remaining,
+		"walkers": saved_walkers, "marks": _marks.duplicate(true),
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	_started = true
+	_width = maxi(1, int(state.get("width", 1)))
+	_height = maxi(1, int(state.get("height", 1)))
+	_cells = PackedInt32Array()
+	_cells.resize(_width * _height)
+	var saved_cells: Array = state.get("cells", []) as Array
+	for index: int in mini(saved_cells.size(), _cells.size()):
+		_cells[index] = int(saved_cells[index])
+	_index_cache.clear()
+	empty_value = int(state.get("emptyValue", empty_value))
+	origin_x = float(state.get("originX", origin_x))
+	origin_y = float(state.get("originY", origin_y))
+	cell_size = int(state.get("cellSize", cell_size))
+	_seed_text = str(state.get("seed", ""))
+	# The seed goes in first and the state after it, because setting a seed RESETS the state.
+	# Restoring both in that order is what puts generation back on the identical stream, so a
+	# half-finished Step Walker animation resumes and produces the identical remaining path.
+	_rng.seed = int(str(state.get("rngSeed", "0")))
+	_rng.state = int(str(state.get("rngState", "0")))
+	random_source = str(state.get("randomSource", random_source))
+	_injected.clear()
+	for value: Variant in state.get("injected", []) as Array:
+		_injected.append(float(value))
+	_injected_head = 0
+	_injected_underran = false
+	_walkers.clear()
+	_order.clear()
+	for entry: Variant in state.get("walkers", []) as Array:
+		var saved: Dictionary = entry as Dictionary
+		var walker: Walker = _register(str(saved.get("id", "")))
+		walker.start_x = int(saved.get("startX", 0))
+		walker.start_y = int(saved.get("startY", 0))
+		walker.steps = int(saved.get("steps", 400))
+		walker.directions = clampi(int(saved.get("directions", 8)), 1, 8)
+		walker.max_turn = float(saved.get("maxTurn", 180.0))
+		walker.start_angle = float(saved.get("startAngle", 0.0))
+		walker.turn_chance = float(saved.get("turnChance", 1.0))
+		walker.carve_value = int(saved.get("carveValue", 1))
+		walker.brush_size = int(saved.get("brushSize", 1))
+		walker.brush_width = int(saved.get("brushWidth", 0))
+		walker.brush_height = int(saved.get("brushHeight", 0))
+		walker.weights = _weights_from_array(saved.get("weights", []) as Array)
+		walker.tag = str(saved.get("tag", ""))
+		walker.apply_progress(saved)
+	_marks.clear()
+	for entry: Variant in state.get("marks", []) as Array:
+		var mark: Dictionary = entry as Dictionary
+		_marks.append({"x": int(mark.get("x", 0)), "y": int(mark.get("y", 0)),
+			"tag": str(mark.get("tag", ""))})
 
 # Drunken Walkers: size a grid, set a seed, register walkers, run them. The pack owns the grid and the marks; you paint the tiles and spawn the objects from the results. Same seed plus same action order = the same map every time. This pack is an event sheet - extend it by editing it.

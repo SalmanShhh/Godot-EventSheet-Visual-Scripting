@@ -20,7 +20,9 @@
 - **A generation you can save mid-walk.** Save State As Text writes the grid, the origin and cell
   size, the seed, every walker with its progress and recorded path, every mark, and the random
   stream's own position; Load State From Text puts them back, silently and with no trigger replayed.
-  A half-finished Step Walker animation resumes and produces the identical remaining path.
+  A half-finished Step Walker animation resumes and produces the identical remaining path. The
+  same record is what the pack hands the save seam every persistence pack here already uses, so a
+  generator parked under a node in the persist group travels with the save with no rows at all.
 - **Randomness that can borrow the project's stream.** Set Random Source switches between the
   pack's own seeded generator, the shared Advanced Random autoload (one seed for every procedural
   system at once) and an injected queue Inject Random fills for a single audited stream, which falls
@@ -1111,14 +1113,16 @@ buys thirteen lines and costs 2,145 readings, so it will not.
   scratch - the shadow filter, the picker's section icons and the public API's verb index - read
   the registry's cache, which was already built: 395 ms to 3 ms, with the two descriptor sets
   proved byte-identical first. And the picker now SHOWS its window before it fills it, with the
-  search field already focused and one line saying the vocabulary is loading, so the click paints a
-  dialog within a frame and the list arrives on the next one.
+  search field already focused and one line saying the vocabulary is loading; the fill is put on the
+  NEXT FRAME, not on a deferred call, because a deferred call is flushed before the frame it was
+  posted in is drawn and so defers nothing a reader can see.
 
   Measured in a running editor over 1,878 verbs: the first open of a session went from 921 ms of
-  frozen editor to a window in 20 ms with its list filled 279 ms later, and a warm open from 128 ms
-  to a window in 18 ms with its list 185 ms later. What is left of the first open's extra cost is
-  asked during idle instead, a few milliseconds per frame, by a warm the dock starts once it is up
-  and that a headless run never schedules at all.
+  frozen editor to a window in 19 ms, with the list arriving 270 ms later on the following frame; a
+  warm open went from 128 ms to a window in 19 ms and its list 184 ms later. What is left of the
+  first open's extra cost is asked during idle instead, a few milliseconds per frame, by a warm the
+  dock starts once it is up, re-arms when a filesystem change drops what it filled, and that a
+  headless run never schedules at all.
 
 - **The budget that the freeze walked past.** Every picker measurement in the huge-project budgets
   was made on a picker whose variable catalog answers something, and the freeze lived in the branch
