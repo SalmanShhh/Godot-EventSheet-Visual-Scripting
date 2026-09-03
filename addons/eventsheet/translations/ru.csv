@@ -6010,3 +6010,96 @@ Full toolbar on - every button is on the strip.,Полная панель вкл
 "Debug layout: Event Trace, Live Values and breakpoints are on for this run.","Отладка макета: трассировка событий, живые значения и точки останова включены для этого запуска."
 Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,"Показаны все кнопки, чтобы можно было указать на эту - ваш выбор отдыхающей панели сохранён. Шеврон снова её свернёт."
 Loading the vocabulary...,Загрузка словаря...
+"The colour the surface is painted, before any light falls on it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color`, the override every GeometryInstance3D wears.","Цвет, которым покрашена поверхность, до того как на неё упадёт свет. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.albedo_color` - переопределение, которое есть у каждого GeometryInstance3D."
+Material,Материал
+"The colour the surface is painted, before any light falls on it.","Цвет, которым покрашена поверхность, до того как на неё упадёт свет."
+Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.,Читает цвет поверхности обратно: `material_override.albedo_color`. Годится в любом поле значения.
+Fade Colour,Плавно изменить цвет
+"Walks the surface's colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color` on this mesh's own copy of the material.","Ведёт цвет поверхности к новому значению во времени, а не прыжком - один твин, состояние хранить не нужно. Пишет `material_override.albedo_color` в собственной копии материала этого меша."
+Fade colour to {value} over {seconds} s,Плавно вести цвет к {value} за {seconds} с
+The colour to arrive at.,"Цвет, к которому нужно прийти."
+Set Glow,Задать свечение
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.emission_energy_multiplier`, the override every GeometryInstance3D wears.","Насколько поверхность светится сама: 0 - темно, 1 - горит, выше - растекается в свечение мира. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.emission_energy_multiplier` - переопределение, которое есть у каждого GeometryInstance3D."
+Set glow to {value},Задать свечение {value}
+Glow,Свечение
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow.","Насколько поверхность светится сама: 0 - темно, 1 - горит, выше - растекается в свечение мира."
+Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.,Читает свечение поверхности обратно: `material_override.emission_energy_multiplier`. Годится в любом поле значения.
+glow,свечение
+Fade Glow,Плавно изменить свечение
+"Walks the surface's glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.emission_energy_multiplier` on this mesh's own copy of the material.","Ведёт свечение поверхности к новому значению во времени, а не прыжком - один твин, состояние хранить не нужно. Пишет `material_override.emission_energy_multiplier` в собственной копии материала этого меша."
+Fade glow to {value} over {seconds} s,Плавно вести свечение к {value} за {seconds} с
+The glow to arrive at.,"Свечение, к которому нужно прийти."
+Set Roughness,Задать шероховатость
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.roughness`, the override every GeometryInstance3D wears.","Насколько рассеяны отражения, долей: 0 - зеркало, 1 - мел. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.roughness` - переопределение, которое есть у каждого GeometryInstance3D."
+Set roughness to {value},Задать шероховатость {value}
+Roughness,Шероховатость
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk.","Насколько рассеяны отражения, долей: 0 - зеркало, 1 - мел."
+Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.,Читает шероховатость поверхности обратно: `material_override.roughness`. Годится в любом поле значения.
+roughness,шероховатость
+Fade Roughness,Плавно изменить шероховатость
+"Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.","Ведёт шероховатость поверхности к новому значению во времени, а не прыжком - один твин, состояние хранить не нужно. Пишет `material_override.roughness` в собственной копии материала этого меша."
+Fade roughness to {value} over {seconds} s,Плавно вести шероховатость к {value} за {seconds} с
+The roughness to arrive at.,"Шероховатость, к которой нужно прийти."
+Set Metal,Задать металличность
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.","Насколько поверхность читается как металл, долей: 0 - краска или пластик, 1 - голый металл. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.metallic` - переопределение, которое есть у каждого GeometryInstance3D."
+Set metal to {value},Задать металличность {value}
+Metal,Металличность
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal.","Насколько поверхность читается как металл, долей: 0 - краска или пластик, 1 - голый металл."
+Reads the surface's metal back: `material_override.metallic`. Use it in any value field.,Читает металличность поверхности обратно: `material_override.metallic`. Годится в любом поле значения.
+metal,металличность
+Fade Metal,Плавно изменить металличность
+"Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.","Ведёт металличность поверхности к новому значению во времени, а не прыжком - один твин, состояние хранить не нужно. Пишет `material_override.metallic` в собственной копии материала этого меша."
+Fade metal to {value} over {seconds} s,Плавно вести металличность к {value} за {seconds} с
+The metal to arrive at.,"Металличность, к которой нужно прийти."
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.","Насколько поверхность плотная: 1 - непрозрачна, 0 - невидима. Godot держит это в альфа-канале цвета, который ничего не делает, пока материал не в альфа-прозрачности, - поэтому строка включает и её. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.albedo_color.a` - переопределение, которое есть у каждого GeometryInstance3D."
+See-Through,Прозрачность
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well.","Насколько поверхность плотная: 1 - непрозрачна, 0 - невидима. Godot держит это в альфа-канале цвета, который ничего не делает, пока материал не в альфа-прозрачности, - поэтому строка включает и её."
+Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.,Читает прозрачность поверхности обратно: `material_override.albedo_color.a`. Годится в любом поле значения.
+see-through,прозрачность
+Fade See-Through,Плавно изменить прозрачность
+"Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.","Ведёт прозрачность поверхности к новому значению во времени, а не прыжком - один твин, состояние хранить не нужно. Пишет `material_override.albedo_color.a` в собственной копии материала этого меша."
+Fade see-through to {value} over {seconds} s,Плавно вести прозрачность к {value} за {seconds} с
+The see-through to arrive at.,"Прозрачность, к которой нужно прийти."
+Set Texture,Задать текстуру
+"The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.","Картинка, нарисованная поверх поверхности. Обнулите её через null, чтобы вернуться к ровному цвету. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.albedo_texture` - переопределение, которое есть у каждого GeometryInstance3D."
+Set texture to {value},Задать текстуру {value}
+Texture,Текстура
+The picture painted over the surface. Blank it with null to go back to a flat colour.,"Картинка, нарисованная поверх поверхности. Обнулите её через null, чтобы вернуться к ровному цвету."
+Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.,Читает текстуру поверхности обратно: `material_override.albedo_texture`. Годится в любом поле значения.
+texture,текстура
+Set Blend,Задать смешивание
+"How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.","Как поверхность смешивается с тем, что уже нарисовано за ней. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.blend_mode` - переопределение, которое есть у каждого GeometryInstance3D."
+Set blend to {value},Задать смешивание {value}
+Blend,Смешивание
+How the surface is mixed with whatever is already drawn behind it.,"Как поверхность смешивается с тем, что уже нарисовано за ней."
+mix,смешивание
+add,сложение
+subtract,вычитание
+multiply,умножение
+premultiplied alpha,предумноженная альфа
+Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.,Читает смешивание поверхности обратно: `material_override.blend_mode`. Годится в любом поле значения.
+blend,смешивание
+Set Transparency,Задать режим прозрачности
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.","Как поверхность вообще обходится с прозрачностью. Отсечение оставляет каждый пиксель либо целиком, либо совсем без него - это то, что нужно листве и заборам, и стоит дешевле всего. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.transparency` - переопределение, которое есть у каждого GeometryInstance3D."
+Set transparency to {value},Задать режим прозрачности {value}
+Transparency,Прозрачность
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.","Как поверхность вообще обходится с прозрачностью. Отсечение оставляет каждый пиксель либо целиком, либо совсем без него - это то, что нужно листве и заборам, и стоит дешевле всего."
+solid,непрозрачно
+alpha,альфа
+alpha scissor,альфа-отсечение
+alpha hash,альфа-хеш
+alpha with depth pre-pass,альфа с предпроходом глубины
+Scissor threshold,Порог отсечения
+Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,Где режет альфа-отсечение: пиксель прозрачнее этого не рисуется вовсе. Читает его только альфа-отсечение.
+Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,Читает режим прозрачности поверхности обратно: `material_override.transparency`. Годится в любом поле значения.
+transparency,прозрачность
+Set Sides,Задать стороны
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.","Какие грани поверхности рисуются. Обе - это то, чего хочет плоский лист, занавес или стена в одну сторону; рисования становится вдвое больше. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.cull_mode` - переопределение, которое есть у каждого GeometryInstance3D."
+Set sides to {value},Задать стороны {value}
+Sides,Стороны
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing.","Какие грани поверхности рисуются. Обе - это то, чего хочет плоский лист, занавес или стена в одну сторону; рисования становится вдвое больше."
+front,лицевые
+back,изнаночные
+both,обе
+Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,Читает стороны поверхности обратно: `material_override.cull_mode`. Годится в любом поле значения.
+sides,стороны

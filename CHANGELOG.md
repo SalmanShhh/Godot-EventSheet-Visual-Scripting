@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### What the surface looks like, said in words
+
+- **Nine words for a 3D surface, and not one of them is a property name.** Colour, glow, roughness,
+  metal, see-through, texture, blend, transparency and sides, on any `MeshInstance3D`: **23 new rows
+  in a Material section of the picker** - a Set row for each of the nine, a read-it-back expression
+  for each of the nine, and a one-line tween Fade for the five a surface can be walked to over time.
+  A reader never has to know that metal is spelled `metallic`, that glow is
+  `emission_energy_multiplier` and does nothing until `emission_enabled` is true, or that
+  see-through is the alpha channel of `albedo_color` and does nothing until the material is in alpha
+  transparency - each row writes the switch its word needs on the same line. Which property each
+  word resolves to, and the value every field opens on, are asked of ClassDB rather than written
+  down; the frozen part is the `ace_id` stem, which is the one thing that cannot be derived.
+- **Every write gives the mesh its own copy of the material first, and the emitted code says so.** A
+  material is a file: two meshes pointing at one `.tres` point at one object, so recolouring the
+  goblin the player hit recolours all twelve. Each template opens with the two lines that duplicate
+  whatever the mesh is drawing with into `material_override`, guarded on the override being empty -
+  the override is the flag, so the copy is taken once, a mesh that already owns one keeps it, and a
+  mesh drawing with nothing at all is given a plain `StandardMaterial3D` rather than reaching
+  through a null. Nothing is assumed and there is no step to remember.
+- **Three of the nine are dropdowns over the engine's own enums.** Blend reads mix / add / subtract
+  / multiply / premultiplied alpha, transparency reads solid / alpha / alpha scissor / alpha hash /
+  alpha with depth pre-pass and carries the scissor threshold on the same row, and sides reads front
+  / back / both. The words are what a reader sees; the `BaseMaterial3D` constant is what the row
+  writes, so the sheet and the emitted GDScript never disagree.
+- The nine words land in all nine translation CSVs (**93 new keys**), and the vocabulary doc is
+  regenerated.
+
 ### A grid that walks itself into a level
 
 - **Drunken Walkers, a seeded grid generator you drive from rows.** Walkers stagger across a grid

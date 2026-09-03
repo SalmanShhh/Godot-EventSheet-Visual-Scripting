@@ -6010,3 +6010,96 @@ Full toolbar on - every button is on the strip.,已开启完整工具栏 - 所�
 "Debug layout: Event Trace, Live Values and breakpoints are on for this run.",调试布局：本次运行已开启事件追踪、实时数值与断点。
 Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,为了指向这个按钮，暂时显示了全部按钮 - 你选择的休息状态仍然记着。点箭头即可让它重新休息。
 Loading the vocabulary...,正在加载词汇...
+"The colour the surface is painted, before any light falls on it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color`, the override every GeometryInstance3D wears.",在任何光照到它之前，表面本身被刷上的颜色。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.albedo_color`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Material,材质
+"The colour the surface is painted, before any light falls on it.",在任何光照到它之前，表面本身被刷上的颜色。
+Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.,读回表面的颜色：`material_override.albedo_color`。可用在任何值字段里。
+Fade Colour,渐变颜色
+"Walks the surface's colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color` on this mesh's own copy of the material.",让表面的颜色随时间走到新值，而不是直接跳过去 - 一个补间，不留状态。写入这个网格自己那份材质副本的 `material_override.albedo_color`。
+Fade colour to {value} over {seconds} s,用 {seconds} 秒把颜色渐变到 {value}
+The colour to arrive at.,最终要到达的颜色。
+Set Glow,设置自发光
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.emission_energy_multiplier`, the override every GeometryInstance3D wears.",表面自己发出多少光：0 是暗的，1 是亮着，再高就会渗进世界的辉光里。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.emission_energy_multiplier`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set glow to {value},将自发光设为 {value}
+Glow,自发光
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow.",表面自己发出多少光：0 是暗的，1 是亮着，再高就会渗进世界的辉光里。
+Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.,读回表面的自发光：`material_override.emission_energy_multiplier`。可用在任何值字段里。
+glow,自发光
+Fade Glow,渐变自发光
+"Walks the surface's glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.emission_energy_multiplier` on this mesh's own copy of the material.",让表面的自发光随时间走到新值，而不是直接跳过去 - 一个补间，不留状态。写入这个网格自己那份材质副本的 `material_override.emission_energy_multiplier`。
+Fade glow to {value} over {seconds} s,用 {seconds} 秒把自发光渐变到 {value}
+The glow to arrive at.,最终要到达的自发光。
+Set Roughness,设置粗糙度
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.roughness`, the override every GeometryInstance3D wears.",反射被打散的程度，以比例计：0 是镜子，1 是粉笔。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.roughness`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set roughness to {value},将粗糙度设为 {value}
+Roughness,粗糙度
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk.",反射被打散的程度，以比例计：0 是镜子，1 是粉笔。
+Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.,读回表面的粗糙度：`material_override.roughness`。可用在任何值字段里。
+roughness,粗糙度
+Fade Roughness,渐变粗糙度
+"Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.",让表面的粗糙度随时间走到新值，而不是直接跳过去 - 一个补间，不留状态。写入这个网格自己那份材质副本的 `material_override.roughness`。
+Fade roughness to {value} over {seconds} s,用 {seconds} 秒把粗糙度渐变到 {value}
+The roughness to arrive at.,最终要到达的粗糙度。
+Set Metal,设置金属度
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.",表面读起来有多像金属，以比例计：0 是漆或塑料，1 是裸金属。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.metallic`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set metal to {value},将金属度设为 {value}
+Metal,金属度
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal.",表面读起来有多像金属，以比例计：0 是漆或塑料，1 是裸金属。
+Reads the surface's metal back: `material_override.metallic`. Use it in any value field.,读回表面的金属度：`material_override.metallic`。可用在任何值字段里。
+metal,金属度
+Fade Metal,渐变金属度
+"Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.",让表面的金属度随时间走到新值，而不是直接跳过去 - 一个补间，不留状态。写入这个网格自己那份材质副本的 `material_override.metallic`。
+Fade metal to {value} over {seconds} s,用 {seconds} 秒把金属度渐变到 {value}
+The metal to arrive at.,最终要到达的金属度。
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.",表面有多实：1 是不透明，0 是看不见。Godot 把它放在颜色的 alpha 通道里，而在材质切到 alpha 透明之前它什么也不做 - 所以这一行会顺手把它打开。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.albedo_color.a`，也就是每个 GeometryInstance3D 都带的覆盖项。
+See-Through,通透度
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well.",表面有多实：1 是不透明，0 是看不见。Godot 把它放在颜色的 alpha 通道里，而在材质切到 alpha 透明之前它什么也不做 - 所以这一行会顺手把它打开。
+Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.,读回表面的通透度：`material_override.albedo_color.a`。可用在任何值字段里。
+see-through,通透度
+Fade See-Through,渐变通透度
+"Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.",让表面的通透度随时间走到新值，而不是直接跳过去 - 一个补间，不留状态。写入这个网格自己那份材质副本的 `material_override.albedo_color.a`。
+Fade see-through to {value} over {seconds} s,用 {seconds} 秒把通透度渐变到 {value}
+The see-through to arrive at.,最终要到达的通透度。
+Set Texture,设置贴图
+"The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.",画在表面上的图。设成 null 就回到纯色。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.albedo_texture`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set texture to {value},将贴图设为 {value}
+Texture,贴图
+The picture painted over the surface. Blank it with null to go back to a flat colour.,画在表面上的图。设成 null 就回到纯色。
+Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.,读回表面的贴图：`material_override.albedo_texture`。可用在任何值字段里。
+texture,贴图
+Set Blend,设置混合
+"How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.",表面如何与它后面已经画好的东西混合。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.blend_mode`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set blend to {value},将混合设为 {value}
+Blend,混合
+How the surface is mixed with whatever is already drawn behind it.,表面如何与它后面已经画好的东西混合。
+mix,混合
+add,相加
+subtract,相减
+multiply,相乘
+premultiplied alpha,预乘 alpha
+Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.,读回表面的混合：`material_override.blend_mode`。可用在任何值字段里。
+blend,混合
+Set Transparency,设置透明模式
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.",表面究竟怎么处理透明这件事。裁切让每个像素要么整个画出来、要么整个不画，这正是树叶和栅栏想要的，也最省。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.transparency`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set transparency to {value},将透明模式设为 {value}
+Transparency,透明模式
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.",表面究竟怎么处理透明这件事。裁切让每个像素要么整个画出来、要么整个不画，这正是树叶和栅栏想要的，也最省。
+solid,不透明
+alpha,alpha
+alpha scissor,alpha 裁切
+alpha hash,alpha 哈希
+alpha with depth pre-pass,带深度预通道的 alpha
+Scissor threshold,裁切阈值
+Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,alpha 裁切在哪里下刀：比这更透的像素根本不画。只有 alpha 裁切会读它。
+Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,读回表面的透明模式：`material_override.transparency`。可用在任何值字段里。
+transparency,透明模式
+Set Sides,设置面
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.",表面的哪些面会被画出来。双面是平叶片、帘子和单层墙想要的；绘制开销翻倍。 先给这个网格一份自己的材质副本，所以与其他网格共用的材质绝不会在它们脚下被改动。写入 `material_override.cull_mode`，也就是每个 GeometryInstance3D 都带的覆盖项。
+Set sides to {value},将面设为 {value}
+Sides,面
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing.",表面的哪些面会被画出来。双面是平叶片、帘子和单层墙想要的；绘制开销翻倍。
+front,正面
+back,背面
+both,双面
+Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,读回表面的面：`material_override.cull_mode`。可用在任何值字段里。
+sides,面

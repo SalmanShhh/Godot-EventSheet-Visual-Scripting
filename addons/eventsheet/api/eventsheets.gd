@@ -1972,6 +1972,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	# And turning a shader's dials is that question one step further out - how the picture is made -
 	# so it lands on the same page rather than starting a fourth one.
 	"effect_dial": "Cameras-Graphics-And-Screenshots",
+	# What a SURFACE looks like - its colour, glow, roughness, metal, see-through, texture, blend,
+	# transparency and sides - is the same page's subject said one step closer in: a reader who wants
+	# a crate to go red is asking how the picture is made, not how a mesh is built. Both spellings of
+	# the unit key it, the module file and the picker category alike.
+	"material": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
 	"video": "Playing-Video",
 	"loop": "Working-With-Lists",

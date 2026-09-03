@@ -588,6 +588,86 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Canvas Texture**
 
+### DrunkenWalkersAddon (`res://eventsheet_addons/drunken_walkers/drunken_walkers_addon.gd`)
+@ace_tags(procedural, generation, random, grid) @ace_category("Drunken Walkers") @ace_version(1.0.0)
+
+#### Triggers
+- **On Cell Carved** (`x: int, y: int, value: int, walker_id: String`)
+- **On Walker Stepped** (`walker_id: String`)
+- **On Walker Finished** (`walker_id: String`)
+- **On Mark Placed** (`tag: String`)
+- **On Walkers By Tag Complete** (`tag: String`)
+- **On Generation Complete**
+
+#### Conditions
+- **Is Cell Value** (`x: int, y: int, value: int`) - True when the cell holds exactly that value. Stricter than the Cell Value expression: an out-of-bounds cell matches nothing, not even the Empty Value, which is what lets you test the border honestly.
+- **Is Inside Grid** (`x: int, y: int`) - True when the X and Y fall inside the current grid. Guard anything built from Layout To X / Layout To Y with it, because a point on screen may simply not be over the grid.
+- **Has Mark At** (`x: int, y: int, tag: String`) - True when a mark with the tag sits on that cell. An empty tag matches any mark, which is the quick way to ask whether anything is already here.
+- **Has Walker** (`id: String`) - True when a walker with that id is currently registered.
+
+#### Actions
+- **Create Grid** (`width: int, height: int`) - Allocates a fresh grid filled with the Empty Value, clamped to Max Grid Size. Only needed for a size other than the Grid Width / Grid Height properties, because that grid already exists from the start. A width or height of 0 or less falls back to its property. Destroys the previous grid, every registered walker and every mark - it is "start a new level". The seed is not touched.
+- **Clear Grid** (`value: int`) - Refills every cell with a value you choose. Walkers, marks and the random stream are left alone, and it does not fire On Cell Carved. Use it to re-run the same walkers over a blank slate without re-registering them.
+- **Set Cell** (`x: int, y: int, value: int`) - Writes one cell directly. Deliberately silent: it does not fire On Cell Carved, which makes it the right tool for pre-placing anchors like a guaranteed entrance or a boss room before the walkers run.
+- **Set Origin** (`x: float, y: float, new_cell_size: int`) - Moves the grid in world space and optionally changes the cell size, for the four coordinate expressions. Pass 0 for the cell size to keep the current one.
+- **Draw Cells To Tilemap** (`layer: TileMapLayer, value: int, source_id: int, atlas_x: int, atlas_y: int`) - Paints one tile into a TileMapLayer for every cell holding a value, replacing the whole paint loop. Cell coordinates map straight onto tile coordinates. Call it once per value; a source id of -1 erases those tiles instead.
+- **Set Seed** (`seed_text: String`) - Resets the generator from a seed string. Call it BEFORE generating: the same seed with the same action order reproduces identical output, and calling it afterwards changes nothing about the map you just built. It does not clear the grid.
+- **Set Random Source** (`source: String`) - Switches where every decision draws from: this pack's own seeded generator, the shared Advanced Random autoload, or the injected queue Inject Random fills. You may switch mid-run, so one pass can audit through a single stream while the rest does not.
+- **Inject Random** (`value: float`) - Queues one value between 0 and 1 for the injected source, generation consuming them in order. Budget roughly two per walker step plus one per mark candidate. A queue that runs dry falls back to the internal generator rather than failing, and says so in Debug Mode.
+- **Add Walker** (`id: String, start_x: int, start_y: int, steps: int, directions: int, max_turn: float, tag: String, carve_value: int`) - Registers a walker with the eight settings you change most: where it starts, how many steps it has, how many headings it may face (1 to 8), how far it may turn in one step, its tag and the value it carves. Everything else takes its default. Re-using an id replaces that walker without moving it in the run order.
+- **Add Walker From Preset** (`preset: String, id: String, start_x: int, start_y: int, tag: String, carve_value: int`) - Registers a walker from a named shape recipe - Cave, Corridors, River, Ore Vein, Lightning or Blob - so you only need a position, a tag and a carve value. Tune it afterwards with the Set Walker actions.
+- **Define Walker** (`definition: String`) - Registers a walker from a whole JSON definition in one string, which suits definitions that live in a data file or a level editor. Anything you leave out takes its default. Both spellings of every field are accepted, so startX and start_x both work.
+- **Set Walker Carve Value** (`id: String, value: int`) - Changes the integer an existing walker writes into the cells it visits. It applies from that walker's next step, so anything already carved keeps its old value - which is how one walker lays down two materials along one path.
+- **Set Walker Steps** (`id: String, steps: int`) - Sets a walker's REMAINING step budget, and un-finishes a finished walker, so topping one up and running it again extends the path it already drew.
+- **Set Walker Turn Chance** (`id: String, chance: float`) - Sets the 0 to 1 probability that a walker even considers turning on a given step. At 1 the heading performs its own random walk and the path curls; around 0.15 to 0.3 is what actually reads as a road or a river.
+- **Set Walker Brush Size** (`id: String, size: int`) - Sets the square block a walker stamps each step. 1 is a single cell, 3 is a centred 3x3. It never rotates, so it is right for blobby caves and wrong for corridors - use the dig size for those. Ignored while a dig size is set.
+- **Set Walker Start Angle** (`id: String, degrees: float`) - Rotates the walker's whole direction set to a new anchor angle, in degrees, 0 being right and 90 down. The direction weights rotate with it, because weight entry 0 always weighs the start angle.
+- **Set Walker Dig Size** (`id: String, width: int, depth: int`) - Swaps the square brush for a rectangle that TURNS WITH THE WALKER. Width is measured across the heading and is always centred, so a corridor keeps its width around every corner. Depth is measured along the heading and is signed: positive digs ahead of the walker, negative digs behind it. 0 on an axis falls back to the brush size, and 0 on both restores the square brush.
+- **Set Walker Direction Weights** (`id: String, weights: String`) - Biases which heading a walker turns toward, as a comma separated list of relative weights in direction order starting at the start angle. A 0 rules that heading out, a missing entry counts as 1, extra entries are ignored, and an empty string restores equal weights.
+- **Remove Walker** (`id: String`) - Unregisters a walker. Everything it already carved stays exactly as it is, because carving writes into the grid as it happens rather than being replayed at the end.
+- **Run All Walkers** - Runs every registered walker to the end of its budget, in registration order, then fires On Generation Complete. This is the whole generation in one row.
+- **Run Walkers By Tag** (`tag: String`) - Runs only the walkers carrying a tag, in registration order, then fires On Walkers By Tag Complete. Staging generation in tagged passes is how a later pass reacts to what an earlier one carved. An empty tag is not a wildcard here: it runs the walkers that genuinely have no tag.
+- **Run Walker** (`id: String`) - Runs one walker by id to the end of its budget. It fires On Cell Carved and On Walker Finished but deliberately NOT On Generation Complete, because it is one pass of a bigger generation rather than the end of it.
+- **Step Walker** (`id: String, steps: int`) - Advances one walker by up to this many steps instead of running it out, firing On Walker Stepped per step - the row that makes the map draw itself in front of the player. The walk is identical to an instant run, just spread over time. The first call carves the start cell, so nothing has to place the walker first.
+- **Drop Marks Along Walk** (`walker_id: String, tag: String, every_steps: int, chance: float, min_spacing: float`) - Replays a walker's recorded path and considers a candidate every N steps, keeping each with the given chance and rejecting it if it lands too close to an existing mark of the same tag. The walker must have run already, because the path is recorded as it walks. Candidates start at step N, not at the start cell.
+- **Scatter Marks** (`count: int, tag: String, value: int, placement: String, min_spacing: float`) - Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed.
+- **Clear Marks** (`tag: String`) - Removes every mark carrying a tag, an empty tag removing all of them. The grid is untouched, so clearing marks and re-scattering only re-rolls the placement.
+- **Dilate Cells** (`value: int, iterations: int`) - Grows every region of a value outward by one ring per iteration, which is how one-cell corridors become chambers. It converts ANY neighbouring cell, including ones holding other values, so dilate before you carve terrain you want to keep. Each iteration works from a snapshot, so one pass grows exactly one ring.
+- **Outline Cells** (`value: int, outline_value: int`) - Writes an outline value into every Empty Value cell touching a cell of the target value - the classic walls-around-the-floor pass. Unlike dilation it only ever overwrites the Empty Value, so water and ore survive it, which makes it safe to run last.
+- **Load State From Text** (`state: String`) - Restores a whole generator from the text Save State As Text produced: the grid, the origin and cell size, the seed, the random stream's own position, every walker with its progress and recorded path, and every mark. Restoring is SILENT - no On Cell Carved and no On Mark Placed - so repaint from Count Cells and the index expressions afterwards.
+
+#### Expressions
+- **Cell Value** (`x: int, y: int`) - The value at a cell. Asking outside the grid reads the Empty Value rather than erroring, so it is always safe to call.
+- **Current Grid Width** - The current grid width in cells, which is what Create Grid last built rather than the property.
+- **Current Grid Height** - The current grid height in cells, which is what Create Grid last built rather than the property.
+- **As Text** (`characters: String`) - The whole grid as text, one character per cell and one line per row. Character N of what you pass stands for value N, and an unmapped value shows as a question mark. Put it in a Label to see the map instantly, before you have a tilemap at all.
+- **Neighbour Count** (`x: int, y: int, value: int`) - How many of the eight surrounding cells hold a value. Off-grid neighbours never match, which is what makes border detection and autotiling work without special-casing the edge.
+- **Cell To World X** (`x: int`) - The world X of that cell's CENTRE, from Origin X and Cell Size - so a sprite placed on it lands centred in its tile whatever the origin is.
+- **Cell To World Y** (`y: int`) - The world Y of that cell's centre, from Origin Y and Cell Size.
+- **World To Cell X** (`world_x: float`) - The cell X containing that world X. It may fall outside the grid, so guard it with Is Inside Grid.
+- **World To Cell Y** (`world_y: float`) - The cell Y containing that world Y. It may fall outside the grid, so guard it with Is Inside Grid.
+- **Count Cells** (`value: int`) - How many cells currently hold the value. Pairs with the two index expressions to walk the whole set, which is the fast way to paint a generated map.
+- **Cell X By Index** (`value: int, index: int`) - The X of the index-th cell holding the value, counted from 0 in a stable left-to-right, top-to-bottom order. Out of range reads -1 rather than erroring.
+- **Cell Y By Index** (`value: int, index: int`) - The Y of the index-th cell holding the value, in the same stable order. Out of range reads -1.
+- **Count Marks** (`tag: String`) - How many marks carry the tag. An empty tag counts every mark, whatever its tag.
+- **Mark X By Index** (`tag: String, index: int`) - The X of the index-th mark with the tag, counted from 0 in placement order. Out of range reads -1.
+- **Mark Y By Index** (`tag: String, index: int`) - The Y of the index-th mark with the tag, in placement order. Out of range reads -1.
+- **Current Seed** - The seed the generator was last set with, including one derived from the clock - so a player can always be shown the code that reproduces the run they are in.
+- **Injected Remaining** - How many injected values are still queued. Read it after a generation to see how much headroom the queue actually had.
+- **Save State As Text** - The whole generator as one JSON string: the grid, the origin and cell size, the seed, the random stream's own position, every walker with its progress and recorded path, and every mark. Because the stream position round-trips, a half-finished Step Walker animation resumes and produces the identical remaining path. Save it with any save pack, hand it back to Load State From Text.
+- **Walker X** - The current X of the triggering walker. Reads 0 outside the walker triggers, never a stale cell.
+- **Walker Y** - The current Y of the triggering walker. Reads 0 outside the walker triggers.
+- **Walker Angle** - The current heading of the triggering walker in degrees, 0 being right and 90 down - point a digger sprite at it and it faces where it is going.
+- **Walker Steps Left** - The remaining step budget of the triggering walker, which is the natural driver for a generation progress bar.
+- **Walker ID** - The id of the triggering walker. It is empty inside the post-processing passes and outside the triggers, which is how On Cell Carved tells a dilated cell from a carved one.
+- **Walker Tag** - The tag of the triggering walker, or the batch tag inside On Walkers By Tag Complete.
+- **Carved X** - The X of the cell just written, inside On Cell Carved.
+- **Carved Y** - The Y of the cell just written, inside On Cell Carved.
+- **Carved Value** - The value just written into the cell, inside On Cell Carved.
+- **Mark X** - The X of the mark just placed, inside On Mark Placed.
+- **Mark Y** - The Y of the mark just placed, inside On Mark Placed.
+- **Mark Tag** - The tag of the mark just placed, inside On Mark Placed.
+
 ### EightDirectionMovement (`res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd`)
 @ace_category("Eight Direction") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -4144,6 +4224,36 @@ Loop control vocabulary
 - **Current Loop Item** - Gives you the item the loop is currently working on inside a For Each.
 - **Loop Index** - Counts 0, 1, 2… for the current loop pass. Name the loop's index "loop_index" (the Loop index field on For Each / Repeat / While) and read it here.
 - **Loop Index Of** (`name: String`) - Reads a NAMED loop's counter, for nested loops: give the outer loop a distinct index name and read it from inside the inner one.
+
+### Material (`res://addons/eventforge/registration/modules/material_aces.gd`)
+the MATERIAL vocabulary: what a surface looks like, said in words.
+
+#### Actions
+- **Set Colour** (`value: Color`) - The colour the surface is painted, before any light falls on it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color`, the override every GeometryInstance3D wears.
+- **Fade Colour** (`value: Color, seconds: String`) - Walks the surface's colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color` on this mesh's own copy of the material.
+- **Set Glow** (`value: String`) - How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.emission_energy_multiplier`, the override every GeometryInstance3D wears.
+- **Fade Glow** (`value: String, seconds: String`) - Walks the surface's glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.emission_energy_multiplier` on this mesh's own copy of the material.
+- **Set Roughness** (`value: String`) - How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.roughness`, the override every GeometryInstance3D wears.
+- **Fade Roughness** (`value: String, seconds: String`) - Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.
+- **Set Metal** (`value: String`) - How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.
+- **Fade Metal** (`value: String, seconds: String`) - Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.
+- **Set See-Through** (`value: String`) - How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.
+- **Fade See-Through** (`value: String, seconds: String`) - Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.
+- **Set Texture** (`value: String`) - The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.
+- **Set Blend** (`value: String`) - How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.
+- **Set Transparency** (`value: String, threshold: String`) - How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.
+- **Set Sides** (`value: String`) - Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.
+
+#### Expressions
+- **Colour** (`target: String`) - Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.
+- **Glow** (`target: String`) - Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.
+- **Roughness** (`target: String`) - Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.
+- **Metal** (`target: String`) - Reads the surface's metal back: `material_override.metallic`. Use it in any value field.
+- **See-Through** (`target: String`) - Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.
+- **Texture** (`target: String`) - Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.
+- **Blend** (`target: String`) - Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.
+- **Transparency** (`target: String`) - Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.
+- **Sides** (`target: String`) - Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.
 
 ### Math Words (`res://addons/eventforge/registration/modules/math_words_aces.gd`)
 the four value-shaping words, with the call in the echo.

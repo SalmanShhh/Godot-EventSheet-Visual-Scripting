@@ -6010,3 +6010,96 @@ Full toolbar on - every button is on the strip.,ツールバーをすべて表�
 "Debug layout: Event Trace, Live Values and breakpoints are on for this run.",レイアウトをデバッグ実行: この実行ではイベントトレース、ライブ値、ブレークポイントが有効です。
 Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,このボタンを指し示すため、すべてのボタンを表示しています - 休ませたツールバーの設定はそのままです。山形の矢印でまた休みます。
 Loading the vocabulary...,語彙を読み込んでいます...
+"The colour the surface is painted, before any light falls on it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color`, the override every GeometryInstance3D wears.",光が当たる前の、表面そのものの色。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.albedo_color` に書き込みます。
+Material,マテリアル
+"The colour the surface is painted, before any light falls on it.",光が当たる前の、表面そのものの色。
+Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.,表面の色を読み返します: `material_override.albedo_color`。どの値フィールドでも使えます。
+Fade Colour,色をフェードさせる
+"Walks the surface's colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color` on this mesh's own copy of the material.",表面の色を一気に変えるのではなく、時間をかけて新しい値へ動かします。トゥイーン一つで、残る状態はありません。このメッシュ自身のマテリアルのコピーの `material_override.albedo_color` に書き込みます。
+Fade colour to {value} over {seconds} s,色を {seconds} 秒かけて {value} にする
+The colour to arrive at.,たどり着く色。
+Set Glow,発光を設定
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.emission_energy_multiplier`, the override every GeometryInstance3D wears.",表面がどれだけ自分から光るか: 0 は暗く、1 は点いた状態、それ以上は世界のグローににじみます。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.emission_energy_multiplier` に書き込みます。
+Set glow to {value},発光を {value} にする
+Glow,発光
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow.",表面がどれだけ自分から光るか: 0 は暗く、1 は点いた状態、それ以上は世界のグローににじみます。
+Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.,表面の発光を読み返します: `material_override.emission_energy_multiplier`。どの値フィールドでも使えます。
+glow,発光
+Fade Glow,発光をフェードさせる
+"Walks the surface's glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.emission_energy_multiplier` on this mesh's own copy of the material.",表面の発光を一気に変えるのではなく、時間をかけて新しい値へ動かします。トゥイーン一つで、残る状態はありません。このメッシュ自身のマテリアルのコピーの `material_override.emission_energy_multiplier` に書き込みます。
+Fade glow to {value} over {seconds} s,発光を {seconds} 秒かけて {value} にする
+The glow to arrive at.,たどり着く発光。
+Set Roughness,粗さを設定
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.roughness`, the override every GeometryInstance3D wears.",映り込みがどれだけ散るか、割合で: 0 は鏡、1 はチョーク。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.roughness` に書き込みます。
+Set roughness to {value},粗さを {value} にする
+Roughness,粗さ
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk.",映り込みがどれだけ散るか、割合で: 0 は鏡、1 はチョーク。
+Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.,表面の粗さを読み返します: `material_override.roughness`。どの値フィールドでも使えます。
+roughness,粗さ
+Fade Roughness,粗さをフェードさせる
+"Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.",表面の粗さを一気に変えるのではなく、時間をかけて新しい値へ動かします。トゥイーン一つで、残る状態はありません。このメッシュ自身のマテリアルのコピーの `material_override.roughness` に書き込みます。
+Fade roughness to {value} over {seconds} s,粗さを {seconds} 秒かけて {value} にする
+The roughness to arrive at.,たどり着く粗さ。
+Set Metal,金属感を設定
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.",表面がどれだけ金属に見えるか、割合で: 0 は塗装やプラスチック、1 は地の金属。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.metallic` に書き込みます。
+Set metal to {value},金属感を {value} にする
+Metal,金属感
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal.",表面がどれだけ金属に見えるか、割合で: 0 は塗装やプラスチック、1 は地の金属。
+Reads the surface's metal back: `material_override.metallic`. Use it in any value field.,表面の金属感を読み返します: `material_override.metallic`。どの値フィールドでも使えます。
+metal,金属感
+Fade Metal,金属感をフェードさせる
+"Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.",表面の金属感を一気に変えるのではなく、時間をかけて新しい値へ動かします。トゥイーン一つで、残る状態はありません。このメッシュ自身のマテリアルのコピーの `material_override.metallic` に書き込みます。
+Fade metal to {value} over {seconds} s,金属感を {seconds} 秒かけて {value} にする
+The metal to arrive at.,たどり着く金属感。
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.",表面がどれだけ中身の詰まった状態か: 1 は不透明、0 は見えません。Godot はこれを色のアルファチャンネルに持っていて、マテリアルがアルファ透過になるまで何も起きないので、この行はそれも一緒に入れます。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.albedo_color.a` に書き込みます。
+See-Through,透け具合
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well.",表面がどれだけ中身の詰まった状態か: 1 は不透明、0 は見えません。Godot はこれを色のアルファチャンネルに持っていて、マテリアルがアルファ透過になるまで何も起きないので、この行はそれも一緒に入れます。
+Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.,表面の透け具合を読み返します: `material_override.albedo_color.a`。どの値フィールドでも使えます。
+see-through,透け具合
+Fade See-Through,透け具合をフェードさせる
+"Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.",表面の透け具合を一気に変えるのではなく、時間をかけて新しい値へ動かします。トゥイーン一つで、残る状態はありません。このメッシュ自身のマテリアルのコピーの `material_override.albedo_color.a` に書き込みます。
+Fade see-through to {value} over {seconds} s,透け具合を {seconds} 秒かけて {value} にする
+The see-through to arrive at.,たどり着く透け具合。
+Set Texture,テクスチャを設定
+"The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.",表面に描かれる絵。null にすると、ただの色に戻ります。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.albedo_texture` に書き込みます。
+Set texture to {value},テクスチャを {value} にする
+Texture,テクスチャ
+The picture painted over the surface. Blank it with null to go back to a flat colour.,表面に描かれる絵。null にすると、ただの色に戻ります。
+Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.,表面のテクスチャを読み返します: `material_override.albedo_texture`。どの値フィールドでも使えます。
+texture,テクスチャ
+Set Blend,ブレンドを設定
+"How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.",表面が、すでに後ろに描かれているものとどう混ざるか。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.blend_mode` に書き込みます。
+Set blend to {value},ブレンドを {value} にする
+Blend,ブレンド
+How the surface is mixed with whatever is already drawn behind it.,表面が、すでに後ろに描かれているものとどう混ざるか。
+mix,ミックス
+add,加算
+subtract,減算
+multiply,乗算
+premultiplied alpha,乗算済みアルファ
+Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.,表面のブレンドを読み返します: `material_override.blend_mode`。どの値フィールドでも使えます。
+blend,ブレンド
+Set Transparency,透過モードを設定
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.",表面がそもそも透けをどう扱うか。シザーは各ピクセルを完全に描くか完全に捨てるかにするので、葉やフェンスに向いていて、いちばん安く済みます。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.transparency` に書き込みます。
+Set transparency to {value},透過モードを {value} にする
+Transparency,透過モード
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.",表面がそもそも透けをどう扱うか。シザーは各ピクセルを完全に描くか完全に捨てるかにするので、葉やフェンスに向いていて、いちばん安く済みます。
+solid,不透明
+alpha,アルファ
+alpha scissor,アルファシザー
+alpha hash,アルファハッシュ
+alpha with depth pre-pass,深度プリパス付きアルファ
+Scissor threshold,シザーのしきい値
+Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,アルファシザーが切る位置: これより透けているピクセルはまったく描かれません。読むのはアルファシザーだけです。
+Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,表面の透過モードを読み返します: `material_override.transparency`。どの値フィールドでも使えます。
+transparency,透過モード
+Set Sides,面を設定
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.",表面のどの面を描くか。両面は、平たい葉やカーテン、片面だけの壁が欲しがるもので、描画は倍かかります。 まずこのメッシュにマテリアルの独自コピーを与えるので、他のメッシュと共有しているマテリアルがその下で変わることはありません。すべての GeometryInstance3D が持つオーバーライド `material_override.cull_mode` に書き込みます。
+Set sides to {value},面を {value} にする
+Sides,面
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing.",表面のどの面を描くか。両面は、平たい葉やカーテン、片面だけの壁が欲しがるもので、描画は倍かかります。
+front,表
+back,裏
+both,両面
+Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,表面の面を読み返します: `material_override.cull_mode`。どの値フィールドでも使えます。
+sides,面

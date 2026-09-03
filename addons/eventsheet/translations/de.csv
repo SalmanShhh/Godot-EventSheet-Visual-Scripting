@@ -6010,3 +6010,96 @@ Full toolbar on - every button is on the strip.,Vollständige Werkzeugleiste an 
 "Debug layout: Event Trace, Live Values and breakpoints are on for this run.","Layout debuggen: Ereignisverfolgung, Live-Werte und Haltepunkte sind für diesen Lauf an."
 Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,"Es werden alle Schaltflächen gezeigt, damit auf diese gezeigt werden kann - deine ruhende Werkzeugleiste bleibt gemerkt. Der Pfeil lässt sie wieder ruhen."
 Loading the vocabulary...,Vokabular wird geladen...
+"The colour the surface is painted, before any light falls on it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color`, the override every GeometryInstance3D wears.","Die Farbe, mit der die Oberfläche gestrichen ist, bevor Licht auf sie fällt. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.albedo_color`, das Override, das jede GeometryInstance3D hat."
+Material,Material
+"The colour the surface is painted, before any light falls on it.","Die Farbe, mit der die Oberfläche gestrichen ist, bevor Licht auf sie fällt."
+Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.,Liest die Farbe der Oberfläche zurück: `material_override.albedo_color`. In jedem Wertfeld verwendbar.
+Fade Colour,Farbe überblenden
+"Walks the surface's colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color` on this mesh's own copy of the material.","Führt die Farbe der Oberfläche über die Zeit zu einem neuen Wert, statt dorthin zu springen - ein Tween, kein Zustand zu behalten. Schreibt `material_override.albedo_color` auf der eigenen Kopie des Materials dieses Meshes."
+Fade colour to {value} over {seconds} s,Farbe in {seconds} s auf {value} überblenden
+The colour to arrive at.,"Die Farbe, bei der es ankommen soll."
+Set Glow,Leuchten setzen
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.emission_energy_multiplier`, the override every GeometryInstance3D wears.","Wie stark die Oberfläche von sich aus leuchtet: 0 ist dunkel, 1 ist hell, höher blutet ins Weltleuchten aus. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.emission_energy_multiplier`, das Override, das jede GeometryInstance3D hat."
+Set glow to {value},Leuchten auf {value} setzen
+Glow,Leuchten
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow.","Wie stark die Oberfläche von sich aus leuchtet: 0 ist dunkel, 1 ist hell, höher blutet ins Weltleuchten aus."
+Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.,Liest das Leuchten der Oberfläche zurück: `material_override.emission_energy_multiplier`. In jedem Wertfeld verwendbar.
+glow,Leuchten
+Fade Glow,Leuchten überblenden
+"Walks the surface's glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.emission_energy_multiplier` on this mesh's own copy of the material.","Führt das Leuchten der Oberfläche über die Zeit zu einem neuen Wert, statt dorthin zu springen - ein Tween, kein Zustand zu behalten. Schreibt `material_override.emission_energy_multiplier` auf der eigenen Kopie des Materials dieses Meshes."
+Fade glow to {value} over {seconds} s,Leuchten in {seconds} s auf {value} überblenden
+The glow to arrive at.,"Das Leuchten, bei dem es ankommen soll."
+Set Roughness,Rauheit setzen
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.roughness`, the override every GeometryInstance3D wears.","Wie stark die Spiegelungen gestreut werden, als Anteil: 0 ist ein Spiegel, 1 ist Kreide. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.roughness`, das Override, das jede GeometryInstance3D hat."
+Set roughness to {value},Rauheit auf {value} setzen
+Roughness,Rauheit
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk.","Wie stark die Spiegelungen gestreut werden, als Anteil: 0 ist ein Spiegel, 1 ist Kreide."
+Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.,Liest die Rauheit der Oberfläche zurück: `material_override.roughness`. In jedem Wertfeld verwendbar.
+roughness,Rauheit
+Fade Roughness,Rauheit überblenden
+"Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.","Führt die Rauheit der Oberfläche über die Zeit zu einem neuen Wert, statt dorthin zu springen - ein Tween, kein Zustand zu behalten. Schreibt `material_override.roughness` auf der eigenen Kopie des Materials dieses Meshes."
+Fade roughness to {value} over {seconds} s,Rauheit in {seconds} s auf {value} überblenden
+The roughness to arrive at.,"Die Rauheit, bei der es ankommen soll."
+Set Metal,Metallgrad setzen
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.","Wie metallisch die Oberfläche wirkt, als Anteil: 0 ist Lack oder Kunststoff, 1 ist blankes Metall. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.metallic`, das Override, das jede GeometryInstance3D hat."
+Set metal to {value},Metallgrad auf {value} setzen
+Metal,Metallgrad
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal.","Wie metallisch die Oberfläche wirkt, als Anteil: 0 ist Lack oder Kunststoff, 1 ist blankes Metall."
+Reads the surface's metal back: `material_override.metallic`. Use it in any value field.,Liest den Metallgrad der Oberfläche zurück: `material_override.metallic`. In jedem Wertfeld verwendbar.
+metal,Metallgrad
+Fade Metal,Metallgrad überblenden
+"Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.","Führt den Metallgrad der Oberfläche über die Zeit zu einem neuen Wert, statt dorthin zu springen - ein Tween, kein Zustand zu behalten. Schreibt `material_override.metallic` auf der eigenen Kopie des Materials dieses Meshes."
+Fade metal to {value} over {seconds} s,Metallgrad in {seconds} s auf {value} überblenden
+The metal to arrive at.,"Der Metallgrad, bei dem es ankommen soll."
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.","Wie fest die Oberfläche ist: 1 ist undurchsichtig, 0 ist unsichtbar. Godot hält das im Alphakanal der Farbe, der nichts tut, solange das Material nicht auf Alpha-Transparenz steht - also schaltet die Zeile das gleich mit ein. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.albedo_color.a`, das Override, das jede GeometryInstance3D hat."
+See-Through,Durchsichtigkeit
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well.","Wie fest die Oberfläche ist: 1 ist undurchsichtig, 0 ist unsichtbar. Godot hält das im Alphakanal der Farbe, der nichts tut, solange das Material nicht auf Alpha-Transparenz steht - also schaltet die Zeile das gleich mit ein."
+Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.,Liest die Durchsichtigkeit der Oberfläche zurück: `material_override.albedo_color.a`. In jedem Wertfeld verwendbar.
+see-through,Durchsichtigkeit
+Fade See-Through,Durchsichtigkeit überblenden
+"Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.","Führt die Durchsichtigkeit der Oberfläche über die Zeit zu einem neuen Wert, statt dorthin zu springen - ein Tween, kein Zustand zu behalten. Schreibt `material_override.albedo_color.a` auf der eigenen Kopie des Materials dieses Meshes."
+Fade see-through to {value} over {seconds} s,Durchsichtigkeit in {seconds} s auf {value} überblenden
+The see-through to arrive at.,"Die Durchsichtigkeit, bei der es ankommen soll."
+Set Texture,Textur setzen
+"The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.","Das Bild, das über die Oberfläche gemalt ist. Mit null leeren, um zu einer glatten Farbe zurückzugehen. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.albedo_texture`, das Override, das jede GeometryInstance3D hat."
+Set texture to {value},Textur auf {value} setzen
+Texture,Textur
+The picture painted over the surface. Blank it with null to go back to a flat colour.,"Das Bild, das über die Oberfläche gemalt ist. Mit null leeren, um zu einer glatten Farbe zurückzugehen."
+Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.,Liest die Textur der Oberfläche zurück: `material_override.albedo_texture`. In jedem Wertfeld verwendbar.
+texture,Textur
+Set Blend,Mischung setzen
+"How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.","Wie die Oberfläche mit dem gemischt wird, was schon dahinter gezeichnet ist. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.blend_mode`, das Override, das jede GeometryInstance3D hat."
+Set blend to {value},Mischung auf {value} setzen
+Blend,Mischung
+How the surface is mixed with whatever is already drawn behind it.,"Wie die Oberfläche mit dem gemischt wird, was schon dahinter gezeichnet ist."
+mix,mischen
+add,addieren
+subtract,subtrahieren
+multiply,multiplizieren
+premultiplied alpha,vormultipliziertes Alpha
+Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.,Liest die Mischung der Oberfläche zurück: `material_override.blend_mode`. In jedem Wertfeld verwendbar.
+blend,Mischung
+Set Transparency,Transparenz setzen
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.","Wie die Oberfläche überhaupt mit Durchsichtigkeit umgeht. Scissor lässt jedes Pixel entweder ganz da oder ganz weg sein, was Blätter und Zäune wollen und am wenigsten kostet. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.transparency`, das Override, das jede GeometryInstance3D hat."
+Set transparency to {value},Transparenz auf {value} setzen
+Transparency,Transparenz
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.","Wie die Oberfläche überhaupt mit Durchsichtigkeit umgeht. Scissor lässt jedes Pixel entweder ganz da oder ganz weg sein, was Blätter und Zäune wollen und am wenigsten kostet."
+solid,deckend
+alpha,Alpha
+alpha scissor,Alpha-Scissor
+alpha hash,Alpha-Hash
+alpha with depth pre-pass,Alpha mit Tiefen-Vorpass
+Scissor threshold,Scissor-Schwelle
+Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,"Wo Alpha-Scissor schneidet: ein Pixel, das durchsichtiger ist als das, wird gar nicht gezeichnet. Nur Alpha-Scissor liest den Wert."
+Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,Liest die Transparenz der Oberfläche zurück: `material_override.transparency`. In jedem Wertfeld verwendbar.
+transparency,Transparenz
+Set Sides,Seiten setzen
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.","Welche Flächen der Oberfläche gezeichnet werden. Beide ist das, was ein flaches Blatt, ein Vorhang oder eine einseitige Wand will; es kostet doppelt so viel Zeichnen. Gibt diesem Mesh zuerst eine eigene Kopie des Materials, damit ein Material, das mehrere Meshes tragen, sich nie unter ihnen ändert. Schreibt `material_override.cull_mode`, das Override, das jede GeometryInstance3D hat."
+Set sides to {value},Seiten auf {value} setzen
+Sides,Seiten
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing.","Welche Flächen der Oberfläche gezeichnet werden. Beide ist das, was ein flaches Blatt, ein Vorhang oder eine einseitige Wand will; es kostet doppelt so viel Zeichnen."
+front,vorne
+back,hinten
+both,beide
+Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,Liest die Seiten der Oberfläche zurück: `material_override.cull_mode`. In jedem Wertfeld verwendbar.
+sides,Seiten

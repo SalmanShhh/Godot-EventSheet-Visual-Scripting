@@ -144,6 +144,9 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# The tree announcing a node joining or leaving a group: two triggers and the group they watch.
 	# One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/group_arrival_aces.gd",
+	# What a surface looks like, said in words: the nine material words, the surface slots beside
+	# them and the two a sprite has. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/material_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files

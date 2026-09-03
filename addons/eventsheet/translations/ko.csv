@@ -6010,3 +6010,96 @@ Full toolbar on - every button is on the strip.,전체 도구 모음 켜짐 - �
 "Debug layout: Event Trace, Live Values and breakpoints are on for this run.","레이아웃 디버그: 이번 실행에서는 이벤트 추적, 라이브 값, 중단점이 켜집니다."
 Showing every button so this one can be pointed at - your resting toolbar is still remembered. The chevron rests it again.,이 버튼을 가리키기 위해 모든 버튼을 보여 줍니다 - 쉬게 해 둔 도구 모음 설정은 그대로입니다. 꺾쇠 화살표로 다시 쉽니다.
 Loading the vocabulary...,어휘를 불러오는 중...
+"The colour the surface is painted, before any light falls on it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color`, the override every GeometryInstance3D wears.","빛이 닿기 전, 표면이 칠해진 색. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.albedo_color` 에 씁니다."
+Material,머티리얼
+"The colour the surface is painted, before any light falls on it.","빛이 닿기 전, 표면이 칠해진 색."
+Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.,표면의 색 을 다시 읽습니다: `material_override.albedo_color`. 어떤 값 필드에서도 쓸 수 있습니다.
+Fade Colour,색 페이드
+"Walks the surface's colour to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color` on this mesh's own copy of the material.",표면의 색 을 단번에 바꾸지 않고 시간에 걸쳐 새 값으로 옮깁니다. 트윈 하나뿐이고 남는 상태도 없습니다. 이 메시 자체의 머티리얼 사본의 `material_override.albedo_color` 에 씁니다.
+Fade colour to {value} over {seconds} s,색을 {seconds} 초에 걸쳐 {value} 로
+The colour to arrive at.,도달할 색.
+Set Glow,발광 설정
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.emission_energy_multiplier`, the override every GeometryInstance3D wears.","표면이 스스로 얼마나 빛을 내는지: 0은 어둡고, 1은 켜진 상태, 그 위로는 월드의 글로우로 번집니다. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.emission_energy_multiplier` 에 씁니다."
+Set glow to {value},발광을 {value} 로 설정
+Glow,발광
+"How hard the surface gives off light of its own: 0 is dark, 1 is lit, higher bleeds into the world's glow.","표면이 스스로 얼마나 빛을 내는지: 0은 어둡고, 1은 켜진 상태, 그 위로는 월드의 글로우로 번집니다."
+Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.,표면의 발광 을 다시 읽습니다: `material_override.emission_energy_multiplier`. 어떤 값 필드에서도 쓸 수 있습니다.
+glow,발광
+Fade Glow,발광 페이드
+"Walks the surface's glow to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.emission_energy_multiplier` on this mesh's own copy of the material.",표면의 발광 을 단번에 바꾸지 않고 시간에 걸쳐 새 값으로 옮깁니다. 트윈 하나뿐이고 남는 상태도 없습니다. 이 메시 자체의 머티리얼 사본의 `material_override.emission_energy_multiplier` 에 씁니다.
+Fade glow to {value} over {seconds} s,발광을 {seconds} 초에 걸쳐 {value} 로
+The glow to arrive at.,도달할 발광.
+Set Roughness,거칠기 설정
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.roughness`, the override every GeometryInstance3D wears.","반사가 얼마나 흩어지는지, 비율로: 0은 거울, 1은 분필. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.roughness` 에 씁니다."
+Set roughness to {value},거칠기를 {value} 로 설정
+Roughness,거칠기
+"How scattered the reflections are, as a fraction: 0 is a mirror, 1 is chalk.","반사가 얼마나 흩어지는지, 비율로: 0은 거울, 1은 분필."
+Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.,표면의 거칠기 을 다시 읽습니다: `material_override.roughness`. 어떤 값 필드에서도 쓸 수 있습니다.
+roughness,거칠기
+Fade Roughness,거칠기 페이드
+"Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.",표면의 거칠기 을 단번에 바꾸지 않고 시간에 걸쳐 새 값으로 옮깁니다. 트윈 하나뿐이고 남는 상태도 없습니다. 이 메시 자체의 머티리얼 사본의 `material_override.roughness` 에 씁니다.
+Fade roughness to {value} over {seconds} s,거칠기를 {seconds} 초에 걸쳐 {value} 로
+The roughness to arrive at.,도달할 거칠기.
+Set Metal,금속감 설정
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.","표면이 얼마나 금속으로 읽히는지, 비율로: 0은 페인트나 플라스틱, 1은 맨 금속. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.metallic` 에 씁니다."
+Set metal to {value},금속감을 {value} 로 설정
+Metal,금속감
+"How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal.","표면이 얼마나 금속으로 읽히는지, 비율로: 0은 페인트나 플라스틱, 1은 맨 금속."
+Reads the surface's metal back: `material_override.metallic`. Use it in any value field.,표면의 금속감 을 다시 읽습니다: `material_override.metallic`. 어떤 값 필드에서도 쓸 수 있습니다.
+metal,금속감
+Fade Metal,금속감 페이드
+"Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.",표면의 금속감 을 단번에 바꾸지 않고 시간에 걸쳐 새 값으로 옮깁니다. 트윈 하나뿐이고 남는 상태도 없습니다. 이 메시 자체의 머티리얼 사본의 `material_override.metallic` 에 씁니다.
+Fade metal to {value} over {seconds} s,금속감을 {seconds} 초에 걸쳐 {value} 로
+The metal to arrive at.,도달할 금속감.
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.","표면이 얼마나 꽉 찼는지: 1은 불투명, 0은 보이지 않음. Godot는 이 값을 색의 알파 채널에 두는데, 머티리얼이 알파 투명이 되기 전에는 아무 일도 하지 않으므로 이 행이 그것도 함께 켭니다. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.albedo_color.a` 에 씁니다."
+See-Through,투명도
+"How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well.","표면이 얼마나 꽉 찼는지: 1은 불투명, 0은 보이지 않음. Godot는 이 값을 색의 알파 채널에 두는데, 머티리얼이 알파 투명이 되기 전에는 아무 일도 하지 않으므로 이 행이 그것도 함께 켭니다."
+Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.,표면의 투명도 을 다시 읽습니다: `material_override.albedo_color.a`. 어떤 값 필드에서도 쓸 수 있습니다.
+see-through,투명도
+Fade See-Through,투명도 페이드
+"Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.",표면의 투명도 을 단번에 바꾸지 않고 시간에 걸쳐 새 값으로 옮깁니다. 트윈 하나뿐이고 남는 상태도 없습니다. 이 메시 자체의 머티리얼 사본의 `material_override.albedo_color.a` 에 씁니다.
+Fade see-through to {value} over {seconds} s,투명도를 {seconds} 초에 걸쳐 {value} 로
+The see-through to arrive at.,도달할 투명도.
+Set Texture,텍스처 설정
+"The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.","표면에 칠해지는 그림. null 로 비우면 단색으로 돌아갑니다. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.albedo_texture` 에 씁니다."
+Set texture to {value},텍스처를 {value} 로 설정
+Texture,텍스처
+The picture painted over the surface. Blank it with null to go back to a flat colour.,표면에 칠해지는 그림. null 로 비우면 단색으로 돌아갑니다.
+Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.,표면의 텍스처 을 다시 읽습니다: `material_override.albedo_texture`. 어떤 값 필드에서도 쓸 수 있습니다.
+texture,텍스처
+Set Blend,블렌드 설정
+"How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.","표면이 뒤에 이미 그려진 것과 어떻게 섞이는지. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.blend_mode` 에 씁니다."
+Set blend to {value},블렌드를 {value} 로 설정
+Blend,블렌드
+How the surface is mixed with whatever is already drawn behind it.,표면이 뒤에 이미 그려진 것과 어떻게 섞이는지.
+mix,믹스
+add,더하기
+subtract,빼기
+multiply,곱하기
+premultiplied alpha,사전 곱셈 알파
+Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.,표면의 블렌드 을 다시 읽습니다: `material_override.blend_mode`. 어떤 값 필드에서도 쓸 수 있습니다.
+blend,블렌드
+Set Transparency,투명 처리 방식 설정
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.","표면이 애초에 투명을 어떻게 다루는지. 시저는 각 픽셀을 완전히 그리거나 완전히 버리므로, 잎사귀와 울타리가 원하는 방식이고 비용도 가장 적습니다. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.transparency` 에 씁니다."
+Set transparency to {value},투명 처리 방식을 {value} 로 설정
+Transparency,투명 처리
+"How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.","표면이 애초에 투명을 어떻게 다루는지. 시저는 각 픽셀을 완전히 그리거나 완전히 버리므로, 잎사귀와 울타리가 원하는 방식이고 비용도 가장 적습니다."
+solid,불투명
+alpha,알파
+alpha scissor,알파 시저
+alpha hash,알파 해시
+alpha with depth pre-pass,깊이 프리패스 알파
+Scissor threshold,시저 임계값
+Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,알파 시저가 잘라내는 지점: 이보다 더 투명한 픽셀은 아예 그려지지 않습니다. 알파 시저만 이 값을 읽습니다.
+Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,표면의 투명 처리 방식 을 다시 읽습니다: `material_override.transparency`. 어떤 값 필드에서도 쓸 수 있습니다.
+transparency,투명 처리
+Set Sides,면 설정
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.","표면의 어느 면을 그릴지. 양면은 납작한 잎사귀나 커튼, 한 겹짜리 벽이 원하는 것이고, 그리는 비용은 두 배입니다. 먼저 이 메시에 머티리얼의 자체 사본을 주므로, 다른 메시와 공유하는 머티리얼이 그 아래에서 바뀌지 않습니다. 모든 GeometryInstance3D가 지니는 오버라이드 `material_override.cull_mode` 에 씁니다."
+Set sides to {value},면을 {value} 로 설정
+Sides,면
+"Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing.","표면의 어느 면을 그릴지. 양면은 납작한 잎사귀나 커튼, 한 겹짜리 벽이 원하는 것이고, 그리는 비용은 두 배입니다."
+front,앞면
+back,뒷면
+both,양면
+Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,표면의 면 을 다시 읽습니다: `material_override.cull_mode`. 어떤 값 필드에서도 쓸 수 있습니다.
+sides,면

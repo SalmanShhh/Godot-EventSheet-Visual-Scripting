@@ -339,6 +339,55 @@ stores none of them:
 Clicking a band selects that node in the Scene dock, where the Inspector that owns the fact is.
 
 
+### What a surface looks like (picker section: Material)
+
+The lights say how a scene is lit. These say what the things in it are made of. Pick a
+`MeshInstance3D` and the row reads **Crate ▸ Set roughness to 0.2**, with the mesh in the column
+where a reader looks for it. Nine words, and not one of them is a property name you have to know:
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Colour | Paints the surface, before any light falls on it. | `material_override.albedo_color = {value}` |
+| Fade Colour | Walks the colour to a new value over time. | `create_tween().tween_property(material_override, "albedo_color", {value}, {seconds})` |
+| Set Glow | How hard the surface gives off light of its own. | `material_override.emission_enabled = true` then `material_override.emission_energy_multiplier = {value}` |
+| Fade Glow | Walks the glow up or down over time. | `create_tween().tween_property(material_override, "emission_energy_multiplier", {value}, {seconds})` |
+| Set Roughness | 0 is a mirror, 1 is chalk. | `material_override.roughness = {value}` |
+| Fade Roughness | Walks the roughness over time. | `create_tween().tween_property(material_override, "roughness", {value}, {seconds})` |
+| Set Metal | 0 is paint or plastic, 1 is bare metal. | `material_override.metallic = {value}` |
+| Fade Metal | Walks the metal over time. | `create_tween().tween_property(material_override, "metallic", {value}, {seconds})` |
+| Set See-Through | 1 is solid, 0 is invisible - and it switches the material to alpha transparency, without which alpha does nothing. | `material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA` then `material_override.albedo_color.a = {value}` |
+| Fade See-Through | Fades the surface out (or back in) over time. | `create_tween().tween_property(material_override, "albedo_color:a", {value}, {seconds})` |
+| Set Texture | The picture painted over the surface; null goes back to a flat colour. | `material_override.albedo_texture = {value}` |
+| Set Blend | mix / add / subtract / multiply / premultiplied alpha. | `material_override.blend_mode = {value}` |
+| Set Transparency | solid / alpha / alpha scissor / alpha hash / alpha with depth pre-pass, with the scissor threshold beside it. | `material_override.transparency = {value}` |
+| Set Sides | Which faces are drawn: front, back or both. | `material_override.cull_mode = {value}` |
+| Colour | Reads the colour back, for any value field. | `get_active_material(0).albedo_color` |
+| Glow | Reads the glow back. | `get_active_material(0).emission_energy_multiplier` |
+| Roughness | Reads the roughness back. | `get_active_material(0).roughness` |
+| Metal | Reads the metal back. | `get_active_material(0).metallic` |
+| See-Through | Reads how solid the surface is. | `get_active_material(0).albedo_color.a` |
+| Texture | Reads the picture on the surface. | `get_active_material(0).albedo_texture` |
+| Blend | Reads the blend mode back. | `get_active_material(0).blend_mode` |
+| Transparency | Reads the transparency mode back. | `get_active_material(0).transparency` |
+| Sides | Reads which faces are drawn. | `get_active_material(0).cull_mode` |
+
+**Every write gives the mesh its own copy of the material first, and you can see it in the code.** A
+material is a file: two meshes pointing at the same `.tres` point at ONE object, so recolouring the
+goblin the player hit recolours all twelve of them. Each of these rows therefore opens with two
+lines that duplicate whatever the mesh is drawing with into `material_override`:
+
+```gdscript
+if material_override == null:
+	material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+material_override.albedo_color = Color(1, 0, 0)
+```
+
+The override is the flag, so the copy is taken once: a mesh that already owns one keeps it, and a
+mesh drawing with nothing at all is given a plain `StandardMaterial3D` rather than reaching through
+a null. Nothing is assumed and there is no step to remember.
+
+These are 3D words: they are `BaseMaterial3D`'s, and a `MeshInstance3D` is what wears one.
+
 ### The screenshot (picker section: General Actions)
 
 | Name | What it does | Ships as |

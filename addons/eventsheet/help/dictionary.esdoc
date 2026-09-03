@@ -19,6 +19,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `_on_unpack_finished` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_progress` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_refused` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
+| `a` | [See-Through](ace:Core/MaterialSeeThrough) | Material | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
 | `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
@@ -55,9 +56,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_undo_reference` | [Remove Node (Undoable)](ace:Core/RemoveNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_visibility_filter` | [Ask A Function Who May See It](ace:Core/AddVisibilityFilter) | Multiplayer | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
+| `albedo_color` | [Colour](ace:Core/MaterialColour) | Material | Vocabulary |
+| `albedo_texture` | [Texture](ace:Core/MaterialTexture) | Material | Vocabulary |
 | `alert` | [Alert](ace:Core/BrowserAlert) | Browser | Vocabulary |
 | `alerted` | [Alert Enemies Within](ace:Core/AlertEnemiesWithin) | Enemies 3D | Vocabulary |
 | `all` | [All Match](ace:Core/ArrayAll) | Variables: Array | Vocabulary |
+| `alpha_scissor_threshold` | [Set Transparency](ace:Core/MaterialSetTransparency) | Material | Vocabulary |
 | `always_on_top` | [Set Always On Top](ace:Core/WindowSetAlwaysOnTop) | Game Window | Vocabulary |
 | `ambient_light_energy` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
 | `amount` | [Amount](ace:Core/GetParticleAmount) | Particles | Vocabulary |
@@ -93,6 +97,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
 | `billboard` | [Set Always Face The Camera](ace:Core/SetFaceTheCamera) | World-space UI | Vocabulary |
 | `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
+| `blend_mode` | [Blend](ace:Core/MaterialBlend) | Material | Vocabulary |
 | `bool` | [No Flashing](ace:Core/NoFlashing) | Accessibility | Vocabulary |
 | `bottom_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
 | `bounce` | [Bounce Off Solids](ace:Core/BounceOffSolid) | Bullet | Vocabulary |
@@ -150,6 +155,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
 | `create_tween` | [Fade Brightness](ace:Core/LightFadeBrightness) | Lighting | Vocabulary |
 | `cross` | [Fire Hitscan](ace:Core/FireHitscan) | Weapons 3D | Vocabulary |
+| `cull_mode` | [Sides](ace:Core/MaterialSides) | Material | Vocabulary |
 | `current_animation` | [Set Current Animation](ace:Core/SetAnimationTime) | Animation | Vocabulary |
 | `current_animation_length` | [Animation Length](ace:Core/AnimationLength) | Animation | Vocabulary |
 | `current_animation_position` | [Animation Position](ace:Core/AnimationPosition) | Animation | Vocabulary |
@@ -182,6 +188,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ease` | [Ease](ace:Core/EaseValue) | Helpers | Vocabulary |
 | `echo` | [On Key Pressed (event)](ace:Core/KeyEventPressed) | Keyboard | Vocabulary |
 | `else` | [As Duration](ace:Core/AsDuration) | Text | Vocabulary |
+| `emission_enabled` | [Set Glow](ace:Core/MaterialSetGlow) | Material | Vocabulary |
+| `emission_energy_multiplier` | [Glow](ace:Core/MaterialGlow) | Material | Vocabulary |
 | `emit` | [Emit Signal](ace:Core/EmitSignal) | Signals / Scene / Input | Vocabulary |
 | `emit_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
 | `emitting` | [Set Emitting](ace:Core/SetEmitting) | Particles | Vocabulary |
@@ -244,6 +252,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_accelerometer` | [Acceleration](ace:Core/TouchAcceleration) | Touch | Vocabulary |
 | `get_action_strength` | [Action Strength](ace:Core/GetActionStrength) | Input | Vocabulary |
 | `get_actions` | [All Input Actions](ace:Core/InputActionsList) | Input | Vocabulary |
+| `get_active_material` | [Colour](ace:Core/MaterialColour) | Material | Vocabulary |
 | `get_animation` | [Reached Marker](ace:Core/AnimationPastMarker) | Animation | Vocabulary |
 | `get_as_text` | 's contents | Object | Object expressions |
 | `get_axis` | [Input Axis](ace:Core/GetInputAxis) | Input | Vocabulary |
@@ -561,6 +570,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `merge` | [Merge Dictionary](ace:Core/DictMerge) | Variables: Dictionary | Vocabulary |
 | `merged` | [Translated Text With Words](ace:Core/TranslatedTextWithWords) | Translation | Vocabulary |
 | `mesh` | [Clear Mesh](ace:Core/ClearMesh) | Mesh | Vocabulary |
+| `metallic` | [Metal](ace:Core/MaterialMetal) | Material | Vocabulary |
 | `min` | [Min](ace:Core/MinValue) | Helpers | Vocabulary |
 | `minf` | [Fill Meter](ace:Core/FillMeter) | Meters | Vocabulary |
 | `mini` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
@@ -713,6 +723,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `rotates` | [Set Rotate With Path](ace:Core/SetPathRotates) | Follow a Path | Vocabulary |
 | `rotation` | [Pin Angle To](ace:Core/PinAngleToObject) | Pin | Vocabulary |
 | `rotation_degrees` | [Rotate Clockwise](ace:Core/RotateClockwise) | Layout Edges | Vocabulary |
+| `roughness` | [Roughness](ace:Core/MaterialRoughness) | Material | Vocabulary |
 | `round` | [Round](ace:Core/RoundValue) | Helpers | Vocabulary |
 | `roundi` | [Cells In Line](ace:Core/CellsInLine) | Math & Random | Vocabulary |
 | `rpad` | [Align Left](ace:Core/AlignLeft) | Text | Vocabulary |
