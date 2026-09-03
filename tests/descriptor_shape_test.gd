@@ -188,7 +188,6 @@ static func _problems_of_param(id: String, param: ACEParam, wants_default: bool)
 	return problems
 
 
-## The `{slot}` names in a text, without repeats.
 ## The fields a template CHOOSES A SHAPE by: every `{?name}` / `{?name=word}` segment mark in it.
 ## Read with the emitter's own spelling of the idiom, so a field the emitter would branch on and this
 ## would not see cannot exist.
@@ -204,6 +203,7 @@ static func _segments_in(text: String) -> PackedStringArray:
 	return found
 
 
+## The `{slot}` names in a text, without repeats.
 static func _slots_in(text: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var pattern: RegEx = RegEx.create_from_string(SLOT_PATTERN)

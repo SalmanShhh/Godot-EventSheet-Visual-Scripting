@@ -149,7 +149,7 @@ static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Di
 
 ## Every action of the sheet with the facts a rule needs about WHERE it sits: the event it is in, the
 ## trigger that reaches it, the slot it occupies in its lane, and whether anything above it has
-## already asked whether its object is still there. ONE walk, four rules - a second walk would be a
+## already asked whether its object is still there. ONE walk, every rule - a second walk would be a
 ## second answer to the same question.
 static func row_contexts(sheet: EventSheetResource) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
