@@ -76,7 +76,40 @@ static func run() -> bool:
 	all_passed = _pin_emitted_3d(shipped) and all_passed
 	all_passed = _pin_arithmetic(shipped) and all_passed
 	all_passed = _pin_fit_limits(shipped) and all_passed
+	all_passed = _pin_mixed_receivers() and all_passed
 	return all_passed
+
+
+## THE RECEIVERS OF A RUN HAVE TO AGREE. Every camera run is a handful of member operations, and a
+## member operation may be written with a node in front of it or without one. A run whose lines
+## address DIFFERENT nodes is not one row about one camera, and claiming it as one would put the
+## whole run on the first node the moment somebody edited a field. The bytes never move either way,
+## which is exactly why this needs a pin of its own: nothing else in the suite can see it.
+##
+## Each case below is a real spelling somebody would write, opened as a sheet and asked what the
+## first row is. A run that DOES agree still reads as its row - so a guard that refused everything
+## would fail here too - and the mixed ones fall back to the readings the single lines already had.
+static func _pin_mixed_receivers() -> bool:
+	var rows: Array = []
+	for case: Array in [
+		["a clip range on one node", "$Cam.near = 0.1\n$Cam.far = 2000.0", "CameraSetClipRange"],
+		["a clip range on no node", "near = 0.1\nfar = 2000.0", "CameraSetClipRange"],
+		["a clip range split over two nodes", "$Other.near = 0.1\n$Cam.far = 2000.0", ""],
+		["a clip range whose second line names nobody", "$Other.near = 0.1\nfar = 2000.0", ""],
+		["a projection split over two nodes",
+			"$Cam.projection = Camera3D.PROJECTION_PERSPECTIVE\n$Other.fov = 70.0", ""],
+		["smooth turns split over two nodes",
+			"$Cam.rotation_smoothing_enabled = true\n$Other.rotation_smoothing_speed = 4.0", ""],
+		["a dead zone whose last line names nobody",
+			"$Cam.drag_horizontal_enabled = true\n$Cam.drag_vertical_enabled = true\n"
+			+ "$Cam.drag_left_margin = 0.25\n$Cam.drag_right_margin = 0.25\n"
+			+ "$Cam.drag_top_margin = 0.15\ndrag_bottom_margin = 0.15", ""],
+	]:
+		var claim: Dictionary = EventForgeCameraLift.match_run(str(case[1]).split("\n"), 0, 0)
+		rows.append(["%s reads as %s" % [str(case[0]),
+			str(case[2]) if not str(case[2]).is_empty() else "no run at all"],
+			str(claim.get("ace_id", "")), str(case[2])])
+	return SUPPORT.pins("camera_shelf_test", rows)
 
 
 ## Identity, shelf and host, off the modules themselves - before the registry's cross-node pass has

@@ -24,6 +24,13 @@
 # the sentence on the row, and the shape is tight enough that it is the sentence a reader wants.
 # Anything looser (one line of the pair, a different order, a stray line between them) is claimed by
 # nothing here and keeps the reading it already had.
+#
+# THE RECEIVERS ARE ASKED ONE BY ONE, and that is what the sentence above needs to be true. A shared
+# capture cannot answer it: an optional group that matched NOTHING is not a capture at all, so
+# `$Other.near = 0.1` followed by a bare `far = 2000.0` agreed with itself and lifted as one row on
+# the first receiver - and the first param edit would then re-emit the bare line onto `$Other`. So
+# every statement captures its own receiver under its own name, and `_receivers_agree` refuses the
+# run unless all of them are the same node or none of them names one.
 @tool
 class_name EventForgeCameraLift
 extends RefCounted
@@ -77,15 +84,16 @@ static func _drift_entry() -> Dictionary:
 		"ace_id": "CameraDriftMargins",
 		"mark": "drag_horizontal_enabled",
 		"statements": [
-			{"pattern": _flag_pattern("drag_horizontal_enabled", "true")},
-			{"pattern": _flag_pattern("drag_vertical_enabled", "true")},
-			{"pattern": _value_pattern("drag_left_margin", "across")},
-			{"pattern": _value_pattern("drag_right_margin", "across")},
-			{"pattern": _value_pattern("drag_top_margin", "down")},
-			{"pattern": _value_pattern("drag_bottom_margin", "down")}
+			{"pattern": _flag_pattern(0, "drag_horizontal_enabled", "true")},
+			{"pattern": _flag_pattern(1, "drag_vertical_enabled", "true")},
+			{"pattern": _value_pattern(2, "drag_left_margin", "across")},
+			{"pattern": _value_pattern(3, "drag_right_margin", "across")},
+			{"pattern": _value_pattern(4, "drag_top_margin", "down")},
+			{"pattern": _value_pattern(5, "drag_bottom_margin", "down")}
 		],
 		"params": ["target", "across", "down"],
 		"defaults": BLANK_RECEIVER,
+		"guard": _agreeing_receivers(6),
 		"shape": _slot("drag_horizontal_enabled = true") + "\n" + _slot("drag_vertical_enabled = true")
 			+ "\n" + _slot("drag_left_margin = {across}") + "\n" + _slot("drag_right_margin = {across}")
 			+ "\n" + _slot("drag_top_margin = {down}") + "\n" + _slot("drag_bottom_margin = {down}"),
@@ -101,11 +109,12 @@ static func _follow_tightly_entry() -> Dictionary:
 		"ace_id": "CameraFollowTightly",
 		"mark": "drag_horizontal_enabled",
 		"statements": [
-			{"pattern": _flag_pattern("drag_horizontal_enabled", "false")},
-			{"pattern": _flag_pattern("drag_vertical_enabled", "false")}
+			{"pattern": _flag_pattern(0, "drag_horizontal_enabled", "false")},
+			{"pattern": _flag_pattern(1, "drag_vertical_enabled", "false")}
 		],
 		"params": ["target"],
 		"defaults": BLANK_RECEIVER,
+		"guard": _agreeing_receivers(2),
 		"shape": _slot("drag_horizontal_enabled = false") + "\n" + _slot("drag_vertical_enabled = false"),
 		"slots": {"target": FIXTURE_CAMERA_2D}
 	}
@@ -118,11 +127,12 @@ static func _smooth_turns_entry() -> Dictionary:
 		"ace_id": "CameraSmoothTurns",
 		"mark": "rotation_smoothing_enabled",
 		"statements": [
-			{"pattern": _value_pattern("rotation_smoothing_enabled", "enabled")},
-			{"pattern": _value_pattern("rotation_smoothing_speed", "speed")}
+			{"pattern": _value_pattern(0, "rotation_smoothing_enabled", "enabled")},
+			{"pattern": _value_pattern(1, "rotation_smoothing_speed", "speed")}
 		],
 		"params": ["target", "enabled", "speed"],
 		"defaults": BLANK_RECEIVER,
+		"guard": _agreeing_receivers(2),
 		"shape": _slot("rotation_smoothing_enabled = {enabled}") + "\n" + _slot("rotation_smoothing_speed = {speed}"),
 		"slots": {"target": FIXTURE_CAMERA_2D, "enabled": "true", "speed": "4.0"}
 	}
@@ -137,13 +147,14 @@ static func _fit_limits_entry() -> Dictionary:
 		"ace_id": "CameraFitLimits",
 		"mark": "limit_left = int(",
 		"statements": [
-			{"pattern": _limit_pattern("limit_left", "position", "x")},
-			{"pattern": _limit_pattern("limit_top", "position", "y")},
-			{"pattern": _limit_pattern("limit_right", "end", "x")},
-			{"pattern": _limit_pattern("limit_bottom", "end", "y")}
+			{"pattern": _limit_pattern(0, "limit_left", "position", "x")},
+			{"pattern": _limit_pattern(1, "limit_top", "position", "y")},
+			{"pattern": _limit_pattern(2, "limit_right", "end", "x")},
+			{"pattern": _limit_pattern(3, "limit_bottom", "end", "y")}
 		],
 		"params": ["target", "area"],
 		"defaults": BLANK_RECEIVER,
+		"guard": _agreeing_receivers(4),
 		"shape": _slot("limit_left = int({area}.position.x)") + "\n" + _slot("limit_top = int({area}.position.y)")
 			+ "\n" + _slot("limit_right = int({area}.end.x)") + "\n" + _slot("limit_bottom = int({area}.end.y)"),
 		"slots": {"target": FIXTURE_CAMERA_2D, "area": "Rect2(0, 0, 1920, 1080)"}
@@ -170,11 +181,12 @@ static func _projection_entry(id: String, ace_id: String, constant: String, prop
 		"ace_id": ace_id,
 		"mark": constant,
 		"statements": [
-			{"pattern": "^%sprojection = Camera3D\\.%s$" % [G.receiver(), constant]},
-			{"pattern": _value_pattern(property, value_name)}
+			{"pattern": "^%sprojection = Camera3D\\.%s$" % [G.receiver(_receiver_name(0)), constant]},
+			{"pattern": _value_pattern(1, property, value_name)}
 		],
 		"params": ["target", value_name],
 		"defaults": BLANK_RECEIVER,
+		"guard": _agreeing_receivers(2),
 		"shape": _slot("projection = Camera3D.%s" % constant) + "\n" + _slot("%s = {%s}" % [property, value_name]),
 		"slots": {"target": FIXTURE_CAMERA_3D, value_name: sample}
 	}
@@ -187,11 +199,12 @@ static func _clip_range_entry() -> Dictionary:
 		"ace_id": "CameraSetClipRange",
 		"mark": "near",
 		"statements": [
-			{"pattern": _value_pattern("near", "near")},
-			{"pattern": _value_pattern("far", "far")}
+			{"pattern": _value_pattern(0, "near", "near")},
+			{"pattern": _value_pattern(1, "far", "far")}
 		],
 		"params": ["target", "near", "far"],
 		"defaults": BLANK_RECEIVER,
+		"guard": _agreeing_receivers(2),
 		"shape": _slot("near = {near}") + "\n" + _slot("far = {far}"),
 		"slots": {"target": FIXTURE_CAMERA_3D, "near": "0.1", "far": "2000.0"}
 	}
@@ -224,20 +237,52 @@ static func _look_at_entry() -> Dictionary:
 	}
 
 
+## THE NAME ONE STATEMENT'S RECEIVER IS CAPTURED UNDER. The first is `target`, which is the row's own
+## "On node" field; every statement after it gets a numbered name of its own, so the guard below can
+## see what each line actually said. They cannot share one name: a receiver is OPTIONAL, and a group
+## that matched nothing leaves no capture behind to disagree with.
+static func _receiver_name(step: int) -> String:
+	return "target" if step == 0 else "target_%d" % (step + 1)
+
+
+## The guard every run of member operations here carries: the statements all address the SAME node,
+## or none of them addresses one. `statements` is how many lines the run has, because a receiver
+## nobody wrote leaves no capture behind and absence is exactly what has to be counted.
+static func _receivers_agree(captures: Dictionary, statements: int) -> bool:
+	var written: String = ""
+	var named: int = 0
+	for step: int in statements:
+		var name: String = _receiver_name(step)
+		if not captures.has(name):
+			continue
+		var text: String = str(captures[name])
+		if named > 0 and text != written:
+			return false
+		written = text
+		named += 1
+	return named == 0 or named == statements
+
+
+## The guard above bound to one run's length - the shape a table entry stores.
+static func _agreeing_receivers(statements: int) -> Callable:
+	return Callable(EventForgeCameraLift, "_receivers_agree").bind(statements)
+
+
 ## `<node>.<property> = <one written value>` - a line whose value IS which row this is, so there is
 ## nothing for the row to show and the value is not a capture.
-static func _flag_pattern(property: String, written: String) -> String:
-	return "^%s%s = %s$" % [G.receiver(), property, written]
+static func _flag_pattern(step: int, property: String, written: String) -> String:
+	return "^%s%s = %s$" % [G.receiver(_receiver_name(step)), property, written]
 
 
 ## `<node>.<property> = <anything>` - the value is the row's, whatever the author wrote there.
-static func _value_pattern(property: String, value_name: String) -> String:
-	return "^%s%s = (?<%s>.+)$" % [G.receiver(), property, value_name]
+static func _value_pattern(step: int, property: String, value_name: String) -> String:
+	return "^%s%s = (?<%s>.+)$" % [G.receiver(_receiver_name(step)), property, value_name]
 
 
 ## One of the four limit writes: the same rectangle every time, read for one of its four numbers.
-static func _limit_pattern(property: String, corner: String, axis: String) -> String:
-	return "^%s%s = int\\((?<area>.+)\\.%s\\.%s\\)$" % [G.receiver(), property, corner, axis]
+static func _limit_pattern(step: int, property: String, corner: String, axis: String) -> String:
+	return "^%s%s = int\\((?<area>.+)\\.%s\\.%s\\)$" % [G.receiver(_receiver_name(step)),
+		property, corner, axis]
 
 
 ## One statement of a shape, with the receiver slot in front of it - the optional prefix a row with
