@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/blend_scene_glow.gd" id="1_glow"]
+[ext_resource type="Material" path="res://tests/fixtures/blend_glow_material.tres" id="2_glow"]
+
+[node name="Glow" type="Sprite2D"]
+material = ExtResource("2_glow")
+script = ExtResource("1_glow")
+
+[node name="Ring" type="Sprite2D" parent="."]
+material = ExtResource("2_glow")
+
+[node name="Plain" type="Sprite2D" parent="."]

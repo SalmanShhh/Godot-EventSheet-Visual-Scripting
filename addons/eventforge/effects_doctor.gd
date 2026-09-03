@@ -30,6 +30,7 @@ const CHECK_SHARED := "effects-shared-material"
 const CHECK_NO_MATERIAL := "effects-no-material"
 const CHECK_GLOBAL := "effects-undeclared-global"
 const CHECK_SCREEN := "effects-screen-effect-idle"
+const CHECK_BLEND := "effects-blend-over-shader"
 
 ## Which check id each finding reports as. One table, so the note on the row and the line in the
 ## report are the same finding under two roofs.
@@ -39,6 +40,7 @@ const CHECK_FOR_KIND: Dictionary = {
 	EventSheetEffectFindings.KIND_NO_MATERIAL: CHECK_NO_MATERIAL,
 	EventSheetEffectFindings.KIND_UNDECLARED_GLOBAL: CHECK_GLOBAL,
 	EventSheetEffectFindings.KIND_IDLE_SCREEN_EFFECT: CHECK_SCREEN,
+	EventSheetEffectFindings.KIND_BLEND_OVER_SHADER: CHECK_BLEND,
 }
 
 ## The cheap first question asked of a scene's text before anything is parsed - a scene with no
@@ -46,10 +48,11 @@ const CHECK_FOR_KIND: Dictionary = {
 ## scene parsed to find that out.
 const MATERIAL_WORD := "material = "
 
-## And of a script's text: the member every dial row reaches through, and the call every global one
-## makes. A script that says neither cannot be one of these sheets.
+## And of a script's text: the member every dial row reaches through, the call every global one
+## makes, and the call a blend row makes. A script that says none of them cannot be one of these
+## sheets.
 const SHEET_WORDS: PackedStringArray = ["set_shader_parameter", "get_shader_parameter",
-	"global_shader_parameter"]
+	"global_shader_parameter", EventSheetEffectFindings.BLEND_CALL]
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor

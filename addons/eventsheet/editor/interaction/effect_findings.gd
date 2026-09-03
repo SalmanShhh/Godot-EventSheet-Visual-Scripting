@@ -42,6 +42,14 @@ const KIND_NO_MATERIAL := "effect-rows-on-a-node-wearing-none"
 const KIND_UNDECLARED_GLOBAL := "shader-global-the-project-does-not-declare"
 const KIND_IDLE_SCREEN_EFFECT := "screen-effect-drawing-while-idle"
 
+## AND THE SAME FACT FROM THE OTHER DIRECTION. The five above are all about rows that turn a dial ON
+## a material. This one is about a row that would REPLACE the material outright: a screen-reading
+## blend mode hands the item a shader of its own, and an item already wearing somebody's shader
+## cannot be given a second one. The blend refuses at run time rather than throwing that effect away,
+## which is right - and is also invisible until somebody runs the game and wonders why the glow never
+## appeared. So it is said here, before the game is run once.
+const KIND_BLEND_OVER_SHADER := "blend-mode-on-an-item-already-wearing-a-shader"
+
 ## The two one-click repairs: rewrite the row's dial to the declared name it was nearly, and insert
 ## the row that gives this node its own copy of the material before anything turns a dial on it.
 const FIX_PICK_DIAL := "pick_dial"
@@ -77,7 +85,17 @@ const GLOBAL_SETTING_PREFIX := "shader_globals/"
 const WRITE_CALL := "set_shader_parameter("
 const DIAL_CALL := "shader_parameter("
 
-## Where the FROZEN free-string rows keep the dial's name - quoted, and typed rather than picked.
+## How a blend row is recognised, and which modes need a shader of their own. Matched IN THE LINE for
+## the same reason the global calls above are: a picked row, a pack's own wrapper around it and a
+## line somebody wrote by hand are all the same finding, and none of them is more real than the
+## others. The five native words are the modes the renderer draws by itself - they set a field on an
+## ordinary material and never replace anything, so a row naming one of them is never this finding.
+const BLEND_CALL := ".blend_as("
+const BLEND_NATIVE_MODES: PackedStringArray = ["normal", "add", "subtract", "multiply",
+	"premultiplied"]
+
+## Where the FROZEN free-string rows keep the dial's name
+ - quoted, and typed rather than picked.
 ## Kept because a hand-written line naming a dial the shader does not declare lifts to one of those
 ## by design: there was no dial to pick, so the row that stands for it is the one that takes a name.
 const FREE_STRING_PARAM := "param"
@@ -309,6 +327,11 @@ static func _finding_for(ace: Resource, judged: Dictionary, event_row: EventRow,
 	var global_name: String = global_of(ace)
 	if not global_name.is_empty():
 		return _undeclared_global(global_name, event_row, lane, slot)
+	# The blend row comes before the dial checks because it names no dial: it would otherwise fall
+	# straight through them and be judged as nothing at all.
+	var about_blend: Dictionary = _blend_over_shader(ace, judged, event_row, lane, slot)
+	if not about_blend.is_empty():
+		return about_blend
 	var dial: String = dial_of(ace)
 	if dial.is_empty():
 		return {}
@@ -324,7 +347,53 @@ static func _finding_for(ace: Resource, judged: Dictionary, event_row: EventRow,
 	return _shared_material(wearer, reference, ace, judged, event_row, lane, slot)
 
 
-## A dial the shader does not declare, and the declared name it was nearly - the whole of the fix,
+## A screen-reading blend aimed at an item the scene already gives a shader. The row is refused at run
+## time - replacing somebody's effect to set a blend would be worse than doing nothing - so the look
+## never appears, and this is where that is said instead of the player finding out.
+##
+## Only ever said of an item the attached scene really carries and really gives a shader: a row aimed
+## at a variable, at a node made at run time, or at a name nothing in the scene has is a row nothing
+## here can establish anything about, and a finding that is a guess is worse than no finding. No fix
+## door either: blend a parent, blend a child, or take the shader off are three different answers to
+## three different scenes, and a wrong guess in a button costs more than no guess at all.
+static func _blend_over_shader(ace: Resource, judged: Dictionary, event_row: EventRow, lane: String,
+		slot: int) -> Dictionary:
+	var line: String = EventSheetLightingFindings.compiled_line(ace)
+	var opened: int = line.find(BLEND_CALL)
+	if opened < 0:
+		return {}
+	var arguments: String = line.substr(opened + BLEND_CALL.length())
+	var comma: int = arguments.find(",")
+	if comma < 0:
+		return {}
+	var mode: String = _first_quoted(arguments.substr(comma + 1))
+	if mode.is_empty() or BLEND_NATIVE_MODES.has(mode):
+		return {}
+	var reference: String = EventSheetSceneEffects.reference_key_of(arguments.substr(0, comma))
+	var wearer: Dictionary = (judged["wearers"] as Dictionary).get(reference, {})
+	var shader_path: String = str(wearer.get("shader_path", ""))
+	if shader_path.is_empty() or _already_said(judged, KIND_BLEND_OVER_SHADER, reference):
+		return {}
+	return _row_finding(KIND_BLEND_OVER_SHADER, reference, EventSheetL10n.translate(
+		"%s already wears %s, and an item wears one material - so the %s blend is refused when the game runs and the look never appears. Blend a parent or a child instead, or take the shader off.") % [
+			reference, shader_path.get_file(), mode], event_row, lane, slot,
+		{"shader_path": shader_path})
+
+
+## The first quoted word in a piece of an emitted line, or "" when there is none. What a mode word
+## looks like in the code: the row writes it quoted, so a value that is anything else - a variable, a
+## whole expression - is a mode only the running game knows, and nothing here may claim to have
+## checked it.
+static func _first_quoted(text: String) -> String:
+	var opened: int = text.find("\"")
+	if opened < 0:
+		return ""
+	var closed: int = text.find("\"", opened + 1)
+	return "" if closed < 0 else text.substr(opened + 1, closed - opened - 1)
+
+
+## A dial the shader does not declare, and the declared name it was nearly
+ - the whole of the fix,
 ## because a name close enough to be a typo is close enough to offer as one click. It carries the
 ## parameter the name sits in, so the re-pick writes into the slot this particular row keeps it in.
 static func _unknown_dial(shader_path: String, dial: String, dial_param: String, event_row: EventRow,

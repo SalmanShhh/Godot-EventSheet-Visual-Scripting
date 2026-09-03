@@ -34,7 +34,48 @@ static func run() -> bool:
 	all_passed = _shaders_ship() and all_passed
 	all_passed = _clipping_rows() and all_passed
 	all_passed = _the_field() and all_passed
+	all_passed = _the_quiet_finding() and all_passed
 	return all_passed
+
+
+## THE QUIET FINDING: a screen-reading blend aimed at an item the scene already gives a shader. The
+## row is refused when the game runs, because replacing somebody's effect to set a blend would be
+## worse than doing nothing - so the look never appears, and the sheet has to say so before the game
+## is run rather than after.
+##
+## The fixture carries all three shapes on purpose: the clash, a NATIVE mode on the same kind of node
+## (which sets a field and replaces nothing, so it is never this finding), and a blend aimed at a
+## node the scene gives no material at all (nothing to clash with). A check that only ever saw the
+## first would be a check nobody could trust to stay quiet.
+static func _the_quiet_finding() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(
+		"res://tests/fixtures/blend_scene_glow.gd")
+	var found: Array[Dictionary] = EventSheetEffectFindings.findings(sheet)
+	var kinds: PackedStringArray = PackedStringArray()
+	var subjects: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in found:
+		kinds.append(str(finding["kind"]))
+		subjects.append(str(finding["subject"]))
+	var rows: Array = [
+		["exactly one of the three blend rows is a finding",
+			",".join(kinds), EventSheetEffectFindings.KIND_BLEND_OVER_SHADER],
+		["and it is the one aimed at the item wearing a shader", ",".join(subjects), "self"]
+	]
+	if not found.is_empty():
+		rows.append(["it names the shader and the mode, and says the look never appears",
+			str(found[0]["message"]).contains("blend is refused when the game runs"), true])
+		rows.append(["it carries the shader it clashes with",
+			str(found[0]["shader_path"]).get_file(), "effect_dissolve.gdshader"])
+		rows.append(["it is amber rather than red, because the game still runs",
+			str(found[0]["severity"]), "warning"])
+		rows.append(["and offers no fix door, because there are three answers and no way to pick one",
+			str(found[0]["fix"]), ""])
+	rows.append(["the Doctor files it under its own check id",
+		str(EventSheetEffectsDoctor.CHECK_FOR_KIND[EventSheetEffectFindings.KIND_BLEND_OVER_SHADER]),
+		EventSheetEffectsDoctor.CHECK_BLEND])
+	rows.append(["and reads a sheet that only says the blend call, which nothing else would open",
+		EventSheetEffectsDoctor.SHEET_WORDS.has(EventSheetEffectFindings.BLEND_CALL), true])
+	return SUPPORT.pins(P, rows)
 
 
 ## The pack driven directly: a native mode is a renderer field, a shader mode is one of the pack's
