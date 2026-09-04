@@ -53,8 +53,12 @@ static func build() -> bool:
 	src.expression("rail_progress", "Rail Progress",
 		"How far through the current shot the rail has come, from 0 at its start to 1 when it finished - the progress bar of a cutscene, or the driver for a fade that tracks the move. It is the time through the shot, before the ease bends it, and it keeps its last value once the shot ends.",
 		[], TYPE_FLOAT)
+	# Three facts on a row, like every other row here: the route, the pace, and what stays in frame.
+	# The ease is the fourth thing a flight has and the one that reads worst in a sentence - a word
+	# out of a dropdown, with the rail's own shot_ease behind it when the row leaves it empty - so
+	# it lives in the parameter dialog, which is where Scene Flow's ease lives for the same reason.
 	Lib.verb_sentences(src.sheet, {
-		"fly_along": "fly along [i]{path}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b], watching [i]{look_at}[/i]",
+		"fly_along": "fly along [i]{path}[/i] over [b]{seconds}[/b]s, watching [i]{look_at}[/i]",
 		"cut_to": "cut to [i]{camera}[/i]",
 		"blend_to": "blend onto [i]{camera}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b]",
 		"hold": "hold this shot for [b]{seconds}[/b]s",

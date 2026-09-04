@@ -11,7 +11,9 @@
 # So the 3D value pins run against the shipped source with those two seams rewritten into the local
 # frame - the arithmetic is identical either way, and every other character is the pack's own. The
 # rewrite is asserted to have FIRED, because a replace that matched nothing would leave this whole
-# half passing for the wrong reason.
+# half passing for the wrong reason. A third seam joins them for the same reason: asking the
+# viewport which camera is current also needs a tree, and the case worth pinning is exactly the one
+# where the answer is a camera the rail never handed the view to.
 @tool
 class_name CameraRailPackTest
 extends RefCounted
@@ -29,6 +31,15 @@ const TREE_CALLS := [
 		"host.transform = Transform3D(Basis.looking_at(focus - host.global_position, Vector3.UP), host.global_position)"],
 	["_flight_path.to_global(point)", "(_flight_path.transform * point)"],
 ]
+## The third seam, kept apart from the two above because it replaces a whole function body rather
+## than one call: which camera the viewport says is current. There is no viewport here, so the
+## shipped guard would answer null for ever and the case worth pinning - a camera somebody ELSE
+## made current - could never arise. The stand-in reads a field the test writes; the `on_screen`
+## member it reads is appended to the rewritten text below.
+const ON_SCREEN_BODY := [
+	"if host == null or not host.is_inside_tree():\n\t\treturn null\n\treturn host.get_viewport().get_camera_3d()",
+	"if host == null:\n\t\treturn null\n\treturn on_screen",
+]
 
 
 static func run() -> bool:
@@ -37,6 +48,26 @@ static func run() -> bool:
 	all_passed = _test_the_3d_rail() and all_passed
 	all_passed = _test_the_shared_curves() and all_passed
 	all_passed = _test_the_emitted_calls() and all_passed
+	all_passed = _test_the_row_sentences() and all_passed
+	return all_passed
+
+
+## What a Fly Along row READS as. Three facts on the row in both twins - the route, the pace, and
+## (in 3D) what stays in frame - because a fourth slot turns a sentence into a settings line. The
+## 3D twin's ease is the fact that stepped out: it is a word from a dropdown with the rail's own
+## shot_ease behind it, so it reads in the parameter dialog, where Scene Flow's ease reads too.
+static func _test_the_row_sentences() -> bool:
+	var all_passed: bool = true
+	for pinned: Array in [
+		[PACK_2D, "fly along [i]{path}[/i] over [b]{seconds}[/b]s, [b]{ease}[/b]"],
+		[PACK_3D, "fly along [i]{path}[/i] over [b]{seconds}[/b]s, watching [i]{look_at}[/i]"],
+	]:
+		var sentence: String = str(pinned[1])
+		all_passed = _check("the pack ships the row sentence %s" % sentence,
+			FileAccess.get_file_as_string(str(pinned[0])).contains(
+				"## @ace_display_template(\"%s\")" % sentence), true) and all_passed
+		all_passed = _check("and it carries three slots, not four",
+			sentence.count("{"), 3) and all_passed
 	return all_passed
 
 
@@ -184,6 +215,48 @@ static func _test_the_2d_rail() -> bool:
 	all_passed = _check("zoom included", camera.zoom.distance_to(third.zoom) < 0.001, true) and all_passed
 	rail.stop_rail()
 
+	# ── A camera somebody ELSE made current. The rail's record only ever says who the RAIL handed
+	# the view to: the builtin Make Current row, a juice pack, or one line of anybody's script can
+	# make a camera current without telling it, and a blend that stood on the stale record would
+	# open with exactly the snap Blend To exists to avoid. The live answer wins, and the record is
+	# the fallback for when there is no viewport to ask.
+	var stub: GDScript = _rail_that_can_be_told_what_is_on_screen()
+	all_passed = _check("the told-what-is-on-screen rail compiles", stub != null, true) and all_passed
+	if stub != null:
+		var own: Camera2D = Camera2D.new()
+		var told: Node = stub.new()
+		told.set("host", own)
+		var parked: Camera2D = Camera2D.new()
+		parked.global_position = Vector2(10.0, 10.0)
+		parked.zoom = Vector2(0.5, 0.5)
+		var current: Camera2D = Camera2D.new()
+		current.global_position = Vector2(900.0, 700.0)
+		current.zoom = Vector2(4.0, 4.0)
+		var destination: Camera2D = Camera2D.new()
+		destination.global_position = Vector2(1200.0, 800.0)
+		told.cut_to(parked)
+		told.set("on_screen", current)
+		told.blend_to(destination, 2.0, "linear")
+		all_passed = _check("a blend starts from the camera that is actually current",
+			own.global_position.distance_to(current.global_position) < 0.001, true) and all_passed
+		all_passed = _check("with that camera's zoom, not the parked record's",
+			own.zoom.distance_to(current.zoom) < 0.001, true) and all_passed
+		all_passed = _check("and the pose the blend travels FROM is that camera's",
+			(told.get("_blend_from_transform") as Transform2D).origin.distance_to(current.global_position) < 0.001,
+			true) and all_passed
+		told.stop_rail()
+		told.set("on_screen", null)
+		told.cut_to(parked)
+		told.blend_to(destination, 2.0, "linear")
+		all_passed = _check("with nothing current the rail's own record is still the fallback",
+			own.global_position.distance_to(parked.global_position) < 0.001, true) and all_passed
+		told.stop_rail()
+		own.free()
+		told.free()
+		parked.free()
+		current.free()
+		destination.free()
+
 	# ── Hold: the beat between two moves, and the one shot with nothing to move.
 	rail.hold(0.5)
 	rail._process(0.25)
@@ -257,11 +330,17 @@ static func _test_the_3d_rail() -> bool:
 		all_passed = _check("the shipped pack still spells %s the way the rewrite expects" % str(swap[0]),
 			text.contains(str(swap[0])), true) and all_passed
 		text = text.replace(str(swap[0]), str(swap[1]))
+	all_passed = _check("the shipped pack still asks the viewport which camera is current",
+		text.contains(str(ON_SCREEN_BODY[0])), true) and all_passed
+	text = text.replace(str(ON_SCREEN_BODY[0]), str(ON_SCREEN_BODY[1]))
 	text = text.replace("global_transform", "transform").replace("global_position", "position")
 	text = text.replace("class_name CameraRail3DBehavior\n", "")
 	all_passed = _check("the rewrite fired", text == shipped, false) and all_passed
 	all_passed = _check("and nothing global is left to fail on a missing tree",
 		text.contains("global_"), false) and all_passed
+	# The field the stand-in above reads. Appended rather than woven in, because a member variable
+	# is legal anywhere at the top level and none of the pack's own bytes move for it.
+	text += "\n\nvar on_screen: Camera3D = null\n"
 
 	var script: GDScript = GDScript.new()
 	script.source_code = text
@@ -361,6 +440,29 @@ static func _test_the_3d_rail() -> bool:
 		camera.position.distance_to(third.position) < 0.001, true) and all_passed
 	all_passed = _check("field of view included", absf(camera.fov - third.fov) < 0.001, true) and all_passed
 	rail.stop_rail()
+
+	# ── And the same rule as in 2D for a camera somebody ELSE made current: the live answer beats
+	# the rail's own record of who it handed the view to, which is stale the moment another row or
+	# another script makes a camera current without saying so.
+	var elsewhere: Camera3D = Camera3D.new()
+	elsewhere.position = Vector3(0.0, 20.0, 40.0)
+	elsewhere.fov = 25.0
+	camera.transform = Transform3D.IDENTITY
+	camera.fov = 60.0
+	rail.cut_to(third)
+	rail.set("on_screen", elsewhere)
+	rail.blend_to(target, 2.0, "linear")
+	all_passed = _check("a blend starts from the camera that is actually current",
+		camera.position.distance_to(elsewhere.position) < 0.001, true) and all_passed
+	all_passed = _check("with that camera's lens, not the parked record's",
+		absf(camera.fov - elsewhere.fov) < 0.001, true) and all_passed
+	rail.stop_rail()
+	rail.set("on_screen", null)
+	rail.cut_to(third)
+	rail.blend_to(target, 2.0, "linear")
+	all_passed = _check("with nothing current the rail's own record is still the fallback",
+		camera.position.distance_to(third.position) < 0.001, true) and all_passed
+	rail.stop_rail()
 	rail.cut_to(third)
 	rail.fly_along(path, 4.0, "linear", null)
 	all_passed = _check("a flight takes the view back for the rail's own camera",
@@ -371,6 +473,7 @@ static func _test_the_3d_rail() -> bool:
 	target.free()
 	third.free()
 	focus.free()
+	elsewhere.free()
 	path.free()
 	rail.free()
 	return all_passed
@@ -393,6 +496,16 @@ static func _test_the_shared_curves() -> bool:
 	all_passed = _check("a fraction past the end is clamped", rail._eased(2.0, "linear"), 1.0) and all_passed
 	rail.free()
 	return all_passed
+
+
+## The shipped 2D rail, subclassed, with the one function that asks the viewport which camera is
+## current answering a field instead. A headless test has no viewport - and the pack asks that
+## question through a function of its own precisely so the answer can be stood in for here, which
+## is what makes "somebody else made a camera current" a case with a value to pin at all.
+static func _rail_that_can_be_told_what_is_on_screen() -> GDScript:
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends \"%s\"\n\n\nvar on_screen: Camera2D = null\n\n\nfunc _camera_on_screen() -> Camera2D:\n\treturn on_screen\n" % PACK_2D
+	return script if script.reload() == OK else null
 
 
 ## Cut To with no camera must change nothing - the record of who holds the view survives it.

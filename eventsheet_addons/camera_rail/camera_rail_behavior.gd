@@ -56,6 +56,16 @@ var _blend_from_zoom: Vector2 = Vector2.ONE
 # It is written whether or not the node is in a tree, because make_current only means anything
 # inside one - so this is the honest record of who the rail thinks is holding the view.
 var _handed_to: Camera2D = null
+## The camera the player is actually looking at, or null when there is no viewport to ask. The rail
+## keeps a record of who it handed the view to, but that record is only ever the rail's OWN doing:
+## a Make Current row, another pack, or one line of somebody's script can make a camera current
+## without telling the rail, and standing on the stale record would open the shot with the snap
+## the function above exists to avoid. So the live answer wins and the record is the fallback.
+## @ace_hidden
+func _camera_on_screen() -> Camera2D:
+	if host == null or not host.is_inside_tree():
+		return null
+	return host.get_viewport().get_camera_2d()
 
 func _ready() -> void:
 	if current_on_ready and host != null:
@@ -211,6 +221,8 @@ func is_flying() -> bool:
 func rail_progress() -> float:
 	return _progress
 
+## The eased position of a shot: the straight 0..1 fraction bent by the named curve. Anything
+## this does not know is linear, so a misspelled word plays the shot rather than freezing it.
 ## @ace_hidden
 func _eased(fraction: float, curve: String) -> float:
 	var straight: float = clampf(fraction, 0.0, 1.0)
@@ -224,6 +236,8 @@ func _eased(fraction: float, curve: String) -> float:
 		_:
 			return straight
 
+## Puts the rail's camera at an eased fraction along the flight path. Points come out of the
+## curve in the PATH node's own space, so they are converted through it rather than used raw.
 ## @ace_hidden
 func _apply_flight(eased_fraction: float) -> void:
 	if host == null or _flight_path == null or _flight_path.curve == null:
@@ -231,6 +245,9 @@ func _apply_flight(eased_fraction: float) -> void:
 	var point: Vector2 = _flight_path.curve.sample_baked(clampf(eased_fraction, 0.0, 1.0) * _flight_length)
 	host.global_position = _flight_path.to_global(point)
 
+## Puts the rail's camera an eased fraction of the way onto the blend target: the whole transform
+## through interpolate_with (which turns the short way round rather than unwinding), and the zoom
+## beside it, because a Camera2D's zoom is not part of its transform.
 ## @ace_hidden
 func _apply_blend(eased_fraction: float) -> void:
 	if host == null or not is_instance_valid(_blend_target):
@@ -238,17 +255,30 @@ func _apply_blend(eased_fraction: float) -> void:
 	host.global_transform = _blend_from_transform.interpolate_with(_blend_target.global_transform, eased_fraction)
 	host.zoom = _blend_from_zoom.lerp(_blend_target.zoom, eased_fraction)
 
+## Puts the rail's camera where the view already is and gives it the view back - what every MOVING
+## shot starts with. A rail drives ONE camera, its own; the moment a Cut To or a finished blend
+## handed the view to another, the rail's camera is parked somewhere nobody is looking, and a shot
+## started there would animate off screen and land as a hard cut. Standing on the shot the player
+## can actually see and taking the view from there is what makes the next move a move.
+##
+## Hold deliberately does NOT do this: a hold is the beat on whatever shot is up, which after a cut
+## is the OTHER camera's, and snatching the view back would make that cut one frame long.
 ## @ace_hidden
 func _take_the_view() -> void:
 	if host == null:
 		return
-	if _handed_to != null and _handed_to != host and is_instance_valid(_handed_to):
-		host.global_transform = _handed_to.global_transform
-		host.zoom = _handed_to.zoom
+	var standing_on: Camera2D = _camera_on_screen()
+	if standing_on == null:
+		standing_on = _handed_to
+	if standing_on != null and standing_on != host and is_instance_valid(standing_on):
+		host.global_transform = standing_on.global_transform
+		host.zoom = standing_on.zoom
 	_handed_to = host
 	if host.is_inside_tree():
 		host.make_current()
 
+## Ends whatever shot is running, silently. No trigger fires here - the callers that SHOULD
+## announce an ending fire their own, which is what keeps Stop quiet and Hold loud.
 ## @ace_hidden
 func _park() -> void:
 	_mode = ""
@@ -256,6 +286,8 @@ func _park() -> void:
 	# nothing until the next Fly Along, Hold or Blend To starts one.
 	set_process(false)
 
+## The handover at the end of a blend: the rail's camera lands EXACTLY on the target rather than
+## a float's width away from it, then the target takes the view and On Blend Finished fires.
 ## @ace_hidden
 func _finish_blend() -> void:
 	# A target freed mid-blend leaves nothing to hand the view to, so the landing is skipped -

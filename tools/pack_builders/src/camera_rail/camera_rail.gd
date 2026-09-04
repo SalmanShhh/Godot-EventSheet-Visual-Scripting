@@ -99,12 +99,26 @@ func _apply_blend(eased_fraction: float) -> void:
 func _take_the_view() -> void:
 	if host == null:
 		return
-	if _handed_to != null and _handed_to != host and is_instance_valid(_handed_to):
-		host.global_transform = _handed_to.global_transform
-		host.zoom = _handed_to.zoom
+	var standing_on: Camera2D = _camera_on_screen()
+	if standing_on == null:
+		standing_on = _handed_to
+	if standing_on != null and standing_on != host and is_instance_valid(standing_on):
+		host.global_transform = standing_on.global_transform
+		host.zoom = standing_on.zoom
 	_handed_to = host
 	if host.is_inside_tree():
 		host.make_current()
+
+## The camera the player is actually looking at, or null when there is no viewport to ask. The rail
+## keeps a record of who it handed the view to, but that record is only ever the rail's OWN doing:
+## a Make Current row, another pack, or one line of somebody's script can make a camera current
+## without telling the rail, and standing on the stale record would open the shot with the snap
+## the function above exists to avoid. So the live answer wins and the record is the fallback.
+## @ace_hidden
+func _camera_on_screen() -> Camera2D:
+	if host == null or not host.is_inside_tree():
+		return null
+	return host.get_viewport().get_camera_2d()
 
 ## Ends whatever shot is running, silently. No trigger fires here - the callers that SHOULD
 ## announce an ending fire their own, which is what keeps Stop quiet and Hold loud.
