@@ -61,6 +61,8 @@ static func run() -> bool:
 	passed = _a_tick_handler_may_end_the_others() and passed
 	passed = _a_file_is_found_by_the_name_it_calls_itself() and passed
 	passed = _extending_a_status_extends_its_multiplier() and passed
+	passed = _a_status_may_end_with_no_tree_under_it() and passed
+	passed = _an_owner_who_has_gone_is_credited_to_nobody() and passed
 	passed = _a_handwritten_apply_comes_back_byte_for_byte() and passed
 	return passed
 
@@ -397,6 +399,62 @@ static func _extending_a_status_extends_its_multiplier() -> bool:
 ## THE LIFT. A hand-written apply is ordinary GDScript, and a file holding one must come back byte
 ## for byte after being opened as a sheet and saved - the standing contract, asked of this pack's
 ## own line.
+## A status ends as often because its node left the tree as because its clock ran out - a pooled
+## enemy despawning is exactly that - and the end of one asks for the Boosts autoload, which is a
+## question about the tree. Asked of a node with no tree, `get_tree()` is an engine error rather
+## than a null, so the shipped code tests for a tree first: the status still ends, On Status Expired
+## still fires, and the only thing that does not happen is the stopping of a boost that, with no
+## tree to hold an autoload, was never started.
+static func _a_status_may_end_with_no_tree_under_it() -> bool:
+	var made: Dictionary = _host_with_health()
+	var status: Node = made["status"]
+	var expired: Array = []
+	status.connect("status_expired", func(word: String) -> void: expired.append(word))
+	status.call("apply", "burn", 3.0, 1)
+	var on_before: bool = bool(status.call("has", "burn"))
+	var boosts_off_tree: Variant = status.call("_boosts")
+	status.call("remove_status", "burn")
+	var pack: String = FileAccess.get_file_as_string(PACK)
+	var passed: bool = SUPPORT.pins("status_effects_pack_test", [
+		["the status was on before the node was asked to end it", on_before, true],
+		["a node with no tree has no Boosts autoload to feed", boosts_off_tree, null],
+		["and it is asked for a tree before it asks the tree anything",
+			pack.contains("func _boosts() -> Node:\n\tif not is_inside_tree():\n\t\treturn null"), true],
+		["the status ended anyway", status.call("has", "burn"), false],
+		["and the row that cleans up after it still ran", expired, ["burn"]]
+	])
+	(made["host"] as Node).free()
+	return passed
+
+
+## A tick's damage is credited to whoever claimed the status node, through the same `owner` key the
+## Claim row writes and the ownership rows read. A poison outlives the player who applied it often
+## enough that the freed case is the ordinary one, so the answer there is nobody rather than a
+## reference to something that has gone - and the tick itself lands regardless, because the enemy
+## burning to death after its poisoner logged out is not a bug.
+static func _an_owner_who_has_gone_is_credited_to_nobody() -> bool:
+	var made: Dictionary = _host_with_health()
+	var status: Node = made["status"]
+	var health: Node = made["health"]
+	var poisoner: Node = Node.new()
+	poisoner.name = "Poisoner"
+	status.set_meta(&"owner", poisoner)
+	var claimed: Variant = status.call("_source")
+	var named: String = (claimed as Node).name if claimed is Node else ""
+	poisoner.free()
+	var after_gone: Variant = status.call("_source")
+	status.call("apply", "burn", 3.0, 1)
+	status.call("_process", 0.5)
+	var passed: bool = SUPPORT.pins("status_effects_pack_test", [
+		["a claimed status node credits the one that claimed it", named, "Poisoner"],
+		["an owner that has been freed is nobody", after_gone, null],
+		["and the tick still takes its two points off", float(health.call("current_health_value")), 98.0],
+		["naming the kind the effect file asked for", str(health.call("last_damage_type_value")), "fire"]
+	])
+	(made["host"] as Node).free()
+	return passed
+
+
 static func _a_handwritten_apply_comes_back_byte_for_byte() -> bool:
 	var source: String = "\n".join(PackedStringArray([
 		"extends Node2D",

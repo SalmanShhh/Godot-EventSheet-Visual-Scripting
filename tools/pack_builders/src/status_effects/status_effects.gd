@@ -159,8 +159,16 @@ func _health() -> Node:
 ## The Boosts autoload, when the project has one and it is the pack this expects. An effect with a
 ## multiplier tag feeds it while the effect lasts; a project without Boosts simply gets no
 ## multiplier, which is the honest answer rather than an error.
+##
+## THE TREE IS ASKED ONLY WHEN THERE IS ONE. A status ends when a node is taken out of the tree as
+## much as when its clock runs out - a pooled enemy despawning is exactly that - and `get_tree()` on
+## a node with no tree is an engine error rather than a null. So being in the tree is tested first,
+## and a status ending off-tree simply stops no boost, which is the same answer a project with no
+## Boosts pack gets.
 ## @ace_hidden
 func _boosts() -> Node:
+	if not is_inside_tree():
+		return null
 	var tree: SceneTree = get_tree()
 	if tree == null or tree.root == null:
 		return null
@@ -182,11 +190,19 @@ func _boost_id(status: String) -> String:
 ## The credit belongs to the NODE, not to one application: every status on this enemy is scored to
 ## whoever last claimed it, so a game where two players poison the same enemy and each wants their
 ## own kill credited claims the node again as it applies. There is no per-status source to read.
+##
+## An owner who has since been freed is nobody, not a dangling reference: a poison outlives the
+## player who applied it often enough that the check earns its line, and the ownership rows that
+## read the same key answer the same way.
+##
+## The key is read as it was stored and tested BEFORE it is cast, because casting a freed object to
+## a Node is itself the error the check is here to avoid.
 ## @ace_hidden
 func _source() -> Node:
 	if not has_meta(OWNER_META):
 		return null
-	return get_meta(OWNER_META) as Node
+	var claimed: Variant = get_meta(OWNER_META)
+	return claimed as Node if is_instance_valid(claimed) else null
 
 ## How far a tint is allowed to pull the host's colour: the project's effect-strength dial, held
 ## under the ceiling while a player has asked for no flashing.
