@@ -79,14 +79,14 @@ static func _test_a_pooled_node_goes_back_to_its_pool() -> bool:
 	var pool: Node = _real_pool()
 	var world: Node = Node.new()
 	var node: Node2D = _pooled_node(world)
-	PooledNodes.hand_back(node, pool)
+	EventForgePooledNodes.hand_back(node, pool)
 	passed = SUPPORT.check(TEST_NAME, "a pooled node is handed back to the pool that made it",
 		int(pool.call("free_count", POOL_NAME)), 1) and passed
 	passed = SUPPORT.check(TEST_NAME, "and is parked under the pool rather than destroyed",
 		node.get_parent() == pool and not node.is_queued_for_deletion(), true) and passed
 	# Once, and only once. A pool's free list is a plain array: a node appended to it twice is handed
 	# out to two callers, which is the failure the guard exists for.
-	PooledNodes.hand_back(node, pool)
+	EventForgePooledNodes.hand_back(node, pool)
 	passed = SUPPORT.check(TEST_NAME, "and a node already parked in its pool is left alone",
 		int(pool.call("free_count", POOL_NAME)), 1) and passed
 	passed = SUPPORT.check(TEST_NAME, "so the pool never has the same node in its free list twice",
@@ -104,15 +104,15 @@ static func _test_retiring_into_a_pool_waits_for_the_frame() -> bool:
 	var pool: Node = _real_pool()
 	var world: Node = Node.new()
 	var node: Node2D = _pooled_node(world)
-	PooledNodes.retire_into(node, pool)
+	EventForgePooledNodes.retire_into(node, pool)
 	passed = SUPPORT.check(TEST_NAME, "retiring into a pool hands nothing over on the line itself",
 		int(pool.call("free_count", POOL_NAME)), 0) and passed
 	passed = SUPPORT.check(TEST_NAME, "so the node is still where it was for the rest of the event",
 		node.get_parent() == world, true) and passed
 	# Twice in one frame books one handing back, not two - the other half of never being in a free
 	# list twice, and the half a parked-under-the-pool question cannot answer yet.
-	PooledNodes.retire_into(node, pool)
-	PooledNodes.hand_back_by_id(node.get_instance_id(), pool.get_instance_id())
+	EventForgePooledNodes.retire_into(node, pool)
+	EventForgePooledNodes.hand_back_by_id(node.get_instance_id(), pool.get_instance_id())
 	passed = SUPPORT.check(TEST_NAME, "and two retires in one frame put it back exactly once",
 		int(pool.call("free_count", POOL_NAME)), 1) and passed
 	world.free()
@@ -124,14 +124,14 @@ static func _test_an_unpooled_node_is_destroyed() -> bool:
 	var passed: bool = true
 	var pool: Node = _real_pool()
 	var node: Node2D = Node2D.new()
-	PooledNodes.retire_into(node, null)
+	EventForgePooledNodes.retire_into(node, null)
 	passed = SUPPORT.check(TEST_NAME, "a node no pool made is destroyed",
 		node.is_queued_for_deletion(), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "and nothing is handed to a pool",
 		int(pool.call("free_count", POOL_NAME)), 0) and passed
 	# A node already on its way out is left alone, which is what makes the row safe to run twice.
-	PooledNodes.retire_into(node, pool)
-	PooledNodes.hand_back(node, pool)
+	EventForgePooledNodes.retire_into(node, pool)
+	EventForgePooledNodes.hand_back(node, pool)
 	passed = SUPPORT.check(TEST_NAME, "and a node already on its way out is not handed anywhere",
 		int(pool.call("free_count", POOL_NAME)), 0) and passed
 	pool.free()
@@ -144,14 +144,14 @@ static func _test_what_counts_as_pooled() -> bool:
 	var passed: bool = true
 	var bare: Node2D = Node2D.new()
 	passed = SUPPORT.check(TEST_NAME, "a node with no pool mark came out of no pool",
-		PooledNodes.pool_of(bare), null) and passed
+		EventForgePooledNodes.pool_of(bare), null) and passed
 	passed = SUPPORT.check(TEST_NAME, "and asking about nothing at all answers nothing",
-		PooledNodes.pool_of(null), null) and passed
-	bare.set_meta(PooledNodes.POOL_META, "bullets")
+		EventForgePooledNodes.pool_of(null), null) and passed
+	bare.set_meta(EventForgePooledNodes.POOL_META, "bullets")
 	passed = SUPPORT.check(TEST_NAME, "a marked node outside the tree still answers nothing, because the pool is found by path",
-		PooledNodes.pool_of(bare), null) and passed
+		EventForgePooledNodes.pool_of(bare), null) and passed
 	passed = SUPPORT.check(TEST_NAME, "and the mark it reads is the one the pool leaves",
-		str(PooledNodes.POOL_META), "__pool__") and passed
+		str(EventForgePooledNodes.POOL_META), "__pool__") and passed
 	bare.free()
 	return passed
 
@@ -178,19 +178,19 @@ static func _test_on_retired_is_one_connection() -> bool:
 	passed = SUPPORT.check(TEST_NAME, "and nothing is hung off the pool's own signal beside it",
 		output.contains("on_despawned"), false) and passed
 	passed = SUPPORT.check(TEST_NAME, "the body retires through the runtime file rather than a bare free",
-		output.contains("PooledNodes.retire(self)"), true) and passed
+		output.contains("EventForgePooledNodes.retire(self)"), true) and passed
 	# And the promise those two names carry: the emitted code goes on parsing when the plugin is
 	# deleted, which is only true while the classes it names are declared OUTSIDE addons/. Asked of
 	# the project's own class list, because that is what a game resolves a global class through.
 	passed = SUPPORT.check(TEST_NAME, "the retire runtime is a file the project owns, not one an uninstall deletes",
-		_declaring_file("PooledNodes"), "res://eventsheet_addons/pooled_nodes.gd") and passed
+		_declaring_file("EventForgePooledNodes"), "res://eventsheet_addons/pooled_nodes.gd") and passed
 	passed = SUPPORT.check(TEST_NAME, "and so is the free-spot runtime the spawn rows name",
-		_declaring_file("FreeSpot"), "res://eventsheet_addons/free_spot.gd") and passed
+		_declaring_file("EventForgeFreeSpot"), "res://eventsheet_addons/free_spot.gd") and passed
 	# And the line that makes the one signal mean one thing. `tree_exiting` is raised on every exit
 	# from the tree, so without this the handler ran on every reparent and on every spawn out of a
 	# pool - the guard is the trigger, and it is emitted where a reader can see it.
 	passed = SUPPORT.check(TEST_NAME, "the handler opens by asking whether this is a retirement",
-		output.contains("func _on_retired() -> void:\n\tif not PooledNodes.is_retiring(self):\n\t\treturn\n"),
+		output.contains("func _on_retired() -> void:\n\tif not EventForgePooledNodes.is_retiring(self):\n\t\treturn\n"),
 		true) and passed
 	return passed
 
@@ -212,26 +212,26 @@ static func _test_on_retired_is_only_a_retirement() -> bool:
 	# handing out.
 	var while_going_back: Array[bool] = []
 	var while_handed_out: Array[bool] = []
-	pool.connect("on_despawned", func() -> void: while_going_back.append(PooledNodes.is_retiring(node)))
-	pool.connect("on_spawned", func() -> void: while_handed_out.append(PooledNodes.is_retiring(node)))
+	pool.connect("on_despawned", func() -> void: while_going_back.append(EventForgePooledNodes.is_retiring(node)))
+	pool.connect("on_spawned", func() -> void: while_handed_out.append(EventForgePooledNodes.is_retiring(node)))
 
 	passed = SUPPORT.check(TEST_NAME, "a node standing in the world is not retiring",
-		PooledNodes.is_retiring(node), false) and passed
+		EventForgePooledNodes.is_retiring(node), false) and passed
 	# A reparent - what four shipped rows do to a node, and what a pool does on every spawn. Each one
 	# takes the node out of the tree, which is the signal On Retired listens to.
 	world.remove_child(node)
 	elsewhere.add_child(node)
 	passed = SUPPORT.check(TEST_NAME, "and a node being moved somewhere else is not retiring",
-		PooledNodes.is_retiring(node), false) and passed
+		EventForgePooledNodes.is_retiring(node), false) and passed
 	elsewhere.remove_child(node)
 	world.add_child(node)
 
 	# Going back to the pool IS a retirement, for the length of the handing over and no longer.
-	PooledNodes.hand_back(node, pool)
+	EventForgePooledNodes.hand_back(node, pool)
 	passed = SUPPORT.check(TEST_NAME, "going back to the pool is a retirement while it happens",
 		while_going_back, [true] as Array[bool]) and passed
 	passed = SUPPORT.check(TEST_NAME, "which the node stops saying the moment the handing over ends",
-		PooledNodes.is_retiring(node), false) and passed
+		EventForgePooledNodes.is_retiring(node), false) and passed
 
 	# The same node handed out again. A pool wakes a copy by taking it out from under itself and
 	# putting it back in the running scene, so the signal is raised on every SPAWN as well - and that
@@ -245,9 +245,9 @@ static func _test_on_retired_is_only_a_retirement() -> bool:
 	# The other retirement, which needs no pool: a node on its way to being destroyed says so for
 	# itself, which is the same answer a plain destroy row gets.
 	var unpooled: Node2D = Node2D.new()
-	PooledNodes.retire_into(unpooled, null)
+	EventForgePooledNodes.retire_into(unpooled, null)
 	passed = SUPPORT.check(TEST_NAME, "a node with no pool behind it is retiring once it is destroyed",
-		PooledNodes.is_retiring(unpooled), true) and passed
+		EventForgePooledNodes.is_retiring(unpooled), true) and passed
 	world.free()
 	elsewhere.free()
 	pool.free()
@@ -378,7 +378,7 @@ static func _test_the_free_spot_loop_answers_a_real_point() -> bool:
 	var wall: Rect2 = Rect2(Vector2(-100, -100), Vector2(100, 200))
 	var placed: Vector2 = Vector2(90, 0)
 	var gap: float = 32.0
-	var found: Variant = FreeSpot.roll_2d(arena, 200, func(point: Vector2) -> bool:
+	var found: Variant = EventForgeFreeSpot.roll_2d(arena, 200, func(point: Vector2) -> bool:
 		return not wall.has_point(point) and point.distance_to(placed) >= gap)
 	passed = SUPPORT.check(TEST_NAME, "a free spot is found in an arena that has room in it",
 		found is Vector2, true) and passed
@@ -393,17 +393,17 @@ static func _test_the_free_spot_loop_answers_a_real_point() -> bool:
 	# A full arena. Nothing fits, so nothing is answered - and the loop stops rather than rolling
 	# for ever, which is the whole reason the try count exists.
 	passed = SUPPORT.check(TEST_NAME, "a full arena answers nothing at all",
-		FreeSpot.roll_2d(arena, 8, func(_point: Vector2) -> bool: return false), null) and passed
+		EventForgeFreeSpot.roll_2d(arena, 8, func(_point: Vector2) -> bool: return false), null) and passed
 	passed = SUPPORT.check(TEST_NAME, "and a node that draws no region answers nothing either",
-		FreeSpot.roll_2d({}, 8, func(_point: Vector2) -> bool: return true), null) and passed
+		EventForgeFreeSpot.roll_2d({}, 8, func(_point: Vector2) -> bool: return true), null) and passed
 	# The same loop in three dimensions, over a box.
 	var room: Dictionary = {"centre": Vector3(0, 0, 0), "half": Vector3(5, 1, 5)}
-	var in_3d: Variant = FreeSpot.roll_3d(room, 32, func(point: Vector3) -> bool:
+	var in_3d: Variant = EventForgeFreeSpot.roll_3d(room, 32, func(point: Vector3) -> bool:
 		return point.x > 0.0)
 	passed = SUPPORT.check(TEST_NAME, "the 3D loop answers a point that passed the question asked of it",
 		in_3d is Vector3 and (in_3d as Vector3).x > 0.0, true) and passed
 	passed = SUPPORT.check(TEST_NAME, "and a full room answers nothing",
-		FreeSpot.roll_3d(room, 8, func(_point: Vector3) -> bool: return false), null) and passed
+		EventForgeFreeSpot.roll_3d(room, 8, func(_point: Vector3) -> bool: return false), null) and passed
 	return passed
 
 
@@ -416,7 +416,7 @@ static func _test_the_free_spot_reads_the_shapes_it_is_given() -> bool:
 	holder.shape = box
 	holder.position = Vector2(40, 0)
 	zone.add_child(holder)
-	var region: Dictionary = FreeSpot.region_2d(zone)
+	var region: Dictionary = EventForgeFreeSpot.region_2d(zone)
 	passed = SUPPORT.check(TEST_NAME, "an Area2D is measured through the collision shape on it",
 		region.get("half", Vector2.ZERO), Vector2(100, 60)) and passed
 	passed = SUPPORT.check(TEST_NAME, "and around the place that shape really sits",
@@ -425,14 +425,14 @@ static func _test_the_free_spot_reads_the_shapes_it_is_given() -> bool:
 	disc.radius = 64.0
 	holder.shape = disc
 	passed = SUPPORT.check(TEST_NAME, "a circle is measured as a disc rather than as a box",
-		FreeSpot.region_2d(zone).get("radius", 0.0), 64.0) and passed
+		EventForgeFreeSpot.region_2d(zone).get("radius", 0.0), 64.0) and passed
 	holder.shape = null
 	passed = SUPPORT.check(TEST_NAME, "and a shape this file cannot roll a point inside draws no region at all",
-		FreeSpot.region_2d(zone).is_empty(), true) and passed
+		EventForgeFreeSpot.region_2d(zone).is_empty(), true) and passed
 	zone.free()
 	# The shape a copy would stand in, read off a packed scene the way a spawn really reads it.
 	var scene: PackedScene = _packed_body()
-	var shape: Shape2D = FreeSpot.scene_shape_2d(scene)
+	var shape: Shape2D = EventForgeFreeSpot.scene_shape_2d(scene)
 	passed = SUPPORT.check(TEST_NAME, "a scene's own collision shape is what the clear test uses",
 		shape is RectangleShape2D and (shape as RectangleShape2D).size == Vector2(16, 16),
 		true) and passed
@@ -450,7 +450,7 @@ static func _test_a_skipped_spawn_says_so() -> bool:
 	passed = SUPPORT.check(TEST_NAME, "the scene is read once, on the line above the question",
 		emitted.contains("var new_enemy_scene = load(\"res://enemy.tscn\")"), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "the row asks the free-spot query for a place",
-		emitted.contains("var new_enemy_spot = FreeSpot.in_2d($SpawnZone, new_enemy_scene, [\"walls\"], 32.0, 24)"),
+		emitted.contains("var new_enemy_spot = EventForgeFreeSpot.in_2d($SpawnZone, new_enemy_scene, [\"walls\"], 32.0, 24)"),
 		true) and passed
 	passed = SUPPORT.check(TEST_NAME, "the copy's name exists whether or not there was room, so the rows below can say it",
 		emitted.contains("var new_enemy = null"), true) and passed
@@ -468,7 +468,7 @@ static func _test_a_skipped_spawn_says_so() -> bool:
 	passed = SUPPORT.check(TEST_NAME, "the 3D twin asks the 3D query",
 		_emitted("SpawnInFreeSpot3D", {"scene": "load(\"res://enemy.tscn\")", "name": "new_enemy",
 			"inside": "$SpawnBox", "clear_of": "[\"walls\"]", "gap": "1.0", "tries": "24",
-			"parent": "self"}).contains("FreeSpot.in_3d($SpawnBox"), true) and passed
+			"parent": "self"}).contains("EventForgeFreeSpot.in_3d($SpawnBox"), true) and passed
 
 	# And the listening half: a sheet that declares the signal gets the connection and the handler.
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -531,12 +531,12 @@ static func _test_a_fade_puts_the_thing_back_before_it_lets_go() -> bool:
 		faded,
 		"await $Ghost.create_tween().tween_property($Ghost, \"modulate:a\", 0.0, 0.5).finished\n"
 			+ "if is_instance_valid($Ghost):\n\t$Ghost.modulate.a = 1.0\n\t"
-			+ "PooledNodes.retire($Ghost)") and passed
+			+ "EventForgePooledNodes.retire($Ghost)") and passed
 	passed = SUPPORT.check(TEST_NAME, "the 3D twin walks transparency up and puts it back at nothing",
 		_emitted("FadeOutAndRetire3D", {"object": "$Mesh", "seconds": "0.5"}),
 		"await $Mesh.create_tween().tween_property($Mesh, \"transparency\", 1.0, 0.5).finished\n"
 			+ "if is_instance_valid($Mesh):\n\t$Mesh.transparency = 0.0\n\t"
-			+ "PooledNodes.retire($Mesh)") and passed
+			+ "EventForgePooledNodes.retire($Mesh)") and passed
 	# And WHERE the 3D row is offered, which is the other half of the same fact: `transparency` is
 	# declared on what is drawn, not on what moves, so a tween aimed at a body finds no such
 	# property, returns nothing, and takes the event down with it.
@@ -709,15 +709,15 @@ static func _test_a_group_on_an_ancestor_still_counts() -> bool:
 	var body: StaticBody2D = StaticBody2D.new()
 	level.add_child(body)
 	passed = SUPPORT.check(TEST_NAME, "a body under a node in the group is in the group for this question",
-		FreeSpot.in_any_group(body, ["walls"]), true) and passed
+		EventForgeFreeSpot.in_any_group(body, ["walls"]), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "the node that carries the name answers too",
-		FreeSpot.in_any_group(level, ["walls"]), true) and passed
+		EventForgeFreeSpot.in_any_group(level, ["walls"]), true) and passed
 	var elsewhere: StaticBody2D = StaticBody2D.new()
 	passed = SUPPORT.check(TEST_NAME, "and a body under nothing in the group is still clear",
-		FreeSpot.in_any_group(elsewhere, ["walls"]), false) and passed
+		EventForgeFreeSpot.in_any_group(elsewhere, ["walls"]), false) and passed
 	elsewhere.free()
 	passed = SUPPORT.check(TEST_NAME, "as is anything that is not a node at all",
-		FreeSpot.in_any_group(null, ["walls"]), false) and passed
+		EventForgeFreeSpot.in_any_group(null, ["walls"]), false) and passed
 	level.free()
 	return passed
 
@@ -744,8 +744,8 @@ static func _test_the_free_spot_is_not_an_at_starter() -> bool:
 ## An empty pool, because what is being watched is what happens to a node handed BACK, and a pool
 ## with a scene in it would answer that question with a copy nobody asked for.
 ## The file a global class name is declared in, read off the project's own class list - the same
-## list a running game resolves `PooledNodes` through, and the only place that says WHERE the name
-## comes from. "" when nothing declares it.
+## list a running game resolves `EventForgePooledNodes` through, and the only place that says
+## WHERE the name comes from. "" when nothing declares it.
 static func _declaring_file(global_class: String) -> String:
 	for entry: Dictionary in ProjectSettings.get_global_class_list():
 		if str(entry.get("class", "")) == global_class:
@@ -765,7 +765,7 @@ static func _real_pool() -> Node:
 ## back - so "did it move" is a question the test can ask of the tree.
 static func _pooled_node(world: Node) -> Node2D:
 	var node: Node2D = Node2D.new()
-	node.set_meta(PooledNodes.POOL_META, POOL_NAME)
+	node.set_meta(EventForgePooledNodes.POOL_META, POOL_NAME)
 	world.add_child(node)
 	return node
 

@@ -202,8 +202,9 @@ static func _pack_drives() -> bool:
 	rows.append(["a word that is not a mode changes nothing",
 		str(pack.call("blend_mode", item)), mode_before_nonsense])
 
-	# SOMEBODY ELSE'S EFFECT IS NEVER THROWN AWAY. Both halves: a shader mode refuses outright, and a
-	# native mode records the ask but leaves the material where it is.
+	# SOMEBODY ELSE'S EFFECT IS NEVER THROWN AWAY - and neither half records a blend it did not put
+	# on. Blend Mode Is answers what the screen is DOING, so an item whose own shader decides its
+	# blending goes on reading as the mode it really has, not as the one a refused row asked for.
 	var wearing_its_own: Sprite2D = Sprite2D.new()
 	var theirs: ShaderMaterial = ShaderMaterial.new()
 	wearing_its_own.material = theirs
@@ -212,8 +213,8 @@ static func _pack_drives() -> bool:
 		wearing_its_own.material == theirs, true])
 	pack.call("blend_as", wearing_its_own, "add", 1.0)
 	rows.append(["and neither does a native one", wearing_its_own.material == theirs, true])
-	rows.append(["though the mode it was asked for is still readable",
-		str(pack.call("blend_mode", wearing_its_own)), "add"])
+	rows.append(["and neither of them records a blend the screen is not doing",
+		str(pack.call("blend_mode", wearing_its_own)), "normal"])
 
 	var untouched: Sprite2D = Sprite2D.new()
 	rows.append(["an item nobody has blended reads as normal",

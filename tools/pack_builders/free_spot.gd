@@ -5,16 +5,16 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## FreeSpot is not a behaviour and publishes no verbs of its own: it is a library the SHIPPED
-## vocabulary calls by name out of its templates, which is why it has to live where the
-## user's own files live rather than inside the plugin. Deleting the editor addon must
+## EventForgeFreeSpot is not a behaviour and publishes no verbs of its own: it is a library the
+## SHIPPED vocabulary calls by name out of its templates, which is why it has to live where
+## the user's own files live rather than inside the plugin. Deleting the editor addon must
 ## leave every emitted line still parsing, and a class declared under addons/ would not.
 ## Built exactly as the canvas surface beside it is: one host class, one verbatim block,
 ## no manifest, no verbs.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "RefCounted"
-	sheet.custom_class_name = "FreeSpot"
+	sheet.custom_class_name = "EventForgeFreeSpot"
 	sheet.class_description = "A place to put the next copy that nothing is already standing in - the roll-until-it-fits query the free-spot placement words and the free-spot spawn rows call."
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([

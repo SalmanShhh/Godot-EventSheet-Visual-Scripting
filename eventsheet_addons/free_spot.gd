@@ -1,5 +1,5 @@
 ## @ace_version(1.0.0)
-class_name FreeSpot
+class_name EventForgeFreeSpot
 extends RefCounted
 ## A place to put the next copy that nothing is already standing in - the roll-until-it-fits query the free-spot placement words and the free-spot spawn rows call.
 

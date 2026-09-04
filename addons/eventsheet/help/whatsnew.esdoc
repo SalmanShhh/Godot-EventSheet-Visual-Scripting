@@ -139,6 +139,20 @@ What changed in the build you have installed (v0.17.0), in the words the release
   project that already wrote these lines by hand opens as. The addon index gains Blend Modes and Post
   Kit, the engine-level reference gains the two clipping rows, the pack count is re-measured at
   **121**, and the words land in all nine translation CSVs (**19 new keys**).
+- **A chromatic shake, beside the kick that stays.** The radial chromatic kick both Juice packs have
+  always shipped pushes the colour channels out from the centre and eases them back; it is a flash,
+  not a movement. Its twin is the camera Shake said on the screen instead of the lens: a split whose
+  direction walks along the same simplex noise the camera shake wobbles with, at the same
+  `shake_frequency`, so a hit that moves the camera and splits the picture reads as one thing. A
+  magnitude in pixels either falls linearly to nothing over the duration or holds flat and stops
+  dead, firing again restarts it rather than stacking a second on it, and a given angle keeps the
+  split on one line and lets only the amount breathe. The clock is advanced by `delta`, which the
+  engine has already scaled by time, so slow motion glides the split and a hitstop freezes it
+  mid-frame. Four rows in each pack - **Chromatic Shake**, **Stop Chromatic Shake**, the
+  **Is Chromatic Shaking** question and the **Chromatic Shake Magnitude** answer in pixels after the
+  falloff - over the shared overlay, which gains a shift and a mix dial beside the kick's untouched
+  one. The effect-strength dial scales it, the no-flashing answer halves both the split and the rate
+  it wanders at, and the tick parks itself the frame the shake ends.
 - **The flagship showcase plays what this pass added.** Carousel of Juice was eight tiles springing
   on a beat; it now feels the beat on the whole screen. Every beat pulses a vignette out of the post
   stack and pulls the tiles' colour channels apart along a fresh angle. **ui_accept** plays the
@@ -152,6 +166,28 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Fixed
 
+- **The Object Pool pack's Despawn row waits for the frame, like the Retire row beside it.** Handing
+  a node back to a pool is a REPARENT, and Godot refuses a reparent while the physics server is
+  flushing its queries - which is the whole of a collision or area callback, and exactly where a
+  bullet is despawned. `ObjectPool.despawn()` did it on the line, so a Despawn row inside `on_body_entered`
+  raised \"can't change this state while flushing queries\". It now books the handing back on the
+  message queue and it lands at the next idle moment, exactly as a destroy already did: the node is
+  still in the world for the rest of the event, a node freed before that moment arrives is skipped
+  quietly, and two Despawn rows in one frame book one handing back, so nothing can reach a free list
+  twice and be handed out to two callers. `On Despawned` still fires exactly once, and it fires
+  inside the retirement the retire runtime marks, so a Despawn row raises `On Retired` exactly once
+  as well. The ace_id, the codegen template and the signature are unchanged; the pack finds that
+  runtime by path rather than by name, so it still parses in a project that installed the pool and
+  nothing else.
+- **The two runtime classes the spawn rows call now wear the engine's own prefix.** They shipped as
+  `FreeSpot` and `PooledNodes` - bare global `class_name`s installed into every project that has
+  the plugin, so a game with its own `FreeSpot` met a project-wide parse error it did nothing to
+  earn. They are now `EventForgeFreeSpot` and `EventForgePooledNodes`, the shape
+  `EventForgeBridgeRuntime` beside them already had. The old bare names are NOT kept as aliases:
+  they were days old and were never in a release, so nothing outside this repository can be
+  spelling them. The files, the rows, the ace_ids and the emitted shapes are otherwise unchanged,
+  both classes still live in `eventsheet_addons/` where an uninstall cannot reach them, and a sheet
+  reopened after the change reads its lines back as the same rows.
 - **The getting-started state takes its colours from the live reading style.** The empty sheet's
   heading, hint, tip and both of its buttons were painted from the palette constants, and the
   secondary button from a white wash at 5% and 22% - invisible on a light preset. Every line and both
@@ -247,6 +283,19 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Fixed in the camera and viewport pass
 
+- **The rail remembered who held the view; the player was looking at somebody else.** Blend To
+  promises the travel starts from whatever shot is on screen, and the rail stood its own camera on
+  the record of who IT last handed the view to - a record only the rail itself ever writes. The
+  builtin Make Current row, a juice pack, or one line of anybody's script can make a camera current
+  without telling it, and the blend then opened on a pose nobody was watching: the snap the row
+  exists to avoid. Both twins now read the camera the viewport says is current, and fall back to
+  their own record only when there is no tree to ask.
+- **A Fly Along row in 3D read as four facts.** The route, the pace, the curve and the node kept in
+  frame were all on the row, which is a settings line rather than a sentence. Three facts stay -
+  the route, the pace, and what stays in frame - and the ease, a dropdown word with the rail's own
+  default behind it, reads in the parameter dialog where Scene Flow's ease already reads.
+- **The pack count in the README and CLAUDE.md was four behind the tree**: 125 pack folders
+  measured off the builder glob when this pass closed, not 121.
 - **A rail shot the player could not see.** Blend To and Fly Along drove the rail's own camera
   without ever making it current, so a shot started while another camera held the view - after a
   Cut To, or after the previous blend handed over - animated a camera nobody was looking at and
@@ -541,14 +590,15 @@ What changed in the build you have installed (v0.17.0), in the words the release
   A project with no pools in it behaves exactly as Destroy Now does. On Retired is one trigger for
   both endings, because a pool takes a node back by removing it from the tree and a free takes it out
   of the tree as well.
-- **Two runtime files, and the parity law is why they are files.** `FreeSpot` and `PooledNodes` are
-  plain GDScript shipped in `eventsheet_addons/` beside the behaviour packs - the project's own
-  folder, not the plugin's - **463 lines** that touch no editor class, no sheet format and no
-  EventForge type, so a built game carries them the way it carries any other script, and deleting
-  the plugin leaves every line that names them still parsing. A free spot is a roll asked again until the answer fits and a retirement is a decision read
-  off the node at run time, so neither could be one expression in a template; naming the pool
-  autoload in a template instead would have put an identifier into every generated script that only
-  parses in a project which installed the pool pack.
+- **Two runtime files, and the parity law is why they are files.** `EventForgeFreeSpot` and
+  `EventForgePooledNodes` are plain GDScript shipped in `eventsheet_addons/` beside the behaviour
+  packs - the project's own folder, not the plugin's - **463 lines** that touch no editor class,
+  no sheet format and no EventForge type, so a built game carries them the way it carries any
+  other script, and deleting the plugin leaves every line that names them still parsing. A free
+  spot is a roll asked again until the answer fits and a retirement is a decision read off the
+  node at run time, so neither could be one expression in a template; naming the pool autoload in
+  a template instead would have put an identifier into every generated script that only parses in
+  a project which installed the pool pack.
 - **Every one of them re-emits byte for byte, and ten of the sixteen read back as themselves.** The
   three multi-statement runs join the lift table as **61 entries** - ten formation spellings in 2D
   and eight in 3D, twenty-four launched spellings in 2D and eighteen in 3D, and one for the self copy
@@ -627,21 +677,22 @@ What changed in the build you have installed (v0.17.0), in the words the release
   precisely so the rows below can still say it.
 - **The two runtime classes moved to the folder that is yours.** The guide said \"uninstall the
   plugin and the emitted code still builds and still runs\", and the emitted lines said
-  `FreeSpot.in_2d(...)` and `PooledNodes.retire(...)` - two classes declared under
+  `EventForgeFreeSpot.in_2d(...)` and `EventForgePooledNodes.retire(...)` - two classes declared under
   `addons/eventforge/`, which is the folder an uninstall deletes. Both now ship as `free_spot.gd`
   and `pooled_nodes.gd` in `eventsheet_addons/`, built through the pack-builder door like every
   other file there and drift-gated with them, which is where the drawing runtime the builtin Draw
   rows call has always lived. The class names, the emitted lines and the rows are unchanged; the
   sentence in the guide is true now instead of nearly true.
-- **On Retired now fires when the object is retired, and not when it is handed out.** The trigger is
-  the node's own `tree_exiting`, which both retirements pass through - but so does every other way a
-  node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the row ran on
-  every spawn from a pool, on all four shipped reparent rows, and on a scene change: a bullet that
-  let go of its trail on retirement let go of it again on the frame it was fired. The handler opens
-  with the line that tells those apart - `if not PooledNodes.is_retiring(self):` and a return,
-  emitted where a reader can see it - and the runtime answers that question from the two things only
-  it can see: a node on its way to being freed, and a node inside the call that gives it to its pool.
-  The trigger's id and its words have not moved; what changed is what it hears.
+- **On Retired now fires when the object is retired, and not when it is handed out.** The trigger
+  is the node's own `tree_exiting`, which both retirements pass through - but so does every other
+  way a node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the
+  row ran on every spawn from a pool, on all four shipped reparent rows, and on a scene change: a
+  bullet that let go of its trail on retirement let go of it again on the frame it was fired. The
+  handler opens with the line that tells those apart -
+  `if not EventForgePooledNodes.is_retiring(self):` and a return, emitted where a reader can see
+  it - and the runtime answers that question from the two things only it can see: a node on its way to
+  being freed, and a node inside the call that gives it to its pool. The trigger's id and its
+  words have not moved; what changed is what it hears.
 - **Which dimension a run is about belongs to the read that asked.** A line formation and a copy of
   the node's own scene write the same characters in 2D and in 3D, so the class the file extends is
   what says which row a reader is shown - and only the whole-file door was ever told it. A pack's
@@ -9789,12 +9840,67 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   no branch gate starts failing, no diff appears anywhere - while the sheet in front of a reader
   still offers the newer spelling. A stored `.tres` sheet, which writes down which verb each row was
   picked from, reports both rows and says neither asks anybody anything.
+- **The migration report can be asked to read every script.** The Doctor's `.gd` half has always
+  been a capped sample that says so in its own summary line, because reading a script means LIFTING
+  it and a thousand of them is minutes rather than seconds. `EventSheets.migration_report(true)` now
+  reads the whole half, for the run that has to be certain - a release check, a project whose packs
+  disagree with themselves. **The default is unchanged and the frozen shape is unchanged**: a
+  `migration_report()` written before the parameter existed goes on meaning exactly what it meant.
+  The summary line now names its mode in BOTH directions - a whole read says it was whole even when
+  the sample would have covered everything - because a mode you can only tell apart by counting the
+  findings is a mode nobody can trust the verdict of.
+- **The two guides stopped naming the wrong command as the CI gate.** `GUIDE-UPDATING-AND-REFACTORING`
+  and `GUIDE-VERSION-CONTROL` both offered `EventSheets.migration_report()` where a branch gate
+  belongs; CI runs `tools/verify_sheets.gd`, whose FOURTH check reads that same report and fails on
+  the rows that ask. The recipe in both guides is now that command, and the API is named for what it
+  is: the in-editor twin, for a Tool sheet or an editor plugin, never the thing CI calls into the
+  editor for.
+- **The backup ring has a door on it.** Every pack update copies the files it is about to overwrite
+  or remove into the per-file ring before the first new byte lands, and until now that was a folder
+  and a sentence: the editor's own Restore menu restores THE SHEET IN FRONT OF YOU, which a pack's
+  guide, icon or translation table never is, so recovering one meant copying a file out of `user://`
+  by hand. **Restore...** on a pack's row in the addon manager now lists what the ring is holding for
+  that pack - every earlier version of every file, newest first, with when the copy was taken and how
+  big it is - and writes the chosen one back as ONE UNDOABLE EDIT with a receipt. Ctrl+Z writes back
+  the bytes that were there, or removes the file again when there were none.
+- **The file an update REMOVED is listed too, and says so** - the case somebody actually comes
+  looking for, since the record is re-stamped over the folder the update left and only the ring
+  remembers such a file existed. It is offered only where its place in the pack can be KNOWN rather
+  than guessed: a ring folder's name is the file's whole path with its separators replaced by
+  underscores, which is many-to-one, so the reconstruction is taken only when the folder's suffix is
+  the ring entry's own file name - a file at the top of the pack folder, with nothing left to guess.
+  A removed file deeper in the folder is not offered rather than offered at an invented path.
+- **The ring itself is never written to by any of it**, which the suite pins by value: it is exactly
+  as big after a restore as it was before.
 - **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
   parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
   \"this node\", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -
   and the parse gate then refused every node-scoped address for a reason that was the harness's and
   not the map's. A slot the template spells `{name.}` is now left blank, and the fixture sheet is
   compiled under the verb's OWN node type instead of a bare `Node`.
+
+### The pack count is measured now, not typed
+
+- **How many behaviour packs ship is a measurement.** The README states it in three sentences and
+  `CLAUDE.md` in one, and every one of them was a hand-typed literal, so the number drifted every
+  time a pack landed - 121, then 123, then 125 in a single night, while the tree already held 130.
+  `tools/measure_packs.gd` computes it the way the rest of the fleet computes anything about packs:
+  from the builders in `tools/pack_builders/`, counting the ones that publish a FOLDER under
+  `eventsheet_addons/`, so the root runtime scripts (`free_spot.gd`, `pooled_nodes.gd`) and the
+  hand-written `demo_*.gd` seam demonstrations are outside the count and the tool's header says so in
+  full. It prints `packs=N builders=N`, names each sentence that disagrees, and with `-- --write`
+  rewrites those literals in place. Historical CHANGELOG lines are deliberately never touched: they
+  are the count as it stood on a release day. It measures the tree ON DISK, and `-- builders=<path>`
+  points it at another builders folder instead - the way to ask what a COMMIT holds while somebody
+  else's half-finished pack sits beside yours in the same working copy, rather than writing a number
+  no clean checkout can reproduce.
+- **And a test holds the four sentences to it.** `pack_count_records_test` measures with the tool's
+  OWN function rather than a second walk of its own, compares every quoted literal, and fails with
+  both numbers and the one line that fixes them. The walk itself is pinned by value against a
+  four-file fixture folder holding one of each shape - a folder pack shipped through `Lib.publish`,
+  one through `Lib.save_pack`, a root runtime script, and a builder that publishes nothing - because
+  pinning it against the live tree would pin a number that moves every day, which is the failure the
+  whole slice exists to end.
 
 ## 0.17.0 - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 

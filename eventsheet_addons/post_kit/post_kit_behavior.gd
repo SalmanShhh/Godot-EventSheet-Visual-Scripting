@@ -383,7 +383,10 @@ func post_strength(called: String = "vignette") -> float:
 ## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
 ## @ace_codegen_template("$PostKitBehavior.outline_group_through_walls("{group}", {colour}, {width}, {seconds})")
 func outline_group_through_walls(group: String = "enemies", colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0) -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or not _has_compositor():
+		# THE RENDERER IS ASKED FIRST, because "does nothing" has to mean nothing: marking the meshes
+		# and only then finding out there is no compositor left every one of them switched onto the
+		# mask layer with nothing to take them off again.
 		return
 	var marked: int = 0
 	for node: Node in get_tree().get_nodes_in_group(group.strip_edges()):
@@ -398,13 +401,14 @@ func outline_group_through_walls(group: String = "enemies", colour: Color = Colo
 ## @ace_action
 ## @ace_name("Silhouette Node Through Walls")
 ## @ace_display_template("Silhouette [i]{node}[/i] through walls in [b]{colour}[/b]")
-## @ace_param(node, desc: "The node to fill. Every visual instance under it is marked.")
+## @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to fill. Every visual instance under it is marked.")
 ## @ace_param(colour, default: Color.YELLOW, desc: "The colour it is filled with.")
 ## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
 ## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
 ## @ace_codegen_template("$PostKitBehavior.silhouette_node_through_walls({node}, {colour}, {seconds})")
 func silhouette_node_through_walls(node: Node3D, colour: Color = Color.YELLOW, seconds: float = 0.0) -> void:
-	if node == null or not is_inside_tree():
+	if node == null or not is_inside_tree() or not _has_compositor():
+		# The renderer is asked before anything is marked, for the reason the group row asks first.
 		return
 	if _mark(node, true) == 0:
 		push_warning("Silhouette Node Through Walls: %s has no mesh to fill." % node.name)
@@ -429,7 +433,7 @@ func stop_outlining() -> void:
 ## @ace_condition
 ## @ace_name("Is Outlined")
 ## @ace_display_template("[i]{node}[/i] is outlined")
-## @ace_param(node, desc: "The node to ask about.")
+## @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to ask about.")
 ## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
 ## @ace_codegen_template("$PostKitBehavior.is_outlined({node})")
 func is_outlined(node: Node3D) -> bool:
@@ -449,7 +453,7 @@ func is_outlined(node: Node3D) -> bool:
 ## @ace_condition
 ## @ace_name("Is Hidden From View")
 ## @ace_display_template("[i]{node}[/i] is hidden from view")
-## @ace_param(node, desc: "The node to ask about.")
+## @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to ask about.")
 ## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
 ## @ace_codegen_template("$PostKitBehavior.is_hidden_from_view({node})")
 func is_hidden_from_view(node: Node3D) -> bool:

@@ -88,7 +88,7 @@ const PLACEMENT_STARTERS_3D: Array[String] = [
 
 ## The runtime file the free-spot word calls, by the name emitted code says. One spelling, named
 ## here, because two rows and a starter all write it.
-const FREE_SPOT_CALL: String = "FreeSpot"
+const FREE_SPOT_CALL: String = "EventForgeFreeSpot"
 
 ## The signal a spawn row raises when the arena had no room in it. A PLAIN signal the sheet declares
 ## for itself, which is why it is a name here and not a mechanism: the row emits it and On Spawn

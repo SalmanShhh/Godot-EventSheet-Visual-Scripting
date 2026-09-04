@@ -307,7 +307,7 @@ func move_post_effect_before(called: String = "vignette", before: String = "") -
 ## @ace_action
 ## @ace_name("Draw Post Effects Below")
 ## @ace_display_template("Draw post effects below [i]{other}[/i]")
-## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should stay under - usually the one the interface is on.")
+## @ace_param(other, hint: node_path, default: $Hud, desc: "The CanvasLayer the effects should stay under - usually the one the interface is on.")
 ## @ace_codegen_template("$ScreenFx.draw_post_effects_below({other})")
 func draw_post_effects_below(other: CanvasLayer) -> void:
 	if other == null:
@@ -320,7 +320,7 @@ func draw_post_effects_below(other: CanvasLayer) -> void:
 ## @ace_action
 ## @ace_name("Draw Post Effects Above")
 ## @ace_display_template("Draw post effects above [i]{other}[/i]")
-## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should cover - usually the one the interface is on.")
+## @ace_param(other, hint: node_path, default: $Hud, desc: "The CanvasLayer the effects should cover - usually the one the interface is on.")
 ## @ace_codegen_template("$ScreenFx.draw_post_effects_above({other})")
 func draw_post_effects_above(other: CanvasLayer) -> void:
 	if other == null:

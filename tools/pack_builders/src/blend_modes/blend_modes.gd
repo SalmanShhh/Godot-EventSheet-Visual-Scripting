@@ -334,8 +334,11 @@ func _pack_material_of(item: CanvasItem) -> ShaderMaterial:
 func _wear_native(item: CanvasItem, mode: String) -> void:
 	var worn: Material = item.material
 	if worn is ShaderMaterial and not is_pack_material(worn):
-		item.set_meta(MODE_META, mode)
-		push_warning("Blend As: %s wears its own shader material, which decides its own blending - the \"%s\" blend was recorded but the material was left alone." % [
+		# NOTHING IS RECORDED, because nothing was done. Blend Mode Is answers what the screen is
+		# doing, and a mode remembered off an item whose blending its own shader decides would have
+		# the condition report a blend nobody can see. The refusal is one rule for both halves of
+		# Blend As: the shader modes already left the meta alone here, and now so does this.
+		push_warning("Blend As: %s wears its own shader material, which decides its own blending - the \"%s\" blend was not put on it. Blend a child or a parent instead, or take the shader off first." % [
 			item.name, mode])
 		return
 	if is_pack_material(worn):

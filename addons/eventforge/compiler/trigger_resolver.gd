@@ -578,7 +578,7 @@ const SOURCE_RETIRE_GUARD_META: String = "__source_retire_guard"
 ## the tree) and every reparent row does too - so the bare signal fires many times for one node and
 ## only sometimes means what On Retired says. The guard is the difference: it asks the node whether
 ## it is on its way out for good, and returns from anything else.
-const RETIRE_GUARD_CALL: String = "PooledNodes.is_retiring"
+const RETIRE_GUARD_CALL: String = "EventForgePooledNodes.is_retiring"
 
 
 ## The guard lines a retirement handler opens with: the author's own where one was read off the

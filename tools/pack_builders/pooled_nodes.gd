@@ -5,16 +5,16 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## PooledNodes is not a behaviour and publishes no verbs of its own: it is a library the SHIPPED
-## vocabulary calls by name out of its templates, which is why it has to live where the
-## user's own files live rather than inside the plugin. Deleting the editor addon must
+## EventForgePooledNodes is not a behaviour and publishes no verbs of its own: it is a library the
+## SHIPPED vocabulary calls by name out of its templates, which is why it has to live where
+## the user's own files live rather than inside the plugin. Deleting the editor addon must
 ## leave every emitted line still parsing, and a class declared under addons/ would not.
 ## Built exactly as the canvas surface beside it is: one host class, one verbatim block,
 ## no manifest, no verbs.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "RefCounted"
-	sheet.custom_class_name = "PooledNodes"
+	sheet.custom_class_name = "EventForgePooledNodes"
 	sheet.class_description = "Retiring a node: back to the pool that made it when it came from one, and destroyed when it did not - the decision the Retire rows call, and the question On Retired asks."
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([

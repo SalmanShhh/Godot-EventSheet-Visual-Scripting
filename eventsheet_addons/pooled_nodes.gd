@@ -1,5 +1,5 @@
 ## @ace_version(1.0.0)
-class_name PooledNodes
+class_name EventForgePooledNodes
 extends RefCounted
 ## Retiring a node: back to the pool that made it when it came from one, and destroyed when it did not - the decision the Retire rows call, and the question On Retired asks.
 

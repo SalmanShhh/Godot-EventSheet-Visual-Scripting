@@ -546,12 +546,12 @@ dimensions:
 Two of them lean on a file the game carries rather than on a line in the row, and that is worth
 saying before you meet them. A free spot is a roll asked over and over until the answer fits, and a
 retirement is a decision read off the node, so neither is one expression. They compile to
-`FreeSpot.in_2d(…)` and `PooledNodes.retire(…)`, and those two classes ship as `free_spot.gd` and
-`pooled_nodes.gd` in `eventsheet_addons/` - the same folder the behaviour packs are in, which is
-YOUR folder and not the plugin's. That is what makes the parity promise hold rather than merely
-sound true: delete `addons/eventforge/` and `addons/eventsheet/` and the two files are still there,
-so every line that names them still parses and still runs. Nothing in either of them touches an
-editor, a sheet, or any class the plugin declares.
+`EventForgeFreeSpot.in_2d(…)` and `EventForgePooledNodes.retire(…)`, and those two classes ship as
+`free_spot.gd` and `pooled_nodes.gd` in `eventsheet_addons/` - the same folder the behaviour packs
+are in, which is YOUR folder and not the plugin's. That is what makes the parity promise hold
+rather than merely sound true: delete `addons/eventforge/` and `addons/eventsheet/` and the two
+files are still there, so every line that names them still parses and still runs. Nothing in either
+of them touches an editor, a sheet, or any class the plugin declares.
 
 ### A whole formation in one row
 
@@ -762,7 +762,7 @@ func _ready() -> void:
 
 func _on_timeout() -> void:
 	var new_crate_scene = Crate
-	var new_crate_spot = FreeSpot.in_2d($Room, new_crate_scene, ["walls"], 32.0, 24)
+	var new_crate_spot = EventForgeFreeSpot.in_2d($Room, new_crate_scene, ["walls"], 32.0, 24)
 	var new_crate = null
 	if new_crate_spot == null:
 		if has_signal(&"spawn_skipped"):
@@ -827,11 +827,11 @@ func _ready() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	PooledNodes.retire(self)
+	EventForgePooledNodes.retire(self)
 
 
 func _on_retired() -> void:
-	if not PooledNodes.is_retiring(self):
+	if not EventForgePooledNodes.is_retiring(self):
 		return
 	$Trail.emitting = false
 ```
@@ -874,10 +874,10 @@ a node back by removing it from the tree, and a free takes it out of the tree as
 own `tree_exiting` is what the trigger listens to. But leaving the tree is not only how a node goes
 away: it is also how it is moved somewhere else, and it is how a pool hands the same copy OUT again
 - so the bare signal is raised on every reparent row and on every spawn from a pool. The handler
-therefore opens with `if not PooledNodes.is_retiring(self): return`, which is emitted where you can
-read it, and which is what makes the event mean what its name says. The object is still valid inside
-that handler, which is what makes it the place to let go of what it was holding, drop it from a
-list, or tell somebody else it is gone.
+therefore opens with `if not EventForgePooledNodes.is_retiring(self): return`, which is emitted
+where you can read it, and which is what makes the event mean what its name says. The object is
+still valid inside that handler, which is what makes it the place to let go of what it was holding,
+drop it from a list, or tell somebody else it is gone.
 
 **Retire is safe to run twice.** Something already on its way out, or already parked back in its
 pool, is left alone rather than handed over a second time - and that guard matters more here than it
@@ -1024,16 +1024,16 @@ that, or spawn a scene the row names outright.
 | Spawn A Copy, Facing And Moving (3D) | The same, with forward being the copy's own -Z. | `var {name} = {scene}.instantiate()`, …, `{name}.look_at({toward}.global_position)`, `var {name}_launch = -{name}.global_transform.basis.z * {speed}`, … |
 | Spawn A Copy Of Myself | Makes one more copy of the scene this node was built from. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
 | Spawn A Copy Of Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
-| Free Spot In | Gives a point inside a shape that nothing is standing in, or nothing. | `FreeSpot.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
-| Free Spot In (3D) | The same question in three dimensions, in metres. | `FreeSpot.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
-| Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_scene = {scene}`, `var {name}_spot = FreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {name}_scene)`, `else:`, … |
-| Spawn A Copy In A Free Spot (3D) | The same row in three dimensions. | `var {name}_scene = {scene}`, `var {name}_spot = FreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
+| Free Spot In | Gives a point inside a shape that nothing is standing in, or nothing. | `EventForgeFreeSpot.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
+| Free Spot In (3D) | The same question in three dimensions, in metres. | `EventForgeFreeSpot.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
+| Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_scene = {scene}`, `var {name}_spot = EventForgeFreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {name}_scene)`, `else:`, … |
+| Spawn A Copy In A Free Spot (3D) | The same row in three dimensions. | `var {name}_scene = {scene}`, `var {name}_spot = EventForgeFreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
 | On Spawn Skipped | Runs when a free-spot spawn found nowhere to put the copy. | `spawn_skipped.connect(_on_spawn_skipped)` |
-| Retire | Hands the object back to its pool, or destroys it when it came from none. | `PooledNodes.retire({object})` |
-| Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(PooledNodes.retire.bind({object}))` |
-| Fade Out Then Retire | Fades the object out, waits, puts its transparency back, then retires it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.modulate.a = 1.0`, `PooledNodes.retire({object})` |
-| Fade Out Then Retire (3D) | The same on a GeometryInstance3D, walking transparency up instead. | `await {object}.create_tween().tween_property({object}, "transparency", 1.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.transparency = 0.0`, `PooledNodes.retire({object})` |
-| On Retired | Runs as the object is retired, whichever of the two happened. | `tree_exiting.connect(_on_retired)`, `if not PooledNodes.is_retiring(self):`, `return` |
+| Retire | Hands the object back to its pool, or destroys it when it came from none. | `EventForgePooledNodes.retire({object})` |
+| Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(EventForgePooledNodes.retire.bind({object}))` |
+| Fade Out Then Retire | Fades the object out, waits, puts its transparency back, then retires it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.modulate.a = 1.0`, `EventForgePooledNodes.retire({object})` |
+| Fade Out Then Retire (3D) | The same on a GeometryInstance3D, walking transparency up instead. | `await {object}.create_tween().tween_property({object}, "transparency", 1.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.transparency = 0.0`, `EventForgePooledNodes.retire({object})` |
+| On Retired | Runs as the object is retired, whichever of the two happened. | `tree_exiting.connect(_on_retired)`, `if not EventForgePooledNodes.is_retiring(self):`, `return` |
 
 ## Use cases
 

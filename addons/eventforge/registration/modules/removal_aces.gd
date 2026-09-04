@@ -63,9 +63,9 @@
 #
 # WHY THE POOL IS LOOKED UP AT RUN TIME. It is an autoload, so a template naming it would put an
 # identifier into every generated script that only parses in a project which installed the pool
-# pack. PooledNodes resolves it by path when the line runs, which is what lets one row work in both
-# kinds of project - and it is plain GDScript, so the generated game carries it like any other
-# runtime file and needs no plugin to run.
+# pack. EventForgePooledNodes resolves it by path when the line runs, which is what lets one row
+# work in both kinds of project - and it is plain GDScript, so the generated game carries it like
+# any other runtime file and needs no plugin to run.
 #
 # ON RETIRED IS ONE SIGNAL AND NOT TWO. Both retirements pass through the same moment: a pool takes
 # a node back by removing it from the tree, and a destroy takes it out of the tree as well, so
@@ -101,7 +101,7 @@ const FADE_TARGET_3D: String = "1.0"
 
 ## The runtime file the retire verbs call, by the name emitted code says. Named here because three
 ## templates write it and one spelling is what keeps them one idea.
-const RETIRE_CALL: String = "PooledNodes.retire"
+const RETIRE_CALL: String = "EventForgePooledNodes.retire"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
