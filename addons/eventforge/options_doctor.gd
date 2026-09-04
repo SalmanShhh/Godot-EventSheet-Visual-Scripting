@@ -1,6 +1,6 @@
 # Godot EventSheets - the Doctor's Options section.
 #
-# Two findings, and what they have in common is that both are about a promise the PROJECT makes and
+# Three findings, and what they have in common is that each is about a promise the PROJECT makes and
 # no row can keep:
 #
 #   AN ACTION WITH NO BINDING   the Input Map declares a control the player cannot press. It is what
@@ -11,13 +11,29 @@
 #                     neighbours answer for. Picking it then leaves that setting wherever the last
 #                     preset put it, so Low after High is not the same Low as Low after Medium - the
 #                     one bug that makes quality presets feel haunted.
+#   A DIFFICULTY NOTHING READS   a project that puts a difficulty in force while no row anywhere
+#                     multiplies by a factor out of it. The menu offers a choice, the choice is
+#                     saved, and the game plays exactly the same either way - which nothing warns
+#                     about, because every part of it is working.
 #
-# BOTH ARE READ FROM SMALL FILES ON PURPOSE. The audit already reads every project script once and
-# every scene once, and a section that added a third corpus would pay for itself in seconds. These
-# two ask Project Settings (already in memory) and the three or four resources in the quality folder,
-# so a project with neither pays almost nothing and reports nothing at all.
+# THE FIRST TWO ARE READ FROM SMALL FILES ON PURPOSE. The audit already reads every project script
+# once and every scene once, and a section that added a third corpus would pay for itself in seconds.
+# They ask Project Settings (already in memory) and the three or four resources in the quality folder,
+# so a project with neither pays almost nothing and reports nothing at all. The third does read the
+# scripts, and pays for it with two substring tests per file before anything is opened properly.
 #
-# NOTHING IS STORED and nothing is written: both answers are derived on every ask, so a fixed project
+# THE DIFFICULTY QUESTION IS ASKED OF CALLS, never of definitions: the words it looks for carry the
+# autoload's own name (`Settings.difficulty_factor(`), because the pack that DEFINES those verbs is a
+# project script too, and a check that counted `func difficulty_factor` as a reading would be answered
+# by the pack itself and never fire for anybody. The one reading it cannot see is the Health pack's
+# Scaled By field, which names a factor without naming the verb - a project whose only use of the
+# difficulty is that field is told about a menu that does something. That is the safe direction to be
+# wrong in: a note nobody needed is worse than a note that never came.
+#
+# THE QUIET SHEET: none of the three draws anything in the sheet. The row wears the amber state, and
+# the words live in the triage inbox and in the row's help strip when it is selected.
+#
+# NOTHING IS STORED and nothing is written: every answer is derived on every ask, so a fixed project
 # stops reporting with no state to clean up.
 @tool
 class_name EventSheetOptionsDoctor
@@ -28,6 +44,14 @@ extends EventSheetDoctorSection
 const CHECK_ID := "options"
 const CHECK_UNBOUND := "options-unbound-action"
 const CHECK_PRESET_GAP := "options-preset-gap"
+const CHECK_DIFFICULTY_UNREAD := "options-difficulty-unread"
+
+## The call sites that put a difficulty in force, and the one that reads a factor back out of it.
+## Both are spelled with the autoload's name in front, so the pack that DEFINES the verbs is never
+## mistaken for a project that uses them.
+const DIFFICULTY_CHOSEN_WORDS: PackedStringArray = ["Settings.use_difficulty(",
+	"Settings.use_difficulty_from("]
+const DIFFICULTY_READ_WORD := "Settings.difficulty_factor("
 
 ## Where Project Settings keeps one input action, and the key its bindings live under.
 const INPUT_PREFIX := "input/"
@@ -50,7 +74,23 @@ static func ensure_registered() -> void:
 ## The section, with the contract every registered check has: append findings, never write inside
 ## res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(project_actions(), EventSheetQualityPresets.preset_paths()))
+	var sources: Array[Dictionary] = []
+	for script_path: String in EventSheets.project_scripts():
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if _says_difficulty(source):
+			sources.append({"path": script_path, "source": source})
+	findings.append_array(report(project_actions(), EventSheetQualityPresets.preset_paths(), sources))
+
+
+## Whether a script is worth keeping for the difficulty question at all - the pre-read, deliberately
+## looser than the rule behind it: it decides what is carried, not what is reported.
+static func _says_difficulty(source: String) -> bool:
+	if source.contains(DIFFICULTY_READ_WORD):
+		return true
+	for word: String in DIFFICULTY_CHOSEN_WORDS:
+		if source.contains(word):
+			return true
+	return false
 
 
 ## Every input action this project declares, in the order Project Settings holds them. The engine's
@@ -67,9 +107,13 @@ static func project_actions() -> PackedStringArray:
 	return found
 
 
-## The whole section as findings: the actions nobody can press, then the presets that leave a setting
-## wherever they found it. Pure over its two lists, so a test hands it actions and paths.
-static func report(actions: PackedStringArray, preset_paths: PackedStringArray) -> Array[Dictionary]:
+## The whole section as findings: the actions nobody can press, the presets that leave a setting
+## wherever they found it, then the difficulty nothing reads. Pure over its three corpora - two lists
+## and a list of {path, source} - so a test hands it actions, paths and two scripts and this never
+## touches the filesystem. The third defaults to nothing, because a caller that has no scripts to
+## offer is asking the two questions that were here first.
+static func report(actions: PackedStringArray, preset_paths: PackedStringArray,
+		sources: Array[Dictionary] = []) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	for action: String in actions:
 		if bindings_of(action).is_empty():
@@ -84,6 +128,30 @@ static func report(actions: PackedStringArray, preset_paths: PackedStringArray) 
 		findings.append(_finding("warning", CHECK_PRESET_GAP, path,
 			EventSheetL10n.translate("%s says nothing about %s, so picking it leaves that where the last preset put it.") % [
 				path.get_file(), ", ".join(missing)], missing[0]))
+	findings.append_array(_difficulty_findings(sources))
+	return findings
+
+
+## The difficulty question, asked of the project as a whole: something PUTS a difficulty in force and
+## nothing READS a factor out of one. It is asked only once a project chooses a difficulty at all, so
+## a game that has never heard of the idea says nothing - and the first script that chooses one is
+## what the finding points at, because that is the file worth opening.
+static func _difficulty_findings(sources: Array[Dictionary]) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var chooses: String = ""
+	for entry: Dictionary in sources:
+		var source: String = str(entry["source"])
+		if source.contains(DIFFICULTY_READ_WORD):
+			return findings
+		if chooses.is_empty():
+			for word: String in DIFFICULTY_CHOSEN_WORDS:
+				if source.contains(word):
+					chooses = str(entry["path"])
+					break
+	if chooses.is_empty():
+		return findings
+	findings.append(_finding("info", CHECK_DIFFICULTY_UNREAD, chooses,
+		EventSheetL10n.translate("%s chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt.") % chooses.get_file(), ""))
 	return findings
 
 

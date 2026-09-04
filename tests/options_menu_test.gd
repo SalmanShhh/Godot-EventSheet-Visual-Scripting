@@ -17,6 +17,12 @@
 #   THE CONFLICT      taking a key leaves the other control without one (and says so), swapping
 #                     leaves nobody without one, and both are the same two InputMap calls a person
 #                     would have written.
+#   THE DIFFICULTY    a word finds its file, its factors answer by name, a key it says nothing about
+#                     reads as 1, and clearing it puts every factor back - driven against the three
+#                     starter files, because a starter nobody can load is not a starter.
+#   THE ASSIST        Declare Assist is one row that lands a toggle on the Accessibility page and
+#                     makes the assist trigger fire beside the setting one; a plain toggle nobody
+#                     declared as an assist answers neither.
 #
 # Two traps this file is written around. The pack declares a class_name that a headless --script run
 # cannot resolve, so it is reached by load(path). And a test process has no scene tree, so the input
@@ -48,6 +54,105 @@ static func run() -> bool:
 	ok = _test_the_way_back() and ok
 	ok = _test_the_conflict_has_three_answers() and ok
 	ok = _test_the_doctor_reads_both() and ok
+	ok = _test_difficulty_is_a_file() and ok
+	ok = _test_assists_are_declared_settings() and ok
+	ok = _test_the_doctor_notices_a_difficulty_nothing_reads() and ok
+	return ok
+
+
+## DIFFICULTY IS A FILE, and the three starters are the files. Everything here runs the shipped pack
+## against the shipped starters: a word puts one in force, its factors answer by name, a key it has
+## no answer for reads as 1, and clearing it puts every factor back to 1.
+##
+## The factors live on Engine, so this test puts that metadata back the way it found it - a
+## difficulty left in force would follow every test that runs after this one.
+static func _test_difficulty_is_a_file() -> bool:
+	var settings: Node = _settings()
+	var had: bool = Engine.has_meta("difficulty_factors")
+	var before: Variant = Engine.get_meta("difficulty_factors", {})
+	var heard: Array = []
+	settings.connect("difficulty_changed", func(word: String) -> void: heard.append(word))
+	settings.call("use_difficulty", "hard")
+	var ok: bool = _check("the word a difficulty goes by finds its file, letter case and all",
+		settings.call("difficulty_name"), "Hard")
+	ok = _check("and the trigger says which one, once", heard, ["Hard"]) and ok
+	ok = _check("the difficulty answers as a question too",
+		[settings.call("difficulty_is", "hard"), settings.call("difficulty_is", "easy")],
+		[true, false]) and ok
+	ok = _check("a factor the file writes answers with its number",
+		settings.call("difficulty_factor", "damage_taken"), 1.5) and ok
+	ok = _check("a factor it says nothing about reads as 1",
+		settings.call("difficulty_factor", "no_such_factor"), 1.0) and ok
+	ok = _check("the folder IS the list, in file-name order",
+		settings.call("difficulty_names"), ["Easy", "Hard", "Normal"]) and ok
+	# The setting road in: the value of a declared setting names the difficulty, which is what makes
+	# the choice save, reset and re-apply with everything else in the options screen.
+	settings.call("declare_setting", "difficulty", "easy", "choice", "easy|normal|hard", "Game", "")
+	settings.call("use_difficulty_from", "difficulty")
+	ok = _check("the difficulty a setting names is the one put in force",
+		[settings.call("difficulty_name"), settings.call("difficulty_factor", "damage_taken")],
+		["Easy", 0.5]) and ok
+	# And nothing at all clears it, so every factor is 1 again rather than whatever was last chosen.
+	settings.call("use_difficulty", null)
+	ok = _check("naming nothing clears the difficulty and every factor with it",
+		[settings.call("difficulty_name"), settings.call("difficulty_factor", "damage_taken")],
+		["", 1.0]) and ok
+	settings.free()
+	if had:
+		Engine.set_meta("difficulty_factors", before)
+	else:
+		Engine.remove_meta("difficulty_factors")
+	return ok
+
+
+## AN ASSIST IS A SETTING, and the point of Declare Assist is that it says so in one row: the toggle
+## lands on the Accessibility page the menu already builds, and the assist trigger fires beside the
+## setting one so a reaction reads as being about an assist.
+static func _test_assists_are_declared_settings() -> bool:
+	var settings: Node = _settings()
+	var heard: Array = []
+	settings.connect("assist_changed", func(assist_name: String, on: bool) -> void:
+		heard.append([assist_name, on]))
+	settings.call("declare_assist", "invincible", false)
+	var ok: bool = _check("an assist is declared as an ordinary toggle on the accessibility page",
+		[settings.call("setting_is_declared", "invincible"), settings.call("setting_kind", "invincible"),
+			settings.call("setting_page", "invincible")], [true, "toggle", "Accessibility"])
+	ok = _check("and it starts off, because that is what it was declared with",
+		settings.call("assist_is_on", "invincible"), false) and ok
+	settings.call("set_setting", "invincible", true)
+	ok = _check("switching it on is switching the setting on",
+		settings.call("assist_is_on", "invincible"), true) and ok
+	ok = _check("and the assist trigger carries the name and the answer",
+		heard, [["invincible", true]]) and ok
+	# An ordinary setting is not an assist, however yes-or-no it is: only a declared one answers.
+	settings.call("declare_setting", "fullscreen", true, "toggle", "", "Video", "")
+	ok = _check("a plain setting nobody declared as an assist reads as off",
+		settings.call("assist_is_on", "fullscreen"), false) and ok
+	ok = _check("and changing it says nothing on the assist trigger", heard.size(), 1) and ok
+	settings.free()
+	return ok
+
+
+## The third Doctor question, asked of two staged scripts rather than of this repository: a project
+## that chooses a difficulty and never multiplies by one is told so, and the same project with one
+## factor read anywhere in it is told nothing.
+static func _test_the_doctor_notices_a_difficulty_nothing_reads() -> bool:
+	var chooser: Dictionary = {"path": "res://menu.gd",
+		"source": "func _on_picked(word: String) -> void:
+	Settings.use_difficulty(word)"}
+	var reader: Dictionary = {"path": "res://player.gd",
+		"source": "func hurt(amount: float) -> void:
+	take_damage(amount * Settings.difficulty_factor(\"damage_taken\"))"}
+	var ok: bool = _check("a difficulty nothing reads a factor out of is one finding",
+		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(), [chooser])),
+		PackedStringArray([
+			"menu.gd chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt."]))
+	ok = _check("one row reading one factor anywhere is enough to answer it",
+		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(), [chooser, reader])),
+		PackedStringArray()) and ok
+	ok = _check("and a project that never chooses one is said nothing about",
+		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(), [])),
+		PackedStringArray()) and ok
 	return ok
 
 

@@ -26,6 +26,14 @@ signal binding_changed(action: String)
 ## @ace_name("On Binding Conflict")
 ## @ace_category("Settings")
 signal binding_conflict(action: String, taken_by: String)
+## @ace_trigger
+## @ace_name("On Difficulty Changed")
+## @ace_category("Settings")
+signal difficulty_changed(difficulty: String)
+## @ace_trigger
+## @ace_name("On Assist Changed")
+## @ace_category("Settings")
+signal assist_changed(assist_name: String, on: bool)
 
 # Where settings live on disk: the same FILE the built-in Save Setting action writes to, in a
 # section named "settings". That action takes its section as a parameter (and offers "audio"),
@@ -60,20 +68,6 @@ var _bound: Dictionary = {}
 # except between Apply With A Way Back and the answer.
 var _way_back: Dictionary = {}
 var _keep_seconds: float = 0.0
-# What a kind IS and what it wants to be shown by, in the words the mismatch sentence uses.
-func _kind_words(kind: String) -> PackedStringArray:
-	match kind:
-		"percent":
-			return PackedStringArray(["a percent", "a slider"])
-		"number":
-			return PackedStringArray(["a number", "a slider"])
-		"toggle":
-			return PackedStringArray(["yes or no", "a checkbox"])
-		"choice":
-			return PackedStringArray(["a choice", "a dropdown"])
-		"text":
-			return PackedStringArray(["text", "a text box"])
-	return PackedStringArray(["", ""])
 # The control one declared kind asks for, made and named after the setting so a hand-made control
 # of that name is found first and this is never built at all.
 func _make_control(setting_name: String) -> Control:
@@ -117,6 +111,45 @@ func _binding_of(action: String, device: String) -> InputEvent:
 		if _device_of(event) == device:
 			return event
 	return null
+
+# Where the starter difficulties ship, so Difficulty Names has a folder to read with nothing
+# set up at all, and so Use Difficulty "hard" finds hard.tres. They are ordinary files -
+# retune them, rename them, duplicate one into a fourth, delete the ones this game has no use
+# for, or point these rows at a folder of your own.
+const DIFFICULTY_FOLDER: String = "res://eventsheet_addons/difficulty_resource"
+
+# The one place the factors in force are kept. Engine metadata rather than a member of this
+# node, so any script in the game reads a factor in one line without knowing this autoload is
+# there - and so a project that never chose a difficulty simply reads the 1.0 it asked for.
+const DIFFICULTY_FACTORS_META: String = "difficulty_factors"
+
+# The difficulty file in force, kept so Difficulty Name and Difficulty Is have something to
+# answer from. Null until a row chose one.
+var _difficulty: Resource = null
+# The difficulty a row named, in whichever of the three ways it named it: the resource itself,
+# a path to one, or the plain word it goes by - so the word a menu built from Difficulty Names
+# handed back is enough, with no path to carry around.
+func _difficulty_named(named: Variant) -> Resource:
+	if named is Resource:
+		return named as Resource
+	var text: String = "" if named == null else str(named).strip_edges()
+	if text.is_empty():
+		return null
+	if ResourceLoader.exists(text):
+		return load(text)
+	for path: String in _difficulty_paths(DIFFICULTY_FOLDER):
+		var found: Resource = load(path)
+		if found != null and _difficulty_word(found, path).to_lower() == text.to_lower():
+			return found
+	return null
+
+# The options page an assist is declared for, so every one of them lands in the same group of
+# the menu Menu Rows From Declarations already builds. It is a page name and nothing more - a
+# project that wants them somewhere else declares those settings with Declare Setting.
+const ASSIST_PAGE: String = "Accessibility"
+
+# The names declared as assists, so the trigger below can tell one from an ordinary setting.
+var _assists: Dictionary = {}
 
 ## @ace_action
 ## @ace_featured
@@ -849,6 +882,99 @@ func build_controls_page(container: Node) -> void:
 	_show_bindings(container)
 	wire_focus_order(_focusable_controls(container))
 
+## @ace_action
+## @ace_name("Use Difficulty")
+## @ace_category("Settings")
+## @ace_description("Puts one difficulty in force: a difficulty file, a path to one, or the word it goes by ("hard" finds hard.tres in the difficulty folder). Its factors become the ones Difficulty Factor answers from, and On Difficulty Changed fires with the word. Naming nothing at all clears the difficulty, so every factor reads 1.0 again. Nothing changes on its own - a factor changes something because some row multiplied by it.")
+## @ace_display_template("Use difficulty [b]{difficulty}[/b]")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.use_difficulty({difficulty})")
+func use_difficulty(difficulty: Variant) -> void:
+	var chosen: Resource = _difficulty_named(difficulty)
+	if chosen == null and difficulty != null and not str(difficulty).strip_edges().is_empty():
+		push_warning("Settings: '%s' is not a difficulty - point Use Difficulty at a .tres, or at the word one of them goes by." % str(difficulty))
+		return
+	_difficulty = chosen
+	Engine.set_meta(DIFFICULTY_FACTORS_META, _difficulty_factors_of(chosen))
+	difficulty_changed.emit(difficulty_name())
+
+## @ace_action
+## @ace_name("Use The Difficulty A Setting Names")
+## @ace_category("Settings")
+## @ace_description("Puts in force whichever difficulty a declared setting names - its value being a path to a difficulty file or the word one goes by. This is the row that makes the difficulty an ordinary setting: it is saved with the rest, it shows on an options page like the rest, and Apply All Settings replays it at boot with everything else. Put it under On Setting Changed for that setting and the menu is wired.")
+## @ace_display_template("Use the difficulty setting [b]{setting_name}[/b] names")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.use_difficulty_from({setting_name})")
+func use_difficulty_from(setting_name: String) -> void:
+	use_difficulty(setting_value(setting_name))
+
+## @ace_condition
+## @ace_name("Difficulty Is")
+## @ace_category("Settings")
+## @ace_description("Whether the difficulty in force goes by this word, letter case ignored. Nothing matches while no difficulty has been chosen, so a rule guarded by it simply does not run rather than running as though the hardest were on.")
+## @ace_display_template("Difficulty is [b]{word}[/b]")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.difficulty_is({word})")
+func difficulty_is(word: String) -> bool:
+	var chosen: String = difficulty_name()
+	return not chosen.is_empty() and chosen.to_lower() == word.strip_edges().to_lower()
+
+## @ace_expression
+## @ace_name("Difficulty Factor")
+## @ace_category("Settings")
+## @ace_description("One named factor of the difficulty in force - 1.0 while none has been chosen, and 1.0 when the one in force has no such key. That fallback is the whole point: a row can multiply by a factor before any difficulty file mentions it and go on behaving exactly as it did, so adding a difficulty is never a rewrite of the rows it affects.")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.difficulty_factor({key})")
+func difficulty_factor(key: String) -> float:
+	return float((Engine.get_meta(DIFFICULTY_FACTORS_META, {}) as Dictionary).get(key, 1.0))
+
+## @ace_expression
+## @ace_name("Difficulty Name")
+## @ace_category("Settings")
+## @ace_description("The word the difficulty in force goes by - its own if the file named itself, otherwise the file name capitalised. Blank while none has been chosen, which is what a menu shows as no selection.")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.difficulty_name()")
+func difficulty_name() -> String:
+	return _difficulty_word(_difficulty, _difficulty.resource_path) if _difficulty != null else ""
+
+## @ace_expression
+## @ace_name("Difficulty Names")
+## @ace_category("Settings")
+## @ace_description("The words the difficulty files in a folder go by, in file-name order - drop it straight into a dropdown and hand whichever the player picked back to Use Difficulty. The folder is read live, so a difficulty added while the game was closed is simply there, and one deleted is simply gone.")
+## @ace_param_hint(folder file_path)
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.difficulty_names({folder})")
+func difficulty_names(folder: String = DIFFICULTY_FOLDER) -> Array:
+	var words: Array = []
+	for path: String in _difficulty_paths(folder):
+		var found: Resource = load(path)
+		if found != null:
+			words.append(_difficulty_word(found, path))
+	return words
+
+## @ace_action
+## @ace_name("Declare Assist")
+## @ace_category("Settings")
+## @ace_description("Declares one accessibility assist: a yes-or-no setting with a default, put on the Accessibility page the options screen already draws - so the toggle appears there with no scene edit and no control to wire. It is an ordinary setting underneath, saved and reset and re-applied with the rest; this row only also says that it IS an assist, which is what lets Assist Is On and On Assist Changed speak about it. What the assist DOES is your rows' business: the pack enforces nothing.")
+## @ace_display_template("Declare assist [b]{assist_name}[/b] default [b]{default_on}[/b]")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.declare_assist({assist_name}, {default_on})")
+func declare_assist(assist_name: String, default_on: bool) -> void:
+	_assists[assist_name] = true
+	declare_setting(assist_name, default_on, "toggle", "", ASSIST_PAGE, "")
+	if not setting_changed.is_connected(_assist_setting_changed):
+		setting_changed.connect(_assist_setting_changed)
+
+## @ace_condition
+## @ace_name("Assist Is On")
+## @ace_category("Settings")
+## @ace_description("Whether one declared assist is switched on right now. A name nobody declared as an assist reads as off, so a row guarding on one a build dropped stops firing rather than erroring - which is the safe direction for an assist to fail in.")
+## @ace_display_template("Assist [b]{assist_name}[/b] is on")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.assist_is_on({assist_name})")
+func assist_is_on(assist_name: String) -> bool:
+	return _assists.has(assist_name) and bool(setting_value(assist_name))
+
 func _announce(setting_name: String, value: Variant) -> void:
 	# Fires the trigger for one setting and keeps the announcing stack honest while handlers run.
 	# Every control bound to the setting is shown the new value FIRST, so a reaction that reads the
@@ -937,6 +1063,21 @@ func _control_value(control: Node, setting_name: String) -> Variant:
 func _control_wrote(control: Node, setting_name: String) -> void:
 	# A player moved a control. One line, because everything else already knows what to do with it.
 	set_setting(setting_name, _control_value(control, setting_name))
+
+func _kind_words(kind: String) -> PackedStringArray:
+	# What a kind IS and what it wants to be shown by, in the words the mismatch sentence uses.
+	match kind:
+		"percent":
+			return PackedStringArray(["a percent", "a slider"])
+		"number":
+			return PackedStringArray(["a number", "a slider"])
+		"toggle":
+			return PackedStringArray(["yes or no", "a checkbox"])
+		"choice":
+			return PackedStringArray(["a choice", "a dropdown"])
+		"text":
+			return PackedStringArray(["text", "a text box"])
+	return PackedStringArray(["", ""])
 
 func _control_word(control: Node) -> String:
 	# What a control IS, in those same words. A control this list does not know is not complained
@@ -1040,6 +1181,43 @@ func _show_bindings(container: Node) -> void:
 				continue
 			var words: String = key_binding_of(action) if device == "keyboard" else pad_binding_of(action)
 			button.text = words if not words.is_empty() else "none"
+
+func _difficulty_word(difficulty: Resource, path: String) -> String:
+	# The word one difficulty file goes by: its own if it named itself, otherwise its file name
+	# capitalised, which is what "hard.tres" would have been called anyway.
+	var named: String = str(difficulty.get("difficulty_name")).strip_edges() if difficulty != null else ""
+	if not named.is_empty():
+		return named
+	var stem: String = path.get_file().get_basename()
+	return stem.substr(0, 1).to_upper() + stem.substr(1)
+
+func _difficulty_factors_of(difficulty: Resource) -> Dictionary:
+	# The factors one difficulty stands for, or {} for a file that is not a difficulty at all.
+	# Asked by name rather than by class, so this pack never has to reference another one.
+	var held: Variant = difficulty.get("factors") if difficulty != null else null
+	return held if held is Dictionary else {}
+
+func _difficulty_paths(folder: String) -> Array:
+	# Every difficulty file in a folder, in file-name order. The folder IS the list, so adding a
+	# difficulty is adding a file and nothing has to be told about it.
+	var found: Array = []
+	var reader: DirAccess = DirAccess.open(folder)
+	if reader == null:
+		return found
+	for file_name: String in reader.get_files():
+		var plain: String = file_name.trim_suffix(".remap")
+		if plain.ends_with(".tres"):
+			found.append("%s/%s" % [folder, plain])
+	found.sort()
+	return found
+
+func _assist_setting_changed(setting_name: String, value: Variant) -> void:
+	# An assist announces itself through the setting trigger like everything else; this is the one
+	# place that turns such an announcement into the assist trigger as well. It is connected by the
+	# first Declare Assist rather than woven into the announcement, so a game with no assists pays
+	# nothing and the shipped announcement path is untouched.
+	if _assists.has(setting_name):
+		assist_changed.emit(setting_name, bool(value))
 
 ## @ace_hidden
 func save_state() -> Dictionary:

@@ -19,8 +19,9 @@ one hand-wired control per setting.
 4. [ACE reference](#ace-reference)
 5. [Where the values live](#where-the-values-live)
 6. [The options screen](#the-options-screen)
-7. [Use cases](#use-cases)
-8. [Tips and common mistakes](#tips-and-common-mistakes)
+7. [Difficulty and assists](#difficulty-and-assists)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this pack shines
 
@@ -127,6 +128,9 @@ draw them:
 | Reset Every Binding | - | The same for every action - the page-level Reset All. |
 | Save Bindings | - | Writes every action's bindings into `user://settings.cfg`, in the section `bindings`. |
 | Load Bindings | - | Reads them back into the Input Map. An action with nothing saved keeps the binding you designed. |
+| Use Difficulty | Difficulty | Puts one difficulty in force: a difficulty file, a path to one, or the word it goes by. Its factors become the ones Difficulty Factor answers from. Naming nothing clears it. |
+| Use The Difficulty A Setting Names | Setting Name | Puts in force whichever difficulty a declared setting names - its value being a path or the word one goes by. The row that makes the difficulty an ordinary setting. |
+| Declare Assist | Assist Name, Default On | Declares one accessibility assist: a yes-or-no setting on the Accessibility page, and a name Assist Is On and On Assist Changed can speak about. |
 
 ### Conditions
 
@@ -138,6 +142,8 @@ draw them:
 | Quality Is | Word | The quality in force goes by this word. "Custom" is true whenever the values match no preset file. |
 | Control Has No Binding | Action | The action has no binding left on any device - what the amber mark on a Controls page row is for. |
 | Waiting For A Key | - | A row is listening for a key or button right now. |
+| Difficulty Is | Word | The difficulty in force goes by this word, letter case ignored. Nothing matches while none has been chosen. |
+| Assist Is On | Assist Name | That declared assist is switched on. A name nobody declared as an assist reads as off. |
 
 ### Expressions
 
@@ -164,6 +170,9 @@ draw them:
 | Unbound Actions | - | Every action with no binding left on any device. |
 | Conflicting Control | - | The action that already answers to the key just pressed, while a conflict waits. |
 | Pending Binding Words | - | That key, in words, while the conflict waits. |
+| Difficulty Factor | Key | One named factor of the difficulty in force. 1.0 while none has been chosen, and 1.0 when the one in force has no such key. |
+| Difficulty Name | - | The word the difficulty in force goes by - its own, or its file name capitalised. Blank while none has been chosen. |
+| Difficulty Names | Folder | The words the difficulty files in a folder go by, in file-name order. Drop it into a dropdown. |
 
 ### Triggers
 
@@ -174,6 +183,8 @@ draw them:
 | On Settings Reverted | - | The way back was taken: by Go Back, or by the countdown running out. |
 | On Binding Changed | `action` | An action's bindings changed - rebound, swapped, taken from, or reset. |
 | On Binding Conflict | `action`, `taken_by` | The key a player pressed already belongs to another action. Nothing has changed yet. |
+| On Difficulty Changed | `difficulty` | A difficulty was put in force, or cleared. The payload is the word it goes by, blank when it was cleared. |
+| On Assist Changed | `assist_name`, `on` | A declared assist was switched on or off. It fires beside On Setting Changed, never instead of it. |
 
 The payload is the signal's own arguments, so the row can read `setting_name` and `value` directly -
 there is no "what changed last" expression to get wrong when two settings change in one frame.
@@ -257,9 +268,81 @@ one key - nothing has changed at that point, and there are exactly three answers
 | **Take the binding anyway** | This action takes the key; the other is left without it, turns up in **Unbound Actions**, and its row goes amber. |
 | **Pick another key** | Nothing changes and the row goes on listening. |
 
-Doctor's Options section asks the two questions nobody thinks to: an action with **no binding on any
-device**, and a quality preset that **says nothing about a setting its neighbours answer for** (which
-is what makes Low after High a different Low from Low after Medium).
+Doctor's Options section asks the three questions nobody thinks to: an action with **no binding on any
+device**, a quality preset that **says nothing about a setting its neighbours answer for** (which is
+what makes Low after High a different Low from Low after Medium), and a project that **chooses a
+difficulty no row reads a factor out of**, which is a difficulty menu that changes nothing. Each is a
+note in the Doctor's inbox and a quiet amber state on the row - never a block drawn inside the sheet.
+
+## Difficulty and assists
+
+### A difficulty is a file
+
+A difficulty is not a global enum and not an `if` in front of every damage row. It is a
+**Difficulty** `.tres`: the word a player picks, a line for the menu, and a dictionary of named
+**factors** your rows multiply by where they care.
+
+```
+On Ready
+  -> Settings: Use difficulty  "normal"
+
+On Damaged
+  -> Player: Take damage of type  Player.last_damage, "physical", attacker, scaled by "damage_taken"
+```
+
+Three things follow from the file being the truth, and each is the point:
+
+- **The folder is the list.** **Difficulty Names** reads a folder live, so adding a difficulty is
+  adding a file and deleting one is deleting a file. Hand whichever word the player picked straight
+  back to **Use Difficulty**.
+- **A missing factor is 1.0.** **Difficulty Factor** answers 1 while no difficulty has been chosen,
+  and 1 when the one in force has no such key. So a row can multiply by `enemy_count` before any
+  difficulty file mentions it and go on behaving exactly as it did - adding a difficulty is never a
+  rewrite of the rows it affects.
+- **Nothing happens on its own.** A factor changes something because a row multiplied by it. Keys
+  nothing reads are simply unread, which is why the Doctor's third question is worth asking.
+
+The difficulty in force is kept as **metadata on `Engine`** rather than inside this autoload, the
+same way the built-in accessibility dials are. That is what lets any script read a factor in one
+line, and it is exactly what the Health pack's **Scaled By** field reads - so a typed hit can name a
+factor without either pack knowing the other exists.
+
+Make the choice an ordinary setting and it saves, resets and re-applies with everything else:
+
+```
+On Setting Changed
+  Condition: Settings: Changed setting is  "difficulty"
+  -> Settings: Use the difficulty setting "difficulty" names
+```
+
+**Three starters ship** beside the Difficulty class - easy, normal and hard - and they are files to
+open, not a set to use. Retune them, rename them, duplicate one into a fourth, or delete the ones
+your game has no use for. They are listed in file-name order, so name them the way you want them
+read.
+
+### An assist is a setting that says it is one
+
+**Declare Assist** takes a name and a default and does three things at once: it declares an ordinary
+yes-or-no setting, it puts that toggle on the **Accessibility** page **Menu Rows From Declarations**
+already builds, and it records the name so **Assist Is On** and **On Assist Changed** can speak about
+it. Everything else about it is an ordinary setting - saved with the rest, reset with the rest,
+re-applied by **Apply All Settings** with the rest.
+
+```
+On Ready
+  -> Settings: Declare assist  "invincible", default false
+  -> Settings: Declare assist  "infinite_ammo", default false
+
+On Assist Changed
+  Condition: Settings: Assist  "invincible"  is on
+  -> Player: Set invulnerable  true
+```
+
+**The pack enforces nothing.** What an assist DOES is your rows' business: `invincible`,
+`infinite_ammo` and `skip_this_puzzle` above are names a project declares for itself, not a
+vocabulary shipped in code. Game speed is worth calling out as the one that is already built - the
+engine's own playback speed row is the whole of it, so declare the assist and let one reaction set
+it.
 
 ## Use cases
 
@@ -543,3 +626,28 @@ things follow from that, and each is worth having:
 
 Keep the individual rows (Set MSAA, Set 3D Resolution Scale) for the moments a preset is too blunt.
 They are the truth; the preset is the shorthand.
+
+## Its third companion data asset: Difficulty
+
+A difficulty word - Easy, Normal, Hard - is not a setting of its own either. It is a set of NUMBERS
+your rows multiply by, which is why choosing Hard is the same thing as writing 1.5 into the places
+that were going to be harder, and why nothing changes until some row asks for a factor.
+
+So each word is a FILE: a **Difficulty** `.tres`, holding the word a player sees (blank means the
+file name), a line for the menu, and the **factors**. **Every key of Factors is a field of its own in
+the Inspector**, named and typed by what is stored under it - so a factor invented today is an
+ordinary row in every difficulty file tomorrow.
+
+The three starters ship with four keys because those are the four most games reach for first, and not
+because the pack means anything by them:
+
+| Factor | What a row does with it |
+|--------|-------------------------|
+| `damage_taken` | Multiplies a hit on the player - the Health pack's **Scaled By** field is this row, without the multiplication. |
+| `damage_dealt` | Multiplies a hit the player lands. |
+| `enemy_count` | Multiplies a wave size, a spawn count, a patrol's population. |
+| `timer_scale` | Multiplies a time limit, a fuse, a countdown. |
+
+Rename them, delete them, invent your own. A key nothing reads is unread; a key no difficulty writes
+reads as 1. The one rule worth keeping is that a factor should read as a MULTIPLIER, so that 1 means
+"as designed" - which is what makes a missing key safe and a cleared difficulty harmless.

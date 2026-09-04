@@ -294,6 +294,8 @@ static func build() -> bool:
 
 	_append_options_menu(sheet)
 	_append_rebinding(sheet)
+	_append_difficulty(sheet)
+	_append_assists(sheet)
 
 	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
 	# Only the VALUES travel: the declarations belong to the game's code, not to a save file, so a
@@ -315,6 +317,7 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	_set_hints(sheet, "apply_quality", {"preset": "quality_preset"})
+	_set_hints(sheet, "difficulty_names", {"folder": "file_path"})
 	_set_hints(sheet, "listen_for_binding", {"action": "input_action"})
 	_set_hints(sheet, "reset_binding", {"action": "input_action"})
 	_set_hints(sheet, "action_is_unbound", {"action": "input_action"})
@@ -339,6 +342,11 @@ static func build() -> bool:
 		"listen_for_binding": "Listen for a new [b]{device}[/b] binding for [b]{action}[/b]",
 		"reset_binding": "Reset the binding of [b]{action}[/b]",
 		"action_is_unbound": "[b]{action}[/b] has no binding",
+		"use_difficulty": "Use difficulty [b]{difficulty}[/b]",
+		"use_difficulty_from": "Use the difficulty setting [b]{setting_name}[/b] names",
+		"difficulty_is": "Difficulty is [b]{word}[/b]",
+		"declare_assist": "Declare assist [b]{assist_name}[/b] default [b]{default_on}[/b]",
+		"assist_is_on": "Assist [b]{assist_name}[/b] is on",
 	})
 	Lib.feature_verbs(sheet, ["declare_setting", "set_setting"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/game_settings/game_settings_addon",
@@ -976,6 +984,191 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 	sheet.events.append(page_refresh)
 
 
+## Difficulty, in the shape the quality presets already have: the FOLDER is the list, the FILE is
+## the rule, and a row asks for one named factor where it cares. A difficulty is not an enum and not
+## a branch in front of every damage row - it is a resource holding a dictionary of factors, and the
+## words easy, normal and hard are three starter files a project edits, renames or deletes.
+##
+## THE FACTORS IN FORCE ARE ENGINE METADATA rather than a member of this node, and that is the whole
+## reason the rest of the game can read one: a behaviour pack, a plain script and a sheet in another
+## scene all ask Engine in one line, with no autoload to reach for and nothing to depend on - the
+## same way the accessibility dials the built-in rows write are read. The Health pack's "scaled by"
+## field reads exactly this dictionary, and neither pack names the other.
+static func _append_difficulty(sheet: EventSheetResource) -> void:
+	var plumbing: RawCodeRow = RawCodeRow.new()
+	plumbing.code = "\n".join(PackedStringArray([
+		"# Where the starter difficulties ship, so Difficulty Names has a folder to read with nothing",
+		"# set up at all, and so Use Difficulty \"hard\" finds hard.tres. They are ordinary files -",
+		"# retune them, rename them, duplicate one into a fourth, delete the ones this game has no use",
+		"# for, or point these rows at a folder of your own.",
+		"const DIFFICULTY_FOLDER: String = \"res://eventsheet_addons/difficulty_resource\"",
+		"",
+		"# The one place the factors in force are kept. Engine metadata rather than a member of this",
+		"# node, so any script in the game reads a factor in one line without knowing this autoload is",
+		"# there - and so a project that never chose a difficulty simply reads the 1.0 it asked for.",
+		"const DIFFICULTY_FACTORS_META: String = \"difficulty_factors\"",
+		"",
+		"# The difficulty file in force, kept so Difficulty Name and Difficulty Is have something to",
+		"# answer from. Null until a row chose one.",
+		"var _difficulty: Resource = null",
+		"",
+		"# The word one difficulty file goes by: its own if it named itself, otherwise its file name",
+		"# capitalised, which is what \"hard.tres\" would have been called anyway.",
+		"func _difficulty_word(difficulty: Resource, path: String) -> String:",
+		"\tvar named: String = str(difficulty.get(\"difficulty_name\")).strip_edges() if difficulty != null else \"\"",
+		"\tif not named.is_empty():",
+		"\t\treturn named",
+		"\tvar stem: String = path.get_file().get_basename()",
+		"\treturn stem.substr(0, 1).to_upper() + stem.substr(1)",
+		"",
+		"# The factors one difficulty stands for, or {} for a file that is not a difficulty at all.",
+		"# Asked by name rather than by class, so this pack never has to reference another one.",
+		"func _difficulty_factors_of(difficulty: Resource) -> Dictionary:",
+		"\tvar held: Variant = difficulty.get(\"factors\") if difficulty != null else null",
+		"\treturn held if held is Dictionary else {}",
+		"",
+		"# Every difficulty file in a folder, in file-name order. The folder IS the list, so adding a",
+		"# difficulty is adding a file and nothing has to be told about it.",
+		"func _difficulty_paths(folder: String) -> Array:",
+		"\tvar found: Array = []",
+		"\tvar reader: DirAccess = DirAccess.open(folder)",
+		"\tif reader == null:",
+		"\t\treturn found",
+		"\tfor file_name: String in reader.get_files():",
+		"\t\tvar plain: String = file_name.trim_suffix(\".remap\")",
+		"\t\tif plain.ends_with(\".tres\"):",
+		"\t\t\tfound.append(\"%s/%s\" % [folder, plain])",
+		"\tfound.sort()",
+		"\treturn found",
+		"",
+		"# The difficulty a row named, in whichever of the three ways it named it: the resource itself,",
+		"# a path to one, or the plain word it goes by - so the word a menu built from Difficulty Names",
+		"# handed back is enough, with no path to carry around.",
+		"func _difficulty_named(named: Variant) -> Resource:",
+		"\tif named is Resource:",
+		"\t\treturn named as Resource",
+		"\tvar text: String = \"\" if named == null else str(named).strip_edges()",
+		"\tif text.is_empty():",
+		"\t\treturn null",
+		"\tif ResourceLoader.exists(text):",
+		"\t\treturn load(text)",
+		"\tfor path: String in _difficulty_paths(DIFFICULTY_FOLDER):",
+		"\t\tvar found: Resource = load(path)",
+		"\t\tif found != null and _difficulty_word(found, path).to_lower() == text.to_lower():",
+		"\t\t\treturn found",
+		"\treturn null"
+	]))
+	sheet.events.append(plumbing)
+
+	var changed: SignalRow = SignalRow.new()
+	changed.signal_name = "difficulty_changed"
+	changed.params = PackedStringArray(["difficulty: String"])
+	changed.trigger = true
+	changed.ace_name = "On Difficulty Changed"
+	changed.ace_category = "Settings"
+	sheet.events.append(changed)
+
+	Lib.append_function(sheet, "use_difficulty", "Use Difficulty", "Settings",
+		"Puts one difficulty in force: a difficulty file, a path to one, or the word it goes by (\"hard\" finds hard.tres in the difficulty folder). Its factors become the ones Difficulty Factor answers from, and On Difficulty Changed fires with the word. Naming nothing at all clears the difficulty, so every factor reads 1.0 again. Nothing changes on its own - a factor changes something because some row multiplied by it.",
+		[["difficulty", "Variant"]],
+		"\n".join(PackedStringArray([
+			"var chosen: Resource = _difficulty_named(difficulty)",
+			"if chosen == null and difficulty != null and not str(difficulty).strip_edges().is_empty():",
+			"\tpush_warning(\"Settings: '%s' is not a difficulty - point Use Difficulty at a .tres, or at the word one of them goes by.\" % str(difficulty))",
+			"\treturn",
+			"_difficulty = chosen",
+			"Engine.set_meta(DIFFICULTY_FACTORS_META, _difficulty_factors_of(chosen))",
+			"difficulty_changed.emit(difficulty_name())"
+		])))
+	Lib.append_function(sheet, "use_difficulty_from", "Use The Difficulty A Setting Names", "Settings",
+		"Puts in force whichever difficulty a declared setting names - its value being a path to a difficulty file or the word one goes by. This is the row that makes the difficulty an ordinary setting: it is saved with the rest, it shows on an options page like the rest, and Apply All Settings replays it at boot with everything else. Put it under On Setting Changed for that setting and the menu is wired.",
+		[["setting_name", "String"]],
+		"use_difficulty(setting_value(setting_name))")
+
+	Lib.condition(sheet, "difficulty_is", "Difficulty Is", "Settings",
+		"Whether the difficulty in force goes by this word, letter case ignored. Nothing matches while no difficulty has been chosen, so a rule guarded by it simply does not run rather than running as though the hardest were on.",
+		[["word", "String"]],
+		"\n".join(PackedStringArray([
+			"var chosen: String = difficulty_name()",
+			"return not chosen.is_empty() and chosen.to_lower() == word.strip_edges().to_lower()"
+		])))
+
+	Lib.number(sheet, "difficulty_factor", "Difficulty Factor", "Settings",
+		"One named factor of the difficulty in force - 1.0 while none has been chosen, and 1.0 when the one in force has no such key. That fallback is the whole point: a row can multiply by a factor before any difficulty file mentions it and go on behaving exactly as it did, so adding a difficulty is never a rewrite of the rows it affects.",
+		[["key", "String"]],
+		"return float((Engine.get_meta(DIFFICULTY_FACTORS_META, {}) as Dictionary).get(key, 1.0))", TYPE_FLOAT)
+	Lib.number(sheet, "difficulty_name", "Difficulty Name", "Settings",
+		"The word the difficulty in force goes by - its own if the file named itself, otherwise the file name capitalised. Blank while none has been chosen, which is what a menu shows as no selection.",
+		[],
+		"return _difficulty_word(_difficulty, _difficulty.resource_path) if _difficulty != null else \"\"", TYPE_STRING)
+	Lib.number(sheet, "difficulty_names", "Difficulty Names", "Settings",
+		"The words the difficulty files in a folder go by, in file-name order - drop it straight into a dropdown and hand whichever the player picked back to Use Difficulty. The folder is read live, so a difficulty added while the game was closed is simply there, and one deleted is simply gone.",
+		[["folder", "String"]],
+		"\n".join(PackedStringArray([
+			"var words: Array = []",
+			"for path: String in _difficulty_paths(folder):",
+			"\tvar found: Resource = load(path)",
+			"\tif found != null:",
+			"\t\twords.append(_difficulty_word(found, path))",
+			"return words"
+		])), TYPE_ARRAY)
+	_optional_of(sheet, "difficulty_names", "folder", "DIFFICULTY_FOLDER")
+
+
+## Assists: the accessibility switches a game offers, declared with a house shape so they all land in
+## one place. An assist IS a setting - saved, reset, applied and shown by everything above - and this
+## section adds only the two things that make it worth saying so: it goes on the Accessibility page
+## without anyone typing that word again, and its own trigger fires alongside the setting one so a
+## reaction reads as "the player turned an assist on" rather than "a setting whose name I recognise".
+##
+## NOTHING HERE IS A LIST OF ASSISTS. What an assist means is the game's own business: this pack
+## enforces none of them, and the guide's invincible / infinite ammo / skip this puzzle are examples
+## a project declares for itself, not a vocabulary shipped in code.
+static func _append_assists(sheet: EventSheetResource) -> void:
+	var plumbing: RawCodeRow = RawCodeRow.new()
+	plumbing.code = "\n".join(PackedStringArray([
+		"# The options page an assist is declared for, so every one of them lands in the same group of",
+		"# the menu Menu Rows From Declarations already builds. It is a page name and nothing more - a",
+		"# project that wants them somewhere else declares those settings with Declare Setting.",
+		"const ASSIST_PAGE: String = \"Accessibility\"",
+		"",
+		"# The names declared as assists, so the trigger below can tell one from an ordinary setting.",
+		"var _assists: Dictionary = {}",
+		"",
+		"# An assist announces itself through the setting trigger like everything else; this is the one",
+		"# place that turns such an announcement into the assist trigger as well. It is connected by the",
+		"# first Declare Assist rather than woven into the announcement, so a game with no assists pays",
+		"# nothing and the shipped announcement path is untouched.",
+		"func _assist_setting_changed(setting_name: String, value: Variant) -> void:",
+		"\tif _assists.has(setting_name):",
+		"\t\tassist_changed.emit(setting_name, bool(value))"
+	]))
+	sheet.events.append(plumbing)
+
+	var changed: SignalRow = SignalRow.new()
+	changed.signal_name = "assist_changed"
+	changed.params = PackedStringArray(["assist_name: String", "on: bool"])
+	changed.trigger = true
+	changed.ace_name = "On Assist Changed"
+	changed.ace_category = "Settings"
+	sheet.events.append(changed)
+
+	Lib.append_function(sheet, "declare_assist", "Declare Assist", "Settings",
+		"Declares one accessibility assist: a yes-or-no setting with a default, put on the Accessibility page the options screen already draws - so the toggle appears there with no scene edit and no control to wire. It is an ordinary setting underneath, saved and reset and re-applied with the rest; this row only also says that it IS an assist, which is what lets Assist Is On and On Assist Changed speak about it. What the assist DOES is your rows' business: the pack enforces nothing.",
+		[["assist_name", "String"], ["default_on", "bool"]],
+		"\n".join(PackedStringArray([
+			"_assists[assist_name] = true",
+			"declare_setting(assist_name, default_on, \"toggle\", \"\", ASSIST_PAGE, \"\")",
+			"if not setting_changed.is_connected(_assist_setting_changed):",
+			"\tsetting_changed.connect(_assist_setting_changed)"
+		])))
+
+	Lib.condition(sheet, "assist_is_on", "Assist Is On", "Settings",
+		"Whether one declared assist is switched on right now. A name nobody declared as an assist reads as off, so a row guarding on one a build dropped stops firing rather than erroring - which is the safe direction for an assist to fail in.",
+		[["assist_name", "String"]],
+		"return _assists.has(assist_name) and bool(setting_value(assist_name))")
+
+
 ## The kind dropdown: the friendly label is shown, the stored token is what an options menu reads
 ## back through Setting Kind to know which control to build.
 static func _kind_options(fn: EventFunction, param_id: String) -> void:
@@ -994,6 +1187,15 @@ static func _kind_options(fn: EventFunction, param_id: String) -> void:
 ## Gives a trailing parameter a GDScript default, so the row can leave it out entirely.
 static func _optional(fn: EventFunction, param_id: String, gdscript_default: String) -> void:
 	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.gdscript_default = gdscript_default
+
+
+## The same as _optional, addressing the verb by NAME instead of by the function object - which is
+## what a section that appended several verbs in a row needs, since only the last of them is reachable
+## as "the one just added".
+static func _optional_of(sheet: EventSheetResource, function_name: String, param_id: String, gdscript_default: String) -> void:
+	for parameter: ACEParam in _params_of(sheet, function_name):
 		if parameter.id == param_id:
 			parameter.gdscript_default = gdscript_default
 
