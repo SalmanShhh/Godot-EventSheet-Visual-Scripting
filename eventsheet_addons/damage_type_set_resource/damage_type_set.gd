@@ -1,7 +1,7 @@
 ## @ace_tags(damage, health, resource)
 ## @ace_category("Health")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/damage_type_set_resource/icon.svg")
 class_name DamageTypeSet
 extends Resource
 ## The kinds of damage your game deals, as a file you own: the names and the colour each one is drawn in. The Health pack's typed-damage rows suggest these names, the HUD Kit takes a floating number's colour from them, and nothing here is required - a game with no set still deals typed damage.
