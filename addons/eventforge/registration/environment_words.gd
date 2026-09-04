@@ -311,7 +311,7 @@ const WORDS: Array[Dictionary] = [
 		"verb": "Set backdrop to {value}",
 		"reads": "backdrop",
 		"label": "Backdrop",
-		"about": "What is drawn behind everything else. A sky is what an outdoor scene wants; a flat colour is what a menu and a stylised level want; transparent draws the project's own clear colour, which is what lets a see-through window show the desktop behind it.",
+		"about": "What is drawn behind everything else. A sky is what an outdoor scene wants; a colour is what a menu and a stylised level want, painted from the Colour field beside this one; the clear colour is the same idea taken from Project Settings instead, so every scene set to it changes together.",
 		"featured": true,
 		# Written down rather than asked for: ClassDB answers a choice property's default as the
 		# integer the enum really is, and a dropdown whose keys are constants cannot open on `0`.
@@ -320,7 +320,7 @@ const WORDS: Array[Dictionary] = [
 		"choices": [
 			{"key": "Environment.BG_SKY", "label": "sky"},
 			{"key": "Environment.BG_COLOR", "label": "colour"},
-			{"key": "Environment.BG_CLEAR_COLOR", "label": "transparent"},
+			{"key": "Environment.BG_CLEAR_COLOR", "label": "the project's clear colour"},
 			{"key": "Environment.BG_KEEP", "label": "keep what was there"}
 		],
 		"companions": [
@@ -408,13 +408,17 @@ const GLOW_LEVEL_COUNT: int = 7
 const GLOW_LEVEL_SET_CALL: String = "set_glow_level"
 const GLOW_LEVEL_GET_CALL: String = "get_glow_level"
 
-## THE THREE TABLES, written down here and documented rather than computed, because each is a shape
-## somebody chose. Level 1 is the sharpest, finest blur and level 7 is the widest, softest one, so a
-## table that leans on the low numbers keeps the glow close to what is glowing and a table that leans
-## on the high ones spreads it over the whole screen.
+## THREE SETS OF SEVEN NUMBERS, offered as SUGGESTIONS in an ordinary value field and nothing more.
+## Level 1 is the sharpest, finest blur and level 7 is the widest, softest one, so numbers leaning on
+## the low levels keep the glow close to what is glowing and numbers leaning on the high ones spread
+## it over the whole screen.
 ##
-## These are STARTERS, not a house style: Set Glow Level sets any one of the seven to any number, and
-## a project that wants its own shape writes it with seven of those rows and never asks here again.
+## THEY ARE NOT A LIST OF THE SHAPES THERE ARE, and the field is what says so: it is a plain
+## expression field a reader types any seven numbers into, with these three sitting in its
+## autocomplete the way a suggested value does anywhere else in the dialog. A dropdown here would
+## have made three shapes chosen in this file the only shapes the row could reach, which is a house
+## style shipped as a product; a suggestion is a starting point somebody types over. Set Glow Level
+## reaches any single one of the seven as well.
 const GLOW_LEVEL_SPREADS: Array[Dictionary] = [
 	{
 		"key": "tight",

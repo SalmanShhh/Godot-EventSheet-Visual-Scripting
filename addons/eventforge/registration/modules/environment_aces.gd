@@ -293,20 +293,20 @@ static func _fade_name(entry: Dictionary) -> String:
 
 
 ## THE ONE SETTING THAT IS NOT A PROPERTY. Godot keeps the glow's seven blur levels as
-## `glow_levels/1` through `glow_levels/7` and reaches them through `set_glow_level(i, n)`, and seven
-## numbers is not a row anybody can read. So there are two rows: one that lays a whole shape down at
-## once from three written-down starting tables, and one that sets a single level by hand for a
-## project that wants its own shape. The three tables are STARTERS, not a house style - the second row
-## reaches every one of the seven, and a project that spells its own shape never asks the first again.
+## `glow_levels/1` through `glow_levels/7` and reaches them through `set_glow_level(i, n)`. So there
+## are two rows: one that lays all seven down at once, and one that sets a single level by hand. The
+## seven-number row's field is an ordinary value field with three shapes SUGGESTED in it, not a
+## dropdown of three - a reader types any seven numbers they like, and what the row stores is the
+## numbers rather than the name of somebody else's taste.
 static func _glow_level_rows() -> Array[ACEDescriptor]:
 	return [
 		F.act("EnvSetGlowLevels", "Set Glow Levels", _glow_spread_template(), CAT,
 			"Set glow levels to {%s}" % SPREAD_PARAM,
-			"Lays down all seven of the glow's blur levels at once. Level 1 is the sharpest and finest, level 7 the widest and softest, so a shape leaning on the low numbers keeps the glow around what is glowing and one leaning on the high numbers washes it across the screen. Switches the glow on as well. Set Glow Level sets any single level by hand.",
+			"Lays down all seven of the glow's blur levels at once, as seven numbers you write. Level 1 is the sharpest and finest, level 7 the widest and softest, so numbers leaning on the low levels keep the glow around what is glowing and numbers leaning on the high ones wash it across the screen. The field suggests three shapes to start from and accepts any seven numbers instead. Switches the glow on as well; Set Glow Level sets any single level by hand.",
 			W.HOST).param_built(_spread_param()).featured(),
 		F.act("EnvSetGlowLevel", "Set Glow Level", _glow_level_template(), CAT,
 			"Set glow level {%s} to {%s}" % [LEVEL_PARAM, AMOUNT_PARAM],
-			"Sets ONE of the glow's seven blur levels, for a project spelling its own shape rather than taking one of the three the row above offers. Level 1 is the sharpest and finest blur, level 7 the widest and softest. Switches the glow on as well.",
+			"Sets ONE of the glow's seven blur levels, for a project changing a single one rather than writing all seven at once. Level 1 is the sharpest and finest blur, level 7 the widest and softest. Switches the glow on as well.",
 			W.HOST).param_typed("String", LEVEL_PARAM, "1", "Level",
 			"Which blur level to set, 1 to %d. 1 is the sharpest, %d the widest." % [
 				W.GLOW_LEVEL_COUNT, W.GLOW_LEVEL_COUNT], "expression").param_typed(
@@ -330,24 +330,24 @@ static func _glow_level_template() -> String:
 		W.ENVIRONMENT_MEMBER, W.GLOW_LEVEL_SET_CALL, LEVEL_PARAM, AMOUNT_PARAM]
 
 
-## The dropdown of written-down shapes. The KEY is the seven numbers themselves, spelled as the array
-## the template assigns, so what a saved row holds is the shape rather than a name that would have to
-## be looked up again - and a reader who opens the field sees the plain words instead.
+## The seven numbers, as a field a reader TYPES and not a list they must choose from. What the row
+## stores is the array itself, so a saved row holds the shape rather than the name of a shape that
+## would have to be looked up again - and the three tables in the word file ride along as
+## autocomplete suggestions, which is what a suggested value is everywhere else in this dialog. A
+## dropdown here would have made three shapes chosen inside the plugin the only shapes the row could
+## reach; a suggestion is a starting point somebody types over.
 static func _spread_param() -> ACEParam:
-	var choices: Array = []
-	var opening: String = ""
+	var suggestions: Array[String] = []
 	for spread: Dictionary in W.GLOW_LEVEL_SPREADS:
 		var numbers: PackedStringArray = PackedStringArray()
 		for level: Variant in (spread["levels"] as Array):
 			numbers.append(F.float_literal(float(level)))
-		var written: String = "PackedFloat32Array([%s])" % ", ".join(numbers)
-		if opening.is_empty():
-			opening = written
-		choices.append({"key": written, "label": "%s" % str(spread["label"])})
-	var parameter: ACEParam = F.make_param(SPREAD_PARAM, "String", opening, "Shape",
-		"Which of the three written-down shapes the seven levels take. Set Glow Level sets any one of them to any number instead.",
-		"", choices)
-	parameter.display_option_labels = true
+		suggestions.append("PackedFloat32Array([%s])" % ", ".join(numbers))
+	var parameter: ACEParam = F.make_param(SPREAD_PARAM, "String",
+		suggestions[0] if not suggestions.is_empty() else "PackedFloat32Array([])", "Levels",
+		"The seven blur levels, sharpest first. Any seven numbers; the suggestions are three shapes to start from, not the only ones. Set Glow Level sets a single one instead.",
+		"expression")
+	parameter.autocomplete = suggestions
 	return parameter
 
 

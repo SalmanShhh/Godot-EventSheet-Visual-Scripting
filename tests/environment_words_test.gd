@@ -189,7 +189,7 @@ static func _test_the_choice_words() -> bool:
 			read[row.ace_id] = ", ".join(pairs)
 	var ok: bool = SUPPORT.check("environment_words_test",
 		"the dropdown words and the constants they write", read, {
-			"EnvSetBackdrop": "sky -> Environment.BG_SKY, colour -> Environment.BG_COLOR, transparent -> Environment.BG_CLEAR_COLOR, keep what was there -> Environment.BG_KEEP",
+			"EnvSetBackdrop": "sky -> Environment.BG_SKY, colour -> Environment.BG_COLOR, the project's clear colour -> Environment.BG_CLEAR_COLOR, keep what was there -> Environment.BG_KEEP",
 			"EnvSetToneMap": "linear -> Environment.TONE_MAPPER_LINEAR, reinhard -> Environment.TONE_MAPPER_REINHARDT, filmic -> Environment.TONE_MAPPER_FILMIC, ACES -> Environment.TONE_MAPPER_ACES, AgX -> Environment.TONE_MAPPER_AGX",
 			"EnvSetGlowBlend": "additive -> Environment.GLOW_BLEND_MODE_ADDITIVE, screen -> Environment.GLOW_BLEND_MODE_SCREEN, soft light -> Environment.GLOW_BLEND_MODE_SOFTLIGHT, replace -> Environment.GLOW_BLEND_MODE_REPLACE, mix -> Environment.GLOW_BLEND_MODE_MIX"
 		})
@@ -211,7 +211,7 @@ static func _test_the_glow_levels() -> bool:
 	var shapes: Dictionary = {}
 	for spread: Dictionary in W.GLOW_LEVEL_SPREADS:
 		shapes[str(spread["key"])] = spread["levels"]
-	var ok: bool = SUPPORT.check("environment_words_test", "the three written-down shapes", shapes, {
+	var ok: bool = SUPPORT.check("environment_words_test", "the three suggested shapes", shapes, {
 		"tight": [1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0],
 		"balanced": [0.0, 0.8, 0.4, 0.1, 0.0, 0.0, 0.0],
 		"wide": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0]
@@ -227,8 +227,13 @@ static func _test_the_glow_levels() -> bool:
 			_templates().get("EnvSetGlowLevel", ""),
 			OWN_LINES + "environment.glow_enabled = true\n"
 				+ "environment.set_glow_level({level}, {amount})"],
-		["the shape a reader picks is the seven numbers themselves",
-			_fields("EnvSetGlowLevels"), "spread=PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])"]
+		["the shape a reader writes is the seven numbers themselves",
+			_fields("EnvSetGlowLevels"), "spread=PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])"],
+		# The field is a TYPED one with suggestions, not a dropdown: three shapes chosen inside the
+		# plugin must not be the only three the row can reach.
+		["and any seven numbers are typeable, the three being suggestions",
+			[_options_of("EnvSetGlowLevels", "spread").size(),
+				_suggestions_of("EnvSetGlowLevels", "spread").size()], [0, 3]]
 	]) and ok
 
 
@@ -469,6 +474,29 @@ static func _templates() -> Dictionary:
 	for row: ACEDescriptor in MODULE.get_descriptors():
 		found[row.ace_id] = str(row.codegen_template)
 	return found
+
+
+## One field's fixed OPTIONS and its typed-field SUGGESTIONS - the difference between a list a reader
+## must choose from and a list they may start from.
+static func _options_of(ace_id: String, param_id: String) -> Array:
+	for row: ACEDescriptor in MODULE.get_descriptors():
+		if row.ace_id != ace_id:
+			continue
+		for parameter: ACEParam in row.params:
+			if parameter.id == param_id:
+				return parameter.options
+	return []
+
+
+static func _suggestions_of(ace_id: String, param_id: String) -> Array[String]:
+	for row: ACEDescriptor in MODULE.get_descriptors():
+		if row.ace_id != ace_id:
+			continue
+		for parameter: ACEParam in row.params:
+			if parameter.id == param_id:
+				return parameter.autocomplete
+	var none: Array[String] = []
+	return none
 
 
 ## One field's HINT, which is what decides the widget the dialog builds for it - and, for a file
