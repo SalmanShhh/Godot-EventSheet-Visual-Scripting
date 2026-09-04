@@ -33,7 +33,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `_on_unpack_progress` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_refused` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_place` | [Spawn In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
-| `_scene` | [Spawn In A Formation (3D)](ace:Core/SpawnFormation3D) | Spawn | Vocabulary |
+| `_scene` | [Spawn A Copy In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
 | `_spot` | [Spawn A Copy In A Free Spot](ace:Core/SpawnInFreeSpot) | Spawn | Vocabulary |
 | `a` | [See-Through](ace:Core/MaterialSeeThrough) | Material | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |

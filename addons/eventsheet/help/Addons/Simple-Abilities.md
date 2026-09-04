@@ -7,13 +7,14 @@ Simple Abilities is a Godot EventSheets behavior pack that gives any node a smal
 ## Table of Contents
 
 1. [Where this pack shines](#where-this-pack-shines)
-2. [Core concepts](#core-concepts)
-3. [Setup](#setup)
-4. [Data-driven loadouts (AbilitySetResource)](#data-driven-loadouts-abilitysetresource)
-5. [ACE reference](#ace-reference)
-6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-7. [Use cases](#use-cases)
-8. [Tips and common mistakes](#tips-and-common-mistakes)
+2. [Which clock do I want?](#which-clock-do-i-want)
+3. [Core concepts](#core-concepts)
+4. [Setup](#setup)
+5. [Data-driven loadouts (AbilitySetResource)](#data-driven-loadouts-abilitysetresource)
+6. [ACE reference](#ace-reference)
+7. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -31,6 +32,30 @@ Simple Abilities is a Godot EventSheets behavior pack that gives any node a smal
 - **Class kits and loadouts.** Tag abilities `"fire"`, `"ice"`, or `"movement"` and enable, disable, or refresh a whole group in one row.
 - **Roguelite ability grants.** Level up or pick a card to grant a new ability by id, and drop abilities you no longer have.
 - **Limited-use items.** A potion belt with three charges that refills at a shop, using stacks as the count and On Max Stacks Reached for a "full" cue.
+
+---
+
+## Which clock do I want?
+
+There are four ways to hold time in a project, and they do not overlap much. Pick by the question
+you are actually asking:
+
+| The question you are asking | The rows that answer it | Where they live |
+| --- | --- | --- |
+| "Do this once, N seconds from now, on THIS node" | Start Timer, Stop Timer, On Timer | the Timer pack (attach a behavior) |
+| "Am I allowed to dash yet?", held by the pause menu and by slow motion | Put On Cooldown, Is Off Cooldown, Cooldown Fraction, Reduce Cooldown By, Clear Cooldown, On Cooldown Ready | built in, the Time shelf |
+| The same question, but the clock must keep running whatever the game does | Start Cooldown, Cooldown Is Ready, Cooldown Time Left | built in, the Time shelf |
+| "Show 01:23 counting down", pausable, with a finish to react to | Start Countdown, Countdown Text, Pause Countdown, Resume Countdown, On Countdown Finished | built in, the Time shelf |
+| "How long did that take?", with laps | Start Stopwatch, Record Lap, Stopwatch Text, Lap Text | built in, the Time shelf |
+| A cooldown that belongs to an ABILITY, with charges, tags and a loadout behind it | Activate Ability, Is Ability Ready, Set Ability Cooldown, On Ability Ready | the Simple Abilities pack |
+
+The built-in Time rows take a NAME rather than a node, so a cooldown started in one event is asked
+about in another with no wiring between them, and a HUD sheet on a different node can read the same
+clock. The Timer pack takes no name because it IS the clock: one behavior, one countdown, and On
+Timer fires on the node it is attached to. The built-in cooldown rows named "Put On Cooldown" and
+"Is Off Cooldown" run on game time by default, which is what makes a pause menu and a slow-motion
+moment hold them; the older "Start Cooldown" pair beside them is realtime and always has been, so
+both spellings stay and the row you pick is the clock you get.
 
 ---
 

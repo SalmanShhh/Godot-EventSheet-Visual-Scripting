@@ -188,13 +188,16 @@ On Fired  ->  MuzzleFlash | Set blending to add
           ->  MuzzleFlash | Set light response to unshaded
 ```
 
+The sheet here is the muzzle flash's own, which is what puts its name in the object column:
+both writing rows open with the own-it guard, so neither carries an **On node**.
+
 ```gdscript
 func fire() -> void:
-	if $MuzzleFlash.material == null:
-		$MuzzleFlash.material = CanvasItemMaterial.new()
-	elif $MuzzleFlash.material is CanvasItemMaterial and not $MuzzleFlash.material.resource_path.is_empty():
-		$MuzzleFlash.material = $MuzzleFlash.material.duplicate()
-	$MuzzleFlash.material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	if material == null:
+		material = CanvasItemMaterial.new()
+	elif material is CanvasItemMaterial and not material.resource_path.is_empty():
+		material = material.duplicate()
+	material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 ```
 
 **An item wearing a shader is left completely alone.** Blending and light response live inside a
@@ -505,25 +508,22 @@ every particle at one identical speed. So both ends are fields on the same row, 
 fade, and read back by expressions of their own: **Slowest Particle Speed** and **Fastest Particle
 Speed**, **Smallest Particle Size** and **Biggest Particle Size**.
 
-<!-- caption: Rain turning into a gale, and the sparks that answer a hit -->
+<!-- caption: Rain turning into a gale, on the emitter's own sheet -->
 ```
 On Storm Started  ->  Rain | Set gravity to Vector2(300, 900)
                   ->  Rain | Set amount to 1200
                   ->  Rain | Fade particle colour to #7fa8d0 over 3.0 s
-
-On Body Entered   ->  Sparks | Set spread to 60
-                  ->  Sparks | Set speed 180 to 420
 ```
 
 ```gdscript
 func _on_storm_started() -> void:
-	if $Rain.process_material == null:
-		$Rain.process_material = ParticleProcessMaterial.new()
-	elif $Rain.process_material is ParticleProcessMaterial and not $Rain.process_material.resource_path.is_empty():
-		$Rain.process_material = $Rain.process_material.duplicate()
-	if $Rain.process_material is ParticleProcessMaterial:
-		$Rain.process_material.gravity = Vector2(300, 900)
-	$Rain.amount = 1200
+	if process_material == null:
+		process_material = ParticleProcessMaterial.new()
+	elif process_material is ParticleProcessMaterial and not process_material.resource_path.is_empty():
+		process_material = process_material.duplicate()
+	if process_material is ParticleProcessMaterial:
+		process_material.gravity = Vector2(300, 900)
+	amount = 1200
 ```
 
 **Why amount does not fade, when every other word here does.** Writing `amount` makes Godot throw the
@@ -590,8 +590,10 @@ chain, so a layer laid over a surface counts its wearers too.
   here can be spelled that way.
 - **A row whose template opens with an `if` has no "On node" field.** The own-it lines are a guard,
   and a guard cannot be written around a node named in the middle of it, so those rows act on the node
-  the sheet is attached to. The read-it-back expressions beside them are plain member reads and do
-  take the ordinary **On node**.
+  the sheet is attached to. Only the reads that are plain member reads carry the field - **Camera
+  Exposure**, **Is Auto Exposure On**, **Focus Distance**, **Particle Amount**, **Particle Lifetime**
+  and **Material Of Surface**. A read that reaches through the resource, like **Particle Gravity** or
+  **Blending**, opens with the same guard and answers for the sheet's own node.
 - **Forward+ only means silence, not an error.** Reflections, indirect light, global illumination,
   volumetric fog and auto exposure are set and ignored on Mobile and Compatibility. Ask **Renderer Is**
   before offering them in a settings menu.

@@ -138,8 +138,8 @@ have to know which of the two the word is on.
 | Set Particle Speed | How fast a new particle sets off. BOTH ends of the range are on this row. | `process_material.initial_velocity_min = {value}` and `initial_velocity_max = {most}` |
 | Set Particle Size | How big a new particle is. Both ends of the range are on this row too. | `process_material.scale_min = {value}` and `scale_max = {most}` |
 | Set Particle Colour | The colour every particle is tinted, multiplied with the picture it draws with. | `process_material.color = {value}` |
-| Set Particle Lifetime | How many seconds one particle lasts before it goes out. | `lifetime = {value}` |
-| Set Particle Amount | How many the emitter keeps in the air at once. | `amount = {value}` |
+| Set Particle Lifetime | How many seconds one particle lasts before it goes out. | `{target.}lifetime = {value}` |
+| Set Particle Amount | How many the emitter keeps in the air at once. | `{target.}amount = {value}` |
 | Particle Gravity / Particle Spread / Particle Colour / Particle Lifetime / Particle Amount | Read the word back. | the same member |
 | Slowest Particle Speed / Fastest Particle Speed | The two ends of the speed range. | `initial_velocity_min` / `initial_velocity_max` |
 | Smallest Particle Size / Biggest Particle Size | The two ends of the size range. | `scale_min` / `scale_max` |
@@ -382,35 +382,40 @@ On landed
 ```
 
 **23. Rain that turns into a gale.** Gravity is a direction with a length, so turning it sideways is
-the whole of "wind":
+the whole of "wind". The five material words write through a guard, so they carry no On node and the
+sheet is the emitter's own:
 
 ```gdscript
-if $Rain.process_material == null:
-	$Rain.process_material = ParticleProcessMaterial.new()
-elif $Rain.process_material is ParticleProcessMaterial and not $Rain.process_material.resource_path.is_empty():
-	$Rain.process_material = $Rain.process_material.duplicate()
-if $Rain.process_material is ParticleProcessMaterial:
-	$Rain.process_material.gravity = Vector2(300, 900)
+if process_material == null:
+	process_material = ParticleProcessMaterial.new()
+elif process_material is ParticleProcessMaterial and not process_material.resource_path.is_empty():
+	process_material = process_material.duplicate()
+if process_material is ParticleProcessMaterial:
+	process_material.gravity = Vector2(300, 900)
 ```
 
 **24. Sparks that answer a hit.** Spread and speed on two rows, with both ends of the speed range on
-the one that sets it:
+the one that sets it. The own-it lines open both templates; the writes they end with are these:
 
 ```gdscript
-$Sparks.process_material.spread = 60.0
-$Sparks.process_material.initial_velocity_min = 180.0
-$Sparks.process_material.initial_velocity_max = 420.0
+if process_material is ParticleProcessMaterial:
+	process_material.spread = 60.0
+if process_material is ParticleProcessMaterial:
+	process_material.initial_velocity_min = 180.0
+	process_material.initial_velocity_max = 420.0
 ```
 
 **25. A torch guttering out.** **Fade Particle Colour** walks the tint rather than cutting it, which
 is what a light dying looks like:
 
 ```gdscript
-create_tween().tween_property($Torch.process_material, "color", Color(0.2, 0.1, 0.05, 0.0), 1.5)
+if process_material is ParticleProcessMaterial:
+	create_tween().tween_property(process_material, "color", Color(0.2, 0.1, 0.05, 0.0), 1.5)
 ```
 
 **26. Density as a graphics setting.** **Set Particle Amount** is the row a low setting turns down,
-and it is a row to use at a moment rather than every frame:
+and it is a row to use at a moment rather than every frame. Amount is the emitter's own member, so
+this one DOES take an On node and can be aimed from anywhere:
 
 ```gdscript
 $Rain.amount = 400
@@ -420,7 +425,8 @@ $Rain.amount = 400
 can double what is already there rather than replacing it with a number somebody typed:
 
 ```gdscript
-$Sparks.process_material.spread = $Sparks.process_material.spread * 2.0
+if process_material is ParticleProcessMaterial:
+	process_material.spread = process_material.spread * 2.0
 ```
 
 ### Other use cases
@@ -474,8 +480,9 @@ $Sparks.process_material.spread = $Sparks.process_material.spread * 2.0
   echo on each row shows which one it wrote.
 - **A Set Particle row that writes the material has no On node parameter.** Its template opens with
   the own-it `if`, and a guard cannot be written around a node named in the middle of it, so it acts
-  on the emitter the sheet is attached to. The read-it-back expressions do take the ordinary
-  **On node**.
+  on the emitter the sheet is attached to. The five material words read the same way. Only the two
+  NODE words carry the field: **Set Particle Lifetime**, **Set Particle Amount**, **Fade Particle
+  Lifetime**, **Particle Lifetime** and **Particle Amount** can be aimed at another emitter.
 - **Setting the amount rebuilds the whole buffer.** Use it at a moment, never every frame, and never
   in a loop. There is deliberately no fade for it.
 - **An emitter wearing a particle shader ignores these rows entirely.** The properties live inside

@@ -714,10 +714,15 @@ the lens the first one did.
 
 **28. Two cameras seeing the same room differently.** Because the exposure belongs to the camera
 rather than to the world, a security-monitor camera can be dim while the player's view is not - and
-because every write takes its own copy first, the two never fight over one attributes file:
+because every write takes its own copy first, the two never fight over one attributes file. The row
+goes on the security camera's own sheet, since a writing lens row carries no On node:
 
 ```gdscript
-$SecurityCam.attributes.exposure_multiplier = 0.4
+if attributes == null:
+	attributes = CameraAttributesPractical.new()
+elif not attributes.resource_path.is_empty():
+	attributes = attributes.duplicate()
+attributes.exposure_multiplier = 0.4
 ```
 
 **29. Cross from the surface into the cave, and let the player move when it lands.** The blend is one
