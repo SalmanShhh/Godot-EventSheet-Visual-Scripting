@@ -437,6 +437,32 @@
 
 ### Fixed in the blend and post pass
 
+- **A moment that could not find the Screen FX layer once stopped looking for it.** The first beat
+  played in a scene searched the tree, and the answer was kept until the scene changed - so a game
+  whose post stack arrives later, a level that builds its own effects or a pause screen made on
+  demand, was told "there is none" for the rest of that scene: every later shockwave and hold did
+  nothing at all and every pulse drew only its vignette. Only a FOUND layer is remembered now, and
+  the search is a group the Screen FX layer joins as it enters the tree rather than a recursive walk
+  of every node, so asking again on the next beat costs a dictionary read. A hand-built post layer
+  joins the same group in one line to be found the same way.
+- **And when a game really has no post stack, the step says so.** A shockwave and a hold did nothing
+  and a pulse fell back to its vignette in complete silence, which reads as a moment that is broken
+  for no reason anybody can see. The step now names itself and the scene file to add - ONCE per
+  scene, because a beat that plays on every hit would otherwise write the same sentence sixty times
+  a second.
+- **Post Strength answers with what the row asked for.** It answered with the DIALLED value - the
+  strength left after a player's effect-strength setting and the no-flashing ceiling - so the
+  ordinary sheet line **Set Post Strength: "hurt", Post Strength + 0.1** folded that setting in
+  again on every round trip and the effect sank towards nothing under any dial but 1. The expression
+  now answers with the request, on the screen's stack and the camera's alike, and the dials keep
+  their one say on the way to the shader and the CompositorEffect: with the setting at a half,
+  setting 0.8 reads back as 0.8 and the screen is handed 0.4. **Post Effect Is On** is the row that
+  asks whether an effect is actually drawing.
+- **A dropped Go To Scene With has somewhere to go.** Its scene slot arrived empty, so a row a
+  designer had only just dropped wrote a change to nowhere. It starts at the project's own main
+  scene now - the setting read at run time, because that slot takes an expression rather than a
+  quoted path, which is what lets a row send the player to a scene a variable names. The frozen Go
+  To Scene beside it is untouched.
 - **The accessibility dials get one say over a strength, not two.** An entry in either post stack
   kept the strength AFTER the effect-strength dial and the no-flashing ceiling had been applied, and
   every walk then fed those already-dialled values back through the same clamp. Under a
@@ -444,8 +470,7 @@
   target times the dial squared, and a look saved from the live stack recorded what one player's
   settings allowed rather than what the rows asked for - decaying a little more on every
   save-and-wear. An entry now remembers the REQUEST and the dials have their say once, on the way to
-  the shader or the CompositorEffect. Post Strength still answers with what is on the screen, so no
-  row changed its meaning.
+  the shader or the CompositorEffect.
 - **See As and Correct Colours For are exempt from both dials.** A colour-vision correction is what
   makes the screen readable, not an amplitude that can strobe - but it went through the same clamp
   as everything else, so a player who had asked for no flashing got the correction capped at 30% and
