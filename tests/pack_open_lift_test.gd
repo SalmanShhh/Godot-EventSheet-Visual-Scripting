@@ -6,20 +6,33 @@
 # Measured 2026-08-17 before the fix: 38 of 91 packs opened with ZERO verbs (the FPS Controller,
 # Save System, Storylet Weaver, ...) because a lifecycle handler after the verbs, an unknown
 # codegen prefix, a class doc glued to the first verb, a Toggle over-match or one bad body each
-# reverted the WHOLE file. This pins the fleet-wide numbers so none of it comes back.
+# reverted the WHOLE file. This pins that none of it comes back.
+#
+# WHY THERE IS NO LIVE COUNT PINNED HERE. The claim this file exists to make is per pack - THIS
+# pack opens with THESE verbs - and that is asserted once per pack inside the walk below, on every
+# pack, every run. A fleet-wide total asserted with == is a different and much weaker claim, and it
+# is one every concurrent pack pass has to come and edit before its own work can go green: the
+# fleet grows by a pack whenever anyone ships one, so an equality on the size of the fleet is a
+# merge conflict with a test name on it, and it goes stale the moment a pack lands. So the totals
+# here are FLOORS at measured values, and the coverage question a total was standing in for - did
+# the walk actually see the fleet, or did it quietly skip a folder - is answered by derivation
+# instead: every pack folder walked must be one a builder in tools/pack_builders/ publishes into,
+# read off the builders the same way tools/build_sample_behaviors.gd discovers them.
 @tool
 class_name PackOpenLiftTest
 extends RefCounted
 
-## Packs that legitimately publish no verbs: data-asset resources and two loaders whose only
-## functions are the host binding and _ready. Anything else opening with zero functions fails.
+## Where the pack builders live - the same folder, and the same leading-underscore-is-a-helper
+## rule, that tools/build_sample_behaviors.gd auto-discovers the fleet from.
+const BUILDERS_DIR: String = "res://tools/pack_builders/"
+
+## The OVERRIDE list, and only that: the three pack files that DO hold functions and still publish
+## no verbs - two loaders whose functions are the host binding and _ready, and the quality preset's
+## own reading of itself. Every other verbless pack is derived rather than listed: a file with no
+## top-level function in it is a data asset, has nothing for the lifter to lift, and may declare no
+## verbs - which is asked of it below without anybody adding its name here.
 const NO_VERB_PACKS: Array[String] = [
-	"ability_set_resource.gd", "encounter_resource.gd", "loot_loader_behavior.gd",
-	"loot_table_resource.gd", "price_table_resource.gd", "quest_resource.gd",
-	"random_table_resource.gd", "skin_catalog_loader_behavior.gd", "skin_catalog_resource.gd",
-	"stat_sheet_resource.gd", "storylet_resource.gd", "touch_shape_library_resource.gd",
-	"uhtn_plan_resource.gd", "color_palette_resource.gd", "skill_tree_resource.gd",
-	"quality_preset.gd", "moment_resource.gd", "screen_look_resource.gd",
+	"loot_loader_behavior.gd", "skin_catalog_loader_behavior.gd", "quality_preset.gd",
 ]
 ## Verbs the lifter still cannot reproduce byte-exactly (one function each - an async loop guard,
 ## an @ace_param header, two Line of Sight helpers, one Drawing Canvas verb). Each stays a raw block
@@ -35,16 +48,21 @@ static func run() -> bool:
 	var total_verbs: int = 0
 	var lifted_verbs: int = 0
 	var packs: int = 0
+	var walked: Dictionary = {}
 	for dir: String in DirAccess.get_directories_at("res://eventsheet_addons"):
+		walked[dir] = true
 		for file_name: String in DirAccess.get_files_at("res://eventsheet_addons/" + dir):
 			if not file_name.ends_with(".gd"):
 				continue
 			var path: String = "res://eventsheet_addons/%s/%s" % [dir, file_name]
 			var source: String = FileAccess.get_file_as_string(path)
 			var declared: int = 0
+			var has_functions: bool = false
 			for line: String in source.split("\n"):
 				if line == "## @ace_action" or line == "## @ace_condition" or line == "## @ace_expression":
 					declared += 1
+				elif line.begins_with("func ") or line.begins_with("static func "):
+					has_functions = true
 			var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
 			packs += 1
 			var exposed: int = 0
@@ -55,88 +73,74 @@ static func run() -> bool:
 			lifted_verbs += exposed
 			var allowed_short: int = int(KNOWN_SHORT.get(file_name, 0))
 			all_passed = _check("%s opens with its verbs (%d of %d declared)" % [file_name, exposed, declared], exposed >= declared - allowed_short, true) and all_passed
-			if NO_VERB_PACKS.has(file_name):
-				all_passed = _check("%s publishes no verbs (data asset / loader)" % file_name, declared, 0) and all_passed
+			if not has_functions:
+				all_passed = _check("%s publishes no verbs (a data asset - no functions at all)" % file_name, declared, 0) and all_passed
+			elif NO_VERB_PACKS.has(file_name):
+				all_passed = _check("%s publishes no verbs (loader / preset)" % file_name, declared, 0) and all_passed
 			else:
 				all_passed = _check("%s lifts at least one function" % file_name, sheet.functions.size() > 0, true) and all_passed
 			var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
-	# Batch 13 added two packs (Touch Gestures and its shape-library data asset): 93 + 2.
-	# The leftovers parcel added the colour-palette data asset: + 1. Recomputed as base + deltas.
-	# Batch 14: Pin 3D (+1), the skill-tree data asset (+1), Skateboard + Skateboard 3D (+2), the
-	# two Traversal Kits (+2), on the colour-palette asset (+1) and the two gesture packs (+2).
-	# Recomputed as base + deltas.
-	# Lighting: Light Flicker, Light Pulse and Day/Night Cycle (+3). Recomputed as base + deltas.
-	# Effects: Hit Flash, Dissolve, Outline, Grayscale, Wave and Screen FX (+6). Same recomputation.
-	# Rendering: the Quality Preset data asset (+1). Same recomputation.
-	# Files: the Folder Watcher (+1). Same recomputation.
-	# Scenes: the Second View pack (+1). Same recomputation.
-	# Generation: the Drunken Walkers pack (+1). Same recomputation.
-	# Camera: the Camera Rail pack and its 3D twin (+2). Same recomputation.
-	# Blend and post: the Blend Modes pack, the Post Kit, and the two data assets a moment and a
-	# look are saved as (+4). Same recomputation.
-	all_passed = _check("the fleet was scanned (121 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1 + 1 + 1 + 2 + 4) and all_passed
+	# Did the walk see the fleet? Asked of the BUILDERS rather than of a number somebody typed: a
+	# pack folder is compiler output, so every folder here has a builder that writes it, and a
+	# folder nobody publishes into is either a pack whose builder was deleted or a stale tree.
+	# Only this direction is pinned. The other one - a builder with no folder yet - is the state a
+	# pack pass is legitimately IN while it works (the builder is written, the pack not built yet),
+	# so asserting it would make this file fail on somebody else's half-finished work.
+	var published: Dictionary = _folders_the_builders_publish()
+	var unbuilt: PackedStringArray = PackedStringArray()
+	for folder: String in walked:
+		if not published.has(folder):
+			unbuilt.append(folder)
+	unbuilt.sort()
+	all_passed = _check("every pack walked is one a pack builder publishes",
+		", ".join(unbuilt), "") and all_passed
+	all_passed = _check("the builders were readable at all", published.size() > 0, true) and all_passed
+	# FLOORS, measured, never equalities - see the header. 121 packs, 1,713 declared verbs and
+	# 1,264 lifted ones stood on 2026-09-04, the day the two equalities became floors. A number
+	# below one of these is a pack or a verb that STOPPED being seen, which is the failure worth
+	# a fleet-wide line; a number above it is somebody's new pack, which is not this file's news.
+	all_passed = _check("the fleet is at least the 121 packs measured", packs >= 121, true) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
-	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
-	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
-	# The leftovers parcel: +2 FPS Controller verbs (the firing slowdown and its question).
-	# The colour-palette pack adds none - it is a data asset and publishes no verbs.
-	# The boomer parcel: +4 FPS Controller verbs; pins: +14 Pin, +24 Pin 3D; skills: +26 Upgrades,
-	# +3 Abilities; skateboard: +32 Skateboard, +34 Skateboard 3D, +7 Combo Box chain rows, +1 HUD
-	# Kit needle; traversal: +21 Traversal Kit, +22 on its 3D twin (the same words plus Float);
-	# combos: +4 more Combo Box rows - the move table (Set / Clear Animation For Combo) and the
-	# two that read it back (Combo Has Animation, Animation For Combo).
-	# lighting: +3 Light Flicker (start, stop, is flickering), +3 Light Pulse (the same three), and
-	# +6 Day/Night Cycle (set the time, run the clock faster, pause, resume, it is day, it is night).
-	# effects: +3 Hit Flash (flash, stop, is flashing), +4 Dissolve (dissolve, appear, is gone, burnt
-	# away), +4 Outline (outline, no outline, fade outline, is outlined), +4 Grayscale (grayscale,
-	# recolour, is gray, grayness), +4 Wave (wave, settle, is waving, wave strength) and +7 Screen FX
-	# (shockwave, fade to, fade back, blur, chromatic pulse, clear, is running).
-	# rendering: +7 Game Settings quality verbs (apply a preset, step one, the folder's paths and
-	# words, the preset in force, the word to show, and the question about it). The Quality Preset
-	# asset itself adds none - it is data.
-	# options menus: +30 more Game Settings verbs - the binding pair (bind a control, why a control
-	# and a setting disagree), the page four (a setting's page, its label, the settings on a page,
-	# the rows built from them) plus the focus pair (wire the order, what nothing can reach), the
-	# way-back four (apply with one, keep, go back, seconds left), and eighteen for rebinding: the
-	# Input Map's own actions, the two binding words, the unbound list and its question, the two
-	# conflict readings, whether a row is listening, listen, the three answers, cancel, the two
-	# resets, save, load, and the page built from the Input Map.
-	# files: +6 Folder Watcher verbs (watch a folder, stop, look now, whether it is watching, and the
-	# two readings of the last look - how many files and which names).
-	# scenes: +5 Second View verbs (make a view, show it in a frame, set its zoom, stop it, and the
-	# expression that hands its picture out).
-	# generation: +63 Drunken Walkers verbs - 29 actions (five for the grid, three for the random
-	# stream, fifteen for the walkers and how they run, three for the marks, two post-processing
-	# passes and the state loader), 4 conditions (a cell's value, inside the grid, a mark here, a
-	# walker registered) and 30 expressions (the grid readings, the two coordinate pairs, the count
-	# and index pairs for cells and marks, the seed, the injected headroom, the saved state, and the
-	# twelve context readings the triggers answer with). Its six triggers are signals, not declared
-	# verbs, so they are not in this number.
-	# camera: +7 Camera Rail verbs (fly along, cut to, blend to, hold, stop, is flying and the
-	# shot's progress) and +7 on its 3D twin - the same seven, with a node kept in frame on the
-	# flight. The two On Finished triggers of each are signals, so they are not in this number.
-	# blend and post: +11 Blend Modes (blend as, the strength pair, the two readings, the two masks
-	# and Unmask, the two grouping rows and the question about them), +14 Post Kit (the six stack
-	# rows, the strength trio, the two questions, and the four outline rows), +22 Screen FX (the
-	# stack's own eleven, the two colour-vision rows, the five look rows and the four readings),
-	# +2 Juice (Moment and Define Moment) and +2 Scene Flow (Go To Scene With, Reload Scene With).
-	# The two On Finished-shaped triggers those packs gained are signals, so they are not in this
-	# number. Recomputed as base + every delta at merge.
-	all_passed = _check("fleet-wide declared verbs count", total_verbs,
-		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
-		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6 + 5 + 63 + 7 + 7 + 11 + 14 + 22 + 2 + 2) and all_passed
+	# The declared-verb total, as a floor for the same reason as the pack count: the number this
+	# was once an equality on had grown by thirty-six recorded deltas, and every one of them was a
+	# pass editing this line to say what its own pack had added. 1,713 is what the fleet declared
+	# on 2026-09-04; a run under it means verbs stopped being declared where they were before.
+	all_passed = _check("fleet-wide declared verbs are at least the 1713 measured",
+		total_verbs >= 1713, true) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
 	for function: Variant in fps.functions:
 		if function is EventFunction and (function as EventFunction).expose_as_ace:
 			fps_exposed += 1
-	# The leftovers parcel gave the pack Set Move Speed While Firing and Is Firing (31 + 2), and the
-	# feel layer four more: Bob With Movement, Sway With Mouse, Set Air Control, Is Bunny Hopping.
-	all_passed = _check("FPS Controller opens with all 37 published verbs", fps_exposed, 31 + 2 + 4) and all_passed
-	all_passed = _check("FPS Controller's hidden helpers lift too (44 functions in all)", fps.functions.size(), 38 + 2 + 4) and all_passed
+	# Floors again, and for the third time the same reason: this pack gains verbs whenever somebody
+	# works on the shooter vocabulary, and an equality here is that person editing this file before
+	# their own suite can go green. 37 verbs over 44 lifted functions is what it opened with on
+	# 2026-09-04; fewer means the whole-file degradation this test exists to catch is back.
+	all_passed = _check("FPS Controller opens with at least the 37 verbs measured", fps_exposed >= 37, true) and all_passed
+	all_passed = _check("FPS Controller's hidden helpers lift too (at least 44 functions)", fps.functions.size() >= 44, true) and all_passed
 	return all_passed
+
+
+## Every eventsheet_addons folder the pack builders write into, as folder name -> builder file.
+## The builder set is the auto-discovered one (every *.gd in tools/pack_builders/ that is not a
+## leading-underscore helper), and the folder is read out of the builder's own text, because the
+## publish path is a literal in the call - which is what makes this cheap enough to be a test:
+## nothing here loads a builder or runs a build.
+static func _folders_the_builders_publish() -> Dictionary:
+	var folders: Dictionary = {}
+	var directory: DirAccess = DirAccess.open(BUILDERS_DIR)
+	if directory == null:
+		return folders
+	var paths: RegEx = RegEx.create_from_string("res://eventsheet_addons/([a-z0-9_]+)/")
+	for file_name: String in directory.get_files():
+		if not file_name.ends_with(".gd") or file_name.begins_with("_"):
+			continue
+		var source: String = FileAccess.get_file_as_string(BUILDERS_DIR + file_name)
+		for hit: RegExMatch in paths.search_all(source):
+			folders[hit.get_string(1)] = file_name
+	return folders
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
