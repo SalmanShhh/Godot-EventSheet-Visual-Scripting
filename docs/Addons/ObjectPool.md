@@ -40,7 +40,10 @@ prewarm; and the custom way, Create Empty Pool then Add To Pool your own nodes. 
   stash is empty. The node is added to the current scene, made visible, and returned so you can position
   it.
 - **Despawn parks it, it does not free it.** A despawned node is hidden, its processing stopped, and it is
-  moved back into the pool to wait for the next Spawn.
+  moved back into the pool to wait for the next Spawn. The move itself lands at the next idle moment rather
+  than on the line, exactly as a destroy does, so the node is still in the world for the rest of the event
+  and Despawn is safe to call from inside a collision or area callback - where Godot refuses a reparent
+  while the physics server is flushing its queries.
 - **Prewarm to avoid the first-use cost.** Make the copies up front (at load time) so the first burst of
   spawns is already smooth.
 

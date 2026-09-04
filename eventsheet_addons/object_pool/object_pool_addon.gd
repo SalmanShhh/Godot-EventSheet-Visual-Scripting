@@ -21,6 +21,37 @@ var _pools: Dictionary = {}
 var _last_spawned: Node = null
 var _last_despawned: Node = null
 
+# THE HANDING BACK WAITS FOR THE FRAME. A pool takes a node back by REPARENTING it - out of the
+# running scene and under the pool - and Godot refuses a reparent while the physics server is
+# flushing its queries, which is the whole of a collision or area callback and exactly where a
+# bullet is despawned. So Despawn BOOKS the handing back on the message queue and it lands at the
+# next idle moment: the node is still in the world for the rest of the event, and no row can raise
+# "can't change this state while flushing queries" from inside a callback.
+#
+# ONCE, AND ONLY ONCE. A free list is a plain array, and a node in it twice is handed out to two
+# callers. A node with a handing back already booked does not book a second one, and a node already
+# in a free list is turned back, so Despawn stays safe to run twice.
+# The nodes whose handing back is booked and has not happened yet, by instance id. Kept here rather
+# than written on the node, because a node handed out again carries every mark it was parked with.
+var _booked: Dictionary = {}
+
+# The retire runtime, when the project ships it: the file the Retire rows call, which marks a node
+# as retiring for the length of the handing over so On Retired can tell a retirement from every
+# other exit from the tree. Found BY PATH rather than named, exactly as that file finds this pool
+# by path, so the pack still parses in a project that installed the pool and nothing else.
+const RETIRE_RUNTIME_PATH: String = "res://eventsheet_addons/pooled_nodes.gd"
+var _retire_runtime: Script = null
+var _retire_runtime_looked_up: bool = false
+# The retire runtime if the project has it, found once and remembered - null when it does not, in
+# which case this pool hands nodes back on its own and marks nothing.
+func _retire_runtime_script() -> Script:
+	if _retire_runtime_looked_up:
+		return _retire_runtime
+	_retire_runtime_looked_up = true
+	if ResourceLoader.exists(RETIRE_RUNTIME_PATH):
+		_retire_runtime = load(RETIRE_RUNTIME_PATH) as Script
+	return _retire_runtime
+
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Create Pool")
@@ -71,25 +102,30 @@ func prewarm(pool_name: String, count: int) -> void:
 ## @ace_featured
 ## @ace_name("Despawn")
 ## @ace_category("Object Pool")
-## @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned.")
+## @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned. The handing back lands at the next idle moment rather than on this line, exactly as a destroy does, so the node is still in the world for the rest of the event and the row is safe inside a collision or area callback. Safe to run twice - a node already booked, or already back in its pool, is left alone.")
 ## @ace_display_template("Despawn [i]{node}[/i]")
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.despawn({node})")
 func despawn(node: Node) -> void:
-	if node == null or not node.has_meta(&"__pool__"):
+	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+		return
+	if not node.has_meta(&"__pool__"):
 		return
 	var pool_name: String = str(node.get_meta(&"__pool__"))
-	if not _pools.has(pool_name):
+	if not _pools.has(pool_name) or (_pools[pool_name].free as Array).has(node):
 		return
-	(_pools[pool_name].active as Array).erase(node)
-	_stow(pool_name, node)
-	_last_despawned = node
-	on_despawned.emit()
+	if _already_retiring(node):
+		_hand_back_now(pool_name, node)
+		return
+	if _booked.has(node.get_instance_id()):
+		return
+	_booked[node.get_instance_id()] = true
+	call_deferred(&"_hand_back_by_id", node.get_instance_id())
 
 ## @ace_action
 ## @ace_name("Despawn All")
 ## @ace_category("Object Pool")
-## @ace_description("Hands every active node of a pool back at once (for a level reset).")
+## @ace_description("Hands every active node of a pool back at once (for a level reset). Like Despawn, each handing back lands at the next idle moment.")
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.despawn_all({pool_name})")
 func despawn_all(pool_name: String) -> void:
@@ -224,5 +260,42 @@ func _wake(node: Node) -> void:
 	# spawn, so velocity/hp/timers clear without the pool knowing any of them.
 	if node.has_method(&"reset"):
 		node.call(&"reset")
+
+func _already_retiring(node: Node) -> bool:
+	# Whether this node is inside a handing over the retire runtime has already marked - which is to
+	# say a Retire row booked the idle moment we are standing in, so the reparent is safe on this line.
+	# Asked after Despawn's queued-for-deletion guard, so the answer is the mark and nothing else.
+	var runtime: Script = _retire_runtime_script()
+	return runtime != null and bool(runtime.call(&"is_retiring", node))
+
+func _hand_back_by_id(node_id: int) -> void:
+	# The booked half, resolved from an id rather than from the node itself: a node can be freed between
+	# the Despawn row and the idle moment that hands it over, and an id that no longer names anything is
+	# simply an answer of no.
+	_booked.erase(node_id)
+	if not is_instance_id_valid(node_id):
+		return
+	var node: Node = instance_from_id(node_id) as Node
+	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+		return
+	var runtime: Script = _retire_runtime_script()
+	if runtime != null:
+		# Out through the runtime and straight back in, so the handing over is MARKED while it happens:
+		# that mark is what On Retired's guard reads, so a Despawn row raises that trigger exactly once,
+		# exactly as a Retire row does.
+		runtime.call(&"hand_back", node, self)
+		return
+	_hand_back_now(str(node.get_meta(&"__pool__")), node)
+
+func _hand_back_now(pool_name: String, node: Node) -> void:
+	# The handing over itself, with the waiting already done: out of the active list, parked under the
+	# pool, and the pack's own signal to say it happened - once, because a node already in the free list
+	# is turned back here.
+	if not _pools.has(pool_name) or (_pools[pool_name].free as Array).has(node):
+		return
+	(_pools[pool_name].active as Array).erase(node)
+	_stow(pool_name, node)
+	_last_despawned = node
+	on_despawned.emit()
 
 # ObjectPool: register as the ObjectPool autoload. Create Pool from a scene (or Create Empty Pool + Add To Pool your own nodes), then Spawn to get a ready node and Despawn to hand it back. Reusing nodes keeps heavy scenes smooth. This pack is an event sheet - extend it by editing it.

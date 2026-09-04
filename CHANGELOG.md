@@ -162,6 +162,19 @@
 
 ### Fixed
 
+- **The Object Pool pack's Despawn row waits for the frame, like the Retire row beside it.** Handing
+  a node back to a pool is a REPARENT, and Godot refuses a reparent while the physics server is
+  flushing its queries - which is the whole of a collision or area callback, and exactly where a
+  bullet is despawned. `ObjectPool.despawn()` did it on the line, so a Despawn row inside `on_body_entered`
+  raised "can't change this state while flushing queries". It now books the handing back on the
+  message queue and it lands at the next idle moment, exactly as a destroy already did: the node is
+  still in the world for the rest of the event, a node freed before that moment arrives is skipped
+  quietly, and two Despawn rows in one frame book one handing back, so nothing can reach a free list
+  twice and be handed out to two callers. `On Despawned` still fires exactly once, and it fires
+  inside the retirement the retire runtime marks, so a Despawn row raises `On Retired` exactly once
+  as well. The ace_id, the codegen template and the signature are unchanged; the pack finds that
+  runtime by path rather than by name, so it still parses in a project that installed the pool and
+  nothing else.
 - **The two runtime classes the spawn rows call now wear the engine's own prefix.** They shipped as
   `FreeSpot` and `PooledNodes` - bare global `class_name`s installed into every project that has
   the plugin, so a game with its own `FreeSpot` met a project-wide parse error it did nothing to
