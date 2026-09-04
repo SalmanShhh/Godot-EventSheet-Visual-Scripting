@@ -173,6 +173,33 @@ are the two rate limits - the leading edge and the trailing edge.
 | At Most Every | Lets this event run at most once every so many **Seconds**, however often it is reached. | `__throttle_{uid}(maxf({seconds}, 0.0))`, hoisted to the end of the condition chain |
 | Has Been Quiet For | True once a poked **Name** has stopped being poked for **Seconds**. | a comparison of `Time.get_ticks_msec()` against the `__ef_poke_{name}` stamp |
 
+### Run Context - once per SAVE SLOT
+
+Only Once Ever is true once per COMPUTER, in a file beside the game. That is the right memory for
+"show this hint once on this machine" and the wrong one for a first kill, a codex entry or a tutorial
+a second playthrough should see again: those belong to the SAVE, not to the machine. These four ask
+the save instead.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| First Time In This Save | True the first time this save reaches a **Name**, and never again for that save | `__first_time_in_save_{uid}(str({key}))`, a helper that asks the store once per key and keeps the answer |
+| Has Seen | The same question asked without using it up | `__seen_in_save_{uid}(str({key}))` |
+| Mark Seen | Marks a name as met, without any row having asked first | a `save_value` on the store, or a `ConfigFile` write when there is none |
+| Forget Seen | Clears a name so First Time In This Save fires for it again | the same write with `false` |
+
+**Where the memory actually lives.** When the Save System pack is registered as the `SaveSystem`
+autoload, these rows write a `seen:` key into the SLOT, so each save answers for itself and Start New
+Run clears it along with everything else in there. Without that pack they fall back to the same
+`user://remembered.cfg` the per-machine rows use, which means one answer for the whole computer and
+nothing to clear it. The rows still work; they answer a different question from the one on the label,
+so the Project Doctor says so once per script as a NOTE - never a warning, because a single-save game
+may have chosen that deliberately. The sheet stays quiet the way it always does: amber on the row,
+the words in the triage inbox and in the row's help strip when it is selected.
+
+**The Name is an expression, and that is the point.** `"kill:" + kind` gives one memory per kind of
+enemy from one row, which is the shape a bestiary or a codex is made of. The store is asked ONCE per
+key per row and the answer is kept, because a read per frame per key would be a file read per frame.
+
 ### Run Context - outcomes: what happened to an action
 
 GDScript has no exceptions, so an outcome is announced rather than thrown. One signal per outcome
@@ -574,6 +601,42 @@ On pool item reset  item
   -> Forget Once For  ( item, "init" )
 ```
 
+**28. A first kill that a new game gets to have again.** One row per kind, keyed by an expression, so
+a bestiary of forty enemies is still one event.
+
+```
+On enemy died  kind
+  Condition: First Time In This Save  ( "kill:" & kind )
+    -> Codex: Discover  "enemies", kind
+    -> Set Text  Banner, "First " & kind & " defeated"
+```
+
+**29. A codex page that greys out until it is found.** Has Seen asks the same question without using
+it up, which is exactly what drawing a list needs: reading it a hundred times a frame changes
+nothing.
+
+```
+On page drawn  entry
+  Condition: Has Seen  ( "codex:" & entry )
+    -> Set Text  PageTitle, entry
+  Else
+    -> Set Text  PageTitle, "? ? ?"
+```
+
+**30. A story flag carried into the next chapter, and a chapter that resets its own.** Mark Seen and
+Forget Seen are the write half: they put a name into the save, or take it out, without any row having
+asked the question first.
+
+```
+On chapter two started
+  Condition: Has Seen  "finished_chapter_one"
+    -> Mark Seen  "codex:the_old_map"
+    -> Set Text  Journal, "The old map is still in your pack."
+
+On chapter two restarted
+  -> Forget Seen  "chapter_two:met_the_smith"
+```
+
 ### Other use cases
 
 **Hitbox and hurtbox pairs.** On Area Entered on the hurtbox, with a group test on the incoming **area**, keeps damage wiring to one event per fighter instead of one per attack.
@@ -647,3 +710,16 @@ On pool item reset  item
   which one writes it, not which trigger they use.
 - **On Tree Exiting and On Tree Exited are not the same moment.** Exiting still has the tree, exited
   does not. Anything that resolves a path belongs in Exiting.
+- **Only Once Ever is the computer, First Time In This Save is the save.** Two rows, two memories, and
+  the one you want is nearly always the second: a first kill, a codex entry and a tutorial should all
+  come back for a new game. Only Once Ever is for the thing that is true about this installation, like
+  a first-launch hint.
+- **Only Once Ever cannot be asked without being consumed.** Reading it marks it. Has Seen exists
+  because a list being drawn needs to ask the same question a hundred times a frame without changing
+  the answer.
+- **Without the Save System pack these four are per machine.** They fall back to
+  `user://remembered.cfg`, so every save shares one answer and nothing clears it. The Doctor says so
+  as a note rather than a warning, because a single-save game may want exactly that.
+- **A row keeps its answer for the session.** Forget Seen clears the store, but a row that already
+  answered for that name this run keeps its cached answer until the next run - the same rule Forget
+  First Time carries, and for the same reason: the alternative is a file read per frame.

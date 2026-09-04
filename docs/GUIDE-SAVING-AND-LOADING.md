@@ -12,6 +12,7 @@ The whole system is built on one small idea, the save-state seam, and one drop-i
   - [The lifecycle broadcast](#the-lifecycle-broadcast)
   - [Targeted saving vs whole-game saving](#targeted-saving-vs-whole-game-saving)
   - [The six save formats](#the-six-save-formats)
+  - [The first time in THIS save](#the-first-time-in-this-save)
   - [Save Studio](#save-studio)
   - [Where a file goes: user:// and res://](#where-a-file-goes-user-and-res)
 - [Use cases](#use-cases)
@@ -97,6 +98,36 @@ Set `backup_count` above `0` and every write copies the slot's previous bytes in
 ### New Game Plus
 
 **Carry Value Into Next Run** marks the keys that survive (unlocked skins, a best time, the settings), then **Start New Run** wipes the slot, writes back only those, bumps the run counter and fires **On New Run Started**. **Run Number** is `1` on a fresh save, `2` after the first NG+.
+
+### The first time in THIS save
+
+A save remembers more than the numbers a Save Value row writes. It remembers what the player has
+already met: the first kill of a kind, the room they have already walked into, the tutorial they have
+already been shown. Four builtin rows on the **Run Context** shelf ask the save that question, so
+none of it needs a variable of its own.
+
+- **First Time In This Save** (Name) is true the FIRST time this save reaches that name, and never
+  again for that save.
+- **Has Seen** asks the same question without using it up - the row a codex page or a greyed-out list
+  entry wants, because drawing a list asks a hundred times a frame.
+- **Mark Seen** and **Forget Seen** are the write half: a story flag carried over from the previous
+  chapter, a debug key, a chapter that resets its own flags.
+
+The Name is an expression, which is what makes one row cover a whole bestiary: `"kill:" + kind` is
+one memory per kind of enemy.
+
+**Where the memory lives, and the one thing to know.** With the Save System registered as the
+`SaveSystem` autoload, these rows write a `seen:` key into the SLOT. Each save answers for itself, and
+Start New Run clears them along with everything else in the slot - which is exactly what New Game Plus
+wants, since a second playthrough should get to discover things again. Without that autoload they fall
+back to `user://remembered.cfg`, the same file the per-machine **Only Once Ever** row uses. They still
+work there, but they answer a different question from the one on the label: one answer for the whole
+computer, and nothing clears it. The Project Doctor says so once per script as a NOTE rather than a
+warning, because a single-save game may have chosen that deliberately.
+
+**Which of the two you want.** Only Once Ever is per COMPUTER, in a file beside the game: the right
+row for a first-launch hint. First Time In This Save is per SAVE: the right row for anything a new
+game should see again.
 
 ### Reading a whole save
 
@@ -254,6 +285,22 @@ Point Read Save File at any path and pass the format it was written in (or leave
 ### 28. Read a dropped-in save without knowing its format up front
 
 When a player imports a save file and you do not know how it was written, call Save File Format to detect it (config, json, binary, csv, ini, or xml), then hand that result straight to Read Save File. Or branch with the Save File Is Format condition - "if the file is xml, run the XML import path" - and use Save Format Is to check what the game itself is currently set to write. Together these let a load flow accept whatever file it is handed instead of assuming one format.
+
+### 29. Give a first kill, a first room and a tutorial back to a new game
+
+Reach for First Time In This Save rather than a saved boolean per thing. The memory is in the slot, so
+Start New Run clears it and a second playthrough gets its first kill back, and the Name is an
+expression, so one event covers every kind of enemy in the game.
+
+```
+On enemy died  kind
+  Condition: First Time In This Save  ( "kill:" & kind )
+    -> Codex: Discover  "enemies", kind
+    -> Set Text  Banner, "First " & kind & " defeated"
+```
+
+Ask it again later without spending it with Has Seen, and hand it over by hand with Mark Seen when a
+chapter is meant to start already knowing something.
 
 ## Other use cases
 

@@ -71,6 +71,32 @@ and nothing to attach. They compile to plain Godot: `await get_tree().create_tim
 - **A Timer node is a separate thing.** **Start Timer**, **Stop Timer**, **Is Timer Stopped** and
   **Get Time Left** are node-scoped rows that work on a `Timer` in your scene. They have nothing to do with
   the named cooldowns above; use whichever suits the shape of the problem.
+- **A named clock is one of Godot's own timers, kept under the name you gave it.** **Put On
+  Cooldown**, **Start Countdown** and **Start Stopwatch** each make a `SceneTreeTimer` and park it in
+  node metadata under the name on the row, so a clock started in one event is asked about in another
+  - or from a different sheet on the same node - with nothing wired between them. Nothing is hoisted,
+  nothing is an autoload, and every row is a plain statement or a plain expression.
+- **There are two cooldown families, and the difference is the pause menu.** Start Cooldown,
+  Cooldown Is Ready and Cooldown Time Left stamp a millisecond deadline, so they keep counting while
+  the tree is paused and while the game is in slow motion: realtime by construction. Put On Cooldown,
+  Is Off Cooldown and Cooldown Seconds Left hold a timer instead, so on game time a pause holds them
+  and slow motion slows them, which is what a dash or a spell wants. Both ship and neither replaces
+  the other. They keep separate memories, so a name put on cooldown by one family is not the name the
+  other family is asking about.
+- **One dropdown answers two questions.** Every starting row carries a **Clock** field with two words
+  in it. Game time is held by a pause and slowed by slow motion; realtime keeps going through both.
+  It is the two flags Godot's own timer takes, set together, because "keep going while the game is
+  paused" and "ignore slow motion" are one wish, and two checkboxes would only invite the
+  half-answer.
+- **The two clock triggers ride a signal the sheet declares.** **On Cooldown Ready** and **On
+  Countdown Finished** are real signals, the way On Scene Spawned is. Add a Signal row for
+  `cooldown_ready(cooldown_name: String)` or `countdown_finished(countdown_name: String)` and the
+  starting row connects the timer to it. Without the Signal row the sheet still compiles, because the
+  emitted line asks `has_signal` first, and nothing connects the event - which is exactly what the
+  Project Doctor reports for this shape of trigger.
+- **A stopwatch counts up by counting a very long timer down.** Start Stopwatch makes a timer of one
+  day and reads the elapsed seconds as that span minus what is left of it, so a stopwatch nobody
+  started reads zero, and the pause rules above apply to it like everything else here.
 
 ## Reference tables
 
@@ -135,6 +161,51 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 | Start Cooldown | Starts or restarts a named cooldown lasting the given seconds | `set_meta(&"__ef_cool_" + str({name}), Time.get_ticks_msec() + int(maxf({seconds}, 0.0) * 1000.0))` |
 | Cooldown Is Ready | True when the named cooldown has finished (one never started counts as ready) | `Time.get_ticks_msec() >= int(get_meta(&"__ef_cool_" + str({name}), 0))` |
 | Cooldown Time Left | Seconds left on a named cooldown, or 0 when ready | `maxf(0.0, float(int(get_meta(&"__ef_cool_" + str({name}), 0)) - Time.get_ticks_msec()) / 1000.0)` |
+
+### Time: named clocks - the cooldown a pause holds
+
+The pausable family beside the three realtime rows above. Every row is keyed by its **Named** field,
+and the starting row carries the **Clock** choice.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Put On Cooldown | Starts or restarts a named cooldown for a number of seconds | `get_tree().create_timer(...)` parked in `set_meta("__ef_cooldown_" + str({name}), ...)`, with its length in a second key |
+| Is Off Cooldown | True when the named cooldown has finished (one never started counts as finished) | a test of the parked timer's `time_left`, true when there is no timer |
+| Cooldown Seconds Left | The seconds still to wait, or 0 when it has finished | the parked timer's `time_left`, or `0.0` when there is none |
+| Cooldown Fraction | How far it has recharged, from 0 the instant it starts to 1 when it is ready | `clampf(1.0 - <seconds left> / <length>, 0.0, 1.0)` |
+| Reduce Cooldown By | Takes seconds off a running cooldown | an assignment to the parked timer's `time_left` |
+| Clear Cooldown | Finishes a named cooldown at once, so what it guards is available again | `time_left = 0.0` on the parked timer |
+| On Cooldown Ready | **Trigger.** Runs the moment a named cooldown finishes, carrying `cooldown_name` | the sheet's own `cooldown_ready` signal, connected by the starting row |
+
+### Time: named clocks - countdowns
+
+The same timer said the other way round: not "am I allowed yet" but "how long until". Countdown Text
+is the row a clock label is set to, so no formatting lands on the row.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Start Countdown | Starts a named countdown for a number of seconds | the same parked `SceneTreeTimer`, under `"__ef_countdown_" + str({name})` |
+| Schedule At | Starts a named countdown that finishes at a moment on the game's own clock | a timer of `{at_second} - Time.get_ticks_msec() / 1000.0` seconds |
+| Countdown Seconds Left | The seconds still to run: 0 when finished or never started, the held number while paused | the parked timer's `time_left`, or the float a pause parked there |
+| Countdown Text | The same number as `mm:ss`, so 83 seconds reads `01:23` | `("%02d:%02d" % [...])` over the seconds left |
+| Countdown Is Running | True while it is counting down, and not while paused, finished or never started | the parked value is a timer and its `time_left` is above zero |
+| Pause Countdown | Holds it where it is, leaving the seconds left readable | `set_meta(<key>, timer.time_left)`, which replaces the timer with a plain float |
+| Resume Countdown | Starts a paused countdown again from the seconds it was holding | a fresh timer of that float, on the clock the countdown was started with |
+| On Countdown Finished | **Trigger.** Runs the moment a named countdown reaches zero, carrying `countdown_name` | the sheet's own `countdown_finished` signal, connected by the starting row |
+
+### Time: named clocks - stopwatches
+
+"How long did that take", with splits. A run clock and a lap time cost one row each instead of a
+variable, a subtraction and a format string.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Start Stopwatch | Starts or restarts a named stopwatch counting up from zero, and clears its laps | a one-day `SceneTreeTimer` parked under `"__ef_stopwatch_" + str({name})` |
+| Record Lap | Marks a split: the time since the previous lap becomes the last lap | two `set_meta` calls, the lap and the mark it is measured from |
+| Stopwatch Seconds | How long it has been running, or 0 when it was never started | the one-day span minus the parked timer's `time_left` |
+| Stopwatch Text | The same number as `mm:ss` | `("%02d:%02d" % [...])` over those seconds |
+| Lap Seconds | How long the last lap took, and 0 until the first Record Lap | `float(get_meta("__ef_stopwatch_lap_" + str({name}), 0.0))` |
+| Lap Text | The last lap as `mm:ss` | the same format string over the lap |
 
 ### Time: input buffering
 
@@ -655,6 +726,105 @@ On Failure Of  verb_id, reason
   -> Show text from  "Could not load: " & reason
 ```
 
+**32. A dash the pause menu holds.** The same shape as use case 5, on the pausable family: the
+cooldown is made of one of Godot's timers, so opening the pause menu stops it and slow motion slows
+it. Nothing on the sheet says "pause" - the **Clock** field on the starting row already did.
+
+```
+On dash pressed
+  Condition: Is Off Cooldown  "dash"
+    -> Put On Cooldown  "dash", 1.5, game time
+    -> dash the player forward
+```
+
+The action lands as four plain lines, and the middle one is the trigger seam: it connects only when
+the sheet has declared the signal, so a sheet without one compiles and simply never fires the event.
+
+```gdscript
+var __cooldown_a1b2: SceneTreeTimer = get_tree().create_timer(maxf(1.5, 0.0), false, false, false)
+if has_signal(&"cooldown_ready"): __cooldown_a1b2.timeout.connect(emit_signal.bind(&"cooldown_ready", "dash"))
+set_meta("__ef_cooldown_" + str("dash"), __cooldown_a1b2)
+set_meta("__ef_cooldown_length_" + str("dash"), maxf(1.5, 0.0))
+```
+
+**33. A cooldown ring that draws itself.** Cooldown Fraction is 0 the instant the cooldown starts and
+1 when it is ready, which is what a radial bar wants, so there is no arithmetic on the row.
+
+```
+Every Frame
+  -> Set Property  DashIcon, "value", Cooldown Fraction("dash")
+```
+
+**34. A round timer on a label.** Countdown Text is minutes and seconds already, so nothing formats
+it on the way to the label.
+
+```
+On round started
+  -> Start Countdown  "round", 90.0, game time
+
+Every Frame
+  -> Set Text  RoundClock, Countdown Text("round")
+```
+
+**35. A countdown that stops for a shop.** A game-time countdown is already held by the pause menu.
+Pause Countdown is the row for the stop that is NOT a pause: a shop, a cutscene, a between-waves
+screen the game keeps running under.
+
+```
+On shop opened
+  -> Pause Countdown  "round"
+
+On shop closed
+  -> Resume Countdown  "round"
+```
+
+The seconds left stay readable while it is held, so the label above goes on showing the frozen
+number, and Resume Countdown starts it again on the clock it was started with.
+
+**36. A scripted event at the two-minute mark.** Schedule At takes a moment on the game's own clock
+rather than a length of time, and Game Time is the expression that reads that clock, so "two minutes
+in" is one row rather than a subtraction.
+
+```
+Declare Signal  countdown_finished(countdown_name: String)
+
+On Ready
+  -> Schedule At  "wave_two", 120.0
+
+On Countdown Finished  countdown_name
+  Condition: Compare Two Values  countdown_name = "wave_two"
+    -> Spawn Scene At  "res://wave_two.tscn", spawn_point.position
+```
+
+**37. One event for every cooldown that finishes.** The trigger carries the name, so a HUD sheet can
+light whichever icon just came back without an event per ability.
+
+```
+Declare Signal  cooldown_ready(cooldown_name: String)
+
+On Cooldown Ready  cooldown_name
+  -> Play Sound  "res://ui/ready.ogg"
+  -> Set Text  ReadyLabel, cooldown_name & " ready"
+```
+
+**38. A run timer with splits.** Start Stopwatch on the run, Record Lap at each checkpoint, and two
+labels read the total and the last split.
+
+```
+On run started
+  -> Start Stopwatch  "run", game time
+
+On checkpoint reached
+  -> Record Lap  "run"
+  -> Set Text  SplitLabel, Lap Text("run")
+
+Every Frame
+  -> Set Text  RunClock, Stopwatch Text("run")
+```
+
+On game time the clock stops while the player is in the pause menu, which is what a speedrun timer
+usually means; pick realtime on the starting row to time the real seconds somebody sat there.
+
 ### Other use cases
 
 **Combo window.** Buffer the second attack press for 0.3s and let the swing animation's end check Press Is Buffered, so a well-timed player chains hits and a mashing one does not.
@@ -821,3 +991,25 @@ Every Physics Tick
   without a Clear Poke fires on every frame after the quiet begins.
 - **A name that was never poked is never quiet**, which is what stops every debounce row in the
   project firing once at startup.
+- **The two cooldown families keep two memories.** Start Cooldown writes `__ef_cool_<name>` and Put
+  On Cooldown writes `__ef_cooldown_<name>`. A sheet that starts one and asks the other never sees a
+  cooldown at all, and the ability reads as available forever. Pick a family per name and stay in it.
+- **The Clock field is on the starting row only.** Put On Cooldown, Start Countdown and Start
+  Stopwatch carry it; the rows that ask about the clock do not, because the answer was decided when
+  it started. Resume Countdown remembers the clock its countdown was started on rather than asking
+  again.
+- **Cooldown Fraction of a cooldown nobody started reads 1.** Fully recharged is the honest answer
+  for "never used", and it means a HUD ring drawn from it looks right on the first frame with no
+  guard row above it.
+- **Pause Countdown replaces the timer with a number.** That is why the seconds left stay readable
+  while it is held, and why Countdown Is Running answers false for a paused countdown: it is no
+  longer a running clock, it is a remembered number waiting for Resume Countdown.
+- **A stopwatch runs for one day and then stops.** It counts up by counting a very long timer down,
+  so a session nobody ever ended reads a day and stays there rather than growing without limit.
+- **Schedule At takes a moment, not a length.** The number is seconds since the game started, which
+  is what the Game Time expression answers, so `120.0` means two minutes after launch and not two
+  minutes from now. A moment already past finishes at once.
+- **The clock triggers need their Signal row.** On Cooldown Ready and On Countdown Finished are
+  ordinary sheet signals: add `cooldown_ready(cooldown_name: String)` or
+  `countdown_finished(countdown_name: String)` with a Signal row. Without it the sheet compiles and
+  the event never runs, which the Project Doctor reports rather than leaving you to find.
