@@ -59,17 +59,23 @@ expression, something built with `%` - says so rather than guessing.
 
 ### And the Doctor says it about the whole project
 
-**Tools > Project Doctor** carries a **Files** section with four checks, run over your project's own
+**Tools > Project Doctor** carries a **Files** section with six checks, run over your project's own
 scripts as well as its sheets:
 
 - **A write aimed at `res://`** - the export trap, reported as an error with a one-click fix that
   rewrites the path under `user://`. A *read* of `res://` is never reported: reading the game's own
-  files is what `res://` is for.
+  files is what `res://` is for. A **folder handle** counts here too: `DirAccess.open("res://")`
+  followed by `make_dir`, `make_dir_recursive`, `remove`, `rename` or `copy` is the same story told
+  over two lines, and the place is read off the `open`. Opening a folder on its own stays a read.
 - **An absolute path in a file call** - a path naming a folder that exists on exactly one computer.
 - **A `user://` read with nothing said about a missing file** - a note rather than a warning, with a
   door that respells the row as the guarded read below.
 - **An outside path handed to `load()`** - the trust boundary, which has a chapter of its own further
   down.
+- **A scene built from a file the game did not ship with** - the same boundary asked about `.tscn`
+  files, with **Scene File Is Data-Only** as its one-click answer.
+- **A folder watch nothing ever stops** - a note, not a warning, and the one check here with no fix
+  button at all. It has a section of its own in the Folder Watcher guide.
 
 Each fix shows what it would change before it changes it, as before-and-after pairs of the row's own
 value, and lands as one undo.
@@ -79,8 +85,10 @@ check.** All three read the path literal a call was actually handed. `FileAccess
 name, FileAccess.WRITE)` is caught, because the literal is there in the line; the same write with
 `var base = "res://"` on the line above it is not, because by then the path is a name. A path held in
 a variable or built out of pieces is one they have nothing to say about, and each finding says so:
-a quiet report is not a proof that a project is clean. The `load()` check below reaches further - it
-follows names within one file - and states its own limits in the same way.
+a quiet report is not a proof that a project is clean. The two boundary checks below reach further -
+they follow names within one file - and the watch note reaches less far than either, because a watch
+started in one script and stopped in another is a pair it has no way to see. Every one of them states
+its own limits in the finding rather than leaving silence to be read as an all-clear.
 
 ## The guard you can see
 
@@ -117,12 +125,19 @@ extends Node
 
 
 func _ready() -> void:
-	DirAccess.make_dir_recursive_absolute("user://runs/latest.txt".get_base_dir())
+	DirAccess.make_dir_recursive_absolute(("user://runs/latest.txt").get_base_dir())
 	var file = FileAccess.open("user://runs/latest.txt", FileAccess.WRITE)
 	if file:
 		file.store_string("run finished")
 		file.close()
 ```
+
+**The path in that prelude wears brackets, and the reason is worth carrying to every path field you
+fill.** A path slot holds an *expression*, and a method written straight after one binds to its LAST
+operand: `"user://runs/" + slot + ".txt"` followed by a bare `.get_base_dir()` asks that question of
+`".txt"`, whose folder is nothing, so the prelude makes nothing and the write lands in a folder that
+was never created. Every row here that asks a method of a slot brackets the slot first, so the
+question is asked of the whole answer however the answer was written.
 
 ![A parameters dialog for Read Text File (or a fallback): the Path field, the If missing field holding "{}", and the ships-as line showing the whole conditional expression the row compiles to](images/file-guarded-read.png)
 
@@ -174,6 +189,14 @@ func _ready() -> void:
 
 ![An event sheet row reading Set items to table of res://data/items.csv - the first line names the columns, with the engine's own reader echoed beside it](images/engine-table-read.png)
 
+**That lambda is several statements, and it opens back as one sentence.** A `.gd` file holding the
+run above opens as the **Set** it was authored as, with the whole read in the value slot a reader
+edits it in; the write and the append open as their own rows the same way, and the write's
+first-line answer comes back as a live choice rather than as frozen text, so answering it the other
+way writes the other shape. The proof is not a resemblance: the row is asked to write the run again
+and the two are compared byte for byte before anything is handed back, so a run that is *nearly* one
+of these stays the code it is.
+
 For a plain text file there is **For Each Line In File**, a looping condition: the file is read once,
 blank lines are skipped, Windows and old-Mac line endings are handled, and the event's actions run
 once per line with the current one readable as `line`.
@@ -215,6 +238,13 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 platform has one, through `DisplayServer.file_dialog_show`, and where it has none the `FileDialog`
 fallback is emitted as a **visible `else`**. Both spellings are in the code a reader can see, because
 a row that quietly picked one of two very different windows would be a row nobody could debug.
+
+**One row, fourteen statements, and one row again when the file is opened.** That visible `else` is
+the honest shape and it used to be the expensive one: reopened, the branch came back as an `if` event
+holding a lambda and an `else` event holding eleven lines about a `FileDialog`. It comes back as the
+Ask row now, under whatever the two locals in it were named, and a branch that has had a line added
+to either half - or whose halves name different locals - is refused and stays the statements it is,
+because the run is written again from the row and compared byte for byte first.
 
 **The answer is an event, never a return value.** A chooser is a separate window and the player
 answers it long after the row ran, so both Ask rows end in **On A File Chosen** or
@@ -264,11 +294,24 @@ project finds out about on somebody else's slow disk.
 - **Look Now** takes one look immediately, which is what you want straight after your own game wrote
   into the folder.
 - **On A File Appeared / Changed / Removed** are what a difference between two looks means, each
-  handing back the whole path.
+  handing back the whole path. **Changed** means the modified time *moved*, not that it got newer: a
+  file restored from a backup or copied back over carries an older time and really has changed.
 
 One look costs one `DirAccess.get_files_at` plus one modified-time question per file that passes the
 name filter, and between looks it costs nothing. The walk is sorted, so two machines watching the
 same folder raise the same events in the same order.
+
+**The band prints the gap the watcher will really keep.** The shortest interval it honours is a tenth
+of a second, so a row that says `0` reads as `every 0.1 s` on the band rather than repeating a number
+the pack is going to floor anyway - ten looks a second is a cost worth seeing at the head of the
+sheet rather than discovering on a slow disk.
+
+**And a watch nobody stops keeps costing.** A watch started on a screen the player walks away from
+goes on reading the disk behind whatever they moved on to, and every line involved is correct, which
+is why nothing used to mention it. The Doctor's Files section files it as a **note** now, naming the
+line that starts it. It has no fix button on purpose: where a watch was meant to end - the screen
+closing, the menu leaving, the download finishing - is yours to say, and a guess would put **Stop
+Watching** somewhere the sheet never meant it.
 
 ![Two events in a sheet called ModFolder, under a head whose files band reads watching user://mods every 2.0 s with watch_folder("user://mods", 2.0) echoed beside it: On Created with FolderWatcher Watch folder "user://mods" 2, and a second On Created with FolderWatcher Stop watching](images/folder-watcher.png)
 
@@ -345,15 +388,18 @@ extends Node
 
 func _ready() -> void:
 	var typed: String = "save 3/8?"
-	var file = FileAccess.open("user://saves/" + (typed.validate_filename().lstrip(".") if not typed.validate_filename().lstrip(".").is_empty() else "untitled") + ".json", FileAccess.WRITE)
+	var file = FileAccess.open("user://saves/" + ((typed).validate_filename().lstrip(".") if not (typed).validate_filename().lstrip(".").is_empty() else "untitled") + ".json", FileAccess.WRITE)
 	if file:
 		file.store_string("{}")
 		file.close()
 ```
 
-The brackets are not decoration: a bare `a if b else c` spliced between two `+` signs binds the whole
-join into the branches, which is a wrong path rather than a parse error, so the guarded form wears
-its own.
+**Both sets of brackets there are load-bearing.** The outer pair is the guard's: a bare
+`a if b else c` spliced between two `+` signs binds the whole join into the branches, which is a
+wrong path rather than a parse error. The inner pair is the *slot's*, and it is the one that matters
+most on this particular row: a name typed as `typed + ".json"` with a bare `.validate_filename()`
+after it would have validated the `".json"` and handed `..` through untouched - through the one row
+that exists to stop it.
 
 **Show In The File Manager** opens the player's own file browser with the file selected, over
 `OS.shell_show_in_file_manager`. It is **desktop only**, said on the row: a web or mobile build does
@@ -419,6 +465,14 @@ reach: the player's files, their network, their machine. So the Doctor's Files s
 that came in through one of the game's own doors - dropped on the window, chosen by the player, found
 in a watched folder, written out of an unpacked archive - being handed to `load()`, and offers the
 three data-shaped doors instead.
+
+**Six spellings count as that door, because they all end the same way.** `load()` and
+`ResourceLoader.load()` are the obvious pair; `ResourceLoader.load_threaded_request()` asks and
+`ResourceLoader.load_threaded_get()` hands the built object over, so both halves are watched rather
+than only the one that starts it. `change_scene_to_file()` is the third shape and the easiest to miss:
+travelling to a layout attaches that scene's script exactly as loading it does, whatever the receiver
+in front of the dot was written as. And `ProjectSettings.load_resource_pack()` is the widest of the
+six, which is why it carries a sentence of its own in the finding rather than sharing the loaders'.
 
 It is a **warning and not an error**. A game whose mods *are* code is a real decision that some
 projects make deliberately; what is not a decision is making it without knowing. The check reads
@@ -518,6 +572,14 @@ player gets at it.
   way in at all.
 - **A watcher under `res://` will never see anything change.** It is packed and read-only in an
   exported game. Watch `user://`.
+- **Every watch wants a Stop Watching somewhere.** A poll runs for the rest of the session unless
+  something ends it. The Doctor files a note about a script that starts one and stops none, and the
+  note is all it does: where the stop belongs is a decision about your game, not about your code.
+- **A safe name is not a Windows-safe name.** `String.validate_filename` keeps a trailing dot, which
+  Windows then drops silently, and it does not know the reserved device names - `con`, `prn`, `aux`,
+  `nul`, `com1` all survive it and Windows takes none of them. Put the extension on yourself after
+  the safe name, and a prefix of your own in front of it, rather than letting the player's typing be
+  the whole file name.
 - **An unpack writes files; it does not install them.** The guard keeps entries inside the folder you
   named. What the files then *mean* is your sheet's decision, which is the whole point of the kinds
   table above.

@@ -258,7 +258,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 |---|---|---|---|
 | Trauma | (none) | float | The current trauma level, 0 to 1 - drive a rumble strength or a shaking HUD element from it. |
 | Ticker Value | `ticker_name` (String) | float | What a ticker currently SHOWS - the eased value Count To is rolling. Print or draw this instead of the real variable. |
-| Chromatic Shake Magnitude | (none) | float | How wide the split is right now, in pixels: the magnitude after the falloff, the wander and the no-flashing halving. Zero when nothing is shaking - drive a rumble or a HUD wobble from it and the whole hit reads as one thing. |
+| Chromatic Shake Magnitude | (none) | float | How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing. Zero when nothing is shaking - drive a rumble or a HUD wobble from it and the whole hit reads as one thing. |
 
 ### Triggers
 
