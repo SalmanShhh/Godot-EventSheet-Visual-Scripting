@@ -66,9 +66,12 @@ const KIND_COLOUR: String = "colour"
 ## THE OWN-IT LINES every material write is preceded by, spelled once. An emitter driving itself with
 ## nothing is given a plain process material, because there is nothing to copy; one driving itself
 ## with a material FILE is given a copy of it, so a `.tres` worn by every torch in the level never
-## changes under the other torches. A material the scene already keeps inside itself has no
-## `resource_path` and is nobody else's, so it is left exactly as it is - and a copy taken once has no
-## path either, which is what makes a row that runs every frame take one copy and not sixty.
+## changes under the other torches. That covers the material a scene keeps INSIDE itself as well: an
+## embedded sub-resource carries a path of its own
+## (`res://torch.tscn::ParticleProcessMaterial_m4d0s`) and every instance of that scene is driving
+## itself with the one the scene file holds, so copying it once is right rather than over-careful. A
+## copy taken once has no path at all, which is what makes a row that runs every frame take one copy
+## and not sixty.
 const OWN_LINES: String = "if %s == null:\n\t%s = %s.new()\nelif %s is %s and not %s.resource_path.is_empty():\n\t%s = %s.duplicate()\n" % [
 	MATERIAL_MEMBER, MATERIAL_MEMBER, MATERIAL_CLASS, MATERIAL_MEMBER, MATERIAL_CLASS,
 	MATERIAL_MEMBER, MATERIAL_MEMBER, MATERIAL_MEMBER]

@@ -8,10 +8,12 @@
 #
 # THE OWN-IT COURTESY IS IN THE TEMPLATE, not in a row a reader has to remember. A material is a
 # FILE: two meshes pointing at the same `.tres` point at ONE object, so recolouring the goblin the
-# player hit recolours all twelve of them. So every write below opens with the two lines that give
-# this mesh its own copy - a duplicate of whatever it is drawing with now, parked on
+# player hit recolours all twelve of them. So every write below opens with the lines that give this
+# mesh its own copy - a duplicate of whatever it is drawing with now, parked on
 # `material_override`, where it shadows the shared one for this node and no other. It is emitted,
-# never assumed, and it is taken once: a mesh that already has an override keeps it.
+# never assumed, and it is taken once: a mesh already wearing a copy of its own keeps it, and a mesh
+# wearing a shared FILE in that slot is copied off it, because a material dropped into the Inspector
+# is somebody else's just as much as the mesh's own surface material is.
 #
 # WHICH IS ALSO WHY THE WRITING ROWS ARE HOST-ONLY. Their templates open with an `if`, so the
 # cross-node transform leaves them alone: a row that gives ANOTHER node its own copy and then writes

@@ -20,13 +20,20 @@
 #
 # THE OWN-IT COURTESY, and why it is in the template rather than in a row of its own. A material is a
 # FILE, and two meshes pointing at the same `.tres` are pointing at ONE object: recolouring the
-# goblin the player hit recolours all twelve of them. So every write below is preceded by the two
-# lines that give this mesh its own copy first - a duplicate of whatever it is drawing with now,
-# parked on `material_override`, where it shadows the shared one for this node and no other. The
-# guard is `material_override == null` rather than a meta flag, because the override IS the flag: it
-# is the thing the copy is stored in, so a mesh that has one has already been given one, and a mesh
-# whose override was cleared by some later row is given a fresh copy rather than writing through a
-# null. The copy is taken once, whichever of the two ways the row is reached.
+# goblin the player hit recolours all twelve of them. So every write below is preceded by the lines
+# that give this mesh its own copy first - a duplicate of whatever it is drawing with now, parked on
+# `material_override`, where it shadows the shared one for this node and no other.
+#
+# THE GUARD ASKS TWO QUESTIONS, and it has to. An empty `material_override` is a mesh drawing with
+# the mesh resource's own surface material, so the copy is taken from `get_active_material`. A
+# FILLED `material_override` is not proof the mesh owns anything: the commonest way a material is
+# assigned at all is by dropping a shared `.tres` into that very slot in the Inspector, and a rule
+# that read "has an override" as "owns one" would write and tween the shared file - all twelve
+# goblins again, which is the exact failure this courtesy exists to prevent. So the second question
+# is the one every other table here asks: an override still carrying a `resource_path` came from a
+# file and is copied. A copy taken once has no path, so a row running every frame takes one copy and
+# not sixty, and a mesh whose override was cleared by some later row is given a fresh one rather
+# than writing through a null.
 #
 # 2D IS A DIFFERENT SURFACE, not a second dimension of this one: a sprite's look is a
 # CanvasItemMaterial with two knobs (blend and light mode), not a BaseMaterial3D with nine. Those two
@@ -79,11 +86,15 @@ const KIND_COLOUR: String = "colour"
 const KIND_TEXTURE: String = "texture"
 const KIND_CHOICE: String = "choice"
 
-## THE TWO LINES every write is preceded by - the own-it courtesy, spelled once. A mesh that already
-## has its own override keeps it; one that has none is given a copy of whatever it is drawing with,
-## or a plain material when it is drawing with nothing.
-const OWN_LINES: String = "if %s == null:\n\t%s = %s(0).duplicate() if %s(0) != null else %s.new()\n" % [
-	OVERRIDE_MEMBER, OVERRIDE_MEMBER, ACTIVE_CALL, ACTIVE_CALL, FALLBACK_MATERIAL]
+## THE LINES every write is preceded by - the own-it courtesy, spelled once, asking TWO questions.
+## A mesh drawing with nothing of its own is given a copy of whatever it IS drawing with, or a plain
+## material when it is drawing with nothing at all. A mesh already wearing an override is given a
+## copy of that one when it came from a file, because dropping a shared `.tres` into that very slot
+## in the Inspector is the commonest way a material is assigned. A copy taken once has no
+## `resource_path`, so a row running every frame takes one copy and not sixty.
+const OWN_LINES: String = "if %s == null:\n\t%s = %s(0).duplicate() if %s(0) != null else %s.new()\nelif not %s.resource_path.is_empty():\n\t%s = %s.duplicate()\n" % [
+	OVERRIDE_MEMBER, OVERRIDE_MEMBER, ACTIVE_CALL, ACTIVE_CALL, FALLBACK_MATERIAL,
+	OVERRIDE_MEMBER, OVERRIDE_MEMBER, OVERRIDE_MEMBER]
 
 ## THE WORDS. One entry per thing a game touches, and for each one the spellings it can take in
 ## preference order, as `property -> ace_id stem`. The stems are frozen (see the header); which
@@ -366,17 +377,20 @@ static func default_of(word: String) -> String:
 ## row that means one slot owns that slot instead. `slot` is the token the row names the surface
 ## with, spliced in wherever the guard, the copy and the write each ask about that same slot.
 static func own_surface_lines(slot: String) -> String:
-	return "if %s(%s) == null:\n\t%s(%s, %s(%s).duplicate() if %s(%s) != null else %s.new())\n" % [
+	return "if %s(%s) == null:\n\t%s(%s, %s(%s).duplicate() if %s(%s) != null else %s.new())\nelif not %s(%s).resource_path.is_empty():\n\t%s(%s, %s(%s).duplicate())\n" % [
 		SURFACE_OVERRIDE_GET, slot, SURFACE_OVERRIDE_SET, slot, ACTIVE_CALL, slot, ACTIVE_CALL,
-		slot, FALLBACK_MATERIAL]
+		slot, FALLBACK_MATERIAL, SURFACE_OVERRIDE_GET, slot, SURFACE_OVERRIDE_SET, slot,
+		SURFACE_OVERRIDE_GET, slot]
 
 
 ## THE OWN-IT COURTESY FOR A SPRITE, and the one line of it that is not a courtesy at all. A sprite
 ## drawing with nothing is given a plain CanvasItemMaterial, because there is nothing to copy; one
-## drawing with a material FILE is given a copy of it, so a `.tres` worn by every coin in the level
-## never changes under the other coins. A material the scene already keeps inside itself has no
-## `resource_path` and is nobody else's, so it is left exactly as it is - and a copy taken once has
-## no path either, which is what makes a row that runs every frame take one copy and not sixty.
+## drawing with a material that carries a `resource_path` is given a copy of it, so a `.tres` worn by
+## every coin in the level never changes under the other coins. That covers the material a scene
+## keeps INSIDE itself too: an embedded sub-resource carries a path of its own
+## (`res://coin.tscn::CanvasItemMaterial_p3f1c`), and every instance of that scene is wearing the one
+## the scene file holds - so copying it once is right rather than over-careful. A copy taken once has
+## no path at all, which is what makes a row that runs every frame take one copy and not sixty.
 ##
 ## THE SHADER IS NOT TOUCHED, here or in the write that follows. A sprite wearing a ShaderMaterial
 ## is wearing somebody's shader, and blend and light live inside that shader rather than on a

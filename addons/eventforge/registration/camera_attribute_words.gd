@@ -222,11 +222,13 @@ static func words() -> PackedStringArray:
 
 
 ## THE LINES every write is preceded by - the own-it courtesy for one host, spelled once. A slot
-## holding nothing is given a Practical, because there is nothing to copy; one holding a FILE is
-## given its own copy of it, whichever class that file is. An attributes resource the scene already
-## keeps inside itself has no `resource_path` and is nobody else's, so it is left exactly as it is -
-## and a copy taken once has no path either, which is what makes a row that runs every frame take one
-## copy and not sixty.
+## holding nothing is given a Practical, because there is nothing to copy; one holding anything that
+## carries a `resource_path` is given its own copy of it, whichever class that file is. That covers
+## the attributes a scene keeps INSIDE itself as well: an embedded sub-resource carries a path of its
+## own (`res://level.tscn::CameraAttributesPractical_a1b2c`) and every instance of that scene is
+## wearing the one the scene file holds, so copying it once is right rather than over-careful. A copy
+## taken once has no path at all, which is what makes a row that runs every frame take one copy and
+## not sixty.
 static func own_lines(host: Dictionary) -> String:
 	var member: String = str(host["member"])
 	return "if %s == null:\n\t%s = %s.new()\nelif not %s.resource_path.is_empty():\n\t%s = %s.duplicate()\n" % [

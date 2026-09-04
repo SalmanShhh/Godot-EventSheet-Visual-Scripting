@@ -54,10 +54,12 @@ const GUARD_LINE: String = "if %s.%s != null and %s is %s:" % [ENVIRONMENT_MEMBE
 
 ## THE OWN-IT LINES, indented one step because they live inside that guard. TWO resources are written
 ## on the way to the material, so two are owned: the Sky (whose `sky_material` slot the copy is parked
-## in) and the sky material itself. Each is copied only when it came from a FILE, because a resource
-## the scene keeps inside itself is nobody else's - and a copy taken once has no `resource_path`, so a
-## row running every frame takes one copy and not sixty. The Environment above them is owned by the
-## caller, with the same lines every other environment row opens with.
+## in) and the sky material itself. Each is copied while it still carries a `resource_path`, which is
+## every resource somebody else can also be holding - a `.tres` on disk, and the embedded
+## sub-resource a scene keeps inside itself (`res://sky.tscn::ProceduralSkyMaterial_k9f2e`), which is
+## worn by every instance of that scene. A copy taken once has no path at all, so a row running every
+## frame takes one copy and not sixty. The Environment above them is owned by the caller, with the
+## same lines every other environment row opens with.
 const OWN_LINES: String = "\tif not %s.%s.resource_path.is_empty():\n\t\t%s.%s = %s.%s.duplicate()\n\tif not %s.resource_path.is_empty():\n\t\t%s = %s.duplicate()\n" % [
 	ENVIRONMENT_MEMBER, SKY_MEMBER, ENVIRONMENT_MEMBER, SKY_MEMBER, ENVIRONMENT_MEMBER, SKY_MEMBER,
 	SKY_MATERIAL_PATH, SKY_MATERIAL_PATH, SKY_MATERIAL_PATH]

@@ -373,16 +373,19 @@ where a reader looks for it. Nine words, and not one of them is a property name 
 
 **Every write gives the mesh its own copy of the material first, and you can see it in the code.** A
 material is a file: two meshes pointing at the same `.tres` point at ONE object, so recolouring the
-goblin the player hit recolours all twelve of them. Each of these rows therefore opens with two
+goblin the player hit recolours all twelve of them. Each of these rows therefore opens with the
 lines that duplicate whatever the mesh is drawing with into `material_override`:
 
 ```gdscript
 if material_override == null:
 	material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+elif not material_override.resource_path.is_empty():
+	material_override = material_override.duplicate()
 material_override.albedo_color = Color(1, 0, 0)
 ```
 
-The override is the flag, so the copy is taken once: a mesh that already owns one keeps it, and a
+A copy has no `resource_path`, so the copy is taken once: a mesh already wearing one of its own
+keeps it, a mesh wearing a shared `.tres` in that slot is copied off it, and a
 mesh drawing with nothing at all is given a plain `StandardMaterial3D` rather than reaching through
 a null. Nothing is assumed and there is no step to remember.
 

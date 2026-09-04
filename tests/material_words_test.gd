@@ -27,11 +27,15 @@ const CRATE_SCENE: String = FIXTURE_DIR + "material_scene_crate.tscn"
 const STONE: String = FIXTURE_DIR + "material_shared_stone.tres"
 const BANNER_MATERIAL: String = FIXTURE_DIR + "material_banner_shader.tres"
 
-## The two lines every write opens with, written out here rather than read from the file under test:
+## The lines every write opens with, written out here rather than read from the file under test:
 ## a test that builds its expectation from the same constant proves only that a constant equals
-## itself.
+## itself. The `elif` is the half a shared `.tres` dropped into the Inspector needs - without it
+## a mesh with an override was taken for a mesh that owns one, and every Set and Fade wrote the
+## shared file.
 const OWN_LINES := "if material_override == null:\n" \
-	+ "\tmaterial_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()\n"
+	+ "\tmaterial_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()\n" \
+	+ "elif not material_override.resource_path.is_empty():\n" \
+	+ "\tmaterial_override = material_override.duplicate()\n"
 
 
 static func run() -> bool:
@@ -306,7 +310,10 @@ static func _test_the_surface_slots() -> bool:
 	var templates: Dictionary = _templates()
 	var own: String = "if get_surface_override_material({surface}) == null:\n" \
 		+ "\tset_surface_override_material({surface}, get_active_material({surface}).duplicate()" \
-		+ " if get_active_material({surface}) != null else StandardMaterial3D.new())\n"
+		+ " if get_active_material({surface}) != null else StandardMaterial3D.new())\n" \
+		+ "elif not get_surface_override_material({surface}).resource_path.is_empty():\n" \
+		+ "\tset_surface_override_material({surface}," \
+		+ " get_surface_override_material({surface}).duplicate())\n"
 	return SUPPORT.pins("material_words_test", [
 		["one slot is painted without touching the others",
 			templates.get("MaterialSetSurfaceMaterial", ""),
@@ -400,8 +407,10 @@ static func _test_ids_are_unique() -> bool:
 		seen[row.ace_id] = true
 	var ok: bool = SUPPORT.check("material_words_test", "no id is published twice", doubled,
 		PackedStringArray())
+	# A VALUE rather than a literal count: what is being asserted is that no id was published
+	# twice, so the number of distinct ids has to be the number of descriptors.
 	return SUPPORT.check("material_words_test", "the module publishes every word's rows",
-		seen.size(), 31) and ok
+		seen.size(), MODULE.get_descriptors().size()) and ok
 
 
 ## Help on the row and on every field it offers - the words a reader meets before they have run

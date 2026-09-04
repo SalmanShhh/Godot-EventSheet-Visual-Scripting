@@ -64,9 +64,12 @@ const KIND_SWITCH: String = "switch"
 const KIND_RESOURCE: String = "resource"
 
 ## THE LINES every write is preceded by - the own-it courtesy, spelled once. A node holding nothing
-## is given a plain Environment, because there is nothing to copy; one holding an Environment FILE is
-## given its own copy of it. An Environment the scene already keeps inside itself has no
-## `resource_path` and is nobody else's, so it is left exactly as it is.
+## is given a plain Environment, because there is nothing to copy; one holding an Environment that
+## carries a `resource_path` is given its own copy of it. That covers the Environment a scene keeps
+## INSIDE itself too: an embedded sub-resource carries a path of its own
+## (`res://cave.tscn::Environment_th8h6`) and every instance of that scene is wearing the one the
+## scene file holds, so copying it once is right rather than over-careful. A copy taken once has no
+## path at all, which is what makes a row that runs every frame take one copy and not sixty.
 const OWN_LINES: String = "if %s == null:\n\t%s = %s.new()\nelif not %s.resource_path.is_empty():\n\t%s = %s.duplicate()\n" % [
 	ENVIRONMENT_MEMBER, ENVIRONMENT_MEMBER, FALLBACK_ENVIRONMENT, ENVIRONMENT_MEMBER,
 	ENVIRONMENT_MEMBER, ENVIRONMENT_MEMBER]

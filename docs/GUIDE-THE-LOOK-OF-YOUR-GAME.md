@@ -73,11 +73,16 @@ the emitted code where you can read it rather than in a step you have to remembe
 ```gdscript
 if material_override == null:
 	material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+elif not material_override.resource_path.is_empty():
+	material_override = material_override.duplicate()
 material_override.albedo_color = Color("c0392b")
 ```
 
-Three promises are in those two lines. A mesh that already owns an override keeps it. A mesh drawing
-with a shared file is given a copy of that file. A mesh drawing with nothing at all is given a plain
+Three promises are in those four lines. A mesh that already owns a copy of its own keeps it - a copy
+has no `resource_path`, which is what makes a row that runs every frame take one copy and not sixty.
+A mesh drawing with a shared file is given a copy of that file, and so is a mesh with that shared
+file dropped straight into its `material_override` slot in the Inspector, which is the commonest way
+a material is assigned at all. A mesh drawing with nothing at all is given a plain
 `StandardMaterial3D` rather than the row reaching through a null.
 
 The copy is taken **once**, and the reason is worth knowing: `material_override` being filled is
@@ -128,9 +133,13 @@ On Body Entered  ->  Crate | Set colour to #ffffff
 func _on_body_entered(body: Node) -> void:
 	if material_override == null:
 		material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+	elif not material_override.resource_path.is_empty():
+		material_override = material_override.duplicate()
 	material_override.albedo_color = Color("ffffff")
 	if material_override == null:
 		material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+	elif not material_override.resource_path.is_empty():
+		material_override = material_override.duplicate()
 	material_override.emission_enabled = true
 	material_override.emission_energy_multiplier = 4.0
 	create_tween().tween_property(material_override, "emission_energy_multiplier", 0.0, 0.35)
