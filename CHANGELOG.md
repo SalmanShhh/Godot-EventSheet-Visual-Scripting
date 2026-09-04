@@ -466,6 +466,36 @@
   English in every locale (they are read out of a table, so the harvester cannot see them), and five
   rows whose node parameter had no starting value emitted a line that does not parse the moment they
   were dropped.
+- **A chromatic shake is as wide as the row says it is.** With no angle given - the way the row
+  opens - the direction the split pointed was the raw noise PAIR, which is a vector shorter than one
+  nearly always and nothing at all in the frames where both samples crossed zero together. So a row
+  asking for 12 pixels put about 4 on the screen while **Chromatic Shake Magnitude** went on
+  answering 12, and only a fixed angle, a unit vector by construction, ever honoured the pixel unit.
+  The noise picks the ANGLE now: the same wander, and the number on the row, the number the
+  expression answers and the width on the screen are finally one number.
+- **A reducing shake falls in a straight line.** The falloff was spent twice - once on the split
+  written to the shader, and again on the dial the shader mixes that split in by - so what a player
+  saw fell as the fade SQUARED: a quarter of the effect half way through a shake the row, the docs
+  and the expression all described as a straight line to nothing. The dial is the on/off gate it was
+  meant to be, and the curve lives in one place.
+- **The no-flashing setting slows the wander instead of jumping it.** It halves the rate the split's
+  direction wanders at, and it did that by rescaling the whole clock behind it, which moves where
+  every past frame was read from - so turning it on part way through a shake snapped the split to an
+  unrelated direction in that one frame. That is a flash, delivered by the setting that exists to
+  prevent them. The clock takes the rate on the way in now, so a change bends the walk from here on.
+- **The screen-FX overlay reads the screen four extra times only while a shake is running.** The
+  shake's split costs four more taps per pixel, and they were being paid on every frame the overlay
+  was up at all - a vignette pulse, a chromatic kick, speed lines - with no shake anywhere near it.
+- **Slowmo's clock dropdown emits a quoted word.** A dropdown key goes into the call verbatim, so a
+  row that picked realtime emitted `slowmo(0.15, 0.25, realtime)` - an identifier nothing declares,
+  and a game that did not parse. The quotes moved into the template, the way the scene transition,
+  the car direction, the slide direction and the shake's own mode already carry them. A shipped
+  template changing is normally not allowed; this one is changing because what it emitted was never
+  GDScript, so no working row can have been built from it.
+- **The carousel wears the look it just wrote.** The flagship saves the live post stack to a file
+  and wears it straight back, which is the whole point of the pair of rows - but `load()` answers
+  with whatever it read the first time, so the second press wore the first press's look. Read back
+  with the cache ignored, the row means what the board says it means.
 
 ### Fixed
 
