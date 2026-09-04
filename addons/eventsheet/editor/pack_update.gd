@@ -358,6 +358,12 @@ static func restorable(pack_folder: String) -> Array[Dictionary]:
 static func _ring_only_files(pack_folder: String) -> PackedStringArray:
 	var prefix: String = "%s_" % EventSheetBackups.backup_dir_for(pack_folder).get_file()
 	var found: PackedStringArray = PackedStringArray()
+	# THE RING ROOT IS NOT THERE UNTIL SOMETHING FILLS IT, and a project that has never taken an
+	# update is the ordinary state of a fresh one. `DirAccess.get_directories_at` answers a missing
+	# folder with an empty list AND an engine error in the Output panel, so pressing Restore… on such
+	# a project got the manager's polite "holding nothing" sentence with a red line underneath it.
+	if not DirAccess.dir_exists_absolute(EventSheetBackups.BACKUPS_ROOT):
+		return found
 	for ring_name: String in DirAccess.get_directories_at(EventSheetBackups.BACKUPS_ROOT):
 		if not ring_name.begins_with(prefix):
 			continue
