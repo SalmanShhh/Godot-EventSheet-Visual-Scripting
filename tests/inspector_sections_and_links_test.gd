@@ -121,7 +121,10 @@ static func _followed_edit_is_one_step() -> bool:
 		["with no undo manager there is no step to write",
 			EventSheetDrawerWidgets.LinkToggle.commit_link(null, target, "count", 8, 16, "spacing", 2.0, 4.0), false]
 	])
+	# UndoRedo is an Object, not a RefCounted: clearing the history drops what it holds, and freeing
+	# it is what keeps the run's exit-time leak count at zero.
 	undo_redo.clear_history()
+	undo_redo.free()
 	return ok
 
 

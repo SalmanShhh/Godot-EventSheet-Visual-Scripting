@@ -223,6 +223,11 @@ static func _undo_step() -> bool:
 		["and neither does a drag with no undo manager",
 			EventSheetInspectorHandlePlugin.commit_drag(null, node, "radius", 1.0, 2.0), false]
 	]) and ok
+	# UndoRedo is an Object, not a RefCounted: a run that only drops the reference leaks it, and the
+	# leak is counted at exit against every other test in the same process.
+	undo.clear_history()
+	undo.free()
+	still.free()
 	node.free()
 	return ok
 
