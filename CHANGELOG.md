@@ -3301,6 +3301,13 @@ against Godot 4.7 before it was repaired.
   prelude above a write all open as rows and save back byte-identically.
 - Game saves are still the Save System's territory - slots, formats, backups - and the guide says
   where the line between the two is.
+- **The rows a project already wrote open back as the rows that wrote them.** Three more spellings
+  join the lift table: the CSV read with Godot's own reader opens as **Table Of File**, the
+  `store_csv_line` loop opens as **Write Table To File**, and the seek-to-end append opens as
+  **Append To File** - each one gated by byte-exact re-emission, so a file that opens as a row saves
+  back as the bytes it arrived as. The **Ask** branch does the same across its two halves: the
+  native chooser and the `FileDialog` fallback are one program written twice, and they open as the
+  ONE row that wrote them rather than as a verbatim block a reader has to recognise.
 
 ### Tables read by the engine itself, and the files band
 
@@ -3581,6 +3588,73 @@ These are the places the two disagreed.
   about. That was true from the start and stated only in a source comment; it is in the finding and
   in the guide's Doctor chapter now, because a quiet report that reads as a clean project is the one
   way an honest check misleads.
+- **Scene File Is Data-Only read the tags and walked past the bodies.** A node's body line begins
+  with no `[`, and the engine's own value parser reads it anyway: `script = Resource("user://x.gd")`
+  is resolved by LOADING that path and `script = Object(GDScript,"script/source":"...")` by making
+  the object and compiling the source carried inside it. Neither writes a resource tag, so a crafted
+  scene with no `[sub_resource]` line in it answered TRUE and ran its author's code the moment
+  anything built it. Both spellings were run before they were written down. Either constructor now
+  answers false wherever it appears, matched on a WORD BOUNDARY - which is what keeps the honest
+  `ExtResource(` and `SubResource(` cleared, and every committed showcase scene still answers true.
+- **And it compared the letters of a tag while the engine decoded them.** A type spelled with a
+  unicode escape in the middle of it is `GDScript` to Godot and something else to a reading that
+  compares as written; a path whose two dots are escaped climbs out of the project while beginning
+  with `res://`; an escaped quote ends a tag early here and not there. All three were run and all
+  three got a script past the guard. A resource tag holding a BACKSLASH is refused now: Godot's own
+  saver writes none, decoding them would be a second copy of the engine's parser kept in step by
+  hope, and unfamiliar is not cleared.
+- **The answer now says what it does not cover** - on the row, in the emitted helper's own comment,
+  and in both guides. A cleared scene brings no code of its OWN, and may still hold a `[connection]`
+  naming one of your methods with arguments of its own, an `Animation` track calling one at a
+  keyframe, or a node whose `instance_placeholder` loads another scene on `create_instance()`. None
+  of those brings a stranger's code in; each can reach yours.
+- **Three doors an outside path could walk through unwatched.** The trace watched `load(`,
+  `ResourceLoader.load(` and `load_threaded_request(`, so a dropped or chosen path handed to
+  `get_tree().change_scene_to_file(...)` earned nothing - and travelling to a layout attaches the
+  scene's script exactly as loading it does. The threaded pair had the gap from the other end: the
+  call that ASKS was watched and the call that hands the object over was not. Widest of the three is
+  `ProjectSettings.load_resource_pack`, which builds nothing at the moment it runs and MOUNTS the
+  pack into `res://` instead, replacing the game's own files unless its second argument says not to.
+  It earns a sentence of its own in the finding, because `res://` being the game's own by
+  construction is the premise the scene reader rests on.
+- **A slot a method is asked of now wears its own brackets.** A parameter holds an EXPRESSION and a
+  method binds to its last operand, so `{name}.validate_filename()` validated only the `".json"` of
+  a name written `typed + ".json"` - and handed `..` through the one row that exists to stop it,
+  really producing `user://saves/../eviljson`. Four more had the same shape: the folder line of
+  **Write Text File (in a folder)** made the folder of `".txt"`, **Sound From File** asked the last
+  piece of a joined path for its extension and so fell to the fallback with nothing said, **Free
+  File Path**'s ceiling bound the wrong way round for anything but a literal, and the two archive
+  loops joined entry paths onto the last operand of their folder. None had shipped in a release, so
+  the fix is free today and would have been a frozen template tomorrow.
+- **A `res://` write through a folder handle is the export trap too.** The check read the write-call
+  list and nothing else, so `DirAccess.open("res://").make_dir("levels")` earned no finding while
+  the literal sat right there in the line - and the finding promises the place is read off the path
+  written in the line. A handle is followed the way an archive packer already was, and only when one
+  of the changing methods is asked of it: opening a folder to LIST it is what `res://` is for.
+- **The watcher's three signal comments shipped as an orphaned block** four lines under
+  `var _watching`, pages from the signals they describe - the builder wrote them interleaved and the
+  emitter gathers signals into their own section while a plain `#` block stays where the raw row
+  sat. They are doc comments now, so they travel with the signal. **On A File Changed** compares
+  whether the modified time is DIFFERENT while the page said "newer": a file restored from a backup
+  carries an older time and really has changed, and both the line and the page say so now. And the
+  sheet's file band printed the row's interval literally while the watcher floors it at a tenth of a
+  second - `every 0 s` on the band was ten looks a second in the game. The band shows the gap the
+  watcher will really keep, and the suite pins the two files to one number.
+- **Three things a lexical unpack guard cannot see, said out loud.** The guard held against every
+  traversal spelling tried on Windows - `../`, `..\`, `a://../../../`, `sub/../../`, absolute,
+  drive-lettered, scheme-prefixed. What it cannot see is a symlink or junction already sitting inside
+  the target folder, an entry named `x:y.txt` landing as a Windows alternate data stream on a file
+  called `x`, and an entry the reader cannot decode landing as a 0-byte file that is counted as one
+  that landed. An entry is also read whole into memory before it is written. All four are in the
+  guide and the module page now.
+- **Both loaders' fallback slots say what they do not answer for.** "When there is no file at that
+  path" was the whole story on the row, while a file that IS there and cannot be decoded answers
+  null and an engine message instead - the guard asks whether a file exists, not whether it is a
+  picture or a track. Also on the row: **Safe File Name** keeps a trailing dot, which Windows then
+  drops silently.
+- **The Mods chapter names the Mods pack**, which is where the rest of that story lives, and says
+  the one thing about it that belongs on a Files page: its mounting verb is exactly the code door
+  these pages say the file vocabulary never opens.
 
 ### Every call on a known class is a row
 

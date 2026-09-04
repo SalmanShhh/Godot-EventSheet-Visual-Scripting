@@ -52,7 +52,14 @@ and the writes guard the file handle, so a bad path cannot null-dereference.
   to `DirAccess.remove_absolute`, which only removes an EMPTY directory. Clear a folder's files before
   removing the folder.
 - **Paths are expressions.** Every path parameter takes any expression, so
-  `"user://slot_" + str(slot) + ".json"` is a perfectly ordinary path.
+  `"user://slot_" + str(slot) + ".json"` is a perfectly ordinary path. Which is also why a template
+  that asks a method OF a path wraps it in brackets - `(path).get_base_dir()`, never
+  `path.get_base_dir()` - because a method binds to the last operand of a join.
+- **A file this vocabulary would have written opens back as the row that wrote it.** The CSV read,
+  the `store_csv_line` loop, the seek-to-end append and both halves of the Ask branch are lifted from
+  a `.gd` you typed yourself, and the file saves back byte for byte.
+
+![A sheet called ScoreBoard opened from a hand-written .gd, with the head's files band reading user://scores.csv - written, user://run.log - written and res://data/items.csv - read, each with its emitted line echoed beside it. Below it one On Created event holds two actions: ScoreBoard write table items to "user://scores.csv" - the first line names the columns, and System append "the run ended" to file "user://run.log"](../images/files-runs-reopened.png)
 
 ## Why writes belong under `user://`
 
