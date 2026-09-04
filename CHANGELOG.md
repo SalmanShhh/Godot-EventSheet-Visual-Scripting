@@ -243,6 +243,19 @@
 
 ### Fixed in the camera and viewport pass
 
+- **The rail remembered who held the view; the player was looking at somebody else.** Blend To
+  promises the travel starts from whatever shot is on screen, and the rail stood its own camera on
+  the record of who IT last handed the view to - a record only the rail itself ever writes. The
+  builtin Make Current row, a juice pack, or one line of anybody's script can make a camera current
+  without telling it, and the blend then opened on a pose nobody was watching: the snap the row
+  exists to avoid. Both twins now read the camera the viewport says is current, and fall back to
+  their own record only when there is no tree to ask.
+- **A Fly Along row in 3D read as four facts.** The route, the pace, the curve and the node kept in
+  frame were all on the row, which is a settings line rather than a sentence. Three facts stay -
+  the route, the pace, and what stays in frame - and the ease, a dropdown word with the rail's own
+  default behind it, reads in the parameter dialog where Scene Flow's ease already reads.
+- **The pack count in the README and CLAUDE.md was four behind the tree**: 125 pack folders
+  measured off the builder glob when this pass closed, not 121.
 - **A rail shot the player could not see.** Blend To and Fly Along drove the rail's own camera
   without ever making it current, so a shot started while another camera held the view - after a
   Cut To, or after the previous blend handed over - animated a camera nobody was looking at and
