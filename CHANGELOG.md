@@ -135,6 +135,20 @@
   project that already wrote these lines by hand opens as. The addon index gains Blend Modes and Post
   Kit, the engine-level reference gains the two clipping rows, the pack count is re-measured at
   **121**, and the words land in all nine translation CSVs (**19 new keys**).
+- **A chromatic shake, beside the kick that stays.** The radial chromatic kick both Juice packs have
+  always shipped pushes the colour channels out from the centre and eases them back; it is a flash,
+  not a movement. Its twin is the camera Shake said on the screen instead of the lens: a split whose
+  direction walks along the same simplex noise the camera shake wobbles with, at the same
+  `shake_frequency`, so a hit that moves the camera and splits the picture reads as one thing. A
+  magnitude in pixels either falls linearly to nothing over the duration or holds flat and stops
+  dead, firing again restarts it rather than stacking a second on it, and a given angle keeps the
+  split on one line and lets only the amount breathe. The clock is advanced by `delta`, which the
+  engine has already scaled by time, so slow motion glides the split and a hitstop freezes it
+  mid-frame. Four rows in each pack - **Chromatic Shake**, **Stop Chromatic Shake**, the
+  **Is Chromatic Shaking** question and the **Chromatic Shake Magnitude** answer in pixels after the
+  falloff - over the shared overlay, which gains a shift and a mix dial beside the kick's untouched
+  one. The effect-strength dial scales it, the no-flashing answer halves both the split and the rate
+  it wanders at, and the tick parks itself the frame the shake ends.
 - **The flagship showcase plays what this pass added.** Carousel of Juice was eight tiles springing
   on a beat; it now feels the beat on the whole screen. Every beat pulses a vignette out of the post
   stack and pulls the tiles' colour channels apart along a fresh angle. **ui_accept** plays the
@@ -10757,6 +10771,21 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   no branch gate starts failing, no diff appears anywhere - while the sheet in front of a reader
   still offers the newer spelling. A stored `.tres` sheet, which writes down which verb each row was
   picked from, reports both rows and says neither asks anybody anything.
+- **The migration report can be asked to read every script.** The Doctor's `.gd` half has always
+  been a capped sample that says so in its own summary line, because reading a script means LIFTING
+  it and a thousand of them is minutes rather than seconds. `EventSheets.migration_report(true)` now
+  reads the whole half, for the run that has to be certain - a release check, a project whose packs
+  disagree with themselves. **The default is unchanged and the frozen shape is unchanged**: a
+  `migration_report()` written before the parameter existed goes on meaning exactly what it meant.
+  The summary line now names its mode in BOTH directions - a whole read says it was whole even when
+  the sample would have covered everything - because a mode you can only tell apart by counting the
+  findings is a mode nobody can trust the verdict of.
+- **The two guides stopped naming the wrong command as the CI gate.** `GUIDE-UPDATING-AND-REFACTORING`
+  and `GUIDE-VERSION-CONTROL` both offered `EventSheets.migration_report()` where a branch gate
+  belongs; CI runs `tools/verify_sheets.gd`, whose FOURTH check reads that same report and fails on
+  the rows that ask. The recipe in both guides is now that command, and the API is named for what it
+  is: the in-editor twin, for a Tool sheet or an editor plugin, never the thing CI calls into the
+  editor for.
 - **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
   parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
   "this node", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -

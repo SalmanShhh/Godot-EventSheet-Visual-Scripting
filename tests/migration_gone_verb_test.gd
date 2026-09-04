@@ -34,6 +34,7 @@ static func run() -> bool:
 	ok = _test_what_is_not_a_finding() and ok
 	ok = _test_keeping_it_as_code() and ok
 	ok = _test_the_doctor_files_the_same_words() and ok
+	ok = _test_the_two_corpus_modes() and ok
 	return ok
 
 
@@ -505,6 +506,105 @@ static func _write(path: String, text: String) -> Error:
 	handle.store_string(text)
 	handle.close()
 	return OK
+
+
+# ── 8. the two corpus modes ───────────────────────────────────────────────────────
+
+
+## THE SAMPLE AND THE WHOLE READ, both pinned by value over a fixture folder, because a mode nobody
+## can tell apart from its output is a mode nobody can trust. The sampled run is the default and
+## always will be - reading a script means LIFTING it - and the whole read is the opt-in for the run
+## that has to be certain.
+##
+## Two halves. The first is the corpus itself, over invented paths, where "which files were read" is
+## the entire difference between the modes and is a value rather than a count. The second is a real
+## folder on disk, read through both corpora, proving that the stored sheet's row is reported the
+## same way either way: the mode changes how much is opened, never what is said about what was.
+static func _test_the_two_corpus_modes() -> bool:
+	var stored: PackedStringArray = PackedStringArray(["res://a.tres"])
+	var scripts: PackedStringArray = PackedStringArray()
+	for index: int in EventSheetMigrationDoctor.SCRIPTS_SAMPLED + 3:
+		scripts.append("res://s%02d.gd" % index)
+	var sampled: PackedStringArray = PackedStringArray(["res://a.tres"])
+	for index: int in EventSheetMigrationDoctor.SCRIPTS_SAMPLED:
+		sampled.append("res://s%02d.gd" % index)
+	var whole: PackedStringArray = PackedStringArray(["res://a.tres"])
+	whole.append_array(scripts)
+	var ok: bool = _check("the sampled corpus is the stored sheets and the first few scripts",
+		EventSheetMigrationDoctor.corpus(stored, scripts), sampled)
+	ok = _check("and the whole read is every one of them, in the same order",
+		EventSheetMigrationDoctor.corpus(stored, scripts, true), whole) and ok
+	ok = _check("the summary line names both numbers when it sampled",
+		EventSheetMigrationDoctor.sample_note(stored, scripts),
+		" The .gd half is a sample: %d of %d script(s) were read." % [
+			EventSheetMigrationDoctor.SCRIPTS_SAMPLED, scripts.size()]) and ok
+	ok = _check("and says so when it read the whole half",
+		EventSheetMigrationDoctor.sample_note(stored, scripts, true),
+		" The .gd half was read whole: %d script(s)." % scripts.size()) and ok
+	# A whole read over a project small enough that the sample already covered it says so anyway -
+	# the line is about which mode ran, not about whether it happened to matter.
+	ok = _check("a whole read over a small project still names itself",
+		EventSheetMigrationDoctor.sample_note(stored, PackedStringArray(["res://one.gd"]), true),
+		" The .gd half was read whole: 1 script(s).") and ok
+
+	# The second half: a real folder, read both ways.
+	var folder: String = "user://eventforge_corpus_fixture"
+	DirAccess.make_dir_recursive_absolute(folder)
+	var sheet_path: String = folder.path_join("stored.tres")
+	if ResourceSaver.save(_stored_sheet_on_an_older_spelling(), sheet_path) != OK:
+		return _check("the fixture sheet is stored", false, true)
+	var written: PackedStringArray = PackedStringArray()
+	for index: int in EventSheetMigrationDoctor.SCRIPTS_SAMPLED + 2:
+		var script_path: String = folder.path_join("filler_%02d.gd" % index)
+		var file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
+		if file == null:
+			return _check("the fixture scripts are written", false, true)
+		file.store_string("extends Node
+")
+		file.close()
+		written.append(script_path)
+	var said: PackedStringArray = PackedStringArray()
+	for mode: bool in [false, true]:
+		var read: PackedStringArray = EventSheetMigrationDoctor.corpus(
+			PackedStringArray([sheet_path]), written, mode)
+		var rows: Array[Dictionary] = EventSheetMigrationDoctor.rows(read)
+		var line: String = "%d file(s):" % read.size()
+		for row: Dictionary in rows:
+			line += " %s -> %s %s" % [str(row.get("from_id", "")), str(row.get("to_id", "")),
+				"asks" if bool(row.get("asks", true)) else "moves"]
+		said.append(line)
+	ok = _check("the two modes open different numbers of files and say the same thing about the one that matters",
+		said, PackedStringArray([
+			"%d file(s): Core::PlayAudio -> Core::AudioPlay moves" % (EventSheetMigrationDoctor.SCRIPTS_SAMPLED + 1),
+			"%d file(s): Core::PlayAudio -> Core::AudioPlay moves" % (written.size() + 1),
+		])) and ok
+	DirAccess.remove_absolute(sheet_path)
+	for script_path: String in written:
+		DirAccess.remove_absolute(script_path)
+	DirAccess.remove_absolute(folder)
+	return ok
+
+
+## A stored sheet holding one row on a spelling the vocabulary has since replaced - the general
+## shelf's Play Sound, which the Audio shelf's Play succeeded. Stored rather than written out as
+## GDScript because both spellings emit the same line, so only a sheet that WRITES DOWN which verb
+## it was picked from can be asked the question at all.
+static func _stored_sheet_on_an_older_spelling() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "MigrationCorpusFixture"
+	sheet.host_class = "AudioStreamPlayer"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	var play: ACEAction = ACEAction.new()
+	play.provider_id = "Core"
+	play.ace_id = "PlayAudio"
+	play.codegen_template = "{target.}play({from_position})"
+	play.display_text = "Play sound"
+	play.params = {"from_position": "0.5", "target": ""}
+	event.actions.append(play)
+	sheet.events.append(event)
+	return sheet
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

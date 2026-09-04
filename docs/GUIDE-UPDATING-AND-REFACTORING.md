@@ -291,7 +291,11 @@ The one chip on a per-sheet line is **Apply per sheet…**, and it opens that sh
 **Nothing applies from the report.** A report that rewrote files from a list nobody was looking at
 would be the fatal version of this feature, so the report's only power is to open a door.
 
-**`EventSheets.migration_report()`** is the same answer as data, for a build script or a branch gate:
+**`EventSheets.migration_report()`** is the same answer as data - the in-editor twin of the branch
+gate, for a Tool sheet, an editor plugin or a script you run from the Godot editor. **It is not what
+CI runs.** The command a branch gate runs is `tools/verify_sheets.gd`, whose fourth check reads this
+exact report and fails on the rows that ask; the recipe is under *The branch gate is two questions*
+below.
 
 <!-- no-figure -->
 ```gdscript
@@ -299,6 +303,12 @@ for row: Dictionary in EventSheets.migration_report():
 	if row["asks"]:
 		print("%s event %d still asks: %s" % [row["sheet"], row["row"], row["before"]])
 ```
+
+The report reads every stored `.tres` sheet and a capped sample of the `.gd` ones, and the Doctor's
+summary line says which. Pass `true` - `EventSheets.migration_report(true)` - to read every script
+instead. That is minutes rather than seconds on a big project, which is why it is opt-in and why the
+default is the sample: a `.gd` sheet derives its rows from the file every time it is opened, so a
+line whose verb is gone has no lift entry left to match and there is nothing in it to find.
 
 One entry per row migration has something to say about, sorted and deterministic:
 
@@ -632,12 +642,13 @@ says so in one line.
 **Does it hold the contracts?** The verify command above, in CI, so a branch cannot merge a file that
 does not parse, will not come back byte for byte, or declares one local twice.
 
-**Is it leaving a decision for somebody else?** That is the fourth check, and the report behind it is
-`EventSheets.migration_report()`. A row that does not `ask` can be rewritten on one click with a
-receipt in front of you. A row that asks cannot be rewritten by anything, so landing a branch full of
-them moves the decision onto whoever opens the file next month. That is what the gate is for - not
-because those rows are broken, but because the person who should decide is the one looking at the
-sheet.
+**Is it leaving a decision for somebody else?** **The same command's fourth check** - there is no
+second command to add, and nothing for CI to call into the editor for. It reads the same report
+`EventSheets.migration_report()` serves in the editor and fails on the rows that `ask`. A row that
+does not ask can be rewritten on one click with a receipt in front of you. A row that asks cannot be
+rewritten by anything, so landing a branch full of them moves the decision onto whoever opens the
+file next month. That is what the gate is for - not because those rows are broken, but because the
+person who should decide is the one looking at the sheet.
 
 ### Reviewing the migration commit itself
 

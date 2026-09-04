@@ -25,6 +25,13 @@
 # two numbers - a section whose only sentence read "812 sheet(s) read" over a corpus of two dozen is
 # how a branch gate passes green over files it never opened.
 #
+# THE WHOLE `.gd` HALF CAN BE ASKED FOR, and it is opt-in rather than the default because reading a
+# thousand scripts means LIFTING a thousand scripts, which is minutes rather than seconds. Every
+# reader of this section carries the flag through to the corpus - `EventSheets.migration_report(true)`
+# is the public door - and the summary line then says which of the two ran, in both directions: a
+# sampled run names both numbers, and a whole read says it was whole. A mode that could only be told
+# apart by counting the findings would be a mode nobody could trust the verdict of.
+#
 # Sheets are opened in memory and dropped. Nothing is written, nothing is cached, and a project whose
 # vocabulary is all present reports one summary line and no findings.
 @tool
@@ -71,10 +78,10 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 
 ## The project's own corpus, listed the way the audit lists it - what the public report reads when
 ## nobody hands it a list of its own.
-static func project_corpus() -> PackedStringArray:
+static func project_corpus(read_every_script: bool = false) -> PackedStringArray:
 	return corpus(
 		EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets()),
-		EventSheets.project_scripts())
+		EventSheets.project_scripts(), read_every_script)
 
 
 ## THE PUBLIC REPORT'S ROWS, and the shape is frozen the way an `ace_id` is - see
@@ -135,20 +142,29 @@ static func sheet_lines(report_rows: Array[Dictionary]) -> Array[Dictionary]:
 ## It is a sentence rather than a number in a dictionary because the only reader who needs it is the
 ## person reading the section, and the one thing that must never happen is their reading a count of
 ## sheets that is not the count of sheets that were opened.
-static func sample_note(sheet_paths: PackedStringArray, scripts: PackedStringArray) -> String:
-	var read: PackedStringArray = corpus(sheet_paths, scripts)
+static func sample_note(sheet_paths: PackedStringArray, scripts: PackedStringArray,
+		read_every_script: bool = false) -> String:
+	var read: PackedStringArray = corpus(sheet_paths, scripts, read_every_script)
 	var sampled: int = 0
 	for path: String in scripts:
 		if read.has(path):
 			sampled += 1
+	# A WHOLE READ NAMES ITSELF EVEN THOUGH IT HAS NOTHING TO CONFESS. The two modes read different
+	# corpora and print the same shape of verdict, so a reader who asked for the whole thing and got
+	# the sample by accident - a flag dropped on the way through a build script - would have no way
+	# to tell from the line in front of them.
+	if read_every_script:
+		return " The .gd half was read whole: %d script(s)." % scripts.size()
 	if sampled >= scripts.size():
 		return ""
 	return " The .gd half is a sample: %d of %d script(s) were read." % [sampled, scripts.size()]
 
 
-## What one audit reads: every stored sheet, then the first few scripts in path order. Sorted and
-## de-duplicated so two machines read the same files in the same order and print the same report.
-static func corpus(sheet_paths: PackedStringArray, scripts: PackedStringArray) -> PackedStringArray:
+## What one audit reads: every stored sheet, then the first few scripts in path order - or every one
+## of them when the whole `.gd` half was asked for. Sorted and de-duplicated so two machines read the
+## same files in the same order and print the same report, in either mode.
+static func corpus(sheet_paths: PackedStringArray, scripts: PackedStringArray,
+		read_every_script: bool = false) -> PackedStringArray:
 	var stored: PackedStringArray = sheet_paths.duplicate()
 	stored.sort()
 	var sampled: PackedStringArray = scripts.duplicate()
@@ -158,7 +174,7 @@ static func corpus(sheet_paths: PackedStringArray, scripts: PackedStringArray) -
 		if not read.has(path):
 			read.append(path)
 	for path: String in sampled:
-		if read.size() >= stored.size() + SCRIPTS_SAMPLED:
+		if not read_every_script and read.size() >= stored.size() + SCRIPTS_SAMPLED:
 			break
 		if not read.has(path):
 			read.append(path)

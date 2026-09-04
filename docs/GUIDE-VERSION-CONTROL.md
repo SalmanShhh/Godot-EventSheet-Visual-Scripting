@@ -296,14 +296,20 @@ remember to commit.
 **Does it hold the contracts?** `tools/verify_sheets.gd`, above. Run it in CI and a branch cannot
 merge a file that does not parse, will not come back byte for byte, or declares one local twice.
 
-**Is it leaving a decision for somebody else?** The same command's fourth check, and the report
-behind it is public:
+**Is it leaving a decision for somebody else?** The same command's fourth check. **There is no second
+command**: `tools/verify_sheets.gd` is the whole gate, and the fourth check is the migration half of
+it. The same answer is public inside the editor, as the twin a Tool sheet or an editor plugin reads -
+never as the thing CI calls:
 
 ```gdscript
 for row: Dictionary in EventSheets.migration_report():
 	if row["asks"]:
 		print("%s event %d still asks: %s" % [row["sheet"], row["row"], row["before"]])
 ```
+
+That report samples the `.gd` half of the project and says so in the Doctor's summary line;
+`EventSheets.migration_report(true)` reads every script instead, which is the mode for a release
+check rather than for a hook.
 
 Each row says which sheet and which event, the spelling it is written in and the one it would be
 written in, the line it writes today and the line it would write, and whether it **asks**. A row that
