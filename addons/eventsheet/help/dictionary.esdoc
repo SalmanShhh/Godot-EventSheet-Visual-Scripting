@@ -9,8 +9,19 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | GDScript | Reads as | Object | Where the reading comes from |
 | --- | --- | --- | --- |
 | `__eventsheets_aim_floor` | [Cursor Is Over Object (3D)](ace:Core/CursorIsOverObject3D) | Mouse | Vocabulary |
+| `__eventsheets_cell_is_solid` | [Cell Is Solid](ace:Core/TileMapCellIsSolid) | Tilemap | Vocabulary |
+| `__eventsheets_cells_around` | [Repaint Terrain Around](ace:Core/TileMapRepaintTerrainAround) | Tilemap | Vocabulary |
+| `__eventsheets_cells_with_data` | [Cells With Data](ace:Core/TileMapCellsWithData) | Tilemap | Vocabulary |
+| `__eventsheets_erase_tiles_in_circle` | [Erase Tiles In Circle](ace:Core/TileMapEraseCircle) | Tilemap | Vocabulary |
+| `__eventsheets_fill_tile_rect` | [Fill Rect With Tile](ace:Core/TileMapFillRect) | Tilemap | Vocabulary |
+| `__eventsheets_first_solid_cell` | [First Solid Cell Along](ace:Core/TileMapFirstSolidCellAlong) | Tilemap | Vocabulary |
+| `__eventsheets_flood_fill_tiles` | [Flood Fill](ace:Core/TileMapFloodFill) | Tilemap | Vocabulary |
+| `__eventsheets_gridmap_fill_box` | [Fill Box](ace:Core/GridMapFillBox) | GridMap | Vocabulary |
+| `__eventsheets_load_tile_layer` | [Load Layer From File](ace:Core/TileMapLoadLayer) | Tilemap | Vocabulary |
 | `__eventsheets_object_at_2d` | [Object Under Cursor (2D)](ace:Core/ObjectUnderCursor2D) | Mouse | Vocabulary |
+| `__eventsheets_save_tile_layer` | [Save Layer To File](ace:Core/TileMapSaveLayer) | Tilemap | Vocabulary |
 | `__eventsheets_scene_is_data_only` | [Scene File Is Data-Only](ace:Core/SceneFileIsDataOnly) | Files | Vocabulary |
+| `__eventsheets_tile_data_at` | [Tile Data At](ace:Core/TileMapDataAt) | Tilemap | Vocabulary |
 | `__eventsheets_tile_under` | [Tile Under Cursor](ace:Core/TileUnderCursor) | Mouse | Vocabulary |
 | `__just_landed_` | [Just Landed](ace:Core/JustLanded) | Collisions | Vocabulary |
 | `__just_left_the_ground_` | [Just Left The Ground](ace:Core/JustLeftTheGround) | Collisions | Vocabulary |
@@ -156,6 +167,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `collide_with_areas` | [RayCast Detects Areas (2D)](ace:Core/RayCast2DSetHitAreas) | Raycast 2D | Vocabulary |
 | `collide_with_bodies` | [RayCast Detects Bodies (2D)](ace:Core/RayCast2DSetHitBodies) | Raycast 2D | Vocabulary |
 | `collider` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
+| `collision_enabled` | [Set Collision On Layer](ace:Core/TileMapSetCollision) | Tilemap | Vocabulary |
 | `collision_mask` | [Set RayCast Mask (2D)](ace:Core/RayCast2DSetMask) | Raycast 2D | Vocabulary |
 | `color` | [Set Colour](ace:Core/LightSetColour) | Lighting | Vocabulary |
 | `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
@@ -316,6 +328,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_camera_3d` | [Current Camera (3D)](ace:Core/CurrentCamera3D) | Camera | Vocabulary |
 | `get_canvas_transform` | [World Point To Screen](ace:Core/WorldPointToScreen) | Math & Random | Vocabulary |
 | `get_cell_atlas_coords` | [Cell Atlas Coords](ace:Core/TileMapGetCellAtlasCoords) | Tilemap | Vocabulary |
+| `get_cell_item` | [Item At](ace:Core/GridMapItemAt) | GridMap | Vocabulary |
 | `get_cell_source_id` | [Cell Is Empty](ace:Core/TileMapCellIsEmpty) | Tilemap | Vocabulary |
 | `get_cell_tile_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
 | `get_child` | [Get Child (by index)](ace:Core/GetChild) | Nodes | Vocabulary |
@@ -442,6 +455,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_string_size` | [Text Fits In Width](ace:Core/TextFitsInWidth) | Text | Vocabulary |
 | `get_surface_count` | [Mesh Surface Count](ace:Core/MeshSurfaceCount) | Mesh | Vocabulary |
 | `get_surface_override_material` | [Remove Layer](ace:Core/MaterialRemoveSurfaceLayer) | Material | Vocabulary |
+| `get_surrounding_cells` | [Surrounding Cells Of](ace:Core/TileMapSurroundingCells) | Tilemap | Vocabulary |
 | `get_texture` | [Rendered As An Image](ace:Core/WindowViewportImage) | Game Window | Vocabulary |
 | `get_theme_font` | [Font Of This Control](ace:Core/ControlFont) | UI | Vocabulary |
 | `get_theme_font_size` | [Text Overflows](ace:Core/TextOverflows) | Text | Vocabulary |
@@ -455,8 +469,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_undo_redo` | [Undo History](ace:Core/EditorUndoHistory) | Editor Tools: Undo history | Vocabulary |
 | `get_unique_id` | [My ID](ace:Core/MyPeerId) | Multiplayer | Vocabulary |
 | `get_unix_time_from_system` | [Date: Now](ace:Core/GetUnixTime) | Time | Vocabulary |
-| `get_used_cells` | [Used Cells Count](ace:Core/TileMapUsedCellsCount) | Tilemap | Vocabulary |
-| `get_used_rect` | [Tiled Area](ace:Core/TiledArea) | Camera | Vocabulary |
+| `get_used_cells` | [Used Cells](ace:Core/GridMapUsedCells) | GridMap | Vocabulary |
+| `get_used_cells_by_id` | [Cell Count Of](ace:Core/TileMapCellCountOf) | Tilemap | Vocabulary |
+| `get_used_rect` | [Used Rect](ace:Core/TileMapUsedRect) | Tilemap | Vocabulary |
 | `get_value` | [Load Setting Into Variable](ace:Core/LoadSettingInto) | Utility: Settings | Vocabulary |
 | `get_vector` | [Move Vector](ace:Core/InputMoveVector) | Input | Vocabulary |
 | `get_viewport` | [Current Camera](ace:Core/CurrentCamera2D) | Camera | Vocabulary |
@@ -657,6 +672,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
 | `navigate_to_path` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
+| `navigation_enabled` | [Set Navigation On Layer](ace:Core/TileMapSetNavigation) | Tilemap | Vocabulary |
 | `near` | [Set Clip Range](ace:Core/CameraSetClipRange) | Camera | Vocabulary |
 | `needs_key` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |
 | `new` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
@@ -745,7 +761,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `randi` | [Random Point On Screen Edge](ace:Core/RandomPointOnScreenEdge) | Math & Random | Vocabulary |
 | `randi_range` | [Random Integer](ace:Core/RandomInt) | Math & Random | Vocabulary |
 | `randomize` | [Randomize Seed](ace:Core/RandomizeSeed) | Math & Random | Vocabulary |
-| `range` | [Cells In Rectangle](ace:Core/CellsInRectangle) | Math & Random | Vocabulary |
+| `range` | [Root Owner Of](ace:Core/RootOwnerOf) | Ownership | Vocabulary |
 | `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
 | `read_file` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
@@ -841,6 +857,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_bus_solo` | [Set Bus Solo](ace:Core/AudioSetBusSolo) | Audio Server | Vocabulary |
 | `set_bus_volume_db` | [Set Bus Volume](ace:Core/SetBusVolume) | Audio | Vocabulary |
 | `set_cell` | [Set Tile](ace:Core/TileMapSetCell) | Tilemap | Vocabulary |
+| `set_cell_item` | [Set Cell Item](ace:Core/GridMapSetCellItem) | GridMap | Vocabulary |
+| `set_cells_terrain_connect` | [Paint Terrain](ace:Core/TileMapPaintTerrain) | Tilemap | Vocabulary |
 | `set_collision_layer_value` | [Set Collision Layer Bit](ace:Core/SetCollisionLayerBit) | Collisions | Vocabulary |
 | `set_collision_mask_value` | [Set Collision Mask Bit](ace:Core/SetCollisionMaskBit) | Collisions | Vocabulary |
 | `set_color` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
@@ -942,6 +960,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |
 | `texture` | [Set Image](ace:Core/SetSpriteTexture) | Animation | Vocabulary |
 | `texture_scale` | [Set Reach](ace:Core/LightSetReach) | Lighting | Vocabulary |
+| `tile_map_data` | [Copy Layer](ace:Core/TileMapCopyLayer) | Tilemap | Vocabulary |
 | `tile_set` | [Tiled Area](ace:Core/TiledArea) | Camera | Vocabulary |
 | `tile_size` | [Tiled Area](ace:Core/TiledArea) | Camera | Vocabulary |
 | `time_left` | [Get Time Left](ace:Core/GetTimerTimeLeft) | General Expressions | Vocabulary |

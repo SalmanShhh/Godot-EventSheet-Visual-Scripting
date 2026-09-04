@@ -271,6 +271,8 @@ What changed in the build you have installed (v0.17.0), in the words the release
   no pin in the tests that walk the other eight. All three now name it, and its six words are keyed
   in all eight languages.
 
+- The scene transition and its ease, the car's keyboard-style direction and the slide direction (on the verb and on Can Slide) are dropdowns over words, and a dropdown key is inserted into the call verbatim - so a row that picked \"wipe\" emitted an identifier nothing declares and the game did not parse. The three packs now carry the quotes in their templates, the way the Camera Rail packs do, and a test pins each shipped template and what a picked row emits through the compiler's own emitters.
+
 ### Lens, sky and surface: what the whole world looks like, said in words
 
 - **Twenty-one words for the world's look, and not one of them is a property name.** Saturation,
@@ -396,6 +398,88 @@ What changed in the build you have installed (v0.17.0), in the words the release
   of the two words it means.
 - The nine words land in all nine translation CSVs (**93 new keys**), the surface slots, the two 2D
   words and the two notes add **39 more**, and the vocabulary doc is regenerated.
+
+### What the lens lets in, the world worn as a file, and an effect said in words
+
+- **Fifteen rows for the lens, on both of the nodes that can hold one.** A `CameraAttributes` is
+  what decides how much light a camera takes in and what it keeps sharp, and almost nobody reaches
+  it, because reaching it means knowing that exposure is `exposure_multiplier` and that focus is
+  three depth-of-field properties rather than a subject. **Set Camera Exposure**, **Camera
+  Exposure** and **Fade Camera Exposure**, **Turn Auto Exposure On** / **Off** and **Is Auto
+  Exposure On** ship on a `Camera3D` and again on a `WorldEnvironment`, where they answer for every
+  camera that has none of its own - **10 actions, 2 conditions and 3 expressions**. The world's
+  exposure grades the finished picture; this one belongs to the camera, so two cameras in one scene
+  can see the same room differently, and the row says which it is.
+- **\"Focus on that crate\" is one sentence a person says and three numbers the engine wants.** So
+  there are two rows rather than three words: **Focus On** takes a node to measure the distance to
+  or the distance itself in metres, switches the far blur on, writes the distance and walks the
+  falloff over the seconds asked for; **Focus Everywhere** eases the blur back out, switches the far
+  blur off at the end of the walk and puts the blur amount back, so the next Focus On starts from
+  the lens the first one did. **Focus Distance** is the number itself for a reader who wants it.
+  `Camera3D` only, and it has to be: the distance is measured from the camera's own position and a
+  `WorldEnvironment` is not standing anywhere.
+- **Practical, never physical, and the guard is in the emitted code.** A lens slot holding nothing
+  is given a `CameraAttributesPractical`, whose blur is metres and whose exposure is a multiplier,
+  rather than the physical one that would hand a reader a focal length, an f-stop, an aperture and a
+  shutter speed to answer a question they asked in one word. A slot somebody deliberately filled
+  with a physical lens keeps it: the duplicate keeps its class, and every line only a practical lens
+  can answer sits inside an `is` guard that asks first. Every write opens with the own-it lines, so
+  an attributes file shared by the gameplay camera and the cutscene camera never changes under
+  either of them - which is also why the six writing rows carry no \"On node\" and the three reads do,
+  a guard being the one shape the cross-node transform cannot wrap around a named node.
+- **A whole world saved as a file, put on and crossed over to: 4 rows.** **Use World Look** wears a
+  saved `Environment` at once - the fog, the glow, the sky, the grading and everything else on it;
+  **Blend To World Look** crosses over instead of cutting; **Current World Look** answers which file
+  the world came from; **On World Look Blended** is the moment the crossing lands, so the game can
+  start the scene, let the player move or play the next line. **No look ships and none is named**:
+  a look is an `Environment` the project builds in the Inspector and saves, and both rows deep-copy
+  it, so the artist's file on disk is left exactly as it was saved.
+- **The crossfade says honestly what it cannot do.** Half of an `Environment` is numbers, vectors
+  and colours and can be walked; the other half is switches and modes - glow on or off, which tone
+  map, which sky - with nothing in between to walk through. So the numbers are tweened over the
+  seconds asked for and the rest is CUT at the halfway point, where a cut is least visible, and the
+  row's own words say so rather than pretending the whole world dissolves. The work is a real file
+  under the runtime folder, plain typed GDScript with no plugin class named in it, exactly like the
+  placement helper the spawn rows call.
+- **An effect said in seven words, on both of the objects it really is: 44 particle rows.** Gravity,
+  spread, speed, size and colour live on a `ParticleProcessMaterial`; lifetime and amount are the
+  emitter node's own. A reader saying \"make the sparks fall faster\" should not have to know which of
+  the two the word is on, and now they do not: a Set row, a read-it-back expression and (for the six
+  that can be walked) a Fade, on `GPUParticles2D` and again on `GPUParticles3D` - **26 actions and
+  18 expressions**. Which property each word resolves to and the value every field opens on are
+  asked of ClassDB; the frozen part is the `ace_id` stem.
+- **Two of the words are really two numbers, and one deliberately has no fade.** A speed is
+  `initial_velocity_min` and `initial_velocity_max`, a size is `scale_min` and `scale_max`, and a
+  row offering one half of either would leave the other wherever it happened to be - which is
+  exactly how an effect ends up with every particle at one identical speed. Both ends ride on the
+  one row, are walked by the one fade, and are read back by **Slowest** / **Fastest Particle Speed**
+  and **Smallest** / **Biggest Particle Size**. Amount has no fade at all, because writing it makes
+  the engine throw the whole particle buffer away and build a new one, and walking it over half a
+  second would do that thirty times; the row says why instead of offering a fade that costs frames.
+- **Every material write owns its material first, and a shader is left completely alone.** An
+  emitter driving itself with nothing is given a plain process material; one driving itself with a
+  material FILE is given a copy, so a `.tres` worn by every torch in the level never changes under
+  the other torches; a copy taken once has no path of its own, which is what makes a row that runs
+  every frame take one copy and not sixty. An emitter driven by somebody's particle shader has none
+  of these properties, so every write sits inside the guard that asks and the row does nothing
+  rather than failing. The two node words need neither line.
+- **The wave in numbers.** **63 new rows** (38 actions, 2 conditions, 22 expressions and 1
+  trigger), taking the built-in vocabulary from **5,705 to 5,768** verbs, measured from the registry
+  dump rather than counted by hand.
+- **Guide:** [docs/GUIDE-THE-LOOK-OF-YOUR-GAME.md](docs/GUIDE-THE-LOOK-OF-YOUR-GAME.md) - the four
+  objects a game's look really lives on and the copy every row takes before it writes, the nine
+  words for a 3D surface and the switch each one needs, one surface slot and the layer over it, a
+  sprite's two words, the twenty-one environment words, the tone map and the glow's seven numbers,
+  the two fogs, what each renderer can actually draw, the sky three objects past the node, the lens,
+  looks as files the reader authors, the seven particle words, what a project that already writes
+  these lines opens as, and the four quiet notes the Doctor files. The cameras and the particles
+  module pages gain their reference rows and use cases, the generated vocabulary reference is
+  rebuilt, and the words land in all nine translation CSVs (**152 new keys**).
+- **The keyed-verb ratchet counts 147 verbs it was not counting.** The world's own look, the sky
+  behind it and the one blend word a 2D light gained had landed keyed and uncounted: their modules
+  joined the l10n obligation and the nine files were filled, and this ratchet was the one reader
+  nobody told, so it had been failing on `main` since that wave. It now names all 84 of those
+  alongside this pass's 63.
 
 ### The wave, the aim, the free spot and the way back out
 
