@@ -2035,6 +2035,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	# ── module files ──
 	"ajax": "Making-Web-Requests",
 	"animation_player": "Animation-And-Sprites",
+	# Bones are the same reader's question as the clips and the blend tree - "how do I make this
+	# character move the way the animator drew it" - asked one layer further in, so they land on the
+	# animation page rather than opening a second one for six rows. Both spellings key it: the module
+	# file and the picker category are the same word.
+	"skeleton": "Animation-And-Sprites",
 	"array_functional": "Working-With-Lists",
 	"audio": "Sound-And-Music",
 	"behavior_shape": "Making-Things-Move-In-2D",
@@ -2157,6 +2162,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"table": "Reading-Spreadsheets-And-Data-Assets",
 	"testing": "Testing-Your-Game",
 	"text_extract": "Working-With-Text",
+	# The effect tags and the reveal are the same reader's question as the fitting vocabulary above -
+	# what the words look like once they are drawn - asked one row later, so they share its guide.
+	"text_effect": "Making-Text-Readable-On-Screen",
 	"text_fit": "Making-Text-Readable-On-Screen",
 	"text_format": "Making-Text-Readable-On-Screen",
 	"tilemap": "Working-With-Tilemaps",
