@@ -2,6 +2,81 @@
 
 ## [Unreleased]
 
+### Who did it, what kind it was, and what it leaves behind
+
+- **One key for who made this: 7 new Ownership rows.** A bullet hits, an enemy dies, and the sheet
+  cannot say who fired. Kill credit, assists, friendly fire, "killed by" on the death screen and a
+  boss that turns on whoever hurt it last all need the same one fact, and three packs each kept it
+  privately. It is now node metadata named `owner` and nothing else: **Claim** writes it, **Disown**
+  takes it off, **Claimed By** reads one step up and **Root Owner Of** walks to the far end - bullet
+  to turret to player answers with the player - while **Is Owned By**, **Is Mine** and **Hit Is Not
+  My Owner** compare ROOT owners on both sides, so "the same source" is one idea rather than three.
+  The walk is a bounded fold because an expression has no loop to write, a chain that points at
+  itself still answers, and a chain whose far end has been freed answers with NOTHING rather than
+  with a freed object. Everything compiles to plain `set_meta` / `get_meta` calls with zero plugin
+  references, so a hand-written project reads back as these rows. Spawn and pool rows gained an
+  **owned by** field, Bullet and Bullet 3D a **Fired By**, and the Weapon Kit a **Claim Shot**.
+- **Damage that knows what kind it is: 16 new Health rows.** **Take Damage Of Type** (amount, kind,
+  who dealt it) runs the arithmetic every game writes in front of every damage row, once, inside the
+  behaviour: resistance as a percentage, then armour as flat points, then the critical as a
+  multiplier, then the pools and health the pack already had. **Resist**, **Immune To**, **Weak To**,
+  **Set Armour** and **Set Crit** are the dials; **Last Damage Type**, **Last Damage Dealt**, **Last
+  Damage Before Mitigation**, **Last Hit Was A Crit** and **Damage Type Is** are the report, written
+  before On Damaged fires so a row under that trigger reads it with no expression. **Take Damage
+  From**, **Last Hit From**, **Killer Of**, **Assists Of** and **Killed By Me** answer by whom. The
+  frozen **Take Damage** keeps its body byte for byte and now means "untyped, from nobody".
+- **The kinds of damage are yours, in a file.** A **DamageTypeSet** resource - names and the colour
+  each is drawn in - is a file your game owns; one starter ships with physical, fire, ice and poison
+  in it to edit or replace, and there is no list of kinds anywhere in the plugin. The type field
+  suggests from it, the HUD Kit's new **Pop Floating Text As** takes a number's colour from it, and
+  the Doctor's new **Damage** section quietly notes a row dealing a kind no set names and a guard
+  against a kind nothing deals. Both notes are silent on a project that has written no set down.
+- **Burn, poison, slow, stun, freeze and shield: the Status Effects pack, 11 rows and 4 triggers.**
+  Apply Status puts a word and a clock on any node; a **StatusEffectResource** answering to that word
+  says the rest - tick damage of a kind through the typed pipeline, healing, a speed factor, a tint
+  the host wears and gets back off again, an icon, a stacking rule, whether an antidote answers it,
+  and a particle scene. Six starters ship to edit or delete. It moves nothing itself: stun and freeze
+  are words the movement packs and the state machine ask about with **Has Status**, which keeps the
+  pack out of every controller's business. Every clock is game time, and the tint obeys the same
+  accessibility ceiling the screen effects do.
+
+### Fixed in the wound-chain pass
+
+- **A walk that lands on something freed answers nothing.** The player dies while their bullet is
+  still in the air, the bullet kills an enemy, and a row under On Death asks who did it. Root Owner
+  Of, Claimed By and the Health pack's own owner walk all handed back the freed player - reading a
+  name off it is an error in the sheet - and Killer Of and Last Hit From answered with it too. All of
+  them answer with nothing now, which is what their descriptions already promised.
+- **Credit is only taken for a hit that landed.** Take Damage From recorded who dealt it before the
+  row it hands to could refuse the hit, and the typed row recorded it before resistance had a say -
+  so a boss that turns on whoever hurt it last turned on somebody whose hit it was immune to, or
+  whose hit arrived inside its i-frames, and Assists Of listed people who dealt nothing.
+- **The minimum never raises a hit.** Minimum Damage exists so armour cannot quietly make a node
+  immortal, but it applied whether or not armour had taken anything off: a half-point graze past no
+  armour at all landed for a whole point, and a hit resistance had already worn below the minimum was
+  put back up to it. It is now held to what got past resistance.
+- **The starter damage type set is not the project's own answer.** The Doctor promised to stay silent
+  about a project that has written no kinds down, and could not: the walk counted the starter the
+  pack ships in its own folder, so every project that merely installed the pack was told it had
+  written its types down - and then had every kind that starter does not name reported as a
+  misspelling. The pack's two shipped copies are skipped, and the summary no longer counts the
+  behaviour that DEFINES the typed rows as a script dealing typed damage.
+- **Who dealt it now starts filled in.** A dropped Take Damage From, Take Damage Of Type or Killed By
+  Me row left its node field empty, which compiles to an empty slot - so the row was invalid GDScript
+  until it was typed into. Those fields ship holding the row's own node.
+- **A Cleanse that names a status is still a Cleanse.** It skipped the file's own answer when it was
+  given a name, so naming the curse was a way around it and Cleanse and Remove Status were the same
+  row. Extend Status now extends the multiplier it started as well as the clock; the tick due exactly
+  as a status expires is paid; a tick handler that ends OTHER statuses no longer leaves the frame it
+  interrupted reading a word that has gone; and an effect answers to what it calls itself through
+  both doors, so a renamed file cannot answer to one word in the folder and another on the node.
+- **Two guides said things that were not so.** The Health guide's fire example did its own arithmetic
+  wrong (12 of fire against 50 per cent and 3 armour lands for 3, not 6), and neither guide said out
+  loud that there is one opinion per kind with the last row winning, that the critical belongs to the
+  actor taking the hit, or that a tick's kill credit belongs to whoever claimed the status node. The
+  Status Effects pack also arrived without a guide at all, and the DamageTypeSet resource without the
+  icon every pack ships.
+
 ### Making it feel like something: how pictures meet, and the beat a hit is made of
 
 - **Twenty ways one picture meets the one behind it, as one row.** Godot draws five blend modes by
