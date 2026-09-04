@@ -45,8 +45,8 @@ static func _vocabulary() -> bool:
 		safe.ace_type, ACEDescriptor.ACEType.EXPRESSION) and ok
 	ok = _check("the safe name is the engine's own validate_filename, in its own brackets",
 		str(safe.codegen_template),
-		"{?fallback}({/fallback}{name}.validate_filename().lstrip(\".\")"
-		+ "{?fallback} if not {name}.validate_filename().lstrip(\".\").is_empty()"
+		"{?fallback}({/fallback}({name}).validate_filename().lstrip(\".\")"
+		+ "{?fallback} if not ({name}).validate_filename().lstrip(\".\").is_empty()"
 		+ " else {fallback}){/fallback}") and ok
 	ok = _check("the safe name's fallback is the second slot",
 		(safe.params[1] as ACEParam).id, "fallback") and ok
@@ -57,7 +57,7 @@ static func _vocabulary() -> bool:
 	ok = _check("the free path reads its path expression exactly once",
 		str(free.codegen_template).count("{path}"), 1) and ok
 	ok = _check("the free path's ceiling is a slot on the row",
-		str(free.codegen_template).contains("range(1, {at_most} + 1)"), true) and ok
+		str(free.codegen_template).contains("range(1, ({at_most}) + 1)"), true) and ok
 	ok = _check("the free path numbers before the extension, with no stray dot",
 		str(free.codegen_template).contains(
 			"__wanted.get_basename() + \"_\" + str(__number)"
@@ -143,6 +143,15 @@ static func _runs_on_disk() -> bool:
 		.replace("{name}", "\".hidden\"").replace("{fallback}", "\"untitled\"")
 	ok = _check("and a name that merely begins with one keeps the rest of itself",
 		_answer(hidden), "hidden") and ok
+	# A SLOT HOLDS AN EXPRESSION, AND A METHOD BINDS TO ITS LAST OPERAND. A name written as a JOIN is
+	# the ordinary way this row is used - the player's word plus the extension the game gives it - and
+	# unbracketed it validated only the `".json"`, handing `..` through the very row that exists to
+	# stop it. The answer here is the whole join made safe: no slash, no leading dots.
+	var joined: String = str(by_id["SafeFileName"].codegen_template)\
+		.replace("{?fallback}", "").replace("{/fallback}", "")\
+		.replace("{name}", "\"../evil\" + \".json\"").replace("{fallback}", "\"untitled\"")
+	ok = _check("a name built out of pieces is made safe whole, not just its last piece",
+		_answer(joined), "_evil.json") and ok
 	var untaken: String = str(by_id["FreeFilePath"].codegen_template)\
 		.replace("{path}", "\"%s/never_written.txt\"" % TEST_DIR).replace("{at_most}", "9")
 	ok = _check("a path with nothing at it is answered back unchanged",

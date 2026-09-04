@@ -294,11 +294,19 @@ static func _test_folder_prelude() -> bool:
 		"folder": "make its folder first"})
 	passed = _check("the prelude is the make_dir_recursive line, above the write",
 		made.split("\n")[0],
-		"DirAccess.make_dir_recursive_absolute(\"user://runs/latest.txt\".get_base_dir())") and passed
+		"DirAccess.make_dir_recursive_absolute((\"user://runs/latest.txt\").get_base_dir())") and passed
 	passed = _check("the prelude is exactly what the one reading of it writes",
 		made.split("\n")[0], P.make_folder_prelude("\"user://runs/latest.txt\"")) and passed
 	passed = _check("the write itself follows it unchanged", made.split("\n")[1],
 		"var __file_w1 = FileAccess.open(\"user://runs/latest.txt\", FileAccess.WRITE)") and passed
+	# A PATH SLOT HOLDS AN EXPRESSION, and `.get_base_dir()` binds to the last operand of one. A path
+	# written as the ordinary join - a folder, a slot the player chose, an extension - asked the
+	# `".txt"` where its folder was, which is nowhere, so the write went into a folder nobody made.
+	var built: String = _emit(template, {"path": "\"user://runs/\" + slot + \".txt\"",
+		"text": "\"hi\"", "folder": "make its folder first"})
+	passed = _check("a path built out of pieces is asked as a whole where its folder is",
+		built.split("\n")[0],
+		"DirAccess.make_dir_recursive_absolute((\"user://runs/\" + slot + \".txt\").get_base_dir())") and passed
 	var assumed: String = _emit(template, {"path": "\"user://runs/latest.txt\"", "text": "\"hi\"",
 		"folder": "its folder is already there"})
 	passed = _check("the other choice emits no prelude at all", assumed.split("\n")[0],

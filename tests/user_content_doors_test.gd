@@ -244,6 +244,17 @@ static func _run_loaders() -> bool:
 	# One line, deliberately: an expression that spans lines is a parse error inside a condition.
 	ok = _check("and it is one line, so it can sit in a condition too",
 		_emitted("LoadSoundFile", {"path": "p", "fallback": "null"}).split("\n").size(), 1) and ok
+	# A PATH SLOT HOLDS AN EXPRESSION, and `.get_extension()` binds to the last operand of one. A path
+	# written as a join asked the `".ogg"` what its extension was - which is `ogg` only by luck, and
+	# `""` for `folder + "/" + name` - so a joined path fell down the chain to the fallback with
+	# nothing said. The slot is bracketed, so the extension is asked of the whole path.
+	var joined_sound: String = _emitted("LoadSoundFile",
+		{"path": "folder + \"/\" + name", "fallback": "null"})
+	ok = _check("a path built out of pieces is asked as a whole what its extension is",
+		joined_sound.contains("(folder + \"/\" + name).get_extension().to_lower()"), true) and ok
+	ok = _check("and no bare last-operand reading of it survives anywhere in the line",
+		joined_sound.contains("\".ogg\".get_extension()")
+			or joined_sound.contains("name.get_extension()"), false) and ok
 
 	DirAccess.remove_absolute(PROBE_PNG)
 	DirAccess.remove_absolute(PROBE_WAV)

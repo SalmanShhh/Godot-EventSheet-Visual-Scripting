@@ -13,6 +13,14 @@
 # folder: writable, per-player, survives updates) or res:// (the game's own files: READ-ONLY once
 # exported). The reading of those places, and where user:// really is on each desktop platform, live
 # once in EventForgeFilePlaces, which the lead, the help strip and the Doctor all ask.
+#
+# AND A SLOT A METHOD IS ASKED OF WEARS BRACKETS. A parameter holds an EXPRESSION, so a template
+# writing `{path}.get_base_dir()` asks that method of the LAST OPERAND of whatever was typed:
+# `"user://runs/" + slot + ".txt"` makes the folder of `".txt"`, which is `""`. It parses, it runs,
+# and it is quietly the wrong answer, which is the only kind of bug nothing ever reports. Every new
+# template here spells it `({path}).get_base_dir()` instead. The rule is only about a method asked of
+# a slot: a slot handed to a call as an ARGUMENT is already one whole expression, and `{uid}` is a
+# baked identifier rather than an expression at all.
 @tool
 class_name EventForgeFileACEs
 extends RefCounted
@@ -58,7 +66,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	#                         stated on the row and the prelude is in the echo.
 	#   the folder door       where user:// really is, opened on the player's own machine.
 	descriptors.append(F.expr("ReadTextFileOr", "Read Text File (or a fallback)", "{?fallback}({/fallback}FileAccess.get_file_as_string({path}){?fallback} if FileAccess.file_exists({path}) else {fallback}){/fallback}", "Files", "text of file {path}, or {fallback}", "Reads a whole file as text, using the fallback you name when the file is not there. The guard is written into the line and shown on the row, so nothing happens that the code does not say.").param("path", "\"user://save.dat\"", "Path", "File to read in full as a String. Prefer user:// - res:// is read-only once the game is exported.", "file_path").param("fallback", "\"\"", "If missing", "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, exactly as Read Text File does.", "expression"))
-	descriptors.append(F.act("WriteTextFileInFolder", "Write Text File (in a folder)", "{?folder=make its folder first}DirAccess.make_dir_recursive_absolute({path}.get_base_dir())\n{/folder}var __file_{uid} = FileAccess.open({path}, FileAccess.WRITE)\nif __file_{uid}:\n\t__file_{uid}.store_string({text})\n\t__file_{uid}.close()", "Files", "write {text} to file {path} - {folder}", "Saves text to a file inside a folder, optionally creating the folders on the way. The folder line is emitted above the write and shown in the row, never behind your back.").param("path", "\"user://runs/latest.txt\"", "Path", "File to write, inside one or more folders. OVERWRITES any existing file. Prefer user:// - res:// is read-only once the game is exported.", "file_path").param("text", "\"\"", "Text", "Text content to store.", "expression").param_choice("folder", "make its folder first", "Folder", "Whether to create the folders in that path before writing. Godot does not make them on the way to opening a file, so a write into a folder that is not there fails.", [{"key": "make its folder first", "label": "Make the folder first"}, {"key": "its folder is already there", "label": "The folder is already there"}]))
+	descriptors.append(F.act("WriteTextFileInFolder", "Write Text File (in a folder)", "{?folder=make its folder first}DirAccess.make_dir_recursive_absolute(({path}).get_base_dir())\n{/folder}var __file_{uid} = FileAccess.open({path}, FileAccess.WRITE)\nif __file_{uid}:\n\t__file_{uid}.store_string({text})\n\t__file_{uid}.close()", "Files", "write {text} to file {path} - {folder}", "Saves text to a file inside a folder, optionally creating the folders on the way. The folder line is emitted above the write and shown in the row, never behind your back.").param("path", "\"user://runs/latest.txt\"", "Path", "File to write, inside one or more folders. OVERWRITES any existing file. Prefer user:// - res:// is read-only once the game is exported.", "file_path").param("text", "\"\"", "Text", "Text content to store.", "expression").param_choice("folder", "make its folder first", "Folder", "Whether to create the folders in that path before writing. Godot does not make them on the way to opening a file, so a write into a folder that is not there fails.", [{"key": "make its folder first", "label": "Make the folder first"}, {"key": "its folder is already there", "label": "The folder is already there"}]))
 	descriptors.append(F.act("OpenUserDataFolder", "Open The Player's Data Folder", "OS.shell_open(ProjectSettings.globalize_path({path}))", "Files", "open the player's data folder {path}", "Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.").param("path", "\"user://\"", "Path", "Folder to open, inside user://. The path is turned into a real one on the player's machine before it is handed to the desktop.", "file_path"))
 
 	descriptors.append_array(_content_from_outside())
@@ -104,14 +112,20 @@ static func _names_and_doors() -> Array[ACEDescriptor]:
 ## signs binds the whole concatenation into the branches - which is a wrong path, not a parse error,
 ## so nothing would ever have said so.
 ##
+## AND SO DOES THE SLOT, for the same reason read the other way round. A parameter slot holds an
+## EXPRESSION, and `.validate_filename()` binds to the last operand of whatever is spliced in: a name
+## written `typed + ".json"` validated the `".json"` and handed `..` through untouched, which is the
+## one thing this row exists to stop. The slot is bracketed so the method is asked of the whole
+## answer, whatever the answer was written as.
+##
 ## AND THE LEADING DOTS COME OFF, because `..` is the one thing a player can type that a file system
 ## accepts and that is not a NAME at all: `validate_filename` leaves it exactly as it is, and
 ## `"user://saves".path_join("..")` is `user://`, which is the folder above the one the row meant.
 ## Stripping the dots off the front turns it into nothing, and nothing is what the fallback is for.
 ## A name that only BEGINS with a dot loses the dot and keeps the rest, which is the same answer.
 static func _safe_name_template() -> String:
-	return "{?fallback}({/fallback}{name}.validate_filename().lstrip(\".\")" \
-		+ "{?fallback} if not {name}.validate_filename().lstrip(\".\").is_empty()" \
+	return "{?fallback}({/fallback}({name}).validate_filename().lstrip(\".\")" \
+		+ "{?fallback} if not ({name}).validate_filename().lstrip(\".\").is_empty()" \
 		+ " else {fallback}){/fallback}"
 
 
@@ -133,7 +147,7 @@ static func _safe_name_template() -> String:
 ## so rather than the line failing somewhere else later.
 static func _free_path_template() -> String:
 	return "(func(__wanted: String) -> String: return __wanted if not FileAccess.file_exists(__wanted)" \
-		+ " else (range(1, {at_most} + 1).map(func(__number: int) -> String:" \
+		+ " else (range(1, ({at_most}) + 1).map(func(__number: int) -> String:" \
 		+ " return __wanted.get_basename() + \"_\" + str(__number)" \
 		+ " + __wanted.trim_prefix(__wanted.get_basename())).filter(" \
 		+ "func(__candidate: String) -> bool: return not FileAccess.file_exists(__candidate))" \
@@ -186,7 +200,7 @@ static func _pack_template() -> String:
 		+ "if __packer_{uid}.open({archive}) == OK:\n" \
 		+ "\tfor __entry_{uid}: String in DirAccess.get_files_at({folder}):\n" \
 		+ "\t\t__packer_{uid}.start_file(__entry_{uid})\n" \
-		+ "\t\t__packer_{uid}.write_file(FileAccess.get_file_as_bytes({folder}.path_join(__entry_{uid})))\n" \
+		+ "\t\t__packer_{uid}.write_file(FileAccess.get_file_as_bytes(({folder}).path_join(__entry_{uid})))\n" \
 		+ "\t\t__packer_{uid}.close_file()\n" \
 		+ "\t__packer_{uid}.close()"
 
@@ -224,7 +238,7 @@ static func _unpack_template() -> String:
 		+ "\tfor __entry_{uid}: String in __reader_{uid}.get_files():\n" \
 		+ "\t\tif __entry_{uid}.ends_with(\"/\"):\n" \
 		+ "\t\t\tcontinue\n" \
-		+ "\t\tvar __into_{uid} := {folder}.path_join(__entry_{uid})\n" \
+		+ "\t\tvar __into_{uid} := ({folder}).path_join(__entry_{uid})\n" \
 		+ "\t\tif not ProjectSettings.globalize_path(__into_{uid}).simplify_path().begins_with(__root_{uid}):\n" \
 		+ "\t\t\t__refused_{uid} = __entry_{uid}\n" \
 		+ "\t\t\tbreak\n" \
@@ -355,7 +369,7 @@ static func _ask_template(title: String, mode: String) -> String:
 ## one the line keeps. The unguarded form is unchanged - nothing to fall back TO is exactly what
 ## leaving the slot blank asks for.
 static func _sound_template() -> String:
-	var extension: String = "{path}.get_extension().to_lower()"
+	var extension: String = "({path}).get_extension().to_lower()"
 	return "{?fallback}({/fallback}" \
 		+ "AudioStreamMP3.load_from_file({path}) if %s == \"mp3\" else " % extension \
 		+ "AudioStreamOggVorbis.load_from_file({path}) if %s == \"ogg\" else " % extension \

@@ -270,8 +270,11 @@ static func guarded_read(path_expression: String, fallback_expression: String) -
 ## The prelude a write asks for when its path has folders in it: the one line that makes them, which
 ## Godot will not do on the way to opening a file. Emitted ABOVE the write and shown in the row's own
 ## echo - a folder appearing out of nowhere is exactly the silent magic this plugin does not do.
+##
+## THE PATH WEARS BRACKETS because it is an EXPRESSION and `.get_base_dir()` binds to the last operand
+## of one: `"user://runs/" + slot + ".txt"` would make the folder of `".txt"`, which is nothing at all.
 static func make_folder_prelude(path_expression: String) -> String:
-	return "DirAccess.make_dir_recursive_absolute(%s.get_base_dir())" % path_expression.strip_edges()
+	return "DirAccess.make_dir_recursive_absolute((%s).get_base_dir())" % path_expression.strip_edges()
 
 
 ## True when this path names a folder below its scheme, which is the only case where the prelude is
