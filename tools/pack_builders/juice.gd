@@ -766,6 +766,32 @@ static func build() -> bool:
 	_param_hint(sheet, "moment", "resource_path")
 	_param_desc(sheet, "moment", "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 	_default(sheet, "moment", "preload(\"res://eventsheet_addons/juice/impact.tres\")")
+	Lib.append_function(sheet, "play_moment_at", "Play Moment At", "Juice", "Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.",
+		[["moment_name", "String"], ["strength", "float"], ["from", "Node"], ["within", "float"], ["falloff", "String"]],
+		"var here: float = EventForgeMomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
+if here <= 0.0:
+	return
+moment(moment_name, here)",
+		"Moment [b]{moment_name}[/b] at [b]{strength}[/b] from [i]{from}[/i] within [b]{within}[/b]")
+	_default(sheet, "moment_name", "impact")
+	_param_desc(sheet, "moment_name", "Which moment to play - the same name Moment takes.")
+	_default(sheet, "strength", "1")
+	_param_desc(sheet, "strength", "The strength before the distance is paid for. 1 is the moment as written.")
+	_param_desc(sheet, "from", "Where it happened: the node the moment belongs to. Empty means everywhere, at full strength.")
+	_default(sheet, "within", "600")
+	_param_desc(sheet, "within", "How far the moment reaches, in the same units the game measures in. 0 = everywhere.")
+	_param_options(sheet, "falloff", ["linear", "smooth", "none"])
+	_default(sheet, "falloff", "linear")
+	_param_desc(sheet, "falloff", "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
+	_quoted_argument(sheet, "play_moment_at({moment_name}, {strength}, {from}, {within}, \"{falloff}\")")
+	Lib.append_function(sheet, "set_moment_strength", "Set Moment Strength", "Juice", "Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It scales what Play Moment At feels; the moments themselves are untouched.",
+		[["value", "float"]],
+		"_moment_strength = maxf(value, 0.0)",
+		"Set moment strength to [b]{value}[/b]")
+	_default(sheet, "value", "1")
+	_param_desc(sheet, "value", "1 is the moments as written, 0.5 half as much of everything, 0 nothing felt at all.")
+	Lib.number(sheet, "moment_strength", "Moment Strength", "Juice", "The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.",
+		[], "return _moment_strength", TYPE_FLOAT)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
@@ -853,6 +879,13 @@ static func _moment_lines() -> PackedStringArray:
 		"## stops being read at all.",
 		"var _moment_told_screen: bool = false",
 		"var _moment_told_scene: Node = null",
+		"",
+		"## The strength every moment this node plays is scaled by, and the one Moment Strength answers.",
+		"## Set Moment Strength writes it, and Play Moment At multiplies by it before the distance is paid",
+		"## for - so a scene that wants its feel turned down, or a boss fight that wants it turned up, has",
+		"## ONE number to set rather than a strength on every row. It starts at 1, which is the moment as",
+		"## its file was written.",
+		"var _moment_strength: float = 1.0",
 		"",
 		"## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.",
 		"## A name that answers to neither plays nothing and says so.",

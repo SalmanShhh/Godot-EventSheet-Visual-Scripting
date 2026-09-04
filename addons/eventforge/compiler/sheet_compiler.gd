@@ -613,6 +613,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			continue
 		if row is EnumRow or row is SignalRow:
 			continue  # emitted above as class-level declarations
+		if row is MomentBlockRow:
+			continue  # emitted below as its own coroutine, beside the sheet's other functions
 		if row.has_method("get_row_kind") and str(row.call("get_row_kind")) != "event":
 			deferred_rows.append("# (unknown row type — preserved as a comment so nothing is silently dropped)")
 			continue

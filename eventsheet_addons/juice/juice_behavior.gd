@@ -301,6 +301,13 @@ var _moment_screen: CanvasLayer = null
 ## stops being read at all.
 var _moment_told_screen: bool = false
 var _moment_told_scene: Node = null
+
+## The strength every moment this node plays is scaled by, and the one Moment Strength answers.
+## Set Moment Strength writes it, and Play Moment At multiplies by it before the distance is paid
+## for - so a scene that wants its feel turned down, or a boss fight that wants it turned up, has
+## ONE number to set rather than a strength on every row. It starts at 1, which is the moment as
+## its file was written.
+var _moment_strength: float = 1.0
 ## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.
 ## A name that answers to neither plays nothing and says so.
 ## @ace_hidden
@@ -1025,6 +1032,44 @@ func define_moment(moment_name: String, moment: Resource) -> void:
 		_moments.erase(word)
 		return
 	_moments[word] = moment
+
+## @ace_action
+## @ace_name("Play Moment At")
+## @ace_category("Juice")
+## @ace_description("Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.")
+## @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b] from [i]{from}[/i] within [b]{within}[/b]")
+## @ace_param(moment_name, default: impact, desc: "Which moment to play - the same name Moment takes.")
+## @ace_param(strength, default: 1, desc: "The strength before the distance is paid for. 1 is the moment as written.")
+## @ace_param(from, desc: "Where it happened: the node the moment belongs to. Empty means everywhere, at full strength.")
+## @ace_param(within, default: 600, desc: "How far the moment reaches, in the same units the game measures in. 0 = everywhere.")
+## @ace_param(falloff, options: linear|smooth|none, default: linear, desc: "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.play_moment_at({moment_name}, {strength}, {from}, {within}, "{falloff}")")
+func play_moment_at(moment_name: String, strength: float, from: Node, within: float, falloff: String) -> void:
+	var here: float = EventForgeMomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
+	if here <= 0.0:
+		return
+	moment(moment_name, here)
+
+## @ace_action
+## @ace_name("Set Moment Strength")
+## @ace_category("Juice")
+## @ace_description("Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It scales what Play Moment At feels; the moments themselves are untouched.")
+## @ace_display_template("Set moment strength to [b]{value}[/b]")
+## @ace_param(value, default: 1, desc: "1 is the moments as written, 0.5 half as much of everything, 0 nothing felt at all.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.set_moment_strength({value})")
+func set_moment_strength(value: float) -> void:
+	_moment_strength = maxf(value, 0.0)
+
+## @ace_expression
+## @ace_name("Moment Strength")
+## @ace_category("Juice")
+## @ace_description("The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_strength()")
+func moment_strength() -> float:
+	return _moment_strength
 
 ## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
 ## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.

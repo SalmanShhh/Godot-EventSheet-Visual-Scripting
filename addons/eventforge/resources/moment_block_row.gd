@@ -156,7 +156,7 @@ func build_lines(action_lines: Callable) -> PackedStringArray:
 	var name_of: String = function_name()
 	if not enabled or name_of.is_empty():
 		return PackedStringArray()
-	var out: PackedStringArray = PackedStringArray([name_of + SIGNATURE])
+	var out: PackedStringArray = PackedStringArray(["func " + name_of + SIGNATURE])
 	if within > 0.0:
 		out.append("\tstrength = %s.strength_at(self, strength, from, %s, \"%s\")" % [
 			RUNNER, _seconds_text(within), falloff_word()])
