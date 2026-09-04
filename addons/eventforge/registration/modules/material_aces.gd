@@ -29,6 +29,12 @@
 # CanvasItemMaterial with two knobs of its own, and those two rows live at the foot of this file
 # hosted on CanvasItem.
 #
+# AND NO ROW HERE IS CALLED WHAT ANOTHER SHELF ALREADY CALLS SOMETHING ELSE. The material's alpha is
+# "surface opacity" rather than "see-through", because the Native 3D shelf has published Set
+# See-Through - `GeometryInstance3D.transparency`, a per-instance fade with no material copy in it -
+# since long before this file existed, a MeshInstance3D IS a GeometryInstance3D so both rows land on
+# the same node, and the two scales run opposite ways.
+#
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant).
 @tool
 class_name EventForgeMaterialACEs
@@ -288,7 +294,7 @@ static func _fade_row(entry: Dictionary) -> ACEDescriptor:
 	var word: String = str(entry["word"])
 	var template: String = "%screate_tween().tween_property(%s, \"%s\", {%s}, {seconds})" % [
 		_preamble(entry), W.OVERRIDE_MEMBER, W.tween_path_of(word), VALUE_PARAM]
-	return F.act("MaterialFade%s" % W.id_stem(word), "Fade %s" % _label(entry), template, CAT,
+	return F.act("MaterialFade%s" % W.id_stem(word), "Fade %s" % _fade_name(entry), template, CAT,
 		"Fade %s to {%s} over {seconds} s" % [word, VALUE_PARAM],
 		"Walks the surface's %s to a new value over time instead of jumping to it - one tween, no state to keep. Writes %s on this mesh's own copy of the material." % [
 			word, _echo(entry)], W.HOST).param_typed(
@@ -339,3 +345,10 @@ static func _echo(entry: Dictionary) -> String:
 ## otherwise.
 static func _label(entry: Dictionary) -> String:
 	return str(entry.get("label", str(entry["word"]).capitalize()))
+
+
+## What a FADE row is called: the word's Set row without its verb, so "Set Colour" and "Fade Colour"
+## are the same words twice. The dialog LABEL is not used here - it is a field's name, written in the
+## sentence case a field wears, and "Fade Surface opacity" is not a row title.
+static func _fade_name(entry: Dictionary) -> String:
+	return str(entry["name"]).trim_prefix("Set ")

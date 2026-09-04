@@ -2,7 +2,7 @@
 #
 # The claim this file holds to account is that the sheet says ONE word where Godot says a property
 # name: `metal` is `metallic`, `glow` is `emission_energy_multiplier` and does nothing until
-# `emission_enabled` is true, `see-through` is the alpha channel of `albedo_color` and does nothing
+# `emission_enabled` is true, `surface opacity` is the alpha channel of `albedo_color` and does nothing
 # until the material is in alpha transparency. The mapping is derived from ClassDB, so what is
 # pinned here is the ANSWERS - by value - rather than the table that produces them.
 #
@@ -48,6 +48,7 @@ static func run() -> bool:
 	ok = _test_the_surface_slots() and ok
 	ok = _test_the_sprite_words() and ok
 	ok = _test_ids_are_unique() and ok
+	ok = _test_no_name_lands_twice_on_one_node() and ok
 	ok = _test_every_row_carries_help() and ok
 	ok = _test_mesh_classes() and ok
 	ok = _test_who_else_wears_it() and ok
@@ -124,7 +125,7 @@ static func _test_a_hand_written_line_reads_as_the_word() -> bool:
 	var context: Dictionary = {"script_object": "Crate", "object_classes": {}}
 	var read: Dictionary = {
 		"material_override.albedo_color = Color.RED": "Crate ▸ Set colour to red",
-		"material_override.albedo_color.a = 0.5": "Crate ▸ Set see-through to 0.5",
+		"material_override.albedo_color.a = 0.5": "Crate ▸ Set surface opacity to 0.5",
 		"get_active_material(0).roughness = 0.2": "Crate ▸ Set roughness to 0.2",
 		"$Barrel.material_override.metallic = 1.0": "Barrel ▸ Set metal to 1",
 		"get_active_material(1).cull_mode = BaseMaterial3D.CULL_DISABLED":
@@ -180,7 +181,7 @@ static func _test_the_word_map() -> bool:
 			"glow": "emission_energy_multiplier",
 			"roughness": "roughness",
 			"metal": "metallic",
-			"see-through": "albedo_color",
+			"surface opacity": "albedo_color",
 			"texture": "albedo_texture",
 			"blend": "blend_mode",
 			"transparency": "transparency",
@@ -188,8 +189,8 @@ static func _test_the_word_map() -> bool:
 		})
 	# The MEMBER a row writes is the property for eight of the nine, and the alpha channel of the
 	# colour for the ninth - the one word whose property is not the thing it means.
-	ok = SUPPORT.check("material_words_test", "see-through writes the colour's alpha channel",
-		[W.member_of("see-through"), W.tween_path_of("see-through")],
+	ok = SUPPORT.check("material_words_test", "surface opacity writes the colour's alpha channel",
+		[W.member_of("surface opacity"), W.tween_path_of("surface opacity")],
 		["albedo_color.a", "albedo_color:a"]) and ok
 	return SUPPORT.check("material_words_test", "every word the table names really resolves",
 		W.words().size(), W.WORDS.size()) and ok
@@ -201,14 +202,14 @@ static func _test_the_word_map() -> bool:
 ## default to hand back and the table writes the engine's own down.
 static func _test_the_defaults_come_from_classdb() -> bool:
 	var defaults: Dictionary = {}
-	for word: String in ["colour", "glow", "roughness", "metal", "see-through"]:
+	for word: String in ["colour", "glow", "roughness", "metal", "surface opacity"]:
 		defaults[word] = W.default_of(word)
 	return SUPPORT.check("material_words_test", "each field opens on Godot's own default", defaults, {
 		"colour": "Color.WHITE",
 		"glow": "1.0",
 		"roughness": "1.0",
 		"metal": "0.0",
-		"see-through": "1.0"
+		"surface opacity": "1.0"
 	})
 
 
@@ -220,7 +221,7 @@ static func _test_the_id_stems() -> bool:
 		stems[word] = W.id_stem(word)
 	return SUPPORT.check("material_words_test", "the frozen id stems", stems, {
 		"colour": "Colour", "glow": "Glow", "roughness": "Roughness", "metal": "Metal",
-		"see-through": "SeeThrough", "texture": "Texture", "blend": "Blend",
+		"surface opacity": "SeeThrough", "texture": "Texture", "blend": "Blend",
 		"transparency": "Transparency", "sides": "Sides"
 	})
 
@@ -237,7 +238,7 @@ static func _test_the_templates() -> bool:
 			templates.get("MaterialSetGlow", ""),
 			OWN_LINES + "material_override.emission_enabled = true\n"
 				+ "material_override.emission_energy_multiplier = {value}"],
-		["see-through switches the material to alpha transparency",
+		["surface opacity switches the material to alpha transparency",
 			templates.get("MaterialSetSeeThrough", ""),
 			OWN_LINES + "material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA\n"
 				+ "material_override.albedo_color.a = {value}"],
@@ -435,6 +436,38 @@ static func _test_every_row_carries_help() -> bool:
 		PackedStringArray())
 	return SUPPORT.check("material_words_test", "every row is hosted on the node it writes through",
 		hosted, PackedStringArray()) and ok
+
+
+## THE PICKER'S OWN QUESTION, which no id check can answer: two rows offered on ONE node must not be
+## called the same thing. A MeshInstance3D IS a GeometryInstance3D and the picker matches with
+## `ClassDB.is_parent_class`, so every Native 3D row lands on a mesh beside every row here - and
+## "Set See-Through" was published twice, once as this shelf's material alpha (1 is solid) and once
+## as the frozen per-instance `transparency` (0 is solid), with the two scales running opposite ways.
+## The names are pinned as the collisions themselves rather than as a count, so a failure says which
+## two rows and on what node.
+static func _test_no_name_lands_twice_on_one_node() -> bool:
+	var collisions: PackedStringArray = PackedStringArray()
+	var published: Array = EventForgeBuiltinACEs.get_descriptors()
+	for row: ACEDescriptor in MODULE.get_descriptors():
+		for other: Variant in published:
+			var them: ACEDescriptor = other
+			if them.ace_id == row.ace_id or str(them.display_name) != str(row.display_name):
+				continue
+			if _lands_on_one_node(str(row.node_type), str(them.node_type)):
+				collisions.append("%s: %s / %s" % [row.display_name, row.ace_id, them.ace_id])
+	collisions.sort()
+	return SUPPORT.check("material_words_test", "no row here shares a name on a node it lands on",
+		collisions, PackedStringArray())
+
+
+## True when two hosts put their rows in front of the same node: the same class, one a subclass of
+## the other, or a row hosted on nothing at all, which is offered everywhere.
+static func _lands_on_one_node(mine: String, theirs: String) -> bool:
+	if theirs.is_empty() or theirs == mine:
+		return true
+	if not ClassDB.class_exists(mine) or not ClassDB.class_exists(theirs):
+		return false
+	return ClassDB.is_parent_class(mine, theirs) or ClassDB.is_parent_class(theirs, mine)
 
 
 ## What counts as a mesh: the class itself and a project's own subclass of it, and nothing else.

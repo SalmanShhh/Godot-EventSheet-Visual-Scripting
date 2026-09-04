@@ -50,7 +50,7 @@ promise: a sheet saved today names it forever.
 
 | The object | The node that holds it | What its words are about |
 |---|---|---|
-| `BaseMaterial3D` | a `MeshInstance3D` | colour, glow, roughness, metal, see-through, texture, blend, transparency, sides |
+| `BaseMaterial3D` | a `MeshInstance3D` | colour, glow, roughness, metal, surface opacity, texture, blend, transparency, sides |
 | `CanvasItemMaterial` | any `CanvasItem` | blending, light response |
 | `Environment` | a `WorldEnvironment` | saturation, fog, glow, tone map, reflections, the backdrop, the sky |
 | `CameraAttributes` | a `Camera3D`, or a `WorldEnvironment` for every camera without one | exposure, auto exposure, focus |
@@ -110,10 +110,10 @@ five a surface can be walked to over time.
 | glow | how much light the surface gives off | `emission_energy_multiplier`, with `emission_enabled` |
 | roughness | dull cloth at 1, polished at 0 | `roughness` |
 | metal | plastic at 0, bare metal at 1 | `metallic` |
-| see-through | how much you can see through it | the alpha of `albedo_color`, with alpha transparency |
+| surface opacity | how solid the surface is | the alpha of `albedo_color`, with alpha transparency |
 | texture | the picture the surface is drawn with | `albedo_texture` |
 | blend | how the surface meets what is behind it | `blend_mode` |
-| transparency | how see-through is worked out | `transparency`, with a scissor threshold |
+| transparency | how being see-through is worked out | `transparency`, with a scissor threshold |
 | sides | which faces are drawn | `cull_mode` |
 
 Three of the nine are dropdowns over the engine's own enums. **Set Blend** reads mix, add, subtract,
@@ -146,7 +146,7 @@ func _on_body_entered(body: Node) -> void:
 ```
 
 **The switch is on the same line as the word.** Glow does nothing at all until `emission_enabled` is
-true, and see-through does nothing until the material is in alpha transparency. Both facts are
+true, and surface opacity does nothing until the material is in alpha transparency. Both facts are
 written into the row rather than left as a second thing to remember, which is why **Set Glow** on a
 material that has never glowed still glows.
 

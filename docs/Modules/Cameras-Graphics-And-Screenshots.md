@@ -355,8 +355,8 @@ where a reader looks for it. Nine words, and not one of them is a property name 
 | Fade Roughness | Walks the roughness over time. | `create_tween().tween_property(material_override, "roughness", {value}, {seconds})` |
 | Set Metal | 0 is paint or plastic, 1 is bare metal. | `material_override.metallic = {value}` |
 | Fade Metal | Walks the metal over time. | `create_tween().tween_property(material_override, "metallic", {value}, {seconds})` |
-| Set See-Through | 1 is solid, 0 is invisible - and it switches the material to alpha transparency, without which alpha does nothing. | `material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA` then `material_override.albedo_color.a = {value}` |
-| Fade See-Through | Fades the surface out (or back in) over time. | `create_tween().tween_property(material_override, "albedo_color:a", {value}, {seconds})` |
+| Set Surface Opacity | 1 is solid, 0 is invisible - and it switches the material to alpha transparency, without which alpha does nothing. Native 3D's Set See-Through is the other row: it fades the whole object without touching its material, and counts the other way round. | `material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA` then `material_override.albedo_color.a = {value}` |
+| Fade Surface Opacity | Fades the surface out (or back in) over time. | `create_tween().tween_property(material_override, "albedo_color:a", {value}, {seconds})` |
 | Set Texture | The picture painted over the surface; null goes back to a flat colour. | `material_override.albedo_texture = {value}` |
 | Set Blend | mix / add / subtract / multiply / premultiplied alpha. | `material_override.blend_mode = {value}` |
 | Set Transparency | solid / alpha / alpha scissor / alpha hash / alpha with depth pre-pass, with the scissor threshold beside it. | `material_override.transparency = {value}` |
@@ -365,7 +365,7 @@ where a reader looks for it. Nine words, and not one of them is a property name 
 | Glow | Reads the glow back. | `get_active_material(0).emission_energy_multiplier` |
 | Roughness | Reads the roughness back. | `get_active_material(0).roughness` |
 | Metal | Reads the metal back. | `get_active_material(0).metallic` |
-| See-Through | Reads how solid the surface is. | `get_active_material(0).albedo_color.a` |
+| Surface Opacity | Reads how solid the surface is. | `get_active_material(0).albedo_color.a` |
 | Texture | Reads the picture on the surface. | `get_active_material(0).albedo_texture` |
 | Blend | Reads the blend mode back. | `get_active_material(0).blend_mode` |
 | Transparency | Reads the transparency mode back. | `get_active_material(0).transparency` |

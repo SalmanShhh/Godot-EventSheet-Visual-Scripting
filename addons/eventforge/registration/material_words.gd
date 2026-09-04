@@ -3,8 +3,8 @@
 #
 # A mesh's LOOK is one resource with a hundred properties on it, and the nine below are the ones a
 # game reaches for at run time: what colour it is, how hard it glows, how rough and how metal it
-# looks, how see-through it is, what picture is painted on it, how it blends with what is behind it,
-# how it handles transparency, and which of its two sides are drawn. Godot keeps every one of them on
+# looks, how solid its surface is, what picture is painted on it, how it blends with what is behind
+# it, how it handles transparency, and which of its two sides are drawn. Godot keeps every one of them on
 # BaseMaterial3D, and a reader should not have to know that `metal` is spelled `metallic` and that
 # `glow` is spelled `emission_energy_multiplier` and only does anything once `emission_enabled` is
 # true.
@@ -149,13 +149,21 @@ const WORDS: Array[Dictionary] = [
 		"spellings": {"metallic": "Metal"}
 	},
 	{
-		"word": "see-through",
+		# NOT "see-through", which the Native 3D shelf has already published for years as
+		# `GeometryInstance3D.transparency` - one node, two rows, and the two scales run OPPOSITE
+		# ways (that row's 0 is solid, this one's 1 is), so a name shared between them would have
+		# handed a reader the opposite of what they meant about half the time. This is the
+		# MATERIAL's own alpha, which is a different thing worth having: it copies the material,
+		# switches it into alpha transparency and can be tweened, where the frozen row is a
+		# per-instance fade that needs none of that. The ace_id stem stays `SeeThrough` because an
+		# ace_id is a promise; only the words a reader sees moved.
+		"word": "surface opacity",
 		"kind": KIND_VALUE,
-		"name": "Set See-Through",
-		"verb": "Set see-through to {value}",
-		"reads": "see-through",
-		"label": "See-Through",
-		"about": "How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well.",
+		"name": "Set Surface Opacity",
+		"verb": "Set surface opacity to {value}",
+		"reads": "surface opacity",
+		"label": "Surface opacity",
+		"about": "How solid the SURFACE is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. The Native 3D shelf's Set See-Through fades the whole object without touching its material, and counts the other way round.",
 		"fades": true,
 		"member": "albedo_color:a",
 		"tween_path": "albedo_color:a",
