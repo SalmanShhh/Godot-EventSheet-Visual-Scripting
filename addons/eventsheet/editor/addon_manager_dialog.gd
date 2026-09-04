@@ -25,6 +25,8 @@ var _on_open_guide: Callable = Callable()
 var _on_open_sheet: Callable = Callable()
 var _on_dry_run: Callable = Callable()
 var _update_dialog: EventSheetPackUpdateDialog = null
+## The way back out of an update: the backup ring's own door, opened per pack row.
+var _restore_dialog: EventSheetPackRestoreDialog = null
 var _update_zip_dialog: FileDialog = null
 ## The pack an Update… is being chosen for, held between the file dialog and the proposal.
 var _updating: String = ""
@@ -157,6 +159,8 @@ func _add_row(grid: GridContainer, pack: Dictionary) -> void:
 		func() -> void: _open_guide_for(pack_dir)))
 	buttons.add_child(_action_button("Update…", "Reads a new version's .zip and shows what it would do to each file of this pack before anything moves.",
 		func() -> void: _on_update(pack)))
+	buttons.add_child(_action_button("Restore\u2026", "Lists the earlier versions of this pack's files the backup ring is holding, and writes one back as an edit you can undo. Every update copies what it is about to overwrite into that ring first.",
+		func() -> void: _set_status(open_restore(pack_dir))))
 	buttons.add_child(_action_button("Source", "Asks this pack's published source whether a newer version is out.",
 		func() -> void: _on_check_one(pack)))
 	buttons.add_child(_action_button("Publish…", "Opens the pack so Publish New Version can run the reading check and bump the version.",
@@ -252,6 +256,23 @@ func propose_update(zip_path: String) -> String:
 	_update_dialog.popup_centered(Vector2i(800, 600))
 	return "Reading %s against the copy of %s in this project - nothing has moved." % [
 		zip_path.get_file(), _updating]
+
+
+## Restore\u2026 - THE WAY BACK OUT OF AN UPDATE. Every update copies the files it is about to
+## overwrite or remove into the per-file backup ring before the first new byte lands; this lists what
+## the ring is holding for one pack and writes a chosen entry back as one undoable edit. Returns the
+## status line, so the refusal is pinnable without a window.
+func open_restore(pack_dir: String) -> String:
+	if _restore_dialog == null:
+		_restore_dialog = EventSheetPackRestoreDialog.new()
+		_restore_dialog.configure(func(said: String) -> void:
+			_set_status(said)
+			refresh())
+		add_child(_restore_dialog)
+	if not _restore_dialog.open_restore(EventSheetPackManifest.folder_for(pack_dir)):
+		return "The backup ring is holding nothing for %s. It fills the first time an update overwrites or removes one of its files." % pack_dir
+	_restore_dialog.popup_centered(Vector2i(720, 520))
+	return "Reading what the backup ring is holding for %s - nothing has moved." % pack_dir
 
 
 func _on_check_updates() -> void:

@@ -19,11 +19,15 @@
 #
 # THE OLD VERSION GOES TO THE BACKUP RING FIRST. Every file this is about to overwrite or remove is
 # copied into the same per-file ring a sheet save uses, before the first write, and the line the
-# dialog prints afterwards says how many went and where they are. That ring is a folder of files
-# rather than a button: the editor's own Restore menu restores the SHEET IN FRONT OF YOU, so a pack
-# guide or icon that was taken over is recovered by copying it back, not by pressing anything here.
-# Saying which is the point - "one restore away" would be a promise about a door that does not
-# exist.
+# dialog prints afterwards says how many went and where they are.
+#
+# AND THE RING HAS A DOOR. The editor's own Restore menu restores the SHEET IN FRONT OF YOU, which a
+# pack's guide, icon or translation table never is; those used to be recovered by copying a file out
+# of a folder by hand. `restorable()` lists what the ring holds for one pack and `restore()` puts one
+# entry back as an UNDOABLE FILE WRITE with a receipt - the bytes that were there are what Ctrl+Z
+# writes, so a restore is as reversible as any other edit. Nothing here ever writes to the ring: it
+# is read, listed and copied out of, and only a save or an update ever adds to it. A door that
+# pruned the ring while restoring from it would be a door that eats the thing it is for.
 #
 # NOTHING IS DERIVED FROM A DATE. What arrived is known because the attach hashed it into the pack's
 # own manifest; a file's mtime, a version string and a folder's age are all things a checkout can
@@ -288,8 +292,178 @@ static func backup_note(done: Dictionary) -> String:
 	var rung: int = int(done.get("backed_up", 0))
 	if rung <= 0:
 		return ""
-	return EventSheetL10n.translate(" The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s.") % [
+	return EventSheetL10n.translate(" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them.") % [
 		rung, EventSheetBackups.BACKUPS_ROOT]
+
+
+# ── The way back ───────────────────────────────────────────────────────────────────────
+
+
+## Every previous version of this pack's files the backup ring is holding, newest first within each
+## file and files in path order, as {"path", "target", "backup", "when", "bytes", "gone"}:
+##   `path`   the file's place inside the pack, which is how a reader knows what they are looking at;
+##   `target` where it would be written back;
+##   `backup` the ring entry itself;
+##   `when`   when that entry was written, as a sortable UTC string;
+##   `bytes`  how big it is;
+##   `gone`   true when the pack no longer has that file at all - an update that REMOVED one still
+##            backed it up first, and that is exactly the case somebody comes here for.
+##
+## THE CANDIDATES ARE NAMED, AND THE ONE THAT CANNOT BE IS PROVED. The pack itself says which files
+## it has - the folder as it stands now, plus every file the attach record wrote down - and each of
+## those is asked for its own ring.
+##
+## That leaves the row somebody actually comes here for: a file an UPDATE REMOVED. It backed the file
+## up first and then re-stamped the record over the folder it left, so neither source mentions it any
+## more and only the ring remembers it existed. A ring folder is the file's whole path with its
+## separators replaced by underscores, which is many-to-one - `a_b/c.md` and `a/b/c.md` spell it the
+## same way - so reading one backwards is guessing, and guessing a path this would then WRITE to is
+## the one thing a door like this must never do. So the reconstruction is only taken when it cannot
+## be wrong: a ring entry is named `<sequence>.<the file's own name>`, and when that name is the
+## whole of what follows the pack's own prefix, the file sat at the top of the pack folder and there
+## is nothing left to guess. A removed file deeper in the folder is not offered, rather than offered
+## at a path invented for it.
+static func restorable(pack_folder: String) -> Array[Dictionary]:
+	var candidates: PackedStringArray = EventSheetPackManifest.files_of(pack_folder)
+	var recorded: Variant = EventSheetPackManifest.read(pack_folder).get("files", {})
+	if recorded is Dictionary:
+		for relative: Variant in (recorded as Dictionary).keys():
+			if not candidates.has(str(relative)):
+				candidates.append(str(relative))
+	for orphan: String in _ring_only_files(pack_folder):
+		if not candidates.has(orphan):
+			candidates.append(orphan)
+	candidates.sort()
+	var listed: Array[Dictionary] = []
+	for relative: String in candidates:
+		var target: String = pack_folder.path_join(relative)
+		for backup: String in EventSheetBackups.list_backups(target):
+			listed.append({
+				"path": relative,
+				"target": target,
+				"backup": backup,
+				"when": Time.get_datetime_string_from_unix_time(
+					FileAccess.get_modified_time(backup), true),
+				"bytes": FileAccess.get_file_as_bytes(backup).size(),
+				"gone": not FileAccess.file_exists(target),
+			})
+	return listed
+
+
+## The top-level files of this pack the ring is holding and the pack itself no longer mentions - the
+## ones an update removed. Read out of the ring's own folder names, and only where the name says the
+## whole answer: the ring entry inside carries the file's own name, and a folder whose name is the
+## pack's prefix plus exactly that name can only have come from a file at the top of the pack folder.
+## Anything else is left alone rather than reconstructed.
+static func _ring_only_files(pack_folder: String) -> PackedStringArray:
+	var prefix: String = "%s_" % EventSheetBackups.backup_dir_for(pack_folder).get_file()
+	var found: PackedStringArray = PackedStringArray()
+	for ring_name: String in DirAccess.get_directories_at(EventSheetBackups.BACKUPS_ROOT):
+		if not ring_name.begins_with(prefix):
+			continue
+		var suffix: String = ring_name.substr(prefix.length())
+		if suffix.is_empty() or suffix.contains("/"):
+			continue
+		for entry: String in DirAccess.get_files_at(
+				EventSheetBackups.BACKUPS_ROOT.path_join(ring_name)):
+			# `<four digits>.<the file's own name>` - the ring's own spelling, and the only part of a
+			# folder name that is not a lossy encoding of a path.
+			if entry.length() > 5 and entry.substr(5) == suffix and not found.has(suffix):
+				found.append(suffix)
+	found.sort()
+	return found
+
+
+## One listed entry as the line the window shows. Pure over the entry, so the suite reads exactly
+## what a reader reads without opening a window - and so the TIME in it is the ring's own fact rather
+## than the moment the list was drawn.
+static func restore_line(entry: Dictionary) -> String:
+	var line: String = "%s - %s, %d byte(s)" % [str(entry.get("path", "")),
+		str(entry.get("when", "")), int(entry.get("bytes", 0))]
+	if bool(entry.get("gone", false)):
+		return "%s (%s)" % [line, EventSheetL10n.translate("this file is not in the pack any more")]
+	return line
+
+
+## Puts one ring entry's bytes back on the file they came from, as ONE undoable edit: the way back
+## writes the bytes that are there NOW, or removes the file again when there was none, so Ctrl+Z
+## leaves the folder exactly as this found it.
+##
+## Returns the receipt - {"restored", "path", "backup", "bytes", "was_missing"} - so the caller says
+## what happened rather than reporting that a button was pressed. `restored` is false and nothing is
+## written when the ring entry has gone (a later save pruned it while the window was open).
+##
+## `undo` is the editor's undo manager, asked for here when the editor is running and handed in by
+## the suite. Without one the write still happens - a project with no editor open is not a project
+## where a restore should refuse - and there is simply nothing to take it back.
+static func restore(entry: Dictionary, undo: Object = null) -> Dictionary:
+	var backup: String = str(entry.get("backup", ""))
+	var target: String = str(entry.get("target", ""))
+	var receipt: Dictionary = {"restored": false, "path": str(entry.get("path", "")),
+		"backup": backup, "bytes": 0, "was_missing": false}
+	if backup.is_empty() or target.is_empty() or not FileAccess.file_exists(backup):
+		return receipt
+	var restoring: PackedByteArray = FileAccess.get_file_as_bytes(backup)
+	var was_missing: bool = not FileAccess.file_exists(target)
+	var previous: PackedByteArray = PackedByteArray()
+	if not was_missing:
+		previous = FileAccess.get_file_as_bytes(target)
+	receipt["restored"] = true
+	receipt["bytes"] = restoring.size()
+	receipt["was_missing"] = was_missing
+	var manager: Object = undo
+	if manager == null and Engine.is_editor_hint():
+		manager = EditorInterface.get_editor_undo_redo()
+	if manager == null:
+		write_bytes(target, restoring)
+		return receipt
+	# The two halves are named METHODS on this script rather than lambdas, because an undo manager
+	# stores an object and a method name and calls it back later - a closure would be a reference the
+	# history cannot hold.
+	var here: Script = _own_script()
+	manager.call("create_action",
+		EventSheetL10n.translate("Restore %s from the backup ring") % str(entry.get("path", "")))
+	manager.call("add_do_method", here, "write_bytes", target, restoring)
+	if was_missing:
+		manager.call("add_undo_method", here, "remove_written", target)
+	else:
+		manager.call("add_undo_method", here, "write_bytes", target, previous)
+	manager.call("commit_action")
+	return receipt
+
+
+## This file as the object an undo manager calls a static method back on.
+static func _own_script() -> Script:
+	return load("res://addons/eventsheet/editor/pack_update.gd") as Script
+
+
+## The write a restore is made of, named so an undo manager can call it by name in both directions.
+## It writes exactly the bytes it was handed and touches nothing else - no ring entry, no record, no
+## rescan.
+static func write_bytes(path: String, bytes: PackedByteArray) -> void:
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_buffer(bytes)
+	file.close()
+
+
+## The other half of that pair: the way back from restoring a file the pack no longer had.
+static func remove_written(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+
+
+## The sentence a restore leaves behind. Pure over the receipt, so the suite pins the words.
+static func restore_text(receipt: Dictionary) -> String:
+	if not bool(receipt.get("restored", false)):
+		return EventSheetL10n.translate("That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.")
+	if bool(receipt.get("was_missing", false)):
+		return EventSheetL10n.translate("%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.") % [
+			str(receipt.get("path", "")), int(receipt.get("bytes", 0))]
+	return EventSheetL10n.translate("%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.") % [
+		str(receipt.get("path", "")), int(receipt.get("bytes", 0))]
 
 
 # ── The words ─────────────────────────────────────────────────────────────────────────────────

@@ -263,9 +263,10 @@ from `tools/build_help_bundle.gd`).
 
 ## Current known gaps
 
-- The pack-update backup ring has no per-file restore door in the editor (the ring is a folder of
-  files; the Restore menu restores the sheet in front of you). The applied receipt names the ring
-  folder.
+- The pack-update backup ring's restore door offers a file the update REMOVED only when the ring
+  folder's name can be read back with certainty (its suffix is the file's own name, so the file sat
+  at the top of the pack folder). A removed file deeper in the folder is not offered, because the
+  flattened folder name is many-to-one and the door would be guessing a path it then writes to.
 - The Doctor's rename/migration sweep over `.gd` sheets reads a bounded sample per run and says
   so in its own verdict line - whole-project certainty comes from `tools/verify_sheets.gd`.
 - Four shipped verbs carry a successor address (the general shelf's `PlayAudio`, `StopAudio`,

@@ -424,11 +424,7 @@ Four details are worth knowing before you press anything:
   away, rather than asking for anything.
 - **The old version goes to the backup ring first.** Every file the update is about to overwrite or
   remove is copied into the same per-file ring a sheet save uses, before the first new byte lands,
-  and the line printed afterwards says how many went and names the folder they are in. That ring is
-  a folder of files rather than a button: the editor's Restore menu restores **the sheet in front of
-  you**, so a pack guide or icon the update took over is recovered by copying it back out of the
-  ring. Knowing which is the point - a promise about a door that does not exist is worse than no
-  promise.
+  and the line printed afterwards says how many went and names the folder they are in.
 - **The dry run answers the vocabulary the update would leave**, not the one you have. The
   forwarding addresses it is about are the incoming version's, and those do not exist in the packs
   installed today.
@@ -440,6 +436,32 @@ instantiated, so its `_init` and any static initialiser execute, and then it is 
 is what the live registry does for every pack you have installed; the difference here is that this
 one is a version you have not accepted yet. An archive whose code you would not run is an archive
 not to open.
+
+### Restore: the way back out of an update
+
+The ring is not only a folder any more. **Restore…** on a pack's row in the addon manager lists
+what the ring is holding for that pack - every earlier version of every file, newest first, with when
+that copy was taken and how big it is - and writes the one you choose back over the file in the pack.
+
+Three things about it are worth saying plainly.
+
+**It is one edit you can undo.** Ctrl+Z writes back the bytes that were there before the restore. A
+file that was not in the folder at all - one an update *removed* - is removed again instead. So
+pressing the button is not a decision you have to be sure about.
+
+**A file the update removed is listed, and says so.** That is the case people actually come here for:
+the pack no longer mentions it, the record was re-stamped over the folder the update left, and only
+the ring remembers it existed. Such a file is offered when its place in the pack can be known for
+certain rather than guessed - a ring folder's name is the file's whole path with the separators
+replaced by underscores, which two different paths can spell the same way, and a door that guessed
+where to write would only have to be wrong once.
+
+**The ring itself is never touched.** Restore reads it and copies out of it. Only a save or an update
+ever adds to it, and only its own pruning ever takes anything out.
+
+The editor's own **Restore** menu is a different door and stays what it was: it restores *the sheet
+in front of you*, loading a backup into the editor as an unsaved change. This one restores a pack's
+files, which are rarely sheets at all - a guide, an icon, a translation table.
 
 ### The registry dump
 

@@ -6972,3 +6972,14 @@ particle amount,パーティクル個数
 "Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",寿命を一気に変えるのではなく、時間をかけて新しい値まで動かします - トゥイーン1つで、覚えておく状態はありません。エミッタ自身のプロパティである `GPUParticles3D.lifetime` に書き込みます。
 "How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.",エミッタが同時に空中に保つパーティクルの数です。これを書き込むとエンジンはパーティクルバッファをまるごと捨てて作り直すので、毎フレームではなく「ここぞ」という瞬間に使う行です。フェードが用意されていないのもそのためです。エミッタ自身のプロパティである `GPUParticles3D.amount` に書き込みます。
 "Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",エフェクトの個数を読み取ります。エミッタ自身のプロパティである `GPUParticles3D.amount` に書き込みます。どの値フィールドでも使えます。
+" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them.", それら %d 個のファイルの以前のバイトは %s の下のバックアップリングにあります - このパックの行の 復元… が一覧を表示します。
+this file is not in the pack any more,このファイルはもうパックにありません
+Restore %s from the backup ring,%s をバックアップリングから復元
+"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.",そのバックアップはもうありません - リングが保持する数は決まっていて、この一覧を作ってからの保存が押し出しました。
+"%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.",%s がバックアップリングからパックに戻りました（%d バイト）。今までフォルダーにはまったくありませんでした。Ctrl+Z で再び取り除かれ、リングはそのままです。
+"%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.",%s をバックアップリングから戻しました（%d バイト）。Ctrl+Z は以前そこにあったバイトを書き戻し、リングはそのままです。
+Restore a file from the backup ring,バックアップリングからファイルを復元
+Put this one back,これを戻す
+"Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",選んだバックアップのバイトをパック内のファイルに上書きします。取り消せる 1 回の編集です。バックアップリング自体には触れません。
+"What the ring is holding, newest first",リングが保持しているもの（新しい順）
+"%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - バックアップリングは %d 件の以前のバージョン（%d 個のファイル分）を保持しています。ひとつ選ぶと、取り消せる 1 回の編集としてパック内のファイルに書き戻されます。

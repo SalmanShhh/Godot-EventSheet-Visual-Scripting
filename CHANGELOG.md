@@ -162,6 +162,15 @@
 
 ### Fixed
 
+- **The two runtime classes the spawn rows call now wear the engine's own prefix.** They shipped as
+  `FreeSpot` and `PooledNodes` - bare global `class_name`s installed into every project that has
+  the plugin, so a game with its own `FreeSpot` met a project-wide parse error it did nothing to
+  earn. They are now `EventForgeFreeSpot` and `EventForgePooledNodes`, the shape
+  `EventForgeBridgeRuntime` beside them already had. The old bare names are NOT kept as aliases:
+  they were days old and were never in a release, so nothing outside this repository can be
+  spelling them. The files, the rows, the ace_ids and the emitted shapes are otherwise unchanged,
+  both classes still live in `eventsheet_addons/` where an uninstall cannot reach them, and a sheet
+  reopened after the change reads its lines back as the same rows.
 - **The getting-started state takes its colours from the live reading style.** The empty sheet's
   heading, hint, tip and both of its buttons were painted from the palette constants, and the
   secondary button from a white wash at 5% and 22% - invisible on a light preset. Every line and both
@@ -564,14 +573,15 @@
   A project with no pools in it behaves exactly as Destroy Now does. On Retired is one trigger for
   both endings, because a pool takes a node back by removing it from the tree and a free takes it out
   of the tree as well.
-- **Two runtime files, and the parity law is why they are files.** `FreeSpot` and `PooledNodes` are
-  plain GDScript shipped in `eventsheet_addons/` beside the behaviour packs - the project's own
-  folder, not the plugin's - **463 lines** that touch no editor class, no sheet format and no
-  EventForge type, so a built game carries them the way it carries any other script, and deleting
-  the plugin leaves every line that names them still parsing. A free spot is a roll asked again until the answer fits and a retirement is a decision read
-  off the node at run time, so neither could be one expression in a template; naming the pool
-  autoload in a template instead would have put an identifier into every generated script that only
-  parses in a project which installed the pool pack.
+- **Two runtime files, and the parity law is why they are files.** `EventForgeFreeSpot` and
+  `EventForgePooledNodes` are plain GDScript shipped in `eventsheet_addons/` beside the behaviour
+  packs - the project's own folder, not the plugin's - **463 lines** that touch no editor class,
+  no sheet format and no EventForge type, so a built game carries them the way it carries any
+  other script, and deleting the plugin leaves every line that names them still parsing. A free
+  spot is a roll asked again until the answer fits and a retirement is a decision read off the
+  node at run time, so neither could be one expression in a template; naming the pool autoload in
+  a template instead would have put an identifier into every generated script that only parses in
+  a project which installed the pool pack.
 - **Every one of them re-emits byte for byte, and ten of the sixteen read back as themselves.** The
   three multi-statement runs join the lift table as **61 entries** - ten formation spellings in 2D
   and eight in 3D, twenty-four launched spellings in 2D and eighteen in 3D, and one for the self copy
@@ -650,21 +660,22 @@
   precisely so the rows below can still say it.
 - **The two runtime classes moved to the folder that is yours.** The guide said "uninstall the
   plugin and the emitted code still builds and still runs", and the emitted lines said
-  `FreeSpot.in_2d(...)` and `PooledNodes.retire(...)` - two classes declared under
+  `EventForgeFreeSpot.in_2d(...)` and `EventForgePooledNodes.retire(...)` - two classes declared under
   `addons/eventforge/`, which is the folder an uninstall deletes. Both now ship as `free_spot.gd`
   and `pooled_nodes.gd` in `eventsheet_addons/`, built through the pack-builder door like every
   other file there and drift-gated with them, which is where the drawing runtime the builtin Draw
   rows call has always lived. The class names, the emitted lines and the rows are unchanged; the
   sentence in the guide is true now instead of nearly true.
-- **On Retired now fires when the object is retired, and not when it is handed out.** The trigger is
-  the node's own `tree_exiting`, which both retirements pass through - but so does every other way a
-  node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the row ran on
-  every spawn from a pool, on all four shipped reparent rows, and on a scene change: a bullet that
-  let go of its trail on retirement let go of it again on the frame it was fired. The handler opens
-  with the line that tells those apart - `if not PooledNodes.is_retiring(self):` and a return,
-  emitted where a reader can see it - and the runtime answers that question from the two things only
-  it can see: a node on its way to being freed, and a node inside the call that gives it to its pool.
-  The trigger's id and its words have not moved; what changed is what it hears.
+- **On Retired now fires when the object is retired, and not when it is handed out.** The trigger
+  is the node's own `tree_exiting`, which both retirements pass through - but so does every other
+  way a node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the
+  row ran on every spawn from a pool, on all four shipped reparent rows, and on a scene change: a
+  bullet that let go of its trail on retirement let go of it again on the frame it was fired. The
+  handler opens with the line that tells those apart -
+  `if not EventForgePooledNodes.is_retiring(self):` and a return, emitted where a reader can see
+  it - and the runtime answers that question from the two things only it can see: a node on its way to
+  being freed, and a node inside the call that gives it to its pool. The trigger's id and its
+  words have not moved; what changed is what it hears.
 - **Which dimension a run is about belongs to the read that asked.** A line formation and a copy of
   the node's own scene write the same characters in 2D and in 3D, so the class the file extends is
   what says which row a reader is shown - and only the whole-file door was ever told it. A pack's
@@ -10786,6 +10797,23 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   the rows that ask. The recipe in both guides is now that command, and the API is named for what it
   is: the in-editor twin, for a Tool sheet or an editor plugin, never the thing CI calls into the
   editor for.
+- **The backup ring has a door on it.** Every pack update copies the files it is about to overwrite
+  or remove into the per-file ring before the first new byte lands, and until now that was a folder
+  and a sentence: the editor's own Restore menu restores THE SHEET IN FRONT OF YOU, which a pack's
+  guide, icon or translation table never is, so recovering one meant copying a file out of `user://`
+  by hand. **Restore...** on a pack's row in the addon manager now lists what the ring is holding for
+  that pack - every earlier version of every file, newest first, with when the copy was taken and how
+  big it is - and writes the chosen one back as ONE UNDOABLE EDIT with a receipt. Ctrl+Z writes back
+  the bytes that were there, or removes the file again when there were none.
+- **The file an update REMOVED is listed too, and says so** - the case somebody actually comes
+  looking for, since the record is re-stamped over the folder the update left and only the ring
+  remembers such a file existed. It is offered only where its place in the pack can be KNOWN rather
+  than guessed: a ring folder's name is the file's whole path with its separators replaced by
+  underscores, which is many-to-one, so the reconstruction is taken only when the folder's suffix is
+  the ring entry's own file name - a file at the top of the pack folder, with nothing left to guess.
+  A removed file deeper in the folder is not offered rather than offered at an invented path.
+- **The ring itself is never written to by any of it**, which the suite pins by value: it is exactly
+  as big after a restore as it was before.
 - **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
   parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
   "this node", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -

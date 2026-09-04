@@ -6972,3 +6972,14 @@ particle amount,파티클 개수
 "Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",수명 값을 바로 바꾸지 않고 시간에 걸쳐 새 값까지 옮깁니다 - 트윈 하나면 되고 따로 남길 상태가 없습니다. 이미터 자신의 속성인 `GPUParticles3D.lifetime`에 씁니다.
 "How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.","이미터가 동시에 공중에 유지하는 파티클 수입니다. 이 값을 쓰면 엔진이 파티클 버퍼를 통째로 버리고 새로 만들기 때문에, 매 프레임이 아니라 어떤 순간에 쓰는 행입니다. 페이드가 없는 이유도 그것입니다. 이미터 자신의 속성인 `GPUParticles3D.amount`에 씁니다."
 "Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",이펙트의 개수 값을 읽어 옵니다. 이미터 자신의 속성인 `GPUParticles3D.amount`에 씁니다. 어떤 값 필드에서든 쓸 수 있습니다.
+" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them.", 그 %d 개 파일의 이전 바이트는 %s 아래 백업 링에 있습니다 - 이 팩 행의 복원…이 목록을 보여줍니다.
+this file is not in the pack any more,이 파일은 더 이상 팩에 없습니다
+Restore %s from the backup ring,백업 링에서 %s 복원
+"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.","그 백업은 더 이상 없습니다 - 링은 정해진 개수만 보관하며, 이 목록을 그린 뒤의 저장이 밀어냈습니다."
+"%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.","%s 이(가) 백업 링에서 팩으로 돌아왔습니다, %d 바이트. 지금까지 폴더에 아예 없던 파일입니다. Ctrl+Z 로 다시 제거되며, 링은 그대로입니다."
+"%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.","%s 을(를) 백업 링에서 되돌렸습니다, %d 바이트. Ctrl+Z 는 이전에 있던 바이트를 다시 씁니다. 링은 그대로입니다."
+Restore a file from the backup ring,백업 링에서 파일 복원
+Put this one back,이것을 되돌리기
+"Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",선택한 백업의 바이트를 팩 안의 파일에 덮어씁니다. 실행 취소할 수 있는 한 번의 편집입니다. 백업 링 자체는 건드리지 않습니다.
+"What the ring is holding, newest first","링이 보관 중인 것, 최신 순"
+"%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - 백업 링이 이전 버전 %d 개(파일 %d 개 분)를 보관 중입니다. 하나를 고르면 실행 취소할 수 있는 한 번의 편집으로 팩 안의 파일에 다시 씌워집니다.

@@ -6972,3 +6972,14 @@ particle amount,粒子数量
 "Walks the effect's lifetime to a new value over time instead of jumping to it - one tween, no state to keep. Writes `GPUParticles3D.lifetime`, which is the emitter's own.",让存续时间随时间走到新值，而不是直接跳过去 - 一个补间，不需要保存任何状态。写入发射器自己的 `GPUParticles3D.lifetime`。
 "How many particles the emitter keeps in the air at once. Writing it makes the engine throw the whole particle buffer away and build a new one, so it is a row to use at a moment rather than every frame - which is also why there is no fade for it. Writes `GPUParticles3D.amount`, which is the emitter's own.",发射器同时保持在空中的粒子数量。写它会让引擎把整个粒子缓冲丢掉重建，所以这是一行用在某个时刻、而不是每帧都跑的行 - 这也是它没有渐变版本的原因。写入发射器自己的 `GPUParticles3D.amount`。
 "Reads the effect's amount back. Writes `GPUParticles3D.amount`, which is the emitter's own. Use it in any value field.",读回特效的数量。写入发射器自己的 `GPUParticles3D.amount`。可用在任何数值字段里。
+" The previous bytes of those %d file(s) are in the backup ring, under %s - Restore… on this pack's row lists them.", 这 %d 个文件的先前字节位于 %s 下的备份环中 - 该包所在行的 恢复… 会列出它们。
+this file is not in the pack any more,此文件已不在包中
+Restore %s from the backup ring,从备份环恢复 %s
+"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.",该备份已不存在 - 备份环只保留固定数量，绘制此列表之后的一次保存把它挤了出去。
+"%s is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched.",%s 已从备份环回到包中，%d 字节。在此之前它根本不在文件夹里。Ctrl+Z 会再次移除它，备份环不受影响。
+"%s was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched.",%s 已从备份环放回，%d 字节。Ctrl+Z 会写回之前那里的字节，备份环不受影响。
+Restore a file from the backup ring,从备份环恢复文件
+Put this one back,放回这一个
+"Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",把所选备份的字节写到包中的文件上，作为一次可撤销的编辑。备份环本身不会被改动。
+"What the ring is holding, newest first",备份环里保存的内容，最新在前
+"%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - 备份环保存着 %d 个较早版本，涉及 %d 个文件。选择一个，它会作为一次可撤销的编辑写回包中的文件。

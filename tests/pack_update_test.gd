@@ -16,6 +16,9 @@
 #   4. ASKING WRITES NOTHING. Planning an update leaves every byte of the pack exactly as it was.
 #   5. TAKING IT BACKS UP FIRST. Every file about to be overwritten or removed goes into the ring
 #      before the first new byte lands, and a "keep mine" answer is honoured to the byte.
+#   6. AND THE RING HAS A DOOR. What it is holding for one pack is listed, and one entry is written
+#      back as an UNDOABLE edit with a receipt - including a file the update removed altogether,
+#      which is the case somebody comes looking for. The ring itself is never touched by any of it.
 #
 # EVERY FIXTURE IS UNDER user://. Nothing here touches eventsheet_addons/, so a crashed run cannot
 # leave a stray pack in the tree for the drift gate to find.
@@ -74,6 +77,7 @@ static func run() -> bool:
 	ok = _test_taking_it_backs_up_first() and ok
 	ok = _test_the_record_says_what_it_now_holds() and ok
 	ok = _test_the_dry_run_answers_the_incoming_vocabulary() and ok
+	ok = _test_the_ring_has_a_door() and ok
 	_clear_fixture()
 	return ok
 
@@ -344,12 +348,12 @@ static func _test_taking_it_backs_up_first() -> bool:
 		FileAccess.get_file_as_string(folder.path_join("guide.md")), mine) and ok
 	ok = _check("the file this version drops is gone",
 		FileAccess.file_exists(folder.path_join("notes.txt")), false) and ok
-	# The ring is a folder of files rather than a button - the editor's Restore menu restores the
-	# sheet in front of you - so the line NAMES it. "2 went into the backup ring" is a number a reader
-	# has to trust; the folder they are in is something they can act on.
+	# The line NAMES the ring and the door onto it. "2 went into the backup ring" is a number a
+	# reader has to trust; the folder they are in, and the button that lists them, are things they
+	# can act on.
 	ok = _check("what happened is said in four numbers, and where the old bytes went",
 		EventSheetPackUpdateDialog.applied_text(done),
-		"1 file(s) took the new version, 1 were removed, 1 of yours were kept. 2 went into the backup ring first. The previous bytes of those 2 file(s) are in the backup ring beside each of them, under %s." % EventSheetBackups.BACKUPS_ROOT) and ok
+		"1 file(s) took the new version, 1 were removed, 1 of yours were kept. 2 went into the backup ring first. The previous bytes of those 2 file(s) are in the backup ring, under %s - Restore\u2026 on this pack's row lists them." % EventSheetBackups.BACKUPS_ROOT) and ok
 	ok = _check("and an update that rang nothing says nothing about a ring",
 		EventSheetPackUpdate.backup_note({"backed_up": 0}), "") and ok
 	var ring: PackedStringArray = EventSheetBackups.list_backups(folder.path_join("probe_pack.gd"))
@@ -437,6 +441,112 @@ static func _test_the_dry_run_answers_the_incoming_vocabulary() -> bool:
 
 ## A clean v1 pack folder under user://, rebuilt from nothing on every call so no test can be
 ## answered by what the one before it left behind.
+# ── 6. the door onto the ring ─────────────────────────────────────────────────────────────────
+
+
+## WHAT THE RING IS HOLDING, AND ONE ENTRY PUT BACK - both by value, over a ring this test filled by
+## running a real update.
+##
+## The interesting row is the file the update REMOVED. It is not in the folder any more, so nothing
+## in the pack points at it and nothing but the ring remembers it existed; listing it, saying so, and
+## writing it back are the whole reason this door exists. The other row is the ordinary one: a file
+## the update overwrote, put back to the bytes it had before.
+##
+## And the standing promise, asked twice: the ring is exactly as big afterwards as it was before. A
+## restore reads it and copies out of it; only a save or an update ever adds to it.
+static func _test_the_ring_has_a_door() -> bool:
+	var folder: String = _fresh_pack()
+	EventSheetPackManifest.stamp(folder, "1.0.0")
+	_clear_ring(folder)
+	var incoming: Dictionary = {"probe_pack.gd": PACK_V2.to_utf8_buffer(),
+		"guide.md": GUIDE_V2.to_utf8_buffer()}
+	EventSheetPackUpdate.apply(folder, incoming,
+		EventSheetPackUpdate.plan(folder, incoming), {}, "2.0.0")
+
+	# THE LISTING. Files in path order, and each says what it is and whether the pack still has it.
+	var listed: Array[Dictionary] = EventSheetPackUpdate.restorable(folder)
+	var said: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in listed:
+		said.append("%s %d byte(s)%s" % [str(entry.get("path", "")), int(entry.get("bytes", 0)),
+			" - gone from the pack" if bool(entry.get("gone", false)) else ""])
+	var ok: bool = _check("the ring lists every file it holds an earlier version of, in path order",
+		said, PackedStringArray([
+			"guide.md %d byte(s)" % GUIDE_V1.to_utf8_buffer().size(),
+			"notes.txt %d byte(s) - gone from the pack" % NOTES_V1.to_utf8_buffer().size(),
+			"probe_pack.gd %d byte(s)" % PACK_V1.to_utf8_buffer().size(),
+		]))
+	ok = _check("and the window says what it is about", EventSheetPackRestoreDialog.summary_text(
+		folder, listed),
+		"probe_pack - the backup ring is holding 3 earlier version(s) of 3 file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.") and ok
+	# The line a row reads, pinned over an entry written HERE, so the time in it is a value rather
+	# than whatever the clock said while the fixture was being built.
+	ok = _check("a row says the file, when that copy was taken and how big it is",
+		EventSheetPackUpdate.restore_line({"path": "guide.md", "when": "2026-09-04T09:15:00",
+			"bytes": 31, "gone": false}),
+		"guide.md - 2026-09-04T09:15:00, 31 byte(s)") and ok
+	ok = _check("and says so when the pack no longer has that file at all",
+		EventSheetPackUpdate.restore_line({"path": "notes.txt", "when": "2026-09-04T09:15:00",
+			"bytes": 8, "gone": true}),
+		"notes.txt - 2026-09-04T09:15:00, 8 byte(s) (this file is not in the pack any more)") and ok
+
+	var held: int = listed.size()
+	var undo: EventSheetEditorTest.FakeEditorUndoRedoManager = EventSheetEditorTest.FakeEditorUndoRedoManager.new()
+
+	# THE FILE THE UPDATE REMOVED, written back.
+	var gone_entry: Dictionary = _entry_for(listed, "notes.txt")
+	var receipt: Dictionary = EventSheetPackUpdate.restore(gone_entry, undo)
+	ok = _check("the file the update removed is back, to the byte",
+		FileAccess.get_file_as_string(folder.path_join("notes.txt")), NOTES_V1) and ok
+	ok = _check("and the receipt says what happened and how to take it back",
+		EventSheetPackUpdate.restore_text(receipt),
+		"notes.txt is back in the pack, %d byte(s), from the backup ring. It was not in the folder at all until now. Ctrl+Z removes it again, and the ring is untouched." % NOTES_V1.to_utf8_buffer().size()) and ok
+	undo.undo()
+	ok = _check("one Ctrl+Z takes it away again, because there was nothing there before",
+		FileAccess.file_exists(folder.path_join("notes.txt")), false) and ok
+
+	# THE FILE THE UPDATE OVERWROTE, put back to the bytes it had.
+	var overwritten: Dictionary = _entry_for(listed, "probe_pack.gd")
+	var second: Dictionary = EventSheetPackUpdate.restore(overwritten, undo)
+	ok = _check("the overwritten script is back to the bytes it had before the update",
+		FileAccess.get_file_as_string(folder.path_join("probe_pack.gd")), PACK_V1) and ok
+	ok = _check("with its own receipt", EventSheetPackUpdate.restore_text(second),
+		"probe_pack.gd was put back from the backup ring, %d byte(s). Ctrl+Z writes the bytes that were there before, and the ring is untouched." % PACK_V1.to_utf8_buffer().size()) and ok
+	undo.undo()
+	ok = _check("and Ctrl+Z writes back exactly what the update had left",
+		FileAccess.get_file_as_string(folder.path_join("probe_pack.gd")), PACK_V2) and ok
+
+	# THE RING IS UNTOUCHED BY ANY OF IT.
+	ok = _check("the ring holds exactly what it held before the door was opened",
+		EventSheetPackUpdate.restorable(folder).size(), held) and ok
+	# And an entry a later save has pruned out from under the window writes nothing at all.
+	ok = _check("a backup that has gone since the list was drawn is refused in words",
+		EventSheetPackUpdate.restore_text(EventSheetPackUpdate.restore(
+			{"path": "guide.md", "target": folder.path_join("guide.md"),
+				"backup": "user://eventforge_no_such_backup"}, undo)),
+		"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.") and ok
+	ok = _check("and leaves the file exactly as it was",
+		FileAccess.get_file_as_string(folder.path_join("guide.md")), GUIDE_V2) and ok
+	_clear_ring(folder)
+	return ok
+
+
+## One listed entry by the file it is about, or {} - the newest, which is what the list offers first.
+static func _entry_for(listed: Array[Dictionary], relative: String) -> Dictionary:
+	for entry: Dictionary in listed:
+		if str(entry.get("path", "")) == relative:
+			return entry
+	return {}
+
+
+## Empties this fixture pack's rings, so a run starts from a ring with nothing in it whatever the
+## previous run left. The ring lives under `user://`, outside the project, and only these fixtures
+## ever write to this pack's corner of it.
+static func _clear_ring(folder: String) -> void:
+	for relative: String in ["probe_pack.gd", "guide.md", "notes.txt"]:
+		for stale: String in EventSheetBackups.list_backups(folder.path_join(relative)):
+			DirAccess.remove_absolute(stale)
+
+
 static func _fresh_pack() -> String:
 	_clear_fixture()
 	var folder: String = FIXTURE_ROOT.path_join(PACK_DIR)
