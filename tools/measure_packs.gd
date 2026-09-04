@@ -47,7 +47,7 @@
 # A builders folder that is not this project's can be measured with `-- builders=<path>` (an OS path
 # is accepted, not only `res://`). That is the way to ask what a COMMIT holds while the working copy
 # carries somebody's half-finished pack beside it: `git archive HEAD tools/pack_builders` into a
-# scratch folder and point the tool at it. Without that, an uncommitted builder counts, the records
+# temporary folder and point the tool at it. Without that, an uncommitted builder counts, the records
 # get a number no clean checkout can reproduce, and the gate goes red on a runner instead of here.
 @tool
 extends SceneTree
