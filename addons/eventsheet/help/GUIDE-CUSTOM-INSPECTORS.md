@@ -187,6 +187,9 @@ Use the table drawer when every row has the same columns; use the card list when
         "label": "Loop Back",                           # the card's title
         "help": "Moves the head back to the last Hold.",# the unfolded card's info line
         "fields": [{"key", "label", "drawer", "default", "show_if", "link"}],
+                    # link names another NUMBER key: the "=" beside the field keeps the
+                    # two in the ratio they had when it was pressed, exactly as the
+                    # property-level "=" does
         "live": [{"key", "label"}],                     # greyed read-only values while the game runs
         "defaults": {"loops": 2},                       # seeded into a NEWLY ADDED card, in this order
         "badge": func(card): return "x%d" % card.loops, # the right-hand badge text
