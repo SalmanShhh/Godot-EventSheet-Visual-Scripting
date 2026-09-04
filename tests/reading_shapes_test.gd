@@ -261,8 +261,6 @@ static func _test_the_doctor_page() -> bool:
 	return ok
 
 
-## Drops what this test warmed, and takes the staged scripts with it. CI runs the suite serially in
-## one process: a family cache left standing here is a cache the next test inherits.
 ## The inside of a multi-line literal is prose, not a statement. Pinned as the STATE the walk carries
 ## line by line, because that is the whole mechanism: `shape_of` sees one line and cannot know that
 ## the line above it opened a text block that has not closed. Without it a template's `task: %s` came
@@ -280,8 +278,17 @@ static func _test_a_text_block_is_not_a_statement() -> bool:
 		["\tvar note: String = \"\"\"one line\"\"\"", "", ""],
 		# A `#` outside a literal starts a comment, so a quote in it opens nothing.
 		["\tqueue_free()  # \"\"\" not a block", "", ""],
-		# A single-quoted literal ends at the end of its line whatever the author meant.
-		["\tvar broken: String = \"unclosed", "", ""],
+		# A PLAINLY quoted literal can carry a real newline in GDScript, and the generated showcases
+		# use it: a three-line HUD readout is one statement. So the plain quote is carried too, and
+		# the prose under it is prose - this is the corpus's own case, not a hypothetical one.
+		["	$Screen.text = \"CHEF PLANNER (HTN)", "", "\""],
+		["task: %s", "\"", "\""],
+		["steps left: %d\" % [$Chef/Planner.current_task()]", "\"", ""],
+		# An escaped quote inside a continued literal closes nothing.
+		["still open \\\" here", "\"", "\""],
+		# Which leaves an unbalanced file with the rest of itself unshaped, rather than with prose
+		# ranked as statements: the safe way round for something whose whole job is a ranking.
+		["	var broken: String = \"unclosed", "", "\""],
 	]:
 		ok = _check("after \"%s\" the walk has %s open" % [str(row[0]).strip_edges(),
 			"nothing" if str(row[2]).is_empty() else str(row[2])],
@@ -330,6 +337,8 @@ static func _test_the_capped_walk() -> bool:
 	return ok
 
 
+## Drops what this test warmed, and takes the staged scripts with it. CI runs the suite serially in
+## one process: a family cache left standing here is a cache the next test inherits.
 static func _tidy_up() -> void:
 	DirAccess.remove_absolute(STAGED_A)
 	DirAccess.remove_absolute(STAGED_B)

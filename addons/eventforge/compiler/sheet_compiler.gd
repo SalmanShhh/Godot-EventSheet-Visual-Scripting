@@ -4082,10 +4082,11 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 				return ""
 			marker = "eventsheet:min_max:%s:%s" % [str(bounds.get("min", "0")), str(bounds.get("max", "100"))]
 		"toggle_row":
-			# A String's fixed choices as one row of toggle buttons - the choices ride the marker
-			# (INSTEAD of @export_enum: one annotation slot). Without the plugin the field degrades
-			# to plain text; the compiled game never depended on the dropdown either way.
-			if type_name != "String" or not (attributes.get("toggle_options") is Array):
+			# Fixed choices as one row of toggle buttons - the choices ride the marker (INSTEAD of
+			# @export_enum: one annotation slot). A String stores the chosen word; an int stores its
+			# index, the way a plain enum int already reads. Without the plugin the field degrades to
+			# a plain field; the compiled game never depended on the buttons either way.
+			if not (type_name in ["String", "int"]) or not (attributes.get("toggle_options") is Array):
 				return ""
 			var toggle_values: PackedStringArray = PackedStringArray()
 			for toggle_option: Variant in attributes.get("toggle_options"):
@@ -4095,6 +4096,13 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if toggle_values.is_empty():
 				return ""
 			marker = "eventsheet:toggle_row:%s" % ",".join(toggle_values)
+			# Optional tails in a FIXED order (the reader walks them positionally, and the icon source
+			# is last because a res:// path carries colons of its own).
+			if bool(attributes.get("toggle_segmented", false)):
+				marker += ":segmented"
+			var icon_source: String = str(attributes.get("toggle_icons", "")).strip_edges()
+			if not icon_source.is_empty() and not icon_source.contains("\"") and not icon_source.contains(","):
+				marker += ":icons=%s" % icon_source
 		"table":
 			# Array of Dictionary rows edited as a grid; the column schema (name=type pairs) rides
 			# the marker. Names that can't survive the joined form (separators, quotes) are skipped.
@@ -4131,6 +4139,23 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if column_pairs.is_empty():
 				return ""
 			marker = "eventsheet:table:%s" % ",".join(column_pairs)
+		"unit":
+			# A float and the unit it is READ in. The unit list and the STORED unit ride the marker;
+			# the stored unit is what the number in this file (and in the running game) means, so the
+			# dropdown can never move it. Without the plugin the field degrades to a plain float.
+			if type_name != "float" or not (attributes.get("unit_kinds") is Array):
+				return ""
+			var unit_values: PackedStringArray = PackedStringArray()
+			for unit_kind: Variant in attributes.get("unit_kinds"):
+				var cleaned_unit: String = str(unit_kind).strip_edges()
+				if not cleaned_unit.is_empty() and not cleaned_unit.contains(",") and not cleaned_unit.contains(":") and not cleaned_unit.contains("|") and not cleaned_unit.contains("\"") and not unit_values.has(cleaned_unit):
+					unit_values.append(cleaned_unit)
+			if unit_values.is_empty():
+				return ""
+			var store_unit: String = str(attributes.get("unit_store", "")).strip_edges()
+			if store_unit.is_empty() or not unit_values.has(store_unit):
+				store_unit = unit_values[0]
+			marker = "eventsheet:unit:kinds=%s,store=%s" % ["|".join(unit_values), store_unit]
 		"vector_dial":
 			if type_name != "Vector2":
 				return ""

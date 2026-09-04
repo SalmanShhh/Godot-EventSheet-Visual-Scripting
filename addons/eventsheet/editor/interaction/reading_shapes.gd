@@ -154,7 +154,8 @@ static func shape_of(statement: String) -> String:
 ## `reading` is what EventSheetLiftReading.read handed back; nothing is re-read or re-parsed here.
 ##
 ## THE INSIDE OF A TEXT BLOCK IS NOT A STATEMENT. `shape_of` reads one line and cannot know that the
-## line before it opened a triple-quoted literal that has not closed yet - so the prose inside a
+## line before it opened a literal that has not closed yet (a triple quoting, or the plain one the
+## generated showcases write a three-line HUD readout with) - so the prose inside a
 ## multi-line string was shaped as though it were code, and on a real project those lines outnumbered
 ## the statements: `task: %s` inside a template came out as "a name, then a unique-name node path",
 ## which is a printf placeholder read as a scene path. The walk is over every line of the reading in
@@ -178,16 +179,23 @@ static func stays_code_lines(reading: Dictionary, path: String) -> Array[Diction
 ## The string delimiter this line leaves OPEN, or "" when it closes everything it opened. `open` is
 ## what the line before it left open, so a caller walking a file in order carries the answer forward.
 ##
-## Only the triple quotings can be left open. A single-quoted literal that is never closed ends at the
-## end of its own line, which is the honest answer and the same one `_string_end` gives: there is no
-## more of it on this line.
+## EVERY quoting can be left open, not only the triple one. GDScript lets a plainly quoted literal
+## carry a real newline, and the generated showcases use exactly that to write a HUD readout as one
+## statement spanning three lines - so treating a `"` unclosed at end of line as "the literal ended
+## here" put the prose of those readouts back into the ledger as statements, which is the very thing
+## the carried state exists to keep out. What is open is therefore the delimiter itself: `\"\"\"`,
+## `'''`, `\"` or `'`.
+##
+## A file whose quotes genuinely do not balance ends up with the rest of itself given no shape, which
+## is the safe way round: those lines are counted as notes rather than ranked as statements nobody
+## wrote.
 static func open_string_after(text: String, open: String) -> String:
 	var index: int = 0
 	if not open.is_empty():
-		var reopened: int = text.find(open)
-		if reopened < 0:
+		var closed: int = _continued_end(text, open)
+		if closed < 0:
 			return open
-		index = reopened + open.length()
+		index = closed
 	while index < text.length():
 		var character: String = text[index]
 		# A `#` outside a literal starts a comment, and nothing after it can open one.
@@ -197,14 +205,43 @@ static func open_string_after(text: String, open: String) -> String:
 			index += 1
 			continue
 		var triple: String = character + character + character
-		if text.substr(index, 3) != triple:
-			index = _string_end(text, index)
+		if text.substr(index, 3) == triple:
+			var triple_closed: int = text.find(triple, index + 3)
+			if triple_closed < 0:
+				return triple
+			index = triple_closed + 3
 			continue
-		var closed: int = text.find(triple, index + 3)
-		if closed < 0:
-			return triple
-		index = closed + 3
+		var one_closed: int = _quote_end(text, index + 1, character)
+		if one_closed < 0:
+			return character
+		index = one_closed
 	return ""
+
+
+## One past the closing delimiter of a literal that began on an EARLIER line, or -1 when this line
+## does not close it either. The triple form is found as plain text (a backslash cannot escape a
+## delimiter three characters long), the one-quote form through the escape-aware scan, because a line
+## of a continued literal may well end on `\\"` and that quote closes nothing.
+static func _continued_end(text: String, open: String) -> int:
+	if open.length() == 3:
+		var found: int = text.find(open)
+		return -1 if found < 0 else found + 3
+	return _quote_end(text, 0, open)
+
+
+## One past the `quote` that closes the literal being scanned from `from`, or -1 when the line holds
+## no unescaped one. The same walk `_string_end` does, said as an answer a caller can test rather
+## than as a position clamped to the end of the line.
+static func _quote_end(text: String, from: int, quote: String) -> int:
+	var index: int = from
+	while index < text.length():
+		if text[index] == "\\":
+			index += 2
+			continue
+		if text[index] == quote:
+			return index + 1
+		index += 1
+	return -1
 
 
 ## The ranked census over a flat list of stays-code lines:
