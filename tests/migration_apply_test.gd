@@ -43,6 +43,8 @@ static func run() -> bool:
 	ok = _test_the_button_applies_the_plan_it_drew() and ok
 	ok = _test_the_project_report() and ok
 	ok = _test_the_doors_are_the_only_doors() and ok
+	ok = _test_the_shipped_address() and ok
+	ok = _test_the_shipped_address_in_the_report() and ok
 	return ok
 
 
@@ -493,6 +495,131 @@ static func _test_the_doors_are_the_only_doors() -> bool:
 			EventSheetMigrationFindings.FIX_KEEP_AS_CODE],
 		["see_what_replaced_it", "keep_it_as_code"]) and ok
 	return ok
+
+
+# ── 10. the shipped address, with nothing invented ────────────────────────────────
+
+
+## EVERY OTHER TEST HERE INVENTS THE OLD VERB. This one invents nothing: the sheet is written on
+## `Core::PlayAudio` and `Core::StopAudio`, the two general-shelf audio rows the Audio shelf
+## superseded a day after they landed, and the vocabulary answering is the one the project ships.
+##
+## Three things are proved of it in the order a reader meets them: the head band counts the rows, the
+## receipt says what would change in words and in code, and Apply lands the successor row as ONE
+## undoable edit. A synthetic corpus can prove the machinery; only this can prove that the addresses
+## the plugin publishes actually carry a real sheet across.
+static func _test_the_shipped_address() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sheet: EventSheetResource = _audio_sheet()
+	sheet.external_source_path = PROBE_PATH
+	dock.setup(sheet)
+	# THE HEAD BAND, counted over the rows themselves rather than remembered anywhere.
+	var counted: int = dock._viewport._row_builder._rows_with_a_newer_spelling(dock.get_current_sheet())
+	var ok: bool = _check("the head band counts the one event holding both older spellings",
+		counted, 1)
+	ok = _check("and says so in one line",
+		EventForgeVocabularyRecord.band_reading(EventForgeVocabularyRecord.band_facts(counted, 0)),
+		"1 row has a newer spelling") and ok
+	# THE RECEIPT, against the shipped vocabulary with nothing handed in.
+	var planned: Array[Dictionary] = EventSheetMigrationPlan.plan(dock.get_current_sheet())
+	ok = _check("the receipt lists both rows, the sentence then the code",
+		EventSheetMigrateDialog.preview_lines(planned), PackedStringArray([
+			"Play sound → Play from 0.5s",
+			"    play(0.5) → play(0.5)",
+			"Stop sound → Stop",
+			"    stop() → stop()",
+		])) and ok
+	ok = _check("and leaves nothing behind for a person to answer",
+		EventSheetMigrateDialog.left_alone_lines(planned), PackedStringArray()) and ok
+	ok = _check("the summary counts one step",
+		EventSheetMigrateDialog.summary_text(planned),
+		"2 row(s) would be rewritten, in one step you can undo.") and ok
+	# THE EDIT.
+	dock._migrate_dialog.open()
+	dock._migrate_dialog.confirm()
+	var moved: Array = (dock.get_current_sheet().events[0] as EventRow).actions
+	ok = _check("both rows now name the Audio shelf's own spelling",
+		[str((moved[0] as ACEAction).ace_id), str((moved[1] as ACEAction).ace_id)],
+		["AudioPlay", "AudioStop"]) and ok
+	ok = _check("the renamed value arrived under the name the successor calls it",
+		(moved[0] as ACEAction).params, {"from": "0.5", "target": ""}) and ok
+	ok = _check("carrying the successor's template",
+		str((moved[0] as ACEAction).codegen_template), "{target.}play({from})") and ok
+	ok = _check("and its reading", str((moved[0] as ACEAction).display_text),
+		"Play from {from}s") and ok
+	ok = _check("the file writes the same line it always did",
+		_compiled(dock.get_current_sheet()).contains("play(0.5)"), true) and ok
+	ok = _check("and the band has nothing left to count",
+		dock._viewport._row_builder._rows_with_a_newer_spelling(dock.get_current_sheet()), 0) and ok
+	# ONE Ctrl+Z.
+	dock._undo_redo_adapter.undo()
+	var back: Array = (dock.get_current_sheet().events[0] as EventRow).actions
+	ok = _check("and ONE Ctrl+Z puts both of them back",
+		[str((back[0] as ACEAction).ace_id), str((back[1] as ACEAction).ace_id)],
+		["PlayAudio", "StopAudio"]) and ok
+	ok = _check("with their values unharmed", (back[0] as ACEAction).params,
+		{"from_position": "0.5", "target": ""}) and ok
+	dock.free()
+	return ok
+
+
+## THE DOCTOR'S MIGRATION SECTION, over a STORED sheet holding the same two rows.
+##
+## Stored on purpose, and the asymmetry is the whole point of this pair. A `.tres` sheet writes down
+## which verb each row was picked from, so an older spelling in one is a fact the report can read. A
+## `.gd` sheet derives its rows from the file every time it is opened - and these two spellings emit
+## the SAME line, `play(0.5)`, so the reverse grammar reads that line back as the current verb and
+## there is nothing to report. That is the good half of an address whose two ends write the same
+## bytes: a project full of `.gd` sheets gains no migration rows at all from it, so no branch gate
+## starts failing and no diff appears anywhere, while the sheet in front of a reader still offers the
+## newer spelling on the head band.
+static func _test_the_shipped_address_in_the_report() -> bool:
+	var path: String = "user://eventforge_migration_shipped_probe.tres"
+	if ResourceSaver.save(_audio_sheet(), path) != OK:
+		return _check("the probe sheet is stored", false, true)
+	var rows: Array[Dictionary] = EventSheetMigrationDoctor.rows(PackedStringArray([path]))
+	var said: PackedStringArray = PackedStringArray()
+	for row: Dictionary in rows:
+		said.append("%d %s -> %s %s" % [int(row.get("row", 0)), str(row.get("from_id", "")),
+			str(row.get("to_id", "")), "asks" if bool(row.get("asks", true)) else "moves"])
+	var ok: bool = _check("the report names both rows, where they go, and that neither asks", said,
+		PackedStringArray([
+			"1 Core::PlayAudio -> Core::AudioPlay moves",
+			"2 Core::StopAudio -> Core::AudioStop moves",
+		]))
+	ok = _check("and the per-sheet line counts them the same way",
+		EventSheetMigrationDoctor.sheet_lines(rows).size(), 1) and ok
+	DirAccess.remove_absolute(path)
+	return ok
+
+
+## The sheet both tests above are about: one event on an AudioStreamPlayer holding the two
+## general-shelf audio rows, each with the values a picked row really carries - the older Play Sound
+## started half a second in, and a Stop Sound acting on the node the sheet is written on.
+static func _audio_sheet() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "MigrationShippedFixture"
+	sheet.host_class = "AudioStreamPlayer"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	var play: ACEAction = ACEAction.new()
+	play.provider_id = "Core"
+	play.ace_id = "PlayAudio"
+	play.codegen_template = "{target.}play({from_position})"
+	play.display_text = "Play sound"
+	play.params = {"from_position": "0.5", "target": ""}
+	event.actions.append(play)
+	var stop: ACEAction = ACEAction.new()
+	stop.provider_id = "Core"
+	stop.ace_id = "StopAudio"
+	stop.codegen_template = "{target.}stop()"
+	stop.display_text = "Stop sound"
+	stop.params = {"target": ""}
+	event.actions.append(stop)
+	sheet.events.append(event)
+	return sheet
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

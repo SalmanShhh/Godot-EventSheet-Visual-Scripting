@@ -35,7 +35,7 @@ static func run() -> bool:
 	ok = _test_the_vocabulary_is_sound() and ok
 	ok = _test_the_annotation() and ok
 	ok = _test_the_builder() and ok
-	ok = _test_the_shipped_vocabulary_carries_none() and ok
+	ok = _test_the_shipped_addresses() and ok
 	ok = _test_the_sheet_says_it_quietly() and ok
 	ok = _test_generated_fixtures() and ok
 	ok = _test_the_engine() and ok
@@ -123,39 +123,69 @@ static func _test_the_builder() -> bool:
 	return ok
 
 
-## THE SHIPPED VOCABULARY CARRIES NO FORWARDING ADDRESS, and that is pinned rather than merely true,
-## because the way an address gets added is by looking plausible. The State Machine pack is the pair
-## that looked plausible and was not: its Go to state and Current state is ask the same questions the
-## object-state Go To State and Is In State ask, but they keep the answer somewhere else. This pack's
+## THE FOUR ADDRESSES THE VOCABULARY SHIPS, pinned by value rather than counted, so a fifth one
+## added later has to come here and say what it is.
+##
+## All four are the same story. They landed on the general shelf the day before the Audio shelf
+## existed; the Audio module then authored the same four questions on the page a reader looks for
+## them on, against the same node type, with the same parameters and the same emitted call, and the
+## two spellings have sat side by side ever since. Nothing about the older four changed when the
+## address was written on them: same id, same template, same place in the picker, same emitted byte.
+##
+## The State Machine pack is the pair that looked exactly as plausible and is NOT here, which is the
+## other half of what this test pins. Its Go to state and Current state is ask the same questions the
+## object-state Go To State and Is In State ask, but they keep the answer somewhere else: this pack's
 ## parameter is a state NAME, so a row holds the quoted literal a text field writes; the object-state
 ## parameter is a member of the object's own State enum, so a row holds a bare name. A map may say
 ## three things and none of them converts one into the other, so the rewrite emitted
-## `state = State."chasing"` and the file gate refused every real row.
-##
-## And the second reason, which no value conversion would have fixed: those four verbs are one
-## machine. Time in state reads the clock Go to state stamps and On any state change rides the signal
-## it emits, and neither has an honest address - so forwarding the other two would have left a
-## machine that still compiles and no longer works.
-##
-## An address added here later has to move this test, which is the point.
-static func _test_the_shipped_vocabulary_carries_none() -> bool:
+## `state = State."chasing"` and the file gate refused every real row. And the second reason, which no
+## value conversion would have fixed: those four verbs are one machine. Time in state reads the clock
+## Go to state stamps and On any state change rides the signal it emits, and neither has an honest
+## address - so forwarding the other two would have left a machine that still compiles and no longer
+## works.
+static func _test_the_shipped_addresses() -> bool:
 	var known: Dictionary = EventForgeSuccessors.catalog()
 	var addressed: PackedStringArray = PackedStringArray()
 	for key: Variant in known.keys():
 		if not EventForgeSuccessors.normalize_map((known[key] as Dictionary).get("map", {})).is_empty():
 			addressed.append(str(key))
 	addressed.sort()
-	var ok: bool = _check("no shipped verb carries a forwarding address yet", addressed,
-		PackedStringArray())
+	var ok: bool = _check("the shipped vocabulary carries exactly these forwarding addresses", addressed,
+		PackedStringArray(["Core::IsAudioPlaying", "Core::PlayAudio", "Core::SetVolumeDb",
+			"Core::StopAudio"]))
+	ok = _check("Play Sound forwards to Play, renaming its one parameter",
+		EventForgeSuccessors.resolve("Core::PlayAudio", known),
+		{"id": "Core::AudioPlay", "renames": {"from_position": "from"}, "defaults": {},
+			"hops": PackedStringArray(["Core::AudioPlay"])}) and ok
+	ok = _check("Stop Sound forwards to Stop with nothing to rename",
+		EventForgeSuccessors.resolve("Core::StopAudio", known),
+		{"id": "Core::AudioStop", "renames": {}, "defaults": {},
+			"hops": PackedStringArray(["Core::AudioStop"])}) and ok
+	ok = _check("Set Volume (dB) forwards to Set Volume",
+		EventForgeSuccessors.resolve("Core::SetVolumeDb", known),
+		{"id": "Core::AudioSetVolume", "renames": {}, "defaults": {},
+			"hops": PackedStringArray(["Core::AudioSetVolume"])}) and ok
+	ok = _check("and Sound Is Playing forwards to Is Playing",
+		EventForgeSuccessors.resolve("Core::IsAudioPlaying", known),
+		{"id": "Core::AudioIsPlaying", "renames": {}, "defaults": {},
+			"hops": PackedStringArray(["Core::AudioIsPlaying"])}) and ok
+	# NOTHING ABOUT THE OLDER VERB MOVED. An address is written beside a frozen row, never over it.
+	ok = _check("and the older row keeps the template it always had",
+		str((known["Core::PlayAudio"] as Dictionary)["template"]), "{target.}play({from_position})") and ok
+	ok = _check("as does the newer one",
+		str((known["Core::AudioPlay"] as Dictionary)["template"]), "{target.}play({from})") and ok
+	# Playback Position is the fifth row of the same family and is deliberately unaddressed: an
+	# expression is not a row, so nothing could ever act on the address.
+	ok = _check("the expression beside them points nowhere",
+		EventForgeSuccessors.resolve("Core::GetPlaybackPosition", known), {}) and ok
 	for key: String in ["StateMachineBehavior::method:set_state",
 			"StateMachineBehavior::method:is_in_state",
 			"StateMachineBehavior::method:time_in_state",
 			"StateMachineBehavior::signal:state_changed"]:
 		ok = _check("%s points nowhere - the machine's four verbs stay together" % key,
 			EventForgeSuccessors.resolve(key, known), {}) and ok
-	# The pack itself is untouched by any of this: same ids, same templates, same emitted call.
 	var go_to: Dictionary = known["StateMachineBehavior::method:set_state"]
-	ok = _check("and the pack keeps the template it always had",
+	ok = _check("and that pack keeps the template it always had",
 		str(go_to["template"]), "{target}.set_state({next})") and ok
 	return ok
 
@@ -164,11 +194,12 @@ static func _test_the_shipped_vocabulary_carries_none() -> bool:
 ##
 ## THE SHEET: a row whose verb has been superseded grows NOTHING - no block, no icon, no inline text,
 ## not even the amber state - because it is not wrong and still compiles exactly as written. Asked
-## here of a real dock over a real pack row, which today carries no forwarding address at all, so the
-## muted line is absent too and the row is silent in every way a row can be.
+## here of a real dock over a real row on a really superseded verb, which is the state the law is
+## about: the muted line exists, and the sheet still shows none of it.
 ##
-## THE STRIP: the one place the words are allowed to appear, driven directly rather than through a
-## shipped address, so the law stays pinned whether or not the vocabulary happens to carry one.
+## THE STRIP: the one place the words are allowed to appear, and it names the successor by the words
+## a picker reads out rather than by its id, because what the reader is being told is what they would
+## write.
 static func _test_the_sheet_says_it_quietly() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -177,23 +208,36 @@ static func _test_the_sheet_says_it_quietly() -> bool:
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnReady"
 	var action: ACEAction = ACEAction.new()
-	action.provider_id = "StateMachineBehavior"
-	action.ace_id = "method:set_state"
-	action.params = {"target": "$StateMachineBehavior", "next": "\"chasing\""}
+	action.provider_id = "Core"
+	action.ace_id = "StopAudio"
+	action.codegen_template = "{target.}stop()"
+	action.params = {"target": "$AudioStreamPlayer"}
 	event.actions.append(action)
 	sheet.events.append(event)
 	dock.setup(sheet)
 	var row: EventRowData = dock._viewport._root_rows[0]
-	var ok: bool = _check("a row on a verb with no address says nothing at all",
-		row.successor_hint, "")
+	var ok: bool = _check("a row on a superseded verb carries the muted line",
+		row.successor_hint, "newer spelling: Stop")
 	ok = _check("wears no amber state", row.attention_note, "") and ok
 	ok = _check("and hangs nothing under itself", row.children.size(), 0) and ok
-	# The strip, driven directly: the words a superseded row WOULD get, and where they are allowed.
-	var carried: EventRowData = EventRowData.new()
-	carried.successor_hint = "newer spelling: Go To State"
-	dock._update_row_help_strip(carried)
+	# And a row on a verb that is the current spelling says nothing at all.
+	var current: EventRow = EventRow.new()
+	current.trigger_provider_id = "Core"
+	current.trigger_id = "OnReady"
+	var newer: ACEAction = ACEAction.new()
+	newer.provider_id = "Core"
+	newer.ace_id = "AudioStop"
+	newer.codegen_template = "{target.}stop()"
+	newer.params = {"target": "$AudioStreamPlayer"}
+	current.actions.append(newer)
+	sheet.events.append(current)
+	dock.setup(sheet)
+	ok = _check("while a row on the current spelling says nothing at all",
+		dock._viewport._root_rows[1].successor_hint, "") and ok
+	# The strip, over the superseded row itself.
+	dock._update_row_help_strip(dock._viewport._root_rows[0])
 	ok = _check("selecting a superseded row puts the muted line on the strip",
-		dock._row_help_label.text, "newer spelling: Go To State") and ok
+		dock._row_help_label.text, "newer spelling: Stop") and ok
 	ok = _check("and shows it", dock._row_help_label.visible, true) and ok
 	ok = _check("muted rather than in the warning colour",
 		dock._row_help_label.modulate, EventSheetActiveTheme.reading().muted_text_color) and ok
@@ -210,11 +254,10 @@ static func _test_the_sheet_says_it_quietly() -> bool:
 ## The generated corpus. Every line printed here is one this harness invented from the map itself,
 ## so the printout doubles as the list of rewrites the plugin claims it can make.
 ##
-## Two populations, and the second one is why this test still means something while the shipped
-## vocabulary carries no address: every installed map, plus a small table written HERE with real
-## templates. A harness whose only corpus is the shipped one quietly becomes an assertion about
-## nothing the day the last address is withdrawn, and would be no readier to catch the next bad
-## address than it was to catch the first.
+## Two populations: every installed map, plus a small table written HERE with real templates. The
+## second one is not redundancy - a harness whose only corpus is the shipped one quietly becomes an
+## assertion about nothing the day the last address is withdrawn, and would be no readier to catch
+## the next bad address than it was to catch the first.
 static func _test_generated_fixtures() -> bool:
 	var known: Dictionary = EventForgeSuccessors.catalog()
 	var ok: bool = true
@@ -222,8 +265,8 @@ static func _test_generated_fixtures() -> bool:
 	for key: String in _addressed_keys(known):
 		ok = _test_one_map(key, known) and ok
 		probed += 1
-	# A value, not a count of a live tree: the shipped vocabulary carries none today, and an address
-	# added later is walked above without this line moving.
+	# A value, not a count of a live tree: whatever the vocabulary carries is what was walked, and an
+	# address added later is walked above without this line moving.
 	ok = _check("every installed forwarding address was probed", probed,
 		_addressed_keys(known).size()) and ok
 	# And the written table, which does carry one, so the whole walk above is exercised either way.
@@ -337,11 +380,22 @@ static func _sample_params(entry: Dictionary) -> Dictionary:
 	var declared: Dictionary = entry.get("declared_defaults", {})
 	var hints: Dictionary = entry.get("declared_hints", {})
 	var types: Dictionary = entry.get("declared_types", {})
+	var template: String = str(entry.get("template", ""))
 	var filled: Dictionary = {}
 	for parameter: String in entry.get("params", PackedStringArray()):
 		var value: String = str(declared.get(parameter, "")).strip_edges()
 		if not value.is_empty():
 			filled[parameter] = value
+			continue
+		# THE NODE-SCOPING SLOT IS THE ONE BLANK THAT IS AN ANSWER. A node-scoped verb wears an
+		# "On node" parameter whose slot is written `{target.}` - the dot lives inside the braces so
+		# the whole prefix disappears when the row acts on the node it is written on, which is what
+		# nearly every such row holds. Filling it with an identifier instead wrote
+		# `mg_target.stop()` into the fixture, which is a line naming a variable nobody declared:
+		# the parse below then refused every node-scoped address for a reason that was the harness's
+		# and not the map's.
+		if template.contains("{%s.}" % parameter):
+			filled[parameter] = ""
 			continue
 		filled[parameter] = _blank_value(parameter, str(hints.get(parameter, "")),
 			str(types.get(parameter, "")))
@@ -396,7 +450,11 @@ static func _compiles_to(successor_key: String, successor: Dictionary, params: D
 	var address: PackedStringArray = EventForgeSuccessors.split_key(successor_key)
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.custom_class_name = "SuccessorFixture"
-	sheet.host_class = "Node"
+	# THE HOST IS THE VERB'S OWN. A node-scoped verb writes a member call on the node it is written
+	# on, so compiling it under a bare `Node` asks the engine about a method that class has never had
+	# and gets an honest refusal about the fixture rather than about the rewrite.
+	var node_type: String = str(successor.get("node_type", "")).strip_edges()
+	sheet.host_class = node_type if not node_type.is_empty() else "Node"
 	var event: EventRow = EventRow.new()
 	if int(successor["ace_type"]) == ACEDefinition.ACEType.CONDITION:
 		var condition: ACECondition = ACECondition.new()
