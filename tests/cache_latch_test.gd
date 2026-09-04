@@ -29,6 +29,7 @@ static func run() -> bool:
 	passed = _pin_builtin_descriptor_index() and passed
 	passed = _pin_category_hosts() and passed
 	passed = _pin_the_picker_catalog() and passed
+	passed = _pin_the_descriptor_count() and passed
 	return passed
 
 
@@ -159,4 +160,23 @@ static func _pin_the_picker_catalog() -> bool:
 		picker._variables_in_scope()
 	return SUPPORT.pins(TEST_NAME, [
 		["fifty asks of an empty catalog derive it once", calls[0], 1],
+	])
+
+
+## The count the lifter's reverse-index memo is keyed on. It is asked for WITHOUT building the array
+## it counts, which is the whole point of it - so the one thing that can go wrong is the two answers
+## drifting apart, and a memo keyed on a number that no longer tracks the vocabulary would either
+## rebuild the index on every call or, far worse, hold a stale index over a rescan that published
+## new ACEs. The parity is pinned here rather than the number itself, which moves with every
+## vocabulary change.
+static func _pin_the_descriptor_count() -> bool:
+	var counted: int = ACERegistry.descriptor_count()
+	var listed: int = ACERegistry.get_all_descriptors().size()
+	ACERegistry.clear_cache()
+	var counted_cold: int = ACERegistry.descriptor_count()
+	var listed_after: int = ACERegistry.get_all_descriptors().size()
+	return SUPPORT.pins(TEST_NAME, [
+		["the count is the length of the list it does not build", counted, listed],
+		["a cold count builds the cache itself rather than answering nothing", counted_cold, listed],
+		["counting left the vocabulary where it found it", listed_after, listed],
 	])
