@@ -124,6 +124,7 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Set Health Pool Priority | `type` (String), `priority` (float) | Sets a pool's absorption priority. Lower priority soaks damage first. |
 | Setup Health Pool | `type` (String), `amount` (float), `decay_rate` (float), `absorption_rate` (float), `priority` (float) | Creates or reconfigures a pool with all its dials in one call. |
 | Revive | `amount` (float) | Clears the death latch and restores health. `amount` at or below 0 revives to full max health. Fires On Revived. |
+| Take Damage From | `amount` (float), `from` (Node) | Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - then applies exactly the damage Take Damage would. |
 
 ### Conditions
 
@@ -134,6 +135,7 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Has Any Health Pool | (none) | Whether any health pool currently holds points above zero. |
 | Has Health Pool | `type` (String) | Whether the named pool exists and holds points above zero. |
 | Health Pool Is Type | `type` (String) | Whether the pool involved in the most recent pool event matches this type. Use it inside a pool trigger to branch by which pool fired. |
+| Killed By Me | `who` (Node) | Whether this actor is dead and the kill traces back to the node you name. The asker is walked up the ownership chain too, so a kill by a turret you own still counts as yours. |
 
 ### Expressions
 
@@ -151,6 +153,9 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Health Pool Priority | `type` (String) | float | The named pool's absorption priority (0 if it does not exist). |
 | Last Pool Damage Absorbed | (none) | float | How much damage the pool soaked in the most recent absorb event. Read it inside On Health Pool Absorbed. |
 | Last Health Pool Type | (none) | String | The type of the pool involved in the most recent pool event. |
+| Last Hit From | (none) | Node | Who last damaged this actor, as the person rather than the projectile. Nothing until something has damaged it through Take Damage From. |
+| Killer Of | (none) | Node | Who killed this actor, or nothing while it is still alive. Already written when On Death fires, so a row under that trigger can read it. |
+| Assists Of | (none) | Array | Everyone else who damaged this actor within Assist Seconds, the killer left out and each helper listed once. |
 
 ### Triggers
 
@@ -172,6 +177,7 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | `max_health` | float | `100` | 1 - 10000 |
 | `invulnerable` | bool | `false` | on / off |
 | `destroy_on_death` | bool | `false` | on / off |
+| `assist_seconds` | float | `8` | 0 - 120 |
 
 ### Inspector properties are ACEs too
 
@@ -402,6 +408,25 @@ On Refresh Check (every 2 seconds)
     -> HUD: show "Armour: " + str(Player.Health.Health Pool  "armour")
   Condition: [else] not Has Health Pool  "armour"
     -> HUD: show "Armour down"
+```
+
+### 16. Kill credit, assists and a "your kill" pop
+
+Take Damage From records who is responsible before the damage lands, so a row under On Death can already name the killer. The source is walked up the ownership chain (the builtin **Claim** row writes it), which is what makes a turret's shot credit the player who built the turret rather than the turret.
+
+```
+On Player: On fire
+  -> Player: Claim  Bullet  for  Player
+
+On Bullet: On bullet hit
+  Condition: Bullet  Hit is not my owner  Hit
+    -> Hit | Health: Take Damage From  5, Bullet
+
+On Enemy | Health: On Death
+  Condition: Enemy | Health  Killed By Me  Player
+    -> Score: Add  100
+  -> HUD: show "Killed by " + str(Enemy.Health.Killer Of)
+  -> HUD: show "Assists: " + str(Enemy.Health.Assists Of)
 ```
 
 ### Other use cases

@@ -76,7 +76,7 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 | Create Empty Pool | pool_name | The custom way: a pool with no scene; fill it with Add To Pool. |
 | Add To Pool | pool_name, node | Puts one of your own nodes into a pool as a ready-to-reuse instance. |
 | Prewarm | pool_name, count | Pre-makes more copies for a scene pool. |
-| Despawn | node | Hands a spawned node back to its pool to be reused (hidden, processing off). Fires On Despawned. |
+| Despawn | node | Hands a spawned node back to its pool to be reused (hidden, processing off). Fires On Despawned. Parking it also clears its ownership key, so a recycled bullet is never credited to whoever fired the one before it. |
 | Despawn All | pool_name | Hands every active node of a pool back at once. |
 | Clear Pool | pool_name | Frees every node in a pool and removes the pool. |
 

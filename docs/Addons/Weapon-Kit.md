@@ -104,6 +104,7 @@ The hand-picked weapon actions:
 | Set Fire Rate | `rate` (float) | Changes the shots per second (the cooldown between shots is 1 / rate). |
 | Set Fire Mode | `mode` (int) | Sets the fire mode: 0 = single, 1 = auto, 2 = burst. |
 | Set Magazine Size | `size` (int) | Changes the magazine size (the cap the magazine reloads and tops up to). |
+| Claim Shot | `shot` (Node) | Marks a round this weapon just sent out as belonging to the weapon. Drop it beside the spawn inside On Fire: the shot points at the weapon and the weapon at whoever holds it, so the kill is credited to the person even though this pack has never heard of them. |
 
 Because the pack exposes its whole surface, every exported property also gets generic write actions. **Set** works on all of them; **Add To** and **Subtract From** exist for the numeric ones:
 

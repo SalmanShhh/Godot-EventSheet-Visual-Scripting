@@ -87,6 +87,7 @@ All ACEs live in the **Bullet 3D** category and target the `Bullet3DBehavior` be
 |---|---|---|
 | Launch Forward | (none) | (Re)launches along the host's current forward (-Z) direction at the current speed. A new bullet auto-launches, so use this to relaunch a repositioned or re-aimed shot. |
 | Set Gravity Direction | `x`, `y`, `z` (float) | Points gravity along a new 3D direction (normalized for you) - the arc bends that way from now on. `(0, -1, 0)` is normal down, `(0, 1, 0)` pulls up. |
+| Fired By | `shooter` (Node) | Marks who fired this shot, on the row that spawns it - the 3D twin of the 2D pack's row, writing the same one ownership key. Hit Is Not My Owner then refuses friendly fire and the Health pack credits the kill to the person. |
 | Set Bullet 3D Speed | `value` (float) | Changes speed while keeping the current heading, applied to the live velocity right away - the way to re-speed a bullet already in flight. |
 | Set Speed | `value` (float) | Writes the speed field directly. Read at launch time, so it sets the speed used by the next Launch Forward (not a bullet already flying). |
 | Add To Speed | `amount` (float) | Adds to the speed field (used by the next launch). |
