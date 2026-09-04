@@ -1764,11 +1764,37 @@ answers by name rather than connecting them, so there is no connect line to read
 theirs, the way a lifecycle callback does. One guard on that: a file that *also* wired one of those
 names to a signal keeps its handler, because the connect line has to go on pointing at something.
 
-**The multi-line loops stay code, and that is the honest answer.** The archive rows, the engine's own
-CSV read and the CSV write all emit several lines, and the reverse index claims single-line spellings
-only. So a file that already holds one of those loops opens with it as a verbatim block, with the
-adopt door beside it - and the promise that matters is gated: opening such a file and saving it
-untouched reproduces its bytes, with the three unpack answers opening as their own events around it.
+**A run of several statements can be one sentence too, and four of them are.** The reverse index
+above claims single-line spellings only, so a shape that takes a lambda or a branch to write needs a
+reader of its own. Four have one:
+
+| the run in the file | opens as |
+| --- | --- |
+| the `get_csv_line` lambda, called on the spot and assigned | the **Set** it was authored as, with `table of <path>` whole in the value slot |
+| the five-local `store_csv_line` write chain | **Write Table To File**, its First line answer still a live choice |
+| a guarded `store_string` / `store_line` onto an opened file | **Append To File**, however the handle was named |
+| the `DisplayServer.file_dialog_show` / `FileDialog` if-else | the **Ask** row it was written from, under its own two local names |
+
+**Each of those is matched against the shipped template of the row it means**, filled with sentinels
+instead of values, so what the reader recognises cannot drift from what the compiler writes. And the
+guarantee is not a resemblance: the row is asked to **write the run again** and the two are compared
+byte for byte before anything is handed back. A branch with a line added to one half, a write chain
+whose locals were named after something else, a read that is not one statement - each is refused and
+stays exactly the code it is.
+
+**Three shapes are left as code deliberately**, because each is a different program from the row that
+would claim it: a hand-written CSV read *loop* (a list, an open, a `while` and an append into the
+list - not one statement, so not the value of a Set), a hand-written table write whose five locals
+are called something other than the names the row bakes (those names are not values of the row, so
+the run could not be written back from what the row holds), and a write or an append with **no guard**
+around the handle - both rows emit `if <file>:`, because `FileAccess.open` answers null on a bad
+path, and a run without it crashes where the row would not.
+
+**The archive loops stay code, and that is the honest answer.** Pack and unpack are still several
+lines the index has no single spelling for, so a file holding one opens with it as a verbatim block
+and the adopt door beside it - and the promise that matters is gated either way: opening such a file
+and saving it untouched reproduces its bytes, with the three unpack answers opening as their own
+events around it.
 
 #### The reading lenses - names you can turn on and off
 
