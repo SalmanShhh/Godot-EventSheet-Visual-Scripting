@@ -73,6 +73,10 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# reads or writes a spreadsheet opens as the sentence it was written in rather than as the
 	# statements underneath it.
 	preload("res://addons/eventforge/importer/file_runs_lift.gd"),
+	# The branch an Ask row is: the platform's own file chooser where there is one, a FileDialog
+	# where there is not. It is the one run here that opens on an `if`, which is why the walk asks
+	# the families before its if grammar as well as after it.
+	preload("res://addons/eventforge/importer/ask_run_lift.gd"),
 	# The three edits a tool makes through the editor's undo history. Each is a local, a do half and
 	# an undo half that only mean a change together; the create_action/commit_action bracket around
 	# them is the COMPILER's, and is consumed rather than lifted - see _parse_body.
@@ -2640,6 +2644,26 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		var is_if: bool = at_this_depth and block_head.begins_with("if ") and block_head.ends_with(":")
 		var is_elif: bool = at_this_depth and chain_open and block_head.begins_with("elif ") and block_head.ends_with(":")
 		var is_else: bool = at_this_depth and chain_open and block_head == "else:"
+		# A run whose FIRST statement is an `if` has to be claimed before the if grammar takes it.
+		# An Ask row emits a BRANCH - the platform's own chooser where there is one, a FileDialog
+		# where there is not - and both halves are that one row's code, so read as a block it comes
+		# back as two events and the sentence the sheet was written in is gone. Every other run
+		# family opens on a statement and refuses this line on its own mark.
+		if is_if:
+			var branch_run: Dictionary = _claimed_run(lines, index, depth)
+			if not branch_run.is_empty():
+				if current != null and not pending_group_slug.is_empty():
+					_flush_raw(current, pending_raw, blank_box)
+					current = null
+				if current == null:
+					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					pending_group_slug = _stamp_group(current, pending_group_slug)
+					rows.append(current)
+				_flush_raw(current, pending_raw, blank_box)
+				current.actions.append(_matched_spelling_action(branch_run, blank_box))
+				index += int(branch_run["consumed"])
+				chain_open = false
+				continue
 		if is_if or is_elif or is_else:
 			var expression: String = ""
 			if is_if:
@@ -2839,11 +2863,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# claimed together before any single line is. The matched spelling rides back as the
 			# row's baked template, which is what re-emits the author's own bytes instead of the
 			# canonical multi-line form.
-			var claimed_run: Dictionary = {}
-			for run_family: GDScript in RUN_FAMILIES:
-				claimed_run = run_family.call(RUN_SPELLING_METHOD, lines, index, depth)
-				if not claimed_run.is_empty():
-					break
+			var claimed_run: Dictionary = _claimed_run(lines, index, depth)
 			if not claimed_run.is_empty():
 				_flush_raw(current, pending_raw, blank_box)
 				current.actions.append(_matched_spelling_action(claimed_run, blank_box))
@@ -2900,6 +2920,18 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		chain_open = false
 	_flush_raw(current, pending_raw, blank_box)
 	return {"ok": true, "rows": rows, "next": index}
+
+
+## The row a RUN of statements at `index` means, asked of every run family in turn, or {} when none
+## of them claims it. One seam for the two places a run can open: an ordinary statement, and the `if`
+## an Ask row's branch opens on - so a family added to RUN_FAMILIES is offered both without knowing
+## that either exists.
+static func _claimed_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	for run_family: GDScript in RUN_FAMILIES:
+		var claimed: Dictionary = run_family.call(RUN_SPELLING_METHOD, lines, index, depth)
+		if not claimed.is_empty():
+			return claimed
+	return {}
 
 
 ## Splits a ONE-LINE `if`/`elif`/`else` (`if hp <= 0: die()`) into {head "if hp <= 0:", body "die()"},

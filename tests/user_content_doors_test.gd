@@ -19,6 +19,13 @@
 #      filled means the guarded one.
 #   4. THE ANSWERS OPEN BACK. A file holding the emitted drop connection, the emitted answer headers
 #      and nothing else lifts to those events and re-emits BYTE FOR BYTE.
+#   5. THE ASK OPENS BACK AS ONE ROW. Its branch is fourteen statements on disk, and read as a block
+#      it came back as two events with the sentence gone. Both spellings are opened again here, with
+#      the two branches this reading REFUSES beside them - a half somebody added a line to, and two
+#      halves naming different locals - because a lift is only as trustworthy as what it declines.
+#   6. A LOADER LANDS IN A VALUE SLOT. A chain that reads content from outside the project is one
+#      expression, so it opens as the Set or the property write it was written as with the whole
+#      chain in the slot a reader edits it in - guarded or plain, and unmoved either way.
 #
 # ONE THING DELIBERATELY NOT TESTED HERE: whether a chooser appears. Neither half of the ask can run
 # in a headless suite (there is no window to parent a dialog to, and no platform chooser to answer
@@ -33,6 +40,10 @@ const PROBE_PNG := "user://user_content_probe.png"
 const PROBE_WAV := "user://user_content_probe.wav"
 const PROBE_MISSING := "user://user_content_no_such_file.png"
 const PROBE_SCRIPT := "user://user_content_probe.gd"
+
+## The path every round trip below re-emits through. One path on both sides of a comparison, which
+## is what a byte-exact compare asks for.
+const LIFT_PROBE := "user://user_content_doors_lift.gd"
 
 ## The file a lift reads: the drop connection, the drop handler and the two answers, spelled exactly
 ## as the compiler writes them. It is the fixture AND the expected output - the lift's promise is
@@ -64,6 +75,8 @@ static func run() -> bool:
 	all_passed = _run_ask() and all_passed
 	all_passed = _run_loaders() and all_passed
 	all_passed = _run_lift() and all_passed
+	all_passed = _run_ask_lift() and all_passed
+	all_passed = _run_loader_readings() and all_passed
 	all_passed = _run_band() and all_passed
 	if all_passed:
 		print("[PASS] user_content_doors_test: the drop door, the ask door and the two loaders")
@@ -263,6 +276,86 @@ static func _run_lift() -> bool:
 	return ok
 
 
+## The ask, opened again. The row emits a BRANCH, so on disk it is fourteen statements; read as a
+## block it came back as two events and the sentence was gone. Every pin here is a VALUE - which row,
+## which filters, which bytes - because a count of rows passes just as happily when the reading is
+## wrong.
+static func _run_ask_lift() -> bool:
+	var ok: bool = true
+	for pair: Array in [["AskForAFileToOpen", "PackedStringArray([\"*.png;Images\"])"],
+			["AskWhereToSave", "PackedStringArray([\"*.txt;Text file\"])"]]:
+		var ace_id: String = str(pair[0])
+		var filters: String = str(pair[1])
+		var source: String = _ask_source(ace_id, "7", filters)
+		var actions: Array = _actions_of(source)
+		ok = _check("%s: the branch opens as one row" % ace_id, actions.size(), 1) and ok
+		ok = _check("%s: and that row is the ask" % ace_id, _ace_id(actions), ace_id) and ok
+		ok = _check("%s: holding the filters it was asked with" % ace_id,
+			_param(actions, "filters"), filters) and ok
+		ok = _check("%s: and the file re-emits byte for byte" % ace_id,
+			_reemitted(source), source) and ok
+	# THE TWO LOCALS ARE NOT A VALUE OF THE ROW. They are the bake the dock made at apply time, so a
+	# branch that calls them something else is the same sentence, and rides back out under its
+	# author's own words rather than under a canonical spelling the byte gate would then refuse.
+	var named: String = _ask_source("AskForAFileToOpen", "chooser",
+		"PackedStringArray([\"*.png;Images\"])")
+	var named_actions: Array = _actions_of(named)
+	ok = _check("a branch whose locals are named differently is the same row",
+		_ace_id(named_actions), "AskForAFileToOpen") and ok
+	ok = _check("and re-emits under the names its author gave them",
+		_reemitted(named), named) and ok
+	# The two refusals. Each is a DIFFERENT program from the row that would claim it, so each comes
+	# back as the statements it is - with its bytes still its own, which is the contract either way.
+	var added: String = _ask_source("AskForAFileToOpen", "9",
+		"PackedStringArray([\"*.png;Images\"])") + "\t\tprint(\"asked\")\n"
+	ok = _check("a branch with a line added to a half is not read as the ask",
+		_ace_id(_actions_of(added)) == "AskForAFileToOpen", false) and ok
+	ok = _check("and its bytes are still its own", _reemitted(added), added) and ok
+	var disagreeing: String = _ask_source("AskForAFileToOpen", "7",
+		"PackedStringArray([\"*.png;Images\"])").replace("__chooser_7", "__chooser_8")
+	ok = _check("a branch whose two halves name different locals is not read as the ask",
+		_ace_id(_actions_of(disagreeing)) == "AskForAFileToOpen", false) and ok
+	ok = _check("and its bytes are still its own", _reemitted(disagreeing), disagreeing) and ok
+	# The if grammar is untouched: an ordinary branch is still an ordinary branch.
+	var plain: String = _file_with(PackedStringArray(["if health <= 0:", "\tdie()"]))
+	ok = _check("an ordinary if is still read as a condition",
+		_reemitted(plain), plain) and ok
+	return ok
+
+
+## The loaders, opened again. A chain that reads content from outside the project is ONE expression,
+## so it lands in the value slot of the Set it was written as - the same slot a picked loader
+## expression rides in - whole, guarded or plain, with nothing moved.
+static func _run_loader_readings() -> bool:
+	var ok: bool = true
+	for pair: Array in [["LoadImageFile", "\"user://portrait.png\""],
+			["LoadSoundFile", "\"user://track.ogg\""]]:
+		var ace_id: String = str(pair[0])
+		for fallback: String in ["", "null"]:
+			var chain: String = _emitted(ace_id, {"path": str(pair[1]), "fallback": fallback})
+			var source: String = _file_with(PackedStringArray(["var loaded := %s" % chain]))
+			var actions: Array = _actions_of(source)
+			var label: String = "%s (%s)" % [ace_id,
+				"guarded" if not fallback.is_empty() else "plain"]
+			ok = _check("%s: the chain opens as one row" % label, actions.size(), 1) and ok
+			ok = _check("%s: and that row is the Set it was written as" % label,
+				_ace_id(actions), "SetLocalVarInferred") and ok
+			ok = _check("%s: with the whole loader in its value slot" % label,
+				_param(actions, "value"), chain) and ok
+			ok = _check("%s: and the file re-emits byte for byte" % label,
+				_reemitted(source), source) and ok
+	# The other place a loaded picture lands: straight onto a property. Same expression, same slot.
+	var image: String = _emitted("LoadImageFile", {"path": "files[0]", "fallback": ""})
+	var written: String = _file_with(PackedStringArray(["$Portrait.texture = %s" % image]))
+	var property_actions: Array = _actions_of(written)
+	ok = _check("a picture written onto a property is the property write it was authored as",
+		_ace_id(property_actions), "SetProperty") and ok
+	ok = _check("with the whole loader in its value slot",
+		_param(property_actions, "value"), image) and ok
+	ok = _check("and the file re-emits byte for byte", _reemitted(written), written) and ok
+	return ok
+
+
 ## The files band: a sheet that stops to ask says so once, whichever chooser it opens.
 static func _run_band() -> bool:
 	var ok: bool = true
@@ -396,6 +489,66 @@ static func _param_description(by_id: Dictionary, ace_id: String, param_id: Stri
 		if param.id == param_id:
 			return str(param.description)
 	return ""
+
+
+## A whole `.gd` file holding one function with these statements in it, at one tab, spelled the way
+## somebody writing GDScript by hand would spell it.
+static func _file_with(statements: PackedStringArray) -> String:
+	var lines: PackedStringArray = PackedStringArray(["extends Node", "", "",
+		"func open_it() -> void:"])
+	for statement: String in statements:
+		lines.append("\t" + statement)
+	return "\n".join(lines) + "\n"
+
+
+## A file holding one Ask row's emitted branch, with the uid the dock would have baked onto it.
+static func _ask_source(ace_id: String, uid: String, filters: String) -> String:
+	var template: String = str(_by_id()[ace_id].codegen_template).replace("{uid}", uid)
+	return _file_with(ActionCodegen._apply_template(template, {"filters": filters}).split("\n"))
+
+
+## The actions of the one event a reopened file holds. Empty when the file came back with no event
+## at all, which every pin above then reads as a mismatch rather than as a crash.
+static func _actions_of(source: String) -> Array:
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	if reopened == null:
+		return []
+	var held: Array = []
+	held.assign(reopened.events)
+	for entry: Variant in reopened.functions:
+		if entry is EventFunction:
+			held.append_array((entry as EventFunction).events)
+	for entry: Variant in held:
+		if entry is EventRow and not (entry as EventRow).actions.is_empty():
+			return (entry as EventRow).actions
+	return []
+
+
+## The ace_id of the first action, or "" when there is none.
+static func _ace_id(actions: Array) -> String:
+	if actions.is_empty() or not (actions[0] is ACEAction):
+		return ""
+	return str((actions[0] as ACEAction).ace_id)
+
+
+## One value off the first action, or "" when the row has no such value.
+static func _param(actions: Array, key: String) -> String:
+	if actions.is_empty() or not (actions[0] is ACEAction):
+		return ""
+	return str((actions[0] as ACEAction).params.get(key, ""))
+
+
+## A file opened as a sheet and written again from it. Equal to what went in is the lossless
+## contract, and the only reason a lift is allowed to fire at all.
+static func _reemitted(source: String) -> String:
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	if reopened == null:
+		return ""
+	reopened.external_source_path = LIFT_PROBE
+	var output: String = str(SheetCompiler.compile(reopened, LIFT_PROBE).get("output", ""))
+	if FileAccess.file_exists(LIFT_PROBE):
+		DirAccess.remove_absolute(LIFT_PROBE)
+	return output
 
 
 ## A GDScript string literal for arbitrary text.

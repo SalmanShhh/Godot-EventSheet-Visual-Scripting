@@ -13,6 +13,10 @@ var _editor: EventSheetEditor = null
 func _init() -> void:
 	root.title = "The Two Doors"
 	root.gui_embed_subwindows = true
+	# Wide enough for the condition lane to hold a trigger's words AND the payload chip beside them.
+	# At the project's own window size the lane gives the chip its room out of the cell, and the
+	# words are what is left out - which makes a picture of a row nobody can read.
+	DisplayServer.window_set_size(Vector2i(1600, 760))
 	process_frame.connect(_on_frame)
 
 
