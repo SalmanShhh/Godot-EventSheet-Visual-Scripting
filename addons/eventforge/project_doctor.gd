@@ -204,6 +204,11 @@ static func run() -> Dictionary:
 	# do nothing, which is why they are a report rather than an error. Same seam, same reason, and
 	# the same quiet sheet behind it - the row itself only ever goes amber.
 	EventSheetTilemapDoctor.ensure_registered()
+	# The Save Memory section: a per-save memory row in a project that registers no SaveSystem
+	# autoload, where it quietly answers per COMPUTER instead. A note rather than a warning - the
+	# fallback is documented behaviour a single-save game may have chosen - and the sheet says it
+	# the way the sheet says everything: amber on the row, words in the inbox and the strip.
+	EventSheetSaveMemoryDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
