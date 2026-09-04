@@ -77,6 +77,7 @@ static func run() -> bool:
 	all_passed = _countdowns_run() and all_passed
 	all_passed = _stopwatches_run() and all_passed
 	all_passed = _the_ready_signal() and all_passed
+	all_passed = _the_clock_a_row_replaces() and all_passed
 	all_passed = _what_comes_back() and all_passed
 	return all_passed
 
@@ -217,6 +218,11 @@ static func _the_clock_choice() -> bool:
 	host.call("schedule_at", "wave_two", 0.0)
 	rows.append(["a scheduled moment already past waits no time at all",
 		spy.calls[4][0], 0.0])
+	# And it waits on the clock the moment was MEASURED on: the second it is given is a reading of
+	# Game Time, which is Time.get_ticks_msec and therefore untouched by a pause or a slowmo. A
+	# game-time timer would finish after the second the row named, by however long the game was held.
+	rows.append(["and it waits on the same clock that moment was measured on",
+		spy.calls[4], [0.0, true, false, true]])
 
 	spy.release()
 	return SUPPORT.pins(P, rows)
@@ -338,6 +344,56 @@ static func _the_ready_signal() -> bool:
 	return SUPPORT.pins(P, rows)
 
 
+## THE CLOCK A ROW REPLACES. A SceneTreeTimer is held by the tree, not by the metadata it was
+## written into, so a row that merely overwrote one would leave it running with its timeout still
+## wired to the sheet's signal - and the trigger would fire at the abandoned clock's moment as well
+## as at the new one. There is no running tree here to prove that by waiting, so the question is
+## asked where the answer lives: the replaced timer's own connection list, and the seconds it has
+## left. Nothing is stepped by hand in this section - every number is what the ROW did.
+static func _the_clock_a_row_replaces() -> bool:
+	var spy: TreeSpy = TreeSpy.new()
+	var host: Object = _host(spy)
+	var rows: Array = []
+
+	host.call("put_on_cooldown", "dash", 0.3, false)
+	var abandoned: SceneTreeTimer = host.get_meta("__ef_cooldown_dash", 0.0) as SceneTreeTimer
+	host.call("put_on_cooldown", "dash", 0.6, false)
+	var current: SceneTreeTimer = host.get_meta("__ef_cooldown_dash", 0.0) as SceneTreeTimer
+	rows.append(["a restarted cooldown is a new clock", current == abandoned, false])
+	rows.append(["the one it replaced has nothing left to announce",
+		abandoned.timeout.get_connections().size(), 0])
+	rows.append(["and is run out rather than left ticking", snappedf(abandoned.time_left, 0.0001), 0.0])
+	rows.append(["while the new one is the clock that speaks",
+		current.timeout.get_connections().size(), 1])
+
+	host.call("start_countdown", "round", 90.0, false)
+	var held: SceneTreeTimer = host.get_meta("__ef_countdown_round", 0.0) as SceneTreeTimer
+	_step(host, "__ef_countdown_round", 83.0)
+	host.call("pause_countdown", "round")
+	rows.append(["pausing a countdown takes the listeners off its clock",
+		held.timeout.get_connections().size(), 0])
+	rows.append(["and runs that clock out where it stood", snappedf(held.time_left, 0.0001), 0.0])
+	rows.append(["so the seconds a label reads are the parked ones",
+		_seconds(host, "countdown_seconds_left", "round"), 83.0])
+	host.call("resume_countdown", "round")
+	var resumed: SceneTreeTimer = host.get_meta("__ef_countdown_round", 0.0) as SceneTreeTimer
+	rows.append(["and only the resumed countdown announces itself",
+		resumed.timeout.get_connections().size(), 1])
+
+	host.call("start_countdown", "round", 30.0, false)
+	rows.append(["restarting a countdown retires the resumed clock too",
+		resumed.timeout.get_connections().size(), 0])
+
+	host.call("start_stopwatch", "run", false)
+	var first_run: SceneTreeTimer = host.get_meta("__ef_stopwatch_run", 0.0) as SceneTreeTimer
+	host.call("start_stopwatch", "run", false)
+	rows.append(["and a restarted stopwatch does not leave a day-long timer behind it",
+		snappedf(first_run.time_left, 0.0001), 0.0])
+
+	spy.release()
+	return SUPPORT.pins(P, rows)
+
+
 ## WHAT COMES BACK when somebody writes these lines by hand. The two conditions are one expression
 ## each, so they read back as their own rows; the actions are runs of statements, which the reading
 ## keeps as honest verbatim blocks rather than guessing at. Both files re-emit byte for byte, which
@@ -357,12 +413,13 @@ static func _what_comes_back() -> bool:
 		SUPPORT.reemit(running_source, "user://cooldown_aces_running_roundtrip.gd"), running_source])
 
 	# The multi-statement rows: no cooldown row claims a whole run of statements, so a hand-written
-	# start is read for what its lines plainly are - the signal guard becomes the general "expression
-	# is true" condition every `if` reads as, and the four lines come back unmangled. That is the
-	# degrade the contract asks for, and the byte compare below is what makes it safe.
+	# start is read for what its lines plainly are - the guard that retires the clock being replaced
+	# reads as the general comparison every `if x is T:` reads as, the signal guard as the general
+	# "expression is true", and the lines come back unmangled. That is the degrade the contract asks
+	# for, and the byte compare below is what makes it safe.
 	var started_source: String = _file_around(_indented(_filled("PutOnCooldown")))
 	rows.append(["a hand-written start is never mistaken for a cooldown row",
-		_lifted_condition_ids(started_source), PackedStringArray(["ExpressionIsTrue"])])
+		_lifted_condition_ids(started_source), PackedStringArray(["CompareVar", "ExpressionIsTrue"])])
 	rows.append(["and it too re-emits byte for byte",
 		SUPPORT.reemit(started_source, "user://cooldown_aces_start_roundtrip.gd"), started_source])
 

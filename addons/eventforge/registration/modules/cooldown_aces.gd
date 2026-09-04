@@ -62,6 +62,14 @@ const _NEW_TIMER: String = "get_tree().create_timer(maxf({seconds}, 0.0), {clock
 ## because the span cancels itself out.
 const _SW_SPAN: String = "86400.0"
 
+## RETIRING THE CLOCK A ROW REPLACES. A SceneTreeTimer is held by the TREE rather than by the
+## metadata this module writes it into, so a timer that is merely overwritten goes on running and
+## goes on emitting: a restarted cooldown would announce itself twice, once at the abandoned clock's
+## moment and once at its own, and a paused countdown would announce itself while it is held. Every
+## row that replaces or parks a clock therefore takes the listeners off the old one and runs it out
+## first. Two lines, and the trigger tells the truth.
+const _RETIRE: String = "var __old_{uid}: Variant = get_meta(%s, 0.0)\nif __old_{uid} is SceneTreeTimer:\n\tfor __gone_{uid}: Dictionary in (__old_{uid} as SceneTreeTimer).timeout.get_connections():\n\t\t(__old_{uid} as SceneTreeTimer).timeout.disconnect(__gone_{uid}[\"callable\"])\n\t(__old_{uid} as SceneTreeTimer).time_left = 0.0\n"
+
 ## The seconds left on a cooldown: the timer's own, or zero when no cooldown of that name was ever
 ## started, which is why the first use of anything is always allowed.
 const _CD_LEFT: String = "((get_meta(%s, 0.0) as SceneTreeTimer).time_left if get_meta(%s, 0.0) is SceneTreeTimer else 0.0)" % [_CD_KEY, _CD_KEY]
@@ -93,7 +101,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 static func _cooldown_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.act("PutOnCooldown", "Put On Cooldown",
-		"var __cooldown_{uid}: SceneTreeTimer = %s\nif has_signal(&\"cooldown_ready\"): __cooldown_{uid}.timeout.connect(emit_signal.bind(&\"cooldown_ready\", {name}))\nset_meta(%s, __cooldown_{uid})\nset_meta(%s, maxf({seconds}, 0.0))" % [_NEW_TIMER, _CD_KEY, _CD_LEN_KEY],
+		"%s%s" % [_RETIRE % _CD_KEY, "var __cooldown_{uid}: SceneTreeTimer = %s\nif has_signal(&\"cooldown_ready\"): __cooldown_{uid}.timeout.connect(emit_signal.bind(&\"cooldown_ready\", {name}))\nset_meta(%s, __cooldown_{uid})\nset_meta(%s, maxf({seconds}, 0.0))" % [_NEW_TIMER, _CD_KEY, _CD_LEN_KEY]],
 		CAT, "put [b]{name}[/b] on cooldown for [b]{seconds}[/b]s",
 		"Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.")
 		.param("name", "\"dash\"", "Named", "The cooldown's name. Every row using the same name is talking about the same cooldown.", "expression")
@@ -138,15 +146,20 @@ static func _cooldown_descriptors() -> Array[ACEDescriptor]:
 static func _countdown_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.act("StartCountdown", "Start Countdown",
-		"var __countdown_{uid}: SceneTreeTimer = %s\nif has_signal(&\"countdown_finished\"): __countdown_{uid}.timeout.connect(emit_signal.bind(&\"countdown_finished\", {name}))\nset_meta(%s, __countdown_{uid})\nset_meta(%s, {clock})" % [_NEW_TIMER, _CN_KEY, _CN_CLOCK_KEY],
+		"%s%s" % [_RETIRE % _CN_KEY, "var __countdown_{uid}: SceneTreeTimer = %s\nif has_signal(&\"countdown_finished\"): __countdown_{uid}.timeout.connect(emit_signal.bind(&\"countdown_finished\", {name}))\nset_meta(%s, __countdown_{uid})\nset_meta(%s, {clock})" % [_NEW_TIMER, _CN_KEY, _CN_CLOCK_KEY]],
 		CAT, "start countdown [b]{name}[/b] for [b]{seconds}[/b]s",
 		"Starts a named countdown that a label can show and an event can react to. On game time it is held by the pause menu and slowed by slow motion, which is what a round timer wants; pick realtime for a menu clock that must keep going while the game is paused. Reaching zero fires On Countdown Finished when the sheet declares the signal.")
 		.param("name", "\"round\"", "Named", "The countdown's name. Every row using the same name is talking about the same countdown.", "expression")
 		.param("seconds", "90.0", "For Seconds", "How long the countdown runs.", "expression")
 		.param_built(_clock_param())
 		.featured())
+	# THE ONE ROW THAT IS REALTIME WHATEVER THE DROPDOWN SAYS, and it has no dropdown for that
+	# reason: the moment it is given is a reading of the Game Time expression, which is
+	# Time.get_ticks_msec - a clock a pause and a slow-motion moment do not touch. A game-time timer
+	# counted against a realtime moment would finish AFTER the second the row named, by however long
+	# the game spent paused, so the wait is made on the same clock the moment was measured on.
 	descriptors.append(F.act("ScheduleAt", "Schedule At",
-		"var __countdown_{uid}: SceneTreeTimer = get_tree().create_timer(maxf({at_second} - Time.get_ticks_msec() / 1000.0, 0.0), false, false, false)\nif has_signal(&\"countdown_finished\"): __countdown_{uid}.timeout.connect(emit_signal.bind(&\"countdown_finished\", {name}))\nset_meta(%s, __countdown_{uid})\nset_meta(%s, false)" % [_CN_KEY, _CN_CLOCK_KEY],
+		"%s%s" % [_RETIRE % _CN_KEY, "var __countdown_{uid}: SceneTreeTimer = get_tree().create_timer(maxf({at_second} - Time.get_ticks_msec() / 1000.0, 0.0), true, false, true)\nif has_signal(&\"countdown_finished\"): __countdown_{uid}.timeout.connect(emit_signal.bind(&\"countdown_finished\", {name}))\nset_meta(%s, __countdown_{uid})\nset_meta(%s, true)" % [_CN_KEY, _CN_CLOCK_KEY]],
 		CAT, "schedule [b]{name}[/b] at second [b]{at_second}[/b]",
 		"Starts a named countdown that finishes at a moment on the game's own clock rather than after a length of time. The moment is a number of seconds since the game started, which the Game Time expression gives, so a scripted event at the two minute mark is one row. A moment already past finishes immediately. It arrives as On Countdown Finished, like any other countdown.")
 		.param("name", "\"wave_two\"", "Named", "The countdown's name.", "expression")
@@ -166,7 +179,7 @@ static func _countdown_descriptors() -> Array[ACEDescriptor]:
 		"True while a named countdown is counting down. A countdown that has finished, that is paused, or that was never started is not running.")
 		.param("name", "\"round\"", "Named", "The countdown's name.", "expression"))
 	descriptors.append(F.act("PauseCountdown", "Pause Countdown",
-		"var __countdown_{uid}: Variant = get_meta(%s, 0.0)\nif __countdown_{uid} is SceneTreeTimer: set_meta(%s, (__countdown_{uid} as SceneTreeTimer).time_left)" % [_CN_KEY, _CN_KEY],
+		"var __countdown_{uid}: Variant = get_meta(%s, 0.0)\nif __countdown_{uid} is SceneTreeTimer:\n\tset_meta(%s, (__countdown_{uid} as SceneTreeTimer).time_left)\n\tfor __gone_{uid}: Dictionary in (__countdown_{uid} as SceneTreeTimer).timeout.get_connections():\n\t\t(__countdown_{uid} as SceneTreeTimer).timeout.disconnect(__gone_{uid}[\"callable\"])\n\t(__countdown_{uid} as SceneTreeTimer).time_left = 0.0" % [_CN_KEY, _CN_KEY],
 		CAT, "pause countdown [b]{name}[/b]",
 		"Holds a named countdown where it is. The seconds left stay readable while it is held, so a label keeps showing the frozen number. Resume Countdown starts it again from there. This is the row for a countdown that must stop for a cutscene or a shop, rather than for the pause menu, which a game-time countdown already holds by itself.")
 		.param("name", "\"round\"", "Named", "The countdown's name.", "expression"))
@@ -187,7 +200,7 @@ static func _countdown_descriptors() -> Array[ACEDescriptor]:
 static func _stopwatch_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.act("StartStopwatch", "Start Stopwatch",
-		"set_meta(%s, get_tree().create_timer(%s, {clock}, false, {clock}))\nset_meta(%s, 0.0)\nset_meta(%s, 0.0)" % [_SW_KEY, _SW_SPAN, _SW_LAP_KEY, _SW_MARK_KEY],
+		"%s%s" % [_RETIRE % _SW_KEY, "set_meta(%s, get_tree().create_timer(%s, {clock}, false, {clock}))\nset_meta(%s, 0.0)\nset_meta(%s, 0.0)" % [_SW_KEY, _SW_SPAN, _SW_LAP_KEY, _SW_MARK_KEY]],
 		CAT, "start stopwatch [b]{name}[/b]",
 		"Starts (or restarts) a named stopwatch counting up from zero, and clears its laps. On game time it stops while the game is paused, which is what a speedrun clock wants; pick realtime to time the real seconds a player sat there. It runs for up to a day.")
 		.param("name", "\"run\"", "Named", "The stopwatch's name. Every row using the same name is talking about the same stopwatch.", "expression")
