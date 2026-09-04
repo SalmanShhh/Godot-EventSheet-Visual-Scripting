@@ -3808,6 +3808,58 @@ against Godot 4.7 before it was repaired.
   a call into another body - so a quiet file is not a proof, and the check says so rather than
   implying otherwise.
 
+### The runs a sheet used to lose when it was reopened, and the watch nobody stops
+
+- **A spreadsheet read, a write and an append open as the rows that wrote them.** Reading a table,
+  writing one back and adding a line to a log are each several statements of GDScript and one
+  sentence on a sheet, and reopened they were the statements: the read came back as a GDScript
+  block, and the write and the append as an empty event with a stray
+  `var __file_… = FileAccess.open(…)` beside it. The bytes were never at risk - they round-tripped
+  then and they round-trip now - but the sentence was, and a sentence a sheet cannot get back is one
+  its author has to write again. **Table Of File** lands in a Set's value slot, so the read comes
+  back as the Set it was authored as, plain or typed, with the whole expression where a reader edits
+  it - exactly where the one-line **Table From File** already sits. **Write Table To File** comes
+  back with its path, its table, its separator and its first-line answer, and that answer stays a
+  LIVE choice, so answering it the other way writes the other shape. **Append To File** comes back
+  whether the sheet wrote the run or a person did, whatever the file was held in and whether the text
+  went out through `store_string` or `store_line`.
+- **The ask opens back as the row that wrote it.** An Ask row emits a BRANCH on purpose - the
+  platform's own chooser where the platform has one, a `FileDialog` where it does not, both
+  spellings in an `if`/`else` a reader can see - which makes one row fourteen statements on disk.
+  Opened again it came back as fourteen: an if event holding a lambda and a call, and an else event
+  holding eleven lines about a `FileDialog`. It is the Ask row again now, under whatever the two
+  locals in it were named, and the lifter asks the run families BEFORE its `if` grammar as well as
+  after it, through one seam both places share - this is the only run here that opens on an `if`,
+  and every other family refuses that line on its own mark. An ordinary branch reads exactly as it
+  did.
+- **The guarantee is a byte comparison, not a resemblance.** Every shape these two families
+  recognise is the SHIPPED template of the row it means, filled with sentinels instead of values, so
+  the spelling they recognise cannot drift from the spelling the compiler writes - and a claimed run
+  is then written out AGAIN from the row and compared byte for byte before anything is handed back.
+  A branch with a line added to one half, a branch whose two halves name different locals, a write
+  chain whose five locals were called something else: each is refused and stays the statements it is.
+- **Four shapes are deliberately left as the code they are**, because each is a different program
+  from the row that would claim it: a hand-written CSV read LOOP (a list, an open, a `while` and an
+  append into it - not one statement, so not the value of a Set), a hand-written table write whose
+  locals are not the names the row bakes, and a write or an append with NO guard around the handle -
+  both rows emit `if <file>:` because `FileAccess.open` answers null on a bad path, so a run without
+  it crashes where the row would not. Neither family is a lift-table entry, and the headers say why:
+  the table engine stores a run by splicing each statement's spelling on its own, and every run here
+  re-uses a value in more than one place, so a spliced run would move an edited value in one line and
+  leave the others behind.
+- **A folder watch nobody stops is said once, in the Doctor.** A watch is not a read that happened.
+  It is a directory read every few seconds for the rest of the session, so one started on a screen
+  the player walks away from goes on reading the disk behind whatever they moved on to - and every
+  line involved is correct, which is why nothing in the editor had ever mentioned it. The Files
+  section files it as the note `files-watch-never-stops`, naming the line that starts the watch and
+  counting the rest, beside the unguarded-read note it sits with. **It has no fix button on
+  purpose**: where a watch was supposed to end - the screen closing, the menu leaving, the download
+  finishing - is the reader's to say, and a quick fix that guessed would put **Stop Watching** in the
+  wrong place and then look like the sheet had meant it there. And it says what it cannot see, in the
+  note rather than only in a comment: it reads one file at a time, so a **Stop Watching** in another
+  script, or one reached through a variable holding the watcher, is a stop it has no way to find. A
+  file that stops a watch anywhere in it is never reported.
+
 ### Files, documented
 
 - **A guide for the whole story: [Files and Folders](docs/GUIDE-FILES-AND-FOLDERS.md).** The two
@@ -3836,6 +3888,16 @@ against Godot 4.7 before it was repaired.
   direction: the table of file spellings and the rows they open as, the window as a connect source,
   the answer function that opens from its header alone, and the multi-line loops that stay verbatim
   blocks with the adopt door - said out loud rather than left to be discovered.
+- **And the three pages caught up with the sweep that ran over them.** The Doctor's Files
+  section is six checks on the page, not four, and the export-trap bullet names the folder-handle
+  spelling; both emitted fences are re-copied off the shipped templates, which grew brackets since
+  the page was written, with the reason on the row rather than the brackets left as decoration;
+  the six spellings that count as the `load()` door are named; and the watcher chapter gains what
+  Changed really means, the gap the band really prints, and the watch note. The reading list's
+  paragraph promising the multi-line runs stay code was true when it was written and is now wrong
+  about four of them, so it is a table of what opens as what, with the byte-for-byte re-write said
+  once and the shapes left as code named with the reason each is a different program. The concept
+  map carries the same three answers in the rows a reader meets them in.
 - **The numbers, re-measured off this tree.** The front page said 1,800 verbs across 82 modules and
   88 triggers; measured module by module today it is **1,821 verbs across 82 modules, 94 of them
   triggers, 2,900 parameters between them, and zero blank descriptions and zero blank parameter
@@ -4011,6 +4073,16 @@ These are the places the two disagreed.
 - **The Mods chapter names the Mods pack**, which is where the rest of that story lives, and says
   the one thing about it that belongs on a Files page: its mounting verb is exactly the code door
   these pages say the file vocabulary never opens.
+- **One reading of the name a line binds a folder handle to.** The pass that collects handle
+  names and the pass that reads the places back off them each parsed the left side of the
+  assignment their own way, and the second did it with a SUBSTRING test - so a handle called `d`
+  claimed the place of a folder opened as `data` beside it. Both ask the same function now, and a
+  name is a whole name.
+- **The picture of the trust boundary is the finding's own words**, and the window it was
+  photographed in was eighty pixels too short, so the last of its three sentences - the honest
+  one, about a quiet file not being a cleared file - fell off the bottom of the page. A reader
+  shown that picture would have taken silence for a clean bill of health, which is the exact
+  misreading the sentence was written to prevent.
 
 ### Every call on a known class is a row
 
