@@ -602,6 +602,11 @@
   scene and a copy in a free spot both declare a real local, and neither was offered by the field
   completion the launched twins had joined - the free-spot row binds its name above the branch
   precisely so the rows below can still say it.
+- **The skipped spawn joins its own family's wording.** The trigger read "On a spawn skipped" in the
+  sheet while every other trigger of that shape reads "On retired", "On spawned", "On destroyed" -
+  an article's worth of difference, and enough to make one row look like a sentence from elsewhere. The
+  row reads "On spawn skipped" now, in all nine translation files; the id it compiles under has not
+  moved.
 - **One copy is one reading of the Scene field.** Spawn A Copy In A Free Spot spelled that field
   three times over - into the query, into the skipped signal and into the instantiate - and the
   field's own starter is `load("res://…")`, so a single copy read the scene from disk three times,

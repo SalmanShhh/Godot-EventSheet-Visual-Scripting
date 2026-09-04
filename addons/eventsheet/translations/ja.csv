@@ -6571,7 +6571,7 @@ Spawn A Copy In A Free Spot (3D),空いている場所にコピーを生成 (3D)
 "The same row in three dimensions, with the gap measured in metres: one copy somewhere inside a box or a sphere you drew that nothing is already standing in, and nothing at all when there is nowhere left. A skipped spawn raises this node's spawn_skipped signal with the scene it could not place.",同じ行を三次元で、間隔はメートルで測ります。自分で描いた箱や球の中で、まだ何も立っていない場所にコピーを 1 つ。空きがなければ何も生成しません。飛ばされた生成は、置けなかったシーンを添えてこのノードの spawn_skipped シグナルを出します。
 On Spawn Skipped,生成が飛ばされたとき
 "Runs when a Spawn A Copy In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.",「空いている場所にコピーを生成」の行がコピーを置く場所を見つけられなかったときに走り、置けなかったシーンを渡します。このシグナルはこのシートが自分で宣言するものです。spawn_skipped(scene) というシグナルブロックを足せば、どちらの側もふつうの Godot です。こうして満杯のアリーナは、ゲームが答えられるものになります - ウェーブを止める、部屋が満杯だと伝える、場所を空ける。
-On a spawn skipped,生成が飛ばされたとき
+On spawn skipped,生成が飛ばされたとき
 Retire,引き取らせる
 "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Safe to run twice: something already on its way out is left alone.",オブジェクトを引き取らせます。プールから出てきたものならそのプールに返し、そうでなければ破棄します。どちらになるかはオブジェクト自身から読み取るので、シートがコピーの出どころを覚えておく必要はありません。プールのないゲームでは「今すぐ破棄」とまったく同じ動きになります。二度実行しても安全で、すでに出ていく途中のものはそのままにされます。
 retire [i]{object}[/i] now,[i]{object}[/i] を今すぐ引き取らせる

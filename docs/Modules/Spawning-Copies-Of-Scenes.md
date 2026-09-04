@@ -740,7 +740,7 @@ so.
 On Timeout
     -> Filler  Spawn a copy of Crate as new_crate in a free spot in $Room, under $Props
 
-On a spawn skipped
+On spawn skipped
     -> Filler  Stop the fill timer
     -> Label   Set text to "No room left"
 ```

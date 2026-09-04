@@ -6571,7 +6571,7 @@ Spawn A Copy In A Free Spot (3D),在空位生成一个副本 (3D)
 "The same row in three dimensions, with the gap measured in metres: one copy somewhere inside a box or a sphere you drew that nothing is already standing in, and nothing at all when there is nowhere left. A skipped spawn raises this node's spawn_skipped signal with the scene it could not place.",同一行在三维中的版本，间距以米计：在你画的盒子或球体里，找一个还没有东西站着的地方生成一个副本；没地方了就完全不生成。被跳过的生成会带着没能放下的那个场景发出本节点的 spawn_skipped 信号。
 On Spawn Skipped,当生成被跳过时
 "Runs when a Spawn A Copy In A Free Spot row found nowhere to put the copy, and hands over the scene it could not place. The signal is one this sheet declares for itself - add a signal block saying spawn_skipped(scene) and both halves are ordinary Godot - so a full arena becomes something the game can answer: stop the wave, say the room is packed, or make more room.",当一行「在空位生成一个副本」找不到地方放副本时运行，并把它没能放下的那个场景交给你。这个信号由本表自己声明 - 加一个写着 spawn_skipped(scene) 的信号块，两边就都是普通的 Godot - 于是「场地满了」变成游戏可以回应的事：结束这一波、提示房间已满，或者腾出空间。
-On a spawn skipped,当一次生成被跳过时
+On spawn skipped,当生成被跳过时
 Retire,回收
 "Retires the object: hands it back to the pool that made it when it came from one, and destroys it when it did not. Which of the two happens is read off the object itself, so a sheet never has to remember where a copy came from - and a game with no pools in it behaves exactly as Destroy Now does. Safe to run twice: something already on its way out is left alone.",回收对象：如果它来自某个对象池，就交还给那个池；如果不是，就销毁它。是哪一种，是从对象自己身上读出来的，所以事件表永远不必记住某个副本是哪来的 - 而在没有对象池的游戏里，它的行为和「立即销毁」完全一样。执行两次也安全：已经在离场途中的东西会被放过。
 retire [i]{object}[/i] now,立即回收 [i]{object}[/i]
