@@ -1,8 +1,11 @@
 # Working With Tilemaps
 
-Eleven builtin actions, conditions and expressions let event rows read and write a **TileMapLayer**: paint
+Thirty builtin actions, conditions and expressions let event rows read and write a **TileMapLayer**: paint
 a tile, erase one, wipe the layer, ask what is in a cell, count what is placed, and convert between
-pixel positions and grid coordinates. No pack to enable, no behavior to attach - drop a row on a TileMapLayer sheet (or point any
+pixel positions and grid coordinates - and then ask the harder questions a level gets asked, paint a
+terrain that joins its own edges up, and move a layer's own bytes to and from a file. Six more say the
+same things on a **GridMap**, which is that grid with one more axis. No pack to enable, no behavior to
+attach - drop a row on a TileMapLayer sheet (or point any
 row at one with **On node**) and it compiles to the exact native call you would have written by hand.
 
 This is the vocabulary behind destructible terrain, dig-and-build games, roguelike level generation,
@@ -90,6 +93,63 @@ front of the cell, and the reading says which layer behind the sentence rather t
 | Used Cells Count | Returns how many cells in the tilemap currently hold a tile. | `get_used_cells().size()` |
 | Position To Tile | Converts a pixel position into the cell coordinates that contain it. | `local_to_map({pos})` |
 | Tile To Position | Converts cell coordinates into the pixel position at that cell's center. | `map_to_local({coords})` |
+
+### The questions a level is asked
+
+Each of these is three or four engine calls written by hand. The ones that need more than one call
+compile to a shared helper the compiler writes into your file the first time any row asks for it, and
+appends after everything else, so nothing above it moves.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Tile Data At | What the tile at a place carries under one of the tileset's custom data layers. Answers null where there is no tile. | `__eventsheets_tile_data_at(self, {where}, {key})` |
+| Tile Data At Is | True when the tile at a place carries this value under the named custom data layer. | `__eventsheets_tile_data_at(self, {where}, {key}) == {value}` |
+| Cell Is Solid | True when the tile at a cell carries a collision shape on the tileset physics layer you name. | `__eventsheets_cell_is_solid(self, {cell}, {layer})` |
+| First Solid Cell Along | Walks the cells along a line and answers the first solid one, with no physics query at all. `Vector2i.MAX` when the line met nothing. | `__eventsheets_first_solid_cell(self, {from}, {to}, {layer})` |
+| Surrounding Cells Of | The cells that touch a cell, asked of the LAYER - so a hex map answers with six. | `get_surrounding_cells({cell})` |
+| Cells With Data | Every cell whose tile carries this value under the named custom data layer, as a list. | `__eventsheets_cells_with_data(self, {key}, {value})` |
+| Used Rect | The rectangle of cells the layer actually holds tiles in, as a Rect2i. | `get_used_rect()` |
+| Cell Count Of | How many cells hold one particular tile. | `get_used_cells_by_id({source_id}, {atlas_coords}).size()` |
+| Tile Under | Which cell a node stands on, through the layer's own transform. | `self.local_to_map(self.to_local({node}.global_position))` |
+
+### The words that change it
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Paint Terrain | Paints a list of cells with one terrain and lets the tileset choose each tile, so edges and joins draw themselves. | `set_cells_terrain_connect({cells}, {terrain_set}, {terrain})` |
+| Repaint Terrain Around | Runs the terrain join again over the cells around a place, so a crater's rim heals itself. | `self.set_cells_terrain_connect(__eventsheets_cells_around(self, {where}, {radius}), {terrain_set}, {terrain})` |
+| Fill Rect With Tile | Paints every cell of a rectangle with one tile. | `__eventsheets_fill_tile_rect(self, {rect}, {source_id}, {atlas_coords})` |
+| Erase Tiles In Circle | Clears every cell within so many cells of a place. | `__eventsheets_erase_tiles_in_circle(self, {where}, {radius})` |
+| Flood Fill | The paint bucket, stopped by the row's own cell limit so a fill on open ground cannot run away. | `__eventsheets_flood_fill_tiles(self, {cell}, {source_id}, {atlas_coords}, {limit})` |
+| Set Navigation On Layer | Turns the layer's navigation regions on or off - what a door opening has to do before agents route through it. | `navigation_enabled = {on}` |
+| Set Collision On Layer | Turns the layer's collision on or off. | `collision_enabled = {on}` |
+
+### The level as a file
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Save Layer To File | Writes the layer's tiles to a file, exactly as the engine stores them. | `__eventsheets_save_tile_layer(self, {path})` |
+| Load Layer From File | Puts the tiles from a file back onto the layer. A file that is not there leaves the layer alone. | `__eventsheets_load_tile_layer(self, {path})` |
+| Copy Layer | Copies every tile of one layer onto another in one go. A level editor's undo is two of these. | `self.tile_map_data = {from}.tile_map_data` |
+
+### The 3D twin - GridMap
+
+A GridMap is a MeshLibrary laid out on a 3D grid, and the six words here are the words their 2D twins
+use, so a reader who learned one knows the other. Cells are `Vector3i`.
+
+**What has no twin, said rather than faked:** a GridMap has no tileset, so it has no custom data layers
+and no terrains. Tile Data At, Cells With Data, Paint Terrain and Repaint Terrain Around are 2D words
+and stay 2D words - a 3D game that wants "which cells are lava" keeps that in a collection or a group,
+the way it would for any other 3D scenery.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Cell Item | Puts one item of the mesh library into a grid cell, turned the way you say. The twin of Set Tile. | `set_cell_item({cell}, {item}, {orientation})` |
+| Item At | Which item sits in a cell, by its index, or -1 when the cell is empty. The twin of Tile At. | `get_cell_item({cell})` |
+| Cell Is Filled | True when the grid cell holds an item. The twin of Cell Has Tile. | `get_cell_item({cell}) != GridMap.INVALID_CELL_ITEM` |
+| Used Cells | Every cell of the grid that holds an item, as a list of Vector3i. | `get_used_cells()` |
+| Fill Box | Puts one item into every cell of a box of grid cells. The two corners may be given in any order. | `__eventsheets_gridmap_fill_box(self, {from}, {to}, {item})` |
+| Erase Box | Clears every cell of a box, which is the same call with the invalid item. | `__eventsheets_gridmap_fill_box(self, {from}, {to}, GridMap.INVALID_CELL_ITEM)` |
 
 ## Use cases
 

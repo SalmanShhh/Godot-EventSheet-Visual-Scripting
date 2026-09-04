@@ -2098,6 +2098,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	"facing": "Mirroring-And-Flipping",
 	"file": "Working-With-Files",
 	"gradient_curve": "Colors-Gradients-And-Curves",
+	# A GridMap is the tilemap question with one more axis, and its six words are deliberately the
+	# words their 2D twins use - so a reader who followed Set Cell Item here must land on the page
+	# that already explains Set Tile, beside the 2D row it is the twin of, rather than on a second
+	# page repeating the same ideas in three dimensions.
+	"gridmap": "Working-With-Tilemaps",
 	"helper": "Calling-Your-Own-Code-From-Rows",
 	"host": "Calling-Your-Own-Code-From-Rows",
 	"input": "Setting-Up-And-Rebinding-Controls",
