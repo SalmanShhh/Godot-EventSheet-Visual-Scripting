@@ -225,12 +225,41 @@ And the last thing a migration does not do: it does not delete the pack, it does
 node, and it does not go looking for other sheets to fix. It rewrites the rows in the receipt and
 stops.
 
-### The shipped vocabulary carries no forwarding address yet, and why that is the honest state
+### The four addresses this plugin ships
 
-Nothing this plugin publishes today points anywhere. The pair that came closest was the **State
+Four verbs point somewhere today, and they are one story. **Play Sound**, **Stop Sound**, **Set
+Volume (dB)** and the general shelf's **Is Playing** landed a day before the Audio shelf existed.
+The Audio module then authored the same four questions on the page a reader looks for them on -
+against the same node type, with the same parameters and the same emitted call - and the two
+spellings have sat side by side ever since. Each older row now names its newer one:
+
+| Written today | Points at | The whole of the map |
+| --- | --- | --- |
+| *Play Sound* | *Play* | one rename: `from_position` is called `from` over there |
+| *Stop Sound* | *Stop* | nothing to rename, nothing to fill |
+| *Set Volume (dB)* | *Set Volume* | nothing to rename, nothing to fill |
+| *Is Playing* (General Conditions) | *Is Playing* (Audio) | nothing to rename, nothing to fill |
+
+**Nothing about the older rows moved.** Same id, same template, same place in the picker, same
+emitted byte. A sheet written on *Play Sound* five versions ago compiles to the line it always did,
+and will go on doing so. What the address adds is a muted line on the selected row, a count on the
+head band, and a Migrate button that has somewhere to send it.
+
+These four also show the cheapest shape an address can have: **both ends write the same bytes**. A
+`.gd` sheet derives its rows from the file every time it is opened, so `play(0.5)` reads back as the
+verb that stands there today and no `.gd` sheet gains a migration row at all - nothing to fail a
+branch gate, nothing to appear in a diff. A stored `.tres` sheet writes down which verb each row was
+picked from, so it reports both rows and says neither asks anybody anything.
+
+*Playback Position*, the fifth row of that same family, is deliberately **not** addressed: an
+expression is not a row, so nothing could ever act on the address.
+
+### The pair that was turned down, and why that is worth knowing
+
+The pair that came closest and was withdrawn was the **State
 Machine** pack's *Go to state* and *Current state is* pointing at the built-in object-state *Go To
-State* and *Is In State* - the same questions, one renamed parameter each - and it was withdrawn,
-for two reasons worth knowing if you are about to write an address of your own.
+State* and *Is In State* - the same questions, one renamed parameter each. It was turned down for
+two reasons worth knowing if you are about to write an address of your own.
 
 **The value has to fit the slot as it stands.** The pack's parameter is a state NAME, so a row holds
 the quoted literal a text field writes (`"chasing"`). The object-state parameter is a member of the

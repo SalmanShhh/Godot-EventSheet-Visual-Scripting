@@ -10721,6 +10721,36 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   furniture (its footer, the search placeholder, the Contents link) stays English, and the file now
   says why: translating it through the running editor's catalog is exactly what would break that.
 
+### Refactor contract
+
+- **The vocabulary carries its first four forwarding addresses**, and every one of them is a verb
+  this plugin really publishes. *Play Sound*, *Stop Sound*, *Set Volume (dB)* and the general
+  shelf's *Is Playing* landed one day before the Audio shelf existed; the Audio module then authored
+  the same four questions on the page a reader looks for them on, against the same node type, with
+  the same parameters and the same emitted call, and the two spellings have sat side by side ever
+  since. Each older row now names its newer one - *Play Sound* renaming its one parameter
+  (`from_position` to `from`), the other three renaming nothing, none of them needing a value
+  invented. **Nothing about the older rows moved**: same `ace_id`, same `codegen_template`, same
+  place in the picker, same emitted byte, so every sheet ever written on them compiles exactly as it
+  did. The head band counts them, the selected row's help strip says *newer spelling: Play*, and
+  Migrate lands the successor row as one undoable edit with a receipt - proved end to end on a real
+  sheet against the shipped vocabulary rather than against an invented pair.
+- **`Playback Position` is deliberately left unaddressed**, being the fifth row of that same family:
+  an expression is not a row, so nothing could ever act on the address. So is the State Machine
+  pack's *Go to state*, for the two reasons the guide already records.
+- **An address whose two ends write the same bytes costs a project nothing.** A `.gd` sheet derives
+  its rows from the file every time it is opened, and both spellings emit `play(0.5)`, so the reverse
+  grammar reads that line back as the current verb and no `.gd` sheet gains a migration row at all -
+  no branch gate starts failing, no diff appears anywhere - while the sheet in front of a reader
+  still offers the newer spelling. A stored `.tres` sheet, which writes down which verb each row was
+  picked from, reports both rows and says neither asks anybody anything.
+- **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
+  parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
+  "this node", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -
+  and the parse gate then refused every node-scoped address for a reason that was the harness's and
+  not the map's. A slot the template spells `{name.}` is now left blank, and the fixture sheet is
+  compiled under the verb's OWN node type instead of a bare `Node`.
+
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)

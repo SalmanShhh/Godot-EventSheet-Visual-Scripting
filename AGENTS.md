@@ -268,9 +268,12 @@ from `tools/build_help_bundle.gd`).
   folder.
 - The Doctor's rename/migration sweep over `.gd` sheets reads a bounded sample per run and says
   so in its own verdict line - whole-project certainty comes from `tools/verify_sheets.gd`.
-- No shipped verb pair carries a successor address yet: the seam, the gates and the harness are
-  live, and the guide records why the first candidate pair was withdrawn (its parameters do not
-  mean the same thing). Add an address only for verbs that truly map.
+- Four shipped verbs carry a successor address (the general shelf's `PlayAudio`, `StopAudio`,
+  `SetVolumeDb` and `IsAudioPlaying`, each pointing at the Audio shelf's twin). Both ends of all
+  four write the same bytes, so a `.gd` sheet reads the line back as the current verb and gains no
+  migration row; a stored `.tres` sheet reports them. The guide records why the State Machine pair
+  was turned down (its parameters do not mean the same thing). Add an address only for verbs that
+  truly map, and never to an EXPRESSION - migration walks rows, and an expression is not one.
 - The theme package manifest is documentation/template only; it is not auto-imported yet.
 - UI screenshots require a NON-headless Godot run: the `tools/render_*.gd` harnesses generate
   real editor-UI PNGs (headless runs cannot render); many are committed because their UI will
