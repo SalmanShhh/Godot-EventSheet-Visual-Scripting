@@ -442,16 +442,24 @@ static func _test_the_doctor_says_the_renderer() -> bool:
 static func _test_the_doctor_says_the_backdrop() -> bool:
 	const NO_SKY := "func _ready() -> void:\n\tenvironment.sky.sky_material.sky_top_color = Color.RED\n"
 	const WITH_SKY := NO_SKY + "\tenvironment.background_mode = Environment.BG_SKY\n"
+	# The second argument is the PROOF: the scripts whose own scene was read and found to be
+	# drawing something other than a sky. Without it the note fired on every file that wrote a sky
+	# word and did not also write the backdrop line - which is every scene whose backdrop was set to
+	# Sky in the Inspector, the normal way to do it.
+	var flat: PackedStringArray = PackedStringArray(["res://look.gd"])
 	var missing: Array[Dictionary] = EventSheetShipItDoctor.sky_backdrop_findings(
-		{"res://look.gd": NO_SKY})
+		{"res://look.gd": NO_SKY}, flat)
 	var settled: Array[Dictionary] = EventSheetShipItDoctor.sky_backdrop_findings(
-		{"res://look.gd": WITH_SKY})
+		{"res://look.gd": WITH_SKY}, flat)
+	var unproven: Array[Dictionary] = EventSheetShipItDoctor.sky_backdrop_findings(
+		{"res://look.gd": NO_SKY}, PackedStringArray())
 	return SUPPORT.pins("environment_words_test", [
 		["a sky word with no sky behind it is one quiet note", missing.size(), 1],
 		["and the words say the door that fixes it",
 			"" if missing.is_empty() else str(missing[0]["message"]),
 			"look.gd sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky."],
-		["a file that does set the backdrop says nothing", settled.size(), 0]
+		["a file that does set the backdrop says nothing", settled.size(), 0],
+		["and a scene that never said what it draws is left alone", unproven.size(), 0]
 	])
 
 

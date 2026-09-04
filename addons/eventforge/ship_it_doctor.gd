@@ -118,7 +118,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(renderer_findings(sources, str(ProjectSettings.get_setting(
 		EventForgeEnvironmentWords.RENDERING_METHOD_SETTING,
 		EventForgeEnvironmentWords.FORWARD_PLUS))))
-	out.append_array(sky_backdrop_findings(sources))
+	out.append_array(sky_backdrop_findings(sources, flat_backdrop_scripts(sources)))
 	out.append_array(loading_screen_findings(sources, plainly_opened_scene_sizes(sources)))
 	return out
 
@@ -642,20 +642,73 @@ static func forward_plus_asked_for(source: String) -> String:
 const SKY_BACKDROP_LINE := "background_mode = Environment.BG_SKY"
 
 
-## A file that sets the sky's colours and never makes the sky the backdrop. The sky words are written
+## What background_mode holds when the backdrop IS the sky, as a scene file writes it. `BG_SKY` is
+## the third value of the enum, and a `.tscn` stores an enum as its number.
+const SKY_BACKDROP_STORED := "background_mode = 2"
+
+
+## A file that sets the sky's colours where the sky is not what is drawn. The sky words are written
 ## to do nothing rather than to error when the world is drawing a flat colour, so the rows run, cost
 ## nothing and change nothing - and the only place that can be said is here. An info note, with the
 ## door that fixes it in the words.
-static func sky_backdrop_findings(sources: Dictionary) -> Array[Dictionary]:
+##
+## IT FIRES ON PROOF, NOT ON SILENCE. `flat_backdrops` names the scripts whose own scene was READ and
+## found to be drawing something other than a sky; a script whose scene says nothing, or that has no
+## single scene to look at, is not named and nothing is said about it. Asking only the script text
+## made this note a standing false positive: setting the backdrop to Sky in the Inspector is the
+## normal way to do it, and a scene that had done exactly that was told its rows did nothing on every
+## run. Pure over its two arguments, so a test hands it two made-up scripts and a list of its own.
+static func sky_backdrop_findings(sources: Dictionary,
+		flat_backdrops: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	for script_path: String in _sorted_keys(sources):
 		var text: String = str(sources[script_path])
 		if text.contains(SKY_BACKDROP_LINE) or not _writes_a_sky_word(text):
 			continue
+		if not flat_backdrops.has(script_path):
+			continue
 		findings.append(_finding("info", CHECK_SKY_BACKDROP, script_path,
 			EventSheetL10n.translate("%s sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky.") % script_path.get_file(),
 			script_path.get_file()))
 	return findings
+
+
+## The scripts whose attached scene was read and found to be drawing a flat colour rather than a sky.
+## THREE THINGS HAVE TO BE TRUE before a script is named, and every one of them is something a reader
+## can go and look at: the script runs exactly one scene (a behaviour worn by five levels has no
+## single backdrop to be wrong about), that scene holds a WorldEnvironment (a project drawing its
+## world from the project-wide default environment is not this scene's business), and neither the
+## scene nor the environment file it points at says the backdrop is the sky. Anything less certain
+## than that is silence.
+static func flat_backdrop_scripts(sources: Dictionary) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for script_path: String in _sorted_keys(sources):
+		if not _writes_a_sky_word(str(sources[script_path])):
+			continue
+		if EventSheetSceneLightingFacts.attached_scene(script_path).is_empty():
+			continue
+		var holders: Array[Dictionary] = EventSheetSceneLights.nodes_of_class(script_path,
+			EventSheetSceneLightingFacts.ENVIRONMENT_CLASS)
+		if holders.is_empty():
+			continue
+		var drawn: bool = false
+		for holder: Dictionary in holders:
+			if _draws_a_sky(holder):
+				drawn = true
+		if not drawn:
+			found.append(script_path)
+	return found
+
+
+## True when one WorldEnvironment's world says the backdrop is the sky - asked of the scene the node
+## lives in when the environment is kept inside it, and of the `.tres` when it points at one.
+static func _draws_a_sky(holder: Dictionary) -> bool:
+	var written: String = EventSheetSceneLightingFacts.environment_resource(holder)
+	var read_from: String = written if not written.is_empty() \
+		else str(holder.get("scene_path", ""))
+	if read_from.is_empty():
+		return false
+	return EventSheetProjectDoctor.source_of(read_from).contains(SKY_BACKDROP_STORED)
 
 
 ## True when a source writes any of the five procedural-sky words, by the whole three-deep path they
