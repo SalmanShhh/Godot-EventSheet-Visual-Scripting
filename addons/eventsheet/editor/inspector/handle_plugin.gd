@@ -60,6 +60,9 @@ func init(plugin: EditorPlugin) -> void:
 	var gizmo_script: Script = load(GIZMO_3D_PATH) as Script
 	if gizmo_script != null and gizmo_script.can_instantiate():
 		_gizmo_3d = gizmo_script.new()
+		# The gizmo commits its own drags, so it needs the same undo manager this seam uses - without
+		# it a 3D drag would move the property and leave no step to undo.
+		_gizmo_3d.set("undo_redo", _plugin.get_undo_redo())
 		_plugin.add_node_3d_gizmo_plugin(_gizmo_3d)
 	_on_selection_changed()
 
