@@ -402,6 +402,10 @@ const UTILITY_AI := "res://eventsheet_addons/utility_ai/utility_ai_addon.gd"
 const HTN_AGENT := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
 const UHTN_PLANNER := "res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior.gd"
 const UHTN_RESOURCE := "res://eventsheet_addons/uhtn_plan_resource/uhtn_plan_resource.gd"
+const JUICE := "res://eventsheet_addons/juice/juice_behavior.gd"
+const SCENE_FLOW := "res://eventsheet_addons/scene_flow/scene_flow_behavior.gd"
+const BLEND_MODES := "res://eventsheet_addons/blend_modes/blend_modes_addon.gd"
+const SCREEN_FX_SCENE := "res://eventsheet_addons/screen_fx/screen_fx.tscn"
 
 
 func _build_carousel() -> bool:
@@ -415,11 +419,13 @@ func _build_carousel() -> bool:
 		"intensity": {"type": "float", "default": 1.4, "exported": true,
 			"attributes": {"tooltip": "Spring kick strength.", "range": {"min": "1", "max": "3", "step": "0.05"}, "clamp": true}},
 		"party_on": {"type": "bool", "default": true, "exported": true,
-			"attributes": {"tooltip": "Is the Juice group running."}}
+			"attributes": {"tooltip": "Is the Juice group running."}},
+		"moments_played": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Impact moments played.", "range": {"min": "0", "max": "9999", "step": "1"}}}
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function). A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party, [b]ui_cancel[/b] calms it. Watch beat/intensity stream in Live Values."
+	about.text = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen. Watch beat/intensity/moments_played stream in Live Values."
 	sheet.events.append(about)
 
 	# Reused function: juice one tile by index.
@@ -448,6 +454,11 @@ func _build_carousel() -> bool:
 	beat_row.conditions.append(_every("beat_caro", "0.5"))
 	beat_row.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "beat", "amount": "1"}))
 	beat_row.actions.append(_action("Core", "CallFunction", "{function_name}({args})", {"function_name": "juice_tile", "args": "beat, intensity * 5.0"}))
+	# The beat is felt on the whole screen too: a vignette borrowed from the post stack and let fall
+	# again, and the colour channels pulled apart along a fresh angle each time - a given angle keeps
+	# the split on one line and lets only the amount wander.
+	beat_row.actions.append(_action("ScreenFx", "method:pulse_post_effect", "$ScreenFx.pulse_post_effect(\"{effect}\", {strength}, {seconds})", {"effect": "vignette", "strength": "0.45", "seconds": "0.35"}))
+	beat_row.actions.append(_action("JuiceBehavior", "method:chromatic_shake", "$JuiceBehavior.chromatic_shake({magnitude}, {duration}, \"{mode}\", {angle_degrees})", {"magnitude": "4.0", "duration": "0.3", "mode": "reducing", "angle_degrees": "randf_range(0.0, 360.0)"}))
 	juice.events.append(beat_row)
 
 	var spin_row: EventRow = EventRow.new()
@@ -468,6 +479,15 @@ func _build_carousel() -> bool:
 	start_row.actions.append(_action("Core", "SetGroupActive", "set(\"__group_\" + {group} + \"_active\", {active})", {"group": "\"juice\"", "active": "true"}))
 	start_row.actions.append(_action("SpringBehavior", "method:add_impulse", "{target}.add_impulse({spring_name}, {amount})", {"target": "$Hero/SpringBehavior", "spring_name": "\"__scale\"", "amount": "intensity * 6.0"}))
 	start_row.actions.append(_action("FlashBehavior", "method:flash", "{target}.flash({seconds})", {"target": "$Hero/FlashBehavior", "seconds": "0.4"}))
+	# A whole beat of feedback as ONE row: the impact starter's shake, freeze, split and vignette,
+	# every amount in it scaled by the board's own intensity dial.
+	start_row.actions.append(_action("JuiceBehavior", "method:moment", "$JuiceBehavior.moment({moment_name}, {strength})", {"moment_name": "\"impact\"", "strength": "intensity * 0.6"}))
+	start_row.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "moments_played", "amount": "1"}))
+	# And the look the party runs at is a file the PLAYER owns rather than a name this plugin chose:
+	# one more effect on the live stack, the stack written out to user://, and that file worn back.
+	start_row.actions.append(_action("ScreenFx", "method:add_post_effect", "$ScreenFx.add_post_effect(\"{effect}\", \"{called}\", {strength})", {"effect": "scanlines", "called": "party", "strength": "0.3"}))
+	start_row.actions.append(_action("ScreenFx", "method:save_look", "$ScreenFx.save_look(\"{path}\", \"{called}\")", {"path": "user://looks/carousel.tres", "called": "Carousel"}))
+	start_row.actions.append(_action("ScreenFx", "method:use_look", "$ScreenFx.use_look({look})", {"look": "load(\"user://looks/carousel.tres\")"}))
 	sheet.events.append(start_row)
 
 	var calm_row: EventRow = EventRow.new()
@@ -478,6 +498,9 @@ func _build_carousel() -> bool:
 	calm_row.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "party_on", "value": "false"}))
 	calm_row.actions.append(_action("Core", "SetGroupActive", "set(\"__group_\" + {group} + \"_active\", {active})", {"group": "\"juice\"", "active": "false"}))
 	calm_row.actions.append(_action("TweenBehavior", "method:tween_rotation", "{target}.tween_rotation({degrees}, {duration})", {"target": "$Hero/TweenBehavior", "degrees": "0.0", "duration": "0.4"}))
+	# Calm is a moment as much as impact is, and the board starts over behind a fade rather than a cut.
+	calm_row.actions.append(_action("JuiceBehavior", "method:moment", "$JuiceBehavior.moment({moment_name}, {strength})", {"moment_name": "\"calm\"", "strength": "1.0"}))
+	calm_row.actions.append(_action("SceneFlowBehavior", "method:reload_scene_with", "$SceneFlowBehavior.reload_scene_with(\"{transition}\", {seconds}, \"{ease}\")", {"transition": "fade", "seconds": "0.6", "ease": "smooth"}))
 	sheet.events.append(calm_row)
 
 	var idle_row: EventRow = EventRow.new()
@@ -491,6 +514,9 @@ func _build_carousel() -> bool:
 	seed_row.trigger_provider_id = "Core"
 	seed_row.trigger_id = "OnReady"
 	seed_row.actions.append(_raw("for c: Node in $Tiles.get_children():\n\tc.get_node(\"SineBehavior\").active = true"))
+	# One tile is drawn against what is already behind it rather than over it - the same row that
+	# reaches every other blend word.
+	seed_row.actions.append(_action("BlendModesAddon", "method:blend_as", "$BlendModes.blend_as({item}, \"{mode}\", {strength})", {"item": "$Tiles/Tile3", "mode": "screen", "strength": "1.0"}))
 	sheet.events.append(seed_row)
 
 	if not _compile(sheet, "res://demo/showcase/carousel/showcase_carousel.tres", "res://demo/showcase/carousel/showcase_carousel.gd"):
@@ -506,6 +532,24 @@ func _build_carousel() -> bool:
 	_attach_behavior(root, "SpringBehavior", SPRING, root)
 	_attach_behavior(root, "TweenBehavior", TWEEN, root)
 	_attach_behavior(root, "FlashBehavior", FLASH, root)
+	# The four packs the board's rows address by name: $JuiceBehavior for the moment and the
+	# chromatic shake, $SceneFlowBehavior for the fade ui_cancel starts over behind, $BlendModes for
+	# the one tile drawn as screen, and $ScreenFx - the pack's OWN scene, instanced once, because the
+	# post stack is a rectangle on a layer rather than a script on a node.
+	_attach_behavior(root, "JuiceBehavior", JUICE, root)
+	_attach_behavior(root, "SceneFlowBehavior", SCENE_FLOW, root)
+	_attach_behavior(root, "BlendModes", BLEND_MODES, root)
+	var screen_fx: Node = (load(SCREEN_FX_SCENE) as PackedScene).instantiate()
+	screen_fx.name = "ScreenFx"
+	root.add_child(screen_fx)
+	screen_fx.owner = root
+	# The camera an impact moment's shake moves. Sat where the board already was, so adding it
+	# changes what the showcase FEELS like and not what it looks like at rest.
+	var eye: Camera2D = Camera2D.new()
+	eye.name = "Eye"
+	eye.position = Vector2(576, 324)
+	root.add_child(eye)
+	eye.owner = root
 	# Hero
 	var hero: Sprite2D = Sprite2D.new()
 	hero.name = "Hero"
