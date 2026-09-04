@@ -22,8 +22,14 @@
 # are plain member reads and take the ordinary "On node" the transform appends to every such row -
 # looking at another mesh's surface changes nothing on it, so there is nothing to own first.
 #
-# READING IT BACK. Every read row is the plain `get_active_material(0).<property>` a person would
-# type, so a hand-written line and a picked row are the same bytes and read as the same sentence.
+# READING IT BACK, and why the reads are a CAST rather than the plain member. `get_active_material`
+# answers with a Material, and only a BaseMaterial3D carries these nine words: a mesh drawing with
+# nothing at all answers null, and a mesh wearing somebody's shader answers a ShaderMaterial, so a
+# bare `get_active_material(0).roughness` is an "attempt to access on a null instance" in the first
+# case and a missing property in the second. Each read is therefore written the way the sprite and
+# sky reads are - `(x as BaseMaterial3D).<property> if x is BaseMaterial3D else <what a new material
+# starts on>` - so an expression in a value slot answers rather than taking the game down. The
+# WRITES need no such guard: their own-it lines put a material there before they touch one.
 #
 # 3D ONLY, and it says so: these nine words are BaseMaterial3D's. A sprite's look is a
 # CanvasItemMaterial with two knobs of its own, and those two rows live at the foot of this file
@@ -283,8 +289,11 @@ static func _set_row(entry: Dictionary) -> ACEDescriptor:
 static func _read_row(entry: Dictionary) -> ACEDescriptor:
 	var word: String = str(entry["word"])
 	return F.expr("Material%s" % W.id_stem(word), str(entry["name"]).trim_prefix("Set "),
-		"%s(0).%s" % [W.ACTIVE_CALL, W.member_of(word)], CAT, str(entry["reads"]),
-		"Reads the surface's %s back: %s. Use it in any value field." % [word, _echo(entry)], W.HOST)
+		"(%s(0) as %s).%s if %s(0) is %s else %s" % [W.ACTIVE_CALL, W.MATERIAL_ROOT,
+			W.member_of(word), W.ACTIVE_CALL, W.MATERIAL_ROOT, W.default_of(word)], CAT,
+		str(entry["reads"]),
+		"Reads the surface's %s back: %s. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field." % [
+			word, _echo(entry)], W.HOST)
 
 
 ## The one row that is not a plain write: a tween walks the property from where it is to where the

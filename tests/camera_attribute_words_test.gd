@@ -109,8 +109,12 @@ static func _test_the_templates() -> bool:
 		["a fade walks the owned copy, never the shared file",
 			templates.get("CamFadeExposure", ""),
 			OWN_LINES + "create_tween().tween_property(attributes, \"exposure_multiplier\", {value}, {seconds})"],
-		["a read is the plain member a person would type",
-			templates.get("CamExposure", ""), "attributes.exposure_multiplier"],
+		# The reads and the questions ask whether the node is carrying a lens at all before they
+		# touch one: an empty `attributes` slot is the state a fresh Camera3D is in, and a bare
+		# member read there is an access on a null instance at run time.
+		["a read answers with what a new lens starts on when there is none",
+			templates.get("CamExposure", ""),
+			"attributes.exposure_multiplier if attributes != null else 1.0"],
 		["the switch settles the whole behaviour on one row, and guards what only a practical lens has",
 			templates.get("CamAutoExposureOn", ""),
 			OWN_LINES + "attributes.auto_exposure_enabled = true\n"
@@ -121,8 +125,9 @@ static func _test_the_templates() -> bool:
 		["and turning it off is the flag alone, on this scene's own copy",
 			templates.get("CamAutoExposureOff", ""),
 			OWN_LINES + "attributes.auto_exposure_enabled = false"],
-		["the question is the plain flag", templates.get("CamIsAutoExposureOn", ""),
-			"attributes.auto_exposure_enabled"]
+		["the question answers false when there is no lens to ask",
+			templates.get("CamIsAutoExposureOn", ""),
+			"attributes != null and attributes.auto_exposure_enabled"]
 	])
 
 
@@ -145,8 +150,9 @@ static func _test_the_focus_rows() -> bool:
 				+ "\t__clear_{uid}.tween_property(attributes, \"dof_blur_amount\", 0.0, {seconds})\n"
 				+ "\t__clear_{uid}.tween_callback(attributes.set.bind(\"dof_blur_far_enabled\", false))\n"
 				+ "\t__clear_{uid}.tween_callback(attributes.set.bind(\"dof_blur_amount\", __blur_{uid}))"],
-		["the distance reads back as the plain member",
-			templates.get("CamFocusDistance", ""), "attributes.dof_blur_far_distance"],
+		["the distance answers with a new lens's own when there is none",
+			templates.get("CamFocusDistance", ""),
+			"attributes.dof_blur_far_distance if attributes != null else 10.0"],
 		["and all three are the camera's own rows, because only a camera stands somewhere",
 			_hosts_of(["CamFocusOn", "CamFocusEverywhere", "CamFocusDistance"]),
 			PackedStringArray(["Camera3D", "Camera3D", "Camera3D"])]

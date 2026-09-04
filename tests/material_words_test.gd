@@ -250,8 +250,19 @@ static func _test_the_templates() -> bool:
 			templates.get("MaterialSetTransparency", ""),
 			OWN_LINES + "material_override.transparency = {value}\n"
 				+ "material_override.alpha_scissor_threshold = {threshold}"],
-		["a read is the plain line a person would type",
-			templates.get("MaterialMetal", ""), "get_active_material(0).metallic"]
+		# The read is a CAST, for the reason the sprite reads are: a mesh drawing with nothing
+		# answers null and one wearing a shader answers a ShaderMaterial, and neither carries these
+		# nine words. Both answer with the value a new material starts on instead of erroring.
+		["a read answers with what a new material starts on when there is none",
+			templates.get("MaterialMetal", ""),
+			"(get_active_material(0) as BaseMaterial3D).metallic"
+				+ " if get_active_material(0) is BaseMaterial3D else 0.0"],
+		# A word whose starting value is a resource nobody set has no literal to fall back to, so
+		# the read says null rather than ending in `else` with nothing after it.
+		["a picture word falls back to null rather than to nothing",
+			templates.get("MaterialTexture", ""),
+			"(get_active_material(0) as BaseMaterial3D).albedo_texture"
+				+ " if get_active_material(0) is BaseMaterial3D else null"]
 	])
 
 

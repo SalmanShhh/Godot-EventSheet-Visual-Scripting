@@ -168,8 +168,9 @@ static func _switch_rows(entry: Dictionary) -> Array[ACEDescriptor]:
 		F.act("Env%sOff" % stem, str(entry["off_name"]), _write_template(entry, "false"), CAT,
 			str(entry["off_verb"]), _about(entry), W.HOST),
 		F.cond("EnvIs%s" % stem, str(entry["asks"]),
-			"%s.%s" % [W.ENVIRONMENT_MEMBER, property], CAT, str(entry["ask_verb"]),
-			"True while %s. Reads %s." % [str(entry["ask_verb"]), _echo(entry)], W.HOST)
+			_asked(property), CAT, str(entry["ask_verb"]),
+			"True while %s. Reads %s, and answers false on a node holding no environment at all." % [
+				str(entry["ask_verb"]), _echo(entry)], W.HOST)
 	]
 
 
@@ -187,8 +188,9 @@ static func _set_row(entry: Dictionary) -> ACEDescriptor:
 static func _read_row(entry: Dictionary) -> ACEDescriptor:
 	var word: String = str(entry["word"])
 	return F.expr("Env%s" % W.id_stem(word), str(entry["name"]).trim_prefix("Set "),
-		"%s.%s" % [W.ENVIRONMENT_MEMBER, W.property_of(word)], CAT, str(entry["reads"]),
-		"Reads the world's %s back: %s. Use it in any value field." % [word, _echo(entry)], W.HOST)
+		_read(W.property_of(word), W.default_of(word)), CAT, str(entry["reads"]),
+		"Reads the world's %s back: %s. A node holding no environment at all answers with the value a new one starts on. Use it in any value field." % [
+			word, _echo(entry)], W.HOST)
 
 
 ## The one row that is not a plain write: a tween walks the property from where it is to where the
@@ -246,6 +248,23 @@ static func _choice_param(entry: Dictionary, opening: String) -> ACEParam:
 static func _about(entry: Dictionary) -> String:
 	return "%s Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes %s." % [
 		str(entry["about"]), _echo(entry)]
+
+
+## THE READS ASK FIRST, and they have to. A WorldEnvironment holding no Environment is the state
+## every one of them starts in - the node is dropped, the slot is empty - and a bare
+## `environment.saturation` there is an "attempt to access on a null instance" at run time. The
+## WRITES are guarded already, by the own-it lines that fill the slot before they touch it; these
+## are the other half. A node with no world answers with the value a new Environment starts on,
+## which is the same promise the sky reads make and the same shape they are written in.
+static func _read(property: String, opening: String) -> String:
+	return "%s.%s if %s != null else %s" % [W.ENVIRONMENT_MEMBER, property, W.ENVIRONMENT_MEMBER,
+		opening]
+
+
+## The same question as a CONDITION. A switch nobody has an environment for is off, which is what
+## `and` says in one line without a value to fall back on.
+static func _asked(property: String) -> String:
+	return "%s != null and %s.%s" % [W.ENVIRONMENT_MEMBER, W.ENVIRONMENT_MEMBER, property]
 
 
 ## The property a row writes, as the reader sees it in the code echo.
@@ -353,9 +372,9 @@ static func _quality_rows() -> Array[ACEDescriptor]:
 				str(dial["off_verb"]), "%s Writes `%s.%s`." % [str(dial["off_about"]),
 					W.ENVIRONMENT_CLASS, str(dial["flag"])], W.HOST))
 			rows.append(F.cond("EnvIs%sOn" % stem, str(dial["asks"]),
-				"%s.%s" % [W.ENVIRONMENT_MEMBER, str(dial["flag"])], CAT, str(dial["ask_verb"]),
-				"%s Reads `%s.%s`." % [str(dial["ask_about"]), W.ENVIRONMENT_CLASS,
-					str(dial["flag"])], W.HOST))
+				_asked(str(dial["flag"])), CAT, str(dial["ask_verb"]),
+				"%s Reads `%s.%s`, and answers false on a node holding no environment at all." % [
+					str(dial["ask_about"]), W.ENVIRONMENT_CLASS, str(dial["flag"])], W.HOST))
 	return rows
 
 

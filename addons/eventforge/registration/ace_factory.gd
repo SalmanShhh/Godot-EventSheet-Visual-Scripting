@@ -108,6 +108,12 @@ static func _verb(provider: String, ace_id: String, label: String, kind: ACEDesc
 ## of these dials and coarse enough to land back on the literal the engine's own docs name.
 static func default_literal(class_text: String, property: String) -> String:
 	var value: Variant = ClassDB.class_get_property_default_value(class_text, property)
+	# A property whose type is a Resource answers with a NULL OBJECT, and the text of a null object
+	# is `<Object#null>` - which is not GDScript, so a row opening on it does not compile and an
+	# expression falling back to it does not parse. The engine's own answer for such a property is
+	# "nothing is set", and `null` is how that is written.
+	if value == null:
+		return "null"
 	if value is Color:
 		var colour: Color = value
 		return "Color.WHITE" if colour == Color.WHITE else "Color(%s, %s, %s)" % [

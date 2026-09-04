@@ -149,10 +149,21 @@ static func _test_the_templates() -> bool:
 			[templates.get("EnvReflectionsOn", ""), templates.get("EnvReflectionsOff", "")],
 			[OWN_LINES + "environment.ssr_enabled = true",
 				OWN_LINES + "environment.ssr_enabled = false"]],
-		["the question is the plain member read",
-			templates.get("EnvIsReflections", ""), "environment.ssr_enabled"],
-		["a read is the plain member a person would type",
-			templates.get("EnvExposure", ""), "environment.tonemap_exposure"],
+		# The reads and the questions ask whether there is an environment at all before they touch
+		# one: an empty `environment` slot is the state a fresh WorldEnvironment is in, and a bare
+		# member read there is an access on a null instance at run time. The writes need no such
+		# guard - their own-it lines fill the slot before they write it.
+		["the question answers false when there is no world to ask",
+			templates.get("EnvIsReflections", ""),
+			"environment != null and environment.ssr_enabled"],
+		["and a read answers with what a new world starts on",
+			templates.get("EnvExposure", ""),
+			"environment.tonemap_exposure if environment != null else 1.0"],
+		# A word whose starting value is a resource nobody set has no literal to fall back to, so
+		# the read says null rather than ending in `else` with nothing after it.
+		["a picture word falls back to null rather than to nothing",
+			templates.get("EnvColourGrade", ""),
+			"environment.adjustment_color_correction if environment != null else null"],
 		["a fade walks the owned copy, never the shared file",
 			templates.get("EnvFadeVolumetricThickness", ""),
 			OWN_LINES + "environment.volumetric_fog_enabled = true\n"
@@ -252,7 +263,8 @@ static func _test_the_quality_dials() -> bool:
 				+ "RenderingServer.environment_set_ssr_roughness_quality({quality})"],
 		["occlusion is the one dial with no switch word, so it mints the off row and the question",
 			[templates.get("EnvTurnOcclusionOff", ""), templates.get("EnvIsOcclusionOn", "")],
-			[OWN_LINES + "environment.ssao_enabled = false", "environment.ssao_enabled"]],
+			[OWN_LINES + "environment.ssao_enabled = false",
+				"environment != null and environment.ssao_enabled"]],
 		["and the other three take theirs from the words they already are",
 			[templates.has("EnvTurnReflectionsOff"), templates.has("EnvTurnIndirectLightOff"),
 				templates.has("EnvTurnGlobalIlluminationOff")], [false, false, false]]

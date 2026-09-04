@@ -396,10 +396,6 @@ const WORDS: Array[Dictionary] = [
 		"label": "Colour grade",
 		"about": "A picture that says what every colour in the scene turns into - the one file that makes a level read as a memory, a poison haze or a night-vision goggle. Blank it with null to go back to the colours as they are. Switches the picture adjustments on as well.",
 		"turns_on": "adjustment_enabled",
-		# Written down, because ClassDB answers an object property's default with a null OBJECT and
-		# the text of that is `<Object#null>`, which is not a thing anybody can type. The value is
-		# still the engine's own: a new Environment has no colour grade.
-		"default": "null",
 		"spellings": {"adjustment_color_correction": "ColourGrade"}
 	}
 ]

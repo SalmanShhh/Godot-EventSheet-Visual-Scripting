@@ -112,9 +112,26 @@ static func _value_rows(entry: Dictionary, host: Dictionary) -> Array[ACEDescrip
 static func _read_row(entry: Dictionary, host: Dictionary) -> ACEDescriptor:
 	var word: String = str(entry["word"])
 	return F.expr("Cam%s" % W.id_stem(word, host), str(entry["read_name"]),
-		"%s.%s" % [str(host["member"]), W.property_of(word)], CAT, str(entry["reads"]),
-		"Reads the %s back: %s. Answers for %s. Use it in any value field." % [word, _echo(entry, host),
-			str(host["which"])], str(host["host"]))
+		_read(host, W.property_of(word), W.default_of(word)), CAT, str(entry["reads"]),
+		"Reads the %s back: %s. Answers for %s, and answers with the value a new lens starts on when the node is carrying none. Use it in any value field." % [
+			word, _echo(entry, host), str(host["which"])], str(host["host"]))
+
+
+## THE READS ASK FIRST, and they have to. A Camera3D with no `attributes` and a WorldEnvironment with
+## no `camera_attributes` are the state both nodes start in - the slot is simply empty - and a bare
+## `attributes.exposure_multiplier` there is an "attempt to access on a null instance" at run time.
+## The WRITES are guarded already, by the own-it lines that fit a lens before they touch one; these
+## are the other half. A node carrying no lens answers with the value a new one starts on, which is
+## the same promise the sky and material reads make and the same shape they are written in.
+static func _read(host: Dictionary, property: String, opening: String) -> String:
+	var member: String = str(host["member"])
+	return "%s.%s if %s != null else %s" % [member, property, member, opening]
+
+
+## The same question as a CONDITION. A switch on a node carrying no lens is off, which is what `and`
+## says in one line without a value to fall back on.
+static func _asked(member: String, property: String) -> String:
+	return "%s != null and %s.%s" % [member, member, property]
 
 
 ## The one row that is not a plain write: a tween walks the property from where it is to where the row
@@ -155,7 +172,7 @@ static func _switch_rows(entry: Dictionary, host: Dictionary) -> Array[ACEDescri
 		F.act("Cam%sOff" % stem, str(entry["off_name"]),
 			"%s%s.%s = false" % [W.own_lines(host), member, property], CAT, str(entry["off_verb"]),
 			"%s Writes %s." % [str(entry["off_about"]), _echo(entry, host)], str(host["host"])),
-		F.cond("CamIs%sOn" % stem, str(entry["asks"]), "%s.%s" % [member, property], CAT,
+		F.cond("CamIs%sOn" % stem, str(entry["asks"]), _asked(member, property), CAT,
 			str(entry["ask_verb"]), "%s Reads %s." % [str(entry["ask_about"]), _echo(entry, host)],
 			str(host["host"]))
 	]
@@ -231,7 +248,8 @@ static func _focus_rows(host: Dictionary) -> Array[ACEDescriptor]:
 			"Takes the blur off and makes the whole picture sharp again, easing it out rather than cutting - the shot coming back from a close-up. The blur amount is put back where it was once the far blur is off, so the next Focus On starts from the same lens it did the first time. Gives this camera its own copy of the camera attributes first, and does nothing at all on a camera somebody fitted with a physical lens.",
 			str(host["host"])).param_typed("String", SECONDS_PARAM, DEFAULT_FADE_SECONDS, "Seconds",
 			"How long the picture takes to come back sharp.", "expression"),
-		F.expr("CamFocusDistance", "Focus Distance", "%s.%s" % [member, W.FOCUS_DISTANCE], CAT,
+		F.expr("CamFocusDistance", "Focus Distance",
+			_read(host, W.FOCUS_DISTANCE, W.default_literal(W.FOCUS_DISTANCE)), CAT,
 			"focus distance",
 			"How many metres away the picture stops being sharp, as Focus On last left it. Reads `%s.%s`. Use it in any value field." % [
 				member, W.FOCUS_DISTANCE], str(host["host"]))
