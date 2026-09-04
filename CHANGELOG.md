@@ -321,6 +321,11 @@
   old index.
 - **One click adds a shape again.** The Drawing Prefab's "+ Add shape" had become Add, search,
   Enter; a "+" beside the search adds the list's first kind in one gesture, for every card list.
+- **A card's number cell stops rounding the number it was given.** Its boxes stepped in tenths, and
+  a Range snaps the value it SHOWS to a multiple of its step: a stored 12.345 appeared as 12.3, and
+  the next press of an arrow wrote 12.4 back into the designer's file. A float cell steps by the
+  same thousandth the unit field and the corners boxes already stepped by; a field the schema calls
+  an `int` still steps by a whole one.
 - **A unit field with nothing to offer draws a plain number box**, instead of an empty dropdown it
   then tried to select an item in, and a unit spelling may name a FAMILY (`time`) rather than list
   its units. A toggle row asks its icon provider for a picture at the size the button shows it at,

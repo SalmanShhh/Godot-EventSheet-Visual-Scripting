@@ -25,7 +25,52 @@ static func run() -> bool:
 	ok = _link_pins() and ok
 	ok = _fold_pins() and ok
 	ok = _prefab_pins() and ok
+	ok = _number_cell_pins() and ok
 	return ok
+
+
+## The number cell keeps the number. A Range SNAPS what it shows to a multiple of its step, so the
+## step decides how much of a designer's saved value survives being looked at: a coarse one would
+## show a stored 12.345 as 12.3 and write 12.4 back into the .tres on the next arrow press. Pinned
+## by value, read and written, and a whole-number field still steps by one.
+static func _number_cell_pins() -> bool:
+	var schema: Dictionary = {"kinds": [{
+		"kind": "step", "label": "Step",
+		"fields": [{"key": "amount"}, {"key": "count", "drawer": "int"}],
+	}]}
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": schema})
+	var card: Dictionary = {"kind": "step", "amount": 12.345, "count": 3}
+	drawer.set_value([card])
+	var amount_row: Control = drawer._build_field(0, card, {"key": "amount"})
+	var count_row: Control = drawer._build_field(0, card, {"key": "count", "drawer": "int"})
+	var amount: SpinBox = _spin_in(amount_row)
+	var count: SpinBox = _spin_in(count_row)
+	var ok: bool = _eq("a card holding 12.345 reads 12.345 back off its cell", amount.value, 12.345)
+	ok = _eq("because a float cell steps by a thousandth", amount.step, 0.001) and ok
+	ok = _eq("and a whole-number cell still steps by one", count.step, 1.0) and ok
+	ok = _eq("a whole-number cell shows its whole number", count.value, 3.0) and ok
+	# And what a person's edit writes back. The cell is moved and then hands over what it HOLDS,
+	# which is the snapped value: a coarser step would have turned this 6.125 into 6.1 before the
+	# card ever saw it. (A programmatic set emits nothing, so the pin emits what an edit emits.)
+	amount.value = 6.125
+	amount.value_changed.emit(amount.value)
+	ok = _eq("a write through the cell stores exactly what the cell holds",
+		(drawer.get_value()[0] as Dictionary).get("amount"), 6.125) and ok
+	amount_row.free()
+	count_row.free()
+	drawer.free()
+	return ok
+
+
+## The number cell inside one built field row.
+static func _spin_in(row: Node) -> SpinBox:
+	for child: Node in row.get_children():
+		if child is SpinBox:
+			return child as SpinBox
+		var deeper: SpinBox = _spin_in(child)
+		if deeper != null:
+			return deeper
+	return null
 
 
 ## The marker: what it parses into, what it emits, and that it lifts back byte-exact.

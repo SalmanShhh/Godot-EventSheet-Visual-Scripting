@@ -31,6 +31,13 @@ const DRAG_KEY: String = "eventsheet_card_index"
 ## than by class name because that file names this one, and two files naming each other is a cycle.
 const ATTRIBUTE_DRAWERS_PATH: String = "res://addons/eventsheet/editor/attribute_drawers.gd"
 
+## How finely a number cell moves - and, because a Range snaps the value it SHOWS to a multiple of
+## its step, how much of a designer's stored number survives being looked at. A float cell steps by
+## the same thousandth the unit field and the corners boxes step by; a field the schema calls an
+## `int` steps by a whole one.
+const FLOAT_STEP: float = 0.001
+const INT_STEP: float = 1.0
+
 static var _drawers_script: Script = null
 
 
@@ -744,7 +751,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable) -
 			var unit_spec: Dictionary = attribute_drawers().call("parse_unit_spec", tail)
 			var unit_ids: PackedStringArray = unit_spec.get("units", PackedStringArray())
 			if unit_ids.is_empty():
-				return _number_field(card, key, write, 0.1)
+				return _number_field(card, key, write, FLOAT_STEP)
 			var unit_field: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(
 				unit_ids, str(unit_spec.get("store", "")))
 			unit_field.set_value(float(card.get(key, 0.0)))
@@ -785,15 +792,21 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable) -
 		"curve_editor":
 			return _curve_field(card, key, write)
 		"int":
-			return _number_field(card, key, write, 1.0)
-	return _number_field(card, key, write, 0.1)
+			return _number_field(card, key, write, INT_STEP)
+	return _number_field(card, key, write, FLOAT_STEP)
 
 
+## A number cell. The STEP is the value's own precision, not a taste: a Range SNAPS what it shows to
+## a multiple of its step, so a coarse step silently rewrites somebody's saved file - a stored 12.345
+## would show as 12.3, and the next arrow press would write 12.4 back into the .tres. Floats therefore
+## step by the same 0.001 the unit field and the corners boxes use, and only a field the schema calls
+## an `int` steps by a whole one.
 func _number_field(card: Dictionary, key: String, write: Callable, step: float) -> Control:
 	var spin: SpinBox = SpinBox.new()
 	spin.allow_greater = true
 	spin.allow_lesser = true
 	spin.step = step
+	spin.rounded = false
 	spin.editable = editable
 	spin.value = float(card.get(key, 0.0))
 	spin.value_changed.connect(func(value: float) -> void: write.call(value))
