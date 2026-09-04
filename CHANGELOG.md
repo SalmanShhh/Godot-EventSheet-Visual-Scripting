@@ -10821,6 +10821,26 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   not the map's. A slot the template spells `{name.}` is now left blank, and the fixture sheet is
   compiled under the verb's OWN node type instead of a bare `Node`.
 
+### The pack count is measured now, not typed
+
+- **How many behaviour packs ship is a measurement.** The README states it in three sentences and
+  `CLAUDE.md` in one, and every one of them was a hand-typed literal, so the number drifted every
+  time a pack landed - 121, then 123, then 125 in a single night, while the tree already held 130.
+  `tools/measure_packs.gd` computes it the way the rest of the fleet computes anything about packs:
+  from the builders in `tools/pack_builders/`, counting the ones that publish a FOLDER under
+  `eventsheet_addons/`, so the root runtime scripts (`free_spot.gd`, `pooled_nodes.gd`) and the
+  hand-written `demo_*.gd` seam demonstrations are outside the count and the tool's header says so in
+  full. It prints `packs=N builders=N`, names each sentence that disagrees, and with `-- --write`
+  rewrites those literals in place. Historical CHANGELOG lines are deliberately never touched: they
+  are the count as it stood on a release day.
+- **And a test holds the four sentences to it.** `pack_count_records_test` measures with the tool's
+  OWN function rather than a second walk of its own, compares every quoted literal, and fails with
+  both numbers and the one line that fixes them. The walk itself is pinned by value against a
+  four-file fixture folder holding one of each shape - a folder pack shipped through `Lib.publish`,
+  one through `Lib.save_pack`, a root runtime script, and a builder that publishes nothing - because
+  pinning it against the live tree would pin a number that moves every day, which is the failure the
+  whole slice exists to end.
+
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)
