@@ -331,6 +331,24 @@ const CLEAN_ABSOLUTE := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_
 const BUG_RES_ARCHIVE := "func _ready() -> void:\n\tvar packer := ZIPPacker.new()\n\tif packer.open(\"res://runs.zip\") == OK:\n\t\tpacker.close()\n"
 const CLEAN_RES_ARCHIVE := "func _ready() -> void:\n\tvar packer := ZIPPacker.new()\n\tif packer.open(\"user://runs.zip\") == OK:\n\t\tpacker.close()\n"
 const CLEAN_RES_UNPACK := "func _ready() -> void:\n\tvar reader := ZIPReader.new()\n\tif reader.open(\"res://runs.zip\") == OK:\n\t\treader.close()\n"
+# A FOLDER HANDLE WRITES THROUGH THE PLACE IT WAS OPENED AT. The place is on the `open` line and the
+# write is on another - or chained onto the same one - and the check read neither, so a res:// write
+# spelled this way earned nothing while the literal sat right there in the file.
+const BUG_RES_DIR_CHAINED := "func _ready() -> void:
+	DirAccess.open(\"res://\").make_dir(\"levels\")
+"
+const BUG_RES_DIR_NAMED := "func _ready() -> void:
+	var folder := DirAccess.open(\"res://saves\")
+	folder.make_dir(\"runs\")
+"
+const CLEAN_RES_DIR_LISTED := "func _ready() -> void:
+	var folder := DirAccess.open(\"res://levels\")
+	print(folder.get_files())
+"
+const CLEAN_USER_DIR_WRITTEN := "func _ready() -> void:
+	var folder := DirAccess.open(\"user://saves\")
+	folder.make_dir(\"runs\")
+"
 const CLEAN_COMMENTED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"user://save.dat\"))  # was \"C:/temp/x.txt\"\n"
 const BUG_COMMENTED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"C:/temp/x.txt\"))  # the old place\n"
 const BUG_ESCAPED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"a \\\" b\" + \"/c/d.txt\"))\n"
@@ -398,6 +416,23 @@ static func _test_doctor_checks() -> bool:
 	passed = _check("a string holding an escaped quote is read as one string",
 		EventSheetFilesDoctor.absolute_path_findings({"res://trap.gd": BUG_ESCAPED}).size(),
 		1) and passed
+
+	# THE PLACE IS READ OFF THE PATH WRITTEN IN THE LINE, which is what the finding promises - and a
+	# folder handle writes through a path written in a line just as plainly as FileAccess does.
+	passed = _check("a res:// folder opened and written on one line is the export trap",
+		EventSheetFilesDoctor.res_write_lines(BUG_RES_DIR_CHAINED),
+		PackedStringArray(["DirAccess.open(\"res://\").make_dir(\"levels\")"])) and passed
+	passed = _check("and so is one opened under a name this file then writes through",
+		EventSheetFilesDoctor.res_write_lines(BUG_RES_DIR_NAMED),
+		PackedStringArray(["var folder := DirAccess.open(\"res://saves\")"])) and passed
+	# OPENING A FOLDER IS A READ. Listing the game's own files is exactly what res:// is for, so a
+	# handle nothing writes through is not the trap and must not be reported as one.
+	passed = _check("a res:// folder that is only listed is nobody's business",
+		EventSheetFilesDoctor.res_write_lines(CLEAN_RES_DIR_LISTED),
+		PackedStringArray()) and passed
+	passed = _check("and a written folder under user:// is the right thing to do",
+		EventSheetFilesDoctor.res_write_lines(CLEAN_USER_DIR_WRITTEN),
+		PackedStringArray()) and passed
 
 	var unguarded: Array[Dictionary] = EventSheetFilesDoctor.unguarded_read_findings(
 		{"res://trap.gd": BUG_UNGUARDED})

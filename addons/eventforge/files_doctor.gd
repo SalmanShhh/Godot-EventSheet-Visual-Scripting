@@ -145,9 +145,11 @@ static func res_write_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var statements: PackedStringArray = _statements_of(source)
 	var packers: PackedStringArray = _packer_names(statements)
+	var folders: PackedStringArray = _written_folder_handles(statements)
 	for line: String in statements:
 		var literals: PackedStringArray = _write_path_literals(line)
 		literals.append_array(_packer_open_literals(line, packers))
+		literals.append_array(_folder_handle_literals(line, folders))
 		for literal: String in literals:
 			if EventForgeFilePlaces.place_of("\"%s\"" % literal) == EventForgeFilePlaces.PLACE_RES:
 				found.append(line)
@@ -185,6 +187,80 @@ static func _packer_open_literals(line: String, packers: PackedStringArray) -> P
 			for literal: String in _quoted_literals(_arguments_after(line, at + mark.length())):
 				found.append(literal)
 			at = line.find(mark, at + mark.length())
+	return found
+
+
+## The names this source binds to a folder handle that it then WRITES through, plus the empty name
+## `""`, which stands for a handle opened and written on one line without ever being given a name.
+##
+## A HANDLE IS A READ UNTIL SOMETHING WRITES THROUGH IT. `DirAccess.open("res://")` on its own is how
+## a game lists its own files, and `res://` is exactly the place for that - so the answer is the
+## handles one of the changing methods is asked of, and nothing else. Only a plain
+## `<name> = DirAccess.open(...)` is followed, exactly as a packer is: a handle held in an array or on
+## somebody else's object is one this reading has nothing to say about, and says so by being quiet.
+static func _written_folder_handles(statements: PackedStringArray) -> PackedStringArray:
+	var opened: PackedStringArray = PackedStringArray()
+	for line: String in statements:
+		var open_at: int = line.find(EventForgeFilePlaces.DIR_OPEN_CALL)
+		if open_at < 0:
+			continue
+		# Opened and written on ONE line - `DirAccess.open("res://").make_dir("x")` - has no name to
+		# follow, and needs none: the place and the write are both right there.
+		if _writes_through_a_handle(line.substr(open_at)) and not opened.has(""):
+			opened.append("")
+		var equals_at: int = line.find("=")
+		if equals_at < 0 or equals_at > open_at:
+			continue
+		var left: String = line.substr(0, equals_at).strip_edges().trim_suffix(":")
+		left = left.trim_prefix("var ").split(":")[0].strip_edges()
+		if not left.is_empty() and not left.contains(" ") and not opened.has(left):
+			opened.append(left)
+	var written: PackedStringArray = PackedStringArray()
+	for name_text: String in opened:
+		if name_text.is_empty():
+			written.append(name_text)
+			continue
+		for line: String in statements:
+			if _writes_through_a_handle(line, name_text):
+				written.append(name_text)
+				break
+	return written
+
+
+## True when this text asks a folder handle one of the methods that CHANGES the folder - of the name
+## given, or of whatever is in front of the dot when no name is given.
+static func _writes_through_a_handle(text: String, handle_name: String = "") -> bool:
+	for call_text: String in EventForgeFilePlaces.DIR_HANDLE_WRITES:
+		if text.contains(handle_name + call_text):
+			return true
+	return false
+
+
+## The path literals one line opens a WRITTEN-THROUGH folder handle at. The place is read off the
+## `DirAccess.open` line, which is the line that names it - the same rule the packer above follows.
+static func _folder_handle_literals(line: String, handles: PackedStringArray) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if handles.is_empty():
+		return found
+	var at: int = line.find(EventForgeFilePlaces.DIR_OPEN_CALL)
+	while at >= 0:
+		var arguments: String = _arguments_after(
+			line, at + EventForgeFilePlaces.DIR_OPEN_CALL.length())
+		for handle_name: String in handles:
+			var names_it: bool = false
+			if handle_name.is_empty():
+				names_it = _writes_through_a_handle(line.substr(at))
+			else:
+				var equals_at: int = line.find("=")
+				names_it = equals_at >= 0 and equals_at < at \
+					and line.substr(0, equals_at).contains(handle_name)
+			if not names_it:
+				continue
+			for literal: String in _quoted_literals(arguments):
+				found.append(literal)
+			break
+		at = line.find(EventForgeFilePlaces.DIR_OPEN_CALL,
+			at + EventForgeFilePlaces.DIR_OPEN_CALL.length())
 	return found
 
 

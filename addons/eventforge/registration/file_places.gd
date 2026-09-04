@@ -119,6 +119,15 @@ const WRITE_CALLS: PackedStringArray = [
 const PACKER_CLASS := "ZIPPacker.new("
 const OPEN_CALL := ".open("
 
+## A FOLDER HANDLE IS THE SAME STORY AS A PACKER. `DirAccess.open(path)` answers with a handle whose
+## own methods act on that folder, so the place is written on one line and the write happens on
+## another - or on the same one, chained. Opening a folder is a READ until one of the methods below is
+## asked of the handle: listing the game's own files is what `res://` is for.
+const DIR_OPEN_CALL := "DirAccess.open("
+const DIR_HANDLE_WRITES: PackedStringArray = [
+	".make_dir(", ".make_dir_recursive(", ".remove(", ".rename(", ".copy(",
+]
+
 ## The call a plain read is spelled with, and the question that guards one.
 const READ_CALL := "FileAccess.get_file_as_string("
 const EXISTS_CALL := "FileAccess.file_exists("
