@@ -95,6 +95,7 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 - Set text of **control_name** to **text**
 - Set bar **bar_name** to **value** of **max_value**
 - Show toast **text**
+- Pop floating text **text** as **style** at **at**
 
 All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of the node they are placed on. Every target is passed by its node name string; the lookup is recursive under the host and cached.
 
@@ -111,6 +112,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 | Toggle Panel | `panel_name` (String) | Flips a named panel's visibility on or off. |
 | Switch Screen | `panel_name` (String) | Shows the named panel and hides its sibling panels - one call flips a whole menu screen. |
 | Show Toast | `text` (String) | Pops a bottom-centre message that fades out after `toast_seconds`. Creates and frees the label for you. |
+| Pop Floating Text As | `text` (String), `style` (String), `at` (Vector2) | Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style `crit` draws the number `crit_text_scale` times bigger. A style the set does not name is drawn white, so a game with no set still gets its numbers. |
 
 ### Conditions
 
@@ -138,6 +140,8 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 |---|---|---|---|
 | `auto_connect_buttons` | bool | `true` | on / off |
 | `toast_seconds` | float | `2.0` | 0.2 - 10 (step 0.1) |
+| `damage_types` | Resource | (none) | a DamageTypeSet, or empty |
+| `crit_text_scale` | float | `1.6` | 1 - 4 (step 0.1) |
 
 ### Inspector properties are ACEs too
 
@@ -346,6 +350,23 @@ On Level Complete
 On Button Pressed
   Condition: HUD | HUD Kit  Button Is  "NextLevelButton"
     -> (load the next level)
+```
+
+### 16. Damage numbers that say what hurt
+
+The Health pack's typed damage writes what kind the hit was and what it came to; this row draws it in that kind's colour without the sheet naming a colour anywhere. Point `damage_types` at your DamageTypeSet in the Inspector first.
+
+```
+On Damaged (Enemy)
+  -> Action: UI | HUD Kit  Pop Floating Text As  Enemy.last_damage_dealt, Enemy.last_damage_type, Enemy.global_position
+```
+
+Add one condition and a critical reads as a critical:
+
+```
+On Damaged (Enemy)
+  Condition: Health | Health  Last Hit Was A Crit
+    -> Action: UI | HUD Kit  Pop Floating Text As  Enemy.last_damage_dealt, "crit", Enemy.global_position
 ```
 
 ### Other use cases

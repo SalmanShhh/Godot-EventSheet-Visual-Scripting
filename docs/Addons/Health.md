@@ -47,6 +47,19 @@ The model is small. Learn these six ideas and every ACE in the pack is just a le
 
 **Each pool has three dials: priority, absorption rate, and decay rate.** *Priority* decides the order pools soak damage (lower first). *Absorption rate* is how hard the pool spends to eat damage: at `1` one point of pool soaks one point of damage; higher than `1` spends the pool faster (a weaker shield per point); lower than `1` stretches it further (a tougher shield per point). *Decay rate* drains the pool by that many points per second on its own, which is how you build a shield that fades - when it hits zero, On Health Pool Depleted fires.
 
+**Damage can have a kind, and the order it is mitigated in is fixed.** Take Damage takes a number and nothing else. Take Damage Of Type takes an amount, a kind and who dealt it, and runs it through four steps in an order that never changes:
+
+1. **Resistance**, as a percentage of the incoming hit. Resist `fire` by 50 halves every fire hit; Immune To takes it to nothing; Weak To is the same dial turned the other way.
+2. **Armour**, as flat points off what is left. A hit that got past resistance still lands for at least `minimum_damage`, so stacking armour blunts hits rather than making an actor unkillable.
+3. **The critical**, as a multiplier on what got through, rolled against `crit_chance` and multiplied by `crit_multiplier`.
+4. **The pools and the health** this pack already had, through the ordinary Take Damage path - so shields, the death latch, Destroy On Death and On Damaged all behave exactly as they always did.
+
+12 of fire against 50% resistance, 3 armour and a certain doubling critical lands for 6. No other order of those three steps gives 6, which is the point of writing the order down once instead of in front of every damage row.
+
+**The kinds are yours, in a file.** A damage type is only ever a word, so nothing in this pack holds a list of them. A **DamageTypeSet** resource - names and the colour each is drawn in - is a file your game owns; the type field of the typed rows suggests the names in it, the HUD Kit's Pop Floating Text As takes a number's colour from it, and the Doctor uses it to notice a row dealing a kind no set names. One starter ships beside the pack with physical, fire, ice and poison in it, to edit or replace. None of it is required: a game with no set deals typed damage perfectly well and simply gets no suggestions and no colours.
+
+**The report is written before On Damaged fires.** After every typed hit the behaviour holds what kind it was (Last Damage Type), what it came to (Last Damage Dealt), what it was worth before this actor's resistance, armour and critical touched it (Last Damage Before Mitigation), and whether it rolled a critical (Last Hit Was A Crit). They are properties rather than signal arguments on purpose: On Damaged is a shipped trigger that existing sheets are already connected to, and growing its arity would break every one of them.
+
 **"Last" values snapshot the most recent event.** Right after a trigger fires, the Last Damage, Last Heal, Last Pool Damage Absorbed, and Last Health Pool Type expressions hold the numbers from that exact event. Read them inside the matching trigger (Last Damage inside On Damaged, Last Health Pool Type inside On Health Pool Absorbed or On Health Pool Depleted) to drive feedback that matches what just happened.
 
 ---
@@ -101,6 +114,12 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 - Set **type** pool priority to **priority**
 - Setup **type** pool: **amount** HP, decay **decay_rate**, absorption **absorption_rate**, priority **priority**
 - Revive with **amount** HP
+- Take **amount** damage of **type** from *from*
+- Resist **type** by **percent** percent
+- Immune to **type**
+- Weak to **type** by **percent** percent
+- Set armour to **amount**
+- Set crit **chance** at **multiplier** times damage
 
 All ACEs live in the **Health** category and target the `SimpleHealthBehavior` behavior on the node they are placed on. There is no entity-id parameter anywhere. Health pools are addressed by a `type` string you pick.
 
@@ -125,6 +144,12 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Setup Health Pool | `type` (String), `amount` (float), `decay_rate` (float), `absorption_rate` (float), `priority` (float) | Creates or reconfigures a pool with all its dials in one call. |
 | Revive | `amount` (float) | Clears the death latch and restores health. `amount` at or below 0 revives to full max health. Fires On Revived. |
 | Take Damage From | `amount` (float), `from` (Node) | Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - then applies exactly the damage Take Damage would. |
+| Take Damage Of Type | `amount` (float), `type` (String), `from` (Node) | Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below `minimum_damage`), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report is written before On Damaged fires. |
+| Resist | `type` (String), `percent` (float) | Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set once on the actor, it applies to every hit of that kind from anywhere. |
+| Immune To | `type` (String) | Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100. |
+| Weak To | `type` (String), `percent` (float) | Takes extra damage from one kind - 50 for half again, 100 for double. |
+| Set Armour | `amount` (float) | Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least `minimum_damage`. |
+| Set Crit | `chance` (float), `multiplier` (float) | Sets how often a typed hit on this actor lands as a critical (0 to 1) and what it multiplies by. A multiplier below 1 is raised to 1. |
 
 ### Conditions
 
@@ -136,6 +161,8 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Has Health Pool | `type` (String) | Whether the named pool exists and holds points above zero. |
 | Health Pool Is Type | `type` (String) | Whether the pool involved in the most recent pool event matches this type. Use it inside a pool trigger to branch by which pool fired. |
 | Killed By Me | `who` (Node) | Whether this actor is dead and the kill traces back to the node you name. The asker is walked up the ownership chain too, so a kill by a turret you own still counts as yours. |
+| Last Hit Was A Crit | (none) | Whether the last typed hit rolled a critical. Under On Damaged, this is the row that makes the number bigger, the shake harder and the sound sharper. |
+| Damage Type Is | `type` (String) | Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds. |
 
 ### Expressions
 
@@ -156,6 +183,9 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | Last Hit From | (none) | Node | Who last damaged this actor, as the person rather than the projectile. Nothing until something has damaged it through Take Damage From. |
 | Killer Of | (none) | Node | Who killed this actor, or nothing while it is still alive. Already written when On Death fires, so a row under that trigger can read it. |
 | Assists Of | (none) | Array | Everyone else who damaged this actor within Assist Seconds, the killer left out and each helper listed once. |
+| Last Damage Type | (none) | String | What kind the last hit was - the word the row dealt it with. Empty until something has damaged this actor through Take Damage Of Type. |
+| Last Damage Dealt | (none) | float | What the last typed hit came to after resistance, armour and the critical - the number a floating damage label should show. |
+| Last Damage Before Mitigation | (none) | float | What the last typed hit was worth before this actor's resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label. |
 
 ### Triggers
 
@@ -178,6 +208,10 @@ All ACEs live in the **Health** category and target the `SimpleHealthBehavior` b
 | `invulnerable` | bool | `false` | on / off |
 | `destroy_on_death` | bool | `false` | on / off |
 | `assist_seconds` | float | `8` | 0 - 120 |
+| `armour` | float | `0` | 0 - 1000 |
+| `minimum_damage` | float | `1` | 0 - 100 |
+| `crit_chance` | float | `0` | 0 - 1 |
+| `crit_multiplier` | float | `2` | 1 - 20 |
 
 ### Inspector properties are ACEs too
 
@@ -427,6 +461,37 @@ On Enemy | Health: On Death
     -> Score: Add  100
   -> HUD: show "Killed by " + str(Enemy.Health.Killer Of)
   -> HUD: show "Assists: " + str(Enemy.Health.Assists Of)
+```
+
+### 17. An enemy that shrugs off fire and melts in ice
+
+Two rows on the enemy, once, and every fire spell in the game already respects them - no branch in front of any damage row, and no table anybody has to keep current.
+
+```
+On Enemy: On Ready
+  -> Enemy | Health: Resist  "fire", 50
+  -> Enemy | Health: Weak To  "ice", 100
+  -> Enemy | Health: Set Armour  3
+
+On Fireball: On bullet hit
+  -> Hit | Health: Take Damage Of Type  12, "fire", Fireball
+```
+
+A 12-point fireball lands for 6 after the resistance and the armour. A 12-point icicle lands for 21. The number in the row never changed.
+
+### 18. A crit that reads as a crit
+
+The report is already written when On Damaged fires, so branching on it is a condition rather than an expression, and the feedback rows read as plainly as the damage row did.
+
+```
+On Enemy | Health: On Damaged
+  Condition: Enemy | Health  Last Hit Was A Crit
+    -> HUD | HUD Kit: Pop Floating Text As  Enemy.Health.Last Damage Dealt, "crit", Enemy.global_position
+    -> Juice: Hitstop
+
+On Enemy | Health: On Damaged
+  Condition: Enemy | Health  Damage Type Is  "fire"
+    -> Enemy: Play  "burning"
 ```
 
 ### Other use cases
