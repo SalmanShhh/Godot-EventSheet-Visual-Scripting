@@ -6983,3 +6983,6 @@ Put this one back,Remettre celui-ci
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.","Écrit les octets de la sauvegarde choisie par-dessus le fichier du paquet, en une seule modification annulable. L'anneau de sauvegarde lui-même n'est pas touché."
 "What the ring is holding, newest first","Ce que l'anneau conserve, du plus récent au plus ancien"
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.","%s - l'anneau de sauvegarde conserve %d version(s) antérieure(s) de %d fichier(s). Choisissez-en une et elle est réécrite par-dessus le fichier du paquet, en une seule modification annulable."
+Native,Natif
+Light and dark,Clair et sombre
+Resource files,Fichiers de ressource

@@ -6983,3 +6983,6 @@ Put this one back,Вернуть этот
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.","Записывает байты выбранной копии поверх файла в пакете, одним отменяемым изменением. Само кольцо резервных копий не трогается."
 "What the ring is holding, newest first","Что хранит кольцо, сначала новые"
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.","%s - кольцо резервных копий хранит %d прежних версий %d файл(ов). Выберите одну, и она будет записана поверх файла в пакете, одним отменяемым изменением."
+Native,Встроенные
+Light and dark,Свет и тень
+Resource files,Файлы ресурсов

@@ -6983,3 +6983,6 @@ Put this one back,이것을 되돌리기
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",선택한 백업의 바이트를 팩 안의 파일에 덮어씁니다. 실행 취소할 수 있는 한 번의 편집입니다. 백업 링 자체는 건드리지 않습니다.
 "What the ring is holding, newest first","링이 보관 중인 것, 최신 순"
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - 백업 링이 이전 버전 %d 개(파일 %d 개 분)를 보관 중입니다. 하나를 고르면 실행 취소할 수 있는 한 번의 편집으로 팩 안의 파일에 다시 씌워집니다.
+Native,네이티브
+Light and dark,밝기와 어둠
+Resource files,리소스 파일

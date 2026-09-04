@@ -6983,3 +6983,6 @@ Put this one back,Diese zurückschreiben
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.","Schreibt die Bytes der gewählten Sicherung über die Datei im Paket, als eine widerrufbare Änderung. Der Sicherungsring selbst bleibt unberührt."
 "What the ring is holding, newest first","Was der Ring hält, neueste zuerst"
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.","%s - der Sicherungsring hält %d frühere Version(en) von %d Datei(en). Wähle eine, und sie wird über die Datei im Paket zurückgeschrieben, als eine widerrufbare Änderung."
+Native,Nativ
+Light and dark,Hell und dunkel
+Resource files,Ressourcendateien

@@ -6983,3 +6983,6 @@ Put this one back,これを戻す
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",選んだバックアップのバイトをパック内のファイルに上書きします。取り消せる 1 回の編集です。バックアップリング自体には触れません。
 "What the ring is holding, newest first",リングが保持しているもの（新しい順）
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - バックアップリングは %d 件の以前のバージョン（%d 個のファイル分）を保持しています。ひとつ選ぶと、取り消せる 1 回の編集としてパック内のファイルに書き戻されます。
+Native,ネイティブ
+Light and dark,明るさと暗さ
+Resource files,リソースファイル

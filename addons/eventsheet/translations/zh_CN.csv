@@ -6983,3 +6983,6 @@ Put this one back,放回这一个
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.",把所选备份的字节写到包中的文件上，作为一次可撤销的编辑。备份环本身不会被改动。
 "What the ring is holding, newest first",备份环里保存的内容，最新在前
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.",%s - 备份环保存着 %d 个较早版本，涉及 %d 个文件。选择一个，它会作为一次可撤销的编辑写回包中的文件。
+Native,原生
+Light and dark,明与暗
+Resource files,资源文件

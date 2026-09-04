@@ -6983,3 +6983,6 @@ Put this one back,Restaurar este
 "Writes the chosen backup's bytes over the file in the pack, as one edit you can undo. The backup ring itself is not touched.","Escribe los bytes de la copia elegida sobre el archivo del paquete, como una sola edición que puedes deshacer. El anillo de copias no se toca."
 "What the ring is holding, newest first","Lo que guarda el anillo, primero lo más reciente"
 "%s - the backup ring is holding %d earlier version(s) of %d file(s). Choose one and it is written back over the file in the pack, as one edit you can undo.","%s - el anillo de copias guarda %d versión(es) anterior(es) de %d archivo(s). Elige una y se escribe sobre el archivo del paquete, como una sola edición que puedes deshacer."
+Native,Nativo
+Light and dark,Claro y oscuro
+Resource files,Archivos de recurso
