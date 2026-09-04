@@ -53,7 +53,7 @@ It is the wrong tool when a condition is permanent (that is a property, or a gro
 
 **Multipliers run through the Boosts pack.** An effect with a Multiplier Tag starts a tagged boost while it lasts and stops it when it ends, and Extend Status extends both clocks together. Boosts stays the multiplier engine; a project without it simply gets no multiplier, which is the honest answer rather than an error.
 
-**Kill credit belongs to the NODE.** A tick's damage is credited to whoever Claimed the Status Effects node, through the project's one ownership key - so `Claim` the status node for the poisoner and a kill by the poison is scored to them exactly as a bullet's would be. Every status on that node credits the same claimer: there is no per-application source, so a game where two players poison the same enemy and each wants their own credit claims the node again as it applies.
+**Kill credit belongs to the NODE.** A tick's damage is credited to whoever Claimed the Status Effects node, through the project's one ownership key - so `Claim` the status node for the poisoner and a kill by the poison is scored to them exactly as a bullet's would be. Every status on that node credits the same claimer: there is no per-application source, so a game where two players poison the same enemy and each wants their own credit claims the node again as it applies. A claimer who has since been freed - the poisoner who died while their poison was still working - is credited as nobody, exactly as `Claimed By` reads it, and the tick lands all the same.
 
 ---
 
