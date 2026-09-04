@@ -18,7 +18,9 @@
 #      fraction is pinned at each step against what the engine says.
 #   5. A HAND-TYPED TAG READS BACK AS THE ROW. A file holding the tag line and nothing else lifts to
 #      Set Text With Effect with the effect, the strength and the words in its fields, and re-emits
-#      BYTE FOR BYTE.
+#      BYTE FOR BYTE. The reveal is the other half of that claim: a hand-written smooth tween of the
+#      ratio is NOT read as Reveal Text, because the row emits a callback per character and saving
+#      the opened file would replace two lines with seventeen the author never wrote.
 #   6. THE STYLES LOAD. The shipped starter is loaded as a resource and asked its six answers,
 #      including the door that hands a style's colour over to the damage that caused it.
 #
@@ -50,6 +52,18 @@ const HAND_WRITTEN := """extends Node
 func _ready() -> void:
 	$Title.bbcode_enabled = true
 	$Title.text = "[wave amp=%s freq=5]" % (40 * float(Engine.get_meta("text_size_scale", 1.0))) + "Starfall" + "[/wave]"
+"""
+
+## The line a person writes when they type a line out BY HAND: a smooth tween of the ratio. It is
+## here to prove what is NOT claimed - the reveal row emits a tween of one callback per character, so
+## reading these two lines as Reveal Text would save back seventeen the author never wrote. The file
+## therefore opens as whatever it already was and re-emits byte for byte.
+const RATIO_TWEEN := """extends Node
+
+
+func _ready() -> void:
+	$Sign.visible_ratio = 0.0
+	create_tween().tween_property($Sign, "visible_ratio", 1.0, 0.5)
 """
 
 
@@ -274,6 +288,21 @@ static func _run_lift() -> bool:
 		rows.append(["and the label it was written on", str(found.params.get("target", "")), "$Title"])
 	var output: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
 	rows.append(["and saving it again reproduces the file byte for byte", output, HAND_WRITTEN])
+	# THE REVEAL IS DELIBERATELY NOT CLAIMED, and this is where that is held. A hand-written smooth
+	# tween of the ratio is a different line from the row's tween of one callback per character, so a
+	# family that read it as Reveal Text would save back code the author never wrote.
+	rows.append(["a hand-written ratio tween is claimed by no tag entry",
+		load(LIFT_PATH).match_line("create_tween().tween_property($Sign, \"visible_ratio\", 1.0, 0.5)"), {}])
+	file = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
+	file.store_string(RATIO_TWEEN)
+	file.close()
+	var by_hand: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	EventSheetACELifter.reset_progress()
+	EventSheetACELifter.attempt_lift(by_hand, RATIO_TWEEN)
+	rows.append(["and it does not open as the reveal row",
+		_find_action(by_hand, "RevealText") == null, true])
+	rows.append(["the tween a person wrote is saved back byte for byte",
+		str(SheetCompiler.compile(by_hand, PROBE_SCRIPT).get("output", "")), RATIO_TWEEN])
 	DirAccess.remove_absolute(PROBE_SCRIPT)
 	return SUPPORT.pins("text_effect_aces_test", rows)
 

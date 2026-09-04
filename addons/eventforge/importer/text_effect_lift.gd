@@ -24,6 +24,12 @@
 #   * Wrap Selection In Effect, which names its label three times in one statement, for the same
 #     reason the removal family's fade entry gives: three mentions cannot each be an optional prefix
 #     of one capture, and a wrap written by hand stays the statement it already was.
+#   * THE REVEAL, and this one is worth spelling out because the obvious reading is the wrong one. A
+#     line typed out by hand is almost always a smooth tween of `visible_ratio`, and reading THAT as
+#     Reveal Text would be a lie the round trip catches: the row emits a tween of one callback per
+#     character - which is what buys a sound on each character and a pause held at a named one - so
+#     saving the opened file would replace a person's two lines with seventeen they did not write.
+#     A lift that cannot reproduce its source must not fire, so a ratio tween stays the tween it is.
 @tool
 class_name EventForgeTextEffectLift
 extends RefCounted
