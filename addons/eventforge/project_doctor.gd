@@ -218,6 +218,11 @@ static func run() -> Dictionary:
 	# scene being edited and only go wrong once it is one tile of a streamed world. Same seam, same
 	# reason - a project streaming with a loader of its own is audited in exactly the same section.
 	EventSheetStreamingDoctor.ensure_registered()
+	# The Animation section: a blend tree travelled to a state its own tree does not declare, and a
+	# vector written into a blend space that is a line. Both are magic strings the engine accepts in
+	# silence, which is why neither is an error and both stay quiet on a script no scene can be
+	# paired with. Same seam, same reason.
+	EventSheetAnimationDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
