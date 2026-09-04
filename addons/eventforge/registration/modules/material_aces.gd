@@ -65,9 +65,10 @@ const VALUE_PARAM := "value"
 const SURFACE_PARAM := "surface"
 const MATERIAL_PARAM := "material"
 
-## The field a texture is picked in - a file field over the project's own resources, rather than an
-## expression box a path has to be typed into by hand.
-const TEXTURE_HINT := "resource_path"
+## The field a texture is picked in - a file field filtered to the formats Godot imports as
+## textures, rather than an expression box a path has to be typed into by hand. The general resource
+## field is not it: that one lists `.tres` and `.res`, so no `.png` could be picked at all.
+const TEXTURE_HINT := "texture_path"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:

@@ -318,13 +318,20 @@ static func _test_the_sky_words() -> bool:
 				+ "\tenvironment.sky = environment.sky.duplicate()\n"
 				+ "environment.sky.sky_material = ProceduralSkyMaterial.new()\n"
 				+ "environment.background_mode = Environment.BG_SKY"],
+		# The picture is written straight in, because the field already ships the `preload(...)`
+		# Browse wrote: wrapping it in `load()` would emit `load(preload("res://sky.exr"))`. And
+		# the field is the PICTURE one rather than the general resource one, which lists `.tres`
+		# and `.res` only and could not offer an `.exr` panorama at all.
+		["the picture field lists pictures, and the row writes what it ships",
+			[_hint_of("SkyUsePanorama", "image"), _hint_of("EnvSetColourGrade", "value")],
+			["texture_path", "texture_path"]],
 		["and so is a panorama",
 			templates.get("SkyUsePanorama", ""),
 			OWN_LINES + "if environment.sky == null:\n\tenvironment.sky = Sky.new()\n"
 				+ "elif not environment.sky.resource_path.is_empty():\n"
 				+ "\tenvironment.sky = environment.sky.duplicate()\n"
 				+ "environment.sky.sky_material = PanoramaSkyMaterial.new()\n"
-				+ "environment.sky.sky_material.panorama = load({image})\n"
+				+ "environment.sky.sky_material.panorama = {image}\n"
 				+ "environment.background_mode = Environment.BG_SKY"]
 	]) and ok
 
@@ -454,6 +461,18 @@ static func _templates() -> Dictionary:
 	for row: ACEDescriptor in MODULE.get_descriptors():
 		found[row.ace_id] = str(row.codegen_template)
 	return found
+
+
+## One field's HINT, which is what decides the widget the dialog builds for it - and, for a file
+## field, which files Browse is even willing to list.
+static func _hint_of(ace_id: String, param_id: String) -> String:
+	for row: ACEDescriptor in MODULE.get_descriptors():
+		if row.ace_id != ace_id:
+			continue
+		for parameter: ACEParam in row.params:
+			if parameter.id == param_id:
+				return str(parameter.hint)
+	return ""
 
 
 ## One row's fields as `id=default` pairs, for a pin about what a reader is handed.

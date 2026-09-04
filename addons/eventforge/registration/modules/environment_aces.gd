@@ -63,9 +63,13 @@ const AMOUNT_PARAM := "amount"
 const SPREAD_PARAM := "spread"
 const IMAGE_PARAM := "image"
 
-## The field a picture is picked in - a file field over the project's own resources, rather than an
-## expression box a path has to be typed into by hand.
-const RESOURCE_HINT := "resource_path"
+## The field a picture is picked in - a file field filtered to the formats Godot imports as
+## textures, rather than an expression box a path has to be typed into by hand. Both words that
+## take a file here take a PICTURE (a panorama, a colour-grade table), and the general resource
+## field cannot offer one: it lists `.tres` and `.res` only, so no `.png`, `.exr` or `.hdr` could be
+## picked at all. Browse writes the `preload(...)` the row's own `= {value}` needs, so nothing wraps
+## it a second time.
+const RESOURCE_HINT := "texture_path"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
@@ -460,10 +464,11 @@ static func _sky_kind_rows() -> Array[ACEDescriptor]:
 			"Puts Godot's own drawn sky behind everything - a gradient from the top colour down through the horizon to the ground, with the sun of any DirectionalLight3D in the scene painted on it - and sets the backdrop to sky so it is actually drawn. This is the sky the five sky words move; a scene without it is what makes them quietly do nothing.",
 			S.HOST).featured(),
 		F.act("SkyUsePanorama", "Use Panorama Sky",
-			"%s%s = %s.new()\n%s.panorama = load({%s})\n%s" % [own_sky, S.SKY_MATERIAL_PATH,
+			"%s%s = %s.new()\n%s.panorama = {%s}\n%s" % [own_sky, S.SKY_MATERIAL_PATH,
 				S.PANORAMA_CLASS, S.SKY_MATERIAL_PATH, IMAGE_PARAM, backdrop],
 			CAT, "Use {%s} as the sky" % IMAGE_PARAM,
 			"Wraps one picture around the whole world as the sky - a photographed or painted panorama, which is what a stylised or a photoreal scene wants instead of a drawn gradient. Sets the backdrop to sky so it is actually drawn. The five sky words do not reach a panorama: those are the drawn sky's own colours.",
-			S.HOST).param_typed("String", IMAGE_PARAM, "\"\"", "Picture",
-			"The panorama image, as an equirectangular picture in the project.", RESOURCE_HINT)
+			S.HOST).param_typed("String", IMAGE_PARAM, "null", "Picture",
+			"The panorama image, as an equirectangular picture in the project - a `.png`, `.exr` or `.hdr`. Browse writes the preload the line needs; leaving it blank installs a panorama sky with no picture in it yet.",
+			RESOURCE_HINT)
 	]

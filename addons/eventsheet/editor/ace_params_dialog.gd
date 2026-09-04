@@ -429,6 +429,11 @@ func _ensure_hint_factories() -> void:
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
 			"resource_path": _create_resource_path_field,
+			# A PICTURE rather than a resource in general: the same field a shader's texture dial
+			# is picked in, filtered to the formats Godot imports as textures, so a `.png` or an
+			# `.exr` panorama can be picked at all - which the resource browse, filtered to
+			# `*.tres` and `*.res`, cannot offer.
+			"texture_path": _create_texture_path_field,
 			"animation_reference": _create_animation_field,
 			"marker_reference": _create_marker_field,
 			# The three fields a blend tree names for itself. A state and a blend node are strings in
@@ -1892,9 +1897,17 @@ func _dial_spin_box(value: String, uniform: Dictionary) -> SpinBox:
 	return spin
 
 
+## A PICTURE parameter - the sky's panorama, a surface's texture, a colour-grade table. The same
+## widget the shader dials use, with `blank_literal` the one difference: a shader dial with no
+## picture ships nothing (the dial is simply not set), while a row writing `x = {value}` needs a
+## value to write, and for a picture that value is `null`.
+func _create_texture_path_field(key: String, default_value: Variant) -> Control:
+	return _create_dial_texture_field(key, str(default_value), "null")
+
+
 ## A dial the shader declares as a texture: the file, picked the way every other file field in this
 ## dialog is picked, and shipped as the `preload` the emitted line needs.
-func _create_dial_texture_field(key: String, value: String) -> Control:
+func _create_dial_texture_field(key: String, value: String, blank_literal: String = "") -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	var shipped: LineEdit = LineEdit.new()
@@ -1905,7 +1918,7 @@ func _create_dial_texture_field(key: String, value: String) -> Control:
 	typed.placeholder_text = "res://…"
 	typed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	typed.text_changed.connect(func(written: String) -> void:
-		shipped.text = texture_literal(written))
+		shipped.text = texture_literal(written, blank_literal))
 	# Dropped from the FileSystem dock, a file arrives as the quoted literal every other field here
 	# wants; this field shows the bare path, and `texture_literal` takes the quotes off either way.
 	typed.set_drag_forwarding(Callable(), _can_drop_on_expression,
@@ -1930,12 +1943,13 @@ func _create_dial_texture_field(key: String, value: String) -> Control:
 	return row
 
 
-## The GDScript one texture dial ships - the file loaded where the row is written, which is what
-## `set_shader_parameter` needs and what a reader would have typed. "" for an empty path, so an
-## unanswered field ships nothing rather than a load of nowhere.
-static func texture_literal(path: String) -> String:
+## The GDScript one picture field ships - the file loaded where the row is written, which is what
+## `set_shader_parameter` needs, what a `= {value}` row needs, and what a reader would have typed.
+## An empty path ships `blank`, which a shader dial leaves as "" (the dial is simply not set) and a
+## row that writes a property gives `null` (there is a slot, and nothing is in it).
+static func texture_literal(path: String, blank: String = "") -> String:
 	var trimmed: String = path.strip_edges().trim_prefix("\"").trim_suffix("\"").strip_edges()
-	return "" if trimmed.is_empty() else "preload(\"%s\")" % trimmed
+	return blank if trimmed.is_empty() else "preload(\"%s\")" % trimmed
 
 
 ## That read back: the path inside a texture literal, or "" when the value is not one. `load` counts

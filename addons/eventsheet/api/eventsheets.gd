@@ -1975,6 +1975,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"canvas_surface": "Drawing-Canvas",
 	"combo_box": "ComboBox",
 	"damage_type_set_resource": "Health",
+	"difficulty_resource": "Game-Settings",
 	"drag_drop": "Drag-And-Drop",
 	"drawing_prefab_resource": "Drawing-Canvas",
 	"drawing_prefab_stamp": "Drawing-Canvas",

@@ -259,6 +259,10 @@ static func _test_the_templates() -> bool:
 				+ " if get_active_material(0) is BaseMaterial3D else 0.0"],
 		# A word whose starting value is a resource nobody set has no literal to fall back to, so
 		# the read says null rather than ending in `else` with nothing after it.
+		# The texture field is the PICTURE one rather than the general resource one, which lists
+		# `.tres` and `.res` only and so could not offer a `.png` at all.
+		["the texture field lists pictures",
+			_hint_of("MaterialSetTexture", "value"), "texture_path"],
 		["a picture word falls back to null rather than to nothing",
 			templates.get("MaterialTexture", ""),
 			"(get_active_material(0) as BaseMaterial3D).albedo_texture"
@@ -447,6 +451,18 @@ static func _test_every_row_carries_help() -> bool:
 		PackedStringArray())
 	return SUPPORT.check("material_words_test", "every row is hosted on the node it writes through",
 		hosted, PackedStringArray()) and ok
+
+
+## One field's HINT, which is what decides the widget the dialog builds for it - and, for a file
+## field, which files Browse is even willing to list.
+static func _hint_of(ace_id: String, param_id: String) -> String:
+	for row: ACEDescriptor in MODULE.get_descriptors():
+		if row.ace_id != ace_id:
+			continue
+		for parameter: ACEParam in row.params:
+			if parameter.id == param_id:
+				return str(parameter.hint)
+	return ""
 
 
 ## THE PICKER'S OWN QUESTION, which no id check can answer: two rows offered on ONE node must not be

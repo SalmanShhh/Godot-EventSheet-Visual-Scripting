@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DifficultyResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/difficulty_resource/difficulty.gd" id="1_difficulty"]
+
+[resource]
+script = ExtResource("1_difficulty")
+difficulty_name = "Normal"
+description = "The game as it was tuned. Every factor is 1, so nothing is scaled at all."
+factors = {
+"damage_dealt": 1.0,
+"damage_taken": 1.0,
+"enemy_count": 1.0,
+"timer_scale": 1.0
+}
