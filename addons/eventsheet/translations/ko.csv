@@ -7095,3 +7095,5 @@ Forget Seen,본 것 잊기
 forget seen ( {key} ),본 것 잊기 ( {key} )
 The memory's name to clear.,지울 기억의 이름입니다.
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.","%s 은(는) %s 을(를) 평범한 씬 전환으로 엽니다. 그런데 그 씬은 디스크에서 %s 이라, 읽는 동안 이전 씬의 마지막 프레임이 그대로 멈춰 있을 만큼 큽니다. 로딩 화면으로 씬 이동은 씬이 디스크에서 올라오는 동안 직접 만든 로딩 화면을 보여 주며, 최소 시간이 있어 순식간에 지나가 버리지도 않습니다."
+"That restore was taken back - %s is what it was before it, and the backup ring is untouched.","그 복원을 취소했습니다. %s 은(는) 이전 상태로 돌아갔고, 백업 링은 그대로입니다."
+"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.","아무것도 쓰지 않았습니다. 복원은 해당 항목이 가리키는 팩 폴더 안에만, 그리고 백업 링에서만 파일을 되돌립니다. %s 은(는) 거기에 해당하지 않습니다."

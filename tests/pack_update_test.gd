@@ -553,12 +553,82 @@ static func _test_the_ring_has_a_door() -> bool:
 	# And an entry a later save has pruned out from under the window writes nothing at all.
 	ok = _check("a backup that has gone since the list was drawn is refused in words",
 		EventSheetPackUpdate.restore_text(EventSheetPackUpdate.restore(
-			{"path": "guide.md", "target": folder.path_join("guide.md"),
+			{"path": "guide.md", "folder": folder, "target": folder.path_join("guide.md"),
 				"backup": "user://eventforge_no_such_backup"}, undo)),
 		"That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.") and ok
 	ok = _check("and leaves the file exactly as it was",
 		FileAccess.get_file_as_string(folder.path_join("guide.md")), GUIDE_V2) and ok
+	ok = _test_the_two_roots(folder, listed, undo) and ok
+	ok = _test_the_way_back_says_so(folder, undo) and ok
 	_clear_ring(folder)
+	return ok
+
+
+## THE TWO ROOTS. `restore()` is a public static, so the dictionary handed to it is what decides
+## which file gets written - which makes "the target is inside the pack folder the entry names, and
+## the bytes come out of the backup ring" a thing to CHECK rather than a thing to assume. Both
+## refusals are asked for by value, and both are asked with a real backup in hand so the refusal is
+## the reason rather than the missing file.
+static func _test_the_two_roots(folder: String, listed: Array[Dictionary],
+		undo: EventSheetEditorTest.FakeEditorUndoRedoManager) -> bool:
+	var real_backup: String = str(_entry_for(listed, "guide.md").get("backup", ""))
+	var elsewhere: String = "user://_pack_update_outside_probe.txt"
+	# The path this must NOT be written to is cleared first: `user://` outlives a run, so a leftover
+	# from an earlier one would report a guard that fired as a guard that did not.
+	DirAccess.remove_absolute(elsewhere)
+	var ok: bool = _check("a target outside the pack folder is refused in words, and nothing is written",
+		EventSheetPackUpdate.restore_text(EventSheetPackUpdate.restore(
+			{"path": "guide.md", "folder": folder, "target": elsewhere,
+				"backup": real_backup}, undo)),
+		"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that." % elsewhere)
+	ok = _check("so the file it named was never made", FileAccess.file_exists(elsewhere), false) and ok
+	# The other root, asked with the pack's own file as the source: bytes that did not come out of the
+	# ring are not a restore, whatever they are.
+	var inside: String = folder.path_join("guide.md")
+	ok = _check("and bytes from outside the backup ring are refused the same way",
+		EventSheetPackUpdate.restore_text(EventSheetPackUpdate.restore(
+			{"path": "guide.md", "folder": folder, "target": inside,
+				"backup": folder.path_join("probe_pack.gd")}, undo)),
+		"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that." % inside) and ok
+	ok = _check("leaving that file exactly as it was",
+		FileAccess.get_file_as_string(inside), GUIDE_V2) and ok
+	# An entry that names no pack folder at all is the same refusal: there is nothing to be inside of.
+	ok = _check("an entry naming no pack folder is refused rather than trusted",
+		bool(EventSheetPackUpdate.restore({"path": "guide.md", "target": inside,
+			"backup": real_backup}, undo).get("restored", false)), false) and ok
+	return ok
+
+
+## THE WAY BACK SAYS SO. A restore's Ctrl+Z writes a file that can be the pack's own `.gd` - the
+## vocabulary itself - so it goes through the same three steps the press does: the sentence, the
+## redrawn list, the registry. Pinned here as the sentence the door is handed, in both directions,
+## plus the folder the write had to make being taken away with the file it was made for.
+static func _test_the_way_back_says_so(folder: String,
+		undo: EventSheetEditorTest.FakeEditorUndoRedoManager) -> bool:
+	var said: PackedStringArray = PackedStringArray()
+	EventSheetPackUpdate.announce_restore_undone_to(func(line: String) -> void: said.append(line))
+	# The overwrite direction first, over the file the pack still has.
+	var ring: Array[Dictionary] = EventSheetPackUpdate.restorable(folder)
+	var overwritten: Dictionary = _entry_for(ring, "guide.md")
+	EventSheetPackUpdate.restore(overwritten, undo)
+	undo.undo()
+	var ok: bool = _check("taking a restore back says so, rather than writing in silence",
+		said, PackedStringArray(["That restore was taken back - guide.md is what it was before it, and the backup ring is untouched."]))
+	# And the removal direction, into a folder the pack does not have - so the write has to make one.
+	said.clear()
+	var deep: String = folder.path_join("sub/deep.md")
+	EventSheetPackUpdate.restore({"path": "sub/deep.md", "folder": folder, "target": deep,
+		"backup": str(overwritten.get("backup", ""))}, undo)
+	ok = _check("a restore into a folder the pack does not have makes the folder",
+		DirAccess.dir_exists_absolute(folder.path_join("sub")), true) and ok
+	undo.undo()
+	ok = _check("and one Ctrl+Z takes the file away", FileAccess.file_exists(deep), false) and ok
+	ok = _check("and the folder the write had to make with it",
+		DirAccess.dir_exists_absolute(folder.path_join("sub")), false) and ok
+	ok = _check("saying so in the same words", said,
+		PackedStringArray(["That restore was taken back - deep.md is what it was before it, and the backup ring is untouched."])) and ok
+	# A static handler outlives the test that set it, so it is put back the way it was found.
+	EventSheetPackUpdate.announce_restore_undone_to(Callable())
 	return ok
 
 

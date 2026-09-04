@@ -7095,3 +7095,5 @@ Forget Seen,見たことを忘れる
 forget seen ( {key} ),見たことを忘れる ( {key} )
 The memory's name to clear.,消す記憶の名前です。
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s は %s をふつうのシーン切り替えで開きますが、そのシーンはディスク上で %s あります - 読み込みのあいだ、前のシーンの最後のフレームがそのまま残るだけの大きさです。「ローディング付きでシーンへ」なら、ディスクから出てくるあいだ自分で作った読み込み画面を見せられます。最短表示時間があるので、一瞬で通り過ぎることもありません。
+"That restore was taken back - %s is what it was before it, and the backup ring is untouched.",その復元を取り消しました。%s は以前の状態に戻り、バックアップリングはそのままです。
+"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.",何も書き込まれていません。復元がファイルを戻すのは、その項目自身が示すパックのフォルダーの中だけで、しかもバックアップリングからだけです。%s はそれに当たりません。

@@ -349,6 +349,7 @@ static func restorable(pack_folder: String) -> Array[Dictionary]:
 				continue
 			listed.append({
 				"path": relative,
+				"folder": pack_folder,
 				"target": target,
 				"backup": backup,
 				"when": Time.get_datetime_string_from_unix_time(
@@ -404,9 +405,17 @@ static func restore_line(entry: Dictionary) -> String:
 ## writes the bytes that are there NOW, or removes the file again when there was none, so Ctrl+Z
 ## leaves the folder exactly as this found it.
 ##
-## Returns the receipt - {"restored", "path", "backup", "bytes", "was_missing"} - so the caller says
-## what happened rather than reporting that a button was pressed. `restored` is false and nothing is
-## written when the ring entry has gone (a later save pruned it while the window was open).
+## Returns the receipt - {"restored", "refused", "path", "backup", "bytes", "was_missing"} - so the
+## caller says what happened rather than reporting that a button was pressed. `restored` is false and
+## nothing is written when the ring entry has gone (a later save pruned it while the window was open)
+## or when the entry names a path outside the two roots this door owns.
+##
+## TWO ROOTS, ASKED BEFORE A BYTE MOVES. This is a public static: whoever calls it hands in the
+## dictionary, and the dictionary is what decides which file gets written. So the entry has to name
+## the pack folder it belongs to, the target has to lie inside that folder, and the bytes have to
+## come out of the backup ring - anything else is refused in words and writes nothing. Nothing about
+## the door's own use changes (`restorable()` fills all three), and a future caller cannot turn a
+## restore into a write anywhere on disk.
 ##
 ## `undo` is the editor's undo manager, asked for here when the editor is running and handed in by
 ## the suite. Without one the write still happens - a project with no editor open is not a project
@@ -414,12 +423,20 @@ static func restore_line(entry: Dictionary) -> String:
 static func restore(entry: Dictionary, undo: Object = null) -> Dictionary:
 	var backup: String = str(entry.get("backup", ""))
 	var target: String = str(entry.get("target", ""))
-	var receipt: Dictionary = {"restored": false, "path": str(entry.get("path", "")),
+	var folder: String = str(entry.get("folder", ""))
+	var receipt: Dictionary = {"restored": false, "refused": "", "path": str(entry.get("path", "")),
 		"backup": backup, "bytes": 0, "was_missing": false}
 	if backup.is_empty() or target.is_empty() or not FileAccess.file_exists(backup):
 		return receipt
+	if folder.is_empty() or not _within(target, folder) \
+			or not _within(backup, EventSheetBackups.BACKUPS_ROOT):
+		receipt["refused"] = target
+		return receipt
 	var restoring: PackedByteArray = FileAccess.get_file_as_bytes(backup)
 	var was_missing: bool = not FileAccess.file_exists(target)
+	# Whether the folder the file goes back INTO was there before this, so the way back can take away
+	# the directory the write made and leave nothing behind that was not there before.
+	var dir_was_missing: bool = not DirAccess.dir_exists_absolute(target.get_base_dir())
 	var previous: PackedByteArray = PackedByteArray()
 	if not was_missing:
 		previous = FileAccess.get_file_as_bytes(target)
@@ -440,16 +457,75 @@ static func restore(entry: Dictionary, undo: Object = null) -> Dictionary:
 		EventSheetL10n.translate("Restore %s from the backup ring") % str(entry.get("path", "")))
 	manager.call("add_do_method", here, "write_bytes", target, restoring)
 	if was_missing:
-		manager.call("add_undo_method", here, "remove_written", target)
+		manager.call("add_undo_method", here, "undo_restore_remove", target, dir_was_missing)
 	else:
-		manager.call("add_undo_method", here, "write_bytes", target, previous)
+		manager.call("add_undo_method", here, "undo_restore_write", target, previous)
 	manager.call("commit_action")
 	return receipt
+
+
+## Is `path` inside `root`? Both are simplified first, so a `..` in an entry cannot walk out of the
+## folder it names and then be read back as if it were inside it.
+static func _within(path: String, root: String) -> bool:
+	var base: String = root.simplify_path()
+	if base.is_empty():
+		return false
+	if not base.ends_with("/"):
+		base += "/"
+	return path.simplify_path().begins_with(base)
 
 
 ## This file as the object an undo manager calls a static method back on.
 static func _own_script() -> Script:
 	return load("res://addons/eventsheet/editor/pack_update.gd") as Script
+
+
+## THE WAY BACK SAYS SO. A restore's Ctrl+Z used to write its bytes and tell nobody: the status line
+## still read as though the file had just been put back, the list still said the row it said before,
+## and - the one that matters - the registry still offered the words of a version no longer on disk,
+## because a pack's own `.gd` is the vocabulary. So both halves of the undo go through here, and here
+## hands the sentence to whatever the door registered, which is the same three steps the restore
+## itself finishes with: say it, redraw the list, tell the registry.
+static var _restore_undone: Callable = Callable()
+
+
+## Where a restore's Ctrl+Z announces itself. The door registers the same handler it gives the
+## dialog, so the two directions can never say it two different ways. An invalid callable is the
+## ordinary state (the suite, a headless run) and means the write happens and nothing is announced.
+static func announce_restore_undone_to(handler: Callable) -> void:
+	_restore_undone = handler
+
+
+## The sentence a taken-back restore leaves behind. Pure over the path, so the suite reads exactly
+## what a reader reads.
+static func restore_undone_text(path: String) -> String:
+	return EventSheetL10n.translate("That restore was taken back - %s is what it was before it, and the backup ring is untouched.") % path.get_file()
+
+
+## The undo half of a restore that OVERWROTE a file: the bytes that were there go back, and the door
+## hears about it.
+static func undo_restore_write(path: String, bytes: PackedByteArray) -> void:
+	write_bytes(path, bytes)
+	_say_restore_undone(path)
+
+
+## The undo half of a restore that put back a file the pack no longer had: the file goes away again,
+## and so does the directory the write had to make for it - an empty folder left behind is the one
+## trace a fully reversible edit is not allowed to leave. Only when it was not there before, which is
+## the caller's fact rather than a guess made from the folder being empty now.
+static func undo_restore_remove(path: String, dir_was_missing: bool = false) -> void:
+	remove_written(path)
+	var folder: String = path.get_base_dir()
+	if dir_was_missing and DirAccess.dir_exists_absolute(folder) \
+			and DirAccess.get_files_at(folder).is_empty() \
+			and DirAccess.get_directories_at(folder).is_empty():
+		DirAccess.remove_absolute(folder)
+	_say_restore_undone(path)
+
+
+static func _say_restore_undone(path: String) -> void:
+	if _restore_undone.is_valid():
+		_restore_undone.call(restore_undone_text(path))
 
 
 ## The write a restore is made of, named so an undo manager can call it by name in both directions.
@@ -472,6 +548,9 @@ static func remove_written(path: String) -> void:
 
 ## The sentence a restore leaves behind. Pure over the receipt, so the suite pins the words.
 static func restore_text(receipt: Dictionary) -> String:
+	var refused: String = str(receipt.get("refused", ""))
+	if not refused.is_empty():
+		return EventSheetL10n.translate("Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.") % refused
 	if not bool(receipt.get("restored", false)):
 		return EventSheetL10n.translate("That backup is not there any more - the ring keeps a fixed number of them, and a save since this list was drawn has pushed it out.")
 	if bool(receipt.get("was_missing", false)):

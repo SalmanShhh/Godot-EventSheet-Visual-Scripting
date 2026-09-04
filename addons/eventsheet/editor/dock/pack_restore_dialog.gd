@@ -47,6 +47,17 @@ func _init() -> void:
 
 func configure(on_restored: Callable) -> void:
 	_on_restored = on_restored
+	# THE WAY BACK GOES THE SAME WAY. A restore's Ctrl+Z is not a smaller event than the restore: the
+	# file it writes can be the pack's own `.gd`, whose annotations are the vocabulary. So the undo
+	# announces itself through the very handler the press does, and the status line, the redrawn list
+	# and the registry all hear about both directions from one place.
+	EventSheetPackUpdate.announce_restore_undone_to(func(said: String) -> void:
+		_status.text = said
+		_entries = EventSheetPackUpdate.restorable(_pack_folder)
+		_fill()
+		_status.text = said
+		if _on_restored.is_valid():
+			_on_restored.call(said))
 
 
 ## Points the window at one pack. Returns false when the ring holds nothing for it, so the caller

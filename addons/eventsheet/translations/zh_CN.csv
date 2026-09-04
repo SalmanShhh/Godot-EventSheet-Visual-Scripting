@@ -7095,3 +7095,5 @@ Forget Seen,忘掉已见
 forget seen ( {key} ),忘掉已见 ( {key} )
 The memory's name to clear.,要清除的记忆的名字。
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s 用普通的场景切换打开 %s，而那个场景在磁盘上有 %s - 大到足以让旧场景的最后一帧在加载期间一直停在屏幕上。「带加载画面切换场景」会在它从磁盘读出来的时候显示你自己的加载画面，并且有一个最短时间，不会一闪而过。
+"That restore was taken back - %s is what it was before it, and the backup ring is untouched.",该还原已撤销 - %s 恢复为之前的状态，备份环不受影响。
+"Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.",未写入任何内容。还原只会把文件放回其条目所指明的包文件夹中，并且只从备份环中取出 - %s 不属于这种情况。
