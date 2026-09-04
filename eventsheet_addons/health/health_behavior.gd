@@ -54,6 +54,10 @@ var health_pools: Dictionary = {}
 var last_trigger_pool_type: String = ""
 var last_pool_damage_absorbed: float = 0.0
 var _invincible_until: int = 0
+## How long a hit still counts as an assist. Anyone who damaged this node within this many seconds of its death is listed by Assists Of.
+@export_range(0, 120, 0.5) var assist_seconds: float = 8.0
+var last_hit_from: Node = null
+var assist_hits: Dictionary = {}
 
 ## A named health pool (shield / armour) - typed so the absorption + decay hot paths read
 ## fields directly instead of float()-casting an untyped Dictionary entry every frame.
@@ -67,6 +71,18 @@ func _get_pool(type: String) -> HealthPool:
 	if not health_pools.has(type):
 		health_pools[type] = HealthPool.new()
 	return health_pools[type]
+# WHO IS RESPONSIBLE, walked to the far end of the ownership chain. A hit arrives from the
+# bullet, the bullet belongs to the turret and the turret to the player, so the credit belongs
+# to the player: each step reads the node metadata key `owner` that Claim writes, and stops at
+# the first node that carries none. The walk is bounded because a chain that somehow points at
+# itself must still answer rather than hang - eight is far past any real chain.
+func _root_owner(node: Node) -> Node:
+	var walker: Node = node
+	for _step: int in 8:
+		if not is_instance_valid(walker) or not walker.has_meta(&"owner"):
+			break
+		walker = walker.get_meta(&"owner") as Node
+	return walker
 
 func _ready() -> void:
 	current_health = max_health
@@ -369,6 +385,60 @@ func revive(amount: float) -> void:
 	on_revived.emit()
 	on_health_changed.emit()
 
+## @ace_action
+## @ace_name("Take Damage From")
+## @ace_category("Health")
+## @ace_description("Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.")
+## @ace_display_template("Take [b]{amount}[/b] damage from [i]{from}[/i]")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.take_damage_from({amount}, {from})")
+func take_damage_from(amount: float, from: Node) -> void:
+	_credit_hit(from)
+	take_damage(amount)
+
+## @ace_expression
+## @ace_name("Last Hit From")
+## @ace_category("Health")
+## @ace_description("Who last damaged this node, as the person rather than the projectile - the boss's next target, the health bar's attacker name, the direction a hit came from. Reads as nothing until something has damaged it through Take Damage From.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_hit_from_value()")
+func last_hit_from_value() -> Node:
+	return last_hit_from
+
+## @ace_expression
+## @ace_name("Killer Of")
+## @ace_category("Health")
+## @ace_description("Who killed this node, or nothing while it is still alive. It is already written when On Death fires, so a row under that trigger can score the kill, name the killer on the death screen, or hand the bounty over without an extra step.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.killer_of()")
+func killer_of() -> Node:
+	return last_hit_from if is_dead_flag else null
+
+## @ace_expression
+## @ace_name("Assists Of")
+## @ace_category("Health")
+## @ace_description("Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.assists_of()")
+func assists_of() -> Array:
+	var cutoff: int = Time.get_ticks_msec() - int(maxf(assist_seconds, 0.0) * 1000.0)
+	var helpers: Array = []
+	for who: Variant in assist_hits.keys():
+		if who == last_hit_from or not is_instance_valid(who):
+			continue
+		if int(assist_hits[who]) >= cutoff:
+			helpers.append(who)
+	return helpers
+
+## @ace_condition
+## @ace_name("Killed By Me")
+## @ace_category("Health")
+## @ace_description("True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.killed_by_me({who})")
+func killed_by_me(who: Node) -> bool:
+	return is_dead_flag and last_hit_from != null and last_hit_from == _root_owner(who)
+
 ## @ace_condition
 ## @ace_name("Is Dead")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
@@ -511,6 +581,19 @@ func _any_pool_decaying() -> bool:
 		if pool.amount > 0.0 and pool.decay_rate > 0.0:
 			return true
 	return false
+
+func _credit_hit(from: Node) -> void:
+	# Records who is responsible for a hit, BEFORE the hit is applied - which is what lets a row
+	# under On Death read Killer Of, because the credit is already written when the signal fires.
+	# A hit on something already dead credits nobody, so the killer is not overwritten by whatever
+	# lands on the corpse afterwards.
+	if is_dead_flag:
+		return
+	var source: Node = _root_owner(from)
+	if source == null:
+		return
+	last_hit_from = source
+	assist_hits[source] = Time.get_ticks_msec()
 
 ## @ace_hidden
 func save_state() -> Dictionary:

@@ -25,7 +25,10 @@ static func build() -> bool:
 		"health_pools": {"type": "Dictionary", "default": {}, "exported": false},
 		"last_trigger_pool_type": {"type": "String", "default": "", "exported": false},
 		"last_pool_damage_absorbed": {"type": "float", "default": 0.0, "exported": false},
-		"_invincible_until": {"type": "int", "default": 0, "exported": false}
+		"_invincible_until": {"type": "int", "default": 0, "exported": false},
+		"assist_seconds": {"type": "float", "default": 8.0, "exported": true, "attributes": {"tooltip": "How long a hit still counts as an assist. Anyone who damaged this node within this many seconds of its death is listed by Assists Of.", "range": {"min": "0", "max": "120", "step": "0.5"}}},
+		"last_hit_from": {"type": "Node", "default": null, "exported": false},
+		"assist_hits": {"type": "Dictionary", "default": {}, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. Grant Invincibility opens a timed i-frame window - damage is ignored while invincible, and On Damaged does not fire. current_health seeds to max_health On Ready."
@@ -188,7 +191,33 @@ static func build() -> bool:
 		"\t\tvar pool: HealthPool = health_pools[pool_name]",
 		"\t\tif pool.amount > 0.0 and pool.decay_rate > 0.0:",
 		"\t\t\treturn true",
-		"\treturn false"
+		"\treturn false",
+		"",
+		"# WHO IS RESPONSIBLE, walked to the far end of the ownership chain. A hit arrives from the",
+		"# bullet, the bullet belongs to the turret and the turret to the player, so the credit belongs",
+		"# to the player: each step reads the node metadata key `owner` that Claim writes, and stops at",
+		"# the first node that carries none. The walk is bounded because a chain that somehow points at",
+		"# itself must still answer rather than hang - eight is far past any real chain.",
+		"func _root_owner(node: Node) -> Node:",
+		"\tvar walker: Node = node",
+		"\tfor _step: int in 8:",
+		"\t\tif not is_instance_valid(walker) or not walker.has_meta(&\"owner\"):",
+		"\t\t\tbreak",
+		"\t\twalker = walker.get_meta(&\"owner\") as Node",
+		"\treturn walker",
+		"",
+		"# Records who is responsible for a hit, BEFORE the hit is applied - which is what lets a row",
+		"# under On Death read Killer Of, because the credit is already written when the signal fires.",
+		"# A hit on something already dead credits nobody, so the killer is not overwritten by whatever",
+		"# lands on the corpse afterwards.",
+		"func _credit_hit(from: Node) -> void:",
+		"\tif is_dead_flag:",
+		"\t\treturn",
+		"\tvar source: Node = _root_owner(from)",
+		"\tif source == null:",
+		"\t\treturn",
+		"\tlast_hit_from = source",
+		"\tassist_hits[source] = Time.get_ticks_msec()"
 	]))
 	sheet.events.append(block)
 
@@ -442,6 +471,42 @@ static func build() -> bool:
 		"on_health_changed.emit()"
 	])), "Revive with [b]{amount}[/b] HP")
 
+	# WHO DID IT. Take Damage answers "how much"; these five answer "by whom", which is what a kill
+	# feed, a score row, an assist list and a "your kill" pop all actually need. The credit is taken
+	# from node metadata `owner` rather than from a field on the bullet scene, so a trap, a summon and
+	# a turret's shot all credit the person behind them without any of them being told how.
+	Lib.append_function(sheet, "take_damage_from", "Take Damage From", "Health",
+		"Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.",
+		[["amount", "float"], ["from", "Node"]], "\n".join(PackedStringArray([
+		"_credit_hit(from)",
+		"take_damage(amount)"
+	])), "Take [b]{amount}[/b] damage from [i]{from}[/i]")
+
+	_expr_node(sheet, "last_hit_from_value", "Last Hit From", "Health",
+		"Who last damaged this node, as the person rather than the projectile - the boss's next target, the health bar's attacker name, the direction a hit came from. Reads as nothing until something has damaged it through Take Damage From.",
+		[], "return last_hit_from")
+
+	_expr_node(sheet, "killer_of", "Killer Of", "Health",
+		"Who killed this node, or nothing while it is still alive. It is already written when On Death fires, so a row under that trigger can score the kill, name the killer on the death screen, or hand the bounty over without an extra step.",
+		[], "return last_hit_from if is_dead_flag else null")
+
+	_expr(sheet, "assists_of", "Assists Of", "Health",
+		"Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.",
+		[], "\n".join(PackedStringArray([
+		"var cutoff: int = Time.get_ticks_msec() - int(maxf(assist_seconds, 0.0) * 1000.0)",
+		"var helpers: Array = []",
+		"for who: Variant in assist_hits.keys():",
+		"\tif who == last_hit_from or not is_instance_valid(who):",
+		"\t\tcontinue",
+		"\tif int(assist_hits[who]) >= cutoff:",
+		"\t\thelpers.append(who)",
+		"return helpers"
+	])), TYPE_ARRAY)
+
+	_condition(sheet, "killed_by_me", "Killed By Me", "Health",
+		"True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.",
+		[["who", "Node"]], "return is_dead_flag and last_hit_from != null and last_hit_from == _root_owner(who)")
+
 	var persistence: RawCodeRow = RawCodeRow.new()
 	persistence.code = "\n".join(PackedStringArray([
 		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
@@ -488,3 +553,27 @@ static func build() -> bool:
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.feature_verbs(sheet, ["take_damage", "heal"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/health/health_behavior")
+
+
+
+## A value-returning exposed function - an Expression - with the given return type.
+static func _expr(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, ret: int) -> void:
+	var fn: EventFunction = Lib.exposed_function(function_name, display_name, category, description, params, body)
+	fn.return_type = ret
+	sheet.functions.append(fn)
+
+
+## An expression that answers with a NODE: the return type is named as well as typed, so the
+## compiled function reads `-> Node` and the row hands a node on to whatever field it lands in.
+static func _expr_node(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
+	var fn: EventFunction = Lib.exposed_function(function_name, display_name, category, description, params, body)
+	fn.return_type = TYPE_OBJECT
+	fn.return_type_name = "Node"
+	sheet.functions.append(fn)
+
+
+## A bool-returning exposed function - a Condition in the picker.
+static func _condition(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
+	var fn: EventFunction = Lib.exposed_function(function_name, display_name, category, description, params, body)
+	fn.return_type = TYPE_BOOL
+	sheet.functions.append(fn)
