@@ -12,7 +12,7 @@
 extends RefCounted
 
 const PREVIEW_NAME: String = "outside-content-doctor-report"
-const PREVIEW_SIZE: Vector2i = Vector2i(1240, 340)
+const PREVIEW_SIZE: Vector2i = Vector2i(1240, 420)
 
 ## The pair, as {script path: source}. Short on purpose: the finding is the picture, not the fixture.
 const SOURCES: Dictionary = {
