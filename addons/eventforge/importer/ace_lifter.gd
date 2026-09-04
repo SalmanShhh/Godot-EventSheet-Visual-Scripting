@@ -45,6 +45,9 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/collision_edge_lift.gd"),
 	preload("res://addons/eventforge/importer/input_event_lift.gd"),
 	preload("res://addons/eventforge/importer/state_lift.gd"),
+	# The compact one-line cast, whose `var hit = <the whole query>` shape the local-declaration
+	# reading would otherwise claim and say nothing about the ray in it.
+	preload("res://addons/eventforge/importer/physics_query_lift.gd"),
 	# The six BBCode effect tags a rich text label wears. Asked here, before the general index,
 	# because the line is an ordinary `text = ...` assignment and the catch-all property write would
 	# otherwise claim it and say nothing about the effect in it.
@@ -84,6 +87,10 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# The still a view is asked for: a wait and a write, whose two lines are each already claimed by
 	# an older row on their own. Asked here so the pair reads as the one row that emits it.
 	preload("res://addons/eventforge/importer/view_lift.gd"),
+	# The three statements a ray asked of the physics world directly has always been written as -
+	# the space state, the query, the cast - which mean the one Cast Ray Into row together and three
+	# unrelated declarations apart.
+	preload("res://addons/eventforge/importer/physics_query_lift.gd"),
 	# The spawn runs that are several statements and one sentence: the formation loop, the copy that
 	# is spawned already facing somewhere and already moving, and the copy of the node's own scene.
 	# Asked last of the run families because all three open on shapes the others have already refused.

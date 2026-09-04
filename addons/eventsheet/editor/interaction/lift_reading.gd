@@ -152,6 +152,36 @@ static func table_claim(line: String, draft_entries: Array = []) -> Dictionary:
 # ── the pieces ──────────────────────────────────────────────────────────────────
 
 
+## The claim on a RUN of statements opening at `index` (0-based, into the file's own lines), asked of
+## the lift tables the way the LIFTER asks them - `match_run`, at the indentation the opening
+## statement is written at. {} when no family claims a run there; otherwise the family, the entry id
+## and how many statements it swallowed.
+##
+## Asked separately from `table_claim` because a run and a statement are two different questions to
+## the table engine, and a family whose whole vocabulary is runs (the three statements a ray asked of
+## the physics world is, the three a layout over the game is) would otherwise never show at the entry
+## layer at all: its lines fall through to the general reading, which names them correctly - the same
+## row, three times over - and says nothing about WHICH vocabulary named them. That is exactly the
+## hole `asked_term` closed for a family of questions, in the one shape it did not cover.
+static func table_run_claim(lines: PackedStringArray, index: int) -> Dictionary:
+	if index < 0 or index >= lines.size():
+		return {}
+	var line: String = lines[index]
+	var text: String = line.strip_edges()
+	if text.is_empty() or text.begins_with("#"):
+		return {}
+	var depth: int = line.length() - line.lstrip("\t").length()
+	for path: Variant in _family_paths():
+		var entries: Variant = _families().get(path, [])
+		var claimed: Dictionary = EventForgeLiftTable.match_run(entries as Array, lines, index, depth)
+		if claimed.is_empty():
+			continue
+		return {"family": str(path).get_file().trim_suffix(".gd"),
+			"entry_id": str(claimed.get("entry_id", "")),
+			"consumed": int(claimed.get("consumed", 1))}
+	return {}
+
+
 ## PUBLIC because every layer below the table is asked the same term. A provenance reader walking
 ## the whole stack - tables, hand-written matchers, the reverse index, the derived readings - has to
 ## put the same question to all of them or its answers are about different strings.
@@ -201,6 +231,7 @@ static func _claim_lines(source: String, sheet: EventSheetResource, source_map: 
 	var row_lines: Dictionary = _row_lines(sheet)
 	var source_lines: PackedStringArray = source.split("
 ")
+	var run_claims: Dictionary = _run_claims(source_lines)
 	for index: int in range(source_lines.size()):
 		var text: String = source_lines[index]
 		var number: int = index + 1
@@ -212,6 +243,18 @@ static func _claim_lines(source: String, sheet: EventSheetResource, source_map: 
 		if block_lines.has(number):
 			entry["layer"] = LAYER_CODE
 			entry["claim"] = STAYS_CODE
+			lines.append(entry)
+			continue
+		if run_claims.has(number):
+			# The row whose emitted lines these are is still TAKEN from the row-name book, so that a
+			# later statement spelled identically is attributed to the row that wrote it rather than
+			# to this one. The name is discarded: the entry that claimed the run says more.
+			_take_row_name(row_lines, text)
+			var run: Dictionary = run_claims[number]
+			entry["layer"] = LAYER_ENTRY
+			entry["family"] = str(run.get("family", ""))
+			entry["entry_id"] = str(run.get("entry_id", ""))
+			entry["claim"] = "%s · %s" % [entry["family"], entry["entry_id"]]
 			lines.append(entry)
 			continue
 		var claimed: Dictionary = table_claim(text, draft_entries)
@@ -235,6 +278,24 @@ static func _claim_lines(source: String, sheet: EventSheetResource, source_map: 
 		entry["claim"] = str(read.get("claim", "reads as a row"))
 		lines.append(entry)
 	return lines
+
+
+## Every line a RUN entry claims, as {line number: {family, entry_id}}. Walked once per reading and
+## in file order, exactly as the lifter walks a body: a run that claims K statements takes all K, and
+## the walk resumes after them, so the second statement of a run can never open a second one.
+static func _run_claims(source_lines: PackedStringArray) -> Dictionary:
+	var claims: Dictionary = {}
+	var index: int = 0
+	while index < source_lines.size():
+		var claimed: Dictionary = table_run_claim(source_lines, index)
+		if claimed.is_empty():
+			index += 1
+			continue
+		var consumed: int = maxi(1, int(claimed.get("consumed", 1)))
+		for step: int in range(consumed):
+			claims[index + step + 1] = claimed
+		index += consumed
+	return claims
 
 
 ## Every line number that sits inside a script block, as a set. The blocks come from the shared

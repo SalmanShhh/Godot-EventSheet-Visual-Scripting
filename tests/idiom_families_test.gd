@@ -1,4 +1,4 @@
-# Godot EventSheets - the four hand-written idioms this pass taught the sheet to read, each pinned as
+# Godot EventSheets - the five hand-written idioms this pass taught the sheet to read, each pinned as
 # VALUES on the shape a person actually writes.
 #
 #   1. THE INPUT-EVENT QUESTIONS.  `if event.is_action_pressed("jump"):` inside a handler, which used
@@ -11,6 +11,19 @@
 #      outright, stranding the handler as a helper function nobody could see the caller of.
 #   4. THE NOTIFICATION TRIGGERS.  The four cases a game really reacts to, which have lifted since the
 #      notification reading shipped and had no NAME until they had descriptors.
+#   5. THE PHYSICS QUERY.          The three statements the engine's own pages print for a ray asked
+#      of the space state directly, which read as three unrelated declarations, and the compact
+#      one-line spelling of the same question.
+#
+# A SIXTH FAMILY WAS LOOKED AT AND LEFT ALONE: the step of a held tween chain
+# (`pop.tween_property(sprite, "scale", big, 0.12)`). It already has a reading, and the reading is
+# better than an entry could be - it names the node being moved, says `opacity` where the line says
+# `"modulate:a"`, carries the two modifiers as chips and puts `(after the previous)` on a step that
+# follows one. An entry claiming the line takes all four of those away, because a lifted row shows
+# its descriptor's own sentence and the ordering of a chain is not one of that row's values. Where
+# a curated reading already outranks what a table could say, the table is the thing that does not
+# get written - which is the same rule as the one that lets an entry outrank a derived row, read
+# from the other end. `tween_reading_test` is where those words are pinned.
 #
 # WHAT IS PINNED, AND WHY IT IS PINNED THIS WAY:
 #
@@ -80,6 +93,22 @@ func _on_body_entered(body: Node) -> void:
 	print(body)
 """
 
+## A ray asked of the physics world in both of its spellings: the three statements the manual prints,
+## and the compact one line. The shape query below them is the honest code this claims nothing about.
+const PHYSICS_QUERIES := """extends Node2D
+
+
+func _physics_process(delta: float) -> void:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, Vector2(0, 100))
+	query.collision_mask = 2
+	var sight := space_state.intersect_ray(query)
+	var ground := get_world_2d().direct_space_state.intersect_ray(PhysicsRayQueryParameters2D.create(global_position, target))
+	var sweep := PhysicsShapeQueryParameters2D.new()
+	var caught := get_world_2d().direct_space_state.intersect_shape(sweep, 8)
+	print(sight, ground, caught)
+"""
+
 ## The four questions in one handler, which is where they are written.
 const INPUT_HANDLER := HANDLER \
 	+ "\tif event.is_action_pressed(\"jump\"):\n\t\tprint(\"a\")\n" \
@@ -93,7 +122,38 @@ static func run() -> bool:
 	ok = _test_the_named_property() and ok
 	ok = _test_the_bound_connect() and ok
 	ok = _test_the_notification_triggers() and ok
+	ok = _test_the_physics_queries() and ok
 	ok = _test_the_property_refusals() and ok
+	return ok
+
+
+## The physics query: the run the manual prints reads as ONE row across its statements, the compact
+## spelling as the same row on one line, and the shape query beside them as the code it is.
+static func _test_the_physics_queries() -> bool:
+	var ok: bool = SUPPORT.pin_table("idiom_families_test/physics_query_lines", {
+		"var hit := get_world_2d().direct_space_state.intersect_ray(PhysicsRayQueryParameters2D.create(a, b))":
+			"ray_query_line_2d",
+		"var hit = get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(a, b))":
+			"ray_query_line_3d",
+		"var hit: Dictionary = get_world_2d().direct_space_state.intersect_ray(PhysicsRayQueryParameters2D.create(a, b))":
+			"ray_query_line_2d",
+		# The cast alone, with no query built above it, is a method call and stays one.
+		"var hit := space_state.intersect_ray(query)": "",
+		# A shape sweep has no row that means the same job, so nothing here claims it.
+		"var caught := get_world_2d().direct_space_state.intersect_shape(sweep, 8)": "",
+		# A `from` written with a comma in it is one this pattern declines to take apart.
+		"var hit := get_world_2d().direct_space_state.intersect_ray(PhysicsRayQueryParameters2D.create(Vector2(0, 0), b))": ""
+	}, func(line: String) -> String:
+		return str(EventForgePhysicsQueryLift.match_line(line).get("entry_id", "")))
+	# The run, as the reading attributes it: four statements, one entry, said once per line - which is
+	# what a run claiming a line at the ENTRY layer looks like, and the thing a family of runs could
+	# not show at all before.
+	ok = SUPPORT.pin_value("idiom_families_test", "the manual's own three statements are one claim",
+		_entry_claims(PHYSICS_QUERIES),
+		"ray_query_masked_run_2d | ray_query_masked_run_2d | ray_query_masked_run_2d"
+		+ " | ray_query_masked_run_2d | ray_query_line_2d") and ok
+	ok = SUPPORT.pin_value("idiom_families_test", "the queries save back byte for byte",
+		_round_trips(PHYSICS_QUERIES), true) and ok
 	return ok
 
 
