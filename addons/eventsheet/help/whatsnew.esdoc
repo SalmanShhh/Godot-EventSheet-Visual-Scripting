@@ -6,6 +6,59 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The clock a pause holds, the first time in a save, and the screen in the gap
+
+- **Cooldowns, countdowns and stopwatches as clocks with names on them: 21 new rows.** A game asks
+  four questions about time that a float variable answers badly - am I allowed to dash yet, how long
+  until the door shuts, show 01:23 counting down, how long did that take - and each of them
+  hand-written is a per-frame subtraction, a clamp and a bug the day somebody opens the pause menu.
+  **Put On Cooldown / Is Off Cooldown / Cooldown Seconds Left / Cooldown Fraction / Reduce Cooldown
+  By / Clear Cooldown** and the **On Cooldown Ready** trigger are the first family; **Start Countdown
+  / Schedule At / Countdown Seconds Left / Countdown Text / Countdown Is Running / Pause Countdown /
+  Resume Countdown** and **On Countdown Finished** the second; **Start Stopwatch / Record Lap /
+  Stopwatch Seconds / Stopwatch Text / Lap Seconds / Lap Text** the third. The clock is Godot's own
+  `SceneTreeTimer`, kept in node metadata under the name the row was given, so a clock started in one
+  event is asked about in another with no wiring. **One dropdown answers two questions**: game time is
+  held by a pause and slowed by slow motion, realtime keeps going through both, which is
+  `process_always` and `ignore_time_scale` set together rather than two checkboxes and a half-answer.
+  The shipped Start Cooldown trio keeps its ids, its templates and its own metadata key - it is
+  realtime by construction, and this family stands beside it rather than over it.
+- **The first time in THIS save, and the three rows around it: 4 new rows.** Only Once Ever is true
+  once per COMPUTER, in a file beside the game, and it cannot be asked without being consumed - which
+  makes it the wrong row for a first kill, a codex entry or a tutorial a second playthrough should see
+  again. **First Time In This Save** is true the first time this save reaches a name and never again
+  for that save; **Has Seen** asks the same question without using it up; **Mark Seen** and **Forget
+  Seen** write it by hand. The Name is an expression, so `\"kill:\" + kind` is one memory per kind from
+  one row, and the store is asked once per key per row rather than once per frame. The memory is a
+  `seen:` key in the SLOT when the Save System pack is registered, so each save answers for itself and
+  Start New Run clears it; without that pack it falls back to `user://remembered.cfg`, which a new
+  **Doctor section says once per script as a NOTE** - never a warning, because a single-save game may
+  have chosen it. The sheet stays quiet: amber on the row, the words in the triage inbox and in the
+  selected row's help strip.
+- **The set of things the player has found, as a pack: Codex, 6 rows.** A bestiary, a recipe book, an
+  item compendium, a gallery of unlocked art and a list of visited rooms are one mechanic wearing five
+  hats. **Discover**, **Has Discovered**, **Discovered Count**, **Total Entries**, **For Each
+  Discovered** and the **On First Discovered** trigger are the whole of it, over **2 pack settings**.
+  The set is a FOLDER and an entry is a FILE in it, so adding a page means dropping a file in a folder:
+  a `CodexEntryResource` you own with **3 fields** - the name, the picture and the words - whose file
+  name is the entry's name and whose folder is the set. There is no list in this pack, no dropdown in
+  the editor, and one empty starter to duplicate.
+- **Go To Scene With Loading, Enter Loaded Scene, Is Loading, Loading Progress, Loading Tip, On
+  Loading Progress and On Loading Finished** - Scene Flow's loading screens: a screen of your own while
+  the next scene comes off the disk on a thread, entered when both the load and a shortest time are
+  done, wrapped in the same seven transition shapes, with `loading_screen.tscn` and `tips.txt` shipped
+  beside the pack as starters neither knob points at. The reading a bar is set to is the SLOWER of the
+  two waits, because a bar that races to the end on a fast disk and then sits there reads as a hang.
+  The Doctor gains a quiet info note: a scene over a megabyte reached by a plain, uncovered change,
+  named with its size and this row as the door out.
+- **Written down where a reader looks, and said in eight languages.** No new guide page: the clock
+  rows joined **Timers, Waiting And Cooldowns**, the save-slot rows joined **Triggers, Signals And When
+  Rows Run** and **Saving and Loading**, and the loading screens joined **Scenes** and the Scene Flow
+  guide, because a page called \"cooldowns, once and loading\" is a page nobody searches for. The Codex
+  guide is new, at the house standard. **99 owed keys** - the whole clock module, the four save-slot
+  rows and the Doctor's heavy-scene note - are filled in all **8 bundled locales**, and the keyed-verb
+  ratchet gained **25 ids** with none dropping out.
+
 ### The ground under the game, the world past the edge of it, and the folder players add to
 
 - **A tilemap layer can be asked what it is made of.** **19 rows** join the eleven shipped tilemap
@@ -470,6 +523,36 @@ What changed in the build you have installed (v0.17.0), in the words the release
   English in every locale (they are read out of a table, so the harvester cannot see them), and five
   rows whose node parameter had no starting value emitted a line that does not parse the moment they
   were dropped.
+- **A chromatic shake is as wide as the row says it is.** With no angle given - the way the row
+  opens - the direction the split pointed was the raw noise PAIR, which is a vector shorter than one
+  nearly always and nothing at all in the frames where both samples crossed zero together. So a row
+  asking for 12 pixels put about 4 on the screen while **Chromatic Shake Magnitude** went on
+  answering 12, and only a fixed angle, a unit vector by construction, ever honoured the pixel unit.
+  The noise picks the ANGLE now: the same wander, and the number on the row, the number the
+  expression answers and the width on the screen are finally one number.
+- **A reducing shake falls in a straight line.** The falloff was spent twice - once on the split
+  written to the shader, and again on the dial the shader mixes that split in by - so what a player
+  saw fell as the fade SQUARED: a quarter of the effect half way through a shake the row, the docs
+  and the expression all described as a straight line to nothing. The dial is the on/off gate it was
+  meant to be, and the curve lives in one place.
+- **The no-flashing setting slows the wander instead of jumping it.** It halves the rate the split's
+  direction wanders at, and it did that by rescaling the whole clock behind it, which moves where
+  every past frame was read from - so turning it on part way through a shake snapped the split to an
+  unrelated direction in that one frame. That is a flash, delivered by the setting that exists to
+  prevent them. The clock takes the rate on the way in now, so a change bends the walk from here on.
+- **The screen-FX overlay reads the screen four extra times only while a shake is running.** The
+  shake's split costs four more taps per pixel, and they were being paid on every frame the overlay
+  was up at all - a vignette pulse, a chromatic kick, speed lines - with no shake anywhere near it.
+- **Slowmo's clock dropdown emits a quoted word.** A dropdown key goes into the call verbatim, so a
+  row that picked realtime emitted `slowmo(0.15, 0.25, realtime)` - an identifier nothing declares,
+  and a game that did not parse. The quotes moved into the template, the way the scene transition,
+  the car direction, the slide direction and the shake's own mode already carry them. A shipped
+  template changing is normally not allowed; this one is changing because what it emitted was never
+  GDScript, so no working row can have been built from it.
+- **The carousel wears the look it just wrote.** The flagship saves the live post stack to a file
+  and wears it straight back, which is the whole point of the pair of rows - but `load()` answers
+  with whatever it read the first time, so the second press wore the first press's look. Read back
+  with the cache ignored, the row means what the board says it means.
 
 ### Fixed
 

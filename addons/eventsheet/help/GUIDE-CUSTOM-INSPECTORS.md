@@ -198,7 +198,7 @@ Use the table drawer when every row has the same columns; use the card list when
 }
 ```
 
-A field's `drawer` word is the **same word an `eventsheet:` export marker uses** (`unit:kinds=s|ms|frames,store=s`, `toggles:a,b,c`, `swatch_row`, `curve_editor`, `texture_preview`), so there is one vocabulary to learn and one parser behind it.
+A field's `drawer` word is the **same word an `eventsheet:` export marker uses** (`unit:kinds=s|ms|frames,store=s`, `toggle_row:a,b,c`, `swatch_row`, `corners`, `curve_editor`, `texture_preview`), so there is one vocabulary to learn and one parser behind it. Four more words exist only inside a card, where the field is one slot of a Dictionary rather than a typed export: `bool`, `text`, `int`, and `options:a,b,c` (a dropdown). A word the drawer does not know draws a plain number box, so a misspelling is silent - spell it the way the marker does.
 
 **Registering one** (all static, and the vocabulary is the pack's, never the plugin's):
 
