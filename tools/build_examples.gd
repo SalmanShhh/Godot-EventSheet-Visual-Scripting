@@ -487,7 +487,10 @@ func _build_carousel() -> bool:
 	# one more effect on the live stack, the stack written out to user://, and that file worn back.
 	start_row.actions.append(_action("ScreenFx", "method:add_post_effect", "$ScreenFx.add_post_effect(\"{effect}\", \"{called}\", {strength})", {"effect": "scanlines", "called": "party", "strength": "0.3"}))
 	start_row.actions.append(_action("ScreenFx", "method:save_look", "$ScreenFx.save_look(\"{path}\", \"{called}\")", {"path": "user://looks/carousel.tres", "called": "Carousel"}))
-	start_row.actions.append(_action("ScreenFx", "method:use_look", "$ScreenFx.use_look({look})", {"look": "load(\"user://looks/carousel.tres\")"}))
+	# Read back with the cache IGNORED, because a plain load() would answer with the copy it read
+	# the first time this row ran and the second press would wear the first press's look. The row is
+	# here to show a file written and then worn, so it has to be the file that gets worn.
+	start_row.actions.append(_action("ScreenFx", "method:use_look", "$ScreenFx.use_look({look})", {"look": "ResourceLoader.load(\"user://looks/carousel.tres\", \"\", ResourceLoader.CACHE_MODE_IGNORE)"}))
 	sheet.events.append(start_row)
 
 	var calm_row: EventRow = EventRow.new()

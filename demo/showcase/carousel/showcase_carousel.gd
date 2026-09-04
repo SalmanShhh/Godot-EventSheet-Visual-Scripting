@@ -40,7 +40,7 @@ func _process(delta: float) -> void:
 		moments_played += 1
 		$ScreenFx.add_post_effect("scanlines", "party", 0.3)
 		$ScreenFx.save_look("user://looks/carousel.tres", "Carousel")
-		$ScreenFx.use_look(load("user://looks/carousel.tres"))
+		$ScreenFx.use_look(ResourceLoader.load("user://looks/carousel.tres", "", ResourceLoader.CACHE_MODE_IGNORE))
 	elif Input.is_action_just_pressed(&"ui_cancel"):
 		party_on = false
 		set("__group_" + "juice" + "_active", false)
