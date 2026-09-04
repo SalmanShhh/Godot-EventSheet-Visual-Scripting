@@ -3709,7 +3709,7 @@ These are the places the two disagreed.
 - **A slot a method is asked of now wears its own brackets.** A parameter holds an EXPRESSION and a
   method binds to its last operand, so `{name}.validate_filename()` validated only the `".json"` of
   a name written `typed + ".json"` - and handed `..` through the one row that exists to stop it,
-  really producing `user://saves/../eviljson`. Four more had the same shape: the folder line of
+  really producing `user://saves/../eviljson`. Four more places had the same shape: the folder line of
   **Write Text File (in a folder)** made the folder of `".txt"`, **Sound From File** asked the last
   piece of a joined path for its extension and so fell to the fallback with nothing said, **Free
   File Path**'s ceiling bound the wrong way round for anything but a literal, and the two archive
