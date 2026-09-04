@@ -207,13 +207,18 @@ static func build() -> bool:
 		"# to the player: each step reads the node metadata key `owner` that Claim writes, and stops at",
 		"# the first node that carries none. The walk is bounded because a chain that somehow points at",
 		"# itself must still answer rather than hang - eight is far past any real chain.",
+		"#",
+		"# A WALK THAT LANDS ON SOMETHING FREED ANSWERS NOTHING. The player dies while their bullet is",
+		"# still in the air; the bullet kills an enemy; a row under On Death asks who did it. Handing",
+		"# back the freed player would make reading its name an error in the sheet, so the credit is",
+		"# nobody instead, which Killer Of already knows how to say.",
 		"func _root_owner(node: Node) -> Node:",
 		"\tvar walker: Node = node",
 		"\tfor _step: int in 8:",
 		"\t\tif not is_instance_valid(walker) or not walker.has_meta(&\"owner\"):",
 		"\t\t\tbreak",
 		"\t\twalker = walker.get_meta(&\"owner\") as Node",
-		"\treturn walker",
+		"\treturn walker if is_instance_valid(walker) else null",
 		"",
 		"# Records who is responsible for a hit, BEFORE the hit is applied - which is what lets a row",
 		"# under On Death read Killer Of, because the credit is already written when the signal fires.",
@@ -487,17 +492,22 @@ static func build() -> bool:
 	Lib.append_function(sheet, "take_damage_from", "Take Damage From", "Health",
 		"Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.",
 		[["amount", "float"], ["from", "Node"]], "\n".join(PackedStringArray([
+		"# Credit is for a hit that lands. A hit refused by invulnerability or by i-frames changed",
+		"# nothing, so it must not rewrite who this node was last hurt by.",
+		"if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():",
+		"\treturn",
 		"_credit_hit(from)",
 		"take_damage(amount)"
 	])), "Take [b]{amount}[/b] damage from [i]{from}[/i]")
+	_field(sheet, "from", "self", "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
 
 	_expr_node(sheet, "last_hit_from_value", "Last Hit From", "Health",
 		"Who last damaged this node, as the person rather than the projectile - the boss's next target, the health bar's attacker name, the direction a hit came from. Reads as nothing until something has damaged it through Take Damage From.",
-		[], "return last_hit_from")
+		[], "return last_hit_from if is_instance_valid(last_hit_from) else null")
 
 	_expr_node(sheet, "killer_of", "Killer Of", "Health",
 		"Who killed this node, or nothing while it is still alive. It is already written when On Death fires, so a row under that trigger can score the kill, name the killer on the death screen, or hand the bounty over without an extra step.",
-		[], "return last_hit_from if is_dead_flag else null")
+		[], "return last_hit_from if is_dead_flag and is_instance_valid(last_hit_from) else null")
 
 	_expr(sheet, "assists_of", "Assists Of", "Health",
 		"Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.",
@@ -514,7 +524,8 @@ static func build() -> bool:
 
 	_condition(sheet, "killed_by_me", "Killed By Me", "Health",
 		"True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.",
-		[["who", "Node"]], "return is_dead_flag and last_hit_from != null and last_hit_from == _root_owner(who)")
+		[["who", "Node"]], "return is_dead_flag and is_instance_valid(last_hit_from) and last_hit_from == _root_owner(who)")
+	_field(sheet, "who", "self", "The node asking. Left as it is, that is the one running this row, and its own owner chain is walked too - a kill by your turret still counts as yours.")
 
 	# WHAT KIND OF HIT IT WAS. Take Damage answers how much and Take Damage From answers by whom;
 	# this answers of what, and with it the arithmetic every game writes in front of every damage row
@@ -530,15 +541,19 @@ static func build() -> bool:
 		[["amount", "float"], ["type", "String"], ["from", "Node"]], "\n".join(PackedStringArray([
 		"if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():",
 		"\treturn",
-		"_credit_hit(from)",
 		"last_damage_type = type",
 		"last_damage_before_mitigation = amount",
 		"var after_resist: float = amount * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))",
+		"# Credit is for a hit that got through. A kind this node is immune to changed nothing, so it",
+		"# must not rewrite Last Hit From or leave an assist behind.",
+		"if after_resist > 0.0:",
+		"\t_credit_hit(from)",
 		"var landed: float = after_resist - armour",
 		"# Armour blunts a hit; it never makes one free. Anything that got past resistance lands for",
 		"# at least the minimum, so stacking armour cannot quietly turn a node immortal - while a hit",
-		"# resistance ate entirely stays eaten, which is what immunity has to mean.",
-		"landed = maxf(landed, minimum_damage) if after_resist > 0.0 else 0.0",
+		"# resistance ate entirely stays eaten, which is what immunity has to mean. The floor never",
+		"# RAISES a hit either: a half-point graze past no armour at all lands for its half point.",
+		"landed = minf(after_resist, maxf(landed, minimum_damage)) if after_resist > 0.0 else 0.0",
 		"last_hit_was_crit = landed > 0.0 and crit_chance > 0.0 and randf() < crit_chance",
 		"if last_hit_was_crit:",
 		"\tlanded *= crit_multiplier",
@@ -547,24 +562,25 @@ static func build() -> bool:
 		"# On Damaged all happen in exactly one place and behave exactly as they always did.",
 		"take_damage(landed)"
 	])), "Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
+	_field(sheet, "from", "self", "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
 	_hint(sheet, "type", "damage_type")
 
 	Lib.append_function(sheet, "resist", "Resist", "Health",
-		"Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly.",
+		"Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly. One opinion per kind: Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts.",
 		[["type", "String"], ["percent", "float"]], "\n".join(PackedStringArray([
 		"resistances[type] = minf(percent, 100.0) / 100.0"
 	])), "Resist [b]{type}[/b] by [b]{percent}[/b] percent")
 	_hint(sheet, "type", "damage_type")
 
 	Lib.append_function(sheet, "immune_to", "Immune To", "Health",
-		"Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it.",
+		"Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it. One opinion per kind: a Weak To of the same kind afterwards replaces this, rather than arguing with it.",
 		[["type", "String"]], "\n".join(PackedStringArray([
 		"resistances[type] = 1.0"
 	])), "Immune to [b]{type}[/b]")
 	_hint(sheet, "type", "damage_type")
 
 	Lib.append_function(sheet, "weak_to", "Weak To", "Health",
-		"Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell.",
+		"Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell. One opinion per kind: a Resist or an Immune To of the same kind afterwards replaces this, rather than arguing with it.",
 		[["type", "String"], ["percent", "float"]], "\n".join(PackedStringArray([
 		"resistances[type] = -maxf(percent, 0.0) / 100.0"
 	])), "Weak to [b]{type}[/b] by [b]{percent}[/b] percent")
@@ -596,7 +612,7 @@ static func build() -> bool:
 		[], "return last_damage_dealt", TYPE_FLOAT)
 
 	_expr(sheet, "last_damage_before_mitigation_value", "Last Damage Before Mitigation", "Health",
-		"What the last typed hit was worth before this node resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.",
+		"What the last typed hit was worth before this node's resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.",
 		[], "return last_damage_before_mitigation", TYPE_FLOAT)
 
 	_condition(sheet, "last_hit_was_a_crit", "Last Hit Was A Crit", "Health",
@@ -682,10 +698,26 @@ static func _condition(sheet: EventSheetResource, function_name: String, display
 
 ## Sets the parameter HINT on the last-declared row parameter - the key the params dialog and the
 ## completion list read to decide what a field offers. "damage_type" is the one that offers the names
-## in the project own DamageTypeSet files, so a type field suggests this game kinds of damage rather
+## in the project's own DamageTypeSet files, so a type field suggests this game's kinds of damage rather
 ## than a vocabulary of guesses. A project with no set gets a plain field, never a wrong list.
 static func _hint(sheet: EventSheetResource, param_id: String, hint: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.hint = hint
+
+
+## Describes the last-declared row's parameter and pre-fills what it shows the moment the row is
+## dropped. A field nobody has answered compiles to an empty slot - `take_damage_from(5.0, )` - and
+## WHO dealt a hit is the one field a reader cannot guess a value for, so it ships already holding
+## the row's own node, which is what it is in nearly every sheet that uses it.
+##
+## The two go together because only the combined `@ace_param` line carries a starting value: a
+## parameter with nothing to say is written as the older `@ace_param_hint` spelling, which has
+## nowhere to put one, so a default set without a description would never reach the emitted pack.
+static func _field(sheet: EventSheetResource, param_id: String, value: String, description: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.default_value = value
+			parameter.description = description

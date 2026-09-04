@@ -34,6 +34,7 @@ const PACK := "res://eventsheet_addons/health/health_behavior.gd"
 const TYPE_SET_PACK := "res://eventsheet_addons/damage_type_set_resource/damage_type_set.gd"
 const TYPE_SET_STARTER := "res://eventsheet_addons/damage_type_set_resource/damage_types.tres"
 const DAMAGE_DOCTOR := "res://addons/eventforge/damage_doctor.gd"
+const DAMAGE_TYPE_FACTS := "res://addons/eventforge/damage_type_facts.gd"
 
 
 static func run() -> bool:
@@ -75,8 +76,10 @@ static func run() -> bool:
 	h.free()
 	all_passed = _the_typed_pipeline_runs_in_its_fixed_order() and all_passed
 	all_passed = _immunity_weakness_and_the_minimum() and all_passed
+	all_passed = _credit_is_only_taken_for_a_hit_that_landed() and all_passed
 	all_passed = _the_type_set_reads_its_own_starter() and all_passed
 	all_passed = _the_doctor_sees_both_disagreements() and all_passed
+	all_passed = _the_shipped_starter_is_not_the_projects_own_set() and all_passed
 	all_passed = _a_handwritten_typed_hit_comes_back_byte_for_byte() and all_passed
 	return all_passed
 
@@ -137,6 +140,14 @@ static func _immunity_weakness_and_the_minimum() -> bool:
 	var walled: Node = _fresh(script)
 	walled.call("set_armour", 100.0)
 	walled.call("take_typed_damage", 5.0, "physical", null)
+	# THE FLOOR NEVER RAISES A HIT. Minimum Damage exists so armour cannot make a node immortal, so
+	# it may only ever put back what ARMOUR took off: a graze past no armour at all, and a hit
+	# resistance has already worn down to less than the minimum, both land for exactly what they are.
+	var grazed: Node = _fresh(script)
+	grazed.call("take_typed_damage", 0.5, "physical", null)
+	var worn: Node = _fresh(script)
+	worn.call("resist", "fire", 50.0)
+	worn.call("take_typed_damage", 1.0, "fire", null)
 	var passed: bool = SUPPORT.pins("health_pack_test", [
 		["immunity takes the whole hit away", immune.call("current_health_value"), 100.0],
 		["and says so in the report", immune.call("last_damage_dealt_value"), 0.0],
@@ -144,9 +155,52 @@ static func _immunity_weakness_and_the_minimum() -> bool:
 			immune.call("last_damage_before_mitigation_value"), 50.0],
 		["a doubled weakness turns 10 into 20", weak.call("current_health_value"), 80.0],
 		["armour past the whole hit still lets the minimum through",
-			walled.call("current_health_value"), 99.0]
+			walled.call("current_health_value"), 99.0],
+		["a half-point graze past no armour lands for its half point",
+			grazed.call("last_damage_dealt_value"), 0.5],
+		["and takes exactly that much health", grazed.call("current_health_value"), 99.5],
+		["a hit resistance wore down below the minimum is not put back up",
+			worn.call("last_damage_dealt_value"), 0.5]
 	])
-	for node: Node in [immune, weak, walled]:
+	for node: Node in [immune, weak, walled, grazed, worn]:
+		node.free()
+	return passed
+
+
+## CREDIT IS FOR A HIT THAT LANDED. A boss that turns on whoever hurt it last must not turn on
+## somebody whose hit it was immune to, whose hit arrived inside its i-frames, or who hit it while it
+## was invulnerable: none of those hurt it. And the source is answered as NOTHING once it has been
+## freed, because a row under On Death reads a name off whatever Killer Of hands it.
+static func _credit_is_only_taken_for_a_hit_that_landed() -> bool:
+	var script: GDScript = load(PACK)
+	var ally: Node = Node.new()
+	ally.name = "Ally"
+	var ghost: Node = Node.new()
+	ghost.name = "Ghost"
+	var immune: Node = _fresh(script)
+	immune.call("immune_to", "fire")
+	immune.call("take_damage_from", 5.0, ally)
+	immune.call("take_typed_damage", 50.0, "fire", ghost)
+	var last_after_immune: Variant = immune.call("last_hit_from_value")
+	var refused: Node = _fresh(script)
+	refused.set("invulnerable", true)
+	refused.call("take_damage_from", 5.0, ally)
+	var nobody: Variant = refused.call("last_hit_from_value")
+	var orphaned: Node = _fresh(script)
+	orphaned.call("take_damage_from", 500.0, ghost)
+	var killed_by_the_ghost: bool = orphaned.call("killer_of") == ghost
+	ghost.free()
+	var passed: bool = SUPPORT.pins("health_pack_test", [
+		["a hit the node is immune to does not take the credit",
+			last_after_immune == ally, true],
+		["and leaves no assist behind either",
+			(immune.call("assists_of") as Array).is_empty(), true],
+		["a hit refused while invulnerable credits nobody at all", nobody == null, true],
+		["the kill is credited while the killer is still there", killed_by_the_ghost, true],
+		["and reads as nothing once the killer has gone", orphaned.call("killer_of") == null, true],
+		["so does the hit before it", orphaned.call("last_hit_from_value") == null, true]
+	])
+	for node: Node in [immune, refused, orphaned, ally]:
 		node.free()
 	return passed
 
@@ -196,13 +250,48 @@ static func _the_doctor_sees_both_disagreements() -> bool:
 	var quiet_checks: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in quiet:
 		quiet_checks.append(str(finding["check"]))
+	# THE PACK ITSELF IS NOT A PROJECT DEALING DAMAGE. The pre-read that picks scripts to open is
+	# four words, and the behaviour that DEFINES those words says all four - so a corpus of nothing
+	# but definitions must report nothing at all, rather than counting the plugin as two scripts.
+	var definitions: Array[Dictionary] = [
+		{"path": "res://eventsheet_addons/health/health_behavior.gd",
+			"source": "func take_typed_damage(amount: float, type: String, from: Node) -> void:\n\tpass\nfunc resist(type: String, percent: float) -> void:\n\tpass"},
+		{"path": "res://eventsheet_addons/status_effects/status_effects_behavior.gd",
+			"source": "\thealth.call(\"take_typed_damage\", damage, kind, _source())"}
+	]
+	var silent: Array[Dictionary] = doctor.call("report", definitions, PackedStringArray(["fire"]), true)
 	return SUPPORT.pins("health_pack_test", [
+		["a corpus of nothing but definitions is not a project dealing damage",
+			silent.is_empty(), true],
 		["the summary leads, then the misspelling, then the guard",
 			Array(checks), ["damage", "damage-unknown-type", "damage-guard-against-nothing"]],
 		["each finding is about the word itself", Array(subjects), ["", "fier", "holy"]],
 		["every one of them is a quiet note", str(findings[1]["severity"]), "info"],
 		["a project that has written no set down is not told it misspelled anything",
 			Array(quiet_checks), ["damage", "damage-guard-against-nothing"]]
+	])
+
+
+## THE STARTER IS NOT THE PROJECT'S OWN ANSWER, asked of the REAL filesystem because that is where
+## the defect lived: the pure report was right all along, and the walk under it counted the pack's
+## own shipped set. `has_any_set` is what the Doctor asks before it may call a word a misspelling, so
+## a starter that counted would answer "this project has written its damage types down" in every
+## project that merely installed the pack, and every kind that starter does not name would be
+## reported as a typo. The file is still read - it is a real set - it simply is not this project's.
+static func _the_shipped_starter_is_not_the_projects_own_set() -> bool:
+	var facts: GDScript = load(DAMAGE_TYPE_FACTS)
+	if facts == null:
+		return _check("the damage type facts load", false, true)
+	var shipped_among_them: PackedStringArray = PackedStringArray()
+	for path: String in facts.call("project_set_files") as PackedStringArray:
+		if path.begins_with("res://eventsheet_addons/damage_type_set_resource/") or path.begins_with("res://tools/pack_builders/"):
+			shipped_among_them.append(path)
+	return SUPPORT.pins("health_pack_test", [
+		["no set the pack ships counts as one this project wrote",
+			Array(shipped_among_them), []],
+		["and it is a real set all the same, or the filter would be proving nothing",
+			Array(facts.call("type_names", facts.call("source_of", TYPE_SET_STARTER))),
+			["physical", "fire", "ice", "poison"]]
 	])
 
 

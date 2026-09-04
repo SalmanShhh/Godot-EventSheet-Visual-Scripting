@@ -89,13 +89,18 @@ func _get_pool(type: String) -> HealthPool:
 # to the player: each step reads the node metadata key `owner` that Claim writes, and stops at
 # the first node that carries none. The walk is bounded because a chain that somehow points at
 # itself must still answer rather than hang - eight is far past any real chain.
+#
+# A WALK THAT LANDS ON SOMETHING FREED ANSWERS NOTHING. The player dies while their bullet is
+# still in the air; the bullet kills an enemy; a row under On Death asks who did it. Handing
+# back the freed player would make reading its name an error in the sheet, so the credit is
+# nobody instead, which Killer Of already knows how to say.
 func _root_owner(node: Node) -> Node:
 	var walker: Node = node
 	for _step: int in 8:
 		if not is_instance_valid(walker) or not walker.has_meta(&"owner"):
 			break
 		walker = walker.get_meta(&"owner") as Node
-	return walker
+	return walker if is_instance_valid(walker) else null
 
 func _ready() -> void:
 	current_health = max_health
@@ -403,9 +408,14 @@ func revive(amount: float) -> void:
 ## @ace_category("Health")
 ## @ace_description("Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.")
 ## @ace_display_template("Take [b]{amount}[/b] damage from [i]{from}[/i]")
+## @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.take_damage_from({amount}, {from})")
 func take_damage_from(amount: float, from: Node) -> void:
+	# Credit is for a hit that lands. A hit refused by invulnerability or by i-frames changed
+	# nothing, so it must not rewrite who this node was last hurt by.
+	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
+		return
 	_credit_hit(from)
 	take_damage(amount)
 
@@ -416,7 +426,7 @@ func take_damage_from(amount: float, from: Node) -> void:
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.last_hit_from_value()")
 func last_hit_from_value() -> Node:
-	return last_hit_from
+	return last_hit_from if is_instance_valid(last_hit_from) else null
 
 ## @ace_expression
 ## @ace_name("Killer Of")
@@ -425,7 +435,7 @@ func last_hit_from_value() -> Node:
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.killer_of()")
 func killer_of() -> Node:
-	return last_hit_from if is_dead_flag else null
+	return last_hit_from if is_dead_flag and is_instance_valid(last_hit_from) else null
 
 ## @ace_expression
 ## @ace_name("Assists Of")
@@ -447,10 +457,11 @@ func assists_of() -> Array:
 ## @ace_name("Killed By Me")
 ## @ace_category("Health")
 ## @ace_description("True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.")
+## @ace_param(who, default: self, desc: "The node asking. Left as it is, that is the one running this row, and its own owner chain is walked too - a kill by your turret still counts as yours.")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.killed_by_me({who})")
 func killed_by_me(who: Node) -> bool:
-	return is_dead_flag and last_hit_from != null and last_hit_from == _root_owner(who)
+	return is_dead_flag and is_instance_valid(last_hit_from) and last_hit_from == _root_owner(who)
 
 ## @ace_action
 ## @ace_name("Take Damage Of Type")
@@ -458,20 +469,25 @@ func killed_by_me(who: Node) -> bool:
 ## @ace_description("Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression.")
 ## @ace_display_template("Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
 ## @ace_param_hint(type damage_type)
+## @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.take_typed_damage({amount}, {type}, {from})")
 func take_typed_damage(amount: float, type: String, from: Node) -> void:
 	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
 		return
-	_credit_hit(from)
 	last_damage_type = type
 	last_damage_before_mitigation = amount
 	var after_resist: float = amount * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))
+	# Credit is for a hit that got through. A kind this node is immune to changed nothing, so it
+	# must not rewrite Last Hit From or leave an assist behind.
+	if after_resist > 0.0:
+		_credit_hit(from)
 	var landed: float = after_resist - armour
 	# Armour blunts a hit; it never makes one free. Anything that got past resistance lands for
 	# at least the minimum, so stacking armour cannot quietly turn a node immortal - while a hit
-	# resistance ate entirely stays eaten, which is what immunity has to mean.
-	landed = maxf(landed, minimum_damage) if after_resist > 0.0 else 0.0
+	# resistance ate entirely stays eaten, which is what immunity has to mean. The floor never
+	# RAISES a hit either: a half-point graze past no armour at all lands for its half point.
+	landed = minf(after_resist, maxf(landed, minimum_damage)) if after_resist > 0.0 else 0.0
 	last_hit_was_crit = landed > 0.0 and crit_chance > 0.0 and randf() < crit_chance
 	if last_hit_was_crit:
 		landed *= crit_multiplier
@@ -483,7 +499,7 @@ func take_typed_damage(amount: float, type: String, from: Node) -> void:
 ## @ace_action
 ## @ace_name("Resist")
 ## @ace_category("Health")
-## @ace_description("Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly.")
+## @ace_description("Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly. One opinion per kind: Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts.")
 ## @ace_display_template("Resist [b]{type}[/b] by [b]{percent}[/b] percent")
 ## @ace_param_hint(type damage_type)
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
@@ -494,7 +510,7 @@ func resist(type: String, percent: float) -> void:
 ## @ace_action
 ## @ace_name("Immune To")
 ## @ace_category("Health")
-## @ace_description("Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it.")
+## @ace_description("Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it. One opinion per kind: a Weak To of the same kind afterwards replaces this, rather than arguing with it.")
 ## @ace_display_template("Immune to [b]{type}[/b]")
 ## @ace_param_hint(type damage_type)
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
@@ -505,7 +521,7 @@ func immune_to(type: String) -> void:
 ## @ace_action
 ## @ace_name("Weak To")
 ## @ace_category("Health")
-## @ace_description("Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell.")
+## @ace_description("Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell. One opinion per kind: a Resist or an Immune To of the same kind afterwards replaces this, rather than arguing with it.")
 ## @ace_display_template("Weak to [b]{type}[/b] by [b]{percent}[/b] percent")
 ## @ace_param_hint(type damage_type)
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
@@ -555,7 +571,7 @@ func last_damage_dealt_value() -> float:
 ## @ace_expression
 ## @ace_name("Last Damage Before Mitigation")
 ## @ace_category("Health")
-## @ace_description("What the last typed hit was worth before this node resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.")
+## @ace_description("What the last typed hit was worth before this node's resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.last_damage_before_mitigation_value()")
 func last_damage_before_mitigation_value() -> float:
