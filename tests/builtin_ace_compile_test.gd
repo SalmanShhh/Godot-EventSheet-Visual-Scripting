@@ -66,6 +66,11 @@ const NOT_STANDALONE: Array[String] = [
 	"EveryXSeconds", "TriggerOnce", "SingleFlight", "HasChanged",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch / a previous-value slot)
 	"EveryRandomSeconds",  # calls a sheet-synthesized helper over its own accumulator + rolled-interval slots
 	"WasRecentlyTrue", "OnlyOnceEver",  # calls a sheet-synthesized helper over its own last-true timestamp slot
+	# The per-save pair. Both call sheet-synthesized helpers over their own already-answered slot:
+	# the reader that asks the save slot (or the remembered file when no save pack is registered),
+	# and the marker beside it. Their two ACTION siblings, Mark Seen and Forget Seen, carry no
+	# synthesized member at all and are compiled here for real.
+	"FirstTimeInSave", "HasSeenInSave",
 	"OnceThisFrame",  # calls a sheet-synthesized helper over its own per-frame claim slots
 	"FpsBelowFor",  # calls a sheet-synthesized helper over its own drop-started-at slot
 	"FrameRunningLong", "FrameRecovered",  # call sheet-synthesized helpers over their own run counters
@@ -155,6 +160,18 @@ const NOT_STANDALONE: Array[String] = [
 	# scene_trust_test, which compiles it through the real compiler, runs the emitted
 	# function against real scene files, and pins that the helper lands exactly once per file.
 	"SceneFileIsDataOnly",
+	# The level-query rows call the shared tilemap and GridMap helpers - the cell lookup with its
+	# null guard, the tile raycast, the cells carrying a value, the circle erase, the rectangle
+	# fill, the flood fill, the two layer-file words and the GridMap box fill - each of which the
+	# compiler writes into the file the first time a row asks for it. Same reason as the aimed-cursor
+	# words above: this harness wraps one host class by hand and builds no companion definitions.
+	# Their templates AND the helper definitions are gated by tilemap_query_aces_test, which compiles
+	# each row through the real compiler, parses the whole emitted file, runs the helpers against a
+	# real TileMapLayer built in the test, and pins that each helper lands exactly once per file.
+	"TileMapDataAt", "TileMapDataAtIs", "TileMapCellIsSolid", "TileMapFirstSolidCellAlong",
+	"TileMapCellsWithData", "TileMapRepaintTerrainAround", "TileMapFillRect", "TileMapEraseCircle",
+	"TileMapFloodFill", "TileMapSaveLayer", "TileMapLoadLayer",
+	"GridMapFillBox", "GridMapEraseBox",
 ]
 
 

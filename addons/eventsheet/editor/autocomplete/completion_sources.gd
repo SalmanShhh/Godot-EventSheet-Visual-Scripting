@@ -48,6 +48,11 @@ const FIELD_STATE := "state_reference"
 const FIELD_INPUT_ACTION := "input_action"
 const FIELD_NODE := "scene_node"
 const FIELD_SHADER_DIAL := "shader_dial"
+## The two lists a TILESET names: the custom data layers its tiles can carry, and the terrains it
+## can be painted with. Read off the project's own tileset files, so a Data field offers the words
+## this project's tiles were actually authored with rather than a vocabulary of guesses.
+const FIELD_TILE_DATA_KEY := "tile_data_key"
+const FIELD_TILE_TERRAIN := "tile_terrain"
 ## An animation of the scene this sheet is attached to, and a named moment inside one. The marker
 ## kind carries the animation as its argument the way a method carries its target: the markers of
 ## `swing` are not the markers of `idle`, and a list that mixed them would be a guess.
@@ -86,7 +91,8 @@ const FILE_HINTS: Dictionary = {
 ## The kinds whose answer is about the PROJECT rather than about the sheet asking. Held once for
 ## every sheet, because ten open tabs asking for the Input Map is one Input Map.
 const PROJECT_SCOPED: Array[String] = [FIELD_GROUP, FIELD_INPUT_ACTION, FIELD_NODE, FIELD_CLASS,
-	FIELD_FILE, FIELD_PATH, "scene_path", "spawn_scene", "audio_path", "resource_path"]
+	FIELD_FILE, FIELD_PATH, FIELD_TILE_DATA_KEY, FIELD_TILE_TERRAIN, "scene_path", "spawn_scene",
+	"audio_path", "resource_path"]
 
 ## The separator between the halves of a detail line. One character, so a detail reads as one line
 ## rather than as two facts jammed together.
@@ -266,6 +272,10 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _node_entries()
 		FIELD_SHADER_DIAL:
 			return _dial_entries(sheet)
+		FIELD_TILE_DATA_KEY:
+			return _tile_data_key_entries()
+		FIELD_TILE_TERRAIN:
+			return _tile_terrain_entries()
 		FIELD_ANIMATION:
 			return _animation_entries(sheet)
 		FIELD_MARKER:
@@ -652,6 +662,34 @@ static func _path_entries() -> Array[Dictionary]:
 		entries.append({"text": "\"%s\"" % path, "detail": "%s %s %s" % [path.get_base_dir(),
 			SEPARATOR, EventSheetL10n.translate("the game's own files, read-only once exported")],
 			"kind": KIND_FILE})
+	return entries
+
+
+## Every custom data layer name the project's tilesets declare, quoted, because the field it fills
+## takes a name as a string. The detail says nothing more than the kind, since a data layer's whole
+## meaning is the word itself and the tileset that declares it is usually the only one.
+##
+## Read as TEXT by EventForgeTileSetFacts rather than by loading anything - the reason lives in that
+## file. A project whose tilesets it cannot read answers with an empty list, which is a plain field
+## rather than a wrong one.
+static func _tile_data_key_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for key: String in EventForgeTileSetFacts.project_data_keys():
+		entries.append({"text": "\"%s\"" % key, "detail": EventSheetL10n.translate("tile data"),
+			"kind": KIND_MEMBER})
+	return entries
+
+
+## Every terrain the project's tilesets declare, inserting the NUMBER the row's field takes and
+## reading out the name and the set it belongs to - which is the whole point of the list, since the
+## field is an index and an index says nothing to anybody.
+static func _tile_terrain_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for terrain: Dictionary in EventForgeTileSetFacts.project_terrains():
+		entries.append({"text": str(terrain["index"]),
+			"detail": "%s %s %s %d" % [str(terrain["name"]), SEPARATOR,
+				EventSheetL10n.translate("terrain set"), int(terrain["set"])],
+			"kind": KIND_MEMBER})
 	return entries
 
 

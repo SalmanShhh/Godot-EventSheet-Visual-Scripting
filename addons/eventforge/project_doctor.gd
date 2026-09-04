@@ -199,6 +199,11 @@ static func run() -> Dictionary:
 	# narrowed to tools that reach for the edited scene, so an ordinary @tool node script never
 	# appears in it.
 	EventSheetToolEditsDoctor.ensure_registered()
+	# The Tilemap section: a tile question asked under a custom data layer name no tileset in this
+	# project declares, and a terrain painted into a set the tilesets do not have. Both run today and
+	# do nothing, which is why they are a report rather than an error. Same seam, same reason, and
+	# the same quiet sheet behind it - the row itself only ever goes amber.
+	EventSheetTilemapDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
