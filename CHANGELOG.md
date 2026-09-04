@@ -602,6 +602,15 @@
   scene and a copy in a free spot both declare a real local, and neither was offered by the field
   completion the launched twins had joined - the free-spot row binds its name above the branch
   precisely so the rows below can still say it.
+- **On Retired now fires when the object is retired, and not when it is handed out.** The trigger is
+  the node's own `tree_exiting`, which both retirements pass through - but so does every other way a
+  node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the row ran on
+  every spawn from a pool, on all four shipped reparent rows, and on a scene change: a bullet that
+  let go of its trail on retirement let go of it again on the frame it was fired. The handler opens
+  with the line that tells those apart - `if not PooledNodes.is_retiring(self):` and a return,
+  emitted where a reader can see it - and the runtime answers that question from the two things only
+  it can see: a node on its way to being freed, and a node inside the call that gives it to its pool.
+  The trigger's id and its words have not moved; what changed is what it hears.
 - **Which dimension a run is about belongs to the read that asked.** A line formation and a copy of
   the node's own scene write the same characters in 2D and in 3D, so the class the file extends is
   what says which row a reader is shown - and only the whole-file door was ever told it. A pack's

@@ -245,9 +245,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnRetired":
 			# Retiring and destroying leave by the same door: a pool takes a node back by removing it
 			# from the tree, and a free takes it out of the tree as well, so the node's own
-			# `tree_exiting` is raised exactly once for either. A connection rather than the
-			# `_exit_tree` virtual beside it, so a sheet can hear about its retirement without
-			# spending the one override every script has.
+			# `tree_exiting` is raised for either. A connection rather than the `_exit_tree` virtual
+			# beside it, so a sheet can hear about its retirement without spending the one override
+			# every script has. That door is also the way a node leaves to be REPARENTED and the way
+			# a pool hands one out again, so the handler opens with the guard `retire_guard_lines`
+			# below writes - the signal says "left the tree", and the guard is what makes the handler
+			# say "retired".
 			return _signal_backed("_on%s_retired" % source_token, "", "tree_exiting", source_path)
 		"OnSpawnSkipped":
 			# The answer a spawn row gives when the arena was full. A plain signal the sheet declares
@@ -557,6 +560,79 @@ static func tempo_class_for(trigger_id: String) -> String:
 			return TEMPO_ONCE
 		_:
 			return TEMPO_SIGNAL
+
+
+## ── On Retired: the one signal, and the line that makes it mean one thing ───────────────────────
+
+## The trigger whose handler opens with the guard below.
+const RETIRE_TRIGGER_ID: String = "OnRetired"
+
+## The guard a lifted handler was found carrying, kept on the event so re-emission writes the
+## author's own line back rather than the canonical one - and writes NOTHING where the author's
+## handler had no guard at all. The byte-verify is absolute: a handler that came in bare and went out
+## guarded would revert its whole file to code blocks.
+const SOURCE_RETIRE_GUARD_META: String = "__source_retire_guard"
+
+## The runtime the guard asks, and the question it asks it. `tree_exiting` is raised every time a
+## node leaves the tree, which a pool does on every SPAWN (it hands a node out by putting it back in
+## the tree) and every reparent row does too - so the bare signal fires many times for one node and
+## only sometimes means what On Retired says. The guard is the difference: it asks the node whether
+## it is on its way out for good, and returns from anything else.
+const RETIRE_GUARD_CALL: String = "PooledNodes.is_retiring"
+
+
+## The guard lines a retirement handler opens with: the author's own where one was read off the
+## source, and the canonical pair for a row the dock applied. Empty for every other trigger, and
+## empty for a source this compiler cannot name in an expression (an autoload, the tree, the window)
+## - none of which raises `tree_exiting` about a node in the first place.
+static func retire_guard_lines(event: EventRow, trigger_id: String, source_path: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if event != null and event.has_meta(SOURCE_RETIRE_GUARD_META):
+		var recorded: Variant = event.get_meta(SOURCE_RETIRE_GUARD_META)
+		for line: Variant in (recorded if recorded is Array or recorded is PackedStringArray else []):
+			lines.append(str(line))
+		return lines
+	if trigger_id != RETIRE_TRIGGER_ID:
+		return lines
+	var subject: String = retire_guard_subject(source_path)
+	if subject.is_empty():
+		return lines
+	lines.append("\tif not %s(%s):" % [RETIRE_GUARD_CALL, subject])
+	lines.append("\t\treturn")
+	return lines
+
+
+## The expression the guard asks about: this node for a self-connected trigger, and the node itself
+## for one hung off another node in the scene. A source spelled with a leading token - the tree, the
+## window, an autoload, a member - is answered with "" rather than with a guess, because none of them
+## is a node this handler is about.
+static func retire_guard_subject(source_path: String) -> String:
+	if source_path.is_empty():
+		return "self"
+	if source_path.begins_with("@") or source_path.begins_with("autoload:"):
+		return ""
+	if source_path.begins_with(MEMBER_SOURCE_PREFIX):
+		return ""
+	return "get_node(\"%s\")" % source_path
+
+
+## The guard at the head of a handler read back: the index of the first line AFTER it, or `index`
+## itself when the handler opens with something else. Both spellings are read - the `return` on the
+## next line and the one-line `: return` - so a hand-written guard opens as the row it is and comes
+## back written the way it was.
+static func retire_guard_end(lines: PackedStringArray, index: int) -> int:
+	if index < 0 or index >= lines.size():
+		return index
+	var head: String = lines[index].strip_edges()
+	if not head.begins_with("if not %s(" % RETIRE_GUARD_CALL):
+		return index
+	if head.ends_with("return"):
+		return index + 1
+	if not head.ends_with(":") or index + 1 >= lines.size():
+		return index
+	if lines[index + 1].strip_edges() == "return":
+		return index + 2
+	return index
 
 
 ## `return_type` is the emitted `-> T`. It is "void" for every engine callback that answers nothing,

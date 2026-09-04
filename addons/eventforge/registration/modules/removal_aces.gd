@@ -157,8 +157,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.act("FadeOutAndRetire3D", "Fade Out Then Retire (3D)", "await {object}.create_tween().tween_property({object}, \"%s\", %s, {seconds}).finished\n" % [FADE_PROPERTY_3D, FADE_TARGET_3D] + "if is_instance_valid({object}):\n\t{object}.%s = 0.0\n\t%s({object})" % [FADE_PROPERTY_3D, RETIRE_CALL], CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then retire it (3D)", "The same fade and retire on a 3D object. A Node3D has no modulate to walk down, so this walks its transparency up instead - 0 is solid and 1 is gone. That property belongs to what is DRAWN rather than to what moves: point Object at the MeshInstance3D (or another GeometryInstance3D), not at the body it hangs under, or the fade has nothing to walk. The line above the retire puts the transparency back, because a pool hands a copy out again exactly as it was parked.", "GeometryInstance3D").param_built(_retired_object_param()).param_built(_over_param()))
 
 	# ── Hearing about it ───────────────────────────────────────────────────────────────
-	# One signal, because both retirements pass through it: a pool takes a node back by removing it
-	# from the tree, and a destroy takes it out of the tree too.
+	# ONE SIGNAL, AND A LINE THAT SAYS WHICH TIME. Both retirements leave by the same door - a pool
+	# takes a node back by removing it from the tree, and a destroy takes it out of the tree as well -
+	# so `tree_exiting` is the signal, and one connection covers both. But that door is not only the
+	# way OUT: a node leaves the tree to be reparented, and a pool hands a node out again by putting
+	# it back in the tree, which means the bare signal is raised on every SPAWN from a pool and on
+	# every reparent row in the language. So the handler opens with a guard that asks the node whether
+	# it is on its way out for good, and returns from every other exit. That guard is emitted as
+	# visible code, and it is what makes this trigger say what its name says.
+	#
+	# The guard's question is the one thing a node cannot answer alone: being freed it knows about
+	# (`is_queued_for_deletion`), going back to a pool it does not, so the retire runtime writes that
+	# down for the length of the handing over and the guard reads it back.
 	descriptors.append(F.trig("OnRetired", "On Retired", "tree_exiting", CATEGORY, "On retired", "Runs the moment this object is retired - handed back to its pool, or destroyed. Both go the same way out: a pool takes a node back by removing it from the tree, so this one signal is raised exactly once whichever of the two happened. The object is still valid here, which is what makes it the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.", "Node"))
 
 	return descriptors

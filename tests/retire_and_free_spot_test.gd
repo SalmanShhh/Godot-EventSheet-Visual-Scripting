@@ -54,6 +54,7 @@ static func run() -> bool:
 	passed = _test_an_unpooled_node_is_destroyed() and passed
 	passed = _test_what_counts_as_pooled() and passed
 	passed = _test_on_retired_is_one_connection() and passed
+	passed = _test_on_retired_is_only_a_retirement() and passed
 	passed = _test_a_copy_of_myself_is_the_safe_spawn() and passed
 	passed = _test_a_copy_of_myself_opens_as_the_row() and passed
 	passed = _test_the_doctor_says_when_there_is_no_scene_file() and passed
@@ -178,6 +179,71 @@ static func _test_on_retired_is_one_connection() -> bool:
 		output.contains("on_despawned"), false) and passed
 	passed = SUPPORT.check(TEST_NAME, "the body retires through the runtime file rather than a bare free",
 		output.contains("PooledNodes.retire(self)"), true) and passed
+	# And the line that makes the one signal mean one thing. `tree_exiting` is raised on every exit
+	# from the tree, so without this the handler ran on every reparent and on every spawn out of a
+	# pool - the guard is the trigger, and it is emitted where a reader can see it.
+	passed = SUPPORT.check(TEST_NAME, "the handler opens by asking whether this is a retirement",
+		output.contains("func _on_retired() -> void:\n\tif not PooledNodes.is_retiring(self):\n\t\treturn\n"),
+		true) and passed
+	return passed
+
+
+## The whole of what On Retired claims, asked of the runtime that answers the guard rather than of
+## the emitted text: the two retirements say yes, and the three other ways a node leaves the tree say
+## no. A pool hands a node out again by putting it BACK in the tree, so before this the trigger fired
+## on every spawn from a pool.
+static func _test_on_retired_is_only_a_retirement() -> bool:
+	var passed: bool = true
+	var pool: Node = _real_pool()
+	var world: Node = Node.new()
+	var elsewhere: Node = Node.new()
+	var node: Node2D = _pooled_node(world)
+	# The guard is asked while the node is leaving the tree, and a suite with no scene tree in it
+	# never gets that moment - `tree_exiting` is raised by a real tree and nothing else. The pool
+	# raises its OWN two signals from inside the same calls, one line further on, so those are what
+	# this asks from: on_despawned is emitted inside the handing over, and on_spawned inside the
+	# handing out.
+	var while_going_back: Array[bool] = []
+	var while_handed_out: Array[bool] = []
+	pool.connect("on_despawned", func() -> void: while_going_back.append(PooledNodes.is_retiring(node)))
+	pool.connect("on_spawned", func() -> void: while_handed_out.append(PooledNodes.is_retiring(node)))
+
+	passed = SUPPORT.check(TEST_NAME, "a node standing in the world is not retiring",
+		PooledNodes.is_retiring(node), false) and passed
+	# A reparent - what four shipped rows do to a node, and what a pool does on every spawn. Each one
+	# takes the node out of the tree, which is the signal On Retired listens to.
+	world.remove_child(node)
+	elsewhere.add_child(node)
+	passed = SUPPORT.check(TEST_NAME, "and a node being moved somewhere else is not retiring",
+		PooledNodes.is_retiring(node), false) and passed
+	elsewhere.remove_child(node)
+	world.add_child(node)
+
+	# Going back to the pool IS a retirement, for the length of the handing over and no longer.
+	PooledNodes.hand_back(node, pool)
+	passed = SUPPORT.check(TEST_NAME, "going back to the pool is a retirement while it happens",
+		while_going_back, [true] as Array[bool]) and passed
+	passed = SUPPORT.check(TEST_NAME, "which the node stops saying the moment the handing over ends",
+		PooledNodes.is_retiring(node), false) and passed
+
+	# The same node handed out again. A pool wakes a copy by taking it out from under itself and
+	# putting it back in the running scene, so the signal is raised on every SPAWN as well - and that
+	# is the raise this whole guard exists to answer no to.
+	var spawned: Node = pool.call("spawn", POOL_NAME) as Node
+	passed = SUPPORT.check(TEST_NAME, "the pool hands the same node back out",
+		spawned == node, true) and passed
+	passed = SUPPORT.check(TEST_NAME, "and a copy being handed OUT is not retiring",
+		while_handed_out, [false] as Array[bool]) and passed
+
+	# The other retirement, which needs no pool: a node on its way to being destroyed says so for
+	# itself, which is the same answer a plain destroy row gets.
+	var unpooled: Node2D = Node2D.new()
+	PooledNodes.retire_into(unpooled, null)
+	passed = SUPPORT.check(TEST_NAME, "a node with no pool behind it is retiring once it is destroyed",
+		PooledNodes.is_retiring(unpooled), true) and passed
+	world.free()
+	elsewhere.free()
+	pool.free()
 	return passed
 
 

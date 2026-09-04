@@ -51,6 +51,16 @@ const POOL_METHOD: StringName = &"despawn"
 ## is empty again by the end of the idle moment that emptied it.
 static var _booked: Dictionary = {}
 
+## The nodes whose handing back is happening RIGHT NOW, by instance id - filled for the length of the
+## one call that gives a node to its pool and emptied again the moment that call returns.
+##
+## WHY A NODE NEEDS THIS TO BE ASKED AT ALL. A pool takes a node back by taking it out of the tree,
+## and a node cannot tell "I am being put away" from "I am being moved" or "I am being handed out
+## again" - `tree_exiting` is raised for all three, and the pool raises it on every spawn. So the one
+## thing the node cannot see for itself is written down here for the length of the handing over, and
+## `is_retiring` below is what a sheet asks instead of guessing.
+static var _retiring: Dictionary = {}
+
 
 ## Retires a node: hands it back to the pool that made it when there is one, and frees it otherwise.
 ## Safe to call twice and safe to call on null - a node already on its way out, or already parked in
@@ -101,7 +111,28 @@ static func hand_back(node: Node, pool: Node) -> void:
 	# question "is it already home" asked of the tree rather than of the pool's private list.
 	if node.get_parent() == pool:
 		return
+	# Marked for exactly as long as the handing over lasts. The pool takes the node out of the tree
+	# inside this call, which is where `tree_exiting` is raised, so this is the only window in which
+	# the node's own retirement is a fact rather than a guess.
+	_retiring[node.get_instance_id()] = true
 	pool.call(POOL_METHOD, node)
+	_retiring.erase(node.get_instance_id())
+
+
+## Whether this node is leaving the world for good, asked the moment it leaves it. `tree_exiting` is
+## raised every time a node is taken out of the tree - a reparent, a scene change, and a pool handing
+## the same node out again - so a sheet that wants the ONE moment a node is retired asks this rather
+## than trusting the signal.
+##
+## The two retirements answer yes for their own reasons, and they are the only two: a node on its way
+## to being freed says so itself (`is_queued_for_deletion`, which a plain destroy sets too, because a
+## destroy IS the other half of retiring), and a node on its way back to a pool is in the table above
+## for the length of that handing over. Everything else - the reparent, the respawn, the scene change
+## - is a node that is going to be somewhere else in a moment, and answers no.
+static func is_retiring(node: Node) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	return node.is_queued_for_deletion() or _retiring.has(node.get_instance_id())
 
 
 ## True when this node came out of a pool that is still in the tree - the question Retire asks, made

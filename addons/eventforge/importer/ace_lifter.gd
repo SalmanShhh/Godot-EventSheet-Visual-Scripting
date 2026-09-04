@@ -1417,10 +1417,11 @@ static func _split_function_declarations(raw: RawCodeRow) -> Dictionary:
 					remainder.append(function_line)
 				i = k
 				continue
-			# An un-annotated function's plain `##` lines are its Godot doc comment: carry them onto
-			# the EventFunction so re-emission keeps them (they used to be dropped here). A recognized
-			# annotation block instead folds them into the ACE description inside _parse_annotations.
-			var doc_comment: String = "" if has_ace_directive else _collect_doc_comment_text("\n".join(ace_block))
+			# The plain `##` lines above ANY function are its Godot doc comment, annotated or not, so
+			# re-emission keeps the prose an author wrote instead of collapsing it into one
+			# @ace_description line. An annotated block's prose is ALSO the ACE description, which
+			# _parse_annotations folds in and flags, so it is never written out twice.
+			var doc_comment: String = _collect_doc_comment_text("\n".join(ace_block))
 			var lift: Dictionary = _lift_sheet_function(function_lines, annotations, false, PackedStringArray(), doc_comment)
 			if bool(lift.get("ok", false)):
 				var event_function: EventFunction = lift.get("function") as EventFunction
@@ -1551,7 +1552,7 @@ static func _is_connected_handler(header: String, connections: Dictionary) -> bo
 ## Reverse of _emit_expose_annotations: parses a `## @ace_*` block into EventFunction
 ## exposure fields. {} = unrecognized shape (lift falls back).
 static func _parse_annotations(code: String) -> Dictionary:
-	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "lift_examples": PackedStringArray(), "param_options": {}, "param_hints": {}}
+	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "lift_examples": PackedStringArray(), "param_options": {}, "param_hints": {}, "param_autocomplete": {}, "param_defaults": {}, "param_descriptions": {}}
 	var recognized: bool = false
 	var doc_lines: PackedStringArray = PackedStringArray()
 	for line: String in code.split("\n"):
@@ -1605,6 +1606,12 @@ static func _parse_annotations(code: String) -> Dictionary:
 			var hint_space: int = hint_inner.find(" ")
 			if hint_space > 0:
 				(fields["param_hints"] as Dictionary)[hint_inner.substr(0, hint_space)] = hint_inner.substr(hint_space + 1).strip_edges()
+		elif text.begins_with("## @ace_param(") and text.ends_with(")"):
+			# `@ace_param(amount, hint: expression, options: a=A|b=B, default: 1.0, desc: "Help.")` -
+			# the one-line form, and the only spelling that can carry a per-parameter starting value
+			# or help text. Read into the same channels the two older lines fill, so emission writes
+			# back the line it read.
+			_parse_param_spec(text.substr(14, text.length() - 15), fields)
 		elif text.begins_with("## @ace_codegen_template(\"") and text.ends_with("\")"):
 			# Kept: the call prefix (or a custom template) is re-emitted from the function, because a
 			# pack opened outside its own project cannot re-derive an autoload / static prefix.
@@ -1620,8 +1627,80 @@ static func _parse_annotations(code: String) -> Dictionary:
 			# the ACE description (doc-comment-as-description), never a reason to refuse.
 			doc_lines.append(text.trim_prefix("##").strip_edges())
 	if str(fields["description"]).is_empty() and not doc_lines.is_empty():
+		# Folded in - and MARKED as folded, because the same prose is also carried back verbatim as
+		# the function's doc comment. Writing it out again as an @ace_description line would add a
+		# line the file never had, and the per-function byte gate would then refuse the whole verb.
 		fields["description"] = " ".join(doc_lines)
+		fields["description_from_doc"] = true
 	return fields if recognized else {}
+
+
+## The inside of one `@ace_param(<id>, key: value, ...)` line, read into the channels the emitter
+## writes that line back from. The keys are the analyzer's own - hint, options, autocomplete, default,
+## desc - because a pack's annotations are read by BOTH this and the provider scanner, and a line the
+## two disagreed about would publish one vocabulary and open as another.
+##
+## Options split on `|` OUTSIDE QUOTES and each entry on its first `=`, so `set=Set it|inc=Increase`
+## keeps its labels and a quoted key may contain the separator. Everything else is taken verbatim
+## apart from one surrounding pair of quotes.
+static func _parse_param_spec(spec: String, fields: Dictionary) -> void:
+	var segments: PackedStringArray = _split_outside_quotes(spec, ",")
+	if segments.is_empty():
+		return
+	var param_name: String = segments[0].strip_edges()
+	if param_name.is_empty():
+		return
+	for segment_index: int in range(1, segments.size()):
+		var segment: String = segments[segment_index]
+		var colon_index: int = segment.find(":")
+		if colon_index == -1:
+			continue
+		var key: String = segment.substr(0, colon_index).strip_edges()
+		var value: String = segment.substr(colon_index + 1).strip_edges()
+		match key:
+			"hint":
+				(fields["param_hints"] as Dictionary)[param_name] = value
+			"options":
+				(fields["param_options"] as Dictionary)[param_name] = _split_option_pairs(value)
+			"autocomplete":
+				var suggestions: Array = []
+				for suggestion: String in _split_outside_quotes(value, "|"):
+					if not suggestion.strip_edges().is_empty():
+						suggestions.append(suggestion.strip_edges())
+				(fields["param_autocomplete"] as Dictionary)[param_name] = suggestions
+			"default":
+				(fields["param_defaults"] as Dictionary)[param_name] = _unquoted_once(value)
+			"desc":
+				(fields["param_descriptions"] as Dictionary)[param_name] = _unquoted_once(value)
+
+
+## An `options:` value as the {key, label} pairs an ACEParam holds - `a|b` plain, `set=Set it` labeled.
+static func _split_option_pairs(value: String) -> Array:
+	var pairs: Array = []
+	for raw_entry: String in _split_outside_quotes(value, "|"):
+		var entry: String = raw_entry.strip_edges()
+		if entry.is_empty():
+			continue
+		var equals_index: int = entry.find("=")
+		if entry.begins_with("\""):
+			# A key that contains the separator ships QUOTED, so its end is the closing quote and the
+			# `=` after that one is what divides key from label.
+			var closing: int = entry.find("\"", 1)
+			equals_index = entry.find("=", closing + 1) if closing > 0 else -1
+		if equals_index <= 0:
+			pairs.append({"key": entry, "label": entry})
+			continue
+		var key: String = _unquoted_once(entry.substr(0, equals_index).strip_edges())
+		pairs.append({"key": key, "label": entry.substr(equals_index + 1).strip_edges()})
+	return pairs
+
+
+## One surrounding pair of quotes off a value, and no more: a description IS quoted, a number is not,
+## and a quoted key keeps the quotes that are part of the GDScript it inserts.
+static func _unquoted_once(value: String) -> String:
+	if value.length() >= 2 and value.begins_with("\"") and value.ends_with("\""):
+		return value.substr(1, value.length() - 2)
+	return value
 
 
 ## The inside of one `@ace_succeeded_by(<id>, renames: a=b, defaults: c=1)` line, as the three
@@ -1774,6 +1853,9 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.ace_display_name = str(annotations.get("name", ""))
 	event_function.ace_category = str(annotations.get("category", ""))
 	event_function.description = str(annotations.get("description", ""))
+	if bool(annotations.get("description_from_doc", false)) and not doc_comment.strip_edges().is_empty():
+		# The prose IS the description, and it is already going back verbatim above the annotations.
+		event_function.description = ""
 	event_function.display_template = str(annotations.get("display_template", ""))
 	event_function.lift_examples = annotations.get("lift_examples", PackedStringArray())
 	event_function.featured = bool(annotations.get("featured", false))
@@ -1798,12 +1880,25 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	# ship them back out and the picker gets its dropdowns and widgets.
 	var lifted_param_options: Dictionary = annotations.get("param_options", {})
 	var lifted_param_hints: Dictionary = annotations.get("param_hints", {})
+	var lifted_param_autocomplete: Dictionary = annotations.get("param_autocomplete", {})
+	var lifted_param_defaults: Dictionary = annotations.get("param_defaults", {})
+	var lifted_param_descriptions: Dictionary = annotations.get("param_descriptions", {})
 	for lifted_param: ACEParam in event_function.params:
 		if lifted_param_options.has(lifted_param.id):
 			for option_value: Variant in (lifted_param_options[lifted_param.id] as Array):
-				lifted_param.options.append(str(option_value))
+				lifted_param.options.append(option_value if option_value is Dictionary else str(option_value))
 		if lifted_param_hints.has(lifted_param.id):
 			lifted_param.hint = str(lifted_param_hints[lifted_param.id])
+		if lifted_param_autocomplete.has(lifted_param.id):
+			for suggestion: Variant in (lifted_param_autocomplete[lifted_param.id] as Array):
+				lifted_param.autocomplete.append(str(suggestion))
+		if lifted_param_defaults.has(lifted_param.id):
+			lifted_param.default_value = str(lifted_param_defaults[lifted_param.id])
+		if lifted_param_descriptions.has(lifted_param.id):
+			# Both spellings, because an ACEParam carries the event-sheet alias beside the name - and
+			# a reader that only ever looks at one of them must not find an empty description.
+			lifted_param.description = str(lifted_param_descriptions[lifted_param.id])
+			lifted_param.desc = lifted_param.description
 	var body: Dictionary = _lift_function(PackedStringArray(["func _ready() -> void:"]) + function_lines.slice(1), {}, true)
 	if not bool(body.get("ok", false)):
 		return {"ok": false}
@@ -2330,6 +2425,19 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			trigger_id = "signal:%s" % signal_name
 			trigger_provider = ""
 			trigger_args = header_match.get_string(2)
+	# A retirement handler opens with the guard that makes `tree_exiting` mean a retirement, so that
+	# line is read here rather than left to be a row of its own: it is the trigger, not something the
+	# sheet said. Recorded EVEN WHEN THERE IS NONE (an empty list), because a hand-written handler
+	# that came in bare has to go back out bare - the byte-verify is absolute, and a canonical guard
+	# written into somebody's file would revert the whole of it to code blocks.
+	var retire_guard: PackedStringArray = PackedStringArray()
+	var read_a_retire_guard: bool = false
+	if trigger_id == TriggerResolver.RETIRE_TRIGGER_ID:
+		read_a_retire_guard = true
+		var retire_guard_next: int = TriggerResolver.retire_guard_end(function_lines, index)
+		for guard_index: int in range(index, retire_guard_next):
+			retire_guard.append(function_lines[guard_index])
+		index = retire_guard_next
 	# A handler whose FIRST statement is a group early return is not a bare touch trigger with an
 	# odd line at the top - it is the filtered one, and the guard IS the filter. Read here so the
 	# row opens with its With field filled instead of stranding the line as something the sheet
@@ -2365,6 +2473,11 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			return {"ok": false}
 	if trigger_id == "OnPhysicsProcess":
 		_read_floor_edges_back(events)
+	if read_a_retire_guard:
+		# What the source spelled, kept on every event of the handler so the section emitter finds it
+		# on whichever event leads the group - exactly as the group filter's own guard is kept.
+		for event: Variant in events:
+			(event as EventRow).set_meta(TriggerResolver.SOURCE_RETIRE_GUARD_META, retire_guard)
 	if not filter_group.is_empty():
 		for event: Variant in events:
 			(event as EventRow).trigger_params[CollisionFilters.GROUP_PARAM] = filter_group

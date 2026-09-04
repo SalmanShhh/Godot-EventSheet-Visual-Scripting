@@ -40,6 +40,23 @@ const AIMED_CURSOR_HELPER: String = "__eventsheets_aim_floor"
 const POINT_CURSOR_HELPER: String = "__eventsheets_object_at_2d"
 const TILE_CURSOR_HELPER: String = "__eventsheets_tile_under"
 
+## The level-query helpers the tilemap and GridMap rows call. Same discipline as the three above:
+## one definition per file, appended last so no source-map line moves, and skipped outright when the
+## file already defines it, which is what makes reopening an emitted file and saving it again
+## byte-identical. They exist so a row that asks a level a question emits ONE readable sentence
+## rather than the three-call, null-guarded shape the question really is.
+const TILE_DATA_HELPER: String = "__eventsheets_tile_data_at"
+const TILE_SOLID_HELPER: String = "__eventsheets_cell_is_solid"
+const TILE_RAY_HELPER: String = "__eventsheets_first_solid_cell"
+const TILE_DATA_CELLS_HELPER: String = "__eventsheets_cells_with_data"
+const TILE_CELLS_AROUND_HELPER: String = "__eventsheets_cells_around"
+const TILE_ERASE_CIRCLE_HELPER: String = "__eventsheets_erase_tiles_in_circle"
+const TILE_FILL_RECT_HELPER: String = "__eventsheets_fill_tile_rect"
+const TILE_FLOOD_FILL_HELPER: String = "__eventsheets_flood_fill_tiles"
+const TILE_SAVE_HELPER: String = "__eventsheets_save_tile_layer"
+const TILE_LOAD_HELPER: String = "__eventsheets_load_tile_layer"
+const GRIDMAP_FILL_BOX_HELPER: String = "__eventsheets_gridmap_fill_box"
+
 ## The comment written above a hoisted Static local, naming the ROW the member belongs to. A
 ## cosmetic marker with zero runtime weight, exactly like the `# @group:` row tags: it is what lets an
 ## opened file hand the member back to the row instead of reading it as an ordinary private member.
@@ -783,6 +800,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_insert_provider_member_declarations(lines, result)
 	_append_aimed_cursor_helper(lines)
 	_append_scene_trust_helper(lines)
+	_append_level_query_helpers(lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -979,6 +997,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_insert_provider_member_declarations(lines, result)
 	_append_aimed_cursor_helper(lines)
 	_append_scene_trust_helper(lines)
+	_append_level_query_helpers(lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -1112,6 +1131,13 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 	var handler_body_start: int = lines.size()
 	for guard_line: String in CollisionFilters.guard_lines(events[0] as EventRow, args):
 		lines.append(guard_line)
+	# And the retirement's own first line, for the same reason: `tree_exiting` is raised every time
+	# the node leaves the tree - a reparent, a pool handing it out again - and only sometimes because
+	# it is being retired. The guard is what makes the handler mean what the row says.
+	for retire_line: String in TriggerResolver.retire_guard_lines(events[0] as EventRow,
+			TriggerResolver.effective_trigger_id(events[0] as EventRow),
+			str(signature.get("source_path", ""))):
+		lines.append(retire_line)
 	if _emit_notification_match(events, lines, source_map, result["warnings"]):
 		return
 	if _emit_menu_match(events, lines, source_map, result["warnings"]):
@@ -1964,6 +1990,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		# file is recognised back by. Nothing is emitted for an unfiltered trigger.
 		for guard_line: String in CollisionFilters.guard_lines(events[0] as EventRow, args):
 			lines.append(guard_line)
+			had_body = true
+		# And the retirement's own first line, emitted as visible code for the same reasons: it IS
+		# the code, and `tree_exiting` alone does not mean what On Retired says - a pool hands a node
+		# out again by putting it back in the tree, so the bare signal fires on every spawn too.
+		for retire_line: String in TriggerResolver.retire_guard_lines(events[0] as EventRow,
+				TriggerResolver.effective_trigger_id(events[0] as EventRow),
+				str(signature.get("source_path", ""))):
+			lines.append(retire_line)
 			had_body = true
 		if function_name == "_ready" and _live_values_receiver_pending:
 			# Edit-back channel: the Live Values window's edits arrive as
@@ -2849,18 +2883,11 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	for lift_example: String in event_function.lift_examples:
 		if not lift_example.strip_edges().is_empty():
 			lines.append("## @ace_lift_example(\"%s\")" % lift_example.strip_edges())
-	# Param dropdowns and widget hints ship as one-line annotations the provider scanner
-	# reads back - without these the picker loses the combos a builder declared.
+	# Param dropdowns, widget hints, starting values and help text ship as annotations the provider
+	# scanner reads back - without these the picker loses the combos a builder declared.
 	for annotated_param in event_function.params:
 		if annotated_param is ACEParam:
-			var ace_param: ACEParam = annotated_param
-			if not ace_param.options.is_empty():
-				var option_texts: PackedStringArray = PackedStringArray()
-				for option_value in ace_param.options:
-					option_texts.append(_param_option_text(option_value))
-				lines.append("## @ace_param_options(%s %s)" % [ace_param.id, ", ".join(option_texts)])
-			if not ace_param.hint.strip_edges().is_empty():
-				lines.append("## @ace_param_hint(%s %s)" % [ace_param.id, ace_param.hint.strip_edges()])
+			lines.append_array(_param_annotation_lines(annotated_param as ACEParam))
 	# The sheet's icon flows to the published ACE (one icon, set once, shown everywhere).
 	if not sheet.custom_class_icon.strip_edges().is_empty():
 		lines.append("## @ace_icon(\"%s\")" % sheet.custom_class_icon.strip_edges())
@@ -2919,6 +2946,51 @@ static func _successor_pairs(pairs: Dictionary) -> String:
 	for name: String in names:
 		written.append("%s=%s" % [name, str(pairs[name])])
 	return "|".join(written)
+
+
+## The annotation line(s) ONE ACE parameter ships as.
+##
+## TWO SPELLINGS, and which one a parameter gets is decided by whether it has anything to say that
+## the older pair of lines cannot carry. `@ace_param_options` and `@ace_param_hint` hold exactly a
+## dropdown and a widget hint, so a parameter that has only those goes on writing them - which is
+## what keeps every pack that never described a parameter emitting byte-identically.
+##
+## A parameter carrying its own HELP TEXT is written as the one-line combined form instead, because
+## that is the only spelling either reader has for a per-parameter description - and, once it is
+## being written, for the STARTING VALUE the picker shows the moment a row is dropped. Without it a
+## builder's default was authoring-time metadata that never reached the emitted pack, so a dropped
+## row opened at type-zero: an empty name, a strength of nothing, a transition with no shape.
+##
+## The key order is fixed - hint, options, autocomplete, default, desc - so the same parameter always
+## renders the same line, which is what a pack's byte-exact reopen rests on.
+static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
+	var written: PackedStringArray = PackedStringArray()
+	var option_texts: PackedStringArray = PackedStringArray()
+	for option_value in ace_param.options:
+		option_texts.append(_param_option_text(option_value))
+	var help: String = ace_param.description.strip_edges()
+	if help.is_empty():
+		help = ace_param.desc.strip_edges()
+	var hint: String = ace_param.hint.strip_edges()
+	if help.is_empty():
+		if not option_texts.is_empty():
+			written.append("## @ace_param_options(%s %s)" % [ace_param.id, ", ".join(option_texts)])
+		if not hint.is_empty():
+			written.append("## @ace_param_hint(%s %s)" % [ace_param.id, hint])
+		return written
+	var parts: PackedStringArray = PackedStringArray()
+	if not hint.is_empty():
+		parts.append("hint: %s" % hint)
+	if not option_texts.is_empty():
+		parts.append("options: %s" % "|".join(option_texts))
+	if not ace_param.autocomplete.is_empty():
+		parts.append("autocomplete: %s" % "|".join(ace_param.autocomplete))
+	var starting_value: String = str(ace_param.default_value).strip_edges()
+	if not starting_value.is_empty():
+		parts.append("default: %s" % starting_value)
+	parts.append("desc: \"%s\"" % help)
+	written.append("## @ace_param(%s, %s)" % [ace_param.id, ", ".join(parts)])
+	return written
 
 
 ## One dropdown option, in the form the provider scanner reads back out of the emitted pack.
@@ -3134,7 +3206,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			# doc comment is Godot's native Inspector tooltip.
 			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
 			if exported:
-				for decor_line: String in _decor_prefix_lines(attributes):
+				for decor_line: String in _decor_prefix_lines(attributes, str(var_name)):
 					lines.append(decor_line)
 			# The variable's description doubles as its Inspector tooltip (Godot's `##` doc-comment
 			# convention): an explicit "tooltip" attribute wins, else the plain description field is
@@ -3163,6 +3235,14 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					last_subgroup = ""
 				if this_group != last_group:
 					if not this_group.is_empty():
+						# A show-if that scopes the WHOLE group rides as a plain `#` comment directly
+						# above the group line - the one place a per-member annotation cannot reach,
+						# since @export_group takes no hint string. It is the round-trip carrier: the
+						# hiding itself is the ordinary _validate_property below, emitted once per
+						# member, so the generated code's shape is exactly the field form's.
+						var group_predicate: String = str(attributes.get("group_show_if", "")).strip_edges()
+						if not group_predicate.is_empty():
+							lines.append("# @inspector_show_if %s" % group_predicate)
 						lines.append("@export_group(\"%s\")" % this_group)
 					last_group = this_group
 					last_subgroup = ""
@@ -3222,12 +3302,18 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					lines.append("\t\t%s()" % on_changed)
 			else:
 				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
-			for condition_key: String in ["show_if", "lock_unless"]:
+			# "group_show_if" is the group-scoped form of "show_if": the member hides with its whole
+			# group, and it compiles to the SAME _validate_property entry the field form compiles to -
+			# once per member, which is what "the group hides" means to Godot. It only counts on a
+			# variable that is actually in a group; without one there is no group to scope.
+			for condition_key: String in ["group_show_if", "show_if", "lock_unless"]:
 				var condition_predicate: String = str(attributes.get(condition_key, "")).strip_edges()
+				if condition_key == "group_show_if" and str(attributes.get("group", "")).strip_edges().is_empty():
+					continue
 				if exported and not condition_predicate.is_empty():
 					if not variables.has(condition_predicate):
 						warnings.append("Variable \"%s\": %s targets unknown variable \"%s\" - check the spelling." % [var_name, condition_key, condition_predicate])
-					property_conditions.append({"name": var_name, "predicate": condition_predicate, "kind": condition_key})
+					property_conditions.append({"name": var_name, "predicate": condition_predicate, "kind": "lock_unless" if condition_key == "lock_unless" else "show_if"})
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
 
@@ -4156,6 +4242,13 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if store_unit.is_empty() or not unit_values.has(store_unit):
 				store_unit = unit_values[0]
 			marker = "eventsheet:unit:kinds=%s,store=%s" % ["|".join(unit_values), store_unit]
+		"corners":
+			# Four numbers that are usually one number: a Vector4 read clockwise from the top-left
+			# (x top-left, y top-right, z bottom-right, w bottom-left). The same shape serves corner
+			# radii, margins and padding, so the marker says "corners" and nothing about what for.
+			if type_name != "Vector4":
+				return ""
+			marker = "eventsheet:corners"
 		"vector_dial":
 			if type_name != "Vector2":
 				return ""
@@ -4192,7 +4285,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	# Decor first, then tooltip, then category/group/subgroup - same canonical order as the
 	# dict-var path (_emit_variables), so the importer's absorb can verify-lift the whole block.
 	# The ## doc attaches to the following @export var.
-	for decor_line: String in _decor_prefix_lines(attributes):
+	for decor_line: String in _decor_prefix_lines(attributes, local_var.name):
 		prefix += decor_line + "\n"
 	# The description doubles as the Inspector tooltip: an explicit "tooltip" attribute wins, else the
 	# plain description field is used (so a comment on a variable becomes its Inspector description).
@@ -4213,6 +4306,11 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 		prefix += "@export_category(\"%s\")\n" % category
 	var group: String = str(attributes.get("group", "")).strip_edges()
 	if not group.is_empty():
+		# The group-scoped show-if, as the plain `#` comment directly above the group line
+		# (@export_group takes no hint string, so the comment is the only place it can ride).
+		var group_predicate: String = str(attributes.get("group_show_if", "")).strip_edges()
+		if not group_predicate.is_empty():
+			prefix += "# @inspector_show_if %s\n" % group_predicate
 		prefix += "@export_group(\"%s\")\n" % group
 	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
 	if not subgroup.is_empty():
@@ -4228,7 +4326,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 ## into the Inspector's hover tooltip and decor must not. Editor-only: the drawers plugin reads them
 ## from the script source and renders a header label / info panel above the property; without the
 ## plugin (or in an exported game) they are inert comments - the parity covenant is untouched.
-static func _decor_prefix_lines(attributes: Dictionary) -> PackedStringArray:
+static func _decor_prefix_lines(attributes: Dictionary, var_name: String = "") -> PackedStringArray:
 	var decor: PackedStringArray = PackedStringArray()
 	var header: String = str(attributes.get("header", "")).strip_edges()
 	if not header.is_empty():
@@ -4253,6 +4351,13 @@ static func _decor_prefix_lines(attributes: Dictionary) -> PackedStringArray:
 	if not action_function.is_empty() and action_function.is_valid_identifier():
 		var action_label: String = str(attributes.get("action_label", "")).strip_edges()
 		decor.append(("# @inspector_action %s %s" % [action_function, action_label]) if not action_label.is_empty() else "# @inspector_action %s" % action_function)
+	# Link: two neighbouring numbers tied by an equals button. The line names BOTH fields (this one
+	# first), because the pair is the point - a reader of the file sees the relation without opening
+	# the editor. Editor-only like every decor: it emits no code, the drawers plugin draws the button
+	# and keeps the ratio, and a project without the plugin simply has two ordinary numbers.
+	var link_partner: String = str(attributes.get("link_with", "")).strip_edges()
+	if not var_name.is_empty() and link_partner.is_valid_identifier() and link_partner != var_name:
+		decor.append("# @inspector_link %s %s" % [var_name, link_partner])
 	return decor
 
 
@@ -4441,6 +4546,148 @@ static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
 static func _append_scene_trust_helper(lines: PackedStringArray) -> void:
 	_append_shared_helper(lines, SceneTrust.HELPER_NAME, SceneTrust.helper_head(),
 		SceneTrust.helper_body())
+
+
+## The eleven functions the level-query rows call - what a tile carries, whether a cell is solid,
+## the first solid cell along a line, the cells carrying a value, the cells around a place, and the
+## five that CHANGE a level: the circle erase, the rectangle fill, the flood fill, and the two that
+## move a layer's own bytes to and from a file. Plus the one the GridMap box words share.
+##
+## Every rule the aimed-floor helper documents above holds for each of them, word for word:
+## appended last so no source-map line moves, skipped outright when the file already defines it
+## (which is what makes reopening an emitted file and saving it again byte-identical), and a mere
+## mention of the name inside a string literal never counts as a call.
+##
+## THE MAP IS DELIBERATELY UNTYPED in every one of them, for the reason the tile-cursor helper above
+## gives: the layer is whatever node the row named, and a `Node`-typed parameter would refuse
+## `local_to_map` at parse time in every project that used it.
+##
+## `where` is a CELL or a POSITION, and each helper decides which: a Vector2i is already a cell, and
+## anything else is a global position turned into the cell holding it through the layer's own
+## transform. That is what lets one row read "tile data at Player.position" and another read "tile
+## data at Vector2i(4, 2)" without the sheet holding two rows for the one question.
+static func _append_level_query_helpers(lines: PackedStringArray) -> void:
+	_append_shared_helper(lines, TILE_DATA_HELPER,
+		"func %s(map, where, key: String) -> Variant:" % TILE_DATA_HELPER,
+		["	if map == null:",
+		"		return null",
+		"	var cell: Vector2i = where if where is Vector2i else map.local_to_map(map.to_local(where))",
+		"	var data: TileData = map.get_cell_tile_data(cell)",
+		"	return data.get_custom_data(key) if data != null else null"])
+	_append_shared_helper(lines, TILE_SOLID_HELPER,
+		"func %s(map, cell: Vector2i, layer: int) -> bool:" % TILE_SOLID_HELPER,
+		["	if map == null:",
+		"		return false",
+		"	var data: TileData = map.get_cell_tile_data(cell)",
+		"	return data != null and data.get_collision_polygons_count(layer) > 0"])
+	# The tile raycast walks the cells of the line itself rather than calling the solid test above,
+	# so the two helpers stay independent: a file that asks only for the ray gets only the ray, and
+	# neither definition can be appended for the sake of the other's body.
+	_append_shared_helper(lines, TILE_RAY_HELPER,
+		"func %s(map, from, to, layer: int) -> Vector2i:" % TILE_RAY_HELPER,
+		["	if map == null:",
+		"		return Vector2i.MAX",
+		"	var start: Vector2i = from if from is Vector2i else map.local_to_map(map.to_local(from))",
+		"	var finish: Vector2i = to if to is Vector2i else map.local_to_map(map.to_local(to))",
+		"	var steps: int = maxi(absi(finish.x - start.x), absi(finish.y - start.y))",
+		"	for step: int in range(steps + 1):",
+		"		var along: float = float(step) / float(maxi(steps, 1))",
+		"		var cell: Vector2i = Vector2i(roundi(lerpf(start.x, finish.x, along)), roundi(lerpf(start.y, finish.y, along)))",
+		"		var data: TileData = map.get_cell_tile_data(cell)",
+		"		if data != null and data.get_collision_polygons_count(layer) > 0:",
+		"			return cell",
+		"	return Vector2i.MAX"])
+	_append_shared_helper(lines, TILE_DATA_CELLS_HELPER,
+		"func %s(map, key: String, value: Variant) -> Array[Vector2i]:" % TILE_DATA_CELLS_HELPER,
+		["	var found: Array[Vector2i] = []",
+		"	if map == null:",
+		"		return found",
+		"	for cell: Vector2i in map.get_used_cells():",
+		"		var data: TileData = map.get_cell_tile_data(cell)",
+		"		if data != null and data.get_custom_data(key) == value:",
+		"			found.append(cell)",
+		"	return found"])
+	_append_shared_helper(lines, TILE_CELLS_AROUND_HELPER,
+		"func %s(map, where, radius: int) -> Array[Vector2i]:" % TILE_CELLS_AROUND_HELPER,
+		["	var cells: Array[Vector2i] = []",
+		"	if map == null:",
+		"		return cells",
+		"	var centre: Vector2i = where if where is Vector2i else map.local_to_map(map.to_local(where))",
+		"	for x: int in range(centre.x - radius, centre.x + radius + 1):",
+		"		for y: int in range(centre.y - radius, centre.y + radius + 1):",
+		"			if Vector2(x - centre.x, y - centre.y).length() <= float(radius) + 0.5:",
+		"				cells.append(Vector2i(x, y))",
+		"	return cells"])
+	_append_shared_helper(lines, TILE_ERASE_CIRCLE_HELPER,
+		"func %s(map, where, radius: int) -> void:" % TILE_ERASE_CIRCLE_HELPER,
+		["	if map == null:",
+		"		return",
+		"	var centre: Vector2i = where if where is Vector2i else map.local_to_map(map.to_local(where))",
+		"	for x: int in range(centre.x - radius, centre.x + radius + 1):",
+		"		for y: int in range(centre.y - radius, centre.y + radius + 1):",
+		"			if Vector2(x - centre.x, y - centre.y).length() <= float(radius) + 0.5:",
+		"				map.erase_cell(Vector2i(x, y))"])
+	_append_shared_helper(lines, TILE_FILL_RECT_HELPER,
+		"func %s(map, rect: Rect2i, source_id: int, atlas_coords: Vector2i) -> void:" % TILE_FILL_RECT_HELPER,
+		["	if map == null:",
+		"		return",
+		"	for x: int in range(rect.position.x, rect.end.x):",
+		"		for y: int in range(rect.position.y, rect.end.y):",
+		"			map.set_cell(Vector2i(x, y), source_id, atlas_coords)"])
+	# The flood fill is BOUNDED, and the bound is the row's own field rather than a number chosen
+	# here: started on an empty cell of an unbounded layer it would otherwise spread for as long as
+	# the machine let it. It also refuses to start when the cell already holds what it would paint,
+	# which is the other way the same walk never ends.
+	_append_shared_helper(lines, TILE_FLOOD_FILL_HELPER,
+		"func %s(map, from: Vector2i, source_id: int, atlas_coords: Vector2i, limit: int) -> void:" % TILE_FLOOD_FILL_HELPER,
+		["	if map == null:",
+		"		return",
+		"	var was_source: int = map.get_cell_source_id(from)",
+		"	var was_atlas: Vector2i = map.get_cell_atlas_coords(from)",
+		"	if was_source == source_id and was_atlas == atlas_coords:",
+		"		return",
+		"	var queue: Array[Vector2i] = [from]",
+		"	var seen: Dictionary = {from: true}",
+		"	while not queue.is_empty() and seen.size() <= limit:",
+		"		var cell: Vector2i = queue.pop_back()",
+		"		map.set_cell(cell, source_id, atlas_coords)",
+		"		for around: Vector2i in map.get_surrounding_cells(cell):",
+		"			if seen.has(around) or map.get_cell_source_id(around) != was_source or map.get_cell_atlas_coords(around) != was_atlas:",
+		"				continue",
+		"			seen[around] = true",
+		"			queue.append(around)"])
+	# The two file words answer whether they worked, so a sheet that cares can ask - and a save to a
+	# folder that is not there, or a load of a file that was never written, leaves the layer exactly
+	# as it was instead of clearing it.
+	_append_shared_helper(lines, TILE_SAVE_HELPER,
+		"func %s(map, path: String) -> bool:" % TILE_SAVE_HELPER,
+		["	if map == null:",
+		"		return false",
+		"	DirAccess.make_dir_recursive_absolute(path.get_base_dir())",
+		"	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)",
+		"	if file == null:",
+		"		return false",
+		"	file.store_buffer(map.tile_map_data)",
+		"	return true"])
+	_append_shared_helper(lines, TILE_LOAD_HELPER,
+		"func %s(map, path: String) -> bool:" % TILE_LOAD_HELPER,
+		["	if map == null or not FileAccess.file_exists(path):",
+		"		return false",
+		"	var file: FileAccess = FileAccess.open(path, FileAccess.READ)",
+		"	if file == null:",
+		"		return false",
+		"	map.tile_map_data = file.get_buffer(file.get_length())",
+		"	return true"])
+	# Erasing a GridMap cell IS filling it with the invalid item, so Fill Box and Erase Box are one
+	# function called with a different last argument, and the emitted code says as much.
+	_append_shared_helper(lines, GRIDMAP_FILL_BOX_HELPER,
+		"func %s(grid, from: Vector3i, to: Vector3i, item: int) -> void:" % GRIDMAP_FILL_BOX_HELPER,
+		["	if grid == null:",
+		"		return",
+		"	for x: int in range(mini(from.x, to.x), maxi(from.x, to.x) + 1):",
+		"		for y: int in range(mini(from.y, to.y), maxi(from.y, to.y) + 1):",
+		"			for z: int in range(mini(from.z, to.z), maxi(from.z, to.z) + 1):",
+		"				grid.set_cell_item(Vector3i(x, y, z), item)"])
 
 
 ## One shared helper's definition, appended when the file calls it and does not already define it.
