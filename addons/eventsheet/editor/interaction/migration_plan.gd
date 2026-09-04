@@ -16,7 +16,10 @@
 # that comes back has to be the same verb and write the same byte. That is the lossless round-trip
 # law asked one row at a time: a migrated line has to be a line this editor reads back as the row it
 # just wrote, or the next person to open the file gets a different sheet. A row that cannot prove
-# that stays on the spelling it has, and the dialog says which one and why.
+# that stays on the spelling it has, and the dialog says which one and why. The one rewrite that is
+# proved WITHOUT reading anything back is the one that writes the line already there, character for
+# character: no file changes, so there is no new line to read and no way for the next person to get
+# a different sheet.
 #
 # WRITTEN FRESH IS THE STANDARD. A migrated row lands with the values it carried under their new
 # names and a value for each parameter the successor has that the old row never did - and with
@@ -343,7 +346,7 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 		listed["why"] = WHY_NEEDS_PICKING
 		planned.append(listed)
 		return
-	var rewritten: Dictionary = _rewritten(row, resolved, successor, scope, host)
+	var rewritten: Dictionary = _rewritten(row, resolved, successor, scope, host, before)
 	if rewritten.is_empty():
 		listed["why"] = WHY_UNPROVABLE
 		planned.append(listed)
@@ -371,12 +374,12 @@ static func _plan_row(event_row: EventRow, row: Resource, lane: String, slot: in
 ## A parameter nothing answers is not a hole this papers over: a slot left showing in the emitted
 ## line is refused below, and the pack gate refuses a map that leaves one before it can ship.
 static func _rewritten(row: Resource, resolved: Dictionary, successor: Dictionary, scope: String,
-		host: String) -> Dictionary:
+		host: String, before: String) -> Dictionary:
 	var params: Variant = row.get("params")
 	var written: Dictionary = EventForgeSuccessors.rewrite_params(
 		params.duplicate(true) if params is Dictionary else {}, resolved,
 		successor.get("params", PackedStringArray()))
-	var line: String = _proved_line(row, successor, written, scope, host)
+	var line: String = _proved_line(row, successor, written, scope, host, before)
 	return {} if line.is_empty() else {"line": line, "params": written}
 
 
@@ -387,8 +390,19 @@ static func _rewritten(row: Resource, resolved: Dictionary, successor: Dictionar
 ## the same byte again. A line with a slot still showing in it is refused before any of that - that
 ## is a parameter nothing answered, and a row that landed with a hole in it would compile to code
 ## with braces in it.
+##
+## AND A REWRITE THAT WRITES THE BYTE THE ROW ALREADY WRITES HAS NOTHING TO READ BACK. The gate above
+## asks one question - would the next person to open this file get a different sheet - and it asks it
+## by reading the new line. When the successor emits the line that is already there, character for
+## character, no file changes and there is no new line: whatever that line read back as before the
+## rewrite, it reads back as after it, because it is the same line. A sheet that STORES its rows (a
+## `.tres`) genuinely moves onto the newer spelling; a sheet that derives them from its text (a `.gd`)
+## keeps deriving exactly what it derived yesterday. Reading the line back would answer a question
+## nobody asked, and answering it wrongly is how an optional argument left empty - `play()` from an
+## audio row whose start time was cleared, which the reverse grammar reads as a plain method call -
+## refused a rewrite that could not have changed a byte of anybody's project.
 static func _proved_line(row: Resource, successor: Dictionary, params: Dictionary, scope: String,
-		host: String) -> String:
+		host: String, before: String) -> String:
 	var address: PackedStringArray = EventForgeSuccessors.split_key(str(successor.get("key", "")))
 	var candidate: Resource = _copy_onto(row, address, str(successor.get("template", "")), params)
 	if candidate == null:
@@ -399,6 +413,8 @@ static func _proved_line(row: Resource, successor: Dictionary, params: Dictionar
 	for parameter: String in (successor.get("params", PackedStringArray()) as PackedStringArray):
 		if line.contains("{%s}" % parameter):
 			return ""
+	if line == before:
+		return line
 	var lifted: Resource = EventSheetACELifter.lift_one_line(line, row is ACECondition)
 	if lifted == null or not (lifted is ACEAction or lifted is ACECondition):
 		return ""

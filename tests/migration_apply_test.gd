@@ -45,6 +45,7 @@ static func run() -> bool:
 	ok = _test_the_doors_are_the_only_doors() and ok
 	ok = _test_the_shipped_address() and ok
 	ok = _test_the_shipped_address_in_the_report() and ok
+	ok = _test_the_shipped_address_with_a_cleared_from() and ok
 	return ok
 
 
@@ -81,15 +82,17 @@ static func _known() -> Dictionary:
 		{"seconds": "1.0"}, {})
 	stateful["needs_baking"] = true
 	known["%s::StatefulTimer" % OLD_PROVIDER] = stateful
-	# Tells a group to do something, superseded by the shipped verb that takes an argument with it.
-	# The argument the map would land on IS that verb's own declared value - and dropping it writes a
-	# line the vocabulary reads as a DIFFERENT verb, which is exactly when a default must be kept.
+	# Tells a group to do something, superseded by the shipped verb that takes an argument with it -
+	# and the map forgets to say where the argument goes. The successor already declares that value
+	# as its own, so nothing is written for it, and the shorter line the emitter then writes is one
+	# the vocabulary reads back as a DIFFERENT verb. A map that leaves a parameter unanswered is the
+	# authoring mistake this gate exists to catch, and the row stays exactly where it was.
 	known["%s::TellEveryone" % OLD_PROVIDER] = _entry("TellEveryone", "Tell everyone",
 		"get_tree().call_group({who}, {what}, {payload})", "Tell {who} to {what} with {payload}",
 		PackedStringArray(["who", "what", "payload"]),
 		{"who": "\"enemies\"", "what": "\"take_damage\"", "payload": "10"},
 		{"id": "Core::CallGroupWith",
-			"renames": {"who": "group", "what": "method", "payload": "args"}, "defaults": {}})
+			"renames": {"who": "group", "what": "method"}, "defaults": {}})
 	return known
 
 
@@ -262,11 +265,16 @@ static func _test_the_ways_a_row_stays() -> bool:
 # ── 4. the round-trip gate says no ────────────────────────────────────────────────
 
 
-## THE GATE THAT MATTERS MOST, met by a rewrite that looks perfectly good on paper. The map is sound,
-## every value travels, the line the successor writes compiles - and the vocabulary reads that line
-## back as a DIFFERENT verb, so a row migrated onto it would come back as something else the next
-## time somebody opened the file. That is the lossless round-trip law asked one row at a time, and
-## the row stays exactly where it was.
+## THE GATE THAT MATTERS MOST, met by a rewrite that looks perfectly good on paper. Every named value
+## travels and the line the successor writes compiles - but the map leaves one of the successor's
+## parameters unanswered, so the emitter writes a SHORTER line than the row wrote before, and the
+## vocabulary reads that shorter line back as a DIFFERENT verb. A row migrated onto it would come
+## back as something else the next time somebody opened the file. That is the lossless round-trip law
+## asked one row at a time, and the row stays exactly where it was.
+##
+## The line has to CHANGE for any of that to be a question. A rewrite that writes the byte already in
+## the file is proved without reading anything back - there is no new line to read - and the cleared
+## `From` below is the shipped case of it.
 static func _test_the_round_trip_gate_refuses() -> bool:
 	var sheet: EventSheetResource = _sheet([_row("TellEveryone", {
 		"who": "\"enemies\"", "what": "\"take_damage\"", "payload": "10"})])
@@ -594,7 +602,47 @@ static func _test_the_shipped_address_in_the_report() -> bool:
 	return ok
 
 
-## The sheet both tests above are about: one event on an AudioStreamPlayer holding the two
+## THE SAME SHIPPED ADDRESS, MET BY THE ONE VALUE THAT IS NOT A VALUE: a cleared *From*.
+##
+## *From* is optional, and a row whose start time has been emptied is a row somebody really has -
+## `play()` is the idiomatic call and the field starts life offering a default nobody has to keep.
+## Both spellings then emit `$Sfx.play()`, and the reverse grammar reads THAT line as a plain method
+## call rather than as either of them, because `play({from})` reverse-matches a call with an argument
+## in it. So the round-trip gate, asked whether the rewritten line reads back as the successor, said
+## no - and a stored `.tres` holding this row failed `tools/verify_sheets.gd` on a sheet nobody had
+## touched, while the head band went on counting it and offering a rewrite Migrate could not make.
+##
+## A rewrite that writes the byte that is already there changes no file, so there is no new line for
+## anybody to read back and nothing for a branch gate to find. Pinned as the plan, the receipt and
+## the gate's own failure list, because those are the three surfaces that disagreed.
+static func _test_the_shipped_address_with_a_cleared_from() -> bool:
+	var sheet: EventSheetResource = _audio_sheet()
+	var play: ACEAction = (sheet.events[0] as EventRow).actions[0] as ACEAction
+	play.params = {"from_position": "", "target": "$Sfx"}
+	var planned: Array[Dictionary] = EventSheetMigrationPlan.plan(sheet)
+	var ok: bool = _check("both rows are still listed", planned.size(), 2)
+	if not ok:
+		return false
+	ok = _check("the cleared row asks nobody anything", planned[0]["asks"], false) and ok
+	ok = _check("for no reason, because there is none left", str(planned[0]["why"]), "") and ok
+	ok = _check("and the line it would write is the line already there",
+		[str(planned[0]["before"]), str(planned[0]["after"])],
+		["$Sfx.play()", "$Sfx.play()"]) and ok
+	ok = _check("the receipt shows it as a rewrite with nothing to answer",
+		EventSheetMigrateDialog.left_alone_lines(planned), PackedStringArray()) and ok
+	# THE BRANCH GATE, over the stored sheet - the surface that was failing.
+	var path: String = "user://eventforge_migration_cleared_probe.tres"
+	if ResourceSaver.save(sheet, path) != OK:
+		return _check("the probe sheet is stored", false, true)
+	var failures: Array[Dictionary] = EventSheetVerify.migration_failures(
+		EventSheetMigrationDoctor.rows(PackedStringArray([path])))
+	ok = _check("and the branch gate has nothing to say about the stored sheet",
+		failures.size(), 0) and ok
+	DirAccess.remove_absolute(path)
+	return ok
+
+
+## The sheet the three tests above are about: one event on an AudioStreamPlayer holding the two
 ## general-shelf audio rows, each with the values a picked row really carries - the older Play Sound
 ## started half a second in, and a Stop Sound acting on the node the sheet is written on.
 static func _audio_sheet() -> EventSheetResource:
