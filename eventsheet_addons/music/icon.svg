@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the layers, quiet under the song -->
+  <g stroke="#64748b" stroke-width="26" opacity="0.4" stroke-linecap="round">
+    <line x1="56" y1="360" x2="56" y2="424"/>
+    <line x1="118" y1="322" x2="118" y2="462"/>
+    <line x1="180" y1="352" x2="180" y2="432"/>
+  </g>
+  <!-- the beam -->
+  <path d="M258 118 L438 74 L438 148 L258 192 Z" fill="#7c9cf5"/>
+  <!-- the two stems -->
+  <g stroke="#7c9cf5" stroke-width="34" stroke-linecap="round">
+    <line x1="258" y1="140" x2="258" y2="374"/>
+    <line x1="438" y1="96" x2="438" y2="330"/>
+  </g>
+  <!-- the note heads -->
+  <ellipse cx="212" cy="378" rx="62" ry="48" fill="#e8a33d"/>
+  <ellipse cx="392" cy="334" rx="62" ry="48" fill="#e8a33d"/>
+</svg>
