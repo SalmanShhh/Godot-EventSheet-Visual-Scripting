@@ -1935,6 +1935,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"drawing_prefab_stamp": "Drawing-Canvas",
 	"color_palette_resource": "Game-Settings",
 	"encounter_resource": "Encounter-Timeline",
+	"floating_text_styles_resource": "HUD-Kit",
 	"glyph_sheet_resource": "Prompts",
 	"home_leash": "Home-And-Leash",
 	"loot_loader": "Loot-Table",

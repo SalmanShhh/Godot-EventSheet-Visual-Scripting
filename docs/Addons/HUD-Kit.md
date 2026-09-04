@@ -11,8 +11,9 @@ HUD Kit is a Godot EventSheets behavior pack that drives a whole menu or HUD by 
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-6. [Use cases](#use-cases)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [Floating text styles - the file the manners live in](#floating-text-styles---the-file-the-manners-live-in)
+7. [Use cases](#use-cases)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -168,6 +169,49 @@ which survive auto-named children. While **Live Values** streams from a running 
 upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
 attached at runtime included, under their real names. And with your node selected in the Scene
 dock, the section grounds to that node's actual children before you even press Run.
+
+## Floating text styles - the file the manners live in
+
+A damage number, a heal, a coin, a critical: the same pop in different manners. **FloatingTextStyles**
+is where a project writes that handful down - a plain Godot resource you own, in your own folder,
+holding one row per manner:
+
+| Field | What it says |
+| --- | --- |
+| `style_names` | What the manners are called: `normal`, `crit`, `heal`, whatever yours are |
+| `sizes` | How much bigger than the ordinary label each is drawn - 1 is the size you designed |
+| `colors` | The colour each is drawn in |
+| `rises` | How far the number floats up before it goes, in pixels |
+| `shakes` | How hard it shakes on the way, in pixels - 0 is a clean rise |
+| `lifetimes` | How long it stays, in seconds |
+| `colour_from_damage_type` | The manners whose colour comes from the HIT rather than from this file |
+
+The six lists are read **in step**: the third name's size is the third size. A manner the file has
+never heard of is answered with the plain default rather than an error, so a file half-written while
+you are still deciding still works.
+
+One starter ships beside the class - `normal`, `crit` and `heal` - and it is a file to edit, rename,
+duplicate or delete. There is no list of manners inside the plugin, because a list of manners is a
+list of somebody else's game.
+
+**The colour has a second door.** A manner listed in `colour_from_damage_type` takes its colour from
+the damage that caused it instead of from this file, which is what lets a fire number be orange and
+an ice one blue without a colour being typed into either row. `colour_of(name, damage_colour)` simply
+prefers the colour it was handed for those manners, so a project with no damage types at all passes
+nothing, gets the file's own colours, and never notices the door is there. The **Pop Floating Text
+As** action already takes its colour from the project's `DamageTypeSet`; this file is where the rest
+of the manner - the size, the rise, the shake and how long it stays - is written down.
+
+Reading it from a sheet is an ordinary expression on the resource:
+
+```gdscript
+var styles := load("res://ui/floating_text_styles.tres")
+styles.size_of("crit")                       # 1.6
+styles.lifetime_of("heal")                   # 0.8
+styles.colour_of("normal", last_damage_hue)  # the hit's own colour
+```
+
+---
 
 ## Use cases
 
