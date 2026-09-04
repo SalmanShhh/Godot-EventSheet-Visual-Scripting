@@ -15,33 +15,34 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("FolderWatcher behavior requires a Node parent.")
 
+## Raised on the first look that finds a file the look before did not.
 ## @ace_trigger
 ## @ace_name("On A File Appeared")
 signal file_appeared(path: String)
+## Raised when a file that was already there has a DIFFERENT modified time from the one it had
+## at the last look. Usually that means newer; a file restored from a backup or copied back
+## over is older and is still a change. A program that writes a file in several goes can raise
+## this more than once per save, and two writes inside the same second read as one.
 ## @ace_trigger
 ## @ace_name("On A File Changed")
 signal file_changed(path: String)
+## Raised on the first look that no longer finds a file the look before did. The path names
+## what went; there is nothing left at it to read.
 ## @ace_trigger
 ## @ace_name("On A File Removed")
 signal file_removed(path: String)
 
-## The folder to look in. Prefer user:// - a folder under res:// is packed into the export and cannot be written to once the game ships, so nothing in it will ever change.
+## The folder to look in. Prefer user:// - a folder under res:// is packed into the export and cannot be written to once the game ships, so nothing in it will ever change. Changing this while a watch is running points the SAME baseline at a different folder, so the next look reads every file in the new one as having just appeared and every file in the old one as having just gone. Stop Watching and Watch Folder again to move a running watch.
 @export var watched_folder: String = "user://mods"
-## Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for a folder holding thousands of files.
+## Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for a folder holding thousands of files. A tenth of a second is the shortest gap honoured: zero would be a directory read every single frame, which is not what anybody means by an interval.
 @export var look_every_seconds: float = 2.0
-## Which file names count, as a pattern with * and ? in it - "*.json" for data files, "*" for all of them. Names that do not match are invisible to this watcher: they raise nothing, and they are not looked up.
+## Which file names count, as a pattern with * and ? in it - "*.json" for data files, "*" for all of them. Names that do not match are invisible to this watcher: they raise nothing, and they are not looked up. Changing this while a watch is running is compared against a baseline read under the OLD pattern, so the next look raises On A File Removed for files that merely stopped matching and On A File Appeared for ones that just started. Stop Watching and Watch Folder again to change it cleanly.
 @export var only_names_like: String = "*"
 ## Start watching as soon as the node is ready, using the folder and interval above. Off by default, because a watcher is usually started by the sheet at the moment the game actually cares.
 @export var watch_on_ready: bool = false
 var _seen: Dictionary = {}
 var _since_last_look: float = 0.0
 var _watching: bool = false
-
-# Raised on the first look that finds a file the look before did not.
-# Raised when a file that was already there has a NEWER modified time than it had at the last
-# look. A program that writes a file in several goes can raise this more than once per save.
-# Raised on the first look that no longer finds a file the look before did. The path names
-# what went; there is nothing left at it to read.
 
 func _ready() -> void:
 	# Nothing is being watched yet, so there is nothing to look for once a frame.
@@ -135,6 +136,8 @@ func watched_file_count() -> int:
 func watched_file_names() -> Array:
 	return _seen.keys()
 
+## What the folder held at the last look: file name -> the time that file was last modified.
+## The whole mechanism is this dictionary compared with the next look's.
 ## @ace_hidden
 func _read_folder() -> Dictionary:
 	var found: Dictionary = {}
@@ -148,6 +151,8 @@ func _read_folder() -> Dictionary:
 		found[entry] = FileAccess.get_modified_time(watched_folder.path_join(entry))
 	return found
 
+## One look: read the folder, raise what the difference means, and keep the new reading as the
+## one the next look is compared against.
 ## @ace_hidden
 func _look() -> void:
 	# A FOLDER THAT IS NOT THERE IS NOT A FOLDER THAT EMPTIED. DirAccess answers with an
@@ -161,6 +166,9 @@ func _look() -> void:
 	for entry: String in found:
 		if not _seen.has(entry):
 			file_appeared.emit(watched_folder.path_join(entry))
+		# DIFFERENT, not newer. A file restored from a backup or copied back over carries an
+		# OLDER modified time and really has changed, so this asks whether the time moved rather
+		# than which way it moved. Two writes inside the same second read as one look's worth.
 		elif int(_seen[entry]) != int(found[entry]):
 			file_changed.emit(watched_folder.path_join(entry))
 	for entry: String in _seen:

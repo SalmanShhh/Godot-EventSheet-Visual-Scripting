@@ -62,6 +62,14 @@ const WATCH_CALL: String = "watch_folder("
 ## row's own emitted line rather than off parameter ids, so the band and the code cannot drift.
 const WATCH_PATTERN: String = "watch_folder\\(\\s*(?<folder>.*?)\\s*,\\s*(?<seconds>[^,()]*?)\\s*\\)"
 
+## The shortest gap a watch can really have, and the way the band spells it. A zero or negative
+## interval would be a directory read every single frame, which is nobody's idea of an interval, so
+## the shipped watcher floors it - and a band printing the row's `0` beside a watcher keeping a tenth
+## of a second is the band saying something untrue about the sheet. The number is the watcher's own;
+## the pair of them is pinned in the suite so the two can never drift apart silently.
+const SHORTEST_LOOK: float = 0.1
+const SHORTEST_LOOK_TEXT: String = "0.1"
+
 ## How many paths the band names before it starts counting.
 const SHOWN_LIMIT: int = 4
 
@@ -261,7 +269,7 @@ static func watched_folders(sheet: EventSheetResource) -> Array[Dictionary]:
 		for hit: RegExMatch in matcher.search_all(text):
 			var reading: Dictionary = {
 				"folder": bare(hit.get_string("folder")),
-				"seconds": hit.get_string("seconds").strip_edges(),
+				"seconds": honoured_seconds(hit.get_string("seconds")),
 				"echo": hit.get_string().strip_edges(),
 			}
 			var key: String = "%s|%s" % [reading["folder"], reading["seconds"]]
@@ -270,6 +278,17 @@ static func watched_folders(sheet: EventSheetResource) -> Array[Dictionary]:
 			seen[key] = true
 			found.append(reading)
 	return found
+
+
+## The interval the watcher will really keep, as the band says it. A row asking for a gap shorter than
+## the floor gets the floor, so a band reading `every 0 s` beside a watcher looking ten times a second
+## is a head that is wrong about its own sheet. Only a NUMBER is answered for: an interval held in an
+## expression is one nothing here can work out, and it rides through as the expression it is.
+static func honoured_seconds(written: String) -> String:
+	var text: String = written.strip_edges()
+	if not text.is_valid_float():
+		return text
+	return text if text.to_float() >= SHORTEST_LOOK else SHORTEST_LOOK_TEXT
 
 
 ## A path field's value without the quotes it is held in - the band says the path, not the literal,

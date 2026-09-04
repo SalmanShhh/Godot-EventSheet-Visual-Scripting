@@ -351,9 +351,32 @@ static func _run_watcher_shape() -> bool:
 		pack.contains("if not _watching:\n\t\tset_process(false)\n\t\treturn"), true) and ok
 	ok = _check("the interval has a floor, so no answer means a read every frame",
 		pack.contains("maxf(look_every_seconds, 0.1)"), true) and ok
+	# THE BAND AND THE WATCHER NAME THE SAME FLOOR. The head says what a sheet does to somebody's
+	# disk, so a band reading `every 0 s` beside a watcher keeping a tenth of a second is a head that
+	# is wrong about its own sheet. Two files hold that number and nothing but this pins them together.
+	ok = _check("and the band's floor is the watcher's own",
+		pack.contains("maxf(look_every_seconds, %s)" % EventSheetFileFacts.SHORTEST_LOOK_TEXT),
+		true) and ok
+	# WHAT EACH SIGNAL MEANS TRAVELS WITH IT. A plain `#` block stayed where the raw row sat while the
+	# signals were gathered into their own section, so the three comments shipped as an orphan block
+	# pages below the signals they describe. Doc comments ride along.
+	ok = _check("each trigger's words sit above the trigger itself",
+		pack.contains("## Raised on the first look that finds a file the look before did not.
+"
+			+ "## @ace_trigger
+## @ace_name(\"On A File Appeared\")
+signal file_appeared"),
+		true) and ok
+	# AND CHANGED MEANS THE TIME MOVED, not that it moved forward: a file restored from a backup
+	# carries an older time and really has changed. The page said "newer" while the line said "!=".
+	ok = _check("the changed trigger says different rather than newer",
+		pack.contains("## at the last look. Usually that means newer; a file restored from a backup"),
+		true) and ok
+	ok = _check("and the line it describes really asks whether the time moved",
+		pack.contains("elif int(_seen[entry]) != int(found[entry]):"), true) and ok
 	# The overshoot is CARRIED. A frame almost never lands exactly on the interval, and starting the
 	# count at zero each time adds a frame to every gap, so the looks drift against the clock the row
-	# named - and the band prints the row's number, not the one the watcher was keeping.
+	# named.
 	ok = _check("and its overshoot is carried, so the looks do not drift against the clock",
 		pack.contains("_since_last_look = minf(_since_last_look - interval, interval)"), true) and ok
 	# A folder that is not there answers [] exactly as an empty one does, so a look taken while a
@@ -457,6 +480,33 @@ static func _run_band() -> bool:
 	ok = _check("naming the folder", str(watches[0].get("folder", "")), "user://mods") and ok
 	ok = _check("and the interval, which the path alone cannot say",
 		str(watches[0].get("seconds", "")), "2.0") and ok
+	# A ROW MAY ASK FOR LESS THAN THE WATCHER WILL GIVE. The shipped watcher floors the gap at a tenth
+	# of a second, so a band printing the row's `0` would be saying the sheet reads the folder never
+	# while it really reads it ten times a second.
+	var hurried: EventSheetResource = EventSheetResource.new()
+	hurried.host_class = "Node"
+	var rush: EventRow = EventRow.new()
+	rush.trigger_provider_id = "Core"
+	rush.trigger_id = "OnReady"
+	var rush_body: RawCodeRow = RawCodeRow.new()
+	rush_body.code = "$FolderWatcher.watch_folder(\"user://mods\", 0)"
+	rush.actions.append(rush_body)
+	hurried.events.append(rush)
+	ok = _check("a gap shorter than the floor is shown as the gap the watcher will really keep",
+		str(EventSheetFileFacts.watched_folders(hurried)[0].get("seconds", "")), "0.1") and ok
+	# An interval held in an expression is one nothing here can work out, and it rides through as it
+	# was written rather than being guessed at.
+	var named: EventSheetResource = EventSheetResource.new()
+	named.host_class = "Node"
+	var by_name: EventRow = EventRow.new()
+	by_name.trigger_provider_id = "Core"
+	by_name.trigger_id = "OnReady"
+	var name_body: RawCodeRow = RawCodeRow.new()
+	name_body.code = "$FolderWatcher.watch_folder(\"user://mods\", poll_gap)"
+	by_name.actions.append(name_body)
+	named.events.append(by_name)
+	ok = _check("while an interval held in a name is left as the name it is",
+		str(EventSheetFileFacts.watched_folders(named)[0].get("seconds", "")), "poll_gap") and ok
 	var readings: Array[Dictionary] = EventSheetFileFacts.bands(sheet)
 	ok = _check("and the band says it in words", str(readings[readings.size() - 1].get("value", "")),
 		EventSheetL10n.translate("watching %s every %s s") % ["user://mods", "2.0"]) and ok

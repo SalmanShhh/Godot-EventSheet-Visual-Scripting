@@ -32,9 +32,9 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["files", "tools"])
 	sheet.variables = {
-		"watched_folder": {"type": "String", "default": "user://mods", "exported": true, "description": "The folder to look in. Prefer user:// - a folder under res:// is packed into the export and cannot be written to once the game ships, so nothing in it will ever change."},
-		"look_every_seconds": {"type": "float", "default": 2.0, "exported": true, "description": "Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for a folder holding thousands of files."},
-		"only_names_like": {"type": "String", "default": "*", "exported": true, "description": "Which file names count, as a pattern with * and ? in it - \"*.json\" for data files, \"*\" for all of them. Names that do not match are invisible to this watcher: they raise nothing, and they are not looked up."},
+		"watched_folder": {"type": "String", "default": "user://mods", "exported": true, "description": "The folder to look in. Prefer user:// - a folder under res:// is packed into the export and cannot be written to once the game ships, so nothing in it will ever change. Changing this while a watch is running points the SAME baseline at a different folder, so the next look reads every file in the new one as having just appeared and every file in the old one as having just gone. Stop Watching and Watch Folder again to move a running watch."},
+		"look_every_seconds": {"type": "float", "default": 2.0, "exported": true, "description": "Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for a folder holding thousands of files. A tenth of a second is the shortest gap honoured: zero would be a directory read every single frame, which is not what anybody means by an interval."},
+		"only_names_like": {"type": "String", "default": "*", "exported": true, "description": "Which file names count, as a pattern with * and ? in it - \"*.json\" for data files, \"*\" for all of them. Names that do not match are invisible to this watcher: they raise nothing, and they are not looked up. Changing this while a watch is running is compared against a baseline read under the OLD pattern, so the next look raises On A File Removed for files that merely stopped matching and On A File Appeared for ones that just started. Stop Watching and Watch Folder again to change it cleanly."},
 		"watch_on_ready": {"type": "bool", "default": false, "exported": true, "description": "Start watching as soon as the node is ready, using the folder and interval above. Off by default, because a watcher is usually started by the sheet at the moment the game actually cares."},
 		"_seen": {"type": "Dictionary", "default": {}, "exported": false},
 		"_since_last_look": {"type": "float", "default": 0.0, "exported": false},
@@ -48,22 +48,26 @@ static func build() -> bool:
 	# The three events one look can raise, each handing back the WHOLE path so a handler can read the
 	# file without rebuilding it. A signal carries its name and nothing else through the pack
 	# pipeline, so what each one means is said in the comment above it rather than in an
-	# `@ace_description` the emitter would drop.
+	# `@ace_description` the emitter would drop. They are DOC comments (`##`), which is what keeps
+	# them attached to their signal in the shipped file: a plain `#` block is left where the raw row
+	# sat while the signals are gathered into their own section, and the two ended up pages apart.
 	var triggers: RawCodeRow = RawCodeRow.new()
 	triggers.code = "\n".join(PackedStringArray([
-		"# Raised on the first look that finds a file the look before did not.",
+		"## Raised on the first look that finds a file the look before did not.",
 		"## @ace_trigger",
 		"## @ace_name(\"On A File Appeared\")",
 		"signal file_appeared(path: String)",
 		"",
-		"# Raised when a file that was already there has a NEWER modified time than it had at the last",
-		"# look. A program that writes a file in several goes can raise this more than once per save.",
+		"## Raised when a file that was already there has a DIFFERENT modified time from the one it had",
+		"## at the last look. Usually that means newer; a file restored from a backup or copied back",
+		"## over is older and is still a change. A program that writes a file in several goes can raise",
+		"## this more than once per save, and two writes inside the same second read as one.",
 		"## @ace_trigger",
 		"## @ace_name(\"On A File Changed\")",
 		"signal file_changed(path: String)",
 		"",
-		"# Raised on the first look that no longer finds a file the look before did. The path names",
-		"# what went; there is nothing left at it to read.",
+		"## Raised on the first look that no longer finds a file the look before did. The path names",
+		"## what went; there is nothing left at it to read.",
 		"## @ace_trigger",
 		"## @ace_name(\"On A File Removed\")",
 		"signal file_removed(path: String)"
@@ -102,6 +106,9 @@ static func build() -> bool:
 		"\tfor entry: String in found:",
 		"\t\tif not _seen.has(entry):",
 		"\t\t\tfile_appeared.emit(watched_folder.path_join(entry))",
+		"\t\t# DIFFERENT, not newer. A file restored from a backup or copied back over carries an",
+		"\t\t# OLDER modified time and really has changed, so this asks whether the time moved rather",
+		"\t\t# than which way it moved. Two writes inside the same second read as one look's worth.",
 		"\t\telif int(_seen[entry]) != int(found[entry]):",
 		"\t\t\tfile_changed.emit(watched_folder.path_join(entry))",
 		"\tfor entry: String in _seen:",
