@@ -11,6 +11,10 @@ extends RefCounted
 # receipt afterwards. Nothing is written until the button is pressed, and the scene it reads is
 # never touched either way.
 
+## The biggest a cell may be, in the scene's own units. A SpinBox tops out at 100 unless it is
+## told otherwise, which would silently clamp a 1024-pixel chunk to a hundredth of itself.
+const MOST_UNITS := 65536.0
+
 const SPLIT_TITLE := "Split Scene Into Chunks"
 const MERGE_TITLE := "Merge Chunks"
 
@@ -49,7 +53,9 @@ func _build(scene_path: String) -> void:
 		"chunk tools" if _splitting else "chunk merge")
 	content.add_child(EventSheetPopupUI.help_strip(
 		"What this moves", _help_body(), "", ""))
-	_dialog.add_child(EventSheetPopupUI.titled_card(_dialog.title, content))
+	_dialog.add_child(EventSheetPopupUI.titled_card(
+		"A scene in, a folder of chunk scenes out" if _splitting
+		else "A folder of chunk scenes in, one scene out", content))
 	_dialog.confirmed.connect(_on_confirmed)
 	# The dialog parents to the editor base control (outside the dock's translation domain), so it
 	# claims the plugin domain itself and its strings auto-translate.
@@ -70,11 +76,14 @@ func _specs(scene_path: String) -> Array[EventSheetFieldSpec]:
 	if not _splitting:
 		specs.append(EventSheetPopupUI.path_field("scene", "Into scene").default("res://world/world.tscn")
 			.tooltip("The one scene the chunks are put back together into."))
-	specs.append(EventSheetPopupUI.number_field("width", "Cell width").default(1024.0).at_least(1.0)
+	specs.append(EventSheetPopupUI.number_field("width", "Cell width")
+		.default(1024.0).at_least(1.0).at_most(MOST_UNITS)
 		.tooltip("How wide one chunk is, in the scene's own units. Match the Streamer's Cell Size."))
-	specs.append(EventSheetPopupUI.number_field("height", "Cell height").default(1024.0).at_least(1.0)
+	specs.append(EventSheetPopupUI.number_field("height", "Cell height")
+		.default(1024.0).at_least(1.0).at_most(MOST_UNITS)
 		.tooltip("How tall one chunk is. Ignored on a 2D scene, and on a 3D one until height is a cell axis."))
-	specs.append(EventSheetPopupUI.number_field("depth", "Cell depth").default(1024.0).at_least(1.0)
+	specs.append(EventSheetPopupUI.number_field("depth", "Cell depth")
+		.default(1024.0).at_least(1.0).at_most(MOST_UNITS)
 		.tooltip("How deep one chunk is. A 2D scene's depth axis is its own y."))
 	if _splitting:
 		specs.append(EventSheetPopupUI.text_field("prefix", "Name prefix")
