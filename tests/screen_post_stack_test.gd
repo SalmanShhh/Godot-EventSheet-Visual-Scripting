@@ -185,16 +185,16 @@ static func _no_flashing_is_a_ceiling() -> bool:
 	Engine.set_meta("effect_strength", 1.0)
 	layer.pulse_post_effect("vignette", 1.0, 0.0)
 	var rows: Array = [
-		["with nothing asked for, a full pulse is a full pulse", layer.post_strength("vignette"),
-			1.0]
+		["with nothing asked for, a full pulse is a full pulse", _on_screen(layer, "vignette"),
+			"1.000"]
 	]
 	Engine.set_meta("no_flashing", true)
 	layer.pulse_post_effect("vignette", 1.0, 0.0)
 	rows.append(["a player who asked for no flashing gets the same row under the ceiling",
-		layer.post_strength("vignette"), layer.FLASH_CEILING])
+		_on_screen(layer, "vignette"), "%.3f" % layer.FLASH_CEILING])
 	layer.set_post_strength("vignette", 1.0)
 	rows.append(["and every other row goes through the same clamp",
-		layer.post_strength("vignette"), layer.FLASH_CEILING])
+		_on_screen(layer, "vignette"), "%.3f" % layer.FLASH_CEILING])
 	rows.append(["a quick walk is slowed to the floor, because a small strobe is still a strobe",
 		layer._slowed(0.05), layer.FLASH_FLOOR_SECONDS])
 	rows.append(["while a slow one is left alone", layer._slowed(2.0), 2.0])
@@ -202,7 +202,7 @@ static func _no_flashing_is_a_ceiling() -> bool:
 	Engine.set_meta("effect_strength", 0.5)
 	layer.set_post_strength("vignette", 1.0)
 	rows.append(["the effect-strength dial scales every row too",
-		layer.post_strength("vignette"), 0.5])
+		_on_screen(layer, "vignette"), "0.500"])
 	rows.append(["and leaves the time alone, because it is about how much, not how fast",
 		layer._slowed(0.05), 0.05])
 	layer.free()
@@ -222,6 +222,13 @@ static func _no_flashing_is_a_ceiling() -> bool:
 ## And a colour-vision correction is not an amplitude that can strobe - it is what makes the screen
 ## readable at all - so a player who has turned the effect strength to nothing, or asked for no
 ## flashing, still gets the colours told apart.
+##
+## WHICH OF THE TWO NUMBERS POST STRENGTH ANSWERS WITH is the other half of the same idea. It answers
+## with the REQUEST - what the rows asked for - because that is the number a sheet's own arithmetic
+## means: Set Post Strength to Post Strength + 0.1 has to walk up in tenths under any dial, and a row
+## that read the dialled value back and wrote it in again would fold the dial in once more on every
+## round trip until the effect was gone. So the two are asked separately here: the expression for what
+## was asked, the shader's own dial for what the player is looking at.
 static func _the_dials_have_one_say() -> bool:
 	var flashing_was: Variant = Engine.get_meta("no_flashing", null)
 	var strength_was: Variant = Engine.get_meta("effect_strength", null)
@@ -231,14 +238,25 @@ static func _the_dials_have_one_say() -> bool:
 	layer.add_post_effect("vignette", "", 0.25)
 	var rows: Array = [
 		["a dial of a half puts a quarter-strength row on the screen at an eighth",
-			layer.post_strength("vignette"), 0.125]
+			_on_screen(layer, "vignette"), "0.125"]
 	]
 	layer.pulse_post_effect("vignette", 1.0, 0.4)
 	rows.append(["and a pulse over it falls back to where it found it, not to that times the dial",
-		layer.post_strength("vignette"), 0.125])
+		_on_screen(layer, "vignette"), "0.125"])
 	layer.fade_post_strength("vignette", 1.0, 0.5)
 	rows.append(["a fade arrives at what it was asked for, through the dial exactly once",
-		layer.post_strength("vignette"), 0.5])
+		_on_screen(layer, "vignette"), "0.500"])
+	layer.set_post_strength("vignette", 0.8)
+	# THE ROUND TRIP a sheet writes by hand: read the strength, do arithmetic on it, write it back.
+	# The expression answers with the request, so the number that comes back is the number that went
+	# in, and the dial has its one say on the way to the shader.
+	rows.append(["Post Strength answers with what the row asked for, whatever the dials are doing",
+		layer.post_strength("vignette"), 0.8])
+	rows.append(["while the shader is handed that through the dial, once",
+		_on_screen(layer, "vignette"), "0.400"])
+	layer.set_post_strength("vignette", layer.post_strength("vignette") + 0.1)
+	rows.append(["so a row that adds a tenth to what it read adds a tenth",
+		"%.3f" % layer.post_strength("vignette"), "0.900"])
 	layer.set_post_strength("vignette", 0.8)
 	var look_path: String = "user://tests/screen_post_stack_dialled.tres"
 	layer.save_look(look_path, "Dialled")
@@ -247,17 +265,22 @@ static func _the_dials_have_one_say() -> bool:
 		_look_strengths(written), "0.8"])
 	layer.use_look(written)
 	rows.append(["so wearing it back is the same screen, and not a dimmer one every time",
-		layer.post_strength("vignette"), 0.4])
+		_on_screen(layer, "vignette"), "0.400"])
 	Engine.set_meta("effect_strength", 0.0)
 	Engine.set_meta("no_flashing", true)
 	layer.correct_colours_for("deuteranopia")
 	rows.append(["the colour-vision correction is exempt from both dials, because it is not an amplitude",
-		layer.post_strength(layer.CORRECT_EFFECT), 1.0])
+		_on_screen(layer, layer.CORRECT_EFFECT), "1.000"])
 	layer.see_as("protanopia")
 	rows.append(["and so is the simulation the designer walks the level with",
-		layer.post_strength(layer.SEE_AS_EFFECT), 1.0])
+		_on_screen(layer, layer.SEE_AS_EFFECT), "1.000"])
+	# Written again rather than only asked about: a dial has its say as an entry is applied, so what
+	# an ordinary effect does under a dial of nothing is what the next row that touches it writes.
+	layer.set_post_strength("vignette", 0.8)
 	rows.append(["while everything else is still held at nothing by a dial of nothing",
-		layer.post_strength("vignette"), 0.0])
+		_on_screen(layer, "vignette"), "0.000"])
+	rows.append(["and still answers with what that row asked for", layer.post_strength("vignette"),
+		0.8])
 	layer.free()
 	_put_meta_back("no_flashing", flashing_was)
 	_put_meta_back("effect_strength", strength_was)
@@ -404,6 +427,22 @@ static func _order(layer: Node) -> String:
 	for entry: Dictionary in layer._stack:
 		names.append(str(entry.get("called", "")))
 	return ",".join(names)
+
+
+## WHAT THE PLAYER IS LOOKING AT, as opposed to what the rows asked for: the strength the entry's own
+## rectangle is actually wearing, read off the ShaderMaterial the pack hands to the screen. That is
+## the far side of the accessibility dials, and the only honest place to ask about them now that Post
+## Strength answers with the request. Printed to three places because a dial applied to a float is
+## not the float anyone would type, and a pin reading "0.4 is not 0.4" teaches nobody anything.
+static func _on_screen(layer: Node, called: String) -> String:
+	for entry: Dictionary in layer._stack:
+		if str(entry.get("called", "")) != called:
+			continue
+		var rect: ColorRect = entry.get("rect", null) as ColorRect
+		if rect == null or rect.material == null:
+			return "no rectangle"
+		return "%.3f" % float((rect.material as ShaderMaterial).get_shader_parameter(STRENGTH_DIAL))
+	return "no entry"
 
 
 ## One entry's own dial, for the two the colour-vision rows write.

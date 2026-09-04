@@ -196,6 +196,12 @@ static func _the_stack_model_by_value() -> bool:
 ## The two dials the whole project already shares reach the camera's stack: the effect-strength dial
 ## scales a row, and no flashing holds it under the ceiling. The new layer obeys them; the frozen
 ## verbs of the other packs are deliberately untouched, which is why this is asked here.
+##
+## EVERY ANSWER IS READ OFF THE COMPOSITOREFFECT, which is what the camera actually draws with. Post
+## Strength answers with the REQUEST - what the rows asked for, before the dials - because that is the
+## number a sheet's arithmetic means, and a row that read the dialled value back and wrote it in again
+## would fold the dial in once more on every round trip until the effect was gone. So the two are
+## asked separately: the resource for what the player sees, the expression for what was asked.
 static func _the_accessibility_dials_reach_the_camera() -> bool:
 	var had_flashing: bool = Engine.has_meta(&"no_flashing")
 	var had_strength: bool = Engine.has_meta(&"effect_strength")
@@ -205,11 +211,12 @@ static func _the_accessibility_dials_reach_the_camera() -> bool:
 	var kit: Node = _behavior(camera)
 	Engine.set_meta(&"effect_strength", 0.5)
 	kit.call("add_post_effect", "vignette", "half", 1.0)
-	var halved: Variant = kit.call("post_strength", "half")
+	var halved: String = _drawn_at(camera, 0)
+	var asked_for: Variant = kit.call("post_strength", "half")
 	Engine.set_meta(&"effect_strength", 1.0)
 	Engine.set_meta(&"no_flashing", true)
 	kit.call("add_post_effect", "tint", "held", 1.0)
-	var held: Variant = kit.call("post_strength", "held")
+	var held: String = _drawn_at(camera, 1)
 	# THE DIAL HAS ONE SAY. An entry keeps what its row ASKED for and the dial is applied once, on the
 	# way to the CompositorEffect - so a pulse falls back to where it found it rather than to that
 	# times the dial, and a fade arrives at its target rather than at the target times the dial
@@ -218,9 +225,14 @@ static func _the_accessibility_dials_reach_the_camera() -> bool:
 	Engine.set_meta(&"effect_strength", 0.5)
 	kit.call("add_post_effect", "pixelate", "", 0.25)
 	kit.call("pulse_post_effect", "pixelate", 1.0, 0.4)
-	var pulsed_back_to: Variant = kit.call("post_strength", "pixelate")
+	var pulsed_back_to: String = _drawn_at(camera, 2)
 	kit.call("fade_post_strength", "pixelate", 1.0, 0.5)
-	var faded_to: Variant = kit.call("post_strength", "pixelate")
+	var faded_to: String = _drawn_at(camera, 2)
+	# The round trip a sheet writes by hand: read the strength, add to it, write it back.
+	kit.call("set_post_strength", "pixelate", 0.8)
+	kit.call("set_post_strength", "pixelate", float(kit.call("post_strength", "pixelate")) + 0.1)
+	var walked_up: String = "%.3f" % float(kit.call("post_strength", "pixelate"))
+	var walked_up_on_screen: String = _drawn_at(camera, 2)
 	camera.free()
 	if had_flashing:
 		Engine.set_meta(&"no_flashing", was_flashing)
@@ -231,12 +243,16 @@ static func _the_accessibility_dials_reach_the_camera() -> bool:
 	else:
 		Engine.remove_meta(&"effect_strength")
 	return SUPPORT.pins(P, [
-		["the effect-strength dial scales a row on the way in", halved, 0.5],
-		["no flashing holds a row under the ceiling", held, 0.3],
+		["the effect-strength dial scales a row on the way in", halved, "0.500"],
+		["while Post Strength answers with what the row asked for", asked_for, 1.0],
+		["no flashing holds a row under the ceiling", held, "0.300"],
 		["a pulse under a dial falls back to where it found it, not to that times the dial",
-			pulsed_back_to, 0.125],
+			pulsed_back_to, "0.125"],
 		["and a fade under one arrives at what it asked for, through the dial exactly once",
-			faded_to, 0.5],
+			faded_to, "0.500"],
+		["a row that adds a tenth to what it read adds a tenth", walked_up, "0.900"],
+		["and the dial still has its one say on the way to the camera", walked_up_on_screen,
+			"0.450"],
 	])
 
 
@@ -340,6 +356,16 @@ static func _effect_files(camera: Camera3D) -> String:
 	for made: CompositorEffect in camera.compositor.compositor_effects:
 		names.append(made.get_script().resource_path.get_file())
 	return ",".join(names)
+
+
+## WHAT THE CAMERA IS DRAWING WITH: the strength on the CompositorEffect at that position, which is
+## the far side of the accessibility dials and the only honest place to ask about them now that Post
+## Strength answers with the request. Printed to three places because a dial applied to a float is not
+## the float anyone would type, and a pin reading "0.5 is not 0.5" teaches nobody anything.
+static func _drawn_at(camera: Camera3D, at: int) -> String:
+	if camera.compositor == null or at >= camera.compositor.compositor_effects.size():
+		return "no effect"
+	return "%.3f" % float(camera.compositor.compositor_effects[at].get("strength"))
 
 
 ## Whether the effect at that position in the camera's stack is switched on.

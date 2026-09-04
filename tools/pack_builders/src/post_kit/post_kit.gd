@@ -275,8 +275,12 @@ func has_post_effect(called: String = "vignette") -> bool:
 	return _find(called) >= 0
 
 
-## How far one effect is going right now, AFTER the accessibility dials have had their say - so it
-## is what the camera is drawing rather than what was asked for. 0 for one that is not there.
+## How far one effect has been ASKED to go, 0 to 1 - the strength the rows set, before the
+## effect-strength setting and the no-flashing ceiling are applied on the way to the CompositorEffect.
+## That is the number a sheet's own arithmetic means: Set Post Strength to Post Strength + 0.1 walks
+## up in tenths whatever a player's accessibility dials are doing, where reading the dialled value
+## back would fold those dials in again on every round trip and the effect would sink towards
+## nothing. 0 for one that is not there.
 ## @ace_expression
 ## @ace_name("Post Strength")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
@@ -286,7 +290,7 @@ func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
-	return _allowed(float(_stack[at].get("strength", 0.0)))
+	return float(_stack[at].get("strength", 0.0))
 
 
 ## Draws an outline around every node in a group, THROUGH whatever is standing in front of them -
