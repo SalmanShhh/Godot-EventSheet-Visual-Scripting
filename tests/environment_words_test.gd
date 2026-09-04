@@ -229,11 +229,19 @@ static func _test_the_quality_dials() -> bool:
 		["occlusion writes the flag and the quality Project Settings would",
 			templates.get("EnvTurnOcclusionOnAtQuality", ""),
 			OWN_LINES + "environment.ssao_enabled = true\n"
-				+ "RenderingServer.environment_set_ssao_quality({quality}, false, 0.5, 2, 0.01, 0.0)"],
+				+ "RenderingServer.environment_set_ssao_quality({quality}, true, 0.5, 2, 50.0, 300.0)"],
 		["indirect light writes its own six-argument call",
 			templates.get("EnvTurnIndirectLightOnAtQuality", ""),
 			OWN_LINES + "environment.ssil_enabled = true\n"
-				+ "RenderingServer.environment_set_ssil_quality({quality}, false, 0.5, 4, 0.01, 0.0)"],
+				+ "RenderingServer.environment_set_ssil_quality({quality}, true, 0.5, 4, 50.0, 300.0)"],
+		# The five arguments after the quality are the ones Project Settings hands the
+		# RenderingServer at boot, and the last two are METRES: `fadeout_from` 50 and `fadeout_to` 300
+		# are where the effect starts and finishes fading out with distance. A row passing 0.01 and 0
+		# there turns occlusion on and then fades it away within a centimetre of the camera, and
+		# `half_size` false doubles the cost of an effect the project asked for at half resolution.
+		["neither dial fades its effect out at the camera",
+			[str(W.QUALITY_DIALS[0]["arguments"]), str(W.QUALITY_DIALS[1]["arguments"])],
+			["true, 0.5, 2, 50.0, 300.0", "true, 0.5, 4, 50.0, 300.0"]],
 		["global illumination's quality is a ray count",
 			templates.get("EnvTurnGlobalIlluminationOnAtQuality", ""),
 			OWN_LINES + "environment.sdfgi_enabled = true\n"

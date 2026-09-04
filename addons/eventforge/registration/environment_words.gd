@@ -443,9 +443,16 @@ const GLOW_LEVEL_SPREADS: Array[Dictionary] = [
 ## the flag and the quality are two different objects. One row says both.
 ##
 ## `flag` is the Environment property the switch itself is, `call` is the RenderingServer method, and
-## `arguments` are the method's remaining arguments in the engine's own order, written out because
-## they are the engine's own defaults and there is nothing to ask them of - `environment_set_ssao_quality`
-## takes six and only the first is a quality. `stem` is frozen, exactly like a word's.
+## `arguments` are the method's remaining arguments in the engine's own order -
+## `environment_set_ssao_quality` takes six and only the first is a quality. They are written out
+## because there is nothing to ask them of at descriptor-build time, and the values are the ones
+## Project Settings itself hands the RenderingServer at boot:
+## `rendering/environment/ssao/half_size` true, `adaptive_target` 0.5, `blur_passes` 2,
+## `fadeout_from` 50.0, `fadeout_to` 300.0, and the same for `ssil` with four blur passes. THEY ARE
+## NOT PLACEHOLDERS. `fadeout_from` and `fadeout_to` are the metres over which the effect is faded
+## out with distance, so a row passing 0.01 and 0.0 there would switch the effect off within a
+## centimetre of the camera while claiming to have turned it on - which is what these numbers being
+## the project's own prevents. `stem` is frozen, exactly like a word's.
 const QUALITY_DIALS: Array[Dictionary] = [
 	{
 		"word": "occlusion",
@@ -458,7 +465,7 @@ const QUALITY_DIALS: Array[Dictionary] = [
 		"ask_verb": "occlusion is on",
 		"flag": "ssao_enabled",
 		"call": "environment_set_ssao_quality",
-		"arguments": "false, 0.5, 2, 0.01, 0.0",
+		"arguments": "true, 0.5, 2, 50.0, 300.0",
 		"default": "RenderingServer.ENV_SSAO_QUALITY_MEDIUM",
 		"choices": [
 			{"key": "RenderingServer.ENV_SSAO_QUALITY_VERY_LOW", "label": "very low"},
@@ -478,7 +485,7 @@ const QUALITY_DIALS: Array[Dictionary] = [
 		"verb": "Turn indirect light on at {quality}",
 		"flag": "ssil_enabled",
 		"call": "environment_set_ssil_quality",
-		"arguments": "false, 0.5, 4, 0.01, 0.0",
+		"arguments": "true, 0.5, 4, 50.0, 300.0",
 		"default": "RenderingServer.ENV_SSIL_QUALITY_MEDIUM",
 		"choices": [
 			{"key": "RenderingServer.ENV_SSIL_QUALITY_VERY_LOW", "label": "very low"},
