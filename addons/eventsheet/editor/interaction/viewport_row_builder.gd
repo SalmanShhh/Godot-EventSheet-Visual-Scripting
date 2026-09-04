@@ -170,6 +170,9 @@ static var _host_bind_regex: RegEx = null
 static var _func_header_regex: RegEx = null
 static var _class_header_regex: RegEx = null
 static var _class_extends_regex: RegEx = null
+## The member-held class reading's own header pattern: it captures the class NAME as well as the
+## base, which the one above deliberately does not (see _class_header_parts).
+static var _structured_class_header_regex: RegEx = null
 static var _class_var_default_regex: RegEx = null
 static var _class_var_bare_regex: RegEx = null
 static var _method_header_regex: RegEx = null
@@ -4873,6 +4876,278 @@ static func data_class_remove_field(code: String, field_index: int) -> String:
 	return emit_data_class(model)
 
 
+# ── The third class reading: a class held by its MEMBERS ───────────────────────────────────────
+# `data_class_name` reads a class of nothing but fields; `methods_class_name` reads one that also
+# has methods. BOTH refuse outright the moment the body holds an enum, a signal, or another class
+# nested inside it - so exactly the classes with the most structure in them were the ones that read
+# as a wall of GDScript. This third reading holds those: the class is a fold, and each member reads
+# as the row it would be at TOP LEVEL - an enum through the enum kind's own summary (which collapses
+# a five-line enum to one row), a signal through the signal kind's, a nested class as its own fold of
+# members, a method as the same `ƒ name(params) -> Type` chip the methods reading gives it.
+#
+# DISJOINT BY CONSTRUCTION: at least one enum / signal / nested-class member is REQUIRED here, and
+# neither other recognizer accepts one, so a class routes to exactly one of the three readings and
+# the other two keep the behaviour they were pinned with.
+#
+# PURE VIEW, AND BYTE-EXACT STRUCTURALLY. Every member keeps its source lines verbatim, so
+# `emit_structured_class` is a concatenation and there is no translation step that could drift;
+# `structured_class_lifts` proves it per row anyway, and a class this walk cannot hold - a bare
+# statement in the body, an enum shape the enum reading refuses, code after the class - degrades to
+# the honest RawCodeRow it already was. General purpose includes the right to just be code.
+
+
+## The class name ("" when this code is not that shape) of a class read by its members. See the
+## section note above for what this reading holds and why it is disjoint from the other two.
+static func structured_class_name(code: String) -> String:
+	return str(parse_structured_class(code).get("class_name", ""))
+
+
+## The structured model of a member-held inner class, or {} when the walk refuses it:
+## { class_name, extends, prefix (verbatim lines before the header), header (the verbatim class
+## line), members }. Each member is {kind, depth, lines} with its SOURCE lines kept verbatim; a
+## nested class member carries {kind:"class", class_name, extends, header, members} instead, so the
+## structure nests as far as the file does. Static + pure - provable without a viewport.
+static func parse_structured_class(code: String) -> Dictionary:
+	# Asked of EVERY code block the two readings above refused, which on a large file is most of
+	# them - so the cheap answer comes before the split that would otherwise allocate an array per
+	# block to reach the same one. The header this reading needs sits at column 0 (a `class ` any
+	# further in is a nested member, which cannot be the declaration this row is), so a block with no
+	# such line has nothing here to find.
+	if not (code.begins_with("class ") or code.contains("\nclass ")):
+		return {}
+	var lines: PackedStringArray = code.split("\n")
+	var i: int = 0
+	var prefix: Array[String] = []
+	while i < lines.size():
+		var stripped: String = lines[i].strip_edges()
+		if stripped.is_empty() or stripped.begins_with("#"):
+			prefix.append(lines[i])
+			i += 1
+		else:
+			break
+	if i >= lines.size():
+		return {}
+	var header: Dictionary = _class_header_parts(lines[i])
+	if header.is_empty():
+		return {}
+	var header_line: String = lines[i]
+	var scan: Dictionary = _scan_class_members(lines, i + 1, 1)
+	# A body the walk refused, or lines left over after it: a second top-level construct sharing the
+	# row is more than one class, and reading it as one would hide whatever follows.
+	if scan.is_empty() or int(scan.get("next", -1)) != lines.size():
+		return {}
+	var members: Array = scan.get("members", [])
+	var holds_structure: bool = false
+	for member: Dictionary in members:
+		var kind: String = str(member.get("kind"))
+		if kind == "enum" or kind == "signal" or kind == "class":
+			holds_structure = true
+			break
+	if not holds_structure:
+		return {}  # a field-only or method-bearing class - one of the other two readings owns it
+	return {
+		"class_name": str(header.get("name")),
+		"extends": str(header.get("extends")),
+		"prefix": prefix,
+		"header": header_line,
+		"members": members
+	}
+
+
+## Re-emits a parse_structured_class model: the verbatim prefix, the verbatim header, then every
+## member's own source lines in order. A concatenation on purpose - nothing here rebuilds a line
+## from parts, so the only way bytes could move is a member the walk failed to record.
+static func emit_structured_class(model: Dictionary) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for prefix_line: String in model.get("prefix", []):
+		out.append(prefix_line)
+	out.append(str(model.get("header")))
+	_append_structured_member_lines(model.get("members", []), out)
+	return "\n".join(out)
+
+
+## The byte-gate for the member-held class reading: true only when the model re-emits to the EXACT
+## source. The view never writes the RawCodeRow back, so this decides structured-vs-verbatim reading
+## only - but the covenant is proved here rather than assumed, exactly as the other two gates do.
+static func structured_class_lifts(code: String) -> bool:
+	var model: Dictionary = parse_structured_class(code)
+	if model.is_empty():
+		return false
+	return emit_structured_class(model) == code
+
+
+## `class Name[ extends Base]:` split into {name, extends}, or {} when the line is not one. The one
+## place the header shape is spelled, so the top-level walk and the nested one cannot disagree.
+##
+## Its OWN regex, deliberately. `_class_extends_regex` beside it is lazily compiled by whichever
+## caller reaches it first and captures only the base class, so reading a name out of its group 1
+## gave "" or the base depending on which reading ran earlier in the session - a state-order bug that
+## passes alone and fails in a suite. A second pattern is cheaper than that class of failure.
+static func _class_header_parts(line: String) -> Dictionary:
+	if _structured_class_header_regex == null:
+		_structured_class_header_regex = RegEx.new()
+		if _structured_class_header_regex.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends ([A-Za-z_][A-Za-z0-9_.]*))?:$") != OK:
+			return {}
+	var parts: RegExMatch = _structured_class_header_regex.search(line)
+	if parts == null:
+		return {}
+	return {"name": parts.get_string(1), "extends": parts.get_string(2)}
+
+
+## Walks one class body at `depth` tabs of indentation from `start`, returning {members, next} - or
+## {} when it meets something this reading cannot hold, which is how a class stays honest code.
+## Recursive: a nested class member is this same walk one tab deeper.
+static func _scan_class_members(lines: PackedStringArray, start: int, depth: int) -> Dictionary:
+	var members: Array = []
+	var indent: String = "\t".repeat(depth)
+	var i: int = start
+	while i < lines.size():
+		var line: String = lines[i]
+		if line.strip_edges().is_empty():
+			members.append({"kind": "blank", "depth": depth, "lines": PackedStringArray([line])})
+			i += 1
+			continue
+		if not line.begins_with(indent):
+			break  # a dedent - this class body ended on the line before
+		var inner: String = line.substr(depth)
+		if inner.begins_with("\t"):
+			return {}  # deeper than the body with no member above it to belong to
+		if inner.begins_with("#"):
+			members.append({"kind": "note", "depth": depth, "lines": PackedStringArray([line])})
+			i += 1
+			continue
+		if inner.begins_with("func ") or inner.begins_with("static func "):
+			var block: PackedStringArray = _consume_member_block(lines, i, depth)
+			members.append({"kind": "method", "depth": depth, "lines": block})
+			i += block.size()
+			continue
+		if inner.begins_with("class "):
+			var nested_header: Dictionary = _class_header_parts(inner)
+			if nested_header.is_empty():
+				return {}
+			var nested: Dictionary = _scan_class_members(lines, i + 1, depth + 1)
+			if nested.is_empty():
+				return {}
+			var nested_members: Array = nested.get("members", [])
+			if _reading_member_count(nested_members) == 0:
+				return {}  # a nested class with nothing in it this walk can name - keep the code
+			members.append({
+				"kind": "class",
+				"depth": depth,
+				"class_name": str(nested_header.get("name")),
+				"extends": str(nested_header.get("extends")),
+				"header": line,
+				"members": nested_members
+			})
+			i = int(nested.get("next", i + 1))
+			continue
+		if inner.begins_with("enum ") or inner.begins_with("signal "):
+			var kind_id: String = "enum" if inner.begins_with("enum ") else "signal"
+			var claimed: Dictionary = _dedented_kind_claim(kind_id, lines, i, depth)
+			if not claimed.is_empty():
+				var consumed: int = int(claimed.get("consumed", 1))
+				members.append({
+					"kind": kind_id,
+					"depth": depth,
+					"lines": _line_slice(lines, i, consumed),
+					"reading": str(claimed.get("reading", "")),
+					"count": int(claimed.get("count", 0))
+				})
+				i += consumed
+				continue
+			# The kind refused this one. A single-line declaration still stands as a plain member
+			# line (honest, and one line either way); a MULTI-line enum whose shape the enum reading
+			# cannot hold would strand its member lines, so the whole class stays code instead.
+			if kind_id == "enum" and not inner.ends_with("}"):
+				return {}
+			members.append({"kind": "member", "depth": depth, "lines": PackedStringArray([line])})
+			i += 1
+			continue
+		if inner.begins_with("var ") or inner.begins_with("const ") or inner.begins_with("@"):
+			members.append({"kind": "member", "depth": depth, "lines": PackedStringArray([line])})
+			i += 1
+			continue
+		return {}  # a bare statement in a class body - not a shape this reading holds
+	return {"members": members, "next": i}
+
+
+## One member and everything indented under it (a method and its body), as its verbatim source
+## lines. Trailing blank lines are handed BACK to the class body: they separate this member from the
+## next, and counted here they would make a method report somebody else's gap as its own length.
+static func _consume_member_block(lines: PackedStringArray, header_index: int, depth: int) -> PackedStringArray:
+	var deeper: String = "\t".repeat(depth + 1)
+	var block: PackedStringArray = PackedStringArray([lines[header_index]])
+	var i: int = header_index + 1
+	while i < lines.size() and (lines[i].strip_edges().is_empty() or lines[i].begins_with(deeper)):
+		block.append(lines[i])
+		i += 1
+	while block.size() > 1 and block[block.size() - 1].strip_edges().is_empty():
+		block.resize(block.size() - 1)
+	return block
+
+
+## What a registered block kind makes of a member once it is dedented to column 0 - which is exactly
+## the question "what row would this be at top level?", asked of the one place that answers it. {}
+## when the kind refuses. Returns how many lines it claimed, its own summary of the row, and the
+## member count behind that summary (an enum's values, a signal's parameters).
+static func _dedented_kind_claim(kind_id: String, lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(kind_id)
+	if kind == null:
+		return {}
+	var indent: String = "\t".repeat(depth)
+	var dedented: PackedStringArray = PackedStringArray()
+	for i: int in range(index, lines.size()):
+		if not lines[i].begins_with(indent):
+			break
+		dedented.append(lines[i].substr(depth))
+	if dedented.is_empty():
+		return {}
+	var claim: Dictionary = kind.lift(dedented, 0)
+	if claim.is_empty():
+		return {}
+	var claimed_row: Resource = claim.get("resource") as Resource
+	if claimed_row == null:
+		return {}
+	var count: int = 0
+	if claimed_row is EnumRow:
+		count = (claimed_row as EnumRow).members.size()
+	elif claimed_row is SignalRow:
+		count = (claimed_row as SignalRow).params.size()
+	return {
+		"consumed": maxi(1, int(claim.get("consumed", 1))),
+		"reading": kind.summary_for(claimed_row),
+		"count": count
+	}
+
+
+## The members that will RENDER as rows - blanks and comments are the class's own spacing, and a
+## nested class made of nothing else has no structure for this reading to show.
+static func _reading_member_count(members: Array) -> int:
+	var shown: int = 0
+	for member: Dictionary in members:
+		var kind: String = str(member.get("kind"))
+		if kind != "blank" and kind != "note":
+			shown += 1
+	return shown
+
+
+static func _line_slice(lines: PackedStringArray, start: int, count: int) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for i: int in range(start, mini(start + count, lines.size())):
+		out.append(lines[i])
+	return out
+
+
+static func _append_structured_member_lines(members: Array, into: PackedStringArray) -> void:
+	for member: Dictionary in members:
+		if str(member.get("kind")) == "class":
+			into.append(str(member.get("header")))
+			_append_structured_member_lines(member.get("members", []), into)
+			continue
+		for line: String in member.get("lines", PackedStringArray()):
+			into.append(line)
+
+
 ## A TOP-LEVEL structured collection declaration (a const table, a var default set): the same
 ## Declare treatment its in-body sibling gets - a header line, one single-cell line per entry,
 ## no bracket rows. Entries edit in place (edit_kind "decl_entry_line:-1:<entry>" - the -1 says
@@ -5049,6 +5324,13 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# unchanged RawCodeRow, so the .gd round-trip is never at risk; double-click opens the code editor.
 	if methods_class_lifts(raw_row.code):
 		return _build_methods_class_row(raw_row, indent)
+	# A class held by its MEMBERS - one carrying an enum, a signal, or another class nested inside it,
+	# which both readings above refuse outright. It reads as the structure it is: the class as a fold,
+	# each member as the row it would be at top level (a five-line enum collapsing to one row is the
+	# clearest case). Byte-gated (structured_class_lifts) and a pure view over the unchanged
+	# RawCodeRow; a class this reading cannot hold stays the honest code it already was.
+	if structured_class_lifts(raw_row.code):
+		return _build_structured_class_row(raw_row, indent)
 	# A lone top-level function (a helper the importer could not lift) collapses to a `ƒ name(params) ->
 	# Type` header + line count, so it reads as a FUNCTION, not a raw GDScript wall - the same view-only
 	# collapse as host-binding and annotation shells above. Double-click still opens the code dialog.
@@ -5532,6 +5814,159 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 		}.merged(action_style, true)))
 	row_data.spans = spans
 	return row_data
+
+
+## A member-held inner class (structured_class_name) rendered as a foldable, READ-ONLY block: the
+## class in the condition cell, what it holds in the action cell, and one child row per member -
+## each read as the row it would be at TOP LEVEL. A nested class becomes its own fold inside this
+## one, as deep as the file goes. Pure view: the RawCodeRow stays the source (double-click opens the
+## code editor), nothing here is editable, and the byte round-trip is untouched.
+func _build_structured_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
+	var model: Dictionary = parse_structured_class(raw_row.code)
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.EVENT
+	row_data.source_resource = raw_row
+	row_data.line_count = 1
+	# Uid scope, NOT the display name (same-named repeats suffix "-2" so rows never alias).
+	var scope: String = _unique_class_scope(str(model.get("class_name")), raw_row)
+	row_data.row_uid = "structured_class_%s" % scope
+	row_data.language_block = true  # a class declaration, not a regular ACE event - language stripe
+	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	row_data.spans = _build_class_header_spans(str(model.get("class_name")), str(model.get("extends", "")),
+		model.get("members", []))
+	row_data.children = _build_class_member_rows(model.get("members", []), scope, indent + 1)
+	if not row_data.children.is_empty():
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	return row_data
+
+
+## The header of a class block: its declaration in the CONDITION cell, and what it holds - counted by
+## kind - in the ACTION cell. Shared by the outer block and every class nested inside it, so a fold
+## three deep reads the same way the one at the top does.
+func _build_class_header_spans(display_name: String, base: String, members: Array) -> Array[SemanticSpan]:
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var header_text: String = "class %s" % display_name
+	if not base.is_empty():
+		header_text += " extends %s" % base
+	var spans: Array[SemanticSpan] = [
+		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
+			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
+			"text_color": event_style.object_label_color
+		}.merged(condition_style, true))
+	]
+	spans.append(_make_span(_class_member_cue(members), SemanticSpan.SpanType.VALUE, {
+		"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
+		"text_color": event_style.value_highlight_color
+	}.merged(action_style, true)))
+	return spans
+
+
+## What a class holds, counted by kind, in the same "N x · N y" idiom the methods-class header uses.
+## Kinds with nothing in them are left out rather than reported as zero.
+static func _class_member_cue(members: Array) -> String:
+	var counts: Dictionary = {"member": 0, "method": 0, "enum": 0, "signal": 0, "class": 0}
+	for member: Dictionary in members:
+		var kind: String = str(member.get("kind"))
+		if counts.has(kind):
+			counts[kind] = int(counts[kind]) + 1
+	var words: Array = [["member", "field", "fields"], ["method", "method", "methods"],
+		["enum", "enum", "enums"], ["signal", "signal", "signals"], ["class", "class", "classes"]]
+	var parts: PackedStringArray = PackedStringArray()
+	for word: Array in words:
+		var count: int = int(counts[str(word[0])])
+		if count > 0:
+			parts.append("%d %s" % [count, str(word[1]) if count == 1 else str(word[2])])
+	return " · ".join(parts)
+
+
+## One child row per member of a class block, each read as the row it would be at top level. Blank
+## lines and comments are the class's own spacing and carry no row. `scope` keys the uids - a nested
+## class extends it with its own name, so a member of Outer.Inner never aliases one of Outer.
+func _build_class_member_rows(members: Array, scope: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	var index: int = 0
+	for member: Dictionary in members:
+		var kind: String = str(member.get("kind"))
+		if kind == "blank":
+			continue
+		var depth: int = int(member.get("depth", 1))
+		if kind == "class":
+			rows.append(_build_nested_class_row(member, scope, index, indent))
+		elif kind == "method":
+			rows.append(_build_class_method_row(scope, index,
+				_dedent_lines(member.get("lines", PackedStringArray()), depth), indent))
+		elif kind == "enum" or kind == "signal":
+			rows.append(_build_class_reading_row(member, scope, index, indent))
+		else:
+			rows.append(_build_data_class_member_row(scope, index,
+				str(member.get("lines", PackedStringArray([""]))[0]), indent))
+		index += 1
+	return rows
+
+
+## A class nested inside another one: the same header + member rows as the block above it, one
+## indent deeper and folded on its own. The uid scope carries the outer class's, so two nested
+## classes with the same name under different parents keep their own fold and selection state.
+func _build_nested_class_row(member: Dictionary, scope: String, index: int, indent: int) -> EventRowData:
+	var nested_scope: String = "%s.%s" % [scope, str(member.get("class_name"))]
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.EVENT
+	row_data.source_resource = null
+	row_data.line_count = 1
+	row_data.row_uid = "structured_class_nested_%s_%d" % [nested_scope, index]
+	row_data.language_block = true
+	row_data.spans = _build_class_header_spans(str(member.get("class_name")),
+		str(member.get("extends", "")), member.get("members", []))
+	row_data.children = _build_class_member_rows(member.get("members", []), nested_scope, indent + 1)
+	if not row_data.children.is_empty():
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	return row_data
+
+
+## An enum or a signal declared inside a class, read the way the same declaration reads at top level:
+## the block kind's OWN summary of the row it lifted, in the condition cell, with the enum's value
+## count beside it. That is what collapses a five-line enum to one row - the reading comes from the
+## kind, not from a second spelling of the same thing kept here.
+func _build_class_reading_row(member: Dictionary, scope: String, index: int, indent: int) -> EventRowData:
+	var kind: String = str(member.get("kind"))
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.EVENT
+	row_data.source_resource = null
+	row_data.line_count = 1
+	row_data.row_uid = "structured_class_%s_%s_%d" % [kind, scope, index]
+	row_data.language_block = true
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var spans: Array[SemanticSpan] = [
+		_make_span("%s %s" % [kind, str(member.get("reading"))], SemanticSpan.SpanType.OBJECT, {
+			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
+			"text_color": _viewport._get_event_style().object_label_color
+		}.merged(condition_style, true))
+	]
+	var count: int = int(member.get("count", 0))
+	if kind == "enum" and count > 0:
+		spans.append(_make_span("%d %s" % [count, EventSheetL10n.translate("values")],
+			SemanticSpan.SpanType.VALUE, {
+				"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
+				"text_color": _viewport._get_reading_style().muted_text_color
+			}.merged(action_style, true)))
+	row_data.spans = spans
+	return row_data
+
+
+## The same lines with `depth` leading tabs taken off each, so a member reads (and matches the
+## method-header shape) exactly as it would at column 0. Blank lines are left alone.
+static func _dedent_lines(lines: PackedStringArray, depth: int) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var indent: String = "\t".repeat(depth)
+	for line: String in lines:
+		out.append(line.substr(depth) if line.begins_with(indent) else line)
+	return out
 
 
 ## An `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
