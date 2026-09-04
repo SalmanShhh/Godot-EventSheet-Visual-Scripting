@@ -419,6 +419,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_on_unpack_refused", "entry: String, reason: String")
 		"OnUnpackFinished":
 			return _lifecycle("_on_unpack_finished", "entries: int, bytes: int")
+		"OnRevealFinished":
+			# The end of a typed line, on the same seam as the three above and for the same reason:
+			# a rich text label's own `finished` signal is about the document being LOADED, not about
+			# a reveal running out, so there is nothing to connect. The reveal's tween calls this
+			# function BY NAME on its last callback, and Skip Reveal calls it directly, which is what
+			# makes an early skip and a reveal that ran out the same moment.
+			return _lifecycle("_on_reveal_finished", "")
 		"OnPlayerJoined":
 			# The seven things the connection itself says - five off MultiplayerAPI's own signals and
 			# the two SceneMultiplayer adds for the handshake, all on the same property. They

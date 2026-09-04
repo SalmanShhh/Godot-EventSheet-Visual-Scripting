@@ -103,6 +103,12 @@ const NOT_STANDALONE: Array[String] = [
 	# three answer events, runs the emitted loop against a real archive, and parses a whole file
 	# holding the loop and its three answers together.
 	"UnpackZipIntoFolder",
+	# The two reveal rows call `_on_reveal_finished` by name, which is the whole point of them: a
+	# typed line ends seconds after the row ran, and a skip ends it early, so both answer in the one
+	# place the sheet's On Reveal Finished event compiles to. This harness builds one empty host
+	# class with no events in it. Their templates are exercised by text_effect_aces_test, which
+	# compiles the reveal together with that event and parses the whole emitted script.
+	"RevealText", "SkipReveal",
 	# The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin
 	# host and nowhere else, and this harness deliberately builds one host class (Node) rather than a
 	# per-ACE menagerie. Their templates are exercised by editor_object_reading_test, which opens a real

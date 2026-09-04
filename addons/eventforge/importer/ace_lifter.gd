@@ -45,6 +45,10 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/collision_edge_lift.gd"),
 	preload("res://addons/eventforge/importer/input_event_lift.gd"),
 	preload("res://addons/eventforge/importer/state_lift.gd"),
+	# The six BBCode effect tags a rich text label wears. Asked here, before the general index,
+	# because the line is an ordinary `text = ...` assignment and the catch-all property write would
+	# otherwise claim it and say nothing about the effect in it.
+	preload("res://addons/eventforge/importer/text_effect_lift.gd"),
 	# The two node dignities whose spelling the general index would claim as the wrong row: the owner
 	# a node is written out as part of (a Set Property to the index) and a reparent that says which of
 	# the two things should happen to where the node is (a bare Reparent To to the index, with the
