@@ -682,6 +682,22 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		attrs["unit_kinds"] = unit_kinds
 		if not unit_store.is_empty():
 			attrs["unit_store"] = unit_store
+	elif parts[1] == "cards" and parts.size() >= 3:
+		# "kind=k,schema=n,stripes=s" recovers into the same three attributes the emitter reads, so
+		# the marker re-emits byte-for-byte. A marker without its schema names nothing to draw, so
+		# it is left as the verbatim @export_custom it came in as.
+		var cards_schema: String = ""
+		for cards_token: String in str(parts[2]).split(","):
+			var cards_trimmed: String = cards_token.strip_edges()
+			if cards_trimmed.begins_with("kind="):
+				attrs["cards_kind_key"] = cards_trimmed.substr(5).strip_edges()
+			elif cards_trimmed.begins_with("schema="):
+				cards_schema = cards_trimmed.substr(7).strip_edges()
+			elif cards_trimmed.begins_with("stripes="):
+				attrs["cards_stripe_key"] = cards_trimmed.substr(8).strip_edges()
+		if cards_schema.is_empty():
+			return
+		attrs["cards_schema"] = cards_schema
 	elif parts[1] == "table" and parts.size() >= 3:
 		# The column schema (name=type pairs) recovers into the same table_columns the emitter
 		# reads, so the marker re-emits byte-for-byte and the dialog reopens it editable.

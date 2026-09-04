@@ -10,6 +10,9 @@
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
 #   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
 #   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
+#   cards          eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>
+#                  Array (of Dictionary cards, each of a KIND, edited as a reorderable list of cards -
+#                  the schema registered under <n> says what each kind is called and which fields it has)
 #   toggle_row     eventsheet:toggle_row:<a>,<b>,<c>     String / int (choices as one row of toggle buttons;
 #                  optional tails, in this order: ":segmented" for equal-width word buttons, ":icons=<source>"
 #                  for a picture per option - a path pattern holding %s, or a registered provider's name)
@@ -33,6 +36,10 @@ extends EditorInspectorPlugin
 # takes an instance).
 const OBJECT_DECOR_PATH: String = "res://addons/eventsheet/editor/inspector/object_decor.gd"
 const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/preview_panel.gd"
+## The card-list drawer and its schema side, loaded BY PATH for the same reason: a property that
+## never asks for cards must not pay for them at every editor start.
+const CARD_LIST_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/card_list_drawer.gd"
+const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card_schemas.gd"
 
 
 func _can_handle(_object: Object) -> bool:
@@ -121,6 +128,15 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			if columns.is_empty():
 				return false
 			add_property_editor(name, TableProperty.new(columns))
+			return true
+		"cards":
+			# A list of Dictionaries, each of a kind: the reorderable card list. Both the untyped list
+			# and Array[Dictionary] reach here as TYPE_ARRAY, exactly as the table drawer does.
+			if type != TYPE_ARRAY:
+				return false
+			var cards_args: Array = drawer.get("args", [])
+			var cards_spec: Dictionary = load(CARD_SCHEMAS_PATH).call("parse_cards_spec", str(cards_args[0]) if cards_args.size() > 0 else "")
+			add_property_editor(name, CardListProperty.new(cards_spec))
 			return true
 		"vector_dial":
 			if type != TYPE_VECTOR2:
@@ -515,6 +531,37 @@ class TableProperty:
 		if incoming == _table.get_value():
 			return
 		_table.set_value(incoming)
+
+
+## A list of Dictionaries as a list of cards: drag to reorder, fold one open for its own fields.
+## The widget is loaded BY PATH (see CARD_LIST_DRAWER_PATH) and spoken to through `connect` and
+## `call`, so this boot-path file never names it and the two never form a cycle.
+class CardListProperty:
+	extends EditorProperty
+	var _list: Control = null
+
+	func _init(spec: Dictionary) -> void:
+		_list = load(EventSheetAttributeDrawers.CARD_LIST_DRAWER_PATH).new(spec)
+		_list.connect("value_changed", _on_changed)
+		add_child(_list)
+		set_bottom_editor(_list)
+
+	func _on_changed(cards: Array) -> void:
+		emit_changed(get_edited_property(), cards)
+		# A property write does not fire a resource's `changed` signal, so live previews (a prefab's
+		# picture, a stamp in the viewport) would not repaint. Fire it, as the table drawer does.
+		var edited: Object = get_edited_object()
+		if edited is Resource:
+			(edited as Resource).emit_changed()
+
+	func _update_property() -> void:
+		# Guard by VALUE: the echo of our own commit carries what the list already shows, so skipping
+		# it keeps the field being edited alive. Only an outside change (undo, reselecting) rebuilds.
+		var value: Variant = get_edited_object().get(get_edited_property())
+		var incoming: Array = value if value is Array else []
+		if incoming == _list.call("get_value"):
+			return
+		_list.call("set_value", incoming)
 
 
 ## Vector2 dial: drag the handle to set direction + magnitude.

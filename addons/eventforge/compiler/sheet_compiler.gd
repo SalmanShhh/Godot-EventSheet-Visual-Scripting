@@ -4225,6 +4225,21 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if column_pairs.is_empty():
 				return ""
 			marker = "eventsheet:table:%s" % ",".join(column_pairs)
+		"cards":
+			# A list of Dictionaries, each of a KIND, edited as a reorderable list of cards. Three
+			# words ride the marker and nothing else: which key holds the kind, which SCHEMA (a name
+			# registered through the public API) says what the kinds are, and which key colours the
+			# card's stripe. The rows themselves stay plain data - without the editor plugin the
+			# property is an ordinary Array and the running game reads what it always read.
+			if not (type_name in ["Array", "Array[Dictionary]"]):
+				return ""
+			var cards_schema: String = _cards_marker_word(attributes.get("cards_schema", ""), "")
+			if cards_schema.is_empty():
+				return ""
+			marker = "eventsheet:cards:kind=%s,schema=%s,stripes=%s" % [
+				_cards_marker_word(attributes.get("cards_kind_key", ""), "kind"),
+				cards_schema,
+				_cards_marker_word(attributes.get("cards_stripe_key", ""), "category")]
 		"unit":
 			# A float and the unit it is READ in. The unit list and the STORED unit ride the marker;
 			# the stored unit is what the number in this file (and in the running game) means, so the
@@ -4270,6 +4285,18 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 		_:
 			return ""
 	return "@export_custom(PROPERTY_HINT_NONE, \"%s\") " % marker
+
+
+## One word of the cards marker, or the fallback when the attribute is empty or carries a character
+## the joined marker could not survive (a separator, an equals sign, a quote).
+static func _cards_marker_word(value: Variant, fallback: String) -> String:
+	var word: String = str(value).strip_edges()
+	if word.is_empty():
+		return fallback
+	for forbidden: String in [",", ":", "=", "\"", "|"]:
+		if word.contains(forbidden):
+			return fallback
+	return word
 
 
 ## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector

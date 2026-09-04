@@ -1654,6 +1654,50 @@ static func inspector_preview_renderer_for(script_path: String) -> Callable:
 	return _inspector_preview_renderers.get(script_path, Callable())
 
 
+## The vocabulary behind a card-list Inspector drawer, published by the pack that owns the kinds.
+##
+## A property marked `eventsheet:cards:kind=<key>,schema=<name>,stripes=<key>` on an Array of
+## Dictionaries edits as a reorderable list of cards. The SCHEMA named there is registered here:
+## `provider` is called with no arguments and returns
+##   {"kinds": [{"kind", "category", "label", "help", "fields", "live", "defaults", "badge",
+##               "actions"}], "label_key", "enabled_key", "stripes"}
+## - one entry per kind the list may hold, each naming its own fields ({"key", "label", "drawer",
+## "default", "show_if", "link"}) with the same drawer words an export marker uses. A callable
+## rather than a Dictionary because a pack's kinds are known when the Inspector opens, not when the
+## plugin boots.
+##
+## One schema per name; last registration wins. Nothing here reaches generated game code - the cards
+## are Inspector chrome, and the property is a plain Array of Dictionaries in the running game.
+static var _card_schemas: Dictionary = {}
+
+
+static func register_card_schema(schema_name: String, provider: Callable) -> void:
+	_card_schemas[schema_name] = provider
+
+
+static func unregister_card_schema(schema_name: String) -> void:
+	_card_schemas.erase(schema_name)
+
+
+## The schema registered under a name, or an empty Dictionary when nothing was registered (a card
+## list whose pack is absent still edits, and still saves the bytes it was opened with).
+static func card_schema(schema_name: String) -> Dictionary:
+	var provider: Variant = _card_schemas.get(schema_name)
+	if not (provider is Callable) or not (provider as Callable).is_valid():
+		return {}
+	var answer: Variant = (provider as Callable).call()
+	return answer if answer is Dictionary else {}
+
+
+## A card schema DERIVED from ACE descriptors: one kind per verb, its label and help from the words
+## the picker already reads out, its fields from the verb's own parameters and their choices. A pack
+## that publishes verbs gets a card list for them with no editor code, in one call:
+##   EventSheets.register_card_schema("my_steps", EventSheets.card_schema_from_aces.bind(my_aces))
+## `fallback_category` groups the verbs that declare no category of their own.
+static func card_schema_from_aces(aces: Array, fallback_category: String = "") -> Dictionary:
+	return load("res://addons/eventsheet/editor/inspector/card_schemas.gd").call("from_aces", aces, fallback_category)
+
+
 ## Pictures for a toggle-buttons Inspector drawer, drawn by the pack that owns the options.
 ##
 ## A drawer's marker can name an icon SOURCE. A path pattern holding "%s" needs nothing registered

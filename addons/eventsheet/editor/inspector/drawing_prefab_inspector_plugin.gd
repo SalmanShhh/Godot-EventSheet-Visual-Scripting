@@ -6,10 +6,12 @@
 #      object can ask for; the prefab hands it the tree-free rasterizer it has always drawn with, so the
 #      picture, its size and its refresh are exactly what they were before the card was made general.
 #   2. A shape-aware editor for the `steps` array (StepsProperty / ShapeStepsEditor): instead of the generic
-#      grid's opaque p1/p2/p3 columns, each step is a titled card whose fields match its shape - a circle
-#      shows "Radius", a rect shows "Width"/"Height", a line shows "End X"/"End Y"/"Thickness", and so on.
-#      The stored keys (kind, x, y, p1, p2, p3, color, texture) are unchanged, so the pack, the rasterizer,
-#      and the .tres bytes are all untouched - this only relabels and lays out the SAME data.
+#      grid's opaque p1/p2/p3 columns, each step is a CARD whose fields match its shape - a circle shows
+#      "Radius", a rect shows "Width"/"Height", a line shows "End X"/"End Y"/"Thickness", and so on. The
+#      cards themselves are the shared card-list drawer (drag to reorder, fold one open, a searchable
+#      Add dropdown); all this file supplies is the shape vocabulary. The stored keys (kind, x, y, p1, p2,
+#      p3, color, texture) are unchanged, so the pack, the rasterizer, and the .tres bytes are all
+#      untouched - this only relabels and lays out the SAME data.
 # Both are cosmetic: without this plugin a prefab still edits as a plain steps table and draws identically.
 @tool
 class_name EventSheetDrawingPrefabInspector
@@ -74,17 +76,18 @@ class StepsProperty:
 		_editor.set_steps(incoming as Array)
 
 
-## The shape-aware steps list: one titled card per step, its fields chosen by the step's `kind`. Editing a
-## value updates the backing Dictionary in place and emits; changing the kind, adding, removing, or reordering
-## rebuilds the list. Deliberately DrawingPrefab-specific (it knows the shape vocabulary), so it lives here
-## rather than in the generic drawer widgets.
+## The shape-aware steps list: the SHARED card-list drawer, handed the prefab's own vocabulary. Each
+## step is a card titled by its shape, whose fields are that shape's - a circle shows "Radius", a
+## line shows "End X" / "End Y" / "Thickness" - and the Add button is the searchable dropdown every
+## card list has. The stored keys (kind, x, y, p1, p2, p3, color, texture) are untouched: nothing is
+## written into a step on load, and an edit keeps the spelling the file already used, so a prefab
+## saved before this editor existed opens, edits and saves as the same bytes.
 class ShapeStepsEditor:
-	extends VBoxContainer
-	signal value_changed(value: Array)
+	extends EventSheetCardListDrawer
 
 	const KINDS: Array[String] = ["circle", "ring", "rect", "line", "cone", "stamp"]
 	## Per-shape fields, in display order. `key` is the frozen storage slot (p1/p2/p3/texture); `label` is
-	## the human title shown above/beside it; `kind` picks the editor ("num" default, "text" for a path).
+	## the human title shown beside it; `drawer` names the editor, in the same words an export marker uses.
 	## x, y (offset) and color are common to every shape and appended separately.
 	const SHAPE_FIELDS: Dictionary = {
 		"circle": [{"key": "p1", "label": "Radius"}],
@@ -92,170 +95,72 @@ class ShapeStepsEditor:
 		"rect": [{"key": "p1", "label": "Width"}, {"key": "p2", "label": "Height"}],
 		"line": [{"key": "p1", "label": "End X"}, {"key": "p2", "label": "End Y"}, {"key": "p3", "label": "Thickness"}],
 		"cone": [{"key": "p1", "label": "Facing"}, {"key": "p2", "label": "FOV"}, {"key": "p3", "label": "Radius"}],
-		"stamp": [{"key": "p1", "label": "Scale"}, {"key": "p2", "label": "Spin"}, {"key": "texture", "label": "Texture", "kind": "text"}],
+		"stamp": [{"key": "p1", "label": "Scale"}, {"key": "p2", "label": "Spin"}, {"key": "texture", "label": "Texture", "drawer": "texture_preview"}],
+	}
+	## What a freshly ADDED step of each shape starts as, in storage order. Every slot is seeded so the
+	## Dictionary shape matches what the rasterizer and the round-trip expect the moment it is added -
+	## and only then: loading a step never writes one of these.
+	const SHAPE_DEFAULTS: Dictionary = {
+		"circle": {"p1": 12.0, "p2": 0.0, "p3": 0.0},
+		"ring": {"p1": 12.0, "p2": 2.0, "p3": 0.0},
+		"rect": {"p1": 24.0, "p2": 16.0, "p3": 0.0},
+		"line": {"p1": 24.0, "p2": 0.0, "p3": 2.0},
+		"cone": {"p1": 0.0, "p2": 60.0, "p3": 32.0},
+		"stamp": {"p1": 1.0, "p2": 0.0, "p3": 0.0},
+	}
+	## What each shape is, in the words the card's info line shows when it is unfolded.
+	const SHAPE_HELP: Dictionary = {
+		"circle": "A filled disc of the given radius, centred on the offset.",
+		"ring": "An outlined circle - its radius, and how thick the outline is.",
+		"rect": "A filled rectangle of the given width and height, centred on the offset.",
+		"line": "A stroke from the offset to the end point, of the given thickness.",
+		"cone": "A filled wedge: which way it faces, how wide it opens, and how far it reaches.",
+		"stamp": "A texture drawn at the offset, scaled and spun.",
 	}
 
-	var _steps: Array = []
-	var _add_button: Button = null
 
 	func _init() -> void:
-		add_theme_constant_override("separation", 4)
-		_add_button = Button.new()
-		_add_button.text = "+ Add shape"
-		_add_button.tooltip_text = "Add a step. Pick its shape and only that shape's fields appear (Radius, Width, End X, etc.)."
-		_add_button.pressed.connect(_on_add)
-		_rebuild()
+		super._init({"kind_key": "kind", "stripe_key": "kind", "schema_dict": build_schema()})
+
+
+	## The prefab's vocabulary as a card schema: one kind per shape, its fields the shape's own slots
+	## followed by the offset and the colour every shape has. The stripe is coloured by the SHAPE, so
+	## a list of mixed shapes reads at a glance, and the schema declares no enable key because a step
+	## the rasterizer would still draw must not grow a checkbox that does nothing.
+	static func build_schema() -> Dictionary:
+		var kinds: Array = []
+		for kind: String in KINDS:
+			var fields: Array = [{"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(PackedStringArray(KINDS))}]
+			for field: Variant in SHAPE_FIELDS[kind]:
+				fields.append(field)
+			fields.append({"key": "x", "label": "Offset X"})
+			fields.append({"key": "y", "label": "Offset Y"})
+			fields.append({"key": "color", "label": "Color", "drawer": "swatch_row"})
+			var defaults: Dictionary = {"x": 0.0, "y": 0.0}
+			for slot: Variant in SHAPE_DEFAULTS[kind]:
+				defaults[str(slot)] = SHAPE_DEFAULTS[kind][slot]
+			defaults["color"] = "#ffffff"
+			defaults["texture"] = ""
+			kinds.append({
+				"kind": kind,
+				"category": kind,
+				"label": kind.capitalize(),
+				"help": SHAPE_HELP.get(kind, ""),
+				"fields": fields,
+				"defaults": defaults,
+			})
+		return {"kinds": kinds}
+
 
 	func set_steps(steps: Array) -> void:
-		_steps = []
-		for step: Variant in steps:
-			if step is Dictionary:
-				_steps.append((step as Dictionary).duplicate())
-		_rebuild()
+		set_value(steps)
+
 
 	func get_steps() -> Array:
-		return _steps.duplicate(true)
+		return get_value()
 
-	func _on_add() -> void:
-		# A fresh step defaults to a visible filled circle so the preview shows something immediately. All
-		# storage slots are seeded so the Dictionary shape matches what the rasterizer and round-trip expect.
-		_steps.append({"kind": "circle", "x": 0.0, "y": 0.0, "p1": 12.0, "p2": 0.0, "p3": 0.0, "color": "#ffffff", "texture": ""})
-		_rebuild()
-		value_changed.emit(get_steps())
 
-	func _rebuild() -> void:
-		for child: Node in get_children():
-			remove_child(child)
-			child.queue_free()
-		if _steps.is_empty():
-			var empty: Label = Label.new()
-			empty.text = "No shapes yet. Add one and pick its shape."
-			empty.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-			empty.modulate = Color(0.72, 0.76, 0.84)
-			add_child(empty)
-		for index: int in range(_steps.size()):
-			add_child(_build_step_card(index))
-		add_child(_add_button)
-
-	## One step as a titled card: a header row (shape dropdown + reorder / remove) over a wrapping field row
-	## whose fields are chosen by the shape - so "Radius" / "Width" / "End X" are titled per shape, never p1.
-	func _build_step_card(index: int) -> Control:
-		var step: Dictionary = _steps[index]
-		var kind: String = str(step.get("kind", "circle"))
-		if not SHAPE_FIELDS.has(kind):
-			kind = "circle"
-		var style: StyleBoxFlat = StyleBoxFlat.new()
-		style.bg_color = Color(1, 1, 1, 0.04)
-		style.set_corner_radius_all(4)
-		style.set_content_margin_all(5)
-		style.border_width_left = 2
-		style.border_color = Color(0.36, 0.66, 1.0, 0.5)
-		var card: PanelContainer = PanelContainer.new()
-		card.add_theme_stylebox_override("panel", style)
-		var body: VBoxContainer = VBoxContainer.new()
-		body.add_theme_constant_override("separation", 3)
-		card.add_child(body)
-		# Header: the shape dropdown drives which fields show; reorder + remove sit at the end.
-		var header: HBoxContainer = HBoxContainer.new()
-		header.add_theme_constant_override("separation", 4)
-		var kind_opt: OptionButton = OptionButton.new()
-		kind_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		kind_opt.tooltip_text = "The shape drawn by this step. Circle is filled; Ring is an outline (its Thickness)."
-		for kind_index: int in range(KINDS.size()):
-			kind_opt.add_item(KINDS[kind_index].capitalize())
-			if KINDS[kind_index] == kind:
-				kind_opt.select(kind_index)
-		kind_opt.item_selected.connect(func(idx: int) -> void:
-			if idx >= 0 and idx < KINDS.size():
-				step["kind"] = KINDS[idx]
-				_rebuild()
-				value_changed.emit(get_steps()))
-		header.add_child(kind_opt)
-		var up_button: Button = Button.new()
-		up_button.text = "▲"
-		up_button.tooltip_text = "Draw this shape earlier (higher in the list draws first, underneath)"
-		up_button.disabled = index == 0
-		up_button.pressed.connect(_on_move_up.bind(index))
-		header.add_child(up_button)
-		var remove_button: Button = Button.new()
-		remove_button.text = "✕"
-		remove_button.tooltip_text = "Remove this shape"
-		remove_button.pressed.connect(_on_remove.bind(index))
-		header.add_child(remove_button)
-		body.add_child(header)
-		# Fields: shape-specific first, then the common Offset X / Y and Color. HFlow wraps them in a narrow
-		# Inspector instead of overflowing off the right edge.
-		var fields: HFlowContainer = HFlowContainer.new()
-		fields.add_theme_constant_override("h_separation", 8)
-		fields.add_theme_constant_override("v_separation", 3)
-		for field: Variant in SHAPE_FIELDS[kind]:
-			var field_dict: Dictionary = field as Dictionary
-			fields.add_child(_titled_field(str(field_dict.get("label", "")), _make_field(step, field_dict)))
-		fields.add_child(_titled_field("Offset X", _make_number(step, "x")))
-		fields.add_child(_titled_field("Offset Y", _make_number(step, "y")))
-		fields.add_child(_titled_field("Color", _make_color(step)))
-		body.add_child(fields)
-		return card
-
-	## A small muted title beside its editor, so a field reads as "Radius [ 12 ]" - the "titled on the row"
-	## look, per shape.
-	func _titled_field(label_text: String, control: Control) -> Control:
-		var box: HBoxContainer = HBoxContainer.new()
-		box.add_theme_constant_override("separation", 3)
-		var label: Label = Label.new()
-		label.text = label_text
-		label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-		label.modulate = Color(0.72, 0.76, 0.84)
-		box.add_child(label)
-		box.add_child(control)
-		return box
-
-	func _make_field(step: Dictionary, field: Dictionary) -> Control:
-		if str(field.get("kind", "num")) == "text":
-			var key: String = str(field.get("key"))
-			var edit: LineEdit = LineEdit.new()
-			edit.custom_minimum_size = Vector2(120.0, 0.0)
-			edit.placeholder_text = "res://path.png"
-			edit.text = str(step.get(key, ""))
-			edit.text_changed.connect(func(text: String) -> void:
-				step[key] = text
-				value_changed.emit(get_steps()))
-			return edit
-		return _make_number(step, str(field.get("key")))
-
-	func _make_number(step: Dictionary, key: String) -> Control:
-		var spin: SpinBox = SpinBox.new()
-		spin.allow_greater = true
-		spin.allow_lesser = true
-		spin.step = 0.1
-		spin.custom_minimum_size = Vector2(64.0, 0.0)
-		spin.value = float(step.get(key, 0.0))
-		spin.value_changed.connect(func(v: float) -> void:
-			step[key] = v
-			value_changed.emit(get_steps()))
-		return spin
-
-	func _make_color(step: Dictionary) -> Control:
-		var swatch: ColorPickerButton = ColorPickerButton.new()
-		swatch.custom_minimum_size = Vector2(44.0, 0.0)
-		swatch.color = Color.from_string(str(step.get("color", "")), Color.WHITE)
-		swatch.color_changed.connect(func(picked: Color) -> void:
-			step["color"] = "#" + picked.to_html(picked.a < 1.0)
-			value_changed.emit(get_steps()))
-		return swatch
-
-	func _on_move_up(index: int) -> void:
-		if index <= 0 or index >= _steps.size():
-			return
-		var moved: Dictionary = _steps[index]
-		_steps.remove_at(index)
-		_steps.insert(index - 1, moved)
-		_rebuild()
-		value_changed.emit(get_steps())
-
-	func _on_remove(index: int) -> void:
-		if index < 0 or index >= _steps.size():
-			return
-		_steps.remove_at(index)
-		_rebuild()
-		value_changed.emit(get_steps())
+	## A step of the DEFAULT shape - a visible filled circle, so the preview shows something the moment
+	## a step exists. The Add dropdown names its own shape; this is the door for everything else.
+	func add_default_step() -> void:
+		add_card(KINDS[0])

@@ -71,7 +71,7 @@ static func run() -> bool:
 	all_passed = _check("cone titles p1/p2/p3 as Facing/FOV/Radius", _shape_labels("cone"), "Facing|FOV|Radius") and all_passed
 	# A freshly added step is a visible filled circle with every storage slot seeded (valid immediately).
 	steps_editor.set_steps([])
-	steps_editor._on_add()
+	steps_editor.add_default_step()
 	var added: Dictionary = steps_editor.get_steps()[0]
 	all_passed = _check("a new step defaults to a circle", str(added.get("kind", "")), "circle") and all_passed
 	all_passed = _check("a new step seeds every storage slot", added.has("p1") and added.has("texture") and added.has("color"), true) and all_passed
