@@ -387,16 +387,44 @@ static func run() -> bool:
 		FileAccess.get_file_as_string("res://demo/showcase/combo_fighter/combo_fighter.tscn")
 			.contains("\"method\": &\"_on_hit_frame\""), true) and passed
 
-	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
+	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors, and the
+	# whole screen half: a post effect pulsed on the beat and one held on the stack, the beat's
+	# chromatic shake, a moment either side of the keypress chain, the look written out and worn
+	# back, the fade the board starts over behind, and one tile drawn blended. Every one of those is
+	# a row somebody could drop out of the builder without the suite noticing, which is what the byte
+	# drift gate alone was left guarding.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",
 		"juice_tile(beat, intensity * 5.0)",
 		"__group_juice_active",
 		"elif Input.is_action_just_pressed(&\"ui_cancel\")",
 		"else:",
+		"@export_range(0, 9999, 1) var moments_played: int = 0",
+		"$ScreenFx.pulse_post_effect(\"vignette\", 0.45, 0.35)",
+		"$JuiceBehavior.chromatic_shake(4.0, 0.3, \"reducing\", randf_range(0.0, 360.0))",
+		"$JuiceBehavior.moment(\"impact\", intensity * 0.6)",
+		"moments_played += 1",
+		"$ScreenFx.add_post_effect(\"scanlines\", \"party\", 0.3)",
+		"$ScreenFx.save_look(\"user://looks/carousel.tres\", \"Carousel\")",
+		"$ScreenFx.use_look(ResourceLoader.load(\"user://looks/carousel.tres\", \"\", ResourceLoader.CACHE_MODE_IGNORE))",
+		"$JuiceBehavior.moment(\"calm\", 1.0)",
+		"$SceneFlowBehavior.reload_scene_with(\"fade\", 0.6, \"smooth\")",
+		"$BlendModes.blend_as($Tiles/Tile3, \"screen\", 1.0)",
 	]) and passed
-	passed = _check_scene("showcase_carousel scene wires Spring + Tween",
-		"res://demo/showcase/carousel/showcase_carousel.tscn", ["SpringBehavior", "TweenBehavior"]) and passed
+	# The scene half, named one at a time rather than folded into a single yes/no, so a board that
+	# lost a pack says WHICH pack the rows above are now addressing at nothing.
+	var carousel_scene: PackedScene = load("res://demo/showcase/carousel/showcase_carousel.tscn") as PackedScene
+	var carousel_root: Node = carousel_scene.instantiate() if carousel_scene != null else null
+	var carousel_wired: PackedStringArray = PackedStringArray()
+	for wanted: String in ["BlendModes", "Eye", "FlashBehavior", "JuiceBehavior", "SceneFlowBehavior",
+			"ScreenFx", "SpringBehavior", "TweenBehavior"]:
+		if carousel_root != null and carousel_root.find_child(wanted, true, false) != null:
+			carousel_wired.append(wanted)
+	if carousel_root != null:
+		carousel_root.free()
+	passed = _check("showcase_carousel scene wires every pack its rows address",
+		",".join(carousel_wired),
+		"BlendModes,Eye,FlashBehavior,JuiceBehavior,SceneFlowBehavior,ScreenFx,SpringBehavior,TweenBehavior") and passed
 
 	# Starfall - enum + match FSM, group pick-filter, spawner.
 	passed = _check_sheet("starfall", "res://demo/showcase/starfall/starfall.gd", [
