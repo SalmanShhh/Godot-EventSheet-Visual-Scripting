@@ -297,6 +297,19 @@ static func _run_state_moments() -> bool:
 	rows.append(["the handler is written with the state it was handed",
 		compiled.contains("func _on_anim_state_entered(state: StringName) -> void:"), true])
 	rows.append(["and the whole emitted file parses", _parses(compiled), true])
+	# THE CROSSING, COMPILED. Its memory is cleared in a PRELUDE and read in the term, which are two
+	# halves of one row - so both have to address the same node, and both have to understand the
+	# optional `{target.}` slot. They did not: the prelude wrote its braces out verbatim and the file
+	# did not parse. Pinned as the whole emitted handler.
+	var marker_file: String = _compiled(_marker_sheet())
+	rows.append(["the crossing's memory is cleared before the question is asked",
+		marker_file.contains("\t__marker_z9 = __marker_z9 and current_animation == \"attack\" and current_animation_position >= get_animation(\"attack\").get_marker_time(\"impact\")"), true])
+	rows.append(["the question is the comparison AND not having answered it already",
+		marker_file.contains("\tif (current_animation == \"attack\" and current_animation_position >= get_animation(\"attack\").get_marker_time(\"impact\")) and not __marker_z9:"), true])
+	rows.append(["answering it writes the memory down", marker_file.contains("\t\t__marker_z9 = true"), true])
+	rows.append(["the memory itself is declared once, with the row's own id in its name",
+		marker_file.contains("var __marker_z9: bool = false"), true])
+	rows.append(["and that whole file parses too", _parses(marker_file), true])
 	return SUPPORT.pins("animation_tree_aces_test", rows)
 
 
@@ -482,6 +495,32 @@ static func _state_sheet() -> EventSheetResource:
 	say.provider_id = "Core"
 	say.ace_id = "Print"
 	say.codegen_template = "print(state)"
+	event_row.actions.append(say)
+	sheet.events.append(event_row)
+	return sheet
+
+
+## A sheet holding the marker trigger and the crossing question the dock drops under it, with the
+## uid already baked exactly as the dock bakes it at apply time.
+static func _marker_sheet() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "AnimationPlayer"
+	var event_row: EventRow = _trigger_row("OnAnimationReachedMarker", "")
+	event_row.trigger_params = {"animation": "\"attack\"", "marker": "\"impact\""}
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "AnimationJustPastMarker")
+	var gate: ACECondition = ACECondition.new()
+	gate.provider_id = "Core"
+	gate.ace_id = "AnimationJustPastMarker"
+	gate.codegen_template = str(descriptor.codegen_template).replace("{uid}", "z9")
+	gate.member_declaration = str(descriptor.member_template).replace("{uid}", "z9")
+	gate.codegen_prelude = str(descriptor.codegen_prelude).replace("{uid}", "z9")
+	gate.codegen_on_true = str(descriptor.codegen_on_true).replace("{uid}", "z9")
+	gate.params = {"animation": "\"attack\"", "marker": "\"impact\"", "target": ""}
+	event_row.conditions.append(gate)
+	var say: ACEAction = ACEAction.new()
+	say.provider_id = "Core"
+	say.ace_id = "Print"
+	say.codegen_template = "print(\"hit\")"
 	event_row.actions.append(say)
 	sheet.events.append(event_row)
 	return sheet

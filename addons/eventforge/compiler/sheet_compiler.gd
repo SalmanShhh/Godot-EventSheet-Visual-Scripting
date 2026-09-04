@@ -3667,7 +3667,17 @@ static func _collect_stateful_members(entries: Array, into: Array) -> void:
 static func _substitute_params(template: String, params: Dictionary) -> String:
 	var output: String = template
 	for key: Variant in params.keys():
-		output = output.replace("{%s}" % str(key), str(params[key]))
+		var name_text: String = str(key)
+		# THE OPTIONAL PREFIX, spelled here as it is in a codegen template: `{target.}` is the node a
+		# row acts on, and it writes `$Anim.` when one is named and NOTHING when the field is blank.
+		# A stateful condition's prelude and its main template are two halves of one row - the prelude
+		# clears the memory the term reads - so the two have to address the same node, which means
+		# both have to understand the same slot. Without this the prelude wrote the braces out
+		# verbatim and the emitted file did not parse.
+		var value: String = str(params[key])
+		var prefixed: String = "" if value.strip_edges().is_empty() else value.strip_edges() + "."
+		output = output.replace("{%s.}" % name_text, prefixed)
+		output = output.replace("{%s}" % name_text, value)
 	return output
 
 
