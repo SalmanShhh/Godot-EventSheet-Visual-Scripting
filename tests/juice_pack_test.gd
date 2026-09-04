@@ -214,6 +214,16 @@ static func run() -> bool:
 	behavior.stop_chromatic_shake()
 	Engine.remove_meta("no_flashing")
 	all_passed = _check("the no-flashing meta is not left behind for other tests", Engine.has_meta("no_flashing"), false) and all_passed
+	# The player's effect-strength dial is spent BEFORE the magnitude is stored, so the expression
+	# answers with the width the screen is showing rather than the width the row asked for. Written
+	# out to three places rather than compared as a float, like the shift pin above.
+	Engine.set_meta("effect_strength", 0.5)
+	behavior.chromatic_shake(12.0, 0.4, "reducing", -1.0)
+	all_passed = _check("the effect-strength dial is answered, not just drawn",
+		"%.3f" % behavior.chromatic_shake_magnitude(), "6.000") and all_passed
+	behavior.stop_chromatic_shake()
+	Engine.remove_meta("effect_strength")
+	all_passed = _check("the effect-strength meta is not left behind for other tests", Engine.has_meta("effect_strength"), false) and all_passed
 	# The falloff is spent once, on the shift. The shader mixes the shaken taps in by chroma_intensity,
 	# so writing the fade into that dial as well would square the curve and a reducing shake would be
 	# a quarter of itself half way through while the expression answered half. Off the tree there is

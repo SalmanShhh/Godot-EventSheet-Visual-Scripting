@@ -509,7 +509,7 @@
   engine has already scaled by time, so slow motion glides the split and a hitstop freezes it
   mid-frame. Four rows in each pack - **Chromatic Shake**, **Stop Chromatic Shake**, the
   **Is Chromatic Shaking** question and the **Chromatic Shake Magnitude** answer in pixels after the
-  falloff - over the shared overlay, which gains a shift and a mix dial beside the kick's untouched
+  falloff and the player's dial - over the shared overlay, which gains a shift and a mix dial beside the kick's untouched
   one. The effect-strength dial scales it, the no-flashing answer halves both the split and the rate
   it wanders at, and the tick parks itself the frame the shake ends.
 - **The flagship showcase plays what this pass added.** Carousel of Juice was eight tiles springing
@@ -639,6 +639,12 @@
   answering 12, and only a fixed angle, a unit vector by construction, ever honoured the pixel unit.
   The noise picks the ANGLE now: the same wander, and the number on the row, the number the
   expression answers and the width on the screen are finally one number.
+- **And the effect-strength dial is answered as well as drawn.** The player's global dial was spent
+  on the split written to the shader and not on the magnitude stored beside it, so a player at half
+  strength saw a 12-pixel shake come out 6 pixels wide while **Chromatic Shake Magnitude** answered
+  12 - and a rumble or a HUD wobble driven from that reading shook at full strength for a player who
+  had asked for half. The dial is spent before the magnitude is stored, so the expression answers
+  the width the screen is showing.
 - **A reducing shake falls in a straight line.** The falloff was spent twice - once on the split
   written to the shader, and again on the dial the shader mixes that split in by - so what a player
   saw fell as the fade SQUARED: a quarter of the effect half way through a shake the row, the docs

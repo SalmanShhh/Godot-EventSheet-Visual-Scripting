@@ -1316,8 +1316,9 @@ func _chroma_shake_direction() -> Vector2:
 		return Vector2.RIGHT
 	return Vector2.from_angle(_chroma_shake_wander() * TAU)
 
-## The magnitude the screen shows this frame, in pixels: what was asked for, less the falloff
-## spent, less the wander a fixed angle leaves on the amount, halved while no flashing is on.
+## The magnitude the shake itself is at this frame, in pixels: what was asked for, less the
+## falloff spent, less the wander a fixed angle leaves on the amount, halved while no flashing
+## is on. The player's effect-strength dial is spent on top of this, where the frame is written.
 ## @ace_hidden
 func _chroma_shake_amount() -> float:
 	var amount: float = _chroma_shake_from * _chroma_shake_fade()
@@ -1330,10 +1331,16 @@ func _chroma_shake_amount() -> float:
 ## Writes this frame of the shake onto the overlay shader. The shift is in pixels here and in
 ## screen fractions there, so it is divided by the viewport - a 12-pixel split is 12 pixels wide
 ## on every resolution. The magnitude is kept whether or not there is a shader to write to, so
-## the expression answers off-tree (and headless) exactly as it does on screen.
+## the expression answers off-tree (and headless) exactly as it does on screen - and it is
+## stored AFTER the effect-strength dial, because the expression's promise is to answer with
+## the width the screen is showing, not the width the row asked for before the player's
+## setting was spent on it.
 ## @ace_hidden
 func _chroma_shake_write() -> void:
-	_chroma_shake_magnitude = _chroma_shake_amount()
+	# The same global dial the camera effects are scaled by, so a player who turned the shake
+	# down turned this down with it.
+	var effect_strength: float = float(Engine.get_meta("effect_strength", 1.0))
+	_chroma_shake_magnitude = _chroma_shake_amount() * effect_strength
 	if _fx_material == null:
 		return
 	var span: Vector2 = Vector2(1.0, 1.0)
@@ -1341,10 +1348,7 @@ func _chroma_shake_write() -> void:
 	if vp != null:
 		span = vp.get_visible_rect().size
 	span = Vector2(maxf(span.x, 1.0), maxf(span.y, 1.0))
-	# The same global dial the camera effects are scaled by, so a player who turned the shake
-	# down turned this down with it.
-	var effect_strength: float = float(Engine.get_meta("effect_strength", 1.0))
-	var shift: Vector2 = _chroma_shake_direction() * _chroma_shake_magnitude * effect_strength
+	var shift: Vector2 = _chroma_shake_direction() * _chroma_shake_magnitude
 	_fx_material.set_shader_parameter("chroma_shift", shift / span)
 	# The falloff is spent ONCE, and it is spent on the shift above. This dial is how far the
 	# shaken taps are mixed in at all, so writing the fade here as well would square the curve:
@@ -1380,9 +1384,10 @@ func _chroma_shake_step(delta: float) -> void:
 func is_chromatic_shaking() -> bool:
 	return _chroma_shake_active
 
-## How wide the split is right now, in pixels: the magnitude after the falloff, the wander and
-## the no-flashing halving. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it
-## and the whole hit reads as one thing.
+## How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the
+## no-flashing halving and the player's effect-strength dial - the width the screen is showing,
+## not the width the row asked for. Zero when nothing is shaking. Drive a rumble or a HUD wobble
+## from it and the whole hit reads as one thing.
 ## @ace_expression
 ## @ace_name("Chromatic Shake Magnitude")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
