@@ -1151,9 +1151,20 @@ static func project_scripts() -> PackedStringArray:
 ## machine path - this answers a question, and applying the answer is an edit somebody approves in
 ## the sheet's own migrate dialog.
 ##
-## This shape is FROZEN, like an `ace_id`: a reader of it may be a studio's own script.
-static func migration_report() -> Array[Dictionary]:
-	return EventSheetMigrationDoctor.rows(EventSheetMigrationDoctor.project_corpus())
+## THE CORPUS IS EVERY STORED SHEET AND A CAPPED SAMPLE OF THE SCRIPTS, and `read_every_script`
+## turns the second half into a whole read. Sampled is the default because reading a script means
+## LIFTING it - a thousand of them is minutes rather than seconds - and because a `.gd` sheet derives
+## its rows from the file every time, so a line whose verb is gone has no lift entry left to match
+## and there is nothing there to find. The whole read is for the run that has to be certain: a
+## release check, or a project whose packs disagree with themselves. The Doctor's own section always
+## samples, and says which mode it ran in its summary line either way.
+##
+## This shape is FROZEN, like an `ace_id`: a reader of it may be a studio's own script. The parameter
+## has a default for that reason - `migration_report()` written before it existed goes on meaning
+## exactly what it meant.
+static func migration_report(read_every_script: bool = false) -> Array[Dictionary]:
+	return EventSheetMigrationDoctor.rows(
+		EventSheetMigrationDoctor.project_corpus(read_every_script))
 
 
 ## Every scene of the project that loads one resource FILE, in path order, leaving out `own_scene`.
@@ -1898,6 +1909,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"drawing_prefab_stamp": "Drawing-Canvas",
 	"color_palette_resource": "Game-Settings",
 	"encounter_resource": "Encounter-Timeline",
+	"glyph_sheet_resource": "Prompts",
 	"home_leash": "Home-And-Leash",
 	"loot_loader": "Loot-Table",
 	"loot_table_resource": "Loot-Table",

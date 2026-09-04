@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[node name="Lane" type="Control"]
+offset_right = 640.0
+offset_bottom = 96.0
+mouse_filter = 2
+
+[node name="HitLine" type="ColorRect" parent="."]
+offset_left = 72.0
+offset_right = 76.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5)
+
+[node name="Note" type="Control" parent="."]
+visible = false
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+
+[node name="Body" type="ColorRect" parent="Note"]
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.25)
+
+[node name="Glyph" type="TextureRect" parent="Note"]
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
