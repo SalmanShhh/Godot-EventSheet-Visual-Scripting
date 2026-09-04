@@ -107,6 +107,23 @@ static func _schema_pins() -> bool:
 		str((EventSheetCardSchemas.from_aces([_bare_descriptor()], "other").get("kinds")[0] as Dictionary).get("category", "")), "other") and ok
 	ok = _eq("anything that is not a descriptor is skipped",
 		EventSheetCardSchemas.from_aces(["not a descriptor", null], ""), {"kinds": []}) and ok
+	# The documented one-line door: a pack registers `EventSheets.card_schema_from_aces.bind(...)`
+	# and must get exactly what the direct call above builds, pinned against the same value.
+	ok = _eq("the public door derives the same schema, value for value",
+		EventSheets.card_schema_from_aces([_shake_descriptor()], "other"),
+		{"kinds": [{
+			"kind": "Shake",
+			"category": "Camera",
+			"label": "Shake",
+			"help": "Shakes the camera.",
+			"fields": [
+				{"key": "strength", "label": "Strength", "drawer": "num", "default": 1.5},
+				{"key": "style", "label": "Style", "drawer": "toggle_row:soft,hard", "default": "soft"},
+			],
+			"live": [],
+		}]}) and ok
+	ok = _eq("and the door's fallback category is the one it was handed",
+		str((EventSheets.card_schema_from_aces([_bare_descriptor()], "other").get("kinds")[0] as Dictionary).get("category", "")), "other") and ok
 
 	# The stripe is DERIVED from the category word, so a pack inventing a category gets a stable
 	# colour with nothing to register - and a schema may still name one exactly.
