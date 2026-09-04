@@ -764,6 +764,7 @@ static func build() -> bool:
 	_param_desc(sheet, "moment_name", "The name every Moment row will use for this file afterwards.")
 	_param_hint(sheet, "moment", "resource_path")
 	_param_desc(sheet, "moment", "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
+	_default(sheet, "moment", "preload(\"res://eventsheet_addons/juice/impact.tres\")")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {

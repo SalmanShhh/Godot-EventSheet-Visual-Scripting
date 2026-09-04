@@ -428,6 +428,7 @@ func _ensure_hint_factories() -> void:
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
+			"resource_path": _create_resource_path_field,
 			"animation_reference": _create_animation_field,
 			"marker_reference": _create_marker_field,
 			"animation_frame": _create_animation_frame_field,
@@ -2324,6 +2325,38 @@ func _browse_for_file(path_edit: LineEdit, filters: PackedStringArray, filter_la
 	_file_browse_target = path_edit
 	_file_browse_format = as_written
 	_file_browse_dialog.popup_file_dialog()
+
+
+## A RESOURCE parameter, picked as a file. The row takes an actual Resource - a look, a moment, a
+## table - so the value in the slot is not a path but the GDScript that LOADS one, and a bare path
+## typed there is a String handed to a Resource parameter that fails at run time. Browse writes the
+## loading call itself, which is what makes a look three keystrokes rather than a spelling nobody was
+## told. Typing stays free: a variable holding a resource belongs in this slot as much as a file.
+func _create_resource_path_field(key: String, default_value: Variant) -> Control:
+	var base: Dictionary = _build_path_field_base(key, default_value)
+	var container: HBoxContainer = base["container"]
+	var path_edit: LineEdit = base["edit"]
+	var browse: Button = Button.new()
+	browse.text = EventSheetL10n.translate("Browse…")
+	browse.pressed.connect(func() -> void: _browse_for_resource(path_edit))
+	container.add_child(browse)
+	return container
+
+
+func _browse_for_resource(path_edit: LineEdit) -> void:
+	_browse_for_file(path_edit, PackedStringArray(["*.tres", "*.res"]),
+		EventSheetL10n.translate("Resource files"),
+		Callable(ACEParamsDialog, "format_loading_call"))
+
+
+## THE GDSCRIPT THAT LOADS ONE FILE. A project file is preloaded, because that is resolved when the
+## script is compiled and costs nothing at run time; anything outside the project is loaded, because
+## preload cannot take a path that only exists on one player's machine - which is exactly what a
+## user:// path is, and what a look saved from a running game is written to.
+static func format_loading_call(value: String) -> String:
+	if value.begins_with("res://"):
+		return "preload(\"%s\")" % value
+	return "load(\"%s\")" % value
 
 
 func _browse_for_palette(path_edit: LineEdit) -> void:

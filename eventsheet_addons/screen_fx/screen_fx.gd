@@ -411,6 +411,48 @@ func set_post_strength(called: String = "vignette", strength: float = 1.0) -> vo
 	_stop_walk_on(called.strip_edges().to_lower())
 	_write_strength(called, strength)
 
+## Sets ONE OF AN EFFECT'S OWN DIALS - the vignette's colour, the letterbox's depth, the glitch's
+## band height, the colour grade's lookup image. Strength is how far the effect goes; this is what
+## the effect is, and it is the row that sits one dropdown deeper than the quick form.
+##
+## A colour grade in particular DOES NOTHING until it has been given one: with no image its table is
+## empty and the shader hands the screen straight back, because mapping every pixel through a blank
+## image would paint the screen white. Set its `grade_table` to your lookup image and its `lut_size`
+## to the number of levels that image holds, and the grade starts grading.
+##
+## The dial names are the uniforms the shader declares, which the pack guide lists per effect. A name
+## the shader does not have is kept rather than refused: a look saved by a newer version of the pack
+## must not lose what this one cannot draw.
+## @ace_action
+## @ace_name("Set Post Dial")
+## @ace_display_template("Set [b]{called}[/b] [b]{dial}[/b] to [b]{value}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(dial, default: softness, desc: "Which of that effect's own dials - the uniform the shader declares. The pack guide lists them per effect.")
+## @ace_param(value, default: 0.5, desc: "What to set it to: a number, a Color, or a texture loaded with preload(...) for the colour grade's table.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.set_post_dial("{called}", "{dial}", {value})")
+func set_post_dial(called: String = "vignette", dial: String = "softness", value: Variant = 0.5) -> void:
+	var dial_name: String = dial.strip_edges()
+	if dial_name.is_empty():
+		return
+	_write_params(called, {dial_name: value})
+
+## What one of an effect's own dials currently holds - the other half of Set Post Dial, for a row
+## that nudges a value rather than naming one. Nothing at all for an entry or a dial the stack has
+## never been given.
+## @ace_expression
+## @ace_name("Post Dial")
+## @ace_display_template("[b]{called}[/b] [b]{dial}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(dial, default: softness, desc: "Which of that effect's own dials to read back.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.post_dial("{called}", "{dial}")")
+func post_dial(called: String = "vignette", dial: String = "softness") -> Variant:
+	var at: int = _find(called)
+	if at < 0:
+		return null
+	return (_stack[at].get("params", {}) as Dictionary).get(dial.strip_edges(), null)
+
 ## Walks one entry's strength to a value over a time, and back again afterwards if a second time is
 ## given - which is the shape of a held breath: in, hold, out, all in one row.
 ## @ace_action
@@ -587,11 +629,11 @@ func correct_colours_for(vision: String = "deuteranopia") -> void:
 ## @ace_action
 ## @ace_name("Save Look")
 ## @ace_display_template("Save the look as [b]{path}[/b]")
-## @ace_param(path, hint: file_path, default: user://looks/my_look.tres, desc: "Where to write it. user:// is the player's own folder; res:// is your project, which only works while the editor is open.")
+## @ace_param(path, hint: file_path, default: res://looks/my_look.tres, desc: "Where to write it. res:// is your project, so the look is a file you can edit and share; user:// is the player's own folder, for a look a running game saves.")
 ## @ace_param(called, default: My look, desc: "The name the look answers to, which is what Look Is and Current Look compare.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.save_look("{path}", "{called}")")
-func save_look(path: String = "user://looks/my_look.tres", called: String = "My look") -> void:
+func save_look(path: String = "res://looks/my_look.tres", called: String = "My look") -> void:
 	if not ResourceLoader.exists(LOOK_SCRIPT):
 		push_warning("Save Look needs the Screen Look Resource pack, which is not installed.")
 		return
@@ -609,7 +651,7 @@ func save_look(path: String = "user://looks/my_look.tres", called: String = "My 
 ## @ace_featured
 ## @ace_name("Use Look")
 ## @ace_display_template("Use the look [b]{look}[/b]")
-## @ace_param(look, hint: resource_path, desc: "A look file. Build one with rows and Save Look, or make one in the Inspector from the Screen Look Resource class.")
+## @ace_param(look, hint: resource_path, default: preload("res://eventsheet_addons/screen_fx/clean.tres"), desc: "A look file. Build one with rows and Save Look, or make one in the Inspector from the Screen Look Resource class. Clean is the empty one the pack ships.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.use_look({look})")
 func use_look(look: Resource) -> void:
@@ -634,7 +676,7 @@ func use_look(look: Resource) -> void:
 ## @ace_action
 ## @ace_name("Blend To Look")
 ## @ace_display_template("Blend to the look [b]{look}[/b] over [b]{seconds}[/b] s")
-## @ace_param(look, hint: resource_path, desc: "The look to arrive at.")
+## @ace_param(look, hint: resource_path, default: preload("res://eventsheet_addons/screen_fx/clean.tres"), desc: "The look to arrive at. Clean is the empty one the pack ships, which is how a row crosses back to the plain screen.")
 ## @ace_param(seconds, default: 1.0, desc: "How long the crossing takes.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("await $ScreenFx.blend_to_look({look}, {seconds})")
@@ -687,7 +729,7 @@ func clear_look() -> void:
 ## @ace_condition
 ## @ace_name("Look Is")
 ## @ace_display_template("The look is [b]{look}[/b]")
-## @ace_param(look, hint: resource_path, desc: "The look to compare against what is on the screen.")
+## @ace_param(look, hint: resource_path, default: preload("res://eventsheet_addons/screen_fx/clean.tres"), desc: "The look to compare against what is on the screen.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.look_is({look})")
 func look_is(look: Resource) -> bool:

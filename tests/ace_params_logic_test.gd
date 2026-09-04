@@ -164,7 +164,29 @@ static func run() -> bool:
 		dialog._first_metadata_row(empty_root) == null, true) and all_passed
 	empty_tree.free()
 
+	# A RESOURCE parameter takes the line that LOADS a file, not the path: a bare path typed in that
+	# slot is a String handed to a Resource parameter and fails at run time. Browse writes the line,
+	# and which of the two calls it writes is decided by where the file is - preload is resolved when
+	# the script compiles, so it cannot take a path that only exists on one player's machine.
+	all_passed = _check("a project file is preloaded",
+		ACEParamsDialog.format_loading_call("res://looks/old_machine.tres"),
+		"preload(\"res://looks/old_machine.tres\")") and all_passed
+	all_passed = _check("a file in the player's own folder is loaded",
+		ACEParamsDialog.format_loading_call("user://looks/mine.tres"),
+		"load(\"user://looks/mine.tres\")") and all_passed
+	all_passed = _check("and the resource hint has a field of its own, so the slot is picked not typed",
+		_knows_resource_hint(), true) and all_passed
+
 	return all_passed
+
+
+## Whether the params dialog builds a field for the `resource_path` hint at all - the check that
+## would have caught a hint no editor answered, which is what left a look field a bare text box.
+static func _knows_resource_hint() -> bool:
+	var dialog: ACEParamsDialog = ACEParamsDialog.new()
+	dialog._ensure_hint_factories()
+	var knows: bool = dialog._hint_factories.has("resource_path")
+	return knows
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

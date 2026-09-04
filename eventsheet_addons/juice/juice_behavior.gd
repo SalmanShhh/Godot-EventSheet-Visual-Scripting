@@ -988,7 +988,7 @@ func moment(moment_name: String, strength: float) -> void:
 ## @ace_description("Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.")
 ## @ace_display_template("Define moment [b]{moment_name}[/b] as [b]{moment}[/b]")
 ## @ace_param(moment_name, default: impact, desc: "The name every Moment row will use for this file afterwards.")
-## @ace_param(moment, hint: resource_path, desc: "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
+## @ace_param(moment, hint: resource_path, default: preload("res://eventsheet_addons/juice/impact.tres"), desc: "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.define_moment({moment_name}, {moment})")
 func define_moment(moment_name: String, moment: Resource) -> void:

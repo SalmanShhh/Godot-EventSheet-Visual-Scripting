@@ -106,6 +106,7 @@ references in *italic*, exactly as the rows draw them:
 | Enable Post Effect | `called` | Turns one effect back on without forgetting how far up it was. |
 | Disable Post Effect | `called` | Turns one effect off and leaves it in the stack, so enabling it again brings back the same strength. |
 | Set Post Strength | `called`, `strength` | Sets how far one effect goes, straight away. |
+| Set Post Dial | `called`, `dial`, `value` | Sets one of that effect's OWN dials - the tint's colour, the vignette's softness, the pixelate's block size. The careful control, one dropdown deeper than strength. A dial the effect does not declare is refused with a warning rather than set on nothing. |
 | Fade Post Strength | `called`, `to`, `seconds` | Walks one effect's strength to a value over a number of seconds. |
 | Pulse Post Effect | `effect`, `strength`, `seconds` | Flashes one effect up and lets it fall back. An effect that was not on the stack is borrowed and taken off again at the end. |
 | Outline Group Through Walls | `group`, `colour`, `width`, `seconds` | Draws an outline around every node in a group, through whatever is in front of them. 0 seconds leaves it on until Stop Outlining. |
@@ -125,6 +126,7 @@ references in *italic*, exactly as the rows draw them:
 | Expression | Parameters | Description |
 |---|---|---|
 | Post Strength | `called` | How far one effect is going right now, after the accessibility dials have had their say. 0 for one that is not there. |
+| Post Dial | `called`, `dial` | What one of that effect's own dials holds - the other half of Set Post Dial, for a row that nudges a value rather than naming one. |
 
 ## Use cases
 

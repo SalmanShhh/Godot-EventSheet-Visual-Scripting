@@ -243,6 +243,53 @@ func set_post_strength(called: String = "vignette", strength: float = 1.0) -> vo
 	_stop_walk_on(called.strip_edges().to_lower())
 	_write_strength(called, strength)
 
+## Sets ONE OF AN EFFECT'S OWN DIALS - the tint's colour, the vignette's softness, the pixelate's
+## block size. Strength is how far the effect goes; this is what the effect is, and it is the row
+## that sits one dropdown deeper than the quick form. The same words the screen's own stack uses, so
+## a project that moves renderer keeps its sheet.
+##
+## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
+## @ace_action
+## @ace_name("Set Post Dial")
+## @ace_display_template("Set [b]{called}[/b] [b]{dial}[/b] to [b]{value}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(dial, default: tint, desc: "Which of that effect's own dials - the property the effect declares. The pack guide lists them per effect.")
+## @ace_param(value, default: 0.5, desc: "What to set it to: a number, a Color, whatever that dial takes.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.set_post_dial("{called}", "{dial}", {value})")
+func set_post_dial(called: String = "vignette", dial: String = "tint", value: Variant = 0.5) -> void:
+	var at: int = _find(called)
+	var dial_name: String = dial.strip_edges()
+	if at < 0 or dial_name.is_empty():
+		return
+	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	if made == null:
+		return
+	if not _has_dial(made, dial_name):
+		push_warning("Set Post Dial: the \"%s\" effect has no dial called \"%s\"." % [
+			str(_stack[at].get("effect", "")), dial_name])
+		return
+	made.set(dial_name, value)
+
+## What one of an effect's own dials currently holds - the other half of Set Post Dial, for a row
+## that nudges a value rather than naming one. Nothing at all for an entry or a dial that is not
+## there.
+## @ace_expression
+## @ace_name("Post Dial")
+## @ace_display_template("[b]{called}[/b] [b]{dial}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(dial, default: tint, desc: "Which of that effect's own dials to read back.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.post_dial("{called}", "{dial}")")
+func post_dial(called: String = "vignette", dial: String = "tint") -> Variant:
+	var at: int = _find(called)
+	if at < 0:
+		return null
+	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
+	if made == null or not _has_dial(made, dial.strip_edges()):
+		return null
+	return made.get(dial.strip_edges())
+
 ## Walks one effect's strength to a value over a number of seconds - the slow drain of colour as the
 ## health goes, the vignette closing in.
 ## @ace_action
@@ -557,6 +604,14 @@ func _walk_strength(called: String, to_value: float, seconds: float, back_to: fl
 	if drop_after:
 		walk.finished.connect(func() -> void: remove_post_effect(called))
 	_stack_walks[called] = walk
+
+## Whether one CompositorEffect really declares a dial by that name. A name it does not have would
+## be set on the object and read back by nobody, which is a row that looks like it worked.
+func _has_dial(made: Object, dial_name: String) -> bool:
+	for declared: Dictionary in made.get_property_list():
+		if str(declared.get("name", "")) == dial_name:
+			return true
+	return false
 
 ## Switches the mask layer on (or off) for every visual instance at or under a node, and remembers
 ## the ones it switched on. Answers how many it touched, so a row with nothing to mark can say so.

@@ -40,6 +40,7 @@ static func run() -> bool:
 	passed = _looks_are_files() and passed
 	passed = _no_flashing_is_a_ceiling() and passed
 	passed = _the_dials_have_one_say() and passed
+	passed = _an_effects_own_dials() and passed
 	passed = _every_effect_has_a_shader() and passed
 	passed = _the_quiet_finding() and passed
 	return passed
@@ -260,6 +261,35 @@ static func _the_dials_have_one_say() -> bool:
 	layer.free()
 	_put_meta_back("no_flashing", flashing_was)
 	_put_meta_back("effect_strength", strength_was)
+	return SUPPORT.pins(P, rows)
+
+
+## AN EFFECT'S OWN DIALS, which is the careful control one dropdown deeper than the quick form. A
+## strength says how far an effect goes; these say what it IS - the vignette's colour, the letterbox's
+## depth, and above all the colour grade's lookup image, without which that effect hands the screen
+## straight back however far up its strength is.
+static func _an_effects_own_dials() -> bool:
+	var layer: Node = _a_layer()
+	layer.add_post_effect("vignette", "", 0.5)
+	var rows: Array = [
+		["a dial nobody has set reads as nothing", layer.post_dial("vignette", "softness"), null]
+	]
+	layer.set_post_dial("vignette", "softness", 0.8)
+	rows.append(["a row sets one of the effect's own dials",
+		layer.post_dial("vignette", "softness"), 0.8])
+	layer.set_post_dial("vignette", "vignette_color", Color.RED)
+	rows.append(["and a dial that is a colour is a colour",
+		layer.post_dial("vignette", "vignette_color"), Color.RED])
+	layer.set_post_dial("vignette", "", 1.0)
+	rows.append(["a dial with no name sets nothing rather than an entry called nothing",
+		layer.post_dial("vignette", ""), null])
+	rows.append(["and an entry that is not there answers with nothing",
+		layer.post_dial("glitch", "band_height"), null])
+	layer.add_post_effect("colour grade", "", 1.0)
+	layer.set_post_dial("colour grade", "lut_size", 16)
+	rows.append(["the grade's table size is a dial a row can set, which is what makes it draw at all",
+		layer.post_dial("colour grade", "lut_size"), 16])
+	layer.free()
 	return SUPPORT.pins(P, rows)
 
 

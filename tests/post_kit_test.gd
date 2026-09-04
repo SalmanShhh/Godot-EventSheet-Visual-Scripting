@@ -181,6 +181,14 @@ static func _the_stack_model_by_value() -> bool:
 	kit.call("pulse_post_effect", "fade", 0.8, 0.0)
 	rows.append(["a pulse with no time left is the strength it asked for",
 		kit.call("post_strength", "fade"), 0.8])
+	# An effect's OWN dials, which is the careful control one dropdown deeper than the quick form.
+	kit.call("add_post_effect", "tint", "", 1.0)
+	kit.call("set_post_dial", "tint", "tint", Color.RED)
+	rows.append(["a row sets one of the effect's own dials",
+		kit.call("post_dial", "tint", "tint"), Color.RED])
+	kit.call("set_post_dial", "tint", "not_a_dial", 1.0)
+	rows.append(["a dial the effect does not declare is refused rather than set on nothing",
+		kit.call("post_dial", "tint", "not_a_dial"), null])
 	camera.free()
 	return SUPPORT.pins(P, rows)
 
