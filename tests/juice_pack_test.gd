@@ -218,6 +218,11 @@ static func run() -> bool:
 	var pack_source: String = FileAccess.get_file_as_string(PACK)
 	all_passed = _check("the shake's mix dial is a gate rather than a second copy of the falloff",
 		pack_source.contains("_fx_material.set_shader_parameter(\"chroma_intensity\", 1.0)"), true) and all_passed
+	# And the shake's four extra reads of the screen per pixel are behind a gate: the overlay is on
+	# screen for a vignette, a kick or speed lines too, and those frames must not pay for a shake
+	# that is not running.
+	all_passed = _check("the overlay pays for the shake's extra taps only while a shake runs",
+		pack_source.contains("if (chroma_intensity > 0.0) {"), true) and all_passed
 	# The overlay shader itself compiles headless: a shader that fails to build reports NO uniforms,
 	# so the sorted uniform list is both the compile check and the shake's two new dials.
 	var fx_shader: Shader = Shader.new()

@@ -197,12 +197,16 @@ void fragment() {
 	// the middle, while this slides the whole screen's channels along one direction that moves.
 	// Red leads, green trails the other way, blue overshoots four times as far, and a fourth,
 	// nearer tap ghosts behind the three - the smear that reads as impact rather than as a lens.
-	vec3 shaken = vec3(
-		texture(screen_texture, uv + chroma_shift).r,
-		texture(screen_texture, uv - chroma_shift).g,
-		texture(screen_texture, uv + chroma_shift * 4.0).b);
-	shaken = mix(shaken, texture(screen_texture, uv + chroma_shift * 1.25).rgb, 0.25);
-	col = mix(col, shaken, clamp(chroma_intensity, 0.0, 1.0));
+	// Behind a gate, because those are FOUR more reads of the screen per pixel and the overlay
+	// is also on screen for a vignette or for speed lines, with no shake anywhere near it.
+	if (chroma_intensity > 0.0) {
+		vec3 shaken = vec3(
+			texture(screen_texture, uv + chroma_shift).r,
+			texture(screen_texture, uv - chroma_shift).g,
+			texture(screen_texture, uv + chroma_shift * 4.0).b);
+		shaken = mix(shaken, texture(screen_texture, uv + chroma_shift * 1.25).rgb, 0.25);
+		col = mix(col, shaken, clamp(chroma_intensity, 0.0, 1.0));
+	}
 	float vignette = smoothstep(0.35, 1.0, length(centered) * 1.5) * vignette_strength;
 	col = mix(col, vignette_color.rgb, clamp(vignette, 0.0, 1.0));
 	float angle = atan(centered.y, centered.x);

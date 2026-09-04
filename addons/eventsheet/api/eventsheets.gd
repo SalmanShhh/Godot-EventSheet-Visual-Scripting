@@ -1978,6 +1978,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"drag_drop": "Drag-And-Drop",
 	"drawing_prefab_resource": "Drawing-Canvas",
 	"drawing_prefab_stamp": "Drawing-Canvas",
+	"codex_entry_resource": "Codex",
 	"color_palette_resource": "Game-Settings",
 	"encounter_resource": "Encounter-Timeline",
 	"floating_text_styles_resource": "HUD-Kit",
@@ -2064,6 +2065,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"collection": "Working-With-Lists",
 	"game_accessibility": "Game-Options-And-The-Window",
 	"collision": "Collisions-Joints-And-World-Physics",
+	# The named clocks are the pausable half of the cooldown family the Timers guide already
+	# holds, so they are read there rather than on a page of their own.
+	"cooldown": "Timers-Waiting-And-Cooldowns",
 	# The filtered touch sentences are the same reader's question as the rest of the collision
 	# vocabulary, asked one row later, so they share its guide rather than opening a second one.
 	"collision_edge": "Collisions-Joints-And-World-Physics",
