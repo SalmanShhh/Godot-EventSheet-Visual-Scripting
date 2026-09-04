@@ -749,6 +749,17 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		group_value = _extract_first_quoted(pending[cursor])
 		meta_count += 1
 		cursor -= 1
+	# A `# @inspector_show_if <var>` sitting directly above the group line scopes the show-if to the
+	# WHOLE group rather than to one field. It is read only when a group line was actually found -
+	# above anything else the same comment is the field form, which the attribute path owns.
+	var group_show_if_value: String = ""
+	if not group_value.is_empty() and cursor >= 0 and pending[cursor].begins_with("# @inspector_show_if "):
+		group_show_if_value = pending[cursor].substr(21).strip_edges()
+		if group_show_if_value.is_valid_identifier():
+			meta_count += 1
+			cursor -= 1
+		else:
+			group_show_if_value = ""
 	var category_value: String = ""
 	if cursor >= 0 and pending[cursor].begins_with("@export_category(\""):
 		category_value = _extract_first_quoted(pending[cursor])
@@ -769,6 +780,15 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
 	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
+	# The link decor is emitted LAST of the decor block (closest to the variable), so it is read
+	# first here. It names both fields; only a line whose FIRST name is this variable belongs to it.
+	var link_partner_value: String = ""
+	if cursor >= 0 and pending[cursor].begins_with("# @inspector_link "):
+		var link_names: PackedStringArray = pending[cursor].substr(18).strip_edges().split(" ", false)
+		if link_names.size() == 2 and link_names[0] == lifted.name and link_names[1].is_valid_identifier():
+			link_partner_value = link_names[1]
+			meta_count += 1
+			cursor -= 1
 	var action_value: String = ""
 	var action_label_value: String = ""
 	if cursor >= 0 and pending[cursor].begins_with("# @inspector_action "):
@@ -832,8 +852,12 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["header_color"] = header_color_value
 	if not category_value.is_empty():
 		candidate["category"] = category_value
+	if not link_partner_value.is_empty():
+		candidate["link_with"] = link_partner_value
 	if not group_value.is_empty():
 		candidate["group"] = group_value
+	if not group_show_if_value.is_empty():
+		candidate["group_show_if"] = group_show_if_value
 	if not subgroup_value.is_empty():
 		candidate["subgroup"] = subgroup_value
 	if doc_after_group:

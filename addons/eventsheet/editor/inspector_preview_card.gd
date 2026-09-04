@@ -69,7 +69,10 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	if not group_name.is_empty():
 		var group_label := Label.new()
-		group_label.text = group_name
+		# The chip the Inspector Designer shows on a group header: the whole section hides with this
+		# switch, which is a fact about the SECTION, not about any one field under it.
+		var group_predicate: String = str(attributes.get("group_show_if", ""))
+		group_label.text = "%s   (shown while %s)" % [group_name, group_predicate] if not group_predicate.is_empty() else group_name
 		group_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 		group_label.add_theme_color_override("font_color", Color(0.85, 0.87, 0.92))
 		_rows.add_child(group_label)
@@ -92,6 +95,11 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	var widget: Control = _build_widget(type_name, default_text, attributes)
 	widget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	property_row.add_child(widget)
+	# The link chip sits between the two neighbours, where the button will be - target-less, so it
+	# is a picture of the tie rather than a live one (nothing to keep in a ratio in a preview).
+	var link_partner: String = str(attributes.get("link_with", ""))
+	if not link_partner.is_empty():
+		property_row.add_child(_ignored(EventSheetDrawerWidgets.LinkToggle.new(null, variable_name, link_partner)))
 	_rows.add_child(property_row)
 
 
@@ -131,6 +139,10 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 		fragments.append("validated by %s()" % str(attributes.get("validate")))
 	if not str(attributes.get("action", "")).is_empty():
 		fragments.append("with a \"%s\" button" % str(attributes.get("action_label", str(attributes.get("action")).capitalize())))
+	if not str(attributes.get("group_show_if", "")).is_empty() and not group_name.is_empty():
+		fragments.append("shown with its group only while %s is on" % str(attributes.get("group_show_if")))
+	if not str(attributes.get("link_with", "")).is_empty():
+		fragments.append("linked to %s" % str(attributes.get("link_with")))
 	if bool(attributes.get("clamp", false)):
 		fragments.append("clamped to the range")
 	if bool(attributes.get("read_only", false)):
@@ -180,6 +192,8 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 			return "shown as toggle buttons"
 		"unit":
 			return "shown with a unit dropdown"
+		"corners":
+			return "shown as four corners"
 		"swatch_row":
 			return "shown as color swatches"
 		"texture_preview":
@@ -252,6 +266,13 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		if not toggle_texts.is_empty():
 			toggle_row.set_value(toggle_texts[0])
 		return _ignored(toggle_row)
+	if drawer_kind == "corners":
+		var corners_field := EventSheetDrawerWidgets.DrawerCorners.new()
+		var corners_default: Variant = str_to_var(default_text)
+		corners_field.set_value(corners_default if corners_default is Vector4 else Vector4.ZERO)
+		corners_field.set_editable(false)
+		corners_field.custom_minimum_size = Vector2(150.0, 0.0)
+		return _ignored(corners_field)
 	if drawer_kind == "unit":
 		var unit_ids: PackedStringArray = PackedStringArray()
 		for unit_kind: Variant in (attributes.get("unit_kinds") if attributes.get("unit_kinds") is Array else ["px", "world", "screen"]):

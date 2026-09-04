@@ -30,6 +30,7 @@ const PRESETS: Array[Dictionary] = [
 	{"id": "preset_expression", "label": "Expression field (math input)", "types": ["String"], "detail": "", "sentence": "A field meant for a math expression."},
 	{"id": "preset_link", "label": "Linked axes (one slider drives all)", "types": ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"], "detail": "", "sentence": "Drag one axis and the others follow."},
 	{"id": "unit", "label": "Number with its unit (px, degrees, seconds…)", "types": ["float"], "detail": "units, e.g. px|world|screen, store=world", "sentence": "A number with a unit dropdown beside it - switching the unit changes the reading, never the stored value."},
+	{"id": "corners", "label": "Four corners (one number, or one each)", "types": ["Vector4"], "detail": "", "sentence": "One number for all four corners, with a button that opens a box per corner - the shape margins and padding take too."},
 	{"id": "easing_attenuation", "label": "Easing curve for attenuation", "types": ["float"], "detail": "", "sentence": "An ease curve tuned for falloff/attenuation."},
 	{"id": "easing_positive", "label": "Easing curve (positive only)", "types": ["float"], "detail": "", "sentence": "An ease curve that never dips negative."},
 	{"id": "storage", "label": "Saved but hidden (storage)", "types": [], "detail": "", "sentence": "Saved with the scene but not shown in the Inspector."},
@@ -134,6 +135,12 @@ static func _build_preview_inner(look_id: String) -> Control:
 			unit_field.set_editable(false)
 			unit_field.custom_minimum_size = Vector2(170.0, 0.0)
 			return unit_field
+		"corners":
+			var corners_field := EventSheetDrawerWidgets.DrawerCorners.new()
+			corners_field.set_value(Vector4(8.0, 8.0, 8.0, 8.0))
+			corners_field.set_editable(false)
+			corners_field.custom_minimum_size = Vector2(170.0, 0.0)
+			return corners_field
 		"storage":
 			var storage_label := Label.new()
 			storage_label.text = "(saved, not shown)"

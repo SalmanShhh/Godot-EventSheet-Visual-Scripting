@@ -148,7 +148,7 @@ var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
 ## _attr_advanced_section in init_dialog - if you move a field between the Basic and Advanced tiers, update
 ## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
-const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "action", "show_if", "lock_unless", "on_changed", "clamp", "read_only", "setter_body", "getter_body"]
+const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "action", "show_if", "group_show_if", "link_with", "lock_unless", "on_changed", "clamp", "read_only", "setter_body", "getter_body"]
 ## The Range field's placeholder per type - one source of truth so the initial build and the per-type swap in
 ## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
 const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
@@ -168,6 +168,8 @@ var _attr_exp_easing_check: CheckBox = null
 var _attr_placeholder_edit: LineEdit = null
 var _attr_placeholder_row: Control = null
 var _attr_show_if_edit: LineEdit = null
+var _attr_group_show_if_edit: LineEdit = null
+var _attr_link_with_edit: LineEdit = null
 var _attr_lock_unless_edit: LineEdit = null
 var _attr_on_changed_edit: LineEdit = null
 var _attr_setter_edit: TextEdit = null
@@ -202,7 +204,7 @@ var _ships_as_label: Label = null
 const TYPE_OPTIONS: PackedStringArray = [
 	"int", "float", "bool", "String",
 	# Common game-value types - also the hosts for the Tier 3 drawers (dial / swatches / texture / curve).
-	"Vector2", "Color", "Texture2D", "Curve", "Gradient",
+	"Vector2", "Vector4", "Color", "Texture2D", "Curve", "Gradient",
 	"Variant",
 	"Array", "Array[int]", "Array[float]", "Array[String]", "Array[Dictionary]",
 	"Dictionary", "Dictionary[String, int]", "Dictionary[String, float]",
@@ -220,6 +222,7 @@ const TYPE_HINTS: Dictionary = {
 	"bool": "Yes / no, on / off (true / false).",
 	"String": "Text.",
 	"Vector2": "An x/y pair: a direction, velocity, or position.",
+	"Vector4": "Four numbers in one value - the shape corner radii, margins and padding take (top-left, top-right, bottom-right, bottom-left).",
 	"Color": "An RGBA colour.",
 	"Texture2D": "An image / sprite resource.",
 	"Curve": "A shape over 0-1 (easing, falloff, ramps). Edits in the Inspector's curve editor.",
@@ -614,6 +617,14 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
+	_attr_group_show_if_edit = LineEdit.new()
+	_attr_group_show_if_edit.placeholder_text = "bool variable (hides this variable's whole group)"
+	_attr_group_show_if_edit.tooltip_text = "Like Show if, but scoped to the export group this variable is in:\nevery member of the group hides together. Needs a Group."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show group if", _attr_group_show_if_edit))
+	_attr_link_with_edit = LineEdit.new()
+	_attr_link_with_edit.placeholder_text = "the neighbouring number this one is tied to"
+	_attr_link_with_edit.tooltip_text = "Draws an equals button between this number and the named one.\nWhile linked, editing one scales the other by the ratio they had when it was linked.\nEditor-only decor - it emits no code."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Link with", _attr_link_with_edit))
 	_attr_lock_unless_edit = LineEdit.new()
 	_attr_lock_unless_edit.placeholder_text = "bool variable (read-only when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Lock unless", _attr_lock_unless_edit))
@@ -1348,6 +1359,8 @@ func open_for_edit(
 		_attr_suffix_edit.text = ""
 	_prefill_look(existing_attributes)
 	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
+	_attr_group_show_if_edit.text = str(existing_attributes.get("group_show_if", ""))
+	_attr_link_with_edit.text = str(existing_attributes.get("link_with", ""))
 	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
 	_attr_setter_edit.text = str(existing_attributes.get("setter_body", ""))
@@ -1535,7 +1548,8 @@ func _on_confirmed() -> void:
 	if not placeholder_text.is_empty() and not placeholder_text.contains("\"") and type_name == "String":
 		attributes["placeholder"] = placeholder_text
 	_fold_look_attributes(attributes, type_name)
-	for conditional in [["show_if", _attr_show_if_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
+	for conditional in [["show_if", _attr_show_if_edit], ["group_show_if", _attr_group_show_if_edit],
+			["link_with", _attr_link_with_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
 		var conditional_value: String = (conditional[1] as LineEdit).text.strip_edges()
 		if conditional_value.is_empty():
 			continue
@@ -1601,7 +1615,7 @@ static func parse_options(raw: String) -> PackedStringArray:
 static func _default_display_text(value: Variant) -> String:
 	if value == null:
 		return ""
-	if value is Array or value is Dictionary or value is Vector2 or value is Color:
+	if value is Array or value is Dictionary or value is Vector2 or value is Vector4 or value is Color:
 		return SheetCompiler._to_code_literal(value)
 	return str(value)
 
@@ -1630,6 +1644,19 @@ static func _parse_default(type_name: String, raw: String) -> Variant:
 				return literal_v if literal_v is Vector2 else Vector2.ZERO
 			var xy: PackedStringArray = value.split(",")
 			return Vector2(xy[0].strip_edges().to_float(), xy[1].strip_edges().to_float()) if xy.size() == 2 else Vector2.ZERO
+		"Vector4":
+			if value.begins_with("Vector4(") and value.ends_with(")"):
+				var literal_v4: Variant = str_to_var(value)
+				return literal_v4 if literal_v4 is Vector4 else Vector4.ZERO
+			var xyzw: PackedStringArray = value.split(",")
+			if xyzw.size() == 4:
+				return Vector4(xyzw[0].strip_edges().to_float(), xyzw[1].strip_edges().to_float(), xyzw[2].strip_edges().to_float(), xyzw[3].strip_edges().to_float())
+			# One number typed into a four-corner field means "all four the same", which is how a
+			# uniform corner radius is written by hand and what the corners drawer shows by default.
+			if xyzw.size() == 1 and not value.strip_edges().is_empty():
+				var uniform: float = value.strip_edges().to_float()
+				return Vector4(uniform, uniform, uniform, uniform)
+			return Vector4.ZERO
 		"Color":
 			if value.begins_with("Color(") and value.ends_with(")"):
 				var literal_c: Variant = str_to_var(value)
@@ -1833,6 +1860,9 @@ func _fold_look_attributes(attributes: Dictionary, type_name: String) -> void:
 				attributes["drawer"] = "unit"
 				attributes["unit_kinds"] = unit_spec.get("units", [])
 				attributes["unit_store"] = str(unit_spec.get("store", ""))
+		"corners":
+			if type_name == "Vector4":
+				attributes["drawer"] = "corners"
 		"storage":
 			attributes["storage"] = true
 		"preset_password":
@@ -1948,6 +1978,8 @@ func _prefill_look(existing: Dictionary) -> void:
 	elif str(existing.get("drawer", "")) == "unit":
 		look_id = "unit"
 		detail = _unit_detail_text(existing)
+	elif str(existing.get("drawer", "")) == "corners":
+		look_id = "corners"
 	elif existing.get("suggestions") is Array:
 		look_id = "suggestions"
 		var suggestion_parts: PackedStringArray = PackedStringArray()

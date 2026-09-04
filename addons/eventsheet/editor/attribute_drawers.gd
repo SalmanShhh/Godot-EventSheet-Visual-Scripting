@@ -14,6 +14,7 @@
 #                  optional tails, in this order: ":segmented" for equal-width word buttons, ":icons=<source>"
 #                  for a picture per option - a path pattern holding %s, or a registered provider's name)
 #   unit           eventsheet:unit:kinds=<a>|<b>,store=<a> float (a spin box with a unit dropdown at its edge)
+#   corners        eventsheet:corners                    Vector4 (one number, or four boxes clockwise from top-left)
 #   vector_dial    eventsheet:vector_dial:<max>          Vector2
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
@@ -41,6 +42,13 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				add_custom_control(EventSheetDrawerWidgets.ValidateBadge.new(_object, str(decor_entry.get("function", ""))))
 			"action":
 				add_custom_control(EventSheetDrawerWidgets.ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
+			"link":
+				add_custom_control(EventSheetDrawerWidgets.LinkToggle.new(_object, str(decor_entry.get("first", "")), str(decor_entry.get("second", ""))))
+			"group_show_if":
+				# Nothing to draw: hiding the group is the ordinary _validate_property the compiler
+				# emits once per member, exactly as the per-field Show If compiles. The entry is here
+				# so the Designer (and anything else reading the map) can say WHY a group hides.
+				pass
 			_:
 				add_custom_control(EventSheetDrawerWidgets.build_info_panel(str(decor_entry.get("text", ""))))
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
@@ -78,6 +86,13 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			if unit_ids.is_empty():
 				return false
 			add_property_editor(name, UnitFieldProperty.new(unit_ids, str(unit_spec.get("store", ""))))
+			return true
+		"corners":
+			# Four corners clockwise from the top-left. One number until they differ, then four
+			# labelled boxes - the same shape margins and padding take.
+			if type != TYPE_VECTOR4:
+				return false
+			add_property_editor(name, CornersProperty.new())
 			return true
 		"table":
 			if type != TYPE_ARRAY:
@@ -208,6 +223,9 @@ static func decor_for(object: Object, property: String) -> Array:
 static func build_decor_map(source: String) -> Dictionary:
 	var map: Dictionary = {}
 	var pending: Array = []
+	# The show-if that scopes a whole @export_group: it rides above the group line and belongs to
+	# every member below it, until the next group (or category) line replaces it.
+	var group_scope: Dictionary = {}
 	for raw_line: String in source.split("\n"):
 		var line: String = raw_line.strip_edges()
 		if line.begins_with("# @inspector_header "):
@@ -226,16 +244,48 @@ static func build_decor_map(source: String) -> Dictionary:
 				"function": action_spec.substr(0, first_space) if first_space > 0 else action_spec,
 				"label": action_spec.substr(first_space + 1).strip_edges() if first_space > 0 else ""
 			})
+		elif line.begins_with("# @inspector_link "):
+			var link_names: PackedStringArray = line.substr(18).strip_edges().split(" ", false)
+			if link_names.size() == 2:
+				pending.append({"kind": "link", "first": link_names[0], "second": link_names[1]})
+		elif line.begins_with("# @inspector_show_if "):
+			# Only meaningful directly above an @export_group line (the group-scoped form); above a
+			# variable the show-if is the per-field attribute, which compiles rather than decorates.
+			pending.append({"kind": "_show_if_pending", "predicate": line.substr(21).strip_edges()})
+		elif line.begins_with("@export_group(") or line.begins_with("@export_category("):
+			# A group line closes the previous group's scope and opens its own. A subgroup line does
+			# NOT: it nests inside the group, so the group's show-if still covers its members. Only
+			# the show-if is consumed here - the canonical emission puts a header / info / action
+			# ABOVE the group line, and those still belong to the variable underneath it.
+			group_scope = {}
+			var carried: Array = []
+			for waiting: Variant in pending:
+				if str((waiting as Dictionary).get("kind", "")) != "_show_if_pending":
+					carried.append(waiting)
+				elif not str((waiting as Dictionary).get("predicate", "")).is_empty():
+					group_scope = {"kind": "group_show_if", "predicate": str((waiting as Dictionary).get("predicate"))}
+			pending = carried
 		elif line.begins_with("var ") or (line.begins_with("@") and line.contains(" var ")):
-			if not pending.is_empty():
+			if not pending.is_empty() or not group_scope.is_empty():
 				var var_name: String = _var_name_from_line(line)
 				if not var_name.is_empty():
-					map[var_name] = pending.duplicate()
+					var entries: Array = []
+					if not group_scope.is_empty():
+						entries.append(group_scope)
+					for waiting: Variant in pending:
+						if str((waiting as Dictionary).get("kind", "")) != "_show_if_pending":
+							entries.append(waiting)
+					if not entries.is_empty():
+						map[var_name] = entries
 				pending = []
 		elif line.begins_with("#") or line.begins_with("@"):
 			continue
 		else:
 			pending = []
+			# A blank line between two members of a group is ordinary spacing, so the group's scope
+			# survives it; a real statement (a function, a signal) means the export block is over.
+			if not line.is_empty():
+				group_scope = {}
 	return map
 
 
@@ -374,6 +424,25 @@ class ToggleRowProperty:
 			return
 		var index: int = int(value)
 		_row.set_value(_options[index] if index >= 0 and index < _options.size() else "")
+
+
+## Four corners in one property: one number while they agree, four labelled boxes when they do not.
+class CornersProperty:
+	extends EditorProperty
+	var _corners: EventSheetDrawerWidgets.DrawerCorners
+
+	func _init() -> void:
+		_corners = EventSheetDrawerWidgets.DrawerCorners.new()
+		_corners.value_changed.connect(_on_changed)
+		add_child(_corners)
+		set_bottom_editor(_corners)
+
+	func _on_changed(value: Vector4) -> void:
+		emit_changed(get_edited_property(), value)
+
+	func _update_property() -> void:
+		var value: Variant = get_edited_object().get(get_edited_property())
+		_corners.set_value(value if value is Vector4 else Vector4.ZERO)
 
 
 ## A float with its unit: a spin box plus a unit dropdown at its edge. The dropdown converts what is

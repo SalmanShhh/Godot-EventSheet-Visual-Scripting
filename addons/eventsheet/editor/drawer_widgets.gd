@@ -633,6 +633,228 @@ class DrawerUnitField:
 		_refresh_shown()
 
 
+# ── Four corners in one number ───────────────────────────────
+## A Vector4 read as four corners, clockwise from the top-left: x top-left, y top-right,
+## z bottom-right, w bottom-left. Most of the time the four are one number, so that is what the
+## widget shows - a single box, with a button that opens the four labelled boxes when they are not.
+## The same shape is what margins and padding are, which is why the marker says "corners" and
+## nothing about what for.
+class DrawerCorners:
+	extends VBoxContainer
+	signal value_changed(value: Vector4)
+
+	## The corner each box holds, in the order the boxes are laid out on screen (reading order),
+	## paired with the component index, so the clockwise storage order is never guessed at.
+	const CORNER_CELLS: Array = [["Top-left", 0], ["Top-right", 1], ["Bottom-left", 3], ["Bottom-right", 2]]
+
+	var editable: bool = true
+	var _value: Vector4 = Vector4.ZERO
+	var _uniform_spin: SpinBox = null
+	var _expand_button: Button = null
+	var _corner_grid: GridContainer = null
+	var _corner_spins: Array[SpinBox] = []
+
+
+	func _init() -> void:
+		add_theme_constant_override("separation", 3)
+		var top_row: HBoxContainer = HBoxContainer.new()
+		top_row.add_theme_constant_override("separation", 2)
+		_uniform_spin = SpinBox.new()
+		_uniform_spin.step = 0.001
+		_uniform_spin.allow_greater = true
+		_uniform_spin.allow_lesser = true
+		_uniform_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_uniform_spin.tooltip_text = "All four corners at once."
+		_uniform_spin.value_changed.connect(_on_uniform_changed)
+		top_row.add_child(_uniform_spin)
+		_expand_button = Button.new()
+		_expand_button.text = "⊞"
+		_expand_button.toggle_mode = true
+		_expand_button.tooltip_text = "Set each corner on its own."
+		_expand_button.toggled.connect(_on_expand_toggled)
+		top_row.add_child(_expand_button)
+		add_child(top_row)
+		_corner_grid = GridContainer.new()
+		_corner_grid.columns = 2
+		_corner_grid.visible = false
+		for cell: Array in CORNER_CELLS:
+			var cell_box: VBoxContainer = VBoxContainer.new()
+			cell_box.add_theme_constant_override("separation", 0)
+			var cell_label: Label = Label.new()
+			cell_label.text = str(cell[0])
+			cell_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+			cell_label.modulate = Color(1.0, 1.0, 1.0, 0.65)
+			cell_box.add_child(cell_label)
+			var cell_spin: SpinBox = SpinBox.new()
+			cell_spin.step = 0.001
+			cell_spin.allow_greater = true
+			cell_spin.allow_lesser = true
+			cell_spin.value_changed.connect(_on_corner_changed.bind(int(cell[1])))
+			cell_box.add_child(cell_spin)
+			_corner_grid.add_child(cell_box)
+			_corner_spins.append(cell_spin)
+		add_child(_corner_grid)
+
+
+	## True when all four corners hold the same number - the case the single box is honest about.
+	static func is_uniform(value: Vector4) -> bool:
+		return is_equal_approx(value.x, value.y) and is_equal_approx(value.y, value.z) and is_equal_approx(value.z, value.w)
+
+
+	## One number as all four corners.
+	static func uniform(number: float) -> Vector4:
+		return Vector4(number, number, number, number)
+
+
+	func set_value(v: Vector4) -> void:
+		_value = v
+		# Four different corners open the four boxes by themselves: a single box showing one of them
+		# would be a quiet lie about the other three.
+		if not is_uniform(_value):
+			_expand_button.set_pressed_no_signal(true)
+			_corner_grid.visible = true
+		_refresh_boxes()
+
+
+	func get_value() -> Vector4:
+		return _value
+
+
+	## True while the four per-corner boxes are open.
+	func is_expanded() -> bool:
+		return _corner_grid.visible
+
+
+	func set_editable(v: bool) -> void:
+		editable = v
+		_uniform_spin.editable = v
+		_expand_button.disabled = not v
+		for spin: SpinBox in _corner_spins:
+			spin.editable = v
+
+
+	func _refresh_boxes() -> void:
+		_uniform_spin.set_value_no_signal(_value.x)
+		for index: int in range(CORNER_CELLS.size()):
+			_corner_spins[index].set_value_no_signal(_value[int(CORNER_CELLS[index][1])])
+
+
+	func _on_expand_toggled(pressed: bool) -> void:
+		_corner_grid.visible = pressed
+		if not pressed:
+			# Folding back to one number means one number: the top-left wins, which is the corner the
+			# single box was showing all along.
+			_commit(uniform(_value.x))
+
+
+	func _on_uniform_changed(number: float) -> void:
+		if not editable:
+			return
+		_commit(uniform(number))
+
+
+	func _on_corner_changed(number: float, component: int) -> void:
+		if not editable:
+			return
+		var next: Vector4 = _value
+		next[component] = number
+		_commit(next)
+
+
+	func _commit(next: Vector4) -> void:
+		if next.is_equal_approx(_value):
+			return
+		_value = next
+		_refresh_boxes()
+		value_changed.emit(_value)
+
+
+# ── Two numbers kept in a ratio ───────────────────────────────
+## The `# @inspector_link <a> <b>` equals button: two neighbouring numbers tied together. Pressing it
+## remembers the ratio the two have at that moment; while it stays pressed, editing either one moves
+## the other to keep that ratio. Nothing is written while it is not pressed, and the decor emits no
+## code at all - a project without this plugin simply has two ordinary numbers.
+## Target-less = mock (the preview card and the gallery tile).
+class LinkToggle:
+	extends HBoxContainer
+
+	var _target: Object = null
+	var _first: String = ""
+	var _second: String = ""
+	var _ratio: float = 1.0
+	var _last_first: float = 0.0
+	var _last_second: float = 0.0
+	var _poll_accumulator: float = 0.0
+	var _button: Button = null
+
+
+	func _init(target: Object = null, first_property: String = "", second_property: String = "") -> void:
+		_target = target
+		_first = first_property
+		_second = second_property
+		add_theme_constant_override("separation", 4)
+		_button = Button.new()
+		_button.text = "="
+		_button.toggle_mode = true
+		_button.tooltip_text = "Keep %s and %s in the ratio they have now." % [_first, _second]
+		_button.toggled.connect(_on_toggled)
+		add_child(_button)
+		var caption: Label = Label.new()
+		caption.text = "linked to %s" % _second
+		caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		caption.modulate = Color(1.0, 1.0, 1.0, 0.6)
+		add_child(caption)
+
+
+	## The ratio to keep: what the follower is worth per unit of the leader. A leader of zero has no
+	## ratio to read (every follower would be infinitely more), so the pair keeps a ratio of one.
+	static func link_ratio(leader: float, follower: float) -> float:
+		return 1.0 if is_zero_approx(leader) else follower / leader
+
+
+	## The follower's new value for a leader that just moved.
+	static func link_follow(ratio: float, leader: float) -> float:
+		return leader * ratio
+
+
+	## The leader's new value for a follower that just moved (the same tie, read the other way).
+	static func link_lead(ratio: float, follower: float) -> float:
+		return follower if is_zero_approx(ratio) else follower / ratio
+
+
+	## True while the two numbers are tied.
+	func is_linked() -> bool:
+		return _button.button_pressed
+
+
+	func _on_toggled(pressed: bool) -> void:
+		if not pressed or _target == null:
+			return
+		_last_first = float(_target.get(_first))
+		_last_second = float(_target.get(_second))
+		_ratio = link_ratio(_last_first, _last_second)
+
+
+	func _process(delta: float) -> void:
+		_poll_accumulator += delta
+		if _poll_accumulator < 0.2:
+			return
+		_poll_accumulator = 0.0
+		if _target == null or not _button.button_pressed:
+			return
+		var current_first: float = float(_target.get(_first))
+		var current_second: float = float(_target.get(_second))
+		# Whichever one the reader just moved is the leader for this tick; the other follows.
+		if not is_equal_approx(current_first, _last_first):
+			current_second = link_follow(_ratio, current_first)
+			_target.set(_second, current_second)
+		elif not is_equal_approx(current_second, _last_second):
+			current_first = link_lead(_ratio, current_second)
+			_target.set(_first, current_first)
+		_last_first = current_first
+		_last_second = current_second
+
+
 # ── Array-of-Dictionary table grid ───────────────────────────────────────────
 ## An Array[Dictionary] edited as a GRID: one row per element, one typed cell editor per column
 ## (text / number / checkbox), with add / remove / move-up controls. Columns come from the

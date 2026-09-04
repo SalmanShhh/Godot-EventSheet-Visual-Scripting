@@ -27,6 +27,7 @@ static func run() -> bool:
 		"unit", "easing_attenuation", "easing_positive", "storage"
 	]) and ok
 	ok = _check("Vector2 looks", _ids_for("Vector2"), ["preset_link", "storage"]) and ok
+	ok = _check("Vector4 looks", _ids_for("Vector4"), ["preset_link", "corners", "storage"]) and ok
 
 	# Every preset (and the default) renders a preview miniature, mouse-transparent
 	# so the tile button underneath receives the click.
