@@ -393,8 +393,8 @@ static func _ring_only_files(pack_folder: String) -> PackedStringArray:
 ## what a reader reads without opening a window - and so the TIME in it is the ring's own fact rather
 ## than the moment the list was drawn.
 static func restore_line(entry: Dictionary) -> String:
-	var line: String = "%s - %s, %d byte(s)" % [str(entry.get("path", "")),
-		str(entry.get("when", "")), int(entry.get("bytes", 0))]
+	var line: String = EventSheetL10n.translate("%s - %s, %d byte(s)") % [
+		str(entry.get("path", "")), str(entry.get("when", "")), int(entry.get("bytes", 0))]
 	if bool(entry.get("gone", false)):
 		return "%s (%s)" % [line, EventSheetL10n.translate("this file is not in the pack any more")]
 	return line
