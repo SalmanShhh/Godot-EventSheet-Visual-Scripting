@@ -48,7 +48,9 @@ Install as a single project-wide autoload you call from any sheet by name.
 - [Advanced Random](Advanced-Random.md) - richer randomness: weighted picks, shuffled bags, dice, and noise.
 - [Event Bus](Event-Bus.md) - a game-wide message board addressed by name: broadcast a channel with a payload, answer it with On Event anywhere, and Wait For Event with a give-up time.
 - [Named Scenes](Named-Scenes.md) - give each .tscn a short name so rows stop carrying res:// paths, carry a record into the next scene, and read back On Scene Ready / Current Scene Is.
+- [Mods](Mods.md) - the folder players put their own content in: load a folder of mods in a load order you set, in one of two tiers the row picks. Data only reads a mod's real contents first and refuses one carrying code; the script tier says what it costs, because Godot has no sandbox and none is claimed here.
 - [Second View](Second-View.md) - a second picture of the world you are already in: name a view, give it a node to follow, and show it in a frame. Minimaps, security monitors, portraits, rear-view mirrors and magnifiers are the same four rows.
+- [Codex](Codex.md) - the set of things the player has found: a bestiary, a recipe book, a gallery or a list of visited rooms, where a set is a folder and an entry is a file you own. Discover one, ask whether it is in, count a set, and walk the discovered pages to draw the screen.
 
 ## Incremental and idle
 
@@ -160,6 +162,8 @@ Attach to a node to move it.
 - [Timer](Timer.md) - named countdowns and repeating timers with triggers.
 - [Time Slicer](Time-Slicer.md) - spread heavy work across frames to avoid hitches.
 - [Run In Background](Run-In-Background.md) - keep logic running while the window is unfocused.
+- [Streamer](Streamer.md) - a 2D world bigger than memory: your map is a folder of scenes named by cell, and this keeps the ones within a radius of a node loaded on a thread, freeing the ones behind, with a frame budget and a keep radius so walking back over a border reloads nothing.
+- [Streamer 3D](Streamer-3D.md) - the same nine words on a Vector3i grid, with one decision: leave Stream Height off and the grid is flat, which is what an open world wants, or turn it on for a station, a cave or a tower and watch a radius of 1 go from nine chunks to twenty-seven.
 - [Folder Watcher](Folder-Watcher.md) - notice a file in one folder appearing, changing or going away. Godot has no runtime file watcher, so this POLLS on the interval you name and says so on the row.
 
 ## Building your own

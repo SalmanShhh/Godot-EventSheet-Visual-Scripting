@@ -130,6 +130,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
 | `blend` | [Blend To World Look](ace:Core/WorldBlendToLook) | Environment | Vocabulary |
 | `blend_mode` | [Blend Light As](ace:Core/LightSetBlend) | Lighting | Vocabulary |
+| `bone_name` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `bool` | [No Flashing](ace:Core/NoFlashing) | Accessibility | Vocabulary |
 | `bottom_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
 | `bounce` | [Bounce Off Solids](ace:Core/BounceOffSolid) | Bullet | Vocabulary |
@@ -193,7 +194,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
 | `create_server` | [Host A Game](ace:Core/HostGame) | Multiplayer | Vocabulary |
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
-| `create_tween` | [Fade Brightness](ace:Core/LightFadeBrightness) | Lighting | Vocabulary |
+| `create_tween` | [Blend Toward](ace:Core/BlendToward) | Animation | Vocabulary |
 | `cross` | [Fire Hitscan](ace:Core/FireHitscan) | Weapons 3D | Vocabulary |
 | `cull_mode` | [Sides](ace:Core/MaterialSides) | Material | Vocabulary |
 | `current_animation` | [Set Current Animation](ace:Core/SetAnimationTime) | Animation | Vocabulary |
@@ -234,6 +235,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `drag_top_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
 | `drag_vertical_enabled` | [Follow Tightly](ace:Core/CameraFollowTightly) | Camera | Vocabulary |
 | `duplicate` | [Copy Array](ace:Core/ArrayDuplicate) | Variables: Array | Vocabulary |
+| `duration` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `ease` | [Ease](ace:Core/EaseValue) | Helpers | Vocabulary |
 | `echo` | [On Key Pressed (event)](ace:Core/KeyEventPressed) | Keyboard | Vocabulary |
 | `else` | [As Duration](ace:Core/AsDuration) | Text | Vocabulary |
@@ -272,6 +274,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `filter` | [Filter](ace:Core/ArrayFilter) | Variables: Array | Vocabulary |
 | `filters` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `find` | [Index Of](ace:Core/ArrayFind) | Variables: Array | Vocabulary |
+| `find_bone` | [Set Bone Pose Override](ace:Core/SetBonePoseOverride) | Skeleton | Vocabulary |
 | `find_child` | [Find Child (by name)](ace:Core/FindChild) | Nodes | Vocabulary |
 | `find_children` | [Find Children (by name)](ace:Core/FindChildrenByPattern) | Nodes: Picking | Vocabulary |
 | `find_keycode_from_string` | [Keycode From Name](ace:Core/KeycodeFromName) | Keyboard | Vocabulary |
@@ -322,6 +325,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_base_control` | [Add Window](ace:Core/AddEditorWindow) | Editor Tools: Panels & menus | Vocabulary |
 | `get_base_dir` | [Write Text File (in a folder)](ace:Core/WriteTextFileInFolder) | Files | Vocabulary |
 | `get_basename` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
+| `get_bone_global_pose` | [Bone Position](ace:Core/BonePosition3D) | Skeleton | Vocabulary |
 | `get_bus_count` | [Bus Count](ace:Core/AudioBusCount) | Audio Server | Vocabulary |
 | `get_bus_index` | [Bus Exists](ace:Core/AudioBusExists) | Audio Server | Vocabulary |
 | `get_bus_peak_volume_left_db` | [Bus Peak Volume (dB)](ace:Core/AudioBusPeakDb) | Audio Server | Vocabulary |
@@ -353,6 +357,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
 | `get_csv_line` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `get_current_node` | [Current State Is](ace:Core/AnimationStateIs) | Animation | Vocabulary |
+| `get_current_play_position` | [Time In State](ace:Core/AnimationTimeInState) | Animation | Vocabulary |
 | `get_current_rendering_method` | [Renderer Is](ace:Core/RenderingRendererIs) | Rendering | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
 | `get_date_string_from_system` | [Date: Today](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
@@ -369,6 +374,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_editor_undo_redo` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
 | `get_error_line` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_error_message` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
+| `get_euler` | [Apply Root Motion](ace:Core/ApplyRootMotion) | Animation | Vocabulary |
 | `get_extension` | [Sound From File](ace:Core/LoadSoundFile) | Files | Vocabulary |
 | `get_file` | [Data Folder Problems](ace:Core/DataFolderProblems) | Files | Vocabulary |
 | `get_file_as_bytes` | [File Size (bytes)](ace:Core/GetFileSize) | Files | Vocabulary |
@@ -425,6 +431,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_parent` | [Get Parent](ace:Core/GetParent) | Nodes | Vocabulary |
 | `get_parsed_text` | [Clear Effects](ace:Core/ClearEffects) | Text | Vocabulary |
 | `get_path` | [Node Path](ace:Core/GetNodePath) | Nodes | Vocabulary |
+| `get_path_to` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `get_peers` | [Players](ace:Core/Players) | Multiplayer | Vocabulary |
 | `get_percent_sign` | [Percent Sign](ace:Core/PercentSign) | Translation | Vocabulary |
 | `get_physics_frames` | [Buffer Input (Frames)](ace:Core/BufferInputFrames) | Timed Input | Vocabulary |
@@ -441,6 +448,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_rendering_info` | [Draw Calls (frame)](ace:Core/RenderingDrawCallsInFrame) | Rendering | Vocabulary |
 | `get_resource_filesystem` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
 | `get_root` | [For Each Node That Can](ace:Core/ForEachNodeThatCan) | Nodes: Picking | Vocabulary |
+| `get_root_motion_position` | [Apply Root Motion](ace:Core/ApplyRootMotion3D) | Animation | Vocabulary |
+| `get_root_motion_rotation` | [Apply Root Motion](ace:Core/ApplyRootMotion3D) | Animation | Vocabulary |
 | `get_screen_center_position` | [View Rectangle](ace:Core/CameraViewRect) | Camera | Vocabulary |
 | `get_script_editor` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `get_section_keys` | [Load Bindings](ace:Core/InputLoadBindings) | Keyboard | Vocabulary |
@@ -488,7 +497,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_world_2d` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |
 | `get_world_3d` | [World Raycast Hits? (3D)](ace:Core/WorldRaycastHit3D) | Raycast 3D | Vocabulary |
 | `global_position` | [Pin To](ace:Core/PinToObject) | Pin | Vocabulary |
-| `global_rotation` | [Spawn A Copy, Facing And Moving (3D)](ace:Core/SpawnFacingAndMoving3D) | Spawn | Vocabulary |
+| `global_rotation` | [Point Bone At](ace:Core/PointBoneAt2D) | Skeleton | Vocabulary |
 | `global_shader_parameter_get` | [Global Shader Parameter](ace:Core/RenderingGetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
@@ -535,6 +544,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `in_2d` | [Free Spot In](ace:Core/PlaceInFreeSpot) | Spawn | Vocabulary |
 | `in_3d` | [Free Spot In (3D)](ace:Core/PlaceInFreeSpot3D) | Spawn | Vocabulary |
 | `index` | [Touch Index](ace:Core/TouchIndexOf) | Touch | Vocabulary |
+| `influence` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `initial_velocity_max` | [Fastest Particle Speed](ace:Core/ParticleSpeedMost) | Particles | Vocabulary |
 | `initial_velocity_min` | [Slowest Particle Speed](ace:Core/ParticleSpeed) | Particles | Vocabulary |
 | `inner_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
@@ -757,6 +767,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `push_mode` | [Push Mode](ace:Core/PushMode) | Game State | Vocabulary |
 | `push_warning` | [Push Warning](ace:Core/PushWarning) | Debug | Vocabulary |
 | `put_packet` | [Send Raw Bytes](ace:Core/SendRawBytes) | Multiplayer | Vocabulary |
+| `quaternion` | [Apply Root Motion](ace:Core/ApplyRootMotion3D) | Animation | Vocabulary |
 | `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |
 | `queue_free` | [Queue Free](ace:Core/QueueFree) | General Actions | Vocabulary |
 | `quit` | [Finish](ace:Core/CommandToolFinish) | Editor Tools: Command tool | Vocabulary |
@@ -854,10 +865,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `self_modulate` | [Set Self Tint](ace:Core/SetSelfModulate) | General Actions | Vocabulary |
 | `send_auth` | [Send Auth](ace:Core/SendAuth) | Multiplayer | Vocabulary |
 | `server_relay` | [Relay Messages Between Players](ace:Core/SetRelay) | Multiplayer | Vocabulary |
-| `set` | [Set Blend](ace:Core/SetTreeParam) | Animation | Vocabulary |
+| `set` | [Set Blend Position](ace:Core/SetBlendPosition) | Animation | Vocabulary |
 | `set_anchors_and_offsets_preset` | [Set Anchors Preset](ace:Core/SetAnchorsPreset) | UI | Vocabulary |
 | `set_auto_accept_quit` | [Handle Quit Myself](ace:Core/HandleQuitRequest) | Scene | Vocabulary |
 | `set_auto_clear` | [Set Auto Clear](ace:Core/DrawSetAutoClear) | Drawing | Vocabulary |
+| `set_bone_global_pose_override` | [Set Bone Pose Override](ace:Core/SetBonePoseOverride) | Skeleton | Vocabulary |
+| `set_bone_local_pose_override` | [Set Bone Pose Override](ace:Core/SetBonePoseOverride2D) | Skeleton | Vocabulary |
 | `set_bus_bypass_effects` | [Set Bus Effects Bypassed](ace:Core/AudioSetBusBypass) | Audio Server | Vocabulary |
 | `set_bus_effect_enabled` | [Set Bus Effect Enabled](ace:Core/AudioSetBusEffectEnabled) | Audio Server | Vocabulary |
 | `set_bus_mute` | [Mute Bus](ace:Core/SetBusMute) | Audio | Vocabulary |
@@ -963,6 +976,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `sun_angle_max` | [Sun Size](ace:Core/SkySunSize) | Environment | Vocabulary |
 | `take_damage` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
 | `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
+| `target_node` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
 | `test_move` | [Is Overlapping At Offset](ace:Core/IsOverlappingAtOffset) | Collisions | Vocabulary |
 | `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |

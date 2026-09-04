@@ -6,6 +6,95 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### A number that says its unit, a list that reads as cards, and a handle you can drag
+
+- **A float now carries the unit it is read in, and the number never moves.** The **unit drawer**
+  is a spin box with a unit dropdown at its right edge: \"Thickness 0.6 world\", \"Start angle 0.25
+  turns\". The export names the unit the value is **stored** in and the dropdown only says which
+  unit it is **shown** in, so a designer reading a wind-up in frames cannot move the number the
+  game reads in seconds - the whole point of the drawer, and the reason emitted code is untouched
+  by every flip of it. **Four families convert**: length (`px`, `world`, `screen`, where a screen
+  unit is the project's configured viewport width), angle (`deg`, `turn`, `rad`), time (`s`, `ms`,
+  `frames` at the project's physics rate) and level (`db`, `fraction`). A word from outside them is
+  a pack's own label the dropdown relabels and nothing more, because there is no honest factor
+  between two words nobody declared. It rides `eventsheet:unit:kinds=a|b,store=a`, it is a look in
+  the gallery with its own picture and sentence, and without the editor plugin it is a plain float.
+- **Four numbers that are usually one number.** The **corners drawer** reads a `Vector4` clockwise
+  from the top-left as one box while all four agree, with a button that opens four labelled boxes
+  when they should not. A file whose corners already differ opens showing the four, because one box
+  would be lying about three of them. The same shape is what margins and padding are, so the marker
+  says `eventsheet:corners` and nothing about what for. **Two new looks** in the gallery in total.
+- **A choice can be a picture, or a strip.** The toggle-buttons drawer gained two optional tails in
+  the order the marker reads them: `:segmented` gives two to five word options equal widths and
+  joins them into one control, and `:icons=<source>` puts a picture on each button. The source
+  tells itself apart with no prefix to remember: a path pattern holding `%s` substitutes the option
+  in snake_case, anything else is a **provider name** a pack registered, so a pack whose options
+  only exist as its own shader can draw the real thing at edit time. A missing file or an
+  unregistered name is never an error - that button keeps its word, and the word stays as the
+  tooltip either way, for hovering and for a screen reader.
+- **Ticking one box can reveal a whole group, and two numbers can be tied.** **Show group if**
+  hides an entire `@export_group` behind one bool instead of one field at a time; the
+  `# @inspector_show_if` comment above the group line is only the round-trip carrier (an export
+  group takes no hint string), and the hiding itself is the same `_validate_property` the field
+  form already emitted, once per member, so the generated code's shape is unchanged. **Link with**
+  draws an equals button between two neighbouring numbers: press it and the pair keeps the ratio it
+  had at that moment. Comment-only, editor-only, and a leader sitting at zero keeps a ratio of one
+  rather than sending its follower to infinity.
+- **Two decor lines that belong to the object, not to a property.** `# @inspector_preview` puts a
+  live picture of the thing being edited at the top of its Inspector, re-drawn as it changes. The
+  Drawing Prefab has had one since it shipped; this is that card made general, and the prefab hands
+  over its own rasterizer so its card is byte for byte what it was. The picture comes from, in
+  order: a renderer the caller passed, a renderer a pack registered for the script, an
+  `inspector_preview_texture(size)` method on the object, and for a node with none of those, the
+  node rendered live into a small viewport of its own. A resource with no renderer anywhere shows
+  an honest empty card.
+- **`# @inspector_handle <property> <kind> [from <anchor>]`, and the plugin has a viewport handle
+  seam at last.** A selected node whose script declares handles shows a draggable mark per handle
+  the way the engine's own collision shapes do: a filled dot for a `point`, a hollow dot for a
+  `length`, a diamond for an `angle`, one dot per entry for `points`. 2D rides the editor plugin's
+  canvas forwarding and 3D a gizmo plugin; **letting go of the mouse writes one undo step**, and
+  holding Ctrl snaps to the editor's own Configure Snap defaults. A line naming an unknown kind or
+  a missing property draws nothing rather than dragging the wrong thing, and the Inspector Designer
+  shows a script's handles as chips so an author reads what will be draggable before opening a
+  scene.
+- **A list of things, each of a kind, edited as a list of cards.** The table drawer is right when
+  every row has the same columns and wrong the moment they do not. The **card-list drawer** is the
+  other picture: one card per entry, a stripe coloured by its category, a drag handle, a fold
+  arrow, an enable box, a label, a badge the schema computes and a menu (duplicate, copy, paste
+  over, move to top, move up, move down, remove), with a searchable Add dropdown underneath and
+  Copy all / Paste all over the whole list. Unfolding a card shows what that kind is for, then its
+  own fields drawn with the **real drawers**, then whatever the running game is writing back,
+  greyed. It rides `eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>` on an Array of Dictionaries.
+- **The kinds are the pack's, never the plugin's.** A card list names a **schema** registered
+  through the public API, and **10 static methods** across three seams ship with it: four for card
+  schemas (`register_card_schema`, `unregister_card_schema`, `card_schema`,
+  `card_schema_from_aces`), three for preview renderers and three for toggle icon providers. The
+  derived form is the one to reach for first -
+  `EventSheets.register_card_schema(\"my_steps\", EventSheets.card_schema_from_aces.bind(my_aces))` -
+  because it builds one card per verb from ACE descriptors, its label and help from the words the
+  picker already reads out and its fields from the verb's own parameters, so a pack that adds a
+  verb gets a card for it with no editor code at all. A card list whose schema was never registered
+  **still draws and still saves the bytes it opened with**, so a `.tres` outlives the pack that
+  authored it.
+- **Three rules a card list obeys, because it is somebody's saved file.** Loading never writes
+  (defaults are seeded when a card is added, never when one is read, so a file saved before the
+  schema grew a field round-trips byte for byte); an edit keeps the stored **type**, a number
+  written as a float staying a float and a colour written as `\"#rrggbb\"` staying a String; and an
+  **absent** enable key means enabled, so switching a card back on erases the key rather than
+  writing a `true` the file never had. A card may carry its own name and its own colour where the
+  schema leaves room, and the swatch is refused where the stripe key IS the kind key, because a
+  colour written there would overwrite what the card is.
+- **The Drawing Prefab's steps are now that drawer, with every stored key untouched.** Its opaque
+  p1/p2/p3 grid is a list of cards titled by shape, each showing that shape's own slots - a circle
+  says \"Radius\", a line says \"End X\" - and the eight keys a `.tres` holds (`kind`, `x`, `y`, `p1`,
+  `p2`, `p3`, `color`, `texture`) are exactly what they were, so an existing prefab loads, draws
+  and round-trips unchanged. One card editor is maintained now instead of two.
+- **The drawer family went from eight to eleven, and none of it reaches a shipped game.** Every
+  drawer is an `@export_custom` hint string and every decor line is a plain `#` comment, so without
+  the editor plugin - or in an exported game - a card list is an ordinary Array, a unit field is an
+  ordinary float, and the handles and the preview card were never there. The parity covenant is
+  untouched, and so is the byte-exact round trip.
+
 ### Who did it, what kind it was, and what it leaves behind
 
 - **One key for who made this: 7 new Ownership rows.** A bullet hits, an enemy dies, and the sheet
@@ -2346,6 +2435,13 @@ against Godot 4.7 before it was repaired.
   prelude above a write all open as rows and save back byte-identically.
 - Game saves are still the Save System's territory - slots, formats, backups - and the guide says
   where the line between the two is.
+- **The rows a project already wrote open back as the rows that wrote them.** Three more spellings
+  join the lift table: the CSV read with Godot's own reader opens as **Table Of File**, the
+  `store_csv_line` loop opens as **Write Table To File**, and the seek-to-end append opens as
+  **Append To File** - each one gated by byte-exact re-emission, so a file that opens as a row saves
+  back as the bytes it arrived as. The **Ask** branch does the same across its two halves: the
+  native chooser and the `FileDialog` fallback are one program written twice, and they open as the
+  ONE row that wrote them rather than as a verbatim block a reader has to recognise.
 
 ### Tables read by the engine itself, and the files band
 
@@ -2626,6 +2722,73 @@ These are the places the two disagreed.
   about. That was true from the start and stated only in a source comment; it is in the finding and
   in the guide's Doctor chapter now, because a quiet report that reads as a clean project is the one
   way an honest check misleads.
+- **Scene File Is Data-Only read the tags and walked past the bodies.** A node's body line begins
+  with no `[`, and the engine's own value parser reads it anyway: `script = Resource(\"user://x.gd\")`
+  is resolved by LOADING that path and `script = Object(GDScript,\"script/source\":\"...\")` by making
+  the object and compiling the source carried inside it. Neither writes a resource tag, so a crafted
+  scene with no `[sub_resource]` line in it answered TRUE and ran its author's code the moment
+  anything built it. Both spellings were run before they were written down. Either constructor now
+  answers false wherever it appears, matched on a WORD BOUNDARY - which is what keeps the honest
+  `ExtResource(` and `SubResource(` cleared, and every committed showcase scene still answers true.
+- **And it compared the letters of a tag while the engine decoded them.** A type spelled with a
+  unicode escape in the middle of it is `GDScript` to Godot and something else to a reading that
+  compares as written; a path whose two dots are escaped climbs out of the project while beginning
+  with `res://`; an escaped quote ends a tag early here and not there. All three were run and all
+  three got a script past the guard. A resource tag holding a BACKSLASH is refused now: Godot's own
+  saver writes none, decoding them would be a second copy of the engine's parser kept in step by
+  hope, and unfamiliar is not cleared.
+- **The answer now says what it does not cover** - on the row, in the emitted helper's own comment,
+  and in both guides. A cleared scene brings no code of its OWN, and may still hold a `[connection]`
+  naming one of your methods with arguments of its own, an `Animation` track calling one at a
+  keyframe, or a node whose `instance_placeholder` loads another scene on `create_instance()`. None
+  of those brings a stranger's code in; each can reach yours.
+- **Three doors an outside path could walk through unwatched.** The trace watched `load(`,
+  `ResourceLoader.load(` and `load_threaded_request(`, so a dropped or chosen path handed to
+  `get_tree().change_scene_to_file(...)` earned nothing - and travelling to a layout attaches the
+  scene's script exactly as loading it does. The threaded pair had the gap from the other end: the
+  call that ASKS was watched and the call that hands the object over was not. Widest of the three is
+  `ProjectSettings.load_resource_pack`, which builds nothing at the moment it runs and MOUNTS the
+  pack into `res://` instead, replacing the game's own files unless its second argument says not to.
+  It earns a sentence of its own in the finding, because `res://` being the game's own by
+  construction is the premise the scene reader rests on.
+- **A slot a method is asked of now wears its own brackets.** A parameter holds an EXPRESSION and a
+  method binds to its last operand, so `{name}.validate_filename()` validated only the `\".json\"` of
+  a name written `typed + \".json\"` - and handed `..` through the one row that exists to stop it,
+  really producing `user://saves/../eviljson`. Four more places had the same shape: the folder line of
+  **Write Text File (in a folder)** made the folder of `\".txt\"`, **Sound From File** asked the last
+  piece of a joined path for its extension and so fell to the fallback with nothing said, **Free
+  File Path**'s ceiling bound the wrong way round for anything but a literal, and the two archive
+  loops joined entry paths onto the last operand of their folder. None had shipped in a release, so
+  the fix is free today and would have been a frozen template tomorrow.
+- **A `res://` write through a folder handle is the export trap too.** The check read the write-call
+  list and nothing else, so `DirAccess.open(\"res://\").make_dir(\"levels\")` earned no finding while
+  the literal sat right there in the line - and the finding promises the place is read off the path
+  written in the line. A handle is followed the way an archive packer already was, and only when one
+  of the changing methods is asked of it: opening a folder to LIST it is what `res://` is for.
+- **The watcher's three signal comments shipped as an orphaned block** four lines under
+  `var _watching`, pages from the signals they describe - the builder wrote them interleaved and the
+  emitter gathers signals into their own section while a plain `#` block stays where the raw row
+  sat. They are doc comments now, so they travel with the signal. **On A File Changed** compares
+  whether the modified time is DIFFERENT while the page said \"newer\": a file restored from a backup
+  carries an older time and really has changed, and both the line and the page say so now. And the
+  sheet's file band printed the row's interval literally while the watcher floors it at a tenth of a
+  second - `every 0 s` on the band was ten looks a second in the game. The band shows the gap the
+  watcher will really keep, and the suite pins the two files to one number.
+- **Three things a lexical unpack guard cannot see, said out loud.** The guard held against every
+  traversal spelling tried on Windows - `../`, `..\\`, `a://../../../`, `sub/../../`, absolute,
+  drive-lettered, scheme-prefixed. What it cannot see is a symlink or junction already sitting inside
+  the target folder, an entry named `x:y.txt` landing as a Windows alternate data stream on a file
+  called `x`, and an entry the reader cannot decode landing as a 0-byte file that is counted as one
+  that landed. An entry is also read whole into memory before it is written. All four are in the
+  guide and the module page now.
+- **Both loaders' fallback slots say what they do not answer for.** \"When there is no file at that
+  path\" was the whole story on the row, while a file that IS there and cannot be decoded answers
+  null and an engine message instead - the guard asks whether a file exists, not whether it is a
+  picture or a track. Also on the row: **Safe File Name** keeps a trailing dot, which Windows then
+  drops silently.
+- **The Mods chapter names the Mods pack**, which is where the rest of that story lives, and says
+  the one thing about it that belongs on a Files page: its mounting verb is exactly the code door
+  these pages say the file vocabulary never opens.
 
 ### Every call on a known class is a row
 
@@ -10018,6 +10181,34 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   the rows that ask. The recipe in both guides is now that command, and the API is named for what it
   is: the in-editor twin, for a Tool sheet or an editor plugin, never the thing CI calls into the
   editor for.
+- **A rewrite that writes the byte already in the file is proved without reading anything back.**
+  *Play Sound*'s *From* is optional, so a row whose start time has been cleared writes `play()` - and
+  the reverse grammar reads a bare `play()` as an ordinary method call, because `play({from})` only
+  matches a call with an argument in it. The per-row round-trip gate, asked whether the rewritten
+  line reads back as the successor, therefore said no: the head band went on counting a row it then
+  offered a rewrite for and left alone, and a stored `.tres` holding that row **failed
+  `tools/verify_sheets.gd` over a sheet nobody had touched** - which is exactly what the addresses
+  were said not to do. The gate asks one question - would the next person to open this file get a
+  different sheet - and when the successor emits the line that is already there, character for
+  character, no file changes and there is no new line to read. A sheet that stores its rows moves
+  onto the newer spelling; a sheet that derives them from its text goes on deriving what it derived
+  yesterday. The round-trip gate's own fixture wrote the same line on both ends too, so it was
+  pinning its refusal by accident rather than by its stated reason; its map now leaves one of the
+  successor's parameters unanswered, which is the authoring mistake it describes.
+- **The run that has to be certain now has a command that runs it.** The migration check's
+  whole-project corpus is every stored `.tres` sheet and a capped sample of the `.gd` ones, and the
+  whole half could only be asked for through `EventSheets.migration_report(true)` - which the guides
+  called the release-check mode while the command a branch gate actually runs had no way to ask for
+  it. **`tools/verify_sheets.gd -- --whole`** is that door, and `EventSheetVerify.run` carries the
+  flag through to the corpus; a run that named its own files reads all of them either way, so the
+  flag changes nothing there. The verdict names its mode in BOTH directions - a sampled run prints
+  the two numbers, a whole read ends with the sentence that says it was whole, in the migration
+  section's own words rather than in a second wording of the same fact.
+- **The guide stopped denying that the `.gd` half can find anything.** The paragraph selling the
+  whole read explained the sample by saying a `.gd` sheet has nothing in it to find - which is the
+  opposite of why the Doctor reads that half at all. What it can find is a vocabulary that disagrees
+  with itself, a lift entry kept after its verb was dropped; that is what the sample is for and what
+  the whole read is worth paying minutes for.
 - **The backup ring has a door on it.** Every pack update copies the files it is about to overwrite
   or remove into the per-file ring before the first new byte lands, and until now that was a folder
   and a sentence: the editor's own Restore menu restores THE SHEET IN FRONT OF YOU, which a pack's
@@ -10035,6 +10226,26 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   A removed file deeper in the folder is not offered rather than offered at an invented path.
 - **The ring itself is never written to by any of it**, which the suite pins by value: it is exactly
   as big after a restore as it was before.
+- **A restore tells the registry, like the update door beside it.** An update finishes with three
+  steps - the status line, the manager's table, and the vocabulary - because a pack's own `.gd` IS
+  its vocabulary. Restore... did the first two. Putting a guide or an icon back costs nothing either
+  way, but putting the `.gd` back is the case the door exists for: it is an earlier version of the
+  behaviour, whose `@ace_*` annotations differ, and the picker went on offering the words of a
+  version no longer on disk until something else happened to rescan.
+- **A restore row offers the bytes of the file it is about.** A ring folder's name is many-to-one, so
+  a top-level `sub_guide.md` and a removed `sub/guide.md` share one folder - and the listing went by
+  the sequence prefix alone, never asking which file an entry came from, so one row could offer the
+  other's bytes and then write them over it. The entry's own name after the sequence is what decides
+  now: the same rule the removed-file reconstruction already applied, asked in both directions.
+- **Restore... on a project that has never taken an update stops printing an engine error.** The
+  ring-only walk asked `DirAccess` for the folders under a backup root a fresh project does not have
+  yet, which answers with an empty list AND a red line in Output - so the manager's polite \"the
+  backup ring is holding nothing\" sentence arrived with an error underneath it.
+- **The restore row's own line is translated.** The parenthetical a removed file wears went through
+  the catalog; the line it hangs off did not, so in the eight non-English catalogs the only
+  translated words in the row were the ones inside the brackets. The harvester reads `translate()`
+  calls, so it could not report the half that was missing. Keyed in all nine files with the unit a
+  reader of that language expects rather than with empty cells.
 - **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
   parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
   \"this node\", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -

@@ -20,14 +20,15 @@ Godot programmer would have written by hand, and a project that already wrote it
 
 1. [Name the one node you mean](#name-the-one-node-you-mean)
 2. [A layout on top of the running game](#a-layout-on-top-of-the-running-game)
-3. [Saying where, in three dimensions](#saying-where-in-three-dimensions)
-4. [Hearing a node arrive](#hearing-a-node-arrive)
-5. [Saving what the player built](#saving-what-the-player-built)
-6. [The trust line a scene file comes back through](#the-trust-line-a-scene-file-comes-back-through)
-7. [Changing somebody's scene from a tool](#changing-somebodys-scene-from-a-tool)
-8. [Three small dignities](#three-small-dignities)
-9. [A second picture of the world you are already in](#a-second-picture-of-the-world-you-are-already-in)
-10. [Tips and common mistakes](#tips-and-common-mistakes)
+3. [The gap between two layouts](#the-gap-between-two-layouts)
+4. [Saying where, in three dimensions](#saying-where-in-three-dimensions)
+5. [Hearing a node arrive](#hearing-a-node-arrive)
+6. [Saving what the player built](#saving-what-the-player-built)
+7. [The trust line a scene file comes back through](#the-trust-line-a-scene-file-comes-back-through)
+8. [Changing somebody's scene from a tool](#changing-somebodys-scene-from-a-tool)
+9. [Three small dignities](#three-small-dignities)
+10. [A second picture of the world you are already in](#a-second-picture-of-the-world-you-are-already-in)
+11. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Name the one node you mean
 
@@ -175,6 +176,70 @@ field has focus, which is the moment it matters.
 The neighbours, so nothing is mistaken for anything else: **Go To Layout** replaces what is running.
 **Spawn Scene Instance** adds a copy under *this* node with a bare `add_child`, which is the right
 reading for a spawned enemy. These three leave the game running underneath and outlive it.
+
+## The gap between two layouts
+
+**Go To Layout** is `get_tree().change_scene_to_file`, and that call reads the next scene off the
+disk on the main thread. For a menu or a small room nobody notices. For a level of any size the game
+stops answering while it works, so the last frame of the old scene sits there, frozen, for as long as
+the read takes. Nothing is wrong; it just looks exactly like something is.
+
+**Go To Scene With Loading**, on the Scene Flow pack, puts a screen of your own in that gap. It swaps
+to the node's **Loading Scene**, asks the engine for the next scene on a background thread, and enters
+it when BOTH the load has finished and a shortest time has been served - so the screen cannot flash
+past on a fast machine and read as a stutter.
+
+```
+On play pressed
+  -> Menu | SceneFlowBehavior: Go To Scene With Loading  "res://scenes/forest.tscn", 1.5, false
+```
+
+```gdscript
+func _on_play_pressed() -> void:
+	$SceneFlowBehavior.go_to_with_loading("res://scenes/forest.tscn", 1.5, false)
+```
+
+The screen itself is an ordinary scene with an ordinary sheet on it. Three rows are all it has to
+know:
+
+```
+On Loading Progress
+  -> Set Property  Bar, "value", Loading Progress()
+
+On Ready
+  -> Set Text  TipLabel, Loading Tip()
+```
+
+**Loading Progress** is the SLOWER of the two waits, not the read alone: a bar that races to the end
+on a fast disk and then sits there reads as a hang, which is the thing a loading screen exists to
+prevent. **Loading Tip** picks one line out of a text file when the load starts and keeps it there
+for the whole wait, because a tip that changes while somebody is reading it is worse than no tip.
+**Is Loading** is true for the whole of it, including the beat at the end, which is what a pause menu
+tests before it agrees to open.
+
+With **Wait For Key** on, the wait ends at **On Loading Finished** and the screen stays up until a row
+runs **Enter Loaded Scene**:
+
+```
+On Loading Finished
+  -> Set Text  Hint, "Press any key"
+
+On Unhandled Input
+  Condition: On Key Pressed (event)
+    -> LoadingScreen | SceneFlowBehavior: Enter Loaded Scene
+```
+
+That last row is safe from the first frame: Enter Loaded Scene does nothing at all while the wait is
+still on, so it needs no guard above it.
+
+**The two starters, and why neither knob points at them.** `loading_screen.tscn` and `tips.txt` ship
+beside the pack. Neither the **Loading Scene** nor the **Loading Tips File** field points at them:
+both open empty, so a project COPIES them and rewrites them rather than inheriting a screen and a
+table of tips the pack owns. A loading screen is the most branded ten seconds in a game.
+
+**The Doctor's quiet note.** A scene over a megabyte reached by a plain, uncovered Go To Layout gets
+an info note in the Doctor's inbox, with its size and this row named as the door out. It is a note and
+not a warning: an uncovered change is the right answer for a small scene, and most scenes are small.
 
 ## Saying where, in three dimensions
 

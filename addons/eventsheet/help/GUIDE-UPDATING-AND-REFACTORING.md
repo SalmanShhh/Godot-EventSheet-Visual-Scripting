@@ -251,6 +251,16 @@ verb that stands there today and no `.gd` sheet gains a migration row at all - n
 branch gate, nothing to appear in a diff. A stored `.tres` sheet writes down which verb each row was
 picked from, so it reports both rows and says neither asks anybody anything.
 
+That last part is why the round-trip gate accepts a rewrite it cannot read back. *From* is optional,
+so a *Play Sound* row whose start time has been cleared writes `play()` - and the reverse grammar
+reads a bare `play()` as an ordinary method call, since `play({from})` only matches a call with an
+argument in it. Asked whether the rewritten line reads back as *Play*, the gate said no, and a stored
+sheet holding that row failed the branch gate over a line nobody had touched. **A rewrite that writes
+the byte already in the file is proved without reading anything back**: no file changes, so there is
+no new line for the next person to read, and whatever that line read back as before, it reads back as
+after. The gate's question is whether the file the next person opens gives them a different sheet,
+and a file that did not change cannot.
+
 *Playback Position*, the fifth row of that same family, is deliberately **not** addressed: an
 expression is not a row, so nothing could ever act on the address.
 
@@ -306,9 +316,16 @@ for row: Dictionary in EventSheets.migration_report():
 
 The report reads every stored `.tres` sheet and a capped sample of the `.gd` ones, and the Doctor's
 summary line says which. Pass `true` - `EventSheets.migration_report(true)` - to read every script
-instead. That is minutes rather than seconds on a big project, which is why it is opt-in and why the
-default is the sample: a `.gd` sheet derives its rows from the file every time it is opened, so a
-line whose verb is gone has no lift entry left to match and there is nothing in it to find.
+instead; on a command line that is `tools/verify_sheets.gd -- --whole`. It is opt-in because reading
+a script means LIFTING it, so a thousand of them is minutes rather than seconds - the right trade for
+a hook and the wrong one for a branch about to merge.
+
+The sample is enough for the usual case because a `.tres` sheet WRITES DOWN which verb each row was
+picked from while a `.gd` sheet derives its rows from the file every time it is opened, so an older
+spelling survives in a stored sheet and a `.gd` one simply reads back as whatever the vocabulary has
+today. What the `.gd` half can still find is a vocabulary that disagrees with itself - a lift entry
+kept after the verb it lifts to was dropped - which is a pack-authoring mistake worth sampling for
+and, when it matters, worth reading every file for.
 
 One entry per row migration has something to say about, sorted and deterministic:
 
@@ -609,6 +626,11 @@ verify: 214 file(s) read, 1 failure(s).
 
 **Every failure ends by naming the door in the editor that fixes it**, because this gate deliberately
 fixes nothing. It reads; you decide.
+
+`--whole` reads the `.gd` half of the fourth check whole rather than sampling it, for the run that
+has to be certain - a release check, or a project whose packs disagree with themselves. The verdict
+line says which of the two ran, in both directions, so a flag dropped on the way through a build
+script cannot look like a run that read everything.
 
 Two things about it are easy to get wrong, so they are worth stating:
 

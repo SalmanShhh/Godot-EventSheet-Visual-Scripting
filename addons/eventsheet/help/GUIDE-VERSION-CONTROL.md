@@ -206,7 +206,8 @@ Paths are accepted the way git prints them (relative to the repository root) or 
 them (`res://…`); both are the same file. `--skip <prefix>` leaves out everything under a folder, and
 exists for one situation: a folder of deliberately broken GDScript kept as test fixtures is the one
 thing this gate cannot tell from a real file, so you name it rather than being told your own fixtures
-are broken.
+are broken. `--whole` reads the `.gd` half of the fourth check whole instead of sampling it, and the
+verdict line says which of the two ran.
 
 ### The plugin ships the command, git decides when it runs
 
@@ -308,8 +309,9 @@ for row: Dictionary in EventSheets.migration_report():
 ```
 
 That report samples the `.gd` half of the project and says so in the Doctor's summary line;
-`EventSheets.migration_report(true)` reads every script instead, which is the mode for a release
-check rather than for a hook.
+`EventSheets.migration_report(true)`, or `tools/verify_sheets.gd -- --whole` on a command line, reads
+every script instead - the mode for a release check rather than for a hook, because reading a script
+means lifting it.
 
 Each row says which sheet and which event, the spelling it is written in and the one it would be
 written in, the line it writes today and the line it would write, and whether it **asks**. A row that
