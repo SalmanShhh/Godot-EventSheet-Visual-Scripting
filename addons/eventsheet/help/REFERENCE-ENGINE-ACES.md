@@ -193,7 +193,28 @@ Picker category: **Animation**. Beyond Play and Stop, these drive an `AnimationP
 | **Animation Length** | Expression | The current animation's total length - pair with Animation Position for a normalized 0-to-1 progress. |
 | **Animation Speed** | Expression | The player's current speed scale (`1` = normal). |
 
-The same category also holds the AnimationTree rows (Travel To State, Set Blend, Is In State, Current State) and the auto-finding "in object" actions (Play Animation, Flip Sprite, Set Sprite Frame) that locate a node's AnimationPlayer or AnimatedSprite2D for you.
+The same category also holds the blend-tree rows, the bone rows and the auto-finding "in object" actions (Play Animation, Flip Sprite, Set Sprite Frame) that locate a node's AnimationPlayer or AnimatedSprite2D for you.
+
+An `AnimationTree` is driven by writing into, and reading out of, four parameter paths - `parameters/playback` for the state machine, `parameters/<space>/blend_position` for a blend space, `parameters/<layer>/blend_amount` for a Blend2 or Add2, and `parameters/conditions/<name>` for the booleans a transition advances on. The rows assemble those strings from fields that list the tree's own names, read off the scene.
+
+| Name | Kind | What it does |
+| --- | --- | --- |
+| **Travel To State** | Action | Walks the state machine to a state through the transitions it was drawn with. |
+| **Jump To** | Action | Starts a state at once, ignoring every transition between here and there - a respawn or a cutscene cut. |
+| **Current State Is** | Condition | True while the machine is in the named state. |
+| **Is In Any State** | Condition | True while it is in any of several - the attack that may start from a stand or a run. |
+| **Set Blend Position** | Action | Moves where a blend space is sampled: a number for a one-dimensional space, a Vector2 for a two-dimensional one. |
+| **Blend Toward** | Action | The same move taken over seconds, as a tween on the tree's own parameter. |
+| **Blend Layer** | Action | Fades a Blend2 or Add2 in or out over seconds - the aim pose that arrives when a target is locked. |
+| **Set Condition** | Action | Writes one of the booleans the transitions advance on. The tree decides when to move; the row only says what is true. |
+| **Set Tree Time Scale** | Action | Slows or speeds everything under one TimeScale node, without touching the game's own clock. |
+| **Time In State** | Expression | How many seconds the machine has been playing its current state. |
+| **On State Entered** | Trigger | The moment the machine enters a state. The signal is on the playback object, not the tree node, so the connection reaches through `parameters/playback`. |
+| **On State Left** | Trigger | The moment the state it was in finishes. |
+| **Apply Root Motion** | Action | Hands the animation's own step to a CharacterBody2D or CharacterBody3D, divided by the frame time because a velocity is a distance per second. |
+| **Point Bone At** | Action | Aims one bone at a node and keeps aiming - through the engine's own LookAtModifier3D in 3D, and on a Bone2D in 2D. |
+| **Bone Position** | Expression | Where a bone is in the world, with the skeleton-space pose multiplied back out. |
+| **Set Bone Pose Override** | Action | Holds a bone in a pose of your own, with a strength, over whatever the animation is playing. |
 
 ---
 

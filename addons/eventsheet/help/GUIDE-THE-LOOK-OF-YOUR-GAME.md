@@ -50,7 +50,7 @@ promise: a sheet saved today names it forever.
 
 | The object | The node that holds it | What its words are about |
 |---|---|---|
-| `BaseMaterial3D` | a `MeshInstance3D` | colour, glow, roughness, metal, see-through, texture, blend, transparency, sides |
+| `BaseMaterial3D` | a `MeshInstance3D` | colour, glow, roughness, metal, surface opacity, texture, blend, transparency, sides |
 | `CanvasItemMaterial` | any `CanvasItem` | blending, light response |
 | `Environment` | a `WorldEnvironment` | saturation, fog, glow, tone map, reflections, the backdrop, the sky |
 | `CameraAttributes` | a `Camera3D`, or a `WorldEnvironment` for every camera without one | exposure, auto exposure, focus |
@@ -73,11 +73,16 @@ the emitted code where you can read it rather than in a step you have to remembe
 ```gdscript
 if material_override == null:
 	material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+elif not material_override.resource_path.is_empty():
+	material_override = material_override.duplicate()
 material_override.albedo_color = Color("c0392b")
 ```
 
-Three promises are in those two lines. A mesh that already owns an override keeps it. A mesh drawing
-with a shared file is given a copy of that file. A mesh drawing with nothing at all is given a plain
+Three promises are in those four lines. A mesh that already owns a copy of its own keeps it - a copy
+has no `resource_path`, which is what makes a row that runs every frame take one copy and not sixty.
+A mesh drawing with a shared file is given a copy of that file, and so is a mesh with that shared
+file dropped straight into its `material_override` slot in the Inspector, which is the commonest way
+a material is assigned at all. A mesh drawing with nothing at all is given a plain
 `StandardMaterial3D` rather than the row reaching through a null.
 
 The copy is taken **once**, and the reason is worth knowing: `material_override` being filled is
@@ -105,10 +110,10 @@ five a surface can be walked to over time.
 | glow | how much light the surface gives off | `emission_energy_multiplier`, with `emission_enabled` |
 | roughness | dull cloth at 1, polished at 0 | `roughness` |
 | metal | plastic at 0, bare metal at 1 | `metallic` |
-| see-through | how much you can see through it | the alpha of `albedo_color`, with alpha transparency |
+| surface opacity | how solid the surface is | the alpha of `albedo_color`, with alpha transparency |
 | texture | the picture the surface is drawn with | `albedo_texture` |
 | blend | how the surface meets what is behind it | `blend_mode` |
-| transparency | how see-through is worked out | `transparency`, with a scissor threshold |
+| transparency | how being see-through is worked out | `transparency`, with a scissor threshold |
 | sides | which faces are drawn | `cull_mode` |
 
 Three of the nine are dropdowns over the engine's own enums. **Set Blend** reads mix, add, subtract,
@@ -128,16 +133,20 @@ On Body Entered  ->  Crate | Set colour to #ffffff
 func _on_body_entered(body: Node) -> void:
 	if material_override == null:
 		material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+	elif not material_override.resource_path.is_empty():
+		material_override = material_override.duplicate()
 	material_override.albedo_color = Color("ffffff")
 	if material_override == null:
 		material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+	elif not material_override.resource_path.is_empty():
+		material_override = material_override.duplicate()
 	material_override.emission_enabled = true
 	material_override.emission_energy_multiplier = 4.0
 	create_tween().tween_property(material_override, "emission_energy_multiplier", 0.0, 0.35)
 ```
 
 **The switch is on the same line as the word.** Glow does nothing at all until `emission_enabled` is
-true, and see-through does nothing until the material is in alpha transparency. Both facts are
+true, and surface opacity does nothing until the material is in alpha transparency. Both facts are
 written into the row rather than left as a second thing to remember, which is why **Set Glow** on a
 material that has never glowed still glows.
 

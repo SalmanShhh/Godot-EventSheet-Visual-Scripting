@@ -21,7 +21,7 @@ project declares, never by a setting, a history or a guess.
 - [Telling them apart at a glance](#telling-them-apart-at-a-glance)
 - [Where the derived layer gets its words](#where-the-derived-layer-gets-its-words)
 - [The ledger: Project Doctor - Reading](#the-ledger-project-doctor---reading)
-- [Six idioms, before and after](#six-idioms-before-and-after)
+- [Seven idioms, before and after](#seven-idioms-before-and-after)
 - [The boundary: what stays code, and why that is right](#the-boundary-what-stays-code-and-why-that-is-right)
 - [Raising the floor yourself](#raising-the-floor-yourself)
 
@@ -166,10 +166,10 @@ The head number comes through the same reader the head bar's coverage chip uses 
 suite's corpus pins measure with, so the Doctor, the canvas and the tests can never quote three
 different percentages for the same bytes.
 
-## Six idioms, before and after
+## Seven idioms, before and after
 
 The layers are a mechanism; what a reader feels is which of their own lines suddenly say something.
-These six are the ones this pass named, each with the reading it used to get beside the reading it
+These seven are the ones this pass named, each with the reading it used to get beside the reading it
 gets now.
 
 **1. Any call on a class the sheet can name.** This is the headline, because it is not one idiom but
@@ -268,6 +268,48 @@ func _notification(what: int) -> void:
 reads as, which can happen more than once; this happens exactly once and nothing follows it, so the
 two moments stopped sharing one sentence.
 
+**7. The ray a project casts by hand.** Three statements, and they have been the same three
+statements in every Godot project since 4.0, because they are the shape the engine's own pages print.
+
+```gdscript
+var space_state := get_world_2d().direct_space_state
+var query := PhysicsRayQueryParameters2D.create(global_position, target.global_position)
+var sight := space_state.intersect_ray(query)
+```
+
+| Before | Now |
+|---|---|
+| *Set Local Variable*, three times over - every row of it true, and none of them the sentence | One **Cast Ray Into** row, the same one the picker offers, holding `from`, `to`, the collision mask when the run sets one, and the variable the hit lands in |
+
+The two locals are not values of the row. They are matched and agreed on - a run is this row only
+when both mentions of the space state name it the same way and both mentions of the query do - and
+then spliced back exactly as the author spelled them, which is what keeps the file byte-identical
+whichever of Godot's three declaration spellings it used. What the line does not spell is left unsaid
+rather than blanked: Godot's own defaults for a bare `create(from, to)` are what the descriptor's
+defaults already say, so opening a lifted row offers values that describe the line already there. The
+compact one-line spelling, which nests the query inside the call and names no local at all, is its own
+entry - a choice of spelling is the one thing a table cannot work out for itself.
+
+A shape sweep and a point query sit in the same files and stay code, counted out loud. The shipped
+Query Bodies rows build their own shape and loop the results, which is a different program from a
+hand-written sweep that hands the array back, and a table reaching for a near-enough row would cost
+the reader more than the sentence gained.
+
+![Six lines of hand-written physics - the space state, the query, a collision mask, the ray, the same ray written compactly on one line, and a shape sweep - above the same file opened as a sheet: two Cast ray rows reading "Cast ray global_position -> target.global_position into sight" and "into ground", with the shape sweep's two locals below them still reading as the code they are](images/physics-query-rows.png)
+
+**And one family that was looked at and left alone.** The step of a held tween chain
+(`pop.tween_property(sprite, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE)`) was the obvious
+eighth entry and did not get written, because it already has a reading and the reading is better than
+an entry could be: it names the node being moved, says *opacity* where the line says `"modulate:a"`,
+carries the easing and the transition as chips, and puts *(after the previous)* or *(at the same
+time)* on a step to say where it sits in the chain. A lifted row shows its descriptor's own sentence,
+and the ordering of a chain is not one of that row's values - so claiming the line would have taken
+all four of those away. Where a curated reading already outranks what a table could say, the table is
+the thing that does not get written. That is the same ranking as everywhere else in this guide, read
+from the other end.
+
+![A five-line held tween chain above the rows it already reads as: Tween opacity to 0 in 0.25 seconds ease = Sine, Tween position:y to -8 in 0.3 seconds ease = out (after the previous), Tween the next steps at the same time, and Tween size to (1, 1) in 0.2 seconds (at the same time)](images/tween-chain-rows.png)
+
 ## The boundary: what stays code, and why that is right
 
 There is a line the top layer is not going to cross, and saying so plainly is more useful than
@@ -293,6 +335,24 @@ So the honest floor is load bearing, and it is designed rather than tolerated:
   is not a trade this plugin makes.
 - Both are **counted**, on the head bar and in the Doctor, so nobody has to take the reading's word
   for how well it did.
+
+**And a wall can stop being a wall without any vocabulary at all.** A class written inside a file is
+read as *structure* rather than as words: the class is a fold, each member reads as the row it would
+be at top level, and the header says what the class holds - `1 field · 1 method · 1 enum · 1 signal`.
+A five-line enum inside it collapses to the one row its own summary is, a signal reads through the
+signal row's, a method keeps the `ƒ name(params) -> Type` chip, and a class nested inside a class is
+its own fold, as deep as the file goes. That last shape used to be the surest way to a wall: a class
+carrying an enum, a signal or another class was refused by both of the older class readings and
+arrived whole, as code, so the classes with the most structure in them were exactly the ones that
+read as none. None of this is a reading of MEANING. It is a pure view over the same block with every
+member keeping its own source lines, which is why the file re-emits byte for byte either way.
+
+![A hand-written class carrying a multi-line enum, a signal, a field, a class nested inside it and a method, read as a fold whose header counts what it holds; below it the same class with one bare statement in its body, refused and left as visible code](images/member-held-class-rows.png)
+
+The refusals are the same shape as everywhere else. A bare statement in the body, an enum whose own
+shape the enum reading will not take, code after the class, a second class at the top level: any of
+those and the whole class stays the honest code it was, because a fold that quietly dropped a line
+would be worse than the wall it replaced.
 
 The measure of the layer model is not that the bottom layer is empty. It is that you always know
 which layer you are in.

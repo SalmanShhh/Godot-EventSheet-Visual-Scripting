@@ -768,6 +768,24 @@ pivot turns.
   first time they are used, one per question however many rows ask it, appended after everything
   else so no line of yours moves.
 
+- **The ray the manual prints is the row it means.** A question put to the physics world directly is
+  three statements - `var space_state := get_world_2d().direct_space_state`, a
+  `PhysicsRayQueryParameters2D.create(from, to)`, then `space_state.intersect_ray(query)` - and it has
+  been those three statements in every Godot project since 4.0, because it is the shape the engine's
+  own pages print. They read as one **Cast Ray Into** row, in both dimensions, holding `from`, `to`,
+  the collision mask when the run sets one, and the variable the hit lands in. The two locals are
+  agreed on rather than held: both mentions of each have to name it the same way for the run to be
+  this row at all, and each rides back out spelled exactly as it was written, so all three of Godot's
+  declaration spellings (`x = v`, `x := v`, `x: Type = v`) save back untouched. Values the line does
+  not spell are left unsaid rather than blanked - Godot's defaults for a bare `create(from, to)` are
+  the ones the row's own dialog offers, so opening a lifted row describes the line already there. The
+  compact one-line spelling, which nests the query inside the call and names no local, is read too. A
+  **shape** sweep and a **point** query are deliberately not claimed: the Query Bodies rows build
+  their own shape and loop the results, which is a different program from a hand-written sweep that
+  hands the array back, so those lines stay the honest code they are and are counted as such.
+
+  ![Six lines of hand-written physics - the space state, the query, a collision mask, the ray, the same ray written compactly on one line, and a shape sweep - above the same file opened as a sheet: two Cast ray rows, with the shape sweep's two locals below them still reading as the code they are](images/physics-query-rows.png)
+
 #### The 3D words - moving, orbiting, animating, and the world's look
 
 - **Third-person locomotion is one action.** The five-line run every 3D character script writes -
@@ -1363,9 +1381,22 @@ to the function it names, the same jump the Outline panel makes.
 
 - **A pure-data `class X:` is a Data type.** The bar in the head says `Data type AbilityData` and its
   fields are the rows below, each editable in place. `Stats.new()` reads `a new Stats`,
-  `stats.duplicate()` reads `a copy of stats`, and `thing is Stats` reads `is a Stats`. An inner class
-  with methods in it keeps its read-only code block: a sentence may only stand for a shape it can see
-  whole.
+  `stats.duplicate()` reads `a copy of stats`, and `thing is Stats` reads `is a Stats`.
+
+- **A class held by its members is a fold, whatever it holds.** A class of nothing but fields is the
+  Data type above and a class that also carries methods is a read-only class block, and both of those
+  refused outright the moment the body held an **enum**, a **signal** or another **class** - so the
+  classes with the most structure in them were exactly the ones that arrived as a wall of GDScript. A
+  third reading holds those: the class is a fold, its header counts what it holds
+  (`1 field · 1 method · 1 enum · 1 signal`), and every member reads as the row it would be at TOP
+  level - the enum through the enum row's own summary, so a five-line `enum Band { … }` collapses to
+  `enum Band { AM, FM = 4 }` with `2 values` beside it; the signal through the signal row's; a method
+  with the same `ƒ name(params) -> Type` chip the methods reading gives it; and a class nested inside
+  a class as its own fold, as deep as the file goes. Every member keeps its own source lines, so the
+  block is a view rather than a rewrite and the file re-emits byte for byte. Double-click the header
+  and the code opens as it always did. What it will not take stays honest code, whole: a bare
+  statement in the body, an enum shape the enum reading refuses, code after the class, or a second
+  class at the top level.
 
 - **The scene tree in one word each.** `find_child("HUD")` is `the child named HUD`,
   `get_tree().current_scene` is `the layout`, `get_tree().current_scene.get_node("Boss")` is `Boss in
