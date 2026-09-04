@@ -218,6 +218,16 @@ What does not belong in a table: a spelling that is several statements only mean
 together, or one that has to read the scene to know what it is looking at. Those stay hand-written
 matchers, and they say so in a comment.
 
+And one more, which is the easiest to get wrong because the entry would work: **a line a curated
+reading already reads better.** A lifted row shows its descriptor's own sentence, so whatever the
+existing reading was saying that is not one of that row's VALUES is lost the day the entry lands. The
+step of a held tween chain is the worked case - the reading names the node, says *opacity* where the
+line says `"modulate:a"`, carries the easing as chips and puts *(after the previous)* on a step, and
+an entry claiming that line takes all four away. Ask what the reading says today before writing the
+entry; where the reading already outranks what a table could say, the table is the thing that does
+not get written. That is the same ranking that lets an entry outrank a derived row, read from the
+other end.
+
 ### The bench it is written on
 
 **Tools > Lift Workbench** is that loop in one window instead of in a throwaway fixture, a test run and
@@ -227,7 +237,7 @@ and the head bar's chip would not:
 
 | The question | What it shows |
 |---|---|
-| What claims each line | The lift family and entry id that recognised it, the plainer name of the row it otherwise arrived as, or "stays code" - drawn differently on purpose, because a named entry and a general reading are not the same claim |
+| What claims each line | The lift family and entry id that recognised it, the plainer name of the row it otherwise arrived as, or "stays code" - drawn differently on purpose, because a named entry and a general reading are not the same claim. A family whose spellings are RUNS answers here too: the reading asks the tables `match_run` at the indentation the opening statement is written at, names the family on every line the run swallowed, and resumes after it, so the second statement of one run can never open another |
 | What it opens as | The real rows, drawn by the real viewport, read-only. Not a mock-up of the canvas: the canvas |
 | What it saves back as | The re-emission, byte for byte. Green when the buffer comes back unchanged, red with the exact two lines when it does not, because a trailing space is the whole bug and "they differ" is not a bug report |
 

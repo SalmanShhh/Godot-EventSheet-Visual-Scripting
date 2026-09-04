@@ -68,7 +68,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 ## Working with your project
 
 - [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those actions and conditions without touching your source, and naming a raw call you already have.
-- [How Your Code Reads: Curated Sentences, Derived Rows and Honest Code](GUIDE-HOW-CODE-READS.md) - the three layers every opened line arrives through, the two marks that tell a curated sentence from a derived one at a glance, where a derived row gets its words, the Doctor's Reading ledger and the shape a stays-code line has, six hand-written idioms with the reading they used to get beside the one they get now, and the boundary the top layer is not going to cross.
+- [How Your Code Reads: Curated Sentences, Derived Rows and Honest Code](GUIDE-HOW-CODE-READS.md) - the three layers every opened line arrives through, the two marks that tell a curated sentence from a derived one at a glance, where a derived row gets its words, the Doctor's Reading ledger and the shape a stays-code line has, seven hand-written idioms with the reading they used to get beside the one they get now, and the boundary the top layer is not going to cross - including the structure that lets a class stop being a wall without any vocabulary at all.
 - [Coming from GDScript](GUIDE-COMING-FROM-GDSCRIPT.md) - you already know Godot: the two dozen words this editor reads your code in (`queue_free` is Destroy, `_process` is Every tick, `await` is Wait for, `signal` is trigger), why a row is one statement, and how to see the GDScript behind any row. The full generated list is Manual ▸ Dictionary: GDScript to events.
 - [Describing Your Game](GUIDE-DESCRIBING-YOUR-GAME.md) - one description per thing you made, kept as the `##` line the file already carries; drafts composed out of the thing's own rows; the Doctor's "describe the undescribed" page and its drift note; the manual your game writes about itself; and the Project View with its search across every sheet.
 - [Sharing Events Between Scripts](GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS.md) - shared event sheets: write common events once and include them in many scripts, as a base class or as a helper.
@@ -99,7 +99,7 @@ The entry-by-entry reference for everything the picker already offers. The four 
 open a Modules guide when you want the full list of actions, conditions and expressions, their
 parameters, and what each row ships as.
 
-- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the 1,556 actions, conditions and expressions that ship in the picker before you enable a single pack.
+- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the 2,064 actions, conditions and expressions that ship in the picker before you enable a single pack.
 
 ## Addon packs
 
