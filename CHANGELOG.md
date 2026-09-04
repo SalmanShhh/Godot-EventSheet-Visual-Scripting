@@ -11355,6 +11355,29 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   and the parse gate then refused every node-scoped address for a reason that was the harness's and
   not the map's. A slot the template spells `{name.}` is now left blank, and the fixture sheet is
   compiled under the verb's OWN node type instead of a bare `Node`.
+- **A retired spelling no longer wins a tie for a hand-written line, by accident or otherwise.** All
+  four forwarding addresses join two verbs that write the same call, so `$Sfx.play(0.5)` in an opened
+  `.gd` file was claimed by whichever of the two the vocabulary happened to register first - which
+  was module file name order, and `audio_aces.gd` sorting before `collection_aces.gd` is the only
+  reason the promise above held. Where two spellings are equally specific, the one with a forwarding
+  address now loses to the one without it, and the four audio lines are pinned by value off a real
+  file along with the migration count of zero they produce.
+- **Ctrl+Z after restoring a file from a pack's backup ring says so.** The restore itself already
+  said what it did, redrew the list and told the registry - the file put back can be the pack's own
+  `.gd`, whose annotations are the vocabulary - but the way back wrote its bytes in silence, leaving
+  the picker offering the words of a version no longer on disk. Both halves of the undo now go
+  through the same three steps, and the folder a restore had to create for a file the pack no longer
+  had is taken away with it rather than left behind empty.
+- **A restore writes inside the pack folder or it writes nothing.** The entry handed to the restore
+  door named the file to write and the bytes to write into it, and neither was checked against
+  anything; it is a public entry point, so a future caller could have restored its way to any path on
+  disk. An entry now has to name the pack folder it belongs to, the target has to be inside it, and
+  the bytes have to come out of the backup ring - anything else is refused in words, with nothing
+  written.
+- **A migration receipt no longer reads "Play from s".** A parameter the reader had cleared was an
+  empty answer rather than no answer, so the slot was filled with nothing and the unit glued to it
+  was left standing on its own. A slot with nothing to say is now dropped together with the word it
+  sits in, unless that word carries another slot that was answered.
 
 ### The pack count is measured now, not typed
 
