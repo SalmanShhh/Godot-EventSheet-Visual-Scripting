@@ -602,6 +602,12 @@
   scene and a copy in a free spot both declare a real local, and neither was offered by the field
   completion the launched twins had joined - the free-spot row binds its name above the branch
   precisely so the rows below can still say it.
+- **Which dimension a run is about belongs to the read that asked.** A line formation and a copy of
+  the node's own scene write the same characters in 2D and in 3D, so the class the file extends is
+  what says which row a reader is shown - and only the whole-file door was ever told it. A pack's
+  function bodies and its event bodies went through their own doors, which answered the question
+  with whatever the last file read had left standing, so a 3D pack built after a 2D one showed its
+  runs as the 2D rows. All four doors state the answer now, and drop it again when the read ends.
 - **The skipped spawn joins its own family's wording.** The trigger read "On a spawn skipped" in the
   sheet while every other trigger of that shape reads "On retired", "On spawned", "On destroyed" -
   an article's worth of difference, and enough to make one row look like a sentence from elsewhere. The

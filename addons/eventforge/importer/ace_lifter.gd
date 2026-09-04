@@ -277,11 +277,18 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# function and must not restart the bar the user is watching. The body has many early returns
 	# (GDScript has no try/finally), so the finalize lives here in the wrapper.
 	if sheet == null or not lift_functions:
-		return _attempt_lift_body(sheet, source, lift_functions)
+		var lifted_events_only: bool = _attempt_lift_body(sheet, source, lift_functions)
+		SpawnRunLift.note_host_class("")
+		return lifted_events_only
 	progress_phase = "lifting"
 	progress_functions_done = 0
 	progress_functions_total = _count_lift_candidates(sheet)
 	var lifted: bool = _attempt_lift_body(sheet, source, lift_functions)
+	# And the dimension the read was about is dropped here, in the same wrapper and for the same
+	# reason: the body sets it per file and has no single exit to clear it at, and a value left
+	# standing would be the NEXT read's answer to a question that read never asked. CI runs the suite
+	# in one process, so a carried value is a row shown in the wrong dimension a whole test later.
+	SpawnRunLift.note_host_class("")
 	progress_functions_done = progress_functions_total
 	progress_phase = "done"
 	return lifted
@@ -1051,6 +1058,11 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 ## `if`, which is the only shape a condition ever has. Both go through the same reverse grammar the
 ## importer uses, so a line this refuses is a line the importer would refuse too.
 static func lift_one_line(line: String, as_condition: bool = false) -> Resource:
+	# One line arrives with no file around it, so there is no `extends` to read a dimension off.
+	# Cleared rather than set: no host class is the honest answer here, and a read that states its
+	# own answer cannot inherit the last read's. (A single line can never fill a multi-statement run,
+	# so nothing here reads the value today - it is stated so that the four doors agree.)
+	SpawnRunLift.note_host_class("")
 	var statement: String = line.strip_edges()
 	if statement.is_empty() or statement.contains("\n"):
 		return null
@@ -1082,6 +1094,10 @@ static func lift_one_line(line: String, as_condition: bool = false) -> Resource:
 static func lift_function_bodies(sheet: EventSheetResource) -> int:
 	if sheet == null or sheet.functions.is_empty():
 		return 0
+	# Which dimension these bodies are about, told the same way the whole-file read tells it: off the
+	# sheet's own host class. A pack's bodies reach the spawn run families exactly as a file's do, so
+	# without this a 3D pack built after a 2D one read its runs as the 2D rows.
+	SpawnRunLift.note_host_class(str(sheet.host_class).strip_edges())
 	var reverse_entries: Array = _build_reverse_entries()
 	var verify_path: String = "user://_eventforge_pack_body_verify.gd"
 	var converted: int = 0
@@ -1120,6 +1136,8 @@ static func lift_function_bodies(sheet: EventSheetResource) -> int:
 			else:
 				fn.rows = backup
 				fn.events = []
+	# Dropped at the end of the read, so the next thing this process lifts asks its own question.
+	SpawnRunLift.note_host_class("")
 	return converted
 
 
@@ -1142,6 +1160,8 @@ static func _to_resource_array(rows: Array) -> Array[Resource]:
 static func lift_event_bodies(sheet: EventSheetResource) -> int:
 	if sheet == null or sheet.events.is_empty():
 		return 0
+	# The same dimension question its function-body sibling asks, answered off the same host class.
+	SpawnRunLift.note_host_class(str(sheet.host_class).strip_edges())
 	var reverse_entries: Array = _build_reverse_entries()
 	var verify_path: String = "user://_eventforge_event_body_verify.gd"
 	var targets: Array[EventRow] = []
@@ -1172,6 +1192,8 @@ static func lift_event_bodies(sheet: EventSheetResource) -> int:
 		else:
 			row.actions = backup_actions
 			row.sub_events = backup_subs
+	# Dropped at the end of the read, exactly as the function-body pass drops it.
+	SpawnRunLift.note_host_class("")
 	return converted
 
 
@@ -3161,14 +3183,26 @@ static func _is_known_connect_line(line: String, connections: Dictionary) -> boo
 static var _own_function_names: Dictionary = {}
 
 
+## The prefix the compiler's own SHARED HELPERS carry - the aimed-floor ray, the 2D point query, the
+## tile lookups, the scene-trust reading. A file that uses one of those rows carries its definition,
+## because that is how a shared helper reaches the file at all, and it is emphatically NOT the
+## author's own function: the rule below exists so `restart()` beside a hand-written `func restart()`
+## reads as the author's call rather than as a particle verb, and a definition the compiler wrote for
+## a row is the opposite case. Left in, every helper-backed row in every emitted file would read as
+## "Call function __eventsheets_…" instead of as the sentence that wrote it. The bytes are identical
+## either way - only the words move - which is exactly why the words are worth getting right.
+const SHARED_HELPER_PREFIX := "__eventsheets_"
+
+
 ## Notes the file's own function headers. Every `func name(` at the top level of the source, whether
-## or not that function itself goes on to lift.
+## or not that function itself goes on to lift - except the compiler's shared helpers, for the
+## reason the prefix above gives.
 static func _note_own_functions(source: String) -> void:
 	_own_function_names.clear()
 	var header: RegEx = RegEx.create_from_string("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\(")
 	for line: String in source.split("\n"):
 		var found: RegExMatch = header.search(line)
-		if found != null:
+		if found != null and not found.get_string(1).begins_with(SHARED_HELPER_PREFIX):
 			_own_function_names[found.get_string(1)] = true
 
 

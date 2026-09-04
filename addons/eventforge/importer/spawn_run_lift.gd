@@ -87,15 +87,23 @@ const UP_TO_NEXT: String = ".+?"
 ## one of them gated by its mark before anything is compiled.
 static var _entries: Array[Dictionary] = []
 
-## Whether the file being read extends a Node3D. Set by the lifter around each file, exactly as the
+## Whether the thing being read extends a Node3D. Set by the lifter around each read, exactly as the
 ## collision-layer reading is told which of a project's two layer lists a file's lines are about, and
 ## for the same reason: some lines are spelled identically in both dimensions and only the class the
 ## file extends says which one is meant. Display-level attribution only - the row re-emits the
 ## author's own spelling either way, so a stale value cannot move a byte.
+##
+## EVERY READ SETS IT AND EVERY READ DROPS IT, and there are four of them: the whole-file lift, a
+## pack's function bodies, a pack's event bodies, and one pasted line, which has no file around it
+## and so has no dimension to be about. A value left standing is the next read's answer to a question
+## that read never asked - and this process is the whole suite when CI runs it serially, so a value
+## carried out of a Node3D file would show a 2D sheet's pasted line as the 3D row an hour later.
 static var _host_is_3d: bool = false
 
 
-## What the lifter read off the `extends` line, handed over before a file is walked.
+## What the lifter read off the `extends` line, handed over before a read is walked - and handed over
+## again as "" at the end of it, which is what drops the answer. An empty class is not 3D, so the
+## dropped state is the same one a fresh process starts in.
 static func note_host_class(host_class: String) -> void:
 	_host_is_3d = _is_3d(host_class)
 

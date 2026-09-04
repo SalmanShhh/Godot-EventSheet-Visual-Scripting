@@ -64,6 +64,7 @@ static func run() -> bool:
 	passed = _test_a_fade_puts_the_thing_back_before_it_lets_go() and passed
 	passed = _test_the_two_new_triggers_survive_a_reopen() and passed
 	passed = _test_the_3d_twins_read_as_the_3d_rows() and passed
+	passed = _test_the_dimension_belongs_to_the_read_that_asked() and passed
 	passed = _test_a_group_on_an_ancestor_still_counts() and passed
 	passed = _test_the_free_spot_is_not_an_at_starter() and passed
 	return passed
@@ -559,6 +560,67 @@ static func _test_the_3d_twins_read_as_the_3d_rows() -> bool:
 	passed = SUPPORT.check(TEST_NAME, "and in a 2D file it opens as the 2D row, as it always did",
 		"" if self_2d == null else self_2d.ace_id, "SpawnCopyOfSelf") and passed
 	return passed
+
+
+## Which dimension a run is about is read off the thing being read, and it belongs to THAT read. A
+## pack's bodies are lifted through their own door, which never asked the question at all and so
+## answered it with whatever the last file read had left standing - and a suite (or a CI run, which
+## is one process from end to end) reads a 3D file long before it builds a 2D pack.
+static func _test_the_dimension_belongs_to_the_read_that_asked() -> bool:
+	var passed: bool = true
+	var copy_values: Dictionary = {"name": "half", "at": "global_position",
+		"parent": "get_parent()"}
+	# The two rows write the same characters, which is the whole reason the answer has to come from
+	# somewhere other than the line.
+	var run: String = _emitted("SpawnCopyOfSelf", copy_values)
+	passed = SUPPORT.check(TEST_NAME, "the two dimensions still write one run between them",
+		_emitted("SpawnCopyOfSelf3D", copy_values), run) and passed
+	# A whole-file read of a 3D script - the read that used to leave its answer behind it.
+	SUPPORT.reopen(_compiled("SpawnCopyOfSelf3D", copy_values, "Node3D"))
+	var in_2d: EventSheetResource = _sheet_with_body(run, "Node2D")
+	passed = SUPPORT.check(TEST_NAME, "a 2D sheet's own body lifts",
+		EventSheetACELifter.lift_event_bodies(in_2d), 1) and passed
+	passed = SUPPORT.check(TEST_NAME, "and lifts as the 2D row, whatever file was read before it",
+		_body_ace_id(in_2d), "SpawnCopyOfSelf") and passed
+	var in_3d: EventSheetResource = _sheet_with_body(run, "Node3D")
+	passed = SUPPORT.check(TEST_NAME, "a 3D sheet's own body lifts",
+		EventSheetACELifter.lift_event_bodies(in_3d), 1) and passed
+	passed = SUPPORT.check(TEST_NAME, "and lifts as the 3D row, which only its own host class can say",
+		_body_ace_id(in_3d), "SpawnCopyOfSelf3D") and passed
+	# And the 3D read above drops its answer too, or the next 2D read inherits it.
+	var after: EventSheetResource = _sheet_with_body(run, "Node2D")
+	EventSheetACELifter.lift_event_bodies(after)
+	passed = SUPPORT.check(TEST_NAME, "and the 3D read hands nothing on to the 2D read after it",
+		_body_ace_id(after), "SpawnCopyOfSelf") and passed
+	return passed
+
+
+## A sheet whose one event body is a verbatim block of `code` - the shape lift_event_bodies claims.
+static func _sheet_with_body(code: String, host: String) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = host
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = code
+	event.actions.append(raw)
+	sheet.events.append(event)
+	return sheet
+
+
+## The ace_id of the one row a lifted body became, or "" when nothing was claimed.
+static func _body_ace_id(sheet: EventSheetResource) -> String:
+	for row: Variant in sheet.events:
+		if not (row is EventRow):
+			continue
+		for sub: Variant in (row as EventRow).sub_events:
+			if not (sub is EventRow):
+				continue
+			for entry: Variant in (sub as EventRow).actions:
+				if entry is ACEAction:
+					return str((entry as ACEAction).ace_id)
+	return ""
 
 
 # ── 11. What the clearance test really asks ──
