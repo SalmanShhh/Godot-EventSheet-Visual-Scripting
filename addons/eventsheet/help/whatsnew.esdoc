@@ -542,9 +542,10 @@ What changed in the build you have installed (v0.17.0), in the words the release
   both endings, because a pool takes a node back by removing it from the tree and a free takes it out
   of the tree as well.
 - **Two runtime files, and the parity law is why they are files.** `FreeSpot` and `PooledNodes` are
-  plain GDScript under the plugin's runtime folder - **463 lines** that touch no editor class, no
-  sheet format and no EventForge type, so a built game carries them the way it carries any other
-  script. A free spot is a roll asked again until the answer fits and a retirement is a decision read
+  plain GDScript shipped in `eventsheet_addons/` beside the behaviour packs - the project's own
+  folder, not the plugin's - **463 lines** that touch no editor class, no sheet format and no
+  EventForge type, so a built game carries them the way it carries any other script, and deleting
+  the plugin leaves every line that names them still parsing. A free spot is a roll asked again until the answer fits and a retirement is a decision read
   off the node at run time, so neither could be one expression in a template; naming the pool
   autoload in a template instead would have put an identifier into every generated script that only
   parses in a project which installed the pool pack.
@@ -624,6 +625,14 @@ What changed in the build you have installed (v0.17.0), in the words the release
   scene and a copy in a free spot both declare a real local, and neither was offered by the field
   completion the launched twins had joined - the free-spot row binds its name above the branch
   precisely so the rows below can still say it.
+- **The two runtime classes moved to the folder that is yours.** The guide said \"uninstall the
+  plugin and the emitted code still builds and still runs\", and the emitted lines said
+  `FreeSpot.in_2d(...)` and `PooledNodes.retire(...)` - two classes declared under
+  `addons/eventforge/`, which is the folder an uninstall deletes. Both now ship as `free_spot.gd`
+  and `pooled_nodes.gd` in `eventsheet_addons/`, built through the pack-builder door like every
+  other file there and drift-gated with them, which is where the drawing runtime the builtin Draw
+  rows call has always lived. The class names, the emitted lines and the rows are unchanged; the
+  sentence in the guide is true now instead of nearly true.
 - **On Retired now fires when the object is retired, and not when it is handed out.** The trigger is
   the node's own `tree_exiting`, which both retirements pass through - but so does every other way a
   node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the row ran on
@@ -9756,6 +9765,36 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   never the editor's - the same command on two machines still writes the same bytes. The site's
   furniture (its footer, the search placeholder, the Contents link) stays English, and the file now
   says why: translating it through the running editor's catalog is exactly what would break that.
+
+### Refactor contract
+
+- **The vocabulary carries its first four forwarding addresses**, and every one of them is a verb
+  this plugin really publishes. *Play Sound*, *Stop Sound*, *Set Volume (dB)* and the general
+  shelf's *Is Playing* landed one day before the Audio shelf existed; the Audio module then authored
+  the same four questions on the page a reader looks for them on, against the same node type, with
+  the same parameters and the same emitted call, and the two spellings have sat side by side ever
+  since. Each older row now names its newer one - *Play Sound* renaming its one parameter
+  (`from_position` to `from`), the other three renaming nothing, none of them needing a value
+  invented. **Nothing about the older rows moved**: same `ace_id`, same `codegen_template`, same
+  place in the picker, same emitted byte, so every sheet ever written on them compiles exactly as it
+  did. The head band counts them, the selected row's help strip says *newer spelling: Play*, and
+  Migrate lands the successor row as one undoable edit with a receipt - proved end to end on a real
+  sheet against the shipped vocabulary rather than against an invented pair.
+- **`Playback Position` is deliberately left unaddressed**, being the fifth row of that same family:
+  an expression is not a row, so nothing could ever act on the address. So is the State Machine
+  pack's *Go to state*, for the two reasons the guide already records.
+- **An address whose two ends write the same bytes costs a project nothing.** A `.gd` sheet derives
+  its rows from the file every time it is opened, and both spellings emit `play(0.5)`, so the reverse
+  grammar reads that line back as the current verb and no `.gd` sheet gains a migration row at all -
+  no branch gate starts failing, no diff appears anywhere - while the sheet in front of a reader
+  still offers the newer spelling. A stored `.tres` sheet, which writes down which verb each row was
+  picked from, reports both rows and says neither asks anybody anything.
+- **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
+  parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
+  \"this node\", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -
+  and the parse gate then refused every node-scoped address for a reason that was the harness's and
+  not the map's. A slot the template spells `{name.}` is now left blank, and the fixture sheet is
+  compiled under the verb's OWN node type instead of a bare `Node`.
 
 ## 0.17.0 - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 

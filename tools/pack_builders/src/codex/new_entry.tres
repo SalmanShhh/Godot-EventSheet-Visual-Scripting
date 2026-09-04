@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="CodexEntryResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/codex_entry_resource/codex_entry_resource.gd" id="1_codex_entry"]
+
+[resource]
+script = ExtResource("1_codex_entry")
+entry_name = ""
+picture = null
+text = ""

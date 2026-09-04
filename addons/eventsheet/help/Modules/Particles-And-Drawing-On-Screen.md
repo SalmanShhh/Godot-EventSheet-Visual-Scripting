@@ -140,10 +140,21 @@ have to know which of the two the word is on.
 | Set Particle Colour | The colour every particle is tinted, multiplied with the picture it draws with. | `process_material.color = {value}` |
 | Set Particle Lifetime | How many seconds one particle lasts before it goes out. | `{target.}lifetime = {value}` |
 | Set Particle Amount | How many the emitter keeps in the air at once. | `{target.}amount = {value}` |
-| Particle Gravity / Particle Spread / Particle Colour / Particle Lifetime / Particle Amount | Read the word back. | the same member |
-| Slowest Particle Speed / Fastest Particle Speed | The two ends of the speed range. | `initial_velocity_min` / `initial_velocity_max` |
-| Smallest Particle Size / Biggest Particle Size | The two ends of the size range. | `scale_min` / `scale_max` |
-| Fade Particle Gravity / Spread / Speed / Size / Colour / Lifetime | Walks the word to a new value over Seconds. | one `create_tween().tween_property(...)` line |
+| Particle Gravity | Reads the gravity back. | `process_material.gravity` |
+| Particle Spread | Reads the spread back. | `process_material.spread` |
+| Particle Colour | Reads the tint back. | `process_material.color` |
+| Particle Lifetime | Reads the lifetime back. | `{target.}lifetime` |
+| Particle Amount | Reads the amount back. | `{target.}amount` |
+| Slowest Particle Speed | The near end of the speed range. | `process_material.initial_velocity_min` |
+| Fastest Particle Speed | The far end of it. | `process_material.initial_velocity_max` |
+| Smallest Particle Size | The near end of the size range. | `process_material.scale_min` |
+| Biggest Particle Size | The far end of it. | `process_material.scale_max` |
+| Fade Particle Gravity | Walks the gravity to a new value over Seconds. | one `create_tween().tween_property(...)` line |
+| Fade Particle Spread | Walks the spread the same way. | one tween line |
+| Fade Particle Speed | Walks both ends of the speed range. | two tween lines |
+| Fade Particle Size | Walks both ends of the size range. | two tween lines |
+| Fade Particle Colour | Walks the tint. | one tween line |
+| Fade Particle Lifetime | Walks the lifetime. | one tween line |
 
 The 3D twins of every row above are the same words on a `GPUParticles3D`, and they say so on the
 row rather than in their names.
