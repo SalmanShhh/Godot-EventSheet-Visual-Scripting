@@ -1,6 +1,6 @@
 # Godot EventSheets - EVERY CALL ON A KNOWN CLASS IS A ROW, pinned as values.
 #
-# Six things are pinned here, and each of them is a claim the derived reading makes out loud:
+# Seven things are pinned here, and each of them is a claim the derived reading makes out loud:
 #
 #   1. WHO THE RECEIVER IS. A table of spellings and the class each one resolves to, with the
 #      source it was answered from - and, just as important, the ones that resolve to NOTHING. A
@@ -19,6 +19,9 @@
 #      the credit riding with the engine's own prose because its licence says so.
 #   6. THE PICKER'S DERIVED SECTION. One entry per declared method per object, with the target,
 #      the method and the arguments already answered off the declaration.
+#   7. WHAT IT COSTS. The layer runs once per statement at row-build time, so the thing worth
+#      pinning is how often an answer is worked out AT ALL: once per distinct class and method,
+#      refusals included, and never for a receiver nothing can name.
 #
 # And the contract underneath all of it: a derived row IS the line it read, so a staged file full
 # of them saves back byte-identical.
@@ -83,6 +86,7 @@ static func run() -> bool:
 	ok = _test_the_pickers_derived_section() and ok
 	ok = _test_the_row_is_the_line() and ok
 	ok = _test_a_shadowed_member_is_nobodys() and ok
+	ok = _test_what_it_costs() and ok
 	_tidy_up()
 	return ok
 
@@ -342,6 +346,70 @@ static func _test_the_row_is_the_line() -> bool:
 	var reading: Dictionary = EventSheetLiftReading.read(STAGED_SOURCE, STAGED_SCRIPT)
 	return _check("a file of derived rows saves back byte-identical",
 		bool(reading.get("identical", false)), true)
+
+
+## 7. WHAT THE LAYER COSTS. It runs at ROW-BUILD time, once per statement, on files with thousands
+## of statements in them - so the number that matters is not how fast one answer is but how many
+## times an answer is worked out at all. The claim is that it is worked out ONCE PER DISTINCT CLASS
+## AND METHOD and held after that, which makes what a file costs a function of the VERBS in it
+## rather than of its length: a thousand calls to the same six methods cost six answers.
+##
+## PINNED STRUCTURALLY - as identity and as cache size - rather than as a clock. A wall-clock budget
+## for this layer alone would be a number measured on one machine on one afternoon; these hold on
+## every machine, and they are the reason the wall-clock budgets over a corpus hold at all. Those
+## budgets exist and this layer is live inside them: the 2,000-line script's open and its rebuild in
+## `huge_project_budget_test.gd` are built through this reader, so a regression here also lands
+## there, in milliseconds, on the biggest file the suite owns.
+##
+## THE REFUSALS ARE CACHED TOO, and that is the half worth pinning hardest: a call this layer
+## declines is asked again on every rebuild for as long as the file is open, so a decline that went
+## back to the class each time would cost a long file more than its readings do.
+static func _test_what_it_costs() -> bool:
+	EventSheetDerivedCalls.clear_cache()
+	var ok: bool = _check("a cleared reader holds no method at all",
+		EventSheetDerivedCalls._method_cache.size(), 0)
+	# THE ONE INDEX. The project's class-name to path map is built once and handed back BY
+	# REFERENCE. Two equal dictionaries would still mean every statement in the file paid for a walk
+	# of the global class list, which is the regression this is here to catch.
+	var index: Dictionary = EventSheetDerivedCalls._class_path_map()
+	ok = _check("the class index is held and handed back by reference",
+		is_same(index, EventSheetDerivedCalls._class_path_map()), true) and ok
+	ok = _check("and it is not the empty map (an empty one would pass vacuously)",
+		index.is_empty(), false) and ok
+	# Six statements over three distinct methods - the shape a real file has, where the same few
+	# verbs are called over and over - cost three answers.
+	var repeated: Array[String] = ["beat.start(1.0)", "beat.start(2.0)", "beat.stop()",
+		"bar.set_value_no_signal(10.0)", "beat.start(3.0)", "bar.set_value_no_signal(20.0)"]
+	for code: String in repeated:
+		_derived_text(code)
+	ok = _check("six statements over three distinct methods cost three answers",
+		EventSheetDerivedCalls._method_cache.size(), 3) and ok
+	for code: String in repeated:
+		_derived_text(code)
+	ok = _check("and the same six asked again cost none", EventSheetDerivedCalls._method_cache.size(),
+		3) and ok
+	# A refusal is an answer, and it is held like one.
+	_derived_text("beat.definitely_not_a_method(1)")
+	ok = _check("a method the class does not have is worked out once",
+		EventSheetDerivedCalls._method_cache.size(), 4) and ok
+	_derived_text("beat.definitely_not_a_method(2)")
+	ok = _check("and asked again it is remembered rather than re-refused",
+		EventSheetDerivedCalls._method_cache.size(), 4) and ok
+	# A receiver nothing can name never reaches the cache at all: there is no class to ask about,
+	# so the line falls through to whatever plainer view it already had for free.
+	_derived_text("whatever.do_thing(1)")
+	ok = _check("a receiver nothing can name asks no class and holds nothing",
+		EventSheetDerivedCalls._method_cache.size(), 4) and ok
+	# And dropping really drops - the same held index, emptied - or a method renamed in a file
+	# nobody reopened would go on reading as the method it used to be.
+	EventSheetDerivedCalls.clear_cache()
+	ok = _check("clearing drops every held method",
+		EventSheetDerivedCalls._method_cache.size(), 0) and ok
+	ok = _check("and empties the one index in place rather than leaving a stale copy behind",
+		index.is_empty(), true) and ok
+	ok = _check("which the next reader fills again",
+		EventSheetDerivedCalls._class_path_map().is_empty(), false) and ok
+	return ok
 
 
 # ── the pieces ──────────────────────────────────────────────────────────────────

@@ -28,7 +28,7 @@ var _picker: ACEPickerDialog = null
 
 func _init() -> void:
 	root.title = "Derived Call Rows"
-	root.size = Vector2i(1060, 500)
+	root.size = Vector2i(1060, 620)
 	root.gui_embed_subwindows = true
 	var base := Color("#252525")
 	var background: ColorRect = ColorRect.new()
@@ -37,14 +37,14 @@ func _init() -> void:
 	root.add_child(background)
 	var column: VBoxContainer = VBoxContainer.new()
 	column.position = Vector2(10, 8)
-	column.size = Vector2(1040, 484)
+	column.size = Vector2(1040, 604)
 	column.add_theme_constant_override("separation", 8)
 	root.add_child(column)
 	column.add_child(_caption("The three calls, as the file writes them"))
 	column.add_child(_code_block())
 	column.add_child(_caption("The same three calls, as the sheet derives them"))
 	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(1040, 306)
+	scroll.custom_minimum_size = Vector2(1040, 426)
 	column.add_child(scroll)
 	_viewport = EventSheetViewport.new()
 	_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
