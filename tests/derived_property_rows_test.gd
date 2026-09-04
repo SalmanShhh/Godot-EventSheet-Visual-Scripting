@@ -1,6 +1,6 @@
 # Godot EventSheets - EVERY PROPERTY TOO, pinned as values.
 #
-# Six things are pinned here, and each of them is a claim the derived property reading makes out
+# Seven things are pinned here, and each of them is a claim the derived property reading makes out
 # loud:
 #
 #   1. THE THREE SHAPES. A write, a question and a read - the Inspector's own object / property /
@@ -21,6 +21,10 @@
 #      its licence says so.
 #   6. THE ROW IS THE LINE. A file full of derived property rows saves back byte-identical, because
 #      the reading repaints segments over an unchanged row and translates nothing.
+#   7. WHAT THE LAYER COSTS, as answers rather than as milliseconds. One walk per class and one
+#      answer per property, refusals held exactly like answers, and the class's property set handed
+#      back by reference - the claims that make a long file cost its PROPERTIES rather than its
+#      length.
 #
 # SERIAL-CI HYGIENE. This warms the derived readers' per-class and per-file caches, and CI runs the
 # suite serially in one process, so all of them are dropped on the way out and the staged script
@@ -81,6 +85,7 @@ static func run() -> bool:
 	ok = _test_curated_outranks_and_upgrades_in_place() and ok
 	ok = _test_the_words_ride() and ok
 	ok = _test_the_row_is_the_line() and ok
+	ok = _test_what_it_costs() and ok
 	_tidy_up()
 	return ok
 
@@ -262,6 +267,92 @@ static func _test_the_row_is_the_line() -> bool:
 	var reading: Dictionary = EventSheetLiftReading.read(STAGED_SOURCE, STAGED_SCRIPT)
 	return _check("a file of derived property rows saves back byte-identical",
 		bool(reading.get("identical", false)), true)
+
+
+## 7. WHAT THE LAYER COSTS. It runs at ROW-BUILD time, once per generic property statement, on files
+## with thousands of statements in them - so the number that matters is not how fast one answer is
+## but how many times an answer is worked out at all. The claim is two-deep and the same shape the
+## derived verbs make: ONE WALK PER CLASS for the question "does this class have that property", and
+## ONE ANSWER PER PROPERTY for the words underneath it. Both held after the first ask, which makes
+## what a file costs a function of the PROPERTIES in front of the reader rather than of its length -
+## a hundred rows writing the same three properties cost three answers.
+##
+## PINNED STRUCTURALLY - as identity and as cache size - rather than as a clock, so the pins hold on
+## a loaded runner and on every machine. The wall-clock budgets that do exist are over a corpus, and
+## this layer is live inside them: the 2,000-line script's open and its rebuild in
+## `huge_project_budget_test.gd` are built through this reader, so a regression here also lands
+## there, in milliseconds, on the biggest file the suite owns.
+##
+## THE REFUSALS ARE CACHED TOO, and that is the half worth pinning hardest: a property this layer
+## declines is asked again on every rebuild for as long as the file is open, so a decline that went
+## back to the class each time would cost a long file more than its readings do.
+static func _test_what_it_costs() -> bool:
+	EventSheetDerivedProperties.clear_cache()
+	var ok: bool = _check("a cleared reader holds no property answer at all",
+		EventSheetDerivedProperties._property_cache.size(), 0)
+	ok = _check("and no class walked either",
+		EventSheetDerivedProperties._class_properties.size(), 0) and ok
+	# THE ONE CLASS INDEX. A class's property set is walked once and handed back BY REFERENCE. Two
+	# equal dictionaries would still mean every statement in the file paid for a walk of the class's
+	# whole inherited property list, which is the regression this is here to catch.
+	var index: Dictionary = EventSheetDerivedProperties._properties_of("Light2D")
+	ok = _check("a class's property set is held and handed back by reference",
+		is_same(index, EventSheetDerivedProperties._properties_of("Light2D")), true) and ok
+	ok = _check("and it is not the empty set (an empty one would pass vacuously)",
+		index.is_empty(), false) and ok
+	ok = _check("one class asked about leaves one class walked",
+		EventSheetDerivedProperties._class_properties.size(), 1) and ok
+	# Six statements over three distinct properties of three objects - the shape a real file has,
+	# where the same few properties are written over and over - cost three answers and three walks.
+	var repeated: Array[String] = [
+		"$Torch.%s = 0.5" % UNCLAIMED_PROPERTY,
+		"$Torch.%s = 0.6" % UNCLAIMED_PROPERTY,
+		"$HpBar.value = 10",
+		"beat.wait_time = 1",
+		"$HpBar.value = 20",
+		"beat.wait_time = 2",
+	]
+	var answered: int = 0
+	for code: String in repeated:
+		if not _derived_statement(code).is_empty():
+			answered += 1
+	# Vacuity guard: a layer that declined all six would hold nothing and pass every count below.
+	ok = _check("all six statements are readings the layer actually claimed", answered, 6) and ok
+	ok = _check("six statements over three distinct properties cost three answers",
+		EventSheetDerivedProperties._property_cache.size(), 3) and ok
+	ok = _check("over three classes, each walked once",
+		EventSheetDerivedProperties._class_properties.size(), 3) and ok
+	for code: String in repeated:
+		_derived_statement(code)
+	ok = _check("and the same six asked again cost none",
+		EventSheetDerivedProperties._property_cache.size(), 3) and ok
+	# A refusal is an answer, and it is held like one.
+	_derived_statement("$Torch.definitely_not_a_property = 1")
+	ok = _check("a property the class does not have is worked out once",
+		EventSheetDerivedProperties._property_cache.size(), 4) and ok
+	_derived_statement("$Torch.definitely_not_a_property = 2")
+	ok = _check("and asked again it is remembered rather than re-refused",
+		EventSheetDerivedProperties._property_cache.size(), 4) and ok
+	# A receiver nothing can name never reaches either cache: there is no class to ask about, so the
+	# line falls through to whatever plainer view it already had for free.
+	_derived_statement("whatever.thing = 1")
+	ok = _check("a receiver nothing can name asks no class and holds nothing",
+		"%d/%d" % [EventSheetDerivedProperties._property_cache.size(),
+			EventSheetDerivedProperties._class_properties.size()], "4/3") and ok
+	# And dropping really drops - or a property added to a script nobody reopened would go on being
+	# the property it was not.
+	EventSheetDerivedProperties.clear_cache()
+	ok = _check("clearing drops every held answer and every walked class",
+		"%d/%d" % [EventSheetDerivedProperties._property_cache.size(),
+			EventSheetDerivedProperties._class_properties.size()], "0/0") and ok
+	# The set handed out before the drop is a set nobody can mistake for the live one afterwards:
+	# the next reader walks the class again and is handed a DIFFERENT dictionary, so a stale handout
+	# cannot quietly go on answering. Nothing here holds one across a drop; this pins that.
+	ok = _check("and the next reader is handed a walk of its own, not the dropped one",
+		is_same(index, EventSheetDerivedProperties._properties_of("Light2D")), false) and ok
+	ok = _check("which is filled again rather than left empty",
+		EventSheetDerivedProperties._properties_of("Light2D").is_empty(), false) and ok
+	return ok
 
 
 # ── the pieces ──────────────────────────────────────────────────────────────────
