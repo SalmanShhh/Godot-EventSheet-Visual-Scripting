@@ -618,8 +618,8 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
 	_attr_group_show_if_edit = LineEdit.new()
-	_attr_group_show_if_edit.placeholder_text = "bool variable (hides this variable's whole group)"
-	_attr_group_show_if_edit.tooltip_text = "Like Show if, but scoped to the export group this variable is in:\nevery member of the group hides together. Needs a Group."
+	_attr_group_show_if_edit.placeholder_text = "bool variable (hides this variable with its group)"
+	_attr_group_show_if_edit.tooltip_text = "Like Show if, but scoped to the export group this variable is in.\nSet it on EVERY member you want to hide - each one that carries it\nhides with the others, and one that does not stays visible. Needs a Group."
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show group if", _attr_group_show_if_edit))
 	_attr_link_with_edit = LineEdit.new()
 	_attr_link_with_edit.placeholder_text = "the neighbouring number this one is tied to"

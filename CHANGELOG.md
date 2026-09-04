@@ -228,10 +228,11 @@
   unregistered name is never an error - that button keeps its word, and the word stays as the
   tooltip either way, for hovering and for a screen reader.
 - **Ticking one box can reveal a whole group, and two numbers can be tied.** **Show group if**
-  hides an entire `@export_group` behind one bool instead of one field at a time; the
-  `# @inspector_show_if` comment above the group line is only the round-trip carrier (an export
-  group takes no hint string), and the hiding itself is the same `_validate_property` the field
-  form already emitted, once per member, so the generated code's shape is unchanged. **Link with**
+  scopes a Show if to the `@export_group` a variable sits in: set it on the members that belong to
+  the group and they hide and reappear together, so one bool can clear a whole block of the
+  Inspector. The `# @inspector_show_if` comment above the group line is only the round-trip carrier
+  (an export group takes no hint string), and the hiding itself is the same `_validate_property` the
+  field form already emitted, once per member, so the generated code's shape is unchanged. **Link with**
   draws an equals button between two neighbouring numbers: press it and the pair keeps the ratio it
   had at that moment. Comment-only, editor-only, and a leader sitting at zero keeps a ratio of one
   rather than sending its follower to infinity.
@@ -289,6 +290,46 @@
   the editor plugin - or in an exported game - a card list is an ordinary Array, a unit field is an
   ordinary float, and the handles and the preview card were never there. The parity covenant is
   untouched, and so is the byte-exact round trip.
+
+### Fixed in the Inspector pass
+
+- **The "=" inside a card kept the wrong promise.** Beside a property the equals button remembers
+  the RATIO two numbers are in; inside a card it copied one field's value into its partner, so a
+  count and its spacing became the same number instead of staying in proportion. Both buttons mean
+  the ratio now, and a link declared on a field holding text or a colour writes nothing rather than
+  guessing.
+- **A linked pair moves as one undo step.** The follower was written straight onto the object from
+  the button's own poll, outside the undo funnel: undoing the leader's edit left the follower where
+  the tie had put it, and the next poll moved it again. The pair travels through the editor's own
+  undo manager together, so one undo puts both numbers back. A tie between two WHOLE numbers now
+  moves at all - a typed `int` member refuses a float, so the follower had never moved.
+- **A handle on a whole number can be dragged.** A length in whole pixels or an angle in whole
+  degrees read fine and dragged nothing, for the same reason: the mark moved under the cursor and
+  the property stayed where it was. Both the 2D overlay and the 3D gizmo write in the type the
+  property already holds, and the gizmo stops keeping a slot map for every gizmo the engine has
+  already thrown away.
+- **The preview card keeps up with a quiet edit.** It listened only for a resource's `changed`
+  signal, which a plain `@export` write never fires and a node never fires at all, so a card that
+  promised to redraw as the thing changes drew once and went stale. It watches the object's stored
+  values instead. The live-viewport fallback also ran a full copy of the selected node inside the
+  Inspector; the copy is a picture now, with nothing in it ticking, listening or firing.
+- **The stripe swatch stops closing its own picker.** Choosing a card's colour rebuilt the whole
+  list on every change the picker announced - continuously, while its wheel was being dragged -
+  which freed the popup out from under the cursor. The stripe is repainted where it stands.
+- **A card's open state travels with the card.** Folding is keyed by position, so after a drag, a
+  duplicate, a removal or Move to top the card that stayed open was whichever one now sat at the
+  old index.
+- **One click adds a shape again.** The Drawing Prefab's "+ Add shape" had become Add, search,
+  Enter; a "+" beside the search adds the list's first kind in one gesture, for every card list.
+- **A unit field with nothing to offer draws a plain number box**, instead of an empty dropdown it
+  then tried to select an item in, and a unit spelling may name a FAMILY (`time`) rather than list
+  its units. A toggle row asks its icon provider for a picture at the size the button shows it at,
+  so a drawn icon is sharp on a HiDPI screen; the cards wear the editor's own fold arrow and drag
+  mark where there is an editor theme to ask, and their corners and margins scale with the rest.
+- **A note for a future bisect**, since it cannot be read off the history: the first four feature
+  commits of this pass rode in under other commits' messages (`f129474d`, `3177cff9`, `ba44a48c`,
+  `8aac8feb`), so `git log` on the unit drawer, the corners drawer, the toggle-row tails and the
+  card list names work they have nothing to do with.
 
 ### Who did it, what kind it was, and what it leaves behind
 
