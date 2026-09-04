@@ -98,6 +98,9 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		stale.free()
 	_empty_hint = null
 	_row_card_count = 0
+	var handle_chips: PackedStringArray = declared_handle_chips(sheet)
+	if not handle_chips.is_empty():
+		_column.add_child(_build_handle_chips(handle_chips))
 	var entries: Array[Dictionary] = collect_entries(sheet)
 	if entries.is_empty():
 		_empty_hint = Label.new()
@@ -147,6 +150,38 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			first_tree_entry = false
 		row.add_child(buttons)
 		_column.add_child(row)
+
+
+## The viewport handles this sheet's own script declares, as chips. They come from the FILE rather
+## than from the rows: a `# @inspector_handle` line is a plain comment a pack author writes, it emits
+## nothing and it belongs to no single variable, so there is no row to read it off. A sheet that is
+## not backed by a .gd, or one whose script declares none, answers with nothing. Static + UI-free so
+## the suite pins the reading.
+static func declared_handle_chips(sheet: EventSheetResource) -> PackedStringArray:
+	if sheet == null or sheet.external_source_path.is_empty():
+		return PackedStringArray()
+	if not FileAccess.file_exists(sheet.external_source_path):
+		return PackedStringArray()
+	var decor: Dictionary = EventSheetInspectorObjectDecor.parse(FileAccess.get_file_as_string(sheet.external_source_path))
+	return EventSheetInspectorObjectDecor.chips(decor.get("handles", []))
+
+
+## The chips row: what a designer will be able to drag in the viewport, read before opening a scene.
+func _build_handle_chips(chips: PackedStringArray) -> Control:
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	var lead: Label = Label.new()
+	lead.text = "Dragged in the viewport:"
+	lead.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	lead.modulate = Color(1.0, 1.0, 1.0, 0.65)
+	row.add_child(lead)
+	for chip: String in chips:
+		var label: Label = Label.new()
+		label.text = chip
+		label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+		label.modulate = Color(0.72, 0.76, 0.84)
+		row.add_child(label)
+	return row
 
 
 func open_for_sheet(sheet: EventSheetResource) -> void:

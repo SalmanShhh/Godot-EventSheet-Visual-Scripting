@@ -19,13 +19,32 @@
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
 #   curve_editor   eventsheet:curve_editor               Curve
+#
+# Decor that belongs to the OBJECT rather than to one property is parsed beside this file:
+# `# @inspector_preview` asks for the preview card at the top, and
+# `# @inspector_handle <property> <kind> [from <property>]` declares a viewport handle.
 @tool
 class_name EventSheetAttributeDrawers
 extends EditorInspectorPlugin
 
+# The two decor lines that belong to the OBJECT rather than to one property - the preview card and
+# the viewport handles - are parsed beside this file and loaded BY PATH here, so naming them never
+# widens what an editor boot compiles (this plugin is constructed at boot; add_inspector_plugin
+# takes an instance).
+const OBJECT_DECOR_PATH: String = "res://addons/eventsheet/editor/inspector/object_decor.gd"
+const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/preview_panel.gd"
+
 
 func _can_handle(_object: Object) -> bool:
 	return true  # cheap: the per-property marker check below does the real filtering
+
+
+## Object-level decor, above every property: a script carrying `# @inspector_preview` gets the shared
+## preview card at the top of its Inspector, showing the object as it is and re-drawing as it changes.
+## Anything else is left alone, so an object that asked for nothing renders exactly as Godot draws it.
+func _parse_begin(object: Object) -> void:
+	if load(OBJECT_DECOR_PATH).wants_preview(object):
+		add_custom_control(load(PREVIEW_PANEL_PATH).new(object))
 
 
 func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, hint_string: String, _usage_flags: int, _wide: bool) -> bool:

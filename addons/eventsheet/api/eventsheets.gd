@@ -1628,6 +1628,32 @@ static func editor_gizmo_drawer_for(script_path: String) -> Callable:
 	return _editor_gizmo_drawers.get(script_path, Callable())
 
 
+## The picture at the top of an object's Inspector, drawn by the pack that owns the object.
+##
+## A node or resource asks for the card with a `# @inspector_preview` comment in its script, and
+## draws itself by shipping `inspector_preview_texture(size: Vector2i) -> Texture2D`. This call
+## registers a renderer for scripts that CANNOT ship that method (third-party or generated code you
+## do not control): `script_path` is the object's script path, and
+## `renderer(object: Object, size: Vector2i) -> Texture2D` takes priority over the method.
+##
+## One renderer per script path; last registration wins. Nothing here reaches generated game code -
+## the card is Inspector chrome, and without the editor plugin the object edits as plain fields.
+static var _inspector_preview_renderers: Dictionary = {}
+
+
+static func register_inspector_preview(script_path: String, renderer: Callable) -> void:
+	_inspector_preview_renderers[script_path] = renderer
+
+
+static func unregister_inspector_preview(script_path: String) -> void:
+	_inspector_preview_renderers.erase(script_path)
+
+
+## The renderer registered for a script path, or an invalid Callable when nothing was registered.
+static func inspector_preview_renderer_for(script_path: String) -> Callable:
+	return _inspector_preview_renderers.get(script_path, Callable())
+
+
 ## Pictures for a toggle-buttons Inspector drawer, drawn by the pack that owns the options.
 ##
 ## A drawer's marker can name an icon SOURCE. A path pattern holding "%s" needs nothing registered

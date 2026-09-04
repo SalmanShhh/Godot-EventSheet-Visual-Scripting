@@ -1,8 +1,10 @@
 # Godot EventSheets - DrawingPrefabResource Inspector (editor-only).
 #
 # Two things for a DrawingPrefabResource:
-#   1. A live preview panel at the top of the Inspector (PreviewPanel) - you SEE the composed drawing while
-#      you edit the steps below, re-rendered on the resource's `changed` signal.
+#   1. A live preview panel at the top of the Inspector - you SEE the composed drawing while you edit the
+#      steps below, re-rendered on the resource's `changed` signal. The card itself is the SHARED one any
+#      object can ask for; the prefab hands it the tree-free rasterizer it has always drawn with, so the
+#      picture, its size and its refresh are exactly what they were before the card was made general.
 #   2. A shape-aware editor for the `steps` array (StepsProperty / ShapeStepsEditor): instead of the generic
 #      grid's opaque p1/p2/p3 columns, each step is a titled card whose fields match its shape - a circle
 #      shows "Radius", a rect shows "Width"/"Height", a line shows "End X"/"End Y"/"Thickness", and so on.
@@ -20,7 +22,14 @@ func _can_handle(object: Object) -> bool:
 
 func _parse_begin(object: Object) -> void:
 	if object is DrawingPrefabResource:
-		add_custom_control(PreviewPanel.new(object as Resource))
+		add_custom_control(EventSheetInspectorPreviewPanel.new(object, rasterize_prefab))
+
+
+## The prefab's own picture: the steps rasterized at the card's size, on the card's background. Handed to
+## the shared card as its renderer, which is what keeps the prefab's preview byte for byte what it was.
+static func rasterize_prefab(object: Object, size: Vector2i) -> Texture2D:
+	var steps: Variant = object.get("steps") if object != null else []
+	return EventSheetDrawingPrefabPreview.rasterize_texture(steps if steps is Array else [], size, EventSheetInspectorPreviewPanel.BACKGROUND)
 
 
 ## Claim the `steps` array with the shape-aware editor. This plugin is registered BEFORE the generic
@@ -32,51 +41,8 @@ func _parse_property(object: Object, type: Variant.Type, name: String, _hint_typ
 	return false
 
 
-## The preview surface: a fixed-size raster of the prefab, scaled to fit the Inspector column. Re-rasterizes
-## on the resource's `changed` signal (so editing a step updates the picture) and cleans up its connection
-## when freed.
-class PreviewPanel:
-	extends PanelContainer
-
-	var _resource: Resource = null
-	var _rect: TextureRect = null
-
-	func _init(resource: Resource) -> void:
-		_resource = resource
-		# Height tracks the raster's own aspect (384x200) at a typical inspector-column width, so the
-		# preview is a compact card instead of a tall box with big empty letterbox bands above and below.
-		custom_minimum_size = Vector2(0, 158)
-		var margin: MarginContainer = MarginContainer.new()
-		for side: String in ["left", "right", "top", "bottom"]:
-			margin.add_theme_constant_override("margin_" + side, 4)
-		add_child(margin)
-		_rect = TextureRect.new()
-		_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		margin.add_child(_rect)
-		if _resource != null and not _resource.changed.is_connected(_refresh):
-			_resource.changed.connect(_refresh)
-
-	func _ready() -> void:
-		_refresh()
-
-	func _exit_tree() -> void:
-		if _resource != null and _resource.changed.is_connected(_refresh):
-			_resource.changed.disconnect(_refresh)
-
-	func _refresh() -> void:
-		if _rect == null:
-			return
-		var steps: Variant = _resource.get("steps") if _resource != null else []
-		if not (steps is Array):
-			steps = []
-		var bg: Color = Color(0.11, 0.12, 0.15, 1.0)
-		_rect.texture = EventSheetDrawingPrefabPreview.rasterize_texture(steps as Array, Vector2i(384, 200), bg)
-
-
 ## The EditorProperty wrapper around ShapeStepsEditor: reads the Array off the resource, writes edits back
-## via emit_changed, and pokes the resource's `changed` signal so the PreviewPanel re-renders live (mirrors
+## via emit_changed, and pokes the resource's `changed` signal so the preview card re-renders live (mirrors
 ## how the generic table drawer refreshes prefab previews on every cell edit).
 class StepsProperty:
 	extends EditorProperty

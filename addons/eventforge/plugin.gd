@@ -22,6 +22,7 @@ const CONNECT_SIGNAL_DIALOG_PATH: String = "res://addons/eventsheet/editor/conne
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
+const INSPECTOR_HANDLES_PATH: String = "res://addons/eventsheet/editor/inspector/handle_plugin.gd"
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
@@ -48,6 +49,9 @@ var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 # Loosely typed on purpose (boot-lazy): loaded by path in _enter_tree so their subtrees stay off the boot compile.
 var _drawing_prefab_inspector: EditorInspectorPlugin = null
 var _drawing_prefab_preview_gen: EditorResourcePreviewGenerator = null
+# Viewport handles for any script whose decor declares them (loaded by path). It draws and drags in
+# the 2D viewport through this plugin's canvas forwarding, and in 3D through a gizmo plugin of its own.
+var _inspector_handles: RefCounted = null
 # Selection-driven 2D gizmo: previews a selected DrawingCanvas's preview_prefab at the host (loaded by path).
 var _drawing_canvas_gizmo: RefCounted = null
 # Selection-driven prefab gizmos: preview a referenced DrawingPrefabResource in the 2D / 3D viewport (loaded by path).
@@ -341,6 +345,12 @@ func _enter_tree() -> void:
 	var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()
 	if prefab_previewer != null:
 		prefab_previewer.add_preview_generator(_drawing_prefab_preview_gen)
+	# Viewport handles: a selected node whose script declares `# @inspector_handle` lines shows a
+	# draggable mark per handle, and each drag is one undo step. It rides the FORCE canvas forwarding
+	# below rather than _handles(), because a main-screen plugin that claims scene nodes makes Godot
+	# switch workspaces the moment one is selected - the same reason the gizmos ride selection.
+	_inspector_handles = load(INSPECTOR_HANDLES_PATH).new()
+	_inspector_handles.call("init", self)
 	# DrawingCanvas 2D preview gizmo: selecting a DrawingCanvas draws its preview_prefab at the host.
 	# Selection-driven (never _handles), so it can't hijack the workspace. Cosmetic design aid.
 	_drawing_canvas_gizmo = load(DRAWING_CANVAS_GIZMO_PATH).new()
@@ -375,6 +385,21 @@ func _enter_tree() -> void:
 	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
 	# appears immediately (driven by _has_main_screen / _get_plugin_name, which don't need the editor).
 	print("[Godot EventSheets] plugin loaded")
+
+
+## The 2D editor's input, forwarded here for every event (set_input_event_forwarding_always_enabled):
+## the handle seam claims a drag on one of its own marks and nothing else, so every gesture it does
+## not claim stays the 2D editor's.
+func _forward_canvas_gui_input(event: InputEvent) -> bool:
+	return _inspector_handles != null and bool(_inspector_handles.call("canvas_gui_input", event))
+
+
+## The 2D editor's overlay, forwarded here whenever the viewport redraws
+## (set_force_draw_over_forwarding_enabled): the handle marks for the selected node, and nothing at
+## all for a selection that declares none.
+func _forward_canvas_force_draw_over_viewport(overlay: Control) -> void:
+	if _inspector_handles != null:
+		_inspector_handles.call("draw_over_viewport", overlay)
 
 
 ## Builds the workspace editor on demand (idempotent). Everything heavy is deferred here so plugin
@@ -455,6 +480,9 @@ func _exit_tree() -> void:
 	for menu: EventSheetContextMenu in _context_menus:
 		remove_context_menu_plugin(menu)
 	_context_menus.clear()
+	if _inspector_handles != null:
+		_inspector_handles.call("teardown")
+		_inspector_handles = null
 	if _drawing_canvas_gizmo != null:
 		_drawing_canvas_gizmo.call("teardown")
 		_drawing_canvas_gizmo = null
