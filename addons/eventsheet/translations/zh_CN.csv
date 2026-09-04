@@ -6991,3 +6991,8 @@ Resource files,资源文件
 "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it. A file that IS there but cannot be decoded - a truncated picture, or something that is not one at all - answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a picture.",该路径上没有文件时这个表达式读到的值。留空则直接读取文件，外面不加任何守卫。文件确实在那里却解不开时 - 被截断的图片，或者根本就不是图片 - 回答的是 null 和一条引擎消息而不是这个值，因为守卫问的是文件在不在，而不是它是不是一张图片。
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.",该路径上没有文件、或者它的扩展名不属于这三种时，这个表达式读到的值。留空则直接读取文件，外面不加任何守卫。文件确实在那里、扩展名也对却解不开时，回答的是 null 和一条引擎消息而不是这个值，因为守卫问的是文件在不在，而不是它是不是一段音轨。
 "%s - %s, %d byte(s)","%s - %s，%d 字节"
+tile data,瓦片数据
+terrain set,地形集
+"Streaming: %d chunk folder(s), %d with something to look at.",流式加载：%d 个区块文件夹，其中 %d 个有需要查看的问题。
+%s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s 中有 %d 个区块场景，但网格中间缺少 %d 个格子：%s。玩家走进这些格子时，那里什么都没有。
+"%s is a chunk scene carrying a camera. Every chunk that streams in makes its camera current, so the view jumps to whichever piece of the world arrived last - keep the camera in the scene that owns the player.",%s 是一个带有摄像机的区块场景。每个流入的区块都会把自己的摄像机设为当前摄像机，因此视角会跳到最后到达的那块世界 - 请把摄像机放在拥有玩家的那个场景里。
