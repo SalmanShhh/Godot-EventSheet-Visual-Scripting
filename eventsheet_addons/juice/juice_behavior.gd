@@ -1337,7 +1337,12 @@ func _chroma_shake_write() -> void:
 	var effect_strength: float = float(Engine.get_meta("effect_strength", 1.0))
 	var shift: Vector2 = _chroma_shake_direction() * _chroma_shake_magnitude * effect_strength
 	_fx_material.set_shader_parameter("chroma_shift", shift / span)
-	_fx_material.set_shader_parameter("chroma_intensity", _chroma_shake_fade())
+	# The falloff is spent ONCE, and it is spent on the shift above. This dial is how far the
+	# shaken taps are mixed in at all, so writing the fade here as well would square the curve:
+	# a reducing shake would be a quarter of itself half way through while the row, the docs and
+	# the expression all promised half. It is a GATE - on while a shake runs, and put back to 0
+	# by Stop Chromatic Shake - which is also what the overlay's visibility check reads it as.
+	_fx_material.set_shader_parameter("chroma_intensity", 1.0)
 
 ## One frame of the shake. The clock is advanced by DELTA, which the engine has already scaled
 ## by time: slow motion glides the split, a hitstop freezes it mid-frame, and the duration

@@ -211,6 +211,13 @@ static func run() -> bool:
 	behavior.stop_chromatic_shake()
 	Engine.remove_meta("no_flashing")
 	all_passed = _check("the no-flashing meta is not left behind for other tests", Engine.has_meta("no_flashing"), false) and all_passed
+	# The falloff is spent once, on the shift. The shader mixes the shaken taps in by chroma_intensity,
+	# so writing the fade into that dial as well would square the curve and a reducing shake would be
+	# a quarter of itself half way through while the expression answered half. Off the tree there is
+	# no material to read the dial back from, so the pinned thing is the line the pack ships.
+	var pack_source: String = FileAccess.get_file_as_string(PACK)
+	all_passed = _check("the shake's mix dial is a gate rather than a second copy of the falloff",
+		pack_source.contains("_fx_material.set_shader_parameter(\"chroma_intensity\", 1.0)"), true) and all_passed
 	# The overlay shader itself compiles headless: a shader that fails to build reports NO uniforms,
 	# so the sorted uniform list is both the compile check and the shake's two new dials.
 	var fx_shader: Shader = Shader.new()
