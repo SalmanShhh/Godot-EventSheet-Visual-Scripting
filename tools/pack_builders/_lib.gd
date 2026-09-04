@@ -376,8 +376,9 @@ static func seed_dials_lines(member: String) -> PackedStringArray:
 ## differs) but share the same bodies below.
 static func juice_fx_overlay_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"# The screen-FX overlay: one full-screen shader with three dials (vignette, chromatic",
-		"# aberration, radial speed lines) built on first use, hidden whenever every dial is 0.",
+		"# The screen-FX overlay: one full-screen shader with four dials (vignette, chromatic",
+		"# aberration, the chromatic shake's directional split, radial speed lines) built on first use,",
+		"# hidden whenever every dial is 0.",
 		"var _fx_layer: CanvasLayer = null",
 		"var _fx_rect: ColorRect = null",
 		"var _fx_material: ShaderMaterial = null",
