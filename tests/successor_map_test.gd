@@ -36,6 +36,7 @@ static func run() -> bool:
 	ok = _test_the_annotation() and ok
 	ok = _test_the_builder() and ok
 	ok = _test_the_shipped_addresses() and ok
+	ok = _test_a_hand_written_line_reads_as_the_current_verb() and ok
 	ok = _test_the_sheet_says_it_quietly() and ok
 	ok = _test_generated_fixtures() and ok
 	ok = _test_the_engine() and ok
@@ -188,6 +189,93 @@ static func _test_the_shipped_addresses() -> bool:
 	ok = _check("and that pack keeps the template it always had",
 		str(go_to["template"]), "{target}.set_state({next})") and ok
 	return ok
+
+
+## THE PROMISE THAT AN OPENED `.gd` FILE GAINS NO MIGRATION ROW, asked of a real file.
+##
+## All four audio addresses join a retired verb to a current one whose template is the same line to
+## the character: `{target.}play({from_position})` and `{target.}play({from})` differ only in what a
+## slot is called. Both are in the lifter's reverse index at exactly equal specificity, so which of
+## them claims a hand-written `$Sfx.play(0.5)` used to be settled by registration order - which is
+## module file name order, which put the retired spelling first by the alphabet alone. A file opened
+## that way reads back on the retired verb and grows a migration row that nothing about the file
+## asked for.
+##
+## So the four lines are lifted out of a REAL file (the lifter reads text off disk, and a fixture
+## built in memory is not the thing the promise is about; the branch's own `print` comes along and is
+## pinned with them rather than trimmed out), the id each row landed on is pinned, and
+## the migration plan over the whole sheet is pinned EMPTY - the same question the head band asks
+## before it offers anybody a rewrite.
+static func _test_a_hand_written_line_reads_as_the_current_verb() -> bool:
+	var path: String = "user://_successor_audio_lift_probe.gd"
+	var source: String = "extends Node\n\n\nfunc _ready() -> void:\n\t$Sfx.play(0.5)\n\t$Sfx.stop()\n\t$Sfx.volume_db = -6.0\n\tif $Sfx.playing:\n\t\tprint(\"still going\")\n"
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return _check("the probe file can be written", false, true)
+	file.store_string(source)
+	file.close()
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var ok: bool = _check("the probe file opens as a sheet", sheet != null, true)
+	if sheet == null:
+		return false
+	var landed: PackedStringArray = PackedStringArray()
+	_collect_ids(sheet.events, landed)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			_collect_ids((entry as EventFunction).events, landed)
+	ok = _check("every audio line reads back as the verb the vocabulary writes today",
+		landed, PackedStringArray(["Core::AudioPlay", "Core::AudioStop", "Core::AudioSetVolume",
+			"Core::AudioIsPlaying", "Core::PrintLog"])) and ok
+	# And the whole point of the pin above: nothing about opening this file asks anybody for anything.
+	ok = _check("so the file gains no migration row at all",
+		EventSheetMigrationPlan.plan(sheet).size(), 0) and ok
+	# The lossless contract over the same file, because a lift that read well and re-emitted badly
+	# would be a worse bug than the one this test is about.
+	sheet.external_source_path = path
+	ok = _check("and re-emits byte for byte",
+		str(SheetCompiler.compile(sheet, path).get("output", "")), source) and ok
+	DirAccess.remove_absolute(path)
+	# AND THE RULE ITSELF, asked where the alphabet cannot answer it. The four pins above hold today
+	# for a reason nobody chose: `audio_aces.gd` sorts before `collection_aces.gd`, so the current
+	# spelling is registered first and wins the tie on registration order. Rename either module and
+	# they all invert, silently. So the reverse index is composed here over a pair registered the
+	# OTHER way round - the superseded verb first - and the current spelling still has to come out in
+	# front of it.
+	var retired: ACEDescriptor = ACEDescriptor.new()
+	retired.provider_id = "P"
+	retired.ace_id = "Retired"
+	retired.ace_type = ACEDescriptor.ACEType.ACTION
+	retired.codegen_template = "ring({old_name})"
+	retired.succeeded_by("P::Current", {"old_name": "name"})
+	var current: ACEDescriptor = ACEDescriptor.new()
+	current.provider_id = "P"
+	current.ace_id = "Current"
+	current.ace_type = ACEDescriptor.ACEType.ACTION
+	current.codegen_template = "ring({name})"
+	var composed: Array = EventSheetACELifter._compose_reverse_entries([retired, current])
+	var sorted_ids: PackedStringArray = PackedStringArray()
+	for entry: Variant in composed:
+		sorted_ids.append(str((entry as Dictionary).get("ace_id", "")))
+	ok = _check("a superseded spelling never wins a tie, whatever order it was registered in",
+		sorted_ids, PackedStringArray(["Current", "Retired"])) and ok
+	return ok
+
+
+## Every verb id a lifted sheet's rows landed on, in reading order - conditions before actions, and
+## sub-events after the event they hang under, which is the order a reader counts in.
+static func _collect_ids(items: Array, into: PackedStringArray) -> void:
+	for item: Variant in items:
+		if not (item is EventRow):
+			continue
+		var event_row: EventRow = item as EventRow
+		for condition: ACECondition in event_row.conditions:
+			if not condition.ace_id.is_empty():
+				into.append("%s::%s" % [condition.provider_id, condition.ace_id])
+		for action: Variant in event_row.actions:
+			if action is ACEAction and not (action as ACEAction).ace_id.is_empty():
+				into.append("%s::%s" % [(action as ACEAction).provider_id,
+					(action as ACEAction).ace_id])
+		_collect_ids(event_row.sub_events, into)
 
 
 ## THE QUIET SHEET LAW, asked of the one thing this slice puts on screen, in its two halves.
