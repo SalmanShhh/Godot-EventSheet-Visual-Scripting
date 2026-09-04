@@ -268,11 +268,14 @@ from `tools/build_help_bundle.gd`).
   at the top of the pack folder). A removed file deeper in the folder is not offered, because the
   flattened folder name is many-to-one and the door would be guessing a path it then writes to.
 - The Doctor's rename/migration sweep over `.gd` sheets reads a bounded sample per run and says
-  so in its own verdict line - whole-project certainty comes from `tools/verify_sheets.gd`.
+  so in its own verdict line - whole-project certainty comes from `tools/verify_sheets.gd -- --whole`
+  (or `EventSheets.migration_report(true)`), whose verdict names which of the two modes ran.
 - Four shipped verbs carry a successor address (the general shelf's `PlayAudio`, `StopAudio`,
   `SetVolumeDb` and `IsAudioPlaying`, each pointing at the Audio shelf's twin). Both ends of all
   four write the same bytes, so a `.gd` sheet reads the line back as the current verb and gains no
-  migration row; a stored `.tres` sheet reports them. The guide records why the State Machine pair
+  migration row; a stored `.tres` sheet reports them. A rewrite whose line is byte-identical to the
+  one already there is proved WITHOUT the lift round trip - no file changes, so there is no new line
+  to read back - which is what a cleared optional parameter (`play()`) depends on. The guide records why the State Machine pair
   was turned down (its parameters do not mean the same thing). Add an address only for verbs that
   truly map, and never to an EXPRESSION - migration walks rows, and an expression is not one.
 - The theme package manifest is documentation/template only; it is not auto-imported yet.

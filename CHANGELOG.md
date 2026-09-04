@@ -11136,6 +11136,34 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   the rows that ask. The recipe in both guides is now that command, and the API is named for what it
   is: the in-editor twin, for a Tool sheet or an editor plugin, never the thing CI calls into the
   editor for.
+- **A rewrite that writes the byte already in the file is proved without reading anything back.**
+  *Play Sound*'s *From* is optional, so a row whose start time has been cleared writes `play()` - and
+  the reverse grammar reads a bare `play()` as an ordinary method call, because `play({from})` only
+  matches a call with an argument in it. The per-row round-trip gate, asked whether the rewritten
+  line reads back as the successor, therefore said no: the head band went on counting a row it then
+  offered a rewrite for and left alone, and a stored `.tres` holding that row **failed
+  `tools/verify_sheets.gd` over a sheet nobody had touched** - which is exactly what the addresses
+  were said not to do. The gate asks one question - would the next person to open this file get a
+  different sheet - and when the successor emits the line that is already there, character for
+  character, no file changes and there is no new line to read. A sheet that stores its rows moves
+  onto the newer spelling; a sheet that derives them from its text goes on deriving what it derived
+  yesterday. The round-trip gate's own fixture wrote the same line on both ends too, so it was
+  pinning its refusal by accident rather than by its stated reason; its map now leaves one of the
+  successor's parameters unanswered, which is the authoring mistake it describes.
+- **The run that has to be certain now has a command that runs it.** The migration check's
+  whole-project corpus is every stored `.tres` sheet and a capped sample of the `.gd` ones, and the
+  whole half could only be asked for through `EventSheets.migration_report(true)` - which the guides
+  called the release-check mode while the command a branch gate actually runs had no way to ask for
+  it. **`tools/verify_sheets.gd -- --whole`** is that door, and `EventSheetVerify.run` carries the
+  flag through to the corpus; a run that named its own files reads all of them either way, so the
+  flag changes nothing there. The verdict names its mode in BOTH directions - a sampled run prints
+  the two numbers, a whole read ends with the sentence that says it was whole, in the migration
+  section's own words rather than in a second wording of the same fact.
+- **The guide stopped denying that the `.gd` half can find anything.** The paragraph selling the
+  whole read explained the sample by saying a `.gd` sheet has nothing in it to find - which is the
+  opposite of why the Doctor reads that half at all. What it can find is a vocabulary that disagrees
+  with itself, a lift entry kept after its verb was dropped; that is what the sample is for and what
+  the whole read is worth paying minutes for.
 - **The backup ring has a door on it.** Every pack update copies the files it is about to overwrite
   or remove into the per-file ring before the first new byte lands, and until now that was a folder
   and a sentence: the editor's own Restore menu restores THE SHEET IN FRONT OF YOU, which a pack's
@@ -11153,6 +11181,26 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   A removed file deeper in the folder is not offered rather than offered at an invented path.
 - **The ring itself is never written to by any of it**, which the suite pins by value: it is exactly
   as big after a restore as it was before.
+- **A restore tells the registry, like the update door beside it.** An update finishes with three
+  steps - the status line, the manager's table, and the vocabulary - because a pack's own `.gd` IS
+  its vocabulary. Restore... did the first two. Putting a guide or an icon back costs nothing either
+  way, but putting the `.gd` back is the case the door exists for: it is an earlier version of the
+  behaviour, whose `@ace_*` annotations differ, and the picker went on offering the words of a
+  version no longer on disk until something else happened to rescan.
+- **A restore row offers the bytes of the file it is about.** A ring folder's name is many-to-one, so
+  a top-level `sub_guide.md` and a removed `sub/guide.md` share one folder - and the listing went by
+  the sequence prefix alone, never asking which file an entry came from, so one row could offer the
+  other's bytes and then write them over it. The entry's own name after the sequence is what decides
+  now: the same rule the removed-file reconstruction already applied, asked in both directions.
+- **Restore... on a project that has never taken an update stops printing an engine error.** The
+  ring-only walk asked `DirAccess` for the folders under a backup root a fresh project does not have
+  yet, which answers with an empty list AND a red line in Output - so the manager's polite "the
+  backup ring is holding nothing" sentence arrived with an error underneath it.
+- **The restore row's own line is translated.** The parenthetical a removed file wears went through
+  the catalog; the line it hangs off did not, so in the eight non-English catalogs the only
+  translated words in the row were the ones inside the brackets. The harvester reads `translate()`
+  calls, so it could not report the half that was missing. Keyed in all nine files with the unit a
+  reader of that language expects rather than with empty cells.
 - **The auto-generated address harness stopped lying about node-scoped verbs.** It filled every blank
   parameter with an identifier, including the `{target.}` slot a node-scoped row leaves empty to mean
   "this node", so its fixture wrote `mg_target.stop()` - a line naming a variable nobody declared -
