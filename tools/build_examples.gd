@@ -425,7 +425,7 @@ func _build_carousel() -> bool:
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen. Watch beat/intensity/moments_played stream in Live Values."
+	about.text = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values."
 	sheet.events.append(about)
 
 	# Reused function: juice one tile by index.
@@ -518,7 +518,10 @@ func _build_carousel() -> bool:
 	seed_row.trigger_id = "OnReady"
 	seed_row.actions.append(_raw("for c: Node in $Tiles.get_children():\n\tc.get_node(\"SineBehavior\").active = true"))
 	# One tile is drawn against what is already behind it rather than over it - the same row that
-	# reaches every other blend word.
+	# reaches every other blend word. The pack's own spelling is the BlendModes AUTOLOAD; the demo
+	# reaches it through a child node of that name instead, because this builder writes showcases
+	# and never project settings, and a showcase that only runs after a human edits project.godot
+	# is not a showcase. The about row says so, so the reader is not left inferring it.
 	seed_row.actions.append(_action("BlendModesAddon", "method:blend_as", "$BlendModes.blend_as({item}, \"{mode}\", {strength})", {"item": "$Tiles/Tile3", "mode": "screen", "strength": "1.0"}))
 	sheet.events.append(seed_row)
 
