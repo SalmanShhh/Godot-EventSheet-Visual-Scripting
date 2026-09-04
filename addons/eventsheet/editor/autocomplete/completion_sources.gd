@@ -53,6 +53,10 @@ const FIELD_SHADER_DIAL := "shader_dial"
 ## this project's tiles were actually authored with rather than a vocabulary of guesses.
 const FIELD_TILE_DATA_KEY := "tile_data_key"
 const FIELD_TILE_TERRAIN := "tile_terrain"
+## The kinds of damage the PROJECT deals, read off its own DamageTypeSet files. A type field offers
+## this game's words - fire, bleed, psychic - and a project that has written no set down gets a
+## plain field rather than a list of somebody else's elements.
+const FIELD_DAMAGE_TYPE := "damage_type"
 ## An animation of the scene this sheet is attached to, and a named moment inside one. The marker
 ## kind carries the animation as its argument the way a method carries its target: the markers of
 ## `swing` are not the markers of `idle`, and a list that mixed them would be a guess.
@@ -91,7 +95,8 @@ const FILE_HINTS: Dictionary = {
 ## The kinds whose answer is about the PROJECT rather than about the sheet asking. Held once for
 ## every sheet, because ten open tabs asking for the Input Map is one Input Map.
 const PROJECT_SCOPED: Array[String] = [FIELD_GROUP, FIELD_INPUT_ACTION, FIELD_NODE, FIELD_CLASS,
-	FIELD_FILE, FIELD_PATH, FIELD_TILE_DATA_KEY, FIELD_TILE_TERRAIN, "scene_path", "spawn_scene",
+	FIELD_FILE, FIELD_PATH, FIELD_TILE_DATA_KEY, FIELD_TILE_TERRAIN, FIELD_DAMAGE_TYPE,
+	"scene_path", "spawn_scene",
 	"audio_path", "resource_path"]
 
 ## The separator between the halves of a detail line. One character, so a detail reads as one line
@@ -276,6 +281,8 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _tile_data_key_entries()
 		FIELD_TILE_TERRAIN:
 			return _tile_terrain_entries()
+		FIELD_DAMAGE_TYPE:
+			return _damage_type_entries()
 		FIELD_ANIMATION:
 			return _animation_entries(sheet)
 		FIELD_MARKER:
@@ -677,6 +684,19 @@ static func _tile_data_key_entries() -> Array[Dictionary]:
 	for key: String in EventForgeTileSetFacts.project_data_keys():
 		entries.append({"text": "\"%s\"" % key, "detail": EventSheetL10n.translate("tile data"),
 			"kind": KIND_MEMBER})
+	return entries
+
+
+## Every kind of damage the project has written down, quoted, because the field it fills takes a
+## name as a string. Read as TEXT by EventForgeDamageTypeFacts rather than by loading anything - a
+## set's script ships in a pack the reader may not have installed. A project with no set answers with
+## an empty list, which is a plain field rather than a wrong one: a type this list has never seen is
+## not wrong, it is simply one nobody has written down yet.
+static func _damage_type_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for kind: Dictionary in EventForgeDamageTypeFacts.project_types():
+		entries.append({"text": "\"%s\"" % str(kind["name"]),
+			"detail": str(kind["path"]).get_file(), "kind": KIND_MEMBER})
 	return entries
 
 

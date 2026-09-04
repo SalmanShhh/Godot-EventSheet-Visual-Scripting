@@ -1,0 +1,164 @@
+# Godot EventSheets - what kinds of damage a project deals, read as TEXT.
+#
+# Two questions, asked by two readers who must never disagree: which damage types has this project
+# actually written down, and which types do its rows deal. The type field of the Health pack's typed
+# damage rows completes from the first; the Doctor's damage section compares the two and says when
+# a row deals a kind nothing declares, or a node resists a kind nothing deals.
+#
+# WHY TEXT, AND NOT `load()`. A DamageTypeSet is a resource whose script ships in a pack the reader
+# may not have installed, and loading one in the editor would run that script. Both facts wanted here
+# are plain property lines in the saved file, so ONE regex over its text answers without touching the
+# resource system:
+#
+#     script_class="DamageTypeSet"
+#     type_names = PackedStringArray("physical", "fire")
+#
+# The consequence is stated rather than hidden: a set saved in the BINARY `.res` format is not read,
+# and neither is one built at run time. Both are answered the same way - the completion list is
+# shorter and the Doctor says nothing - because a list missing an entry must never become a finding
+# claiming the entry does not exist. `has_any_set` is what the Doctor asks first for exactly that
+# reason: a project this file can read nothing from is one it has no business reporting on.
+#
+# NOTHING IS WRITTEN and nothing is stored. The walk is bounded and SORTED - CI runs the suite on a
+# filesystem whose own walk order is its business - so two runs over an unchanged project answer with
+# the same list in the same order.
+@tool
+class_name EventForgeDamageTypeFacts
+extends RefCounted
+
+## Where the walk stops. A project with more files than this is not read further: the list is a
+## convenience, and an editor that stalls opening a dialog is not one.
+const FILE_LIMIT: int = 4000
+
+## The class line a saved DamageTypeSet carries, and the property holding its names. Spelled as the
+## engine writes them, because that is what the file on disk actually holds.
+const SET_MARKER := "script_class=\"DamageTypeSet\""
+const NAMES_PATTERN := "type_names = PackedStringArray\\(([^)]*)\\)"
+
+## The line a row DEALS a kind of damage with, and the lines a node has an OPINION about a kind with.
+## Two patterns rather than one, because the type sits in a different argument in each: the typed
+## damage row takes an amount first, while resisting, immunity and weakness lead with the kind. The
+## Doctor's two findings are exactly the difference between what these two answer.
+const DEALT_PATTERN := "take_typed_damage\\([^,)]*, ?\"([^\"]*)\""
+const OPINION_PATTERN := "(?:resist|immune_to|weak_to)\\( ?\"([^\"]*)\""
+
+
+## Every damage type name any set in this project declares, sorted and without repeats.
+static func project_type_names() -> PackedStringArray:
+	var seen: Dictionary = {}
+	for path: String in project_set_files():
+		for name_of_type: String in type_names(source_of(path)):
+			seen[name_of_type] = true
+	var names: Array = seen.keys()
+	names.sort()
+	return PackedStringArray(names)
+
+
+## Every damage type the project declares WITH THE FILE that declares it, sorted by name. What a
+## completion list shows: the word to insert, and the set it came from, since a project with two sets
+## is exactly the project where a reader wants to know which one a word belongs to. A name declared
+## by two sets is listed once, under the first file in path order.
+static func project_types() -> Array[Dictionary]:
+	var seen: Dictionary = {}
+	for path: String in project_set_files():
+		for name_of_type: String in type_names(source_of(path)):
+			if not seen.has(name_of_type):
+				seen[name_of_type] = path
+	var names: Array = seen.keys()
+	names.sort()
+	var found: Array[Dictionary] = []
+	for name_of_type: String in names:
+		found.append({"name": name_of_type, "path": str(seen[name_of_type])})
+	return found
+
+
+## True when this project holds a text-format DamageTypeSet at all. The Doctor asks this before it
+## says anything about an unknown type: a project that has written no set down has not disagreed with
+## anything, and silence is the only honest report.
+static func has_any_set() -> bool:
+	return not project_set_files().is_empty()
+
+
+## Every project file whose text is a saved DamageTypeSet, in sorted path order.
+static func project_set_files() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for path: String in _resource_files():
+		if source_of(path).contains(SET_MARKER):
+			found.append(path)
+	return found
+
+
+## The type names one file's text declares, in the order the file declares them and without repeats.
+## Pure over a string, so a test hands it a set it wrote itself.
+static func type_names(source: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var matcher: RegEx = RegEx.create_from_string(NAMES_PATTERN)
+	var found: RegExMatch = matcher.search(source)
+	if found == null:
+		return names
+	for piece: String in found.get_string(1).split(","):
+		var word: String = piece.strip_edges().trim_prefix("\"").trim_suffix("\"")
+		if not word.is_empty() and not names.has(word):
+			names.append(word)
+	return names
+
+
+## Every damage type one script DEALS, from the type argument of each typed-damage call. Sorted and
+## without repeats, and pure over a string so the Doctor's tests need no files.
+static func types_dealt(source: String) -> PackedStringArray:
+	return _quoted_matches(source, DEALT_PATTERN)
+
+
+## Every damage type one script has an OPINION about - resisted, immune to, weak to. The other half
+## of the Doctor's comparison, read the same way from the lines that lead with the kind.
+static func types_opined(source: String) -> PackedStringArray:
+	return _quoted_matches(source, OPINION_PATTERN)
+
+
+## One file's text, or "" when it cannot be opened. Never throws and never warns: a file that has
+## gone since the walk listed it is simply one this reader says nothing about.
+static func source_of(path: String) -> String:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	return "" if file == null else file.get_as_text()
+
+
+## Every first capture of one pattern over a text, sorted and without repeats. A call whose type is
+## not a literal - a variable, an expression - contributes nothing, which is the honest answer: the
+## reader cannot know what a variable held, so it says nothing about it rather than guessing.
+static func _quoted_matches(source: String, pattern: String) -> PackedStringArray:
+	var seen: Dictionary = {}
+	var matcher: RegEx = RegEx.create_from_string(pattern)
+	for hit: RegExMatch in matcher.search_all(source):
+		var word: String = hit.get_string(1)
+		if not word.is_empty():
+			seen[word] = true
+	var names: Array = seen.keys()
+	names.sort()
+	return PackedStringArray(names)
+
+
+## Every text-format resource in the project, sorted, bounded, and skipping this plugin's own folder.
+static func _resource_files() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var pending: Array[String] = ["res://"]
+	while not pending.is_empty() and found.size() < FILE_LIMIT:
+		var directory: String = pending.pop_front()
+		var handle: DirAccess = DirAccess.open(directory)
+		if handle == null:
+			continue
+		var directories: PackedStringArray = handle.get_directories()
+		directories.sort()
+		for sub_directory: String in directories:
+			if sub_directory.begins_with(".") or sub_directory == "addons":
+				continue
+			pending.append(directory.path_join(sub_directory))
+		var files: PackedStringArray = handle.get_files()
+		files.sort()
+		for file_name: String in files:
+			if file_name.get_extension().to_lower() != "tres":
+				continue
+			found.append(directory.path_join(file_name))
+			if found.size() >= FILE_LIMIT:
+				break
+	found.sort()
+	return found

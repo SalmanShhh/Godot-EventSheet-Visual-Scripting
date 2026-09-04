@@ -22,7 +22,9 @@ static func build() -> bool:
 		"needle_colour": {"type": "Color", "default": Color(0.66, 0.80, 1.0, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle is drawn in while the value is inside its warning mark."}},
 		"needle_warning_colour": {"type": "Color", "default": Color(1.0, 0.45, 0.38, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle turns once the value has drifted past its warning mark."}},
 		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
-		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false}
+		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false},
+		"damage_types": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white."}},
+		"crit_text_scale": {"type": "float", "default": 1.6, "exported": true, "attributes": {"tooltip": "How much bigger a number popped with the style \"crit\" is drawn. The whole language of a critical hit in one number.", "range": {"min": "1", "max": "4", "step": "0.1"}}}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "HUD Kit behavior: drive a menu or HUD by NODE NAME - set label text, fill bars, switch menu screens (show one panel, hide its siblings), pop auto-fading toasts - and every descendant Button reports through one On Button Pressed trigger, so a whole menu needs zero connected signals. Drop it under your UI root (CanvasLayer or Control)."
@@ -199,6 +201,45 @@ static func build() -> bool:
 	])))
 	_default(sheet, "color", "Color.WHITE")
 
+	# THE SAME POP, IN THE COLOUR OF THE THING THAT CAUSED IT. Pop Floating Text takes a Color, which
+	# means every damage row in the game has to know what colour fire is - the same list of colours
+	# retyped in front of every hit. This row takes the WORD instead and looks the colour up in the
+	# DamageTypeSet the game already owns, so renaming a colour is editing one file.
+	#
+	# It sits BESIDE Pop Floating Text rather than growing it: that row's three arguments are a
+	# shipped promise, and a fourth would rewrite every sheet already using it.
+	#
+	# "crit" is the one style that is not a damage type, because a critical is not a kind of damage -
+	# it is the same damage, louder. It reads from the set if the set names it, and is drawn bigger
+	# either way.
+	Lib.append_function(sheet, "pop_floating_text_as", "Pop Floating Text As", "UI",
+		"Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style \"crit\" draws the number bigger, which is the whole language of a critical hit. A style the set does not name is drawn white, so a game with no set still gets its numbers.",
+		[["text", "String"], ["style", "String"], ["at", "Vector2"]], "\n".join(PackedStringArray([
+		"var tint: Color = Color.WHITE",
+		"# Duck-typed rather than cast: the DamageTypeSet class ships in a pack a game need not have",
+		"# installed, and a HUD that refused to draw a number because of that would be worse than one",
+		"# drawing it white.",
+		"if damage_types != null and damage_types.has_method(\"colour_of\"):",
+		"\ttint = damage_types.call(\"colour_of\", style)",
+		"var label: Label = Label.new()",
+		"label.text = text",
+		"label.modulate = tint",
+		"label.position = at",
+		"if style == \"crit\":",
+		"\tlabel.scale = Vector2(crit_text_scale, crit_text_scale)",
+		"if host != null:",
+		"\thost.add_child(label)",
+		"else:",
+		"\tadd_child(label)",
+		"var pop: Tween = label.create_tween()",
+		"pop.set_parallel(true)",
+		"pop.tween_property(label, \"position:y\", at.y - 24.0, 0.7)",
+		"pop.tween_property(label, \"modulate:a\", 0.0, 0.7)",
+		"pop.set_parallel(false)",
+		"pop.tween_callback(label.queue_free)"
+	])))
+	_hint(sheet, "style", "damage_type")
+
 	# A meter with a CENTRE rather than a floor: balance on a rail or in a manual, a tug-of-war
 	# bar, a lean, a tuning dial. A bar cannot show it - what matters is how far from the middle the
 	# needle has drifted and which side it is on - so this builds the needle itself the first time it
@@ -241,6 +282,7 @@ static func build() -> bool:
 		"set_text": "Set text of [b]{control_name}[/b] to [b]{text}[/b]",
 		"show_toast": "Show toast [b]{text}[/b]",
 		"pop_floating_text": "Pop floating text [b]{text}[/b] at [b]{at}[/b]",
+		"pop_floating_text_as": "Pop floating text [b]{text}[/b] as [b]{style}[/b] at [b]{at}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["set_text", "set_bar", "show_toast"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/hud_kit/hud_kit_behavior")
@@ -252,3 +294,14 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## Sets the parameter HINT on the last-appended row parameter - the key the params dialog and the
+## completion list read to decide what a field offers. "damage_type" offers the names in the
+## project own DamageTypeSet files, so a style field suggests this game kinds of damage rather than
+## a vocabulary of guesses. A project with no set gets a plain field, never a wrong list.
+static func _hint(sheet: EventSheetResource, param_id: String, hint: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.hint = hint

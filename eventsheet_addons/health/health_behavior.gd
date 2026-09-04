@@ -58,6 +58,19 @@ var _invincible_until: int = 0
 @export_range(0, 120, 0.5) var assist_seconds: float = 8.0
 var last_hit_from: Node = null
 var assist_hits: Dictionary = {}
+## Flat damage taken off every typed hit, after the type resistance and before a critical. A hit that got past resistance never lands for less than Minimum Damage, so armour blunts hits rather than ending them.
+@export_range(0, 1000, 0.5) var armour: float = 0.0
+## The least a hit that got past resistance can land for, however much armour there is. Without it, enough armour quietly makes a node unkillable by anything small.
+@export_range(0, 100, 0.5) var minimum_damage: float = 1.0
+## How often a typed hit on this node lands as a critical: 0 never, 1 every time.
+@export_range(0, 1, 0.01) var crit_chance: float = 0.0
+## What a critical multiplies the damage by, after armour has come off.
+@export_range(1, 20, 0.1) var crit_multiplier: float = 2.0
+var resistances: Dictionary = {}
+var last_damage_type: String = ""
+var last_damage_dealt: float = 0.0
+var last_damage_before_mitigation: float = 0.0
+var last_hit_was_crit: bool = false
 
 ## A named health pool (shield / armour) - typed so the absorption + decay hot paths read
 ## fields directly instead of float()-casting an untyped Dictionary entry every frame.
@@ -438,6 +451,134 @@ func assists_of() -> Array:
 ## @ace_codegen_template("$SimpleHealthBehavior.killed_by_me({who})")
 func killed_by_me(who: Node) -> bool:
 	return is_dead_flag and last_hit_from != null and last_hit_from == _root_owner(who)
+
+## @ace_action
+## @ace_name("Take Damage Of Type")
+## @ace_category("Health")
+## @ace_description("Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression.")
+## @ace_display_template("Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
+## @ace_param_hint(type damage_type)
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.take_typed_damage({amount}, {type}, {from})")
+func take_typed_damage(amount: float, type: String, from: Node) -> void:
+	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
+		return
+	_credit_hit(from)
+	last_damage_type = type
+	last_damage_before_mitigation = amount
+	var after_resist: float = amount * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))
+	var landed: float = after_resist - armour
+	# Armour blunts a hit; it never makes one free. Anything that got past resistance lands for
+	# at least the minimum, so stacking armour cannot quietly turn a node immortal - while a hit
+	# resistance ate entirely stays eaten, which is what immunity has to mean.
+	landed = maxf(landed, minimum_damage) if after_resist > 0.0 else 0.0
+	last_hit_was_crit = landed > 0.0 and crit_chance > 0.0 and randf() < crit_chance
+	if last_hit_was_crit:
+		landed *= crit_multiplier
+	last_damage_dealt = landed
+	# Handed to the row this pack already had, so the pools, the death latch, destroy-on-death and
+	# On Damaged all happen in exactly one place and behave exactly as they always did.
+	take_damage(landed)
+
+## @ace_action
+## @ace_name("Resist")
+## @ace_category("Health")
+## @ace_description("Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly.")
+## @ace_display_template("Resist [b]{type}[/b] by [b]{percent}[/b] percent")
+## @ace_param_hint(type damage_type)
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.resist({type}, {percent})")
+func resist(type: String, percent: float) -> void:
+	resistances[type] = minf(percent, 100.0) / 100.0
+
+## @ace_action
+## @ace_name("Immune To")
+## @ace_category("Health")
+## @ace_description("Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it.")
+## @ace_display_template("Immune to [b]{type}[/b]")
+## @ace_param_hint(type damage_type)
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.immune_to({type})")
+func immune_to(type: String) -> void:
+	resistances[type] = 1.0
+
+## @ace_action
+## @ace_name("Weak To")
+## @ace_category("Health")
+## @ace_description("Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell.")
+## @ace_display_template("Weak to [b]{type}[/b] by [b]{percent}[/b] percent")
+## @ace_param_hint(type damage_type)
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.weak_to({type}, {percent})")
+func weak_to(type: String, percent: float) -> void:
+	resistances[type] = -maxf(percent, 0.0) / 100.0
+
+## @ace_action
+## @ace_name("Set Armour")
+## @ace_category("Health")
+## @ace_description("Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least Minimum Damage, so armour is a blunting rather than a wall.")
+## @ace_display_template("Set armour to [b]{amount}[/b]")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.set_armour({amount})")
+func set_armour(amount: float) -> void:
+	armour = maxf(0.0, amount)
+
+## @ace_action
+## @ace_name("Set Crit")
+## @ace_category("Health")
+## @ace_description("Sets how often a typed hit on this node lands as a critical and what it multiplies by. Chance runs 0 to 1; a multiplier below 1 is raised to 1, because a critical that hurt less would read as a bug in every game ever made.")
+## @ace_display_template("Set crit [b]{chance}[/b] at [b]{multiplier}[/b] times damage")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.set_crit({chance}, {multiplier})")
+func set_crit(chance: float, multiplier: float) -> void:
+	crit_chance = clampf(chance, 0.0, 1.0)
+	crit_multiplier = maxf(1.0, multiplier)
+
+## @ace_expression
+## @ace_name("Last Damage Type")
+## @ace_category("Health")
+## @ace_description("What kind the last hit was - the word the row dealt it with. Empty until something has damaged this node through Take Damage Of Type.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_damage_type_value()")
+func last_damage_type_value() -> String:
+	return last_damage_type
+
+## @ace_expression
+## @ace_name("Last Damage Dealt")
+## @ace_category("Health")
+## @ace_description("What the last typed hit came to after resistance, armour and the critical - the number a floating damage label should show.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_damage_dealt_value()")
+func last_damage_dealt_value() -> float:
+	return last_damage_dealt
+
+## @ace_expression
+## @ace_name("Last Damage Before Mitigation")
+## @ace_category("Health")
+## @ace_description("What the last typed hit was worth before this node resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_damage_before_mitigation_value()")
+func last_damage_before_mitigation_value() -> float:
+	return last_damage_before_mitigation
+
+## @ace_condition
+## @ace_name("Last Hit Was A Crit")
+## @ace_category("Health")
+## @ace_description("Whether the last typed hit rolled a critical. Under On Damaged this is the row that makes the number bigger, the shake harder and the sound sharper.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_hit_was_a_crit()")
+func last_hit_was_a_crit() -> bool:
+	return last_hit_was_crit
+
+## @ace_condition
+## @ace_name("Damage Type Is")
+## @ace_category("Health")
+## @ace_description("Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds.")
+## @ace_param_hint(type damage_type)
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.damage_type_is({type})")
+func damage_type_is(type: String) -> bool:
+	return last_damage_type == type
 
 ## @ace_condition
 ## @ace_name("Is Dead")

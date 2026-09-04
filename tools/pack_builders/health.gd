@@ -28,7 +28,16 @@ static func build() -> bool:
 		"_invincible_until": {"type": "int", "default": 0, "exported": false},
 		"assist_seconds": {"type": "float", "default": 8.0, "exported": true, "attributes": {"tooltip": "How long a hit still counts as an assist. Anyone who damaged this node within this many seconds of its death is listed by Assists Of.", "range": {"min": "0", "max": "120", "step": "0.5"}}},
 		"last_hit_from": {"type": "Node", "default": null, "exported": false},
-		"assist_hits": {"type": "Dictionary", "default": {}, "exported": false}
+		"assist_hits": {"type": "Dictionary", "default": {}, "exported": false},
+		"armour": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "Flat damage taken off every typed hit, after the type resistance and before a critical. A hit that got past resistance never lands for less than Minimum Damage, so armour blunts hits rather than ending them.", "range": {"min": "0", "max": "1000", "step": "0.5"}}},
+		"minimum_damage": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "The least a hit that got past resistance can land for, however much armour there is. Without it, enough armour quietly makes a node unkillable by anything small.", "range": {"min": "0", "max": "100", "step": "0.5"}}},
+		"crit_chance": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "How often a typed hit on this node lands as a critical: 0 never, 1 every time.", "range": {"min": "0", "max": "1", "step": "0.01"}}},
+		"crit_multiplier": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "What a critical multiplies the damage by, after armour has come off.", "range": {"min": "1", "max": "20", "step": "0.1"}}},
+		"resistances": {"type": "Dictionary", "default": {}, "exported": false},
+		"last_damage_type": {"type": "String", "default": "", "exported": false},
+		"last_damage_dealt": {"type": "float", "default": 0.0, "exported": false},
+		"last_damage_before_mitigation": {"type": "float", "default": 0.0, "exported": false},
+		"last_hit_was_crit": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. Grant Invincibility opens a timed i-frame window - damage is ignored while invincible, and On Damaged does not fire. current_health seeds to max_health On Ready."
@@ -507,6 +516,98 @@ static func build() -> bool:
 		"True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.",
 		[["who", "Node"]], "return is_dead_flag and last_hit_from != null and last_hit_from == _root_owner(who)")
 
+	# WHAT KIND OF HIT IT WAS. Take Damage answers how much and Take Damage From answers by whom;
+	# this answers of what, and with it the arithmetic every game writes in front of every damage row
+	# moves inside the behaviour, where every On Damaged in the project can already see the result.
+	#
+	# THE ORDER IS FIXED and it is the whole point: resistance as a PERCENTAGE of the incoming hit,
+	# armour as POINTS off what is left, a critical as a MULTIPLIER on what got through, then the
+	# pools and the health this pack already had. Those are what the three words mean to everybody;
+	# what nobody agrees on is the order, which is why writing it down once here is worth more than
+	# writing it well in one enemy event.
+	Lib.append_function(sheet, "take_typed_damage", "Take Damage Of Type", "Health",
+		"Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression.",
+		[["amount", "float"], ["type", "String"], ["from", "Node"]], "\n".join(PackedStringArray([
+		"if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():",
+		"\treturn",
+		"_credit_hit(from)",
+		"last_damage_type = type",
+		"last_damage_before_mitigation = amount",
+		"var after_resist: float = amount * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))",
+		"var landed: float = after_resist - armour",
+		"# Armour blunts a hit; it never makes one free. Anything that got past resistance lands for",
+		"# at least the minimum, so stacking armour cannot quietly turn a node immortal - while a hit",
+		"# resistance ate entirely stays eaten, which is what immunity has to mean.",
+		"landed = maxf(landed, minimum_damage) if after_resist > 0.0 else 0.0",
+		"last_hit_was_crit = landed > 0.0 and crit_chance > 0.0 and randf() < crit_chance",
+		"if last_hit_was_crit:",
+		"\tlanded *= crit_multiplier",
+		"last_damage_dealt = landed",
+		"# Handed to the row this pack already had, so the pools, the death latch, destroy-on-death and",
+		"# On Damaged all happen in exactly one place and behave exactly as they always did.",
+		"take_damage(landed)"
+	])), "Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
+	_hint(sheet, "type", "damage_type")
+
+	Lib.append_function(sheet, "resist", "Resist", "Health",
+		"Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly.",
+		[["type", "String"], ["percent", "float"]], "\n".join(PackedStringArray([
+		"resistances[type] = minf(percent, 100.0) / 100.0"
+	])), "Resist [b]{type}[/b] by [b]{percent}[/b] percent")
+	_hint(sheet, "type", "damage_type")
+
+	Lib.append_function(sheet, "immune_to", "Immune To", "Health",
+		"Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it.",
+		[["type", "String"]], "\n".join(PackedStringArray([
+		"resistances[type] = 1.0"
+	])), "Immune to [b]{type}[/b]")
+	_hint(sheet, "type", "damage_type")
+
+	Lib.append_function(sheet, "weak_to", "Weak To", "Health",
+		"Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell.",
+		[["type", "String"], ["percent", "float"]], "\n".join(PackedStringArray([
+		"resistances[type] = -maxf(percent, 0.0) / 100.0"
+	])), "Weak to [b]{type}[/b] by [b]{percent}[/b] percent")
+	_hint(sheet, "type", "damage_type")
+
+	Lib.append_function(sheet, "set_armour", "Set Armour", "Health",
+		"Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least Minimum Damage, so armour is a blunting rather than a wall.",
+		[["amount", "float"]], "\n".join(PackedStringArray([
+		"armour = maxf(0.0, amount)"
+	])), "Set armour to [b]{amount}[/b]")
+
+	Lib.append_function(sheet, "set_crit", "Set Crit", "Health",
+		"Sets how often a typed hit on this node lands as a critical and what it multiplies by. Chance runs 0 to 1; a multiplier below 1 is raised to 1, because a critical that hurt less would read as a bug in every game ever made.",
+		[["chance", "float"], ["multiplier", "float"]], "\n".join(PackedStringArray([
+		"crit_chance = clampf(chance, 0.0, 1.0)",
+		"crit_multiplier = maxf(1.0, multiplier)"
+	])), "Set crit [b]{chance}[/b] at [b]{multiplier}[/b] times damage")
+
+	# THE REPORT. Five readings of the hit that just landed, written before On Damaged fires so a row
+	# under that trigger reads them with no expression of its own. They are MEMBERS rather than signal
+	# arguments on purpose: On Damaged is a shipped signal that sheets are already connected to, and
+	# growing its arity would break every one of those connections.
+	_expr(sheet, "last_damage_type_value", "Last Damage Type", "Health",
+		"What kind the last hit was - the word the row dealt it with. Empty until something has damaged this node through Take Damage Of Type.",
+		[], "return last_damage_type", TYPE_STRING)
+
+	_expr(sheet, "last_damage_dealt_value", "Last Damage Dealt", "Health",
+		"What the last typed hit came to after resistance, armour and the critical - the number a floating damage label should show.",
+		[], "return last_damage_dealt", TYPE_FLOAT)
+
+	_expr(sheet, "last_damage_before_mitigation_value", "Last Damage Before Mitigation", "Health",
+		"What the last typed hit was worth before this node resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.",
+		[], "return last_damage_before_mitigation", TYPE_FLOAT)
+
+	_condition(sheet, "last_hit_was_a_crit", "Last Hit Was A Crit", "Health",
+		"Whether the last typed hit rolled a critical. Under On Damaged this is the row that makes the number bigger, the shake harder and the sound sharper.",
+		[], "return last_hit_was_crit")
+
+	_condition(sheet, "damage_type_is", "Damage Type Is", "Health",
+		"Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds.",
+		[["type", "String"]], "return last_damage_type == type")
+	_hint(sheet, "type", "damage_type")
+
 	var persistence: RawCodeRow = RawCodeRow.new()
 	persistence.code = "\n".join(PackedStringArray([
 		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
@@ -577,3 +678,14 @@ static func _condition(sheet: EventSheetResource, function_name: String, display
 	var fn: EventFunction = Lib.exposed_function(function_name, display_name, category, description, params, body)
 	fn.return_type = TYPE_BOOL
 	sheet.functions.append(fn)
+
+
+## Sets the parameter HINT on the last-declared row parameter - the key the params dialog and the
+## completion list read to decide what a field offers. "damage_type" is the one that offers the names
+## in the project own DamageTypeSet files, so a type field suggests this game kinds of damage rather
+## than a vocabulary of guesses. A project with no set gets a plain field, never a wrong list.
+static func _hint(sheet: EventSheetResource, param_id: String, hint: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.hint = hint
