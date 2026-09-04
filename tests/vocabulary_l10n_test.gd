@@ -371,6 +371,12 @@ const FULLY_KEYED_ACES: Array[String] = [
 	"ParticleSize3D", "ParticleSizeMost3D", "ParticleFadeSize3D", "ParticleSetColour3D",
 	"ParticleColour3D", "ParticleFadeColour3D", "ParticleSetLifetime3D", "ParticleLifetime3D",
 	"ParticleFadeLifetime3D", "ParticleSetAmount3D", "ParticleAmount3D",
+	"PutOnCooldown", "IsOffCooldown", "CooldownSecondsLeft", "CooldownFraction",
+	"ReduceCooldownBy", "ClearCooldown", "signal:cooldown_ready", "StartCountdown", "ScheduleAt",
+	"CountdownSecondsLeft", "CountdownText", "CountdownIsRunning", "PauseCountdown",
+	"ResumeCountdown", "signal:countdown_finished", "StartStopwatch", "RecordLap",
+	"StopwatchSeconds", "StopwatchText", "LapSeconds", "LapText", "FirstTimeInSave",
+	"HasSeenInSave", "MarkSeenInSave", "ForgetSeenInSave",
 ]
 
 

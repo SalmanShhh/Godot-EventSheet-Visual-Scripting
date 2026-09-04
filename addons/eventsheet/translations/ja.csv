@@ -6996,3 +6996,102 @@ terrain set,地形セット
 "Streaming: %d chunk folder(s), %d with something to look at.",ストリーミング: チャンクフォルダー %d 個、うち %d 個に確認すべき点があります。
 %s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s には %d 個のチャンクシーンがありますが、グリッドの途中で %d 個のセルが欠けています: %s。プレイヤーがそのセルに入っても、そこには何もありません。
 "%s is a chunk scene carrying a camera. Every chunk that streams in makes its camera current, so the view jumps to whichever piece of the world arrived last - keep the camera in the scene that owns the player.",%s はカメラを持つチャンクシーンです。ストリーミングで読み込まれたチャンクはどれも自分のカメラをカレントにするため、視点は最後に到着した地形へ飛びます - カメラはプレイヤーを持つシーンに置いてください。
+Put On Cooldown,クールダウンを設定
+"Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.",名前付きのクールダウンを開始（または再開始）します。守りたい処理の前に「クールダウン明け」で尋ねてください。同じ名前はこのノードのどのイベントからでも通じます。ゲーム時間ではポーズ中は止まり、スローモーション中はゆっくり進みます - ダッシュや魔法が求めるのはこちらです。ポーズメニューの向こうでも進み続ける時計にはリアルタイムを選んでください。シートが cooldown_ready(cooldown_name) シグナルを宣言していれば、終わった瞬間に「クールダウン明けのとき」トリガーが発火します。
+put [b]{name}[/b] on cooldown for [b]{seconds}[/b]s,[b]{name}[/b] を [b]{seconds}[/b] 秒クールダウンにする
+The cooldown's name. Every row using the same name is talking about the same cooldown.,クールダウンの名前です。同じ名前を使う行はすべて同じクールダウンの話をしています。
+How long the cooldown lasts.,クールダウンが続く長さです。
+Clock,時計
+Game time is held by a pause and slowed by slow motion; realtime keeps going through both.,ゲーム時間はポーズで止まり、スローモーションで遅くなります。リアルタイムはどちらも素通りして進み続けます。
+game time,ゲーム時間
+realtime,リアルタイム
+Is Off Cooldown,クールダウン明け
+"True when the named cooldown has finished, so the action it guards may run. A cooldown nobody has started counts as finished, which is why the first press always works.",名前付きクールダウンが終わっていれば真になり、それが守っているアクションを実行できます。一度も開始されていないクールダウンは終わっている扱いです - だから最初の入力はいつでも通ります。
+[b]{name}[/b] is off cooldown,[b]{name}[/b] はクールダウン明け
+"The cooldown's name, matching the Put On Cooldown row that started it.",クールダウンの名前です。開始した「クールダウンを設定」の行と同じ名前を使ってください。
+Cooldown Seconds Left,クールダウン残り秒数
+"The seconds still to wait on a named cooldown, or zero when it is finished. The number a HUD label shows.",名前付きクールダウンで待つべき残り秒数です。終わっていればゼロになります。HUD のラベルが表示する数値です。
+cooldown [b]{name}[/b] seconds left,クールダウン [b]{name}[/b] の残り秒数
+The cooldown's name.,クールダウンの名前です。
+Cooldown Fraction,クールダウンの進み具合
+"How far a named cooldown has recharged, from 0 the instant it starts to 1 when it is ready. The value a radial bar or a fading icon is set to, with no maths on the row.",名前付きクールダウンがどこまで回復したかを、始まった瞬間の 0 から準備完了の 1 までで返します。円形ゲージや薄くなるアイコンにそのまま設定できる値で、行の中で計算する必要はありません。
+cooldown [b]{name}[/b] fraction,クールダウン [b]{name}[/b] の進み具合
+Reduce Cooldown By,クールダウンを短縮
+"Takes seconds off a running cooldown, which is what a cooldown-reduction stat, a pickup or a hit that refunds part of an ability does. Reducing it past zero simply finishes it.",進行中のクールダウンから秒数を差し引きます。クールダウン短縮のステータス、拾ったアイテム、能力の一部を払い戻すヒットがするのがこれです。ゼロを下回るまで減らせば、そのまま終了します。
+reduce cooldown [b]{name}[/b] by [b]{seconds}[/b]s,クールダウン [b]{name}[/b] を [b]{seconds}[/b] 秒短縮
+By Seconds,秒数
+How many seconds to take off.,何秒差し引くかです。
+Clear Cooldown,クールダウンを解除
+"Finishes a named cooldown at once, so the thing it guards is available again. The reset a new round, a respawn or a debug key wants. On Cooldown Ready fires for it like any other finish.",名前付きクールダウンをその場で終わらせ、守られていたものを再び使えるようにします。新しいラウンド、リスポーン、デバッグキーが求めるリセットです。他の終わり方と同じく「クールダウン明けのとき」も発火します。
+clear cooldown [b]{name}[/b],クールダウン [b]{name}[/b] を解除
+On Cooldown Ready,クールダウン明けのとき
+"Runs the moment a named cooldown finishes, so a HUD icon lights up or a ready sound plays without asking every frame. The name arrives on the row as cooldown_name, so one event can answer for every cooldown. Needs a Signal row for cooldown_ready(cooldown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.",名前付きクールダウンが終わった瞬間に走るので、毎フレーム尋ねなくても HUD のアイコンを光らせたり準備完了音を鳴らしたりできます。名前は cooldown_name として行に届くため、ひとつのイベントですべてのクールダウンに答えられます。cooldown_ready(cooldown_name: String) のシグナル行が必要です - なくてもシートはコンパイルされますが、このイベントは何にも接続されず、決して走りません。
+On cooldown ready ( [b]{cooldown_name}[/b] ),クールダウン明けのとき ( [b]{cooldown_name}[/b] )
+"Which cooldown finished, carried by the signal itself.",どのクールダウンが終わったかを、シグナル自身が運んできます。
+Start Countdown,カウントダウンを開始
+"Starts a named countdown that a label can show and an event can react to. On game time it is held by the pause menu and slowed by slow motion, which is what a round timer wants; pick realtime for a menu clock that must keep going while the game is paused. Reaching zero fires On Countdown Finished when the sheet declares the signal.",ラベルが表示でき、イベントが受け取れる名前付きカウントダウンを開始します。ゲーム時間ではポーズメニューに止められ、スローモーションで遅くなります - ラウンドタイマーが求めるのはこちらです。ゲームが止まっていても進み続けるメニューの時計にはリアルタイムを選んでください。ゼロに達すると、シートがシグナルを宣言していれば「カウントダウン終了のとき」が発火します。
+start countdown [b]{name}[/b] for [b]{seconds}[/b]s,カウントダウン [b]{name}[/b] を [b]{seconds}[/b] 秒で開始
+The countdown's name. Every row using the same name is talking about the same countdown.,カウントダウンの名前です。同じ名前を使う行はすべて同じカウントダウンの話をしています。
+How long the countdown runs.,カウントダウンが走る長さです。
+Schedule At,指定時刻に予約
+"Starts a named countdown that finishes at a moment on the game's own clock rather than after a length of time. The moment is a number of seconds since the game started, which the Game Time expression gives, so a scripted event at the two minute mark is one row. A moment already past finishes immediately. It arrives as On Countdown Finished, like any other countdown.",長さのあとではなく、ゲーム自身の時計の「ある瞬間」に終わる名前付きカウントダウンを開始します。瞬間はゲーム開始からの秒数で、式「ゲーム時間」が返すのと同じ数値です。だから二分の時点のスクリプトイベントが一行で書けます。すでに過ぎた瞬間はただちに終わります。他のカウントダウンと同じく「カウントダウン終了のとき」として届きます。
+schedule [b]{name}[/b] at second [b]{at_second}[/b],[b]{name}[/b] を [b]{at_second}[/b] 秒の時点に予約
+The countdown's name.,カウントダウンの名前です。
+At Second,指定の秒
+"The moment to finish at, in seconds since the game started - the same number the Game Time expression reads.",終わらせたい瞬間を、ゲーム開始からの秒数で指定します - 式「ゲーム時間」が読むのと同じ数値です。
+Countdown Seconds Left,カウントダウン残り秒数
+"The seconds still to run on a named countdown, zero when it has finished or was never started, and the paused number while it is paused. The value a bar is set to.",名前付きカウントダウンの残り秒数です。終わっているか一度も開始されていなければゼロ、一時停止中は止まったままの数値になります。バーに設定する値です。
+countdown [b]{name}[/b] seconds left,カウントダウン [b]{name}[/b] の残り秒数
+Countdown Text,カウントダウンの文字列
+"A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"". The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","名前付きカウントダウンを分と秒で返します。残り 83 秒なら ""01:23"" です。時計ラベルにそのまま設定できる文字列で、行の中で書式を組む必要はありません。1 時間を超えるカウントダウンは繰り上がらず、分のまま数え続けます。"
+countdown [b]{name}[/b] as text,カウントダウン [b]{name}[/b] を文字列で
+Countdown Is Running,カウントダウンが動いている
+"True while a named countdown is counting down. A countdown that has finished, that is paused, or that was never started is not running.",名前付きカウントダウンが減っている間だけ真になります。終わったもの、一時停止中のもの、一度も開始していないものは動いていません。
+countdown [b]{name}[/b] is running,カウントダウン [b]{name}[/b] が動いている
+Pause Countdown,カウントダウンを一時停止
+"Holds a named countdown where it is. The seconds left stay readable while it is held, so a label keeps showing the frozen number. Resume Countdown starts it again from there. This is the row for a countdown that must stop for a cutscene or a shop, rather than for the pause menu, which a game-time countdown already holds by itself.",名前付きカウントダウンをその場で止めます。止まっている間も残り秒数は読めるので、ラベルは凍った数値を表示し続けます。「カウントダウンを再開」でそこから動き出します。これはカットシーンや店のために止めたいカウントダウンのための行です - ポーズメニューのためではありません。ゲーム時間のカウントダウンはポーズをすでに自分で受け止めています。
+pause countdown [b]{name}[/b],カウントダウン [b]{name}[/b] を一時停止
+Resume Countdown,カウントダウンを再開
+"Starts a paused countdown again from the seconds it was holding, on the same clock it was started with. A countdown that is already running, or that has finished, is left alone.",一時停止中のカウントダウンを、保持していた秒数から、開始時と同じ時計で再び動かします。すでに動いているものや終わっているものには手を触れません。
+resume countdown [b]{name}[/b],カウントダウン [b]{name}[/b] を再開
+On Countdown Finished,カウントダウン終了のとき
+"Runs the moment a named countdown reaches zero. The name arrives on the row as countdown_name, so one event can answer for every countdown and a condition under it can pick out one. Needs a Signal row for countdown_finished(countdown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.",名前付きカウントダウンがゼロに達した瞬間に走ります。名前は countdown_name として行に届くので、ひとつのイベントですべてのカウントダウンに答えられ、その下の条件で特定のひとつだけを取り出せます。countdown_finished(countdown_name: String) のシグナル行が必要です - なくてもシートはコンパイルされますが、このイベントは何にも接続されず、決して走りません。
+On countdown finished ( [b]{countdown_name}[/b] ),カウントダウン終了のとき ( [b]{countdown_name}[/b] )
+"Which countdown finished, carried by the signal itself.",どのカウントダウンが終わったかを、シグナル自身が運んできます。
+Start Stopwatch,ストップウォッチを開始
+"Starts (or restarts) a named stopwatch counting up from zero, and clears its laps. On game time it stops while the game is paused, which is what a speedrun clock wants; pick realtime to time the real seconds a player sat there. It runs for up to a day.",名前付きストップウォッチをゼロから数え上げる形で開始（または再開始）し、ラップを消します。ゲーム時間ではポーズ中は止まります - タイムアタックの時計が求めるのはこちらです。その場に座っていた実際の秒数を測りたいときはリアルタイムを選んでください。最大で一日ぶん動きます。
+start stopwatch [b]{name}[/b],ストップウォッチ [b]{name}[/b] を開始
+The stopwatch's name. Every row using the same name is talking about the same stopwatch.,ストップウォッチの名前です。同じ名前を使う行はすべて同じストップウォッチの話をしています。
+Record Lap,ラップを記録
+"Marks a split on a named stopwatch: the time since the previous lap becomes the last lap, and the stopwatch keeps running. Stopwatch Text shows either the total or that last lap.",名前付きストップウォッチにスプリットを刻みます。前のラップからの時間が「最後のラップ」になり、ストップウォッチはそのまま走り続けます。ストップウォッチの文字列は合計かその最後のラップかを表示します。
+record lap on stopwatch [b]{name}[/b],ストップウォッチ [b]{name}[/b] にラップを記録
+The stopwatch's name.,ストップウォッチの名前です。
+Stopwatch Seconds,ストップウォッチの秒数
+"How long a named stopwatch has been running, in seconds, or zero when it was never started. The number a best-time comparison uses.",名前付きストップウォッチが動いている長さを秒で返します。一度も開始していなければゼロです。ベストタイムとの比較に使う数値です。
+stopwatch [b]{name}[/b] seconds,ストップウォッチ [b]{name}[/b] の秒数
+Stopwatch Text,ストップウォッチの文字列
+"A named stopwatch as minutes and seconds, so 83 seconds reads ""01:23"". The text a run-timer label is set to, with no formatting on the row.","名前付きストップウォッチを分と秒で返します。83 秒なら ""01:23"" です。走行タイムのラベルにそのまま設定できる文字列で、行の中で書式を組む必要はありません。"
+stopwatch [b]{name}[/b] as text,ストップウォッチ [b]{name}[/b] を文字列で
+Lap Seconds,ラップの秒数
+"How long the last lap took, in seconds - the split the most recent Record Lap row marked. Zero until the first lap is recorded.",最後のラップにかかった秒数です - 直近の「ラップを記録」行が刻んだスプリットです。最初のラップを記録するまではゼロです。
+stopwatch [b]{name}[/b] last lap seconds,ストップウォッチ [b]{name}[/b] の最後のラップの秒数
+Lap Text,ラップの文字列
+The last lap on a named stopwatch as minutes and seconds. The text a split label is set to.,名前付きストップウォッチの最後のラップを分と秒で返します。スプリット表示のラベルに設定する文字列です。
+stopwatch [b]{name}[/b] last lap as text,ストップウォッチ [b]{name}[/b] の最後のラップを文字列で
+First Time In This Save,このセーブで初めて
+"True the FIRST time this save slot reaches this name, and never again for that save - the first kill of a kind, the first visit to a room, a tutorial a new game should show again. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer. Has Seen asks the same question without using it up.",このセーブスロットがこの名前に達した最初の一回だけ真になり、そのセーブでは二度と真になりません - ある種類の初撃破、ある部屋への初訪問、新しいゲームでは再び見せたいチュートリアルなどです。 セーブシステムのパックがツリーにあるとき、この記憶はセーブスロットの中に置かれます。だからセーブごとに別々に答え、新しい周回を始める行がほかのものと一緒に消します。そのパックがない場合は、マシン単位の行が使うのと同じ user://remembered.cfg に落ちます - つまりコンピューター全体でひとつの答えになります。「見たことがある」は同じ問いを消費せずに尋ねます。
+first time in this save ( {key} ),このセーブで初めて ( {key} )
+"The memory's name - one true per name, per save. An expression is fine: ""kill:"" + kind gives one memory per kind.","記憶の名前です。名前ごと、セーブごとに真は一度きり。式でもかまいません - ""kill:"" + kind と書けば種類ごとにひとつの記憶になります。"
+Has Seen,見たことがある
+"Whether this save has already met that name - the question First Time In This Save answers by USING it up, asked without using it up. Show the codex page, grey out the entry, skip the intro. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",このセーブがその名前にすでに出会っているかどうかです - 「このセーブで初めて」が消費して答える問いを、消費せずに尋ねます。コーデックスのページを表示する、項目を灰色にする、イントロを飛ばす、といった用途です。 セーブシステムのパックがツリーにあるとき、この記憶はセーブスロットの中に置かれます。だからセーブごとに別々に答え、新しい周回を始める行がほかのものと一緒に消します。そのパックがない場合は、マシン単位の行が使うのと同じ user://remembered.cfg に落ちます - つまりコンピューター全体でひとつの答えになります。
+has seen ( {key} ),見たことがある ( {key} )
+"The memory's name, the same one the row that marks it uses.",記憶の名前です。それを記すほうの行と同じ名前を使ってください。
+Mark Seen,見たことにする
+"Marks a name as met in this save without any row having asked first - unlocking a page from a cheat menu, carrying a story flag over, skipping a tutorial the player has turned off. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",どの行も先に尋ねていなくても、その名前をこのセーブで出会ったことにします - チートメニューからページを開放する、物語のフラグを引き継ぐ、プレイヤーが切ったチュートリアルを飛ばす、といった用途です。 セーブシステムのパックがツリーにあるとき、この記憶はセーブスロットの中に置かれます。だからセーブごとに別々に答え、新しい周回を始める行がほかのものと一緒に消します。そのパックがない場合は、マシン単位の行が使うのと同じ user://remembered.cfg に落ちます - つまりコンピューター全体でひとつの答えになります。
+mark seen ( {key} ),見たことにする ( {key} )
+The memory's name to mark.,記す記憶の名前です。
+Forget Seen,見たことを忘れる
+"Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. A row that has already answered for that name this session keeps its answer until the next run. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",この名前をセーブから消し、「このセーブで初めて」がもう一度その名前で発火するようにします - テスト用、あるいは自分のフラグを自分で戻す章のためです。今回のセッションですでにその名前に答えた行は、次の起動まで答えを持ち続けます。 セーブシステムのパックがツリーにあるとき、この記憶はセーブスロットの中に置かれます。だからセーブごとに別々に答え、新しい周回を始める行がほかのものと一緒に消します。そのパックがない場合は、マシン単位の行が使うのと同じ user://remembered.cfg に落ちます - つまりコンピューター全体でひとつの答えになります。
+forget seen ( {key} ),見たことを忘れる ( {key} )
+The memory's name to clear.,消す記憶の名前です。
+"%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s は %s をふつうのシーン切り替えで開きますが、そのシーンはディスク上で %s あります - 読み込みのあいだ、前のシーンの最後のフレームがそのまま残るだけの大きさです。「ローディング付きでシーンへ」なら、ディスクから出てくるあいだ自分で作った読み込み画面を見せられます。最短表示時間があるので、一瞬で通り過ぎることもありません。

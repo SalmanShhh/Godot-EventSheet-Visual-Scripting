@@ -6996,3 +6996,102 @@ terrain set,地形集
 "Streaming: %d chunk folder(s), %d with something to look at.",流式加载：%d 个区块文件夹，其中 %d 个有需要查看的问题。
 %s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s 中有 %d 个区块场景，但网格中间缺少 %d 个格子：%s。玩家走进这些格子时，那里什么都没有。
 "%s is a chunk scene carrying a camera. Every chunk that streams in makes its camera current, so the view jumps to whichever piece of the world arrived last - keep the camera in the scene that owns the player.",%s 是一个带有摄像机的区块场景。每个流入的区块都会把自己的摄像机设为当前摄像机，因此视角会跳到最后到达的那块世界 - 请把摄像机放在拥有玩家的那个场景里。
+Put On Cooldown,设为冷却
+"Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.",开始（或重新开始）一个具名冷却。在它守护的动作之前用「冷却已结束」来询问，同一个名字在该节点的任何事件里都通用。使用游戏时间时，游戏暂停冷却也随之停住，游戏变慢它也变慢 - 冲刺或法术要的正是这一种；若时钟必须穿过暂停菜单继续走，就选实时。若事件表声明了 cooldown_ready(cooldown_name) 信号，冷却就绪时触发器会在它结束的那一刻触发。
+put [b]{name}[/b] on cooldown for [b]{seconds}[/b]s,让 [b]{name}[/b] 冷却 [b]{seconds}[/b] 秒
+The cooldown's name. Every row using the same name is talking about the same cooldown.,冷却的名字。使用同一名字的每一行说的都是同一个冷却。
+How long the cooldown lasts.,冷却持续多久。
+Clock,时钟
+Game time is held by a pause and slowed by slow motion; realtime keeps going through both.,游戏时间会被暂停停住、被慢动作放慢；实时则穿过两者继续走。
+game time,游戏时间
+realtime,实时
+Is Off Cooldown,冷却已结束
+"True when the named cooldown has finished, so the action it guards may run. A cooldown nobody has started counts as finished, which is why the first press always works.",当该具名冷却已经结束、它守护的动作可以执行时为真。从未被启动过的冷却算作已结束，这正是第一次按下总能生效的原因。
+[b]{name}[/b] is off cooldown,[b]{name}[/b] 冷却已结束
+"The cooldown's name, matching the Put On Cooldown row that started it.",冷却的名字，与启动它的「设为冷却」那一行相同。
+Cooldown Seconds Left,冷却剩余秒数
+"The seconds still to wait on a named cooldown, or zero when it is finished. The number a HUD label shows.",该具名冷却还要等待的秒数；已结束时为零。这就是 HUD 标签显示的数字。
+cooldown [b]{name}[/b] seconds left,冷却 [b]{name}[/b] 剩余秒数
+The cooldown's name.,冷却的名字。
+Cooldown Fraction,冷却进度
+"How far a named cooldown has recharged, from 0 the instant it starts to 1 when it is ready. The value a radial bar or a fading icon is set to, with no maths on the row.",该具名冷却已经恢复到什么程度：刚开始时为 0，就绪时为 1。这正是环形进度条或渐隐图标要设置的值，行内不必做任何运算。
+cooldown [b]{name}[/b] fraction,冷却 [b]{name}[/b] 进度
+Reduce Cooldown By,减少冷却
+"Takes seconds off a running cooldown, which is what a cooldown-reduction stat, a pickup or a hit that refunds part of an ability does. Reducing it past zero simply finishes it.",从正在进行的冷却上减去秒数，这正是冷却缩减属性、拾取物或一次返还部分技能的命中所做的事。减到零以下就直接结束。
+reduce cooldown [b]{name}[/b] by [b]{seconds}[/b]s,把冷却 [b]{name}[/b] 减少 [b]{seconds}[/b] 秒
+By Seconds,减少秒数
+How many seconds to take off.,要减去多少秒。
+Clear Cooldown,结束冷却
+"Finishes a named cooldown at once, so the thing it guards is available again. The reset a new round, a respawn or a debug key wants. On Cooldown Ready fires for it like any other finish.",立刻结束一个具名冷却，让它守护的动作重新可用。新一局、重生或调试按键要的正是这个重置。与任何其他结束一样，冷却就绪时也会触发。
+clear cooldown [b]{name}[/b],结束冷却 [b]{name}[/b]
+On Cooldown Ready,冷却就绪时
+"Runs the moment a named cooldown finishes, so a HUD icon lights up or a ready sound plays without asking every frame. The name arrives on the row as cooldown_name, so one event can answer for every cooldown. Needs a Signal row for cooldown_ready(cooldown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.",在具名冷却结束的那一刻运行，于是 HUD 图标点亮或就绪音效响起，而不必每帧询问。名字以 cooldown_name 送到行上，因此一个事件就能为所有冷却作答。需要一行 cooldown_ready(cooldown_name: String) 的信号行 - 没有它事件表照样能编译，但没有任何东西连上这个事件，它便永远不会运行。
+On cooldown ready ( [b]{cooldown_name}[/b] ),冷却就绪时 ( [b]{cooldown_name}[/b] )
+"Which cooldown finished, carried by the signal itself.",哪个冷却结束了，由信号本身带来。
+Start Countdown,开始倒计时
+"Starts a named countdown that a label can show and an event can react to. On game time it is held by the pause menu and slowed by slow motion, which is what a round timer wants; pick realtime for a menu clock that must keep going while the game is paused. Reaching zero fires On Countdown Finished when the sheet declares the signal.",开始一个具名倒计时，标签可以显示它，事件可以响应它。使用游戏时间时，它会被暂停菜单停住、被慢动作放慢 - 回合计时器要的正是这一种；若是必须在游戏暂停时继续走的菜单时钟，就选实时。归零时，如果事件表声明了该信号，倒计时结束时就会触发。
+start countdown [b]{name}[/b] for [b]{seconds}[/b]s,开始倒计时 [b]{name}[/b]，共 [b]{seconds}[/b] 秒
+The countdown's name. Every row using the same name is talking about the same countdown.,倒计时的名字。使用同一名字的每一行说的都是同一个倒计时。
+How long the countdown runs.,倒计时运行多久。
+Schedule At,定时到
+"Starts a named countdown that finishes at a moment on the game's own clock rather than after a length of time. The moment is a number of seconds since the game started, which the Game Time expression gives, so a scripted event at the two minute mark is one row. A moment already past finishes immediately. It arrives as On Countdown Finished, like any other countdown.",开始一个具名倒计时，它在游戏自己时钟上的某个时刻结束，而不是在一段时长之后。那个时刻是自游戏启动以来的秒数，正是「游戏时间」表达式给出的数字，因此第二分钟的剧本事件只需一行。已经过去的时刻会立刻结束。它和其他倒计时一样，以倒计时结束时到达。
+schedule [b]{name}[/b] at second [b]{at_second}[/b],把 [b]{name}[/b] 定在第 [b]{at_second}[/b] 秒
+The countdown's name.,倒计时的名字。
+At Second,在第几秒
+"The moment to finish at, in seconds since the game started - the same number the Game Time expression reads.",要结束的时刻，以自游戏启动以来的秒数计 - 与「游戏时间」表达式读到的数字相同。
+Countdown Seconds Left,倒计时剩余秒数
+"The seconds still to run on a named countdown, zero when it has finished or was never started, and the paused number while it is paused. The value a bar is set to.",该具名倒计时还剩多少秒；已结束或从未开始时为零，暂停期间则是被冻住的那个数。这就是进度条要设置的值。
+countdown [b]{name}[/b] seconds left,倒计时 [b]{name}[/b] 剩余秒数
+Countdown Text,倒计时文本
+"A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"". The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","把具名倒计时写成分和秒，于是剩 83 秒读作 ""01:23""。这就是时钟标签要设置的文本，行内不必做任何格式化。超过一小时的倒计时会继续按分钟计，而不是回卷。"
+countdown [b]{name}[/b] as text,倒计时 [b]{name}[/b] 的文本
+Countdown Is Running,倒计时正在进行
+"True while a named countdown is counting down. A countdown that has finished, that is paused, or that was never started is not running.",只要该具名倒计时在往下走就为真。已结束、已暂停或从未开始的倒计时都不算在进行。
+countdown [b]{name}[/b] is running,倒计时 [b]{name}[/b] 正在进行
+Pause Countdown,暂停倒计时
+"Holds a named countdown where it is. The seconds left stay readable while it is held, so a label keeps showing the frozen number. Resume Countdown starts it again from there. This is the row for a countdown that must stop for a cutscene or a shop, rather than for the pause menu, which a game-time countdown already holds by itself.",把一个具名倒计时停在原处。停住期间剩余秒数仍然可读，因此标签会继续显示那个被冻住的数字。继续倒计时会从那里重新走。这一行是给必须为过场或商店停下的倒计时用的，而不是给暂停菜单用的 - 游戏时间的倒计时本来就会被暂停自己停住。
+pause countdown [b]{name}[/b],暂停倒计时 [b]{name}[/b]
+Resume Countdown,继续倒计时
+"Starts a paused countdown again from the seconds it was holding, on the same clock it was started with. A countdown that is already running, or that has finished, is left alone.",让暂停的倒计时从它保存的秒数继续走，使用它启动时的同一个时钟。已经在走或已经结束的倒计时不受影响。
+resume countdown [b]{name}[/b],继续倒计时 [b]{name}[/b]
+On Countdown Finished,倒计时结束时
+"Runs the moment a named countdown reaches zero. The name arrives on the row as countdown_name, so one event can answer for every countdown and a condition under it can pick out one. Needs a Signal row for countdown_finished(countdown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.",在具名倒计时归零的那一刻运行。名字以 countdown_name 送到行上，因此一个事件就能为所有倒计时作答，其下的条件再挑出某一个。需要一行 countdown_finished(countdown_name: String) 的信号行 - 没有它事件表照样能编译，但没有任何东西连上这个事件，它便永远不会运行。
+On countdown finished ( [b]{countdown_name}[/b] ),倒计时结束时 ( [b]{countdown_name}[/b] )
+"Which countdown finished, carried by the signal itself.",哪个倒计时结束了，由信号本身带来。
+Start Stopwatch,开始秒表
+"Starts (or restarts) a named stopwatch counting up from zero, and clears its laps. On game time it stops while the game is paused, which is what a speedrun clock wants; pick realtime to time the real seconds a player sat there. It runs for up to a day.",开始（或重新开始）一个具名秒表，从零往上数，并清空它的分段。使用游戏时间时，游戏暂停它也停住 - 速通计时器要的正是这一种；若要计量一个人真正坐在那里的秒数，就选实时。它最多走一天。
+start stopwatch [b]{name}[/b],开始秒表 [b]{name}[/b]
+The stopwatch's name. Every row using the same name is talking about the same stopwatch.,秒表的名字。使用同一名字的每一行说的都是同一个秒表。
+Record Lap,记录一段
+"Marks a split on a named stopwatch: the time since the previous lap becomes the last lap, and the stopwatch keeps running. Stopwatch Text shows either the total or that last lap.",在具名秒表上打一个分段点：距上一段的时间成为最后一段，而秒表继续走。秒表文本显示的是总时间或那最后一段。
+record lap on stopwatch [b]{name}[/b],在秒表 [b]{name}[/b] 上记录一段
+The stopwatch's name.,秒表的名字。
+Stopwatch Seconds,秒表秒数
+"How long a named stopwatch has been running, in seconds, or zero when it was never started. The number a best-time comparison uses.",该具名秒表已经走了多久，以秒计；从未开始时为零。这就是与最好成绩比较时用的数字。
+stopwatch [b]{name}[/b] seconds,秒表 [b]{name}[/b] 秒数
+Stopwatch Text,秒表文本
+"A named stopwatch as minutes and seconds, so 83 seconds reads ""01:23"". The text a run-timer label is set to, with no formatting on the row.","把具名秒表写成分和秒，于是 83 秒读作 ""01:23""。这就是计时标签要设置的文本，行内不必做任何格式化。"
+stopwatch [b]{name}[/b] as text,秒表 [b]{name}[/b] 的文本
+Lap Seconds,分段秒数
+"How long the last lap took, in seconds - the split the most recent Record Lap row marked. Zero until the first lap is recorded.",最后一段花了多少秒 - 由最近一次「记录一段」行打下的分段。在记录第一段之前为零。
+stopwatch [b]{name}[/b] last lap seconds,秒表 [b]{name}[/b] 最后一段秒数
+Lap Text,分段文本
+The last lap on a named stopwatch as minutes and seconds. The text a split label is set to.,把具名秒表的最后一段写成分和秒。这就是分段标签要设置的文本。
+stopwatch [b]{name}[/b] last lap as text,秒表 [b]{name}[/b] 最后一段的文本
+First Time In This Save,本存档中的第一次
+"True the FIRST time this save slot reaches this name, and never again for that save - the first kill of a kind, the first visit to a room, a tutorial a new game should show again. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer. Has Seen asks the same question without using it up.",在这个存档槽第一次到达这个名字时为真，此后对该存档永远为假 - 某种敌人的第一次击杀、某个房间的第一次到访、新开一局应当再看一遍的教学。 当存档系统包在场景树里时，这份记忆存放在存档槽内，因此每个存档各自作答，「开始新一轮」会连同其他内容一起清掉它；没有该包时，它退回到按机器记忆的那些行所用的同一个 user://remembered.cfg，也就是整台电脑只有一个答案。「已经见过」用同样的问题发问，却不会把它用掉。
+first time in this save ( {key} ),本存档中的第一次 ( {key} )
+"The memory's name - one true per name, per save. An expression is fine: ""kill:"" + kind gives one memory per kind.","记忆的名字 - 每个名字、每个存档只为真一次。表达式也可以：""kill:"" + kind 就是每个种类一份记忆。"
+Has Seen,已经见过
+"Whether this save has already met that name - the question First Time In This Save answers by USING it up, asked without using it up. Show the codex page, grey out the entry, skip the intro. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",这个存档是否已经遇到过那个名字 - 与「本存档中的第一次」用掉它来作答的是同一个问题，这里发问却不会用掉它。用来显示图鉴页、把条目变灰、跳过开场。 当存档系统包在场景树里时，这份记忆存放在存档槽内，因此每个存档各自作答，「开始新一轮」会连同其他内容一起清掉它；没有该包时，它退回到按机器记忆的那些行所用的同一个 user://remembered.cfg，也就是整台电脑只有一个答案。
+has seen ( {key} ),已经见过 ( {key} )
+"The memory's name, the same one the row that marks it uses.",记忆的名字，与标记它的那一行相同。
+Mark Seen,标记为已见
+"Marks a name as met in this save without any row having asked first - unlocking a page from a cheat menu, carrying a story flag over, skipping a tutorial the player has turned off. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",在没有任何行先发问的情况下，把一个名字标记为本存档已经遇到过 - 从作弊菜单解锁一页、把剧情标记带过来、跳过玩家已关闭的教学。 当存档系统包在场景树里时，这份记忆存放在存档槽内，因此每个存档各自作答，「开始新一轮」会连同其他内容一起清掉它；没有该包时，它退回到按机器记忆的那些行所用的同一个 user://remembered.cfg，也就是整台电脑只有一个答案。
+mark seen ( {key} ),标记为已见 ( {key} )
+The memory's name to mark.,要标记的记忆的名字。
+Forget Seen,忘掉已见
+"Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. A row that has already answered for that name this session keeps its answer until the next run. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",在本存档中清掉一个名字，好让「本存档中的第一次」再次为它触发 - 用于测试，或用于一个会重置自己标记的章节。本次运行中已经为该名字作过答的行，会把答案留到下次启动。 当存档系统包在场景树里时，这份记忆存放在存档槽内，因此每个存档各自作答，「开始新一轮」会连同其他内容一起清掉它；没有该包时，它退回到按机器记忆的那些行所用的同一个 user://remembered.cfg，也就是整台电脑只有一个答案。
+forget seen ( {key} ),忘掉已见 ( {key} )
+The memory's name to clear.,要清除的记忆的名字。
+"%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s 用普通的场景切换打开 %s，而那个场景在磁盘上有 %s - 大到足以让旧场景的最后一帧在加载期间一直停在屏幕上。「带加载画面切换场景」会在它从磁盘读出来的时候显示你自己的加载画面，并且有一个最短时间，不会一闪而过。

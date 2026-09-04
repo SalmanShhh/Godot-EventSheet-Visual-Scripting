@@ -6996,3 +6996,102 @@ terrain set,지형 세트
 "Streaming: %d chunk folder(s), %d with something to look at.","스트리밍: 청크 폴더 %d개, 그중 %d개에 살펴볼 것이 있습니다."
 %s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s에는 청크 씬이 %d개 있지만 그리드 한가운데에서 %d개의 칸이 빠져 있습니다: %s. 플레이어가 그 칸으로 걸어 들어가면 아무것도 없습니다.
 "%s is a chunk scene carrying a camera. Every chunk that streams in makes its camera current, so the view jumps to whichever piece of the world arrived last - keep the camera in the scene that owns the player.",%s은(는) 카메라를 담고 있는 청크 씬입니다. 스트리밍으로 들어온 청크마다 자기 카메라를 현재 카메라로 만들기 때문에 시점이 마지막에 도착한 월드 조각으로 튑니다 - 카메라는 플레이어가 있는 씬에 두세요.
+Put On Cooldown,쿨다운 시작
+"Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.",이름이 붙은 쿨다운을 시작(또는 재시작)합니다. 이 쿨다운이 지키는 동작 앞에서 쿨다운 해제됨으로 물어보세요. 같은 이름은 이 노드의 어떤 이벤트에서도 통합니다. 게임 시간에서는 게임이 일시정지된 동안 멈추고 슬로모션이면 느리게 흐릅니다 - 대시나 주문이 원하는 쪽입니다. 일시정지 메뉴 너머에서도 계속 흘러야 하는 시계라면 실시간을 고르세요. 시트가 cooldown_ready(cooldown_name) 시그널을 선언했다면 끝나는 순간 쿨다운 준비됨 트리거가 발동합니다.
+put [b]{name}[/b] on cooldown for [b]{seconds}[/b]s,[b]{name}[/b] 을(를) [b]{seconds}[/b]초 동안 쿨다운으로
+The cooldown's name. Every row using the same name is talking about the same cooldown.,쿨다운의 이름입니다. 같은 이름을 쓰는 행은 모두 같은 쿨다운을 가리킵니다.
+How long the cooldown lasts.,쿨다운이 지속되는 길이입니다.
+Clock,시계
+Game time is held by a pause and slowed by slow motion; realtime keeps going through both.,게임 시간은 일시정지에 멈추고 슬로모션에 느려집니다. 실시간은 둘 다 통과해 계속 흐릅니다.
+game time,게임 시간
+realtime,실시간
+Is Off Cooldown,쿨다운 해제됨
+"True when the named cooldown has finished, so the action it guards may run. A cooldown nobody has started counts as finished, which is why the first press always works.","이름이 붙은 쿨다운이 끝났으면 참이 되어, 그 쿨다운이 지키던 동작이 실행될 수 있습니다. 한 번도 시작한 적 없는 쿨다운은 끝난 것으로 칩니다. 그래서 첫 입력은 언제나 통합니다."
+[b]{name}[/b] is off cooldown,[b]{name}[/b] 이(가) 쿨다운 해제됨
+"The cooldown's name, matching the Put On Cooldown row that started it.",쿨다운의 이름입니다. 그것을 시작한 쿨다운 시작 행과 같은 이름을 쓰세요.
+Cooldown Seconds Left,쿨다운 남은 초
+"The seconds still to wait on a named cooldown, or zero when it is finished. The number a HUD label shows.",이름이 붙은 쿨다운에서 아직 기다려야 하는 초입니다. 끝났으면 0입니다. HUD 라벨이 보여 주는 숫자입니다.
+cooldown [b]{name}[/b] seconds left,쿨다운 [b]{name}[/b] 남은 초
+The cooldown's name.,쿨다운의 이름입니다.
+Cooldown Fraction,쿨다운 진행 비율
+"How far a named cooldown has recharged, from 0 the instant it starts to 1 when it is ready. The value a radial bar or a fading icon is set to, with no maths on the row.","이름이 붙은 쿨다운이 얼마나 회복되었는지를 시작한 순간의 0부터 준비된 1까지로 답합니다. 원형 게이지나 흐려지는 아이콘에 그대로 넣는 값이며, 행에서 계산할 것이 없습니다."
+cooldown [b]{name}[/b] fraction,쿨다운 [b]{name}[/b] 진행 비율
+Reduce Cooldown By,쿨다운 줄이기
+"Takes seconds off a running cooldown, which is what a cooldown-reduction stat, a pickup or a hit that refunds part of an ability does. Reducing it past zero simply finishes it.","진행 중인 쿨다운에서 초를 덜어 냅니다. 쿨다운 감소 스탯, 주운 아이템, 능력의 일부를 돌려주는 타격이 하는 일입니다. 0 아래로 줄이면 그대로 끝납니다."
+reduce cooldown [b]{name}[/b] by [b]{seconds}[/b]s,쿨다운 [b]{name}[/b] 을(를) [b]{seconds}[/b]초 줄이기
+By Seconds,줄일 초
+How many seconds to take off.,몇 초를 덜어 낼지입니다.
+Clear Cooldown,쿨다운 해제
+"Finishes a named cooldown at once, so the thing it guards is available again. The reset a new round, a respawn or a debug key wants. On Cooldown Ready fires for it like any other finish.","이름이 붙은 쿨다운을 즉시 끝내, 그것이 지키던 동작을 다시 쓸 수 있게 합니다. 새 라운드, 리스폰, 디버그 키가 원하는 초기화입니다. 다른 종료와 마찬가지로 쿨다운 준비됨도 발동합니다."
+clear cooldown [b]{name}[/b],쿨다운 [b]{name}[/b] 해제
+On Cooldown Ready,쿨다운 준비됨
+"Runs the moment a named cooldown finishes, so a HUD icon lights up or a ready sound plays without asking every frame. The name arrives on the row as cooldown_name, so one event can answer for every cooldown. Needs a Signal row for cooldown_ready(cooldown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.","이름이 붙은 쿨다운이 끝나는 순간 실행되므로, 매 프레임 묻지 않고도 HUD 아이콘을 켜거나 준비 완료 소리를 낼 수 있습니다. 이름은 cooldown_name으로 행에 도착하므로 이벤트 하나가 모든 쿨다운에 답할 수 있습니다. cooldown_ready(cooldown_name: String) 시그널 행이 필요합니다. 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 결코 실행되지 않습니다."
+On cooldown ready ( [b]{cooldown_name}[/b] ),쿨다운 준비됨 ( [b]{cooldown_name}[/b] )
+"Which cooldown finished, carried by the signal itself.",어떤 쿨다운이 끝났는지를 시그널 자체가 실어 옵니다.
+Start Countdown,카운트다운 시작
+"Starts a named countdown that a label can show and an event can react to. On game time it is held by the pause menu and slowed by slow motion, which is what a round timer wants; pick realtime for a menu clock that must keep going while the game is paused. Reaching zero fires On Countdown Finished when the sheet declares the signal.","라벨이 보여 줄 수 있고 이벤트가 받을 수 있는, 이름이 붙은 카운트다운을 시작합니다. 게임 시간에서는 일시정지 메뉴에 멈추고 슬로모션에 느려집니다 - 라운드 타이머가 원하는 쪽입니다. 게임이 멈춘 동안에도 계속 흘러야 하는 메뉴 시계라면 실시간을 고르세요. 0에 닿으면, 시트가 시그널을 선언한 경우 카운트다운 종료됨이 발동합니다."
+start countdown [b]{name}[/b] for [b]{seconds}[/b]s,카운트다운 [b]{name}[/b] 을(를) [b]{seconds}[/b]초로 시작
+The countdown's name. Every row using the same name is talking about the same countdown.,카운트다운의 이름입니다. 같은 이름을 쓰는 행은 모두 같은 카운트다운을 가리킵니다.
+How long the countdown runs.,카운트다운이 흐르는 길이입니다.
+Schedule At,특정 시각에 예약
+"Starts a named countdown that finishes at a moment on the game's own clock rather than after a length of time. The moment is a number of seconds since the game started, which the Game Time expression gives, so a scripted event at the two minute mark is one row. A moment already past finishes immediately. It arrives as On Countdown Finished, like any other countdown.","길이가 지난 뒤가 아니라, 게임 자체 시계의 어떤 순간에 끝나는 이름 붙은 카운트다운을 시작합니다. 그 순간은 게임이 시작된 뒤로 흐른 초이며, 게임 시간 표현식이 답하는 바로 그 숫자입니다. 그래서 2분 지점의 연출 이벤트가 한 행이 됩니다. 이미 지난 순간은 즉시 끝납니다. 다른 카운트다운과 마찬가지로 카운트다운 종료됨으로 도착합니다."
+schedule [b]{name}[/b] at second [b]{at_second}[/b],[b]{name}[/b] 을(를) [b]{at_second}[/b]초 지점에 예약
+The countdown's name.,카운트다운의 이름입니다.
+At Second,지정 초
+"The moment to finish at, in seconds since the game started - the same number the Game Time expression reads.",끝낼 순간을 게임 시작 이후의 초로 지정합니다. 게임 시간 표현식이 읽는 바로 그 숫자입니다.
+Countdown Seconds Left,카운트다운 남은 초
+"The seconds still to run on a named countdown, zero when it has finished or was never started, and the paused number while it is paused. The value a bar is set to.","이름이 붙은 카운트다운의 남은 초입니다. 끝났거나 한 번도 시작하지 않았으면 0이고, 일시정지 중에는 멈춘 숫자 그대로입니다. 게이지에 넣는 값입니다."
+countdown [b]{name}[/b] seconds left,카운트다운 [b]{name}[/b] 남은 초
+Countdown Text,카운트다운 텍스트
+"A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"". The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","이름이 붙은 카운트다운을 분과 초로 돌려줍니다. 83초 남았으면 ""01:23""입니다. 시계 라벨에 그대로 넣는 문자열이며, 행에서 서식을 만들 필요가 없습니다. 한 시간이 넘는 카운트다운도 넘어가지 않고 분으로 계속 셉니다."
+countdown [b]{name}[/b] as text,카운트다운 [b]{name}[/b] 을(를) 텍스트로
+Countdown Is Running,카운트다운 진행 중
+"True while a named countdown is counting down. A countdown that has finished, that is paused, or that was never started is not running.","이름이 붙은 카운트다운이 줄고 있는 동안에만 참입니다. 끝났거나, 일시정지되었거나, 한 번도 시작하지 않은 카운트다운은 진행 중이 아닙니다."
+countdown [b]{name}[/b] is running,카운트다운 [b]{name}[/b] 진행 중
+Pause Countdown,카운트다운 일시정지
+"Holds a named countdown where it is. The seconds left stay readable while it is held, so a label keeps showing the frozen number. Resume Countdown starts it again from there. This is the row for a countdown that must stop for a cutscene or a shop, rather than for the pause menu, which a game-time countdown already holds by itself.",이름이 붙은 카운트다운을 그 자리에 붙들어 둡니다. 붙들려 있는 동안에도 남은 초는 읽히므로 라벨은 멈춘 숫자를 계속 보여 줍니다. 카운트다운 재개가 거기서부터 다시 흐르게 합니다. 이 행은 컷신이나 상점 때문에 멈춰야 하는 카운트다운을 위한 것입니다. 일시정지 메뉴를 위한 것이 아닙니다. 게임 시간 카운트다운은 이미 스스로 멈춥니다.
+pause countdown [b]{name}[/b],카운트다운 [b]{name}[/b] 일시정지
+Resume Countdown,카운트다운 재개
+"Starts a paused countdown again from the seconds it was holding, on the same clock it was started with. A countdown that is already running, or that has finished, is left alone.","일시정지된 카운트다운을 붙들고 있던 초부터, 시작할 때와 같은 시계로 다시 흐르게 합니다. 이미 진행 중이거나 이미 끝난 카운트다운은 건드리지 않습니다."
+resume countdown [b]{name}[/b],카운트다운 [b]{name}[/b] 재개
+On Countdown Finished,카운트다운 종료됨
+"Runs the moment a named countdown reaches zero. The name arrives on the row as countdown_name, so one event can answer for every countdown and a condition under it can pick out one. Needs a Signal row for countdown_finished(countdown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.","이름이 붙은 카운트다운이 0에 닿는 순간 실행됩니다. 이름은 countdown_name으로 행에 도착하므로 이벤트 하나가 모든 카운트다운에 답할 수 있고, 아래의 조건으로 하나만 골라낼 수 있습니다. countdown_finished(countdown_name: String) 시그널 행이 필요합니다. 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 결코 실행되지 않습니다."
+On countdown finished ( [b]{countdown_name}[/b] ),카운트다운 종료됨 ( [b]{countdown_name}[/b] )
+"Which countdown finished, carried by the signal itself.",어떤 카운트다운이 끝났는지를 시그널 자체가 실어 옵니다.
+Start Stopwatch,스톱워치 시작
+"Starts (or restarts) a named stopwatch counting up from zero, and clears its laps. On game time it stops while the game is paused, which is what a speedrun clock wants; pick realtime to time the real seconds a player sat there. It runs for up to a day.","이름이 붙은 스톱워치를 0부터 세어 올라가게 시작(또는 재시작)하고, 랩을 지웁니다. 게임 시간에서는 게임이 일시정지된 동안 멈춥니다 - 기록 도전 시계가 원하는 쪽입니다. 사람이 실제로 앉아 있던 초를 재려면 실시간을 고르세요. 최대 하루까지 흐릅니다."
+start stopwatch [b]{name}[/b],스톱워치 [b]{name}[/b] 시작
+The stopwatch's name. Every row using the same name is talking about the same stopwatch.,스톱워치의 이름입니다. 같은 이름을 쓰는 행은 모두 같은 스톱워치를 가리킵니다.
+Record Lap,랩 기록
+"Marks a split on a named stopwatch: the time since the previous lap becomes the last lap, and the stopwatch keeps running. Stopwatch Text shows either the total or that last lap.","이름이 붙은 스톱워치에 구간을 표시합니다. 직전 랩 이후의 시간이 마지막 랩이 되고, 스톱워치는 계속 흐릅니다. 스톱워치 텍스트는 총 시간이나 그 마지막 랩을 보여 줍니다."
+record lap on stopwatch [b]{name}[/b],스톱워치 [b]{name}[/b] 에 랩 기록
+The stopwatch's name.,스톱워치의 이름입니다.
+Stopwatch Seconds,스톱워치 초
+"How long a named stopwatch has been running, in seconds, or zero when it was never started. The number a best-time comparison uses.",이름이 붙은 스톱워치가 얼마나 흘렀는지를 초로 답합니다. 한 번도 시작하지 않았으면 0입니다. 최고 기록과 비교할 때 쓰는 숫자입니다.
+stopwatch [b]{name}[/b] seconds,스톱워치 [b]{name}[/b] 초
+Stopwatch Text,스톱워치 텍스트
+"A named stopwatch as minutes and seconds, so 83 seconds reads ""01:23"". The text a run-timer label is set to, with no formatting on the row.","이름이 붙은 스톱워치를 분과 초로 돌려줍니다. 83초면 ""01:23""입니다. 기록 시계 라벨에 그대로 넣는 문자열이며, 행에서 서식을 만들 필요가 없습니다."
+stopwatch [b]{name}[/b] as text,스톱워치 [b]{name}[/b] 을(를) 텍스트로
+Lap Seconds,랩 초
+"How long the last lap took, in seconds - the split the most recent Record Lap row marked. Zero until the first lap is recorded.","마지막 랩이 걸린 초입니다. 가장 최근의 랩 기록 행이 찍은 구간이며, 첫 랩을 기록하기 전까지는 0입니다."
+stopwatch [b]{name}[/b] last lap seconds,스톱워치 [b]{name}[/b] 마지막 랩 초
+Lap Text,랩 텍스트
+The last lap on a named stopwatch as minutes and seconds. The text a split label is set to.,이름이 붙은 스톱워치의 마지막 랩을 분과 초로 돌려줍니다. 구간 라벨에 넣는 문자열입니다.
+stopwatch [b]{name}[/b] last lap as text,스톱워치 [b]{name}[/b] 마지막 랩을 텍스트로
+First Time In This Save,이 세이브에서 처음
+"True the FIRST time this save slot reaches this name, and never again for that save - the first kill of a kind, the first visit to a room, a tutorial a new game should show again. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer. Has Seen asks the same question without using it up.","이 세이브 슬롯이 이 이름에 처음 닿는 그 한 번만 참이고, 그 세이브에서는 다시는 참이 되지 않습니다. 어떤 종류의 첫 처치, 어떤 방의 첫 방문, 새 게임이라면 다시 보여 줘야 할 튜토리얼 같은 것입니다. 저장 시스템 팩이 트리에 있으면 이 기억은 세이브 슬롯 안에 놓입니다. 그래서 세이브마다 따로 답하고, 새 회차 시작이 다른 것들과 함께 지웁니다. 그 팩이 없으면 기기 단위 행들이 쓰는 것과 같은 user://remembered.cfg로 물러납니다. 즉 컴퓨터 전체에 하나의 답이 됩니다. 본 적 있음은 같은 질문을 소모하지 않고 묻습니다."
+first time in this save ( {key} ),이 세이브에서 처음 ( {key} )
+"The memory's name - one true per name, per save. An expression is fine: ""kill:"" + kind gives one memory per kind.","기억의 이름입니다. 이름마다, 세이브마다 참은 한 번뿐입니다. 표현식도 괜찮습니다. ""kill:"" + kind 라고 쓰면 종류마다 기억이 하나씩 생깁니다."
+Has Seen,본 적 있음
+"Whether this save has already met that name - the question First Time In This Save answers by USING it up, asked without using it up. Show the codex page, grey out the entry, skip the intro. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.","이 세이브가 그 이름을 이미 만났는지입니다. 이 세이브에서 처음이 소모하면서 답하는 그 질문을, 소모하지 않고 묻습니다. 코덱스 페이지를 보여 주거나, 항목을 흐리게 하거나, 인트로를 건너뛸 때 씁니다. 저장 시스템 팩이 트리에 있으면 이 기억은 세이브 슬롯 안에 놓입니다. 그래서 세이브마다 따로 답하고, 새 회차 시작이 다른 것들과 함께 지웁니다. 그 팩이 없으면 기기 단위 행들이 쓰는 것과 같은 user://remembered.cfg로 물러납니다. 즉 컴퓨터 전체에 하나의 답이 됩니다."
+has seen ( {key} ),본 적 있음 ( {key} )
+"The memory's name, the same one the row that marks it uses.",기억의 이름입니다. 그것을 표시하는 행과 같은 이름을 쓰세요.
+Mark Seen,본 것으로 표시
+"Marks a name as met in this save without any row having asked first - unlocking a page from a cheat menu, carrying a story flag over, skipping a tutorial the player has turned off. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.","어떤 행도 먼저 묻지 않았더라도, 그 이름을 이 세이브에서 만난 것으로 표시합니다. 치트 메뉴에서 페이지를 열어 주거나, 이야기 플래그를 넘겨받거나, 플레이어가 꺼 둔 튜토리얼을 건너뛸 때 씁니다. 저장 시스템 팩이 트리에 있으면 이 기억은 세이브 슬롯 안에 놓입니다. 그래서 세이브마다 따로 답하고, 새 회차 시작이 다른 것들과 함께 지웁니다. 그 팩이 없으면 기기 단위 행들이 쓰는 것과 같은 user://remembered.cfg로 물러납니다. 즉 컴퓨터 전체에 하나의 답이 됩니다."
+mark seen ( {key} ),본 것으로 표시 ( {key} )
+The memory's name to mark.,표시할 기억의 이름입니다.
+Forget Seen,본 것 잊기
+"Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. A row that has already answered for that name this session keeps its answer until the next run. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.","이 세이브에서 그 이름을 지워, 이 세이브에서 처음이 그 이름으로 다시 발동하게 합니다. 테스트용이거나, 자기 플래그를 스스로 되돌리는 챕터를 위한 것입니다. 이번 세션에서 이미 그 이름에 답한 행은 다음 실행까지 그 답을 유지합니다. 저장 시스템 팩이 트리에 있으면 이 기억은 세이브 슬롯 안에 놓입니다. 그래서 세이브마다 따로 답하고, 새 회차 시작이 다른 것들과 함께 지웁니다. 그 팩이 없으면 기기 단위 행들이 쓰는 것과 같은 user://remembered.cfg로 물러납니다. 즉 컴퓨터 전체에 하나의 답이 됩니다."
+forget seen ( {key} ),본 것 잊기 ( {key} )
+The memory's name to clear.,지울 기억의 이름입니다.
+"%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.","%s 은(는) %s 을(를) 평범한 씬 전환으로 엽니다. 그런데 그 씬은 디스크에서 %s 이라, 읽는 동안 이전 씬의 마지막 프레임이 그대로 멈춰 있을 만큼 큽니다. 로딩 화면으로 씬 이동은 씬이 디스크에서 올라오는 동안 직접 만든 로딩 화면을 보여 주며, 최소 시간이 있어 순식간에 지나가 버리지도 않습니다."

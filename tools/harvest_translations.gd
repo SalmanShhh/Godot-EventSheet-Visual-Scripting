@@ -168,6 +168,9 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# in one row. Two modules, each shipped whole, so the whole of each is owed.
 	"res://addons/eventforge/registration/modules/focus_and_exposure_aces.gd",
 	"res://addons/eventforge/registration/modules/world_look_aces.gd",
+	# Cooldowns, countdowns and stopwatches as clocks with names on them. One module, shipped
+	# whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/cooldown_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files
@@ -262,6 +265,9 @@ const OWED_VERBS_IN_MODULE: Dictionary = {
 		"signal:verb_failed", "signal:verb_succeeded", "ReportFailure", "ReportSuccess",
 		"AtMostEvery", "Poke", "ClearPoke", "HasBeenQuiet", "OnlyOncePerNode",
 		"OnlyOncePerName", "OnlyOnceThisSceneLoad", "ForgetOnceFor",
+		# The same question asked of the SAVE SLOT rather than of the machine: the first time, the
+		# reading that does not use it up, and the two writes.
+		"FirstTimeInSave", "HasSeenInSave", "MarkSeenInSave", "ForgetSeenInSave",
 	],
 	# The drop door, the ask door and the two loaders - see USER_CONTENT_DOOR_IDS above.
 	"res://addons/eventforge/registration/modules/file_aces.gd": USER_CONTENT_DOOR_IDS,
