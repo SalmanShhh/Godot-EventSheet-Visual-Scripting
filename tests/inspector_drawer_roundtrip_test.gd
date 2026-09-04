@@ -448,8 +448,12 @@ static func run() -> bool:
 	var toggle_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:toggle_row:easy,normal,hard\") var difficulty: String = \"normal\""
 	all_passed = _eq("toggle_row emits its marker (choices ride along)",
 		_emit_for_named("difficulty", "String", "normal", {"drawer": "toggle_row", "toggle_options": ["easy", "normal", "hard"]}), toggle_expected) and all_passed
-	all_passed = _eq("toggle_row on an int emits no marker",
-		_emit_for("int", 0, {"drawer": "toggle_row", "toggle_options": ["a"]}).contains("eventsheet:"), false) and all_passed
+	# An int hosts the same row of buttons, storing the option's INDEX (the way a plain enum int reads).
+	all_passed = _eq("toggle_row on an int emits the same marker (the int stores the index)",
+		_emit_for_named("caps", "int", 2, {"drawer": "toggle_row", "toggle_options": ["None", "Square", "Round"]}),
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:toggle_row:None,Square,Round\") var caps: int = 2") and all_passed
+	all_passed = _eq("toggle_row on a Vector2 emits no marker",
+		_emit_for("Vector2", Vector2(0, 0), {"drawer": "toggle_row", "toggle_options": ["a"]}).contains("eventsheet:"), false) and all_passed
 	all_passed = _eq("toggle_row without choices emits no marker",
 		_emit_for("String", "", {"drawer": "toggle_row"}).contains("eventsheet:"), false) and all_passed
 	var toggle_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + toggle_expected + "\n")
@@ -553,7 +557,212 @@ static func run() -> bool:
 	all_passed = _eq("Range '0, 100, 5' parses via the real split",
 		VariableDialog._parse_range_parts("0, 100, 5".split(",")), {"min": "0", "max": "100", "step": "5"}) and all_passed
 
+	all_passed = _unit_drawer() and all_passed
+	all_passed = _toggle_icons() and all_passed
+
 	return all_passed
+
+
+# ── The unit drawer: a float and the unit it is read in ────────────────────────
+#
+## The conversions, the marker, the lift, and THE PROMISE: switching the dropdown moves the reading
+## and never the stored number, so the emitted GDScript is the same before and after.
+static func _unit_drawer() -> bool:
+	var passed: bool = true
+
+	# Conversion by value, one family at a time. Every conversion runs through the family's base.
+	passed = _near("a quarter turn is 90 degrees", EventSheetDrawerWidgets.convert_unit("turn", "deg", 0.25), 90.0) and passed
+	passed = _near("90 degrees is a quarter turn", EventSheetDrawerWidgets.convert_unit("deg", "turn", 90.0), 0.25) and passed
+	passed = _near("PI radians is 180 degrees", EventSheetDrawerWidgets.convert_unit("rad", "deg", PI), 180.0) and passed
+	passed = _near("180 degrees is PI radians", EventSheetDrawerWidgets.convert_unit("deg", "rad", 180.0), PI) and passed
+	passed = _near("a quarter second is 250 ms", EventSheetDrawerWidgets.convert_unit("s", "ms", 0.25), 250.0) and passed
+	passed = _near("500 ms is half a second", EventSheetDrawerWidgets.convert_unit("ms", "s", 500.0), 0.5) and passed
+	# The project's own physics rate answers for "frames" - derived, never a hard-coded 60.
+	passed = _near("one second is the project's physics rate in frames",
+		EventSheetDrawerWidgets.convert_unit("s", "frames", 1.0), EventSheetDrawerWidgets.physics_rate()) and passed
+	passed = _near("a full amplitude is 0 dB", EventSheetDrawerWidgets.convert_unit("fraction", "db", 1.0), 0.0) and passed
+	passed = _near("0 dB is a full amplitude", EventSheetDrawerWidgets.convert_unit("db", "fraction", 0.0), 1.0) and passed
+	passed = _near("half amplitude is about -6 dB", EventSheetDrawerWidgets.convert_unit("fraction", "db", 0.5), -6.0206) and passed
+	passed = _near("silence reads as the dB floor, never negative infinity",
+		EventSheetDrawerWidgets.convert_unit("fraction", "db", 0.0), EventSheetDrawerWidgets.SILENCE_DB) and passed
+	# The project's viewport width answers for "screen"; a world unit IS a pixel in Godot 2D.
+	passed = _near("half a screen is half the project's viewport width in pixels",
+		EventSheetDrawerWidgets.convert_unit("screen", "px", 0.5), EventSheetDrawerWidgets.screen_unit_pixels() * 0.5) and passed
+	passed = _near("a world unit is a pixel", EventSheetDrawerWidgets.convert_unit("world", "px", 2.0), 2.0) and passed
+	# Units that do not share a family (and a pack's own words) are labels: the number is untouched.
+	passed = _near("degrees do not convert into seconds", EventSheetDrawerWidgets.convert_unit("deg", "s", 5.0), 5.0) and passed
+	passed = _near("a pack's own words leave the number alone", EventSheetDrawerWidgets.convert_unit("tiles", "chunks", 3.0), 3.0) and passed
+	passed = _eq("a pack's own word belongs to no family", EventSheetDrawerWidgets.unit_family("tiles"), "") and passed
+	passed = _eq("a known unit names its family", EventSheetDrawerWidgets.unit_family("turn"), "angle") and passed
+	passed = _eq("an unknown unit is its own label", EventSheetDrawerWidgets.unit_label("tiles"), "tiles") and passed
+
+	# The marker's grammar, and its store fallback.
+	passed = _eq("the marker parses into units + the stored one",
+		EventSheetAttributeDrawers.parse_unit_spec("kinds=px|world|screen,store=world"),
+		{"units": PackedStringArray(["px", "world", "screen"]), "store": "world"}) and passed
+	passed = _eq("a marker naming no store falls back to the first unit",
+		str(EventSheetAttributeDrawers.parse_unit_spec("kinds=deg|turn|rad").get("store", "")), "deg") and passed
+	passed = _eq("a marker naming a store it does not list falls back to the first unit",
+		str(EventSheetAttributeDrawers.parse_unit_spec("kinds=s|ms,store=frames").get("store", "")), "s") and passed
+
+	# THE PROMISE, on the widget: the dropdown moves the reading, not the value.
+	var field: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(PackedStringArray(["deg", "turn", "rad"]), "deg")
+	var emitted: Array = []
+	field.value_changed.connect(func(value: float) -> void: emitted.append(value))
+	field.set_value(90.0)
+	passed = _near("the field shows the stored value in the stored unit", field.get_shown_value(), 90.0) and passed
+	field.set_view_unit("turn")
+	passed = _near("switching the unit re-reads the number", field.get_shown_value(), 0.25) and passed
+	passed = _near("switching the unit does not move the stored value", field.get_value(), 90.0) and passed
+	passed = _eq("switching the unit emits nothing (the file cannot move)", emitted.size(), 0) and passed
+	field._on_spin_changed(0.5)
+	passed = _near("typing in the shown unit stores the converted value", field.get_value(), 180.0) and passed
+	passed = _eq("typing emits exactly one change", emitted.size(), 1) and passed
+	passed = _near("the emitted value is in the STORED unit", float(emitted[0]) if not emitted.is_empty() else -1.0, 180.0) and passed
+	field.free()
+
+	# Emission + the byte-exact lift back.
+	var unit_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:unit:kinds=px|world|screen,store=world\") var thickness: float = 2.0"
+	passed = _eq("unit emits its marker (the units and the stored one ride along)",
+		_emit_for_named("thickness", "float", 2.0, {"drawer": "unit", "unit_kinds": ["px", "world", "screen"], "unit_store": "world"}),
+		unit_expected) and passed
+	passed = _eq("unit falls back to the first listed unit as the stored one",
+		_emit_for_named("start_angle", "float", 0.0, {"drawer": "unit", "unit_kinds": ["deg", "turn", "rad"]}),
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:unit:kinds=deg|turn|rad,store=deg\") var start_angle: float = 0.0") and passed
+	passed = _eq("unit on an int emits no marker",
+		_emit_for("int", 2, {"drawer": "unit", "unit_kinds": ["px"]}).contains("eventsheet:"), false) and passed
+	passed = _eq("unit without a unit list emits no marker",
+		_emit_for("float", 1.0, {"drawer": "unit"}).contains("eventsheet:"), false) and passed
+	passed = _roundtrip("unit", unit_expected, "thickness", "unit") and passed
+	var unit_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + unit_expected + "\n")
+	var unit_lifted: LocalVariable = _find(unit_sheet, "thickness")
+	passed = _eq("the lift recovers the unit list",
+		(unit_lifted.attributes as Dictionary).get("unit_kinds") if unit_lifted != null else null, ["px", "world", "screen"]) and passed
+	passed = _eq("the lift recovers the stored unit",
+		str((unit_lifted.attributes as Dictionary).get("unit_store", "")) if unit_lifted != null else "", "world") and passed
+	if unit_lifted != null:
+		passed = _eq("a unit var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(unit_lifted), unit_expected) and passed
+
+	# The look, its one field, and the round trip through the dialog's grammar.
+	passed = _eq("float offers the unit look", _look_ids_for("float").has("unit"), true) and passed
+	passed = _eq("int does not offer the unit look (the stored number is a float)",
+		_look_ids_for("int").has("unit"), false) and passed
+	passed = _eq("the look's field parses the marker's own spelling",
+		VariableDialog._parse_unit_detail("kinds=s|ms|frames, store=s"),
+		{"units": ["s", "ms", "frames"], "store": "s"}) and passed
+	passed = _eq("the look's field parses the shorthand a designer types",
+		VariableDialog._parse_unit_detail("deg|turn|rad, store=deg"),
+		{"units": ["deg", "turn", "rad"], "store": "deg"}) and passed
+	passed = _eq("an empty field lands the length units",
+		VariableDialog._parse_unit_detail(""), {"units": ["px", "world", "screen"], "store": "world"}) and passed
+	passed = _eq("the field rebuilds from a lifted variable's attributes",
+		VariableDialog._unit_detail_text({"unit_kinds": ["px", "world", "screen"], "unit_store": "world"}),
+		"kinds=px|world|screen, store=world") and passed
+
+	# The gallery tile draws the real field, so the picture cannot drift from the drawer.
+	var tile: Control = EventSheetInspectorLooks.build_preview("unit")
+	passed = _eq("the gallery tile for the unit look is the real field",
+		tile is EventSheetDrawerWidgets.DrawerUnitField, true) and passed
+	tile.free()
+	return passed
+
+
+# ── Toggle buttons: a picture per option, and the segmented word strip ─────────────
+#
+## The icon source (a path pattern or a registered renderer), the segmented word strip, and the
+## int form where the button's INDEX is the stored value.
+static func _toggle_icons() -> bool:
+	var passed: bool = true
+
+	# The marker's optional tails, in their fixed order. The icon source is rejoined because a
+	# res:// path carries colons the marker split apart.
+	var icon_marker: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:toggle_row:None,Square,Round:segmented:icons=res://art/cap_%s.svg\") var caps: String = \"Round\""
+	passed = _eq("toggle_row emits its icon source and the segmented tail",
+		_emit_for_named("caps", "String", "Round", {
+			"drawer": "toggle_row", "toggle_options": ["None", "Square", "Round"],
+			"toggle_segmented": true, "toggle_icons": "res://art/cap_%s.svg",
+		}), icon_marker) and passed
+	passed = _eq("the marker's tails parse back (the path's own colons survive)",
+		EventSheetAttributeDrawers.parse_toggle_spec(["None,Square,Round", "segmented", "icons=res", "//art/cap_%s.svg"]),
+		{"options": PackedStringArray(["None", "Square", "Round"]), "segmented": true, "icons": "res://art/cap_%s.svg"}) and passed
+	passed = _eq("a plain option list parses with no tails",
+		EventSheetAttributeDrawers.parse_toggle_spec(["easy,normal,hard"]),
+		{"options": PackedStringArray(["easy", "normal", "hard"]), "segmented": false, "icons": ""}) and passed
+	var icon_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + icon_marker + "\n")
+	var icon_lifted: LocalVariable = _find(icon_sheet, "caps")
+	passed = _eq("the lift recovers the icon source",
+		str((icon_lifted.attributes as Dictionary).get("toggle_icons", "")) if icon_lifted != null else "",
+		"res://art/cap_%s.svg") and passed
+	passed = _eq("the lift recovers the segmented tail",
+		bool((icon_lifted.attributes as Dictionary).get("toggle_segmented", false)) if icon_lifted != null else false, true) and passed
+	if icon_lifted != null:
+		passed = _eq("an icon toggle_row re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(icon_lifted), icon_marker) and passed
+
+	# Provider lookup: a pack that can only DRAW its options registers a renderer by name.
+	var drawn: PlaceholderTexture2D = PlaceholderTexture2D.new()
+	var asked: Array = []
+	EventSheets.register_toggle_icon_provider("test:cap", func(option: String, size: int) -> Texture2D:
+		asked.append("%s@%d" % [option, size])
+		return drawn
+	)
+	passed = _eq("a registered renderer is found by name",
+		EventSheets.toggle_icon_provider_for("test:cap").is_valid(), true) and passed
+	passed = _eq("an unregistered name finds no renderer",
+		EventSheets.toggle_icon_provider_for("test:missing").is_valid(), false) and passed
+	passed = _eq("a source that is not a path pattern asks the renderer",
+		EventSheetDrawerWidgets.toggle_icon_for("test:cap", "Round", 24) == drawn, true) and passed
+	passed = _eq("the renderer is asked for the option at the icon size", asked, ["Round@24"]) and passed
+	passed = _eq("an unregistered source draws no icon (the button keeps its word)",
+		EventSheetDrawerWidgets.toggle_icon_for("test:missing", "Round", 24), null) and passed
+	passed = _eq("a path pattern with no file behind it draws no icon",
+		EventSheetDrawerWidgets.toggle_icon_for("res://art/no_such_cap_%s.svg", "Round", 24), null) and passed
+	EventSheets.unregister_toggle_icon_provider("test:cap")
+	passed = _eq("unregistering removes the renderer",
+		EventSheets.toggle_icon_provider_for("test:cap").is_valid(), false) and passed
+
+	# The row itself: the picture replaces the word, and the word becomes the tooltip.
+	EventSheets.register_toggle_icon_provider("test:cap", func(_option: String, _size: int) -> Texture2D: return drawn)
+	var icon_row: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["None", "Square", "Round"]), "test:cap")
+	var first: Button = icon_row.get_child(0) as Button
+	passed = _eq("an icon button shows no text", first.text, "") and passed
+	passed = _eq("an icon button says its option in the tooltip", first.tooltip_text, "None") and passed
+	icon_row.set_value("Round")
+	passed = _eq("the pressed icon button is the one whose OPTION matches",
+		(icon_row.get_child(2) as Button).button_pressed, true) and passed
+	passed = _eq("the unpressed icon buttons stay unpressed", first.button_pressed, false) and passed
+	icon_row.free()
+	EventSheets.unregister_toggle_icon_provider("test:cap")
+
+	# Segmented: a handful of word options joined into one strip; past that, ordinary buttons.
+	var strip: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["Flat", "Billboard", "Volumetric"]), "", true)
+	passed = _eq("a segmented row joins its buttons into one strip",
+		strip.get_theme_constant("separation"), 0) and passed
+	passed = _eq("a segmented row keeps its words", (strip.get_child(0) as Button).text, "Flat") and passed
+	strip.free()
+	var too_many: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["a", "b", "c", "d", "e", "f"]), "", true)
+	passed = _eq("past a handful of options the segmented strip falls back to ordinary buttons",
+		too_many.get_theme_constant("separation"), 2) and passed
+	too_many.free()
+	return passed
+
+
+static func _look_ids_for(type_name: String) -> Array:
+	var ids: Array = []
+	for preset: Dictionary in EventSheetInspectorLooks.for_type(type_name):
+		ids.append(str(preset.get("id")))
+	return ids
+
+
+static func _near(label: String, actual: float, expected: float) -> bool:
+	if absf(actual - expected) <= 0.0005:
+		print("[PASS] inspector_drawer_roundtrip_test: %s" % label)
+		return true
+	print("[FAIL] inspector_drawer_roundtrip_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false
 
 
 static func _vector_dial_range_persists() -> bool:

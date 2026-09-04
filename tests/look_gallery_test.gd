@@ -24,7 +24,7 @@ static func run() -> bool:
 		"preset_password", "preset_expression", "storage"
 	]) and ok
 	ok = _check("float looks", _ids_for("float"), [
-		"easing_attenuation", "easing_positive", "storage"
+		"unit", "easing_attenuation", "easing_positive", "storage"
 	]) and ok
 	ok = _check("Vector2 looks", _ids_for("Vector2"), ["preset_link", "storage"]) and ok
 

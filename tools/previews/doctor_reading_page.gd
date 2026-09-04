@@ -89,11 +89,31 @@ static func build(host: Window) -> Control:
 	# picture is of a page somebody is opening for the first time.
 	EventSheetProjectDoctorPanel.fill_inbox(tree, tree.create_item(),
 		EventSheetDoctorInbox.triage(findings, PackedStringArray()))
+	# The stage is the EDITOR's own window, which is already full of editor: a card with a
+	# transparent ground lets the 3D viewport and the docks read straight through the ledger's lines.
+	# So the picture carries its own opaque floor, in the editor's own base colour, and the card sits
+	# on that.
+	var stage: Control = Control.new()
+	stage.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var floor_rect: ColorRect = ColorRect.new()
+	floor_rect.color = _base_colour()
+	floor_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stage.add_child(floor_rect)
 	var body: MarginContainer = EventSheetPopupUI.margined(
 		EventSheetPopupUI.titled_card("Inbox", tree))
 	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	host.add_child(body)
-	return body
+	stage.add_child(body)
+	host.add_child(stage)
+	return stage
+
+
+## The colour a Doctor panel actually sits on. Asked of the running editor's theme so the picture is
+## of the editor a reader has, and answered with the plugin's own dark ground when there is no editor
+## around to ask - a preview run without one is still worth a picture.
+static func _base_colour() -> Color:
+	if Engine.is_editor_hint() and EditorInterface.get_editor_theme() != null:
+		return EditorInterface.get_editor_theme().get_color("base_color", "Editor")
+	return Color("#252525")
 
 
 ## Writes the staged project and hands back its paths, sorted - the order the section reads them in.

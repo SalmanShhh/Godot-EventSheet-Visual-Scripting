@@ -178,6 +178,8 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 			return "shown as an editable table"
 		"toggle_row":
 			return "shown as toggle buttons"
+		"unit":
+			return "shown with a unit dropdown"
 		"swatch_row":
 			return "shown as color swatches"
 		"texture_preview":
@@ -244,11 +246,21 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		var toggle_texts: PackedStringArray = PackedStringArray()
 		for toggle_option: Variant in toggle_options:
 			toggle_texts.append(str(toggle_option))
-		var toggle_row := EventSheetDrawerWidgets.DrawerToggleRow.new(toggle_texts)
+		var toggle_row := EventSheetDrawerWidgets.DrawerToggleRow.new(toggle_texts,
+			str(attributes.get("toggle_icons", "")), bool(attributes.get("toggle_segmented", false)))
 		toggle_row.editable = false
 		if not toggle_texts.is_empty():
 			toggle_row.set_value(toggle_texts[0])
 		return _ignored(toggle_row)
+	if drawer_kind == "unit":
+		var unit_ids: PackedStringArray = PackedStringArray()
+		for unit_kind: Variant in (attributes.get("unit_kinds") if attributes.get("unit_kinds") is Array else ["px", "world", "screen"]):
+			unit_ids.append(str(unit_kind))
+		var unit_field := EventSheetDrawerWidgets.DrawerUnitField.new(unit_ids, str(attributes.get("unit_store", "")))
+		unit_field.set_value(default_text.to_float())
+		unit_field.set_editable(false)
+		unit_field.custom_minimum_size = Vector2(150.0, 0.0)
+		return _ignored(unit_field)
 	if drawer_kind == "table":
 		var columns: Array = attributes.get("table_columns") if attributes.get("table_columns") is Array else [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]
 		var table := EventSheetDrawerWidgets.DrawerTable.new(columns)

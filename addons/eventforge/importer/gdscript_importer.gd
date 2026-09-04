@@ -655,6 +655,33 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		if toggle_options.is_empty():
 			return
 		attrs["toggle_options"] = toggle_options
+		# The optional tails, walked positionally: "segmented", then "icons=<source>". The icon
+		# source is rejoined because a res:// path carries colons the marker split apart.
+		for tail_index: int in range(3, parts.size()):
+			var tail: String = str(parts[tail_index])
+			if tail == "segmented":
+				attrs["toggle_segmented"] = true
+			elif tail.begins_with("icons="):
+				attrs["toggle_icons"] = ":".join(PackedStringArray(Array(parts).slice(tail_index))).substr(6)
+				break
+	elif parts[1] == "unit" and parts.size() >= 3:
+		# "kinds=a|b|c,store=b" recovers into the same unit_kinds / unit_store the emitter reads,
+		# so the marker re-emits byte-for-byte and the dialog reopens the look editable.
+		var unit_kinds: Array = []
+		var unit_store: String = ""
+		for token: String in str(parts[2]).split(","):
+			var trimmed_token: String = token.strip_edges()
+			if trimmed_token.begins_with("kinds="):
+				for unit_id: String in trimmed_token.substr(6).split("|"):
+					if not unit_id.strip_edges().is_empty():
+						unit_kinds.append(unit_id.strip_edges())
+			elif trimmed_token.begins_with("store="):
+				unit_store = trimmed_token.substr(6).strip_edges()
+		if unit_kinds.is_empty():
+			return
+		attrs["unit_kinds"] = unit_kinds
+		if not unit_store.is_empty():
+			attrs["unit_store"] = unit_store
 	elif parts[1] == "table" and parts.size() >= 3:
 		# The column schema (name=type pairs) recovers into the same table_columns the emitter
 		# reads, so the marker re-emits byte-for-byte and the dialog reopens it editable.

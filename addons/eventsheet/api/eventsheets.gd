@@ -1617,6 +1617,33 @@ static func editor_gizmo_drawer_for(script_path: String) -> Callable:
 	return _editor_gizmo_drawers.get(script_path, Callable())
 
 
+## Pictures for a toggle-buttons Inspector drawer, drawn by the pack that owns the options.
+##
+## A drawer's marker can name an icon SOURCE. A path pattern holding "%s" needs nothing registered
+## (the option name in snake_case is substituted, and the file is loaded). A source that is not a
+## pattern is a NAME looked up here, so a pack whose options only exist as its own shader or
+## material can draw them itself: `renderer(option: String, size: int) -> Texture2D`, called once
+## per option when the Inspector builds the row, at edit time only. Return null for an option you
+## have no picture for and the button keeps its word.
+##
+## One renderer per name; last registration wins. Nothing here reaches generated game code - the
+## icons are Inspector chrome, and without the editor plugin the property is a plain field.
+static var _toggle_icon_providers: Dictionary = {}
+
+
+static func register_toggle_icon_provider(provider_name: String, renderer: Callable) -> void:
+	_toggle_icon_providers[provider_name] = renderer
+
+
+static func unregister_toggle_icon_provider(provider_name: String) -> void:
+	_toggle_icon_providers.erase(provider_name)
+
+
+## The renderer registered under a name, or an invalid Callable when nothing was registered.
+static func toggle_icon_provider_for(provider_name: String) -> Callable:
+	return _toggle_icon_providers.get(provider_name, Callable())
+
+
 ## Toggles the behavior preview on the current scene-editor selection - the same entry the
 ## Tools menu and Command Palette use. Returns false when the workspace is not open.
 static func preview_behaviors() -> bool:

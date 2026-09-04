@@ -17,7 +17,12 @@ extends RefCounted
 ## helpers, which only a designer editing a table cell ever calls. Loaded once on first use instead.
 const SHEET_COMPILER_PATH: String = "res://addons/eventforge/compiler/sheet_compiler.gd"
 
+## The public API script, reached BY PATH for the same boot-cost reason as the compiler above: only
+## a toggle row that actually asks for provider-drawn icons ever needs the registry behind it.
+const EVENTSHEETS_API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
+
 static var _compiler_script: Script = null
+static var _api_script: Script = null
 
 ## A shared, game-flavoured palette for the swatch-row drawer (and its preview). Hex text on
 ## purpose: these are game-content choices a designer picks a colour FROM, not editor chrome a
@@ -40,6 +45,136 @@ static func sheet_compiler() -> Script:
 	if _compiler_script == null:
 		_compiler_script = load(SHEET_COMPILER_PATH)
 	return _compiler_script
+
+
+## The public API script, loaded on first use and cached for the session (see EVENTSHEETS_API_PATH).
+static func eventsheets_api() -> Script:
+	if _api_script == null:
+		_api_script = load(EVENTSHEETS_API_PATH)
+	return _api_script
+
+
+## The unit families the unit drawer knows, each as an ordered list of unit ids whose FIRST entry
+## is the family's base (every conversion goes through it). A unit outside these lists is a pack's
+## own word: it is shown as a label and converts to nothing, so a custom list is never mangled.
+##   length  px (a Godot 2D world unit IS one pixel), screen = one viewport width
+##   angle   deg, turn (360 deg), rad
+##   time    s, ms, frames (the project's physics tick rate)
+##   level   dB, fraction (Godot's own linear/dB pair)
+const UNIT_FAMILIES: Dictionary = {
+	"length": ["px", "world", "screen"],
+	"angle": ["deg", "turn", "rad"],
+	"time": ["s", "ms", "frames"],
+	"level": ["db", "fraction"],
+}
+
+## Short words for the dropdown - the same spelling a Godot suffix would use.
+const UNIT_LABELS: Dictionary = {
+	"px": "px", "world": "world", "screen": "screen",
+	"deg": "deg", "turn": "turns", "rad": "rad",
+	"s": "s", "ms": "ms", "frames": "frames",
+	"db": "dB", "fraction": "fraction",
+}
+
+## The floor a zero (or negative) linear amplitude reads as in dB. Godot's own mixer bottoms out
+## at -80 dB, and linear_to_db(0.0) is -inf, which no spin box can show.
+const SILENCE_DB: float = -80.0
+
+
+## The family a unit belongs to ("" for a pack's own word).
+static func unit_family(unit: String) -> String:
+	for family: String in UNIT_FAMILIES:
+		if (UNIT_FAMILIES[family] as Array).has(unit):
+			return family
+	return ""
+
+
+## The dropdown word for a unit - its own spelling when the drawer does not know it.
+static func unit_label(unit: String) -> String:
+	return str(UNIT_LABELS.get(unit, unit))
+
+
+## A value expressed in `unit`, in its family's base unit.
+static func unit_to_base(unit: String, value: float) -> float:
+	match unit:
+		"screen":
+			return value * screen_unit_pixels()
+		"turn":
+			return value * 360.0
+		"rad":
+			return rad_to_deg(value)
+		"ms":
+			return value * 0.001
+		"frames":
+			return value / physics_rate()
+		"fraction":
+			return linear_to_db(value) if value > 0.0 else SILENCE_DB
+	return value
+
+
+## The inverse of unit_to_base: a base-unit value read back in `unit`.
+static func unit_from_base(unit: String, value: float) -> float:
+	match unit:
+		"screen":
+			return value / screen_unit_pixels()
+		"turn":
+			return value / 360.0
+		"rad":
+			return deg_to_rad(value)
+		"ms":
+			return value / 0.001
+		"frames":
+			return value * physics_rate()
+		"fraction":
+			return db_to_linear(value)
+	return value
+
+
+## `value` re-read in another unit. Units from different families (or a pack's own words) are labels
+## only, so the number is handed back untouched rather than converted through a guess.
+static func convert_unit(from_unit: String, to_unit: String, value: float) -> float:
+	if from_unit == to_unit:
+		return value
+	var family: String = unit_family(from_unit)
+	if family.is_empty() or family != unit_family(to_unit):
+		return value
+	return unit_from_base(to_unit, unit_to_base(from_unit, value))
+
+
+## The project's physics tick rate - what one "frame" of the time family is worth.
+static func physics_rate() -> float:
+	var rate: float = float(ProjectSettings.get_setting("physics/common/physics_ticks_per_second", 60))
+	return rate if rate > 0.0 else 60.0
+
+
+## The project's viewport width - what one "screen" of the length family is worth in pixels.
+static func screen_unit_pixels() -> float:
+	var width: float = float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152))
+	return width if width > 0.0 else 1152.0
+
+
+## The picture for one toggle-row option, or null when there is none to draw.
+##
+## Two sources, told apart by the source text itself (no prefix to remember):
+##   a PATH PATTERN holding "%s" - the option name in snake_case is substituted, so
+##     "res://art/cap_%s.svg" with the option "Round" loads "res://art/cap_round.svg";
+##   anything else is a PROVIDER NAME registered through EventSheets.register_toggle_icon_provider,
+##     whose callable is handed (option, size) and returns the Texture2D it drew.
+## A missing file or an unregistered name is not an error: the button keeps its word.
+static func toggle_icon_for(source: String, option: String, icon_size: int = 24) -> Texture2D:
+	var trimmed: String = source.strip_edges()
+	if trimmed.is_empty() or option.strip_edges().is_empty():
+		return null
+	if trimmed.contains("%s"):
+		var path: String = trimmed.replace("%s", option.strip_edges().to_snake_case())
+		if not ResourceLoader.exists(path):
+			return null
+		return load(path) as Texture2D
+	var provider: Callable = eventsheets_api().toggle_icon_provider_for(trimmed)
+	if not provider.is_valid():
+		return null
+	var drawn: Variant = provider.call(option, icon_size)
+	return drawn as Texture2D
 
 
 ## An accent-coloured section label with breathing room above, so the section reads as a visual break.
@@ -346,28 +481,51 @@ class ActionButton:
 class DrawerToggleRow:
 	extends HBoxContainer
 	signal value_changed(value: String)
+
+	## The picture on an icon button, in editor pixels before the HiDPI scale.
+	const ICON_SIZE: int = 24
+	## The segmented variant is for a HANDFUL of word options; past that the equal-width strip stops
+	## being readable and the row falls back to ordinary buttons.
+	const SEGMENTED_MIN: int = 2
+	const SEGMENTED_MAX: int = 5
+
 	var editable: bool = true
 	var _options: PackedStringArray = PackedStringArray()
 	var _value: String = ""
 	var _buttons: Array[Button] = []
 
-	func _init(options: PackedStringArray = PackedStringArray()) -> void:
+	func _init(options: PackedStringArray = PackedStringArray(), icon_source: String = "", segmented: bool = false) -> void:
 		_options = options
-		add_theme_constant_override("separation", 2)
+		# Segmented = equal-width word buttons joined into one strip, so it reads as a single control.
+		var strip: bool = segmented and _options.size() >= SEGMENTED_MIN and _options.size() <= SEGMENTED_MAX
+		add_theme_constant_override("separation", 0 if strip else 2)
 		for option: String in _options:
 			var button: Button = Button.new()
 			button.text = option
 			button.toggle_mode = true
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			if strip:
+				button.clip_text = true
+			var icon: Texture2D = EventSheetDrawerWidgets.toggle_icon_for(icon_source, option, ICON_SIZE)
+			if icon != null:
+				# The picture IS the choice; the word stays as the tooltip so hovering (and a screen
+				# reader) still says which option this is.
+				button.icon = icon
+				button.tooltip_text = option
+				button.text = ""
+				button.expand_icon = true
+				button.custom_minimum_size = Vector2(EventSheetPalette.scaled(ICON_SIZE + 8), EventSheetPalette.scaled(ICON_SIZE + 8))
 			button.pressed.connect(_on_option_pressed.bind(option))
 			add_child(button)
 			_buttons.append(button)
 
 	func set_value(v: String) -> void:
 		_value = v
-		for button: Button in _buttons:
-			button.set_pressed_no_signal(button.text == _value)
-			button.disabled = not editable
+		# Compare against the OPTION, not the button's text: an icon button carries the word in its
+		# tooltip and shows no text at all, so a text comparison would never light one up.
+		for index: int in range(_buttons.size()):
+			_buttons[index].set_pressed_no_signal(index < _options.size() and _options[index] == _value)
+			_buttons[index].disabled = not editable
 
 	func get_value() -> String:
 		return _value
@@ -377,6 +535,102 @@ class DrawerToggleRow:
 			return
 		set_value(option)
 		value_changed.emit(_value)
+
+
+# ── A number and its unit ────────────────────────────────────────────
+## A float shown as a spin box with a unit dropdown at its right edge. THE CONTRACT: the value this
+## widget holds and reports is always in the STORED unit the export named; the dropdown only changes
+## which unit it is READ in. Switching from world units to pixels re-reads 2.0 as 2.0 px and emits
+## nothing, so the file on disk - and the number the running game uses - never moves.
+class DrawerUnitField:
+	extends HBoxContainer
+	## Emitted with the value in the STORED unit, never in the shown one.
+	signal value_changed(value: float)
+
+	var editable: bool = true
+	var _units: PackedStringArray = PackedStringArray()
+	var _store_unit: String = ""
+	var _view_unit: String = ""
+	var _stored: float = 0.0
+	var _spin: SpinBox = null
+	var _unit_option: OptionButton = null
+
+
+	func _init(units: PackedStringArray = PackedStringArray(), store_unit: String = "") -> void:
+		_units = units
+		_store_unit = store_unit if units.has(store_unit) else (units[0] if not units.is_empty() else "")
+		_view_unit = _store_unit
+		add_theme_constant_override("separation", 2)
+		_spin = SpinBox.new()
+		_spin.step = 0.001
+		_spin.allow_greater = true
+		_spin.allow_lesser = true
+		_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_spin.value_changed.connect(_on_spin_changed)
+		add_child(_spin)
+		_unit_option = OptionButton.new()
+		for unit: String in _units:
+			_unit_option.add_item(EventSheetDrawerWidgets.unit_label(unit))
+			_unit_option.set_item_metadata(_unit_option.item_count - 1, unit)
+		_unit_option.select(max(Array(_units).find(_view_unit), 0))
+		_unit_option.item_selected.connect(_on_unit_selected)
+		add_child(_unit_option)
+
+
+	## Sets the value IN THE STORED UNIT (what the property holds).
+	func set_value(v: float) -> void:
+		_stored = v
+		_refresh_shown()
+
+
+	## The value in the stored unit.
+	func get_value() -> float:
+		return _stored
+
+
+	## The number as the spin box currently SHOWS it - the stored value read in the view unit.
+	func get_shown_value() -> float:
+		return _spin.value
+
+
+	## The unit currently being read in - a view, not a fact about the value.
+	func get_view_unit() -> String:
+		return _view_unit
+
+
+	## Reads the value in another unit. The stored value does not move and nothing is emitted;
+	## this is the dropdown's whole effect.
+	func set_view_unit(unit: String) -> void:
+		var index: int = Array(_units).find(unit)
+		if index < 0:
+			return
+		_view_unit = unit
+		_unit_option.select(index)
+		_refresh_shown()
+
+
+	func set_editable(v: bool) -> void:
+		editable = v
+		_spin.editable = v
+		_unit_option.disabled = not v
+
+
+	func _refresh_shown() -> void:
+		_spin.set_value_no_signal(EventSheetDrawerWidgets.convert_unit(_store_unit, _view_unit, _stored))
+
+
+	func _on_spin_changed(shown: float) -> void:
+		if not editable:
+			return
+		_stored = EventSheetDrawerWidgets.convert_unit(_view_unit, _store_unit, shown)
+		value_changed.emit(_stored)
+
+
+	func _on_unit_selected(index: int) -> void:
+		_view_unit = str(_unit_option.get_item_metadata(index))
+		# Only the reading changes. No value_changed here: emitting one would write the converted
+		# number back onto the property and the "stored unit is fixed" promise would be a lie.
+		_refresh_shown()
 
 
 # ── Array-of-Dictionary table grid ───────────────────────────────────────────

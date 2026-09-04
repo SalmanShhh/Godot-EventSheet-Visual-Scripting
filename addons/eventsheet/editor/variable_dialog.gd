@@ -1827,6 +1827,12 @@ func _fold_look_attributes(attributes: Dictionary, type_name: String) -> void:
 						suggestion_entries.append(suggestion_text.strip_edges())
 				if not suggestion_entries.is_empty():
 					attributes["suggestions"] = suggestion_entries
+		"unit":
+			if type_name == "float":
+				var unit_spec: Dictionary = _parse_unit_detail(detail)
+				attributes["drawer"] = "unit"
+				attributes["unit_kinds"] = unit_spec.get("units", [])
+				attributes["unit_store"] = str(unit_spec.get("store", ""))
 		"storage":
 			attributes["storage"] = true
 		"preset_password":
@@ -1848,6 +1854,47 @@ func _fold_look_attributes(attributes: Dictionary, type_name: String) -> void:
 		_:
 			if _selected_look_id().begins_with("layers_") and type_name == "int":
 				attributes["layers"] = _selected_look_id().trim_prefix("layers_")
+
+
+## The unit look's one field -> {units: Array, store: String}. Written the way the marker reads
+## ("kinds=px|world|screen, store=world"), and forgiving of the shorthand a designer actually types
+## ("px|world|screen, store=world", or just "s|ms|frames"). An empty field means the length units,
+## so picking the look and typing nothing still lands a working field. The store falls back to the
+## first unit listed, which is the unit the number in the file is already written in.
+static func _parse_unit_detail(detail: String) -> Dictionary:
+	var units: Array = []
+	var store: String = ""
+	for token: String in detail.split(",", false):
+		var trimmed: String = token.strip_edges()
+		if trimmed.is_empty():
+			continue
+		if trimmed.begins_with("store="):
+			store = trimmed.substr(6).strip_edges()
+			continue
+		if trimmed.begins_with("kinds="):
+			trimmed = trimmed.substr(6)
+		for unit: String in trimmed.split("|", false):
+			if not unit.strip_edges().is_empty() and not units.has(unit.strip_edges()):
+				units.append(unit.strip_edges())
+	if units.is_empty():
+		units = ["px", "world", "screen"]
+		if store.is_empty():
+			store = "world"
+	if store.is_empty() or not units.has(store):
+		store = str(units[0])
+	return {"units": units, "store": store}
+
+
+## The unit look's field, rebuilt from an edited variable's attributes - the inverse of
+## _parse_unit_detail, in the marker's own spelling.
+static func _unit_detail_text(existing: Dictionary) -> String:
+	var units: PackedStringArray = PackedStringArray()
+	for unit: Variant in (existing.get("unit_kinds") if existing.get("unit_kinds") is Array else []):
+		units.append(str(unit))
+	if units.is_empty():
+		return ""
+	var store: String = str(existing.get("unit_store", ""))
+	return "kinds=%s, store=%s" % ["|".join(units), store if not store.is_empty() else units[0]]
 
 
 ## "Fire:1, Ice" -> [{label, value}] (value stays a string; empty = auto).
@@ -1898,6 +1945,9 @@ func _prefill_look(existing: Dictionary) -> void:
 		for type_entry: Variant in existing.get("node_path_types"):
 			type_parts.append(str(type_entry))
 		detail = ", ".join(type_parts)
+	elif str(existing.get("drawer", "")) == "unit":
+		look_id = "unit"
+		detail = _unit_detail_text(existing)
 	elif existing.get("suggestions") is Array:
 		look_id = "suggestions"
 		var suggestion_parts: PackedStringArray = PackedStringArray()
@@ -2163,6 +2213,9 @@ func _refresh_ships_as() -> void:
 			preview["range"] = parsed_range
 	_fold_look_attributes(preview, type_name)
 	var prefix: String = SheetCompiler._structured_hint_prefix(preview, type_name)
+	if prefix.is_empty():
+		# A look that lands a custom drawer (the unit field) ships as the drawer's own marker line.
+		prefix = SheetCompiler._drawer_export_prefix(preview, type_name)
 	if prefix.is_empty():
 		if _attr_multiline_check.button_pressed and type_name == "String":
 			prefix = "@export_multiline "

@@ -29,6 +29,7 @@ const PRESETS: Array[Dictionary] = [
 	{"id": "preset_password", "label": "Password field (dots, not text)", "types": ["String"], "detail": "", "sentence": "Typed text shows as dots."},
 	{"id": "preset_expression", "label": "Expression field (math input)", "types": ["String"], "detail": "", "sentence": "A field meant for a math expression."},
 	{"id": "preset_link", "label": "Linked axes (one slider drives all)", "types": ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"], "detail": "", "sentence": "Drag one axis and the others follow."},
+	{"id": "unit", "label": "Number with its unit (px, degrees, seconds…)", "types": ["float"], "detail": "units, e.g. px|world|screen, store=world", "sentence": "A number with a unit dropdown beside it - switching the unit changes the reading, never the stored value."},
 	{"id": "easing_attenuation", "label": "Easing curve for attenuation", "types": ["float"], "detail": "", "sentence": "An ease curve tuned for falloff/attenuation."},
 	{"id": "easing_positive", "label": "Easing curve (positive only)", "types": ["float"], "detail": "", "sentence": "An ease curve that never dips negative."},
 	{"id": "storage", "label": "Saved but hidden (storage)", "types": [], "detail": "", "sentence": "Saved with the scene but not shown in the Inspector."},
@@ -127,6 +128,12 @@ static func _build_preview_inner(look_id: String) -> Control:
 			return _EasePreview.new(true)
 		"easing_positive":
 			return _EasePreview.new(false)
+		"unit":
+			var unit_field := EventSheetDrawerWidgets.DrawerUnitField.new(PackedStringArray(["px", "world", "screen"]), "world")
+			unit_field.set_value(0.6)
+			unit_field.set_editable(false)
+			unit_field.custom_minimum_size = Vector2(170.0, 0.0)
+			return unit_field
 		"storage":
 			var storage_label := Label.new()
 			storage_label.text = "(saved, not shown)"

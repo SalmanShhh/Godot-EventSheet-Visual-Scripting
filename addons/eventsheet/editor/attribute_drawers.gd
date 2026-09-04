@@ -10,7 +10,10 @@
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
 #   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
 #   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
-#   toggle_row     eventsheet:toggle_row:<a>,<b>,<c>     String (choices as one row of toggle buttons)
+#   toggle_row     eventsheet:toggle_row:<a>,<b>,<c>     String / int (choices as one row of toggle buttons;
+#                  optional tails, in this order: ":segmented" for equal-width word buttons, ":icons=<source>"
+#                  for a picture per option - a path pattern holding %s, or a registered provider's name)
+#   unit           eventsheet:unit:kinds=<a>|<b>,store=<a> float (a spin box with a unit dropdown at its edge)
 #   vector_dial    eventsheet:vector_dial:<max>          Vector2
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
@@ -54,13 +57,27 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			add_property_editor(name, MinMaxSliderProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
 			return true
 		"toggle_row":
-			if type != TYPE_STRING:
+			# String stores the option TEXT; int stores its INDEX (an enum written as buttons).
+			if type != TYPE_STRING and type != TYPE_INT:
 				return false
-			var toggle_args: Array = drawer.get("args", [])
-			var toggle_options: PackedStringArray = PackedStringArray(str(toggle_args[0]).split(",")) if toggle_args.size() > 0 else PackedStringArray()
+			var toggle_spec: Dictionary = parse_toggle_spec(drawer.get("args", []))
+			var toggle_options: PackedStringArray = toggle_spec.get("options", PackedStringArray())
 			if toggle_options.is_empty():
 				return false
-			add_property_editor(name, ToggleRowProperty.new(toggle_options))
+			add_property_editor(name, ToggleRowProperty.new(toggle_options, type == TYPE_INT,
+				str(toggle_spec.get("icons", "")), bool(toggle_spec.get("segmented", false))))
+			return true
+		"unit":
+			# The stored number never moves: the dropdown converts the VIEW, and the export says
+			# which unit the file (and therefore the running game) is written in.
+			if type != TYPE_FLOAT:
+				return false
+			var unit_args: Array = drawer.get("args", [])
+			var unit_spec: Dictionary = parse_unit_spec(str(unit_args[0]) if unit_args.size() > 0 else "")
+			var unit_ids: PackedStringArray = unit_spec.get("units", PackedStringArray())
+			if unit_ids.is_empty():
+				return false
+			add_property_editor(name, UnitFieldProperty.new(unit_ids, str(unit_spec.get("store", ""))))
 			return true
 		"table":
 			if type != TYPE_ARRAY:
@@ -110,6 +127,53 @@ static func parse_drawer_hint(hint_string: String) -> Dictionary:
 	if parts.size() > 3:
 		parsed["max"] = parts[3].to_float()
 	return parsed
+
+
+## "kinds=px|world|screen,store=world" -> {units: PackedStringArray, store: String}. The store falls
+## back to the first listed unit, so a marker missing it (or naming a unit it does not list) still
+## has a definite stored unit. Static + UI-free so the headless suite pins the contract.
+static func parse_unit_spec(spec: String) -> Dictionary:
+	var units: PackedStringArray = PackedStringArray()
+	var store: String = ""
+	for token: String in spec.split(","):
+		var trimmed: String = token.strip_edges()
+		if trimmed.begins_with("kinds="):
+			for unit: String in trimmed.substr(6).split("|"):
+				if not unit.strip_edges().is_empty():
+					units.append(unit.strip_edges())
+		elif trimmed.begins_with("store="):
+			store = trimmed.substr(6).strip_edges()
+	if units.is_empty():
+		return {"units": units, "store": ""}
+	if store.is_empty() or not units.has(store):
+		store = units[0]
+	return {"units": units, "store": store}
+
+
+## The toggle-row marker's arguments -> {options, segmented, icons}. The option list is args[0];
+## after it come the optional tails in a fixed order - "segmented", then "icons=<source>". The icon
+## source is rejoined with ":" because a res:// path carries colons of its own.
+## Static + UI-free so the headless suite pins the contract.
+static func parse_toggle_spec(args: Array) -> Dictionary:
+	var spec: Dictionary = {"options": PackedStringArray(), "segmented": false, "icons": ""}
+	if args.is_empty():
+		return spec
+	var options: PackedStringArray = PackedStringArray()
+	for option: String in str(args[0]).split(","):
+		if not option.strip_edges().is_empty():
+			options.append(option.strip_edges())
+	spec["options"] = options
+	for index: int in range(1, args.size()):
+		var tail: String = str(args[index])
+		if tail == "segmented":
+			spec["segmented"] = true
+		elif tail.begins_with("icons="):
+			var joined: PackedStringArray = PackedStringArray()
+			for rest: int in range(index, args.size()):
+				joined.append(str(args[rest]))
+			spec["icons"] = ":".join(joined).substr(6)
+			break
+	return spec
 
 
 # Decor maps parsed per script, cached by source length (cosmetic-only, so a same-length edit missing
@@ -278,22 +342,58 @@ class MinMaxSliderProperty:
 		_slider.set_value(get_edited_object().get(get_edited_property()))
 
 
-## String choices as one row of toggle buttons: the pressed button IS the value.
+## Fixed choices as one row of toggle buttons: the pressed button IS the value. A String property
+## stores the option text; an int property stores the option's INDEX, which is how a plain
+## @export_enum int already reads - so the same row of buttons serves both without a second drawer.
 class ToggleRowProperty:
 	extends EditorProperty
 	var _row: EventSheetDrawerWidgets.DrawerToggleRow
+	var _options: PackedStringArray = PackedStringArray()
+	var _stores_index: bool = false
 
-	func _init(options: PackedStringArray) -> void:
-		_row = EventSheetDrawerWidgets.DrawerToggleRow.new(options)
+	func _init(options: PackedStringArray, stores_index: bool = false, icon_source: String = "", segmented: bool = false) -> void:
+		_options = options
+		_stores_index = stores_index
+		_row = EventSheetDrawerWidgets.DrawerToggleRow.new(options, icon_source, segmented)
 		_row.value_changed.connect(_on_changed)
 		add_child(_row)
 		set_bottom_editor(_row)
 
 	func _on_changed(value: String) -> void:
+		if not _stores_index:
+			emit_changed(get_edited_property(), value)
+			return
+		var index: int = Array(_options).find(value)
+		if index >= 0:
+			emit_changed(get_edited_property(), index)
+
+	func _update_property() -> void:
+		var value: Variant = get_edited_object().get(get_edited_property())
+		if not _stores_index:
+			_row.set_value(str(value))
+			return
+		var index: int = int(value)
+		_row.set_value(_options[index] if index >= 0 and index < _options.size() else "")
+
+
+## A float with its unit: a spin box plus a unit dropdown at its edge. The dropdown converts what is
+## SHOWN; what is stored stays in the unit the export named, so flipping it never rewrites the scene
+## and never moves a number the running game reads.
+class UnitFieldProperty:
+	extends EditorProperty
+	var _field: EventSheetDrawerWidgets.DrawerUnitField
+
+	func _init(units: PackedStringArray, store_unit: String) -> void:
+		_field = EventSheetDrawerWidgets.DrawerUnitField.new(units, store_unit)
+		_field.value_changed.connect(_on_changed)
+		add_child(_field)
+		add_focusable(_field)
+
+	func _on_changed(value: float) -> void:
 		emit_changed(get_edited_property(), value)
 
 	func _update_property() -> void:
-		_row.set_value(str(get_edited_object().get(get_edited_property())))
+		_field.set_value(float(get_edited_object().get(get_edited_property())))
 
 
 ## Array-of-Dictionary table: a grid with typed cell editors, add / remove / move-up.
