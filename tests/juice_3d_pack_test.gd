@@ -139,6 +139,43 @@ static func run() -> bool:
 	all_passed = _check("a fixed angle points the split down that line",
 		Vector2(behavior._chroma_shake_direction()).is_equal_approx(Vector2(0.0, 1.0)), true) and all_passed
 	behavior.stop_chromatic_shake()
+	# ── The WANDERING direction, which is the one a row opens with. Everything above runs with no
+	# noise at all (script.new() never runs _ready), so the default path - the only one a designer
+	# meets without typing an angle - is the one path the rest of this file cannot see. A noise is
+	# seeded by hand here and taken away again afterwards, and the question asked of it is the whole
+	# promise of the verb: a direction one pixel long, so the magnitude the row asks for and the
+	# expression answers is the width the screen is actually given. ──
+	behavior._noise = FastNoiseLite.new()
+	behavior._noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	behavior._noise.frequency = 1.0
+	behavior._noise.seed = 20260904
+	behavior.chromatic_shake(12.0, 10.0, "constant", -1.0)
+	var off_the_unit: int = 0
+	var angles_seen: Dictionary = {}
+	for step: int in range(120):
+		behavior._chroma_shake_phase = float(step) * 0.05
+		var walked: Vector2 = behavior._chroma_shake_direction()
+		if not is_equal_approx(walked.length(), 1.0):
+			off_the_unit += 1
+		angles_seen[int(roundf(walked.angle() * 8.0))] = true
+	all_passed = _check("every wandering direction is one pixel long", off_the_unit, 0) and all_passed
+	all_passed = _check("and the split still wanders rather than sitting still", angles_seen.size() > 8, true) and all_passed
+	# Written out to three places rather than compared as a float: snapping a float and comparing it
+	# to a literal is the pin that passes here and flakes on the runner by one ulp.
+	all_passed = _check("so the shift handed to the shader is as wide as the expression says",
+		"%.3f" % (Vector2(behavior._chroma_shake_direction()).length() * behavior.chromatic_shake_magnitude()),
+		"12.000") and all_passed
+	# And turning no flashing on part way through a shake SLOWS the wander from here on rather than
+	# jumping it: the clock already carries the rate, so the sample the noise is read at does not
+	# move under the setting. The two readings are taken in the same frame, either side of the meta.
+	var wander_before: float = behavior._chroma_shake_wander()
+	Engine.set_meta("no_flashing", true)
+	var wander_after: float = behavior._chroma_shake_wander()
+	Engine.remove_meta("no_flashing")
+	all_passed = _check("the anti-strobe setting slows the wander without teleporting it",
+		wander_after, wander_before) and all_passed
+	behavior.stop_chromatic_shake()
+	behavior._noise = null
 	Engine.set_meta("no_flashing", true)
 	behavior.chromatic_shake(12.0, 0.4, "reducing", -1.0)
 	all_passed = _check("no flashing halves the magnitude", behavior.chromatic_shake_magnitude(), 6.0) and all_passed
@@ -146,6 +183,18 @@ static func run() -> bool:
 	behavior.stop_chromatic_shake()
 	Engine.remove_meta("no_flashing")
 	all_passed = _check("the no-flashing meta is not left behind for other tests", Engine.has_meta("no_flashing"), false) and all_passed
+	# The falloff is spent once, on the shift. The shader mixes the shaken taps in by chroma_intensity,
+	# so writing the fade into that dial as well would square the curve and a reducing shake would be
+	# a quarter of itself half way through while the expression answered half. Off the tree there is
+	# no material to read the dial back from, so the pinned thing is the line the pack ships.
+	var pack_source: String = FileAccess.get_file_as_string(PACK)
+	all_passed = _check("the shake's mix dial is a gate rather than a second copy of the falloff",
+		pack_source.contains("_fx_material.set_shader_parameter(\"chroma_intensity\", 1.0)"), true) and all_passed
+	# And the shake's four extra reads of the screen per pixel are behind a gate: the overlay is on
+	# screen for a vignette, a kick or speed lines too, and those frames must not pay for a shake
+	# that is not running.
+	all_passed = _check("the overlay pays for the shake's extra taps only while a shake runs",
+		pack_source.contains("if (chroma_intensity > 0.0) {"), true) and all_passed
 	# The overlay shader itself compiles headless: a shader that fails to build reports NO uniforms,
 	# so the sorted uniform list is both the compile check and the shake's two new dials.
 	var fx_shader: Shader = Shader.new()
