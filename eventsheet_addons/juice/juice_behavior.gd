@@ -227,8 +227,9 @@ const CHROMA_SHAKE_WANDER: float = 0.35
 
 ## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
 ## No Flashing row writes. A game carrying that row needs nothing else: the split comes out half
-## as wide and wanders half as fast, which is the same shake without the strobe.
-const CHROMA_SHAKE_NO_FLASHING_META: StringName = &"no_flashing"
+## as wide and wanders half as fast, which is the same shake without the strobe. This is the
+## pack's ONE name for that meta, read by everything here that has to obey it.
+const NO_FLASHING_META: StringName = &"no_flashing"
 
 # The magnitude the screen is showing right now, in pixels - what the expression answers with.
 var _chroma_shake_magnitude: float = 0.0
@@ -263,9 +264,8 @@ const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
 const MOMENT_FLASH_CEILING: float = 0.3
 const MOMENT_FLASH_FLOOR_SECONDS: float = 0.4
 
-## The Engine meta the whole project keeps that answer in - the one the built-in Set No Flashing row
-## writes. A game carrying that row needs nothing else for its moments to obey it.
-const MOMENT_NO_FLASHING_META: StringName = &"no_flashing"
+# The Engine meta the whole project keeps that answer in is NO_FLASHING_META, declared once with
+# the chromatic shake above and read by both: one meta, one name for it.
 
 ## Every word a step may be, in the order a reader meets them: this pack's own effects first, then
 ## the two that reach the screen, then the two that drive the post stack.
@@ -1268,7 +1268,7 @@ func _fx_update_visibility() -> void:
 ## Whether this player has asked for no flashing.
 ## @ace_hidden
 func _chroma_shake_quiet() -> bool:
-	return bool(Engine.get_meta(CHROMA_SHAKE_NO_FLASHING_META, false))
+	return bool(Engine.get_meta(NO_FLASHING_META, false))
 
 ## How fast the split's direction wanders: the same knob the camera shake scrolls its noise at,
 ## halved while no flashing is on.
@@ -1485,7 +1485,7 @@ func _moment_here() -> Vector2:
 ## and applying it twice over would square it.
 ## @ace_hidden
 func _moment_allowed(amount: float) -> float:
-	if bool(Engine.get_meta(MOMENT_NO_FLASHING_META, false)):
+	if bool(Engine.get_meta(NO_FLASHING_META, false)):
 		return clampf(amount, -MOMENT_FLASH_CEILING, MOMENT_FLASH_CEILING)
 	return amount
 
@@ -1493,7 +1493,7 @@ func _moment_allowed(amount: float) -> float:
 ## because a small amplitude arriving ten times a second is still a strobe.
 ## @ace_hidden
 func _moment_slowed(seconds: float) -> float:
-	if bool(Engine.get_meta(MOMENT_NO_FLASHING_META, false)):
+	if bool(Engine.get_meta(NO_FLASHING_META, false)):
 		return maxf(seconds, MOMENT_FLASH_FLOOR_SECONDS)
 	return maxf(seconds, 0.0)
 
