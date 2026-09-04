@@ -142,6 +142,24 @@ const MULTIPLAYER_SOURCE: String = "@multiplayer"
 const MEMBER_SOURCE_PREFIX: String = "member:"
 
 
+## The parameter a blend tree keeps its state machine's playback object under. Frozen alongside the
+## rows that write it: the travel and jump verbs address the same string.
+const PLAYBACK_PARAMETER: String = "parameters/playback"
+
+
+## The source a state-machine trigger connects through, as a `member:` expression rather than as a
+## node path - because the signal is not on the AnimationTree node at all. It is on the playback
+## object the tree keeps under `parameters/playback`, so the `_ready` line has to reach through the
+## tree to it: `get_node("Anim").get("parameters/playback").state_started.connect(...)`, or the bare
+## `get("parameters/playback")...` when the sheet IS the tree. The `member:` prefix is the seam for
+## exactly this - a source that is an EXPRESSION of the script rather than a node it looks up.
+static func playback_source(source_path: String) -> String:
+	var reach: String = "get(\"%s\")" % PLAYBACK_PARAMETER
+	if not source_path.strip_edges().is_empty():
+		reach = "get_node(\"%s\").%s" % [source_path.strip_edges(), reach]
+	return "%s%s" % [MEMBER_SOURCE_PREFIX, reach]
+
+
 ## The menu variable a menu-item event names, "" for any other trigger.
 static func menu_variable_of(event: EventRow) -> String:
 	if effective_trigger_id(event) != MENU_TRIGGER_ID:
@@ -477,6 +495,20 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# condition under it, exactly as a notification's constant is a case under `_notification`.
 			# One handler per sprite, so every frame event on the same sprite shares it.
 			return _signal_backed("_on%s_frame_changed" % source_token, "", "frame_changed", source_path)
+		"OnAnimationReachedMarker":
+			# The mixer says it has just been stepped; WHICH crossing the event answers is the
+			# condition under it, exactly as the frame question is under On Animation Frame. One
+			# handler per player, so every marker event on the same player shares it.
+			return _signal_backed("_on%s_mixer_updated" % source_token, "", "mixer_updated", source_path)
+		"OnAnimationStateEntered":
+			# A state machine's two moments are signals on its PLAYBACK object rather than on the
+			# tree node, so the connect line reaches through the tree to it - which is the line a
+			# hand-written project writes to hear the same thing.
+			return _signal_backed("_on%s_state_entered" % source_token, "state: StringName",
+				"state_started", playback_source(source_path))
+		"OnAnimationStateLeft":
+			return _signal_backed("_on%s_state_left" % source_token, "state: StringName",
+				"state_finished", playback_source(source_path))
 		ANIMATION_EVENT_TRIGGER_ID:
 			# An animation METHOD TRACK calls a function on the script by name - there is no signal
 			# to connect, the animation itself is the caller. So the event compiles to that named

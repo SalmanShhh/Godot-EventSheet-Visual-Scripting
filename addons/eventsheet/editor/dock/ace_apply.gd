@@ -665,6 +665,19 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 			"target": event_row.trigger_source_path.strip_edges()
 		}
 		event_row.conditions.append(frame_gate)
+	# On Animation Reached Marker is the PLAYER's mixer_updated signal, which fires on every frame
+	# the player is stepped - so which crossing the event answers is a condition under it, for the
+	# same reasons as above. The crossing question is the edge one (true on the one frame the play
+	# head passes the moment), because a trigger is a moment and the shipped Reached Marker row
+	# stays true for the rest of the clip.
+	if definition.id == "OnAnimationReachedMarker" and event_row.conditions.is_empty():
+		var marker_definition: ACEDefinition = _dock._find_definition("Core", "AnimationJustPastMarker")
+		if marker_definition != null:
+			var marker_gate: ACECondition = _create_condition_from_definition(marker_definition, {})
+			marker_gate.params["animation"] = str(event_row.trigger_params.get("animation", "\"attack\""))
+			marker_gate.params["marker"] = str(event_row.trigger_params.get("marker", "\"impact\""))
+			marker_gate.params["target"] = event_row.trigger_source_path.strip_edges()
+			event_row.conditions.append(marker_gate)
 
 
 ## True when this event already asks one particular question. What keeps an auto-added gate from

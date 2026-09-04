@@ -4075,7 +4075,18 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# all - the networked meaning is in WHERE it runs (on the owner, with a spawner watching), not in
 	# the line. Admitted to the index it would relabel every removal in every project as a networking
 	# row, so it authors only and a bare `queue_free()` keeps the row it already had.
-	"Despawn"
+	"Despawn",
+	# Bone Position (2D), for the same reason Place Of (3D) is here: its template IS
+	# `global_position`, which is the line the shipped place rows already speak for, character for
+	# character. A bone in 2D is a node, and asking where a node is has one spelling - so admitting
+	# this row would split every `global_position` read in every project between two rows by
+	# registry order alone. It is an authoring word; the reading stays the one that opens the line.
+	"BonePosition2D",
+	# Just Reached Marker, for a different reason: its template names the state the compiler
+	# synthesizes for it (`__marker_<uid>`), which exists only inside a sheet that applied the row.
+	# There is no hand-written line for it to claim, and the shipped Reached Marker already speaks
+	# for the marker comparison a person writes by hand.
+	"AnimationJustPastMarker"
 ]
 
 
@@ -4150,14 +4161,33 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 			# eats `const FMT = "a: b = c"` into name=`FMT = "a`). Flag it so _match_entry rejects any match
 			# whose captured name is not a bare identifier, letting the plain (correct) template win.
 			var decl_name: bool = variant.begins_with("var ") or variant.begins_with("const ")
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, ""))})
+			# A verb carrying a forwarding address is a SUPERSEDED spelling of a line the vocabulary
+			# now writes another way. Recorded here so the sort below can prefer the current verb
+			# whenever the two spell the same template - see the tie-break note there.
+			var superseded: bool = not descriptor.successor_map().is_empty()
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "superseded": superseded, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, ""))})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
 	# would reverse-lift as SetVar). _match_entry is first-match, so stable-sort by literal-char count
 	# (descending) - `velocity = {vel}` outranks `{var_name} = {value}`; the `order` tiebreaker keeps
 	# registry order among equal-specificity twins (sort_custom is not guaranteed stable).
-	entries.sort_custom(func(a, b): return a["literal_len"] > b["literal_len"] if a["literal_len"] != b["literal_len"] else a["order"] < b["order"])
+	#
+	# A SUPERSEDED SPELLING NEVER WINS A TIE. Where a retired verb and the verb that replaced it write
+	# the same template - `{target.}play({from_position})` and `{target.}play({from})` are the same
+	# line to the character once the slots are taken out - the two entries have equal literal_len, and
+	# a tie broken by registration order alone means a hand-written `$Sfx.play(0.5)` reads back as
+	# whichever module happens to sort first. That is an alphabetical accident deciding whether an
+	# opened `.gd` file grows a migration row, so it is decided here instead: a verb with no
+	# forwarding address is preferred over a verb that has one, and only then does registry order
+	# speak. A superseded verb keeps its entry - a stored `.tres` sheet still names it, and its
+	# template still compiles - it simply stops claiming lines the current spelling would claim.
+	entries.sort_custom(func(a, b):
+		if a["literal_len"] != b["literal_len"]:
+			return a["literal_len"] > b["literal_len"]
+		if bool(a["superseded"]) != bool(b["superseded"]):
+			return not bool(a["superseded"])
+		return a["order"] < b["order"])
 	return entries
 
 

@@ -431,6 +431,12 @@ func _ensure_hint_factories() -> void:
 			"resource_path": _create_resource_path_field,
 			"animation_reference": _create_animation_field,
 			"marker_reference": _create_marker_field,
+			# The three fields a blend tree names for itself. A state and a blend node are strings in
+			# a magic path, so the list has to come off the tree resource or the reader is typing
+			# blind - which is exactly how `travel(&"Swng")` reaches a game.
+			"animation_state": _create_animation_state_field,
+			"blend_space": _create_blend_space_field,
+			"blend_layer": _create_blend_layer_field,
 			"animation_frame": _create_animation_frame_field,
 			"method_reference": _create_method_reference_field,
 			"property_reference": _create_property_reference_field,
@@ -2470,6 +2476,65 @@ func _create_marker_field(key: String, default_value: Variant) -> Control:
 			known.append(quoted)
 			described[quoted] = EventSheetL10n.translate("%s s in") % String.num(
 				float((marker as Dictionary).get("time", 0.0)), 2)
+	return _create_autocomplete_field(key, Array(known), default_value,
+		func(name: String) -> String: return str(described.get(name, "")))
+
+
+## The STATES the attached scene's AnimationTree really declares. Offered quoted, the way the shipped
+## travel row has always written them, because a name the tree has never heard of walks nowhere and
+## reports nothing. A `&"Name"` typed by hand is accepted just the same - `travel()` takes either -
+## and so is a name built while the game runs, exactly as an animation name is.
+func _create_animation_state_field(key: String, default_value: Variant) -> Control:
+	var trees: Array[Dictionary] = EventSheetSceneAnimationTree.for_script(_sheet_source_path())
+	var known: PackedStringArray = PackedStringArray()
+	for state_name: String in EventSheetSceneAnimationTree.state_names(trees):
+		known.append(format_quoted_literal(state_name))
+	var row: Control = _create_autocomplete_field(key, Array(known), default_value)
+	# The LIST offers one spelling; the JUDGEMENT accepts both, because `travel()` really does take
+	# either and a reader who typed the StringName form has done nothing wrong.
+	var accepted: PackedStringArray = known.duplicate()
+	for quoted: String in known:
+		accepted.append("&%s" % quoted)
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit != null and not known.is_empty():
+		edit.text_changed.connect(func(_typed: String) -> void: _judge_state(edit, accepted))
+		_judge_state(edit, accepted)
+	return row
+
+
+## The one thing the scene can say about a state name before the game runs: no state machine in this
+## tree is called that, so the travel walks nowhere and nothing reports it.
+func _judge_state(edit: LineEdit, known: PackedStringArray) -> void:
+	_validate_named_field(edit, known, EventSheetL10n.translate("no such state"),
+		EventSheetL10n.translate("This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant."))
+
+
+## The BLEND SPACES the attached scene's tree declares - the nodes that take a blend position. Bare
+## names, not quoted ones: the row writes the name straight into the parameter path
+## (`parameters/<name>/blend_position`), so what the field holds is the name itself.
+func _create_blend_space_field(key: String, default_value: Variant) -> Control:
+	return _create_blend_node_field(key, default_value, true)
+
+
+## The BLEND LAYERS beside them - the Blend2 and Add2 nodes, which take one amount rather than a
+## position. Told apart from the spaces by the class the tree gives each child, so a layer never
+## appears in a blend-position field and a space never appears in a layer one.
+func _create_blend_layer_field(key: String, default_value: Variant) -> Control:
+	return _create_blend_node_field(key, default_value, false)
+
+
+## The one body behind the two fields above: the tree's own child names, described by what each one
+## is, so a reader picking "Locomotion" can see it is a two-dimensional space before they write a
+## number into it.
+func _create_blend_node_field(key: String, default_value: Variant, want_space: bool) -> Control:
+	var trees: Array[Dictionary] = EventSheetSceneAnimationTree.for_script(_sheet_source_path())
+	var described: Dictionary = {}
+	var known: PackedStringArray = EventSheetSceneAnimationTree.space_names(trees) if want_space \
+		else EventSheetSceneAnimationTree.layer_names(trees)
+	for space_name: String in known:
+		var dimensions: int = EventSheetSceneAnimationTree.dimensions_of(trees, space_name)
+		described[space_name] = EventSheetL10n.translate("%d-dimensional") % dimensions if dimensions > 0 \
+			else EventSheetL10n.translate("one amount")
 	return _create_autocomplete_field(key, Array(known), default_value,
 		func(name: String) -> String: return str(described.get(name, "")))
 
