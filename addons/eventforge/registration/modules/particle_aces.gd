@@ -65,6 +65,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# The words, LAST and for a reason: registration order is the reverse-lifter's tie-break, so the
 	# frozen rows above keep every line they already claimed. A hand-written `amount = 8` still reads
 	# as the row it has always read as.
+	#
+	# WHICH IS ALSO THE COST, said here so nobody has to find it out from a sheet. Two of the words
+	# land on a line a frozen row already spells: `amount` and `lifetime` on a 2D emitter are Set
+	# Amount and Set Lifetime to the reverse-lifter forever, never Set Particle Amount and never Set
+	# Particle Lifetime. So "every particle word reads backwards" is true of the material words and
+	# of both node words in 3D, and NOT of those two lines in 2D - they read as the older row, which
+	# emits the identical GDScript and says the same thing in fewer letters. The alternative was
+	# taking a line away from a row somebody's saved sheet already holds, and a frozen row keeping
+	# what it claimed is worth more than a tidy sentence here.
 	for host: Dictionary in W.HOSTS:
 		for word: String in W.words(host):
 			descriptors.append_array(_word_rows(W.word_entry(word), host))
