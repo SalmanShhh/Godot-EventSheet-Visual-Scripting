@@ -1988,6 +1988,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"loot_table_resource": "Loot-Table",
 	"mod_manifest_resource": "Mods",
 	"moment_resource": "Juice",
+	"music_track_resource": "Music",
 	"object_pool": "ObjectPool",
 	"platformer_movement": "Platformer",
 	"price_table_resource": "Priced-Tables",
