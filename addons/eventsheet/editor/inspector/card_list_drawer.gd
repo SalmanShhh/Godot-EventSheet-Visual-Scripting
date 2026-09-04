@@ -134,6 +134,33 @@ func set_card_enabled(index: int, enabled: bool) -> void:
 	_commit()
 
 
+## Rename one card. Only a schema that declares a `label_key` has a name to write; without one a
+## card is titled by its kind, and typing a name would invent a key the file never had.
+func set_card_label(index: int, text: String) -> void:
+	var label_key: String = str(_schema.get("label_key", ""))
+	if label_key.is_empty() or index < 0 or index >= _cards.size():
+		return
+	_cards[index][label_key] = text
+	value_changed.emit(get_value())
+
+
+## Give one card its own stripe colour, written at the stripe key as the "#rrggbb" a plain-data list
+## holds. REFUSED when the stripe key is the key that holds the kind (which is how the Drawing
+## Prefab colours its shapes): a colour written there would overwrite what the card IS.
+func set_card_stripe(index: int, color: Color) -> void:
+	var stripe_key: String = str(_spec.get("stripe_key", "category"))
+	if stripe_key.is_empty() or stripe_key == str(_spec.get("kind_key", "kind")) or index < 0 or index >= _cards.size():
+		return
+	_cards[index][stripe_key] = "#" + color.to_html(false)
+	_commit()
+
+
+## Whether a card may carry a colour of its own - the swatch beside its name is drawn only then.
+func stripe_editable() -> bool:
+	var stripe_key: String = str(_spec.get("stripe_key", "category"))
+	return not stripe_key.is_empty() and stripe_key != str(_spec.get("kind_key", "kind"))
+
+
 ## Replace the card at `index` with the clipboard's first card ("Paste over" on the card's menu).
 func paste_over(index: int, text: String) -> void:
 	var pasted: Array = EventSheetCardSchemas.cards_from_text(text)
@@ -388,6 +415,10 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 		info.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		info.modulate = Color(1.0, 1.0, 1.0, 0.6)
 		body.add_child(info)
+	if not EventSheetCardSchemas.enabled_key(_schema).is_empty():
+		body.add_child(_build_active_row(index, EventSheetCardSchemas.card_enabled(_schema, card)))
+	if not str(_schema.get("label_key", "")).is_empty():
+		body.add_child(_build_label_row(index, card, entry))
 	var fields: VBoxContainer = VBoxContainer.new()
 	fields.add_theme_constant_override("separation", 2)
 	for field: Variant in EventSheetCardSchemas.fields_of(entry):
@@ -417,17 +448,58 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 	return body
 
 
-## One field: its title, its editor, and - when the field is linked to another - the "=" toggle that
-## writes both keys at once while it is lit.
-func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
+## The card's own enable box, the same switch the header carries - here because an open card is where
+## a designer reads what this one does before deciding to skip it.
+func _build_active_row(index: int, enabled: bool) -> Control:
+	var box: CheckBox = CheckBox.new()
+	box.button_pressed = enabled
+	box.disabled = not editable
+	box.tooltip_text = "Untick to skip this card."
+	box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(index, pressed))
+	return _titled_row("Active", box)
+
+
+## The card's name, and beside it the colour of its stripe when the list stores one per card. A
+## schema that declares no label key has no name to type, so this row is not built at all.
+func _build_label_row(index: int, card: Dictionary, entry: Dictionary) -> Control:
+	var row: HBoxContainer = _titled_row("Label", null)
+	var name_edit: LineEdit = LineEdit.new()
+	name_edit.text = str(card.get(str(_schema.get("label_key", "")), ""))
+	name_edit.placeholder_text = EventSheetCardSchemas.card_label(_schema, _spec, entry, card)
+	name_edit.editable = editable
+	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_edit.text_changed.connect(func(text: String) -> void: set_card_label(index, text))
+	row.add_child(name_edit)
+	if stripe_editable():
+		var swatch: ColorPickerButton = ColorPickerButton.new()
+		swatch.custom_minimum_size = Vector2(EventSheetPalette.scaled(38), 0.0)
+		swatch.disabled = not editable
+		swatch.tooltip_text = "The colour of this card's stripe."
+		swatch.color = EventSheetCardSchemas.stripe_color(_schema, EventSheetCardSchemas.card_category(_spec, entry, card))
+		swatch.color_changed.connect(func(picked: Color) -> void: set_card_stripe(index, picked))
+		row.add_child(swatch)
+	return row
+
+
+## A muted title with its editor beside it - the shape every row inside a card has.
+func _titled_row(title: String, control: Control) -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
 	var label: Label = Label.new()
-	label.text = str(field.get("label", field.get("key", "")))
+	label.text = title
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	label.custom_minimum_size = Vector2(EventSheetPalette.scaled(84), 0.0)
 	label.modulate = Color(1.0, 1.0, 1.0, 0.75)
 	row.add_child(label)
+	if control != null:
+		row.add_child(control)
+	return row
+
+
+## One field: its title, its editor, and - when the field is linked to another - the "=" toggle that
+## writes both keys at once while it is lit.
+func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
+	var row: HBoxContainer = _titled_row(str(field.get("label", field.get("key", ""))), null)
 	var linked: String = str(field.get("link", ""))
 	var link_toggle: CheckButton = null
 	if not linked.is_empty():

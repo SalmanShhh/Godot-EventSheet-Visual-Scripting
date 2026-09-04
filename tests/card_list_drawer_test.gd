@@ -20,6 +20,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _marker_pins() and ok
 	ok = _schema_pins() and ok
+	ok = _card_row_pins() and ok
 	ok = _array_pins() and ok
 	ok = _prefab_pins() and ok
 	return ok
@@ -117,6 +118,45 @@ static func _schema_pins() -> bool:
 		EventSheetCardSchemas.stripe_color({}, ""), EventSheetCardSchemas.UNCATEGORISED_STRIPE) and ok
 	ok = _eq("a schema naming a colour wins",
 		EventSheetCardSchemas.stripe_color({"stripes": {"audio": "#112233"}}, "audio"), Color.from_string("#112233", Color.WHITE)) and ok
+	ok = _eq("a card carrying its own colour is read as that colour, not hashed",
+		EventSheetCardSchemas.stripe_color({}, "#4488cc"), Color.from_string("#4488cc", Color.WHITE)) and ok
+	return ok
+
+
+## The card's own two rows - the enable box and the name with its colour - written through the
+## drawer, because those two write keys into somebody's file and the rest of the card does not.
+static func _card_row_pins() -> bool:
+	var ok: bool = true
+	var schema: Dictionary = {
+		"label_key": "label",
+		"enabled_key": "on",
+		"kinds": [{"kind": "shake", "category": "camera", "label": "Shake", "fields": [{"key": "amount"}]}],
+	}
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": schema})
+	drawer.set_value([{"kind": "shake", "amount": 2.0}])
+	ok = _eq("a card the designer has not renamed is titled by its kind", drawer.card_labels(), PackedStringArray(["Shake"])) and ok
+	drawer.set_card_label(0, "Big hit")
+	ok = _eq("renaming a card writes the schema's label key", drawer.get_value(), [{"kind": "shake", "amount": 2.0, "label": "Big hit"}]) and ok
+	ok = _eq("the renamed card is titled by its own name", drawer.card_labels(), PackedStringArray(["Big hit"])) and ok
+	drawer.set_card_stripe(0, Color.from_string("#4488cc", Color.WHITE))
+	ok = _eq("a card's own colour is stored as the text a plain-data list holds",
+		str((drawer.get_value()[0] as Dictionary).get("category", "")), "#4488cc") and ok
+	drawer.set_card_enabled(0, false)
+	ok = _eq("switching the card off writes one key",
+		bool((drawer.get_value()[0] as Dictionary).get("on", true)), false) and ok
+	drawer.free()
+
+	# A list whose stripe key IS the key holding the kind (the Drawing Prefab) can never be given a
+	# colour, because the colour would land where the shape is stored.
+	var prefab_drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({
+		"kind_key": "kind", "stripe_key": "kind", "schema_dict": {"kinds": [{"kind": "circle", "label": "Circle"}]}})
+	prefab_drawer.set_value([{"kind": "circle", "p1": 4.0}])
+	ok = _eq("a list coloured by its kind offers no colour of its own", prefab_drawer.stripe_editable(), false) and ok
+	prefab_drawer.set_card_stripe(0, Color.RED)
+	ok = _eq("and a colour written there anyway is refused", prefab_drawer.get_value(), [{"kind": "circle", "p1": 4.0}]) and ok
+	prefab_drawer.set_card_label(0, "renamed")
+	ok = _eq("a schema with no label key has no name to write", prefab_drawer.get_value(), [{"kind": "circle", "p1": 4.0}]) and ok
+	prefab_drawer.free()
 	return ok
 
 
@@ -205,6 +245,32 @@ static func _prefab_pins() -> bool:
 	ok = _eq("a stamp still names its texture", _field_labels(schema, "stamp"), "Shape|Scale|Spin|Texture|Offset X|Offset Y|Color") and ok
 	ok = _eq("the prefab declares no enable key (nothing would honour it)",
 		EventSheetCardSchemas.enabled_key(schema), "") and ok
+	ok = _tres_round_trip() and ok
+	return ok
+
+
+## A saved prefab opened in the cards editor and saved again is the SAME FILE. This is the contract
+## the whole drawer is built around, and the only pin that asks the question in the designer's own
+## terms: the bytes on disk.
+static func _tres_round_trip() -> bool:
+	var path: String = "user://card_list_drawer_test_prefab.tres"
+	var prefab: DrawingPrefabResource = DrawingPrefabResource.new()
+	prefab.prefab_name = "marker"
+	prefab.steps = [
+		{"kind": "circle", "x": 0.0, "y": 0.0, "p1": 9.0, "p2": 0.0, "p3": 0.0, "color": "#ffcc00", "texture": ""},
+		{"kind": "line", "x": -4.0, "y": 0.0, "p1": 12.0, "p2": 0.0, "p3": 2.0, "color": "red"},
+	]
+	ResourceSaver.save(prefab, path)
+	var before: String = FileAccess.get_file_as_string(path)
+	var reopened: DrawingPrefabResource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as DrawingPrefabResource
+	var editor: EventSheetDrawingPrefabInspector.ShapeStepsEditor = EventSheetDrawingPrefabInspector.ShapeStepsEditor.new()
+	editor.set_steps(reopened.steps)
+	reopened.steps = editor.get_steps()
+	editor.free()
+	ResourceSaver.save(reopened, path)
+	var after: String = FileAccess.get_file_as_string(path)
+	var ok: bool = _eq("a prefab opened in the cards editor and saved again is the same file", after, before)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	return ok
 
 

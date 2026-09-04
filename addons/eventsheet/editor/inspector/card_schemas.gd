@@ -127,9 +127,14 @@ static func stripe_color(schema: Dictionary, category: String) -> Color:
 	var overrides: Dictionary = schema.get("stripes") if schema.get("stripes") is Dictionary else {}
 	if overrides.has(category):
 		return Color.from_string(str(overrides[category]), UNCATEGORISED_STRIPE)
-	if category.strip_edges().is_empty():
+	var word: String = category.strip_edges()
+	if word.is_empty():
 		return UNCATEGORISED_STRIPE
-	return Color.from_hsv(_hue_of(category), 0.5, 0.85)
+	# A card that carries its own colour says so in the one spelling a plain-data list can hold: the
+	# "#rrggbb" text. There is nothing to hash then - the card already named the answer.
+	if word.begins_with("#") and Color.html_is_valid(word):
+		return Color.from_string(word, UNCATEGORISED_STRIPE)
+	return Color.from_hsv(_hue_of(word), 0.5, 0.85)
 
 
 ## A word's hue, in 0..1. A plain rolling hash over the bytes, taken modulo 360 whole degrees so the
