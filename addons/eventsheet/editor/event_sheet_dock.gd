@@ -361,6 +361,10 @@ var _lift_workbench: RefCounted = null
 ## somebody asks: a workspace that never streams a world should not cost a window, and loading it
 ## by path keeps it off the boot path.
 var _chunk_tools_dialog: RefCounted = null
+## Command palette ▸ Export Mod Template (mod_template_dialog.gd). Null until somebody asks: a
+## project that never ships mod support should not cost a window, and loading it by path keeps it
+## off the boot path.
+var _mod_template_dialog: RefCounted = null
 var _translation_studio: EventSheetTranslationStudio = EventSheetTranslationStudio.new()  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog_glue.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
@@ -473,6 +477,9 @@ func _init() -> void:
 	# palette is where this editor already keeps those - the same door the guide tells a reader about.
 	EventSheets.register_palette_command("Split Scene Into Chunks", func() -> void: _open_chunk_tools(true), "Streaming")
 	EventSheets.register_palette_command("Merge Chunks", func() -> void: _open_chunk_tools(false), "Streaming")
+	# The starter folder the Mods pack's guide tells a game to hand its modders. Same reasoning as
+	# the two above: an errand run once per project, on the door this editor already keeps those on.
+	EventSheets.register_palette_command("Export Mod Template", func() -> void: _open_mod_template(), "Mods")
 	_ace_apply.init(self)
 	_editor_tool_bar.init(self)
 	_this_editor_bar.init(self)
@@ -4656,6 +4663,15 @@ func _open_chunk_tools(splitting: bool) -> void:
 		_chunk_tools_dialog.open_split(self, edited)
 	else:
 		_chunk_tools_dialog.open_merge(self, edited)
+
+
+## Command palette ▸ Export Mod Template: the starter mod folder a game hands its modders, with
+## its manifest already filled in (mod_template_dialog.gd). Built on first open, so a project that
+## never ships mod support pays nothing.
+func _open_mod_template() -> void:
+	if _mod_template_dialog == null:
+		_mod_template_dialog = load("res://addons/eventsheet/editor/mod_template_dialog.gd").new()
+	_mod_template_dialog.open(self)
 
 
 ## Tools ▸ Lift Workbench: the developer-side bench a recogniser is written on - paste code, see per
