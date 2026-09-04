@@ -10,10 +10,11 @@ Scene Flow is a Godot EventSheets behavior pack that gives a whole menu (or a wh
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [Transitions - a shape drawn over the change](#transitions---a-shape-drawn-over-the-change)
-5. [ACE reference](#ace-reference)
-6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-7. [Use cases](#use-cases)
-8. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Loading screens - a screen of your own while the next scene loads](#loading-screens---a-screen-of-your-own-while-the-next-scene-loads)
+6. [ACE reference](#ace-reference)
+7. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -31,12 +32,13 @@ Scene Flow is a Godot EventSheets behavior pack that gives a whole menu (or a wh
 - **Debounced buttons.** Guard every transition with **Is Transitioning** so a mashed button cannot fire two scene changes at once.
 - **Scene-aware logic.** Read **Current Scene Path** to branch behavior (play different music, show different UI) based on which scene file is live.
 - **Consistent look across a whole game.** Set `fade_color` and `fade_seconds` once per menu node and every faded change matches.
+- **A level that takes a beat to open.** **Go To Scene With Loading** shows a screen of your own while the next scene comes off the disk, with a bar, a tip, and a shortest time so it cannot flash past on a fast machine.
 
 ---
 
 ## Core concepts
 
-The whole pack is five actions, one condition, and one expression. Learn these five ideas and you have all of it.
+The heart of the pack is five actions, one condition, and one expression, with the shaped transitions and the loading screens built on top of them. Learn these five ideas and you have all of it.
 
 **It is a behavior you attach to a node, and it acts on the whole game.** You add a `SceneFlowBehavior` as a child of some node - a menu Control, a HUD, a persistent manager, anything that is a `Node`. Its actions all talk to the running scene tree (`get_tree()`), not just to the node you attached it to. So where you attach it barely matters as long as that node is alive in the current scene when you call the action. A common choice is the root node of each menu or level scene that needs scene-flow buttons.
 
@@ -145,6 +147,92 @@ On Transition Finished
 
 ---
 
+## Loading screens - a screen of your own while the next scene loads
+
+A small scene opens between two frames. A big one does not: **Go To Scene** holds the last frame of
+the old scene while the new one comes off the disk, and a held frame reads as a hang even when
+nothing is wrong. **Go To Scene With Loading** puts a screen of your own in that gap.
+
+```
+On Play Pressed
+  -> Menu | SceneFlowBehavior: Go To Scene With Loading  "res://scenes/forest.tscn"  1.5  false
+
+On Loading Progress
+  -> LoadBar: set value = SceneFlow.loading_progress
+
+On Loading Finished
+  -> PressAnyKey: set visible = true
+```
+
+One row starts it. Under the row the pack swaps to your loading screen, asks the engine for the next
+scene on a background thread, and enters it when **both** the load has finished and the shortest
+time has been served.
+
+### The three knobs
+
+| Property | Default | What it does |
+|---|---|---|
+| `loading_scene` | empty | The screen shown while the next scene loads. Empty means no screen at all: the wait still happens, with the reading and both triggers, wherever the player is standing. |
+| `loading_transition` | `fade` | The shape drawn over both halves of the change - onto the loading screen and off it again into the new scene. The same seven shapes **Go To Scene With** picks from, held over the node's `fade_seconds`. `none` swaps plainly. |
+| `loading_tips_file` | empty | A text file of tips, one per line, that **Loading Tip** picks from. |
+
+### The starters are files, not a list the pack owns
+
+Two starters ship beside the pack script in `res://eventsheet_addons/scene_flow/`:
+
+- `loading_screen.tscn` - a dark backdrop, a "Loading" title, a spinning square, a `LoadBar` whose
+  maximum is `1` (which is what the reading answers with), a `Tip` label, a hidden "Press any key"
+  label, and a Scene Flow node so the three rows above have somewhere to live.
+- `tips.txt` - eight tips about a game that does not exist, and a note to itself at the top.
+
+**Neither knob points at either of them.** Both open empty on purpose: copy the two files into your
+own folders, restyle the screen and rewrite the tips, then point the knobs at your copies. The pack
+ships one of each and never a list of screens or a table of tips it owns.
+
+A tips file is one tip per line. Blank lines are skipped, and a line starting with `#` is a note to
+yourself that is never shown, so a tip can be parked without being deleted. The file is read again
+on every load, so editing it while the game runs shows up on the next screen. Add `*.txt` to the
+export filters in the export preset so the file ships with the game.
+
+### What the bar is set to
+
+**Loading Progress** answers from 0 to 1, and it is the **slower** of the two things being waited
+on: how much of the scene is off the disk, and how much of the shortest time has been served. A bar
+that races to the end on a fast disk and then sits there for a second reads as a hang, so this one
+never runs ahead of the wait it belongs to. **On Loading Progress** fires every time that number
+moves, on the Scene Flow node standing in the loading screen, which is exactly where a row that sets
+a bar wants to be.
+
+The shortest time is seconds a **player** waits: a slowmo running underneath cannot stretch it. One
+second is enough for the screen to read as a beat rather than as a flicker; zero enters the moment
+the load lands.
+
+### Press any key
+
+With **Wait For Key** off, the new scene is entered as soon as the wait is over. With it on, the wait
+ends at **On Loading Finished** and the screen stays up until a row runs **Enter Loaded Scene**.
+That verb does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to
+leave on the loading screen from the first frame:
+
+```
+On Any Key Pressed
+  -> LoadingScreen | SceneFlowBehavior: Enter Loaded Scene
+```
+
+**Is Loading** is true for the whole of it - the wait, the beat where it is waiting for a key, and
+the covered change into the new scene - so any row can be gated on "still loading".
+
+### A quiet note from the Doctor
+
+The Doctor watches for a scene over a megabyte opened with a plain, uncovered change, and files an
+**info** note naming the script, the scene and its size on disk, with this row as the door out. It
+is a note rather than a warning because hard-cutting into a big scene is a choice: a splash screen
+that should cut is allowed to stay exactly as it is. Like every finding it says nothing inside the
+sheet - the row wears the quiet amber state, and the words live in the Doctor's triage inbox and in
+the row's help strip when it is selected.
+
+---
+
 ## ACE reference
 
 On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
@@ -164,24 +252,31 @@ All ACEs live in the **Scenes** category and target the `SceneFlowBehavior` beha
 | Quit Game | (none) | Quits the game. A safe no-op on platforms that forbid it, such as web. |
 | Go To Scene With | `path` (String), `transition` (String), `seconds` (float), `ease` (String) | Changes to the scene at `path` with a shape drawn over the change: the cover walks on over the first half, the scene is swapped underneath it, and it walks off again over the second. Shapes are fade, wipe, dissolve, iris, blinds, pixelate and page curl; eases are linear, smooth, in and out. Ignored while a transition is already running; a blank path does nothing. Opens at fade, 0.6, smooth. |
 | Reload Scene With | `transition` (String), `seconds` (float), `ease` (String) | Reloads the current scene with the same shapes, cover colour and one-at-a-time rule as Go To Scene With - the polished retry in whichever shape the game uses everywhere else. Opens at fade, 0.6, smooth. |
+| Go To Scene With Loading | `scene` (String), `min_seconds` (float), `wait_for_key` (bool) | Shows the node's Loading Scene while the scene at `scene` comes off the disk on a background thread, then enters it. The wait is over when both the load has finished and `min_seconds` have passed, so the screen cannot flash past on a fast machine. Opens at 1 second with the key branch off; a blank path does nothing, and a second call while one is running is ignored. |
+| Enter Loaded Scene | (none) | Enters the scene a loading screen has been holding. Does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to leave on the loading screen - it is what Wait For Key waits for. |
 
 ### Conditions
 
 | Condition | Parameters | Description |
 |---|---|---|
 | Is Transitioning | (none) | Whether a faded transition is currently running. True from the moment a Fade To Scene / Fade Reload Scene begins until its fade-in finishes. |
+| Is Loading | (none) | Whether a background load started by Go To Scene With Loading is still in flight. True while the screen is up, including the beat where it is waiting for a key and the covered change into the new scene. |
 
 ### Expressions
 
 | Expression | Parameters | Returns | Description |
 |---|---|---|---|
 | Current Scene Path | (none) | String | The `res://` file path of the scene running right now (empty string if there is somehow no current scene). |
+| Loading Progress | (none) | float | How far the wait has got, from 0 to 1: the slower of how much of the scene is off the disk and how much of the shortest time has been served. Zero when nothing is loading. |
+| Loading Tip | (none) | String | The one line picked out of the tips file when this load started. It stays put for the whole wait, because a tip that changes while somebody is reading it is worse than no tip. Empty when there is no tips file, or nothing is loading. |
 
 ### Triggers
 
 | Trigger | Fires when |
 |---|---|
 | On Transition Finished | A transition started by Go To Scene With or Reload Scene With has finished: the new scene is up and the cover is off. It arrives on the Scene Flow node in the NEW scene, carrying the shape the transition was (`fade`, `iris`, and so on), so one handler can tell them apart. |
+| On Loading Progress | The loading reading moved. It arrives on the Scene Flow node standing in the loading screen and carries nothing: Loading Progress answers with the number, so the row that sets a bar reads as a sentence. |
+| On Loading Finished | The wait is over: the scene is off the disk and the shortest time has been served. With Wait For Key off the swap follows immediately; with it on, this is the moment to show "press any key". |
 
 Everything else you drive from your own game events - a button press, a player-died signal, a
 level-complete condition, an `On Ready` after a timer. The plain **Fade To Scene** and **Fade Reload
@@ -195,6 +290,9 @@ shaded pair above when you want the signal.
 | `fade_color` | Color | opaque black `Color(0, 0, 0, 1)` | any color | The cover color the screen fades through. |
 | `fade_seconds` | float | `0.4` | 0.05 - 5 (step 0.05) | Fade-out (and fade-in) duration, in seconds. |
 | `wipe_image` | Texture2D | empty | any texture | The greyscale picture a `wipe` transition follows: its dark parts are covered first and its light parts last. Empty is a plain left-to-right sweep. |
+| `loading_scene` | String (file) | empty | `*.tscn`, `*.scn` | The screen shown while Go To Scene With Loading waits for the next scene. Empty means no screen at all, and the wait happens where the player is standing. |
+| `loading_transition` | String (list) | `fade` | none, fade, wipe, dissolve, iris, blinds, pixelate, page curl | The shape drawn over both halves of a loading change, held over `fade_seconds`. |
+| `loading_tips_file` | String (file) | empty | `*.txt` | A text file of tips, one per line, that Loading Tip picks from. A line starting with `#` is a note to yourself. |
 
 ### Inspector properties are ACEs too
 
@@ -440,6 +538,66 @@ On Retry Pressed
 
 One shape word per row keeps every change in the game reading as the same game.
 
+### 19. A level that takes a beat to open
+
+The first big level is twelve megabytes of scene. Opened plainly, the menu's last frame sits there
+while it loads. Opened with a screen, the player watches a bar.
+
+```
+On Play Pressed
+  -> Menu | SceneFlowBehavior: Go To Scene With Loading  "res://scenes/forest.tscn"  1.5  false
+```
+
+Point the node's Loading Scene at your copy of the starter screen first. The 1.5 is the shortest the
+screen stays up, so a machine with a fast disk spends the same beat on it as a slow one.
+
+### 20. The bar and the tip
+
+Both rows live on the loading screen itself, on the Scene Flow node the starter already carries.
+
+```
+On Loading Progress
+  -> LoadBar: set value = SceneFlow.loading_progress
+
+On Loading Progress
+  -> Tip: set text = SceneFlow.loading_tip
+```
+
+The tip is picked once when the load starts and does not change while somebody is reading it, so
+setting it on every reading is safe.
+
+### 21. Press any key to continue
+
+With Wait For Key on, the screen stays up after the load lands and a key press is what enters.
+
+```
+On Play Pressed
+  -> Menu | SceneFlowBehavior: Go To Scene With Loading  "res://scenes/forest.tscn"  1.0  true
+
+On Loading Finished
+  -> PressAnyKey: set visible = true
+
+On Any Key Pressed
+  -> LoadingScreen | SceneFlowBehavior: Enter Loaded Scene
+```
+
+The last row is safe from the first frame: Enter Loaded Scene does nothing while the wait is still
+on, so a player who mashes a key during the load simply enters the moment it is ready.
+
+### 22. Nothing else fires while a screen is up
+
+A pause menu that leads into a level keeps running while the load does. Guard the rows that should
+wait with the condition.
+
+```
+On Pause Pressed
+  + PauseMenu | SceneFlowBehavior: Is Loading  [inverted]
+  -> PauseMenu: set visible = true
+```
+
+Is Loading is true for the whole screen, the press-any-key beat and the covered change into the new
+scene, so one inverted condition covers every part of the wait.
+
 ### Other use cases
 
 **Attract mode.** A demo or kiosk build starts an idle timer on the title and gameplay scenes and Fade To Scene back to the intro when nobody touches the controls, keeping a show-floor build presentable on its own.
@@ -468,3 +626,9 @@ One shape word per row keeps every change in the game reading as the same game.
 - **A transition is measured in seconds the player waits.** The walk ignores `Engine.time_scale`, so a slowmo or a hitstop running underneath it cannot stretch a 0.6 second wipe into three.
 - **Pixelate and page curl read the screen; the other five do not.** They cost one screen read per pixel while the transition runs, and nothing at all when it is over. Reach for them deliberately, and prefer a fade or an iris on a phone.
 - **The wipe image is yours.** No wipe pictures ship with the pack. Any greyscale texture in your project works - dark first, light last - and a small gradient PNG is plenty.
+- **The loading screen and the tips file are yours too.** The two starters in the pack folder are meant to be copied and rewritten; neither knob points at them, so a project that never opens them is a project that never sees them. Copy them into your own folders before you restyle, or a pack update will write over your edits.
+- **Point Loading Scene at something before the first loading row runs.** With the knob empty the wait still happens - the reading moves and both triggers fire - but there is no screen, so it looks exactly like a plain change with a delay in it.
+- **Put the bar and tip rows on the loading screen, not on the menu.** The two loading triggers arrive on the Scene Flow node standing in the loading screen, because the node that started the load has been replaced by then. The starter screen already carries one.
+- **The shortest time is a floor, not a duration.** A scene that takes four seconds to load takes four seconds however small the minimum is. Zero means "enter the moment it lands", which is the right answer for a screen you only want on slow machines.
+- **Ship the tips file with the game.** It is a `.txt`, and export presets filter those out by default. Add `*.txt` to the preset's filters or the file the knob names will not be there in the exported build.
+- **Enter Loaded Scene is safe to leave running.** It does nothing while the wait is on and nothing when there is no load, so an "any key pressed" row on the loading screen needs no guard.
