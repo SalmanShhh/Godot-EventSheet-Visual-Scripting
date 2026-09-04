@@ -76,14 +76,29 @@ static func report(sources: Array[Dictionary], declared: PackedStringArray,
 	if sources.is_empty():
 		return findings
 	var dealt_anywhere: Dictionary = {}
+	# WHO ACTUALLY SAYS A KIND. The pre-read admits any script holding one of the four words, which
+	# includes the packs that DEFINE them - the Health behaviour's own `func take_typed_damage` is a
+	# hit on `take_typed_damage(`. A script that names no kind has nothing in either list, so it is
+	# not one of the scripts this section is counting, and a report of nothing but definitions says
+	# nothing at all rather than "2 scripts deal typed damage" about the plugin itself.
+	var speaking: int = 0
+	var first_speaking: String = ""
 	for entry: Dictionary in sources:
-		for kind: String in EventForgeDamageTypeFacts.types_dealt(str(entry["source"])):
+		var text: String = str(entry["source"])
+		if not (EventForgeDamageTypeFacts.types_dealt(text).is_empty()
+				and EventForgeDamageTypeFacts.types_opined(text).is_empty()):
+			speaking += 1
+			if first_speaking.is_empty():
+				first_speaking = str(entry["path"])
+		for kind: String in EventForgeDamageTypeFacts.types_dealt(text):
 			dealt_anywhere[kind] = true
+	if speaking == 0:
+		return findings
 	var undeclared: int = 0
 	var unguarded: int = 0
 	# The summary points at the FIRST script with something to say, because that is the one worth
 	# opening - double-clicking the line in the panel is what takes the reader there.
-	var first_path: String = str(sources[0]["path"])
+	var first_path: String = first_speaking
 	for entry: Dictionary in sources:
 		var path: String = str(entry["path"])
 		var source: String = str(entry["source"])
@@ -110,5 +125,5 @@ static func report(sources: Array[Dictionary], declared: PackedStringArray,
 					path.get_file(), kind], kind))
 	findings.insert(0, _finding("info", CHECK_ID, first_path,
 		"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals." % [
-			sources.size(), undeclared, unguarded], ""))
+			speaking, undeclared, unguarded], ""))
 	return findings

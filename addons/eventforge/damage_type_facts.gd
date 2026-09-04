@@ -30,6 +30,17 @@ extends RefCounted
 ## convenience, and an editor that stalls opening a dialog is not one.
 const FILE_LIMIT: int = 4000
 
+## THE PLUGIN'S OWN COPIES OF THE STARTER SET, which are not the project's answer to anything.
+## `has_any_set` is what the Doctor asks before it may call a word a misspelling, so a starter that
+## ships with the pack would answer "yes, this project has written its damage types down" in every
+## project that merely installed the pack - and then report every kind that starter does not name.
+## The two homes are the pack folder the starter ships in and the builder source it is built from;
+## a set the AUTHOR wrote, wherever they put it, is what this reader is looking for.
+const SHIPPED_FOLDERS: PackedStringArray = [
+	"res://eventsheet_addons/damage_type_set_resource",
+	"res://tools/pack_builders"
+]
+
 ## The class line a saved DamageTypeSet carries, and the property holding its names. Spelled as the
 ## engine writes them, because that is what the file on disk actually holds.
 const SET_MARKER := "script_class=\"DamageTypeSet\""
@@ -79,13 +90,26 @@ static func has_any_set() -> bool:
 	return not project_set_files().is_empty()
 
 
-## Every project file whose text is a saved DamageTypeSet, in sorted path order.
+## Every project file whose text is a saved DamageTypeSet, in sorted path order. The starter the pack
+## ships is not one of them: it is the plugin's own file, not something this project decided.
 static func project_set_files() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for path: String in _resource_files():
+		if _is_shipped(path):
+			continue
 		if source_of(path).contains(SET_MARKER):
 			found.append(path)
 	return found
+
+
+## Whether a path is one of the plugin's own copies of the starter rather than a set the author
+## wrote. Kept as one question so the completion list and the Doctor can never disagree about which
+## files count as this project having written its damage types down.
+static func _is_shipped(path: String) -> bool:
+	for folder: String in SHIPPED_FOLDERS:
+		if path.begins_with(folder + "/"):
+			return true
+	return false
 
 
 ## The type names one file's text declares, in the order the file declares them and without repeats.
