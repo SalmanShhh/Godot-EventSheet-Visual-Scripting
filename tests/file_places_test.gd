@@ -349,6 +349,14 @@ const CLEAN_USER_DIR_WRITTEN := "func _ready() -> void:
 	var folder := DirAccess.open(\"user://saves\")
 	folder.make_dir(\"runs\")
 "
+# A NAME IS A WHOLE NAME. `data` is not the handle called `d`, so a res:// folder merely LISTED
+# through it is not the write that the user:// handle beside it makes.
+const CLEAN_TWO_DIR_HANDLES := "func _ready() -> void:
+	var d := DirAccess.open(\"user://a\")
+	d.make_dir(\"x\")
+	var data := DirAccess.open(\"res://levels\")
+	print(data.get_files())
+"
 const CLEAN_COMMENTED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"user://save.dat\"))  # was \"C:/temp/x.txt\"\n"
 const BUG_COMMENTED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"C:/temp/x.txt\"))  # the old place\n"
 const BUG_ESCAPED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"a \\\" b\" + \"/c/d.txt\"))\n"
@@ -432,6 +440,9 @@ static func _test_doctor_checks() -> bool:
 		PackedStringArray()) and passed
 	passed = _check("and a written folder under user:// is the right thing to do",
 		EventSheetFilesDoctor.res_write_lines(CLEAN_USER_DIR_WRITTEN),
+		PackedStringArray()) and passed
+	passed = _check("and one handle's name is not another's that begins with the same letters",
+		EventSheetFilesDoctor.res_write_lines(CLEAN_TWO_DIR_HANDLES),
 		PackedStringArray()) and passed
 
 	var unguarded: Array[Dictionary] = EventSheetFilesDoctor.unguarded_read_findings(

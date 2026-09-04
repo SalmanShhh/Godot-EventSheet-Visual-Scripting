@@ -208,12 +208,8 @@ static func _written_folder_handles(statements: PackedStringArray) -> PackedStri
 		# follow, and needs none: the place and the write are both right there.
 		if _writes_through_a_handle(line.substr(open_at)) and not opened.has(""):
 			opened.append("")
-		var equals_at: int = line.find("=")
-		if equals_at < 0 or equals_at > open_at:
-			continue
-		var left: String = line.substr(0, equals_at).strip_edges().trim_suffix(":")
-		left = left.trim_prefix("var ").split(":")[0].strip_edges()
-		if not left.is_empty() and not left.contains(" ") and not opened.has(left):
+		var left: String = _bound_name(line, open_at)
+		if not left.is_empty() and not opened.has(left):
 			opened.append(left)
 	var written: PackedStringArray = PackedStringArray()
 	for name_text: String in opened:
@@ -225,6 +221,19 @@ static func _written_folder_handles(statements: PackedStringArray) -> PackedStri
 				written.append(name_text)
 				break
 	return written
+
+
+## The plain name a line binds the thing opened at `open_at` to, or "" when the line binds none - a
+## chained call, a handle stored on somebody else's object, an element of a list. One reading, shared
+## by the pass that collects the names and the pass that reads the places back off them, so the two
+## can never disagree about which name a line bound.
+static func _bound_name(line: String, open_at: int) -> String:
+	var equals_at: int = line.find("=")
+	if equals_at < 0 or equals_at > open_at:
+		return ""
+	var left: String = line.substr(0, equals_at).strip_edges().trim_suffix(":")
+	left = left.trim_prefix("var ").split(":")[0].strip_edges()
+	return "" if left.contains(" ") else left
 
 
 ## True when this text asks a folder handle one of the methods that CHANGES the folder - of the name
@@ -246,14 +255,10 @@ static func _folder_handle_literals(line: String, handles: PackedStringArray) ->
 	while at >= 0:
 		var arguments: String = _arguments_after(
 			line, at + EventForgeFilePlaces.DIR_OPEN_CALL.length())
+		var bound: String = _bound_name(line, at)
 		for handle_name: String in handles:
-			var names_it: bool = false
-			if handle_name.is_empty():
-				names_it = _writes_through_a_handle(line.substr(at))
-			else:
-				var equals_at: int = line.find("=")
-				names_it = equals_at >= 0 and equals_at < at \
-					and line.substr(0, equals_at).contains(handle_name)
+			var names_it: bool = _writes_through_a_handle(line.substr(at)) \
+				if handle_name.is_empty() else bound == handle_name
 			if not names_it:
 				continue
 			for literal: String in _quoted_literals(arguments):
