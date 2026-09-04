@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
+  <!-- the chunk grid -->
+  <g stroke="#64748b" stroke-width="14" opacity="0.35" stroke-linecap="round">
+    <line x1="46" y1="46" x2="466" y2="46"/>
+    <line x1="46" y1="186" x2="466" y2="186"/>
+    <line x1="46" y1="326" x2="466" y2="326"/>
+    <line x1="46" y1="466" x2="466" y2="466"/>
+    <line x1="46" y1="46" x2="46" y2="466"/>
+    <line x1="186" y1="46" x2="186" y2="466"/>
+    <line x1="326" y1="46" x2="326" y2="466"/>
+    <line x1="466" y1="46" x2="466" y2="466"/>
+  </g>
+  <!-- the cells that are loaded, around the middle -->
+  <rect x="186" y="186" width="140" height="140" fill="#0ea5e9" opacity="0.95"/>
+  <rect x="46" y="186" width="140" height="140" fill="#0ea5e9" opacity="0.55"/>
+  <rect x="326" y="186" width="140" height="140" fill="#0ea5e9" opacity="0.55"/>
+  <rect x="186" y="46" width="140" height="140" fill="#0ea5e9" opacity="0.55"/>
+  <rect x="186" y="326" width="140" height="140" fill="#0ea5e9" opacity="0.55"/>
+  <!-- the node the radius is measured around -->
+  <circle cx="256" cy="256" r="46" fill="#f97316"/>
+</svg>
