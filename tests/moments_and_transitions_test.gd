@@ -58,6 +58,7 @@ static func run() -> bool:
 	passed = _strength_scales_what_a_player_sees() and passed
 	passed = _no_flashing_is_a_ceiling_here_too() and passed
 	passed = _a_step_plays() and passed
+	passed = _a_moment_finds_the_screen_layer() and passed
 	passed = _the_transition_walk() and passed
 	passed = _a_dropped_row_is_a_whole_sentence() and passed
 	passed = _every_shape_has_a_shader() and passed
@@ -204,6 +205,56 @@ static func _a_step_plays() -> bool:
 	return SUPPORT.pins(P, rows)
 
 
+## HOW A MOMENT FINDS THE SCREEN, and what it is allowed to remember about not finding it.
+##
+## The three steps that reach the post stack - shockwave, pulse, hold - need the Screen FX layer, and
+## a game may well not have one when the first beat plays: a level that adds its own effects, a pause
+## screen built on demand. Remembering a MISS is therefore the one thing this must not do, because
+## the layer that arrives a second later would never be found again and every later moment would fall
+## back in silence for the rest of the game. Only a found layer is kept, and only while it is still
+## alive and still in the tree.
+##
+## A headless test has no scene tree, so what is pinned here is the memory rather than the search: a
+## miss remembers nothing, a layer that has left the tree is dropped rather than answered with, and
+## the two packs spell the group the search asks for with one name. The search itself is a single
+## `get_first_node_in_group`, which is why re-asking on the next beat costs nothing worth caching.
+static func _a_moment_finds_the_screen_layer() -> bool:
+	var juice: Node = _a_juice()
+	var screen: Node = _a_screen()
+	var source: String = FileAccess.get_file_as_string(JUICE_SCRIPT)
+	var missed: Variant = juice._moment_screen_fx()
+	var rows: Array = [
+		["with no layer to be found, a moment is answered with nothing",
+			[missed, juice._moment_screen], [null, null]],
+		["and nothing is remembered about the miss, so the next beat asks again",
+			source.contains("_moment_screen_searched"), false]
+	]
+	juice._moment_screen = screen
+	rows.append(["a layer that is not in the tree is dropped rather than answered with",
+		[juice._moment_screen_fx(), juice._moment_screen], [null, null]])
+	rows.append(["the group a moment asks for is the one the layer joins, spelled once in each pack",
+		[str(juice.POST_STACK_GROUP), str(screen.POST_STACK_GROUP)],
+		["screen_fx_post_stack", "screen_fx_post_stack"]])
+	rows.append(["and the layer joins it as it enters the tree",
+		FileAccess.get_file_as_string(SCREEN_FX_SCRIPT).contains("add_to_group(POST_STACK_GROUP)"),
+		true])
+	# AND WHEN THERE IS NONE, IT SAYS SO ONCE. A shockwave and a hold do nothing at all without the
+	# stack and a pulse draws only its vignette, so a moment without the layer looks broken and says
+	# nothing about why - but a beat that plays on every hit must not write the same sentence sixty
+	# times a second either. The word is asked for here rather than pushed, so the once-ness is a
+	# value rather than a log nobody reads.
+	rows.append(["the first step that wants the stack and has none is worth saying",
+		juice._first_time_without_a_screen(), true])
+	rows.append(["the second is not, however many beats play", juice._first_time_without_a_screen(),
+		false])
+	juice._moment_told_scene = screen
+	rows.append(["and the next scene is worth saying it in again",
+		juice._first_time_without_a_screen(), true])
+	juice.free()
+	screen.free()
+	return SUPPORT.pins(P, rows)
+
+
 ## THE PROGRESS MODEL: out over the first half, the swap at the top, in over the second. It is one
 ## triangle, and everything about a transition reads it - the shader's dial, the moment the scene is
 ## exchanged, and the answer to which part of it we are in. A model that moved would change the scene
@@ -277,15 +328,10 @@ static func _a_dropped_row_is_a_whole_sentence() -> bool:
 			"impact"],
 		["and the file it points at is picked, not typed",
 			_field_hint(juice, "Define Moment", "moment"), "resource_path"],
-		# A moment must not pay a recursive walk of the whole tree per beat: a game with no Screen FX
-		# layer would never find one, and clearing the search per moment asked again on every hit.
-		["the search for the screen layer is cleared by a scene change, not by every moment played",
-			FileAccess.get_file_as_string(JUICE_SCRIPT).contains("_moment_screen_searched = false"),
-			false],
-		["so it asks which scene it looked in", FileAccess.get_file_as_string(JUICE_SCRIPT).contains(
-			"if _moment_screen_searched and _moment_screen_scene == here:"), true],
-		["a dropped Go To Scene With has a shape",
-			_starting_value(flow, "Go To Scene With", "transition"), "fade"],
+		["a dropped Go To Scene With has somewhere to go",
+			_starting_value(flow, "Go To Scene With", "path"),
+			"ProjectSettings.get_setting(\"application/run/main_scene\")"],
+		["a shape", _starting_value(flow, "Go To Scene With", "transition"), "fade"],
 		["a time", _starting_value(flow, "Go To Scene With", "seconds"), "0.6"],
 		["and a walk", _starting_value(flow, "Go To Scene With", "ease"), "smooth"],
 		["and Reload Scene With arrives the same way",

@@ -284,15 +284,23 @@ const MOMENT_AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "s
 ## finds it. A name nothing was defined under falls through to the file of that name beside the pack.
 static var _moments: Dictionary = {}
 
-## The Screen FX layer this game has, once one has been found, and whether this play has looked yet.
-var _moment_screen: CanvasLayer = null
-var _moment_screen_searched: bool = false
+## The group the Screen FX layer puts itself in, which is how a moment finds it: one name, spelled
+## the same in both packs and joined by that layer as it enters the tree. Asking a group is a
+## dictionary read, so a game that has no post stack at all pays nothing to be told so again.
+const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
 
-## And WHICH SCENE that search was made in, because that is what makes the answer stale rather
-## than the number of moments played since. A game with no Screen FX layer searches once per scene
-## and then knows; clearing the flag per moment made every hit, every kill and every danger beat
-## pay a whole recursive walk of the tree to be told the same thing again.
-var _moment_screen_scene: Node = null
+## The Screen FX layer this game has, once one has been FOUND. Only a found layer is remembered:
+## a game whose post stack arrives after the first beat has played - a level that adds its own
+## effects, a pause screen built on demand - would otherwise be missed for ever, and every later
+## moment would quietly fall back to this pack's own overlay.
+var _moment_screen: CanvasLayer = null
+
+## Whether this behaviour has already said that a step wanted the post stack and this game has none,
+## and WHICH SCENE it said it in. Once per scene rather than once per step: a moment that plays on
+## every hit would otherwise write the same sentence sixty times a second, which is how a warning
+## stops being read at all.
+var _moment_told_screen: bool = false
+var _moment_told_scene: Node = null
 ## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.
 ## A name that answers to neither plays nothing and says so.
 ## @ace_hidden
@@ -310,28 +318,24 @@ func _moment_named(called: String) -> Resource:
 	return null
 ## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a
 ## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as
-## much and looks wrong wherever the two overlap. Found once per moment and kept; a game with no
-## Screen FX layer falls back to this pack's own overlay for the two effects it can draw.
+## much and looks wrong wherever the two overlap. A game with no Screen FX layer falls back to this
+## pack's own overlay for the two effects it can draw.
 ##
-## LOOKED FOR ONCE PER SCENE, not once per moment: the walk is recursive over the whole tree, and a
-## game that simply has no Screen FX layer would otherwise pay for it on every beat it plays. A
-## scene change is the one thing that can make the answer wrong, so that is what asks again.
+## ONLY A FOUND LAYER IS KEPT, and a layer that has left the tree is asked for again: a miss costs
+## one group lookup, so re-asking on the next beat is cheaper than the mistake of never asking
+## again. The layer must be in the group above, which the Screen FX pack's own layer joins as it
+## enters the tree - a hand-built post layer joins it in one line to be found the same way.
 ## @ace_hidden
 func _moment_screen_fx() -> CanvasLayer:
-	if _moment_screen != null and is_instance_valid(_moment_screen):
+	if _moment_screen != null and is_instance_valid(_moment_screen) and _moment_screen.is_inside_tree():
 		return _moment_screen
+	_moment_screen = null
 	if not is_inside_tree():
 		return null
-	var here: Node = get_tree().current_scene
-	if _moment_screen_searched and _moment_screen_scene == here:
-		return null
-	_moment_screen_searched = true
-	_moment_screen_scene = here
-	for found: Node in get_tree().get_root().find_children("*", "CanvasLayer", true, false):
-		if found.has_method("pulse_post_effect"):
-			_moment_screen = found as CanvasLayer
-			return _moment_screen
-	return null
+	var found: Node = get_tree().get_first_node_in_group(POST_STACK_GROUP)
+	if found is CanvasLayer and found.has_method("pulse_post_effect"):
+		_moment_screen = found as CanvasLayer
+	return _moment_screen
 
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
@@ -1431,6 +1435,8 @@ func _play_moment_step(step: Dictionary, strength: float) -> void:
 		"shockwave":
 			if screen != null:
 				screen.call("shockwave", _moment_here(), amount)
+			else:
+				_moment_wants_screen(word)
 		"chromatic":
 			if screen != null:
 				screen.call("chromatic_pulse", amount, maxf(seconds, 0.05))
@@ -1441,8 +1447,12 @@ func _play_moment_step(step: Dictionary, strength: float) -> void:
 				screen.call("pulse_post_effect", effect, amount, maxf(seconds, 0.05))
 			elif effect == "vignette":
 				pulse_vignette(amount, Color.BLACK, maxf(seconds, 0.05))
+			else:
+				_moment_wants_screen(word)
 		"hold":
-			if screen != null:
+			if screen == null:
+				_moment_wants_screen(word)
+			else:
 				# An effect the stack is not holding yet is added at nothing first, so the walk has
 				# somewhere to start from; one it already holds keeps its place in the order.
 				if float(screen.call("post_strength", effect)) <= 0.0001:
@@ -1478,6 +1488,31 @@ func _moment_here() -> Vector2:
 	if host is Control:
 		return (host as Control).global_position
 	return Vector2.ZERO
+
+## Says, ONCE PER SCENE, that a step asked for the post stack and this game has none. The three
+## steps that reach the screen are the only ones that can want it, and without it a shockwave and a
+## hold do nothing at all while a pulse draws only its vignette - each of them silently, which is a
+## moment that looks broken and says nothing about why. The sentence names the step and the way out.
+## @ace_hidden
+func _moment_wants_screen(word: String) -> void:
+	if not _first_time_without_a_screen():
+		return
+	push_warning(("Moment: the \"%s\" step needs a post stack and this scene has none - add the "
+		+ "Screen FX pack's screen_fx.tscn to the scene, or take the step out of the moment.") % word)
+
+## Whether this is the FIRST time in this scene that a step has gone without the post stack -
+## true once, then false until the scene changes. Its own function so the once-ness is a value
+## that can be asked for, rather than a line in a log somebody has to notice.
+## @ace_hidden
+func _first_time_without_a_screen() -> bool:
+	var here: Node = null
+	if is_inside_tree():
+		here = get_tree().current_scene
+	if _moment_told_screen and _moment_told_scene == here:
+		return false
+	_moment_told_screen = true
+	_moment_told_scene = here
+	return true
 
 ## What a step's amount really becomes: held under the ceiling while no flashing is on. ONE function,
 ## so no step can be the one that forgot. The effect-strength dial is deliberately NOT applied here -

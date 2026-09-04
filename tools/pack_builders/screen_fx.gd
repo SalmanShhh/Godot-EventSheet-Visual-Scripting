@@ -45,6 +45,10 @@ static func build() -> bool:
 	ready_row.trigger_id = "OnReady"
 	var ready_body: RawCodeRow = RawCodeRow.new()
 	ready_body.code = "\n".join(PackedStringArray([
+		"# Findable by name rather than by a walk of the tree: a layer added after the game has started",
+		"# is in the group the moment it is in the tree, which is what lets another pack ask again",
+		"# cheaply instead of remembering that it once looked and found nothing.",
+		"add_to_group(POST_STACK_GROUP)",
 		"_rect = get_node_or_null(RECT_NAME) as ColorRect",
 		"if _rect == null:",
 		"\tpush_warning(\"Screen FX expects a ColorRect named %s under it - add the pack's own screen_fx.tscn rather than a bare CanvasLayer.\" % RECT_NAME)",

@@ -100,6 +100,12 @@ const FLASH_FLOOR_SECONDS: float = 0.4
 const NO_FLASHING_META: StringName = &"no_flashing"
 const EFFECT_STRENGTH_META: StringName = &"effect_strength"
 
+## The group this layer joins as it enters the tree, so another pack can find the post stack without
+## walking the scene tree looking for something that answers to a method name. The Juice pack's
+## moments ask for it by this name - one name, spelled the same in both packs - and a game that has
+## built its own post layer joins the group in one line to be found the same way.
+const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
+
 ## The look resource's own script, loaded by path rather than named as a class, so this pack still
 ## runs (and says so) in a project that only installed Screen FX.
 const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen_look_resource.gd"
@@ -159,6 +165,10 @@ func _shader_for(effect: String) -> Shader:
 	return found
 
 func _ready() -> void:
+	# Findable by name rather than by a walk of the tree: a layer added after the game has started
+	# is in the group the moment it is in the tree, which is what lets another pack ask again
+	# cheaply instead of remembering that it once looked and found nothing.
+	add_to_group(POST_STACK_GROUP)
 	_rect = get_node_or_null(RECT_NAME) as ColorRect
 	if _rect == null:
 		push_warning("Screen FX expects a ColorRect named %s under it - add the pack's own screen_fx.tscn rather than a bare CanvasLayer." % RECT_NAME)
@@ -571,10 +581,12 @@ func post_effect_is_on(called: String = "vignette") -> bool:
 		return false
 	return bool(_stack[at].get("enabled", true)) and _dialled(_stack[at]) > 0.001
 
-## How far one entry currently goes, 0 to 1 - after the effect-strength dial and the no-flashing
-## ceiling, so it is what is on the screen rather than what a row asked for. The two colour-vision
-## entries are exempt from both, so they read back at what they were set to. 0 for one that is not
-## there.
+## How far one entry has been ASKED to go, 0 to 1 - the strength the rows set, before the
+## effect-strength setting and the no-flashing ceiling are applied on the way to the shader. That is
+## the number a sheet's own arithmetic means: Set Post Strength to Post Strength + 0.1 walks up in
+## tenths whatever a player's accessibility dials are doing, where reading the dialled value back
+## would fold those dials in again on every round trip and the effect would sink towards nothing.
+## Post Effect Is On is the row that asks whether it is actually drawing. 0 for one that is not there.
 ## @ace_expression
 ## @ace_name("Post Strength")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
@@ -584,7 +596,7 @@ func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
-	return _dialled(_stack[at])
+	return float(_stack[at].get("strength", 0.0))
 
 ## How many effects the stack is drawing right now - the number a reader wants when the frame rate
 ## has gone, because every one of them reads the whole screen back.
