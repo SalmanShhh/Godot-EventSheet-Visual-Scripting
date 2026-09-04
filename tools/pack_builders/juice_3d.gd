@@ -187,6 +187,16 @@ static func build() -> bool:
 	teardown_body.code = "_unapply()"
 	teardown.actions.append(teardown_body)
 	sheet.events.append(teardown)
+	# Per-frame: one step of the chromatic shake. It runs BEFORE the camera work because that work
+	# returns early when no camera is active, while the split is drawn on the screen and has to go
+	# on shaking either way.
+	var chroma_shake_tick: EventRow = EventRow.new()
+	chroma_shake_tick.trigger_provider_id = "Core"
+	chroma_shake_tick.trigger_id = "OnProcess"
+	var chroma_shake_tick_body: RawCodeRow = RawCodeRow.new()
+	chroma_shake_tick_body.code = Lib.JUICE_CHROMA_SHAKE_TICK_BODY
+	chroma_shake_tick.actions.append(chroma_shake_tick_body)
+	sheet.events.append(chroma_shake_tick)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -219,7 +229,7 @@ static func build() -> bool:
 		"# A held lean is NOT settled - it is re-applied after every unapply, so it keeps the tick",
 		"# alive, as does the tween still writing it.",
 		"var kicks_busy: bool = _recoil_pitch != 0.0 or _recoil_yaw != 0.0 or _fov_kick != 0.0 or _kick_vec != Vector3.ZERO",
-		"var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001",
+		"var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001 or _chroma_shake_active",
 		"var lean_running: bool = _lean_tween != null and is_instance_valid(_lean_tween) and _lean_tween.is_running()",
 		"if not (kicks_busy or effects_busy or lean_running):",
 		"\tset_process(false)",
@@ -312,6 +322,11 @@ static func build() -> bool:
 	fx_block.code = "\n".join(Lib.juice_fx_overlay_lines())
 	sheet.events.append(fx_block)
 
+	# ── Chromatic shake: the camera Shake's twin, on the screen instead of the lens ───
+	var chroma_shake_block: RawCodeRow = RawCodeRow.new()
+	chroma_shake_block.code = "\n".join(Lib.juice_chroma_shake_lines())
+	sheet.events.append(chroma_shake_block)
+
 	# --- Actions (fire-and-forget, mirroring the 2D Juice verbs) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice 3D", "Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.",
 		[["strength", "float"]],
@@ -398,6 +413,18 @@ static func build() -> bool:
 		Lib.JUICE_CHROMATIC_KICK_BODY)
 	_default(sheet, "strength", "0.5")
 	_default(sheet, "seconds", "0.25")
+	Lib.append_function(sheet, "chromatic_shake", "Chromatic Shake", "Juice 3D", "Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.",
+		[["magnitude", "float"], ["duration", "float"], ["mode", "String"], ["angle_degrees", "float"]],
+		Lib.JUICE_CHROMATIC_SHAKE_BODY,
+		"Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
+	_default(sheet, "magnitude", "12")
+	_default(sheet, "duration", "0.3")
+	_default(sheet, "mode", "reducing")
+	_param_options(sheet, "mode", ["reducing", "constant"])
+	_default(sheet, "angle_degrees", "-1")
+	Lib.append_function(sheet, "stop_chromatic_shake", "Stop Chromatic Shake", "Juice 3D", "Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.",
+		[],
+		Lib.JUICE_STOP_CHROMATIC_SHAKE_BODY)
 	Lib.append_function(sheet, "set_speed_lines", "Set Speed Lines", "Juice 3D", "Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with FOV Punch for full sprint feel.",
 		[["intensity", "float"]],
 		Lib.JUICE_SET_SPEED_LINES_BODY)
@@ -446,3 +473,16 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## Sets the dropdown options[] on the last-appended ACE's parameter (append_function only sets
+## id+type), so e.g. the chromatic shake's mode becomes a reducing/constant picker instead of a
+## plain text field.
+static func _param_options(sheet: EventSheetResource, param_id: String, choices: Array) -> void:
+	var typed: Array[String] = []
+	for choice: Variant in choices:
+		typed.append(str(choice))
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.options = typed

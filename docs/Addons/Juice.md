@@ -231,6 +231,8 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Stop Ghost Trail | (none) | Stops stamping (the ghosts already out finish fading). |
 | Pulse Vignette | `strength` (float), `color` (Color), `seconds` (float) | Darkens the screen edges to a color, then fades back out - taking damage, a near miss. Opens at 0.6, dark red, 0.5. |
 | Chromatic Kick | `strength` (float), `seconds` (float) | Splits the screen's color channels for an instant and settles back - the AAA impact frame. Opens at 0.5, 0.25. |
+| Chromatic Shake | `magnitude` (float), `duration` (float), `mode` (String), `angle_degrees` (float) | Shakes the screen's color channels apart along a direction that MOVES - the Shake you feel, on the screen instead of the camera. A reducing shake falls to nothing over the duration; a constant one holds and then stops dead. An angle below zero lets the split wander with the same noise the camera shake uses; an angle pins the line and lets only the amount breathe. Firing again restarts it, slow motion glides it, a hitstop freezes it, and no flashing halves it. Opens at 12, 0.3, reducing, -1. |
+| Stop Chromatic Shake | (none) | Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early. |
 | Set Speed Lines | `intensity` (float) | Radial anime-style speed streaks that HOLD until you set 0 - sprints, dashes, adrenaline. Opens at 0.5. |
 | Play Sound Varied | `path` (String), `pitch_jitter` (float), `volume_jitter_db` (float) | Plays a sound with a random pitch/volume wobble - the #1 trick against repetitive footsteps, hits, coins, clicks. Opens at 0.08, 2. |
 | Play Sound With Intensity | `path` (String), `intensity` (float) | Plays a sound scaled by a 0-1 intensity: quiet and low when light, full and bright when heavy - drive it, Shake, and Punch Scale from ONE hit-power value. Opens at 0.5. |
@@ -245,6 +247,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 |---|---|---|
 | Is Shaking | (none) | Whether the camera is currently shaking (trauma is above zero). |
 | Is Hitstopped | (none) | Whether a hitstop freeze is active right now. |
+| Is Chromatic Shaking | (none) | Whether a chromatic shake is running right now - true from the row that fires it until the duration is up or Stop Chromatic Shake takes it off. |
 
 ### Expressions
 
@@ -252,6 +255,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 |---|---|---|---|
 | Trauma | (none) | float | The current trauma level, 0 to 1 - drive a rumble strength or a shaking HUD element from it. |
 | Ticker Value | `ticker_name` (String) | float | What a ticker currently SHOWS - the eased value Count To is rolling. Print or draw this instead of the real variable. |
+| Chromatic Shake Magnitude | (none) | float | How wide the split is right now, in pixels: the magnitude after the falloff, the wander and the no-flashing halving. Zero when nothing is shaking - drive a rumble or a HUD wobble from it and the whole hit reads as one thing. |
 
 ### Triggers
 

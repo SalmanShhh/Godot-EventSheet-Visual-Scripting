@@ -111,6 +111,52 @@ static func run() -> bool:
 	all_passed = _check("count_to + On Ticker Finished exist (tween needs a live tree)",
 		behavior.has_method("count_to") and behavior.has_signal("ticker_finished"), true) and all_passed
 
+	# ── Chromatic shake: the same split over the 3D overlay. Pinned by VALUE through the emitted
+	# script's own tick. There is no _noise here (script.new() never runs _ready), which is the
+	# off-tree path this whole file drives: the wander reads zero, so the magnitudes are exact. ──
+	behavior.set_process(false)                 # so "the verb woke the tick" means what it says
+	behavior.chromatic_shake(12.0, 0.4, "reducing", -1.0)
+	all_passed = _check("chromatic shake starts", behavior.is_chromatic_shaking(), true) and all_passed
+	all_passed = _check("a shake opens at the magnitude it was asked for", behavior.chromatic_shake_magnitude(), 12.0) and all_passed
+	all_passed = _check("a running shake keeps the tick awake", behavior.is_processing(), true) and all_passed
+	behavior._process(0.1)
+	all_passed = _check("a reducing shake falls linearly (a quarter of 0.4 s spent)", behavior.chromatic_shake_magnitude(), 9.0) and all_passed
+	behavior._process(0.1)
+	all_passed = _check("a reducing shake keeps falling (half of 0.4 s spent)", behavior.chromatic_shake_magnitude(), 6.0) and all_passed
+	behavior.chromatic_shake(12.0, 0.4, "reducing", -1.0)
+	all_passed = _check("firing again RESTARTS the shake instead of stacking on it", behavior.chromatic_shake_magnitude(), 12.0) and all_passed
+	behavior.stop_chromatic_shake()
+	all_passed = _check("Stop Chromatic Shake takes it off at once", behavior.is_chromatic_shaking(), false) and all_passed
+	all_passed = _check("a stopped shake reads zero magnitude", behavior.chromatic_shake_magnitude(), 0.0) and all_passed
+	behavior.chromatic_shake(10.0, 0.3, "constant", -1.0)
+	behavior._process(0.1)
+	behavior._process(0.1)
+	all_passed = _check("a constant shake holds its magnitude flat", behavior.chromatic_shake_magnitude(), 10.0) and all_passed
+	behavior._process(0.15)
+	all_passed = _check("a constant shake stops dead when the duration is up", behavior.is_chromatic_shaking(), false) and all_passed
+	all_passed = _check("the ended shake parks the tick again", behavior.is_processing(), false) and all_passed
+	behavior.chromatic_shake(12.0, 0.4, "reducing", 90.0)
+	all_passed = _check("a fixed angle points the split down that line",
+		Vector2(behavior._chroma_shake_direction()).is_equal_approx(Vector2(0.0, 1.0)), true) and all_passed
+	behavior.stop_chromatic_shake()
+	Engine.set_meta("no_flashing", true)
+	behavior.chromatic_shake(12.0, 0.4, "reducing", -1.0)
+	all_passed = _check("no flashing halves the magnitude", behavior.chromatic_shake_magnitude(), 6.0) and all_passed
+	all_passed = _check("no flashing halves the wander rate", behavior._chroma_shake_rate(), float(behavior.get("shake_frequency")) * 0.5) and all_passed
+	behavior.stop_chromatic_shake()
+	Engine.remove_meta("no_flashing")
+	all_passed = _check("the no-flashing meta is not left behind for other tests", Engine.has_meta("no_flashing"), false) and all_passed
+	# The overlay shader itself compiles headless: a shader that fails to build reports NO uniforms,
+	# so the sorted uniform list is both the compile check and the shake's two new dials.
+	var fx_shader: Shader = Shader.new()
+	fx_shader.code = str(script.get_script_constant_map().get("_FX_SHADER", ""))
+	var fx_uniforms: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in fx_shader.get_shader_uniform_list(true):
+		fx_uniforms.append(str(entry.get("name", "")))
+	fx_uniforms.sort()
+	all_passed = _check("the overlay shader compiles and carries the shake's dials", ",".join(fx_uniforms),
+		"chroma_intensity,chroma_shift,chroma_strength,speed_lines,vignette_color,vignette_strength") and all_passed
+
 	camera.free()
 	behavior.free()
 	return all_passed

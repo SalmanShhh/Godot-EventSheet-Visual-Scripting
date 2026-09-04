@@ -232,6 +232,16 @@ static func build() -> bool:
 	]))
 	teardown.actions.append(teardown_body)
 	sheet.events.append(teardown)
+	# Per-frame: one step of the chromatic shake. It runs BEFORE the camera mixer because the split
+	# is drawn on the screen rather than through a lens - it has to go on shaking in a scene with no
+	# camera in it at all - and the mixer's own work is camera-shaped.
+	var chroma_shake_tick: EventRow = EventRow.new()
+	chroma_shake_tick.trigger_provider_id = "Core"
+	chroma_shake_tick.trigger_id = "OnProcess"
+	var chroma_shake_tick_body: RawCodeRow = RawCodeRow.new()
+	chroma_shake_tick_body.code = Lib.JUICE_CHROMA_SHAKE_TICK_BODY
+	chroma_shake_tick.actions.append(chroma_shake_tick_body)
+	sheet.events.append(chroma_shake_tick)
 	# Per-frame: decay trauma and drive the camera offset/roll from squared trauma (perceptual ramp).
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -515,6 +525,11 @@ static func build() -> bool:
 	fx_block.code = "\n".join(Lib.juice_fx_overlay_lines())
 	sheet.events.append(fx_block)
 
+	# ── Chromatic shake: the camera Shake's twin, on the screen instead of the lens ───
+	var chroma_shake_block: RawCodeRow = RawCodeRow.new()
+	chroma_shake_block.code = "\n".join(Lib.juice_chroma_shake_lines())
+	sheet.events.append(chroma_shake_block)
+
 	# ── Moments: a hit, a kill, a win, a danger, a calm - each one a file of steps ────
 	var moment_block: RawCodeRow = RawCodeRow.new()
 	moment_block.code = "\n".join(_moment_lines())
@@ -544,7 +559,8 @@ static func build() -> bool:
 		"# which writes _tilt_roll for the mixer to apply rather than touching the camera itself.",
 		"var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
 		"var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()",
-		"if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active):",
+		"if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active",
+		"\t\tor _chroma_shake_active):",
 		"\tset_process(false)"
 	]))
 	tick_extras.actions.append(tick_extras_body)
@@ -687,6 +703,18 @@ static func build() -> bool:
 		Lib.JUICE_CHROMATIC_KICK_BODY)
 	_default(sheet, "strength", "0.5")
 	_default(sheet, "seconds", "0.25")
+	Lib.append_function(sheet, "chromatic_shake", "Chromatic Shake", "Juice", "Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.",
+		[["magnitude", "float"], ["duration", "float"], ["mode", "String"], ["angle_degrees", "float"]],
+		Lib.JUICE_CHROMATIC_SHAKE_BODY,
+		"Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
+	_default(sheet, "magnitude", "12")
+	_default(sheet, "duration", "0.3")
+	_default(sheet, "mode", "reducing")
+	_param_options(sheet, "mode", ["reducing", "constant"])
+	_default(sheet, "angle_degrees", "-1")
+	Lib.append_function(sheet, "stop_chromatic_shake", "Stop Chromatic Shake", "Juice", "Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.",
+		[],
+		Lib.JUICE_STOP_CHROMATIC_SHAKE_BODY)
 	Lib.append_function(sheet, "set_speed_lines", "Set Speed Lines", "Juice", "Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.",
 		[["intensity", "float"]],
 		Lib.JUICE_SET_SPEED_LINES_BODY)

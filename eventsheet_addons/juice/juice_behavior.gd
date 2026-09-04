@@ -181,6 +181,8 @@ uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;
 uniform float vignette_strength = 0.0;
 uniform vec4 vignette_color: source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float chroma_strength = 0.0;
+uniform vec2 chroma_shift = vec2(0.0, 0.0);
+uniform float chroma_intensity = 0.0;
 uniform float speed_lines = 0.0;
 
 void fragment() {
@@ -191,6 +193,16 @@ void fragment() {
 		texture(screen_texture, uv + chroma_offset).r,
 		texture(screen_texture, uv).g,
 		texture(screen_texture, uv - chroma_offset).b);
+	// The SHAKE's split, on top of the kick's: the kick pulls the channels apart outwards from
+	// the middle, while this slides the whole screen's channels along one direction that moves.
+	// Red leads, green trails the other way, blue overshoots four times as far, and a fourth,
+	// nearer tap ghosts behind the three - the smear that reads as impact rather than as a lens.
+	vec3 shaken = vec3(
+		texture(screen_texture, uv + chroma_shift).r,
+		texture(screen_texture, uv - chroma_shift).g,
+		texture(screen_texture, uv + chroma_shift * 4.0).b);
+	shaken = mix(shaken, texture(screen_texture, uv + chroma_shift * 1.25).rgb, 0.25);
+	col = mix(col, shaken, clamp(chroma_intensity, 0.0, 1.0));
 	float vignette = smoothstep(0.35, 1.0, length(centered) * 1.5) * vignette_strength;
 	col = mix(col, vignette_color.rgb, clamp(vignette, 0.0, 1.0));
 	float angle = atan(centered.y, centered.x);
@@ -200,6 +212,32 @@ void fragment() {
 	COLOR = vec4(col, 1.0);
 }
 """
+
+# --- Chromatic shake: a directional channel split that moves while it lasts ---
+
+## How much of the peak a fixed-angle shake can lose to the wander. A shake told which way to
+## point keeps that direction, so the noise lands on the AMOUNT instead and the split breathes
+## along one line rather than swinging around the screen.
+const CHROMA_SHAKE_WANDER: float = 0.35
+
+## The Engine meta the whole project keeps the no-flashing answer in - the one the built-in Set
+## No Flashing row writes. A game carrying that row needs nothing else: the split comes out half
+## as wide and wanders half as fast, which is the same shake without the strobe.
+const CHROMA_SHAKE_NO_FLASHING_META: StringName = &"no_flashing"
+
+# The magnitude the screen is showing right now, in pixels - what the expression answers with.
+var _chroma_shake_magnitude: float = 0.0
+# The magnitude the gesture was fired at, before falloff, wander and the no-flashing halving.
+var _chroma_shake_from: float = 0.0
+var _chroma_shake_duration: float = 0.3
+var _chroma_shake_elapsed: float = 0.0
+# True for the "constant" mode: hold the amount flat for the duration, then stop dead.
+var _chroma_shake_hold: bool = false
+# The direction in degrees, or below zero for a direction that wanders with the noise.
+var _chroma_shake_angle: float = -1.0
+# The noise clock, advanced by delta so the wander rides the game's own time.
+var _chroma_shake_time: float = 0.0
+var _chroma_shake_active: bool = false
 
 # --- Moments: one felt beat of the game, played from a file ---
 
@@ -296,6 +334,7 @@ func _on_tree_exiting() -> void:
 		Engine.time_scale = 1.0
 
 func _process(delta: float) -> void:
+	_chroma_shake_step(delta)
 	# Effect STATE advances camera-or-not (headless-safe: trauma must decay and recoil must
 	# recover even when no viewport exists); only the camera write below needs a camera.
 	if trauma > 0.0:
@@ -382,7 +421,8 @@ func _process(delta: float) -> void:
 	# which writes _tilt_roll for the mixer to apply rather than touching the camera itself.
 	var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
 	var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()
-	if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active):
+	if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active
+			or _chroma_shake_active):
 		set_process(false)
 
 ## @ace_action
@@ -820,6 +860,47 @@ func chromatic_kick(strength: float, seconds: float) -> void:
 	_chroma_tween = tw
 
 ## @ace_action
+## @ace_name("Chromatic Shake")
+## @ace_category("Juice")
+## @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.")
+## @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
+## @ace_param_options(mode reducing, constant)
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.chromatic_shake({magnitude}, {duration}, {mode}, {angle_degrees})")
+func chromatic_shake(magnitude: float, duration: float, mode: String, angle_degrees: float) -> void:
+	_ensure_fx_overlay()
+	_chroma_shake_from = maxf(magnitude, 0.0)
+	_chroma_shake_duration = maxf(duration, 0.01)
+	_chroma_shake_hold = mode == "constant"
+	_chroma_shake_angle = angle_degrees
+	# Firing again RESTARTS the shake rather than stacking a second one on it: the same split, from
+	# the top. The noise clock deliberately keeps running, so a second hit carries the wander on
+	# instead of snapping the split back to where the first one started.
+	_chroma_shake_elapsed = 0.0
+	_chroma_shake_active = true
+	if _fx_rect != null:
+		_fx_rect.visible = true
+	_chroma_shake_write()
+	set_process(true)
+
+## @ace_action
+## @ace_name("Stop Chromatic Shake")
+## @ace_category("Juice")
+## @ace_description("Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.stop_chromatic_shake()")
+func stop_chromatic_shake() -> void:
+	_chroma_shake_active = false
+	_chroma_shake_elapsed = 0.0
+	_chroma_shake_magnitude = 0.0
+	if _fx_material == null:
+		return
+	_fx_material.set_shader_parameter("chroma_shift", Vector2.ZERO)
+	_fx_material.set_shader_parameter("chroma_intensity", 0.0)
+	# Hands the overlay back: it hides itself unless a vignette, a kick or speed lines are still on it.
+	_fx_update_visibility()
+
+## @ace_action
 ## @ace_name("Set Speed Lines")
 ## @ace_category("Juice")
 ## @ace_description("Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.")
@@ -1132,9 +1213,11 @@ func _ensure_fx_overlay() -> void:
 	_fx_material.shader = fx_shader
 	# Seed every uniform so get_shader_parameter never returns null: reading an un-set uniform
 	# returns null (NOT the shader default), and _fx_update_visibility's float() would fault on it
-	# whenever only one of the three effects had been used.
+	# whenever only one of the effects had been used.
 	_fx_material.set_shader_parameter("vignette_strength", 0.0)
 	_fx_material.set_shader_parameter("chroma_strength", 0.0)
+	_fx_material.set_shader_parameter("chroma_shift", Vector2.ZERO)
+	_fx_material.set_shader_parameter("chroma_intensity", 0.0)
 	_fx_material.set_shader_parameter("speed_lines", 0.0)
 	_fx_rect.material = _fx_material
 	_fx_rect.visible = false
@@ -1146,7 +1229,94 @@ func _fx_update_visibility() -> void:
 		return
 	_fx_rect.visible = float(_fx_material.get_shader_parameter("vignette_strength")) > 0.001 \
 			or float(_fx_material.get_shader_parameter("chroma_strength")) > 0.001 \
+			or float(_fx_material.get_shader_parameter("chroma_intensity")) > 0.001 \
 			or float(_fx_material.get_shader_parameter("speed_lines")) > 0.001
+
+## @ace_hidden
+func _chroma_shake_quiet() -> bool:
+	return bool(Engine.get_meta(CHROMA_SHAKE_NO_FLASHING_META, false))
+
+## @ace_hidden
+func _chroma_shake_rate() -> float:
+	return shake_frequency * (0.5 if _chroma_shake_quiet() else 1.0)
+
+## @ace_hidden
+func _chroma_shake_wander() -> float:
+	if _noise == null:
+		return 0.0
+	return _noise.get_noise_2d(_chroma_shake_time * _chroma_shake_rate(), 0.0)
+
+## @ace_hidden
+func _chroma_shake_fade() -> float:
+	if not _chroma_shake_active:
+		return 0.0
+	if _chroma_shake_hold:
+		return 1.0
+	return clampf(1.0 - _chroma_shake_elapsed / maxf(_chroma_shake_duration, 0.0001), 0.0, 1.0)
+
+## @ace_hidden
+func _chroma_shake_direction() -> Vector2:
+	if _chroma_shake_angle >= 0.0:
+		return Vector2.from_angle(deg_to_rad(_chroma_shake_angle))
+	if _noise == null:
+		return Vector2.RIGHT
+	var t: float = _chroma_shake_time * _chroma_shake_rate()
+	return Vector2(_noise.get_noise_2d(t, 0.0), _noise.get_noise_2d(0.0, t))
+
+## @ace_hidden
+func _chroma_shake_amount() -> float:
+	var amount: float = _chroma_shake_from * _chroma_shake_fade()
+	if _chroma_shake_angle >= 0.0:
+		amount *= 1.0 - CHROMA_SHAKE_WANDER * absf(_chroma_shake_wander())
+	if _chroma_shake_quiet():
+		amount *= 0.5
+	return amount
+
+## @ace_hidden
+func _chroma_shake_write() -> void:
+	_chroma_shake_magnitude = _chroma_shake_amount()
+	if _fx_material == null:
+		return
+	var span: Vector2 = Vector2(1.0, 1.0)
+	var vp: Viewport = get_viewport()
+	if vp != null:
+		span = vp.get_visible_rect().size
+	span = Vector2(maxf(span.x, 1.0), maxf(span.y, 1.0))
+	# The same global dial the camera effects are scaled by, so a player who turned the shake
+	# down turned this down with it.
+	var effect_strength: float = float(Engine.get_meta("effect_strength", 1.0))
+	var shift: Vector2 = _chroma_shake_direction() * _chroma_shake_magnitude * effect_strength
+	_fx_material.set_shader_parameter("chroma_shift", shift / span)
+	_fx_material.set_shader_parameter("chroma_intensity", _chroma_shake_fade())
+
+## @ace_hidden
+func _chroma_shake_step(delta: float) -> void:
+	if not _chroma_shake_active:
+		return
+	_chroma_shake_time += delta
+	_chroma_shake_elapsed += delta
+	if _chroma_shake_elapsed >= _chroma_shake_duration:
+		# A reducing shake has reached nothing and a constant one has held long enough: both end
+		# here, the overlay is put back to clean, and the tick parks itself on the next pass.
+		stop_chromatic_shake()
+		return
+	_chroma_shake_write()
+
+## @ace_condition
+## @ace_name("Is Chromatic Shaking")
+## @ace_description("Whether a chromatic shake is running right now - true from the row that fires it until the duration is up or Stop Chromatic Shake takes it off.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.is_chromatic_shaking()")
+func is_chromatic_shaking() -> bool:
+	return _chroma_shake_active
+
+## @ace_expression
+## @ace_name("Chromatic Shake Magnitude")
+## @ace_description("How wide the split is right now, in pixels: the magnitude after the falloff, the wander and the no-flashing halving. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it and the whole hit reads as one thing.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.chromatic_shake_magnitude()")
+func chromatic_shake_magnitude() -> float:
+	return _chroma_shake_magnitude
 
 ## @ace_hidden
 func _moment_steps(played: Resource) -> Array:
