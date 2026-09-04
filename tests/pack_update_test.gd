@@ -78,6 +78,7 @@ static func run() -> bool:
 	ok = _test_the_record_says_what_it_now_holds() and ok
 	ok = _test_the_dry_run_answers_the_incoming_vocabulary() and ok
 	ok = _test_the_ring_has_a_door() and ok
+	ok = _test_a_ring_folder_is_many_to_one() and ok
 	_clear_fixture()
 	return ok
 
@@ -436,6 +437,37 @@ static func _test_the_dry_run_answers_the_incoming_vocabulary() -> bool:
 	return ok
 
 
+## A RING FOLDER'S NAME IS MANY-TO-ONE, AND THE ENTRY INSIDE IS NOT.
+##
+## The folder is the file's whole path with its separators replaced by underscores, so a top-level
+## `sub_guide.md` and a removed `sub/guide.md` land in the SAME folder. The ring lists a folder's
+## entries by their sequence prefix alone, without asking which file each came from - so the row for
+## one of those two could offer the other's bytes and then write them over it, which is the one thing
+## a door that writes files must never do. Each entry carries the file's own name after the sequence,
+## and that is what decides.
+static func _test_a_ring_folder_is_many_to_one() -> bool:
+	var folder: String = _fresh_pack()
+	_write(folder.path_join("sub_guide.md"), "the file at the top of the pack
+")
+	var ring: String = EventSheetBackups.backup_dir_for(folder.path_join("sub_guide.md"))
+	var crossed: String = EventSheetBackups.backup_dir_for(folder.path_join("sub/guide.md"))
+	var ok: bool = _check("the two paths really do share one ring folder", ring, crossed)
+	DirAccess.make_dir_recursive_absolute(ring)
+	_write(ring.path_join("0001.guide.md"), "the deeper file's bytes
+")
+	_write(ring.path_join("0002.sub_guide.md"), "the top-level file's bytes
+")
+	var said: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheetPackUpdate.restorable(folder):
+		if str(entry.get("path", "")) == "sub_guide.md":
+			said.append(str(entry.get("backup", "")).get_file())
+	ok = _check("the row offers only the entry written from the file it is about", said,
+		PackedStringArray(["0002.sub_guide.md"])) and ok
+	DirAccess.remove_absolute(ring.path_join("0001.guide.md"))
+	DirAccess.remove_absolute(ring.path_join("0002.sub_guide.md"))
+	DirAccess.remove_absolute(ring)
+	_clear_fixture()
+	return ok
 # ── the fixture ───────────────────────────────────────────────────────────────────────────────
 
 

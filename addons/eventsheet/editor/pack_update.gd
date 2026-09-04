@@ -338,6 +338,15 @@ static func restorable(pack_folder: String) -> Array[Dictionary]:
 	for relative: String in candidates:
 		var target: String = pack_folder.path_join(relative)
 		for backup: String in EventSheetBackups.list_backups(target):
+			# THE ENTRY'S OWN NAME SAYS WHOSE BYTES THESE ARE. A ring folder is the file's whole path
+			# with its separators replaced by underscores, which is many-to-one: a top-level
+			# `sub_guide.md` and a removed `sub/guide.md` are held in one folder, and the ring lists a
+			# folder's entries without looking at which file each came from. So a row for one of them
+			# could offer the other's bytes and then write them over it. An entry is
+			# `<four digits>.<the file's own name>`, and that is the same rule the reconstruction below
+			# applies, asked in the other direction.
+			if backup.get_file().substr(5) != relative.get_file():
+				continue
 			listed.append({
 				"path": relative,
 				"target": target,
