@@ -683,7 +683,7 @@ class DrawerCorners:
 			var cell_label: Label = Label.new()
 			cell_label.text = str(cell[0])
 			cell_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-			cell_label.modulate = Color(1.0, 1.0, 1.0, 0.65)
+			cell_label.modulate.a = 0.65
 			cell_box.add_child(cell_label)
 			var cell_spin: SpinBox = SpinBox.new()
 			cell_spin.step = 0.001
@@ -802,7 +802,7 @@ class LinkToggle:
 		var caption: Label = Label.new()
 		caption.text = "linked to %s" % _second
 		caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-		caption.modulate = Color(1.0, 1.0, 1.0, 0.6)
+		caption.modulate.a = 0.6
 		add_child(caption)
 
 
