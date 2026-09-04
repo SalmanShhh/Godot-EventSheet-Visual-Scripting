@@ -851,11 +851,8 @@ static func _eq(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check(P, label, actual, expected)
 
 
+## The `_eq` pin for a line whose TAIL is a default-value spelling this test does not fix (a Vector2
+## writes its own `Vector2(...)` text): the HEAD of the line is compared, as a value, through the one
+## reporter the runner and the report tool parse.
 static func _starts(label: String, actual: String, prefix: String) -> bool:
-	if actual.begins_with(prefix):
-		print("[PASS] inspector_drawer_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] inspector_drawer_roundtrip_test: %s" % label)
-	print("  expected prefix: %s" % prefix)
-	print("  actual:          %s" % actual)
-	return false
+	return SUPPORT.check(P, label, actual.substr(0, prefix.length()), prefix)
