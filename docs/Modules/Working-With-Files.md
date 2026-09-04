@@ -200,9 +200,19 @@ worlds - reach for the one whose world you are in.
 resources, and a resource may be a *script*. Building one runs that script with everything your game
 can reach. That is exactly right for a scene you shipped and exactly wrong for one that arrived from
 somewhere else, so **Scene File Is Data-Only** is the question to ask first: it reads the file's own
-resource table as text, builds nothing, and answers false for a scene that carries a script inside it
-or points at one from anywhere but `res://`. It reads the one file you name - a scene that file points
-at is a separate file with a table of its own.
+resource table as text, builds nothing, and answers false for a scene that carries a script inside it,
+points at one from anywhere but `res://`, writes a value the engine would build (`Resource("...")` or
+`Object(...)` in a node's body), or holds an escape in a resource tag - Godot decodes those and this
+reading does not, so a tag carrying one is refused rather than second-guessed. It reads the one file
+you name - a scene that file points at is a separate file with a table of its own.
+
+**What a true answer does not cover.** It says the file brings no code of its own with it. It does not
+say the file is inert. A cleared scene may still hold a `[connection]` naming one of *your* methods
+with arguments of its own, an `Animation` track that calls one of your methods at a keyframe, or a
+node with an `instance_placeholder` that loads another scene when something calls `create_instance()`
+on it. None of those brings a stranger's code in; each of them can reach yours. A scene from outside
+is still somebody else's **data**, so the methods it can reach deserve the thought any other input
+gets.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
@@ -622,8 +632,13 @@ On load pressed
   rows made.
 - **A file that is THERE but unreadable is not a missing file.** The guard on all three loaders is
   `file_exists`, so a truncated `.png` or a `.ogg` that is really something else reaches its reader,
-  and the reader answers with null and an engine message rather than with your fallback. Check the
-  answer before using it when the file came from outside the game.
+  and the reader answers with **null and an engine message rather than with your fallback** - the
+  fallback slot answers for a path with no file at it, not for a file that turned out to be rubbish.
+  Check the answer before using it when the file came from outside the game.
+- **Safe File Name keeps a trailing dot.** `save.` comes back as `save.`, because
+  `String.validate_filename` allows it - and Windows then drops the dot silently, so the file is
+  called `save` and a later read of `save.` finds nothing. Put the extension on yourself after the
+  safe name rather than letting the player's typing end in one.
 - **Safe File Name does not know the reserved device names.** `con`, `prn`, `aux`, `nul` and `com1`
   survive it, because `String.validate_filename` does not treat them specially, and Windows will not
   take a file called any of them. Adding a prefix or suffix of your own - `save_` in front of the
@@ -642,6 +657,17 @@ On load pressed
   the file system refuses, a folder it could not make, a full disk - moves neither the progress bar
   nor the totals On Unpack Finished carries. A finish saying nine entries after a ten-entry archive
   is a finish saying one did not land.
+- **The unpack guard is LEXICAL, and three things it cannot see are worth knowing.** It compares the
+  real path each entry would land at against the real path of the target folder, which is what turns
+  every spelling of `..` into a refusal. But (1) a **symlink or junction already sitting inside the
+  target folder** redirects a write out of it, because the path is inside and the file system is not -
+  the guard sees the path, not the link; (2) on Windows, an entry named `x:y.txt` lands as an
+  **alternate data stream** on a file called `x` rather than as a file of its own, which is a payload
+  that does not show in a directory listing; and (3) an entry the reader cannot decode gives back
+  nothing, so it lands as a **0-byte file** and is counted as one that landed.
+- **An entry is read whole before it is written.** `read_file` materialises the entire entry in
+  memory, so an archive from outside the game can be a memory bill as well as a disk one. Check the
+  archive's size before unpacking one somebody sent.
 - **Pack Folder Into Zip is not recursive.** It walks the files directly in that one folder. A whole
   tree needs your own walk with List Subdirectories.
 - **A packed archive stores bare file names**, so unpacking one lays its files flat in the target
@@ -653,6 +679,15 @@ On load pressed
   folder that already holds two hundred files is not two hundred things that just happened.
 - **A modified time is stamped to the nearest second.** A file written twice inside one second looks
   unchanged to the watcher, which is a real limit of the filesystem rather than of these rows.
+- **Changed means the time MOVED, not that it moved forward.** A file restored from a backup or
+  copied back over carries an older time, and that is a change like any other.
+- **Change the watched folder or the name filter through the rows, not the Inspector, while a watch
+  is running.** The baseline was read under the old folder and the old pattern, so the next look
+  raises On A File Removed for names that merely stopped matching and On A File Appeared for ones
+  that just started. Stop Watching, then Watch Folder again.
+- **A tenth of a second is the shortest gap a watch will keep.** Ask for zero and you get 0.1, and
+  the sheet's file band says the interval the watcher will really keep rather than the number typed
+  into the row.
 - **A program that writes a file in several goes can raise On A File Changed more than once** for
   what a person would call one save. Debounce in your own row if that matters.
 - **A watcher under `res://` will never see anything change.** `res://` is packed into the export and
