@@ -2,6 +2,95 @@
 
 ## [Unreleased]
 
+### A number that says its unit, a list that reads as cards, and a handle you can drag
+
+- **A float now carries the unit it is read in, and the number never moves.** The **unit drawer**
+  is a spin box with a unit dropdown at its right edge: "Thickness 0.6 world", "Start angle 0.25
+  turns". The export names the unit the value is **stored** in and the dropdown only says which
+  unit it is **shown** in, so a designer reading a wind-up in frames cannot move the number the
+  game reads in seconds - the whole point of the drawer, and the reason emitted code is untouched
+  by every flip of it. **Four families convert**: length (`px`, `world`, `screen`, where a screen
+  unit is the project's configured viewport width), angle (`deg`, `turn`, `rad`), time (`s`, `ms`,
+  `frames` at the project's physics rate) and level (`db`, `fraction`). A word from outside them is
+  a pack's own label the dropdown relabels and nothing more, because there is no honest factor
+  between two words nobody declared. It rides `eventsheet:unit:kinds=a|b,store=a`, it is a look in
+  the gallery with its own picture and sentence, and without the editor plugin it is a plain float.
+- **Four numbers that are usually one number.** The **corners drawer** reads a `Vector4` clockwise
+  from the top-left as one box while all four agree, with a button that opens four labelled boxes
+  when they should not. A file whose corners already differ opens showing the four, because one box
+  would be lying about three of them. The same shape is what margins and padding are, so the marker
+  says `eventsheet:corners` and nothing about what for. **Two new looks** in the gallery in total.
+- **A choice can be a picture, or a strip.** The toggle-buttons drawer gained two optional tails in
+  the order the marker reads them: `:segmented` gives two to five word options equal widths and
+  joins them into one control, and `:icons=<source>` puts a picture on each button. The source
+  tells itself apart with no prefix to remember: a path pattern holding `%s` substitutes the option
+  in snake_case, anything else is a **provider name** a pack registered, so a pack whose options
+  only exist as its own shader can draw the real thing at edit time. A missing file or an
+  unregistered name is never an error - that button keeps its word, and the word stays as the
+  tooltip either way, for hovering and for a screen reader.
+- **Ticking one box can reveal a whole group, and two numbers can be tied.** **Show group if**
+  hides an entire `@export_group` behind one bool instead of one field at a time; the
+  `# @inspector_show_if` comment above the group line is only the round-trip carrier (an export
+  group takes no hint string), and the hiding itself is the same `_validate_property` the field
+  form already emitted, once per member, so the generated code's shape is unchanged. **Link with**
+  draws an equals button between two neighbouring numbers: press it and the pair keeps the ratio it
+  had at that moment. Comment-only, editor-only, and a leader sitting at zero keeps a ratio of one
+  rather than sending its follower to infinity.
+- **Two decor lines that belong to the object, not to a property.** `# @inspector_preview` puts a
+  live picture of the thing being edited at the top of its Inspector, re-drawn as it changes. The
+  Drawing Prefab has had one since it shipped; this is that card made general, and the prefab hands
+  over its own rasterizer so its card is byte for byte what it was. The picture comes from, in
+  order: a renderer the caller passed, a renderer a pack registered for the script, an
+  `inspector_preview_texture(size)` method on the object, and for a node with none of those, the
+  node rendered live into a small viewport of its own. A resource with no renderer anywhere shows
+  an honest empty card.
+- **`# @inspector_handle <property> <kind> [from <anchor>]`, and the plugin has a viewport handle
+  seam at last.** A selected node whose script declares handles shows a draggable mark per handle
+  the way the engine's own collision shapes do: a filled dot for a `point`, a hollow dot for a
+  `length`, a diamond for an `angle`, one dot per entry for `points`. 2D rides the editor plugin's
+  canvas forwarding and 3D a gizmo plugin; **letting go of the mouse writes one undo step**, and
+  holding Ctrl snaps to the editor's own Configure Snap defaults. A line naming an unknown kind or
+  a missing property draws nothing rather than dragging the wrong thing, and the Inspector Designer
+  shows a script's handles as chips so an author reads what will be draggable before opening a
+  scene.
+- **A list of things, each of a kind, edited as a list of cards.** The table drawer is right when
+  every row has the same columns and wrong the moment they do not. The **card-list drawer** is the
+  other picture: one card per entry, a stripe coloured by its category, a drag handle, a fold
+  arrow, an enable box, a label, a badge the schema computes and a menu (duplicate, copy, paste
+  over, move to top, move up, move down, remove), with a searchable Add dropdown underneath and
+  Copy all / Paste all over the whole list. Unfolding a card shows what that kind is for, then its
+  own fields drawn with the **real drawers**, then whatever the running game is writing back,
+  greyed. It rides `eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>` on an Array of Dictionaries.
+- **The kinds are the pack's, never the plugin's.** A card list names a **schema** registered
+  through the public API, and **10 static methods** across three seams ship with it: four for card
+  schemas (`register_card_schema`, `unregister_card_schema`, `card_schema`,
+  `card_schema_from_aces`), three for preview renderers and three for toggle icon providers. The
+  derived form is the one to reach for first -
+  `EventSheets.register_card_schema("my_steps", EventSheets.card_schema_from_aces.bind(my_aces))` -
+  because it builds one card per verb from ACE descriptors, its label and help from the words the
+  picker already reads out and its fields from the verb's own parameters, so a pack that adds a
+  verb gets a card for it with no editor code at all. A card list whose schema was never registered
+  **still draws and still saves the bytes it opened with**, so a `.tres` outlives the pack that
+  authored it.
+- **Three rules a card list obeys, because it is somebody's saved file.** Loading never writes
+  (defaults are seeded when a card is added, never when one is read, so a file saved before the
+  schema grew a field round-trips byte for byte); an edit keeps the stored **type**, a number
+  written as a float staying a float and a colour written as `"#rrggbb"` staying a String; and an
+  **absent** enable key means enabled, so switching a card back on erases the key rather than
+  writing a `true` the file never had. A card may carry its own name and its own colour where the
+  schema leaves room, and the swatch is refused where the stripe key IS the kind key, because a
+  colour written there would overwrite what the card is.
+- **The Drawing Prefab's steps are now that drawer, with every stored key untouched.** Its opaque
+  p1/p2/p3 grid is a list of cards titled by shape, each showing that shape's own slots - a circle
+  says "Radius", a line says "End X" - and the eight keys a `.tres` holds (`kind`, `x`, `y`, `p1`,
+  `p2`, `p3`, `color`, `texture`) are exactly what they were, so an existing prefab loads, draws
+  and round-trips unchanged. One card editor is maintained now instead of two.
+- **The drawer family went from eight to eleven, and none of it reaches a shipped game.** Every
+  drawer is an `@export_custom` hint string and every decor line is a plain `#` comment, so without
+  the editor plugin - or in an exported game - a card list is an ordinary Array, a unit field is an
+  ordinary float, and the handles and the preview card were never there. The parity covenant is
+  untouched, and so is the byte-exact round trip.
+
 ### Who did it, what kind it was, and what it leaves behind
 
 - **One key for who made this: 7 new Ownership rows.** A bullet hits, an enemy dies, and the sheet
