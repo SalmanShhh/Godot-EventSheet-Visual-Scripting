@@ -135,6 +135,24 @@
   project that already wrote these lines by hand opens as. The addon index gains Blend Modes and Post
   Kit, the engine-level reference gains the two clipping rows, the pack count is re-measured at
   **121**, and the words land in all nine translation CSVs (**19 new keys**).
+- **The flagship showcase plays what this pass added.** Carousel of Juice was eight tiles springing
+  on a beat; it now feels the beat on the whole screen. Every beat pulses a vignette out of the post
+  stack and pulls the tiles' colour channels apart along a fresh angle. **ui_accept** plays the
+  impact moment at the board's own intensity dial, puts one more effect on the live stack, then
+  writes that stack out to `user://` and wears it straight back off disk - the look a game runs at is
+  a file its player owns rather than a name this plugin chose. One tile is drawn blended as screen,
+  and **ui_cancel** plays the calm moment and starts the board over behind a fade. The scene carries
+  the four packs those rows address by name, plus the camera an impact shake moves. A runtime smoke
+  drove the real scene to prove it: the moment played, the look on the screen was the one the row had
+  just saved, and the picture was taken on the first beat with the split still on it.
+
+### Fixed
+
+- **The getting-started state takes its colours from the live reading style.** The empty sheet's
+  heading, hint, tip and both of its buttons were painted from the palette constants, and the
+  secondary button from a white wash at 5% and 22% - invisible on a light preset. Every line and both
+  buttons now read the reading style's primary, secondary and muted text colours, so a preset
+  recolours the getting-started state along with the rows it sits among.
 
 ### The camera, the view, and how the game meets the screen
 
