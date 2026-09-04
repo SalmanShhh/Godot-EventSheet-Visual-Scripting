@@ -89,6 +89,15 @@ static func _test_the_row_keeps_its_reading() -> bool:
 	ok = _check("a slot the row never answered is emptied, not printed at the reader",
 		EventSheetMigrationFindings.reading_text("Set {property} to {value}", {"value": "5"}),
 		"Set to 5") and ok
+	# A CLEARED value reads as unanswered too, and the word the slot sits in goes with it - a unit
+	# glued to the braces used to be left standing on its own ("Play from s") because an empty string
+	# is a filled slot to a plain replace.
+	ok = _check("a cleared value takes the word its slot sits in with it",
+		EventSheetMigrationFindings.reading_text("Play from {from}s", {"from": ""}),
+		"Play from") and ok
+	ok = _check("while a word holding an answered slot beside an unanswered one keeps its answer",
+		EventSheetMigrationFindings.reading_text("Wait {amount}{unit}", {"amount": "3", "unit": ""}),
+		"Wait 3") and ok
 	ok = _check("a row with no stored reading says nothing, and the old fallbacks answer",
 		EventSheetMigrationFindings.reading_text("", {"a": "1"}), "") and ok
 	# What the dock bakes onto a row when it is applied: the display TEMPLATE, never a finished

@@ -151,6 +151,13 @@ static func near_names(ace_id: String) -> String:
 ## `{name}` - the descriptor that knew that parameter's default is exactly what is gone - and the gap
 ## it leaves closes with it, so the sentence still reads as one.
 ##
+## AND A SLOT IS DROPPED WITH THE WORD IT SITS IN. A blank value is as unanswered as a missing one -
+## a cleared optional parameter is exactly the case, `play()` with no From - and a slot glued to a
+## unit ("Play from {from}s") leaves the unit stranded when only the braces go, so the receipt read
+## "Play sound -> Play from s". The whole whitespace-delimited word goes instead, unless it carries
+## another slot that DID get an answer, in which case only the unanswered braces are taken out and
+## the answer keeps its word.
+##
 ## It goes through the catalog like every other display template: a sentence this plugin wrote is
 ## prose, and a reader in another language should not lose theirs because a pack was uninstalled.
 static func reading_text(stored: String, params_dict: Dictionary) -> String:
@@ -158,15 +165,36 @@ static func reading_text(stored: String, params_dict: Dictionary) -> String:
 	if template.is_empty():
 		return ""
 	var text: String = EventSheetL10n.translate(template)
-	for key: Variant in params_dict.keys():
-		text = text.replace("{%s}" % str(key), str(params_dict[key]))
 	if _unfilled_slot_re == null:
 		_unfilled_slot_re = RegEx.new()
 		_unfilled_slot_re.compile("\\{[A-Za-z_][A-Za-z0-9_]*\\}")
 	if _run_of_spaces_re == null:
 		_run_of_spaces_re = RegEx.new()
 		_run_of_spaces_re.compile("[ \\t]{2,}")
+	var kept: PackedStringArray = PackedStringArray()
+	for word: String in text.split(" "):
+		var slots: Array[RegExMatch] = _unfilled_slot_re.search_all(word)
+		var unanswered: int = 0
+		for slot: RegExMatch in slots:
+			var slot_text: String = slot.get_string()
+			if _answer_is_blank(params_dict, slot_text.substr(1, slot_text.length() - 2)):
+				unanswered += 1
+		if unanswered > 0 and unanswered == slots.size():
+			continue
+		kept.append(word)
+	text = " ".join(kept)
+	for key: Variant in params_dict.keys():
+		if _answer_is_blank(params_dict, str(key)):
+			continue
+		text = text.replace("{%s}" % str(key), str(params_dict[key]))
 	return _run_of_spaces_re.sub(_unfilled_slot_re.sub(text, "", true), " ", true).strip_edges()
+
+
+## Has this row nothing to say for that parameter? A key it does not carry and a key it carries
+## empty are the same fact to a reader - there is no value to read - and only one of the two used to
+## be treated that way.
+static func _answer_is_blank(params_dict: Dictionary, name: String) -> bool:
+	return str(params_dict.get(name, "")).strip_edges().is_empty()
 
 
 ## The words, in one place, so the Doctor's line and the sentence the sheet's own help strip shows
