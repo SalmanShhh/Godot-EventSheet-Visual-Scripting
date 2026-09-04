@@ -298,6 +298,10 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Nodes": "Node",
 	"Overlap 2D": "Area2D",
 	"Overlap 3D": "Area3D",
+	# Nothing derives "Ownership": it is not a class, and its rows carry no host node because
+	# they act on whatever the sheet names. What they are about is a fact written ON a node - the
+	# metadata key naming who made it - so the editor's own object mark is the human choice here.
+	"Ownership": "Object",
 	"Platform": "Godot",
 	"Procedural": "FastNoiseLite",
 	# Nothing derives "Destroy": it is not a class, and its rows carry no host node because they act
