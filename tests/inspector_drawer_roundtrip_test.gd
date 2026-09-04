@@ -11,6 +11,10 @@ class_name InspectorDrawerRoundtripTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+const P: String = "inspector_drawer_roundtrip_test"
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -755,14 +759,14 @@ static func _look_ids_for(type_name: String) -> Array:
 	return ids
 
 
+## A float pin, both sides rounded to the fourth decimal so the last bit of a conversion does not
+## decide a test. Reported through the ONE assertion file, like every other pin in the suite.
 static func _near(label: String, actual: float, expected: float) -> bool:
-	if absf(actual - expected) <= 0.0005:
-		print("[PASS] inspector_drawer_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] inspector_drawer_roundtrip_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check(P, label, _rounded(actual), _rounded(expected))
+
+
+static func _rounded(value: float) -> float:
+	return roundf(value * 10000.0) / 10000.0
 
 
 static func _vector_dial_range_persists() -> bool:
@@ -844,13 +848,7 @@ static func _type_roundtrip(label: String, var_line: String, var_name: String) -
 
 
 static func _eq(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] inspector_drawer_roundtrip_test: %s" % label)
-		return true
-	print("[FAIL] inspector_drawer_roundtrip_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check(P, label, actual, expected)
 
 
 static func _starts(label: String, actual: String, prefix: String) -> bool:
