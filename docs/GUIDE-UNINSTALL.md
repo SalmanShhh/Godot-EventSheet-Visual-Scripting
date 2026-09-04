@@ -40,7 +40,7 @@ A CI test (`tests/clean_removal_test.gd`) enforces the zero-runtime-dependency c
 | Keep (your game needs these) | Remove (plugin-only) |
 |---|---|
 | `*_generated.gd` - the compiled scripts your scenes attach | `addons/eventforge/` |
-| `eventsheet_addons/**/*.gd` - behavior packs are plain `class_name` classes the game uses | `addons/eventsheet/` |
+| `eventsheet_addons/**/*.gd` - behavior packs, and the runtime classes the emitted code calls (`free_spot.gd`, `pooled_nodes.gd`), are plain `class_name` classes the game uses | `addons/eventsheet/` |
 | Your **autoload-sheet singletons** (they point at compiled `.gd`, not at the plugin) | The **`EventForgeBridge`** autoload (editor-only vocabulary) |
 | Generated scenes (`.tscn`) and resources | The legacy `.tres` sheet sources, if any (optional - default `.gd` sheets stay editable as plain code; a `.tres` is only needed to re-edit those specific sheets) |
 
@@ -67,6 +67,6 @@ Drop `addons/eventforge/` + `addons/eventsheet/` back in and re-enable the plugi
 
 - **Run Project Doctor first, every time.** It recompiles every sheet and fails loudly on drift. Do not delete anything until it reports **safe**.
 - **Do not delete your autoload-sheet singletons.** They point at compiled `.gd` files, not at the plugin; removing them breaks the game. The only autoload that goes is `EventForgeBridge`, which is editor-only.
-- **Behavior packs stay.** Everything under `eventsheet_addons/` is plain `class_name` GDScript the game uses at runtime; it is not part of the plugin.
+- **Behavior packs stay, and so does the runtime the rows call.** Everything under `eventsheet_addons/` is plain `class_name` GDScript the game uses at runtime; it is not part of the plugin. That includes the two files a spawn or a retire row names by class - `free_spot.gd` and `pooled_nodes.gd` - which is exactly why those rows keep working after the plugin is gone.
 - **Legacy `.tres` sources are optional to keep.** Default `.gd` sheets stay editable as plain code; a `.tres` is only needed if you want to re-edit those specific sheets after re-installing.
 - **Removal is reversible.** The code was always the source of truth, so re-installing the plugin recovers full sheet editing with nothing lost.

@@ -179,6 +179,13 @@ static func _test_on_retired_is_one_connection() -> bool:
 		output.contains("on_despawned"), false) and passed
 	passed = SUPPORT.check(TEST_NAME, "the body retires through the runtime file rather than a bare free",
 		output.contains("PooledNodes.retire(self)"), true) and passed
+	# And the promise those two names carry: the emitted code goes on parsing when the plugin is
+	# deleted, which is only true while the classes it names are declared OUTSIDE addons/. Asked of
+	# the project's own class list, because that is what a game resolves a global class through.
+	passed = SUPPORT.check(TEST_NAME, "the retire runtime is a file the project owns, not one an uninstall deletes",
+		_declaring_file("PooledNodes"), "res://eventsheet_addons/pooled_nodes.gd") and passed
+	passed = SUPPORT.check(TEST_NAME, "and so is the free-spot runtime the spawn rows name",
+		_declaring_file("FreeSpot"), "res://eventsheet_addons/free_spot.gd") and passed
 	# And the line that makes the one signal mean one thing. `tree_exiting` is raised on every exit
 	# from the tree, so without this the handler ran on every reparent and on every spawn out of a
 	# pool - the guard is the trigger, and it is emitted where a reader can see it.
@@ -736,6 +743,16 @@ static func _test_the_free_spot_is_not_an_at_starter() -> bool:
 ## The shipped pool, driven directly rather than through the autoload path a running game resolves.
 ## An empty pool, because what is being watched is what happens to a node handed BACK, and a pool
 ## with a scene in it would answer that question with a copy nobody asked for.
+## The file a global class name is declared in, read off the project's own class list - the same
+## list a running game resolves `PooledNodes` through, and the only place that says WHERE the name
+## comes from. "" when nothing declares it.
+static func _declaring_file(global_class: String) -> String:
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == global_class:
+			return str(entry.get("path", ""))
+	return ""
+
+
 static func _real_pool() -> Node:
 	var pool: Node = Node.new()
 	pool.set_script(load(POOL_SCRIPT_PATH))

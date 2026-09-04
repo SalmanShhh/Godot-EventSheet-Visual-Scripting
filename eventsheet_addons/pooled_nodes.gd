@@ -1,0 +1,152 @@
+## @ace_version(1.0.0)
+class_name PooledNodes
+extends RefCounted
+## Retiring a node: back to the pool that made it when it came from one, and destroyed when it did not - the decision the Retire rows call, and the question On Retired asks.
+
+# Retiring a node: back to the pool that made it, or out of the world.
+#
+# Destroying is `queue_free()` and every destroy row in the language writes it. RETIRING is the
+# other answer to the same question, and it is the one a pooled game wants: a node that came out of
+# an object pool goes BACK to that pool to be handed out again, and a node that came from anywhere
+# else is freed exactly as before. Which of the two a node is, is written on the node - the pool
+# stamps every copy it hands out - so nothing has to be remembered by the sheet and nothing has to
+# be configured.
+#
+# WHY THIS IS A FILE AND NOT THREE LINES IN A TEMPLATE. The pool is an autoload, so a template that
+# named it would put an identifier into every generated script that only parses in a project which
+# installed the pool pack. Resolving it HERE, by path, at run time, is what lets the same row work in
+# a project with a pool and in one without: no pool, or no stamp, and the node is freed.
+#
+# THE HANDING BACK WAITS FOR THE FRAME, and that is what makes retiring a safe swap for destroying
+# rather than only nearly one. A pool takes a node back by REPARENTING it - out of the running scene
+# and under the pool - and Godot refuses a reparent while the physics server is flushing its queries,
+# which is the whole of a collision or body callback and exactly where a bullet is retired. Freeing
+# has never had this problem, because `queue_free()` already waits for the end of the frame; so the
+# pool half waits too, booked on the message queue and done at the next idle moment. Both halves of
+# the verb therefore leave the node in the world for the rest of the event, which is the one fact a
+# reader has to carry, and neither of them can raise an error from inside a callback.
+#
+# ONCE, AND ONLY ONCE. A pool's free list is a plain array and a node appended to it twice is handed
+# out to two callers, which is the worst thing a pool can do. Two things stop it: a node with a
+# handing-back already booked this frame does not book a second one, and a node already parked under
+# the pool is left alone. Freeing needs neither - Godot ignores a second `queue_free()` - so the
+# guard lives only where it is earned.
+#
+# PLAIN GDSCRIPT, AND NOT THE PLUGIN'S. Nothing here touches an editor, a sheet or any class the
+# plugin declares, and this file is not one of the plugin's files: it ships beside the behaviour
+# packs, in the folder that is the project's own, so deleting the editor addon leaves every emitted
+# line that names it still parsing and still running. The emitted line itself reads exactly like a
+# line somebody would have written by hand.
+
+## Where an object pool registers itself. An absolute path, which resolves from any node in the
+## tree, so the lookup needs nothing about where the caller sits.
+const POOL_AUTOLOAD_PATH: String = "/root/ObjectPool"
+
+## The mark a pool leaves on every copy it hands out - the pool's own name. Reading it is how this
+## file knows a node is pooled without asking the pool to search for it.
+const POOL_META: StringName = &"__pool__"
+
+## The method a pool takes a node back through.
+const POOL_METHOD: StringName = &"despawn"
+
+## The nodes whose handing back is booked and has not happened yet, by instance id. Kept here rather
+## than written on the node, because a node that goes back to a pool is handed out again with every
+## mark it was carrying still on it, and a mark that outlives the frame it was set in would refuse
+## the NEXT retirement of the same node. An entry is dropped by the booked call itself, so the table
+## is empty again by the end of the idle moment that emptied it.
+static var _booked: Dictionary = {}
+
+## The nodes whose handing back is happening RIGHT NOW, by instance id - filled for the length of the
+## one call that gives a node to its pool and emptied again the moment that call returns.
+##
+## WHY A NODE NEEDS THIS TO BE ASKED AT ALL. A pool takes a node back by taking it out of the tree,
+## and a node cannot tell "I am being put away" from "I am being moved" or "I am being handed out
+## again" - `tree_exiting` is raised for all three, and the pool raises it on every spawn. So the one
+## thing the node cannot see for itself is written down here for the length of the handing over, and
+## `is_retiring` below is what a sheet asks instead of guessing.
+static var _retiring: Dictionary = {}
+## The pool a node came out of, or null when it came from anywhere else. Null covers all four ways
+## the answer can be no: the node is not in a tree, it carries no pool mark, nothing is registered at
+## the autoload path, and whatever is registered there cannot take a node back.
+static func pool_of(node: Node) -> Node:
+	if node == null or not is_instance_valid(node) or not node.is_inside_tree():
+		return null
+	if not node.has_meta(POOL_META):
+		return null
+	var pool: Node = node.get_node_or_null(POOL_AUTOLOAD_PATH)
+	if pool == null or not pool.has_method(POOL_METHOD):
+		return null
+	return pool
+
+## Retires a node: hands it back to the pool that made it when there is one, and frees it otherwise.
+## Safe to call twice and safe to call on null - a node already on its way out, or already parked in
+## its pool, is left alone rather than handed over a second time.
+static func retire(node: Node) -> void:
+	retire_into(node, pool_of(node))
+
+## The doing, with the deciding already done. Separated from the question above so that BOTH answers
+## can be watched: a pool is something a test can hand in, where "the autoload at /root/ObjectPool"
+## is something only a running game has. A null pool is the ordinary case and means destroy.
+##
+## The pool answer is BOOKED rather than done on this line, for the reason the header states: taking
+## a node back is a reparent, and a reparent inside a physics callback is what Godot refuses.
+static func retire_into(node: Node, pool: Node) -> void:
+	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+		return
+	if pool != null and is_instance_valid(pool) and pool.has_method(POOL_METHOD):
+		if _booked.has(node.get_instance_id()) or node.get_parent() == pool:
+			return
+		_booked[node.get_instance_id()] = true
+		var booked: Callable = hand_back_by_id
+		booked.bind(node.get_instance_id(), pool.get_instance_id()).call_deferred()
+		return
+	node.queue_free()
+
+## The booked half, resolved from ids rather than from the objects themselves: a node can be freed
+## between the row that retired it and the idle moment that hands it over, and an id that no longer
+## names anything is simply an answer of no.
+static func hand_back_by_id(node_id: int, pool_id: int) -> void:
+	_booked.erase(node_id)
+	if not is_instance_id_valid(node_id) or not is_instance_id_valid(pool_id):
+		return
+	hand_back(instance_from_id(node_id) as Node, instance_from_id(pool_id) as Node)
+
+## The handing over itself, with nothing deferred and nothing looked up - the one line a pool needs,
+## plus the guard that keeps a node out of a free list it is already in. Public because it is the
+## half a test can watch: the booking above cannot be seen without a running message queue, and this
+## is what the booking does when the queue runs.
+static func hand_back(node: Node, pool: Node) -> void:
+	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+		return
+	if pool == null or not is_instance_valid(pool) or not pool.has_method(POOL_METHOD):
+		return
+	# Already parked. A pool holds the nodes it is keeping as its own children, so this is the
+	# question "is it already home" asked of the tree rather than of the pool's private list.
+	if node.get_parent() == pool:
+		return
+	# Marked for exactly as long as the handing over lasts. The pool takes the node out of the tree
+	# inside this call, which is where `tree_exiting` is raised, so this is the only window in which
+	# the node's own retirement is a fact rather than a guess.
+	_retiring[node.get_instance_id()] = true
+	pool.call(POOL_METHOD, node)
+	_retiring.erase(node.get_instance_id())
+
+## Whether this node is leaving the world for good, asked the moment it leaves it. `tree_exiting` is
+## raised every time a node is taken out of the tree - a reparent, a scene change, and a pool handing
+## the same node out again - so a sheet that wants the ONE moment a node is retired asks this rather
+## than trusting the signal.
+##
+## The two retirements answer yes for their own reasons, and they are the only two: a node on its way
+## to being freed says so itself (`is_queued_for_deletion`, which a plain destroy sets too, because a
+## destroy IS the other half of retiring), and a node on its way back to a pool is in the table above
+## for the length of that handing over. Everything else - the reparent, the respawn, the scene change
+## - is a node that is going to be somewhere else in a moment, and answers no.
+static func is_retiring(node: Node) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	return node.is_queued_for_deletion() or _retiring.has(node.get_instance_id())
+
+## True when this node came out of a pool that is still in the tree - the question Retire asks, made
+## available on its own so a sheet can ask it too.
+static func is_pooled(node: Node) -> bool:
+	return pool_of(node) != null

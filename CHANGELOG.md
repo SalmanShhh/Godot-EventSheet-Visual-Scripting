@@ -538,9 +538,10 @@
   both endings, because a pool takes a node back by removing it from the tree and a free takes it out
   of the tree as well.
 - **Two runtime files, and the parity law is why they are files.** `FreeSpot` and `PooledNodes` are
-  plain GDScript under the plugin's runtime folder - **463 lines** that touch no editor class, no
-  sheet format and no EventForge type, so a built game carries them the way it carries any other
-  script. A free spot is a roll asked again until the answer fits and a retirement is a decision read
+  plain GDScript shipped in `eventsheet_addons/` beside the behaviour packs - the project's own
+  folder, not the plugin's - **463 lines** that touch no editor class, no sheet format and no
+  EventForge type, so a built game carries them the way it carries any other script, and deleting
+  the plugin leaves every line that names them still parsing. A free spot is a roll asked again until the answer fits and a retirement is a decision read
   off the node at run time, so neither could be one expression in a template; naming the pool
   autoload in a template instead would have put an identifier into every generated script that only
   parses in a project which installed the pool pack.
@@ -620,6 +621,14 @@
   scene and a copy in a free spot both declare a real local, and neither was offered by the field
   completion the launched twins had joined - the free-spot row binds its name above the branch
   precisely so the rows below can still say it.
+- **The two runtime classes moved to the folder that is yours.** The guide said "uninstall the
+  plugin and the emitted code still builds and still runs", and the emitted lines said
+  `FreeSpot.in_2d(...)` and `PooledNodes.retire(...)` - two classes declared under
+  `addons/eventforge/`, which is the folder an uninstall deletes. Both now ship as `free_spot.gd`
+  and `pooled_nodes.gd` in `eventsheet_addons/`, built through the pack-builder door like every
+  other file there and drift-gated with them, which is where the drawing runtime the builtin Draw
+  rows call has always lived. The class names, the emitted lines and the rows are unchanged; the
+  sentence in the guide is true now instead of nearly true.
 - **On Retired now fires when the object is retired, and not when it is handed out.** The trigger is
   the node's own `tree_exiting`, which both retirements pass through - but so does every other way a
   node leaves the tree, and a pool hands a copy OUT by putting it back in the tree. So the row ran on

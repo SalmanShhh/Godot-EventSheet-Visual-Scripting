@@ -546,10 +546,12 @@ dimensions:
 Two of them lean on a file the game carries rather than on a line in the row, and that is worth
 saying before you meet them. A free spot is a roll asked over and over until the answer fits, and a
 retirement is a decision read off the node, so neither is one expression. They compile to
-`FreeSpot.in_2d(…)` and `PooledNodes.retire(…)`, two plain GDScript files under the plugin's runtime
-folder that a built game carries the way it carries any other script. Nothing in them touches the
-editor or the sheet format, so the parity promise holds: uninstall the plugin and the emitted code
-still builds and still runs.
+`FreeSpot.in_2d(…)` and `PooledNodes.retire(…)`, and those two classes ship as `free_spot.gd` and
+`pooled_nodes.gd` in `eventsheet_addons/` - the same folder the behaviour packs are in, which is
+YOUR folder and not the plugin's. That is what makes the parity promise hold rather than merely
+sound true: delete `addons/eventforge/` and `addons/eventsheet/` and the two files are still there,
+so every line that names them still parses and still runs. Nothing in either of them touches an
+editor, a sheet, or any class the plugin declares.
 
 ### A whole formation in one row
 
