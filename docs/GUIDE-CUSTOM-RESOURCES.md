@@ -147,6 +147,16 @@ The grid is usually the star, but most resources also carry a few loose fields (
 - **Drawers** - how a value is presented: the `table` drawer is the grid; others include ranges/sliders for numbers, file pickers for paths, progress bars, and more. The variable dialog shows a live "Ships as:" strip with the exact annotation each choice emits.
 - **Validate** - wire any variable to a validate function by name (what the wizard's checkbox does for the grid).
 
+Five of those drawers and two decor lines are worth knowing by name the first time a data asset outgrows a grid. Each is an editor convenience only: the emitted `.gd` is plain GDScript, and a `.tres` opened without the plugin edits as ordinary fields and saves the bytes it opened with.
+
+- **A number that carries its unit.** `@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=s|ms|frames,store=s") var wind_up: float = 0.25` shows a spin box with a unit dropdown at its edge. The value is stored in the unit the export names and shown in whichever the dropdown says, so a designer reading a wind-up in frames never moves the number the game reads in seconds.
+- **A list of things, each of a kind.** When the entries of a list are *not* the same shape (a shape step, a feedback step, a spawn rule), the grid is the wrong picture. `@export_custom(PROPERTY_HINT_NONE, "eventsheet:cards:kind=kind,schema=<name>,stripes=category") var steps: Array[Dictionary] = []` draws it as reorderable **cards**, each with its own fields, a stripe by category, an enable box and a badge. The vocabulary comes from a schema the pack registers with `EventSheets.register_card_schema(name, provider)`, so nothing hard-codes a pack; a list whose schema is absent still draws and still round-trips.
+- **Four corners in one number.** `"eventsheet:corners"` on a `Vector4` is one box while the four agree and four labelled boxes when they should not - corner radii, margins, padding.
+- **Choices as pictures.** A toggle row can carry `:segmented` (equal widths) or `:icons=res://art/cap_%s.svg` (a picture per option), which is what a mode field wants when its words are a trade's names rather than a description.
+- **A picture of the asset, and handles in the viewport.** A `# @inspector_preview` comment anywhere in the sheet puts a live card at the top of the asset's Inspector, re-drawn as it is edited; `# @inspector_handle <property> <kind> [from <property>]` makes a position, length, angle or point list draggable in the 2D and 3D viewports, one undo step per drag. Both are plain comments and emit nothing.
+
+Two more Advanced fields earn their keep on a bigger asset: **Show group if** hides a whole `@export_group` behind one bool (a Dashed tick that reveals its seven fields), and **Link with** draws an equals button between two neighbouring numbers that should stay in proportion.
+
 To see the result as one page, open **Sheet > Inspector Designer…**. It renders the sheet's *entire* Inspector top to bottom - every exported variable with its decor, grouping, and a miniature of its widget - exactly as a designer will meet it. It is a live view, not a separate editor: the pencil button on each entry opens the same variable dialog you already know, and the arrow buttons reorder fields, all through the normal undo system. When the Inspector is the product (and for a data asset, it is), this dialog is where you check your work.
 
 A good habit: after the wizard creates your sheet, open the Inspector Designer once, read your Inspector like a designer would, and fix whatever needs a tooltip or a group before anyone else sees it.
@@ -543,6 +553,31 @@ var function_name: String = EventSheets.attach_validator(sheet, "drops")
 ```
 
 It creates a `validate_<variable>` function on the sheet (returning a warning String, `""` meaning valid, with a ready-to-edit skeleton body - for Array variables it starts as an is-empty check), and wires the variable's `validate` attribute to that function so the Inspector shows the returned message above the field while the value is edited. If a function of that name already exists it is reused, never duplicated. Returns the function name, or `""` when the sheet or variable does not exist. The wizard's "Add a validation check" box is literally this call.
+
+### The three Inspector seams a pack registers
+
+A pack that owns a vocabulary publishes it rather than teaching the plugin about itself. All three are static, one entry per name, last registration wins, and none of them reaches generated game code:
+
+```gdscript
+# The kinds behind a card-list property (an Array of Dictionaries drawn as cards).
+EventSheets.register_card_schema("prefab_steps", my_provider)   # provider() -> the schema Dictionary
+EventSheets.unregister_card_schema("prefab_steps")
+EventSheets.card_schema("prefab_steps")                         # {} when nothing is registered
+
+# One line instead of a hand-written schema: a card per verb, derived from your ACE descriptors.
+EventSheets.register_card_schema("my_steps", EventSheets.card_schema_from_aces.bind(my_aces))
+
+# The picture at the top of an object's Inspector, for a script that cannot ship
+# inspector_preview_texture(size) itself.
+EventSheets.register_inspector_preview(script_path, my_renderer)  # renderer(object, size) -> Texture2D
+EventSheets.unregister_inspector_preview(script_path)
+
+# Pictures on a toggle row's buttons, when the options only exist as your own shader or material.
+EventSheets.register_toggle_icon_provider("shapes_dash", my_icon_renderer)  # (option, size) -> Texture2D
+EventSheets.unregister_toggle_icon_provider("shapes_dash")
+```
+
+`card_schema_from_aces` is the one worth reaching for first: it takes each card's label and help from the words your picker already reads out and its fields from the verb's own parameters, so a pack that adds a verb gets a card for it with no editor code at all.
 
 ### Rounding out a pack
 
