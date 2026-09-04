@@ -256,6 +256,7 @@ Node script extending `CharacterBody2D`.
 - **Set Angle Of Motion** (`degrees: float`) - Redirects the bullet (degrees).
 - **Set Gravity Angle** (`angle: float`) - Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action.
 - **Set Bullet Enabled** (`is_enabled: bool`) - Pauses or resumes the movement.
+- **Fired By** (`shooter: Node`) - Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.
 
 ### Bullet3DBehavior (`res://eventsheet_addons/bullet_3d/bullet_3d_behavior.gd`)
 @ace_category("Bullet 3D") @ace_expose_all(node) @ace_version(1.0.0)
@@ -267,6 +268,7 @@ Node script extending `CharacterBody2D`.
 - **Launch Forward** - (Re)launches along the host's current forward direction.
 - **Set Bullet 3D Speed** (`value: float`) - Changes speed, keeping the current direction.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X.
+- **Fired By** (`shooter: Node`) - Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.
 
 ### CameraRailBehavior (`res://eventsheet_addons/camera_rail/camera_rail_behavior.gd`)
 @ace_tags(camera, cinematic, path) @ace_category("Camera Rail") @ace_version(1.0.0)
@@ -356,6 +358,23 @@ Node script extending `CharacterBody2D`.
 - **Total Clicks** - How many clicks have been resolved.
 - **Click Multiplier** - The current click multiplier.
 - **Crit Chance** - The current crit chance, 0 to 1.
+
+### CodexAddon (`res://eventsheet_addons/codex/codex_addon.gd`)
+@ace_tags(collection, codex, progression, unlocks) @ace_category("Codex") @ace_version(1.0.0)
+
+#### Triggers
+- **On First Discovered** (`set_name: String, entry_id: String`)
+
+#### Conditions
+- **For Each Discovered** (`set_name: String`)
+- **Has Discovered** (`set_name: String, entry_id: String`) - Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.
+
+#### Actions
+- **Discover** (`set_name: String, entry_id: String`) - Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.
+
+#### Expressions
+- **Discovered Count** (`set_name: String`) - How many entries of a set have been found - the left-hand number of a 14-out-of-60 line.
+- **Total Entries** (`set_name: String`) - How many entries a set HOLDS, counted from the files in its folder - the right-hand number of a 14-out-of-60 line. A page added to the folder joins the total with no sheet edit.
 
 ### ComboBoxAddon (`res://eventsheet_addons/combo_box/combo_box_addon.gd`)
 @ace_tags(input, combo) @ace_category("ComboBox") @ace_version(1.0.0)
@@ -930,6 +949,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Reset Jumps** - Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.
 - **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.
+- **Claim As Mine** (`node: Node`) - Marks something as belonging to this character - the round it just fired, the grenade it threw, the turret it dropped. Every ownership row afterwards traces back to this body, so friendly fire is refused, the kill is credited, and a turret this character placed still scores as its own.
 
 #### Expressions
 - **Current Speed** - The host's horizontal speed right now (metres per second).
@@ -1033,6 +1053,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Invincible** - True while an invincibility window granted by Grant Invincibility is still open.
+- **Killed By Me** (`who: Node`) - True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.
+- **Last Hit Was A Crit** - Whether the last typed hit rolled a critical. Under On Damaged this is the row that makes the number bigger, the shake harder and the sound sharper.
+- **Damage Type Is** (`type: String`) - Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds.
 - **Is Dead**
 - **Is Invulnerable**
 - **Has Any Health Pool**
@@ -1057,8 +1080,21 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Health Pool Priority** (`type: String, priority: float`) - Sets a pool's absorption priority (lower absorbs first).
 - **Setup Health Pool** (`type: String, amount: float, decay_rate: float, absorption_rate: float, priority: float`) - Creates/configures a health pool in one call.
 - **Revive** (`amount: float`) - Clears death and restores health (amount<=0 → full).
+- **Take Damage From** (`amount: float, from: Node`) - Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.
+- **Take Damage Of Type** (`amount: float, type: String, from: Node`) - Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression.
+- **Resist** (`type: String, percent: float`) - Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly. One opinion per kind: Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts.
+- **Immune To** (`type: String`) - Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it. One opinion per kind: a Weak To of the same kind afterwards replaces this, rather than arguing with it.
+- **Weak To** (`type: String, percent: float`) - Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell. One opinion per kind: a Resist or an Immune To of the same kind afterwards replaces this, rather than arguing with it.
+- **Set Armour** (`amount: float`) - Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least Minimum Damage, so armour is a blunting rather than a wall.
+- **Set Crit** (`chance: float, multiplier: float`) - Sets how often a typed hit on this node lands as a critical and what it multiplies by. Chance runs 0 to 1; a multiplier below 1 is raised to 1, because a critical that hurt less would read as a bug in every game ever made.
 
 #### Expressions
+- **Last Hit From** - Who last damaged this node, as the person rather than the projectile - the boss's next target, the health bar's attacker name, the direction a hit came from. Reads as nothing until something has damaged it through Take Damage From.
+- **Killer Of** - Who killed this node, or nothing while it is still alive. It is already written when On Death fires, so a row under that trigger can score the kill, name the killer on the death screen, or hand the bounty over without an extra step.
+- **Assists Of** - Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.
+- **Last Damage Type** - What kind the last hit was - the word the row dealt it with. Empty until something has damaged this node through Take Damage Of Type.
+- **Last Damage Dealt** - What the last typed hit came to after resistance, armour and the critical - the number a floating damage label should show.
+- **Last Damage Before Mitigation** - What the last typed hit was worth before this node's resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.
 - **Current Health**
 - **Max Health**
 - **Health Percent**
@@ -1151,6 +1187,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Switch Screen** (`panel_name: String`) - Shows the named panel and hides its sibling panels - one call flips a whole menu screen.
 - **Show Toast** (`text: String`) - Pops a bottom-centre message that fades out after toast_seconds.
 - **Pop Floating Text** (`text: String, at: Vector2, color: Color`) - Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.
+- **Pop Floating Text As** (`text: String, style: String, at: Vector2`) - Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style "crit" draws the number bigger, which is the whole language of a critical hit. A style the set does not name is drawn white, so a game with no set still gets its numbers.
 - **Set Needle** (`needle_name: String, value: float, warn_at: float`) - Shows a value from -1 to 1 as a needle in a named Control, with a mark at dead centre. The needle is built inside that Control the first time this runs, so the only thing the scene needs is an empty box of the right size. Past the warning mark the needle turns the warning colour, which is the whole of a balance meter's language.
 
 #### Expressions
@@ -1227,6 +1264,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Conditions
 - **Is Shaking**
 - **Is Hitstopped**
+- **Is Chromatic Shaking**
 
 #### Actions
 - **Shake** (`strength: float`) - Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.
@@ -1257,6 +1295,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Ghost Trail** - Stops stamping afterimages (the ones already out finish fading on their own).
 - **Pulse Vignette** (`strength: float, color: Color, seconds: float`) - Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Slowmo + Fade Screen Tint for last-stand moments.
 - **Chromatic Kick** (`strength: float, seconds: float`) - Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake + Hitstop on explosions and heavy hits.
+- **Chromatic Shake** (`magnitude: float, duration: float, mode: String, angle_degrees: float`) - Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.
+- **Stop Chromatic Shake** - Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.
 - **Set Speed Lines** (`intensity: float`) - Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.
 - **Play Sound Varied** (`path: String, pitch_jitter: float, volume_jitter_db: float`) - Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, coins, and clicks. Fire-and-forget (the player frees itself).
 - **Play Sound With Intensity** (`path: String, intensity: float`) - Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.
@@ -1264,15 +1304,16 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Ticker** (`ticker_name: String, value: float`) - Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.
 - **Moment** (`moment_name: String, strength: float`) - Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.
 - **Define Moment** (`moment_name: String, moment: Resource`) - Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.
-- **Set Host Tint** (`color: Color, strength: float`) - Tints the HOST object: blends its color toward the tint by Strength (0 = its own colors untouched, 1 = fully the tint color) - the classic object tint, with the strength as your opacity dial. Children inherit (modulate).
-- **Clear Host Tint** - Removes the host tint (back to its own colors).
-- **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red, poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.
-- **Fade Screen Tint** (`seconds: float`) - Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
-- **Clear Screen Tint** - Removes the screen tint instantly.
+- **Set Host Tint** (`color: Color, strength: float`)
+- **Clear Host Tint**
+- **Set Screen Tint** (`color: Color, strength: float`)
+- **Fade Screen Tint** (`seconds: float`)
+- **Clear Screen Tint**
 
 #### Expressions
 - **Trauma**
-- **Ticker Value** (`ticker_name: String`) - What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.
+- **Ticker Value** (`ticker_name: String`)
+- **Chromatic Shake Magnitude**
 
 ### Juice3DBehavior (`res://eventsheet_addons/juice_3d/juice_3d_behavior.gd`)
 @ace_tags(camera, juice, 3d) @ace_category("Juice 3D") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1286,6 +1327,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Shaking**
+- **Is Chromatic Shaking**
 
 #### Actions
 - **Shake** (`strength: float`) - Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.
@@ -1306,18 +1348,21 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Punch Position** (`offset: Vector3, duration: float`) - Kicks the host's position by an offset (metres) and springs it back elastically - knockback reads, impact shoves away from an attacker. Emits On Punch Finished.
 - **Pulse Vignette** (`strength: float, color: Color, seconds: float`) - Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Fade Screen Tint for last-stand moments.
 - **Chromatic Kick** (`strength: float, seconds: float`) - Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake on explosions and heavy hits.
+- **Chromatic Shake** (`magnitude: float, duration: float, mode: String, angle_degrees: float`) - Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.
+- **Stop Chromatic Shake** - Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.
 - **Set Speed Lines** (`intensity: float`) - Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with FOV Punch for full sprint feel.
 - **Play Sound Varied** (`path: String, pitch_jitter: float, volume_jitter_db: float`) - Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, and shots. Fire-and-forget (the player frees itself).
 - **Play Sound With Intensity** (`path: String, intensity: float`) - Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.
 - **Count To** (`ticker_name: String, target: float, duration: float`) - Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.
 - **Set Ticker** (`ticker_name: String, value: float`) - Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.
-- **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view - damage red, poison green, night blue. Call again to retune; strength 0 clears.
-- **Fade Screen Tint** (`seconds: float`) - Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
-- **Clear Screen Tint** - Removes the screen tint instantly.
+- **Set Screen Tint** (`color: Color, strength: float`)
+- **Fade Screen Tint** (`seconds: float`)
+- **Clear Screen Tint**
 
 #### Expressions
-- **Ticker Value** (`ticker_name: String`) - What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.
+- **Ticker Value** (`ticker_name: String`)
 - **Trauma**
+- **Chromatic Shake Magnitude**
 
 ### LightFlickerBehavior (`res://eventsheet_addons/light_flicker/light_flicker_behavior.gd`)
 @ace_tags(lighting, juice, visual) @ace_category("Light Flicker") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1426,6 +1471,36 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Reached** - The id of the milestone that just latched (read inside On Milestone Reached).
 - **Nearest Unreached** - The id of the unreached milestone closest to its threshold (for a "next goal" display); "" if all reached.
 
+### ModsAddon (`res://eventsheet_addons/mods/mods_addon.gd`)
+@ace_tags(mods, files, content, modding) @ace_category("Mods") @ace_version(1.0.0)
+
+#### Triggers
+- **On Mod Loaded** (`loaded_name: String, loaded_version: String`)
+- **On Mod Refused** (`refused_name: String, reason: String`)
+- **On Mods Changed**
+
+#### Conditions
+- **For Each Mod**
+- **Mod Is Loaded** (`wanted: String`) - Whether a mod of that name is loaded right now - the check in front of using what it brought.
+
+#### Actions
+- **Load Mods From** (`folder: String, data_only: bool`) - Loads every mod in a folder, in load order: a subfolder with a manifest in it, or a .pck / .zip pack file. With Data Only on, a mod carrying code is refused and says so through On Mod Refused instead of loading. A mod switched off is skipped in silence, and On Mods Changed fires once at the end.
+- **Load Mod** (`path: String, data_only: bool`) - Loads one mod by path - a mod folder or a pack file - with the same two tiers Load Mods From uses. A path with no mod at it is refused with that reason rather than passed over.
+- **Unload Mod** (`unloading_name: String`) - Takes a FOLDER mod back out of the loaded list, so the rows that read mod folders stop seeing it. A pack file cannot be unloaded: once Godot has loaded one, its files stay in the running game, so this row refuses with that reason and the way to do it is to switch the mod off and start again.
+- **Set Load Order** (`names: String`) - Says which mods load first, as a comma-separated list of names. Everything not named follows in name order, and later mods replace the files earlier ones brought - which is what a load order is for. It also re-lists what is already loaded, so the list an options screen shows and the order the next load uses are the same order.
+- **Enable Mod** (`enabling_name: String`) - Switches a mod back on. A mod is on unless it has been switched off, so this is the way back from Disable Mod rather than something every mod needs. The choice is remembered through the Settings autoload when the project has one.
+- **Disable Mod** (`disabling_name: String`) - Switches a mod off: it is skipped the next time mods are loaded, and a folder mod drops out of the loaded list at once. A pack file's files are already in the running game and stay until it starts again. The choice is remembered through the Settings autoload when the project has one.
+
+#### Expressions
+- **Mod Count** - How many mods are loaded - the number on the options screen's mods line.
+- **Mod Name** - The name of the mod the last Mods event was about - the one that just loaded, or the one that was just refused.
+- **Mod Version** - The version of the mod the last Mods event was about, as its manifest spells it.
+- **Mod Author** - The author of the mod the last Mods event was about - the credit line beside its name.
+- **Mod Reason** - Why the last refused mod was refused, in plain words a player can read, and nothing at all when none has been.
+- **Mod Folder** (`wanted: String`) - Where a loaded mod's files live, so Resources In Folder, a Skin Vault catalog, a loot table or Data Folder Problems can be pointed straight at it. A pack file has no folder of its own - its files replace the game's by path - so this is empty for one.
+- **Mod Folders** (`subfolder: String`) - The same folder inside every loaded folder mod, in load order, skipping the mods that do not have one - hand it "items" and it is every mod's items folder, ready for a loop that loads each one's data assets.
+- **Mod Content Problems** (`subfolder: String`) - Every structural problem in the loaded mods' content, one per line, and nothing at all when it is clean: a data asset that will not load, and a file two mods both bring, where the one loaded last wins. It is the Data Folder Problems check over the mod folders, so a broken mod is named rather than crashed on.
+
 ### MoveToBehavior (`res://eventsheet_addons/move_to/move_to_behavior.gd`)
 @ace_category("Move To") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -1449,6 +1524,41 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Move To Position (3D)** (`x: float, y: float, z: float`) - Replaces the queue and glides toward the point.
 - **Add Waypoint (3D)** (`x: float, y: float, z: float`) - Appends a stop to the queue.
 - **Stop Moving (3D)** - Clears the queue without firing On Arrived.
+
+### MusicAddon (`res://eventsheet_addons/music/music_addon.gd`)
+@ace_tags(audio, music, rhythm, beat) @ace_category("Music") @ace_version(1.0.0)
+
+#### Triggers
+- **On Beat** (`number: int`)
+- **On Bar** (`number: int`)
+- **On Beat Number** (`number: int`)
+
+#### Conditions
+- **Is Playing** - True while a track is playing and not paused.
+
+#### Actions
+- **Play** (`track: String, fade: float`) - Plays a track, crossfading down whatever was playing over the fade seconds. A fade of 0 is a cut. The name is looked up as a file in the Music Folder, or given as a full res:// path.
+- **Crossfade To** (`track: String, seconds: float`) - Crossfades to another track over the seconds given - the same machinery as Play, spelled the way a music change reads. It always takes time; Play with a fade of 0 is the cut.
+- **Stop** (`fade: float`) - Fades the music out over the seconds given and frees the players. A fade of 0 stops it dead.
+- **Pause** - Pauses the music where it is. The director runs while the tree is paused, so a pause menu does NOT silence the song by itself - this is the row that does, and Resume carries on from the same place.
+- **Resume** - Carries on from where Pause left off, rather than starting the track again.
+- **Stinger** (`path: String, duck_db: float`) - Plays a one-shot over the music - the sting on a discovery, the flourish on a win - and ducks the music underneath it for exactly as long as the sound lasts, then brings it back up.
+- **Duck** (`db: float, seconds: float`) - Drops the music by that many decibels over the seconds given, and leaves it there - under a line of dialogue, a radio call, a cutscene. Unduck brings it back.
+- **Unduck** (`seconds: float`) - Brings the music back up to full over the seconds given.
+- **Set Music Volume** (`level: float`) - Sets the music bus's volume from a 0-to-1 level - the number an options-menu slider gives, with the decibel conversion done for you. It writes the same bus the Options rows do.
+- **Fade Layer** (`layer: String, to: float, seconds: float`) - Fades one of the track's layers to a 0-to-1 volume over the seconds given - the drums coming in as the danger rises, the strings dropping out as it passes. The layers are one synchronized stream, so they cannot drift out of time with the song.
+- **Set Layers** (`layers: String, seconds: float`) - Says which layers are on, all at once, as a comma-separated list: every layer named fades up, every other layer of the track fades down. It states the whole mix rather than changing one thing, so it is safe to fire on every state change.
+- **Switch To Clip** (`clip: String`) - Switches an interactive track to another of its clips by name. The stream's own transition rules decide when the change lands - on the bar, at the end of the clip, through a filler. Needs the track's stream to be an AudioStreamInteractive, which Godot 4.3 and later provide.
+- **Set Tempo** (`bpm: float, offset: float`) - Sets the tempo the beat is counted at, and how many seconds into the file the first beat lands. A track file carries both already - this is for a song whose file does not, or for a tempo that changes mid-piece.
+
+#### Expressions
+- **Current Track** - The name of the track playing now, or nothing when the music is stopped.
+- **Position In Bars** - How far into the song the player is, counted in bars - the number a music-driven level reads to know where it is.
+- **Beat Number** - Which beat of the song is playing right now, counted from the track's first beat.
+- **Seconds To Next Beat** - How long until the next beat lands, in seconds - the wait before a move that should fire on the beat.
+- **Beat Phase** - How far through its beat the song is, from 0 on the beat to just under 1 before the next - the number a pulse, a bob or a breathing light rides on.
+- **Next Beat At** - The moment the next beat lands, on the same engine clock the Timed Input rows measure a press with - put it in Beat Grade's Beat At slot and a press is graded against the song.
+- **Layer Volume** (`layer: String`) - How loud one of the track's layers is right now, from 0 to 1.
 
 ### NamedScenesPackAddon (`res://eventsheet_addons/named_scenes/named_scenes_addon.gd`)
 @ace_tags(scenes, navigation, levels) @ace_category("Scenes") @ace_version(1.0.0)
@@ -1523,12 +1633,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Create Empty Pool** (`pool_name: String`) - The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.
 - **Add To Pool** (`pool_name: String, node: Node`) - Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.
 - **Prewarm** (`pool_name: String, count: int`) - Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).
-- **Despawn** (`node: Node`) - Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned.
-- **Despawn All** (`pool_name: String`) - Hands every active node of a pool back at once (for a level reset).
+- **Despawn** (`node: Node`) - Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned. The handing back lands at the next idle moment rather than on this line, exactly as a destroy does, so the node is still in the world for the rest of the event and the row is safe inside a collision or area callback. Safe to run twice - a node already booked, or already back in its pool, is left alone.
+- **Despawn All** (`pool_name: String`) - Hands every active node of a pool back at once (for a level reset). Like Despawn, each handing back lands at the next idle moment.
 - **Clear Pool** (`pool_name: String`) - Frees (deletes) every node in a pool and removes the pool. Use it when the pool is truly done.
 
 #### Expressions
 - **Spawn** (`pool_name: String`) - Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.
+- **Spawn Safely** (`pool_name: String, at: Variant`) - The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: Godot refuses to reparent a node while the physics server is flushing its queries, and this row waits for that to finish rather than erroring. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.
 - **Last Spawned** - The node most recently spawned (handy inside On Spawned).
 - **Last Despawned** - The node most recently despawned (handy inside On Despawned).
 - **Free Count** (`pool_name: String`) - How many ready (unused) nodes a pool holds.
@@ -1826,13 +1937,15 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Enable Post Effect** (`called: String = "vignette"`)
 - **Disable Post Effect** (`called: String = "vignette"`)
 - **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`)
+- **Set Post Dial** (`called: String = "vignette", dial: String = "tint", value: Variant = 0.5`)
 - **Fade Post Strength** (`called: String = "vignette", to: float = 1.0, seconds: float = 0.5`)
-- **Pulse Post Effect**
-- **Outline Group Through Walls**
-- **Silhouette Node Through Walls**
-- **Stop Outlining** - Ends every outline and silhouette at once: the mask layer goes back off the meshes that were marked, the entry leaves the stack, and the mask rig is freed, so nothing is left running.
+- **Pulse Post Effect** (`effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35`)
+- **Outline Group Through Walls** (`group: String = "enemies", colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0`)
+- **Silhouette Node Through Walls** (`node: Node3D, colour: Color = Color.YELLOW, seconds: float = 0.0`)
+- **Stop Outlining**
 
 #### Expressions
+- **Post Dial** (`called: String = "vignette", dial: String = "tint"`)
 - **Post Strength** (`called: String = "vignette"`)
 
 ### PrestigeAddon (`res://eventsheet_addons/prestige/prestige_addon.gd`)
@@ -1954,6 +2067,34 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Entered Type** - The type of the room just entered (inside On Room Entered).
 - **Blocked Id** - The room that couldn't be entered (inside On Traversal Blocked).
 - **Block Reason** - Why entry was blocked - "locked" or "unreachable" (inside On Traversal Blocked).
+
+### PromptsAddon (`res://eventsheet_addons/prompts/prompts_addon.gd`)
+@ace_tags(input, qte, rhythm, prompt, glyph) @ace_category("Prompts") @ace_version(1.0.0)
+
+#### Triggers
+- **On Prompt Hit** (`action: String, grade: String`)
+- **On Prompt Missed** (`action: String`)
+- **On Sequence Finished** (`completed: bool`)
+
+#### Conditions
+- **Prompt Is Open** - True while the player is being asked for something and has not answered or run out yet.
+- **Grade Is** (`grade: String`) - True when the last prompt to end ended this way - "perfect", "good" or "miss". The same three words a note is graded in, so one branch serves both.
+
+#### Actions
+- **Prompt** (`action: String, seconds: float, at: Node`) - Asks the player for a control, for the seconds given, drawn over a node. The glyph is the one for the device in their hands. Answering fires On Prompt Hit with a grade; the seconds running out fires On Prompt Missed.
+- **Hold Prompt** (`action: String, hold: float, seconds: float, at: Node`) - Asks the player to HOLD a control down for a while, within the seconds given - the winch, the door being forced, the finisher pressed and kept pressed. Letting go resets the hold, because a hold that survived being let go is not a hold.
+- **Mash Prompt** (`action: String, presses: int, seconds: float, at: Node`) - Asks the player for a number of presses within the seconds given - breaking free of a grab, cranking a handle, shaking off a swarm. It is the shipped mash rows with a prompt over the top.
+- **Sequence** (`actions: String, seconds: float, at: Node`) - Asks for several controls one after another, as a comma-separated list, each with the same seconds to answer. On Sequence Finished fires once at the end carrying whether every one of them landed; the first miss ends it.
+- **Cancel Prompt** - Takes whatever is being asked off the screen with no grade and no miss - the cutscene was skipped, the enemy died first, the player walked away. A sequence cancelled this way finishes uncompleted.
+- **Prompt On Beat** (`action: String, lane: Node`) - Sends a note down a lane to land on the song's next beat, where pressing the control grades it. With a Music director in the project the moment is the song's own next beat; without one it is the Lead Seconds from now, so a lane works on its own too.
+- **Force Device** (`device_name: String`) - Shows every glyph for one device from now on, whatever the player last touched - the options screen showing a layout on purpose, the tutorial card printed for a console. "auto" hands it back to the last input event.
+
+#### Expressions
+- **Last Grade** - How the last prompt ended, as a word: "perfect", "good" or "miss". Empty until the first one ends.
+- **Prompt Time Left** - Seconds left before the open prompt runs out, and 0 when nothing is open - the fill of a bar drawn somewhere other than on the prompt itself.
+- **Sequence Progress** - How far through a sequence the player is, from 0 to 1 - the number a progress bar over a cutscene reads.
+- **Glyph For** (`action: String`) - The picture that stands for a control on the device in the player's hands, straight from your glyph sheet. Put it in a texture anywhere - a HUD hint, a tutorial card, a rebinding screen - and the whole game follows the pad the player picked up.
+- **Device** - Which device the glyphs are being drawn for right now: "keyboard", "pad", or one of the three console layouts. It follows the last input event unless Force Device has fixed it.
 
 ### QuestPackAddon (`res://eventsheet_addons/quest/quest_addon.gd`)
 @ace_tags(quest, objective, progression) @ace_category("Quest") @ace_version(1.0.0)
@@ -2094,9 +2235,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Transition Finished** (`shape: String`)
+- **On Loading Progress**
+- **On Loading Finished**
 
 #### Conditions
 - **Is Transitioning**
+- **Is Loading**
 
 #### Actions
 - **Fade To Scene** (`path: String`) - Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).
@@ -2106,47 +2250,53 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Quit Game** - Quits the game (a no-op on platforms that forbid it, like web).
 - **Go To Scene With** (`path: String, transition: String, seconds: float, ease: String`) - Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.
 - **Reload Scene With** (`transition: String, seconds: float, ease: String`) - Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.
+- **Go To Scene With Loading** (`scene: String, min_seconds: float, wait_for_key: bool`) - Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Loading Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.
+- **Enter Loaded Scene** - Enters the scene a loading screen has been holding. Does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to leave on the loading screen; it is what Wait For Key waits for.
 
 #### Expressions
 - **Current Scene Path**
+- **Loading Progress**
+- **Loading Tip**
 
 ### ScreenFx (`res://eventsheet_addons/screen_fx/screen_fx.gd`)
 @ace_tags(effects, shader, juice, camera, visual) @ace_category("Screen FX") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Conditions
+- **Screen Effect Is Running**
 - **Post Effect Is On** (`called: String = "vignette"`)
 - **Look Is** (`look: Resource`)
-- **Screen Effect Is Running** - True while any effect is running - a fade held on, a blur, a ring still travelling.
 
 #### Actions
+- **Shockwave** (`at: Vector2 = Vector2.ZERO, strength: float = 1.0`)
+- **Fade To** (`colour: Color = Color.BLACK, seconds: float = 1.0`)
+- **Fade Back** (`colour: Color = Color.BLACK, seconds: float = 1.0`)
+- **Blur** (`amount: float = 2.0, seconds: float = 0.3`)
+- **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`)
+- **Clear Screen Effects**
 - **Add Post Effect** (`effect: String = "vignette", called: String = "", strength: float = 0.6`)
 - **Remove Post Effect** (`called: String = "vignette"`)
 - **Enable Post Effect** (`called: String = "vignette"`)
 - **Disable Post Effect** (`called: String = "vignette"`)
 - **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`)
-- **Fade Post Strength**
-- **Pulse Post Effect**
+- **Set Post Dial** (`called: String = "vignette", dial: String = "softness", value: Variant = 0.5`)
+- **Fade Post Strength** (`called: String = "vignette", to: float = 1.0, seconds: float = 0.5, then_back_seconds: float = 0.0`)
+- **Pulse Post Effect** (`effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35`)
 - **Move Post Effect Before** (`called: String = "vignette", before: String = ""`)
 - **Draw Post Effects Below** (`other: CanvasLayer`)
 - **Draw Post Effects Above** (`other: CanvasLayer`)
 - **See As** (`vision: String = "deuteranopia"`)
 - **Correct Colours For** (`vision: String = "deuteranopia"`)
-- **Save Look** (`path: String = "user://looks/my_look.tres", called: String = "My look"`)
+- **Save Look** (`path: String = "res://looks/my_look.tres", called: String = "My look"`)
 - **Use Look** (`look: Resource`)
 - **Blend To Look** (`look: Resource, seconds: float = 1.0`)
-- **Shockwave** (`at: Vector2 = Vector2.ZERO, strength: float = 1.0`) - Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a landing. The camera transform is applied, so the ring stays on the thing that caused it however the camera is moving.
-- **Fade To** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what happens next: change the scene, show the credits, start the level. That is the scene transition, spelled as two rows in one event.
-- **Fade Back** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the screen back from a colour to the game, and waits for that too - the other half of a transition, run once the new scene is up.
-- **Blur** (`amount: float = 2.0, seconds: float = 0.3`) - Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout, a dream. 0 is sharp again.
-- **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`) - Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.
-- **Clear Screen Effects** - Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.
-- **Clear Look** - Takes every effect off the stack at once and puts the screen back the way the game drew it. The empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.
+- **Clear Look**
 
 #### Expressions
+- **Post Dial** (`called: String = "vignette", dial: String = "softness"`)
 - **Post Strength** (`called: String = "vignette"`)
+- **Post Effect Count**
+- **Current Look**
 - **Post Effect Words**
-- **Post Effect Count** - How many effects the stack is drawing right now - the number a reader wants when the frame rate has gone, because every one of them reads the whole screen back.
-- **Current Look** - The name of the look on the screen, or "" when the stack was built row by row rather than worn from a file.
 
 ### SecondViewPackAddon (`res://eventsheet_addons/second_view/second_view_addon.gd`)
 @ace_tags(camera, viewport, minimap, ui) @ace_category("Second View") @ace_version(1.0.0)
@@ -2441,6 +2591,32 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Time in state** - How many seconds the machine has been in its current state.
 
+### StatusEffectsBehavior (`res://eventsheet_addons/status_effects/status_effects_behavior.gd`)
+@ace_tags(combat, status, buff, debuff) @ace_category("Status Effects") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Status Applied** (`status: String, stacks: int`)
+- **On Status Ticked** (`status: String, stacks: int`)
+- **On Status Expired** (`status: String`)
+- **On Stacks Changed** (`status: String, stacks: int`)
+
+#### Conditions
+- **Has Status** (`status: String`) - True while that status is on. This is the row a movement pack or a state machine asks before it moves anything, which is why stun and freeze need no code of their own.
+
+#### Actions
+- **Apply Status** (`status: String, seconds: float, stacks: int`) - Puts a status on this node for a time, stacking by the rule in its own file. The name is a StatusEffectResource in the effects folder, so "burn" is burn.tres; a name no file answers to still applies as a name and a clock, which is all a pure flag like "stunned" needs.
+- **Extend Status** (`status: String, seconds: float`) - Adds seconds to a status that is already on, leaving its stacks alone. Nothing happens if it is not on - extending is for a fire being fed, not for lighting one.
+- **Remove Status** (`status: String`) - Takes one status off now, whatever its file says about being cleansable - the boss shrugs it off, the scene moved on, the shield was spent. On Status Expired still fires, so the row that cleans up after a status is the same row either way.
+- **Cleanse** (`status: String`) - Takes a status off, or - given no name at all - every status whose file says it may be cleansed. That is what makes an antidote one row, and what makes a curse survive it.
+- **Immune To Status** (`status: String, seconds: float`) - Stops a status from landing here for a while, and takes it off if it is already on. The i-frames of the status world: the potion that makes you proof against poison for ten seconds.
+
+#### Expressions
+- **Status Stacks** (`status: String`) - How many stacks of a status are on, and 0 when it is not. Ticks and healing are multiplied by it, so it is also how hard the effect is hitting.
+- **Status Time Left** (`status: String`) - Seconds left before a status ends, and 0 when it is not on - the fill of the little bar under its icon.
+- **Status Icon** (`status: String`) - The picture the effect's own file names for it, straight into a HUD texture. A status with no icon, or one that is not on, answers with nothing.
+- **Active Statuses** - Every status on this node right now, in name order - the list a status bar walks to draw one icon per effect.
+- **Speed Factor** - The product of every active effect's speed factor: 1 when nothing is on, 0.5 under one slow, 0.25 under two. Multiply your movement speed by it and every slow, root and haste in the game already works.
+
 ### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
 @ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.3.0)
 
@@ -2510,6 +2686,52 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Storylet Count** - How many storylets are registered.
 - **Validate Book Resource** (`resource: Resource`) - Checks a StoryletResource's grids and returns each structural problem - a requirement / choice / effect / meta row naming a storylet (or choice) that does not exist, a blank storylet id, or a duplicate id that silently overrides an earlier storylet - one per line, "" when the book is clean. Print it while authoring to catch typos in the tables.
 - **Validate Book JSON** (`json: String`) - Checks a JSON storybook and returns each structural problem one per line, "" when clean - the JSON twin of Validate Book Resource. Also reports "not valid JSON" for a parse failure and a non-object root, so it doubles as a JSON syntax check before Load From JSON.
+
+### StreamerBehavior (`res://eventsheet_addons/streamer/streamer_behavior.gd`)
+@ace_tags(world, loading, performance) @ace_category("Streamer") @ace_version(1.0.0)
+
+#### Triggers
+- **On Chunk Loaded** (`chunk: Node, cell: Vector2i`)
+- **On Chunk Unloading** (`chunk: Node, cell: Vector2i`)
+- **On Streaming Idle**
+
+#### Conditions
+- **Chunk Is Loaded At** (`point: Vector2`) - Whether the chunk covering this world point is in the world right now. The guard for waking a boss, spawning a patrol or aiming a camera at ground that may not be there yet.
+- **Is Loading Chunks** - Whether anything is still on its way in: a request in flight, or a cell waiting for one. False is the moment the world around the player is complete.
+
+#### Actions
+- **Stream Chunks Around** (`around: Node2D, radius_cells: int, folder: String`) - Follows a node and keeps the chunk scenes within this many cells of it loaded, freeing the ones behind. The folder holds one scene per cell, named chunk_X_Y.tscn.
+- **Stop Streaming** - Stops following. Loaded chunks stay exactly where they are - use Release Chunk, or a new Stream Chunks Around, to move them.
+- **Keep Chunk** (`cell: Vector2i`) - Pins one cell's chunk: it is loaded if it is not already, and distance never releases it. The hub, the shop, the room the quest is in.
+- **Release Chunk** (`cell: Vector2i`) - Unpins one cell's chunk and takes it out of the world now, firing On Chunk Unloading first.
+- **Preload Chunks Around** (`point: Vector2, radius_cells: int`) - Asks for the chunks within this many cells of a point before anything goes there - the row a teleport, a fast travel or a cutscene runs while the screen is still covered.
+
+#### Expressions
+- **Loaded Chunk Count** - How many chunk scenes are in the world right now - the number a debug overlay shows and a memory budget is measured against.
+- **Chunk Of** (`point: Vector2`) - The cell a world point falls in, as a Vector2i. Feed it to Keep Chunk or Release Chunk, or compare two of them to notice a border being crossed.
+
+### Streamer3DBehavior (`res://eventsheet_addons/streamer_3d/streamer_3d_behavior.gd`)
+@ace_tags(world, loading, performance, 3d) @ace_category("Streamer 3D") @ace_version(1.0.0)
+
+#### Triggers
+- **On Chunk Loaded** (`chunk: Node, cell: Vector3i`)
+- **On Chunk Unloading** (`chunk: Node, cell: Vector3i`)
+- **On Streaming Idle**
+
+#### Conditions
+- **Chunk Is Loaded At** (`point: Vector3`) - Whether the chunk covering this world point is in the world right now. The guard for waking a boss, spawning a patrol or aiming a camera at ground that may not be there yet.
+- **Is Loading Chunks** - Whether anything is still on its way in: a request in flight, or a cell waiting for one. False is the moment the world around the player is complete.
+
+#### Actions
+- **Stream Chunks Around** (`around: Node3D, radius_cells: int, folder: String`) - Follows a node and keeps the chunk scenes within this many cells of it loaded, freeing the ones behind. The folder holds one scene per cell, named chunk_X_Y_Z.tscn.
+- **Stop Streaming** - Stops following. Loaded chunks stay exactly where they are - use Release Chunk, or a new Stream Chunks Around, to move them.
+- **Keep Chunk** (`cell: Vector3i`) - Pins one cell's chunk: it is loaded if it is not already, and distance never releases it. The hub, the hangar, the room the quest is in.
+- **Release Chunk** (`cell: Vector3i`) - Unpins one cell's chunk and takes it out of the world now, firing On Chunk Unloading first.
+- **Preload Chunks Around** (`point: Vector3, radius_cells: int`) - Asks for the chunks within this many cells of a point before anything goes there - the row a teleport, a fast travel or a cutscene runs while the screen is still covered.
+
+#### Expressions
+- **Loaded Chunk Count** - How many chunk scenes are in the world right now - the number a debug overlay shows and a memory budget is measured against.
+- **Chunk Of** (`point: Vector3`) - The cell a world point falls in, as a Vector3i. Feed it to Keep Chunk or Release Chunk, or compare two of them to notice a border being crossed.
 
 ### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.gd`)
 @ace_category("Tile Movement") @ace_expose_all(node) @ace_version(1.0.0)
@@ -2930,6 +3152,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Fire Rate** (`rate: float`) - Changes the shots-per-second.
 - **Set Fire Mode** (`mode: int`) - 0 = single, 1 = auto, 2 = burst.
 - **Set Magazine Size** (`size: int`) - Changes the magazine size.
+- **Claim Shot** (`shot: Node`) - Marks a round this weapon just sent out as belonging to the weapon. Drop it beside the spawn inside On Fire: friendly fire is then refused by Hit Is Not My Owner, and Take Damage From credits the kill to whoever the weapon itself belongs to rather than to the bullet.
 
 ### WrapBehavior (`res://eventsheet_addons/wrap/wrap_behavior.gd`)
 @ace_tags(movement, screen) @ace_category("Wrap") @ace_version(1.0.0)
@@ -2942,8 +3165,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Custom Wrap Bounds** (`x: float, y: float, width: float, height: float`) - Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.
 - **Set Wrap Axes** (`horizontal: bool, vertical: bool`) - Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).
 - **Set Wrap Extents** (`new_half_width: float, new_half_height: float`) - Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.
-- **Set Wrap Space** (`space: String`) - Switches what the host wraps around: the on-screen camera view, or the custom rectangle.
-- **Set Circle Wrap Bounds** (`center_x: float, center_y: float, radius: float`) - Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it: fully outside the circle teleports to the antipode - a round arena in one action.
+- **Set Wrap Space** (`space: String`)
+- **Set Circle Wrap Bounds** (`center_x: float, center_y: float, radius: float`)
 
 ## Built-in vocabulary
 
@@ -2972,6 +3195,9 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 #### Triggers
 - **On Animation Frame** (`animation: String, frame: String`) - Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.
 - **On Animation Event** (`event_name: String`) - Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.
+- **On State Entered** - Runs the moment the state machine enters a state, with the state's name handed to the event. The state machine's own answer to "the swing has started" - no polling, no per-frame question.
+- **On State Left** - Runs the moment the state the machine was in finishes, with its name handed to the event - the recovery that begins when the swing ends.
+- **On Animation Reached Marker** (`animation: String, marker: String`) - Runs on the one frame a clip's play head crosses a named moment on its timeline - the frame the hit lands on. Applying it adds the crossing as a condition you can see and edit, so the moment is a row rather than a number nobody can find.
 
 #### Conditions
 - **Has Animation** (`animation: String, target: String`) - True when this player owns a clip by that name - guard a Play so a missing animation never errors.
@@ -2980,6 +3206,8 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Is Between** (`animation: String, from_time: String, to_time: String, target: String`) - True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.
 - **Is Animation Frame** (`animation: String, frame: String, target: String`) - True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.
 - **Reached Marker** (`animation: String, marker: String, target: String`) - True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.
+- **Is In Any State** (`states: String, target: String`) - True while the state machine is in ANY of the states listed - the attack that may start from a stand or a run, the interrupt that only some states allow. The single-state question already ships beside it.
+- **Just Reached Marker** (`animation: String, marker: String, target: String`) - True on the ONE frame the play head crosses a named moment, and false on every frame after it - the difference between "the hit has landed" and "the hit landed a while ago". Reached Marker beside it stays true for the rest of the clip, which is the right question for a window rather than for a moment.
 
 #### Actions
 - **Set Animation Speed** (`scale: float, target: String`) - Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place.
@@ -2992,11 +3220,20 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Play One-Shot Animation** (`name: String, target: String`) - Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.
 - **Pause For** (`seconds: String, target: String`) - Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.
 - **Play Then** (`animation: String, next: String, target: String`) - Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.
+- **Jump To** (`state: String, target: String`) - Puts the state machine into a state at once, ignoring every transition between here and there - a respawn, a cutscene cut, a hard reset. Travel To State is the everyday one; this is the cut.
+- **Set Blend Position** (`space: String, value: Vector2, target: String`) - Moves where a blend space is sampled - the stick's direction into a walk-run-turn space, the aim height into a lean. A one-dimensional space takes a number and a two-dimensional one takes a Vector2; the field lists the spaces the tree really has.
+- **Blend Toward** (`space: String, value: Vector2, seconds: String, target: Node`) - The same move, taken over time instead of at once - the stick snaps, the blend should not. A tween on the tree's own parameter, so nothing has to be stepped by hand.
+- **Blend Layer** (`layer: String, amount: String, seconds: String, target: Node`) - Mixes a layer in or out over time - the aim pose that fades on when a target is locked, the hurt overlay that fades off. The layer is a Blend2 or an Add2 in the tree, and the amount is 0 for none of it and 1 for all of it.
+- **Set Condition** (`condition: String, value: String, target: String`) - Writes one of the booleans a state machine's transitions advance on - the tree decides WHEN to move, the sheet only says what is true. Set it from a condition row and the transitions the tree was drawn with do the rest.
+- **Set Tree Time Scale** (`node: String, scale: String, target: String`) - Slows down or speeds up everything under one TimeScale node in the tree - a slow-motion finish, a hasted character - without touching the game's own clock.
+- **Apply Root Motion** (`tree: String, scale: String, target: String`) - Moves and turns this body by whatever the animation's root moved this frame, so an animator's step really steps. Put it in a physics tick, before Move And Slide. The scale is there for the day the animation was authored at the wrong size.
+- **Apply Root Motion** (`tree: String, scale: String, target: String`) - Moves and turns this body by whatever the animation's root moved this frame, turned by the way the body is already facing, so an animator's step really steps. Put it in a physics tick, before Move And Slide. The scale is there for the day the animation was authored at the wrong size.
 
 #### Expressions
 - **Animation Position** (`target: String`) - How many seconds into the current animation the play head is - sync an effect to a frame or drive a progress bar.
 - **Animation Length** (`target: String`) - The current animation's total length in seconds - pair with Animation Position for a normalized 0-to-1 progress.
 - **Animation Speed** (`target: String`) - The player's current speed scale (1 = normal).
+- **Time In State** (`target: String`) - How many seconds the state machine has been playing its current state - the number a recovery window, a charge-up or a progress bar is measured against.
 
 ### Around Objects (`res://addons/eventforge/registration/modules/around_objects_aces.gd`)
 the things AROUND an object: picking, layers and Z order, text, the browser.
@@ -3626,6 +3863,38 @@ Controls: analog, gamepads by number, touch and gestures,
 - **Rotation Rate** - How fast the device is being turned, as x, y, z (the gyroscope). Reports 0 on desktop.
 - **Magnetic Field** - The magnetic field around the device, as x, y, z (the compass). Reports 0 on desktop.
 
+### Cooldown (`res://addons/eventforge/registration/modules/cooldown_aces.gd`)
+NAMED CLOCKS: cooldowns, countdowns and stopwatches as words.
+
+#### Triggers
+- **On Cooldown Ready** (`cooldown_name: String`) - Runs the moment a named cooldown finishes, so a HUD icon lights up or a ready sound plays without asking every frame. The name arrives on the row as cooldown_name, so one event can answer for every cooldown. Needs a Signal row for cooldown_ready(cooldown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.
+- **On Countdown Finished** (`countdown_name: String`) - Runs the moment a named countdown reaches zero. The name arrives on the row as countdown_name, so one event can answer for every countdown and a condition under it can pick out one. Needs a Signal row for countdown_finished(countdown_name: String) - without one the sheet still compiles, but nothing connects this event, so it never runs.
+
+#### Conditions
+- **Is Off Cooldown** (`name: String`) - True when the named cooldown has finished, so the action it guards may run. A cooldown nobody has started counts as finished, which is why the first press always works.
+- **Countdown Is Running** (`name: String`) - True while a named countdown is counting down. A countdown that has finished, that is paused, or that was never started is not running.
+
+#### Actions
+- **Put On Cooldown** (`name: String, seconds: String, clock: String`) - Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.
+- **Reduce Cooldown By** (`name: String, seconds: String`) - Takes seconds off a running cooldown, which is what a cooldown-reduction stat, a pickup or a hit that refunds part of an ability does. Reducing it past zero simply finishes it.
+- **Clear Cooldown** (`name: String`) - Finishes a named cooldown at once, so the thing it guards is available again. The reset a new round, a respawn or a debug key wants. On Cooldown Ready fires for it like any other finish.
+- **Start Countdown** (`name: String, seconds: String, clock: String`) - Starts a named countdown that a label can show and an event can react to. On game time it is held by the pause menu and slowed by slow motion, which is what a round timer wants; pick realtime for a menu clock that must keep going while the game is paused. Reaching zero fires On Countdown Finished when the sheet declares the signal.
+- **Schedule At** (`name: String, at_second: String`) - Starts a named countdown that finishes at a moment on the game's own clock rather than after a length of time. The moment is a number of seconds since the game started, which the Game Time expression gives, so a scripted event at the two minute mark is one row. A moment already past finishes immediately. It arrives as On Countdown Finished, like any other countdown.
+- **Pause Countdown** (`name: String`) - Holds a named countdown where it is. The seconds left stay readable while it is held, so a label keeps showing the frozen number. Resume Countdown starts it again from there. This is the row for a countdown that must stop for a cutscene or a shop, rather than for the pause menu, which a game-time countdown already holds by itself.
+- **Resume Countdown** (`name: String`) - Starts a paused countdown again from the seconds it was holding, on the same clock it was started with. A countdown that is already running, or that has finished, is left alone.
+- **Start Stopwatch** (`name: String, clock: String`) - Starts (or restarts) a named stopwatch counting up from zero, and clears its laps. On game time it stops while the game is paused, which is what a speedrun clock wants; pick realtime to time the real seconds a player sat there. It runs for up to a day.
+- **Record Lap** (`name: String`) - Marks a split on a named stopwatch: the time since the previous lap becomes the last lap, and the stopwatch keeps running. Stopwatch Text shows either the total or that last lap.
+
+#### Expressions
+- **Cooldown Seconds Left** (`name: String`) - The seconds still to wait on a named cooldown, or zero when it is finished. The number a HUD label shows.
+- **Cooldown Fraction** (`name: String`) - How far a named cooldown has recharged, from 0 the instant it starts to 1 when it is ready. The value a radial bar or a fading icon is set to, with no maths on the row.
+- **Countdown Seconds Left** (`name: String`) - The seconds still to run on a named countdown, zero when it has finished or was never started, and the paused number while it is paused. The value a bar is set to.
+- **Countdown Text** (`name: String`) - A named countdown as minutes and seconds, so 83 seconds left reads "01:23". The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.
+- **Stopwatch Seconds** (`name: String`) - How long a named stopwatch has been running, in seconds, or zero when it was never started. The number a best-time comparison uses.
+- **Stopwatch Text** (`name: String`) - A named stopwatch as minutes and seconds, so 83 seconds reads "01:23". The text a run-timer label is set to, with no formatting on the row.
+- **Lap Seconds** (`name: String`) - How long the last lap took, in seconds - the split the most recent Record Lap row marked. Zero until the first lap is recorded.
+- **Lap Text** (`name: String`) - The last lap on a named stopwatch as minutes and seconds. The text a split label is set to.
+
 ### Core (`res://addons/eventforge/registration/modules/core_aces.gd`)
 Core vocabulary (the Phase-1 surface, fully migrated).
 
@@ -3984,11 +4253,11 @@ the DIAL is the thing the row names, and the shader says what it is called.
 the ENVIRONMENT vocabulary: what the whole world looks like, said in words.
 
 #### Conditions
-- **Is Volumetric Fog On** (`target: String`) - True while Volumetric fog is on. Reads `Environment.volumetric_fog_enabled`.
-- **Are Reflections On** (`target: String`) - True while reflections are on. Reads `Environment.ssr_enabled`.
-- **Is Indirect Light On** (`target: String`) - True while indirect light is on. Reads `Environment.ssil_enabled`.
-- **Is Global Illumination On** (`target: String`) - True while global illumination is on. Reads `Environment.sdfgi_enabled`.
-- **Is Occlusion On** (`target: String`) - True while the corners and creases of the scene are being darkened. Reads `Environment.ssao_enabled`.
+- **Is Volumetric Fog On** (`target: String`) - True while Volumetric fog is on. Reads `Environment.volumetric_fog_enabled`, and answers false on a node holding no environment at all.
+- **Are Reflections On** (`target: String`) - True while reflections are on. Reads `Environment.ssr_enabled`, and answers false on a node holding no environment at all.
+- **Is Indirect Light On** (`target: String`) - True while indirect light is on. Reads `Environment.ssil_enabled`, and answers false on a node holding no environment at all.
+- **Is Global Illumination On** (`target: String`) - True while global illumination is on. Reads `Environment.sdfgi_enabled`, and answers false on a node holding no environment at all.
+- **Is Occlusion On** (`target: String`) - True while the corners and creases of the scene are being darkened. Reads `Environment.ssao_enabled`, and answers false on a node holding no environment at all.
 
 #### Actions
 - **Set Saturation** (`value: String`) - How colourful the whole picture is: 1 is untouched, 0 is grey, above 1 is louder. The one row that turns a flashback grey and a power-up garish. Gives this scene its own copy of the environment first, so an environment file shared with other scenes never changes under them. Writes `Environment.adjustment_saturation`.
@@ -4048,23 +4317,23 @@ the ENVIRONMENT vocabulary: what the whole world looks like, said in words.
 - **Use Panorama Sky** (`image: String`) - Wraps one picture around the whole world as the sky - a photographed or painted panorama, which is what a stylised or a photoreal scene wants instead of a drawn gradient. Sets the backdrop to sky so it is actually drawn. The five sky words do not reach a panorama: those are the drawn sky's own colours.
 
 #### Expressions
-- **Saturation** (`target: String`) - Reads the world's saturation back: `Environment.adjustment_saturation`. Use it in any value field.
-- **Contrast** (`target: String`) - Reads the world's contrast back: `Environment.adjustment_contrast`. Use it in any value field.
-- **Picture Brightness** (`target: String`) - Reads the world's picture brightness back: `Environment.adjustment_brightness`. Use it in any value field.
-- **Exposure** (`target: String`) - Reads the world's exposure back: `Environment.tonemap_exposure`. Use it in any value field.
-- **Glow Bloom** (`target: String`) - Reads the world's glow bloom back: `Environment.glow_bloom`. Use it in any value field.
-- **Glow Threshold** (`target: String`) - Reads the world's glow threshold back: `Environment.glow_hdr_threshold`. Use it in any value field.
-- **Fog Floor** (`target: String`) - Reads the world's fog floor back: `Environment.fog_height`. Use it in any value field.
-- **Fog Floor Thickness** (`target: String`) - Reads the world's fog floor thickness back: `Environment.fog_height_density`. Use it in any value field.
-- **Aerial Perspective** (`target: String`) - Reads the world's aerial perspective back: `Environment.fog_aerial_perspective`. Use it in any value field.
-- **Fog Sun Glow** (`target: String`) - Reads the world's fog sun glow back: `Environment.fog_sun_scatter`. Use it in any value field.
-- **Volumetric Thickness** (`target: String`) - Reads the world's volumetric thickness back: `Environment.volumetric_fog_density`. Use it in any value field.
-- **Volumetric Colour** (`target: String`) - Reads the world's volumetric colour back: `Environment.volumetric_fog_albedo`. Use it in any value field.
-- **Volumetric Reach** (`target: String`) - Reads the world's volumetric reach back: `Environment.volumetric_fog_length`. Use it in any value field.
-- **Backdrop** (`target: String`) - Reads the world's backdrop back: `Environment.background_mode`. Use it in any value field.
-- **Tone Map** (`target: String`) - Reads the world's tone map back: `Environment.tonemap_mode`. Use it in any value field.
-- **Glow Blend** (`target: String`) - Reads the world's glow blend back: `Environment.glow_blend_mode`. Use it in any value field.
-- **Colour Grade** (`target: String`) - Reads the world's colour grade back: `Environment.adjustment_color_correction`. Use it in any value field.
+- **Saturation** (`target: String`) - Reads the world's saturation back: `Environment.adjustment_saturation`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Contrast** (`target: String`) - Reads the world's contrast back: `Environment.adjustment_contrast`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Picture Brightness** (`target: String`) - Reads the world's picture brightness back: `Environment.adjustment_brightness`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Exposure** (`target: String`) - Reads the world's exposure back: `Environment.tonemap_exposure`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Glow Bloom** (`target: String`) - Reads the world's glow bloom back: `Environment.glow_bloom`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Glow Threshold** (`target: String`) - Reads the world's glow threshold back: `Environment.glow_hdr_threshold`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Fog Floor** (`target: String`) - Reads the world's fog floor back: `Environment.fog_height`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Fog Floor Thickness** (`target: String`) - Reads the world's fog floor thickness back: `Environment.fog_height_density`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Aerial Perspective** (`target: String`) - Reads the world's aerial perspective back: `Environment.fog_aerial_perspective`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Fog Sun Glow** (`target: String`) - Reads the world's fog sun glow back: `Environment.fog_sun_scatter`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Volumetric Thickness** (`target: String`) - Reads the world's volumetric thickness back: `Environment.volumetric_fog_density`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Volumetric Colour** (`target: String`) - Reads the world's volumetric colour back: `Environment.volumetric_fog_albedo`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Volumetric Reach** (`target: String`) - Reads the world's volumetric reach back: `Environment.volumetric_fog_length`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Backdrop** (`target: String`) - Reads the world's backdrop back: `Environment.background_mode`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Tone Map** (`target: String`) - Reads the world's tone map back: `Environment.tonemap_mode`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Glow Blend** (`target: String`) - Reads the world's glow blend back: `Environment.glow_blend_mode`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
+- **Colour Grade** (`target: String`) - Reads the world's colour grade back: `Environment.adjustment_color_correction`. A node holding no environment at all answers with the value a new one starts on. Use it in any value field.
 - **Sky Top** - Reads the sky's sky top back: `ProceduralSkyMaterial.sky_top_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
 - **Sky Horizon** - Reads the sky's sky horizon back: `ProceduralSkyMaterial.sky_horizon_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
 - **Sky Ground** - Reads the sky's sky ground back: `ProceduralSkyMaterial.ground_bottom_color`. A scene with no sky, or one wearing a panorama or a sky shader, answers with the value a new sky starts on. Use it in any value field.
@@ -4121,7 +4390,7 @@ File management (read / write / JSON, plus directory + file operations).
 #### Conditions
 - **File Exists** (`path: String`) - True when a file exists at that path, so you can check before reading or writing it.
 - **Directory Exists** (`path: String`) - True when a folder exists at that path, useful before creating or listing it.
-- **Scene File Is Data-Only** (`path: String`) - True when a scene file brings nothing in from outside the game: no script written inside it, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared.
+- **Scene File Is Data-Only** (`path: String`) - True when a scene file brings nothing in from outside the game: no script written inside it, nothing built by a value in a node's body, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared. A true answer means the file brings no code of its OWN: a cleared scene may still hold a connection, an animation track or a placeholder that reaches your game's own methods, so it is still somebody else's data.
 
 #### Actions
 - **Write Text File** (`path: String, text: String`) - Saves text to a file, overwriting anything already there (great for save data).
@@ -4171,8 +4440,8 @@ the LENS vocabulary: what the camera lets in, and what it keeps sharp.
 - **Focus Everywhere** (`seconds: String`) - Takes the blur off and makes the whole picture sharp again, easing it out rather than cutting - the shot coming back from a close-up. The blur amount is put back where it was once the far blur is off, so the next Focus On starts from the same lens it did the first time. Gives this camera its own copy of the camera attributes first, and does nothing at all on a camera somebody fitted with a physical lens.
 
 #### Expressions
-- **Camera Exposure** (`target: String`) - Reads the camera exposure back: `attributes.exposure_multiplier`. Answers for this camera. Use it in any value field.
-- **Camera Exposure** (`target: String`) - Reads the camera exposure back: `camera_attributes.exposure_multiplier`. Answers for every camera that has none of its own. Use it in any value field.
+- **Camera Exposure** (`target: String`) - Reads the camera exposure back: `attributes.exposure_multiplier`. Answers for this camera, and answers with the value a new lens starts on when the node is carrying none. Use it in any value field.
+- **Camera Exposure** (`target: String`) - Reads the camera exposure back: `camera_attributes.exposure_multiplier`. Answers for every camera that has none of its own, and answers with the value a new lens starts on when the node is carrying none. Use it in any value field.
 - **Focus Distance** (`target: String`) - How many metres away the picture stops being sharp, as Focus On last left it. Reads `attributes.dof_blur_far_distance`. Use it in any value field.
 
 ### Game Accessibility (`res://addons/eventforge/registration/modules/game_accessibility_aces.gd`)
@@ -4256,6 +4525,21 @@ Gradient & Curve vocabulary (smooth colour ramps and shaped 0-1 curves).
 #### Expressions
 - **Sample Gradient** (`gradient: String, position: float`) - Reads the smooth colour at a 0-to-1 position along a gradient - drive a health-bar tint, a day/night sky, a heat map from one line.
 - **Sample Curve** (`curve: String, position: float`) - Reads a curve's value at a 0-to-1 position - turn a designer-drawn easing / falloff / difficulty curve into a number, no math.
+
+### Gridmap (`res://addons/eventforge/registration/modules/gridmap_aces.gd`)
+GridMaps (the 3D twin of the tilemap words).
+
+#### Conditions
+- **Cell Is Filled** (`cell: String, target: String`) - True when the grid cell holds an item - the 3D twin of Cell Has Tile, and what a builder asks before it puts something there.
+
+#### Actions
+- **Set Cell Item** (`cell: String, item: String, orientation: String, target: String`) - Puts one item of the mesh library into a grid cell, turned the way you say. This is the 3D twin of Set Tile. Note what has no 3D twin: a GridMap has no tileset, so there are no custom data layers and no terrains here - a 3D game keeps "which cells are lava" in a collection or a group instead.
+- **Fill Box** (`target: String, from: String, to: String, item: String`) - Puts one item into every cell of a box of grid cells - a floor, a wall, a solid block of the level, in one row instead of three loops. The two corners may be given in any order.
+- **Erase Box** (`target: String, from: String, to: String`) - Empties every cell of a box of grid cells - the 3D crater, the room carved out of solid rock. The two corners may be given in any order.
+
+#### Expressions
+- **Item At** (`cell: String, target: String`) - Which item of the mesh library sits in a cell, by its index, or -1 when the cell is empty. The 3D twin of Tile At.
+- **Used Cells** (`target: String`) - Every cell of the grid that holds an item, as a list of Vector3i. Feed it to a For Each to walk the level that was actually built.
 
 ### Group Arrival (`res://addons/eventforge/registration/modules/group_arrival_aces.gd`)
 Group arrivals (the moment a node joins or leaves a group)
@@ -4527,8 +4811,8 @@ the MATERIAL vocabulary: what a surface looks like, said in words.
 - **Fade Roughness** (`value: String, seconds: String`) - Walks the surface's roughness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.roughness` on this mesh's own copy of the material.
 - **Set Metal** (`value: String`) - How metal the surface reads, as a fraction: 0 is paint or plastic, 1 is bare metal. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.metallic`, the override every GeometryInstance3D wears.
 - **Fade Metal** (`value: String, seconds: String`) - Walks the surface's metal to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.metallic` on this mesh's own copy of the material.
-- **Set See-Through** (`value: String`) - How solid the surface is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.
-- **Fade See-Through** (`value: String, seconds: String`) - Walks the surface's see-through to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.
+- **Set Surface Opacity** (`value: String`) - How solid the SURFACE is: 1 is solid, 0 is invisible. Godot keeps it as the colour's alpha channel, which does nothing until the material is in alpha transparency - so the row switches that on as well. The Native 3D shelf's Set See-Through fades the whole object without touching its material, and counts the other way round. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_color.a`, the override every GeometryInstance3D wears.
+- **Fade Surface Opacity** (`value: String, seconds: String`) - Walks the surface's surface opacity to a new value over time instead of jumping to it - one tween, no state to keep. Writes `material_override.albedo_color.a` on this mesh's own copy of the material.
 - **Set Texture** (`value: String`) - The picture painted over the surface. Blank it with null to go back to a flat colour. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.albedo_texture`, the override every GeometryInstance3D wears.
 - **Set Blend** (`value: String`) - How the surface is mixed with whatever is already drawn behind it. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.blend_mode`, the override every GeometryInstance3D wears.
 - **Set Transparency** (`value: String, threshold: String`) - How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.
@@ -4540,15 +4824,15 @@ the MATERIAL vocabulary: what a surface looks like, said in words.
 - **Set Light Response** (`value: String`) - How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.light_mode`.
 
 #### Expressions
-- **Colour** (`target: String`) - Reads the surface's colour back: `material_override.albedo_color`. Use it in any value field.
-- **Glow** (`target: String`) - Reads the surface's glow back: `material_override.emission_energy_multiplier`. Use it in any value field.
-- **Roughness** (`target: String`) - Reads the surface's roughness back: `material_override.roughness`. Use it in any value field.
-- **Metal** (`target: String`) - Reads the surface's metal back: `material_override.metallic`. Use it in any value field.
-- **See-Through** (`target: String`) - Reads the surface's see-through back: `material_override.albedo_color.a`. Use it in any value field.
-- **Texture** (`target: String`) - Reads the surface's texture back: `material_override.albedo_texture`. Use it in any value field.
-- **Blend** (`target: String`) - Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.
-- **Transparency** (`target: String`) - Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.
-- **Sides** (`target: String`) - Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.
+- **Colour** - Reads the surface's colour back: `material_override.albedo_color`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Glow** - Reads the surface's glow back: `material_override.emission_energy_multiplier`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Roughness** - Reads the surface's roughness back: `material_override.roughness`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Metal** - Reads the surface's metal back: `material_override.metallic`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Surface Opacity** - Reads the surface's surface opacity back: `material_override.albedo_color.a`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Texture** - Reads the surface's texture back: `material_override.albedo_texture`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Blend** - Reads the surface's blend back: `material_override.blend_mode`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Transparency** - Reads the surface's transparency back: `material_override.transparency`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
+- **Sides** - Reads the surface's sides back: `material_override.cull_mode`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.
 - **Material Of Surface** (`surface: String, target: String`) - The material one surface is drawing with right now - its own override when it has one, and the mesh's otherwise. Use it in any value field. Writes `MeshInstance3D.get_active_material`.
 - **Blending** - Reads the sprite's blending back: `CanvasItemMaterial.blend_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.
 - **Light Response** - Reads the sprite's light response back: `CanvasItemMaterial.light_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.
@@ -4821,6 +5105,22 @@ Game Options vocabulary (the knobs an options menu changes).
 
 #### Expressions
 - **Bus Volume (percent)** (`bus: String`) - Reads a bus's volume back as a 0-100 percent (to set a slider's start value).
+
+### Ownership (`res://addons/eventforge/registration/modules/ownership_aces.gd`)
+Ownership: who made this, said once for the whole project.
+
+#### Conditions
+- **Is Owned By** (`node: Node, owner: Node`) - True while a node traces back to the owner you name. Both sides are walked to the root, so a bullet fired by a turret the player built counts as the player's - and as the turret's, because the turret traces back to the same person.
+- **Is Mine** (`node: Node`) - True while a node traces back to the same owner this row does - my bullet, my turret, my summon, or me. The friendly half of the pair: Hit Is Not My Owner is the same question asked the other way.
+- **Hit Is Not My Owner** (`hit: String`) - The friendly-fire guard, for any hit trigger: true while the thing that was hit does not trace back to whoever fired this. Put the trigger's own collider in the field - the bullet stops shooting the player who fired it, and the turret that player built, without a single flag.
+
+#### Actions
+- **Claim** (`node: Node, owner: Node`) - Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.
+- **Disown** (`node: Node`) - Takes the owner off a node, so it belongs to nobody again. A recycled node carries no credit from its last life, which is why a pool disowns on the way back to the shelf; a dropped weapon that anyone may pick up is the same idea.
+
+#### Expressions
+- **Claimed By** (`node: Node`) - The node that claimed this one, one step up - the turret that fired the bullet, not the player behind the turret. Reads as nothing when it was never claimed, and when the owner itself has gone. For the far end of the chain, use Root Owner Of.
+- **Root Owner Of** (`node: Node`) - The far end of the owner chain: bullet to turret to player answers with the player. This is the one a kill feed, a score row and an assist list all want, because it is the person rather than the thing they were holding. A node nobody claimed answers with itself, and a chain whose far end has been freed answers with nothing.
 
 ### Particle (`res://addons/eventforge/registration/modules/particle_aces.gd`)
 Particles (GPUParticles2D / GPUParticles3D / CPUParticles2D)
@@ -5185,6 +5485,19 @@ the two lighting objects that are not lights.
 - **Fade The Glow** (`target: String, value: String, seconds: String`) - Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.
 - **Make The Environment This Scene's Own** (`target: String`) - Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.
 
+### Skeleton (`res://addons/eventforge/registration/modules/skeleton_aces.gd`)
+bones: pointing one at something, asking where one is, and holding one in a
+
+#### Actions
+- **Point Bone At** (`bone: String, node: Node, seconds: String, weight: String, target: String`) - Aims one bone at a node and keeps aiming - the head that follows the target you locked, the turret that tracks the player. It sets up the engine's own look-at modifier, which then does the aiming every frame, easing in over the time you give it. The modifier node has to be under the skeleton already; this row is the sheet's hand on its dials.
+- **Point Bone At** (`node: Node, seconds: String, weight: String, target: String`) - Turns this bone toward a node, a frame's worth at a time - the head that follows the player, the arm that tracks the cursor. Asked every tick it eases over the seconds you give it; the weight is how much of the way it is allowed to get.
+- **Set Bone Pose Override** (`bone: String, pose: Transform3D, amount: String, target: String`) - Holds one bone in a pose of your own over whatever the animation is playing - the spine that twists on a hit, the head that stays level on a slope. The amount is how much of your pose wins: 1 for all of it, 0 to give the bone back to the animation.
+- **Set Bone Pose Override** (`bone: String, pose: Transform2D, amount: String, target: String`) - Holds one bone in a pose of your own over whatever the animation is playing - the arm that stays out while the walk keeps walking. The amount is how much of your pose wins: 1 for all of it, 0 to give the bone back to the animation.
+
+#### Expressions
+- **Bone Position** (`bone: String, target: String`) - Where one bone is in the world right now - the hand a weapon hangs off, the head a name tag floats over. The skeleton answers in its own space, so this reads it back out into the world's; a raw bone pose put straight onto a node lands in the wrong place.
+- **Bone Position** (`target: String`) - Where this bone is in the world right now - the hand a shell drops from, the head a name tag floats over.
+
 ### Space Words (`res://addons/eventforge/registration/modules/space_words_aces.gd`)
 every move says WHOSE SPACE it means, and the three turns.
 
@@ -5338,7 +5651,9 @@ System (event-sheet System parity)
 - **Is Inside Area** (`area: String, point: String`) - True when a point falls inside a rectangle - a zone, a safe area, a spawn band - without needing an Area2D node in the scene.
 - **Expression Is True** (`expr: String`) - True when your custom GDScript expression evaluates to true; an escape hatch for advanced checks.
 - **Is Group Active** (`group: String`) - True when the named runtime group is currently switched on.
-- **Only Once Ever** (`key: String`) - True exactly once, ever - even across closing the game. Show a tutorial hint the first time and never again; Forget First Time resets it for testing (takes effect next run).
+- **Only Once Ever** (`key: String`) - True exactly once, ever - even across closing the game. Show a tutorial hint the first time and never again; Forget First Time resets it for testing (takes effect next run). This one is per COMPUTER, in a file beside the game; First Time In This Save asks the same question of the SAVE SLOT, so a second save sees it again.
+- **First Time In This Save** (`key: String`) - True the FIRST time this save slot reaches this name, and never again for that save - the first kill of a kind, the first visit to a room, a tutorial a new game should show again. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer. Has Seen asks the same question without using it up.
+- **Has Seen** (`key: String`) - Whether this save has already met that name - the question First Time In This Save answers by USING it up, asked without using it up. Show the codex page, grey out the entry, skip the intro. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.
 - **Spawn Is Alive** (`spawn_name: String`) - True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'.
 - **At Most Every** (`seconds: String`) - Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.
 - **Has Been Quiet For** (`poke_name: String, seconds: String`) - True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke.
@@ -5365,6 +5680,8 @@ System (event-sheet System parity)
 - **Remove Effect** (`target: String`) - Takes the effect off this object, returning it to how it normally draws.
 - **Tween Effect Parameter** (`param: String, from: String, to: String, seconds: String, target: String`) - Drives one of an effect's parameters from one value to another over time.
 - **Forget First Time** (`key: String`) - Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run.
+- **Mark Seen** (`key: String`) - Marks a name as met in this save without any row having asked first - unlocking a page from a cheat menu, carrying a story flag over, skipping a tutorial the player has turned off. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.
+- **Forget Seen** (`key: String`) - Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. A row that has already answered for that name this session keeps its answer until the next run. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.
 - **Spawn Scene As** (`path: String, spawn_name: String, values: String, parent: String, position: String`) - Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.
 - **Report Failure** (`verb: String, reason: String`) - Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.
 - **Report Success** (`verb: String`) - Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.
@@ -5466,6 +5783,28 @@ Testing vocabulary (a sheet that makes claims and reports pass/fail).
 #### Expressions
 - **Scene Under Test** (`as_name: String`) - The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals.
 
+### Text Effect (`res://addons/eventforge/registration/modules/text_effect_aces.gd`)
+text that MOVES: the six effects a rich text label already knows, and the
+
+#### Triggers
+- **On Reveal Finished** - Runs when a reveal reaches its last character, and when Skip Reveal ends one early - the same moment either way, which is what lets the Continue prompt be written once. Every reveal in the sheet ends here, so a sheet typing out more than one line asks which line it was.
+
+#### Conditions
+- **Effect Is Active** (`effect: String, target: String`) - True while the label's text carries that effect's tag. Ask it before writing another one, or to tell a shaking warning from a calm one without a variable beside it. Type the name of your own effect here to ask about that instead.
+- **Is Revealing** (`target: String`) - True while a line is still typing itself out. Ask it to make one button do both jobs: skip while it is revealing, go on to the next line when it is not.
+
+#### Actions
+- **Set Text With Effect** (`text: String, effect: String, strength: String, custom: String, target: String`) - Puts words on a rich text label already wearing an effect: a title that waves, a warning that shakes, a legendary drop in a rainbow. It writes the engine's own tag around the text, so the label needs nothing installed and the emitted line is the line you would have typed. The strength is the one knob - bigger waves higher, shakes harder, fades longer - and it answers the player's text-size and no-flashing settings without a row of its own.
+- **Wrap Selection In Effect** (`from: String, to: String, effect: String, strength: String, custom: String, target: String`) - Puts an effect around a STRETCH of the text already on the label, counted in characters, leaving the rest of the line alone. This is the row for one shaking word inside a calm sentence, or a name that glows where the sentence does not. It counts characters of the string the label holds, so wrap before you add more tags, not after.
+- **Clear Effects** (`target: String`) - Takes every effect back off and leaves the words. It asks the label for its own parsed text - the string with the tags stripped - so it clears effects nobody here wrote as well, and there is no list of tag names to keep up to date.
+- **Install Text Effect** (`effect: Resource, target: String`) - Teaches this label ONE effect you wrote yourself: a RichTextEffect resource out of a folder you own, whose bbcode name then works in a tag like any of the engine's six. Point Set Text With Effect at "custom" and type that same name to use it.
+- **Reveal Text** (`text: String, chars_per_second: String, sound: Node, target: String`) - Types a line out one character at a time, at the speed you name. Any pause set by Pause Reveal At is held on the way, a sound plays on each character when you name one, and On Reveal Finished runs when the last character lands. Starting a second reveal on the same label ends the first, so a player who skips ahead never gets two lines typing over each other.
+- **Skip Reveal** (`target: String`) - Ends the reveal now and shows the whole line, then runs On Reveal Finished exactly as a reveal that finished on its own would. This is the second press of the button that started the line, and it is why the answer belongs in the trigger rather than after the Reveal Text row.
+- **Pause Reveal At** (`at: String, seconds: String, target: String`) - Holds the reveal for a beat when it reaches one character - the comma pause that makes a typed line sound like speech rather than a printer. Drop it BEFORE the Reveal Text row: it writes the pause down on the label, and the reveal that follows reads it. Several pauses on one line are several rows.
+
+#### Expressions
+- **Revealed Fraction** (`target: String`) - How much of the line is showing, from 0 to 1. The number to drive a progress bar, a portrait's mouth flap or a sound that gets quieter as the line ends.
+
 ### Text Extract (`res://addons/eventforge/registration/modules/text_extract_aces.gd`)
 reading a part out of a line, and saying what went wrong.
 
@@ -5525,11 +5864,23 @@ Tilemaps (TileMapLayer, Godot 4.3+)
 - **Tile Has Custom Data** (`coords: String, name: String, target: String`) - True when the tile at a cell carries the named custom data - how a tileset marks walls, water or ladders.
 - **Cell Is Empty** (`coords: String, target: String`) - True when the chosen tilemap cell has no tile in it.
 - **Cell Has Tile** (`coords: String, target: String`) - True when the chosen tilemap cell actually has a tile placed.
+- **Tile Data At Is** (`target: String, where: String, key: String, value: String`) - True when the tile at a place carries this value under the named custom data layer. "Is the player standing on ice" as one row, rather than a cell lookup, a null guard and a data read written out by hand.
+- **Cell Is Solid** (`target: String, cell: String, layer: String`) - True when the tile at a cell carries a collision shape on the tileset physics layer you name - what a path search, a dig tool and a "can I stand here" test are all really asking.
 
 #### Actions
 - **Set Tile** (`coords: String, source_id: String, atlas_coords: String, target: String`) - Paints a tile at a grid cell, choosing which tileset and which tile of it to use.
 - **Erase Tile** (`coords: String, target: String`) - Clears the tile at a single grid cell, leaving it empty.
 - **Clear Tilemap** (`target: String`) - Wipes every tile from the tilemap layer, leaving it blank.
+- **Paint Terrain** (`cells: String, terrain_set: String, terrain: String, target: String`) - Paints a list of cells with one terrain and lets the tileset choose each tile, so edges, corners and joins draw themselves. This is what makes a placed wall or a filled hole look like it was always there.
+- **Repaint Terrain Around** (`target: String, where: String, radius: String, terrain_set: String, terrain: String`) - Runs the terrain join again over the cells around a place, so tiles left with broken edges by an explosion or a placed block heal themselves. Leave the terrain at -1 to say those cells hold no terrain, which is what the inside of a hole is.
+- **Fill Rect With Tile** (`target: String, rect: String, source_id: String, atlas_coords: String`) - Paints every cell of a rectangle with one tile - a floor, a platform, a room's worth of wall, in one row instead of two loops.
+- **Erase Tiles In Circle** (`target: String, where: String, radius: String`) - Clears every cell within so many cells of a place - the crater a bomb leaves, the hole a drill makes. Give it a cell or a global position. Follow it with Repaint Terrain Around so the rim joins up again.
+- **Flood Fill** (`target: String, cell: String, source_id: String, atlas_coords: String, limit: String`) - The paint bucket: spreads one tile out from a cell across every touching cell holding whatever the starting cell held. It stops at the cell limit you set, so a fill let loose on open ground cannot run away with the frame.
+- **Set Navigation On Layer** (`on: bool, target: String`) - Turns the layer's navigation regions on or off - what a door opening or a bridge dropping has to do before agents will route through it.
+- **Set Collision On Layer** (`on: bool, target: String`) - Turns the layer's collision on or off - a ghost phase, a drop-through floor, a background layer that should never stop anything.
+- **Save Layer To File** (`target: String, path: String`) - Writes the layer's tiles to a file, exactly as the engine stores them. This is a level the player built, kept - Load Layer From File reads it straight back.
+- **Load Layer From File** (`target: String, path: String`) - Puts the tiles from a file back onto the layer, replacing whatever it held. A file that is not there leaves the layer alone rather than clearing it.
+- **Copy Layer** (`target: String, from: String`) - Copies every tile of one layer onto another in one go, as the bytes the engine keeps them in. A level editor's undo is two of these: one onto a spare layer before the edit, and one back afterwards.
 
 #### Expressions
 - **Tile At** (`coords: String, target: String`) - Returns which tileset the tile at a cell came from, or -1 when the cell is empty.
@@ -5537,6 +5888,13 @@ Tilemaps (TileMapLayer, Godot 4.3+)
 - **Used Cells Count** (`target: String`) - Returns how many cells in the tilemap currently hold a tile.
 - **Position To Tile** (`pos: String, target: String`) - Converts a pixel position into the cell coordinates that contain it.
 - **Tile To Position** (`coords: String, target: String`) - Converts cell coordinates into the pixel position at that cell's center.
+- **Tile Data At** (`target: String, where: String, key: String`) - What the tile at a place carries under one of its tileset's custom data layers - the "surface" that says ice, the "cost" a path search adds up. Give it a cell, or a global position and it finds the cell holding it. Answers null where there is no tile.
+- **First Solid Cell Along** (`target: String, from: String, to: String, layer: String`) - Walks the cells along a line and answers the first one whose tile is solid - line of sight, a laser stopping at a wall, a jump arc meeting the ground, with no physics query at all. Answers Vector2i.MAX when the line reaches its end having met nothing.
+- **Surrounding Cells Of** (`cell: String, target: String`) - The cells that touch a cell, as a list. It asks the LAYER rather than doing the arithmetic, so a hex or isometric map answers with its own neighbours instead of a square's four. Feed it to a For Each.
+- **Cells With Data** (`target: String, key: String, value: String`) - Every cell of the layer whose tile carries this value under the named custom data layer, as a list - every spawn point, every water tile, every door the level was drawn with. Feed it to a For Each.
+- **Used Rect** (`target: String`) - The rectangle of cells the layer actually holds tiles in, as a Rect2i. This is the number a camera's limits are set from, and how a level knows how big it is without anybody typing its size a second time.
+- **Cell Count Of** (`source_id: String, atlas_coords: String, target: String`) - How many cells hold one particular tile - coins left on the level, walls still standing, how much of the board one colour covers.
+- **Tile Under** (`target: String, node: String`) - Which cell of the layer a node stands on, as map coordinates - the number every other tile row takes. It goes through the layer's own transform, so a scrolled, rotated or scaled map still answers correctly.
 
 ### Timed Input (`res://addons/eventforge/registration/modules/timed_input_aces.gd`)
 Timed inputs: input windows, mashes, prompts and graded timing.
