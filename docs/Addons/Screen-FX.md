@@ -145,7 +145,8 @@ effect, or when a later row should be able to find this one without knowing what
 
 **What it costs.** Every entry reads the whole screen back through a BackBufferCopy of the viewport,
 taken once per entry that is on - so each one is a full-screen copy plus a full-screen shader pass,
-every frame it is drawing. Two or three is a look; twelve is a bill, and the frame rate will say so. **Post Effect Count** reads how many are drawing right now, which is the number to look at when
+every frame it is drawing. Two or three is a look; twelve is a bill, and the frame rate will say
+so. **Post Effect Count** reads how many are drawing right now, which is the number to look at when
 the frame rate has gone.
 
 **It costs nothing at rest.** An entry whose strength is 0 hides its own rectangle, exactly the way

@@ -239,7 +239,8 @@ Effect Before** is how you say which.
 
 **What it costs, said once.** Every entry reads the whole screen back through a BackBufferCopy of
 the viewport, taken once per entry that is on - one full-screen copy plus one full-screen shader
-pass each. Two or three is a look; twelve is a bill, and the frame rate will say so. **Post Effect Count** is the number to look at when the frame rate has gone. An entry whose
+pass each. Two or three is a look; twelve is a bill, and the frame rate will say so. **Post Effect
+Count** is the number to look at when the frame rate has gone. An entry whose
 strength is 0 hides its own rectangle, and a hidden Control is not drawn at all, so a stack at rest
 costs nothing.
 
