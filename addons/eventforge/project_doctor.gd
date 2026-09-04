@@ -209,6 +209,15 @@ static func run() -> Dictionary:
 	# fallback is documented behaviour a single-save game may have chosen - and the sheet says it
 	# the way the sheet says everything: amber on the row, words in the inbox and the strip.
 	EventSheetSaveMemoryDoctor.ensure_registered()
+	# The Damage section: a row dealing a kind of damage no DamageTypeSet in this project names, and
+	# a node guarding against a kind nothing deals. Both are a mistyped word rather than a broken line,
+	# which is why neither is an error and both stay quiet on a project that has written no set down.
+	EventSheetDamageDoctor.ensure_registered()
+	# The Streaming section: a hole in a folder of chunk scenes, and a chunk carrying a camera.
+	# Both are facts about FILES rather than about rows, both behave perfectly while a chunk is the
+	# scene being edited and only go wrong once it is one tile of a streamed world. Same seam, same
+	# reason - a project streaming with a loader of its own is audited in exactly the same section.
+	EventSheetStreamingDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:

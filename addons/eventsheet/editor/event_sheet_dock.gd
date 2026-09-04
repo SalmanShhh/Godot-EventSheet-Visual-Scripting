@@ -357,6 +357,10 @@ var _save_studio: EventSheetSaveStudio = EventSheetSaveStudio.new()  # Tools ▸
 ## Tools ▸ Lift Workbench (dock/lift_workbench.gd). Null until somebody asks for it: a developer tool
 ## nobody opens should not cost a window, and loading it by path keeps it off the boot path.
 var _lift_workbench: RefCounted = null
+## Command palette ▸ Split Scene Into Chunks / Merge Chunks (chunk_tools_dialog.gd). Null until
+## somebody asks: a workspace that never streams a world should not cost a window, and loading it
+## by path keeps it off the boot path.
+var _chunk_tools_dialog: RefCounted = null
 var _translation_studio: EventSheetTranslationStudio = EventSheetTranslationStudio.new()  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog_glue.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
@@ -464,6 +468,11 @@ func _init() -> void:
 	EventSheets.register_palette_command("Expand To Level 3", func() -> void: _viewport.expand_to_level(3))
 	EventSheets.register_palette_command("Save Studio", func() -> void: _open_save_studio())
 	EventSheets.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
+	# The two chunk tools the Streamer packs ship with. They live on the palette rather than in a
+	# menu because they are a world-building errand somebody runs twice in a project's life, and the
+	# palette is where this editor already keeps those - the same door the guide tells a reader about.
+	EventSheets.register_palette_command("Split Scene Into Chunks", func() -> void: _open_chunk_tools(true), "Streaming")
+	EventSheets.register_palette_command("Merge Chunks", func() -> void: _open_chunk_tools(false), "Streaming")
 	_ace_apply.init(self)
 	_editor_tool_bar.init(self)
 	_this_editor_bar.init(self)
@@ -4632,6 +4641,21 @@ func _generate_vocabulary_doc() -> void:
 ## load_state() generator for addon authors (dock/save_studio.gd).
 func _open_save_studio() -> void:
 	_save_studio.open()
+
+
+## Command palette ▸ Split Scene Into Chunks / Merge Chunks: the two world-building errands the
+## Streamer packs ship with. Built on first open, so a workspace that never streams pays nothing,
+## and parented to the editor base control the way every other dialog here is.
+func _open_chunk_tools(splitting: bool) -> void:
+	if _chunk_tools_dialog == null:
+		_chunk_tools_dialog = load("res://addons/eventsheet/editor/chunk_tools_dialog.gd").new()
+	var edited: String = ""
+	if Engine.is_editor_hint() and EditorInterface.get_edited_scene_root() != null:
+		edited = EditorInterface.get_edited_scene_root().scene_file_path
+	if splitting:
+		_chunk_tools_dialog.open_split(self, edited)
+	else:
+		_chunk_tools_dialog.open_merge(self, edited)
 
 
 ## Tools ▸ Lift Workbench: the developer-side bench a recogniser is written on - paste code, see per
