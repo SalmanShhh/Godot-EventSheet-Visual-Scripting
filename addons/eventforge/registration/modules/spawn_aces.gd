@@ -337,14 +337,21 @@ static func self_copy_template() -> String:
 ## The spawn that may not happen, with `query` naming which of the two free-spot calls it asks. The
 ## copy's name is bound at the top rather than inside the branch so the rows underneath can still
 ## say it - it is simply nothing when the arena was full, which is what Is Still Here asks about.
+##
+## THE SCENE IS READ ONCE, on the line above the question, exactly as the formation row reads it.
+## The Scene field is an EXPRESSION and its own starter is `load("res://…")`, so a template that
+## spelled the field three times - the query, the signal and the instantiate - would run that load
+## three times for one copy, and a field holding anything with a side effect would do it three times
+## too. One local, spelled thrice, is the same characters a hand would write.
 static func free_spot_spawn_template(query: String) -> String:
-	return "var {name}_spot = %s.%s({inside}, {scene}, {clear_of}, {gap}, {tries})\n" % [FREE_SPOT_CALL, query] \
+	return "var {name}_scene = {scene}\n" \
+		+ "var {name}_spot = %s.%s({inside}, {name}_scene, {clear_of}, {gap}, {tries})\n" % [FREE_SPOT_CALL, query] \
 		+ "var {name} = null\n" \
 		+ "if {name}_spot == null:\n" \
 		+ "\tif has_signal(&\"%s\"):\n" % SKIPPED_SIGNAL \
-		+ "\t\temit_signal(&\"%s\", {scene})\n" % SKIPPED_SIGNAL \
+		+ "\t\temit_signal(&\"%s\", {name}_scene)\n" % SKIPPED_SIGNAL \
 		+ "else:\n" \
-		+ "\t{name} = {scene}.instantiate()\n" \
+		+ "\t{name} = {name}_scene.instantiate()\n" \
 		+ "\t{parent}.call_deferred(\"add_child\", {name})\n" \
 		+ "\t{name}.set_deferred(\"global_position\", {name}_spot)"
 

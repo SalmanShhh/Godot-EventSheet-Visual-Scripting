@@ -602,6 +602,12 @@
   scene and a copy in a free spot both declare a real local, and neither was offered by the field
   completion the launched twins had joined - the free-spot row binds its name above the branch
   precisely so the rows below can still say it.
+- **One copy is one reading of the Scene field.** Spawn A Copy In A Free Spot spelled that field
+  three times over - into the query, into the skipped signal and into the instantiate - and the
+  field's own starter is `load("res://…")`, so a single copy read the scene from disk three times,
+  and a field holding anything with a side effect in it did that three times too. The run now binds
+  the scene to a local on the line above the question and says the local thrice, exactly as the
+  formation row beside it already did.
 
 ### A grid that walks itself into a level
 

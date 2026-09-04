@@ -759,13 +759,14 @@ func _ready() -> void:
 
 
 func _on_timeout() -> void:
-	var new_crate_spot = FreeSpot.in_2d($Room, Crate, ["walls"], 32.0, 24)
+	var new_crate_scene = Crate
+	var new_crate_spot = FreeSpot.in_2d($Room, new_crate_scene, ["walls"], 32.0, 24)
 	var new_crate = null
 	if new_crate_spot == null:
 		if has_signal(&"spawn_skipped"):
-			emit_signal(&"spawn_skipped", Crate)
+			emit_signal(&"spawn_skipped", new_crate_scene)
 	else:
-		new_crate = Crate.instantiate()
+		new_crate = new_crate_scene.instantiate()
 		$Props.call_deferred("add_child", new_crate)
 		new_crate.set_deferred("global_position", new_crate_spot)
 
@@ -1016,8 +1017,8 @@ that, or spawn a scene the row names outright.
 | Spawn A Copy Of Myself (3D) | The same row, offered on a 3D host. | `var {name} = load(scene_file_path).instantiate()`, `{parent}.call_deferred("add_child", {name})`, `{name}.set_deferred("global_position", {at})` |
 | Free Spot In | Gives a point inside a shape that nothing is standing in, or nothing. | `FreeSpot.in_2d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
 | Free Spot In (3D) | The same question in three dimensions, in metres. | `FreeSpot.in_3d({inside}, {scene}, {clear_of}, {gap}, {tries})` |
-| Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_spot = FreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {scene})`, `else:`, … |
-| Spawn A Copy In A Free Spot (3D) | The same row in three dimensions. | `var {name}_spot = FreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
+| Spawn A Copy In A Free Spot | Spawns a copy where nothing is standing, or nothing at all. | `var {name}_scene = {scene}`, `var {name}_spot = FreeSpot.in_2d(…)`, `var {name} = null`, `if {name}_spot == null:`, `emit_signal(&"spawn_skipped", {name}_scene)`, `else:`, … |
+| Spawn A Copy In A Free Spot (3D) | The same row in three dimensions. | `var {name}_scene = {scene}`, `var {name}_spot = FreeSpot.in_3d(…)`, `var {name} = null`, `if {name}_spot == null:`, …, `else:`, … |
 | On Spawn Skipped | Runs when a free-spot spawn found nowhere to put the copy. | `spawn_skipped.connect(_on_spawn_skipped)` |
 | Retire | Hands the object back to its pool, or destroys it when it came from none. | `PooledNodes.retire({object})` |
 | Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(PooledNodes.retire.bind({object}))` |

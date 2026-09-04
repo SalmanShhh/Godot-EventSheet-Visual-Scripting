@@ -373,14 +373,20 @@ static func _test_a_skipped_spawn_says_so() -> bool:
 	var emitted: String = _emitted("SpawnInFreeSpot", {"scene": "load(\"res://enemy.tscn\")",
 		"name": "new_enemy", "inside": "$SpawnZone", "clear_of": "[\"walls\"]", "gap": "32.0",
 		"tries": "24", "parent": "self"})
+	passed = SUPPORT.check(TEST_NAME, "the scene is read once, on the line above the question",
+		emitted.contains("var new_enemy_scene = load(\"res://enemy.tscn\")"), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "the row asks the free-spot query for a place",
-		emitted.contains("var new_enemy_spot = FreeSpot.in_2d($SpawnZone, load(\"res://enemy.tscn\"), [\"walls\"], 32.0, 24)"),
+		emitted.contains("var new_enemy_spot = FreeSpot.in_2d($SpawnZone, new_enemy_scene, [\"walls\"], 32.0, 24)"),
 		true) and passed
 	passed = SUPPORT.check(TEST_NAME, "the copy's name exists whether or not there was room, so the rows below can say it",
 		emitted.contains("var new_enemy = null"), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "no room means nothing is spawned and the sheet's own signal is raised",
-		emitted.contains("emit_signal(&\"spawn_skipped\", load(\"res://enemy.tscn\"))"),
+		emitted.contains("emit_signal(&\"spawn_skipped\", new_enemy_scene)"),
 		true) and passed
+	# One copy is one read of the Scene field. Spelled three times the row ran the field's own
+	# starter - a load() - three times over, and a field with anything else in it three times too.
+	passed = SUPPORT.check(TEST_NAME, "and the Scene field is written into the run exactly once",
+		emitted.count("load(\"res://enemy.tscn\")"), 1) and passed
 	passed = SUPPORT.check(TEST_NAME, "and the signal is only raised when the sheet declares it",
 		emitted.contains("if has_signal(&\"spawn_skipped\"):"), true) and passed
 	passed = SUPPORT.check(TEST_NAME, "room means the copy is added on the next idle moment",
