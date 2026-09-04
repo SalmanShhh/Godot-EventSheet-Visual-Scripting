@@ -18,6 +18,10 @@
 #      rewrite really moves the value.
 #   7. THE LIFT. The spellings a project already has - the plain read, the guarded ternary, the
 #      open/get_as_text pair and the folder prelude - open as rows and save back BYTE-IDENTICALLY.
+#   8. THE SENTENCE A READ READS BACK AS. A file read opened out of somebody's own script says
+#      what the picked row says, guard and all - and a line that reads one file after asking about
+#      another says nothing, because that one is the Doctor's finding and has to keep looking like
+#      the mistake it is.
 #
 # Values are pinned, never counts: a count tells nobody which sentence moved.
 @tool
@@ -43,6 +47,7 @@ static func run() -> bool:
 	passed = _test_doctor_checks() and passed
 	passed = _test_fixes() and passed
 	passed = _test_lifts() and passed
+	passed = _test_reads_back() and passed
 	return passed
 
 
@@ -170,6 +175,18 @@ static func _test_leads() -> bool:
 		P.where_user_lives().contains("~/Library/Application Support/Godot"), true) and passed
 	passed = _check("the strip says where user:// really is on Linux",
 		P.where_user_lives().contains("~/.local/share/godot"), true) and passed
+	# THE STRIP IS THE THREE SENTENCES ABOVE, JOINED - never a fourth copy of them. The paragraph a
+	# reader meets used to be written out again in the dialog's own hint table, where it drifted from
+	# these and shipped untranslated in all eight bundled languages while these three were keyed.
+	var paragraph: String = P.strip_paragraph()
+	passed = _check("the strip leads with what the player's folder allows",
+		paragraph.contains(P.lead_for(P.PLACE_USER)), true) and passed
+	passed = _check("and says what the game's own files forbid",
+		paragraph.contains(P.lead_for(P.PLACE_RES)), true) and passed
+	passed = _check("and ends with where the player's folder really is",
+		paragraph.contains(P.where_user_lives()), true) and passed
+	passed = _check("the field's help strip IS that paragraph, not a copy of it",
+		EventSheetParamFieldFactory.hint_paragraph(P.PATH_HINT), paragraph) and passed
 	return passed
 
 
@@ -498,6 +515,53 @@ static func _round_trip(source: String) -> String:
 	var written: String = "" if sheet == null else str(SheetCompiler.compile(sheet, path).get("output", ""))
 	DirAccess.remove_absolute(path)
 	return written
+
+
+# ── 8. The sentence a read reads back as ─────────────────────────────────────────────────────
+
+
+## Both halves of one shape: the line the verb WRITES is taken apart by the same file that writes it,
+## and the sentence a reader sees is the SHIPPED verb's own display text rather than a second wording
+## kept beside it. So a read picked from the list and a read typed by hand say one thing.
+static func _test_reads_back() -> bool:
+	var passed: bool = true
+	passed = _check("a plain read is taken apart as a read with no fallback",
+		P.read_parts("FileAccess.get_file_as_string(\"user://save.dat\")"),
+		{"path": "\"user://save.dat\"", "fallback": ""}) and passed
+	passed = _check("the guarded line the verb writes is taken apart as path and fallback",
+		P.read_parts(P.guarded_read("\"user://save.dat\"", "\"{}\"")),
+		{"path": "\"user://save.dat\"", "fallback": "\"{}\""}) and passed
+	passed = _check("and so is the same guard written by hand, without the brackets",
+		P.read_parts("FileAccess.get_file_as_string(\"user://save.dat\") if "
+			+ "FileAccess.file_exists(\"user://save.dat\") else \"{}\""),
+		{"path": "\"user://save.dat\"", "fallback": "\"{}\""}) and passed
+	passed = _check("a line that asks about a DIFFERENT file is not a guarded read",
+		P.read_parts("FileAccess.get_file_as_string(\"user://save.dat\") if "
+			+ "FileAccess.file_exists(\"user://settings.json\") else \"\""), {}) and passed
+	passed = _check("nor is a ternary that reads no file at all",
+		P.read_parts("a if b else c"), {}) and passed
+	passed = _check("a read with a fallback of nothing is not a read with a fallback",
+		P.read_parts("FileAccess.get_file_as_string(\"user://save.dat\") if "
+			+ "FileAccess.file_exists(\"user://save.dat\") else "), {}) and passed
+	passed = _check("the plain read reads back as the verb that writes it",
+		EventSheetSentence.expression_text("FileAccess.get_file_as_string(\"user://save.dat\")", {}),
+		"text of file \"user://save.dat\"") and passed
+	passed = _check("the guarded read reads back with the fallback it wrote",
+		EventSheetSentence.expression_text(P.guarded_read("\"user://save.dat\"", "\"{}\""), {}),
+		"text of file \"user://save.dat\", or \"{}\"") and passed
+	passed = _check("the mis-guarded read keeps the code it is, so the finding stays visible",
+		EventSheetSentence.expression_text("FileAccess.get_file_as_string(\"user://save.dat\") if "
+			+ "FileAccess.file_exists(\"user://settings.json\") else \"\"", {}),
+		"FileAccess.get_file_as_string(\"user://save.dat\") if "
+			+ "FileAccess.file_exists(\"user://settings.json\") else \"\"") and passed
+	# The words come from the descriptors, so a display text edited tomorrow moves both at once.
+	var by_id: Dictionary = _descriptors()
+	passed = _check("the plain sentence is the shipped verb's own display text",
+		str(by_id["ReadTextFile"].get_display_text()), "text of file {path}") and passed
+	passed = _check("and the guarded one is the guarded verb's",
+		str(by_id["ReadTextFileOr"].get_display_text()),
+		"text of file {path}, or {fallback}") and passed
+	return passed
 
 
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────

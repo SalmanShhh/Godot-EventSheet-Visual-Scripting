@@ -145,10 +145,10 @@ const HINT_PARAGRAPHS: Dictionary = {
 	# peer kind a browser can open. They live here rather than in the descriptors so a pack that ships
 	# a hosting row of its own gets the same words for free.
 	# A path field takes any GDScript exactly as an expression one does, and is spelled apart from it
-	# so this paragraph has something to attach to: which of a game's two places a path is in, what
-	# each of them allows, and where user:// really is on the machine the game is played on. The two
-	# facts a path field otherwise sends somebody to a search engine for.
-	"file_path": "A path in one of the two places a game has. user:// is the player's folder - writable, one per player, and it survives the game being updated, which is why saves, settings and logs belong there. res:// is the game's own files, packed into the build and READ-ONLY once exported: writing there works while you are in the editor and fails on every machine you send the game to. On disk user:// is %APPDATA%\\Godot\\app_userdata\\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS and ~/.local/share/godot/app_userdata/<project> on Linux; the Open The Player's Data Folder action opens it while the game runs.",
+	# so this paragraph has something to attach to. Its wording is NOT here: which of a game's two
+	# places a path is in and where user:// really lives are the sentences the field's own muted lead
+	# is made of, and `hint_paragraph` asks the one reading of the places for them rather than keeping
+	# a second copy that would drift from it and ship untranslated besides.
 	"net_address": "Play as host + client puts both instances on this machine, which is what 127.0.0.1 is for. Across the internet the host has to forward its port on the router, or both sides go through a relay. A field or a variable works here as well as a literal - the player usually types it.",
 	"net_port": "7000 to 65535 are free for games; anything below 1024 needs admin rights on most systems. Over the internet the host forwards this one port on its router, which is the step people miss.",
 	"peer_kind": "How the game talks over the network, and both sides have to pick the same one. ENet is Godot's own default; a browser export can only open WebSocket; WebRTC goes browser to browser through a signalling server you run.",
@@ -221,6 +221,11 @@ static func hint_paragraph(hint: String, owner: String = "") -> String:
 	var text: String = EventSheets.param_help_for(key)
 	if text.is_empty():
 		text = str(HINT_PARAGRAPHS.get(key, ""))
+	# A path field's paragraph is composed from the one reading of the two places rather than
+	# written down here: the same three sentences the field's muted lead is made of, and the ones
+	# the locale files already carry.
+	if text.is_empty() and key == EventForgeFilePlaces.PATH_HINT:
+		return EventForgeFilePlaces.strip_paragraph()
 	if text.is_empty():
 		return ""
 	text = EventSheetL10n.translate(text)

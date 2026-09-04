@@ -317,3 +317,87 @@ static func path_params_of(ace_id: String, provider_id: String = "Core") -> Pack
 ## The parameters of one verb that carry a path it WRITES to.
 static func write_params_of(ace_id: String) -> PackedStringArray:
 	return PackedStringArray(WRITE_SHAPED.get(ace_id, []))
+
+
+## The read one line IS, taken back apart - the exact inverse of `guarded_read` above, and here
+## rather than anywhere else for the reason that function is here: one file spells the guarded shape,
+## in both directions, so the verb that writes it and the reading that words it can never disagree
+## about what a guard looks like.
+##
+## Answers `{"path": ..., "fallback": ...}` for a guarded read, `{"path": ..., "fallback": ""}` for a
+## plain one, and `{}` for everything else. A blank fallback IS the plain read - the same answer the
+## verb gives when its second parameter is left empty.
+##
+## BOTH PATHS HAVE TO BE THE SAME PATH. A line that reads one file after asking about another is not
+## a guarded read: it is the mistake the Doctor reports, and wording it as a working guard is exactly
+## how a reader would stop seeing it. So the two are compared and an unequal pair is claimed by
+## nothing.
+static func read_parts(expression: String) -> Dictionary:
+	var text: String = expression.strip_edges()
+	if not text.contains(READ_CALL):
+		return {}
+	if text.begins_with("(") and _closing_paren(text, 0) == text.length() - 1:
+		text = text.substr(1, text.length() - 2).strip_edges()
+	if not text.begins_with(READ_CALL):
+		return {}
+	var read_ends: int = _closing_paren(text, READ_CALL.length() - 1)
+	if read_ends < 0:
+		return {}
+	var path: String = text.substr(READ_CALL.length(), read_ends - READ_CALL.length()).strip_edges()
+	if path.is_empty():
+		return {}
+	var rest: String = text.substr(read_ends + 1).strip_edges()
+	if rest.is_empty():
+		return {"path": path, "fallback": ""}
+	var guard_head: String = "if %s" % EXISTS_CALL
+	if not rest.begins_with(guard_head):
+		return {}
+	var exists_ends: int = _closing_paren(rest, guard_head.length() - 1)
+	if exists_ends < 0:
+		return {}
+	var guarded_path: String = rest.substr(guard_head.length(),
+		exists_ends - guard_head.length()).strip_edges()
+	if guarded_path != path:
+		return {}
+	var tail: String = rest.substr(exists_ends + 1).strip_edges()
+	if not tail.begins_with("else "):
+		return {}
+	var fallback: String = tail.substr("else ".length()).strip_edges()
+	return {} if fallback.is_empty() else {"path": path, "fallback": fallback}
+
+
+## The index of the bracket that closes the one at `open_index`, or -1 when nothing does. Quoted text
+## is stepped over whole, because a bracket inside a string is a character and not a bracket.
+static func _closing_paren(text: String, open_index: int) -> int:
+	if open_index < 0 or open_index >= text.length() or text.substr(open_index, 1) != "(":
+		return -1
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = open_index
+	while index < text.length():
+		var character: String = text.substr(index, 1)
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+			if depth == 0:
+				return index
+		index += 1
+	return -1
+
+
+## The whole paragraph a path field's help strip shows: both places and what each of them allows,
+## then where user:// really is on the machine the game is played on. Composed from the three
+## sentences above rather than written out a second time, so the strip and the field's own muted lead
+## can never say different things about the same place - and so the strip is translated, those three
+## being the wordings the locale files carry.
+static func strip_paragraph() -> String:
+	return " ".join([lead_for(PLACE_USER), lead_for(PLACE_RES), where_user_lives()])

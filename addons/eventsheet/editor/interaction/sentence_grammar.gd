@@ -1161,6 +1161,13 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var tool_file_value: String = tool_file_expression(trimmed, context)
 	if not tool_file_value.is_empty():
 		return tool_file_value
+	# A whole file read as text is the Files verb it IS, guard and all: "text of file <path>" on its
+	# own, and the guarded form's own sentence when the line carries the fallback. Whole-expression
+	# only, and ahead of the general call rewriting, which would spell the read back out as the call
+	# a reader can already see.
+	var file_read: String = file_read_words(trimmed, context)
+	if not file_read.is_empty():
+		return file_read
 	# A whole controls read (a stick, a gamepad's name, a sensor) is one settled
 	# phrase, ahead of the general call rewriting which would only take its arguments apart.
 	var controls_value: String = controls_expression(trimmed)
@@ -8448,6 +8455,28 @@ static func tool_file_condition(text: String, context: Dictionary) -> Dictionary
 ## read whole - or "" when the caller keeps whatever words it already had.
 static func tool_file_expression(text: String, context: Dictionary) -> String:
 	return EventSheetToolFiles.command_expression(text, context)
+
+
+## A whole-file read, in the words the Files vocabulary already says it in. The sentence is read
+## off the SHIPPED descriptor rather than written again here, so a read a reader picked and a read
+## somebody typed by hand show the same sentence and can never drift apart; the shape is taken
+## apart by the one file that also writes it, so a guard is a guard by exactly one definition.
+##
+## "" for anything that is not one of the two shapes - including a line that reads one file after
+## asking about another, which is the mistake the Doctor reports and must keep looking like one.
+static func file_read_words(text: String, context: Dictionary) -> String:
+	var parts: Dictionary = EventForgeFilePlaces.read_parts(text)
+	if parts.is_empty():
+		return ""
+	var fallback: String = str(parts.get("fallback", ""))
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core",
+		"ReadTextFile" if fallback.is_empty() else "ReadTextFileOr")
+	if descriptor == null:
+		return ""
+	var filled: Dictionary = {"path": expression_text(str(parts.get("path", "")), context)}
+	if not fallback.is_empty():
+		filled["fallback"] = expression_text(fallback, context)
+	return translate(descriptor.get_display_text()).format(filled)
 # ── web requests and lights ─────────────────────────────────────────────────────────────────────
 #
 # Two families of line a finished game has and a first script does not: a request to a server, and
