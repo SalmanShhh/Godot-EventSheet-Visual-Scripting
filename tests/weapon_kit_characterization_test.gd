@@ -30,6 +30,10 @@ const EXPECTED := [
 	"method:ammo_percent|2|Ammo Percent|Weapon|{target}.ammo_percent()",
 	"method:can_fire|0|Can Fire|Weapon|{target}.can_fire()",
 	"method:cancel_reload|1|Cancel Reload|Weapon|{target}.cancel_reload()",
+	# The ownership row the pack grew with the wound chain: it claims the shot it just fired for
+	# whoever the weapon belongs to, so a kill by that shot is credited to the person rather than
+	# to the weapon. A deliberate addition, noted in the changelog with the rest of that pass.
+	"method:claim_shot|1|Claim Shot|Weapon|{target}.claim_shot({shot})",
 	"method:cooldown_progress|2|Cooldown Progress|Weapon|{target}.cooldown_progress()",
 	"method:fire|1|Fire|Weapon|{target}.fire()",
 	"method:has_ammo|0|Has Ammo|Weapon|{target}.has_ammo()",
