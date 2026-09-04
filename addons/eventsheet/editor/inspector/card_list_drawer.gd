@@ -50,6 +50,7 @@ var _unfolded: Dictionary = {}
 var _list: VBoxContainer = null
 var _head_label: Label = null
 var _add_button: Button = null
+var _quick_add_button: Button = null
 var _add_popup: PopupPanel = null
 var _add_filter: LineEdit = null
 var _add_tree: Tree = null
@@ -100,6 +101,15 @@ func card_labels() -> PackedStringArray:
 	return labels
 
 
+## Add a card of the schema's FIRST kind - the one-click add, for the common case where a list only
+## ever holds one thing and searching for it is a gesture too many.
+func add_first_kind() -> void:
+	var kinds: Array = EventSheetCardSchemas.kinds_of(_schema)
+	if kinds.is_empty():
+		return
+	add_card(str((kinds[0] as Dictionary).get("kind", "")))
+
+
 ## Add a card of one kind at the end, folded.
 func add_card(kind: String) -> void:
 	var entry: Dictionary = EventSheetCardSchemas.kind_entry(_schema, kind)
@@ -109,20 +119,49 @@ func add_card(kind: String) -> void:
 	_commit()
 
 
-## Move the card at `from` to `to` - what a finished drag, and "Move to top", write.
+## Move the card at `from` to `to` - what a finished drag, and "Move to top", write. The open cards
+## travel with their cards: the list is reordered and the fold map is read against the new order.
 func move_card(from: int, to: int) -> void:
+	var order: Array = _index_order()
+	if from >= 0 and from < order.size() and to >= 0 and to < order.size() and from != to:
+		var travelling: Variant = order[from]
+		order.remove_at(from)
+		order.insert(to, travelling)
 	_cards = EventSheetCardSchemas.move_card(_cards, from, to)
+	_refold(order)
 	_commit()
 
 
 func duplicate_card(index: int) -> void:
+	var order: Array = _index_order()
+	if index >= 0 and index < order.size():
+		# The copy is a card that did not exist a moment ago, so it starts shut.
+		order.insert(index + 1, -1)
 	_cards = EventSheetCardSchemas.duplicate_card(_cards, index)
+	_refold(order)
 	_commit()
 
 
 func remove_card(index: int) -> void:
+	var order: Array = _index_order()
+	if index >= 0 and index < order.size():
+		order.remove_at(index)
 	_cards = EventSheetCardSchemas.remove_card(_cards, index)
+	_refold(order)
 	_commit()
+
+
+## The cards' current positions, as the starting point every reorder rewrites.
+func _index_order() -> Array:
+	var order: Array = []
+	for index: int in range(_cards.size()):
+		order.append(index)
+	return order
+
+
+## The fold map read against a new order (new index -> old index, -1 for a card that is new).
+func _refold(order: Array) -> void:
+	_unfolded = EventSheetCardSchemas.remapped_folds(_unfolded, order)
 
 
 ## Switch one card on or off. Absent means on, so switching a card back on leaves the file exactly
@@ -152,7 +191,28 @@ func set_card_stripe(index: int, color: Color) -> void:
 	if stripe_key.is_empty() or stripe_key == str(_spec.get("kind_key", "kind")) or index < 0 or index >= _cards.size():
 		return
 	_cards[index][stripe_key] = "#" + color.to_html(false)
-	_commit()
+	# NOT _commit(): the picker fires this continuously while its wheel is being dragged, and a
+	# rebuild would free the popup out from under the cursor. The stripe is restyled where it stands
+	# instead, exactly as renaming a card does.
+	_restyle_card(index)
+	value_changed.emit(get_value())
+
+
+## Repaint one card's stripe in place, without rebuilding the row it belongs to.
+func _restyle_card(index: int) -> void:
+	if _list == null or index < 0 or index >= _list.get_child_count() or index >= _cards.size():
+		return
+	var panel: Control = _list.get_child(index) as Control
+	if panel == null:
+		return
+	var style: StyleBoxFlat = panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if style == null:
+		return
+	var card: Dictionary = _cards[index]
+	var entry: Dictionary = _entry_for(card)
+	var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, card)
+	var stripe: Color = EventSheetCardSchemas.stripe_color(_schema, EventSheetCardSchemas.card_category(_spec, entry, card))
+	style.border_color = stripe if enabled else Color(stripe.r, stripe.g, stripe.b, 0.35)
 
 
 ## Whether a card may carry a colour of its own - the swatch beside its name is drawn only then.
@@ -195,11 +255,28 @@ func _build_chrome() -> void:
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 3)
 	add_child(_list)
+	var add_row: HBoxContainer = HBoxContainer.new()
+	add_row.add_theme_constant_override("separation", 4)
+	_quick_add_button = Button.new()
+	_quick_add_button.text = "+"
+	_quick_add_button.pressed.connect(add_first_kind)
+	add_row.add_child(_quick_add_button)
 	_add_button = Button.new()
 	_add_button.text = "Add"
+	_add_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_add_button.tooltip_text = "Add a card. Type to search; the list is grouped the way its pack groups it."
 	_add_button.pressed.connect(_on_add_pressed)
-	add_child(_add_button)
+	add_row.add_child(_add_button)
+	add_child(add_row)
+
+
+## The title of the schema's first kind - what the one-click add says it will add.
+func _first_kind_label() -> String:
+	var kinds: Array = EventSheetCardSchemas.kinds_of(_schema)
+	if kinds.is_empty():
+		return "card"
+	var entry: Dictionary = kinds[0] as Dictionary
+	return str(entry.get("label", entry.get("kind", "card")))
 
 
 func _small_button(text: String, tooltip: String, action: Callable) -> Button:
@@ -295,7 +372,11 @@ func _rebuild() -> void:
 		stale.queue_free()
 	_head_label.text = "%d card%s" % [_cards.size(), "" if _cards.size() == 1 else "s"]
 	_head_label.modulate = Color(1.0, 1.0, 1.0, 0.7)
-	_add_button.disabled = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
+	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
+	_add_button.disabled = nothing_to_add
+	if _quick_add_button != null:
+		_quick_add_button.disabled = nothing_to_add
+		_quick_add_button.tooltip_text = "" if nothing_to_add else "Add one %s." % _first_kind_label()
 	if _cards.is_empty():
 		var empty: Label = Label.new()
 		empty.text = "Nothing here yet. Add one."
@@ -315,8 +396,8 @@ func _build_card(index: int) -> Control:
 	var panel: _CardRow = _CardRow.new(self, index)
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 0.04)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(5)
+	style.set_corner_radius_all(EventSheetPalette.scaled(4))
+	style.set_content_margin_all(EventSheetPalette.scaled(5))
 	style.border_width_left = EventSheetPalette.scaled(3)
 	style.border_color = stripe if enabled else Color(stripe.r, stripe.g, stripe.b, 0.35)
 	panel.add_theme_stylebox_override("panel", style)
@@ -332,15 +413,15 @@ func _build_card(index: int) -> Control:
 func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: bool) -> Control:
 	var header: HBoxContainer = HBoxContainer.new()
 	header.add_theme_constant_override("separation", 4)
-	var handle: Label = Label.new()
-	handle.text = "⋮⋮"
-	handle.tooltip_text = "Drag to reorder."
-	handle.modulate = Color(1.0, 1.0, 1.0, 0.45)
-	handle.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(handle)
+	header.add_child(_glyph_control("TripleBar", "⋮⋮", "Drag to reorder."))
+	var open: bool = bool(_unfolded.get(index, false))
 	var fold: Button = Button.new()
 	fold.flat = true
-	fold.text = "▾" if bool(_unfolded.get(index, false)) else "▸"
+	var arrow: Texture2D = _editor_icon("GuiTreeArrowDown" if open else "GuiTreeArrowRight")
+	if arrow != null:
+		fold.icon = arrow
+	else:
+		fold.text = "▾" if open else "▸"
 	fold.tooltip_text = "Open this card."
 	fold.pressed.connect(func() -> void:
 		_unfolded[index] = not bool(_unfolded.get(index, false))
@@ -369,12 +450,44 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	return header
 
 
+## One of the editor's own icons, or null when there is no editor theme to ask (a headless tool run,
+## a preview harness). Asking first is what keeps the row familiar where an editor exists and legible
+## where one does not: every caller carries the plain glyph it falls back to.
+func _editor_icon(icon_name: String) -> Texture2D:
+	if icon_name.is_empty() or not has_theme_icon(icon_name, "EditorIcons"):
+		return null
+	return get_theme_icon(icon_name, "EditorIcons")
+
+
+## A small, non-interactive mark: the editor's icon where there is one, the glyph otherwise.
+func _glyph_control(icon_name: String, glyph: String, tooltip: String) -> Control:
+	var icon: Texture2D = _editor_icon(icon_name)
+	if icon != null:
+		var mark: TextureRect = TextureRect.new()
+		mark.texture = icon
+		mark.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		mark.tooltip_text = tooltip
+		mark.modulate = Color(1.0, 1.0, 1.0, 0.45)
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return mark
+	var label: Label = Label.new()
+	label.text = glyph
+	label.tooltip_text = tooltip
+	label.modulate = Color(1.0, 1.0, 1.0, 0.45)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return label
+
+
 ## The card's menu. "Paste over" replaces this card with the clipboard's first; "Move to top" is the
 ## reorder a long list actually asks for, and the drag handle is the rest.
 func _build_menu(index: int) -> Control:
 	var menu: MenuButton = MenuButton.new()
-	menu.text = "⋯"
 	menu.flat = true
+	var dots: Texture2D = _editor_icon("GuiTabMenuHl")
+	if dots != null:
+		menu.icon = dots
+	else:
+		menu.text = "⋯"
 	menu.tooltip_text = "More for this card."
 	menu.disabled = not editable
 	var popup: PopupMenu = menu.get_popup()
@@ -497,22 +610,34 @@ func _titled_row(title: String, control: Control) -> HBoxContainer:
 
 
 ## One field: its title, its editor, and - when the field is linked to another - the "=" toggle that
-## writes both keys at once while it is lit.
+## ties the two numbers together while it is lit.
+##
+## THE TIE IS A RATIO, never a copy: pressing "=" remembers what the linked key is worth per unit of
+## this one, and every edit afterwards keeps that proportion - the SAME meaning the property-level
+## "=" carries, so one glyph never stands for two things. A ratio only exists between numbers, so a
+## link declared on a field holding text or a colour writes nothing.
 func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 	var row: HBoxContainer = _titled_row(str(field.get("label", field.get("key", ""))), null)
 	var linked: String = str(field.get("link", ""))
 	var link_toggle: CheckButton = null
+	# Held in a one-cell Array so the two lambdas below share the ratio the toggle wrote, rather than
+	# each capturing its own copy of a local float.
+	var ratio: Array = [1.0]
 	if not linked.is_empty():
 		link_toggle = CheckButton.new()
 		link_toggle.text = "="
-		link_toggle.tooltip_text = "While this is on, %s follows this field." % linked
+		link_toggle.tooltip_text = "Keep %s and this field in the ratio they have now." % linked
 		link_toggle.disabled = not editable
+		link_toggle.toggled.connect(func(pressed: bool) -> void:
+			if pressed:
+				ratio[0] = link_ratio_for(index, str(field.get("key", "")), linked))
 	var write: Callable = func(value: Variant) -> void:
 		var written: String = str(field.get("key", ""))
-		_write_field(index, written, value)
-		if link_toggle != null and link_toggle.button_pressed and not linked.is_empty():
-			_write_field(index, linked, value)
-		value_changed.emit(get_value())
+		if link_toggle != null and link_toggle.button_pressed and (value is float or value is int):
+			write_linked_pair(index, written, linked, ratio[0], float(value))
+		else:
+			_write_field(index, written, value)
+			value_changed.emit(get_value())
 		# Changing a card's KIND changes which fields it has, so the card is redrawn - deferred,
 		# because the control that just emitted is still finishing its own signal.
 		if written == str(_spec.get("kind_key", "kind")):
@@ -541,6 +666,34 @@ func _write_field(index: int, key: String, value: Variant) -> void:
 		card[key] = str(value)
 	else:
 		card[key] = value
+
+
+## The ratio the "=" tie remembers when it is switched on: what `linked` is worth per unit of `key`,
+## as the card holds them right now. A leader of zero has no ratio to read, so the pair keeps a
+## ratio of one - the same answer the property-level link gives.
+func link_ratio_for(index: int, key: String, linked: String) -> float:
+	return EventSheetDrawerWidgets.LinkToggle.link_ratio(_field_number(index, key), _field_number(index, linked))
+
+
+## Write one field and move its linked partner to keep `ratio`, as one edit. This is what a lit "="
+## does: the partner is not handed this field's value, it is handed its share of it.
+func write_linked_pair(index: int, key: String, linked: String, ratio: float, value: float) -> void:
+	_write_field(index, key, value)
+	if not linked.is_empty():
+		_write_field(index, linked, EventSheetDrawerWidgets.LinkToggle.link_follow(ratio, value))
+	value_changed.emit(get_value())
+
+
+## One card key read as a number - what the "=" tie measures its ratio from. A key the card does not
+## hold, or holds as text, reads as zero, which is the same "no ratio to read" the property-level
+## link answers with.
+func _field_number(index: int, key: String) -> float:
+	if index < 0 or index >= _cards.size():
+		return 0.0
+	var stored: Variant = (_cards[index] as Dictionary).get(key)
+	if stored is float or stored is int:
+		return float(stored)
+	return 0.0
 
 
 ## The editor for one field, chosen by the field's `drawer` word. The words are the SAME ones the
@@ -585,9 +738,15 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable) -
 			toggles.value_changed.connect(func(chosen: String) -> void: write.call(chosen))
 			return toggles
 		"unit":
+			# The tail is spelled the way the export marker spells it - "kinds=s|ms,store=s", or just
+			# a family's name ("time"). A spelling that named no units at all leaves an ordinary
+			# number box rather than a dropdown with nothing in it.
 			var unit_spec: Dictionary = attribute_drawers().call("parse_unit_spec", tail)
+			var unit_ids: PackedStringArray = unit_spec.get("units", PackedStringArray())
+			if unit_ids.is_empty():
+				return _number_field(card, key, write, 0.1)
 			var unit_field: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(
-				unit_spec.get("units", PackedStringArray(["px"])), str(unit_spec.get("store", "")))
+				unit_ids, str(unit_spec.get("store", "")))
 			unit_field.set_value(float(card.get(key, 0.0)))
 			unit_field.set_editable(editable)
 			unit_field.value_changed.connect(func(value: float) -> void: write.call(value))

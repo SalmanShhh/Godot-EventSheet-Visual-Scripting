@@ -14,6 +14,9 @@
 #       "label":    "Loop Back",                       the card's title
 #       "help":     "Moves the head back...",          the unfolded card's info line
 #       "fields":   [{"key", "label", "drawer", "default", "show_if", "link"}],
+#                                                      `link` names another NUMBER key: the "=" beside
+#                                                      the field keeps the two in the ratio they were
+#                                                      in when it was pressed, as the property link does
 #       "live":     [{"key", "label"}],                greyed read-only values while the game runs
 #       "defaults": {"x": 0.0, ...},                   seeded into a NEWLY ADDED card, in this order
 #       "badge":    Callable(card) -> String,          the right-hand badge text
@@ -269,6 +272,19 @@ static func duplicate_card(cards: Array, index: int) -> Array:
 		return copied
 	copied.insert(index + 1, (copied[index] as Dictionary).duplicate(true))
 	return copied
+
+
+## Which cards are open after the list itself moved. Folding is a VIEW, keyed by position, so a card
+## dragged, duplicated or removed has to take its open state with it - otherwise the card that stays
+## open after a drag is whichever one now sits at the old index. `order` reads new index -> old index,
+## with -1 for a card that did not exist before, so one function answers for every operation.
+static func remapped_folds(folds: Dictionary, order: Array) -> Dictionary:
+	var remapped: Dictionary = {}
+	for new_index: int in range(order.size()):
+		var old_index: int = int(order[new_index])
+		if old_index >= 0 and bool(folds.get(old_index, false)):
+			remapped[new_index] = true
+	return remapped
 
 
 ## The list without the card at `index`.

@@ -163,4 +163,4 @@ class ShapeStepsEditor:
 	## A step of the DEFAULT shape - a visible filled circle, so the preview shows something the moment
 	## a step exists. The Add dropdown names its own shape; this is the door for everything else.
 	func add_default_step() -> void:
-		add_card(KINDS[0])
+		add_first_kind()

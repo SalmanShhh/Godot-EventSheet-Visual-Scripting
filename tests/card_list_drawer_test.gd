@@ -22,6 +22,8 @@ static func run() -> bool:
 	ok = _schema_pins() and ok
 	ok = _card_row_pins() and ok
 	ok = _array_pins() and ok
+	ok = _link_pins() and ok
+	ok = _fold_pins() and ok
 	ok = _prefab_pins() and ok
 	return ok
 
@@ -206,6 +208,60 @@ static func _array_pins() -> bool:
 		EventSheetCardSchemas.field_visible({"key": "a", "show_if": "dashed"}, {"dashed": false}), false) and ok
 	ok = _eq("a show-if field shows while its key is on",
 		EventSheetCardSchemas.field_visible({"key": "a", "show_if": "dashed"}, {"dashed": true}), true) and ok
+	return ok
+
+
+## The "=" inside a card is the SAME tie the property-level "=" is: a ratio remembered when it is
+## pressed, never a copy of the leader's value into its partner.
+static func _link_pins() -> bool:
+	var ok: bool = true
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": {"kinds": [{"kind": "dash",
+		"fields": [{"key": "count", "link": "spacing"}, {"key": "spacing"}, {"key": "note", "drawer": "text"}]}]}})
+	drawer.set_value([{"kind": "dash", "count": 8.0, "spacing": 2.0, "note": "hi"}])
+	ok = _eq("the ratio is what the partner is worth per unit of this field",
+		drawer.link_ratio_for(0, "count", "spacing"), 0.25) and ok
+	drawer.write_linked_pair(0, "count", "spacing", 0.25, 16.0)
+	ok = _eq("a linked edit moves the partner by that ratio, not by copying the value",
+		drawer.get_value(), [{"kind": "dash", "count": 16.0, "spacing": 4.0, "note": "hi"}]) and ok
+	ok = _eq("a key holding text has no ratio to read, so the pair keeps a ratio of one",
+		drawer.link_ratio_for(0, "note", "count"), 1.0) and ok
+	drawer.free()
+
+	# The stored spelling still decides the written type: a pair of whole numbers stays whole.
+	var whole: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": {"kinds": [{"kind": "dash",
+		"fields": [{"key": "count", "link": "spacing"}, {"key": "spacing"}]}]}})
+	whole.set_value([{"kind": "dash", "count": 8, "spacing": 2}])
+	whole.write_linked_pair(0, "count", "spacing", 0.25, 16.0)
+	ok = _eq("a tie between two whole numbers writes two whole numbers",
+		whole.get_value(), [{"kind": "dash", "count": 16, "spacing": 4}]) and ok
+	whole.free()
+	return ok
+
+
+## Folding is a view keyed by position, so every reorder has to carry it - and one click still adds
+## the thing a list of one kind is made of.
+static func _fold_pins() -> bool:
+	var ok: bool = SUPPORT.pins("card_list_drawer_test", [
+		["a card dragged to the top takes its open state with it",
+			EventSheetCardSchemas.remapped_folds({2: true}, [2, 0, 1]), {0: true}],
+		["a duplicated card starts shut and the original stays open",
+			EventSheetCardSchemas.remapped_folds({0: true}, [0, -1, 1]), {0: true}],
+		["a removed card takes only its own state",
+			EventSheetCardSchemas.remapped_folds({2: true}, [0, 2]), {1: true}],
+		["a shut list stays shut", EventSheetCardSchemas.remapped_folds({}, [0, 1]), {}]
+	])
+
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": {"kinds": [
+		{"kind": "circle", "label": "Circle", "defaults": {"r": 4.0}}, {"kind": "square", "label": "Square"}]}})
+	drawer.add_first_kind()
+	ok = _eq("one click adds one card of the list's first kind",
+		drawer.get_value(), [{"kind": "circle", "r": 4.0}]) and ok
+	drawer.free()
+
+	var nothing: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"schema_dict": {"kinds": []}})
+	nothing.add_first_kind()
+	ok = _eq("a list with no kinds to add adds nothing", nothing.get_value(), []) and ok
+	nothing.free()
 	return ok
 
 
