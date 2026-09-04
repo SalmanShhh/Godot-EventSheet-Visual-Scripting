@@ -47,6 +47,7 @@ const CHECK_WHAT_GETS_SAVED := "ship-what-gets-saved"
 const CHECK_PIXEL_SCALE := "ship-pixel-scale"
 const CHECK_RENDERER := "ship-renderer-only"
 const CHECK_SKY_BACKDROP := "ship-sky-backdrop"
+const CHECK_LOADING_SCREEN := "ship-loading-screen"
 
 ## Where Godot keeps the export presets, and the header a preset is one of.
 const EXPORT_PRESETS_PATH := "res://export_presets.cfg"
@@ -118,6 +119,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 		EventForgeEnvironmentWords.RENDERING_METHOD_SETTING,
 		EventForgeEnvironmentWords.FORWARD_PLUS))))
 	out.append_array(sky_backdrop_findings(sources))
+	out.append_array(loading_screen_findings(sources, plainly_opened_scene_sizes(sources)))
 	return out
 
 
@@ -665,6 +667,89 @@ static func _writes_a_sky_word(source: String) -> bool:
 				EventForgeSkyWords.property_of(word)]):
 			return true
 	return false
+
+
+# ── A big scene opened with nothing over it ──────────────────────────────────
+
+## The two spellings a plain, uncovered scene change compiles to: the engine's own call, which is
+## what Go To Scene and a hand-written swap both write, and the pack verb that wraps it.
+const PLAIN_SWAP_CALLS: PackedStringArray = [
+	"change_scene_to_file(", "go_to_scene(",
+]
+
+## How big a scene has to be on disk before the swap is worth a word. Measured the same way the
+## performance section measures a script - the file's own length - so a reader can check the number
+## for themselves in the file manager. A megabyte of scene is a beat of held frame on a slow disk,
+## and the held frame is the whole complaint: the game has not hung, it just looks as though it has.
+const BIG_SCENE_BYTES: int = 1048576
+
+
+## A big scene reached by a plain swap. Pure over the sources and a table of {scene path: bytes}, so
+## a test hands it two made-up scripts and a size of its own and reads back the exact sentence. An
+## info note with the door in the words: this is a choice, not a mistake, and a splash screen that
+## really should hard-cut is allowed to stay exactly as it is.
+static func loading_screen_findings(sources: Dictionary, scene_bytes: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
+			var size: int = int(scene_bytes.get(scene_path, 0))
+			if size < BIG_SCENE_BYTES:
+				continue
+			findings.append(_finding("info", CHECK_LOADING_SCREEN, script_path,
+				EventSheetL10n.translate("%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.") % [
+					script_path.get_file(), scene_path.get_file(), _megabytes(size)],
+				scene_path))
+	return findings
+
+
+## Every scene a source opens with a plain swap, in the order it opens them, each named once. Only a
+## literal path counts: a swap through a variable is a scene this cannot size, and a guess about one
+## is worse than saying nothing.
+static func plainly_opened_scenes(source: String) -> PackedStringArray:
+	var scenes: PackedStringArray = PackedStringArray()
+	for raw_line: String in source.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("#"):
+			continue
+		for call_text: String in PLAIN_SWAP_CALLS:
+			var at: int = line.find(call_text)
+			if at < 0:
+				continue
+			var named: String = _first_quoted(line.substr(at + call_text.length()))
+			if named.begins_with("res://") and named.ends_with(".tscn") and not scenes.has(named):
+				scenes.append(named)
+	return scenes
+
+
+## The size on disk of every scene the corpus opens plainly, gathered once. Separate from the check
+## above so the check itself never touches the filesystem - a scene nobody can read is a zero, which
+## is the same answer a small one gives.
+static func plainly_opened_scene_sizes(sources: Dictionary) -> Dictionary:
+	var sizes: Dictionary = {}
+	for script_path: String in _sorted_keys(sources):
+		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
+			if not sizes.has(scene_path):
+				sizes[scene_path] = _bytes_of(scene_path)
+	return sizes
+
+
+## The text between the first pair of double quotes, or "" when the fragment has no pair.
+static func _first_quoted(fragment: String) -> String:
+	var opened: int = fragment.find("\"")
+	if opened < 0:
+		return ""
+	var closed: int = fragment.find("\"", opened + 1)
+	return "" if closed < 0 else fragment.substr(opened + 1, closed - opened - 1)
+
+
+static func _bytes_of(path: String) -> int:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	return 0 if file == null else int(file.get_length())
+
+
+## A byte count as the reader's own file manager would say it, to one decimal.
+static func _megabytes(bytes: int) -> String:
+	return "%.1f MB" % (float(bytes) / 1048576.0)
 
 
 # ── Shared ───────────────────────────────────────────────────────────────────────────────────
