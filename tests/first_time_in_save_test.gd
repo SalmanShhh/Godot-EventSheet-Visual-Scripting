@@ -54,7 +54,34 @@ static func run() -> bool:
 	passed = _the_slot_is_the_memory() and passed
 	passed = _without_the_save_pack_it_is_the_remembered_file() and passed
 	passed = _marking_and_forgetting_write_the_same_memory() and passed
+	passed = _the_doctor_says_which_store_it_landed_in() and passed
 	return passed
+
+
+# ── The note ──────────────────────────────────────────────────────────────────────────────────
+
+
+## The fallback is honest but it is not what the row's name says, so the Doctor says which of the
+## two a project is getting. A NOTE, never a warning - a single-save game has no slots to tell
+## apart and may have chosen this deliberately - and silence in a project that registers the pack.
+static func _the_doctor_says_which_store_it_landed_in() -> bool:
+	var found: Array[Dictionary] = EventSheetSaveMemoryDoctor.report(
+		PackedStringArray(["res://game/hud.gd", "res://game/boss.gd"]))
+	var first: Dictionary = found[0] if not found.is_empty() else {}
+	return SUPPORT.pins(TEST, [
+		["one note per script that asks the save", found.size(), 2],
+		["and they are sorted, so two runs report in one order",
+			str(first.get("path", "")), "res://game/boss.gd"],
+		["it is a note, not a warning", str(first.get("severity", "")), "info"],
+		["filed under its own check id", str(first.get("check", "")),
+			EventSheetSaveMemoryDoctor.CHECK_NO_SAVE_PACK],
+		["and it names the file, the store it really landed in, and both ways out",
+			str(first.get("message", "")).contains("user://remembered.cfg")
+				and str(first.get("message", "")).contains("Only Once Ever")
+				and str(first.get("message", "")).contains("boss.gd"), true],
+		["a project with nothing to say gets no note",
+			EventSheetSaveMemoryDoctor.report(PackedStringArray()).size(), 0],
+	])
 
 
 # ── What the rows emit ────────────────────────────────────────────────────────────────────────
