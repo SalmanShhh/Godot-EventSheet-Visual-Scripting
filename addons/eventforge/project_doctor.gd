@@ -582,8 +582,20 @@ static func save_key_findings(usage_by_path: Dictionary) -> Array[Dictionary]:
 ## game key is not spelled this way, so skipping them costs no coverage. Reported by
 ## save_key_usage all the same - a tool asking what a script touches wants the truth; it is the
 ## BLAME that is wrong here, not the fact.
+##
+## The "seen:" namespace is reserved for the same reason and a second one. First Time In This Save,
+## Has Seen, Mark Seen and Forget Seen keep their memory under it, and they WRITE it through
+## `call(&"save_value", ...)` on a store they look up at run time - a shape no reader of source text
+## can recognise as a save. Left out, every project using those rows would be told nothing ever
+## saves a key its own rows save on the line above.
+const RESERVED_SAVE_KEY_PREFIXES: PackedStringArray = ["__", "seen:"]
+
+
 static func _is_reserved_save_key(key: String) -> bool:
-	return key.begins_with("__")
+	for prefix: String in RESERVED_SAVE_KEY_PREFIXES:
+		if key.begins_with(prefix):
+			return true
+	return false
 
 
 ## First writer wins, but a pack's placeholder is upgraded the moment a project script uses the

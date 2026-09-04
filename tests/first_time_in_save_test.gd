@@ -81,6 +81,14 @@ static func _the_doctor_says_which_store_it_landed_in() -> bool:
 				and str(first.get("message", "")).contains("boss.gd"), true],
 		["a project with nothing to say gets no note",
 			EventSheetSaveMemoryDoctor.report(PackedStringArray()).size(), 0],
+		# The OTHER Doctor check these rows meet: the save-key sweep, which reads source text and
+		# cannot see a write made through call(&"save_value", ...) on a store looked up at run time.
+		# Unreserved, it would tell every project using these rows that nothing saves a key its own
+		# rows save on the line above.
+		["the save-key sweep does not blame a memory these rows save themselves",
+			EventSheetProjectDoctor._is_reserved_save_key("seen:boss"), true],
+		["and an ordinary key is still its business",
+			EventSheetProjectDoctor._is_reserved_save_key("coins"), false],
 	])
 
 
