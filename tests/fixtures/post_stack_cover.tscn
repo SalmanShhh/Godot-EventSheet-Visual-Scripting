@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[node name="Level" type="Node2D"]
+
+[node name="ScreenFx" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="Screen" type="ColorRect" parent="ScreenFx"]
+
+[node name="Fade" type="CanvasLayer" parent="."]
+layer = 90
+
+[node name="Cover" type="ColorRect" parent="Fade"]
+
+[node name="Hud" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Bar" type="ProgressBar" parent="Hud"]

@@ -717,9 +717,22 @@ static func interface_layer_of(scene_path: String) -> String:
 			if child == null or not str(child.get("path", "")).begins_with(under):
 				continue
 			var kind: String = str(child.get("type", ""))
+			if COVER_CONTROLS.has(kind):
+				continue
 			if ClassDB.class_exists(kind) and ClassDB.is_parent_class(kind, "Control"):
 				return str(node.get("name", ""))
 	return ""
+
+
+## THE TWO CONTROLS THAT ARE NOT AN INTERFACE. A layer counts as the interface because it holds
+## something a player reads or presses; a bare rectangle over the whole screen is the opposite thing -
+## it is a cover. The effects layer this very pack builds is a CanvasLayer holding one ColorRect
+## called Screen, and so is nearly every hand-rolled fade, so counting those as an interface had the
+## sheet advised to draw its post effects below its own post effects.
+##
+## Anything else - a Label, a Button, a bar, a container - is a reader's business and makes the layer
+## an interface, which is what the note is about.
+const COVER_CONTROLS: PackedStringArray = ["ColorRect", "TextureRect"]
 
 
 ## True when the line makes one of these calls. Kept beside the tables it is asked with, so a table

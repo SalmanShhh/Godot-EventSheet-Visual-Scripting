@@ -277,6 +277,13 @@ static func _a_dropped_row_is_a_whole_sentence() -> bool:
 			"impact"],
 		["and the file it points at is picked, not typed",
 			_field_hint(juice, "Define Moment", "moment"), "resource_path"],
+		# A moment must not pay a recursive walk of the whole tree per beat: a game with no Screen FX
+		# layer would never find one, and clearing the search per moment asked again on every hit.
+		["the search for the screen layer is cleared by a scene change, not by every moment played",
+			FileAccess.get_file_as_string(JUICE_SCRIPT).contains("_moment_screen_searched = false"),
+			false],
+		["so it asks which scene it looked in", FileAccess.get_file_as_string(JUICE_SCRIPT).contains(
+			"if _moment_screen_searched and _moment_screen_scene == here:"), true],
 		["a dropped Go To Scene With has a shape",
 			_starting_value(flow, "Go To Scene With", "transition"), "fade"],
 		["a time", _starting_value(flow, "Go To Scene With", "seconds"), "0.6"],

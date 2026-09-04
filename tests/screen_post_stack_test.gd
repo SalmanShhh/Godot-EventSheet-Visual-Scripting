@@ -360,6 +360,24 @@ static func _the_quiet_finding() -> bool:
 	rows.append(["and says nothing at all about a scene with no interface layer in it",
 		EventSheetEffectFindings.interface_layer_of("res://tests/fixtures/blend_scene_glow.tscn"),
 		""])
+	# A COVER IS NOT AN INTERFACE. The effects layer this pack builds is a CanvasLayer holding one
+	# ColorRect called Screen, and so is nearly every hand-rolled fade - so a heuristic that took the
+	# first CanvasLayer with any Control under it advised the sheet to draw its post effects below its
+	# own post effects. The interface is the layer with something a player reads or presses on it.
+	rows.append(["a layer whose only Control is a full-screen rectangle is a cover, not an interface",
+		EventSheetEffectFindings.interface_layer_of("res://tests/fixtures/post_stack_cover.tscn"),
+		"Hud"])
+	# And the sweep that decides which scripts are opened as sheets at all. Every word here is a
+	# spelling a ROW writes - a member reached through, a call made, a write emitted - never a bare
+	# class name, because a script that merely names the class in a comment or a type would match and
+	# each match buys a whole sheet build in memory. Pinned as the list itself, since that is the
+	# thing a later hand would widen.
+	rows.append(["the effects sweep opens a script for spellings a row writes, not names it mentions",
+		",".join(EventSheetEffectsDoctor.SHEET_WORDS),
+		"set_shader_parameter,get_shader_parameter,global_shader_parameter,.blend_as(,"
+		+ "material_override = ,is CanvasItemMaterial,as CanvasItemMaterial,post_effect(,"
+		+ "post_effect_is_on(,post_effect_count(,post_effects_below(,post_effects_above(,"
+		+ "use_look(,blend_to_look("])
 	return SUPPORT.pins(P, rows)
 
 

@@ -64,13 +64,18 @@ const MATERIAL_WORD := "material = "
 ## And of a script's text: the member every dial row reaches through, the call every global one
 ## makes, and the call a blend row makes. A script that says none of them cannot be one of these
 ## sheets.
-## And the two the MATERIAL WORDS reach through: the override every mesh word writes its copy onto,
-## and the class the two 2D words make when an item has none.
-## And the one the post-stack rows reach through, which is a word of its own rather than a dial call:
-## a sheet that never says "post effect" cannot be one of these sheets.
+##
+## EVERY WORD HERE IS A SPELLING A ROW WRITES, never a name a script might merely mention. That is
+## not tidiness: a script matching any of them is fully OPENED AS A SHEET in memory, so a word like a
+## bare class name - which every script that names the class in a comment, a type, or a doc line
+## carries - buys a whole sheet build for a file that has no rows of this kind at all. So the mesh
+## word is the WRITE the row emits, the two 2D words are the cast and the test their template emits,
+## and the post-stack words are the calls rather than the phrase "post effect".
 const SHEET_WORDS: PackedStringArray = ["set_shader_parameter", "get_shader_parameter",
-	"global_shader_parameter", EventSheetEffectFindings.BLEND_CALL, "material_override",
-	"CanvasItemMaterial", "post_effect", "use_look(", "blend_to_look("]
+	"global_shader_parameter", EventSheetEffectFindings.BLEND_CALL, "material_override = ",
+	"is CanvasItemMaterial", "as CanvasItemMaterial", "post_effect(", "post_effect_is_on(",
+	"post_effect_count(", "post_effects_below(", "post_effects_above(", "use_look(",
+	"blend_to_look("]
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor

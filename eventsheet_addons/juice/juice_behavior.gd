@@ -278,6 +278,12 @@ static var _moments: Dictionary = {}
 ## The Screen FX layer this game has, once one has been found, and whether this play has looked yet.
 var _moment_screen: CanvasLayer = null
 var _moment_screen_searched: bool = false
+
+## And WHICH SCENE that search was made in, because that is what makes the answer stale rather
+## than the number of moments played since. A game with no Screen FX layer searches once per scene
+## and then knows; clearing the flag per moment made every hit, every kill and every danger beat
+## pay a whole recursive walk of the tree to be told the same thing again.
+var _moment_screen_scene: Node = null
 ## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.
 ## A name that answers to neither plays nothing and says so.
 ## @ace_hidden
@@ -297,13 +303,21 @@ func _moment_named(called: String) -> Resource:
 ## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as
 ## much and looks wrong wherever the two overlap. Found once per moment and kept; a game with no
 ## Screen FX layer falls back to this pack's own overlay for the two effects it can draw.
+##
+## LOOKED FOR ONCE PER SCENE, not once per moment: the walk is recursive over the whole tree, and a
+## game that simply has no Screen FX layer would otherwise pay for it on every beat it plays. A
+## scene change is the one thing that can make the answer wrong, so that is what asks again.
 ## @ace_hidden
 func _moment_screen_fx() -> CanvasLayer:
 	if _moment_screen != null and is_instance_valid(_moment_screen):
 		return _moment_screen
-	if _moment_screen_searched or not is_inside_tree():
+	if not is_inside_tree():
+		return null
+	var here: Node = get_tree().current_scene
+	if _moment_screen_searched and _moment_screen_scene == here:
 		return null
 	_moment_screen_searched = true
+	_moment_screen_scene = here
 	for found: Node in get_tree().get_root().find_children("*", "CanvasLayer", true, false):
 		if found.has_method("pulse_post_effect"):
 			_moment_screen = found as CanvasLayer
@@ -973,7 +987,6 @@ func set_ticker(ticker_name: String, value: float) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.moment({moment_name}, {strength})")
 func moment(moment_name: String, strength: float) -> void:
-	_moment_screen_searched = false
 	var played: Resource = _moment_named(moment_name)
 	if played == null:
 		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
