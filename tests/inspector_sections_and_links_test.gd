@@ -121,6 +121,41 @@ static func _followed_edit_is_one_step() -> bool:
 		["with no undo manager there is no step to write",
 			EventSheetDrawerWidgets.LinkToggle.commit_link(null, target, "count", 8, 16, "spacing", 2.0, 4.0), false]
 	])
+
+	# THE READER'S ONE GESTURE. The Inspector writes its own step for the number that was dragged;
+	# the tie JOINS that step instead of following it with a second, so the history holds one entry
+	# and both Ctrl+Z and Ctrl+Y move the pair together (a second entry meant redo brought the
+	# leader back on its own, with the follower left behind).
+	var gesture_target: Object = _pair_object()
+	var gesture: UndoRedo = UndoRedo.new()
+	gesture.create_action("Set count", UndoRedo.MERGE_ENDS)
+	gesture.add_do_property(gesture_target, "count", 16)
+	gesture.add_undo_property(gesture_target, "count", 8)
+	gesture.commit_action()
+	EventSheetDrawerWidgets.LinkToggle.commit_link(gesture, gesture_target, "count", 8, 16, "spacing", 2.0, 4.0)
+	var linked: String = "%s|%s" % [str(gesture_target.get("count")), str(gesture_target.get("spacing"))]
+	gesture.undo()
+	var taken_back: String = "%s|%s" % [str(gesture_target.get("count")), str(gesture_target.get("spacing"))]
+	gesture.redo()
+	var brought_back: String = "%s|%s" % [str(gesture_target.get("count")), str(gesture_target.get("spacing"))]
+	ok = SUPPORT.pins(P, [
+		["one gesture is one entry in the history", gesture.get_history_count(), 1],
+		["under the name the editor gave the reader's own edit", gesture.get_current_action_name(), "Set count"],
+		["the gesture leaves the pair where the ratio puts it", linked, "16|4.0"],
+		["one undo takes the WHOLE gesture back", taken_back, "8|2.0"],
+		["and one redo brings the whole gesture back", brought_back, "16|4.0"],
+		["a step named for some other edit is not joined",
+			EventSheetDrawerWidgets.LinkToggle.merge_target_name(gesture, gesture_target, "spacing"), ""],
+		["a manager holding no step at all has nothing to join",
+			EventSheetDrawerWidgets.LinkToggle.merge_target_name(null, gesture_target, "count"), ""],
+		["a follower a hair from where it already is is where it already is",
+			EventSheetDrawerWidgets.LinkToggle.same_value(2.0, 2.0 + 0.000000001), true],
+		["two whole numbers apart are not",
+			EventSheetDrawerWidgets.LinkToggle.same_value(2, 3), false]
+	]) and ok
+	gesture.clear_history()
+	gesture.free()
+
 	# UndoRedo is an Object, not a RefCounted: clearing the history drops what it holds, and freeing
 	# it is what keeps the run's exit-time leak count at zero.
 	undo_redo.clear_history()

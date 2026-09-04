@@ -850,18 +850,56 @@ class LinkToggle:
 		return int(round(value)) if existing is int else value
 
 
+	## Whether the follower is already where the tie would put it. Two floats a hair apart are the
+	## same number for this purpose - writing that hair would be an undo step nobody made - while
+	## anything else (a whole-number pair, most of all) compares exactly.
+	static func same_value(before: Variant, after: Variant) -> bool:
+		if before is float and after is float:
+			return is_equal_approx(before, after)
+		return before == after
+
+
+	## The name of the step this edit should JOIN rather than follow: the one the Inspector has just
+	## committed for the leader's own edit. It is asked of the manager instead of spelled here,
+	## because the editor names that step in its own words (and its own language). A name that does
+	## not end in the leader's own is some other edit entirely, so it is refused and the follower
+	## writes a step of its own - which is what a suite's bare UndoRedo, holding no action at all,
+	## also gets.
+	static func merge_target_name(undo_redo_manager: Object, target: Object, leader: String) -> String:
+		if undo_redo_manager == null or leader.is_empty():
+			return ""
+		var current: String = ""
+		if undo_redo_manager.has_method("get_current_action_name"):
+			current = str(undo_redo_manager.call("get_current_action_name"))
+		elif undo_redo_manager.has_method("get_object_history_id") and undo_redo_manager.has_method("get_history_undo_redo"):
+			# The editor's manager keeps one history per object; the plain UndoRedo inside it is the
+			# one that knows what it last committed.
+			var history: Object = undo_redo_manager.call("get_history_undo_redo",
+				int(undo_redo_manager.call("get_object_history_id", target)))
+			if history != null:
+				current = str(history.call("get_current_action_name"))
+		return current if current.ends_with(leader) else ""
+
+
 	## The one undo step a followed edit writes: the leader lands where the reader put it and the
 	## follower lands on its share, so a single Ctrl+Z puts BOTH numbers back where they were - and
 	## the poll below, seeing the pair as it left it, does not immediately move the follower again.
+	## It is ONE step because it MERGES into the step the Inspector just wrote for the leader: a
+	## gesture the reader made once must not be two entries in the history, with Ctrl+Y bringing the
+	## leader back on its own. Where there is nothing to merge into, the follower names its own step.
 	## The manager is taken duck-typed (the editor's manager in the editor, a plain UndoRedo in the
 	## suite), and a null one answers false so the caller can write the follower directly.
 	static func commit_link(undo_redo_manager: Object, target: Object, leader: String, leader_before: Variant,
 			leader_after: Variant, follower: String, follower_before: Variant, follower_after: Variant) -> bool:
 		if undo_redo_manager == null or target == null or leader.is_empty() or follower.is_empty():
 			return false
-		if follower_before == follower_after:
+		if same_value(follower_before, follower_after):
 			return false
-		undo_redo_manager.call("create_action", "Link %s and %s" % [leader, follower])
+		var joined: String = merge_target_name(undo_redo_manager, target, leader)
+		# MERGE_ALL, never MERGE_ENDS: the ends mode DROPS the undo operations of the action being
+		# merged in, and the follower's undo operation is the whole point of the merge.
+		undo_redo_manager.call("create_action",
+			joined if not joined.is_empty() else "Link %s and %s" % [leader, follower], UndoRedo.MERGE_ALL)
 		undo_redo_manager.call("add_do_property", target, leader, leader_after)
 		undo_redo_manager.call("add_do_property", target, follower, follower_after)
 		undo_redo_manager.call("add_undo_property", target, leader, leader_before)

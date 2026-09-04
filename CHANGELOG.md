@@ -303,6 +303,11 @@
   the tie had put it, and the next poll moved it again. The pair travels through the editor's own
   undo manager together, so one undo puts both numbers back. A tie between two WHOLE numbers now
   moves at all - a typed `int` member refuses a float, so the follower had never moved.
+- **And one gesture is one entry in the history.** The follower's step was written BESIDE the step
+  the editor had just written for the number that was dragged, so a single gesture left two: one
+  Ctrl+Z took only the follower back, and Ctrl+Y brought the leader back on its own. The follower
+  joins the editor's own step now, under the name the editor gave it, and a follower already a hair
+  from where the tie would put it writes no step at all.
 - **A handle on a whole number can be dragged.** A length in whole pixels or an angle in whole
   degrees read fine and dragged nothing, for the same reason: the mark moved under the cursor and
   the property stayed where it was. Both the 2D overlay and the 3D gizmo write in the type the
