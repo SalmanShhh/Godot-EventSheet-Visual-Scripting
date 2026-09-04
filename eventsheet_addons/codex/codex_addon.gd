@@ -24,23 +24,6 @@ signal first_discovered(set_name: String, entry_id: String)
 ## What has been found, as {set name: {entry id: true}}. A Dictionary per set rather than an array
 ## because the only question ever asked of it is whether one entry is in there.
 var _found: Dictionary = {}
-## Every entry id a set's folder HOLDS, sorted - the file names with their extension taken off. A
-## folder that is not there holds nothing, and says so only in debug mode, because Total Entries is
-## the kind of row a menu asks every frame.
-## @ace_hidden
-func _entry_ids(set_name: String) -> PackedStringArray:
-	var folder: String = _set_folder(set_name)
-	var ids: PackedStringArray = PackedStringArray()
-	if not DirAccess.dir_exists_absolute(folder):
-		if debug_mode:
-			push_warning("Codex: there is no folder at %s, so the \"%s\" set counts as empty." % [folder, set_name])
-		return ids
-	for file_name: String in DirAccess.get_files_at(folder):
-		var plain: String = String(file_name).trim_suffix(".remap")
-		if plain.ends_with(".tres") or plain.ends_with(".res"):
-			ids.append(plain.get_basename())
-	ids.sort()
-	return ids
 ## One entry's resource, or null when no file answers to that id. Both resource extensions are
 ## tried, so a binary .res entry works exactly like a text .tres one.
 ## @ace_hidden
@@ -128,6 +111,24 @@ func total_entries(set_name: String) -> int:
 ## @ace_hidden
 func _set_folder(set_name: String) -> String:
 	return codex_folder.path_join(set_name)
+
+## Every entry id a set's folder HOLDS, sorted - the file names with their extension taken off. A
+## folder that is not there holds nothing, and says so only in debug mode, because Total Entries is
+## the kind of row a menu asks every frame.
+## @ace_hidden
+func _entry_ids(set_name: String) -> PackedStringArray:
+	var folder: String = _set_folder(set_name)
+	var ids: PackedStringArray = PackedStringArray()
+	if not DirAccess.dir_exists_absolute(folder):
+		if debug_mode:
+			push_warning("Codex: there is no folder at %s, so the \"%s\" set counts as empty." % [folder, set_name])
+		return ids
+	for file_name: String in DirAccess.get_files_at(folder):
+		var plain: String = String(file_name).trim_suffix(".remap")
+		if plain.ends_with(".tres") or plain.ends_with(".res"):
+			ids.append(plain.get_basename())
+	ids.sort()
+	return ids
 
 ## The save seam every autoload pack here answers to: Save All Addons snapshots this under the
 ## autoload's own name, and Load All Addons hands it straight back. Plain data only, and the ids go
