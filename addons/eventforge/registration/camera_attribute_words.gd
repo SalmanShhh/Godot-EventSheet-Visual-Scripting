@@ -67,7 +67,7 @@ const PRACTICAL_CLASS: String = "CameraAttributesPractical"
 
 ## What kind of row a word makes. A VALUE word is set to a number and can be read back; a SWITCH is
 ## turned on or off and can be asked about, and carries whatever companion properties are the same
-## decision. One builder per kind, in camera_attributes_aces.gd.
+## decision. One builder per kind, in focus_and_exposure_aces.gd.
 const KIND_VALUE: String = "value"
 const KIND_SWITCH: String = "switch"
 
