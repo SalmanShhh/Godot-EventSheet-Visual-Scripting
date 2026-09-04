@@ -10832,7 +10832,10 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   hand-written `demo_*.gd` seam demonstrations are outside the count and the tool's header says so in
   full. It prints `packs=N builders=N`, names each sentence that disagrees, and with `-- --write`
   rewrites those literals in place. Historical CHANGELOG lines are deliberately never touched: they
-  are the count as it stood on a release day.
+  are the count as it stood on a release day. It measures the tree ON DISK, and `-- builders=<path>`
+  points it at another builders folder instead - the way to ask what a COMMIT holds while somebody
+  else's half-finished pack sits beside yours in the same working copy, rather than writing a number
+  no clean checkout can reproduce.
 - **And a test holds the four sentences to it.** `pack_count_records_test` measures with the tool's
   OWN function rather than a second walk of its own, compares every quoted literal, and fails with
   both numbers and the one line that fixes them. The walk itself is pinned by value against a

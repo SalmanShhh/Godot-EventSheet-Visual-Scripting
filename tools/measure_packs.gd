@@ -42,6 +42,13 @@
 # - the literal immediately before "behavior packs" / "behaviour packs". Nothing else moves. The
 # CHANGELOG is deliberately NOT in the list: its entries are the count as it stood on a release day,
 # which is history and must stay wrong-by-now.
+#
+# WHICH TREE IT MEASURES: the one on disk, which is what a working copy holds and what CI checks out.
+# A builders folder that is not this project's can be measured with `-- builders=<path>` (an OS path
+# is accepted, not only `res://`). That is the way to ask what a COMMIT holds while the working copy
+# carries somebody's half-finished pack beside it: `git archive HEAD tools/pack_builders` into a
+# scratch folder and point the tool at it. Without that, an uncommitted builder counts, the records
+# get a number no clean checkout can reproduce, and the gate goes red on a runner instead of here.
 @tool
 extends SceneTree
 
@@ -68,10 +75,17 @@ const FIX_LINE := "\"$GODOT\" --headless --path . --script tools/measure_packs.g
 
 
 func _init() -> void:
-	var write: bool = OS.get_cmdline_user_args().has("--write")
-	var folders: PackedStringArray = pack_folders(BUILDERS_DIR)
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var write: bool = args.has("--write")
+	var builders_dir: String = BUILDERS_DIR
+	for arg: String in args:
+		if arg.begins_with("builders="):
+			builders_dir = arg.trim_prefix("builders=")
+			if not builders_dir.ends_with("/"):
+				builders_dir += "/"
+	var folders: PackedStringArray = pack_folders(builders_dir)
 	var count: int = folders.size()
-	print("packs=%d builders=%d" % [count, publishing_builders(BUILDERS_DIR)])
+	print("packs=%d builders=%d from=%s" % [count, publishing_builders(builders_dir), builders_dir])
 	var stale: int = 0
 	for path: String in RECORD_FILES:
 		var quoted: PackedInt32Array = record_counts(path)
