@@ -22,9 +22,12 @@
 # halfway point, where a cut is least visible. The row says so in its own words rather than pretending
 # the whole world dissolves.
 #
-# THE WORK ITSELF IS A REAL FILE a debugger can step into: `WorldLook` under the runtime folder, plain
-# typed GDScript with no plugin class named anywhere in it, exactly like the placement helper the
-# spawn rows call. A compiled game carries it the way it carries any other script.
+# THE WORK ITSELF IS A REAL FILE a debugger can step into: `WorldLook`, at
+# `eventsheet_addons/world_look.gd`, plain typed GDScript with no plugin class named anywhere in
+# it, exactly like the free-spot and pooled-nodes helpers the spawn and retire rows call. It ships
+# in the project's OWN folder rather than in the plugin's, and that is a contract rather than a
+# preference: the emitted lines name the class, `addons/` is what an uninstall deletes, and a sheet
+# holding one of these rows has to go on parsing after the editor is gone.
 #
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant).
 @tool

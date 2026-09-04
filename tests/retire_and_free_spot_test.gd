@@ -186,6 +186,11 @@ static func _test_on_retired_is_one_connection() -> bool:
 		_declaring_file("EventForgePooledNodes"), "res://eventsheet_addons/pooled_nodes.gd") and passed
 	passed = SUPPORT.check(TEST_NAME, "and so is the free-spot runtime the spawn rows name",
 		_declaring_file("EventForgeFreeSpot"), "res://eventsheet_addons/free_spot.gd") and passed
+	# The third class the shipped vocabulary calls by name out of its own templates: Use World
+	# Look, Blend To World Look and Current World Look all write `WorldLook.<call>(...)`, so it
+	# has to be outside addons/ for the same reason the two above are.
+	passed = SUPPORT.check(TEST_NAME, "and so is the world-look runtime the look rows name",
+		_declaring_file("WorldLook"), "res://eventsheet_addons/world_look.gd") and passed
 	# And the line that makes the one signal mean one thing. `tree_exiting` is raised on every exit
 	# from the tree, so without this the handler ran on every reparent and on every spawn out of a
 	# pool - the guard is the trigger, and it is emitted where a reader can see it.
