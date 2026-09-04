@@ -183,7 +183,7 @@ static func run() -> bool:
 	var off_the_unit: int = 0
 	var angles_seen: Dictionary = {}
 	for step: int in range(120):
-		behavior._chroma_shake_time = float(step) * 0.05
+		behavior._chroma_shake_phase = float(step) * 0.05
 		var walked: Vector2 = behavior._chroma_shake_direction()
 		if not is_equal_approx(walked.length(), 1.0):
 			off_the_unit += 1
@@ -192,6 +192,15 @@ static func run() -> bool:
 	all_passed = _check("and the split still wanders rather than sitting still", angles_seen.size() > 8, true) and all_passed
 	all_passed = _check("so the shift handed to the shader is as wide as the expression says",
 		snappedf((behavior._chroma_shake_direction() as Vector2).length() * behavior.chromatic_shake_magnitude(), 0.0001), 12.0) and all_passed
+	# And turning no flashing on part way through a shake SLOWS the wander from here on rather than
+	# jumping it: the clock already carries the rate, so the sample the noise is read at does not
+	# move under the setting. The two readings are taken in the same frame, either side of the meta.
+	var wander_before: float = behavior._chroma_shake_wander()
+	Engine.set_meta("no_flashing", true)
+	var wander_after: float = behavior._chroma_shake_wander()
+	Engine.remove_meta("no_flashing")
+	all_passed = _check("the anti-strobe setting slows the wander without teleporting it",
+		wander_after, wander_before) and all_passed
 	behavior.stop_chromatic_shake()
 	behavior._noise = null
 	# No flashing halves what the player sees AND how fast the split wanders.
