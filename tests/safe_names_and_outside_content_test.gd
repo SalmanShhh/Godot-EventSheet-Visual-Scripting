@@ -266,6 +266,18 @@ static func _doctor_says_the_risk_and_the_doors() -> bool:
 		message.contains("follows names inside ONE file"), true) and ok
 	ok = _check("and that saying nothing is not clearing it",
 		message.contains("is not a file it has cleared"), true) and ok
+	# THE PACK MOUNT SAYS THE EXTRA TRUE THING, and only about a file that holds one. A load is not a
+	# mount, so a finding about a load must not carry the mount's sentence.
+	ok = _check("a load says nothing about mounting",
+		message.contains("MOUNTS a pack"), false) and ok
+	var mounting: Array[Dictionary] = EventSheetFilesDoctor.loads_outside_findings(
+		{"res://game/packs.gd": str(_bug_fixtures()["a chosen pack, mounted into res://"])})
+	ok = _check("one finding, on the file that mounts", mounting.size(), 1) and ok
+	var mount_message: String = "" if mounting.is_empty() else str(mounting[0].get("message", ""))
+	ok = _check("it says the pack is put under res:// from then on",
+		mount_message.contains("puts everything inside it under res:// from then on"), true) and ok
+	ok = _check("and that it replaces the game's own files unless told otherwise",
+		mount_message.contains("REPLACES the game's own files"), true) and ok
 	return ok
 
 
@@ -298,6 +310,23 @@ static func _bug_fixtures() -> Dictionary:
 		"a file under a watched folder held in a name": "extends Node\n\n\nfunc _ready() -> void:\n"
 			+ "\tvar folder := \"user://mods\"\n\t$FolderWatcher.watch_folder(folder, 2.0)\n\n\n"
 			+ "func apply() -> void:\n\tvar mod := load(\"user://mods/first.tscn\")\n\tprint(mod)\n",
+		# TRAVELLING TO A LAYOUT BUILDS IT. `change_scene_to_file` attaches whatever script the scene
+		# names exactly as `load` does, and a dropped path handed to it earned nothing at all while
+		# the same path handed to `load` earned a finding.
+		"a dropped file, travelled to": "extends Node\n\n\nfunc _ready() -> void:\n"
+			+ "\tget_window().files_dropped.connect(_on_files_dropped)\n\n\n"
+			+ "func _on_files_dropped(files: PackedStringArray) -> void:\n"
+			+ "\tget_tree().change_scene_to_file(files[0])\n",
+		# AND MOUNTING A PACK IS WIDER THAN EITHER. Nothing is built at that moment; everything
+		# after it may be somebody else's, because the pack's files ARE res:// from then on.
+		"a chosen pack, mounted into res://": "extends Node\n\n\n"
+			+ "func _on_file_chosen(path: String) -> void:\n"
+			+ "\tProjectSettings.load_resource_pack(path, true)\n",
+		# The threaded pair is one call that asks and another that hands the object over. Only the
+		# second one builds, and it was the one nothing watched.
+		"a chosen file, asked for and taken threaded": "extends Node\n\n\n"
+			+ "func _on_file_chosen(path: String) -> void:\n"
+			+ "\tvar skin := ResourceLoader.load_threaded_get(path)\n\tprint(skin)\n",
 		"a file out of an unpacked archive, loaded": "extends Node\n\n\nfunc unpack() -> void:\n"
 			+ "\tvar __reader_a := ZIPReader.new()\n\tif __reader_a.open(\"user://pack.zip\") == OK:\n"
 			+ "\t\tDirAccess.make_dir_recursive_absolute(\"user://unpacked\")\n"

@@ -2,9 +2,13 @@
 #
 # A game that opens a door for its players - a drop on the window, a file chooser, a watched folder,
 # an unpacked archive - is holding paths it did not write. That is fine, and it is the whole point of
-# those doors. What is not fine is handing one of those paths to `load()` or `ResourceLoader.load()`.
+# those doors. What is not fine is handing one of those paths to a call that BUILDS what the file
+# describes: `load()`, `ResourceLoader.load()`, the threaded pair, `change_scene_to_file()` - or to
+# `ProjectSettings.load_resource_pack()`, which builds nothing at that moment and is wider than all of
+# them together, because it MOUNTS the pack into `res://` and by default replaces the game's own files
+# with the ones inside it.
 #
-# WHY THAT ONE CALL IS DIFFERENT. A `.tscn`, a `.tres` and a `.res` may name a script, and loading one
+# WHY THOSE CALLS ARE DIFFERENT. A `.tscn`, a `.tres` and a `.res` may name a script, and loading one
 # builds the objects it describes with that script attached. So a scene or a resource file that came
 # from somewhere else can carry code, and loading it can run a stranger's code with everything the
 # game itself can reach: the player's files, their network, their machine. Reading the same file as an
@@ -61,8 +65,24 @@ const MAKE_DIR_CALL: String = "DirAccess.make_dir_recursive_absolute("
 ## `preload(` is not one: it takes a constant path, which is a file the game shipped with by
 ## construction. `Image.load_from_file` and the audio readers are not one either, and are the doors
 ## this check points at.
+##
+## LOADING IS NOT THE ONLY VERB THAT BUILDS ONE. Travelling to a layout builds the scene it names
+## exactly as loading it does, and the threaded pair is one call that asks and another that hands the
+## object over, so both halves are here. The two spelled with a leading DOT are methods written on
+## something - `get_tree().change_scene_to_file(...)` - and the dot is the boundary: whatever the
+## receiver is, the name after it is the whole name.
+##
+## AND ONE OF THEM IS NOT A LOAD AT ALL. `ProjectSettings.load_resource_pack` MOUNTS a `.pck` or a
+## `.zip` into `res://`, and with its second argument left at its default it REPLACES the game's own
+## files with the ones inside it. Nothing is built at that moment and everything after it may be: the
+## pack's scripts, scenes and resources are `res://` from then on, which is the one place the rest of
+## this plugin treats as the game's own by construction. So a stranger's pack handed to it is the
+## widest door in the file, and it earns a sentence of its own in the finding.
+const PACK_MOUNT_CALL: String = "ProjectSettings.load_resource_pack("
 const LOADER_CALLS: PackedStringArray = [
-	"ResourceLoader.load(", "ResourceLoader.load_threaded_request(", "load(",
+	"ResourceLoader.load(", "ResourceLoader.load_threaded_request(",
+	"ResourceLoader.load_threaded_get(", "load(",
+	".change_scene_to_file(", PACK_MOUNT_CALL,
 ]
 
 ## How many rounds the name trace runs before it stops. A chain of assignments is short in real code,

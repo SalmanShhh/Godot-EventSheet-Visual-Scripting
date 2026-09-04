@@ -332,7 +332,9 @@ static func _guarded_paths(line: String) -> PackedStringArray:
 # ── A file from outside the game, handed to the loader that can run code ─────────────────────
 
 
-## One finding per script that hands an outside path to `load()` or `ResourceLoader.load()`.
+## One finding per script that hands an outside path to a call that builds what the file describes -
+## the loaders, the threaded pair, `change_scene_to_file` - or to `load_resource_pack`, which mounts
+## it into `res://` instead and gets a sentence of its own.
 ##
 ## THE ONLY CHECK IN THIS SECTION THAT IS ABOUT SAFETY rather than about a path that will not work.
 ## The other three describe a game that breaks; this one describes a game that works exactly as
@@ -353,10 +355,21 @@ static func loads_outside_findings(sources: Dictionary) -> Array[Dictionary]:
 			script_path.get_file(), lines[0]]
 		message += _and_more(lines)
 		message += " " + EventSheetL10n.translate("A scene or a resource file can name a script, and loading one runs that script with everything this game can reach - the player's files, their network, their machine. The file was written by whoever made it, and that is not this project.")
+		if _mounts_a_pack(lines):
+			message += " " + EventSheetL10n.translate("One of those lines MOUNTS a pack rather than loading a file: load_resource_pack puts everything inside it under res:// from then on, and unless its second argument says otherwise it REPLACES the game's own files with the ones it carries. Nothing runs at that moment and everything after it may be somebody else's - including the files the rest of this project treats as the game's own by construction.")
 		message += " " + EventSheetL10n.translate("Read it as DATA instead, and the file cannot bring behaviour with it: Image From File for a picture, Read Text File (or a fallback) for text, Table From File for rows and columns. If this game means to run code its players wrote, say so where they can read it - that is a decision, not an accident.")
 		message += " " + EventSheetL10n.translate("This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.")
 		findings.append(_finding("warning", CHECK_LOADS_OUTSIDE, script_path, message, lines[0]))
 	return findings
+
+
+## True when one of the reported lines mounts a resource pack rather than loading a file. The extra
+## sentence is only true about that call, so it is only said about a file that holds one.
+static func _mounts_a_pack(lines: PackedStringArray) -> bool:
+	for line: String in lines:
+		if line.contains(EventForgeOutsidePaths.PACK_MOUNT_CALL):
+			return true
+	return false
 
 
 # ── A scene built from a file this project cannot vouch for ──────────────────────────────────
