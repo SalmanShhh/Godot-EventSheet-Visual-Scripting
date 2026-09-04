@@ -520,7 +520,7 @@
   both endings, because a pool takes a node back by removing it from the tree and a free takes it out
   of the tree as well.
 - **Two runtime files, and the parity law is why they are files.** `FreeSpot` and `PooledNodes` are
-  plain GDScript under the plugin's runtime folder - **399 lines** that touch no editor class, no
+  plain GDScript under the plugin's runtime folder - **463 lines** that touch no editor class, no
   sheet format and no EventForge type, so a built game carries them the way it carries any other
   script. A free spot is a roll asked again until the answer fits and a retirement is a decision read
   off the node at run time, so neither could be one expression in a template; naming the pool
