@@ -144,9 +144,9 @@ func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 	half_width = new_half_width
 	half_height = new_half_height
 
+## Switches what the host wraps around: the on-screen camera view, or the custom rectangle.
 ## @ace_action
 ## @ace_name("Set Wrap Space")
-## @ace_description("Switches what the host wraps around: the on-screen camera view, or the custom rectangle.")
 ## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
 ## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_space({space})")
@@ -154,9 +154,10 @@ func set_wrap_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		wrap_space = space
 
+## Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it:
+## fully outside the circle teleports to the antipode - a round arena in one action.
 ## @ace_action
 ## @ace_name("Set Circle Wrap Bounds")
-## @ace_description("Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it: fully outside the circle teleports to the antipode - a round arena in one action.")
 ## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_circle_wrap_bounds({center_x}, {center_y}, {radius})")
 func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:
@@ -165,6 +166,8 @@ func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> 
 	wrap_shape = "circle"
 	wrap_space = "custom"
 
+## The dominant exit direction as a side word - so circle wraps report through the
+## same On Wrapped vocabulary the rect edges use.
 ## @ace_hidden
 func _direction_side(direction: Vector2) -> String:
 	if absf(direction.x) >= absf(direction.y):

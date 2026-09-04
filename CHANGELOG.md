@@ -444,6 +444,13 @@
   on found the interface by taking the first CanvasLayer with any Control under it - which is the
   effects layer itself (a CanvasLayer holding one ColorRect called Screen) and nearly every
   hand-rolled fade. A layer whose only Controls are full-screen rectangles is a cover now.
+- **The one pack the prose change reached, rebuilt.** Carrying an authored `##` note verbatim
+  instead of rewriting it as an `@ace_description` line is a change to every pack assembled out of
+  a source folder, not only the three that needed it - and the drift gate could not see it, because
+  it asks whether a shipped pack round-trips to itself rather than whether its builder still writes
+  it. The Wrap pack was the only other one whose source spells a note that way; it now ships the two
+  notes and the helper comment its author wrote, and every verb's description is the same text it
+  always was.
 - **The files a pack ships beside its script are gated.** Screen FX ships twelve shaders and a
   scene, Blend Modes fifteen more, Scene Flow seven, the Post Kit six compute shaders, Juice six
   moment files - all compiler output, and all invisible to a drift gate that reads only the pack
