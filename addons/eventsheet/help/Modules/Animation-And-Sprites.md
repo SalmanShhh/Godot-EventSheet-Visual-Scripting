@@ -171,6 +171,100 @@ with no player is a no-op rather than an error.
 | Current State | Returns the state-machine node the tree is currently in. | `get("parameters/playback").get_current_node()` |
 | Tree Parameter | Returns the current value of an AnimationTree parameter. | `get({path})` |
 
+### AnimationTree - travelling, blending and the two state moments
+
+The rows above are the tree's oldest vocabulary and are still exactly what they were. These are the
+rest of what a blend tree does, and every one of them is a value written into, or read out of, one of
+the engine's own parameter paths. The **State** field on Travel To State, Is In State, Current State Is
+and Jump To lists the states the tree in your scene really declares; the **Blend space** and **Layer**
+fields list its blend nodes, each said with how many dimensions it has, so a Vector2 never goes into a
+space that is a line.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Jump To | Puts the state machine straight into a state, ignoring every transition on the way - a respawn, a cutscene cut. | `get("parameters/playback").start({state})` |
+| Is In Any State | True while the machine is in ANY of several states - the attack that may start from a stand or a run. | `get("parameters/playback").get_current_node() in {states}` |
+| Set Blend Position | Moves where a blend space is sampled: the stick into a walk-run space, the aim height into a lean. | `set("parameters/{space}/blend_position", {value})` |
+| Blend Toward | The same move taken over seconds instead of at once, as a tween on the tree's own parameter. | `create_tween().tween_property({target}, "parameters/{space}/blend_position", {value}, {seconds})` |
+| Blend Layer | Fades a Blend2 or Add2 layer in or out over seconds - the aim pose that arrives when a target is locked. | `create_tween().tween_property({target}, "parameters/{layer}/blend_amount", {amount}, {seconds})` |
+| Set Condition | Writes one of the booleans the tree's transitions advance on, so the tree decides WHEN and the sheet only says what is true. | `set("parameters/conditions/{condition}", {value})` |
+| Set Tree Time Scale | Slows or speeds everything under one TimeScale node, without touching the game's own clock. | `set("parameters/{node}/scale", {scale})` |
+| Time In State | How many seconds the machine has been playing its current state. | `get("parameters/playback").get_current_play_position()` |
+| On State Entered | Runs the moment the machine enters a state, with the state's name handed to the event. | the playback object's own `state_started` signal |
+| On State Left | Runs the moment the state it was in finishes. | the playback object's own `state_finished` signal |
+
+**On State Entered and On State Left are not signals of the AnimationTree node.** They belong to the
+playback object the tree keeps under `parameters/playback`, so the connect line the sheet writes
+reaches through the tree to it - `get_node("Anim").get("parameters/playback").state_started.connect(...)` -
+which is exactly the line a hand-written project writes to hear the same thing.
+
+**Travel To State is the one to reach for.** It walks the machine through its own transitions, so the
+blend times, the advance conditions and the transition priorities the tree was drawn with all still
+apply. Jump To ignores all of that on purpose, and is the cut rather than the everyday move.
+
+### Reaching a marker as a moment
+
+**Reached Marker** stays true for the rest of the clip, which is the right question for a window. A
+moment needs the crossing itself, and that is the pair below: applying the trigger adds the crossing
+question as a condition you can see and edit, exactly as On Animation Frame adds its frame question.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| On Animation Reached Marker | Runs on the one frame a clip's play head crosses a named moment on its timeline. | the mixer's own `mixer_updated` signal, with the crossing as a condition under it |
+| Just Reached Marker | True on the ONE frame the play head passes the marker, false on every frame after it. | the marker comparison, plus a remembered "had it already passed" beside it |
+
+### Root motion - the animator's step, taken into the body
+
+Root motion is the animation moving the character rather than a number in the sheet moving it. Godot
+answers how far the root moved this frame; the row's whole job is dividing that by the frame time,
+because a velocity is a distance per second and root motion is a distance per frame. Put the row in a
+physics tick, **before** Move And Slide.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Apply Root Motion (Movement 2D) | Moves and turns a CharacterBody2D by whatever the animation's root moved this frame, with an optional scale. | the tree's `get_root_motion_position()` read once, then `velocity = Vector2(...) / delta * {scale}` and a turn by the root's own rotation |
+| Apply Root Motion (Movement 3D) | The same on a CharacterBody3D, turned by the body's own basis first, because the animation was authored facing forward. | `velocity = (basis * {tree}.get_root_motion_position()) / delta * {scale}`, then `quaternion *= {tree}.get_root_motion_rotation()` |
+
+### Bones - pointing, reading and holding
+
+Six rows, in 2D and 3D twins. In 3D a bone is an index inside a Skeleton3D and a name resolves to one;
+in 2D a bone IS a node, a Bone2D under the Skeleton2D, so the 2D rows are node-scoped on Bone2D and
+address it the way every other 2D row addresses a node.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Point Bone At (Skeleton 3D) | Aims one bone at a node and keeps aiming, easing in over the seconds you give it. | four assignments on the engine's own LookAtModifier3D - `bone_name`, `target_node`, `duration`, `influence` |
+| Point Bone At (Skeleton 2D) | Turns this bone toward a node, a frame's worth at a time. | `global_rotation = lerp_angle(global_rotation, (...).angle(), clampf(delta / ...) * {weight})` |
+| Bone Position (Skeleton 3D) | Where one bone is in the WORLD - the hand a weapon hangs off, the head a name tag floats over. | `(global_transform * get_bone_global_pose(find_bone({bone}))).origin` |
+| Bone Position (Skeleton 2D) | The same question in 2D, where a bone knows where it is. | `global_position` |
+| Set Bone Pose Override (Skeleton 3D) | Holds one bone in a pose of your own over whatever is playing, by an amount. | `set_bone_global_pose_override(find_bone({bone}), {pose}, {amount}, true)` |
+| Set Bone Pose Override (Skeleton 2D) | The same, on a 2D skeleton, by bone index. | `set_bone_local_pose_override({bone}, {pose}, {amount}, true)` |
+
+**The 3D point row sets a modifier up rather than doing the aiming itself.** A LookAtModifier3D already
+knows how to ease into a look, how to stop at an angle limit and how to blend out again, and none of
+that is worth writing again in a row. Add the modifier under the skeleton once; the row is the sheet's
+hand on its dials. The 2D twin has no such modifier to lean on - the 2D modification stack is the old
+path - so it does the one line the modifier would have done, every tick it is asked.
+
+**Bone Position in 3D is the line everybody gets wrong the first time.** `get_bone_global_pose` is
+global to the SKELETON, not to the world, so a muzzle flash placed straight at it appears wherever the
+skeleton's origin happens to be. The row multiplies it back out by the skeleton's own transform.
+
+### What the Doctor says about a tree
+
+Two notes, and both describe something that runs today without an error and without doing what the row
+says. Neither draws anything in the sheet: the row wears the quiet amber state, and the words live in
+the triage inbox and in the row's help strip when it is selected.
+
+- **A state nobody declared.** `travel(&"Swng")` walks nowhere - the machine looks for a state by that
+  name, does not find one, and stays where it was. The note names the file, the state and the nearest
+  one the tree really has.
+- **A vector into a line.** A Vector2 written into a ONE-dimensional blend space is accepted by `set()`,
+  and the space keeps only what it can use - so the blend is driven by the x alone, for ever.
+
+Both are answered by the SCENE rather than by the sheet, so a script no single scene runs has nothing
+to be checked against and is passed over in silence.
+
 ### Animations that call back - method tracks
 
 An animation can call a function on the animated node: that is a **method track**, and it is the only
@@ -448,6 +542,68 @@ extends Node2D
 func _ready() -> void:
 	$Anim.play("idle")
 	$Anim.queue(&"swing")
+```
+
+**23. The stick drives the walk-run blend.** One row in a tick, and the blend space's name comes off
+the tree rather than out of your memory. A hand-written `set` of the same path opens as the same row.
+
+```gdscript
+extends CharacterBody2D
+
+
+func _physics_process(_delta: float) -> void:
+	$Anim.set("parameters/Locomotion/blend_position", move_input)
+```
+
+**24. Swing on the press, but only from a stand or a run.** Is In Any State is the question a combo
+system asks all day: several states, one row, and Travel To State walks through the transitions the
+tree was drawn with rather than cutting to the state.
+
+```gdscript
+extends CharacterBody2D
+
+
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("attack") and $Anim.get("parameters/playback").get_current_node() in ["Idle", "Run"]:
+		$Anim.get("parameters/playback").travel(&"Swing")
+```
+
+**25. The aim layer arrives when the target is locked.** Blend Layer is a tween on the tree's own
+parameter, so nothing is stepped by hand and nothing has to be un-stepped when the lock is dropped.
+
+```gdscript
+extends Node3D
+
+
+func _on_locked_on() -> void:
+	create_tween().tween_property($Anim, "parameters/Aim/blend_amount", 1.0, 0.2)
+```
+
+**26. The animator's step moves the character.** Root motion in a physics tick, before Move And Slide,
+so a swing that lunges forward lunges exactly as far as the animator drew it.
+
+```gdscript
+extends CharacterBody3D
+
+
+func _physics_process(delta: float) -> void:
+	velocity = (basis * $Anim.get_root_motion_position()) / delta * 1.0
+	quaternion *= $Anim.get_root_motion_rotation()
+	move_and_slide()
+```
+
+**27. The head follows the thing you locked onto.** Point Bone At sets the engine's own look-at
+modifier up once; the modifier keeps aiming every frame after, easing over the time you gave it.
+
+```gdscript
+extends Node3D
+
+
+func _on_locked_on() -> void:
+	$Rig/Skeleton3D/LookAt.bone_name = "Head"
+	$Rig/Skeleton3D/LookAt.target_node = $Rig/Skeleton3D/LookAt.get_path_to(locked_target)
+	$Rig/Skeleton3D/LookAt.duration = 0.2
+	$Rig/Skeleton3D/LookAt.influence = 1.0
 ```
 
 ### Other use cases
