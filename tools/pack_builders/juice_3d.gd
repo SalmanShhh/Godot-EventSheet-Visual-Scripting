@@ -413,7 +413,7 @@ static func build() -> bool:
 		Lib.JUICE_CHROMATIC_KICK_BODY)
 	_default(sheet, "strength", "0.5")
 	_default(sheet, "seconds", "0.25")
-	Lib.append_function(sheet, "chromatic_shake", "Chromatic Shake", "Juice 3D", "Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.",
+	Lib.append_function(sheet, "chromatic_shake", "Chromatic Shake", "Juice 3D", "Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. It runs on the game's own time, so any change to Engine.time_scale glides it and a freeze holds it.",
 		[["magnitude", "float"], ["duration", "float"], ["mode", "String"], ["angle_degrees", "float"]],
 		Lib.JUICE_CHROMATIC_SHAKE_BODY,
 		"Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")

@@ -90,7 +90,7 @@ placed on.
 | Punch Position | `offset` (Vector3), `duration` (float) | Kicks the host's position (metres) and springs back - knockback reads, impact shoves. Opens at (0.2, 0, 0), 0.35. |
 | Pulse Vignette | `strength` (float), `color` (Color), `seconds` (float) | Darkens the screen edges to a color, then fades back out - taking damage, a near miss. Opens at 0.6, dark red, 0.5. |
 | Chromatic Kick | `strength` (float), `seconds` (float) | Splits the screen's color channels for an instant and settles back - the AAA impact frame. Opens at 0.5, 0.25. |
-| Chromatic Shake | `magnitude` (float), `duration` (float), `mode` (String), `angle_degrees` (float) | Shakes the screen's color channels apart along a direction that MOVES - the Shake you feel, on the screen instead of the camera. A reducing shake falls to nothing over the duration; a constant one holds and then stops dead. An angle below zero lets the split wander with the same noise the camera shake uses; an angle pins the line and lets only the amount breathe. Firing again restarts it, slow motion glides it, a hitstop freezes it, and no flashing halves it. Opens at 12, 0.3, reducing, -1. |
+| Chromatic Shake | `magnitude` (float), `duration` (float), `mode` (String), `angle_degrees` (float) | Shakes the screen's color channels apart along a direction that MOVES - the Shake you feel, on the screen instead of the camera. A reducing shake falls to nothing over the duration; a constant one holds and then stops dead. An angle below zero lets the split wander with the same noise the camera shake uses; an angle pins the line and lets only the amount breathe. Firing again restarts it, any change to `Engine.time_scale` glides or holds it, and no flashing halves it. Opens at 12, 0.3, reducing, -1. |
 | Stop Chromatic Shake | (none) | Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early. |
 | Set Speed Lines | `intensity` (float) | Radial anime-style speed streaks that HOLD until you set 0 - sprints, dashes, adrenaline. Pair with FOV Punch. Opens at 0.5. |
 | Play Sound Varied | `path` (String), `pitch_jitter` (float), `volume_jitter_db` (float) | Plays a sound with a random pitch/volume wobble - the cure for repetitive footsteps, hits, shots. Opens at 0.08, 2. |
@@ -106,7 +106,7 @@ placed on.
 | Expression | Trauma | The current trauma level, 0 to 1 - drive controller rumble from it. |
 | Expression | Ticker Value | What a ticker currently SHOWS - the eased value Count To is rolling (`ticker_name`). |
 | Condition | Is Chromatic Shaking | Whether a chromatic shake is running right now - true until the duration is up or Stop Chromatic Shake takes it off. |
-| Expression | Chromatic Shake Magnitude | How wide the split is right now, in pixels: the magnitude after the falloff, the wander and the no-flashing halving. Zero when nothing is shaking. |
+| Expression | Chromatic Shake Magnitude | How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing. Zero when nothing is shaking. |
 
 ### Triggers
 

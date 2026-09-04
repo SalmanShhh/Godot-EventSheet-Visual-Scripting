@@ -510,7 +510,7 @@ func chromatic_kick(strength: float, seconds: float) -> void:
 ## @ace_action
 ## @ace_name("Chromatic Shake")
 ## @ace_category("Juice 3D")
-## @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.")
+## @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. It runs on the game's own time, so any change to Engine.time_scale glides it and a freeze holds it.")
 ## @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
 ## @ace_param_options(mode reducing, constant)
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
