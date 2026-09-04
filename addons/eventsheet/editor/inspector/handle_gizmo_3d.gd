@@ -53,6 +53,11 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 			positions.append(mark_position(node, entry, point_index))
 			ids.append(slots.size())
 			slots.append({"handle": entry, "index": point_index})
+	# The engine builds a fresh gizmo per scene open and per selection, so the map would otherwise
+	# grow for the whole editor session. Every entry whose gizmo is gone goes with it.
+	for stale: Variant in _slots.keys():
+		if not is_instance_id_valid(int(stale)):
+			_slots.erase(stale)
 	_slots[gizmo.get_instance_id()] = slots
 	if not positions.is_empty():
 		gizmo.add_handles(positions, get_material("handles", gizmo), ids)
@@ -85,7 +90,9 @@ func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, _secondary: bool, cam
 	var value: Variant = value_from_point(str(handle.get("kind", "")), anchor, local_point as Vector3)
 	if str(handle.get("kind", "")) == "points":
 		value = _replaced_point(node.get(property), int(slot.get("index", 0)), value as Vector3)
-	node.set(property, value)
+	# A whole-number property refuses a float through `set`, so a length or an angle stored as an int
+	# is written as one - otherwise the handle drags and the property never moves.
+	node.set(property, _matched_type(node.get(property), value))
 	gizmo.get_node_3d().update_gizmos()
 
 
@@ -156,6 +163,13 @@ func cursor_on_anchor_plane(node: Node3D, camera: Camera3D, screen_point: Vector
 	if hit == null:
 		return null
 	return node.global_transform.affine_inverse() * (hit as Vector3)
+
+
+## A dragged value in the type the property already holds (the 3D reading of the 2D seam's rule).
+func _matched_type(existing: Variant, value: Variant) -> Variant:
+	if existing is int and value is float:
+		return int(round(float(value)))
+	return value
 
 
 func _mark_count(node: Node3D, handle: Dictionary) -> int:

@@ -39,6 +39,8 @@ static func run() -> bool:
 	ok = _handle_maths() and ok
 	ok = _undo_step() and ok
 	ok = _preview_card() and ok
+	ok = _typed_writes() and ok
+	ok = _preview_notices_quiet_edits() and ok
 	return ok
 
 
@@ -295,6 +297,40 @@ static func _flat_texture(_object: Object, size: Vector2i) -> Texture2D:
 
 ## A trigonometric answer read to three decimals: 90 degrees is 90, not 89.99999999999999. Pins are
 ## still VALUES - this only spells how many of a float's digits the pin is about.
+## A dragged value in the type the property already holds: a length or an angle stored as a whole
+## number is written as one, because a typed int member refuses a float through `set` and the mark
+## would otherwise move under the cursor while the property stayed where it was.
+static func _typed_writes() -> bool:
+	return SUPPORT.pins(P, [
+		["a whole-number property is written a whole number",
+			EventSheetInspectorHandlePlugin.matched_type(3, 12.7), 13],
+		["a number property is written the number itself",
+			EventSheetInspectorHandlePlugin.matched_type(2.5, 12.7), 12.7],
+		["a point is written as the point it is",
+			EventSheetInspectorHandlePlugin.matched_type(Vector2.ZERO, Vector2(1.0, 2.0)), Vector2(1.0, 2.0)],
+		["a property the node does not hold is written as it came",
+			EventSheetInspectorHandlePlugin.matched_type(null, 4.0), 4.0]
+	])
+
+
+## The preview card watches the object it draws: a plain `@export` write announces nothing, so the
+## card compares the object's stored values instead of waiting for a signal that never comes.
+static func _preview_notices_quiet_edits() -> bool:
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends Resource\n\n\n@export var width: float = 4.0\n@export var height: float = 2.0\n"
+	script.reload()
+	var subject: Resource = script.new()
+	var before: int = EventSheetInspectorPreviewPanel.state_hash(subject)
+	var unchanged: int = EventSheetInspectorPreviewPanel.state_hash(subject)
+	subject.set("width", 9.0)
+	var after: int = EventSheetInspectorPreviewPanel.state_hash(subject)
+	return SUPPORT.pins(P, [
+		["the same values read the same", unchanged, before],
+		["an edit nothing announced still reads as a change", after != before, true],
+		["nothing to draw reads as nothing", EventSheetInspectorPreviewPanel.state_hash(null), 0]
+	])
+
+
 static func _rounded(value: Variant) -> float:
 	return roundf(float(value) * 1000.0) / 1000.0
 

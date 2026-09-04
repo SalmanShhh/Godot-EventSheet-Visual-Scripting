@@ -27,10 +27,15 @@ const API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
 const CARD_HEIGHT: int = 158
 const RASTER_SIZE: Vector2i = Vector2i(384, 200)
 const BACKGROUND: Color = Color(0.11, 0.12, 0.15, 1.0)
+## How often the card looks for an edit nothing announced. A plain `@export` write fires no signal
+## at all, so a card that only listened to `changed` drew once and then quietly went stale.
+const POLL_SECONDS: float = 0.25
 
 var _object: Object = null
 var _renderer: Callable = Callable()
 var _rect: TextureRect = null
+var _poll_accumulator: float = 0.0
+var _last_state: int = 0
 
 
 ## The card for one object. `renderer` is optional and takes priority over everything else:
@@ -66,6 +71,41 @@ func _ready() -> void:
 	refresh()
 
 
+## The card watches the object it draws. A resource announces its own edits through `changed`, but a
+## plain `@export` write announces nothing and a node announces nothing at all, so the card reads the
+## object's stored values a few times a second and re-draws when they differ from the ones it drew.
+## Editor-only, and only for an object that asked for a card: nothing here ships in a game.
+func _process(delta: float) -> void:
+	if _rect == null:
+		return
+	_poll_accumulator += delta
+	if _poll_accumulator < POLL_SECONDS:
+		return
+	_poll_accumulator = 0.0
+	var state: int = state_hash(_object)
+	if state == _last_state:
+		return
+	_last_state = state
+	refresh()
+
+
+## A number that changes when any stored value of the object changes - the seam the poll compares.
+## Sub-objects are skipped rather than walked: a resource inside a resource announces its own edits
+## through `changed`, and walking one could recurse forever.
+static func state_hash(object: Object) -> int:
+	if not is_instance_valid(object):
+		return 0
+	var values: Array = []
+	for entry: Dictionary in object.get_property_list():
+		if int(entry.get("usage", 0)) & PROPERTY_USAGE_STORAGE == 0:
+			continue
+		var value: Variant = object.get(str(entry.get("name", "")))
+		if value is Object:
+			continue
+		values.append(value)
+	return hash(values)
+
+
 func _exit_tree() -> void:
 	if _object is Resource and (_object as Resource).changed.is_connected(refresh):
 		(_object as Resource).changed.disconnect(refresh)
@@ -77,6 +117,7 @@ func refresh() -> void:
 	if _rect == null or not is_instance_valid(_object):
 		return
 	_rect.texture = render_texture(_object, RASTER_SIZE, _renderer)
+	_last_state = state_hash(_object)
 
 
 ## The picture currently on the card, or null while it has none - the suite's seam onto a card it
@@ -155,6 +196,12 @@ func _build_live_viewport(node: Node) -> Control:
 	var copy: Node = node.duplicate(DUPLICATE_SCRIPTS)
 	if copy == null:
 		return container
+	# The copy is a PICTURE, not a second live node: nothing in it ticks, listens or fires, so a node
+	# whose script spawns, times or plays something does none of it twice while its Inspector is open.
+	# A `_ready` still runs once when the copy enters this viewport, which is the one thing a
+	# duplicate cannot be spared - a script with side effects there should draw its own card with an
+	# `inspector_preview_texture(size)` method instead, which this card prefers anyway.
+	copy.process_mode = Node.PROCESS_MODE_DISABLED
 	if copy is Node3D:
 		viewport.own_world_3d = true
 		var light: DirectionalLight3D = DirectionalLight3D.new()

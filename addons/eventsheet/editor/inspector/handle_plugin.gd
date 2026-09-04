@@ -185,7 +185,7 @@ func _apply_drag(local_point: Vector2, snapping: bool) -> void:
 	var value: Variant = value_from_point(str(handle.get("kind", "")), anchor_of(_target, handle), local_point, snapping)
 	if str(handle.get("kind", "")) == "points":
 		value = replaced_point(_target.get(property), _drag_point_index, value as Vector2)
-	_target.set(property, value)
+	_target.set(property, matched_type(_target.get(property), value))
 	if _plugin != null:
 		_plugin.update_overlays()
 
@@ -250,6 +250,15 @@ static func value_from_point(kind: String, anchor: Vector2, local_point: Vector2
 			var degrees: float = fposmod(rad_to_deg(offset.angle()), 360.0)
 			return fposmod(snappedf(degrees, ROTATION_STEP_DEG), 360.0) if snapping else degrees
 	return offset
+
+
+## A dragged value in the type the property already holds. A length in whole pixels or an angle in
+## whole degrees is an `int` member, and a typed `int` member REFUSES a float through `set` - so
+## without this the mark moves under the cursor and the property never changes.
+static func matched_type(existing: Variant, value: Variant) -> Variant:
+	if existing is int and value is float:
+		return int(round(float(value)))
+	return value
 
 
 ## A point on the editor's grid while the snap modifier is held, and exactly where the cursor is
