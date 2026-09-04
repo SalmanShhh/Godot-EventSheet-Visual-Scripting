@@ -24,7 +24,7 @@ extends RefCounted
 ## already declaring modes, which is the point of choosing the obvious names.
 const ENUM_NAME: String = "Mode"
 const MODE_VARIABLE: String = "mode"
-const CHANGED_SIGNAL: String = "mode_changed"
+const CHANGED_SIGNAL: String = EventForgeModeWords.CHANGED_SIGNAL
 const STACK_VARIABLE: String = "mode_stack"
 
 ## The signal's parameters, as the compiler writes them. Two, because "what did we leave" is half of
@@ -252,9 +252,11 @@ const ENTERING_ACE_IDS: PackedStringArray = ["GoToMode", "PushMode"]
 const MODE_ACE_IDS: PackedStringArray = ["GoToMode", "PushMode", "InMode"]
 
 ## The triggers that answer a change of mode, and the trigger parameter every one of them carries.
-const ENTERING_TRIGGER_ID: String = "OnEnteringMode"
-const LEAVING_TRIGGER_ID: String = "OnLeavingMode"
-const MODE_PARAM: String = "mode"
+## Spelled once, in the word table the Game State vocabulary module reads - that module is built
+## during the first sheet tab and must not compile this file's own subtree to learn four strings.
+const ENTERING_TRIGGER_ID: String = EventForgeModeWords.ENTERING_TRIGGER_ID
+const LEAVING_TRIGGER_ID: String = EventForgeModeWords.LEAVING_TRIGGER_ID
+const MODE_PARAM: String = EventForgeModeWords.MODE_PARAM
 
 
 static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray = MODE_ACE_IDS) -> void:

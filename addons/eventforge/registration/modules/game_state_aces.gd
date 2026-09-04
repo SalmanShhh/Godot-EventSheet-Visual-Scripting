@@ -58,9 +58,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	descriptors.append(F.act("GoBackMode", "Go Back", "go_back()", CAT, "Go back", "Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key."))
 
-	descriptors.append(F.trig(EventSheetModeFacts.ENTERING_TRIGGER_ID, "On Entering Mode", EventSheetModeFacts.CHANGED_SIGNAL, CAT, "On entering {mode}", "Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.").param_built(_mode_param()))
+	descriptors.append(F.trig(EventForgeModeWords.ENTERING_TRIGGER_ID, "On Entering Mode", EventForgeModeWords.CHANGED_SIGNAL, CAT, "On entering {mode}", "Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.").param_built(_mode_param()))
 
-	descriptors.append(F.trig(EventSheetModeFacts.LEAVING_TRIGGER_ID, "On Leaving Mode", EventSheetModeFacts.CHANGED_SIGNAL, CAT, "On leaving {mode}", "Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.").param_built(_mode_param()))
+	descriptors.append(F.trig(EventForgeModeWords.LEAVING_TRIGGER_ID, "On Leaving Mode", EventForgeModeWords.CHANGED_SIGNAL, CAT, "On leaving {mode}", "Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.").param_built(_mode_param()))
 
 	return descriptors
 
@@ -69,6 +69,6 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## what turns the field into that list rather than into free text, and the default names no mode at
 ## all - a row must say which, and the picker's own list is where the answer comes from.
 static func _mode_param() -> ACEParam:
-	return F.make_param(EventSheetModeFacts.MODE_PARAM, "String", "", "Mode",
+	return F.make_param(EventForgeModeWords.MODE_PARAM, "String", "", "Mode",
 		"Which of this game's declared modes. The Edit modes dialog on the sheet head is where they are declared.",
 		MODE_HINT)
