@@ -52,6 +52,7 @@ static func run() -> bool:
 	ok = _test_a_row_waiting_on_a_human() and ok
 	ok = _test_what_one_run_reads() and ok
 	ok = _test_the_corpus_is_reported_honestly() and ok
+	ok = _test_the_whole_read_names_itself() and ok
 	ok = _test_a_file_nothing_can_read() and ok
 	ok = _test_the_running_script_is_not_reloaded() and ok
 	ok = _test_the_lines_it_prints() and ok
@@ -322,6 +323,48 @@ static func _test_the_corpus_is_reported_honestly() -> bool:
 		EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]), many),
 		" The .gd half is a sample: %d of %d script(s) were read." % [
 			EventSheetMigrationDoctor.SCRIPTS_SAMPLED, many.size()]) and ok
+	return ok
+
+
+## THE RUN THAT HAS TO BE CERTAIN, and it says so. `--whole` reads the `.gd` half of the migration
+## check whole rather than sampling it, for a release check or a project whose packs disagree with
+## themselves; the default samples because reading a script means lifting it. The two modes read
+## different corpora and print the same shape of verdict, so the whole one ENDS WITH THE SENTENCE
+## THAT NAMES IT - in the migration section's own words, not a second wording of the same fact - even
+## when the sample would have covered everything. A mode you could only tell apart by counting the
+## findings is a mode nobody can trust the verdict of.
+static func _test_the_whole_read_names_itself() -> bool:
+	var whole: String = EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]),
+		PackedStringArray(["res://one.gd", "res://two.gd"]), true)
+	var ok: bool = _check("the section says it read the half whole, with nothing to confess",
+		whole, " The .gd half was read whole: 2 script(s).")
+	ok = _check("and the verdict ends with that sentence", EventSheetVerify.verdict(
+		{"files": 812, "migration_files": 812, "migration_note": whole, "failures": []}),
+		"verify: 812 file(s) read, nothing to answer. The .gd half was read whole: 2 script(s).") and ok
+	ok = _check("in the red direction too", EventSheetVerify.verdict(
+		{"files": 812, "migration_files": 812, "migration_note": whole, "failures": [{}]}),
+		"verify: 812 file(s) read, 1 failure(s). The .gd half was read whole: 2 script(s).") and ok
+	ok = _check("a run that named its files reads all of them either way, so it says nothing",
+		EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]),
+			PackedStringArray(["res://one.gd"]), false), "") and ok
+	# And the flag reaches the corpus rather than only the sentence: every script, not the first few.
+	var many: PackedStringArray = PackedStringArray()
+	for index: int in EventSheetMigrationDoctor.SCRIPTS_SAMPLED + 6:
+		many.append("res://script_%02d.gd" % index)
+	ok = _check("and the whole corpus really is every script",
+		EventSheetMigrationDoctor.corpus(PackedStringArray(["res://a.tres"]), many, true).size(),
+		many.size() + 1) and ok
+	ok = _check("where the sampled one stops at the cap",
+		EventSheetMigrationDoctor.corpus(PackedStringArray(["res://a.tres"]), many, false).size(),
+		EventSheetMigrationDoctor.SCRIPTS_SAMPLED + 1) and ok
+	# A named-files run is answered about those files, so the flag has nothing to change there.
+	_write(CLEAN_PATH, "extends Node
+")
+	var named: Dictionary = EventSheetVerify.run(PackedStringArray([CLEAN_PATH]),
+		PackedStringArray(), "", true)
+	ok = _check("and a named-files run carries no such sentence",
+		str(named.get("migration_note", "-")), "") and ok
+	DirAccess.remove_absolute(CLEAN_PATH)
 	return ok
 
 

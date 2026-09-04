@@ -76,26 +76,33 @@ const QUOTED_LINE_WIDTH: int = 72
 ## is demonstrably able to read is answered by that fact instead. The other three still ask it
 ## everything.
 ##
-## Returns {"files": int, "migration_files": int, "failures": Array[Dictionary]}, each failure shaped
-## {check, path, line, message, where} - `line` is 1-based and 0 when the failure belongs to the
-## file rather than to a line of it, and `where` names the one place in the editor that shows the
-## same thing. `migration_files` is how many files check 4 actually read, which is NOT always
-## `files`: the whole-project report reads every stored sheet and only samples the `.gd` ones, and a
-## verdict printing one of those numbers over the other is how a gate reports green over files
-## nobody read.
+## `read_every_script` is THE RUN THAT HAS TO BE CERTAIN. Check 4's whole-project corpus is every
+## stored `.tres` sheet and a capped sample of the `.gd` ones, because reading a script means LIFTING
+## it and a thousand of them is minutes rather than seconds - which is the right trade for a hook and
+## the wrong one for a release check. Asked for, the `.gd` half is read whole and the verdict says so.
+## It changes nothing about a run that named its files: those are all read either way.
+##
+## Returns {"files": int, "migration_files": int, "migration_note": String,
+## "failures": Array[Dictionary]}, each failure shaped {check, path, line, message, where} - `line`
+## is 1-based and 0 when the failure belongs to the file rather than to a line of it, and `where`
+## names the one place in the editor that shows the same thing. `migration_files` is how many files
+## check 4 actually read, which is NOT always `files`: the whole-project report reads every stored
+## sheet and only samples the `.gd` ones, and a verdict printing one of those numbers over the other
+## is how a gate reports green over files nobody read. `migration_note` is the sentence a whole read
+## names itself with, and "" for every other run.
 static func run(requested: PackedStringArray = PackedStringArray(),
 		skipped: PackedStringArray = PackedStringArray(),
-		running_script: String = "") -> Dictionary:
+		running_script: String = "", read_every_script: bool = false) -> Dictionary:
 	var paths: PackedStringArray = corpus(requested, skipped)
 	var failures: Array[Dictionary] = []
 	for path: String in paths:
 		failures.append_array(file_failures(path, running_script))
-	var migration: Dictionary = _migration_rows(requested, paths)
+	var migration: Dictionary = _migration_rows(requested, paths, read_every_script)
 	var rows: Array[Dictionary] = []
 	rows.assign(migration.get("rows", []))
 	failures.append_array(migration_failures(rows))
 	return {"files": paths.size(), "migration_files": int(migration.get("files", 0)),
-		"failures": failures}
+		"migration_note": str(migration.get("note", "")), "failures": failures}
 
 
 ## The files one run reads: the ones asked for, or the whole project when nothing was asked for.
@@ -399,15 +406,18 @@ static func failure_line(failure: Dictionary) -> String:
 ## found. A gate whose green run prints nothing leaves the reader guessing whether it ran.
 ## The migration check's own corpus is named whenever it is smaller than the run's, because those two
 ## numbers are the difference between "this gate read your project" and "this gate read a sample of
-## it", and only one of them is worth trusting a branch to.
+## it", and only one of them is worth trusting a branch to. A run asked to read the `.gd` half whole
+## ends with the sentence that says so, in the migration section's own words - because a mode you
+## could only tell apart by counting the findings is a mode nobody can trust the verdict of.
 static func verdict(result: Dictionary) -> String:
 	var failures: Array = result.get("failures", []) as Array
 	var files: int = int(result.get("files", 0))
 	var migration: int = int(result.get("migration_files", files))
 	var sampled: String = "" if migration >= files else " (migration read %d of them)" % migration
+	var whole: String = str(result.get("migration_note", ""))
 	if failures.is_empty():
-		return "verify: %d file(s) read%s, nothing to answer." % [files, sampled]
-	return "verify: %d file(s) read%s, %d failure(s)." % [files, sampled, failures.size()]
+		return "verify: %d file(s) read%s, nothing to answer.%s" % [files, sampled, whole]
+	return "verify: %d file(s) read%s, %d failure(s).%s" % [files, sampled, failures.size(), whole]
 
 
 # ── the parts nobody outside calls ────────────────────────────────────────────────
@@ -426,12 +436,21 @@ static func verdict(result: Dictionary) -> String:
 ##
 ## A hook that named three staged files is answered about those three instead: the sampling is right
 ## for a project-wide audit and wrong for a hook, whose three files may not be in the sample.
-static func _migration_rows(requested: PackedStringArray,
-		paths: PackedStringArray) -> Dictionary:
+##
+## A WHOLE READ NAMES ITSELF, in the migration section's own words rather than in a second wording of
+## the same fact - the two halves of the corpus are listed here so that sentence can be asked for
+## without walking the project a third time to build it.
+static func _migration_rows(requested: PackedStringArray, paths: PackedStringArray,
+		read_every_script: bool = false) -> Dictionary:
 	if not requested.is_empty():
-		return {"rows": EventSheetMigrationDoctor.rows(paths), "files": paths.size()}
-	var corpus_paths: PackedStringArray = EventSheetMigrationDoctor.project_corpus()
-	return {"rows": EventSheetMigrationDoctor.rows(corpus_paths), "files": corpus_paths.size()}
+		return {"rows": EventSheetMigrationDoctor.rows(paths), "files": paths.size(), "note": ""}
+	var sheets: PackedStringArray = EventSheetTemplates.non_template_sheets(
+		EventSheetProjectFind.list_project_sheets())
+	var scripts: PackedStringArray = EventSheets.project_scripts()
+	var corpus_paths: PackedStringArray = EventSheetMigrationDoctor.corpus(sheets, scripts,
+		read_every_script)
+	return {"rows": EventSheetMigrationDoctor.rows(corpus_paths), "files": corpus_paths.size(),
+		"note": EventSheetMigrationDoctor.sample_note(sheets, scripts, true) if read_every_script else ""}
 
 
 ## A prefix is written the way the path is, so `tests/fixtures/` and `res://tests/fixtures/` are the
