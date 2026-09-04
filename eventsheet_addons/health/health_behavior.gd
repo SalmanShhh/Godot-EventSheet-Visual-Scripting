@@ -466,18 +466,23 @@ func killed_by_me(who: Node) -> bool:
 ## @ace_action
 ## @ace_name("Take Damage Of Type")
 ## @ace_category("Health")
-## @ace_description("Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression.")
+## @ace_description("Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression. Naming a difficulty factor in Scaled By scales the hit by it first, so the difficulty is a field on the row rather than a multiplication in front of it; leaving it blank changes nothing at all.")
 ## @ace_display_template("Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
 ## @ace_param_hint(type damage_type)
 ## @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
+## @ace_param(scaled_by, desc: "Optional: the name of a difficulty factor to scale this hit by first - damage_taken on the player's side, damage_dealt on the enemy's. A factor the difficulty in force has no key for, and a game that chose no difficulty at all, both count as 1, so the field is safe to fill in before any difficulty file mentions it. Blank means the hit is not scaled by anything.")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.take_typed_damage({amount}, {type}, {from})")
-func take_typed_damage(amount: float, type: String, from: Node) -> void:
+## @ace_codegen_template("$SimpleHealthBehavior.take_typed_damage({amount}, {type}, {from}, {scaled_by})")
+func take_typed_damage(amount: float, type: String, from: Node, scaled_by: String = "") -> void:
 	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
 		return
+	# The difficulty's own word for this hit, when the row named one. It happens BEFORE the
+	# report is written, so Last Damage Before Mitigation is the hit as this game is being
+	# played rather than the number the row was authored with.
+	var incoming: float = amount * _difficulty_factor(scaled_by)
 	last_damage_type = type
-	last_damage_before_mitigation = amount
-	var after_resist: float = amount * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))
+	last_damage_before_mitigation = incoming
+	var after_resist: float = incoming * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))
 	# Credit is for a hit that got through. A kind this node is immune to changed nothing, so it
 	# must not rewrite Last Hit From or leave an assist behind.
 	if after_resist > 0.0:
@@ -751,6 +756,14 @@ func _credit_hit(from: Node) -> void:
 		return
 	last_hit_from = source
 	assist_hits[source] = Time.get_ticks_msec()
+
+## @ace_hidden
+func _difficulty_factor(key: String) -> float:
+	# The number one named difficulty factor stands for, or 1.0. A row that named no factor never
+	# reaches the dictionary at all, which is what makes the field free to leave blank.
+	if key.strip_edges().is_empty():
+		return 1.0
+	return float((Engine.get_meta("difficulty_factors", {}) as Dictionary).get(key, 1.0))
 
 ## @ace_hidden
 func save_state() -> Dictionary:

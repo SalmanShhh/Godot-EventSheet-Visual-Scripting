@@ -81,7 +81,45 @@ static func run() -> bool:
 	all_passed = _the_doctor_sees_both_disagreements() and all_passed
 	all_passed = _the_shipped_starter_is_not_the_projects_own_set() and all_passed
 	all_passed = _a_handwritten_typed_hit_comes_back_byte_for_byte() and all_passed
+	all_passed = _the_difficulty_factor_scales_the_hit() and all_passed
 	return all_passed
+
+
+## THE SCALED-BY FIELD. A typed hit may name a difficulty factor, and the number it is scaled by
+## comes off Engine metadata - which is why this test can write that metadata by hand and needs no
+## Settings autoload, no scene tree and no other pack installed. Three hits prove the three answers
+## that matter: a factor the difficulty writes, a factor it does not, and a row that named none.
+##
+## The metadata is put back the way it was found, because a test that left a difficulty in force
+## would quietly halve the damage of every test that ran after it.
+static func _the_difficulty_factor_scales_the_hit() -> bool:
+	var script: GDScript = load(PACK)
+	var had: bool = Engine.has_meta("difficulty_factors")
+	var before: Variant = Engine.get_meta("difficulty_factors", {})
+	Engine.set_meta("difficulty_factors", {"damage_taken": 0.5})
+	var halved: Node = _fresh(script)
+	halved.call("take_typed_damage", 20.0, "physical", null, "damage_taken")
+	var unknown: Node = _fresh(script)
+	unknown.call("take_typed_damage", 20.0, "physical", null, "no_such_factor")
+	var plain: Node = _fresh(script)
+	plain.call("take_typed_damage", 20.0, "physical", null)
+	var passed: bool = SUPPORT.pins("health_pack_test", [
+		["a named factor of 0.5 halves the hit", halved.call("last_damage_dealt_value"), 10.0],
+		["and the report shows the scaled hit, not the number the row was written with",
+			halved.call("last_damage_before_mitigation_value"), 10.0],
+		["a factor the difficulty has no key for counts as 1",
+			unknown.call("last_damage_dealt_value"), 20.0],
+		["and a row that named no factor at all is untouched",
+			plain.call("last_damage_dealt_value"), 20.0]
+	])
+	halved.free()
+	unknown.free()
+	plain.free()
+	if had:
+		Engine.set_meta("difficulty_factors", before)
+	else:
+		Engine.remove_meta("difficulty_factors")
+	return passed
 
 
 ## THE ORDER, BY ARITHMETIC. 12 of fire, resisted by half, 3 points of armour, and a critical that

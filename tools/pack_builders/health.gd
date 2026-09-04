@@ -536,14 +536,35 @@ static func build() -> bool:
 	# pools and the health this pack already had. Those are what the three words mean to everybody;
 	# what nobody agrees on is the order, which is why writing it down once here is worth more than
 	# writing it well in one enemy event.
+	# THE DIFFICULTY SEAM, and the reason it is metadata on Engine rather than a call into another
+	# pack: a factor is read from everywhere, so it is kept where everything can already see it -
+	# exactly as the built-in accessibility dials are. This behaviour depends on no Settings autoload
+	# and no Difficulty class; a game that never chose a difficulty, and a game that never installed
+	# the Settings pack at all, both read the 1.0 that leaves the hit exactly as the row wrote it.
+	var difficulty: RawCodeRow = RawCodeRow.new()
+	difficulty.code = "\n".join(PackedStringArray([
+		"# The number one named difficulty factor stands for, or 1.0. A row that named no factor never",
+		"# reaches the dictionary at all, which is what makes the field free to leave blank.",
+		"## @ace_hidden",
+		"func _difficulty_factor(key: String) -> float:",
+		"\tif key.strip_edges().is_empty():",
+		"\t\treturn 1.0",
+		"\treturn float((Engine.get_meta(\"difficulty_factors\", {}) as Dictionary).get(key, 1.0))"
+	]))
+	sheet.events.append(difficulty)
+
 	Lib.append_function(sheet, "take_typed_damage", "Take Damage Of Type", "Health",
-		"Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression.",
-		[["amount", "float"], ["type", "String"], ["from", "Node"]], "\n".join(PackedStringArray([
+		"Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression. Naming a difficulty factor in Scaled By scales the hit by it first, so the difficulty is a field on the row rather than a multiplication in front of it; leaving it blank changes nothing at all.",
+		[["amount", "float"], ["type", "String"], ["from", "Node"], ["scaled_by", "String"]], "\n".join(PackedStringArray([
 		"if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():",
 		"\treturn",
+		"# The difficulty's own word for this hit, when the row named one. It happens BEFORE the",
+		"# report is written, so Last Damage Before Mitigation is the hit as this game is being",
+		"# played rather than the number the row was authored with.",
+		"var incoming: float = amount * _difficulty_factor(scaled_by)",
 		"last_damage_type = type",
-		"last_damage_before_mitigation = amount",
-		"var after_resist: float = amount * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))",
+		"last_damage_before_mitigation = incoming",
+		"var after_resist: float = incoming * maxf(0.0, 1.0 - float(resistances.get(type, 0.0)))",
 		"# Credit is for a hit that got through. A kind this node is immune to changed nothing, so it",
 		"# must not rewrite Last Hit From or leave an assist behind.",
 		"if after_resist > 0.0:",
@@ -564,6 +585,8 @@ static func build() -> bool:
 	])), "Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
 	_field(sheet, "from", "self", "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
 	_hint(sheet, "type", "damage_type")
+	_field(sheet, "scaled_by", "", "Optional: the name of a difficulty factor to scale this hit by first - damage_taken on the player's side, damage_dealt on the enemy's. A factor the difficulty in force has no key for, and a game that chose no difficulty at all, both count as 1, so the field is safe to fill in before any difficulty file mentions it. Blank means the hit is not scaled by anything.")
+	_optional_param(sheet, "scaled_by", "\"\"")
 
 	Lib.append_function(sheet, "resist", "Resist", "Health",
 		"Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly. One opinion per kind: Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts.",
@@ -705,6 +728,17 @@ static func _hint(sheet: EventSheetResource, param_id: String, hint: String) -> 
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.hint = hint
+
+
+## Gives a TRAILING parameter of the last-declared row a GDScript default, so the emitted verb reads
+## `scaled_by: String = ""` and a hand-written call that leaves it out still compiles. That is what
+## makes a parameter added to a shipped verb an addition rather than a break: everything that called
+## it with the old arguments goes on calling it, and the new field is one nobody has to answer.
+static func _optional_param(sheet: EventSheetResource, param_id: String, gdscript_default: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.gdscript_default = gdscript_default
 
 
 ## Describes the last-declared row's parameter and pre-fills what it shows the moment the row is
