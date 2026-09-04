@@ -650,7 +650,7 @@ func spring_squash(stretch: float) -> void:
 ## @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.")
 ## @ace_param_options(duration_clock realtime, gametime)
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, {duration_clock})")
+## @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, "{duration_clock}")")
 func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -> void:
 	if _slowmo_tween != null:
 		_slowmo_tween.kill()

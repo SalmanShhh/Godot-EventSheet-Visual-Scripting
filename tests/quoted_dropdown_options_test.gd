@@ -1,7 +1,8 @@
 # Godot EventSheets - a dropdown over words emits a quoted word, never an identifier.
 #
-# Three packs offer a dropdown on a String argument whose keys are bare words: the scene transition
-# and its ease, the car's keyboard-style direction, and the slide direction on a verb and a condition.
+# Several packs offer a dropdown on a String argument whose keys are bare words: the scene transition
+# and its ease, the car's keyboard-style direction, the slide direction on a verb and a condition, and
+# the two Juice packs' chromatic-shake mode and slowmo clock.
 # A dropdown key is inserted into the call verbatim, so the shipped template has to carry the quotes
 # itself - a row that picked "wipe" emitted `go_to_scene_with(path, wipe, 1.0, smooth)`, and the game
 # did not parse. Quoting the KEY does not survive the annotation round trip (the emitter wraps a key
@@ -34,6 +35,8 @@ const ACTIONS := [
 		"$SlideMove.slide(\"left\")"],
 	[JUICE, "$JuiceBehavior.chromatic_shake({magnitude}, {duration}, \"{mode}\", {angle_degrees})",
 		"$JuiceBehavior.chromatic_shake(12.0, 0.3, \"reducing\", -1.0)"],
+	[JUICE, "$JuiceBehavior.slowmo({target_scale}, {hold_duration}, \"{duration_clock}\")",
+		"$JuiceBehavior.slowmo(0.15, 0.25, \"realtime\")"],
 	[JUICE_3D, "$Juice3DBehavior.chromatic_shake({magnitude}, {duration}, \"{mode}\", {angle_degrees})",
 		"$Juice3DBehavior.chromatic_shake(12.0, 0.3, \"reducing\", -1.0)"],
 ]
@@ -44,7 +47,8 @@ const CONDITIONS := [
 
 const PICKED := {"path": "\"res://levels/forest.tscn\"", "transition": "wipe", "seconds": "1.0",
 	"ease": "smooth", "direction": "left", "magnitude": "12.0", "duration": "0.3",
-	"mode": "reducing", "angle_degrees": "-1.0"}
+	"mode": "reducing", "angle_degrees": "-1.0", "target_scale": "0.15",
+	"hold_duration": "0.25", "duration_clock": "realtime"}
 
 
 static func run() -> bool:
@@ -90,15 +94,9 @@ static func _test_the_emitted_calls() -> bool:
 ## The shape that caused the bug must not come back: in these packs, every parameter that has an
 ## options annotation is quoted inside the template of the function it belongs to. The walk pairs
 ## each options line with the next template line below it, which is how the pack lays them out.
-##
-## The 2D Juice pack is deliberately NOT swept yet: its Slowmo verb still carries a bare-word
-## `duration_clock` dropdown from long before this check existed, so a row picking "realtime" emits
-## an identifier nothing declares. Quoting it changes a shipped template and rewrites the pack's
-## bytes, which is a build pass's job rather than a gate's; the pack joins the sweep the day that
-## lands. Its Chromatic Shake row is pinned by value in ACTIONS above in the meantime.
 static func _test_no_bare_word_dropdown_is_left() -> bool:
 	var all_passed: bool = true
-	for pack: String in [SCENE_FLOW, PHYSICS_CAR, SLIDE_MOVE, JUICE_3D]:
+	for pack: String in [SCENE_FLOW, PHYSICS_CAR, SLIDE_MOVE, JUICE, JUICE_3D]:
 		var lines: PackedStringArray = FileAccess.get_file_as_string(pack).split("\n")
 		var pending: Array[String] = []
 		for line: String in lines:

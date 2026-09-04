@@ -633,6 +633,7 @@ static func build() -> bool:
 	_default(sheet, "hold_duration", "0.25")
 	_default(sheet, "duration_clock", "realtime")
 	_param_options(sheet, "duration_clock", ["realtime", "gametime"])
+	_quoted_argument(sheet, "slowmo({target_scale}, {hold_duration}, \"{duration_clock}\")")
 	Lib.append_function(sheet, "clear_slowmo", "Clear Slowmo", "Juice", "Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).",
 		[],
 		"if _slowmo_tween != null:\n\t_slowmo_tween.kill()\n\t_slowmo_tween = null\nEngine.time_scale = 1.0")
