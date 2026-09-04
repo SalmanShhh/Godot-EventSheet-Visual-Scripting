@@ -481,6 +481,28 @@ static func word_of_member(member_path: String) -> String:
 	return ""
 
 
+## THE DROPDOWN WORD a written constant IS - "add" for `BaseMaterial3D.BLEND_MODE_ADD` - or "" for a
+## word that is not a choice word and for a constant none of its choices name. What lets a
+## hand-written `material_override.blend_mode = BaseMaterial3D.BLEND_MODE_ADD` read back as the plain
+## word the picker would have shown, rather than as the constant Godot spells it with.
+##
+## Asked by WORD rather than by property, because one property here is two words (the colour and its
+## alpha channel), so the reading resolves the member to a word before it asks. The bare tail is
+## compared as well as the whole spelling, so a line that wrote the constant unqualified resolves too.
+static func choice_label(word: String, value: String) -> String:
+	var entry: Dictionary = word_entry(word)
+	if entry.is_empty() or str(entry["kind"]) != KIND_CHOICE:
+		return ""
+	var wanted: String = value.strip_edges()
+	var bare: String = wanted.substr(wanted.rfind(".") + 1)
+	for choice: Variant in (entry["choices"] as Array):
+		var option: Dictionary = choice
+		var key: String = str(option["key"])
+		if key == wanted or key.substr(key.rfind(".") + 1) == bare:
+			return str(option["label"])
+	return ""
+
+
 ## True when a class is one these rows speak for - a mesh instance, or a project's own subclass of
 ## one. Asked through ClassDB rather than against a list, so a subclass resolves too.
 static func is_mesh_class(class_text: String) -> bool:

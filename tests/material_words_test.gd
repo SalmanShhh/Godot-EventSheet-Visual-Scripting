@@ -128,8 +128,16 @@ static func _test_a_hand_written_line_reads_as_the_word() -> bool:
 		"material_override.albedo_color.a = 0.5": "Crate ▸ Set surface opacity to 0.5",
 		"get_active_material(0).roughness = 0.2": "Crate ▸ Set roughness to 0.2",
 		"$Barrel.material_override.metallic = 1.0": "Barrel ▸ Set metal to 1",
+		# A CHOICE word says the dropdown word, not the constant behind it, so a typed line and a
+		# picked row read the same sentence - and a value outside the dropdown falls back to the
+		# ordinary expression reading rather than being called a word it is not.
 		"get_active_material(1).cull_mode = BaseMaterial3D.CULL_DISABLED":
-			"Crate ▸ Set sides to BaseMaterial3D.CULL_DISABLED",
+			"Crate ▸ Set sides to both",
+		"material_override.blend_mode = BaseMaterial3D.BLEND_MODE_ADD":
+			"Crate ▸ Set blend to add",
+		"material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR":
+			"Crate ▸ Set transparency to alpha scissor",
+		"material_override.cull_mode = picked_mode": "Crate ▸ Set sides to picked_mode",
 		# And the lines this must NOT claim.
 		"material.blend_mode = 1": "material ▸ Set blend_mode to 1",
 		"material_override.some_other_thing = 3": "material_override ▸ Set some_other_thing to 3"

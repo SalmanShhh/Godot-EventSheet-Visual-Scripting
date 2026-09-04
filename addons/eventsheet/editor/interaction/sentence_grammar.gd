@@ -3169,9 +3169,15 @@ static func material_word_assignment(target: String, assigned: String, context: 
 	var word: String = EventForgeMaterialWords.word_of_member(str(reached["member"]))
 	if word.is_empty():
 		return {}
+	# A CHOICE word says the plain dropdown word rather than the constant behind it, the way the
+	# world's own choice words do - so a typed `blend_mode = BaseMaterial3D.BLEND_MODE_ADD` and a
+	# picked Set Blend row read the same sentence. Anything the table does not name falls back to the
+	# ordinary expression reading, which is what a value outside the dropdown deserves.
+	var chosen: String = EventForgeMaterialWords.choice_label(word, assigned)
+	var said: String = expression_text(assigned, context) if chosen.is_empty() else translate(chosen)
 	return _sentence(_receiver_object(str(reached["receiver"]), context), "Set {name} to {value}", {
 		"name": [translate(word), "name"],
-		"value": [expression_text(assigned, context), "value"]
+		"value": [said, "value"]
 	})
 
 
