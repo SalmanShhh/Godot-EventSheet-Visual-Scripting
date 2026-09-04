@@ -54,6 +54,18 @@ static func eventsheets_api() -> Script:
 	return _api_script
 
 
+## The editor's own undo manager, or null when there is no editor around (a headless run, the
+## Variable dialog's preview). Reached through the singleton by NAME rather than by naming an
+## editor-only class, so this file still loads in a headless suite and in an exported game's tools.
+static func editor_undo_redo() -> Object:
+	if not Engine.has_singleton("EditorInterface"):
+		return null
+	var interface: Object = Engine.get_singleton("EditorInterface")
+	if interface == null or not interface.has_method("get_editor_undo_redo"):
+		return null
+	return interface.call("get_editor_undo_redo")
+
+
 ## The unit families the unit drawer knows, each as an ordered list of unit ids whose FIRST entry
 ## is the family's base (every conversion goes through it). A unit outside these lists is a pack's
 ## own word: it is shown as a label and converts to nothing, so a custom list is never mangled.
@@ -506,7 +518,9 @@ class DrawerToggleRow:
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			if strip:
 				button.clip_text = true
-			var icon: Texture2D = EventSheetDrawerWidgets.toggle_icon_for(icon_source, option, ICON_SIZE)
+			# Asked for at the size the button SHOWS it at: a provider draws its picture to order, and
+			# a 24 px one stretched into a scaled button is a blurred picture on a HiDPI screen.
+			var icon: Texture2D = EventSheetDrawerWidgets.toggle_icon_for(icon_source, option, EventSheetPalette.scaled(ICON_SIZE))
 			if icon != null:
 				# The picture IS the choice; the word stays as the tooltip so hovering (and a screen
 				# reader) still says which option this is.
@@ -572,9 +586,12 @@ class DrawerUnitField:
 		for unit: String in _units:
 			_unit_option.add_item(EventSheetDrawerWidgets.unit_label(unit))
 			_unit_option.set_item_metadata(_unit_option.item_count - 1, unit)
-		_unit_option.select(max(Array(_units).find(_view_unit), 0))
-		_unit_option.item_selected.connect(_on_unit_selected)
-		add_child(_unit_option)
+		# A field built with no units at all is a plain number box: selecting an item that is not
+		# there is an error, and an empty dropdown beside a number says nothing to anybody.
+		if _unit_option.item_count > 0:
+			_unit_option.select(max(Array(_units).find(_view_unit), 0))
+			_unit_option.item_selected.connect(_on_unit_selected)
+			add_child(_unit_option)
 
 
 	## Sets the value IN THE STORED UNIT (what the property holds).
@@ -786,12 +803,16 @@ class LinkToggle:
 	var _last_second: float = 0.0
 	var _poll_accumulator: float = 0.0
 	var _button: Button = null
+	## The editor's undo manager, so a followed edit is one step a reader can take back. Settable,
+	## so the suite can hand a plain UndoRedo in and count the steps.
+	var undo_redo: Object = null
 
 
 	func _init(target: Object = null, first_property: String = "", second_property: String = "") -> void:
 		_target = target
 		_first = first_property
 		_second = second_property
+		undo_redo = EventSheetDrawerWidgets.editor_undo_redo()
 		add_theme_constant_override("separation", 4)
 		_button = Button.new()
 		_button.text = "="
@@ -822,6 +843,33 @@ class LinkToggle:
 		return follower if is_zero_approx(ratio) else follower / ratio
 
 
+	## A number written back in the type the property already holds. A whole-number property (a dash
+	## count, a step count) REFUSES a float through `set`, so without this the follower of an int pair
+	## never moves at all.
+	static func matched_type(existing: Variant, value: float) -> Variant:
+		return int(round(value)) if existing is int else value
+
+
+	## The one undo step a followed edit writes: the leader lands where the reader put it and the
+	## follower lands on its share, so a single Ctrl+Z puts BOTH numbers back where they were - and
+	## the poll below, seeing the pair as it left it, does not immediately move the follower again.
+	## The manager is taken duck-typed (the editor's manager in the editor, a plain UndoRedo in the
+	## suite), and a null one answers false so the caller can write the follower directly.
+	static func commit_link(undo_redo_manager: Object, target: Object, leader: String, leader_before: Variant,
+			leader_after: Variant, follower: String, follower_before: Variant, follower_after: Variant) -> bool:
+		if undo_redo_manager == null or target == null or leader.is_empty() or follower.is_empty():
+			return false
+		if follower_before == follower_after:
+			return false
+		undo_redo_manager.call("create_action", "Link %s and %s" % [leader, follower])
+		undo_redo_manager.call("add_do_property", target, leader, leader_after)
+		undo_redo_manager.call("add_do_property", target, follower, follower_after)
+		undo_redo_manager.call("add_undo_property", target, leader, leader_before)
+		undo_redo_manager.call("add_undo_property", target, follower, follower_before)
+		undo_redo_manager.call("commit_action")
+		return true
+
+
 	## True while the two numbers are tied.
 	func is_linked() -> bool:
 		return _button.button_pressed
@@ -844,15 +892,38 @@ class LinkToggle:
 			return
 		var current_first: float = float(_target.get(_first))
 		var current_second: float = float(_target.get(_second))
-		# Whichever one the reader just moved is the leader for this tick; the other follows.
+		# Whichever one the reader just moved is the leader for this tick; the other follows. The
+		# pair moves as ONE undo step - through the editor's own manager, never behind its back, so
+		# taking the edit back takes the follower back with it.
+		var leader: String = ""
+		var follower: String = ""
+		var leader_before: float = 0.0
+		var leader_after: float = 0.0
+		var follower_before: float = 0.0
+		var follower_after: float = 0.0
 		if not is_equal_approx(current_first, _last_first):
-			current_second = link_follow(_ratio, current_first)
-			_target.set(_second, current_second)
+			leader = _first
+			leader_before = _last_first
+			leader_after = current_first
+			follower = _second
+			follower_before = current_second
+			follower_after = link_follow(_ratio, current_first)
 		elif not is_equal_approx(current_second, _last_second):
-			current_first = link_lead(_ratio, current_second)
-			_target.set(_first, current_first)
-		_last_first = current_first
-		_last_second = current_second
+			leader = _second
+			leader_before = _last_second
+			leader_after = current_second
+			follower = _first
+			follower_before = current_first
+			follower_after = link_lead(_ratio, current_second)
+		else:
+			return
+		var typed_follower: Variant = matched_type(_target.get(follower), follower_after)
+		if not commit_link(undo_redo, _target, leader, matched_type(_target.get(leader), leader_before),
+				matched_type(_target.get(leader), leader_after), follower,
+				matched_type(_target.get(follower), follower_before), typed_follower):
+			_target.set(follower, typed_follower)
+		_last_first = float(_target.get(_first))
+		_last_second = float(_target.get(_second))
 
 
 # ── Array-of-Dictionary table grid ───────────────────────────────────────────

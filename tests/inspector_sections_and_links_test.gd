@@ -101,6 +101,39 @@ static func _group_show_if() -> bool:
 	return ok
 
 
+# ── One edit, one step ──────────────────────────────────────────────────────
+## A followed edit goes through the editor's own undo manager and moves BOTH numbers in one step, so
+## taking the edit back takes the follower back with it. Written against a plain UndoRedo, which is
+## what the manager is duck-typed for.
+static func _followed_edit_is_one_step() -> bool:
+	var target: Object = _pair_object()
+	var undo_redo: UndoRedo = UndoRedo.new()
+	var wrote: bool = EventSheetDrawerWidgets.LinkToggle.commit_link(undo_redo, target, "count", 8, 16, "spacing", 2.0, 4.0)
+	var after: String = "%s|%s" % [str(target.get("count")), str(target.get("spacing"))]
+	undo_redo.undo()
+	var undone: String = "%s|%s" % [str(target.get("count")), str(target.get("spacing"))]
+	var ok: bool = SUPPORT.pins(P, [
+		["a followed edit writes a step", wrote, true],
+		["the pair lands where the ratio puts it", after, "16|4.0"],
+		["one undo puts BOTH numbers back", undone, "8|2.0"],
+		["a follower that did not move writes no step at all",
+			EventSheetDrawerWidgets.LinkToggle.commit_link(undo_redo, target, "count", 8, 16, "spacing", 2.0, 2.0), false],
+		["with no undo manager there is no step to write",
+			EventSheetDrawerWidgets.LinkToggle.commit_link(null, target, "count", 8, 16, "spacing", 2.0, 4.0), false]
+	])
+	undo_redo.clear_history()
+	return ok
+
+
+## A pair of numbers on a scriptless-looking object: one whole, one not, which is the pair the tie
+## is usually drawn between (a dash count and its spacing).
+static func _pair_object() -> Object:
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends RefCounted\n\n\nvar count: int = 8\nvar spacing: float = 2.0\n"
+	script.reload()
+	return script.new()
+
+
 # ── Two numbers kept in a ratio ─────────────────────────────────────────────
 static func _link_decor() -> bool:
 	# The ratio, by value: it is what the follower is worth per unit of the leader, read at the
@@ -111,8 +144,11 @@ static func _link_decor() -> bool:
 		["a leader of zero keeps the pair as it is", EventSheetDrawerWidgets.LinkToggle.link_ratio(0.0, 9.0), 1.0],
 		["the follower moves with the leader", EventSheetDrawerWidgets.LinkToggle.link_follow(4.0, 5.0), 20.0],
 		["the leader moves with the follower", EventSheetDrawerWidgets.LinkToggle.link_lead(4.0, 20.0), 5.0],
-		["a ratio of zero leaves the leader where it is", EventSheetDrawerWidgets.LinkToggle.link_lead(0.0, 7.0), 7.0]
+		["a ratio of zero leaves the leader where it is", EventSheetDrawerWidgets.LinkToggle.link_lead(0.0, 7.0), 7.0],
+		["a whole-number property is written a whole number", EventSheetDrawerWidgets.LinkToggle.matched_type(3, 4.6), 5],
+		["a number property is written the number itself", EventSheetDrawerWidgets.LinkToggle.matched_type(3.0, 4.6), 4.6]
 	])
+	ok = _followed_edit_is_one_step() and ok
 
 	# Emission: the decor names BOTH fields, this one first, and it is the LAST decor line - closest
 	# to the variable it belongs to.

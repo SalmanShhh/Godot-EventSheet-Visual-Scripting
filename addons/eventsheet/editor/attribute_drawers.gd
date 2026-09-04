@@ -193,6 +193,14 @@ static func parse_unit_spec(spec: String) -> Dictionary:
 					units.append(unit.strip_edges())
 		elif trimmed.begins_with("store="):
 			store = trimmed.substr(6).strip_edges()
+	# A spec that is just a FAMILY'S NAME ("time", "angle") means that family, in its own order, with
+	# its base unit as the stored one - the short spelling a card schema's field uses. Only read when
+	# no `kinds=` was given, so a marker that names its units keeps naming them.
+	if units.is_empty():
+		var family: String = spec.strip_edges()
+		if EventSheetDrawerWidgets.UNIT_FAMILIES.has(family):
+			for unit: Variant in (EventSheetDrawerWidgets.UNIT_FAMILIES[family] as Array):
+				units.append(str(unit))
 	if units.is_empty():
 		return {"units": units, "store": ""}
 	if store.is_empty() or not units.has(store):
