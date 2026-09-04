@@ -75,6 +75,17 @@ const TRANSITIONS: PackedStringArray = ["fade", "wipe", "dissolve", "iris", "bli
 ## so Is Transitioning is ONE question with one answer rather than two flags that can disagree.
 const TRANSITION_GROUP: StringName = &"scene_flow_transition"
 
+## THE ACCESSIBILITY FLOOR. A player who has asked for no flashing gets the same transition in the
+## same shape, held over this many seconds - because a shape that sweeps the whole screen and back
+## in a tenth of a second is a flash whatever shape it is. This is the same floor the post stack
+## holds its walks over, read off the same Engine meta the built-in Set No Flashing row writes.
+const TRANSITION_FLASH_FLOOR_SECONDS: float = 0.4
+const TRANSITION_NO_FLASHING_META: StringName = &"no_flashing"
+
+## And the shortest a transition may be when nobody has asked for anything: short enough to feel
+## instant, long enough that the swap still happens under cover.
+const TRANSITION_FLOOR_SECONDS: float = 0.1
+
 ## And the group every Scene Flow node joins, so a finished transition can tell somebody. The runner
 ## outlives the scene it started in, so the node it tells is whichever one is standing in the NEW
 ## scene - which is exactly where a row waiting on the arrival wants to be.
@@ -301,12 +312,18 @@ static func transition_phase(fraction: float) -> String:
 	return "out" if walk < 0.5 else "in"
 
 ## @ace_hidden
+static func transition_floor_seconds() -> float:
+	if bool(Engine.get_meta(TRANSITION_NO_FLASHING_META, false)):
+		return TRANSITION_FLASH_FLOOR_SECONDS
+	return TRANSITION_FLOOR_SECONDS
+
+## @ace_hidden
 func _start_transition(path: String, shape: String, seconds: float, ease_word: String) -> void:
 	if is_transitioning():
 		return
 	var runner: ShaderTransitionRunner = ShaderTransitionRunner.new()
 	runner.shape = shape
-	runner.seconds = maxf(seconds, 0.1)
+	runner.seconds = maxf(seconds, transition_floor_seconds())
 	runner.ease_word = ease_word
 	runner.cover_color = fade_color
 	runner.wipe_image = wipe_image

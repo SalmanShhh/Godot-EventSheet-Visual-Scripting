@@ -238,6 +238,22 @@ static func _the_transition_walk() -> bool:
 			FileAccess.get_file_as_string(SCENE_FLOW_SCRIPT).contains(
 				"add_to_group(SceneFlowBehavior.TRANSITION_GROUP)"), true]
 	]
+	# THE ACCESSIBILITY FLOOR reaches the transitions too. A shape that sweeps the whole screen and
+	# back in a tenth of a second is a flash whatever shape it is, so a player who asked for no
+	# flashing gets the same transition held over the same floor the post stack and the moments use.
+	var flashing_was: Variant = Engine.get_meta("no_flashing", null)
+	Engine.set_meta("no_flashing", false)
+	rows.append(["with nothing asked for, a transition may be as quick as the ordinary floor",
+		flow.transition_floor_seconds(), flow.TRANSITION_FLOOR_SECONDS])
+	Engine.set_meta("no_flashing", true)
+	rows.append(["a player who asked for no flashing gets the shape held over the longer floor",
+		flow.transition_floor_seconds(), flow.TRANSITION_FLASH_FLOOR_SECONDS])
+	rows.append(["which is the same floor a moment step and a post-stack walk are held over",
+		flow.TRANSITION_FLASH_FLOOR_SECONDS, 0.4])
+	if flashing_was == null:
+		Engine.remove_meta("no_flashing")
+	else:
+		Engine.set_meta("no_flashing", flashing_was)
 	flow.free()
 	return SUPPORT.pins(P, rows)
 
