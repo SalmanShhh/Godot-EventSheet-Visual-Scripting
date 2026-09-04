@@ -7,7 +7,9 @@
 # that spawns its own Label, tweens it and frees it.
 #
 # The health half runs for real (treeless: Time.get_ticks_msec needs no scene tree); the HUD Kit
-# half is source-pinned only, since a spawned Label needs a tree to tween in.
+# half is source-pinned only, since a spawned Label needs a tree to tween in - except the one part
+# of it that is a decision rather than a drawing: Pop Floating Text As takes a number's colour from
+# a DamageTypeSet, and that set is a real file, so what it answers is run.
 @tool
 class_name ThirdWavePacksTest
 extends RefCounted
@@ -15,12 +17,14 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const HEALTH_PACK := "res://eventsheet_addons/health/health_behavior.gd"
 const HUD_KIT_PACK := "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"
+const TYPE_SET_STARTER := "res://eventsheet_addons/damage_type_set_resource/damage_types.tres"
 
 
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _emitted_source() and all_passed
 	all_passed = _invincibility_runtime() and all_passed
+	all_passed = _the_coloured_popup() and all_passed
 	return all_passed
 
 
@@ -41,6 +45,35 @@ static func _emitted_source() -> bool:
 	all_passed = _check("the popup fades out", hud_source.contains("pop.tween_property(label, \"modulate:a\", 0.0, 0.7)"), true) and all_passed
 	all_passed = _check("the popup frees itself", hud_source.contains("pop.tween_callback(label.queue_free)"), true) and all_passed
 	return all_passed
+
+
+## POP FLOATING TEXT AS: the half that can be run, and the half that cannot.
+##
+## The colour is DECIDED by the DamageTypeSet and only ASKED FOR by the row, so the deciding is run
+## against the shipped starter file, and the asking is pinned in the emitted text - a spawned Label
+## needs a tree to tween in, so the row itself cannot be driven here.
+##
+## "crit" is a STYLE rather than a kind, which is why the set does not name it and the number is
+## marked by its SIZE instead: a set that did name it would colour it too, and both would be true at
+## once. The white fallback is the same promise the other way round - a game with no set at all
+## still gets its numbers.
+static func _the_coloured_popup() -> bool:
+	var all_passed: bool = true
+	var hud_source: String = FileAccess.get_file_as_string(HUD_KIT_PACK)
+	all_passed = _check("hud_kit pack emits Pop Floating Text As", hud_source.contains("func pop_floating_text_as(text: String, style: String, at: Vector2) -> void:"), true) and all_passed
+	all_passed = _check("the colour comes from the set, not from the row", hud_source.contains("tint = damage_types.call(\"colour_of\", style)"), true) and all_passed
+	all_passed = _check("and is asked for rather than cast for", hud_source.contains("if damage_types != null and damage_types.has_method(\"colour_of\"):"), true) and all_passed
+	all_passed = _check("a game with no set still gets its numbers", hud_source.contains("var tint: Color = Color.WHITE"), true) and all_passed
+	all_passed = _check("a crit is marked by its size", hud_source.contains("label.scale = Vector2(crit_text_scale, crit_text_scale)"), true) and all_passed
+	var starter: Resource = load(TYPE_SET_STARTER)
+	if starter == null:
+		return _check("the starter damage type set loads", false, true) and all_passed
+	return SUPPORT.pins("third_wave_packs_test", [
+		["fire is drawn in the colour the starter names",
+			starter.call("colour_of", "fire"), Color(1.0, 0.45, 0.1, 1.0)],
+		["and a style the set does not name is drawn white",
+			starter.call("colour_of", "crit"), Color.WHITE]
+	]) and all_passed
 
 
 ## The i-frame window really opens and really closes (no tree needed: it is one clock read).

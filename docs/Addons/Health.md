@@ -50,11 +50,15 @@ The model is small. Learn these six ideas and every ACE in the pack is just a le
 **Damage can have a kind, and the order it is mitigated in is fixed.** Take Damage takes a number and nothing else. Take Damage Of Type takes an amount, a kind and who dealt it, and runs it through four steps in an order that never changes:
 
 1. **Resistance**, as a percentage of the incoming hit. Resist `fire` by 50 halves every fire hit; Immune To takes it to nothing; Weak To is the same dial turned the other way.
-2. **Armour**, as flat points off what is left. A hit that got past resistance still lands for at least `minimum_damage`, so stacking armour blunts hits rather than making an actor unkillable.
+2. **Armour**, as flat points off what is left. A hit that got past resistance still lands for at least `minimum_damage`, so stacking armour blunts hits rather than making an actor unkillable. The floor only ever puts back what armour took off: a half-point graze past no armour at all still lands for half a point.
 3. **The critical**, as a multiplier on what got through, rolled against `crit_chance` and multiplied by `crit_multiplier`.
 4. **The pools and the health** this pack already had, through the ordinary Take Damage path - so shields, the death latch, Destroy On Death and On Damaged all behave exactly as they always did.
 
 12 of fire against 50% resistance, 3 armour and a certain doubling critical lands for 6. No other order of those three steps gives 6, which is the point of writing the order down once instead of in front of every damage row.
+
+**One opinion per kind, and it belongs to the actor being hit.** Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts - Immune To `fire` followed by Weak To `fire` leaves the actor weak to fire, not immune. The critical is the same: `crit_chance` and `crit_multiplier` are properties of the actor TAKING the hit, so a game where the attacker owns the crit sets them on the target from the attacker's row - Set Crit, then Take Damage Of Type - rather than expecting the row to carry them.
+
+**Credit is only taken for a hit that landed.** Take Damage From and Take Damage Of Type record who dealt it, but not when the hit changed nothing: a kind the actor is immune to, a hit inside its invincibility window, or a hit while it is invulnerable leaves Last Hit From and Assists Of exactly as they were. A boss that turns on whoever hurt it last never turns on somebody who did not.
 
 **The kinds are yours, in a file.** A damage type is only ever a word, so nothing in this pack holds a list of them. A **DamageTypeSet** resource - names and the colour each is drawn in - is a file your game owns; the type field of the typed rows suggests the names in it, the HUD Kit's Pop Floating Text As takes a number's colour from it, and the Doctor uses it to notice a row dealing a kind no set names. One starter ships beside the pack with physical, fire, ice and poison in it, to edit or replace. None of it is required: a game with no set deals typed damage perfectly well and simply gets no suggestions and no colours.
 
@@ -477,7 +481,7 @@ On Fireball: On bullet hit
   -> Hit | Health: Take Damage Of Type  12, "fire", Fireball
 ```
 
-A 12-point fireball lands for 6 after the resistance and the armour. A 12-point icicle lands for 21. The number in the row never changed.
+A 12-point fireball lands for 3: halved by the resistance to 6, then 3 off for the armour. A 12-point icicle lands for 21. The number in the row never changed.
 
 ### 18. A crit that reads as a crit
 

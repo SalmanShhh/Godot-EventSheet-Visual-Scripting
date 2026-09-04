@@ -298,7 +298,7 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 
 ## Sets the parameter HINT on the last-appended row parameter - the key the params dialog and the
 ## completion list read to decide what a field offers. "damage_type" offers the names in the
-## project own DamageTypeSet files, so a style field suggests this game kinds of damage rather than
+## project's own DamageTypeSet files, so a style field suggests this game's kinds of damage rather than
 ## a vocabulary of guesses. A project with no set gets a plain field, never a wrong list.
 static func _hint(sheet: EventSheetResource, param_id: String, hint: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
