@@ -10,6 +10,7 @@ class_name CardListDrawerTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
+const PREFAB_STEPS := preload("res://addons/eventsheet/editor/inspector/drawing_prefab_steps_property.gd")
 
 ## A schema name nothing else uses, registered and unregistered inside one run so no other test can
 ## see it (a leaked static is a red run somewhere else).
@@ -330,7 +331,7 @@ static func _fold_pins() -> bool:
 ## The Drawing Prefab's steps: the same eight keys, in the same order, whatever the card list does.
 static func _prefab_pins() -> bool:
 	var ok: bool = true
-	var editor: EventSheetDrawingPrefabInspector.ShapeStepsEditor = EventSheetDrawingPrefabInspector.ShapeStepsEditor.new()
+	var editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
 	editor.set_steps([
 		{"kind": "line", "x": 1.0, "y": 2.0, "p1": 5.0, "p2": 6.0, "p3": 3.0, "color": "red"},
 		{"kind": "circle", "x": 0.0, "y": 0.0, "p1": 8.0, "p2": 0.0, "p3": 0.0, "color": "#ffffff", "texture": ""},
@@ -357,7 +358,7 @@ static func _prefab_pins() -> bool:
 	editor.free()
 
 	# The shape vocabulary is the schema's: each shape still titles its own slots, never p1/p2/p3.
-	var schema: Dictionary = EventSheetDrawingPrefabInspector.ShapeStepsEditor.build_schema()
+	var schema: Dictionary = PREFAB_STEPS.ShapeStepsEditor.build_schema()
 	ok = _eq("line still titles p1/p2/p3 as End X/End Y/Thickness", _field_labels(schema, "line"), "Shape|End X|End Y|Thickness|Offset X|Offset Y|Color") and ok
 	ok = _eq("circle still titles p1 as Radius", _field_labels(schema, "circle"), "Shape|Radius|Offset X|Offset Y|Color") and ok
 	ok = _eq("a stamp still names its texture", _field_labels(schema, "stamp"), "Shape|Scale|Spin|Texture|Offset X|Offset Y|Color") and ok
@@ -381,7 +382,7 @@ static func _tres_round_trip() -> bool:
 	ResourceSaver.save(prefab, path)
 	var before: String = FileAccess.get_file_as_string(path)
 	var reopened: DrawingPrefabResource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as DrawingPrefabResource
-	var editor: EventSheetDrawingPrefabInspector.ShapeStepsEditor = EventSheetDrawingPrefabInspector.ShapeStepsEditor.new()
+	var editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
 	editor.set_steps(reopened.steps)
 	reopened.steps = editor.get_steps()
 	editor.free()

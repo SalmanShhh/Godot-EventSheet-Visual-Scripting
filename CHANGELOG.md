@@ -326,6 +326,13 @@
   old index.
 - **One click adds a shape again.** The Drawing Prefab's "+ Add shape" had become Add, search,
   Enter; a "+" beside the search adds the list's first kind in one gesture, for every card list.
+- **Starting the editor stops compiling the Drawing Prefab's Inspector.** The plugin that draws a
+  prefab is built at editor start, and it named the card-list drawer, the card schemas and the
+  preview card by class, so around 68 KB of editor source was compiled at every start of every
+  project - including projects with no drawing prefab anywhere in them. It reaches all three by
+  path now, keeps the shape-aware steps editor in a file of its own, and recognises the resource by
+  the name its script carries rather than by naming the class. None of it is compiled until an
+  Inspector actually opens a prefab.
 - **A card's number cell stops rounding the number it was given.** Its boxes stepped in tenths, and
   a Range snaps the value it SHOWS to a multiple of its step: a stored 12.345 appeared as 12.3, and
   the next press of an arrow wrote 12.4 back into the designer's file. A float cell steps by the

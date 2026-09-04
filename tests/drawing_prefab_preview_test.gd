@@ -10,6 +10,7 @@ extends RefCounted
 
 
 const SUPPORT := preload("res://tests/support.gd")
+const PREFAB_STEPS := preload("res://addons/eventsheet/editor/inspector/drawing_prefab_steps_property.gd")
 
 
 static func run() -> bool:
@@ -57,7 +58,7 @@ static func run() -> bool:
 	# instantiate headless). On load it preserves the stored keys exactly - never injecting a `texture`
 	# slot the source lacked, never coercing a legacy color name - so opening a prefab reads back faithfully;
 	# only an explicit edit changes the data.
-	var steps_editor: EventSheetDrawingPrefabInspector.ShapeStepsEditor = EventSheetDrawingPrefabInspector.ShapeStepsEditor.new()
+	var steps_editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
 	steps_editor.set_steps([{"kind": "line", "x": 1.0, "y": 2.0, "p1": 5.0, "p2": 6.0, "p3": 3.0, "color": "red"}])
 	var roundtrip: Array = steps_editor.get_steps()
 	var first: Dictionary = roundtrip[0] if not roundtrip.is_empty() else {}
@@ -87,7 +88,7 @@ static func _is_bg(c: Color, bg: Color) -> bool:
 ## The titled field labels a shape shows, pipe-joined in display order (circle -> "Radius").
 static func _shape_labels(kind: String) -> String:
 	var labels: PackedStringArray = PackedStringArray()
-	for field: Variant in EventSheetDrawingPrefabInspector.ShapeStepsEditor.SHAPE_FIELDS.get(kind, []):
+	for field: Variant in PREFAB_STEPS.ShapeStepsEditor.SHAPE_FIELDS.get(kind, []):
 		labels.append(str((field as Dictionary).get("label", "")))
 	return "|".join(labels)
 
