@@ -6,6 +6,64 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The ground under the game, the world past the edge of it, and the folder players add to
+
+- **A tilemap layer can be asked what it is made of.** **19 rows** join the eleven shipped tilemap
+  ones, none of which is touched. The questions: **Tile Data At** and **Tile Data At Is** (a cell or
+  a global position, and a custom data layer's name), **Cell Is Solid**, **First Solid Cell Along**
+  (the tile raycast, answering `Vector2i.MAX` when the line meets nothing), **Surrounding Cells Of**
+  (asked of the layer, so a hex map answers with six), **Cells With Data**, **Used Rect**, **Cell
+  Count Of** and **Tile Under** a node. The words that change it: **Paint Terrain** and **Repaint
+  Terrain Around**, so a dug hole joins its autotile back up; **Fill Rect With Tile**, **Erase Tiles
+  In Circle**, **Flood Fill** bounded by the row's own cell limit, **Set Navigation On Layer** and
+  **Set Collision On Layer**. And the level as a file: **Save Layer To File** and **Load Layer From
+  File** over the engine's own `tile_map_data` bytes, with **Copy Layer** beside them, which makes a
+  level editor's undo two rows.
+- **The rows that ask more than one engine call compile to a shared helper.** The compiler writes
+  each definition into the file the first time any row asks for it - **11 of them** - appended last
+  so no source-map line moves, and skipped outright when the file already defines one, which is what
+  keeps reopening an emitted file and saving it again byte-identical.
+- **The 3D twin, on GridMap, in its own module.** **6 rows** under the same words their 2D twins use:
+  **Set Cell Item**, **Item At**, **Cell Is Filled**, **Used Cells**, **Fill Box**, **Erase Box**.
+  What has no twin is said rather than faked: a GridMap has no tileset, so there are no custom data
+  layers and no terrains there, and the row's help strip says so.
+- **The Data and Terrain fields suggest from the project's own tilesets**, read as text rather than
+  loaded, and the same reading backs a quiet **Tilemap** Doctor section with **2 checks**: a data key
+  no tileset here declares, and a terrain set the tilesets do not reach. It says nothing at all in a
+  project it found no readable tileset in, because a list that may be incomplete must never become a
+  finding.
+- **A world bigger than memory is a folder of scenes and one row.** The **Streamer** and **Streamer
+  3D** packs ship **12 rows each** (including three triggers): **Stream Chunks Around** follows a
+  node and keeps the chunks within a radius loaded on a thread, freeing the ones behind, with one
+  request per frame, a millisecond budget and a keep radius so walking back over a border reloads
+  nothing. **On Chunk Unloading** fires before the drop, so a row can save what the player changed in
+  a chunk while its node still exists. The 3D pack's one decision is **Stream Height**, off by
+  default: on, a radius of 1 goes from nine chunks to twenty-seven.
+- **The chunk folder has one reading, and four things ask it.** A streamed world has no format - the
+  file name IS the address - so the grammar behind `chunk_3_-2.tscn` is written down once and both
+  packs, the Doctor and the tools read it from there. The Doctor's **Streaming** section reports the
+  **2 things** that go wrong with a folder rather than with a row: a hole in the middle of the grid,
+  where a player walks into a void on somebody else's machine, and a chunk carrying a camera, which
+  makes itself current as it streams in. **Split Scene Into Chunks** and **Merge Chunks** ride the
+  command palette; a split is never a one-way door, and the round trip is what the suite pins.
+- **The folder players put their own content in.** The **Mods** autoload pack ships **19 rows**
+  (including three triggers) plus a **ModManifest** resource: Load Mods From, Load Mod, Unload Mod,
+  Set Load Order, Enable Mod, Disable Mod, Mod Is Loaded, For Each Mod, the five report expressions,
+  the three doors onto a mod's content, and On Mod Loaded / On Mod Refused / On Mods Changed.
+  Loading is **two tiers and the row picks one**: a data-only load reads the mod's real contents
+  before it takes anything and refuses one carrying a script, a library or a native binary, with the
+  reason in words a player can read; a script load takes a mod that carries code, and the guide's
+  first paragraph says that code in a mod runs with everything the game can reach, that Godot has no
+  sandbox to put it in, and that none is claimed here. **Export Mod Template** rides the palette and
+  writes the folder a modder copies.
+- **One guide for the three of them.** [Tiles, Streaming and Mods](docs/GUIDE-TILES-STREAMING-AND-MODS.md)
+  is the lesson: the questions a level is asked and the helper written into the file once, the tile
+  raycast that needs no physics, the crater and the repaint that heals its rim, a layer's own bytes
+  as a save file and as an undo step, the GridMap twin and what has no twin, the chunk naming grammar
+  in full including its one ambiguity, and the two tiers with what a script mod costs said out loud.
+  **Streamer**, **Streamer 3D** and **Mods** each get a pack guide to the house standard, and the
+  five new editor strings ship translated in **8 languages**.
+
 ### A number that says its unit, a list that reads as cards, and a handle you can drag
 
 - **A float now carries the unit it is read in, and the number never moves.** The **unit drawer**
