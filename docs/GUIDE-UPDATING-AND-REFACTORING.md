@@ -317,8 +317,12 @@ for row: Dictionary in EventSheets.migration_report():
 The report reads every stored `.tres` sheet and a capped sample of the `.gd` ones, and the Doctor's
 summary line says which. Pass `true` - `EventSheets.migration_report(true)` - to read every script
 instead; on a command line that is `tools/verify_sheets.gd -- --whole`. It is opt-in because reading
-a script means LIFTING it, so a thousand of them is minutes rather than seconds - the right trade for
-a hook and the wrong one for a branch about to merge.
+a script means LIFTING it, so a thousand of them is minutes rather than seconds - too slow for a
+commit hook, and more than an ordinary branch needs. It IS the right trade twice: on a **release
+branch**, where the answer has to be about every file rather than a sample of them, and after a
+**migration that touched `.gd` sheets**, where the sample is exactly the half of the project the
+migration was about. That is why this repository's own CI runs the sampled form on every push and
+`--whole` is a thing somebody runs deliberately, before a release.
 
 The sample is enough for the usual case because a `.tres` sheet WRITES DOWN which verb each row was
 picked from while a `.gd` sheet derives its rows from the file every time it is opened, so an older

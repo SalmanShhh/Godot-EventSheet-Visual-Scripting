@@ -249,24 +249,24 @@ checkout has no import cache and a project that has not been imported cannot res
   run: godot --headless --import --path .
 
 - name: The standing contracts
-  run: godot --headless --path . --script tools/verify_sheets.gd
+  run: |
+    godot --headless --path . --script tools/verify_sheets.gd -- \
+      --skip res://tests/fixtures/ --skip res://tests/corpus/
 ```
 
-This repository runs that job on itself, so the recipe is one that has to keep working: see
-`.github/workflows/ci.yml`. It runs it TWICE, and the difference is worth knowing because your
-project may need the same shape.
+That is the step this repository runs on itself, character for character, so the recipe is one that
+has to keep working: see `.github/workflows/ci.yml`. The two `--skip` prefixes are the only thing in
+it that is about THIS repository rather than about the gate - it keeps two folders of GDScript that
+is not meant to load, `tests/fixtures/`, which is deliberately broken so the importer can be tested
+against it, and `tests/corpus/`, which illustrates code the reader is being shown rather than code
+that runs. The gate cannot tell either of them from a real file, which is exactly what `--skip` is
+for. A project with no such folders drops both prefixes and the command reads everything, generated
+content included.
 
-The first form is the one above with two `--skip` prefixes on it, because this repository keeps two
-folders of GDScript that is not meant to load - `tests/fixtures/`, which is deliberately broken so
-the importer can be tested against it, and `tests/corpus/`, which illustrates code the reader is
-being shown rather than code that runs. The gate cannot tell either of them from a real file, which
-is exactly what `--skip` is for. Everything else in the repository is read, generated content
-included.
-
-The second form hands it an explicit list of the generated sheets (`git ls-files 'demo/*.gd'
-'eventsheet_addons/*.gd'`), which is the same shape the pre-commit hook uses, and takes seconds
-rather than minutes. A project with no fixture folders needs neither variation: the plain command
-above reads everything and is the whole gate.
+It runs the gate TWICE, and the second form is worth knowing because your project may want the same
+shape: it hands the gate an explicit list of the generated sheets (`git ls-files 'demo/*.gd'
+'eventsheet_addons/*.gd'`), which is what the pre-commit hook above does, and takes seconds rather
+than minutes.
 
 ---
 
