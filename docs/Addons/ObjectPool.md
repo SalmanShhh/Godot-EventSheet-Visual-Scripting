@@ -94,6 +94,7 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 | Expression | Parameters | Returns | Description |
 |-----------|-----------|---------|-------------|
 | Spawn | pool_name | Node | Hands out a ready node (reusing a free one, else a new copy), added to the scene and returned. Fires On Spawned. |
+| Spawn Safely | pool_name, at | Node | The same spawn, placed and returned on the line but joining the world on the next idle moment. Use it inside a collision or area callback, where Godot refuses a reparent. Fires On Spawned when the copy is actually in the world. |
 | Last Spawned | (none) | Node | The node most recently spawned. |
 | Last Despawned | (none) | Node | The node most recently despawned. |
 | Free Count | pool_name | int | How many ready (unused) nodes a pool holds. |
@@ -253,6 +254,21 @@ On fire
 ```
 
 The oldest shots despawn on their own (hit or off-screen), freeing room for the next volley.
+
+**16. Spawn from inside a collision or area callback.** A hit spark asked for on the line raises "can't
+change this state while flushing queries", because handing a copy out of a pool is a reparent and Godot
+refuses one while the physics server is busy. Spawn Safely is the row for that spot.
+
+```
+Bullet On Body Entered
+  -> set s = ObjectPool.Spawn Safely("sparks", the hit point)
+  -> ObjectPool: Despawn  self
+```
+
+The spark comes back straight away, reset and already at the hit point, so the rows under it can set its
+colour or play its animation; it joins the running scene a moment later, and On Spawned fires there, with
+the spark already parented. Outside a callback keep using plain Spawn - its copy is in the world on the
+line.
 
 ### Other use cases
 

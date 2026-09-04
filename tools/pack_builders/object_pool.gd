@@ -82,12 +82,18 @@ static func build() -> bool:
 		"\t\tnode.remove_meta(&\"owner\")",
 		"\t(_pools[pool_name].free as Array).append(node)",
 		"",
-		"# Wakes a node into the running scene: reparented to the current scene, shown, processing on.",
-		"func _wake(node: Node) -> void:",
-		"\tif node.get_parent() != null:",
-		"\t\tnode.get_parent().remove_child(node)",
-		"\tvar target: Node = get_tree().current_scene if (is_inside_tree() and get_tree() != null and get_tree().current_scene != null) else self",
-		"\ttarget.add_child(node)",
+		"# Where a spawned copy belongs: the running scene when there is one, and this pool itself when",
+		"# there is not - a headless run, or a pool used before the first scene is up.",
+		"func _world_parent() -> Node:",
+		"\tif is_inside_tree() and get_tree() != null and get_tree().current_scene != null:",
+		"\t\treturn get_tree().current_scene",
+		"\treturn self",
+		"",
+		"# The half of waking that is NOT a reparent: shown, processing on, and the pooled scene's own",
+		"# reset(). Split out because Spawn Safely does exactly this half on the line and books the other,",
+		"# and because reset() has to run before the row hands the node back to the sheet - a reset after",
+		"# the following rows configured the copy would wipe what they just wrote.",
+		"func _ready_for_use(node: Node) -> void:",
 		"\tif node is CanvasItem:",
 		"\t\t(node as CanvasItem).visible = true",
 		"\tnode.set_process(true)",
@@ -96,6 +102,66 @@ static func build() -> bool:
 		"\t# spawn, so velocity/hp/timers clear without the pool knowing any of them.",
 		"\tif node.has_method(&\"reset\"):",
 		"\t\tnode.call(&\"reset\")",
+		"",
+		"# Wakes a node into the running scene: reparented to the current scene, shown, processing on.",
+		"func _wake(node: Node) -> void:",
+		"\tif node.get_parent() != null:",
+		"\t\tnode.get_parent().remove_child(node)",
+		"\t_world_parent().add_child(node)",
+		"\t_ready_for_use(node)",
+		"",
+		"# One node out of a pool's free list, or a fresh copy of the pool's scene when the stash is empty.",
+		"# Null when there is no pool by that name, and null when an empty custom pool has no scene of its",
+		"# own to make one from. The node is NOT counted active here: each spawn row does that at the",
+		"# moment it means it.",
+		"func _take_from_pool(pool_name: String) -> Node:",
+		"\tif not _pools.has(pool_name):",
+		"\t\treturn null",
+		"\tvar free_list: Array = _pools[pool_name].free",
+		"\tif not free_list.is_empty():",
+		"\t\treturn free_list.pop_back()",
+		"\tif _pools[pool_name].scene == null:",
+		"\t\treturn null",
+		"\tvar node: Node = (_pools[pool_name].scene as PackedScene).instantiate()",
+		"\tnode.set_meta(&\"__pool__\", pool_name)",
+		"\treturn node",
+		"",
+		"# Puts a copy where the row said, in whichever dimension the copy lives in. The place is set",
+		"# BEFORE the copy joins the world, so it is a place relative to its parent - and a pool has no",
+		"# transform of its own, so the number a row writes is the number the copy lands on. A value of the",
+		"# wrong shape for the node (a Vector2 for a Node3D) is left alone rather than raising.",
+		"func _place(node: Node, at: Variant) -> void:",
+		"\tif node is Node2D and at is Vector2:",
+		"\t\t(node as Node2D).position = at as Vector2",
+		"\telif node is Node3D and at is Vector3:",
+		"\t\t(node as Node3D).position = at as Vector3",
+		"\telif node is Control and at is Vector2:",
+		"\t\t(node as Control).position = at as Vector2",
+		"",
+		"# THE JOINING WAITS FOR THE FRAME TOO, for Spawn Safely and for that row only. Handing a copy out",
+		"# is a reparent exactly as handing one back is, and Godot refuses a reparent while the physics",
+		"# server is flushing its queries - the whole of a collision or area callback. So Spawn Safely does",
+		"# everything but the reparent on the line and books this, and On Spawned is raised HERE, with the",
+		"# copy already in the world, so a row under that trigger can read the copy's parent.",
+		"# Resolved from an id rather than from the node, because a row can free the copy again before this",
+		"# lands, and an id that no longer names anything is simply an answer of no. A copy a Despawn row",
+		"# already took back is no longer counted active, and is left parked where it is.",
+		"func _join_world_by_id(node_id: int) -> void:",
+		"\tif not is_instance_id_valid(node_id):",
+		"\t\treturn",
+		"\tvar node: Node = instance_from_id(node_id) as Node",
+		"\tif node == null or not is_instance_valid(node) or node.is_queued_for_deletion():",
+		"\t\treturn",
+		"\tif not node.has_meta(&\"__pool__\"):",
+		"\t\treturn",
+		"\tvar pool_name: String = str(node.get_meta(&\"__pool__\"))",
+		"\tif not _pools.has(pool_name) or not (_pools[pool_name].active as Array).has(node):",
+		"\t\treturn",
+		"\tif node.get_parent() != null:",
+		"\t\tnode.get_parent().remove_child(node)",
+		"\t_world_parent().add_child(node)",
+		"\t_last_spawned = node",
+		"\ton_spawned.emit()",
 		"",
 		"# The retire runtime if the project has it, found once and remembered - null when it does not, in",
 		"# which case this pool hands nodes back on its own and marks nothing.",
@@ -179,7 +245,11 @@ static func build() -> bool:
 	# --- Expressions ---
 	_expr_node(sheet, "spawn", "Spawn", "Object Pool", "Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.",
 		[["pool_name", "String"]],
-		"if not _pools.has(pool_name):\n\treturn null\nvar free_list: Array = _pools[pool_name].free\nvar node: Node = null\nif not free_list.is_empty():\n\tnode = free_list.pop_back()\nelif _pools[pool_name].scene != null:\n\tnode = (_pools[pool_name].scene as PackedScene).instantiate()\n\tnode.set_meta(&\"__pool__\", pool_name)\nif node == null:\n\treturn null\n_wake(node)\n(_pools[pool_name].active as Array).append(node)\n_last_spawned = node\non_spawned.emit()\nreturn node")
+		"var node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_wake(node)\n(_pools[pool_name].active as Array).append(node)\n_last_spawned = node\non_spawned.emit()\nreturn node")
+	_expr_node(sheet, "spawn_safely", "Spawn Safely", "Object Pool", "The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: Godot refuses to reparent a node while the physics server is flushing its queries, and this row waits for that to finish rather than erroring. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.",
+		[["pool_name", "String"], ["at", "Variant"]],
+		"var node: Node = _take_from_pool(pool_name)\nif node == null:\n\treturn null\n_ready_for_use(node)\n_place(node, at)\n(_pools[pool_name].active as Array).append(node)\ncall_deferred(&\"_join_world_by_id\", node.get_instance_id())\nreturn node")
+	_field(sheet, "at", "Vector2.ZERO", "Where the copy goes, set before it joins the world - so it is a place relative to the parent it is about to get, and a pool has no transform of its own. A Vector3 places a 3D copy; a value of the wrong shape for the copy is left alone.")
 	_expr_node(sheet, "last_spawned", "Last Spawned", "Object Pool", "The node most recently spawned (handy inside On Spawned).", [],
 		"return _last_spawned")
 	_expr_node(sheet, "last_despawned", "Last Despawned", "Object Pool", "The node most recently despawned (handy inside On Despawned).", [],
@@ -206,6 +276,18 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## The starting value AND the line the params dialog shows under the field, set together because
+## only the combined `@ace_param` form carries a default into the shipped pack: a parameter with
+## nothing to say is written as the older hint-only spelling, which has nowhere to put one, so a
+## default set on its own never reaches the emitted file and the row opens on an empty field.
+static func _field(sheet: EventSheetResource, param_id: String, value: String, description: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.default_value = value
+			parameter.description = description
 
 
 static func _condition(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:

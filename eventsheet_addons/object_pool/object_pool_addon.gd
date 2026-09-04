@@ -42,6 +42,27 @@ var _booked: Dictionary = {}
 const RETIRE_RUNTIME_PATH: String = "res://eventsheet_addons/pooled_nodes.gd"
 var _retire_runtime: Script = null
 var _retire_runtime_looked_up: bool = false
+# Where a spawned copy belongs: the running scene when there is one, and this pool itself when
+# there is not - a headless run, or a pool used before the first scene is up.
+func _world_parent() -> Node:
+	if is_inside_tree() and get_tree() != null and get_tree().current_scene != null:
+		return get_tree().current_scene
+	return self
+# One node out of a pool's free list, or a fresh copy of the pool's scene when the stash is empty.
+# Null when there is no pool by that name, and null when an empty custom pool has no scene of its
+# own to make one from. The node is NOT counted active here: each spawn row does that at the
+# moment it means it.
+func _take_from_pool(pool_name: String) -> Node:
+	if not _pools.has(pool_name):
+		return null
+	var free_list: Array = _pools[pool_name].free
+	if not free_list.is_empty():
+		return free_list.pop_back()
+	if _pools[pool_name].scene == null:
+		return null
+	var node: Node = (_pools[pool_name].scene as PackedScene).instantiate()
+	node.set_meta(&"__pool__", pool_name)
+	return node
 # The retire runtime if the project has it, found once and remembered - null when it does not, in
 # which case this pool hands nodes back on its own and marks nothing.
 func _retire_runtime_script() -> Script:
@@ -164,21 +185,30 @@ func has_pool(pool_name: String) -> bool:
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.spawn({pool_name})")
 func spawn(pool_name: String) -> Node:
-	if not _pools.has(pool_name):
-		return null
-	var free_list: Array = _pools[pool_name].free
-	var node: Node = null
-	if not free_list.is_empty():
-		node = free_list.pop_back()
-	elif _pools[pool_name].scene != null:
-		node = (_pools[pool_name].scene as PackedScene).instantiate()
-		node.set_meta(&"__pool__", pool_name)
+	var node: Node = _take_from_pool(pool_name)
 	if node == null:
 		return null
 	_wake(node)
 	(_pools[pool_name].active as Array).append(node)
 	_last_spawned = node
 	on_spawned.emit()
+	return node
+
+## @ace_expression
+## @ace_name("Spawn Safely")
+## @ace_category("Object Pool")
+## @ace_description("The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: Godot refuses to reparent a node while the physics server is flushing its queries, and this row waits for that to finish rather than erroring. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.")
+## @ace_param(at, default: Vector2.ZERO, desc: "Where the copy goes, set before it joins the world - so it is a place relative to the parent it is about to get, and a pool has no transform of its own. A Vector3 places a 3D copy; a value of the wrong shape for the copy is left alone.")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
+## @ace_codegen_template("ObjectPool.spawn_safely({pool_name}, {at})")
+func spawn_safely(pool_name: String, at: Variant) -> Node:
+	var node: Node = _take_from_pool(pool_name)
+	if node == null:
+		return null
+	_ready_for_use(node)
+	_place(node, at)
+	(_pools[pool_name].active as Array).append(node)
+	call_deferred(&"_join_world_by_id", node.get_instance_id())
 	return node
 
 ## @ace_expression
@@ -246,12 +276,11 @@ func _stow(pool_name: String, node: Node) -> void:
 		node.remove_meta(&"owner")
 	(_pools[pool_name].free as Array).append(node)
 
-func _wake(node: Node) -> void:
-	# Wakes a node into the running scene: reparented to the current scene, shown, processing on.
-	if node.get_parent() != null:
-		node.get_parent().remove_child(node)
-	var target: Node = get_tree().current_scene if (is_inside_tree() and get_tree() != null and get_tree().current_scene != null) else self
-	target.add_child(node)
+func _ready_for_use(node: Node) -> void:
+	# The half of waking that is NOT a reparent: shown, processing on, and the pooled scene's own
+	# reset(). Split out because Spawn Safely does exactly this half on the line and books the other,
+	# and because reset() has to run before the row hands the node back to the sheet - a reset after
+	# the following rows configured the copy would wipe what they just wrote.
 	if node is CanvasItem:
 		(node as CanvasItem).visible = true
 	node.set_process(true)
@@ -260,6 +289,50 @@ func _wake(node: Node) -> void:
 	# spawn, so velocity/hp/timers clear without the pool knowing any of them.
 	if node.has_method(&"reset"):
 		node.call(&"reset")
+
+func _wake(node: Node) -> void:
+	# Wakes a node into the running scene: reparented to the current scene, shown, processing on.
+	if node.get_parent() != null:
+		node.get_parent().remove_child(node)
+	_world_parent().add_child(node)
+	_ready_for_use(node)
+
+func _place(node: Node, at: Variant) -> void:
+	# Puts a copy where the row said, in whichever dimension the copy lives in. The place is set
+	# BEFORE the copy joins the world, so it is a place relative to its parent - and a pool has no
+	# transform of its own, so the number a row writes is the number the copy lands on. A value of the
+	# wrong shape for the node (a Vector2 for a Node3D) is left alone rather than raising.
+	if node is Node2D and at is Vector2:
+		(node as Node2D).position = at as Vector2
+	elif node is Node3D and at is Vector3:
+		(node as Node3D).position = at as Vector3
+	elif node is Control and at is Vector2:
+		(node as Control).position = at as Vector2
+
+func _join_world_by_id(node_id: int) -> void:
+	# THE JOINING WAITS FOR THE FRAME TOO, for Spawn Safely and for that row only. Handing a copy out
+	# is a reparent exactly as handing one back is, and Godot refuses a reparent while the physics
+	# server is flushing its queries - the whole of a collision or area callback. So Spawn Safely does
+	# everything but the reparent on the line and books this, and On Spawned is raised HERE, with the
+	# copy already in the world, so a row under that trigger can read the copy's parent.
+	# Resolved from an id rather than from the node, because a row can free the copy again before this
+	# lands, and an id that no longer names anything is simply an answer of no. A copy a Despawn row
+	# already took back is no longer counted active, and is left parked where it is.
+	if not is_instance_id_valid(node_id):
+		return
+	var node: Node = instance_from_id(node_id) as Node
+	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+		return
+	if not node.has_meta(&"__pool__"):
+		return
+	var pool_name: String = str(node.get_meta(&"__pool__"))
+	if not _pools.has(pool_name) or not (_pools[pool_name].active as Array).has(node):
+		return
+	if node.get_parent() != null:
+		node.get_parent().remove_child(node)
+	_world_parent().add_child(node)
+	_last_spawned = node
+	on_spawned.emit()
 
 func _already_retiring(node: Node) -> bool:
 	# Whether this node is inside a handing over the retire runtime has already marked - which is to
