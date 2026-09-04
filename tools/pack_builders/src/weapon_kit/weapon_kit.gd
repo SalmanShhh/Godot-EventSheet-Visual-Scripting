@@ -181,3 +181,7 @@ func set_fire_mode(mode: int) -> void:
 
 func set_max_ammo(size: int) -> void:
 	max_ammo = maxi(size, 0)
+
+func claim_shot(shot: Node) -> void:
+	if shot != null and host != null:
+		shot.set_meta(&"owner", host)

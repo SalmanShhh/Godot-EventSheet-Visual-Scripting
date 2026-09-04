@@ -175,6 +175,16 @@ func set_fire_mode(mode: int) -> void:
 func set_max_ammo(size: int) -> void:
 	max_ammo = maxi(size, 0)
 
+## @ace_action
+## @ace_name("Claim Shot")
+## @ace_category("Weapon")
+## @ace_description("Marks a round this weapon just sent out as belonging to the weapon. Drop it beside the spawn inside On Fire: friendly fire is then refused by Hit Is Not My Owner, and Take Damage From credits the kill to whoever the weapon itself belongs to rather than to the bullet.")
+## @ace_icon("res://eventsheet_addons/weapon_kit/icon.svg")
+## @ace_codegen_template("$WeaponKit.claim_shot({shot})")
+func claim_shot(shot: Node) -> void:
+	if shot != null and host != null:
+		shot.set_meta(&"owner", host)
+
 func can_fire() -> bool:
 	return not _reloading and _cooldown <= 0.0 and current_ammo > 0 and _burst_left <= 0
 

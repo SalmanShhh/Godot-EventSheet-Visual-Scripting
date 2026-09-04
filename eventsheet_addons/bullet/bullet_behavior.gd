@@ -154,4 +154,15 @@ func set_bullet_enabled(is_enabled: bool) -> void:
 	# A frozen bullet costs nothing per frame; enabling it turns the tick back on.
 	set_process(is_enabled)
 
+## @ace_action
+## @ace_name("Fired By")
+## @ace_category("Bullet")
+## @ace_description("Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.")
+## @ace_display_template("Fired by [i]{shooter}[/i]")
+## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
+## @ace_codegen_template("$BulletBehavior.set_fired_by({shooter})")
+func set_fired_by(shooter: Node) -> void:
+	if host != null:
+		host.set_meta(&"owner", shooter)
+
 # Bullet behavior (event-sheet parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled).

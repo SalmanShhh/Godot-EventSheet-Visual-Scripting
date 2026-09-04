@@ -203,6 +203,11 @@ func _stow(pool_name: String, node: Node) -> void:
 		(node as CanvasItem).visible = false
 	node.set_process(false)
 	node.set_physics_process(false)
+	# A recycled node carries no credit from its last life: the ownership key a spawn row
+	# claimed it with comes off here, so the next Claim is the only one that counts and a
+	# reused bullet can never be credited to whoever fired the one before it.
+	if node.has_meta(&"owner"):
+		node.remove_meta(&"owner")
 	(_pools[pool_name].free as Array).append(node)
 
 func _wake(node: Node) -> void:

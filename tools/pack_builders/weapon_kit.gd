@@ -70,5 +70,12 @@ static func build() -> bool:
 	src.verb("set_max_ammo", "Set Magazine Size",
 		"Changes the magazine size.",
 		[["size", "int"]])
+	# WHOSE SHOT IT WAS. The pack owns no projectile, so the sheet spawns it - and this is the one
+	# row that tells the world whose it is, writing the node metadata key `owner` the Ownership rows
+	# read. The shot points at the weapon and the weapon at whoever is holding it, so the chain
+	# credits the person even though this pack has never heard of them.
+	src.verb("claim_shot", "Claim Shot",
+		"Marks a round this weapon just sent out as belonging to the weapon. Drop it beside the spawn inside On Fire: friendly fire is then refused by Hit Is Not My Owner, and Take Damage From credits the kill to whoever the weapon itself belongs to rather than to the bullet.",
+		[["shot", "Node"]])
 	Lib.feature_verbs(src.sheet, ["fire", "reload"])
 	return Lib.publish(src, "res://eventsheet_addons/weapon_kit/weapon_kit_behavior")

@@ -209,4 +209,16 @@ static func build() -> bool:
 	set_bullet_enabled_fn.events.append(set_bullet_enabled_fn_body)
 	sheet.functions.append(set_bullet_enabled_fn)
 
+	# WHO FIRED IT. A shot that cannot say who fired it cannot score a kill, cannot be told apart
+	# from an enemy's, and cannot avoid its own shooter. One line writes the node metadata key
+	# `owner` that the Ownership rows and the Health pack's credit both read, so the answer is the
+	# same one everywhere in the project.
+	Lib.append_function(sheet, "set_fired_by", "Fired By", "Bullet",
+		"Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.",
+		[["shooter", "Node"]], "
+".join(PackedStringArray([
+		"if host != null:",
+		"	host.set_meta(&\"owner\", shooter)"
+	])), "Fired by [i]{shooter}[/i]")
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/bullet/bullet_behavior")

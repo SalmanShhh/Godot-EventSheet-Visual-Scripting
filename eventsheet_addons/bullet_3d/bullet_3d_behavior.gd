@@ -140,6 +140,17 @@ func set_bullet3d_speed(value: float) -> void:
 func set_gravity_direction(x: float, y: float, z: float) -> void:
 	gravity_direction = Vector3(x, y, z)
 
+## @ace_action
+## @ace_name("Fired By")
+## @ace_category("Bullet 3D")
+## @ace_description("Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.")
+## @ace_display_template("Fired by [i]{shooter}[/i]")
+## @ace_icon("res://eventsheet_addons/bullet_3d/icon.svg")
+## @ace_codegen_template("$Bullet3DBehavior.set_fired_by({shooter})")
+func set_fired_by(shooter: Node) -> void:
+	if host != null:
+		host.set_meta(&"owner", shooter)
+
 ## @ace_hidden
 static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
 	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the arc solved for a

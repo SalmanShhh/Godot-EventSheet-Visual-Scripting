@@ -740,6 +740,15 @@ static func build() -> bool:
 		[["x", "float"], ["y", "float"], ["z", "float"]],
 		"gravity_direction = Vector3(x, y, z)")
 
+	# WHOSE SHOT IT WAS. The body running around is the person the game credits, so anything it
+	# sends into the world says so in one line: the node metadata key `owner` that the Ownership
+	# rows read, written onto the shot rather than remembered privately here.
+	Lib.append_function(sheet, "claim_as_mine", "Claim As Mine", "FPS Controller",
+		"Marks something as belonging to this character - the round it just fired, the grenade it threw, the turret it dropped. Every ownership row afterwards traces back to this body, so friendly fire is refused, the kill is credited, and a turret this character placed still scores as its own.",
+		[["node", "Node"]],
+		"if node != null and host != null:
+	node.set_meta(&\"owner\", host)", "Claim [i]{node}[/i] as mine")
+
 	Lib.feature_verbs(sheet, ["do_crouch", "do_wall_jump"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/fps_controller/fps_controller_behavior")
 

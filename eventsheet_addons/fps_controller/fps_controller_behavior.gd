@@ -711,6 +711,17 @@ func wall_normal_z() -> float:
 func set_gravity_direction(x: float, y: float, z: float) -> void:
 	gravity_direction = Vector3(x, y, z)
 
+## @ace_action
+## @ace_name("Claim As Mine")
+## @ace_category("FPS Controller")
+## @ace_description("Marks something as belonging to this character - the round it just fired, the grenade it threw, the turret it dropped. Every ownership row afterwards traces back to this body, so friendly fire is refused, the kill is credited, and a turret this character placed still scores as its own.")
+## @ace_display_template("Claim [i]{node}[/i] as mine")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.claim_as_mine({node})")
+func claim_as_mine(node: Node) -> void:
+	if node != null and host != null:
+		node.set_meta(&"owner", host)
+
 func _gravity_dir() -> Vector3:
 	# The normalized pull axis; a zeroed export falls back to plain down.
 	var pull := gravity_direction.normalized()

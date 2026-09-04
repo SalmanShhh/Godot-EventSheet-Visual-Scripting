@@ -209,4 +209,14 @@ static func build() -> bool:
 	set_gravity_direction_fn.events.append(set_gravity_direction_fn_body)
 	sheet.functions.append(set_gravity_direction_fn)
 
+	# WHO FIRED IT - the 3D twin of the 2D pack's row, writing the same one node metadata key, so a
+	# project that mixes the two dimensions reads kill credit out of one place.
+	Lib.append_function(sheet, "set_fired_by", "Fired By", "Bullet 3D",
+		"Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.",
+		[["shooter", "Node"]], "
+".join(PackedStringArray([
+		"if host != null:",
+		"	host.set_meta(&\"owner\", shooter)"
+	])), "Fired by [i]{shooter}[/i]")
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/bullet_3d/bullet_3d_behavior")
