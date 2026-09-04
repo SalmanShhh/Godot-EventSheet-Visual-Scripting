@@ -12,8 +12,9 @@ Everything here is a builtin ACE, so it is in the picker of every sheet with no 
 4. [Meshes at runtime (Mesh)](#meshes-at-runtime-mesh)
 5. [Camera field of view (Camera)](#camera-field-of-view-camera)
 6. [Animation playback (Animation)](#animation-playback-animation)
-7. [Gradients and curves](#gradients-and-curves)
-8. [Clipping a node's children (Blend Modes)](#clipping-a-nodes-children-blend-modes)
+7. [Text that moves (Text)](#text-that-moves-text)
+8. [Gradients and curves](#gradients-and-curves)
+9. [Clipping a node's children (Blend Modes)](#clipping-a-nodes-children-blend-modes)
 
 ---
 
@@ -218,6 +219,32 @@ An `AnimationTree` is driven by writing into, and reading out of, four parameter
 
 ---
 
+## Text that moves (Text)
+
+Picker category: **Text**, on a `RichTextLabel` - only that node parses BBCode and only it counts characters, so a plain `Label` is deliberately not offered these rows. The engine already knows six moving tags - `wave`, `shake`, `tornado`, `rainbow`, `fade` and `pulse` - plus a seventh door, `install_effect`, for a `RichTextEffect` you wrote yourself. These rows write those tags, so the emitted line is the line you would have typed by hand and the label needs nothing installed.
+
+| Name | Kind | What it does |
+| --- | --- | --- |
+| **Set Text With Effect** | Action | Puts words on the label already wearing one of the seven effects - a title that waves, a warning that shakes, a legendary drop in a rainbow. |
+| **Wrap Selection In Effect** | Action | Puts an effect around a stretch of the text already there, counted in characters - one word shaking inside a calm sentence. |
+| **Clear Effects** | Action | Takes every effect back off and leaves the words, by asking the label for its own parsed text - so it clears tags nobody here wrote as well, with no list of names to keep up to date. |
+| **Effect Is Active** | Condition | True while the label's text carries that effect's tag - ask before writing another one, or to tell a shaking warning from a calm one with no variable beside it. |
+| **Install Text Effect** | Action | Teaches this label one `RichTextEffect` of your own, out of a folder you own, whose bbcode name the "custom" choice then writes. |
+| **Reveal Text** | Action | Types a line out at so many characters a second, with a sound on each character when you name a player. A second reveal on the same label ends the first. |
+| **Skip Reveal** | Action | Shows the whole line now and finishes exactly as a reveal that ran out would - the second press of the button that started it. |
+| **Pause Reveal At** | Action | Holds the reveal for a beat at one character: the comma pause that makes a typed line sound like speech. Drop it before the Reveal Text row, which reads it. |
+| **Is Revealing** | Condition | True while a line is still typing itself out - which is how one button skips while it is, and goes on to the next line when it is not. |
+| **Revealed Fraction** | Expression | How much of the line is showing, from 0 to 1 - a progress bar, a portrait's mouth flap, a sound that quietens as the line ends. |
+| **On Reveal Finished** | Trigger | The moment the last character lands. Skip Reveal ends here too, which is what lets the Continue prompt be written once. |
+
+Each effect fills its OWN knob - `amp` for a wave, `level` for a shake, `radius` for a tornado, `freq` for a rainbow or a pulse, `length` for a fade - because the parser accepts an `amp` written into a shake and then does nothing with it. One Strength field on the row is spelled into whichever knob the chosen effect reads.
+
+**Both accessibility settings are read at the moment the row runs**, so neither needs a row of its own. The text-size scale multiplies an effect's own knob, so an effect grows with the text it is drawn on rather than staying the size it was designed at. Reduce Flashing drops a shake to a third of its strength - a drift rather than a rattle - and takes the two colour-cycling effects, rainbow and pulse, to a frequency of zero, which is the engine's own way of spelling "hold still".
+
+A dialogue system that already types its own lines keeps doing so: these rows are for every other label - a title card, a tutorial hint, a shop description, a boss name.
+
+---
+
 ## Gradients and curves
 
 Picker category: **Gradients & Curves**. Turn a designer-drawn ramp or curve into a colour or a number, with no maths in the sheet.
@@ -256,3 +283,4 @@ The rest of that shelf - twenty blend modes, masks, and a node's children merged
 - **Bus effects must exist before you toggle them.** Add the effect to the bus in Godot's Audio panel first; **Set Bus Effect Enabled** flips a slot that is already there, by index.
 - **The Rendering settings apply to the current viewport.** In a game with several viewports, apply the ones you care about where they matter.
 - **The Mesh actions need a MeshInstance3D to draw onto.** They build the shape and assign it; they do not create the node for you.
+- **A label draws a tag as characters until BBCode is on.** `bbcode_enabled` starts false, which is why every row that writes a text effect switches it on in the line above - two statements rather than one.
