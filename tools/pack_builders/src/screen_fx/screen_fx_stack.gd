@@ -103,11 +103,11 @@ var _look_name: String = ""
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Add Post Effect")
-## @ace_codegen_template("$ScreenFx.add_post_effect("{effect}", "{called}", {strength})")
 ## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
-## @ace_param(called, default: , desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
+## @ace_param(effect, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, default: vignette, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
+## @ace_param(called, desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
 ## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
+## @ace_codegen_template("$ScreenFx.add_post_effect("{effect}", "{called}", {strength})")
 func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
 	var word: String = effect.strip_edges().to_lower()
 	if not _is_an_effect(word):
@@ -132,9 +132,9 @@ func add_post_effect(effect: String = "vignette", called: String = "", strength:
 ## Takes one effect off the stack and frees its rectangle, so it stops costing anything at all.
 ## @ace_action
 ## @ace_name("Remove Post Effect")
-## @ace_codegen_template("$ScreenFx.remove_post_effect("{called}")")
 ## @ace_display_template("Remove post effect [b]{called}[/b]")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_codegen_template("$ScreenFx.remove_post_effect("{called}")")
 func remove_post_effect(called: String = "vignette") -> void:
 	var at: int = _find(called)
 	if at < 0:
@@ -150,9 +150,9 @@ func remove_post_effect(called: String = "vignette") -> void:
 ## effect a look should keep but a moment should hide.
 ## @ace_action
 ## @ace_name("Enable Post Effect")
-## @ace_codegen_template("$ScreenFx.enable_post_effect("{called}")")
 ## @ace_display_template("Enable post effect [b]{called}[/b]")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_codegen_template("$ScreenFx.enable_post_effect("{called}")")
 func enable_post_effect(called: String = "vignette") -> void:
 	_set_enabled(called, true)
 
@@ -161,9 +161,9 @@ func enable_post_effect(called: String = "vignette") -> void:
 ## Enable brings it back exactly as it was.
 ## @ace_action
 ## @ace_name("Disable Post Effect")
-## @ace_codegen_template("$ScreenFx.disable_post_effect("{called}")")
 ## @ace_display_template("Disable post effect [b]{called}[/b]")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_codegen_template("$ScreenFx.disable_post_effect("{called}")")
 func disable_post_effect(called: String = "vignette") -> void:
 	_set_enabled(called, false)
 
@@ -172,10 +172,10 @@ func disable_post_effect(called: String = "vignette") -> void:
 ## ceiling holds it down, so the number a row asks for is a request rather than a command.
 ## @ace_action
 ## @ace_name("Set Post Strength")
-## @ace_codegen_template("$ScreenFx.set_post_strength("{called}", {strength})")
 ## @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
 ## @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1.")
+## @ace_codegen_template("$ScreenFx.set_post_strength("{called}", {strength})")
 func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
 	_stop_walk_on(called.strip_edges().to_lower())
 	_write_strength(called, strength)
@@ -185,14 +185,13 @@ func set_post_strength(called: String = "vignette", strength: float = 1.0) -> vo
 ## given - which is the shape of a held breath: in, hold, out, all in one row.
 ## @ace_action
 ## @ace_name("Fade Post Strength")
-## @ace_codegen_template("$ScreenFx.fade_post_strength("{called}", {to}, {seconds}, {then_back_seconds})")
 ## @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
 ## @ace_param(to, default: 1.0, desc: "The strength to arrive at, 0 to 1.")
 ## @ace_param(seconds, default: 0.5, desc: "How long the walk there takes.")
 ## @ace_param(then_back_seconds, default: 0.0, desc: "How long to walk back to where it started afterwards. 0 stays where it landed.")
-func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5,
-		then_back_seconds: float = 0.0) -> void:
+## @ace_codegen_template("$ScreenFx.fade_post_strength("{called}", {to}, {seconds}, {then_back_seconds})")
+func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5, then_back_seconds: float = 0.0) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
@@ -213,13 +212,12 @@ func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: f
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Pulse Post Effect")
-## @ace_codegen_template("$ScreenFx.pulse_post_effect("{effect}", {strength}, {seconds})")
 ## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, desc: "Which effect to flash up and let fall.")
+## @ace_param(effect, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, default: vignette, desc: "Which effect to flash up and let fall.")
 ## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
 ## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
-func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
-		seconds: float = 0.35) -> void:
+## @ace_codegen_template("$ScreenFx.pulse_post_effect("{effect}", {strength}, {seconds})")
+func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35) -> void:
 	var word: String = effect.strip_edges().to_lower()
 	if not _is_an_effect(word):
 		push_warning("Pulse Post Effect: no effect is called \"%s\" - the words are %s." % [
@@ -244,10 +242,10 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
 ## under a vignette grades the game; a grade over one grades the vignette too.
 ## @ace_action
 ## @ace_name("Move Post Effect Before")
-## @ace_codegen_template("$ScreenFx.move_post_effect_before("{called}", "{before}")")
 ## @ace_display_template("Draw [b]{called}[/b] before [b]{before}[/b]")
 ## @ace_param(called, default: vignette, desc: "The entry to move.")
-## @ace_param(before, default: , desc: "The entry it should be drawn before. Empty moves it to the very end, so it has the last word.")
+## @ace_param(before, desc: "The entry it should be drawn before. Empty moves it to the very end, so it has the last word.")
+## @ace_codegen_template("$ScreenFx.move_post_effect_before("{called}", "{before}")")
 func move_post_effect_before(called: String = "vignette", before: String = "") -> void:
 	var at: int = _find(called)
 	if at < 0:
@@ -266,9 +264,9 @@ func move_post_effect_before(called: String = "vignette", before: String = "") -
 ## while the game behind it is graded, blurred or dimmed. This is the row a health-bar layer wants.
 ## @ace_action
 ## @ace_name("Draw Post Effects Below")
-## @ace_codegen_template("$ScreenFx.draw_post_effects_below({other})")
 ## @ace_display_template("Draw post effects below [i]{other}[/i]")
 ## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should stay under - usually the one the interface is on.")
+## @ace_codegen_template("$ScreenFx.draw_post_effects_below({other})")
 func draw_post_effects_below(other: CanvasLayer) -> void:
 	if other == null:
 		return
@@ -279,9 +277,9 @@ func draw_post_effects_below(other: CanvasLayer) -> void:
 ## game. That is what a cutscene letterbox or a full-screen colour change usually wants.
 ## @ace_action
 ## @ace_name("Draw Post Effects Above")
-## @ace_codegen_template("$ScreenFx.draw_post_effects_above({other})")
 ## @ace_display_template("Draw post effects above [i]{other}[/i]")
 ## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should cover - usually the one the interface is on.")
+## @ace_codegen_template("$ScreenFx.draw_post_effects_above({other})")
 func draw_post_effects_above(other: CanvasLayer) -> void:
 	if other == null:
 		return
@@ -291,9 +289,9 @@ func draw_post_effects_above(other: CanvasLayer) -> void:
 ## True while that entry is on the stack, enabled and actually drawing something.
 ## @ace_condition
 ## @ace_name("Post Effect Is On")
-## @ace_codegen_template("$ScreenFx.post_effect_is_on("{called}")")
 ## @ace_display_template("[b]{called}[/b] is on")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_codegen_template("$ScreenFx.post_effect_is_on("{called}")")
 func post_effect_is_on(called: String = "vignette") -> bool:
 	var at: int = _find(called)
 	if at < 0:
@@ -307,8 +305,8 @@ func post_effect_is_on(called: String = "vignette") -> bool:
 ## there.
 ## @ace_expression
 ## @ace_name("Post Strength")
-## @ace_codegen_template("$ScreenFx.post_strength("{called}")")
 ## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_codegen_template("$ScreenFx.post_strength("{called}")")
 func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
@@ -334,9 +332,9 @@ func post_effect_count() -> int:
 ## is the bug you came to find. Normal takes it off again.
 ## @ace_action
 ## @ace_name("See As")
-## @ace_codegen_template("$ScreenFx.see_as("{vision}")")
 ## @ace_display_template("See as [b]{vision}[/b]")
-## @ace_param(vision, default: deuteranopia, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, desc: "Which kind of vision to simulate. Normal turns the simulation off.")
+## @ace_param(vision, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, default: deuteranopia, desc: "Which kind of vision to simulate. Normal turns the simulation off.")
+## @ace_codegen_template("$ScreenFx.see_as("{vision}")")
 func see_as(vision: String = "deuteranopia") -> void:
 	_wear_vision(SEE_AS_EFFECT, vision, "See As")
 
@@ -346,9 +344,9 @@ func see_as(vision: String = "deuteranopia") -> void:
 ## belongs behind a settings choice rather than on by default. Normal takes it off again.
 ## @ace_action
 ## @ace_name("Correct Colours For")
-## @ace_codegen_template("$ScreenFx.correct_colours_for("{vision}")")
 ## @ace_display_template("Correct colours for [b]{vision}[/b]")
-## @ace_param(vision, default: deuteranopia, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, desc: "Which kind of vision to correct for. Normal turns the correction off.")
+## @ace_param(vision, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, default: deuteranopia, desc: "Which kind of vision to correct for. Normal turns the correction off.")
+## @ace_codegen_template("$ScreenFx.correct_colours_for("{vision}")")
 func correct_colours_for(vision: String = "deuteranopia") -> void:
 	_wear_vision(CORRECT_EFFECT, vision, "Correct Colours For")
 
@@ -358,10 +356,10 @@ func correct_colours_for(vision: String = "deuteranopia") -> void:
 ## once, and every later row picks it by file.
 ## @ace_action
 ## @ace_name("Save Look")
-## @ace_codegen_template("$ScreenFx.save_look("{path}", "{called}")")
 ## @ace_display_template("Save the look as [b]{path}[/b]")
 ## @ace_param(path, hint: file_path, default: user://looks/my_look.tres, desc: "Where to write it. user:// is the player's own folder; res:// is your project, which only works while the editor is open.")
 ## @ace_param(called, default: My look, desc: "The name the look answers to, which is what Look Is and Current Look compare.")
+## @ace_codegen_template("$ScreenFx.save_look("{path}", "{called}")")
 func save_look(path: String = "user://looks/my_look.tres", called: String = "My look") -> void:
 	if not ResourceLoader.exists(LOOK_SCRIPT):
 		push_warning("Save Look needs the Screen Look Resource pack, which is not installed.")
@@ -380,9 +378,9 @@ func save_look(path: String = "user://looks/my_look.tres", called: String = "My 
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Use Look")
-## @ace_codegen_template("$ScreenFx.use_look({look})")
 ## @ace_display_template("Use the look [b]{look}[/b]")
 ## @ace_param(look, hint: resource_path, desc: "A look file. Build one with rows and Save Look, or make one in the Inspector from the Screen Look Resource class.")
+## @ace_codegen_template("$ScreenFx.use_look({look})")
 func use_look(look: Resource) -> void:
 	clear_look()
 	if look == null:
@@ -405,10 +403,10 @@ func use_look(look: Resource) -> void:
 ## the new look has fade in from nothing. Nothing cuts.
 ## @ace_action
 ## @ace_name("Blend To Look")
-## @ace_codegen_template("await $ScreenFx.blend_to_look({look}, {seconds})")
 ## @ace_display_template("Blend to the look [b]{look}[/b] over [b]{seconds}[/b] s")
 ## @ace_param(look, hint: resource_path, desc: "The look to arrive at.")
 ## @ace_param(seconds, default: 1.0, desc: "How long the crossing takes.")
+## @ace_codegen_template("await $ScreenFx.blend_to_look({look}, {seconds})")
 func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
 	if look == null:
 		clear_look()
@@ -458,9 +456,9 @@ func clear_look() -> void:
 ## reloaded from disk is still the same look.
 ## @ace_condition
 ## @ace_name("Look Is")
-## @ace_codegen_template("$ScreenFx.look_is({look})")
 ## @ace_display_template("The look is [b]{look}[/b]")
 ## @ace_param(look, hint: resource_path, desc: "The look to compare against what is on the screen.")
+## @ace_codegen_template("$ScreenFx.look_is({look})")
 func look_is(look: Resource) -> bool:
 	if look == null:
 		return _look_name.is_empty()
@@ -683,8 +681,7 @@ func _stop_walk_on(called: String) -> void:
 ##
 ## WITH NO TREE TO RUN A TWEEN IN (a headless run, a layer built but not added yet) the walk lands on
 ## its final value at once, which is the same answer a moment later.
-func _walk_strength(called: String, to_value: float, seconds: float, back_to: float,
-		back_seconds: float, drop_after: bool) -> void:
+func _walk_strength(called: String, to_value: float, seconds: float, back_to: float, back_seconds: float, drop_after: bool) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return

@@ -89,226 +89,6 @@ var _marked: Array[VisualInstance3D] = []
 ## Whether this run has already said out loud that there is no compositor here. Once is honest;
 ## once a frame is noise.
 var _said_no_compositor: bool = false
-## Adds one effect to the end of the camera's post stack and turns it on. The five words are
-## vignette, desaturate, pixelate, tint and fade - the same words the 2D post stack uses, so a row
-## reads alike on either. Leave the name empty and the entry is called after its effect, which is
-## what one of each wants.
-##
-## FORWARD+ ONLY. Mobile and Compatibility have no compositor, so this row does nothing at all
-## there; Screen FX does the same looks on any renderer.
-## @ace_action
-## @ace_featured
-## @ace_name("Add Post Effect")
-## @ace_codegen_template("$PostKitBehavior.add_post_effect("{effect}", "{called}", {strength})")
-## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, desc: "Which effect. Each one runs a compute shader over the whole frame, so each one costs a pass over every pixel the camera drew.")
-## @ace_param(called, default: , desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
-## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
-func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
-	var word: String = effect.strip_edges().to_lower()
-	if not POST_EFFECTS.has(word):
-		push_warning("Add Post Effect: no effect is called \"%s\" - the words are %s." % [
-			effect, ", ".join(POST_EFFECTS)])
-		return
-	var name_of_it: String = called.strip_edges().to_lower()
-	if name_of_it.is_empty():
-		name_of_it = word
-	_add_entry(word, name_of_it, strength)
-## Takes one effect off the stack, so it stops costing anything at all.
-## @ace_action
-## @ace_name("Remove Post Effect")
-## @ace_codegen_template("$PostKitBehavior.remove_post_effect("{called}")")
-## @ace_display_template("Remove post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func remove_post_effect(called: String = "vignette") -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	_stop_walk_on(str(_stack[at].get("called", "")))
-	_stack.remove_at(at)
-	_write_effects()
-## Turns one effect back on without forgetting how far up it was.
-## @ace_action
-## @ace_name("Enable Post Effect")
-## @ace_codegen_template("$PostKitBehavior.enable_post_effect("{called}")")
-## @ace_display_template("Enable post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func enable_post_effect(called: String = "vignette") -> void:
-	_set_enabled(called, true)
-## Turns one effect off and leaves it in the stack, so a later Enable Post Effect brings back the
-## same strength rather than a fresh guess at it.
-## @ace_action
-## @ace_name("Disable Post Effect")
-## @ace_codegen_template("$PostKitBehavior.disable_post_effect("{called}")")
-## @ace_display_template("Disable post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func disable_post_effect(called: String = "vignette") -> void:
-	_set_enabled(called, false)
-## Sets how far one effect goes, straight away.
-## @ace_action
-## @ace_name("Set Post Strength")
-## @ace_codegen_template("$PostKitBehavior.set_post_strength("{called}", {strength})")
-## @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1, before the accessibility dials have their say.")
-func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
-	_stop_walk_on(called.strip_edges().to_lower())
-	_write_strength(called, strength)
-## Walks one effect's strength to a value over a number of seconds - the slow drain of colour as the
-## health goes, the vignette closing in.
-## @ace_action
-## @ace_name("Fade Post Strength")
-## @ace_codegen_template("$PostKitBehavior.fade_post_strength("{called}", {to}, {seconds})")
-## @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(to, default: 1.0, desc: "The strength it arrives at, 0 to 1.")
-## @ace_param(seconds, default: 0.5, desc: "How long the walk takes. Held over a floor while no flashing is on.")
-func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5) -> void:
-	_walk_strength(called.strip_edges().to_lower(), clampf(to, 0.0, 1.0), _slowed(seconds), 0.0,
-		0.0, false)
-## Flashes one effect up and lets it fall back - the whole sentence a hit, a pickup or a near miss
-## wants, in one row and with nothing to tune. An effect that was not on the stack is borrowed for
-## the moment and taken off again at the end.
-##
-## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility; Screen FX pulses the same words on
-## any renderer.
-## @ace_action
-## @ace_featured
-## @ace_name("Pulse Post Effect")
-## @ace_codegen_template("$PostKitBehavior.pulse_post_effect("{effect}", {strength}, {seconds})")
-## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, desc: "Which effect to flash up and let fall.")
-## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
-## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
-func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
-		seconds: float = 0.35) -> void:
-	var word: String = effect.strip_edges().to_lower()
-	if not POST_EFFECTS.has(word):
-		push_warning("Pulse Post Effect: no effect is called \"%s\" - the words are %s." % [
-			effect, ", ".join(POST_EFFECTS)])
-		return
-	var borrowed: bool = _find(word) < 0
-	var falls_back_to: float = 0.0
-	if borrowed:
-		_add_entry(word, word, 0.0)
-	else:
-		falls_back_to = float(_stack[_find(word)].get("strength", 0.0))
-	if _find(word) < 0:
-		return
-	_stop_walk_on(word)
-	_write_strength(word, strength)
-	if seconds <= 0.0:
-		return
-	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
-## Whether an effect by that name is on the stack at all, on or off. The gate for a row that should
-## only add one once.
-## @ace_condition
-## @ace_name("Has Post Effect")
-## @ace_codegen_template("$PostKitBehavior.has_post_effect("{called}")")
-## @ace_display_template("has the post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func has_post_effect(called: String = "vignette") -> bool:
-	return _find(called) >= 0
-## How far one effect is going right now, AFTER the accessibility dials have had their say - so it
-## is what the camera is drawing rather than what was asked for. 0 for one that is not there.
-## @ace_expression
-## @ace_name("Post Strength")
-## @ace_codegen_template("$PostKitBehavior.post_strength("{called}")")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func post_strength(called: String = "vignette") -> float:
-	var at: int = _find(called)
-	if at < 0:
-		return 0.0
-	return _allowed(float(_stack[at].get("strength", 0.0)))
-## Draws an outline around every node in a group, THROUGH whatever is standing in front of them -
-## the enemies behind the wall, the objective across the level, the teammate in the smoke.
-##
-## The row switches the mask layer on for those nodes' meshes and a second camera that can see that
-## layer and nothing else draws them into a mask, which is edge-detected over the finished frame.
-## So the outline is one extra pass over the marked meshes, and nothing at all when nothing is
-## marked. Ask for seconds and it takes itself off again; ask for 0 and Stop Outlining ends it.
-##
-## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
-## @ace_action
-## @ace_featured
-## @ace_name("Outline Group Through Walls")
-## @ace_codegen_template("$PostKitBehavior.outline_group_through_walls("{group}", {colour}, {width}, {seconds})")
-## @ace_display_template("Outline group [b]{group}[/b] through walls in [b]{colour}[/b]")
-## @ace_param(group, default: enemies, desc: "The group whose nodes are outlined. Every visual instance under each of them is marked.")
-## @ace_param(colour, default: Color.YELLOW, desc: "The colour the outline is drawn in.")
-## @ace_param(width, default: 2.0, desc: "How thick the outline is, in pixels of the frame.")
-## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
-func outline_group_through_walls(group: String = "enemies",
-		colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0) -> void:
-	if not is_inside_tree():
-		return
-	var marked: int = 0
-	for node: Node in get_tree().get_nodes_in_group(group.strip_edges()):
-		marked += _mark(node, true)
-	if marked == 0:
-		push_warning("Outline Group Through Walls: nothing in the group \"%s\" has a mesh to outline." % group)
-		return
-	_start_outline(colour, width, 0.0, seconds)
-
-
-## Fills one node in a flat colour, through whatever is in front of it - where the thing is, rather
-## than what shape it is. The same mask as the outline, drawn solid.
-## @ace_action
-## @ace_name("Silhouette Node Through Walls")
-## @ace_codegen_template("$PostKitBehavior.silhouette_node_through_walls({node}, {colour}, {seconds})")
-## @ace_display_template("Silhouette [i]{node}[/i] through walls in [b]{colour}[/b]")
-## @ace_param(node, desc: "The node to fill. Every visual instance under it is marked.")
-## @ace_param(colour, default: Color.YELLOW, desc: "The colour it is filled with.")
-## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
-func silhouette_node_through_walls(node: Node3D, colour: Color = Color.YELLOW,
-		seconds: float = 0.0) -> void:
-	if node == null or not is_inside_tree():
-		return
-	if _mark(node, true) == 0:
-		push_warning("Silhouette Node Through Walls: %s has no mesh to fill." % node.name)
-		return
-	_start_outline(colour, 2.0, 1.0, seconds)
-## Whether a node is one of the ones being drawn through walls right now.
-## @ace_condition
-## @ace_name("Is Outlined")
-## @ace_codegen_template("$PostKitBehavior.is_outlined({node})")
-## @ace_display_template("[i]{node}[/i] is outlined")
-## @ace_param(node, desc: "The node to ask about.")
-func is_outlined(node: Node3D) -> bool:
-	if node == null:
-		return false
-	for instance: VisualInstance3D in _marked:
-		if is_instance_valid(instance) and (instance == node or node.is_ancestor_of(instance)):
-			return true
-	return false
-## Whether something solid is standing between the camera and a node - the question an outline row
-## is usually the answer to, asked on its own so a sheet can decide instead of always drawing.
-##
-## It is one ray from the camera to the node's own origin, so a body whose middle is visible past
-## the corner of a wall reads as seen. That is a cheap question with an honest answer, not a
-## visibility test.
-## @ace_condition
-## @ace_name("Is Hidden From View")
-## @ace_codegen_template("$PostKitBehavior.is_hidden_from_view({node})")
-## @ace_display_template("[i]{node}[/i] is hidden from view")
-## @ace_param(node, desc: "The node to ask about.")
-func is_hidden_from_view(node: Node3D) -> bool:
-	if node == null or not is_inside_tree():
-		return false
-	var camera: Camera3D = _camera()
-	if camera == null:
-		return false
-	var world: World3D = camera.get_world_3d()
-	if world == null or world.direct_space_state == null:
-		return false
-	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
-		camera.global_position, node.global_position)
-	query.collide_with_areas = false
-	var hit: Dictionary = world.direct_space_state.intersect_ray(query)
-	var blocker: Node = hit.get("collider", null) as Node
-	if blocker == null:
-		return false
-	return blocker != node and not node.is_ancestor_of(blocker) and not blocker.is_ancestor_of(node)
 ## The camera the effects hang on: the parent, when this behavior was put under one, and otherwise
 ## whichever camera the viewport is currently drawing through.
 func _camera() -> Camera3D:
@@ -343,33 +123,6 @@ func _make(effect: String) -> CompositorEffect:
 		push_warning("Post Kit: the effect \"%s\" has no script at %s." % [effect, script_path])
 		return null
 	return made.new() as CompositorEffect
-## Walks one entry's strength - there, and optionally back - and takes it off the stack afterwards
-## when it was only borrowed for a moment.
-##
-## WITH NO TREE TO RUN A TWEEN IN (a headless run, a behavior built but not added yet) the walk
-## lands on its final value at once, which is the same answer a moment later.
-func _walk_strength(called: String, to_value: float, seconds: float, back_to: float,
-		back_seconds: float, drop_after: bool) -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	_stop_walk_on(called)
-	var ends_at: float = back_to if back_seconds > 0.0 else to_value
-	if not is_inside_tree() or (seconds <= 0.0 and back_seconds <= 0.0):
-		_write_strength(called, ends_at)
-		if drop_after:
-			remove_post_effect(called)
-		return
-	var walk: Tween = create_tween()
-	if seconds > 0.0:
-		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			float(_stack[at].get("strength", 0.0)), to_value, seconds)
-	if back_seconds > 0.0:
-		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			to_value, back_to, back_seconds)
-	if drop_after:
-		walk.finished.connect(func() -> void: remove_post_effect(called))
-	_stack_walks[called] = walk
 ## The size the mask viewport should be: the size of the frame the outline is drawn over.
 func _view_size() -> Vector2i:
 	var view: Viewport = get_viewport()
@@ -415,9 +168,206 @@ func _process(delta: float) -> void:
 	if made != null:
 		made.set("mask_texture", RenderingServer.texture_get_rd_texture(_mask.get_texture().get_rid()))
 
+## Adds one effect to the end of the camera's post stack and turns it on. The five words are
+## vignette, desaturate, pixelate, tint and fade - the same words the 2D post stack uses, so a row
+## reads alike on either. Leave the name empty and the entry is called after its effect, which is
+## what one of each wants.
+##
+## FORWARD+ ONLY. Mobile and Compatibility have no compositor, so this row does nothing at all
+## there; Screen FX does the same looks on any renderer.
+## @ace_action
+## @ace_featured
+## @ace_name("Add Post Effect")
+## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
+## @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect. Each one runs a compute shader over the whole frame, so each one costs a pass over every pixel the camera drew.")
+## @ace_param(called, desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
+## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.add_post_effect("{effect}", "{called}", {strength})")
+func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
+	var word: String = effect.strip_edges().to_lower()
+	if not POST_EFFECTS.has(word):
+		push_warning("Add Post Effect: no effect is called \"%s\" - the words are %s." % [
+			effect, ", ".join(POST_EFFECTS)])
+		return
+	var name_of_it: String = called.strip_edges().to_lower()
+	if name_of_it.is_empty():
+		name_of_it = word
+	_add_entry(word, name_of_it, strength)
+
+## Takes one effect off the stack, so it stops costing anything at all.
+## @ace_action
+## @ace_name("Remove Post Effect")
+## @ace_display_template("Remove post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.remove_post_effect("{called}")")
+func remove_post_effect(called: String = "vignette") -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	_stop_walk_on(str(_stack[at].get("called", "")))
+	_stack.remove_at(at)
+	_write_effects()
+
+## Turns one effect back on without forgetting how far up it was.
+## @ace_action
+## @ace_name("Enable Post Effect")
+## @ace_display_template("Enable post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.enable_post_effect("{called}")")
+func enable_post_effect(called: String = "vignette") -> void:
+	_set_enabled(called, true)
+
+## Turns one effect off and leaves it in the stack, so a later Enable Post Effect brings back the
+## same strength rather than a fresh guess at it.
+## @ace_action
+## @ace_name("Disable Post Effect")
+## @ace_display_template("Disable post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.disable_post_effect("{called}")")
+func disable_post_effect(called: String = "vignette") -> void:
+	_set_enabled(called, false)
+
+## Sets how far one effect goes, straight away.
+## @ace_action
+## @ace_name("Set Post Strength")
+## @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1, before the accessibility dials have their say.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.set_post_strength("{called}", {strength})")
+func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
+	_stop_walk_on(called.strip_edges().to_lower())
+	_write_strength(called, strength)
+
+## Walks one effect's strength to a value over a number of seconds - the slow drain of colour as the
+## health goes, the vignette closing in.
+## @ace_action
+## @ace_name("Fade Post Strength")
+## @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(to, default: 1.0, desc: "The strength it arrives at, 0 to 1.")
+## @ace_param(seconds, default: 0.5, desc: "How long the walk takes. Held over a floor while no flashing is on.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.fade_post_strength("{called}", {to}, {seconds})")
+func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5) -> void:
+	_walk_strength(called.strip_edges().to_lower(), clampf(to, 0.0, 1.0), _slowed(seconds), 0.0,
+		0.0, false)
+
+## Flashes one effect up and lets it fall back - the whole sentence a hit, a pickup or a near miss
+## wants, in one row and with nothing to tune. An effect that was not on the stack is borrowed for
+## the moment and taken off again at the end.
+##
+## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility; Screen FX pulses the same words on
+## any renderer.
+## @ace_action
+## @ace_featured
+## @ace_name("Pulse Post Effect")
+## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
+## @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect to flash up and let fall.")
+## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
+## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.pulse_post_effect("{effect}", {strength}, {seconds})")
+func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35) -> void:
+	var word: String = effect.strip_edges().to_lower()
+	if not POST_EFFECTS.has(word):
+		push_warning("Pulse Post Effect: no effect is called \"%s\" - the words are %s." % [
+			effect, ", ".join(POST_EFFECTS)])
+		return
+	var borrowed: bool = _find(word) < 0
+	var falls_back_to: float = 0.0
+	if borrowed:
+		_add_entry(word, word, 0.0)
+	else:
+		falls_back_to = float(_stack[_find(word)].get("strength", 0.0))
+	if _find(word) < 0:
+		return
+	_stop_walk_on(word)
+	_write_strength(word, strength)
+	if seconds <= 0.0:
+		return
+	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
+
+## Whether an effect by that name is on the stack at all, on or off. The gate for a row that should
+## only add one once.
+## @ace_condition
+## @ace_name("Has Post Effect")
+## @ace_display_template("has the post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.has_post_effect("{called}")")
+func has_post_effect(called: String = "vignette") -> bool:
+	return _find(called) >= 0
+
+## How far one effect is going right now, AFTER the accessibility dials have had their say - so it
+## is what the camera is drawing rather than what was asked for. 0 for one that is not there.
+## @ace_expression
+## @ace_name("Post Strength")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.post_strength("{called}")")
+func post_strength(called: String = "vignette") -> float:
+	var at: int = _find(called)
+	if at < 0:
+		return 0.0
+	return _allowed(float(_stack[at].get("strength", 0.0)))
+
+## Draws an outline around every node in a group, THROUGH whatever is standing in front of them -
+## the enemies behind the wall, the objective across the level, the teammate in the smoke.
+##
+## The row switches the mask layer on for those nodes' meshes and a second camera that can see that
+## layer and nothing else draws them into a mask, which is edge-detected over the finished frame.
+## So the outline is one extra pass over the marked meshes, and nothing at all when nothing is
+## marked. Ask for seconds and it takes itself off again; ask for 0 and Stop Outlining ends it.
+##
+## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
+## @ace_action
+## @ace_featured
+## @ace_name("Outline Group Through Walls")
+## @ace_display_template("Outline group [b]{group}[/b] through walls in [b]{colour}[/b]")
+## @ace_param(group, default: enemies, desc: "The group whose nodes are outlined. Every visual instance under each of them is marked.")
+## @ace_param(colour, default: Color.YELLOW, desc: "The colour the outline is drawn in.")
+## @ace_param(width, default: 2.0, desc: "How thick the outline is, in pixels of the frame.")
+## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.outline_group_through_walls("{group}", {colour}, {width}, {seconds})")
+func outline_group_through_walls(group: String = "enemies", colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0) -> void:
+	if not is_inside_tree():
+		return
+	var marked: int = 0
+	for node: Node in get_tree().get_nodes_in_group(group.strip_edges()):
+		marked += _mark(node, true)
+	if marked == 0:
+		push_warning("Outline Group Through Walls: nothing in the group \"%s\" has a mesh to outline." % group)
+		return
+	_start_outline(colour, width, 0.0, seconds)
+
+## Fills one node in a flat colour, through whatever is in front of it - where the thing is, rather
+## than what shape it is. The same mask as the outline, drawn solid.
+## @ace_action
+## @ace_name("Silhouette Node Through Walls")
+## @ace_display_template("Silhouette [i]{node}[/i] through walls in [b]{colour}[/b]")
+## @ace_param(node, desc: "The node to fill. Every visual instance under it is marked.")
+## @ace_param(colour, default: Color.YELLOW, desc: "The colour it is filled with.")
+## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.silhouette_node_through_walls({node}, {colour}, {seconds})")
+func silhouette_node_through_walls(node: Node3D, colour: Color = Color.YELLOW, seconds: float = 0.0) -> void:
+	if node == null or not is_inside_tree():
+		return
+	if _mark(node, true) == 0:
+		push_warning("Silhouette Node Through Walls: %s has no mesh to fill." % node.name)
+		return
+	_start_outline(colour, 2.0, 1.0, seconds)
+
+## Ends every outline and silhouette at once: the mask layer goes back off the meshes that were
+## marked, the entry leaves the stack, and the mask rig is freed, so nothing is left running.
 ## @ace_action
 ## @ace_name("Stop Outlining")
-## @ace_description("Ends every outline and silhouette at once: the mask layer goes back off the meshes that were marked, the entry leaves the stack, and the mask rig is freed, so nothing is left running.")
 ## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
 ## @ace_codegen_template("$PostKitBehavior.stop_outlining()")
 func stop_outlining() -> void:
@@ -427,6 +377,51 @@ func stop_outlining() -> void:
 	_marked.clear()
 	remove_post_effect(OUTLINE_EFFECT)
 	_free_mask()
+
+## Whether a node is one of the ones being drawn through walls right now.
+## @ace_condition
+## @ace_name("Is Outlined")
+## @ace_display_template("[i]{node}[/i] is outlined")
+## @ace_param(node, desc: "The node to ask about.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.is_outlined({node})")
+func is_outlined(node: Node3D) -> bool:
+	if node == null:
+		return false
+	for instance: VisualInstance3D in _marked:
+		if is_instance_valid(instance) and (instance == node or node.is_ancestor_of(instance)):
+			return true
+	return false
+
+## Whether something solid is standing between the camera and a node - the question an outline row
+## is usually the answer to, asked on its own so a sheet can decide instead of always drawing.
+##
+## It is one ray from the camera to the node's own origin, so a body whose middle is visible past
+## the corner of a wall reads as seen. That is a cheap question with an honest answer, not a
+## visibility test.
+## @ace_condition
+## @ace_name("Is Hidden From View")
+## @ace_display_template("[i]{node}[/i] is hidden from view")
+## @ace_param(node, desc: "The node to ask about.")
+## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
+## @ace_codegen_template("$PostKitBehavior.is_hidden_from_view({node})")
+func is_hidden_from_view(node: Node3D) -> bool:
+	if node == null or not is_inside_tree():
+		return false
+	var camera: Camera3D = _camera()
+	if camera == null:
+		return false
+	var world: World3D = camera.get_world_3d()
+	if world == null or world.direct_space_state == null:
+		return false
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+		camera.global_position, node.global_position)
+	query.collide_with_areas = false
+	var hit: Dictionary = world.direct_space_state.intersect_ray(query)
+	var blocker: Node = hit.get("collider", null) as Node
+	if blocker == null:
+		return false
+	return blocker != node and not node.is_ancestor_of(blocker) and not blocker.is_ancestor_of(node)
 
 ## Where an entry sits in the stack, or -1. Names are compared trimmed and lower-cased, so a row that
 ## says "Vignette" and one that says "vignette" mean the same entry.
@@ -535,6 +530,33 @@ func _stop_walk_on(called: String) -> void:
 	if walk != null and walk.is_valid():
 		walk.kill()
 	_stack_walks.erase(called)
+
+## Walks one entry's strength - there, and optionally back - and takes it off the stack afterwards
+## when it was only borrowed for a moment.
+##
+## WITH NO TREE TO RUN A TWEEN IN (a headless run, a behavior built but not added yet) the walk
+## lands on its final value at once, which is the same answer a moment later.
+func _walk_strength(called: String, to_value: float, seconds: float, back_to: float, back_seconds: float, drop_after: bool) -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	_stop_walk_on(called)
+	var ends_at: float = back_to if back_seconds > 0.0 else to_value
+	if not is_inside_tree() or (seconds <= 0.0 and back_seconds <= 0.0):
+		_write_strength(called, ends_at)
+		if drop_after:
+			remove_post_effect(called)
+		return
+	var walk: Tween = create_tween()
+	if seconds > 0.0:
+		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
+			float(_stack[at].get("strength", 0.0)), to_value, seconds)
+	if back_seconds > 0.0:
+		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
+			to_value, back_to, back_seconds)
+	if drop_after:
+		walk.finished.connect(func() -> void: remove_post_effect(called))
+	_stack_walks[called] = walk
 
 ## Switches the mask layer on (or off) for every visual instance at or under a node, and remembers
 ## the ones it switched on. Answers how many it touched, so a row with nothing to mark can say so.

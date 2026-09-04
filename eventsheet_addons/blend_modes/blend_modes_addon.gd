@@ -54,6 +54,33 @@ var _shaders: Dictionary = {}
 ## The strength fades running right now, keyed by the item's instance id, so a second fade on the
 ## same item replaces the first rather than the two of them fighting over one uniform.
 var _fades: Dictionary = {}
+## One mode's shader, loaded the first time it is asked for and kept after that. A project that only
+## ever blends one way loads one file.
+func _shader_for(mode: String) -> Shader:
+	if _shaders.has(mode):
+		return _shaders[mode] as Shader
+	var path: String = SHADER_DIRECTORY + SHADER_PREFIX + mode.replace(" ", "_") + ".gdshader"
+	var shader: Shader = load(path) as Shader
+	if shader == null:
+		push_warning("Blend Modes: the shader for \"%s\" is missing from %s." % [mode, SHADER_DIRECTORY])
+		return null
+	_shaders[mode] = shader
+	return shader
+## The pack's own material on this item, or null when it is not wearing one - the one question every
+## row that turns a dial has to ask first.
+func _pack_material_of(item: CanvasItem) -> ShaderMaterial:
+	if item == null or not is_pack_material(item.material):
+		return null
+	return item.material as ShaderMaterial
+## The run-time CanvasGroup wrapped around this node's children, or null. Asked through the meta
+## rather than by name, so a scene that already has a node called the same thing is never mistaken
+## for one of these.
+func _group_of(item: CanvasItem) -> CanvasGroup:
+	var held: Variant = item.get_meta(GROUP_META, null)
+	if held == null or not is_instance_valid(held as Object):
+		return null
+	return held as CanvasGroup
+
 ## Blends this item into whatever has already been drawn under it. The five native modes are the
 ## ones Godot draws by itself and cost nothing; the other fifteen read the screen back through a
 ## shader, which costs one screen read for every pixel the item covers - a look for the few things
@@ -62,11 +89,12 @@ var _fades: Dictionary = {}
 ## @ace_featured
 ## @ace_name("Blend As")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.blend_as({item}, "{mode}", {strength})")
 ## @ace_display_template("Blend [i]{item}[/i] as [b]{mode}[/b]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item to blend. self is the node running this sheet.")
-## @ace_param(mode, hint: blend_mode, default: screen, options: normal=Normal|add=Add|subtract=Subtract|multiply=Multiply|premultiplied=Premultiplied|screen=Screen|overlay=Overlay|darken=Darken|lighten=Lighten|colour dodge=Colour dodge|colour burn=Colour burn|hard light=Hard light|soft light=Soft light|difference=Difference|exclusion=Exclusion|hue=Hue|saturation=Saturation|colour=Colour|luminosity=Luminosity|copy=Copy, desc: "Which look. The five at the top are the ones the renderer draws by itself; the rest read the screen.")
+## @ace_param(mode, hint: blend_mode, options: normal=Normal|add=Add|subtract=Subtract|multiply=Multiply|premultiplied=Premultiplied|screen=Screen|overlay=Overlay|darken=Darken|lighten=Lighten|colour dodge=Colour dodge|colour burn=Colour burn|hard light=Hard light|soft light=Soft light|difference=Difference|exclusion=Exclusion|hue=Hue|saturation=Saturation|colour=Colour|luminosity=Luminosity|copy=Copy, default: screen, desc: "Which look. The five at the top are the ones the renderer draws by itself; the rest read the screen.")
 ## @ace_param(strength, default: 1.0, desc: "How far the blend goes. 0 leaves the screen as it was, 1 is the whole mode. Native modes ignore it.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.blend_as({item}, "{mode}", {strength})")
 func blend_as(item: CanvasItem, mode: String = "screen", strength: float = 1.0) -> void:
 	if item == null:
 		return
@@ -95,31 +123,35 @@ func blend_as(item: CanvasItem, mode: String = "screen", strength: float = 1.0) 
 	item.material = material
 	item.set_meta(MODE_META, wanted)
 	set_blend_strength(item, strength)
+
 ## Turns the blend up or down without changing which mode it is - the same dial Blend As set when it
 ## put the look on. An item in a native mode has nothing to turn, so this does nothing to one.
 ## @ace_action
 ## @ace_name("Set Blend Strength")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.set_blend_strength({item}, {strength})")
 ## @ace_display_template("Set [i]{item}[/i] blend strength to [b]{strength}[/b]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item whose blend to turn.")
 ## @ace_param(strength, default: 1.0, desc: "0 leaves the screen as it was, 1 is the whole mode.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.set_blend_strength({item}, {strength})")
 func set_blend_strength(item: CanvasItem, strength: float = 1.0) -> void:
 	var material: ShaderMaterial = _pack_material_of(item)
 	if material == null:
 		return
 	_stop_fade(item)
 	material.set_shader_parameter("strength", clampf(strength, 0.0, 1.0))
+
 ## Walks the blend to a new strength over time instead of jumping to it - a look coming on as the
 ## boss appears, a mask opening, a glow settling. One tween, and nothing kept between frames.
 ## @ace_action
 ## @ace_name("Fade Blend Strength")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.fade_blend_strength({item}, {strength}, {seconds})")
 ## @ace_display_template("Fade [i]{item}[/i] blend to [b]{strength}[/b] over [b]{seconds}[/b] s")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item whose blend to walk.")
 ## @ace_param(strength, default: 0.0, desc: "Where the walk ends. 0 is the screen as it was.")
 ## @ace_param(seconds, default: 0.4, desc: "How long the walk takes.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.fade_blend_strength({item}, {strength}, {seconds})")
 func fade_blend_strength(item: CanvasItem, strength: float = 0.0, seconds: float = 0.4) -> void:
 	var material: ShaderMaterial = _pack_material_of(item)
 	if material == null:
@@ -132,29 +164,34 @@ func fade_blend_strength(item: CanvasItem, strength: float = 0.0, seconds: float
 	var walk: Tween = create_tween()
 	walk.tween_property(material, "shader_parameter/strength", landing, seconds)
 	_fades[item.get_instance_id()] = walk
+
 ## True while this item is blending the way the row says. Reads the same record Blend Mode does, so
 ## an item nothing here has touched answers to "normal" rather than to nothing at all.
 ## @ace_condition
 ## @ace_name("Blend Mode Is")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.blend_mode_is({item}, "{mode}")")
 ## @ace_display_template("[i]{item}[/i] blend is [b]{mode}[/b]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item to ask about.")
-## @ace_param(mode, hint: blend_mode, default: screen, options: normal=Normal|add=Add|subtract=Subtract|multiply=Multiply|premultiplied=Premultiplied|screen=Screen|overlay=Overlay|darken=Darken|lighten=Lighten|colour dodge=Colour dodge|colour burn=Colour burn|hard light=Hard light|soft light=Soft light|difference=Difference|exclusion=Exclusion|hue=Hue|saturation=Saturation|colour=Colour|luminosity=Luminosity|copy=Copy, desc: "The mode to compare against.")
+## @ace_param(mode, hint: blend_mode, options: normal=Normal|add=Add|subtract=Subtract|multiply=Multiply|premultiplied=Premultiplied|screen=Screen|overlay=Overlay|darken=Darken|lighten=Lighten|colour dodge=Colour dodge|colour burn=Colour burn|hard light=Hard light|soft light=Soft light|difference=Difference|exclusion=Exclusion|hue=Hue|saturation=Saturation|colour=Colour|luminosity=Luminosity|copy=Copy, default: screen, desc: "The mode to compare against.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.blend_mode_is({item}, "{mode}")")
 func blend_mode_is(item: CanvasItem, mode: String = "screen") -> bool:
 	return blend_mode(item) == mode.strip_edges().to_lower()
+
 ## The word this item is blending by, for any value field - "screen", "multiply", "normal". An item
 ## no row here has touched reads back "normal", which is what it is doing.
 ## @ace_expression
 ## @ace_name("Blend Mode")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.blend_mode({item})")
 ## @ace_display_template("blend mode of [i]{item}[/i]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item to read.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.blend_mode({item})")
 func blend_mode(item: CanvasItem) -> String:
 	if item == null:
 		return DEFAULT_MODE
 	return str(item.get_meta(MODE_META, DEFAULT_MODE))
+
 ## Lets a second picture decide where this one is allowed to be. The mask's transparency is what is
 ## read, so any sprite, any drawn shape and any texture with a hole in it works as one - a torn
 ## edge, a spotlight, a wipe that moves.
@@ -162,11 +199,12 @@ func blend_mode(item: CanvasItem) -> String:
 ## @ace_featured
 ## @ace_name("Mask With")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.mask_with({item}, {shape}, "{mode}")")
 ## @ace_display_template("Mask [i]{item}[/i] with [b]{shape}[/b], [b]{mode}[/b]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item to mask.")
 ## @ace_param(shape, hint: expression, default: null, desc: "The texture whose transparency decides. Drag one in, or read one off another node.")
-## @ace_param(mode, default: inside, options: inside=Inside the mask|outside=Outside the mask|atop=The mask shape|behind=Behind the item|xor=Where only one of them is, desc: "How the two shapes meet.")
+## @ace_param(mode, options: inside=Inside the mask|outside=Outside the mask|atop=The mask shape|behind=Behind the item|xor=Where only one of them is, default: inside, desc: "How the two shapes meet.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.mask_with({item}, {shape}, "{mode}")")
 func mask_with(item: CanvasItem, shape: Texture2D = null, mode: String = "inside") -> void:
 	if item == null:
 		return
@@ -194,16 +232,18 @@ func mask_with(item: CanvasItem, shape: Texture2D = null, mode: String = "inside
 	material.set_shader_parameter("strength", 1.0)
 	item.material = material
 	item.set_meta(MODE_META, "mask")
+
 ## The same mask, taken off ANOTHER NODE's picture - the sprite in the scene that is already the
 ## shape you want. Reads that node's own texture, so moving or swapping the sprite changes the mask.
 ## @ace_action
 ## @ace_name("Mask With Node")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.mask_with_node({item}, {shape_node}, "{mode}")")
 ## @ace_display_template("Mask [i]{item}[/i] with [i]{shape_node}[/i], [b]{mode}[/b]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item to mask.")
 ## @ace_param(shape_node, hint: expression, default: null, desc: "The node whose picture is the shape. A Sprite2D, a TextureRect, anything wearing a texture.")
-## @ace_param(mode, default: inside, options: inside=Inside the mask|outside=Outside the mask|atop=The mask shape|behind=Behind the item|xor=Where only one of them is, desc: "How the two shapes meet.")
+## @ace_param(mode, options: inside=Inside the mask|outside=Outside the mask|atop=The mask shape|behind=Behind the item|xor=Where only one of them is, default: inside, desc: "How the two shapes meet.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.mask_with_node({item}, {shape_node}, "{mode}")")
 func mask_with_node(item: CanvasItem, shape_node: CanvasItem = null, mode: String = "inside") -> void:
 	if shape_node == null:
 		push_warning("Mask With Node: no node was handed to the mask, so nothing was masked.")
@@ -214,19 +254,22 @@ func mask_with_node(item: CanvasItem, shape_node: CanvasItem = null, mode: Strin
 		push_warning("Mask With Node: %s wears no texture, so there is no shape to mask with." % shape_node.name)
 		return
 	mask_with(item, shape_node.get("texture") as Texture2D, mode)
+
 ## Takes the mask off and puts back whatever the item was wearing before it - its own material, or
 ## none at all. An item that was never masked is left exactly as it is.
 ## @ace_action
 ## @ace_name("Unmask")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.unmask({item})")
 ## @ace_display_template("Unmask [i]{item}[/i]")
 ## @ace_param(item, hint: expression, default: self, desc: "The canvas item to unmask.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.unmask({item})")
 func unmask(item: CanvasItem) -> void:
 	if item == null or blend_mode(item) != "mask":
 		return
 	_restore_worn(item)
 	item.set_meta(MODE_META, DEFAULT_MODE)
+
 ## Draws this node's children into one picture first and puts THAT on the screen, so where they
 ## overlap they stop showing through each other. It is what a half-faded character made of six
 ## sprites wants, and what a blend mode on a group of things wants. Wraps the children under a
@@ -235,9 +278,10 @@ func unmask(item: CanvasItem) -> void:
 ## @ace_featured
 ## @ace_name("Blend As One")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.blend_as_one({item})")
 ## @ace_display_template("Blend [i]{item}[/i] children as one")
 ## @ace_param(item, hint: blend_group_target, default: self, desc: "The node whose children to draw as one picture. The field offers to do it in the scene instead, if you want it always drawn that way.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.blend_as_one({item})")
 func blend_as_one(item: CanvasItem) -> void:
 	if item == null or is_blended_as_one(item):
 		return
@@ -248,14 +292,16 @@ func blend_as_one(item: CanvasItem) -> void:
 		if child != group and child is CanvasItem:
 			(child as CanvasItem).reparent(group)
 	item.set_meta(GROUP_META, group)
+
 ## Puts the children back the way they were, each drawn on its own. The node's own class is never
 ## changed by either of these, so a node that was already a CanvasGroup in the scene stays one.
 ## @ace_action
 ## @ace_name("Blend Separately")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.blend_separately({item})")
 ## @ace_display_template("Blend [i]{item}[/i] children separately")
 ## @ace_param(item, hint: expression, default: self, desc: "The node whose children to draw on their own again.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.blend_separately({item})")
 func blend_separately(item: CanvasItem) -> void:
 	if item == null:
 		return
@@ -267,18 +313,21 @@ func blend_separately(item: CanvasItem) -> void:
 			(child as CanvasItem).reparent(item)
 	item.remove_meta(GROUP_META)
 	group.queue_free()
+
 ## True while this node's children are drawn as one picture - either because a row asked for it, or
 ## because the node in the scene IS a CanvasGroup already.
 ## @ace_condition
 ## @ace_name("Is Blended As One")
 ## @ace_category("Blend Modes")
-## @ace_codegen_template("BlendModes.is_blended_as_one({item})")
 ## @ace_display_template("[i]{item}[/i] blends its children as one")
 ## @ace_param(item, hint: expression, default: self, desc: "The node to ask about.")
+## @ace_icon("res://eventsheet_addons/blend_modes/icon.svg")
+## @ace_codegen_template("BlendModes.is_blended_as_one({item})")
 func is_blended_as_one(item: CanvasItem) -> bool:
 	if item == null:
 		return false
 	return item is CanvasGroup or _group_of(item) != null
+
 ## Every mode word the pack knows, native ones first - the order the picker's own list is in, and
 ## the list a warning prints when somebody types a word that is not one of them.
 ## @ace_hidden
@@ -286,33 +335,9 @@ func mode_words() -> PackedStringArray:
 	var words: PackedStringArray = PackedStringArray(NATIVE_MODES.keys())
 	words.append_array(SHADER_MODES)
 	return words
-## One mode's shader, loaded the first time it is asked for and kept after that. A project that only
-## ever blends one way loads one file.
-func _shader_for(mode: String) -> Shader:
-	if _shaders.has(mode):
-		return _shaders[mode] as Shader
-	var path: String = SHADER_DIRECTORY + SHADER_PREFIX + mode.replace(" ", "_") + ".gdshader"
-	var shader: Shader = load(path) as Shader
-	if shader == null:
-		push_warning("Blend Modes: the shader for \"%s\" is missing from %s." % [mode, SHADER_DIRECTORY])
-		return null
-	_shaders[mode] = shader
-	return shader
-## The pack's own material on this item, or null when it is not wearing one - the one question every
-## row that turns a dial has to ask first.
-func _pack_material_of(item: CanvasItem) -> ShaderMaterial:
-	if item == null or not is_pack_material(item.material):
-		return null
-	return item.material as ShaderMaterial
-## The run-time CanvasGroup wrapped around this node's children, or null. Asked through the meta
-## rather than by name, so a scene that already has a node called the same thing is never mistaken
-## for one of these.
-func _group_of(item: CanvasItem) -> CanvasGroup:
-	var held: Variant = item.get_meta(GROUP_META, null)
-	if held == null or not is_instance_valid(held as Object):
-		return null
-	return held as CanvasGroup
 
+## Whether a material is one this pack put on. Asked of the shader's own file path, because that is
+## the one thing about it nothing else in a project can accidentally look like.
 ## @ace_hidden
 func is_pack_material(material: Material) -> bool:
 	var shader_material: ShaderMaterial = material as ShaderMaterial

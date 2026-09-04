@@ -130,332 +130,6 @@ var _stack_walks: Dictionary = {}
 ## What Current Look reads back: the name of the look last worn, or "" when the stack was built row
 ## by row. Save Look does not change it, because saving is not wearing.
 var _look_name: String = ""
-## Adds one effect to the top of the post stack and turns it on. The twelve words are vignette, film
-## grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox, bloom, saturate and
-## desaturate; leave the name empty and the entry is called after its effect, which is what one of
-## each wants.
-##
-## Every entry reads the screen back, so each one costs one screen read per pixel of the viewport
-## while it is on. Two or three is a look; twelve is a bill.
-## @ace_action
-## @ace_featured
-## @ace_name("Add Post Effect")
-## @ace_codegen_template("$ScreenFx.add_post_effect("{effect}", "{called}", {strength})")
-## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
-## @ace_param(called, default: , desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
-## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
-func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
-	var word: String = effect.strip_edges().to_lower()
-	if not _is_an_effect(word):
-		push_warning("Add Post Effect: no effect is called \"%s\" - the words are %s." % [
-			effect, ", ".join(effect_words())])
-		return
-	var name_of_it: String = called.strip_edges().to_lower()
-	if name_of_it.is_empty():
-		name_of_it = word
-	var at: int = _find(name_of_it)
-	if at >= 0:
-		_stack[at]["effect"] = word
-		_stack[at]["enabled"] = true
-		_write_strength(name_of_it, strength)
-		return
-	_stack.append({"called": name_of_it, "effect": word, "strength": clampf(strength, 0.0, 1.0),
-		"enabled": true, "params": {}, "rect": null})
-	_apply(_stack.size() - 1)
-	_reorder()
-## Takes one effect off the stack and frees its rectangle, so it stops costing anything at all.
-## @ace_action
-## @ace_name("Remove Post Effect")
-## @ace_codegen_template("$ScreenFx.remove_post_effect("{called}")")
-## @ace_display_template("Remove post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func remove_post_effect(called: String = "vignette") -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	_stop_walk_on(str(_stack[at].get("called", "")))
-	var rect: ColorRect = _stack[at].get("rect", null) as ColorRect
-	if rect != null and is_instance_valid(rect):
-		rect.queue_free()
-	_stack.remove_at(at)
-## Turns one entry back on at the strength it already holds - the other half of Disable, for an
-## effect a look should keep but a moment should hide.
-## @ace_action
-## @ace_name("Enable Post Effect")
-## @ace_codegen_template("$ScreenFx.enable_post_effect("{called}")")
-## @ace_display_template("Enable post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func enable_post_effect(called: String = "vignette") -> void:
-	_set_enabled(called, true)
-## Turns one entry off without forgetting it: its rectangle stops drawing, its strength is kept, and
-## Enable brings it back exactly as it was.
-## @ace_action
-## @ace_name("Disable Post Effect")
-## @ace_codegen_template("$ScreenFx.disable_post_effect("{called}")")
-## @ace_display_template("Disable post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func disable_post_effect(called: String = "vignette") -> void:
-	_set_enabled(called, false)
-## Sets how far one entry goes, at once. The effect-strength dial scales it and the no-flashing
-## ceiling holds it down, so the number a row asks for is a request rather than a command.
-## @ace_action
-## @ace_name("Set Post Strength")
-## @ace_codegen_template("$ScreenFx.set_post_strength("{called}", {strength})")
-## @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1.")
-func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
-	_stop_walk_on(called.strip_edges().to_lower())
-	_write_strength(called, strength)
-## Walks one entry's strength to a value over a time, and back again afterwards if a second time is
-## given - which is the shape of a held breath: in, hold, out, all in one row.
-## @ace_action
-## @ace_name("Fade Post Strength")
-## @ace_codegen_template("$ScreenFx.fade_post_strength("{called}", {to}, {seconds}, {then_back_seconds})")
-## @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(to, default: 1.0, desc: "The strength to arrive at, 0 to 1.")
-## @ace_param(seconds, default: 0.5, desc: "How long the walk there takes.")
-## @ace_param(then_back_seconds, default: 0.0, desc: "How long to walk back to where it started afterwards. 0 stays where it landed.")
-func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5,
-		then_back_seconds: float = 0.0) -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	var started_at: float = float(_stack[at].get("strength", 0.0))
-	if seconds <= 0.0 and then_back_seconds <= 0.0:
-		set_post_strength(called, to)
-		return
-	_walk_strength(str(_stack[at].get("called", "")), clampf(to, 0.0, 1.0), _slowed(seconds),
-		started_at, _slowed(then_back_seconds) if then_back_seconds > 0.0 else 0.0, false)
-
-
-## THE ONE-SHOT: turns an effect all the way up and lets it fall back, in one row. If the stack does
-## not hold that effect yet the pulse borrows one and takes it away again afterwards, so a hit, a
-## boom or a win is one row and leaves nothing behind.
-##
-## A pulse with no time at all is a set that stays, because that is the only thing "pulse for zero
-## seconds" can honestly mean.
-## @ace_action
-## @ace_featured
-## @ace_name("Pulse Post Effect")
-## @ace_codegen_template("$ScreenFx.pulse_post_effect("{effect}", {strength}, {seconds})")
-## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
-## @ace_param(effect, default: vignette, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, desc: "Which effect to flash up and let fall.")
-## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
-## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
-func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
-		seconds: float = 0.35) -> void:
-	var word: String = effect.strip_edges().to_lower()
-	if not _is_an_effect(word):
-		push_warning("Pulse Post Effect: no effect is called \"%s\" - the words are %s." % [
-			effect, ", ".join(effect_words())])
-		return
-	var borrowed: bool = _find(word) < 0
-	var falls_back_to: float = 0.0
-	if borrowed:
-		add_post_effect(word, word, 0.0)
-	else:
-		falls_back_to = float(_stack[_find(word)].get("strength", 0.0))
-	if _find(word) < 0:
-		return
-	_stop_walk_on(word)
-	_write_strength(word, strength)
-	if seconds <= 0.0:
-		return
-	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
-## Moves one entry so it is drawn BEFORE another - which is what decides whose look wins. A grade
-## under a vignette grades the game; a grade over one grades the vignette too.
-## @ace_action
-## @ace_name("Move Post Effect Before")
-## @ace_codegen_template("$ScreenFx.move_post_effect_before("{called}", "{before}")")
-## @ace_display_template("Draw [b]{called}[/b] before [b]{before}[/b]")
-## @ace_param(called, default: vignette, desc: "The entry to move.")
-## @ace_param(before, default: , desc: "The entry it should be drawn before. Empty moves it to the very end, so it has the last word.")
-func move_post_effect_before(called: String = "vignette", before: String = "") -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	var moved: Dictionary = _stack[at]
-	_stack.remove_at(at)
-	var landing: int = _find(before)
-	if landing < 0:
-		_stack.append(moved)
-	else:
-		_stack.insert(landing, moved)
-	_reorder()
-## Draws the whole post stack UNDER this layer, so the interface on it stays sharp and unfiltered
-## while the game behind it is graded, blurred or dimmed. This is the row a health-bar layer wants.
-## @ace_action
-## @ace_name("Draw Post Effects Below")
-## @ace_codegen_template("$ScreenFx.draw_post_effects_below({other})")
-## @ace_display_template("Draw post effects below [i]{other}[/i]")
-## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should stay under - usually the one the interface is on.")
-func draw_post_effects_below(other: CanvasLayer) -> void:
-	if other == null:
-		return
-	layer = other.layer - 1
-## Draws the whole post stack OVER this layer, so the interface is graded and dimmed along with the
-## game. That is what a cutscene letterbox or a full-screen colour change usually wants.
-## @ace_action
-## @ace_name("Draw Post Effects Above")
-## @ace_codegen_template("$ScreenFx.draw_post_effects_above({other})")
-## @ace_display_template("Draw post effects above [i]{other}[/i]")
-## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should cover - usually the one the interface is on.")
-func draw_post_effects_above(other: CanvasLayer) -> void:
-	if other == null:
-		return
-	layer = other.layer + 1
-## True while that entry is on the stack, enabled and actually drawing something.
-## @ace_condition
-## @ace_name("Post Effect Is On")
-## @ace_codegen_template("$ScreenFx.post_effect_is_on("{called}")")
-## @ace_display_template("[b]{called}[/b] is on")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func post_effect_is_on(called: String = "vignette") -> bool:
-	var at: int = _find(called)
-	if at < 0:
-		return false
-	return bool(_stack[at].get("enabled", true)) and _dialled(_stack[at]) > 0.001
-## How far one entry currently goes, 0 to 1 - after the effect-strength dial and the no-flashing
-## ceiling, so it is what is on the screen rather than what a row asked for. The two colour-vision
-## entries are exempt from both, so they read back at what they were set to. 0 for one that is not
-## there.
-## @ace_expression
-## @ace_name("Post Strength")
-## @ace_codegen_template("$ScreenFx.post_strength("{called}")")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-func post_strength(called: String = "vignette") -> float:
-	var at: int = _find(called)
-	if at < 0:
-		return 0.0
-	return _dialled(_stack[at])
-## SHOWS YOU what a player with one of the three common kinds of colour blindness sees. This is the
-## designer's row: turn it on, walk the level, and the health bar that vanishes into the background
-## is the bug you came to find. Normal takes it off again.
-## @ace_action
-## @ace_name("See As")
-## @ace_codegen_template("$ScreenFx.see_as("{vision}")")
-## @ace_display_template("See as [b]{vision}[/b]")
-## @ace_param(vision, default: deuteranopia, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, desc: "Which kind of vision to simulate. Normal turns the simulation off.")
-func see_as(vision: String = "deuteranopia") -> void:
-	_wear_vision(SEE_AS_EFFECT, vision, "See As")
-## CORRECTS the screen so a player with one of the three common kinds of colour blindness can tell
-## apart the colours that would otherwise land on top of each other. This is the player's row, and it
-## belongs behind a settings choice rather than on by default. Normal takes it off again.
-## @ace_action
-## @ace_name("Correct Colours For")
-## @ace_codegen_template("$ScreenFx.correct_colours_for("{vision}")")
-## @ace_display_template("Correct colours for [b]{vision}[/b]")
-## @ace_param(vision, default: deuteranopia, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, desc: "Which kind of vision to correct for. Normal turns the correction off.")
-func correct_colours_for(vision: String = "deuteranopia") -> void:
-	_wear_vision(CORRECT_EFFECT, vision, "Correct Colours For")
-## Writes the LIVE stack out as a look file: every entry, in order, with its strength and its own
-## dials. That is how a look is authored - build it with rows until the screen is right, save it
-## once, and every later row picks it by file.
-## @ace_action
-## @ace_name("Save Look")
-## @ace_codegen_template("$ScreenFx.save_look("{path}", "{called}")")
-## @ace_display_template("Save the look as [b]{path}[/b]")
-## @ace_param(path, hint: file_path, default: user://looks/my_look.tres, desc: "Where to write it. user:// is the player's own folder; res:// is your project, which only works while the editor is open.")
-## @ace_param(called, default: My look, desc: "The name the look answers to, which is what Look Is and Current Look compare.")
-func save_look(path: String = "user://looks/my_look.tres", called: String = "My look") -> void:
-	if not ResourceLoader.exists(LOOK_SCRIPT):
-		push_warning("Save Look needs the Screen Look Resource pack, which is not installed.")
-		return
-	var made: Resource = (load(LOOK_SCRIPT) as GDScript).new()
-	made.set("look_name", called)
-	made.set("rows", _look_rows())
-	var folder: String = path.get_base_dir()
-	if not folder.is_empty() and not DirAccess.dir_exists_absolute(folder):
-		DirAccess.make_dir_recursive_absolute(folder)
-	if ResourceSaver.save(made, path) != OK:
-		push_warning("Save Look could not write %s." % path)
-## Wears a look at once: the stack becomes exactly what the look says, in the look's own order.
-## @ace_action
-## @ace_featured
-## @ace_name("Use Look")
-## @ace_codegen_template("$ScreenFx.use_look({look})")
-## @ace_display_template("Use the look [b]{look}[/b]")
-## @ace_param(look, hint: resource_path, desc: "A look file. Build one with rows and Save Look, or make one in the Inspector from the Screen Look Resource class.")
-func use_look(look: Resource) -> void:
-	clear_look()
-	if look == null:
-		return
-	for row: Variant in _rows_of(look):
-		var entry: Dictionary = row as Dictionary
-		if entry == null:
-			continue
-		var word: String = str(entry.get("effect", "")).strip_edges().to_lower()
-		if not _is_an_effect(word):
-			continue
-		var name_of_it: String = str(entry.get("called", word)).strip_edges().to_lower()
-		add_post_effect(word, name_of_it, float(entry.get("strength", 0.0)))
-		_write_params(name_of_it, entry.get("params", {}) as Dictionary)
-	_look_name = str(look.get("look_name"))
-## Walks from the look on the screen to another one over a time: the effects both looks hold fade
-## from one strength to the other, the ones only the old look had fade out and go, and the ones only
-## the new look has fade in from nothing. Nothing cuts.
-## @ace_action
-## @ace_name("Blend To Look")
-## @ace_codegen_template("await $ScreenFx.blend_to_look({look}, {seconds})")
-## @ace_display_template("Blend to the look [b]{look}[/b] over [b]{seconds}[/b] s")
-## @ace_param(look, hint: resource_path, desc: "The look to arrive at.")
-## @ace_param(seconds, default: 1.0, desc: "How long the crossing takes.")
-func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
-	if look == null:
-		clear_look()
-		return
-	var span: float = _slowed(maxf(seconds, 0.0))
-	var wanted: Dictionary = {}
-	for row: Variant in _rows_of(look):
-		var entry: Dictionary = row as Dictionary
-		if entry == null:
-			continue
-		var word: String = str(entry.get("effect", "")).strip_edges().to_lower()
-		if not _is_an_effect(word):
-			continue
-		var name_of_it: String = str(entry.get("called", word)).strip_edges().to_lower()
-		wanted[name_of_it] = entry
-		if _find(name_of_it) < 0:
-			add_post_effect(word, name_of_it, 0.0)
-		_write_params(name_of_it, entry.get("params", {}) as Dictionary)
-	var leaving: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in _stack:
-		var name_of_it: String = str(entry.get("called", ""))
-		if wanted.has(name_of_it):
-			var arriving: Dictionary = wanted[name_of_it]
-			_walk_strength(name_of_it, clampf(float(arriving.get("strength", 0.0)), 0.0, 1.0), span,
-				0.0, 0.0, false)
-		else:
-			leaving.append(name_of_it)
-	for name_of_it: String in leaving:
-		_walk_strength(name_of_it, 0.0, span, 0.0, 0.0, true)
-	_look_name = str(look.get("look_name"))
-	if span > 0.0 and is_inside_tree():
-		await get_tree().create_timer(span).timeout
-## True while that look is the one on the screen - compared by the look's own name, so a look
-## reloaded from disk is still the same look.
-## @ace_condition
-## @ace_name("Look Is")
-## @ace_codegen_template("$ScreenFx.look_is({look})")
-## @ace_display_template("The look is [b]{look}[/b]")
-## @ace_param(look, hint: resource_path, desc: "The look to compare against what is on the screen.")
-func look_is(look: Resource) -> bool:
-	if look == null:
-		return _look_name.is_empty()
-	return _look_name == str(look.get("look_name"))
-## Every effect word the stack knows, in the order the picker offers them - what a warning prints,
-## and what a settings screen can list without keeping a second copy of the list.
-## @ace_expression
-## @ace_name("Post Effect Words")
-## @ace_codegen_template("$ScreenFx.effect_words()")
-func effect_words() -> PackedStringArray:
-	var words: PackedStringArray = POST_EFFECTS.duplicate()
-	words.append(SEE_AS_EFFECT)
-	words.append(CORRECT_EFFECT)
-	return words
 ## The stack as look rows: what Save Look writes and what Use Look reads back, in stack order. The
 ## strength recorded is the one the ROWS ASKED FOR, never the one one player's accessibility dials
 ## allowed at the moment of saving - otherwise a look saved under a half-strength dial would come
@@ -483,33 +157,6 @@ func _shader_for(effect: String) -> Shader:
 		push_warning("Screen FX has no shader file for the \"%s\" effect at %s." % [effect, path])
 	_shaders[effect] = found
 	return found
-## Walks one entry's strength - there, and optionally back - and takes it off the stack afterwards
-## when it was only borrowed for a moment.
-##
-## WITH NO TREE TO RUN A TWEEN IN (a headless run, a layer built but not added yet) the walk lands on
-## its final value at once, which is the same answer a moment later.
-func _walk_strength(called: String, to_value: float, seconds: float, back_to: float,
-		back_seconds: float, drop_after: bool) -> void:
-	var at: int = _find(called)
-	if at < 0:
-		return
-	_stop_walk_on(called)
-	var ends_at: float = back_to if back_seconds > 0.0 else to_value
-	if not is_inside_tree() or (seconds <= 0.0 and back_seconds <= 0.0):
-		_write_strength(called, ends_at)
-		if drop_after:
-			remove_post_effect(called)
-		return
-	var walk: Tween = create_tween()
-	if seconds > 0.0:
-		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			float(_stack[at].get("strength", 0.0)), to_value, seconds)
-	if back_seconds > 0.0:
-		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
-			to_value, back_to, back_seconds)
-	if drop_after:
-		walk.finished.connect(func() -> void: remove_post_effect(called))
-	_stack_walks[called] = walk
 
 func _ready() -> void:
 	_rect = get_node_or_null(RECT_NAME) as ColorRect
@@ -522,10 +169,12 @@ func _ready() -> void:
 	# nothing should be drawing.
 	_rect.visible = false
 
+## Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a
+## landing. The camera transform is applied, so the ring stays on the thing that caused it
+## however the camera is moving.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Shockwave")
-## @ace_description("Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a landing. The camera transform is applied, so the ring stays on the thing that caused it however the camera is moving.")
 ## @ace_display_template("Shockwave at [b]{at}[/b], strength [b]{strength}[/b]")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.shockwave({at}, {strength})")
@@ -542,10 +191,12 @@ func shockwave(at: Vector2 = Vector2.ZERO, strength: float = 1.0) -> void:
 		ring.set_parallel(true)
 		ring.tween_property(_screen, "shader_parameter/shock_strength", 0.0, ring_seconds)
 
+## Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what
+## happens next: change the scene, show the credits, start the level. That is the scene
+## transition, spelled as two rows in one event.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Fade To")
-## @ace_description("Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what happens next: change the scene, show the credits, start the level. That is the scene transition, spelled as two rows in one event.")
 ## @ace_display_template("Fade to [b]{colour}[/b] over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("await $ScreenFx.fade_to({colour}, {seconds})")
@@ -557,9 +208,10 @@ func fade_to(colour: Color = Color.BLACK, seconds: float = 1.0) -> void:
 	if walk != null:
 		await walk.finished
 
+## Fades the screen back from a colour to the game, and waits for that too - the other half of
+## a transition, run once the new scene is up.
 ## @ace_action
 ## @ace_name("Fade Back")
-## @ace_description("Fades the screen back from a colour to the game, and waits for that too - the other half of a transition, run once the new scene is up.")
 ## @ace_display_template("Fade back from [b]{colour}[/b] over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("await $ScreenFx.fade_back({colour}, {seconds})")
@@ -572,18 +224,20 @@ func fade_back(colour: Color = Color.BLACK, seconds: float = 1.0) -> void:
 	if walk != null:
 		await walk.finished
 
+## Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout,
+## a dream. 0 is sharp again.
 ## @ace_action
 ## @ace_name("Blur")
-## @ace_description("Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout, a dream. 0 is sharp again.")
 ## @ace_display_template("Blur to [b]{amount}[/b] over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.blur({amount}, {seconds})")
 func blur(amount: float = 2.0, seconds: float = 0.3) -> void:
 	_walk_dial("blur", maxf(amount, 0.0), maxf(seconds, 0.0))
 
+## Pulls the colour channels apart and lets them snap back - the one-frame lens error that
+## reads as impact.
 ## @ace_action
 ## @ace_name("Chromatic Pulse")
-## @ace_description("Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.")
 ## @ace_display_template("Chromatic pulse at [b]{strength}[/b]")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.chromatic_pulse({strength}, {seconds})")
@@ -591,18 +245,19 @@ func chromatic_pulse(strength: float = 0.6, seconds: float = 0.35) -> void:
 	_set_dial("chromatic", clampf(strength, 0.0, 1.0))
 	_walk_dial("chromatic", 0.0, maxf(seconds, 0.0))
 
+## Ends every effect at once and puts the screen back the way it was, which is the row a pause
+## menu closing or a scene change wants.
 ## @ace_action
 ## @ace_name("Clear Screen Effects")
-## @ace_description("Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.clear_screen_effects()")
 func clear_screen_effects() -> void:
 	for dial: String in AT_REST:
 		_set_dial(dial, float(AT_REST[dial]))
 
+## True while any effect is running - a fade held on, a blur, a ring still travelling.
 ## @ace_condition
 ## @ace_name("Screen Effect Is Running")
-## @ace_description("True while any effect is running - a fade held on, a blur, a ring still travelling.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.screen_effect_is_running()")
 func screen_effect_is_running() -> bool:
@@ -668,9 +323,231 @@ func _seed_dials() -> void:
 			starts_at = type_convert(starts_at, int(declared.get("type", TYPE_NIL)))
 		_screen.set_shader_parameter(dial, starts_at)
 
+## Adds one effect to the top of the post stack and turns it on. The twelve words are vignette, film
+## grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox, bloom, saturate and
+## desaturate; leave the name empty and the entry is called after its effect, which is what one of
+## each wants.
+##
+## Every entry reads the screen back, so each one costs one screen read per pixel of the viewport
+## while it is on. Two or three is a look; twelve is a bill.
+## @ace_action
+## @ace_featured
+## @ace_name("Add Post Effect")
+## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
+## @ace_param(effect, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, default: vignette, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
+## @ace_param(called, desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
+## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.add_post_effect("{effect}", "{called}", {strength})")
+func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
+	var word: String = effect.strip_edges().to_lower()
+	if not _is_an_effect(word):
+		push_warning("Add Post Effect: no effect is called \"%s\" - the words are %s." % [
+			effect, ", ".join(effect_words())])
+		return
+	var name_of_it: String = called.strip_edges().to_lower()
+	if name_of_it.is_empty():
+		name_of_it = word
+	var at: int = _find(name_of_it)
+	if at >= 0:
+		_stack[at]["effect"] = word
+		_stack[at]["enabled"] = true
+		_write_strength(name_of_it, strength)
+		return
+	_stack.append({"called": name_of_it, "effect": word, "strength": clampf(strength, 0.0, 1.0),
+		"enabled": true, "params": {}, "rect": null})
+	_apply(_stack.size() - 1)
+	_reorder()
+
+## Takes one effect off the stack and frees its rectangle, so it stops costing anything at all.
+## @ace_action
+## @ace_name("Remove Post Effect")
+## @ace_display_template("Remove post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.remove_post_effect("{called}")")
+func remove_post_effect(called: String = "vignette") -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	_stop_walk_on(str(_stack[at].get("called", "")))
+	var rect: ColorRect = _stack[at].get("rect", null) as ColorRect
+	if rect != null and is_instance_valid(rect):
+		rect.queue_free()
+	_stack.remove_at(at)
+
+## Turns one entry back on at the strength it already holds - the other half of Disable, for an
+## effect a look should keep but a moment should hide.
+## @ace_action
+## @ace_name("Enable Post Effect")
+## @ace_display_template("Enable post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.enable_post_effect("{called}")")
+func enable_post_effect(called: String = "vignette") -> void:
+	_set_enabled(called, true)
+
+## Turns one entry off without forgetting it: its rectangle stops drawing, its strength is kept, and
+## Enable brings it back exactly as it was.
+## @ace_action
+## @ace_name("Disable Post Effect")
+## @ace_display_template("Disable post effect [b]{called}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.disable_post_effect("{called}")")
+func disable_post_effect(called: String = "vignette") -> void:
+	_set_enabled(called, false)
+
+## Sets how far one entry goes, at once. The effect-strength dial scales it and the no-flashing
+## ceiling holds it down, so the number a row asks for is a request rather than a command.
+## @ace_action
+## @ace_name("Set Post Strength")
+## @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.set_post_strength("{called}", {strength})")
+func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
+	_stop_walk_on(called.strip_edges().to_lower())
+	_write_strength(called, strength)
+
+## Walks one entry's strength to a value over a time, and back again afterwards if a second time is
+## given - which is the shape of a held breath: in, hold, out, all in one row.
+## @ace_action
+## @ace_name("Fade Post Strength")
+## @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_param(to, default: 1.0, desc: "The strength to arrive at, 0 to 1.")
+## @ace_param(seconds, default: 0.5, desc: "How long the walk there takes.")
+## @ace_param(then_back_seconds, default: 0.0, desc: "How long to walk back to where it started afterwards. 0 stays where it landed.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.fade_post_strength("{called}", {to}, {seconds}, {then_back_seconds})")
+func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5, then_back_seconds: float = 0.0) -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	var started_at: float = float(_stack[at].get("strength", 0.0))
+	if seconds <= 0.0 and then_back_seconds <= 0.0:
+		set_post_strength(called, to)
+		return
+	_walk_strength(str(_stack[at].get("called", "")), clampf(to, 0.0, 1.0), _slowed(seconds),
+		started_at, _slowed(then_back_seconds) if then_back_seconds > 0.0 else 0.0, false)
+
+## THE ONE-SHOT: turns an effect all the way up and lets it fall back, in one row. If the stack does
+## not hold that effect yet the pulse borrows one and takes it away again afterwards, so a hit, a
+## boom or a win is one row and leaves nothing behind.
+##
+## A pulse with no time at all is a set that stays, because that is the only thing "pulse for zero
+## seconds" can honestly mean.
+## @ace_action
+## @ace_featured
+## @ace_name("Pulse Post Effect")
+## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
+## @ace_param(effect, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, default: vignette, desc: "Which effect to flash up and let fall.")
+## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
+## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.pulse_post_effect("{effect}", {strength}, {seconds})")
+func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35) -> void:
+	var word: String = effect.strip_edges().to_lower()
+	if not _is_an_effect(word):
+		push_warning("Pulse Post Effect: no effect is called \"%s\" - the words are %s." % [
+			effect, ", ".join(effect_words())])
+		return
+	var borrowed: bool = _find(word) < 0
+	var falls_back_to: float = 0.0
+	if borrowed:
+		add_post_effect(word, word, 0.0)
+	else:
+		falls_back_to = float(_stack[_find(word)].get("strength", 0.0))
+	if _find(word) < 0:
+		return
+	_stop_walk_on(word)
+	_write_strength(word, strength)
+	if seconds <= 0.0:
+		return
+	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
+
+## Moves one entry so it is drawn BEFORE another - which is what decides whose look wins. A grade
+## under a vignette grades the game; a grade over one grades the vignette too.
+## @ace_action
+## @ace_name("Move Post Effect Before")
+## @ace_display_template("Draw [b]{called}[/b] before [b]{before}[/b]")
+## @ace_param(called, default: vignette, desc: "The entry to move.")
+## @ace_param(before, desc: "The entry it should be drawn before. Empty moves it to the very end, so it has the last word.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.move_post_effect_before("{called}", "{before}")")
+func move_post_effect_before(called: String = "vignette", before: String = "") -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	var moved: Dictionary = _stack[at]
+	_stack.remove_at(at)
+	var landing: int = _find(before)
+	if landing < 0:
+		_stack.append(moved)
+	else:
+		_stack.insert(landing, moved)
+	_reorder()
+
+## Draws the whole post stack UNDER this layer, so the interface on it stays sharp and unfiltered
+## while the game behind it is graded, blurred or dimmed. This is the row a health-bar layer wants.
+## @ace_action
+## @ace_name("Draw Post Effects Below")
+## @ace_display_template("Draw post effects below [i]{other}[/i]")
+## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should stay under - usually the one the interface is on.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.draw_post_effects_below({other})")
+func draw_post_effects_below(other: CanvasLayer) -> void:
+	if other == null:
+		return
+	layer = other.layer - 1
+
+## Draws the whole post stack OVER this layer, so the interface is graded and dimmed along with the
+## game. That is what a cutscene letterbox or a full-screen colour change usually wants.
+## @ace_action
+## @ace_name("Draw Post Effects Above")
+## @ace_display_template("Draw post effects above [i]{other}[/i]")
+## @ace_param(other, hint: node_path, desc: "The CanvasLayer the effects should cover - usually the one the interface is on.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.draw_post_effects_above({other})")
+func draw_post_effects_above(other: CanvasLayer) -> void:
+	if other == null:
+		return
+	layer = other.layer + 1
+
+## True while that entry is on the stack, enabled and actually drawing something.
+## @ace_condition
+## @ace_name("Post Effect Is On")
+## @ace_display_template("[b]{called}[/b] is on")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.post_effect_is_on("{called}")")
+func post_effect_is_on(called: String = "vignette") -> bool:
+	var at: int = _find(called)
+	if at < 0:
+		return false
+	return bool(_stack[at].get("enabled", true)) and _dialled(_stack[at]) > 0.001
+
+## How far one entry currently goes, 0 to 1 - after the effect-strength dial and the no-flashing
+## ceiling, so it is what is on the screen rather than what a row asked for. The two colour-vision
+## entries are exempt from both, so they read back at what they were set to. 0 for one that is not
+## there.
+## @ace_expression
+## @ace_name("Post Strength")
+## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.post_strength("{called}")")
+func post_strength(called: String = "vignette") -> float:
+	var at: int = _find(called)
+	if at < 0:
+		return 0.0
+	return _dialled(_stack[at])
+
+## How many effects the stack is drawing right now - the number a reader wants when the frame rate
+## has gone, because every one of them reads the whole screen back.
 ## @ace_expression
 ## @ace_name("Post Effect Count")
-## @ace_description("How many effects the stack is drawing right now - the number a reader wants when the frame rate has gone, because every one of them reads the whole screen back.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.post_effect_count()")
 func post_effect_count() -> int:
@@ -680,9 +557,124 @@ func post_effect_count() -> int:
 			drawing += 1
 	return drawing
 
+## SHOWS YOU what a player with one of the three common kinds of colour blindness sees. This is the
+## designer's row: turn it on, walk the level, and the health bar that vanishes into the background
+## is the bug you came to find. Normal takes it off again.
+## @ace_action
+## @ace_name("See As")
+## @ace_display_template("See as [b]{vision}[/b]")
+## @ace_param(vision, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, default: deuteranopia, desc: "Which kind of vision to simulate. Normal turns the simulation off.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.see_as("{vision}")")
+func see_as(vision: String = "deuteranopia") -> void:
+	_wear_vision(SEE_AS_EFFECT, vision, "See As")
+
+## CORRECTS the screen so a player with one of the three common kinds of colour blindness can tell
+## apart the colours that would otherwise land on top of each other. This is the player's row, and it
+## belongs behind a settings choice rather than on by default. Normal takes it off again.
+## @ace_action
+## @ace_name("Correct Colours For")
+## @ace_display_template("Correct colours for [b]{vision}[/b]")
+## @ace_param(vision, options: normal=Normal|protanopia=Protanopia|deuteranopia=Deuteranopia|tritanopia=Tritanopia, default: deuteranopia, desc: "Which kind of vision to correct for. Normal turns the correction off.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.correct_colours_for("{vision}")")
+func correct_colours_for(vision: String = "deuteranopia") -> void:
+	_wear_vision(CORRECT_EFFECT, vision, "Correct Colours For")
+
+## Writes the LIVE stack out as a look file: every entry, in order, with its strength and its own
+## dials. That is how a look is authored - build it with rows until the screen is right, save it
+## once, and every later row picks it by file.
+## @ace_action
+## @ace_name("Save Look")
+## @ace_display_template("Save the look as [b]{path}[/b]")
+## @ace_param(path, hint: file_path, default: user://looks/my_look.tres, desc: "Where to write it. user:// is the player's own folder; res:// is your project, which only works while the editor is open.")
+## @ace_param(called, default: My look, desc: "The name the look answers to, which is what Look Is and Current Look compare.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.save_look("{path}", "{called}")")
+func save_look(path: String = "user://looks/my_look.tres", called: String = "My look") -> void:
+	if not ResourceLoader.exists(LOOK_SCRIPT):
+		push_warning("Save Look needs the Screen Look Resource pack, which is not installed.")
+		return
+	var made: Resource = (load(LOOK_SCRIPT) as GDScript).new()
+	made.set("look_name", called)
+	made.set("rows", _look_rows())
+	var folder: String = path.get_base_dir()
+	if not folder.is_empty() and not DirAccess.dir_exists_absolute(folder):
+		DirAccess.make_dir_recursive_absolute(folder)
+	if ResourceSaver.save(made, path) != OK:
+		push_warning("Save Look could not write %s." % path)
+
+## Wears a look at once: the stack becomes exactly what the look says, in the look's own order.
+## @ace_action
+## @ace_featured
+## @ace_name("Use Look")
+## @ace_display_template("Use the look [b]{look}[/b]")
+## @ace_param(look, hint: resource_path, desc: "A look file. Build one with rows and Save Look, or make one in the Inspector from the Screen Look Resource class.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.use_look({look})")
+func use_look(look: Resource) -> void:
+	clear_look()
+	if look == null:
+		return
+	for row: Variant in _rows_of(look):
+		var entry: Dictionary = row as Dictionary
+		if entry == null:
+			continue
+		var word: String = str(entry.get("effect", "")).strip_edges().to_lower()
+		if not _is_an_effect(word):
+			continue
+		var name_of_it: String = str(entry.get("called", word)).strip_edges().to_lower()
+		add_post_effect(word, name_of_it, float(entry.get("strength", 0.0)))
+		_write_params(name_of_it, entry.get("params", {}) as Dictionary)
+	_look_name = str(look.get("look_name"))
+
+## Walks from the look on the screen to another one over a time: the effects both looks hold fade
+## from one strength to the other, the ones only the old look had fade out and go, and the ones only
+## the new look has fade in from nothing. Nothing cuts.
+## @ace_action
+## @ace_name("Blend To Look")
+## @ace_display_template("Blend to the look [b]{look}[/b] over [b]{seconds}[/b] s")
+## @ace_param(look, hint: resource_path, desc: "The look to arrive at.")
+## @ace_param(seconds, default: 1.0, desc: "How long the crossing takes.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("await $ScreenFx.blend_to_look({look}, {seconds})")
+func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
+	if look == null:
+		clear_look()
+		return
+	var span: float = _slowed(maxf(seconds, 0.0))
+	var wanted: Dictionary = {}
+	for row: Variant in _rows_of(look):
+		var entry: Dictionary = row as Dictionary
+		if entry == null:
+			continue
+		var word: String = str(entry.get("effect", "")).strip_edges().to_lower()
+		if not _is_an_effect(word):
+			continue
+		var name_of_it: String = str(entry.get("called", word)).strip_edges().to_lower()
+		wanted[name_of_it] = entry
+		if _find(name_of_it) < 0:
+			add_post_effect(word, name_of_it, 0.0)
+		_write_params(name_of_it, entry.get("params", {}) as Dictionary)
+	var leaving: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in _stack:
+		var name_of_it: String = str(entry.get("called", ""))
+		if wanted.has(name_of_it):
+			var arriving: Dictionary = wanted[name_of_it]
+			_walk_strength(name_of_it, clampf(float(arriving.get("strength", 0.0)), 0.0, 1.0), span,
+				0.0, 0.0, false)
+		else:
+			leaving.append(name_of_it)
+	for name_of_it: String in leaving:
+		_walk_strength(name_of_it, 0.0, span, 0.0, 0.0, true)
+	_look_name = str(look.get("look_name"))
+	if span > 0.0 and is_inside_tree():
+		await get_tree().create_timer(span).timeout
+
+## Takes every effect off the stack at once and puts the screen back the way the game drew it. The
+## empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.
 ## @ace_action
 ## @ace_name("Clear Look")
-## @ace_description("Takes every effect off the stack at once and puts the screen back the way the game drew it. The empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.clear_look()")
 func clear_look() -> void:
@@ -690,13 +682,39 @@ func clear_look() -> void:
 		remove_post_effect(str(entry.get("called", "")))
 	_look_name = ""
 
+## True while that look is the one on the screen - compared by the look's own name, so a look
+## reloaded from disk is still the same look.
+## @ace_condition
+## @ace_name("Look Is")
+## @ace_display_template("The look is [b]{look}[/b]")
+## @ace_param(look, hint: resource_path, desc: "The look to compare against what is on the screen.")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.look_is({look})")
+func look_is(look: Resource) -> bool:
+	if look == null:
+		return _look_name.is_empty()
+	return _look_name == str(look.get("look_name"))
+
+## The name of the look on the screen, or "" when the stack was built row by row rather than worn
+## from a file.
 ## @ace_expression
 ## @ace_name("Current Look")
-## @ace_description("The name of the look on the screen, or "" when the stack was built row by row rather than worn from a file.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.current_look()")
 func current_look() -> String:
 	return _look_name
+
+## Every effect word the stack knows, in the order the picker offers them - what a warning prints,
+## and what a settings screen can list without keeping a second copy of the list.
+## @ace_expression
+## @ace_name("Post Effect Words")
+## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
+## @ace_codegen_template("$ScreenFx.effect_words()")
+func effect_words() -> PackedStringArray:
+	var words: PackedStringArray = POST_EFFECTS.duplicate()
+	words.append(SEE_AS_EFFECT)
+	words.append(CORRECT_EFFECT)
+	return words
 
 ## Whether this word is one of the effects the pack ships - the twelve, plus the two the
 ## colour-vision rows wear.
@@ -843,5 +861,32 @@ func _stop_walk_on(called: String) -> void:
 	if walk != null and walk.is_valid():
 		walk.kill()
 	_stack_walks.erase(called)
+
+## Walks one entry's strength - there, and optionally back - and takes it off the stack afterwards
+## when it was only borrowed for a moment.
+##
+## WITH NO TREE TO RUN A TWEEN IN (a headless run, a layer built but not added yet) the walk lands on
+## its final value at once, which is the same answer a moment later.
+func _walk_strength(called: String, to_value: float, seconds: float, back_to: float, back_seconds: float, drop_after: bool) -> void:
+	var at: int = _find(called)
+	if at < 0:
+		return
+	_stop_walk_on(called)
+	var ends_at: float = back_to if back_seconds > 0.0 else to_value
+	if not is_inside_tree() or (seconds <= 0.0 and back_seconds <= 0.0):
+		_write_strength(called, ends_at)
+		if drop_after:
+			remove_post_effect(called)
+		return
+	var walk: Tween = create_tween()
+	if seconds > 0.0:
+		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
+			float(_stack[at].get("strength", 0.0)), to_value, seconds)
+	if back_seconds > 0.0:
+		walk.tween_method(func(value: float) -> void: _write_strength(called, value),
+			to_value, back_to, back_seconds)
+	if drop_after:
+		walk.finished.connect(func() -> void: remove_post_effect(called))
+	_stack_walks[called] = walk
 
 # Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of twelve shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.

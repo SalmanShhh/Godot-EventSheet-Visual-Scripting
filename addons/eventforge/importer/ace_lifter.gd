@@ -64,6 +64,11 @@ const RUN_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/layout_on_top_lift.gd"),
 	preload("res://addons/eventforge/importer/camera_lift.gd"),
 	preload("res://addons/eventforge/importer/scene_save_lift.gd"),
+	# The three runs a FILE vocabulary row is several statements of: the table read that lands in
+	# a Set's value slot, the table write, and the append. Each is claimed here so a sheet that
+	# reads or writes a spreadsheet opens as the sentence it was written in rather than as the
+	# statements underneath it.
+	preload("res://addons/eventforge/importer/file_runs_lift.gd"),
 	# The three edits a tool makes through the editor's undo history. Each is a local, a do half and
 	# an undo half that only mean a change together; the create_action/commit_action bracket around
 	# them is the COMPILER's, and is consumed rather than lifted - see _parse_body.
@@ -1810,7 +1815,12 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.function_name = header_match.get_string(2)
 	event_function.no_return_annotation = header_match.get_string(4).is_empty()
 	var return_name: String = "void" if event_function.no_return_annotation else header_match.get_string(4)
-	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}
+	# The six PACKED arrays are here beside the plain ones because they are Variant types with names
+	# `type_string` reproduces exactly, so a `-> PackedStringArray` helper re-emits its own header
+	# byte-for-byte. Without them a verb answering with a list of words - the words a pack offers, the
+	# names a registry holds - fell to the custom-return branch the trailing scan refuses, and opened
+	# as a code block while every verb around it lifted.
+	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX, "PackedByteArray": TYPE_PACKED_BYTE_ARRAY, "PackedInt32Array": TYPE_PACKED_INT32_ARRAY, "PackedInt64Array": TYPE_PACKED_INT64_ARRAY, "PackedFloat32Array": TYPE_PACKED_FLOAT32_ARRAY, "PackedFloat64Array": TYPE_PACKED_FLOAT64_ARRAY, "PackedStringArray": TYPE_PACKED_STRING_ARRAY, "PackedVector2Array": TYPE_PACKED_VECTOR2_ARRAY, "PackedVector3Array": TYPE_PACKED_VECTOR3_ARRAY, "PackedColorArray": TYPE_PACKED_COLOR_ARRAY}
 	if return_types.has(return_name):
 		event_function.return_type = return_types[return_name]
 	elif allow_custom_return:
