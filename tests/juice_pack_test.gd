@@ -190,8 +190,11 @@ static func run() -> bool:
 		angles_seen[int(roundf(walked.angle() * 8.0))] = true
 	all_passed = _check("every wandering direction is one pixel long", off_the_unit, 0) and all_passed
 	all_passed = _check("and the split still wanders rather than sitting still", angles_seen.size() > 8, true) and all_passed
+	# Written out to three places rather than compared as a float: snapping a float and comparing it
+	# to a literal is the pin that passes here and flakes on the runner by one ulp.
 	all_passed = _check("so the shift handed to the shader is as wide as the expression says",
-		snappedf((behavior._chroma_shake_direction() as Vector2).length() * behavior.chromatic_shake_magnitude(), 0.0001), 12.0) and all_passed
+		"%.3f" % ((behavior._chroma_shake_direction() as Vector2).length() * behavior.chromatic_shake_magnitude()),
+		"12.000") and all_passed
 	# And turning no flashing on part way through a shake SLOWS the wander from here on rather than
 	# jumping it: the clock already carries the rate, so the sample the noise is read at does not
 	# move under the setting. The two readings are taken in the same frame, either side of the meta.
