@@ -31,7 +31,10 @@ func _build(folder: String) -> void:
 	_dialog.ok_button_text = "Write template"
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_form = EventSheetPopupUI.form(content, _specs(folder), "mod template")
-	content.add_child(EventSheetPopupUI.help_strip("What this writes", _help_body(), "", ""))
+	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip(
+		"What this writes", _help_body(), "", "")
+	content.add_child(strip)
+	_follow_fields(strip)
 	_dialog.add_child(EventSheetPopupUI.titled_card(
 		"The folder a modder copies, with its manifest already filled in", content))
 	_dialog.confirmed.connect(_on_confirmed)
@@ -71,6 +74,34 @@ func _specs(folder: String) -> Array[EventSheetFieldSpec]:
 		.default(true)
 		.tooltip("Saves the same five fields as a ModManifest resource beside the JSON, for a modder who works inside Godot. Needs the ModManifest the Mods pack ships."))
 	return specs
+
+
+## Every field says what it is for as it is reached, and the foot says what the button will write
+## with what is typed NOW. A strip nothing is wired to describes the dialog's opening state for
+## ever, which reads as an explanation and is really a decoration - so the heading and the words
+## come from each field's own label and tooltip, and there is one place a field's wording lives.
+func _follow_fields(strip: EventSheetPopupUI.HelpStrip) -> void:
+	for field_id: String in _form.field_ids():
+		var spec: EventSheetFieldSpec = _form.spec(field_id)
+		var control: Control = _form.control(field_id)
+		if spec == null or control == null:
+			continue
+		strip.follow(control, spec.label, spec.tooltip_text)
+		var reread: Callable = func() -> void: _refresh_reading(strip)
+		control.focus_entered.connect(reread)
+		control.mouse_entered.connect(reread)
+	_refresh_reading(strip)
+
+
+## The two reading lines: the mod this writes, as one sentence, and the manifest file it writes it
+## into. Read off the form each time, so a reader who has just renamed the folder sees that folder.
+func _refresh_reading(strip: EventSheetPopupUI.HelpStrip) -> void:
+	var values: Dictionary = _form.values()
+	var folder: String = str(values.get("folder", "")).rstrip("/")
+	var carries: String = "carrying code" if bool(values.get("scripts", false)) else "data only"
+	strip.set_reading("Write %s %s into %s, %s" % [str(values.get("name", "")),
+		str(values.get("version", "")), folder, carries],
+		"%s/mod.json%s" % [folder, " + mod.tres" if bool(values.get("resource", true)) else ""])
 
 
 ## What lands on disk, said before the button rather than discovered after it.

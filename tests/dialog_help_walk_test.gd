@@ -66,6 +66,7 @@ static func _test_dialogs_are_found() -> bool:
 	var found: PackedStringArray = _dialog_paths()
 	return _check("the dialogs that build a help strip", found, PackedStringArray([
 		"res://addons/eventsheet/editor/ace_params_dialog.gd",
+		"res://addons/eventsheet/editor/chunk_tools_dialog.gd",
 		"res://addons/eventsheet/editor/dock/compare_condition_dialog.gd",
 		"res://addons/eventsheet/editor/dock/message_dialog.gd",
 		"res://addons/eventsheet/editor/dock/modes_dialog.gd",
@@ -73,6 +74,7 @@ static func _test_dialogs_are_found() -> bool:
 		"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd",
 		"res://addons/eventsheet/editor/dock/sheet_type_dialog.gd",
 		"res://addons/eventsheet/editor/dock/states_dialog.gd",
+		"res://addons/eventsheet/editor/mod_template_dialog.gd",
 		"res://addons/eventsheet/editor/variable_dialog.gd"
 	]))
 

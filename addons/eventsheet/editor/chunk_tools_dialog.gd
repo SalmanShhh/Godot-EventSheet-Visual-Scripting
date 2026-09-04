@@ -51,8 +51,10 @@ func _build(scene_path: String) -> void:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_form = EventSheetPopupUI.form(content, _specs(scene_path),
 		"chunk tools" if _splitting else "chunk merge")
-	content.add_child(EventSheetPopupUI.help_strip(
-		"What this moves", _help_body(), "", ""))
+	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip(
+		"What this moves", _help_body(), "", "")
+	content.add_child(strip)
+	_follow_fields(strip)
 	_dialog.add_child(EventSheetPopupUI.titled_card(
 		"A scene in, a folder of chunk scenes out" if _splitting
 		else "A folder of chunk scenes in, one scene out", content))
@@ -93,6 +95,42 @@ func _specs(scene_path: String) -> Array[EventSheetFieldSpec]:
 		.default(false)
 		.tooltip("Off, the grid is flat and every cell's height is 0 - what an open world wants. On, cells stack, for a station, a cave or a tower."))
 	return specs
+
+
+## Every field says what it is for as it is reached, and the foot says what the button will do with
+## what is typed NOW. A strip nothing is wired to describes the dialog's opening state for ever,
+## which reads as an explanation and is really a decoration - so the heading and the words come from
+## each field's own label and tooltip, and there is one place a field's wording lives.
+func _follow_fields(strip: EventSheetPopupUI.HelpStrip) -> void:
+	for field_id: String in _form.field_ids():
+		var spec: EventSheetFieldSpec = _form.spec(field_id)
+		var control: Control = _form.control(field_id)
+		if spec == null or control == null:
+			continue
+		strip.follow(control, spec.label, spec.tooltip_text)
+		var reread: Callable = func() -> void: _refresh_reading(strip)
+		control.focus_entered.connect(reread)
+		control.mouse_entered.connect(reread)
+	_refresh_reading(strip)
+
+
+## The two reading lines: the errand as one sentence, and the first file name it turns on. Read off
+## the form each time rather than off the values the dialog opened with, so a reader who has just
+## changed the cell size sees the size they typed.
+func _refresh_reading(strip: EventSheetPopupUI.HelpStrip) -> void:
+	var values: Dictionary = _form.values()
+	var folder: String = str(values.get("folder", ""))
+	var scene_path: String = str(values.get("scene", ""))
+	var cell: String = "%d x %d" % [int(values.get("width", 0)), int(values.get("height", 0))]
+	if bool(values.get("stacked", false)):
+		cell += " x %d" % int(values.get("depth", 0))
+	if _splitting:
+		var prefix: String = str(values.get("prefix", EventSheetChunkTools.DEFAULT_PREFIX))
+		strip.set_reading("Split %s into %s, one scene per %s cell" % [scene_path, folder, cell],
+			"%s/%s_3_-2.tscn" % [folder.rstrip("/"), prefix])
+		return
+	strip.set_reading("Merge the cells in %s into %s, placed %s apart" % [folder, scene_path, cell],
+		scene_path)
 
 
 ## What the tool will and will not do, said before it is run rather than discovered afterwards.
