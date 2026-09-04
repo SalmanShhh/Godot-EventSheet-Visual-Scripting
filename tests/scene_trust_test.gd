@@ -188,6 +188,25 @@ const OUTSIDE_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_r
 const PROJECT_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" uid=\"uid://abc\" path=\"res://player.gd\" id=\"1_a\"]\n\n[node name=\"Player\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
 const EMBEDDED_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[sub_resource type=\"GDScript\" id=\"1_a\"]\nscript/source = \"extends Node2D\"\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = SubResource(\"1_a\")\n"
 const NOT_A_SCENE: String = "just some text nobody wrote as a scene\n"
+## THE BODY OF A NODE IS NOT A TAG, and the engine's value parser reads it all the same. Each of these
+## two carries no `[ext_resource]` and no `[sub_resource]` line at all: the first hands the parser a
+## path to LOAD, the second hands it an object to MAKE with source code inside it. Both were run
+## before they were written down - each one built and ran its script on instantiate.
+const BODY_RESOURCE_SCENE: String = "[gd_scene format=3]\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = Resource(\"user://_scene_trust_test/mod.gd\")\n"
+const BODY_OBJECT_SCENE: String = "[gd_scene format=3]\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = Object(GDScript,\"script/source\":\"extends Node2D\")\n"
+## THE ESCAPES. Godot's parser decodes what it finds in a tag; a reading that compares the letters as
+## written does not. `\\u0053` is `S`, so the first names a `GDScript` that does not end in `Script`
+## here; `\\u002e\\u002e` is `..`, so the second climbs out of the project while beginning with
+## `res://`; and the third's escaped quote ends the tag early here and not there.
+const ESCAPED_TYPE_TAIL_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[sub_resource type=\"GD\\u0053cript\" id=\"1_a\"]\nscript/source = \"extends Node2D\"\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const ESCAPED_CLIMB_OUT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://\\u002e\\u002e/payload.gd\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const ESCAPED_QUOTE_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://ok.gd\\\"] \" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+## THE LIMIT THE ANSWER STATES OUT LOUD. A cleared scene may still ask the GAME'S OWN code to run:
+## a connection naming one of your methods with its own arguments in `binds`, or a placeholder that
+## loads another scene when somebody calls `create_instance()`. Neither brings a stranger's code in,
+## both are still somebody else's data, and the answer is true - which is why the row, the guide and
+## the helper all say what "data-only" does not cover.
+const CONNECTION_WITH_BINDS_SCENE: String = "[gd_scene format=3]\n\n[node name=\"Level\" type=\"Node2D\"]\n\n[node name=\"Button\" type=\"Button\" parent=\".\"]\n\n[connection signal=\"pressed\" from=\"Button\" to=\".\" method=\"spend\" binds= [999]]\n"
 
 
 static func _test_the_question_answers() -> bool:
@@ -242,6 +261,33 @@ static func _test_the_question_answers() -> bool:
 	ok = _check("while a scene naming the game's OWN scenes is the game running",
 		asking.call(EventForgeSceneTrust.HELPER_NAME,
 			_written("project_scene.tscn", PROJECT_SCENE_SCENE)), true) and ok
+
+	# THE BODY OF A NODE. Neither of these writes a resource tag at all, and each one ran its script
+	# on instantiate before it was written down here.
+	ok = _check("a path handed to the value parser to LOAD, in a node's body, answers false",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("body_resource.tscn", BODY_RESOURCE_SCENE)), false) and ok
+	ok = _check("and an object made in a node's body with source code inside it answers false",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("body_object.tscn", BODY_OBJECT_SCENE)), false) and ok
+
+	# THE ESCAPES. The engine decodes them and this reading does not, so the two disagree about what
+	# a type is called, where a path goes and where a tag ends.
+	ok = _check("a type whose tail is spelled with an escape does not slip past the script check",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("escaped_type_tail.tscn", ESCAPED_TYPE_TAIL_SCENE)), false) and ok
+	ok = _check("nor a path whose two dots are spelled with escapes",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("escaped_climb_out.tscn", ESCAPED_CLIMB_OUT_SCENE)), false) and ok
+	ok = _check("nor a quote inside a value that would end the tag early here and not there",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("escaped_quote.tscn", ESCAPED_QUOTE_SCENE)), false) and ok
+
+	# AND THE WORD BOUNDARY IS THE WHOLE REASON THE HONEST PAIR STILL PASSES. `ExtResource(` holds
+	# `Resource(` with a letter in front of it; the two scenes above that answer TRUE both use it.
+	ok = _check("what the answer does NOT cover: a connection with binds is still data",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("connection_binds.tscn", CONNECTION_WITH_BINDS_SCENE)), true) and ok
 	return ok
 
 

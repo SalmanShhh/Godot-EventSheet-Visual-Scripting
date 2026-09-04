@@ -80,6 +80,27 @@ const SCRIPT_TYPE_TAIL := "Script"
 ## its own: `res://../payload.gd` begins with it and names a file beside the project.
 const CLIMB_OUT := ".."
 
+## The two constructors a scene file's own VALUES may be written with that build something. A scene
+## file is tags AND bodies, and a body line carries no tag at all: `script = Resource("user://mod.gd")`
+## is a node property whose value the engine's parser resolves by LOADING that path, and
+## `script = Object(GDScript,"script/source":"extends Node...")` is one it resolves by making the
+## object and compiling the source carried in it - neither of them writes an `[ext_resource]` or a
+## `[sub_resource]` line for the tag reading to find. `ExtResource(` and `SubResource(` are the honest
+## pair and are deliberately NOT here: each names an entry in this file's own table, which the tag
+## reading has already answered for. Both names are matched on a WORD BOUNDARY, which is precisely
+## what keeps those two out - `ExtResource(` holds `Resource(` with a letter in front of it.
+const BUILDING_MAKERS: PackedStringArray = ["Object(", "Resource("]
+
+## The one glyph a resource tag may not carry. Godot's own saver writes no escape and no backslash
+## into an `[ext_resource]` or a `[sub_resource]` tag, while its parser DECODES every escape it finds
+## in one. So a type spelled with a unicode escape in the middle of it is `GDScript` to the engine and
+## something else entirely to a reading that compares the letters as written; a path whose two dots
+## are escaped climbs out of the project while beginning with `res://`; and an escaped quote inside a
+## value is a quote to this reading and a character to the engine, which is how a tag ends early here
+## and carries on there. Decoding the escapes would be a second copy of the engine's parser, kept in
+## step by hope. Refusing the glyph is the same answer in one line, and unfamiliar is not cleared.
+const ESCAPE_GLYPH := "\\"
+
 
 ## The scene paths one line builds, as the expressions they are written as, in the order they appear.
 ## Only a quoted literal naming a scene file: a path built out of pieces is one this reading has
@@ -210,7 +231,7 @@ static func helper_head() -> String:
 
 ## The body of that function: the scene file's own resource table, read as TEXT, with nothing built.
 ##
-## IT READS TAGS, NOT LINES, because that is what Godot's own text parser reads. A tag is `[` at the
+## IT READS TAGS AS TAGS, because that is what Godot's own text parser reads. A tag is `[` at the
 ## start of a line through to the `]` that closes it, and between those two the engine tokenises:
 ## `type = "Script"` with spaces around the `=` is the same tag as `type="Script"`, and a tag may run
 ## over more than one line. A reading built on `entry.contains("type=\"Script\"")` answers TRUE for
@@ -225,6 +246,18 @@ static func helper_head() -> String:
 ##                                 type. Something unfamiliar is not something that has been cleared.
 ##   a script written INSIDE it  - a `[sub_resource]` whose type ends in `Script` is source code
 ##                                 carried in the scene file itself, in any language the engine has.
+##   a value that BUILDS something - a body line is not a tag and carries none, and a node property
+##                                 written as `Resource("user://mod.gd")` or as
+##                                 `Object(GDScript,"script/source":"...")` is resolved by the
+##                                 engine's own value parser: the first by loading that path, the
+##                                 second by making the object and compiling the source in it. Both
+##                                 are refused wherever they appear, on a word boundary so the honest
+##                                 `ExtResource(` and `SubResource(` are not caught by it.
+##   an escape in a resource tag - the engine decodes escapes in a tag and this reading compares the
+##                                 letters as written, so the two disagree about what a type is
+##                                 called, about where a path goes, and about where a tag ends. A
+##                                 backslash is not something Godot's saver writes into one, so a
+##                                 resource tag holding one is refused rather than second-guessed.
 ##   anything it points AT from  - EVERY `[ext_resource]` must name a path under `res://` that does
 ##   outside the project           not climb out of it. Not only scripts: a scene file may name
 ##                                 another SCENE or a `.tres`, and those carry tables of their own
@@ -234,6 +267,15 @@ static func helper_head() -> String:
 ##
 ## A TRUE ANSWER IS ABOUT THIS FILE AND THE PLACES IT NAMES. It does not open the res:// files it
 ## points at, because those are the game's own - which is what a game IS.
+##
+## AND IT IS ABOUT CODE THE FILE CARRIES, NOT ABOUT WHAT THE FILE ASKS THE GAME'S OWN CODE TO DO. A
+## cleared scene may still hold a `[connection]` naming one of your own methods with arguments of its
+## own in `binds`, an `Animation` track that calls one of your own methods at a keyframe, or a
+## `[node instance_placeholder="..."]` that loads another scene the moment somebody calls
+## `create_instance()` on it. None of those brings a stranger's code in; each of them can reach your
+## own. A scene from outside is still somebody else's DATA, so the methods it can reach are worth the
+## same thought as any other input, and this file says so rather than letting "data-only" be read as
+## "inert".
 ##
 ## THE `uid=` ATTRIBUTE IS NOT READ, and does not need to be. Godot's text loader prefers a uid over
 ## the path beside it, but a uid only resolves through the project's own registry - which is built
@@ -245,6 +287,13 @@ static func helper_body() -> Array:
 		"	var scene_text: String = FileAccess.get_file_as_string(scene_path)",
 		"	if not scene_text.begins_with(%s):" % _as_literal(SCENE_HEAD),
 		"		return false",
+		"	for maker: String in %s:" % _as_list_literal(BUILDING_MAKERS),
+		"		var maker_at: int = scene_text.find(maker)",
+		"		while maker_at >= 0:",
+		"			var lead: String = scene_text.substr(maker_at - 1, 1) if maker_at > 0 else \"\"",
+		"			if lead.to_lower() == lead.to_upper() and not lead.is_valid_int() and lead != \"_\":",
+		"				return false",
+		"			maker_at = scene_text.find(maker, maker_at + maker.length())",
 		"	var scene_lines: PackedStringArray = scene_text.split(\"\\n\")",
 		"	var line_index: int = 0",
 		"	while line_index < scene_lines.size():",
@@ -275,6 +324,8 @@ static func helper_body() -> Array:
 		"		if tag_name != %s and tag_name != %s:" % [
 			_as_literal(EXT_RESOURCE), _as_literal(SUB_RESOURCE)],
 		"			continue",
+		"		if head.contains(%s):" % _as_literal(ESCAPE_GLYPH),
+		"			return false",
 		"		var rest: String = \"\" if named_at < 0 else head.substr(named_at + 1)",
 		"		var fields: Dictionary = {}",
 		"		var cursor: int = 0",
@@ -323,6 +374,15 @@ static func helper_body() -> Array:
 ## written by the plugin, which is exactly the kind of thing a shared spelling exists to prevent.
 static func _as_literal(text: String) -> String:
 	return "\"%s\"" % text.replace("\\", "\\\\").replace("\"", "\\\"")
+
+
+## A list of those marks as the GDScript array literal that names them, so the emitted loop walks the
+## same table this file declares rather than a second copy of it typed into a string.
+static func _as_list_literal(marks: PackedStringArray) -> String:
+	var written: PackedStringArray = PackedStringArray()
+	for mark: String in marks:
+		written.append(_as_literal(mark))
+	return "[%s]" % ", ".join(written)
 
 
 ## Where a call starts in a line at or after `from`, or -1. A call spelled with its own leading DOT
