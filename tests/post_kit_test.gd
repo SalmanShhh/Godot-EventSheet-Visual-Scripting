@@ -41,6 +41,7 @@ static func run() -> bool:
 	all_passed = _the_outline_row_marks_the_layer() and all_passed
 	all_passed = _the_companions_are_the_bytes_they_came_from() and all_passed
 	all_passed = _the_renderer_note_names_the_door() and all_passed
+	all_passed = _no_meta_is_left_behind() and all_passed
 	return all_passed
 
 
@@ -389,3 +390,20 @@ static func _pack_constant(constant_name: String) -> PackedStringArray:
 	if script == null:
 		return PackedStringArray()
 	return script.get_script_constant_map().get(constant_name, PackedStringArray())
+
+
+## THE LEDGER'S LAST LINE: neither accessibility meta is left standing when this file is done.
+##
+## `no_flashing` and `effect_strength` live on Engine, which is ONE object shared by every test in
+## the process, so a `true` left behind here does not fail here - it halves or clamps every strength
+## a later test reads and fails somewhere that has nothing to do with it. Each function above puts
+## back exactly what it found; this asks whether that actually happened, and then sweeps, so a leak
+## is a named failure rather than a mystery three tests later.
+static func _no_meta_is_left_behind() -> bool:
+	var standing: Array = [Engine.has_meta("no_flashing"), Engine.has_meta("effect_strength")]
+	for key: String in ["no_flashing", "effect_strength"]:
+		if Engine.has_meta(key):
+			Engine.remove_meta(key)
+	return SUPPORT.pins(P, [
+		["no accessibility meta is left standing for the next test", standing, [false, false]]
+	])

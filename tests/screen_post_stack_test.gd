@@ -43,6 +43,7 @@ static func run() -> bool:
 	passed = _an_effects_own_dials() and passed
 	passed = _every_effect_has_a_shader() and passed
 	passed = _the_quiet_finding() and passed
+	passed = _no_meta_is_left_behind() and passed
 	return passed
 
 
@@ -495,3 +496,20 @@ static func _put_meta_back(key: String, was: Variant) -> void:
 		Engine.remove_meta(key)
 	else:
 		Engine.set_meta(key, was)
+
+
+## THE LEDGER'S LAST LINE: neither accessibility meta is left standing when this file is done.
+##
+## `no_flashing` and `effect_strength` live on Engine, which is ONE object shared by every test in
+## the process, so a `true` left behind here does not fail here - it halves or clamps every strength
+## a later test reads and fails somewhere that has nothing to do with it. Each function above puts
+## back exactly what it found; this asks whether that actually happened, and then sweeps, so a leak
+## is a named failure rather than a mystery three tests later.
+static func _no_meta_is_left_behind() -> bool:
+	var standing: Array = [Engine.has_meta("no_flashing"), Engine.has_meta("effect_strength")]
+	for key: String in ["no_flashing", "effect_strength"]:
+		if Engine.has_meta(key):
+			Engine.remove_meta(key)
+	return SUPPORT.pins(P, [
+		["no accessibility meta is left standing for the next test", standing, [false, false]]
+	])

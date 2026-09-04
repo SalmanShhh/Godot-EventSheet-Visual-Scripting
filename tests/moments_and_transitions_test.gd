@@ -62,6 +62,7 @@ static func run() -> bool:
 	passed = _the_transition_walk() and passed
 	passed = _a_dropped_row_is_a_whole_sentence() and passed
 	passed = _every_shape_has_a_shader() and passed
+	passed = _no_meta_is_left_behind() and passed
 	return passed
 
 
@@ -464,3 +465,20 @@ static func _declares_in(file_name: String, dial: String) -> bool:
 	var shader: Shader = ResourceLoader.load(TRANSITION_DIRECTORY + file_name, "",
 		ResourceLoader.CACHE_MODE_IGNORE) as Shader
 	return shader != null and _declares(shader, dial)
+
+
+## THE LEDGER'S LAST LINE: neither accessibility meta is left standing when this file is done.
+##
+## `no_flashing` and `effect_strength` live on Engine, which is ONE object shared by every test in
+## the process, so a `true` left behind here does not fail here - it halves or clamps every strength
+## a later test reads and fails somewhere that has nothing to do with it. Each function above puts
+## back exactly what it found; this asks whether that actually happened, and then sweeps, so a leak
+## is a named failure rather than a mystery three tests later.
+static func _no_meta_is_left_behind() -> bool:
+	var standing: Array = [Engine.has_meta("no_flashing"), Engine.has_meta("effect_strength")]
+	for key: String in ["no_flashing", "effect_strength"]:
+		if Engine.has_meta(key):
+			Engine.remove_meta(key)
+	return SUPPORT.pins(P, [
+		["no accessibility meta is left standing for the next test", standing, [false, false]]
+	])
