@@ -274,8 +274,9 @@ linear and AgX, and **AgX contrast** is read by AgX alone.
 
 **The glow's blur levels are seven numbers nobody can read.** Godot spells them `glow_levels/1`
 through `glow_levels/7` and reaches them through a call rather than a property, which is exactly the
-shape a sheet cannot show. **Set Glow Levels** lays a whole shape down from three written-down
-starting tables:
+shape a sheet cannot show. **Set Glow Levels** lays all seven down at once, as seven numbers you
+write into an ordinary value field. Three shapes sit in that field's autocomplete as somewhere to
+start:
 
 | Shape | What it looks like | The seven numbers |
 |---|---|---|
@@ -283,8 +284,10 @@ starting tables:
 | balanced | the shape a new `Environment` already has | 0, 0.8, 0.4, 0.1, 0, 0, 0 |
 | wide | a bright window washing light across the room | 0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0 |
 
-Those three are **starters and not styles**: they are numbers written into the dropdown, and
-**Set Glow Level** sets any single one of the seven by hand for a project spelling its own shape.
+Those three are **suggestions and not styles**. The field is not a list of the shapes there are:
+it takes any seven numbers you type, and the three are only a starting point to type over - which
+is the whole difference between a suggestion and three shapes chosen inside the plugin. **Set Glow
+Level** sets any single one of the seven by hand as well.
 
 <!-- caption: The neon sign, and the sun through the window -->
 ```
