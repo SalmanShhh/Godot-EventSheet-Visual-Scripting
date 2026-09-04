@@ -230,6 +230,11 @@ class LoadingRunner:
 	var finished: bool = false
 	var _elapsed: float = 0.0
 	var _entering: bool = false
+	# An entry that has been ASKED FOR and is waiting for the cover into the loading screen to
+	# come off. Entering under a running cover would swap now and let that cover swap back to
+	# the loading screen at its own halfway mark, leaving the game on a screen with nothing
+	# loading behind it - so the entry waits a frame at a time instead.
+	var _entry_wanted: bool = false
 	# The loaded scene, held from the moment it lands until the swap has actually happened. A
 	# threaded load nobody is holding can be dropped again before a covered change reaches its
 	# halfway mark, and the second read off the disk is the hitch the whole screen was for.
@@ -248,9 +253,19 @@ class LoadingRunner:
 			if get_tree().get_nodes_in_group(SceneFlowBehavior.TRANSITION_GROUP).is_empty():
 				queue_free()
 			return
-		# The minimum is seconds a PLAYER waits, so a slowmo running underneath must not stretch
-		# it: the frame's own time is put back through the time scale it was scaled by.
-		_elapsed += delta / maxf(Engine.time_scale, 0.0001)
+		var covered: bool = not get_tree().get_nodes_in_group(
+			SceneFlowBehavior.TRANSITION_GROUP).is_empty()
+		if _entry_wanted and not covered:
+			_entry_wanted = false
+			enter()
+			return
+		# The minimum is the shortest the loading SCREEN stays up, so it is counted from the
+		# moment the screen is actually up: while the cover into it is still walking, the player
+		# is looking at the scene they left. The seconds are a PLAYER'S, so a slowmo running
+		# underneath must not stretch them - the frame's own time is put back through the time
+		# scale it was scaled by.
+		if not covered:
+			_elapsed += delta / maxf(Engine.time_scale, 0.0001)
 		var seen: Array = []
 		var status: int = ResourceLoader.load_threaded_get_status(target_path, seen)
 		if status == ResourceLoader.THREAD_LOAD_FAILED \
@@ -274,10 +289,20 @@ class LoadingRunner:
 
 	## Swaps to the scene this runner has been waiting for, under the loading transition when the
 	## node asked for one. Does NOTHING while the wait is still on, which is what makes a bare
-	## "any key pressed -> Enter Loaded Scene" row safe to leave on the loading screen.
+	## "any key pressed -> Enter Loaded Scene" row safe to leave on the loading screen; and it
+	## holds the swap while a cover is walking, so the change into the loading screen and the
+	## change out of it can never happen over the top of one another.
 	func enter() -> void:
 		if _entering or not finished:
 			return
+		# THE COVER INTO THE LOADING SCREEN MAY STILL BE WALKING. A swap made under it would be
+		# undone a moment later, when that cover reaches its own halfway mark and changes to the
+		# loading screen over the top of the scene just entered - with this runner already gone.
+		# So the entry is remembered and _process asks again on the next frame.
+		if not get_tree().get_nodes_in_group(SceneFlowBehavior.TRANSITION_GROUP).is_empty():
+			_entry_wanted = true
+			return
+		_entry_wanted = false
 		var packed: PackedScene = ResourceLoader.load_threaded_get(target_path) as PackedScene
 		if packed == null:
 			push_warning("Scene Flow loaded %s and it is not a scene, so there is nothing to enter." % target_path)
@@ -286,9 +311,7 @@ class LoadingRunner:
 		_entering = true
 		_held_scene = packed
 		var word: String = shape.strip_edges().to_lower()
-		var busy: bool = not get_tree().get_nodes_in_group(
-			SceneFlowBehavior.TRANSITION_GROUP).is_empty()
-		if busy or word.is_empty() or word == SceneFlowBehavior.LOADING_NO_TRANSITION:
+		if word.is_empty() or word == SceneFlowBehavior.LOADING_NO_TRANSITION:
 			get_tree().change_scene_to_packed(packed)
 			queue_free()
 			return

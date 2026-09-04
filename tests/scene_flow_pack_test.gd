@@ -51,6 +51,7 @@ static func run() -> bool:
 	all_passed = _test_the_wait_for_key_branch() and all_passed
 	all_passed = _test_the_tips_file() and all_passed
 	all_passed = _test_the_shipped_rows() and all_passed
+	all_passed = _test_the_entry_waits_for_the_cover() and all_passed
 	all_passed = _test_the_starters() and all_passed
 	all_passed = _test_the_doctor_note() and all_passed
 	return all_passed
@@ -181,6 +182,26 @@ static func _test_the_shipped_rows() -> bool:
 			shipped.contains("@export_enum(\"none\", \"fade\", \"wipe\", \"dissolve\", \"iris\", \"blinds\", \"pixelate\", \"page curl\") var loading_transition: String = \"fade\""), true],
 		["the three background rows the engine already had are untouched",
 			shipped.contains("load_threaded_request"), true],
+	])
+
+
+## THE ORDER OF THE TWO CHANGES. A loading screen is reached under a cover and left under another
+## one, and the runner that leaves must not go while the one that arrived is still walking: the
+## cover into the screen swaps to it at its own halfway mark, so a scene entered underneath it is
+## replaced by the loading screen a moment later, with the runner already freed. That is a whole
+## frame of tree state no headless run can build, so the pins are the lines themselves - the shape
+## of the wait, read out of the pack the builder shipped.
+static func _test_the_entry_waits_for_the_cover() -> bool:
+	var shipped: String = FileAccess.get_file_as_string(PACK_PATH)
+	return SUPPORT.pins(P, [
+		["an entry asked for while a cover is walking is remembered rather than made",
+			shipped.contains("\t\tif not get_tree().get_nodes_in_group(SceneFlowBehavior.TRANSITION_GROUP).is_empty():\n\t\t\t_entry_wanted = true\n\t\t\treturn"), true],
+		["and it is made on the first frame the screen is clear again",
+			shipped.contains("\t\tif _entry_wanted and not covered:\n\t\t\t_entry_wanted = false\n\t\t\tenter()"), true],
+		["the plain swap under a running cover is gone",
+			shipped.contains("if busy or word.is_empty()"), false],
+		["and the shortest time is counted only while the loading screen is what is on screen",
+			shipped.contains("\t\tif not covered:\n\t\t\t_elapsed += delta"), true],
 	])
 
 
