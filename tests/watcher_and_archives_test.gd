@@ -53,6 +53,7 @@ static func run() -> bool:
 	all_passed = _run_watcher_shape() and all_passed
 	all_passed = _run_watcher_runtime() and all_passed
 	all_passed = _run_band() and all_passed
+	all_passed = _run_never_stops() and all_passed
 	_clean()
 	if all_passed:
 		print("[PASS] watcher_and_archives_test: the honest watcher, and the two archive verbs")
@@ -625,6 +626,59 @@ static func _default(by_id: Dictionary, ace_id: String, param_id: String) -> Str
 		if param.id == param_id:
 			return str(param.default_value)
 	return ""
+
+
+## The Doctor's note about a watch nobody stops. The check is a pure function over text, so the whole
+## corpus here is two made-up scripts - nothing is planted in the project, which would make the
+## repo's own audit report the finding for good.
+static func _run_never_stops() -> bool:
+	var ok: bool = true
+	const OPENED := "func _ready() -> void:\n\t$FolderWatcher.watch_folder(\"user://mods\", 2.0)\n"
+	const CLOSED := "func _ready() -> void:\n\t$FolderWatcher.watch_folder(\"user://mods\", 2.0)\n" \
+		+ "\n\nfunc _on_screen_closed() -> void:\n\t$FolderWatcher.stop_watching()\n"
+	ok = _check("the line that starts a watch nothing ends is the line the note names",
+		str(EventSheetFilesDoctor.watch_never_stops_lines(OPENED)),
+		"[\"$FolderWatcher.watch_folder(\\\"user://mods\\\", 2.0)\"]") and ok
+	# A FILE THAT STOPS ONE STOPS THEM ALL, as far as this check is concerned. Pairing a start with a
+	# stop would mean reading control flow, and a note that guessed at which branch runs would be
+	# wrong on the sheets that got it right.
+	ok = _check("a file that stops a watch anywhere in it is not reported",
+		str(EventSheetFilesDoctor.watch_never_stops_lines(CLOSED)), "[]") and ok
+	ok = _check("and a file that watches nothing has nothing to answer for",
+		str(EventSheetFilesDoctor.watch_never_stops_lines(
+			"func _ready() -> void:\n\tprint(\"hello\")\n")), "[]") and ok
+
+	var findings: Array[Dictionary] = EventSheetFilesDoctor.watch_never_stops_findings(
+		{"res://menu.gd": OPENED, "res://quiet.gd": CLOSED})
+	ok = _check("one note, about the one file that owes it", findings.size(), 1) and ok
+	ok = _check("filed as a note rather than a warning, because a session-long watch is a real thing to want",
+		str(findings[0].get("severity", "")), "info") and ok
+	ok = _check("under the check id the inbox addresses it by",
+		str(findings[0].get("check", "")), "files-watch-never-stops") and ok
+	ok = _check("about the file that opened the watch", str(findings[0].get("path", "")),
+		"res://menu.gd") and ok
+	ok = _check("naming the line as its subject", str(findings[0].get("subject", "")),
+		"$FolderWatcher.watch_folder(\"user://mods\", 2.0)") and ok
+	var message: String = str(findings[0].get("message", ""))
+	ok = _check("the note leads with the file and the cost", message.begins_with(
+		EventSheetL10n.translate("%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.") % [
+			"menu.gd", "$FolderWatcher.watch_folder(\"user://mods\", 2.0)"]), true) and ok
+	ok = _check("says what ends it, and what a stopped watcher then costs", message.contains(
+		EventSheetL10n.translate("Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.")), true) and ok
+	# A CHECK THAT OVERSTATES ITS REACH READS AS A CLEAN PROJECT when it is quiet, so what it cannot
+	# see is in the note itself rather than only in this file's comments.
+	ok = _check("and says out loud what it cannot see", message.contains(
+		EventSheetL10n.translate("This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.")), true) and ok
+
+	# TWO STARTS ARE ONE NOTE. A finding that lists every line is a wall; one line and a number is a
+	# sentence, and it is the same tail every other check in this section grows.
+	var twice: Array[Dictionary] = EventSheetFilesDoctor.watch_never_stops_findings(
+		{"res://two.gd": OPENED + "\n\nfunc _later() -> void:\n\t$Other.watch_folder(\"user://skins\", 5.0)\n"})
+	ok = _check("two starts in one file are one note", twice.size(), 1) and ok
+	ok = _check("with the rest counted rather than listed",
+		str(twice[0].get("message", "")).contains(
+			EventSheetL10n.translate("%d more like it in this file.") % 1), true) and ok
+	return ok
 
 
 static func _hint(by_id: Dictionary, ace_id: String, param_id: String) -> String:

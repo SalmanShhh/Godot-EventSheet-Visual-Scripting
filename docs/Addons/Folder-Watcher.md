@@ -18,10 +18,11 @@ somebody else's slow disk.
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [What one look costs](#what-one-look-costs)
-5. [ACE reference](#ace-reference)
-6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-7. [Use cases](#use-cases)
-8. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [The Doctor's note about a watch nobody stops](#the-doctors-note-about-a-watch-nobody-stops)
+6. [ACE reference](#ace-reference)
+7. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this pack shines
 
@@ -83,6 +84,33 @@ the same order - the engine promises no order of its own.
 **The first look is the baseline.** Starting a watch records what is already there without raising
 anything. A folder that already holds two hundred files is not two hundred things that just
 happened; the events start at the second look.
+
+## The Doctor's note about a watch nobody stops
+
+A watch is not a read that happened. It is a directory read every few seconds for the rest of the
+session, so one started on a screen the player walks away from goes on reading the disk behind
+whatever they moved on to - a cost that is invisible in the editor, because everything about the
+line that started it is correct.
+
+The Doctor's **Files** section says so. A script that starts a watch and never stops one is filed as
+a note, `files-watch-never-stops`, naming the line that starts it:
+
+> `menu.gd` starts watching a folder and never stops watching it. A watch is a directory read every
+> few seconds for the rest of the session, so one started on a screen the player walks away from goes
+> on reading the disk behind whatever they moved on to. First:
+> `$FolderWatcher.watch_folder("user://mods", 2.0)`. Stop Watching ends it, and a stopped watcher
+> parks its per-frame tick - the engine stops visiting it at all.
+
+**It is a note, not a warning, and it has no fix button.** A watch meant to run for as long as the
+game does is a real thing to want, and where a watch was supposed to end - the screen closing, the
+menu leaving, the download finishing - is yours to say. A quick fix that guessed would put Stop
+Watching in the wrong place and then look like the sheet meant it there.
+
+**What the note cannot see**, said in the note itself rather than only here: it reads one file at a
+time. A Stop Watching in another script, or one reached through a variable holding the watcher, is a
+stop it has no way to find - so it will ask about a watch you really do stop. A file that stops a
+watch anywhere in it is never reported, because pairing one start with one stop would mean reading
+control flow the check has not read.
 
 ## ACE reference
 
@@ -317,6 +345,10 @@ On A File Removed path -> SlotMenu | Rebuild
   directory read every frame, which is never what anybody meant by an interval.
 - **Every look reads the whole folder.** A folder with thousands of files in it wants a long
   interval, or a narrower filter, or both.
+- **A watch nobody stops runs for the whole session, and the Doctor says so.** A script that starts
+  a watch and never stops one is filed as the note `files-watch-never-stops`. It is a note rather
+  than a warning, because a session-long watch is a real thing to want - but a watch started on a
+  screen the player leaves keeps reading the disk behind whatever they went to next.
 - **Stopped means stopped.** Stop Watching parks the per-frame tick, so nothing is noticed while it
   is off - not even a Look Now's worth. Start it again, or call Look Now yourself.
 - **The triggers hand back whole paths; the expressions hand back names.** Join the folder back on

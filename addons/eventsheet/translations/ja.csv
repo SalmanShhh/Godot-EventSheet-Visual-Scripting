@@ -7097,3 +7097,14 @@ The memory's name to clear.,消す記憶の名前です。
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s は %s をふつうのシーン切り替えで開きますが、そのシーンはディスク上で %s あります - 読み込みのあいだ、前のシーンの最後のフレームがそのまま残るだけの大きさです。「ローディング付きでシーンへ」なら、ディスクから出てくるあいだ自分で作った読み込み画面を見せられます。最短表示時間があるので、一瞬で通り過ぎることもありません。
 "That restore was taken back - %s is what it was before it, and the backup ring is untouched.",その復元を取り消しました。%s は以前の状態に戻り、バックアップリングはそのままです。
 "Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.",何も書き込まれていません。復元がファイルを戻すのは、その項目自身が示すパックのフォルダーの中だけで、しかもバックアップリングからだけです。%s はそれに当たりません。
+no such state,そのような状態はありません
+This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,このシーンのアニメーションツリーには %s という状態がありません。綴りを誤った状態はどこにも遷移せず、何も報告しません。意図した状態を選んでください。
+%d-dimensional,%d 次元
+one amount,値ひとつ
+"Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.",アニメーション: %d 個のスクリプトがブレンドツリーを操作、%d 個の状態はどのツリーにも存在せず、%d 個のブレンド位置が1次元の空間にベクトルとして書き込まれています。
+"%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s は ""%s"" へ遷移しますが、そのシーンのどのアニメーションツリーにもこの状態はありません。綴りを誤った状態はどこにも遷移せず、ゲーム自身は何も報告しません。"
+"Did you mean ""%s""?","もしかして ""%s"" ですか?"
+"%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s は ""%s"" にベクトルを書き込んでいますが、これは1次元のブレンド空間です。最初の数値だけが使われ、残りの向きは何も告げずに捨てられます。"
+"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.","%s はフォルダーの監視を始めますが、一度も止めません。監視とは、セッションが終わるまで数秒おきにディレクトリを読み続けることです。プレイヤーが離れた画面で始めた監視は、移った先の裏でディスクを読み続けます。最初: %s。"
+"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.","「監視をやめる」がそれを終わらせます。止まった監視役は毎フレームの処理を止め、エンジンはもうそこを訪れません。"
+"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.","これは一度に一つのファイルを読みます。別のスクリプトにある「監視をやめる」や、監視役を持つ変数を通して呼ばれるものは、この検査には見えない停止です。"

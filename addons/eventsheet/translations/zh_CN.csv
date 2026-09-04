@@ -7097,3 +7097,14 @@ The memory's name to clear.,要清除的记忆的名字。
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.",%s 用普通的场景切换打开 %s，而那个场景在磁盘上有 %s - 大到足以让旧场景的最后一帧在加载期间一直停在屏幕上。「带加载画面切换场景」会在它从磁盘读出来的时候显示你自己的加载画面，并且有一个最短时间，不会一闪而过。
 "That restore was taken back - %s is what it was before it, and the backup ring is untouched.",该还原已撤销 - %s 恢复为之前的状态，备份环不受影响。
 "Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.",未写入任何内容。还原只会把文件放回其条目所指明的包文件夹中，并且只从备份环中取出 - %s 不属于这种情况。
+no such state,没有这个状态
+This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,此场景的动画树中没有名为 %s 的状态。拼错的状态哪里也去不了，也不会报告任何信息 - 请选择你想要的那个。
+%d-dimensional,%d 维
+one amount,单个数值
+"Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.",动画：%d 个脚本驱动混合树，%d 个状态没有任何树声明，%d 个混合位置以向量写入一维空间。
+"%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s 前往 ""%s""，但其场景中没有任何动画树声明该状态。拼错的状态哪里也去不了，游戏本身也不会报告。"
+"Did you mean ""%s""?","你是指 ""%s"" 吗？"
+"%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s 向 ""%s"" 写入了向量，而它是一维混合空间。只有第一个数字会被使用，方向的其余部分会被悄悄丢弃。"
+"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.","%s 开始监视一个文件夹，却从不停止。监视就是在这一局余下的时间里每隔几秒读一次目录，所以在玩家离开的界面上启动的监视，会在他转去的任何地方背后继续读磁盘。第一处：%s。"
+"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.","“停止监视”会结束它，而停下来的监视者会停住每帧的处理 - 引擎从此完全不再造访它。"
+"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.","它一次只读一个文件：写在另一个脚本里的“停止监视”，或者通过持有监视者的变量调用的那一个，都是这项检查看不到的停止。"

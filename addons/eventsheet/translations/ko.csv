@@ -7097,3 +7097,14 @@ The memory's name to clear.,지울 기억의 이름입니다.
 "%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.","%s 은(는) %s 을(를) 평범한 씬 전환으로 엽니다. 그런데 그 씬은 디스크에서 %s 이라, 읽는 동안 이전 씬의 마지막 프레임이 그대로 멈춰 있을 만큼 큽니다. 로딩 화면으로 씬 이동은 씬이 디스크에서 올라오는 동안 직접 만든 로딩 화면을 보여 주며, 최소 시간이 있어 순식간에 지나가 버리지도 않습니다."
 "That restore was taken back - %s is what it was before it, and the backup ring is untouched.","그 복원을 취소했습니다. %s 은(는) 이전 상태로 돌아갔고, 백업 링은 그대로입니다."
 "Nothing was written. A restore only ever puts a file back inside the pack folder its own entry names, out of the backup ring, and %s is not that.","아무것도 쓰지 않았습니다. 복원은 해당 항목이 가리키는 팩 폴더 안에만, 그리고 백업 링에서만 파일을 되돌립니다. %s 은(는) 거기에 해당하지 않습니다."
+no such state,그런 상태가 없습니다
+This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,이 씬의 애니메이션 트리에는 %s 라는 상태가 없습니다. 잘못 적은 상태는 아무 데로도 가지 않고 아무것도 알리지 않습니다 - 의도한 상태를 고르세요.
+%d-dimensional,%d차원
+one amount,값 하나
+"Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.","애니메이션: 스크립트 %d개가 블렌드 트리를 다루고, 어떤 트리에도 없는 상태 %d개, 1차원 공간에 벡터로 쓴 블렌드 위치 %d개."
+"%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s 는 ""%s"" 로 이동하지만 그 씬의 어떤 애니메이션 트리도 이 상태를 선언하지 않습니다. 잘못 적은 상태는 아무 데로도 가지 않고 게임도 알려주지 않습니다."
+"Did you mean ""%s""?","""%s"" 를 뜻하셨나요?"
+"%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s 는 ""%s"" 에 벡터를 씁니다. 이것은 1차원 블렌드 공간이라 첫 번째 숫자만 쓰이고 나머지 방향은 말없이 버려집니다."
+"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.","%s은(는) 폴더 감시를 시작하고 한 번도 멈추지 않습니다. 감시란 세션이 끝날 때까지 몇 초마다 디렉터리를 읽는 일이라서, 플레이어가 떠난 화면에서 시작된 감시는 그가 옮겨 간 곳 뒤에서 계속 디스크를 읽습니다. 처음: %s."
+"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.","""감시 멈추기"" 가 그것을 끝내고, 멈춘 감시자는 프레임마다의 처리를 세워 둡니다 - 엔진은 더 이상 그것을 찾아가지 않습니다."
+"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.","이것은 한 번에 한 파일만 읽습니다. 다른 스크립트에 있는 ""감시 멈추기"" 나 감시자를 담은 변수를 통해 불리는 것은 이 검사가 볼 수 없는 멈춤입니다."

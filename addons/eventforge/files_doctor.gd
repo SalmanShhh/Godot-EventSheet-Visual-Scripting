@@ -47,6 +47,17 @@
 #                               question is one row, so unlike the check above this one has a door:
 #                               the question, asked first.
 #
+# And one about a cost rather than a path:
+#
+#   A WATCH NOBODY STOPS       A file starts a folder watch and never stops one. A watch is not a
+#                              read that happened: it is a directory read every few seconds for the
+#                              rest of the session, so one started on a screen the player walks away
+#                              from goes on reading the disk behind whatever they moved on to. This
+#                              is a NOTE, not a warning - a watch meant to run for the whole session
+#                              is a real thing to want, and the pack's own tick is parked the moment
+#                              it is stopped - and it has no fix, because only the reader knows
+#                              where the watch was supposed to end.
+#
 # EVERY CHECK IS A PURE FUNCTION OVER TEXT, and the gathering is separate, so the tests pin the exact
 # words a reader meets rather than a count. The corpus is EMITTED SCRIPTS rather than sheets, for the
 # reason the release-build console check is: the line is in the file whoever typed it, and a check
@@ -70,6 +81,14 @@ const CHECK_ABSOLUTE_PATH := "files-absolute-path"
 const CHECK_UNGUARDED_READ := "files-unguarded-read"
 const CHECK_LOADS_OUTSIDE := "files-loads-outside-content"
 const CHECK_UNTRUSTED_SCENE := "files-untrusted-scene-load"
+const CHECK_WATCH_NEVER_STOPS := "files-watch-never-stops"
+
+## The verb that ENDS a watch, as the shipped Folder Watcher pack spells it. Its twin that starts one
+## is read from the outside-path reading beside this file, which already knows that name for its own
+## reason; this half lives here because stopping a watch is a question about what the game costs
+## while it runs, and nothing about where a path came from. Both are shipped public ids, frozen the
+## way an ace_id is, so matching them by text is matching the pack's own contract.
+const STOP_WATCH_CALL := "stop_watching("
 
 ## Folders whose scripts are not this project's to answer for: the plugin itself, the shipped packs,
 ## the suite and the tools. The same list the Ship It section keeps, for the same reason.
@@ -103,6 +122,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(unguarded_read_findings(sources))
 	out.append_array(loads_outside_findings(sources))
 	out.append_array(untrusted_scene_findings(sources))
+	out.append_array(watch_never_stops_findings(sources))
 	return out
 
 
@@ -569,6 +589,48 @@ static func _indent_of(line: String) -> int:
 	while tabs < line.length() and line[tabs] == "\t":
 		tabs += 1
 	return tabs
+
+
+# ── A watch that runs for the rest of the session ────────────────────────────────────────────
+
+
+## One NOTE per script that starts a folder watch and never stops one. A note rather than a warning:
+## a watch that is meant to last as long as the game does is a real thing to want, and the shipped
+## watcher parks its per-frame tick the moment it is stopped, so this is about a cost that keeps
+## being paid rather than about a line that is wrong.
+##
+## THERE IS NO DOOR ON THIS ONE. Where a watch was supposed to end - the screen closing, the menu
+## leaving, the download finishing - is the reader's to say, and a fix that guessed would put Stop
+## Watching in the wrong place and look like the sheet meant it.
+static func watch_never_stops_findings(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		var lines: PackedStringArray = watch_never_stops_lines(str(sources[script_path]))
+		if lines.is_empty():
+			continue
+		var message: String = EventSheetL10n.translate("%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.") % [
+			script_path.get_file(), lines[0]]
+		message += _and_more(lines)
+		message += " " + EventSheetL10n.translate("Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.")
+		message += " " + EventSheetL10n.translate("This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.")
+		findings.append(_finding("info", CHECK_WATCH_NEVER_STOPS, script_path, message, lines[0]))
+	return findings
+
+
+## The lines of this source that START a watch, when that same source stops one NOWHERE. A file
+## holding a Stop Watching anywhere in it is not reported at all - not per line, because the two are
+## almost never on the same path through the code, and a check pairing them up would be reporting on
+## control flow it has not read.
+static func watch_never_stops_lines(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var statements: PackedStringArray = _statements_of(source)
+	for line: String in statements:
+		if line.contains(STOP_WATCH_CALL):
+			return PackedStringArray()
+	for line: String in statements:
+		if line.contains(EventForgeOutsidePaths.WATCH_CALL):
+			found.append(line)
+	return found
 
 
 # ── The receipts, and the rows a fix would change ────────────────────────────────────────────
