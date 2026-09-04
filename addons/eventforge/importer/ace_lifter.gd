@@ -4078,9 +4078,14 @@ static func warm_matchers() -> void:
 
 
 static func _build_reverse_entries() -> Array:
-	var descriptors: Array = ACERegistry.get_all_descriptors()
-	if _cached_reverse_count == descriptors.size() and not _cached_reverse_entries.is_empty():
+	# The memo is keyed on how many descriptors the registry holds, and that count is asked for
+	# WITHOUT a copy of the vocabulary. Asking through get_all_descriptors() duplicated a
+	# two-thousand-entry array on the way to reading its size, on every one of the several calls
+	# each lifted function makes - the answer was thrown away nine times out of ten.
+	var count: int = ACERegistry.descriptor_count()
+	if _cached_reverse_count == count and not _cached_reverse_entries.is_empty():
 		return _cached_reverse_entries
+	var descriptors: Array = ACERegistry.get_all_descriptors()
 	var built: Array = _compose_reverse_entries(descriptors)
 	_cached_reverse_entries = built
 	_cached_reverse_count = descriptors.size()

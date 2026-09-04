@@ -88,6 +88,22 @@ static func get_all_descriptors() -> Array[ACEDescriptor]:
 	return output
 
 
+## How many descriptors get_all_descriptors() would hand back, WITHOUT building the array to count
+## them. The lifter's reverse index asks this to decide whether its memo is still current, and it
+## used to ask by taking a whole fresh copy of the vocabulary - two thousand entries duplicated per
+## call, and the lift calls it several times per function it reads. The number is the same one
+## get_all_descriptors() would produce, so a rescan that publishes new ACEs still moves it.
+static func descriptor_count() -> int:
+	_ensure_builtin_cache()
+	var total: int = _builtin_cache.size()
+	var bridge: Node = _get_bridge()
+	if bridge != null and bridge.has_method("get_all_descriptors"):
+		for entry: Variant in bridge.call("get_all_descriptors"):
+			if _normalize_descriptor(entry) != null:
+				total += 1
+	return total
+
+
 ## Returns descriptors for a provider including built-ins and runtime descriptors.
 static func get_provider_descriptors(provider_id: String) -> Array[ACEDescriptor]:
 	var output: Array[ACEDescriptor] = []

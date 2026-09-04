@@ -38,7 +38,10 @@ var _canceled: bool = false
 ## Cheap once warm; the first call pays the one-time descriptor/registry build. Called by start(),
 ## and safe to call earlier (plugin boot deliberately does NOT - it would undo the lazy-boot win).
 static func warm_registries() -> void:
-	ACERegistry.get_all_descriptors()
+	# The descriptor cache and the main-thread bridge lookup, forced without the copy of the whole
+	# vocabulary that reading the array back would have made - warming is about building the static,
+	# not about having the list.
+	ACERegistry.descriptor_count()
 	EventSheetACELifter._build_reverse_entries()
 	EventSheetACELifter.warm_matchers()
 	EventSheetBlockRegistry.all_kinds()
