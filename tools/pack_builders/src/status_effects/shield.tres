@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/status_effect_resource/status_effect_resource.gd" id="1_status_effect"]
+
+[resource]
+script = ExtResource("1_status_effect")
+status_name = "shield"
+tint = Color(0.8, 0.88, 1, 1)
+icon = null
+tick_amount = 0.0
+tick_type = ""
+tick_seconds = 0.5
+heal_amount = 0.0
+speed_factor = 1.0
+multiplier_tag = "defence"
+multiplier = 0.5
+stacking = "refresh"
+max_stacks = 1
+cleansable = false
+particle_scene = null

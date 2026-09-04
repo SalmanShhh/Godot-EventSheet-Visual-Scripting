@@ -265,9 +265,15 @@ func propose_update(zip_path: String) -> String:
 func open_restore(pack_dir: String) -> String:
 	if _restore_dialog == null:
 		_restore_dialog = EventSheetPackRestoreDialog.new()
+		# The same three steps an update finishes with, and for the same reason: the file put back can
+		# be the pack's own .gd, whose @ace_* annotations are the vocabulary. Saying the status line
+		# and redrawing the list without telling the registry leaves the picker offering the words of
+		# a version that is no longer on disk - which is the case this door exists for.
 		_restore_dialog.configure(func(said: String) -> void:
 			_set_status(said)
-			refresh())
+			refresh()
+			if _on_registry_changed.is_valid():
+				_on_registry_changed.call())
 		add_child(_restore_dialog)
 	if not _restore_dialog.open_restore(EventSheetPackManifest.folder_for(pack_dir)):
 		return "The backup ring is holding nothing for %s. It fills the first time an update overwrites or removes one of its files." % pack_dir

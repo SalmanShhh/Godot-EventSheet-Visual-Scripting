@@ -99,7 +99,28 @@ static func run() -> bool:
 		"Switch health back on") and all_passed
 	all_passed = _check("an unnamed fix is refused rather than half-applied",
 		bool(EventSheetQuickFixes.apply("not_a_fix", {}, {}).get("ok", true)), false) and all_passed
+
+	# THE WAY BACK OUT OF AN UPDATE TELLS THE REGISTRY, like the update door beside it. The file a
+	# restore puts back can be the pack's own .gd, whose @ace_* annotations ARE the vocabulary - which
+	# is the case this door exists for - so a restore that only redrew the manager's own table left
+	# the picker offering the words of a version no longer on disk.
+	all_passed = _test_a_restore_tells_the_registry() and all_passed
 	return all_passed
+
+
+static func _test_a_restore_tells_the_registry() -> bool:
+	var manager: EventSheetAddonManagerDialog = EventSheetAddonManagerDialog.new()
+	var told: Array[int] = [0]
+	manager.configure(func() -> void: told[0] += 1, Callable(), Callable())
+	var said: String = manager.open_restore("eventforge_no_such_pack_here")
+	var ok: bool = _check("a pack whose ring holds nothing says so instead of opening a blank page",
+		said.begins_with("The backup ring is holding nothing for"), true)
+	ok = _check("nothing has been put back, so nothing has been said yet", told[0], 0) and ok
+	manager._restore_dialog._on_restored.call("guide.md put back, 31 byte(s).")
+	ok = _check("and a restore tells the registry the vocabulary may have moved",
+		told[0], 1) and ok
+	manager.free()
+	return ok
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
