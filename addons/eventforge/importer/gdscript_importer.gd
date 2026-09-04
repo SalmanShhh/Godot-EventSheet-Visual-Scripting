@@ -85,6 +85,16 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 	var index: int = 0
 	while index < lines.size():
 		var line: String = lines[index]
+		# A MOMENT BLOCK is a function of one exact shape, so it is probed BEFORE the function
+		# branch below - which would otherwise claim the whole `func` as a verbatim block and the
+		# moment would never be seen. Byte-gated inside the kind: a coroutine that is not that
+		# exact shape stays the plain function it always was.
+		var lifted_moment: Dictionary = _try_lift_moment_block(lines, index)
+		if not lifted_moment.is_empty():
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted_moment["row"])
+			index += int(lifted_moment["consumed"])
+			continue
 		# Top-level function: emitted as its OWN block row (one row per function gives the
 		# sheet useful granularity and per-function provenance without lossy lifting).
 		if line.begins_with("func ") or line.begins_with("static func "):
@@ -1101,6 +1111,24 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 		block_row.fields = fields
 		return {"row": block_row, "consumed": consumed}
 	return {}
+
+
+## Lifts a Moment block: a coroutine of the exact shape a Moment block emits - the fixed
+## signature, the Juice runner's waits, an optional loop around a stretch - reads back as the
+## block it came from. The cheap name test first, so every other function in a file pays one
+## string compare; the kind's own byte gate decides, and a refusal leaves the function exactly
+## the verbatim block it has always been.
+## Returns {} when nothing is claimed, else {"row": MomentBlockRow, "consumed": int}.
+func _try_lift_moment_block(lines: PackedStringArray, index: int) -> Dictionary:
+	if not lines[index].begins_with("func %s" % MomentBlockRow.FUNCTION_PREFIX):
+		return {}
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("moment")
+	if kind == null:
+		return {}
+	var claim: Dictionary = kind.lift(lines, index)
+	if claim.is_empty() or not claim.has("resource"):
+		return {}
+	return {"row": claim["resource"], "consumed": maxi(1, int(claim.get("consumed", 1)))}
 
 
 ## Lifts a canonical single-line enum (`enum Name { A, B = 4 }`) to an EnumRow when the

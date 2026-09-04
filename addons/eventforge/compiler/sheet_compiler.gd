@@ -792,6 +792,20 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			lines.append(_empty_function_stub(event_function))
 		source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
+	# Moment blocks: each one is a coroutine of its own, beside the sheet's other functions,
+	# because that is what a moment IS - a beat something else plays by name.
+	var moment_blocks: Array = []
+	_collect_moment_blocks(all_events, moment_blocks)
+	for moment_entry: Variant in moment_blocks:
+		var moment_block: MomentBlockRow = moment_entry as MomentBlockRow
+		var moment_lines: PackedStringArray = _moment_block_lines(moment_block)
+		if moment_lines.is_empty():
+			continue
+		lines.append("")
+		var moment_start: int = lines.size() + 1
+		lines.append_array(moment_lines)
+		source_map.append({"uid": str(moment_block.get_instance_id()), "start": moment_start, "end": lines.size(), "kind": "moment"})
+
 	for deferred: String in deferred_rows:
 		lines.append("")
 		lines.append(deferred)
@@ -940,6 +954,17 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 					for block_line: String in block_lines:
 						lines.append(block_line)
 					source_map.append({"uid": str((entry as CustomBlockRow).get_instance_id()), "start": custom_block_start, "end": lines.size(), "kind": "custom_block"})
+		elif entry is MomentBlockRow:
+			# A Moment block emits IN ARRAY POSITION on the opened-file path (the ordering contract
+			# enums, signals and custom blocks all follow), so a coroutine lifted out of a
+			# hand-written script re-emits exactly where it came from and the whole-file
+			# byte-verify holds.
+			var external_moment: MomentBlockRow = entry as MomentBlockRow
+			var external_moment_lines: PackedStringArray = _moment_block_lines(external_moment)
+			if not external_moment_lines.is_empty():
+				var external_moment_start: int = lines.size() + 1
+				lines.append_array(external_moment_lines)
+				source_map.append({"uid": str(external_moment.get_instance_id()), "start": external_moment_start, "end": lines.size(), "kind": "moment"})
 		elif entry is FunctionAnchorRow:
 			# A lifted MID-FILE function emits at its original slot (no added blank - the
 			# separator blank lives verbatim in the raw block above). The trailing functions
@@ -3540,6 +3565,35 @@ static func _collect_enum_rows(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_enum_rows(group.child_rows(), into)
+
+
+## Gathers Moment blocks from the event tree, group-recursive like enums/signals so a moment
+## written inside a group still compiles to its coroutine.
+static func _collect_moment_blocks(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is MomentBlockRow:
+			into.append(entry)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_moment_blocks(group.child_rows(), into)
+
+
+## One Moment block as GDScript. The SCHEDULE and the skeleton live on the row itself (the block
+## kind's byte gate goes through the same build_lines), and this supplies the one thing the row
+## cannot know: how to turn its steps' action rows into statements, which is the ordinary action
+## compiler. So a moment step can hold any action the sheet has.
+static func _moment_block_lines(block: MomentBlockRow) -> PackedStringArray:
+	if block == null:
+		return PackedStringArray()
+	return block.build_lines(_moment_step_statements)
+
+
+## Every statement one Moment step runs, with no indent of its own - build_lines puts each where
+## the schedule says it goes.
+static func _moment_step_statements(step: MomentStepRow) -> PackedStringArray:
+	if step == null:
+		return PackedStringArray()
+	return _emit_match_case_body(step.actions, "", "", null)
 
 
 ## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive

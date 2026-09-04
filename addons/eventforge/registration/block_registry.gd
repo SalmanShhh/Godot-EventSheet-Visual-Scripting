@@ -110,6 +110,7 @@ static func _ensure_built_ins() -> void:
 	register_kind(RegionBlockKind.new())
 	register_kind(EnumBlockKind.new())
 	register_kind(SignalBlockKind.new())
+	register_kind(MomentBlockKind.new())
 	_scan_pack_kinds()
 
 
@@ -565,3 +566,247 @@ class RegionBlockKind extends EventSheetBlockKind:
 			elif trimmed.begins_with("\"") and trimmed.ends_with("\"") and trimmed.length() >= 2:
 				parsed["description"] = trimmed.substr(1, trimmed.length() - 2)
 		return parsed
+
+
+# ── Built-in RESOURCE kind: the Moment block (`func moment_impact(strength, from) -> void:`) ──
+# A moment written as rows: the block head names it, its child steps carry a timing word on the
+# left and any actions on the right, and the whole thing compiles to ONE coroutine on the host.
+#
+# THE SHAPE IT READS BACK. A hand-written coroutine of exactly the emitted form - the fixed
+# signature, waits through the Juice pack's runner, an optional `for _moment_loop` around a
+# looped stretch - opens as this block. Anything else stays the plain function it always was.
+# The statements inside each step come back as VERBATIM code rows: recovering a step's WHEN is
+# what makes the block a block, and a statement nothing claims is an honest line of GDScript
+# rather than a mangled row. The claim is dropped altogether unless re-emission reproduces the
+# consumed lines byte for byte, so a moment can never be corrupted by being opened.
+class MomentBlockKind extends EventSheetBlockKind:
+	## The waits the emitted coroutine is made of, by name, so the reader of this file can see
+	## the whole vocabulary the lift looks for in one place.
+	const AT_CALL: String = ".at(self, "
+	const THEN_CALL: String = ".then(self, "
+	const HOLD_CALL: String = ".hold(self, "
+	const RANGE_CALL: String = ".strength_at(self, strength, from, "
+	const LOOP_HEAD: String = "for _moment_loop: int in "
+
+	func _init() -> void:
+		kind_id = "moment"
+		title = "Moment"
+
+	func handles(entry: Resource) -> bool:
+		return entry is MomentBlockRow
+
+	func addable() -> bool:
+		return false
+
+	func source_map_kind() -> String:
+		return "moment"
+
+	## The block as GDScript, with each step's VERBATIM statements in place. This is the lift's
+	## own byte gate; the compiler emits through the same MomentBlockRow.build_lines() with a
+	## provider that also knows how to render ACE action rows.
+	func emit_lines(entry: Resource) -> PackedStringArray:
+		var block: MomentBlockRow = entry as MomentBlockRow
+		if block == null:
+			return PackedStringArray()
+		return block.build_lines(_verbatim_statements)
+
+	func summary_for(entry: Resource) -> String:
+		var block: MomentBlockRow = entry as MomentBlockRow
+		if block == null:
+			return ""
+		return "%s - %d step(s)" % [block.moment_name, block.live_steps().size()]
+
+	func lift(lines: PackedStringArray, i: int) -> Dictionary:
+		var header: RegEx = RegEx.new()
+		if header.compile("^func %s([A-Za-z_][A-Za-z0-9_]*)%s$" % [
+				MomentBlockRow.FUNCTION_PREFIX, _escaped_signature()]) != OK:
+			return {}
+		var opened: RegExMatch = header.search(lines[i])
+		if opened == null:
+			return {}
+		var body_end: int = i + 1
+		while body_end < lines.size() and lines[body_end].begins_with("\t"):
+			body_end += 1
+		var consumed: int = body_end - i
+		if consumed < 2:
+			return {}
+		var block: MomentBlockRow = _read_body(opened.get_string(1), lines.slice(i + 1, body_end))
+		if block == null:
+			return {}
+		# The gate: a claim survives only when the block writes those exact lines back.
+		var emitted: PackedStringArray = emit_lines(block)
+		if emitted.size() != consumed:
+			return {}
+		for offset: int in range(consumed):
+			if emitted[offset] != lines[i + offset]:
+				return {}
+		return {"resource": block, "consumed": consumed}
+
+	## The signature as a regular expression, derived from the one place it is spelled so the two
+	## can never drift apart.
+	func _escaped_signature() -> String:
+		var pattern: String = ""
+		for index: int in range(MomentBlockRow.SIGNATURE.length()):
+			var character: String = MomentBlockRow.SIGNATURE[index]
+			pattern += ("\\" + character) if "()[]{}.*+?^$|".contains(character) else character
+		return pattern
+
+	## Reads a moment's body back into steps: the range line, the loop head, the three waits, and
+	## everything else as a verbatim statement on the step it belongs to. Returns null the moment
+	## the body is not a shape this kind writes, which is how a plain coroutine stays a function.
+	func _read_body(word: String, body: PackedStringArray) -> MomentBlockRow:
+		var block: MomentBlockRow = MomentBlockRow.new()
+		block.moment_name = word
+		var current: MomentStepRow = null
+		var cursor: float = 0.0
+		var last_start: float = 0.0
+		var depth: int = 1
+		var loop_count: int = 1
+		var pending_loop: bool = false
+		for raw_line: String in body:
+			if not raw_line.begins_with("\t".repeat(depth)):
+				if depth == 1:
+					return null
+				# The looped stretch has ended: the row that closes it is the loop back.
+				block.steps.append(_loop_back_step(loop_count))
+				depth = 1
+				cursor = 0.0
+				last_start = 0.0
+				current = null
+			var line: String = raw_line.substr(depth)
+			if line.begins_with("\t"):
+				return null  # a body indented deeper than any shape this kind writes
+			if current == null and line == "pass":
+				continue
+			if block.steps.is_empty() and current == null and line.contains(RANGE_CALL):
+				var ranged: PackedStringArray = _arguments(line, RANGE_CALL)
+				if ranged.size() != 2:
+					return null
+				block.within = ranged[0].to_float()
+				block.falloff = ranged[1].strip_edges().trim_prefix("\"").trim_suffix("\"")
+				continue
+			if line.begins_with(LOOP_HEAD) and line.ends_with(":"):
+				if depth == 2:
+					return null  # one level of looping is the whole grammar
+				loop_count = maxi(line.substr(LOOP_HEAD.length()).trim_suffix(":").to_int() - 1, 1)
+				pending_loop = true
+				depth = 2
+				cursor = 0.0
+				last_start = 0.0
+				current = null
+				continue
+			var started: MomentStepRow = _step_from_wait(line, cursor)
+			if started != null:
+				_carry_hold_duration(started, current, cursor, last_start)
+				cursor = float(started.get_meta("__cursor", cursor))
+				started.remove_meta("__cursor")
+				last_start = cursor
+				block.steps.append(started)
+				current = started
+				pending_loop = false
+				continue
+			if current == null:
+				current = MomentStepRow.new()
+				current.seconds = cursor
+				last_start = cursor
+				block.steps.append(current)
+				pending_loop = false
+			var statement: RawCodeRow = RawCodeRow.new()
+			statement.code = line
+			current.actions.append(statement)
+		if pending_loop:
+			return null  # a loop head with nothing under it is not a shape this kind writes
+		if depth == 2:
+			block.steps.append(_loop_back_step(loop_count))
+		return block
+
+	## The row a closing looped stretch reads as.
+	func _loop_back_step(loop_count: int) -> MomentStepRow:
+		var closer: MomentStepRow = MomentStepRow.new()
+		closer.timing = MomentStepRow.TIMING_LOOP_BACK
+		closer.loop_count = loop_count
+		return closer
+
+	## One wait line as the step it starts, or null when the line is not a wait. Where the
+	## schedule stands afterwards rides on a meta the caller takes straight back off - the reader
+	## needs both answers, and a step has nowhere to keep a running total.
+	func _step_from_wait(line: String, cursor: float) -> MomentStepRow:
+		if not line.begins_with("await %s" % MomentBlockRow.RUNNER):
+			return null
+		var step: MomentStepRow = MomentStepRow.new()
+		if line.contains(AT_CALL):
+			var at_args: PackedStringArray = _arguments(line, AT_CALL)
+			if at_args.size() != 2:
+				return null
+			step.timing = MomentStepRow.TIMING_AT
+			step.seconds = cursor + at_args[0].to_float()
+			step.clock = _clock_word(at_args[1])
+			step.set_meta("__cursor", step.seconds)
+			return step
+		if line.contains(THEN_CALL):
+			var then_args: PackedStringArray = _arguments(line, THEN_CALL)
+			if then_args.size() != 2:
+				return null
+			step.timing = MomentStepRow.TIMING_THEN
+			step.seconds = then_args[0].to_float()
+			step.clock = _clock_word(then_args[1])
+			step.set_meta("__cursor", cursor + step.seconds)
+			return step
+		if line.contains(HOLD_CALL):
+			var hold_args: PackedStringArray = _arguments(line, HOLD_CALL)
+			if hold_args.size() != 3:
+				return null
+			step.timing = MomentStepRow.TIMING_HOLD
+			step.seconds = hold_args[1].to_float()
+			step.clock = _clock_word(hold_args[2])
+			# The first number is how much of the longest step above is still to run.
+			step.set_meta("__longest", hold_args[0].to_float())
+			step.set_meta("__cursor", cursor + hold_args[0].to_float() + step.seconds)
+			return step
+		return null
+
+	## Puts a Hold's waited-for time back on the step above it, as the duration that step declared
+	## - the reverse of the fold the emitter does. Nothing to do when the wait was zero, which is
+	## every moment whose steps are all instant.
+	func _carry_hold_duration(step: MomentStepRow, above: MomentStepRow, cursor: float,
+			above_start: float) -> void:
+		if not step.has_meta("__longest"):
+			return
+		var longest: float = float(step.get_meta("__longest"))
+		step.remove_meta("__longest")
+		if longest <= 0.0 or above == null:
+			return
+		above.lasts = maxf(cursor + longest - above_start, 0.0)
+
+
+	## The clock a wait names ("real" only when it says so).
+	func _clock_word(argument: String) -> String:
+		if argument.contains(MomentStepRow.CLOCK_REAL):
+			return MomentStepRow.CLOCK_REAL
+		return MomentStepRow.CLOCK_GAME
+
+	## The arguments of one runner call, split at the top level, with the leading `self` dropped.
+	func _arguments(line: String, call_text: String) -> PackedStringArray:
+		var opened: int = line.find(call_text)
+		if opened < 0:
+			return PackedStringArray()
+		var closed: int = line.rfind(")")
+		if closed <= opened:
+			return PackedStringArray()
+		var start: int = opened + call_text.length()
+		return EventSheetBlockRegistry.split_params_top_level(line.substr(start, closed - start))
+
+	## Every statement a step holds, unindented, exactly as the compiler renders a verbatim row.
+	static func _verbatim_statements(step: MomentStepRow) -> PackedStringArray:
+		var out: PackedStringArray = PackedStringArray()
+		if step == null:
+			return out
+		for entry: Variant in step.actions:
+			if not (entry is RawCodeRow):
+				continue
+			var raw: RawCodeRow = entry as RawCodeRow
+			if not raw.enabled or raw.code.strip_edges().is_empty():
+				continue
+			for code_line: String in raw.code.split("\n"):
+				out.append(code_line)
+		return out
