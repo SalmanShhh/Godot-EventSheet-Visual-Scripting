@@ -829,6 +829,8 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _on_retired() -> void:
+	if not PooledNodes.is_retiring(self):
+		return
 	$Trail.emitting = false
 ```
 
@@ -865,10 +867,15 @@ POOLED object is never freed, so nothing is dropped: a copy that goes back to it
 handed out again inside the wait is retired by that timer in the middle of its NEXT life. Where a
 copy can be retired early, use Retire on its own.
 
-**On Retired is one trigger for both endings.** A pool takes a node back by removing it from the
-tree, and a free takes it out of the tree as well, so the node's own `tree_exiting` is raised once
-whichever of the two happened. The object is still valid inside that handler, which is what makes it
-the place to let go of what it was holding, drop it from a list, or tell somebody else it is gone.
+**On Retired is one trigger for both endings, and one line says which time it means.** A pool takes
+a node back by removing it from the tree, and a free takes it out of the tree as well, so the node's
+own `tree_exiting` is what the trigger listens to. But leaving the tree is not only how a node goes
+away: it is also how it is moved somewhere else, and it is how a pool hands the same copy OUT again
+- so the bare signal is raised on every reparent row and on every spawn from a pool. The handler
+therefore opens with `if not PooledNodes.is_retiring(self): return`, which is emitted where you can
+read it, and which is what makes the event mean what its name says. The object is still valid inside
+that handler, which is what makes it the place to let go of what it was holding, drop it from a
+list, or tell somebody else it is gone.
 
 **Retire is safe to run twice.** Something already on its way out, or already parked back in its
 pool, is left alone rather than handed over a second time - and that guard matters more here than it
@@ -1024,7 +1031,7 @@ that, or spawn a scene the row names outright.
 | Retire After Seconds | The same decision, taken after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect(PooledNodes.retire.bind({object}))` |
 | Fade Out Then Retire | Fades the object out, waits, puts its transparency back, then retires it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.modulate.a = 1.0`, `PooledNodes.retire({object})` |
 | Fade Out Then Retire (3D) | The same on a GeometryInstance3D, walking transparency up instead. | `await {object}.create_tween().tween_property({object}, "transparency", 1.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.transparency = 0.0`, `PooledNodes.retire({object})` |
-| On Retired | Runs as the object is retired, whichever of the two happened. | `tree_exiting.connect(_on_retired)` |
+| On Retired | Runs as the object is retired, whichever of the two happened. | `tree_exiting.connect(_on_retired)`, `if not PooledNodes.is_retiring(self):`, `return` |
 
 ## Use cases
 
@@ -1293,8 +1300,10 @@ way it left, with rows that clear its target and drop it from a list.
 - **Retire and Destroy Now are the same thing in a project with no pools.** Reach for Retire early:
   it costs nothing, and it is what saves the sheet being rewritten the day a profiler asks for a
   pool.
-- **On Retired fires for both endings.** It is the node's own `tree_exiting`, so it runs whether the
-  node was freed or handed back - and it also runs when the whole branch is taken out of the tree,
-  which is usually what you want and occasionally a surprise.
+- **On Retired fires for both endings, and for neither of the other exits.** It is the node's own
+  `tree_exiting`, so it runs whether the node was freed or handed back to its pool. It does NOT run
+  when the node is merely moved somewhere else, nor when a pool hands the same copy out again -
+  both of those leave the tree too, and the guard at the head of the handler is what tells them
+  apart.
 - **Do not Destroy Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
   other one. Despawn is the removal that travels.

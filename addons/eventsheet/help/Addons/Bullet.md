@@ -99,6 +99,7 @@ All ACEs live in the **Bullet** category and target the `BulletBehavior` on the 
 | Set Angle Of Motion | `degrees` (float) | Redirects the bullet along an absolute angle in degrees (0 right, 90 down, 180 left, -90 up), keeping its current speed. |
 | Set Gravity Angle | `angle` (float) | Points gravity in a new direction in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action. |
 | Set Bullet Enabled | `is_enabled` (bool) | Pauses the movement (`false`) or resumes it (`true`); a paused bullet keeps its velocity and simply holds position. |
+| Fired By | `shooter` (Node) | Marks who fired this shot, on the row that spawns it. Every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, and the Health pack's Take Damage From credits the kill to the person rather than to the projectile. |
 | Set Speed | `value` (float) | Writes the underlying speed value that feeds the launch and Set Angle Of Motion. For a live change on a bullet already in flight, prefer Set Bullet Speed. |
 | Add To Speed | `amount` (float) | Adds to the underlying speed value (see Set Speed). |
 | Subtract From Speed | `amount` (float) | Subtracts from the underlying speed value (see Set Speed). |

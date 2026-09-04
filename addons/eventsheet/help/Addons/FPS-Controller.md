@@ -76,6 +76,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Trigger | On Camera Mode Changed | Fires when first/third person flips. |
 | Action | Jump | Launches upward with Jump Velocity (also fires On Jumped). |
 | Action | Set Gravity Direction | Points gravity along a new 3D direction (normalized for you). `(0, 1, 0)` walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal. |
+| Action | Claim As Mine (node) | Marks something as belonging to this character - the round it just fired, the grenade it threw, the turret it dropped. Friendly fire is then refused, the kill is credited, and a turret this character placed still scores as its own. |
 | Action | Add Look (x, y) | Turns the view by a mouse delta - the same action the built-in mouse look calls. |
 | Action | Set Third Person (enabled) | Switches camera mode explicitly. |
 | Action | Toggle Camera Mode | Flips first/third person. |

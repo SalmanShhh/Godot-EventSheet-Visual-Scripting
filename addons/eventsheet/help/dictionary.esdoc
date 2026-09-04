@@ -399,6 +399,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_locale_language` | [Speak](ace:Core/SpeakText) | Accessibility | Vocabulary |
 | `get_locale_name` | [Current Language Name](ace:Core/CurrentLanguageName) | Translation | Vocabulary |
 | `get_magnetometer` | [Magnetic Field](ace:Core/TouchMagneticField) | Touch | Vocabulary |
+| `get_main_loop` | [Mark Seen](ace:Core/MarkSeenInSave) | Run Context | Vocabulary |
 | `get_marker_time` | [Reached Marker](ace:Core/AnimationPastMarker) | Animation | Vocabulary |
 | `get_message` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
 | `get_meta` | [Get Metadata](ace:Core/GetMeta) | Metadata | Vocabulary |
