@@ -608,6 +608,20 @@ static func _unit_drawer() -> bool:
 		str(EventSheetAttributeDrawers.parse_unit_spec("kinds=deg|turn|rad").get("store", "")), "deg") and passed
 	passed = _eq("a marker naming a store it does not list falls back to the first unit",
 		str(EventSheetAttributeDrawers.parse_unit_spec("kinds=s|ms,store=frames").get("store", "")), "s") and passed
+	# The short spelling a card schema's field uses: a FAMILY'S name is that family, in its own
+	# order, with its first unit as the stored one.
+	passed = _eq("a family's name is the whole family",
+		EventSheetAttributeDrawers.parse_unit_spec("time"),
+		{"units": PackedStringArray(["s", "ms", "frames"]), "store": "s"}) and passed
+	passed = _eq("and every shipped family answers to its own name",
+		EventSheetAttributeDrawers.parse_unit_spec("level"),
+		{"units": PackedStringArray(["db", "fraction"]), "store": "db"}) and passed
+	passed = _eq("a spelling that names units keeps naming them, family word or not",
+		EventSheetAttributeDrawers.parse_unit_spec("kinds=deg|turn,store=turn"),
+		{"units": PackedStringArray(["deg", "turn"]), "store": "turn"}) and passed
+	passed = _eq("a word that is no family and lists nothing names no units at all",
+		EventSheetAttributeDrawers.parse_unit_spec("tiles"),
+		{"units": PackedStringArray(), "store": ""}) and passed
 
 	# THE PROMISE, on the widget: the dropdown moves the reading, not the value.
 	var field: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(PackedStringArray(["deg", "turn", "rad"]), "deg")
