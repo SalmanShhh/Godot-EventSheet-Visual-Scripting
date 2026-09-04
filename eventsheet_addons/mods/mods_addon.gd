@@ -1,7 +1,7 @@
 ## @ace_tags(mods, files, content, modding)
 ## @ace_category("Mods")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/mods/icon.svg")
 class_name ModsAddon
 extends Node
 ## The folder players put their own content in, as the Mods autoload: load every mod in a folder in load order, ask what loaded and what did not, switch one off, and walk the list for an options screen. A data-only load reads a pack file's own contents and refuses one carrying code; a script mod loads only when the row says so, and runs with everything the game can reach.
@@ -129,7 +129,7 @@ func _ready() -> void:
 ## @ace_category("Mods")
 ## @ace_description("Loads every mod in a folder, in load order: a subfolder with a manifest in it, or a .pck / .zip pack file. With Data Only on, a mod carrying code is refused and says so through On Mod Refused instead of loading. A mod switched off is skipped in silence, and On Mods Changed fires once at the end.")
 ## @ace_display_template("Load mods from [b]{folder}[/b], data only [b]{data_only}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.load_from({folder}, {data_only})")
 func load_from(folder: String, data_only: bool) -> void:
 	for record: Dictionary in _mods_in(folder):
@@ -141,7 +141,7 @@ func load_from(folder: String, data_only: bool) -> void:
 ## @ace_category("Mods")
 ## @ace_description("Loads one mod by path - a mod folder or a pack file - with the same two tiers Load Mods From uses. A path with no mod at it is refused with that reason rather than passed over.")
 ## @ace_display_template("Load mod [b]{path}[/b], data only [b]{data_only}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.load_mod({path}, {data_only})")
 func load_mod(path: String, data_only: bool) -> void:
 	var record: Dictionary = _manifest_at(path)
@@ -157,7 +157,7 @@ func load_mod(path: String, data_only: bool) -> void:
 ## @ace_category("Mods")
 ## @ace_description("Takes a FOLDER mod back out of the loaded list, so the rows that read mod folders stop seeing it. A pack file cannot be unloaded: once Godot has loaded one, its files stay in the running game, so this row refuses with that reason and the way to do it is to switch the mod off and start again.")
 ## @ace_display_template("Unload mod [b]{unloading_name}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.unload_mod({unloading_name})")
 func unload_mod(unloading_name: String) -> void:
 	var at: int = _index_of(unloading_name)
@@ -178,7 +178,7 @@ func unload_mod(unloading_name: String) -> void:
 ## @ace_category("Mods")
 ## @ace_description("Says which mods load first, as a comma-separated list of names. Everything not named follows in name order, and later mods replace the files earlier ones brought - which is what a load order is for. It also re-lists what is already loaded, so the list an options screen shows and the order the next load uses are the same order.")
 ## @ace_display_template("Set load order [b]{names}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.set_load_order({names})")
 func set_load_order(names: String) -> void:
 	_order = PackedStringArray()
@@ -203,7 +203,7 @@ func set_load_order(names: String) -> void:
 ## @ace_category("Mods")
 ## @ace_description("Switches a mod back on. A mod is on unless it has been switched off, so this is the way back from Disable Mod rather than something every mod needs. The choice is remembered through the Settings autoload when the project has one.")
 ## @ace_display_template("Enable mod [b]{enabling_name}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.enable_mod({enabling_name})")
 func enable_mod(enabling_name: String) -> void:
 	_disabled.erase(enabling_name)
@@ -215,7 +215,7 @@ func enable_mod(enabling_name: String) -> void:
 ## @ace_category("Mods")
 ## @ace_description("Switches a mod off: it is skipped the next time mods are loaded, and a folder mod drops out of the loaded list at once. A pack file's files are already in the running game and stay until it starts again. The choice is remembered through the Settings autoload when the project has one.")
 ## @ace_display_template("Disable mod [b]{disabling_name}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.disable_mod({disabling_name})")
 func disable_mod(disabling_name: String) -> void:
 	_disabled[disabling_name] = true
@@ -233,7 +233,7 @@ func disable_mod(disabling_name: String) -> void:
 ## @ace_category("Mods")
 ## @ace_description("Whether a mod of that name is loaded right now - the check in front of using what it brought.")
 ## @ace_display_template("Mod [b]{wanted}[/b] is loaded")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_is_loaded({wanted})")
 func mod_is_loaded(wanted: String) -> bool:
 	return _index_of(wanted) >= 0
@@ -242,7 +242,7 @@ func mod_is_loaded(wanted: String) -> bool:
 ## @ace_name("Mod Count")
 ## @ace_category("Mods")
 ## @ace_description("How many mods are loaded - the number on the options screen's mods line.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_count()")
 func mod_count() -> int:
 	return _mods.size()
@@ -251,7 +251,7 @@ func mod_count() -> int:
 ## @ace_name("Mod Name")
 ## @ace_category("Mods")
 ## @ace_description("The name of the mod the last Mods event was about - the one that just loaded, or the one that was just refused.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_name()")
 func mod_name() -> String:
 	return str(_about.get("name", ""))
@@ -260,7 +260,7 @@ func mod_name() -> String:
 ## @ace_name("Mod Version")
 ## @ace_category("Mods")
 ## @ace_description("The version of the mod the last Mods event was about, as its manifest spells it.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_version()")
 func mod_version() -> String:
 	return str(_about.get("version", ""))
@@ -269,7 +269,7 @@ func mod_version() -> String:
 ## @ace_name("Mod Author")
 ## @ace_category("Mods")
 ## @ace_description("The author of the mod the last Mods event was about - the credit line beside its name.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_author()")
 func mod_author() -> String:
 	return str(_about.get("author", ""))
@@ -278,7 +278,7 @@ func mod_author() -> String:
 ## @ace_name("Mod Reason")
 ## @ace_category("Mods")
 ## @ace_description("Why the last refused mod was refused, in plain words a player can read, and nothing at all when none has been.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_reason()")
 func mod_reason() -> String:
 	return str(_about.get("reason", ""))
@@ -289,7 +289,7 @@ func mod_reason() -> String:
 ## @ace_category("Mods")
 ## @ace_description("Where a loaded mod's files live, so Resources In Folder, a Skin Vault catalog, a loot table or Data Folder Problems can be pointed straight at it. A pack file has no folder of its own - its files replace the game's by path - so this is empty for one.")
 ## @ace_display_template("folder of mod [b]{wanted}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_folder({wanted})")
 func mod_folder(wanted: String) -> String:
 	var at: int = _index_of(wanted)
@@ -302,7 +302,7 @@ func mod_folder(wanted: String) -> String:
 ## @ace_category("Mods")
 ## @ace_description("The same folder inside every loaded folder mod, in load order, skipping the mods that do not have one - hand it "items" and it is every mod's items folder, ready for a loop that loads each one's data assets.")
 ## @ace_display_template("every mod's [b]{subfolder}[/b] folder")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_folders({subfolder})")
 func mod_folders(subfolder: String) -> Array:
 	var folders: Array = []
@@ -320,7 +320,7 @@ func mod_folders(subfolder: String) -> Array:
 ## @ace_category("Mods")
 ## @ace_description("Every structural problem in the loaded mods' content, one per line, and nothing at all when it is clean: a data asset that will not load, and a file two mods both bring, where the one loaded last wins. It is the Data Folder Problems check over the mod folders, so a broken mod is named rather than crashed on.")
 ## @ace_display_template("mod problems in [b]{subfolder}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/mods/icon.svg")
 ## @ace_codegen_template("Mods.mod_content_problems({subfolder})")
 func mod_content_problems(subfolder: String) -> String:
 	var problems: PackedStringArray = PackedStringArray()

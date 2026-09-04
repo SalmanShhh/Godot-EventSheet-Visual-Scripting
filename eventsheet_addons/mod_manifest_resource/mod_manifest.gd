@@ -1,7 +1,7 @@
 ## @ace_tags(mods, resource, files)
 ## @ace_category("Mods")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/mod_manifest_resource/icon.svg")
 class_name ModManifest
 extends Resource
 ## What a mod says about itself, as a file: its name, its version, its author, what it replaces, and whether it carries code. Save one as mod.tres beside a mod's files, or write the same five fields as a mod.json - the Mods pack reads both into the same record.
