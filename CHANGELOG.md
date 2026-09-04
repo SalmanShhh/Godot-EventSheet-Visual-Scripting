@@ -891,15 +891,16 @@
 - **Twenty-one words for the world's look, and not one of them is a property name.** Saturation,
   contrast, picture brightness, exposure, glow bloom, glow threshold, fog floor, fog floor
   thickness, aerial perspective, fog sun glow, volumetric thickness, volumetric colour, volumetric
-  reach, volumetric fog, reflections, indirect light, global illumination, backdrop, tone map, glow
-  blend and colour grade, on any `WorldEnvironment`: **65 new rows on the Environment shelf**, which
-  now publishes **89** counting the eight frozen Core actions and the seven node-scoped World rows
-  it lands beside, every one of them untouched. A reader never has to know that saturation is
-  `adjustment_saturation` and does nothing until `adjustment_enabled` is true, that the fog's floor
-  is `fog_height`, or that reflections are `ssr_enabled` - each row writes the switch its word needs
-  on the same line. Which property each word resolves to, and the value every field opens on, are
-  asked of ClassDB; the frozen part is the `ace_id` stem, which is the one thing that cannot be
-  derived.
+  reach, volumetric fog, reflections, indirect light, global illumination, backdrop, tone map,
+  glow blend and colour grade, on any `WorldEnvironment`: **65 new rows on the Environment
+  shelf**, which publishes **93** at the end of this pass - those 65, the 17 sky rows below, the
+  **7** frozen Core actions the shelf already had and the 4 world-look rows, every one of the
+  frozen ones untouched. The number is read off the registry, not added up here. A reader never
+  has to know that saturation is `adjustment_saturation` and does nothing until
+  `adjustment_enabled` is true, that the fog's floor is `fog_height`, or that reflections are
+  `ssr_enabled` - each row writes the switch its word needs on the same line. Which property each
+  word resolves to, and the value every field opens on, are asked of ClassDB; the frozen part is
+  the `ace_id` stem, which is the one thing that cannot be derived.
 - **Every write gives the scene its own copy of the environment first, and the emitted code says
   so.** An Environment is a file: two scenes loading one `.tres` load one object, so turning the fog
   up in the cave turns it up in the town and the change follows the player out of the room. Each
@@ -917,13 +918,14 @@
   renderer the project is actually built for.
 - **The seven numbers nobody can read, and the quality Project Settings writes once.** The glow's
   blur levels are `glow_levels/1` through `glow_levels/7` and are reached through a call, so **Set
-  Glow Levels** lays a whole shape down from three written-down starting tables (tight, balanced -
-  which is Godot's own - and wide) and **Set Glow Level** sets any single one by hand for a project
-  spelling its own. And four switches have a matching quality that Godot keeps on the
-  RenderingServer rather than on the Environment: occlusion, indirect light, global illumination and
-  reflections each gain a **Turn ... On At Quality** row that writes the flag and the quality call
-  together, with the engine's own remaining arguments after it. Occlusion, the one of the four with
-  no switch word of its own, gains the Off row and the question as well.
+  Glow Levels** lays all seven down at once as seven numbers a reader writes - an ordinary
+  expression field, with three shapes (tight, balanced, which is Godot's own, and wide) sitting in
+  its autocomplete as suggestions to start from rather than a list to pick from - and **Set Glow
+  Level** sets any single one by hand. And four switches have a matching quality that Godot keeps
+  on the RenderingServer rather than on the Environment: occlusion, indirect light, global
+  illumination and reflections each gain a **Turn ... On At Quality** row that writes the flag and
+  the quality call together, with the engine's own remaining arguments after it. Occlusion, the
+  one of the four with no switch word of its own, gains the Off row and the question as well.
 - **The sky is three objects past the node, and every row of it refuses to guess.** Sky top, sky
   horizon, sky ground, sun size and sky energy - **17 rows**, a Set, a read and a Fade for each,
   plus **Use Procedural Sky** and **Use Panorama Sky**, which install the sky and set the backdrop
@@ -947,25 +949,26 @@
 - **Words:** the environment module joins the l10n obligation and its **343 owed keys** are filled
   in all eight locales.
 
-### What the surface looks like, said in words
-
-- **Nine words for a 3D surface, and not one of them is a property name.** Colour, glow, roughness,
-  metal, see-through, texture, blend, transparency and sides, on any `MeshInstance3D`: **23 new rows
-  in a Material section of the picker** - a Set row for each of the nine, a read-it-back expression
-  for each of the nine, and a one-line tween Fade for the five a surface can be walked to over time.
-  A reader never has to know that metal is spelled `metallic`, that glow is
-  `emission_energy_multiplier` and does nothing until `emission_enabled` is true, or that
-  see-through is the alpha channel of `albedo_color` and does nothing until the material is in alpha
-  transparency - each row writes the switch its word needs on the same line. Which property each
-  word resolves to, and the value every field opens on, are asked of ClassDB rather than written
-  down; the frozen part is the `ace_id` stem, which is the one thing that cannot be derived.
-- **Every write gives the mesh its own copy of the material first, and the emitted code says so.** A
-  material is a file: two meshes pointing at one `.tres` point at one object, so recolouring the
-  goblin the player hit recolours all twelve. Each template opens with the two lines that duplicate
-  whatever the mesh is drawing with into `material_override`, guarded on the override being empty -
-  the override is the flag, so the copy is taken once, a mesh that already owns one keeps it, and a
-  mesh drawing with nothing at all is given a plain `StandardMaterial3D` rather than reaching
-  through a null. Nothing is assumed and there is no step to remember.
+- **Nine words for a 3D surface, and not one of them is a property name.** Colour, glow,
+  roughness, metal, surface opacity, texture, blend, transparency and sides, on any
+  `MeshInstance3D`: **23 new rows in a Material section of the picker** - a Set row for each of
+  the nine, a read-it-back expression for each of the nine, and a one-line tween Fade for the five
+  a surface can be walked to over time. A reader never has to know that metal is spelled
+  `metallic`, that glow is `emission_energy_multiplier` and does nothing until `emission_enabled`
+  is true, or that surface opacity is the alpha channel of `albedo_color` and does nothing until
+  the material is in alpha transparency - each row writes the switch its word needs on the same
+  line. Which property each word resolves to, and the value every field opens on, are asked of
+  ClassDB rather than written down; the frozen part is the `ace_id` stem, which is the one thing
+  that cannot be derived.
+- **Every write gives the mesh its own copy of the material first, and the emitted code says so.**
+  A material is a file: two meshes pointing at one `.tres` point at one object, so recolouring the
+  goblin the player hit recolours all twelve. Each template opens with the lines that duplicate
+  whatever the mesh is drawing with into `material_override`, and the guard asks TWO questions
+  rather than one: an empty override takes its copy from the mesh's own surface material (or a
+  plain `StandardMaterial3D` when there is nothing to copy at all), and a FILLED override still
+  carrying a `resource_path` is copied too, because dropping a shared `.tres` into that slot in
+  the Inspector is the commonest way a material is assigned. Nothing is assumed and there is no
+  step to remember.
 - **Three of the nine are dropdowns over the engine's own enums.** Blend reads mix / add / subtract
   / multiply / premultiplied alpha, transparency reads solid / alpha / alpha scissor / alpha hash /
   alpha with depth pre-pass and carries the scissor threshold on the same row, and sides reads front
@@ -1011,8 +1014,6 @@
   of the two words it means.
 - The nine words land in all nine translation CSVs (**93 new keys**), the surface slots, the two 2D
   words and the two notes add **39 more**, and the vocabulary doc is regenerated.
-
-### What the lens lets in, the world worn as a file, and an effect said in words
 
 - **Fifteen rows for the lens, on both of the nodes that can hold one.** A `CameraAttributes` is
   what decides how much light a camera takes in and what it keeps sharp, and almost nobody reaches
@@ -1093,6 +1094,63 @@
   joined the l10n obligation and the nine files were filled, and this ratchet was the one reader
   nobody told, so it had been failing on `main` since that wave. It now names all 84 of those
   alongside this pass's 63.
+
+### Fixed in the lens, sky and surface pass
+
+- **The two quality dials stopped switching off the effect they turned on.** Turn Occlusion On At
+  Quality and Turn Indirect Light On At Quality wrote the six-argument RenderingServer call with
+  arguments described as the engine's own defaults, and two of them were not: the fade-out pair
+  went out as `0.01` and `0.0`, which fades the effect away within a centimetre of the camera, and
+  the half-size flag went out as `false`, doubling the cost the project setting had chosen. Both
+  calls now carry Godot's own numbers (`50.0` and `300.0`, half size on), and the gate pins those.
+- **A shared material dropped into the override slot is copied too.** The mesh own-it courtesy
+  asked only whether `material_override` was empty, so a mesh whose Inspector override is a shared
+  `.tres` - the commonest way a material is assigned at all - was taken for a mesh that already
+  owned one, and every Set and Fade wrote and tweened the shared file. It now asks the second
+  question every other table here asks: an override still carrying a `resource_path` came from a
+  file and is duplicated first. The surface-slot rows are fixed the same way.
+- **Two rows called Set See-Through no longer land on one node.** The frozen `SetSeeThrough` on
+  `GeometryInstance3D` is the engine's own per-instance transparency and counts 0-is-solid; the
+  new material word writes the alpha channel and counts the other way round, and `MeshInstance3D`
+  is a `GeometryInstance3D`, so both were offered on the same node under one name with inverted
+  scales. The new word is now **Surface Opacity**, and both rows say in their descriptions which
+  is which.
+- **A read of a world, a surface or a lens that is not there answers instead of erroring.** The
+  Environment, material and camera-attribute expressions and conditions reached straight through
+  the sub-resource, so Is Volumetric Fog On against a fresh `WorldEnvironment` was an access on a
+  null instance at run time. Every read is now the guarded cast the sky reads always were, and
+  answers with the value a new resource starts on.
+- **A panorama, a texture and a colour grade are picked as pictures.** Use Panorama Sky wrapped
+  its field in `load()` while the field's own Browse wrote `preload("...")` and listed only
+  `*.tres` and `*.res`, so no `.png`, `.exr` or `.hdr` could be picked and the blank default
+  emitted `load("")`. Those fields now browse for images and emit one loading call, not two.
+- **The sky-backdrop note stops firing on scenes that do draw a sky.** The Doctor decided a file's
+  sky rows did nothing unless that same file's text contained the line that sets the backdrop, so
+  every scene whose backdrop is set to Sky in the Inspector - the normal case - was told so on
+  every run. It consults the scene now.
+- **The seven glow levels are numbers a reader types, not three shapes chosen inside the plugin.**
+  Set Glow Levels offered a dropdown over three tables written down in the vocabulary, which made
+  those three the only shapes the row could reach. The field is an ordinary expression field
+  holding the seven numbers, with the three riding along as autocomplete suggestions.
+- **Set Backdrop's third choice stops promising a see-through window.** `BG_CLEAR_COLOR` draws the
+  project's clear colour and nothing else - a transparent window needs the viewport flag and the
+  window flag, neither of which the row writes - so the choice is now called the project's clear
+  colour and the description says what it does.
+- **A surface's dropdown word reads back as the word.** A hand-written
+  `material_override.blend_mode = BaseMaterial3D.BLEND_MODE_ADD` read as the constant while the
+  world's choice words already read as the plain word; blend, transparency and sides now say add,
+  alpha scissor and both, and a value outside the dropdown still reads as itself.
+- **The look runtime the emitted lines call ships in the project's own folder.** Three world-look
+  rows emitted a call to a class declared under `addons/`, so uninstalling the plugin stopped
+  every sheet holding one of them from parsing - the parity contract, broken by the vocabulary
+  rather than by a lift. It is a pack-built file beside the other two runtimes now, and the
+  uninstall page names it.
+- **Two rows stop reading as one string in five locales.** Set Blend (a 3D surface) and Set
+  Blending (a 2D sprite) were the same translated sentence in German, Japanese, Korean, Russian
+  and Simplified Chinese, so a translated picker offered one name for two different words.
+- **Fifty-three keys this pass owed are filled in all eight locales.** The guarded reads, the
+  rename, the picture fields and the glow levels had landed keyed and unharvested, and the
+  coverage gate had been red on their blank cells.
 
 ### The wave, the aim, the free spot and the way back out
 
