@@ -230,7 +230,7 @@ func quit_game() -> void:
 ## @ace_param_options(transition fade, wipe, dissolve, iris, blinds, pixelate, page curl)
 ## @ace_param_options(ease linear, smooth, in, out)
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.go_to_scene_with({path}, {transition}, {seconds}, {ease})")
+## @ace_codegen_template("$SceneFlowBehavior.go_to_scene_with({path}, "{transition}", {seconds}, "{ease}")")
 func go_to_scene_with(path: String, transition: String, seconds: float, ease: String) -> void:
 	if path.strip_edges().is_empty():
 		return
@@ -244,7 +244,7 @@ func go_to_scene_with(path: String, transition: String, seconds: float, ease: St
 ## @ace_param_options(transition fade, wipe, dissolve, iris, blinds, pixelate, page curl)
 ## @ace_param_options(ease linear, smooth, in, out)
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.reload_scene_with({transition}, {seconds}, {ease})")
+## @ace_codegen_template("$SceneFlowBehavior.reload_scene_with("{transition}", {seconds}, "{ease}")")
 func reload_scene_with(transition: String, seconds: float, ease: String) -> void:
 	_start_transition("", transition, seconds, ease)
 

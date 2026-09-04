@@ -62,7 +62,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_display_template("Slide [b]{direction}[/b]")
 ## @ace_param_options(direction left, right, up, down)
 ## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
-## @ace_codegen_template("$SlideMove.slide({direction})")
+## @ace_codegen_template("$SlideMove.slide("{direction}")")
 func slide(direction: String) -> void:
 	if _sliding:
 		return
@@ -135,7 +135,7 @@ func is_sliding() -> bool:
 ## @ace_description("Whether the tile next to the character in a direction is open (not a wall).")
 ## @ace_param_options(direction left, right, up, down)
 ## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
-## @ace_codegen_template("$SlideMove.can_slide({direction})")
+## @ace_codegen_template("$SlideMove.can_slide("{direction}")")
 func can_slide(direction: String) -> bool:
 	var dir: Vector2 = _dir_from(direction)
 	if dir == Vector2.ZERO or host == null:

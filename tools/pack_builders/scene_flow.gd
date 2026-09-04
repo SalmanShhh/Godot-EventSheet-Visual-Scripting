@@ -137,6 +137,7 @@ static func build() -> bool:
 	_default(sheet, "seconds", "0.6")
 	_default(sheet, "ease", "smooth")
 	_param_options(sheet, "ease", ["linear", "smooth", "in", "out"])
+	_quoted_argument(sheet, "go_to_scene_with({path}, \"{transition}\", {seconds}, \"{ease}\")")
 
 	Lib.append_function(sheet, "reload_scene_with", "Reload Scene With", "Scenes",
 		"Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.",
@@ -147,6 +148,7 @@ static func build() -> bool:
 	_default(sheet, "seconds", "0.6")
 	_default(sheet, "ease", "smooth")
 	_param_options(sheet, "ease", ["linear", "smooth", "in", "out"])
+	_quoted_argument(sheet, "reload_scene_with(\"{transition}\", {seconds}, \"{ease}\")")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
@@ -330,6 +332,15 @@ static func _transition_lines() -> PackedStringArray:
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value
 ## (authoring-time metadata only - defaults never appear in the compiled .gd).
+## A dropdown key is inserted into the call verbatim, so a String argument picked from a list of words
+## has to carry its own quotes in the TEMPLATE - a quoted key does not survive the annotation round
+## trip (the emitter wraps it again and the scanner strips one pair back off). The call prefix is the
+## pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
+
+
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:

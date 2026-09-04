@@ -204,6 +204,7 @@ static func build() -> bool:
 		"_drive_mode = \"\"\nmatch direction:\n\t\"up\": throttle = 1.0\n\t\"down\": throttle = -1.0\n\t\"left\": steer = -1.0\n\t\"right\": steer = 1.0\n\t\"stop\": throttle = 0.0\nif direction == \"stop\":\n\tsteer = 0.0\n\tbrake = 0.0")
 	_param_options(sheet, "direction", ["up", "down", "left", "right", "stop"])
 	_default(sheet, "direction", "up")
+	_quoted_argument(sheet, "simulate_control(\"{direction}\")")
 	Lib.append_function(sheet, "stop", "Stop", "Physics Car", "Clears throttle, brake, and steer, and exits any Drive Toward mode. The car coasts to rest.",
 		[],
 		"throttle = 0.0\nbrake = 0.0\nsteer = 0.0\n_drive_mode = \"\"")
@@ -317,6 +318,15 @@ static func build() -> bool:
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value
 ## (authoring-time metadata only - defaults never appear in the compiled .gd).
+## A dropdown key is inserted into the call verbatim, so a String argument picked from a list of words
+## has to carry its own quotes in the TEMPLATE - a quoted key does not survive the annotation round
+## trip (the emitter wraps it again and the scanner strips one pair back off). The call prefix is the
+## pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
+
+
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:

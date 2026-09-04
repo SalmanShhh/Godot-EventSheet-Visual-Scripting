@@ -131,7 +131,7 @@ func set_steer(amount: float) -> void:
 ## @ace_display_template("Drive [b]{direction}[/b]")
 ## @ace_param_options(direction up, down, left, right, stop)
 ## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
-## @ace_codegen_template("$PhysicsCar.simulate_control({direction})")
+## @ace_codegen_template("$PhysicsCar.simulate_control("{direction}")")
 func simulate_control(direction: String) -> void:
 	_drive_mode = ""
 	match direction:

@@ -145,6 +145,7 @@ static func build() -> bool:
 		"if _sliding:\n\treturn\nvar dir: Vector2 = _dir_from(direction)\nif dir == Vector2.ZERO or host == null:\n\treturn\n_dir_name = direction\nvar target: Vector2 = _scan_target(dir)\nif target.distance_to(_snap((host as Node2D).global_position)) < grid_size * 0.5:\n\ton_hit_wall.emit()\n\treturn\n_dir = dir\n_target = target\n_sliding = true\non_slide_started.emit()")
 	_param_options(sheet, "direction", ["left", "right", "up", "down"])
 	_default(sheet, "direction", "left")
+	_quoted_argument(sheet, "slide(\"{direction}\")")
 	Lib.append_function(sheet, "stop_slide", "Stop Slide", "Slide Movement", "Stops a slide immediately and snaps the character to the nearest tile.",
 		[],
 		"_sliding = false\nif host is Node2D:\n\t(host as Node2D).global_position = _snap((host as Node2D).global_position)")
@@ -163,6 +164,7 @@ static func build() -> bool:
 	_condition(sheet, "can_slide", "Can Slide", "Slide Movement", "Whether the tile next to the character in a direction is open (not a wall).", [["direction", "String"]],
 		"var dir: Vector2 = _dir_from(direction)\nif dir == Vector2.ZERO or host == null:\n\treturn false\nreturn _scan_target(dir).distance_to(_snap((host as Node2D).global_position)) >= grid_size * 0.5")
 	_param_options_last_condition(sheet, "direction", ["left", "right", "up", "down"])
+	_quoted_argument(sheet, "can_slide(\"{direction}\")")
 
 	_expr(sheet, "slide_direction", "Slide Direction", "Slide Movement", "The direction of the current or last slide (\"left\" / \"right\" / \"up\" / \"down\").", [],
 		"return _dir_name", TYPE_STRING)
@@ -180,6 +182,15 @@ static func build() -> bool:
 
 
 ## Pre-fills the last-appended ACE's parameter default (authoring-time metadata only).
+## A dropdown key is inserted into the call verbatim, so a String argument picked from a list of words
+## has to carry its own quotes in the TEMPLATE - a quoted key does not survive the annotation round
+## trip (the emitter wraps it again and the scanner strips one pair back off). The call prefix is the
+## pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
+
+
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:
