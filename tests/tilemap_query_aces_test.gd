@@ -12,7 +12,8 @@
 #   2. THE EMITTED FILE - every row compiled through the real compiler, the whole file parsed, and
 #      each shared helper landing exactly ONCE however many rows called for it;
 #   3. THE ROUND TRIP - that emitted file reopened and re-emitted byte for byte, which is the one
-#      promise a helper appended at the end of a file could break;
+#      promise a helper appended at the end of a file could break, and the same promise from the
+#      other side: a hand-written file that CALLS a helper without defining it grows nothing;
 #   4. THE ANSWERS - the helpers run against a real TileMapLayer built here, tile data and all, so
 #      "cell is solid" is a fact rather than a spelling;
 #   5. THE FILE WORDS - a layer's bytes written and read back, and the tiles surviving the trip;
@@ -33,6 +34,11 @@ const NAME := "tilemap_query_aces_test"
 
 ## Where the emitted file is verified from. A user:// path naming the test, by convention.
 const EMITTED_PATH := "user://eventforge_tilemap_queries.gd"
+
+## And where the hand-written files of the round-trip gate below are verified from - a script that
+## CALLS one of the helpers without defining it, which is the one shape the appender could grow a
+## definition onto that its author never wrote.
+const HANDWRITTEN_PATH := "user://eventforge_tilemap_handwritten.gd"
 
 ## And where the layer's own bytes go on the file gate's round trip.
 const LAYER_FILE := "user://eventforge_tilemap_queries_layer.tiles"
@@ -187,6 +193,22 @@ static func _emitted_file() -> bool:
 	# again in the same place, so the file saves byte for byte.
 	ok = SUPPORT.pin_value(NAME, "the emitted file re-emits byte for byte",
 		SUPPORT.reemit(emitted, EMITTED_PATH), emitted) and ok
+	# AND THE OTHER HALF OF THAT PROMISE: a HAND-WRITTEN file that calls one of these helpers
+	# without defining it - a test driving them, a script reaching another node's plumbing - is
+	# passed through as written. The appender asks what the ROWS of the sheet called for, and a call
+	# that only rode through a verbatim block asked for nothing, so opening such a file and saving it
+	# must not grow a definition its author never wrote. Four spellings, because each reaches the
+	# appender by a different road: a call inside an argument, a bare statement, a call on another
+	# node, and a call as the term of an `if`.
+	var handwritten: Dictionary = {
+		"\tprint(__eventsheets_tile_data_at(self, Vector2i(0, 0), \"surface\"))": true,
+		"\t__eventsheets_erase_tiles_in_circle(self, Vector2i(0, 0), 3)": true,
+		"\tlayer.__eventsheets_erase_tiles_in_circle(layer, Vector2i(0, 0), 3)": true,
+		"\tif __eventsheets_cell_is_solid(self, Vector2i(0, 0), 0):\n\t\tprint(1)": true
+	}
+	ok = SUPPORT.pin_table(NAME, handwritten, func(body: String) -> bool:
+		var source: String = "extends Node\n\n\nfunc _ready() -> void:\n%s\n" % body
+		return SUPPORT.reemit(source, HANDWRITTEN_PATH) == source) and ok
 	return ok
 
 

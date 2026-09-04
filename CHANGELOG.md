@@ -189,6 +189,18 @@
   **Streamer**, **Streamer 3D** and **Mods** each get a pack guide to the house standard, and the
   five new editor strings ship translated in **8 languages**.
 
+### Fixed in the tilemap pass
+
+- **A file that only CALLS a shared helper no longer grows its definition.** The compiler writes a
+  helper's definition into a file the first time a row asks for it, and it decided what "asks" meant
+  by looking for the call in the emitted text - which also finds the calls that merely rode through a
+  verbatim block. So a hand-written script driving those helpers, or reaching another node's, gained
+  the whole helper prelude the moment it was opened as a sheet and saved: the lossless contract
+  broken by the compiler rather than by any lift. The emitted text is the rows' lines plus the
+  verbatim ones, so the verbatim calls are now counted the same way and subtracted, and what is left
+  is what the rows asked for. An emitted sheet is unchanged to the byte - its rows still ask, and it
+  still carries every helper it calls.
+
 ### A number that says its unit, a list that reads as cards, and a handle you can drag
 
 - **A float now carries the unit it is read in, and the number never moves.** The **unit drawer**

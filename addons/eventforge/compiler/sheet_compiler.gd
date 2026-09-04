@@ -798,9 +798,12 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
-	_append_aimed_cursor_helper(lines)
-	_append_scene_trust_helper(lines)
-	_append_level_query_helpers(lines)
+	# What the ROWS asked for, told apart from what merely rode through: the shared helpers are
+	# appended for the calls this compile wrote, never for one sitting inside a verbatim block.
+	var verbatim_lines: PackedStringArray = _verbatim_code_lines(sheet)
+	_append_aimed_cursor_helper(lines, verbatim_lines)
+	_append_scene_trust_helper(lines, verbatim_lines)
+	_append_level_query_helpers(lines, verbatim_lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -995,9 +998,12 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		lines.append("# %s" % comment_line)
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
-	_append_aimed_cursor_helper(lines)
-	_append_scene_trust_helper(lines)
-	_append_level_query_helpers(lines)
+	# What the ROWS asked for, told apart from what merely rode through: the shared helpers are
+	# appended for the calls this compile wrote, never for one sitting inside a verbatim block.
+	var verbatim_lines: PackedStringArray = _verbatim_code_lines(sheet)
+	_append_aimed_cursor_helper(lines, verbatim_lines)
+	_append_scene_trust_helper(lines, verbatim_lines)
+	_append_level_query_helpers(lines, verbatim_lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -4506,10 +4512,15 @@ static func _resolve_output_path(sheet: EventSheetResource, output_path: String)
 	return "res://event_sheet_generated.gd"
 
 
-## Whether `needle` appears in `line` OUTSIDE every string literal. A file that merely TALKS about
-## the helper - a pattern table, a doc string, a test's expected text - must never be handed the
-## helper's definition: injecting it breaks the byte-exact reopen of a file that was only opened.
-static func _calls_outside_strings(line: String, needle: String) -> bool:
+## How many times `needle` appears in `line` OUTSIDE every string literal. A file that merely TALKS
+## about the helper - a pattern table, a doc string, a test's expected text - must never be handed
+## the helper's definition: injecting it breaks the byte-exact reopen of a file that was only opened.
+##
+## It COUNTS rather than answering yes or no because the emitted text holds two kinds of call: the
+## ones the rows wrote, and the ones that rode through inside a verbatim block. Subtracting the
+## second from the first is what tells them apart (see _verbatim_code_lines).
+static func _count_calls_outside_strings(line: String, needle: String) -> int:
+	var found: int = 0
 	var in_string: bool = false
 	var quote: String = ""
 	var index: int = 0
@@ -4525,9 +4536,11 @@ static func _calls_outside_strings(line: String, needle: String) -> bool:
 			in_string = true
 			quote = character
 		elif line.substr(index).begins_with(needle):
-			return true
+			found += 1
+			index += needle.length()
+			continue
 		index += 1
-	return false
+	return found
 
 
 ## The one function every aimed-floor word calls, written into the file the first time any of
@@ -4539,7 +4552,8 @@ static func _calls_outside_strings(line: String, needle: String) -> bool:
 ## when the file already defines it, which is what makes reopening an emitted file and saving it
 ## again byte-identical - the definition read back as an ordinary function is the same definition
 ## this would have written.
-static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
+static func _append_aimed_cursor_helper(lines: PackedStringArray,
+		verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
 	_append_shared_helper(lines, AIMED_CURSOR_HELPER,
 		"func %s(canvas_point: Vector2, layer_mask: int, reach: float) -> Dictionary:" % AIMED_CURSOR_HELPER,
 		["	var camera: Camera3D = get_viewport().get_camera_3d()",
@@ -4549,7 +4563,7 @@ static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
 		"	var to: Vector3 = from + camera.project_ray_normal(canvas_point) * reach",
 		"	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)",
 		"	query.collision_mask = layer_mask",
-		"	return get_viewport().find_world_3d().direct_space_state.intersect_ray(query)"])
+		"	return get_viewport().find_world_3d().direct_space_state.intersect_ray(query)"], verbatim_lines)
 	_append_shared_helper(lines, POINT_CURSOR_HELPER,
 		"func %s(canvas_point: Vector2, layer_mask: int) -> Dictionary:" % POINT_CURSOR_HELPER,
 		["	var world: World2D = get_viewport().find_world_2d()",
@@ -4562,14 +4576,14 @@ static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
 		"	var hits: Array[Dictionary] = world.direct_space_state.intersect_point(query, 1)",
 		"	if hits.is_empty():",
 		"		return {}",
-		"	return hits[0]"])
+		"	return hits[0]"], verbatim_lines)
 	# The map is deliberately UNTYPED: a tile lookup is asked of whatever node the row names, and a
 	# `Node`-typed parameter would refuse `local_to_map` at parse time in every project that uses it.
 	_append_shared_helper(lines, TILE_CURSOR_HELPER,
 		"func %s(map) -> Vector2i:" % TILE_CURSOR_HELPER,
 		["	if map == null:",
 		"		return Vector2i.ZERO",
-		"	return map.local_to_map(map.get_local_mouse_position())"])
+		"	return map.local_to_map(map.get_local_mouse_position())"], verbatim_lines)
 
 
 ## The one function Scene File Is Data-Only asks, written into the file the first time any row asks
@@ -4580,9 +4594,10 @@ static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
 ##
 ## The question itself lives beside the row that asks it, so the condition's template, this
 ## definition and the Doctor's reading of a guarded line can only ever be one spelling.
-static func _append_scene_trust_helper(lines: PackedStringArray) -> void:
+static func _append_scene_trust_helper(lines: PackedStringArray,
+		verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
 	_append_shared_helper(lines, SceneTrust.HELPER_NAME, SceneTrust.helper_head(),
-		SceneTrust.helper_body())
+		SceneTrust.helper_body(), verbatim_lines)
 
 
 ## The eleven functions the level-query rows call - what a tile carries, whether a cell is solid,
@@ -4603,20 +4618,21 @@ static func _append_scene_trust_helper(lines: PackedStringArray) -> void:
 ## anything else is a global position turned into the cell holding it through the layer's own
 ## transform. That is what lets one row read "tile data at Player.position" and another read "tile
 ## data at Vector2i(4, 2)" without the sheet holding two rows for the one question.
-static func _append_level_query_helpers(lines: PackedStringArray) -> void:
+static func _append_level_query_helpers(lines: PackedStringArray,
+		verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
 	_append_shared_helper(lines, TILE_DATA_HELPER,
 		"func %s(map, where, key: String) -> Variant:" % TILE_DATA_HELPER,
 		["	if map == null:",
 		"		return null",
 		"	var cell: Vector2i = where if where is Vector2i else map.local_to_map(map.to_local(where))",
 		"	var data: TileData = map.get_cell_tile_data(cell)",
-		"	return data.get_custom_data(key) if data != null else null"])
+		"	return data.get_custom_data(key) if data != null else null"], verbatim_lines)
 	_append_shared_helper(lines, TILE_SOLID_HELPER,
 		"func %s(map, cell: Vector2i, layer: int) -> bool:" % TILE_SOLID_HELPER,
 		["	if map == null:",
 		"		return false",
 		"	var data: TileData = map.get_cell_tile_data(cell)",
-		"	return data != null and data.get_collision_polygons_count(layer) > 0"])
+		"	return data != null and data.get_collision_polygons_count(layer) > 0"], verbatim_lines)
 	# The tile raycast walks the cells of the line itself rather than calling the solid test above,
 	# so the two helpers stay independent: a file that asks only for the ray gets only the ray, and
 	# neither definition can be appended for the sake of the other's body.
@@ -4633,7 +4649,7 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"		var data: TileData = map.get_cell_tile_data(cell)",
 		"		if data != null and data.get_collision_polygons_count(layer) > 0:",
 		"			return cell",
-		"	return Vector2i.MAX"])
+		"	return Vector2i.MAX"], verbatim_lines)
 	_append_shared_helper(lines, TILE_DATA_CELLS_HELPER,
 		"func %s(map, key: String, value: Variant) -> Array[Vector2i]:" % TILE_DATA_CELLS_HELPER,
 		["	var found: Array[Vector2i] = []",
@@ -4643,7 +4659,7 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"		var data: TileData = map.get_cell_tile_data(cell)",
 		"		if data != null and data.get_custom_data(key) == value:",
 		"			found.append(cell)",
-		"	return found"])
+		"	return found"], verbatim_lines)
 	_append_shared_helper(lines, TILE_CELLS_AROUND_HELPER,
 		"func %s(map, where, radius: int) -> Array[Vector2i]:" % TILE_CELLS_AROUND_HELPER,
 		["	var cells: Array[Vector2i] = []",
@@ -4654,7 +4670,7 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"		for y: int in range(centre.y - radius, centre.y + radius + 1):",
 		"			if Vector2(x - centre.x, y - centre.y).length() <= float(radius) + 0.5:",
 		"				cells.append(Vector2i(x, y))",
-		"	return cells"])
+		"	return cells"], verbatim_lines)
 	_append_shared_helper(lines, TILE_ERASE_CIRCLE_HELPER,
 		"func %s(map, where, radius: int) -> void:" % TILE_ERASE_CIRCLE_HELPER,
 		["	if map == null:",
@@ -4663,14 +4679,14 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"	for x: int in range(centre.x - radius, centre.x + radius + 1):",
 		"		for y: int in range(centre.y - radius, centre.y + radius + 1):",
 		"			if Vector2(x - centre.x, y - centre.y).length() <= float(radius) + 0.5:",
-		"				map.erase_cell(Vector2i(x, y))"])
+		"				map.erase_cell(Vector2i(x, y))"], verbatim_lines)
 	_append_shared_helper(lines, TILE_FILL_RECT_HELPER,
 		"func %s(map, rect: Rect2i, source_id: int, atlas_coords: Vector2i) -> void:" % TILE_FILL_RECT_HELPER,
 		["	if map == null:",
 		"		return",
 		"	for x: int in range(rect.position.x, rect.end.x):",
 		"		for y: int in range(rect.position.y, rect.end.y):",
-		"			map.set_cell(Vector2i(x, y), source_id, atlas_coords)"])
+		"			map.set_cell(Vector2i(x, y), source_id, atlas_coords)"], verbatim_lines)
 	# The flood fill is BOUNDED, and the bound is the row's own field rather than a number chosen
 	# here: started on an empty cell of an unbounded layer it would otherwise spread for as long as
 	# the machine let it. It also refuses to start when the cell already holds what it would paint,
@@ -4692,7 +4708,7 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"			if seen.has(around) or map.get_cell_source_id(around) != was_source or map.get_cell_atlas_coords(around) != was_atlas:",
 		"				continue",
 		"			seen[around] = true",
-		"			queue.append(around)"])
+		"			queue.append(around)"], verbatim_lines)
 	# The two file words answer whether they worked, so a sheet that cares can ask - and a save to a
 	# folder that is not there, or a load of a file that was never written, leaves the layer exactly
 	# as it was instead of clearing it.
@@ -4705,7 +4721,7 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"	if file == null:",
 		"		return false",
 		"	file.store_buffer(map.tile_map_data)",
-		"	return true"])
+		"	return true"], verbatim_lines)
 	_append_shared_helper(lines, TILE_LOAD_HELPER,
 		"func %s(map, path: String) -> bool:" % TILE_LOAD_HELPER,
 		["	if map == null or not FileAccess.file_exists(path):",
@@ -4714,7 +4730,7 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"	if file == null:",
 		"		return false",
 		"	map.tile_map_data = file.get_buffer(file.get_length())",
-		"	return true"])
+		"	return true"], verbatim_lines)
 	# Erasing a GridMap cell IS filling it with the invalid item, so Fill Box and Erase Box are one
 	# function called with a different last argument, and the emitted code says as much.
 	_append_shared_helper(lines, GRIDMAP_FILL_BOX_HELPER,
@@ -4724,26 +4740,96 @@ static func _append_level_query_helpers(lines: PackedStringArray) -> void:
 		"	for x: int in range(mini(from.x, to.x), maxi(from.x, to.x) + 1):",
 		"		for y: int in range(mini(from.y, to.y), maxi(from.y, to.y) + 1):",
 		"			for z: int in range(mini(from.z, to.z), maxi(from.z, to.z) + 1):",
-		"				grid.set_cell_item(Vector3i(x, y, z), item)"])
+		"				grid.set_cell_item(Vector3i(x, y, z), item)"], verbatim_lines)
 
 
-## One shared helper's definition, appended when the file calls it and does not already define it.
-## Every rule the aimed-floor helper documents above holds for each of them: appended last so no
-## source-map line moves, skipped when the head line is already present so a reopened file re-emits
-## byte-identically, and a mere mention inside a string literal never counts as a call.
+## One shared helper's definition, appended when a ROW of the sheet calls it and the file does not
+## already define it. Every rule the aimed-floor helper documents above holds for each of them:
+## appended last so no source-map line moves, skipped when the head line is already present so a
+## reopened file re-emits byte-identically, and a mere mention inside a string literal never counts
+## as a call.
+##
+## AND A CALL THAT RODE THROUGH A VERBATIM BLOCK IS NOT A ROW ASKING. Opening somebody's hand-written
+## file as a sheet leaves whatever the vocabulary cannot read as a verbatim block, and those lines
+## are written back out character for character - so a file that CALLS one of these helpers without
+## defining it (a test driving them, a script sharing another node's plumbing) would otherwise grow a
+## definition it never had the moment it was opened and saved, which is the lossless contract broken
+## by the compiler rather than by any lift. The emitted text is the rows' lines plus the verbatim
+## ones, so the verbatim calls are counted the same way and subtracted: what is left is what the rows
+## asked for, and only that is worth a definition. Both counts come from the one scanner, so a
+## spelling one of them is blind to (a call inside a multi-line string) is invisible to both and
+## cancels exactly.
 static func _append_shared_helper(lines: PackedStringArray, helper_name: String, head: String,
-		body: Array) -> void:
-	var called: bool = false
+		body: Array, verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
+	var needle: String = "%s(" % helper_name
+	var called: int = 0
 	for line: String in lines:
 		if line == head:
 			return
 		if line.strip_edges().begins_with("#"):
 			continue
-		if _calls_outside_strings(line, "%s(" % helper_name):
-			called = true
-	if not called:
+		called += _count_calls_outside_strings(line, needle)
+	for line: String in verbatim_lines:
+		if line.strip_edges().begins_with("#"):
+			continue
+		called -= _count_calls_outside_strings(line, needle)
+	if called <= 0:
 		return
 	lines.append("")
 	lines.append(head)
 	for body_line: String in body:
 		lines.append(body_line)
+
+
+## The lines of every VERBATIM block the sheet holds - the code the compiler passes through
+## untouched rather than writes. Walked over the row containers a block can sit in (a sheet's own
+## events, a function's body, an event's actions and sub-events, a match case's rows), by property
+## name so a row kind added later is reached without a list to maintain here. A block this walk does
+## not reach simply counts as nothing, which leaves the helper appended exactly as it always was.
+##
+## Only ENABLED, non-empty blocks count, because those are the only ones emission writes out - a
+## disabled block counted here would subtract a call the output never made.
+static func _verbatim_code_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var collected: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return collected
+	var seen: Dictionary = {}
+	for property: String in ["events", "functions"]:
+		_collect_verbatim_code(sheet.get(property), collected, seen)
+	return collected
+
+
+## The row containers a verbatim block can be reached through. Names rather than types, so the walk
+## above stays one function whatever holds the rows.
+const _VERBATIM_ROW_CONTAINERS: Array[String] = ["events", "rows", "actions", "sub_events", "cases"]
+
+
+static func _collect_verbatim_code(entry: Variant, collected: PackedStringArray,
+		seen: Dictionary) -> void:
+	if entry is Array:
+		for item: Variant in entry as Array:
+			_collect_verbatim_code(item, collected, seen)
+		return
+	if not (entry is Resource):
+		return
+	var resource: Resource = entry as Resource
+	if seen.has(resource.get_instance_id()):
+		return
+	seen[resource.get_instance_id()] = true
+	# A disabled row, function or block is not emitted at all, so counting it here would subtract a
+	# call the output never made and leave a helper the rows really did ask for unwritten.
+	var enabled: Variant = resource.get("enabled")
+	if enabled is bool and not bool(enabled):
+		return
+	if resource is RawCodeRow:
+		var raw: RawCodeRow = resource as RawCodeRow
+		if not raw.code.strip_edges().is_empty():
+			collected.append_array(raw.code.split("\n"))
+		return
+	for property: String in _VERBATIM_ROW_CONTAINERS:
+		# `rows` is the backwards-compatible alias for `events`, and emission reads whichever of the
+		# two is filled rather than both - so walking both here would count one block twice.
+		if property == "rows" and (resource.get("events") is Array) \
+				and not (resource.get("events") as Array).is_empty():
+			continue
+		_collect_verbatim_code(resource.get(property), collected, seen)
