@@ -389,7 +389,7 @@ func quit_game() -> void:
 ## @ace_category("Scenes")
 ## @ace_description("Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.")
 ## @ace_display_template("Go to scene [b]{path}[/b] with a [b]{transition}[/b] over [b]{seconds}[/b] s")
-## @ace_param(path, desc: "The scene to open. Its res:// path, or an expression that answers with one.")
+## @ace_param(path, default: ProjectSettings.get_setting("application/run/main_scene"), desc: "The scene to open. Its res:// path in quotes, or an expression that answers with one - it starts at the project's own main scene.")
 ## @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
 ## @ace_param(seconds, default: 0.6, desc: "How long the whole change takes, on and off again. Held over a floor while no flashing is on.")
 ## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")

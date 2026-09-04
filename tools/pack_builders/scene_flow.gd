@@ -141,7 +141,14 @@ static func build() -> bool:
 		"if path.strip_edges().is_empty():\n\treturn\n_start_transition(path.strip_edges(), transition, seconds, ease)")
 	_default(sheet, "transition", "fade")
 	_param_options(sheet, "transition", ["fade", "wipe", "dissolve", "iris", "blinds", "pixelate", "page curl"])
-	_param_desc(sheet, "path", "The scene to open. Its res:// path, or an expression that answers with one.")
+	# A DROPPED ROW HAS SOMEWHERE TO GO. The slot is an expression rather than a quoted path - that is
+	# what lets a row send the player to a scene a variable names - so its starting value has to be an
+	# expression too, and the one every project already has an answer for is its own main scene. A
+	# quoted literal cannot be the starting value here: a default is written into the emitted pack as
+	# annotation text and read back with its outer quotes removed, so "res://main.tscn" would come
+	# back as a bare path and the row would write an identifier no game declares.
+	_default(sheet, "path", "ProjectSettings.get_setting(\"application/run/main_scene\")")
+	_param_desc(sheet, "path", "The scene to open. Its res:// path in quotes, or an expression that answers with one - it starts at the project's own main scene.")
 	_param_desc(sheet, "transition", "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
 	_default(sheet, "seconds", "0.6")
 	_param_desc(sheet, "seconds", "How long the whole change takes, on and off again. Held over a floor while no flashing is on.")
