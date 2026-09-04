@@ -57,8 +57,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## given" and folds from the first element instead, so a row asking about a node that has been freed
 ## would answer with the number 0. Seeded this way the walk names the node once and answers nothing
 ## for nothing.
+##
+## A STEP THAT LANDS ON SOMETHING FREED ANSWERS NOTHING, which is the other half of that promise and
+## the half a real game reaches first: the player dies while their bullet is still in the air, and
+## the enemy that bullet kills would otherwise hand a row under On Death a previously-freed object to
+## read a name off. The walk stops with nothing instead, and a sheet asks about nothing the way it
+## asks about anything else - `is nothing`, or a field left empty.
 static func root_owner_expression(node_text: String) -> String:
-	return "([%s] + range(%d)).reduce(func(__own: Variant, __step: int) -> Variant: return __own.get_meta(&\"owner\") if is_instance_valid(__own) and __own.has_meta(&\"owner\") else __own)" % [node_text, OWNER_CHAIN_LIMIT]
+	return "([%s] + range(%d)).reduce(func(__own: Variant, __step: int) -> Variant: return __own.get_meta(&\"owner\") if is_instance_valid(__own) and __own.has_meta(&\"owner\") else (__own if is_instance_valid(__own) else null))" % [node_text, OWNER_CHAIN_LIMIT]
 
 
 ## The two rows that WRITE the key. Claim is the whole gesture - a spawn row, a trap being armed, a
@@ -75,9 +81,10 @@ static func _writing(descriptors: Array[ACEDescriptor]) -> void:
 static func _reading(descriptors: Array[ACEDescriptor]) -> void:
 	# The key is ASKED FOR before it is read, rather than read with a fallback: Godot reads a `null`
 	# fallback as "no fallback given" and errors on a node that was never claimed, which is the
-	# ordinary case this row has to answer quietly.
-	descriptors.append(F.expr("ClaimedBy", "Claimed By", "({node}.get_meta(&\"owner\") if is_instance_valid({node}) and {node}.has_meta(&\"owner\") else null)", OWNERSHIP, "who claimed [i]{node}[/i]", "The node that claimed this one, one step up - the turret that fired the bullet, not the player behind the turret. Reads as nothing when it was never claimed. For the far end of the chain, use Root Owner Of.").param_typed("Node", "node", "self", "Node", "The node whose owner is being read.", "scene_node"))
-	descriptors.append(F.expr("RootOwnerOf", "Root Owner Of", "(%s)" % root_owner_expression("{node}"), OWNERSHIP, "root owner of [i]{node}[/i]", "The far end of the owner chain: bullet to turret to player answers with the player. This is the one a kill feed, a score row and an assist list all want, because it is the person rather than the thing they were holding. A node nobody claimed answers with itself.").param_typed("Node", "node", "self", "Node", "The node the chain is walked from.", "scene_node").featured())
+	# ordinary case this row has to answer quietly. The owner it finds is asked about too, because a
+	# turret that has been blown up must read as nothing rather than as a freed object.
+	descriptors.append(F.expr("ClaimedBy", "Claimed By", "({node}.get_meta(&\"owner\") if is_instance_valid({node}) and {node}.has_meta(&\"owner\") and is_instance_valid({node}.get_meta(&\"owner\")) else null)", OWNERSHIP, "who claimed [i]{node}[/i]", "The node that claimed this one, one step up - the turret that fired the bullet, not the player behind the turret. Reads as nothing when it was never claimed, and when the owner itself has gone. For the far end of the chain, use Root Owner Of.").param_typed("Node", "node", "self", "Node", "The node whose owner is being read.", "scene_node"))
+	descriptors.append(F.expr("RootOwnerOf", "Root Owner Of", "(%s)" % root_owner_expression("{node}"), OWNERSHIP, "root owner of [i]{node}[/i]", "The far end of the owner chain: bullet to turret to player answers with the player. This is the one a kill feed, a score row and an assist list all want, because it is the person rather than the thing they were holding. A node nobody claimed answers with itself, and a chain whose far end has been freed answers with nothing.").param_typed("Node", "node", "self", "Node", "The node the chain is walked from.", "scene_node").featured())
 
 
 ## The three rows that ASK about it. All three compare ROOT owners on both sides, so a bullet, the

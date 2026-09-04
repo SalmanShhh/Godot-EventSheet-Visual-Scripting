@@ -18,8 +18,9 @@
 #      Death read the killer at all.
 #   6. THE POOL FORGETS. A recycled node must not carry its last life's owner, or the second bullet
 #      out of the pool is credited to whoever fired the first.
-#   7. THE LIFT. The hand-written `set_meta(&"owner", ...)` line opens as the row it is, and the file
-#      comes back byte for byte.
+#   7. THE LIFT. The hand-written `set_meta(&"owner", ...)` line opens as the row it is; the
+#      two-line disown DEGRADES to the general meta rows that already say it, which is the honest
+#      answer rather than a corrupt one; and all three files come back byte for byte.
 #
 # Values are pinned, never counts.
 @tool
@@ -51,7 +52,7 @@ static func run() -> bool:
 	passed = _test_claim_writes_and_disown_clears() and passed
 	passed = _test_the_credit_runs_through_the_health_pack() and passed
 	passed = _test_the_pool_forgets_on_the_way_back() and passed
-	passed = _test_the_handwritten_claim_opens_as_the_row_it_is() and passed
+	passed = _test_the_handwritten_rows_open_as_the_rows_they_are() and passed
 	return passed
 
 
@@ -129,11 +130,15 @@ static func _test_the_walk_always_answers() -> bool:
 	carrier.set_meta(&"owner", ghost)
 	ghost.free()
 	var after_free: Variant = root.call(carrier)
+	var nearest: Callable = _reader("ClaimedBy")
+	var nearest_after_free: Variant = nearest.call(carrier)
 	var passed: bool = SUPPORT.pins("ownership", [
 		["a chain that points at itself still answers with a node in it",
 			cycled == first or cycled == second, true],
-		["an owner that has been freed answers with nothing valid",
-			is_instance_valid(after_free), false],
+		# NOTHING, not "something that is no longer valid": a row reads a name off what this
+		# answers, and reading one off a freed object is an error in the sheet.
+		["an owner that has been freed answers with nothing", after_free == null, true],
+		["and the nearest owner answers with nothing too", nearest_after_free == null, true],
 		["nothing owns nothing", root.call(null) == null, true]
 	])
 	for node: Node in [first, second, carrier]:
@@ -263,7 +268,7 @@ static func _test_the_pool_forgets_on_the_way_back() -> bool:
 
 ## The line a hand-written project already contains opens as the row it is, and saving the file
 ## untouched reproduces it byte for byte.
-static func _test_the_handwritten_claim_opens_as_the_row_it_is() -> bool:
+static func _test_the_handwritten_rows_open_as_the_rows_they_are() -> bool:
 	var source: String = "\n".join(PackedStringArray([
 		"extends Node2D",
 		"",
@@ -280,9 +285,50 @@ static func _test_the_handwritten_claim_opens_as_the_row_it_is() -> bool:
 				if action is ACEAction:
 					claimed = str((action as ACEAction).ace_id)
 	var reemitted: String = SUPPORT.reemit(source, "user://eventforge_ownership_trip.gd")
+	# DISOWN DEGRADES RATHER THAN CORRUPTS, and that is pinned rather than wished for: its template
+	# is a two-line `if has_meta` / `remove_meta`, which the general meta rows already say character
+	# for character, so a hand-written one opens as those two rows instead of as Disown. It says the
+	# same thing, and the file it came from comes back untouched - which is the contract.
+	var stowed: String = "\n".join(PackedStringArray([
+		"extends Node2D",
+		"",
+		"",
+		"func _on_stow(node: Node) -> void:",
+		"\tif node.has_meta(&\"owner\"):",
+		"\t\tnode.remove_meta(&\"owner\")",
+		""
+	]))
+	var reopened_stow: EventSheetResource = SUPPORT.reopen(stowed)
+	var stow_rows: PackedStringArray = PackedStringArray()
+	for fn: EventFunction in reopened_stow.functions:
+		for row: Resource in fn.events:
+			if not (row is EventRow):
+				continue
+			for condition: Resource in (row as EventRow).conditions:
+				if condition is ACECondition:
+					stow_rows.append(str((condition as ACECondition).ace_id))
+			for action: Resource in (row as EventRow).actions:
+				if action is ACEAction:
+					stow_rows.append(str((action as ACEAction).ace_id))
+	# And the fold the three comparison rows are built from is an ordinary expression wherever a
+	# project already wrote one: it is kept whole, not split down the middle by the reading.
+	var folded: String = "\n".join(PackedStringArray([
+		"extends Node2D",
+		"",
+		"",
+		"func _ready() -> void:",
+		"\tprint(%s)" % load(MODULE_PATH).call("root_owner_expression", "self"),
+		""
+	]))
 	return SUPPORT.pins("ownership", [
 		["a hand-written claim opens as Claim", claimed, "Claim"],
-		["and the file comes back byte for byte", reemitted, source]
+		["and the file comes back byte for byte", reemitted, source],
+		["a hand-written disown opens as the meta rows that already say it",
+			Array(stow_rows), ["HasMeta", "RemoveMeta"]],
+		["and that file comes back byte for byte too",
+			SUPPORT.reemit(stowed, "user://eventforge_ownership_stow_trip.gd"), stowed],
+		["a file holding the owner walk comes back byte for byte",
+			SUPPORT.reemit(folded, "user://eventforge_ownership_fold_trip.gd"), folded]
 	])
 
 
