@@ -101,6 +101,8 @@ a note, `files-watch-never-stops`, naming the line that starts it:
 > `$FolderWatcher.watch_folder("user://mods", 2.0)`. Stop Watching ends it, and a stopped watcher
 > parks its per-frame tick - the engine stops visiting it at all.
 
+![The Project Doctor inbox: two watches nobody stops, filed as notes under Files watch never stops, each naming the file and the line that started it](../images/watch-never-stops.png)
+
 **It is a note, not a warning, and it has no fix button.** A watch meant to run for as long as the
 game does is a real thing to want, and where a watch was supposed to end - the screen closing, the
 menu leaving, the download finishing - is yours to say. A quick fix that guessed would put Stop
