@@ -504,7 +504,7 @@ func chromatic_kick(strength: float, seconds: float) -> void:
 ## @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
 ## @ace_param_options(mode reducing, constant)
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
-## @ace_codegen_template("$Juice3DBehavior.chromatic_shake({magnitude}, {duration}, {mode}, {angle_degrees})")
+## @ace_codegen_template("$Juice3DBehavior.chromatic_shake({magnitude}, {duration}, "{mode}", {angle_degrees})")
 func chromatic_shake(magnitude: float, duration: float, mode: String, angle_degrees: float) -> void:
 	_ensure_fx_overlay()
 	_chroma_shake_from = maxf(magnitude, 0.0)

@@ -712,6 +712,7 @@ static func build() -> bool:
 	_default(sheet, "mode", "reducing")
 	_param_options(sheet, "mode", ["reducing", "constant"])
 	_default(sheet, "angle_degrees", "-1")
+	_quoted_argument(sheet, "chromatic_shake({magnitude}, {duration}, \"{mode}\", {angle_degrees})")
 	Lib.append_function(sheet, "stop_chromatic_shake", "Stop Chromatic Shake", "Juice", "Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.",
 		[],
 		Lib.JUICE_STOP_CHROMATIC_SHAKE_BODY)
@@ -999,3 +1000,12 @@ static func _param_hint(sheet: EventSheetResource, param_id: String, hint: Strin
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.hint = hint
+
+
+## A dropdown key is inserted into the call verbatim, so a String argument picked from a list of words
+## has to carry its own quotes in the TEMPLATE - a quoted key does not survive the annotation round
+## trip (the emitter wraps it again and the scanner strips one pair back off). The call prefix is the
+## pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
