@@ -202,6 +202,17 @@ static func _the_accessibility_dials_reach_the_camera() -> bool:
 	Engine.set_meta(&"no_flashing", true)
 	kit.call("add_post_effect", "tint", "held", 1.0)
 	var held: Variant = kit.call("post_strength", "held")
+	# THE DIAL HAS ONE SAY. An entry keeps what its row ASKED for and the dial is applied once, on the
+	# way to the CompositorEffect - so a pulse falls back to where it found it rather than to that
+	# times the dial, and a fade arrives at its target rather than at the target times the dial
+	# squared. Neither shows at a dial of 1, which is why this asks at 0.5.
+	Engine.set_meta(&"no_flashing", false)
+	Engine.set_meta(&"effect_strength", 0.5)
+	kit.call("add_post_effect", "pixelate", "", 0.25)
+	kit.call("pulse_post_effect", "pixelate", 1.0, 0.4)
+	var pulsed_back_to: Variant = kit.call("post_strength", "pixelate")
+	kit.call("fade_post_strength", "pixelate", 1.0, 0.5)
+	var faded_to: Variant = kit.call("post_strength", "pixelate")
 	camera.free()
 	if had_flashing:
 		Engine.set_meta(&"no_flashing", was_flashing)
@@ -214,6 +225,10 @@ static func _the_accessibility_dials_reach_the_camera() -> bool:
 	return SUPPORT.pins(P, [
 		["the effect-strength dial scales a row on the way in", halved, 0.5],
 		["no flashing holds a row under the ceiling", held, 0.3],
+		["a pulse under a dial falls back to where it found it, not to that times the dial",
+			pulsed_back_to, 0.125],
+		["and a fade under one arrives at what it asked for, through the dial exactly once",
+			faded_to, 0.5],
 	])
 
 

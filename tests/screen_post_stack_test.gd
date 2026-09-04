@@ -39,6 +39,7 @@ static func run() -> bool:
 	passed = _a_pulse_puts_it_back() and passed
 	passed = _looks_are_files() and passed
 	passed = _no_flashing_is_a_ceiling() and passed
+	passed = _the_dials_have_one_say() and passed
 	passed = _every_effect_has_a_shader() and passed
 	passed = _the_quiet_finding() and passed
 	return passed
@@ -203,6 +204,59 @@ static func _no_flashing_is_a_ceiling() -> bool:
 		layer.post_strength("vignette"), 0.5])
 	rows.append(["and leaves the time alone, because it is about how much, not how fast",
 		layer._slowed(0.05), 0.05])
+	layer.free()
+	_put_meta_back("no_flashing", flashing_was)
+	_put_meta_back("effect_strength", strength_was)
+	return SUPPORT.pins(P, rows)
+
+
+## THE DIALS HAVE ONE SAY, and the two colour-vision rows are exempt from both.
+##
+## An entry remembers what its ROW ASKED FOR and the dials are applied once, on the way to the
+## shader. Get that wrong and the dial lands twice on anything that walks: a pulse falls back to
+## strength times the dial instead of where it started, a fade arrives at target times the dial
+## squared, and a look saved under a dial decays a little more every time it is saved and worn. None
+## of it shows at a dial of 1, which is why this asks at 0.5.
+##
+## And a colour-vision correction is not an amplitude that can strobe - it is what makes the screen
+## readable at all - so a player who has turned the effect strength to nothing, or asked for no
+## flashing, still gets the colours told apart.
+static func _the_dials_have_one_say() -> bool:
+	var flashing_was: Variant = Engine.get_meta("no_flashing", null)
+	var strength_was: Variant = Engine.get_meta("effect_strength", null)
+	Engine.set_meta("no_flashing", false)
+	Engine.set_meta("effect_strength", 0.5)
+	var layer: Node = _a_layer()
+	layer.add_post_effect("vignette", "", 0.25)
+	var rows: Array = [
+		["a dial of a half puts a quarter-strength row on the screen at an eighth",
+			layer.post_strength("vignette"), 0.125]
+	]
+	layer.pulse_post_effect("vignette", 1.0, 0.4)
+	rows.append(["and a pulse over it falls back to where it found it, not to that times the dial",
+		layer.post_strength("vignette"), 0.125])
+	layer.fade_post_strength("vignette", 1.0, 0.5)
+	rows.append(["a fade arrives at what it was asked for, through the dial exactly once",
+		layer.post_strength("vignette"), 0.5])
+	layer.set_post_strength("vignette", 0.8)
+	var look_path: String = "user://tests/screen_post_stack_dialled.tres"
+	layer.save_look(look_path, "Dialled")
+	var written: Resource = ResourceLoader.load(look_path, "", ResourceLoader.CACHE_MODE_IGNORE)
+	rows.append(["a look records what the rows ASKED for, not what one player's dials allowed",
+		_look_strengths(written), "0.8"])
+	layer.use_look(written)
+	rows.append(["so wearing it back is the same screen, and not a dimmer one every time",
+		layer.post_strength("vignette"), 0.4])
+	Engine.set_meta("effect_strength", 0.0)
+	Engine.set_meta("no_flashing", true)
+	layer.correct_colours_for("deuteranopia")
+	rows.append(["the colour-vision correction is exempt from both dials, because it is not an amplitude",
+		layer.post_strength(layer.CORRECT_EFFECT), 1.0])
+	layer.see_as("protanopia")
+	rows.append(["and so is the simulation the designer walks the level with",
+		layer.post_strength(layer.SEE_AS_EFFECT), 1.0])
+	rows.append(["while everything else is still held at nothing by a dial of nothing",
+		layer.post_strength("vignette"), 0.0])
 	layer.free()
 	_put_meta_back("no_flashing", flashing_was)
 	_put_meta_back("effect_strength", strength_was)

@@ -30,6 +30,12 @@ const POST_EFFECTS: PackedStringArray = ["vignette", "film grain", "scanlines", 
 const SEE_AS_EFFECT: String = "see as"
 const CORRECT_EFFECT: String = "correct colours"
 
+## And the two the accessibility dials do NOT touch. A colour-vision correction is not an amplitude
+## that can strobe - it is the thing that makes the screen readable at all - so the effect-strength
+## dial does not fade it away and the no-flashing ceiling does not hold it down. Every other entry
+## obeys both.
+const UNDIALLED_EFFECTS: PackedStringArray = [SEE_AS_EFFECT, CORRECT_EFFECT]
+
 ## The four kinds of colour vision, IN THE ORDER the two vision shaders number them: the position in
 ## this list is the number written into the shader, so nothing keeps a second table of numbers in
 ## step with this one.
@@ -66,7 +72,10 @@ const LOOK_SCRIPT: String = "res://eventsheet_addons/screen_look_resource/screen
 ##
 ##   called    the name rows address this entry by (its effect word, when nobody said otherwise)
 ##   effect    which of the shipped effects it is
-##   strength  how far it goes, 0 to 1, AFTER the two accessibility dials have had their say
+##   strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the screen.
+##             The two accessibility dials are applied once, on the way to the shader, so a walk
+##             that moves this value cannot scale it a second time and a look saved from it holds
+##             what the game asked for rather than what one player's settings allowed
 ##   enabled   whether it draws at all
 ##   params    the effect's own dials, by the uniform name the shader declares
 ##   rect      the full-screen ColorRect wearing it, once there is one
@@ -114,7 +123,7 @@ func add_post_effect(effect: String = "vignette", called: String = "", strength:
 		_stack[at]["enabled"] = true
 		_write_strength(name_of_it, strength)
 		return
-	_stack.append({"called": name_of_it, "effect": word, "strength": _allowed(strength),
+	_stack.append({"called": name_of_it, "effect": word, "strength": clampf(strength, 0.0, 1.0),
 		"enabled": true, "params": {}, "rect": null})
 	_apply(_stack.size() - 1)
 	_reorder()
@@ -191,8 +200,8 @@ func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: f
 	if seconds <= 0.0 and then_back_seconds <= 0.0:
 		set_post_strength(called, to)
 		return
-	_walk_strength(str(_stack[at].get("called", "")), _allowed(to), _slowed(seconds), started_at,
-		_slowed(then_back_seconds) if then_back_seconds > 0.0 else 0.0, false)
+	_walk_strength(str(_stack[at].get("called", "")), clampf(to, 0.0, 1.0), _slowed(seconds),
+		started_at, _slowed(then_back_seconds) if then_back_seconds > 0.0 else 0.0, false)
 
 
 ## THE ONE-SHOT: turns an effect all the way up and lets it fall back, in one row. If the stack does
@@ -228,7 +237,7 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
 	_write_strength(word, strength)
 	if seconds <= 0.0:
 		return
-	_walk_strength(word, _allowed(strength), 0.0, falls_back_to, _slowed(seconds), borrowed)
+	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
 
 
 ## Moves one entry so it is drawn BEFORE another - which is what decides whose look wins. A grade
@@ -289,11 +298,12 @@ func post_effect_is_on(called: String = "vignette") -> bool:
 	var at: int = _find(called)
 	if at < 0:
 		return false
-	return bool(_stack[at].get("enabled", true)) and float(_stack[at].get("strength", 0.0)) > 0.001
+	return bool(_stack[at].get("enabled", true)) and _dialled(_stack[at]) > 0.001
 
 
 ## How far one entry currently goes, 0 to 1 - after the effect-strength dial and the no-flashing
-## ceiling, so it is what is on the screen rather than what was asked for. 0 for one that is not
+## ceiling, so it is what is on the screen rather than what a row asked for. The two colour-vision
+## entries are exempt from both, so they read back at what they were set to. 0 for one that is not
 ## there.
 ## @ace_expression
 ## @ace_name("Post Strength")
@@ -303,7 +313,7 @@ func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
-	return float(_stack[at].get("strength", 0.0))
+	return _dialled(_stack[at])
 
 
 ## How many effects the stack is drawing right now - the number a reader wants when the frame rate
@@ -314,7 +324,7 @@ func post_strength(called: String = "vignette") -> float:
 func post_effect_count() -> int:
 	var drawing: int = 0
 	for entry: Dictionary in _stack:
-		if bool(entry.get("enabled", true)) and float(entry.get("strength", 0.0)) > 0.001:
+		if bool(entry.get("enabled", true)) and _dialled(entry) > 0.001:
 			drawing += 1
 	return drawing
 
@@ -422,7 +432,7 @@ func blend_to_look(look: Resource, seconds: float = 1.0) -> void:
 		var name_of_it: String = str(entry.get("called", ""))
 		if wanted.has(name_of_it):
 			var arriving: Dictionary = wanted[name_of_it]
-			_walk_strength(name_of_it, _allowed(float(arriving.get("strength", 0.0))), span,
+			_walk_strength(name_of_it, clampf(float(arriving.get("strength", 0.0)), 0.0, 1.0), span,
 				0.0, 0.0, false)
 		else:
 			leaving.append(name_of_it)
@@ -515,12 +525,23 @@ func _slowed(seconds: float) -> float:
 	return maxf(seconds, 0.0)
 
 
-## Writes one entry's strength through the accessibility dials and pushes it at the screen.
+## What ONE ENTRY puts on the screen: the strength its row asked for, through the dials - except for
+## the two colour-vision entries, which are exempt. This is the only place a request becomes a screen
+## value, which is what stops a walk over requests from being scaled a second time per step.
+func _dialled(entry: Dictionary) -> float:
+	var asked: float = clampf(float(entry.get("strength", 0.0)), 0.0, 1.0)
+	if UNDIALLED_EFFECTS.has(str(entry.get("effect", ""))):
+		return asked
+	return _allowed(asked)
+
+
+## Remembers what one entry's row ASKED for and pushes it at the screen. The dials have their say in
+## _apply, once, on the way to the shader.
 func _write_strength(called: String, strength: float) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	_stack[at]["strength"] = _allowed(strength)
+	_stack[at]["strength"] = clampf(strength, 0.0, 1.0)
 	_apply(at)
 
 
@@ -548,6 +569,8 @@ func _set_enabled(called: String, on: bool) -> void:
 
 
 ## One of the two colour-vision entries, wearing a kind of vision - or gone, when the kind is normal.
+## Both are UNDIALLED_EFFECTS, so the correction lands whole: a player who has turned the effect
+## strength down, or asked for no flashing, still gets the colours told apart.
 func _wear_vision(effect: String, vision: String, row_name: String) -> void:
 	var kind: String = vision.strip_edges().to_lower()
 	var which: int = VISION_KINDS.find(kind)
@@ -564,7 +587,10 @@ func _wear_vision(effect: String, vision: String, row_name: String) -> void:
 	_write_strength(effect, 1.0)
 
 
-## The stack as look rows: what Save Look writes and what Use Look reads back, in stack order.
+## The stack as look rows: what Save Look writes and what Use Look reads back, in stack order. The
+## strength recorded is the one the ROWS ASKED FOR, never the one one player's accessibility dials
+## allowed at the moment of saving - otherwise a look saved under a half-strength dial would come
+## back at a quarter, and one saved while no flashing was on would carry that ceiling for ever.
 func _look_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for entry: Dictionary in _stack:
@@ -624,7 +650,7 @@ func _apply(at: int) -> void:
 	var shader: Shader = _shader_for(str(entry.get("effect", "")))
 	if worn.shader != shader:
 		worn.shader = shader
-	var showing: float = float(entry.get("strength", 0.0))
+	var showing: float = _dialled(entry)
 	if not bool(entry.get("enabled", true)):
 		showing = 0.0
 	worn.set_shader_parameter(STRENGTH_DIAL, showing)

@@ -55,7 +55,9 @@ const MASK_NODE_NAME: String = "PostKitMask"
 ##
 ##   called    the name rows address this entry by (its effect word, when nobody said otherwise)
 ##   effect    which of the shipped effects it is
-##   strength  how far it goes, 0 to 1, AFTER the two accessibility dials have had their say
+##   strength  how far the row ASKED it to go, 0 to 1 - the request, not what reached the frame.
+##             The two accessibility dials are applied once, on the way to the CompositorEffect, so
+##             a walk that moves this value cannot scale it a second time
 ##   enabled   whether it is applied at all
 ##   resource  the CompositorEffect wearing it
 var _stack: Array[Dictionary] = []
@@ -166,7 +168,8 @@ func set_post_strength(called: String = "vignette", strength: float = 1.0) -> vo
 ## @ace_param(to, default: 1.0, desc: "The strength it arrives at, 0 to 1.")
 ## @ace_param(seconds, default: 0.5, desc: "How long the walk takes. Held over a floor while no flashing is on.")
 func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5) -> void:
-	_walk_strength(called.strip_edges().to_lower(), _allowed(to), _slowed(seconds), 0.0, 0.0, false)
+	_walk_strength(called.strip_edges().to_lower(), clampf(to, 0.0, 1.0), _slowed(seconds), 0.0,
+		0.0, false)
 
 
 ## Flashes one effect up and lets it fall back - the whole sentence a hit, a pickup or a near miss
@@ -202,7 +205,7 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6,
 	_write_strength(word, strength)
 	if seconds <= 0.0:
 		return
-	_walk_strength(word, _allowed(strength), 0.0, falls_back_to, _slowed(seconds), borrowed)
+	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
 
 
 ## Whether an effect by that name is on the stack at all, on or off. The gate for a row that should
@@ -226,7 +229,7 @@ func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
-	return float(_stack[at].get("strength", 0.0))
+	return _allowed(float(_stack[at].get("strength", 0.0)))
 
 
 ## Draws an outline around every node in a group, THROUGH whatever is standing in front of them -
@@ -439,8 +442,9 @@ func _add_entry(effect: String, called: String, strength: float) -> void:
 	var made: CompositorEffect = _make(effect)
 	if made == null:
 		return
-	made.set("strength", _allowed(strength))
-	_stack.append({"called": called, "effect": effect, "strength": _allowed(strength),
+	var asked: float = clampf(strength, 0.0, 1.0)
+	made.set("strength", _allowed(asked))
+	_stack.append({"called": called, "effect": effect, "strength": asked,
 		"enabled": true, "resource": made})
 	_write_effects()
 
@@ -461,16 +465,19 @@ func _write_effects() -> void:
 	compositor.compositor_effects = effects
 
 
-## Writes one entry's strength through the accessibility dials and pushes it at the effect.
+## Remembers what one entry's row ASKED for and pushes it at the effect, through the accessibility
+## dials. The request is what is kept, and the dials have their say once, here, on the way to the
+## CompositorEffect - which is what stops a walk over requests from being scaled a second time per
+## step.
 func _write_strength(called: String, strength: float) -> void:
 	var at: int = _find(called)
 	if at < 0:
 		return
-	var held: float = _allowed(strength)
-	_stack[at]["strength"] = held
+	var asked: float = clampf(strength, 0.0, 1.0)
+	_stack[at]["strength"] = asked
 	var made: CompositorEffect = _stack[at].get("resource", null) as CompositorEffect
 	if made != null:
-		made.set("strength", held)
+		made.set("strength", _allowed(asked))
 
 
 ## Turns one entry on or off without forgetting how far up it was.
