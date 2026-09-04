@@ -400,6 +400,18 @@ Every door in this guide is data-shaped for the same reason. **Image From File**
 **Read Text File (or a fallback)** gives you text, **Table Of File** gives you rows and columns.
 A file that arrives through one of those cannot bring behaviour with it.
 
+**The Mods pack is where the rest of that story lives.** Discovering mod folders, reading a manifest,
+ordering a load, enabling and disabling - those are its rows, and this guide deliberately keeps none
+of its own. One thing about it belongs here, because it is the exact door these pages say the file
+vocabulary never opens: the pack can mount a `.pck` or `.zip` through
+`ProjectSettings.load_resource_pack`, and that call puts everything inside the pack under `res://`
+from the moment it runs, replacing the game's own files with the pack's unless its second argument
+says otherwise. Nothing is built at that instant and everything afterwards may be somebody else's -
+including the files every "it is under `res://`, so it is the game's own" reading on this page rests
+on. That is a real decision a modding game can make; it is not one to make by accident, which is why
+the Doctor's Files section names that line like any other outside load and says the extra thing about
+it.
+
 **What `load()` does instead is the thing worth knowing.** `load()` and `ResourceLoader.load()` work
 on an outside path - that is exactly why nothing else in the engine warns about it - and a `.tscn` or
 a `.tres` can name a **script**. Loading one runs its author's code with everything your game can
@@ -446,9 +458,19 @@ On load pressed
 
 It reads the file's own resource table as **text** and builds nothing, so asking is safe on a file
 from anywhere. It answers false for a scene carrying a script inside it, for one pointing at a script
-outside `res://`, and for a file it cannot read at all - an unreadable file is not a file that has
-been cleared. It reads the **one file you name**: a scene that file points at is a separate file with
-a table of its own.
+outside `res://`, for a node body that writes a value the engine would build - `Resource("...")` loads
+that path, `Object(...)` makes an object and compiles the source it carries, and neither writes a
+resource tag for a tag-reader to find - for a resource tag holding an escape, since Godot decodes
+those and this reading compares the letters as written, and for a file it cannot read at all: an
+unreadable file is not a file that has been cleared. It reads the **one file you name**: a scene that
+file points at is a separate file with a table of its own.
+
+**A true answer means the file brings no code of its own. It does not mean the file is inert.** A
+cleared scene may still hold a `[connection]` naming one of *your* methods with arguments of its own,
+an `Animation` track that calls one of your methods at a keyframe, or a node with an
+`instance_placeholder` that loads another scene the moment something calls `create_instance()` on it.
+None of those brings a stranger's code in; every one of them can reach yours. A scene from outside is
+still somebody else's **data**, and the methods it can reach deserve the thought any other input gets.
 
 The Doctor's Files section reports a row that builds a scene from a path written in the line and not
 under `res://` with no such question anywhere around it. It is a **warning**, not an error, for the
@@ -499,6 +521,12 @@ player gets at it.
 - **An unpack writes files; it does not install them.** The guard keeps entries inside the folder you
   named. What the files then *mean* is your sheet's decision, which is the whole point of the kinds
   table above.
+- **That guard is lexical, and three things are outside what it can see.** A symlink or junction
+  already sitting inside the target folder redirects a write out of it, because the path is inside
+  even when the file system is not. On Windows an entry named `x:y.txt` lands as an alternate data
+  stream on a file called `x` rather than as a file of its own. And an entry the reader cannot decode
+  lands as a 0-byte file and is counted as one that landed. An archive is also read one entry at a
+  time in full, so a huge entry is a memory bill before it is a disk one.
 - **User content is data, never code.** Read a picture as a picture, text as text and a table as a
   table. Reach for `load()` on a player's file only if you have decided, on purpose, that your mods
   are programs.

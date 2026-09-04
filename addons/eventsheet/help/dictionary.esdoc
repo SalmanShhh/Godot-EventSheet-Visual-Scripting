@@ -29,6 +29,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `_launch` | [Spawn A Copy, Facing And Moving](ace:Core/SpawnFacingAndMoving) | Spawn | Vocabulary |
 | `_on_ask_cancelled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `_on_file_chosen` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
+| `_on_reveal_finished` | [Skip Reveal](ace:Core/SkipReveal) | Text | Vocabulary |
 | `_on_unpack_finished` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_progress` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `_on_unpack_refused` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
@@ -123,6 +124,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `background_mode` | [Backdrop](ace:Core/EnvBackdrop) | Environment | Vocabulary |
 | `base64_to_variant` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
 | `basis` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `bbcode_enabled` | [Set Text With Effect](ace:Core/SetTextWithEffect) | Text | Vocabulary |
 | `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
 | `billboard` | [Set Always Face The Camera](ace:Core/SetFaceTheCamera) | World-space UI | Vocabulary |
 | `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
@@ -421,6 +423,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_overlapping_bodies` | [Overlapping Bodies](ace:Core/GetOverlappingBodies) | Collisions | Vocabulary |
 | `get_packet` | [Next Raw Packet](ace:Core/NextRawPacket) | Multiplayer | Vocabulary |
 | `get_parent` | [Get Parent](ace:Core/GetParent) | Nodes | Vocabulary |
+| `get_parsed_text` | [Clear Effects](ace:Core/ClearEffects) | Text | Vocabulary |
 | `get_path` | [Node Path](ace:Core/GetNodePath) | Nodes | Vocabulary |
 | `get_peers` | [Players](ace:Core/Players) | Multiplayer | Vocabulary |
 | `get_percent_sign` | [Percent Sign](ace:Core/PercentSign) | Translation | Vocabulary |
@@ -463,6 +466,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_ticks_msec` | [Game Time](ace:Core/GetGameTime) | Time | Vocabulary |
 | `get_ticks_usec` | [Begin Frame Budget](ace:Core/BeginFrameBudget) | Performance | Vocabulary |
 | `get_time_string_from_system` | [Date: Time Text](ace:Core/GetSystemTime) | Utility: Time | Vocabulary |
+| `get_total_character_count` | [Reveal Text](ace:Core/RevealText) | Text | Vocabulary |
 | `get_translation_object` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
 | `get_tree` | [Await Next Frame](ace:Core/AwaitNextFrame) | Performance | Vocabulary |
 | `get_typed_builtin` | [Element Type](ace:Core/ArrayTypedBuiltin) | Variables: Array | Vocabulary |
@@ -536,6 +540,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `inner_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
 | `insert` | [Insert At](ace:Core/ArrayInsert) | Variables: Array | Vocabulary |
 | `inspect_object` | [Inspect In Editor](ace:Core/InspectInEditor) | Editor Tools | Vocabulary |
+| `install_effect` | [Install Text Effect](ace:Core/InstallTextEffect) | Text | Vocabulary |
 | `instance_from_id` | [Pick By UID](ace:Core/PickByUid) | Nodes: Picking | Vocabulary |
 | `instantiate` | [Make A Copy](ace:Core/MakeNewCopy) | Spawn | Vocabulary |
 | `int` | [Is Even](ace:Core/IsEven) | Compare: Numbers | Vocabulary |
@@ -594,6 +599,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
 | `join` | [Join To Text](ace:Core/ArrayJoin) | Variables: Array | Vocabulary |
 | `keys` | [Dictionary Keys](ace:Core/DictKeys) | Variables: Dictionary | Vocabulary |
+| `kill` | [Skip Reveal](ace:Core/SkipReveal) | Text | Vocabulary |
 | `layer` | [Set Layer Order](ace:Core/SetLayerOrder) | Layers | Vocabulary |
 | `layout_direction` | [Mirror Layout For Language](ace:Core/MirrorLayoutForLanguage) | Translation | Vocabulary |
 | `left` | [Left](ace:Core/TextLeft) | Text | Vocabulary |
@@ -891,6 +897,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
+| `set_visible_characters` | [Reveal Text](ace:Core/RevealText) | Text | Vocabulary |
 | `shadow_enabled` | [Turn Shadows On](ace:Core/LightShadowsOn) | Lighting | Vocabulary |
 | `shape` | [Random Place Inside Box](ace:Core/PlaceInsideBox3D) | Spawn | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
@@ -996,6 +1003,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `tts_speak` | [Speak](ace:Core/SpeakText) | Accessibility | Vocabulary |
 | `tts_stop` | [Stop Speaking](ace:Core/StopSpeaking) | Accessibility | Vocabulary |
 | `tween_callback` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `tween_interval` | [Reveal Text](ace:Core/RevealText) | Text | Vocabulary |
 | `tween_method` | [Tween Effect Parameter](ace:Core/TweenEffectParameter) | Effects | Vocabulary |
 | `tween_property` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `type_string` | [Value Type Name](ace:Core/ValueTypeName) | Compare: Types | Vocabulary |
@@ -1027,6 +1035,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `visibility_range_begin` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visibility_range_end` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visible` | [Is Visible](ace:Core/IsVisible) | General Conditions | Vocabulary |
+| `visible_characters` | [Reveal Text](ace:Core/RevealText) | Text | Vocabulary |
+| `visible_ratio` | [Is Revealing](ace:Core/IsRevealing) | Text | Vocabulary |
 | `volume_db` | [Set Volume](ace:Core/AudioSetVolume) | Audio | Vocabulary |
 | `volumetric_fog_albedo` | [Volumetric Colour](ace:Core/EnvVolumetricColour) | Environment | Vocabulary |
 | `volumetric_fog_density` | [Volumetric Thickness](ace:Core/EnvVolumetricThickness) | Environment | Vocabulary |

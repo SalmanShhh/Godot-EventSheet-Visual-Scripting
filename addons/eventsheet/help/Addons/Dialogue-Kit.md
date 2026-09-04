@@ -36,6 +36,12 @@ and it fires triggers as each line and the whole conversation start and finish.
 - **Typewriter typing.** Text appears character by character at Chars Per Second. While it is still
   typing, **Advance** finishes the current line instantly; once a line is fully shown, **Advance** moves
   to the next line.
+- **This kit's typewriter is this kit's.** It types into the labels the kit drives, and it is not
+  going to change. For a label the kit does not own - a title that waves, a sign the player reads, a
+  damage number that shakes - the builtin **Text** shelf has the same words as ordinary rows on any
+  `RichTextLabel`: **Reveal Text** at so many characters a second (with **Skip Reveal**, **Is
+  Revealing**, **Revealed Fraction**, **Pause Reveal At** and **On Reveal Finished** beside it), and
+  **Set Text With Effect** for the engine's own wave, shake, tornado, rainbow, fade and pulse.
 - **It drives named UI.** The kit looks under the node it is attached to for a panel, a speaker label,
   and a text label by the names you set in the Inspector, and writes into them. You build the look; the
   kit fills in the words.

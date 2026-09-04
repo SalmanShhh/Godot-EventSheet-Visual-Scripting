@@ -120,7 +120,9 @@ expression that works one out while the game runs, goes on working: the strip is
 the only door.
 
 **What it costs, said once.** The five native modes cost nothing. The fifteen shader modes read the
-screen back, which is one screen read per pixel the item covers, every frame it is visible. That is
+screen back through a BackBufferCopy of the whole viewport, taken once per blending item - so the
+bill is counted in blended ITEMS rather than in the pixels they cover, every frame they are visible.
+That is
 fine for a flare, a decal or a boss aura, and wrong for every sprite in a bullet hell. And a
 screen-reading mode must be drawn AFTER what it blends with - later in the tree, or on a higher
 `z_index` - because an item that draws first has nothing under it to read.
@@ -235,9 +237,10 @@ when a row somewhere else should be able to reach this one.
 grade UNDER a vignette grades the game; the same grade OVER it grades the vignette too. **Move Post
 Effect Before** is how you say which.
 
-**What it costs, said once.** Every entry reads the whole screen back: one screen read per pixel of
-the viewport, per entry that is on. Two or three is a look; nine is a bill, and the frame rate will
-say so. **Post Effect Count** is the number to look at when the frame rate has gone. An entry whose
+**What it costs, said once.** Every entry reads the whole screen back through a BackBufferCopy of
+the viewport, taken once per entry that is on - one full-screen copy plus one full-screen shader
+pass each. Two or three is a look; twelve is a bill, and the frame rate will say so. **Post Effect
+Count** is the number to look at when the frame rate has gone. An entry whose
 strength is 0 hides its own rectangle, and a hidden Control is not drawn at all, so a stack at rest
 costs nothing.
 

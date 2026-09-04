@@ -60,10 +60,13 @@ Godot spells it, and that is what the middle column is for.
 
 - **The five native modes cost nothing.** They are a field on an ordinary
   `CanvasItemMaterial`; the renderer already knows how to draw a quad that way.
-- **The fifteen shader modes read the screen.** Blending against what is behind you means
-  having what is behind you, so the item samples the frame so far for every pixel it covers,
-  every frame it is visible. That is fine for a flare, a decal, a boss aura - and wrong for
-  every sprite in a bullet hell.
+- **The fifteen shader modes read the screen, and the read is bigger than the item.** Blending
+  against what is behind you means having what is behind you, so the item samples the frame so far
+  for every pixel it covers. Godot serves that sample out of a **BackBufferCopy of the whole
+  viewport, taken once per blending item** - so ten blended sprites are ten full-screen copies
+  however small each sprite is, every frame they are visible. That is fine for a flare, a decal, a
+  boss aura, and wrong for every sprite in a bullet hell. Blend As One is the lever when you want
+  many of them: one CanvasGroup blends as a single item, and pays for a single copy.
 - **They must be drawn AFTER what they blend with.** Later in the tree, or on a higher
   `z_index`. An item that draws first has nothing under it to read.
 - **Clipping costs nothing either.** `Clip My Children` is a rendering field, not a shader.

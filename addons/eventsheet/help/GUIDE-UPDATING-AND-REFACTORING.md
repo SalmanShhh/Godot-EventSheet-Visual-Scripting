@@ -225,12 +225,41 @@ And the last thing a migration does not do: it does not delete the pack, it does
 node, and it does not go looking for other sheets to fix. It rewrites the rows in the receipt and
 stops.
 
-### The shipped vocabulary carries no forwarding address yet, and why that is the honest state
+### The four addresses this plugin ships
 
-Nothing this plugin publishes today points anywhere. The pair that came closest was the **State
+Four verbs point somewhere today, and they are one story. **Play Sound**, **Stop Sound**, **Set
+Volume (dB)** and the general shelf's **Is Playing** landed a day before the Audio shelf existed.
+The Audio module then authored the same four questions on the page a reader looks for them on -
+against the same node type, with the same parameters and the same emitted call - and the two
+spellings have sat side by side ever since. Each older row now names its newer one:
+
+| Written today | Points at | The whole of the map |
+| --- | --- | --- |
+| *Play Sound* | *Play* | one rename: `from_position` is called `from` over there |
+| *Stop Sound* | *Stop* | nothing to rename, nothing to fill |
+| *Set Volume (dB)* | *Set Volume* | nothing to rename, nothing to fill |
+| *Is Playing* (General Conditions) | *Is Playing* (Audio) | nothing to rename, nothing to fill |
+
+**Nothing about the older rows moved.** Same id, same template, same place in the picker, same
+emitted byte. A sheet written on *Play Sound* five versions ago compiles to the line it always did,
+and will go on doing so. What the address adds is a muted line on the selected row, a count on the
+head band, and a Migrate button that has somewhere to send it.
+
+These four also show the cheapest shape an address can have: **both ends write the same bytes**. A
+`.gd` sheet derives its rows from the file every time it is opened, so `play(0.5)` reads back as the
+verb that stands there today and no `.gd` sheet gains a migration row at all - nothing to fail a
+branch gate, nothing to appear in a diff. A stored `.tres` sheet writes down which verb each row was
+picked from, so it reports both rows and says neither asks anybody anything.
+
+*Playback Position*, the fifth row of that same family, is deliberately **not** addressed: an
+expression is not a row, so nothing could ever act on the address.
+
+### The pair that was turned down, and why that is worth knowing
+
+The pair that came closest and was withdrawn was the **State
 Machine** pack's *Go to state* and *Current state is* pointing at the built-in object-state *Go To
-State* and *Is In State* - the same questions, one renamed parameter each - and it was withdrawn,
-for two reasons worth knowing if you are about to write an address of your own.
+State* and *Is In State* - the same questions, one renamed parameter each. It was turned down for
+two reasons worth knowing if you are about to write an address of your own.
 
 **The value has to fit the slot as it stands.** The pack's parameter is a state NAME, so a row holds
 the quoted literal a text field writes (`"chasing"`). The object-state parameter is a member of the
@@ -262,7 +291,11 @@ The one chip on a per-sheet line is **Apply per sheet…**, and it opens that sh
 **Nothing applies from the report.** A report that rewrote files from a list nobody was looking at
 would be the fatal version of this feature, so the report's only power is to open a door.
 
-**`EventSheets.migration_report()`** is the same answer as data, for a build script or a branch gate:
+**`EventSheets.migration_report()`** is the same answer as data - the in-editor twin of the branch
+gate, for a Tool sheet, an editor plugin or a script you run from the Godot editor. **It is not what
+CI runs.** The command a branch gate runs is `tools/verify_sheets.gd`, whose fourth check reads this
+exact report and fails on the rows that ask; the recipe is under *The branch gate is two questions*
+below.
 
 <!-- no-figure -->
 ```gdscript
@@ -270,6 +303,12 @@ for row: Dictionary in EventSheets.migration_report():
 	if row["asks"]:
 		print("%s event %d still asks: %s" % [row["sheet"], row["row"], row["before"]])
 ```
+
+The report reads every stored `.tres` sheet and a capped sample of the `.gd` ones, and the Doctor's
+summary line says which. Pass `true` - `EventSheets.migration_report(true)` - to read every script
+instead. That is minutes rather than seconds on a big project, which is why it is opt-in and why the
+default is the sample: a `.gd` sheet derives its rows from the file every time it is opened, so a
+line whose verb is gone has no lift entry left to match and there is nothing in it to find.
 
 One entry per row migration has something to say about, sorted and deterministic:
 
@@ -385,11 +424,7 @@ Four details are worth knowing before you press anything:
   away, rather than asking for anything.
 - **The old version goes to the backup ring first.** Every file the update is about to overwrite or
   remove is copied into the same per-file ring a sheet save uses, before the first new byte lands,
-  and the line printed afterwards says how many went and names the folder they are in. That ring is
-  a folder of files rather than a button: the editor's Restore menu restores **the sheet in front of
-  you**, so a pack guide or icon the update took over is recovered by copying it back out of the
-  ring. Knowing which is the point - a promise about a door that does not exist is worse than no
-  promise.
+  and the line printed afterwards says how many went and names the folder they are in.
 - **The dry run answers the vocabulary the update would leave**, not the one you have. The
   forwarding addresses it is about are the incoming version's, and those do not exist in the packs
   installed today.
@@ -401,6 +436,32 @@ instantiated, so its `_init` and any static initialiser execute, and then it is 
 is what the live registry does for every pack you have installed; the difference here is that this
 one is a version you have not accepted yet. An archive whose code you would not run is an archive
 not to open.
+
+### Restore: the way back out of an update
+
+The ring is not only a folder any more. **Restore…** on a pack's row in the addon manager lists
+what the ring is holding for that pack - every earlier version of every file, newest first, with when
+that copy was taken and how big it is - and writes the one you choose back over the file in the pack.
+
+Three things about it are worth saying plainly.
+
+**It is one edit you can undo.** Ctrl+Z writes back the bytes that were there before the restore. A
+file that was not in the folder at all - one an update *removed* - is removed again instead. So
+pressing the button is not a decision you have to be sure about.
+
+**A file the update removed is listed, and says so.** That is the case people actually come here for:
+the pack no longer mentions it, the record was re-stamped over the folder the update left, and only
+the ring remembers it existed. Such a file is offered when its place in the pack can be known for
+certain rather than guessed - a ring folder's name is the file's whole path with the separators
+replaced by underscores, which two different paths can spell the same way, and a door that guessed
+where to write would only have to be wrong once.
+
+**The ring itself is never touched.** Restore reads it and copies out of it. Only a save or an update
+ever adds to it, and only its own pruning ever takes anything out.
+
+The editor's own **Restore** menu is a different door and stays what it was: it restores *the sheet
+in front of you*, loading a backup into the editor as an unsaved change. This one restores a pack's
+files, which are rarely sheets at all - a guide, an icon, a translation table.
 
 ### The registry dump
 
@@ -603,12 +664,13 @@ says so in one line.
 **Does it hold the contracts?** The verify command above, in CI, so a branch cannot merge a file that
 does not parse, will not come back byte for byte, or declares one local twice.
 
-**Is it leaving a decision for somebody else?** That is the fourth check, and the report behind it is
-`EventSheets.migration_report()`. A row that does not `ask` can be rewritten on one click with a
-receipt in front of you. A row that asks cannot be rewritten by anything, so landing a branch full of
-them moves the decision onto whoever opens the file next month. That is what the gate is for - not
-because those rows are broken, but because the person who should decide is the one looking at the
-sheet.
+**Is it leaving a decision for somebody else?** **The same command's fourth check** - there is no
+second command to add, and nothing for CI to call into the editor for. It reads the same report
+`EventSheets.migration_report()` serves in the editor and fails on the rows that `ask`. A row that
+does not ask can be rewritten on one click with a receipt in front of you. A row that asks cannot be
+rewritten by anything, so landing a branch full of them moves the decision onto whoever opens the
+file next month. That is what the gate is for - not because those rows are broken, but because the
+person who should decide is the one looking at the sheet.
 
 ### Reviewing the migration commit itself
 

@@ -21,8 +21,9 @@ Every template is plain GDScript over native calls. No runtime, no helper librar
 2. [Core concepts](#core-concepts)
 3. [Reference tables](#reference-tables)
 4. [How Fit Text To Label works](#how-fit-text-to-label-works)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [How Reveal Text works](#how-reveal-text-works)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -134,6 +135,38 @@ These pad; they never cut. They only truly line up in a MONOSPACE font.
 | Text Fits In Width | CONDITION: true when the text would draw no wider than that many pixels - the check for a control you are about to fill or size, before it exists on screen. | `{font}.get_string_size({text}, HORIZONTAL_ALIGNMENT_LEFT, -1.0, {font_size}).x <= float({width})` |
 | Wrapped Text Height | How TALL the text becomes once it wraps into a box that wide, in pixels. | `{font}.get_multiline_string_size({text}, HORIZONTAL_ALIGNMENT_LEFT, float({width}), {font_size}).y` |
 
+### Text (effects, on a RichTextLabel)
+
+Godot's `RichTextLabel` already knows six effects as BBCode tags. These rows write the engine's own
+tag, so the label needs nothing installed and the emitted line is the line you would have typed. Two
+shorthands appear in the templates, written out here so the table stays readable:
+
+- **S** (the text dial) is `float(Engine.get_meta("text_size_scale", 1.0))` - the shipped Text Size
+  setting, so an effect grows with the text it is drawn on.
+- **C** (the calm factor) is `(0.3 if bool(Engine.get_meta("no_flashing", false)) else 1.0)` for an
+  effect that MOVES letters, and `(0.0 ...)` for one that CYCLES COLOUR - so Reduce Flashing turns a
+  shake into a drift and holds a rainbow still. A frequency of zero is the engine's own way of
+  spelling that, not a second mechanism.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Text With Effect | ACTION on a RichTextLabel: puts words on the label already wearing an effect - wave, shake, tornado, rainbow, fade, pulse, or one of your own. Takes an optional **On node**. | `{target.}bbcode_enabled = true` then, for wave, `{target.}text = "[wave amp=%s freq=5]" % ({strength} * S) + {text} + "[/wave]"` - one line per effect, each filling its own knob |
+| Wrap Selection In Effect | ACTION: puts the same tag around a STRETCH of the text already on the label, counted in characters, leaving the rest alone. | `{target.}text = {target.}text.insert(int({to}), "[/wave]").insert(int({from}), "[wave amp=%s freq=5]" % ({strength} * S))` |
+| Clear Effects | ACTION: takes every effect back off and leaves the words. Asks the label for its own parsed text, so there is no tag list to keep up to date. | `{target.}text = {target.}get_parsed_text()` |
+| Effect Is Active | CONDITION: true while the label's text carries that effect's tag. Type your own effect's name to ask about that instead. | `{target.}text.contains("[{effect}")` |
+| Install Text Effect | ACTION: teaches this label one `RichTextEffect` you wrote yourself, whose bbcode name then works in a tag like any of the six. | `{target.}install_effect({effect})` |
+
+### Text (the reveal)
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Reveal Text | ACTION on a RichTextLabel: types a line out one character at a time, at the speed you name, with a sound per character when you name one. | a multi-line block, see [How Reveal Text works](#how-reveal-text-works) |
+| Skip Reveal | ACTION: ends the reveal now, shows the whole line, and answers where a reveal that ran out answers. | `if {target.}has_meta(&"reveal"):` / `({target.}get_meta(&"reveal") as Tween).kill()` / `{target.}visible_ratio = 1.0` / `_on_reveal_finished()` |
+| Pause Reveal At | ACTION: holds the reveal for a beat at one character - the comma pause. Drop it BEFORE the Reveal Text row; it writes the beat down on the label and the reveal reads it. | `var __pauses: Dictionary = {target.}get_meta(&"reveal_pauses", {})` / `__pauses[int({at})] = float({seconds})` / `{target.}set_meta(&"reveal_pauses", __pauses)` |
+| Is Revealing | CONDITION: true while a line is still typing itself out. | `{target.}visible_ratio < 1.0` |
+| Revealed Fraction | How much of the line is showing, 0 to 1. | `{target.}visible_ratio` |
+| On Reveal Finished | TRIGGER: runs when a reveal reaches its last character, and when Skip Reveal ends one early. | a named moment - the handler is `_on_reveal_finished()` |
+
 ## How Fit Text To Label works
 
 Fit Text To Label is the only multi-line template in this vocabulary, and the shape is worth knowing
@@ -168,6 +201,55 @@ control.
 
 That is the same set of edge rules the character-based Shorten expressions follow, deliberately: two
 families that disagree about the same string would be worse than one that is only approximate.
+
+## How Reveal Text works
+
+Reveal Text is the other multi-line template here, and the shape is worth knowing because it explains
+what the row can do that a smooth fade of `visible_ratio` cannot.
+
+**It is a tween of callbacks, one per character.** The row asks the label how many characters it has
+once the tags are parsed - `get_total_character_count()` counts the WORDS, not the markup - and then
+adds one delayed callback per character:
+
+```gdscript
+bbcode_enabled = true
+text = "The bridge is out."
+visible_characters = 0
+if has_meta(&"reveal"):
+	(get_meta(&"reveal") as Tween).kill()
+var __voice_a1: Node = $Blip
+var __pauses_a1: Dictionary = get_meta(&"reveal_pauses", {})
+var __step_a1: float = 1.0 / maxf(1.0, float(40))
+var __reveal_a1: Tween = create_tween()
+set_meta(&"reveal", __reveal_a1)
+for __at_a1: int in range(1, get_total_character_count() + 1):
+	__reveal_a1.tween_callback(set_visible_characters.bind(__at_a1)).set_delay(__step_a1)
+	if __voice_a1 != null:
+		__reveal_a1.tween_callback(__voice_a1.play)
+	if __pauses_a1.has(__at_a1):
+		__reveal_a1.tween_interval(float(__pauses_a1[__at_a1]))
+__reveal_a1.tween_callback(_on_reveal_finished)
+```
+
+That is what buys the two things a typed line needs and an interpolation cannot give: a **sound on
+each character**, and a **pause held at a named one**.
+
+**The tween is parked on the label.** `set_meta(&"reveal", ...)` is what lets the next Reveal Text -
+or a Skip Reveal - end the one that is going, which is the difference between a player pressing the
+button twice and two lines typing over each other.
+
+**The ending is a named function, not a signal.** A `RichTextLabel`'s own `finished` signal is about
+the document being LOADED, not about a reveal running out, so there is nothing to connect: the last
+callback calls `_on_reveal_finished()` by name, and Skip Reveal calls it directly. That function is
+what the sheet's **On Reveal Finished** event compiles to, so an early skip and a reveal that ran out
+are the same moment - which is what lets the Continue prompt be written once. A sheet with a Reveal
+Text row and no On Reveal Finished event does not parse, which is the plainest way a missing answer
+can announce itself.
+
+**Both reading rows ask the ratio, not the count.** `visible_characters` and `visible_ratio` are two
+faces of one number: 3 of 8 characters reads back as a ratio of 0.375, and writing the ratio as 1.0
+reads back as `-1` characters, the engine's spelling for "all of them". Asking the ratio is therefore
+total whichever face was written.
 
 ## Use cases
 

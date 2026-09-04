@@ -39,8 +39,8 @@ somebody else's slow disk.
   Godot tells anybody. It reads the folder on an interval and compares the reading with the one
   before it. A change is noticed on the next look and no sooner.
 - **Two readings, one difference.** A look records file name against modified time. A name in the
-  new reading that was not in the old one is **appeared**; a name in both with a newer time is
-  **changed**; a name in the old one that is gone is **removed**. That dictionary comparison is the
+  new reading that was not in the old one is **appeared**; a name in both whose time is DIFFERENT from
+  the one it had is **changed**; a name in the old one that is gone is **removed**. That dictionary comparison is the
   entire mechanism, and it is in the emitted script where you can read it.
 - **The first look is the baseline.** Starting a watch records what is already there and raises
   nothing, so a folder that already holds two hundred files is not two hundred things that just
@@ -112,7 +112,7 @@ happened; the events start at the second look.
 | Name | Parameters | Description |
 |---|---|---|
 | On A File Appeared | `path` | Raised on the first look that finds a file the look before did not. |
-| On A File Changed | `path` | Raised when a file that was already there has a newer modified time than it had at the last look. |
+| On A File Changed | `path` | Raised when a file that was already there has a DIFFERENT modified time from the one it had at the last look. Usually that means newer; a file restored from a backup or copied back over is older and is still a change. |
 | On A File Removed | `path` | Raised on the first look that no longer finds a file the look before did. The path names what went; there is nothing left at it to read. |
 
 Every trigger hands back the **whole path**, folder and all, so a handler can read the file without
@@ -293,6 +293,16 @@ On A File Removed path -> SlotMenu | Rebuild
   interval of two seconds means "within two seconds", never "immediately".
 - **A modified time is stamped to the nearest second.** A file written twice inside one second looks
   unchanged. That is a limit of the filesystem, not of this pack.
+- **Changed means the time moved, not that it moved forward.** Restoring a file from a backup or
+  copying an older copy over it puts an OLDER time on it, and that really is a change, so it raises
+  On A File Changed like any other.
+- **Change the folder or the filter through the rows, not the Inspector, while a watch is running.**
+  The baseline was read under the old folder and the old pattern, so the next look compares the new
+  folder against the old folder's files - raising On A File Removed for names that merely stopped
+  matching and On A File Appeared for ones that just started. Stop Watching, then Watch Folder again.
+- **A tenth of a second is the shortest gap.** `look_every_seconds` is floored there, because zero
+  would be a directory read every single frame, which is not what anybody means by an interval. The
+  head's file band says the interval the watcher will really keep, not the number typed in the row.
 - **A program that writes a file in several goes can raise On A File Changed more than once** for
   what a person would call one save. Debounce in your own row if that matters.
 - **The first look raises nothing.** If you want to react to what is already there, read

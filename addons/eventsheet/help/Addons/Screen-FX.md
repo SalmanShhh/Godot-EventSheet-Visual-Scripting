@@ -2,8 +2,8 @@
 
 Screen FX is a Godot EventSheets pack for the effects that happen to the whole screen: a shockwave
 ring from a point in the world, a fade to a colour you can wait on, a blur, and a chromatic pulse -
-and on top of those, the **post stack**: a named list of full-screen effects drawn in order, nine of
-them shipped, any of them one row away.
+and on top of those, the **post stack**: a named list of full-screen effects drawn in order, twelve
+of them shipped, any of them one row away.
 
 A full-screen effect in Godot is a CanvasLayer holding a ColorRect whose shader reads
 `hint_screen_texture`. That is three nodes and a shader before a game gets its first flash of white,
@@ -115,7 +115,7 @@ and its own shader, drawn in the order the list holds them.
 does not hold a glitch it borrows one, flashes it, and gives it back. That is the jam form, and it is
 the row to reach for first.
 
-**Nine effects ship with the pack**, each one shader file beside the script:
+**Twelve effects ship with the pack**, each one shader file beside the script:
 
 | Word | What it looks like | Its own dials |
 |---|---|---|
@@ -128,6 +128,9 @@ the row to reach for first.
 | `fisheye` | The picture bulges out of the middle, or pinches into it. | `bulge`, `zoom` |
 | `glitch` | Bands jump sideways and the colour channels come apart. | `band_height`, `jump`, `colour_split`, `glitch_speed` |
 | `letterbox` | Solid bars close in from the top and the bottom. | `bar_depth`, `bar_colour`, `feather` |
+| `bloom` | The bright parts spill light into what is around them. | `threshold`, `spread` |
+| `saturate` | The colours get stronger, the way a win should feel. | - |
+| `desaturate` | The colours drain away, the way danger should feel. | - |
 
 Every one also has `strength`, which is the dial the rows turn: 0 hands the screen back untouched, 1
 is the whole effect.
@@ -140,8 +143,9 @@ too. **Move Post Effect Before** is how you say which.
 wants. Give it a name (`Add Post Effect  vignette  danger  0.0`) when you want two of the same
 effect, or when a later row should be able to find this one without knowing what it is.
 
-**What it costs.** Every entry reads the whole screen back. That is one screen read per pixel of the
-viewport, per entry that is on. Two or three is a look; nine is a bill, and the frame rate will say
+**What it costs.** Every entry reads the whole screen back through a BackBufferCopy of the viewport,
+taken once per entry that is on - so each one is a full-screen copy plus a full-screen shader pass,
+every frame it is drawing. Two or three is a look; twelve is a bill, and the frame rate will say
 so. **Post Effect Count** reads how many are drawing right now, which is the number to look at when
 the frame rate has gone.
 
@@ -226,12 +230,13 @@ picks which one it means.
 | **Chromatic Pulse** | `strength` (float, default `0.6`), `seconds` (float, default `0.35`) | Pulls the colour channels apart and lets them snap back. |
 | **Clear Screen Effects** | none | Ends every effect at once. |
 | **Set Ring Seconds** | `value` (float) | How long a ring takes to cross. |
-| **Add Post Effect** | `effect` (one of the nine words), `called` (String, default empty), `strength` (float, default `0.6`) | Adds one effect to the top of the post stack and turns it on. An empty name calls it after its effect. |
+| **Add Post Effect** | `effect` (one of the twelve words), `called` (String, default empty), `strength` (float, default `0.6`) | Adds one effect to the top of the post stack and turns it on. An empty name calls it after its effect. |
 | **Pulse Post Effect** | `effect`, `strength` (float, default `0.6`), `seconds` (float, default `0.35`) | Turns an effect up and lets it fall back in one row, borrowing an entry and giving it back if the stack did not hold one. |
 | **Remove Post Effect** | `called` (String) | Takes one entry off the stack and frees its rectangle, so it stops costing anything. |
 | **Enable Post Effect** | `called` (String) | Turns one entry back on at the strength it already holds. |
 | **Disable Post Effect** | `called` (String) | Turns one entry off without forgetting how far up it was. |
 | **Set Post Strength** | `called` (String), `strength` (float, default `1.0`) | Sets how far one entry goes, at once. |
+| **Set Post Dial** | `called` (String), `dial` (String), `value` (any) | Sets one of that effect's OWN dials - the vignette's colour, the letterbox's depth, the colour grade's lookup image. The careful control, one dropdown deeper than strength. |
 | **Fade Post Strength** | `called`, `to` (float), `seconds` (float, default `0.5`), `then_back_seconds` (float, default `0.0`) | Walks one entry's strength to a value over a time, and back again afterwards if a second time is given. |
 | **Move Post Effect Before** | `called` (String), `before` (String, empty for last) | Moves one entry so it is drawn before another, which is what decides whose look wins. |
 | **Draw Post Effects Below** | `other` (CanvasLayer) | Draws the whole post stack under that layer, so the interface on it stays sharp. |
@@ -257,6 +262,7 @@ picks which one it means.
 |---|---|
 | **Ring Seconds** | How long a shockwave takes to cross the screen. |
 | **Post Strength** | How far one entry currently goes, 0 to 1, after the accessibility dials have had their say. |
+| **Post Dial** | What one of that effect's own dials holds - the other half of Set Post Dial, for a row that nudges a value rather than naming one. Takes `called` and `dial`. |
 | **Post Effect Count** | How many post effects are drawing right now - the number to look at when the frame rate has gone. |
 | **Current Look** | The name of the look on the screen, or empty when the stack was built row by row. |
 | **Post Effect Words** | Every effect word the stack knows, so a settings screen can list them without a second copy. |
@@ -463,25 +469,32 @@ On Debug Key Pressed
   -> ScreenFx: Add scanlines at 0.4
   -> ScreenFx: Add dither at 0.6
   -> ScreenFx: Add film grain at 0.2
-  -> ScreenFx: Save the look as user://looks/old_machine.tres
+  -> ScreenFx: Save the look as res://looks/old_machine.tres
 ```
 
-Run it once while you tune the numbers, then delete the event and use the file.
+Run it once while you tune the numbers, then delete the event and use the file. Save to `res://` to
+author a look you keep in the project and share; save to `user://` when a running game is writing a
+look for one player.
 
 ### 21. Wearing that look on start
 
+A look field takes the RESOURCE, not a path, so what goes in the slot is the line that loads one.
+Press **Browse…** beside the field and pick the file - it writes the line for you:
+
 ```
 On Ready
-  -> ScreenFx: Use the look OldMachine
+  -> ScreenFx: Use the look preload("res://looks/old_machine.tres")
 ```
+
+`preload` for a file in your project; `load("user://...")` for one only the player's machine has.
 
 ### 22. Crossing between two looks at nightfall
 
 ```
 On Night Fell
-  -> ScreenFx: Blend to the look Night over 4.0 s
+  -> ScreenFx: Blend to the look preload("res://looks/night.tres") over 4.0 s
 On Day Broke
-  -> ScreenFx: Blend to the look Day over 4.0 s
+  -> ScreenFx: Blend to the look preload("res://looks/day.tres") over 4.0 s
 ```
 
 ### 23. Underwater, held for as long as it lasts
@@ -609,6 +622,8 @@ shows a half-faded frame.
   the empty Clean.
 - **A colour grade needs its table before it does anything.** With no image assigned, `lut_size`
   rests at 0 and the effect hands the screen back untouched however far up its strength is. That is
-  deliberate: mapping every pixel through a blank image would paint the screen white.
+  deliberate: mapping every pixel through a blank image would paint the screen white. Two Set Post
+  Dial rows are the whole setup: `grade_table` to your lookup image, `lut_size` to the number of
+  levels it holds.
 - **Reduced flashing is not this pack's setting.** Use the built-in Set No Flashing row; the stack
   reads it and holds every amplitude and every rate under it for you.

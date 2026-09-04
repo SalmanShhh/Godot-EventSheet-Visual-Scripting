@@ -164,6 +164,84 @@ What changed in the build you have installed (v0.17.0), in the words the release
   drove the real scene to prove it: the moment played, the look on the screen was the one the row had
   just saved, and the picture was taken on the first beat with the split still on it.
 
+### Fixed in the blend and post pass
+
+- **The accessibility dials get one say over a strength, not two.** An entry in either post stack
+  kept the strength AFTER the effect-strength dial and the no-flashing ceiling had been applied, and
+  every walk then fed those already-dialled values back through the same clamp. Under a
+  half-strength dial a pulse fell back to an eighth instead of a quarter, a fade landed at its
+  target times the dial squared, and a look saved from the live stack recorded what one player's
+  settings allowed rather than what the rows asked for - decaying a little more on every
+  save-and-wear. An entry now remembers the REQUEST and the dials have their say once, on the way to
+  the shader or the CompositorEffect. Post Strength still answers with what is on the screen, so no
+  row changed its meaning.
+- **See As and Correct Colours For are exempt from both dials.** A colour-vision correction is what
+  makes the screen readable, not an amplitude that can strobe - but it went through the same clamp
+  as everything else, so a player who had asked for no flashing got the correction capped at 30% and
+  one who had turned the effect strength down lost it altogether. Both rows now land whole.
+- **A look and a moment are picked from a file.** The four rows that take one used a `resource_path`
+  hint no editor answered, so the slot was a bare text box and both guides showed spellings that do
+  not parse - a bare path is a parse error and a quoted one is a String handed to a Resource
+  parameter. The hint now opens a path field with a Browse button that writes the loading call
+  itself: `preload(\"res://...\")` for a project file, `load(\"...\")` for one only the player's machine
+  has. Save Look offers `res://` now, because a look you can open in the Inspector and share is a
+  project file rather than one in the player folder.
+- **A dropped Moment, and a dropped transition, arrive whole.** Moment, Define Moment, Go To Scene
+  With and Reload Scene With shipped with empty fields: their builders set starting values, but
+  those were authoring-time metadata that never reached the emitted pack, so a dropped Moment played
+  nothing at a strength of zero and a dropped transition was a tenth of a second with no shape.
+- **A shaded transition is held over the no-flashing floor too.** The seven shapes read the
+  accessibility flag nowhere, so a blinds or a dissolve asked for at a tenth of a second swept the
+  whole screen and back at full cover for a player who had asked for no flashing - which is a flash
+  whatever shape it is drawn in.
+- **An effect's own dials are a row.** Set Post Dial and Post Dial land beside Set Post Strength on
+  both stacks, under the same names on the screen and on the camera. Above all this rescues the
+  colour grade, which was a silent no-op in every form the pack offered: with no lookup image its
+  table size rests at 0 and the shader hands the screen straight back however far up its strength
+  is. Two rows are now the whole setup.
+- **The fifty-four blend and post rows open as rows, not as code.** 42 of them showed as verbatim
+  code blocks when the pack was opened, which contradicts each pack's own note that a pack is an
+  event sheet you extend by editing it. Three things were in the way and each is fixed where it
+  lives: the emitter can now write the one-line `@ace_param` form a parameter with help text or a
+  starting value needs (and the lifter reads it back); the plain prose above an annotated verb is
+  carried verbatim as its doc comment instead of being rewritten as one `@ace_description` line; and
+  a verb answering with a `PackedStringArray` no longer falls to the custom-return branch the
+  trailing scan refuses. Every other pack emits byte-identically.
+- **A blend the screen is not doing is not recorded.** Asked for a native mode on an item wearing
+  somebody else's shader, Blend As recorded the mode and left the material alone, so Blend Mode Is
+  answered \"add\" about an item nothing was adding. Both halves of the row now refuse without
+  recording, because that condition answers what the screen is DOING.
+- **On a renderer with no compositor, \"does nothing\" means nothing.** The two outline rows marked
+  their meshes onto the mask layer and only then asked whether this renderer has a compositor, so on
+  Mobile and Compatibility they left every mesh switched onto visual layer 20 with nothing to take
+  it off again.
+- **A moment stops walking the whole tree per beat.** The Moment row cleared its search for the
+  Screen FX layer on every call, so a game with no such layer paid a full recursive walk on every
+  hit, every kill and every danger moment. A scene change is what asks again now.
+- **The effects sweep opens a script for spellings a row writes, not names it mentions.** Three of
+  the Doctor's words were bare class and property names, and every script that merely named one in a
+  comment or a type was fully opened as a sheet in memory. Narrowed to the write, the cast and the
+  calls the rows emit, the sweep opens 43 scripts of this project instead of 58.
+- **A cover is not an interface.** The note about which side of the interface the post stack draws
+  on found the interface by taking the first CanvasLayer with any Control under it - which is the
+  effects layer itself (a CanvasLayer holding one ColorRect called Screen) and nearly every
+  hand-rolled fade. A layer whose only Controls are full-screen rectangles is a cover now.
+- **The files a pack ships beside its script are gated.** Screen FX ships twelve shaders and a
+  scene, Blend Modes fifteen more, Scene Flow seven, the Post Kit six compute shaders, Juice six
+  moment files - all compiler output, and all invisible to a drift gate that reads only the pack
+  `.gd`. One derived check now reads every `ship_files` call out of the builder that makes it, so a
+  pack that starts shipping a companion tomorrow is gated the day it does.
+- **The screen read is a full-viewport copy, said where it is paid.** Every blend shader header and
+  all three pages priced a screen-reading blend per pixel the item covers; in Godot 4 the sample is
+  served out of a BackBufferCopy of the whole viewport, taken once per blending item, so the bill is
+  counted in items rather than in pixels.
+- **The Screen FX guide counted nine effects while the pack shipped twelve** - and the three it left
+  out, bloom, saturate and desaturate, are the ones the starter moments are made of.
+- **Two blend-strip shelf titles, and five node fields.** Native and Light and dark fell back to
+  English in every locale (they are read out of a table, so the harvester cannot see them), and five
+  rows whose node parameter had no starting value emitted a line that does not parse the moment they
+  were dropped.
+
 ### Fixed
 
 - **The Object Pool pack's Despawn row waits for the frame, like the Retire row beside it.** Handing
@@ -614,6 +692,16 @@ What changed in the build you have installed (v0.17.0), in the words the release
   no repair, because the answer is a decision about the scene. The pre-read gained the word
   `load(scene_file_path)` so that a script whose only spawning is a self copy is opened at all -
   those rows write no `add_child(` of their own.
+- **Spawn Safely, beside the Object Pool's frozen Spawn.** Handing a copy OUT of a pool is a reparent
+  exactly as handing one back is, and Godot refuses a reparent while the physics server is flushing its
+  queries - so a Spawn row inside a collision or area callback raised \"can't change this state while
+  flushing queries\". The shipped Spawn keeps its bytes and its timing, because a project may read the
+  copy's tree state on the very next line; the new row lands beside it, the way Spawn A Copy Safely
+  lands beside Spawn A Copy. It takes the copy out of the free list, resets it, shows it, puts it where
+  the row says and counts it active on the line, and books only the joining for the next idle moment.
+  `On Spawned` fires THERE, with the copy already in the world, so a row under that trigger can read
+  its parent - and a copy freed before the booking lands is skipped quietly, because the booking holds
+  an instance id rather than the node.
 - **The record.** The sixteen rows land in all nine translation CSVs (**103 new keys**, filled in
   eight languages), the spawning guide gains a chapter with a whole two-lane event, the emitted code
   and the trap removed for each of the five sentences, and its Doctor section, contents and reference

@@ -161,9 +161,12 @@ Two ways, and neither of them is code:
 2. **Keep it wherever you like and name it once.** Make a new `MomentResource` in your own folder
    (right-click, New Resource, MomentResource), fill in its steps, and point a name at it:
 
+The moment slot takes the RESOURCE, not a path, so what goes in it is the line that loads one.
+Press **Browse…** beside the field and pick the file - it writes the line for you:
+
 ```
 On Ready
-  -> Game | JuiceBehavior: Define Moment  "hit"  res://feel/my_hit.tres
+  -> Game | JuiceBehavior: Define Moment  "hit"  preload("res://feel/my_hit.tres")
 
 On Enemy Hit
   -> Enemy | JuiceBehavior: Moment  "hit"  1.0

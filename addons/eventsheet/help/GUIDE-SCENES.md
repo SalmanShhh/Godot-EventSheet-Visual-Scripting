@@ -363,12 +363,29 @@ because a scene that names another scene names a file with a table of its own, a
 opens the one file you gave it. So a true answer means *nothing comes in with this file that the
 game did not ship with*, which is a promise it can keep.
 
-It reads **tags, not lines**, because that is what Godot's own parser reads: `type = "Script"` with
+It reads **tags as tags**, because that is what Godot's own parser reads: `type = "Script"` with
 spaces around the `=` is the same tag as `type="Script"`, and a tag may run over two lines. The
 threat here is a file somebody wrote by hand, so "the editor does not write it that way" is not an
 answer - both of those spellings load the script they name. And anything it cannot read as a scene
 table - a tag that never closes, a resource with no type, a binary `.scn`, a file that is not there
 - answers false, because an unfamiliar file is not a file that has been cleared.
+
+It reads the **node bodies** too, because a body line carries no tag at all and the engine's value
+parser reads it anyway: `script = Resource("user://mod.gd")` is resolved by loading that path and
+`script = Object(GDScript,"script/source":"...")` by making the object and compiling the source
+inside it, neither of them writing a resource tag for a tag-reader to find. Both constructors are
+refused wherever they appear; the honest `ExtResource(` and `SubResource(` are matched on a word
+boundary and pass. A resource tag carrying a **backslash** is refused as well: Godot decodes escapes
+in a tag and this reading compares the letters as written, so the two would disagree about what a
+type is called, where a path goes and where the tag ends.
+
+**A true answer means the file brings no code of its own. It does not mean the file is inert.** A
+cleared scene may still hold a `[connection]` naming one of *your* methods with arguments of its own,
+an `Animation` track calling one of your methods at a keyframe, or a node with an
+`instance_placeholder` that loads another scene when something calls `create_instance()` on it. None
+of those brings a stranger's code in; every one of them can reach yours. A scene from outside is
+still somebody else's **data**, and the methods it can reach are worth the same thought as any other
+input.
 
 **A question mentioned is not a question answered.** `if not <the question>` and `if debug or <the
 question>` both run the body on exactly the files the question refused, so neither counts as a guard
