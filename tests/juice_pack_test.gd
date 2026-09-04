@@ -169,6 +169,31 @@ static func run() -> bool:
 	behavior.chromatic_shake(12.0, 0.4, "reducing", 90.0)
 	all_passed = _check("a fixed angle points the split down that line", (behavior._chroma_shake_direction() as Vector2).is_equal_approx(Vector2(0.0, 1.0)), true) and all_passed
 	behavior.stop_chromatic_shake()
+	# ── The WANDERING direction, which is the one a row opens with. Everything above runs with no
+	# noise at all (script.new() never runs _ready), so the default path - the only one a designer
+	# meets without typing an angle - is the one path the rest of this file cannot see. A noise is
+	# seeded by hand here and taken away again afterwards, and the question asked of it is the whole
+	# promise of the verb: a direction one pixel long, so the magnitude the row asks for and the
+	# expression answers is the width the screen is actually given. ──
+	behavior._noise = FastNoiseLite.new()
+	behavior._noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	behavior._noise.frequency = 1.0
+	behavior._noise.seed = 20260904
+	behavior.chromatic_shake(12.0, 10.0, "constant", -1.0)
+	var off_the_unit: int = 0
+	var angles_seen: Dictionary = {}
+	for step: int in range(120):
+		behavior._chroma_shake_time = float(step) * 0.05
+		var walked: Vector2 = behavior._chroma_shake_direction()
+		if not is_equal_approx(walked.length(), 1.0):
+			off_the_unit += 1
+		angles_seen[int(roundf(walked.angle() * 8.0))] = true
+	all_passed = _check("every wandering direction is one pixel long", off_the_unit, 0) and all_passed
+	all_passed = _check("and the split still wanders rather than sitting still", angles_seen.size() > 8, true) and all_passed
+	all_passed = _check("so the shift handed to the shader is as wide as the expression says",
+		snappedf((behavior._chroma_shake_direction() as Vector2).length() * behavior.chromatic_shake_magnitude(), 0.0001), 12.0) and all_passed
+	behavior.stop_chromatic_shake()
+	behavior._noise = null
 	# No flashing halves what the player sees AND how fast the split wanders.
 	Engine.set_meta("no_flashing", true)
 	behavior.chromatic_shake(12.0, 0.4, "reducing", -1.0)

@@ -118,6 +118,7 @@ Attach to a node to move it.
 - [Physics Car](Physics-Car.md) - a force-driven arcade car on a RigidBody2D, with grip and drift.
 - [Weapon Kit](Weapon-Kit.md) - fire rates, ammo, reloads, and spread for a weapon.
 - [Health](Health.md) - hit points with absorption and shield pools, damage and heal events.
+- [Status Effects](Status-Effects.md) - burn, poison, slow, stun, freeze and shield as StatusEffectResource files you own: a status is a word and a clock, its ticks go through the Health pack's typed damage, and its tint, stacking rule and cleansability live on the file.
 - [StatForge](StatForge.md) - stats as a buff stack: add/multiply/override modifiers with tags, sources, timers, threshold rules, and .tres loadouts (StatSheetResource).
 - [Simple Abilities](Simple-Abilities.md) - cooldown-gated abilities you trigger by name.
 

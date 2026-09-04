@@ -1,6 +1,6 @@
 # Inspector Drawers & Export Options Guide
 
-Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, min-max ranges, direction dials, colour swatches, texture thumbnails, and inline curves, plus **decor** (accent section headers, info note panels) and every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is a rich-inspector experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with - and **hovering any exported variable in the sheet shows a live preview** of exactly what they will get.
+Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, min-max ranges, direction dials, colour swatches, texture thumbnails, inline curves, numbers that carry their unit, and lists of cards, plus **decor** (accent section headers, info note panels, a live preview card, draggable viewport handles) and every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is a rich-inspector experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with - and **hovering any exported variable in the sheet shows a live preview** of exactly what they will get.
 
 ![Inspector drawers plus the header and info-note decor](images/inspector-drawers.png)
 
@@ -99,7 +99,7 @@ naming popup.
 
 ## 4. The Drawers (the rich controls)
 
-A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **"Show as"** dropdown for the types that can host one (the default is always "Default field", so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). There are eight in total, each documented below; the image at the top of this guide shows a representative set, not all of them.
+A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **"Show as"** dropdown for the types that can host one (the default is always "Default field", so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). There are eleven in total, each documented below; the image at the top of this guide shows a representative set, not all of them.
 
 ### Progress bar (int / float)
 
@@ -127,6 +127,24 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **Use case.** A `spawn_gap` of 10-40 seconds, a `damage_range` rolled per hit, or camera `zoom_bounds` - anywhere the design says "between A and B".
 
+### Number with its unit (float)
+
+**What it does.** A spin box with a **unit dropdown at its right edge**: "Thickness `0.6` world", "Start angle `0.25` turns". The value is **stored in one unit** (the export line says which) and **shown** in whichever the dropdown says, so switching the dropdown re-reads the number without moving it. A designer stops guessing whether a thickness is pixels or world units, because the field says so.
+
+**How to use it.** On a `float` variable pick the **Unit** look and fill its one field the way the marker reads it: `kinds=px|world|screen, store=world`. The first kind listed is the stored one when `store=` names something not in the list. Leaving the field empty gives the length kinds.
+
+**Emits:**
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=world") var thickness: float = 2.0
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=deg|turn|rad,store=deg") var start_angle: float = 0.0
+```
+
+**The four families it converts**, and nothing else: length (`px`, `world`, `screen`), angle (`deg`, `turn`, `rad`), time (`s`, `ms`, `frames` at the project's physics tick rate) and level (`db`, `fraction`). Inside the length family `px` and `world` are one to one, so the dropdown only relabels them; `screen` is the one that scales, and one screen unit is the project's configured viewport width in pixels. A word from outside the four families is a **pack's own label**: the dropdown shows it and the number stays exactly as typed, because there is no honest factor to apply between two words the drawer has never met. Two kinds from different families never convert into each other either.
+
+**The one rule worth repeating.** The dropdown is a **view**. The number in the file, the number the running game reads, and the number a hand-written script assigns are always in the stored unit, so nothing in an emitted sheet moves when a designer flips the dropdown.
+
+**Use case.** A `thickness` stored in world units and read in pixels while zoomed, a `hitstop` stored in seconds and read in frames, a `music_duck` stored in dB and read as a fraction.
+
 ### Editable table (Array)
 
 **What it does.** Turns an `Array` of `Dictionary` rows into an **editable grid**: one row per element, one typed cell per column (text, number, checkbox), with add / remove / move-up controls. The single most painful data-editing surface in Godot - loot tables, wave definitions, dialogue lines - becomes a spreadsheet.
@@ -144,6 +162,61 @@ A choice can also carry a **label**, written `key=Label`: the dropdown READS the
 
 **Use case.** A `loot` table designers fill row by row, a `waves` list (enemy, count, delay), or dialogue lines (speaker, text, portrait path) - all without touching Godot's generic array editor. Use an `enum(...)` column wherever a cell should only ever hold one of a fixed set of words (a shape kind, a rarity, an easing mode), so designers pick from a list instead of risking a typo.
 
+### Card list (Array of Dictionaries, each of a kind)
+
+**What it does.** The other shape a list of dictionaries takes: not a grid of identical rows, but **a list of cards, each of a different kind, each with its own fields**. A drawing prefab's shapes, a list of feedback steps, a list of spawn rules. Each card shows a stripe coloured by its category, a drag handle to reorder it, a fold arrow, an enable box, its label, a badge the schema computes, and a menu (duplicate, copy, paste over, move to top, remove). Unfolding one shows what that kind is for, then its own fields drawn with the **real drawers** (unit, toggles, swatch, curve, texture), then whatever the running game is writing back, greyed. Underneath the list sits an **Add** dropdown you can type into.
+
+Use the table drawer when every row has the same columns; use the card list when the entries have different shapes and a designer reads them one at a time.
+
+**How to use it.** Three words ride the marker and nothing else: which key holds the **kind**, which **schema** says what the kinds are, and which key colours the **stripe**. The schema is registered by the pack that owns the vocabulary (see below), so nothing in the plugin hard-codes a pack's kinds.
+
+**Emits:**
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:cards:kind=kind,schema=feedback_steps,stripes=category") var steps: Array[Dictionary] = []
+```
+
+`kind=` defaults to `kind` and `stripes=` to `category` when the marker leaves them out. **A card list whose schema was never registered still draws** (as unlabelled cards) and still saves the bytes it opened with, so a `.tres` outlives the pack that authored it.
+
+**The schema shape**, frozen once shipped exactly like an `ace_id`:
+
+```gdscript
+{
+    "kinds": [{
+        "kind": "loop_back",                            # the value stored under the kind key
+        "category": "loop",                             # groups the Add dropdown, colours the stripe
+        "label": "Loop Back",                           # the card's title
+        "help": "Moves the head back to the last Hold.",# the unfolded card's info line
+        "fields": [{"key", "label", "drawer", "default", "show_if", "link"}],
+        "live": [{"key", "label"}],                     # greyed read-only values while the game runs
+        "defaults": {"loops": 2},                       # seeded into a NEWLY ADDED card, in this order
+        "badge": func(card): return "x%d" % card.loops, # the right-hand badge text
+        "actions": [{"label": "Play this", "run": func(card): ...}],
+    }],
+    "label_key": "",     # an optional card key whose value replaces the kind's label
+    "enabled_key": "",   # an optional card key holding the enable box (absent = enabled)
+    "stripes": {},       # category -> "#rrggbb", overriding the derived colour
+}
+```
+
+A field's `drawer` word is the **same word an `eventsheet:` export marker uses** (`unit:kinds=s|ms|frames,store=s`, `toggles:a,b,c`, `swatch_row`, `curve_editor`, `texture_preview`), so there is one vocabulary to learn and one parser behind it.
+
+**Registering one** (all static, and the vocabulary is the pack's, never the plugin's):
+
+```gdscript
+EventSheets.register_card_schema("feedback_steps", my_provider)      # provider() -> the Dictionary above
+EventSheets.unregister_card_schema("feedback_steps")
+EventSheets.card_schema("feedback_steps")                            # {} when nothing is registered
+EventSheets.register_card_schema("my_steps", EventSheets.card_schema_from_aces.bind(my_aces))
+```
+
+That last line is the whole editor code a pack needs: `card_schema_from_aces` **derives** one kind per verb from ACE descriptors, taking each card's label and help from the words the picker already reads out and its fields from the verb's own parameters. A pack that adds a verb gets a card for it with no editor code at all.
+
+**A card can carry its own name and its own colour** when the schema leaves room for them: a `label_key` lets a designer rename one card in a long list, and a colour written as `"#rrggbb"` at the stripe key overrides the hue derived from its category. Where the stripe key IS the key holding the kind (which is how the Drawing Prefab colours its shapes) the swatch is not offered, because a colour written there would overwrite what the card is. The stripe colour of an ordinary category is derived from the word's own letters, so a pack that invents a category gets a stable colour with nothing to register. **Copy all** and **Paste all** under the list move the whole list between resources through the system clipboard; a paste that is not a copied card list is refused rather than emptying the list.
+
+**Three rules a card list obeys, because it is somebody's saved file.** Loading never writes (defaults are seeded when a card is **added**, never when one is read, so a file saved before the schema grew a field round-trips byte for byte); an edit keeps the stored **type** (a number written as a float stays a float, a colour written as `"#rrggbb"` stays a String); and an **absent** enable key means enabled, so switching a card back on erases the key rather than writing a `true` the file never had.
+
+**Use case.** The Drawing Prefab's steps are this drawer: each step is a card titled by its shape, whose fields are that shape's own (a circle shows "Radius", a line shows "End X / End Y"), with the eight stored keys untouched.
+
 ### Toggle buttons (String with Options)
 
 **What it does.** Shows a String's fixed choices as **one row of toggle buttons** instead of a dropdown - every option visible at a glance, one click to switch. The pressed button is the value.
@@ -157,6 +230,26 @@ A choice can also carry a **label**, written `key=Label`: the dropdown READS the
 
 **Use case.** A `difficulty`, `team`, or `weapon_slot` a designer flips constantly during playtesting - three visible buttons beat a three-item dropdown.
 
+#### Pictures on the buttons, and equal widths
+
+Some choices are not words. "Round" or "Square" end cap, "angled" or "rounded" dash, a mask mode: the honest button is the picture of what you will get. Two optional tails ride after the choices in a **fixed order**, and both are editor-only like the buttons themselves:
+
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:segmented") var caps: String = "round"
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:none,square,round:icons=res://art/cap_%s.svg") var caps: String = "round"
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=shapes_dash") var dash_style: String = "plain"
+```
+
+- **`:segmented`** gives every button an equal width and joins them into one strip, which is what turns a handful of words into a single control instead of a ragged row. It applies to **two to five** options; past that the strip stops being readable and the row falls back to ordinary buttons on its own.
+- **`:icons=<source>`** puts a picture on each button. The source is told apart by its own text, with no prefix to remember: a path **pattern** holding `%s` substitutes the option name in `snake_case` (`res://art/cap_%s.svg` with the option `Round` loads `res://art/cap_round.svg`), and anything else is a **provider name** a pack registered:
+
+```gdscript
+EventSheets.register_toggle_icon_provider("shapes_dash", my_renderer)  # renderer(option: String, size: int) -> Texture2D
+EventSheets.unregister_toggle_icon_provider("shapes_dash")
+```
+
+  The renderer is called once per option when the Inspector builds the row, at edit time only, so a pack whose options only exist as its own shader or material can draw the real thing. **A missing file or an unregistered name is never an error**: that button simply keeps its word, and the word stays as the tooltip either way. The icon source is last in the marker because a `res://` path carries colons of its own.
+
 ### Direction dial (Vector2)
 
 **What it does.** A round dial with a draggable handle. The handle's angle sets the direction and its distance from the centre sets the magnitude, so one gesture sets both components.
@@ -169,6 +262,19 @@ A choice can also carry a **label**, written `key=Label`: the dropdown READS the
 ```
 
 **Use case.** `wind`, `gravity_direction`, or a default `dash_vector` that reads more naturally as an arrow than as `x` and `y` boxes.
+
+### Four corners (Vector4)
+
+**What it does.** Four numbers that are usually one number. A `Vector4` read **clockwise from the top-left** (`x` top-left, `y` top-right, `z` bottom-right, `w` bottom-left) shows as **one box** while all four agree, with a button that opens four labelled boxes when they should not. A file whose four corners already differ opens with the four boxes showing, because a single box would be lying about three of them.
+
+**How to use it.** On a `Vector4` variable pick the **Four corners** look. The same shape is what margins and padding are, which is why the marker says "corners" and nothing about what for.
+
+**Emits:**
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:corners") var corner_radius: Vector4 = Vector4(8, 8, 8, 8)
+```
+
+**Use case.** A `corner_radius` on a panel, a `padding` on a card, or a `margin` on a HUD element - three fields that were four number boxes and one comment explaining the order.
 
 ### Swatch row (Color)
 
@@ -214,6 +320,47 @@ A choice can also carry a **label**, written `key=Label`: the dropdown READS the
 **Sheet ▸ Inspector Designer…** shows every Inspector-visible variable of the sheet as ONE live view - decor, grouping, and widgets, exactly as Godot will show them, with the plain-language sentence under each. It is the "what does my whole Inspector look like?" answer the per-variable dialogs cannot give - and you edit from it too: **✎** opens that variable in the Variable dialog (the Designer refreshes when you confirm), and **▲** moves a sheet variable up in the Inspector as one undo step. The list is in the order the file declares them - the same order the compiler emits, so what you see here is what Godot will show.
 
 <img src="images/inspector-designer.png" alt="The Inspector Designer over the EnemyStats resource: the Combat section with its min-max damage slider, curve, loot grid and health bar, the Identity section with the required portrait warning and swatches, and the Spawning info note - each with a one-line plain-language description." width="620">
+
+## 4c. Decor that belongs to the object: the preview card and viewport handles
+
+Every drawer above belongs to one property. Two decor lines belong to the **object** instead, so they sit anywhere in the script rather than above a variable. Both are plain `#` comments (never `##`, which would merge into the hover tooltip), so they reach the editor only through the script's own source text and **emit nothing at all**: a project without the plugin runs the same code and ships the same bytes.
+
+### The preview card
+
+**What it does.** A picture of the thing you are editing, at the top of its Inspector, re-drawn as you edit it. The Drawing Prefab has had one since it shipped; this is that card made general, so any node or resource opts in with one line:
+
+```gdscript
+# @inspector_preview
+```
+
+**Where the picture comes from**, in order, so a pack can always take over the drawing:
+
+1. a renderer the caller passed in (the Drawing Prefab hands over its own tree-free rasterizer, which is why its card behaves exactly as it always has);
+2. a renderer a pack registered for the script through the public API;
+3. an `inspector_preview_texture(size: Vector2i) -> Texture2D` method on the object itself;
+4. for a **node** with none of those, the node rendered live into a small viewport of its own.
+
+A resource with no renderer anywhere shows an honest empty card rather than a guess. Registering one is for the scripts that cannot ship the method (generated or third-party code you do not control):
+
+```gdscript
+EventSheets.register_inspector_preview(script_path, my_renderer)  # renderer(object: Object, size: Vector2i) -> Texture2D
+EventSheets.unregister_inspector_preview(script_path)
+```
+
+### Viewport handles
+
+**What it does.** A node whose script declares handles shows a **draggable mark per handle while it is selected**, the way the engine's own collision shapes do, in the 2D viewport and (through a gizmo) in 3D. Dragging writes the property; letting go of the mouse writes **one** undo step. Nothing to set up beyond the decor line:
+
+```gdscript
+# @inspector_handle start point
+# @inspector_handle radius length from position
+# @inspector_handle start_angle angle from position
+# @inspector_handle points points
+```
+
+**The four kinds**, frozen once shipped because a decor line is source text somebody wrote: `point` (the property is a position, drawn as a filled dot), `length` (a distance from the anchor, a hollow dot), `angle` (an angle in degrees around the anchor, a diamond) and `points` (a list of positions, one dot each). `from <property>` names the anchor the handle is measured against; without it the anchor is the node's own origin. A line naming an unknown kind or a missing property draws **no** handle rather than dragging the wrong thing.
+
+Holding **Ctrl** while dragging snaps to the editor's own Configure Snap defaults (an 8 unit grid, a 15 degree rotation step) - the defaults rather than a scene's configured step, because no public API reads that step back and a number nobody can see is worse than an honest one. The Inspector Designer shows a script's handles as chips, so an author reads what will be draggable before opening a scene.
 
 ## 5. The Export Options
 
@@ -341,6 +488,29 @@ Collapsible Inspector sections so related variables sit together. Fill **"Group 
 @export var armour: int = 10
 ```
 
+### Show if, on a whole group
+
+"Tick Dashed and seven fields appear" is the shape a long Inspector wants, and a group is the natural unit for it. Fill **"Show group if"** (Advanced) on the variables of a group and the **whole group** hides with the named bool, instead of hiding one field at a time.
+
+```gdscript
+# @inspector_show_if dashed
+@export_group("Dashes")
+@export var dash_count: int = 16
+```
+
+The comment above the group line is the **round-trip carrier** and nothing more: `@export_group` takes no hint string, so there is nowhere else on a group to write it. The hiding itself is the ordinary `_validate_property` the field-level Show if already generates, emitted once per member, so the generated code's shape is exactly the field form's and nothing new runs in a shipped game. It only counts on a variable that is actually in a group; without one there is no group to scope.
+
+### Link two numbers (the equals button)
+
+Two neighbouring numbers that should stay in proportion - a dash count and its spacing, a width and a height - get an **equals button** between them. Press it and the pair remembers the ratio it has at that moment; while it stays pressed, editing either one moves the other to keep that ratio. Fill **"Link with"** (Advanced) with the neighbour's name.
+
+```gdscript
+# @inspector_link dash_count dash_spacing
+@export var dash_count: int = 16
+```
+
+The line names **both** fields, this one first, so a reader of the file sees the relation without opening the editor. Editor-only decor: it emits no code, nothing is written while the button is not pressed, and a project without the plugin simply has two ordinary numbers. A leader sitting at zero has no ratio to read, so the pair keeps a ratio of one rather than sending the follower to infinity.
+
 ## 6. The Behaviours (Tier-2 setters)
 
 These add a little generated logic to a variable. They live under **Advanced** and apply to exported variables.
@@ -423,7 +593,12 @@ func _validate_property(property: Dictionary) -> void:
 | Show as: Progress bar | More options | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
 | Show as: Min-max range | More options | Vector2 | `@export_custom(... "eventsheet:min_max:min:max")` |
 | Show as: Editable table | More options | Array | `@export_custom(... "eventsheet:table:name=type,...")` |
+| Card list | authored on the export | Array of Dictionary | `@export_custom(... "eventsheet:cards:kind=<k>,schema=<n>,stripes=<k>")` |
 | Show as: Toggle buttons | More options | String + Options | `@export_custom(... "eventsheet:toggle_row:a,b,c")` |
+| Toggle buttons, equal widths | authored on the export | String / int + Options | `...:toggle_row:a,b,c:segmented` |
+| Toggle buttons, with pictures | authored on the export | String / int + Options | `...:toggle_row:a,b,c:icons=<pattern or provider>` |
+| Show as: Number with its unit | Inspector look | float | `@export_custom(... "eventsheet:unit:kinds=a\|b,store=a")` |
+| Show as: Four corners | Inspector look | Vector4 | `@export_custom(... "eventsheet:corners")` |
 | Show as: Direction dial | More options | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
 | Show as: Swatch row | More options | Color | `@export_custom(... "eventsheet:swatch_row")` |
 | Show as: Texture preview | More options | Texture2D | `@export_custom(... "eventsheet:texture_preview")` |
@@ -434,7 +609,11 @@ func _validate_property(property: Dictionary) -> void:
 | Validate with | Advanced | any (@tool sheet) | `# @inspector_validate function_name` (editor decor comment) |
 | Field button | Advanced | any (@tool sheet) | `# @inspector_action function_name Label` (editor decor comment) |
 | Read-only | Advanced | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
+| Link with | Advanced | two neighbouring numbers | `# @inspector_link a b` (editor decor comment) |
 | Group / Sub-heading | Advanced | any | `@export_group("...")` / `@export_subgroup("...")` |
+| Show group if | Advanced | any in a group | `# @inspector_show_if bool_var` above the group, plus the usual `_validate_property` |
+| Preview card | object decor | any node / resource | `# @inspector_preview` (editor decor comment) |
+| Viewport handle | object decor | any node | `# @inspector_handle <property> <kind> [from <property>]` (editor decor comment) |
 | Clamp to range | Advanced | int / float + Range | a `set(value)` with `clampi` / `clampf` |
 | On changed | Advanced | any | a `set(value)` that calls your function |
 | Show if / Lock unless | Advanced | any (driven by a bool) | a generated `_validate_property` |
@@ -703,4 +882,7 @@ The Inspector calls `check_spawn_gap()` as the field is edited and shows its ret
 - **Clamp needs a Range.** "Clamp to range" only generates its setter when the variable is numeric and has a Range; without one it is ignored.
 - **On changed names a sheet function.** The function must exist in the sheet, or the compiler warns that the target is unknown.
 - **Show if / Lock unless point at a bool variable.** The predicate is another variable's name; misspell it and the compiler flags it.
+- **The unit dropdown never moves the number.** A `unit` drawer stores in the unit the export names and shows whichever the dropdown says. If you want the running game to know which unit a designer was reading in, that is a second exported variable of your own; the dropdown is a view and deliberately leaves no trace.
+- **Decor is comment-only, so a typo is silent.** `# @inspector_link`, `# @inspector_preview` and `# @inspector_handle` are plain comments: a misspelled property name, an unknown handle kind, or a missing icon file draws nothing rather than raising an error, which is the price of a seam that emits no code. If a handle or a picture does not appear, read the line rather than looking for a warning.
+- **A card list outlives the pack that authored it.** The kinds come from a schema a pack registers, so opening a `.tres` in a project without that pack shows unlabelled cards - and saves the exact bytes it opened with. Nothing is dropped because the vocabulary is missing.
 - **Everything round-trips, but re-editability varies.** Drawers, ranges, No alpha, Easing curve, and Placeholder come back as live dialog fields you can re-edit. Some plainer annotations round-trip byte-for-byte yet reopen as a verbatim hint rather than a ticked box; the value is never lost either way.

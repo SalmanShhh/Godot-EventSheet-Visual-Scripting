@@ -600,9 +600,10 @@ func set_ticker(ticker_name: String, value: float) -> void:
 	_tickers[ticker_name] = value
 	_ticker_targets[ticker_name] = value
 
+## What a ticker currently SHOWS - the eased value Count To is rolling toward its target.
+## Print or draw this instead of the real variable and scores roll instead of snapping.
 ## @ace_expression
 ## @ace_name("Ticker Value")
-## @ace_description("What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.ticker_value({ticker_name})")
 func ticker_value(ticker_name: String) -> float:
@@ -613,6 +614,7 @@ func _finish_ticker(ticker_name: String) -> void:
 	_tickers[ticker_name] = _ticker_targets.get(ticker_name, _tickers.get(ticker_name, 0.0))
 	ticker_finished.emit(ticker_name)
 
+## Spawns a throwaway one-shot AudioStreamPlayer (frees itself when done).
 ## @ace_hidden
 func _spawn_one_shot(path: String, pitch: float, volume_db: float) -> void:
 	var stream: AudioStream = load(path) as AudioStream
@@ -668,9 +670,10 @@ func _ensure_tint_overlay() -> void:
 	_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tint_overlay.add_child(_tint_rect)
 
+## Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view -
+## damage red, poison green, night blue. Call again to retune; strength 0 clears.
 ## @ace_action
 ## @ace_name("Set Screen Tint")
-## @ace_description("Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view - damage red, poison green, night blue. Call again to retune; strength 0 clears.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.set_screen_tint({color}, {strength})")
 func set_screen_tint(color: Color, strength: float) -> void:
@@ -679,9 +682,10 @@ func set_screen_tint(color: Color, strength: float) -> void:
 		_tint_rect.color = Color(color.r, color.g, color.b, clampf(strength, 0.0, 1.0))
 		_tint_rect.visible = _tint_rect.color.a > 0.001
 
+## Fades the screen tint's strength to zero over the given seconds - the damage-flash
+## pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
 ## @ace_action
 ## @ace_name("Fade Screen Tint")
-## @ace_description("Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.fade_screen_tint({seconds})")
 func fade_screen_tint(seconds: float) -> void:
@@ -689,9 +693,9 @@ func fade_screen_tint(seconds: float) -> void:
 		return
 	create_tween().tween_property(_tint_rect, "color:a", 0.0, maxf(seconds, 0.01))
 
+## Removes the screen tint instantly.
 ## @ace_action
 ## @ace_name("Clear Screen Tint")
-## @ace_description("Removes the screen tint instantly.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.clear_screen_tint()")
 func clear_screen_tint() -> void:
@@ -733,20 +737,26 @@ func _fx_update_visibility() -> void:
 			or float(_fx_material.get_shader_parameter("chroma_intensity")) > 0.001 \
 			or float(_fx_material.get_shader_parameter("speed_lines")) > 0.001
 
+## Whether this player has asked for no flashing.
 ## @ace_hidden
 func _chroma_shake_quiet() -> bool:
 	return bool(Engine.get_meta(CHROMA_SHAKE_NO_FLASHING_META, false))
 
+## How fast the split's direction wanders: the same knob the camera shake scrolls its noise at,
+## halved while no flashing is on.
 ## @ace_hidden
 func _chroma_shake_rate() -> float:
 	return shake_frequency * (0.5 if _chroma_shake_quiet() else 1.0)
 
+## One sample of the shared noise at the shake's own clock - what makes the split move.
 ## @ace_hidden
 func _chroma_shake_wander() -> float:
 	if _noise == null:
 		return 0.0
 	return _noise.get_noise_2d(_chroma_shake_time * _chroma_shake_rate(), 0.0)
 
+## How much of the shake is left: all of it while a constant one holds, and a straight line down
+## to nothing while a reducing one runs.
 ## @ace_hidden
 func _chroma_shake_fade() -> float:
 	if not _chroma_shake_active:
@@ -755,15 +765,27 @@ func _chroma_shake_fade() -> float:
 		return 1.0
 	return clampf(1.0 - _chroma_shake_elapsed / maxf(_chroma_shake_duration, 0.0001), 0.0, 1.0)
 
+## Which way the split points this frame: the angle it was told, or the shared noise walking it
+## around. Without a seeded noise (a shake fired before _ready) it points right rather than
+## nowhere, so the effect is still visible.
+##
+## It is a UNIT direction whichever way it came, because the magnitude beside it is the whole
+## promise: 12 pixels asked for is 12 pixels wide on screen, and the expression that answers 12
+## is answering about the same split. The noise therefore picks the ANGLE - one full turn per
+## unit of noise - rather than the vector. Reading a PAIR of samples as the vector instead would
+## hand back a direction shorter than one almost always, and nothing at all in the frames where
+## both samples crossed zero together, so the split would quietly be a fraction of what the row
+## and the expression both said it was.
 ## @ace_hidden
 func _chroma_shake_direction() -> Vector2:
 	if _chroma_shake_angle >= 0.0:
 		return Vector2.from_angle(deg_to_rad(_chroma_shake_angle))
 	if _noise == null:
 		return Vector2.RIGHT
-	var t: float = _chroma_shake_time * _chroma_shake_rate()
-	return Vector2(_noise.get_noise_2d(t, 0.0), _noise.get_noise_2d(0.0, t))
+	return Vector2.from_angle(_chroma_shake_wander() * TAU)
 
+## The magnitude the screen shows this frame, in pixels: what was asked for, less the falloff
+## spent, less the wander a fixed angle leaves on the amount, halved while no flashing is on.
 ## @ace_hidden
 func _chroma_shake_amount() -> float:
 	var amount: float = _chroma_shake_from * _chroma_shake_fade()
@@ -773,6 +795,10 @@ func _chroma_shake_amount() -> float:
 		amount *= 0.5
 	return amount
 
+## Writes this frame of the shake onto the overlay shader. The shift is in pixels here and in
+## screen fractions there, so it is divided by the viewport - a 12-pixel split is 12 pixels wide
+## on every resolution. The magnitude is kept whether or not there is a shader to write to, so
+## the expression answers off-tree (and headless) exactly as it does on screen.
 ## @ace_hidden
 func _chroma_shake_write() -> void:
 	_chroma_shake_magnitude = _chroma_shake_amount()
@@ -790,6 +816,9 @@ func _chroma_shake_write() -> void:
 	_fx_material.set_shader_parameter("chroma_shift", shift / span)
 	_fx_material.set_shader_parameter("chroma_intensity", _chroma_shake_fade())
 
+## One frame of the shake. The clock is advanced by DELTA, which the engine has already scaled
+## by time: slow motion glides the split, a hitstop freezes it mid-frame, and the duration
+## stretches with them - the shake belongs to the game's time, not the wall clock.
 ## @ace_hidden
 func _chroma_shake_step(delta: float) -> void:
 	if not _chroma_shake_active:
@@ -803,17 +832,20 @@ func _chroma_shake_step(delta: float) -> void:
 		return
 	_chroma_shake_write()
 
+## Whether a chromatic shake is running right now - true from the row that fires it until the
+## duration is up or Stop Chromatic Shake takes it off.
 ## @ace_condition
 ## @ace_name("Is Chromatic Shaking")
-## @ace_description("Whether a chromatic shake is running right now - true from the row that fires it until the duration is up or Stop Chromatic Shake takes it off.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.is_chromatic_shaking()")
 func is_chromatic_shaking() -> bool:
 	return _chroma_shake_active
 
+## How wide the split is right now, in pixels: the magnitude after the falloff, the wander and
+## the no-flashing halving. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it
+## and the whole hit reads as one thing.
 ## @ace_expression
 ## @ace_name("Chromatic Shake Magnitude")
-## @ace_description("How wide the split is right now, in pixels: the magnitude after the falloff, the wander and the no-flashing halving. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it and the whole hit reads as one thing.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.chromatic_shake_magnitude()")
 func chromatic_shake_magnitude() -> float:
