@@ -134,9 +134,13 @@ static func build() -> bool:
 		"if path.strip_edges().is_empty():\n\treturn\n_start_transition(path.strip_edges(), transition, seconds, ease)")
 	_default(sheet, "transition", "fade")
 	_param_options(sheet, "transition", ["fade", "wipe", "dissolve", "iris", "blinds", "pixelate", "page curl"])
+	_param_desc(sheet, "path", "The scene to open. Its res:// path, or an expression that answers with one.")
+	_param_desc(sheet, "transition", "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
 	_default(sheet, "seconds", "0.6")
+	_param_desc(sheet, "seconds", "How long the whole change takes, on and off again. Held over a floor while no flashing is on.")
 	_default(sheet, "ease", "smooth")
 	_param_options(sheet, "ease", ["linear", "smooth", "in", "out"])
+	_param_desc(sheet, "ease", "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 	_quoted_argument(sheet, "go_to_scene_with({path}, \"{transition}\", {seconds}, \"{ease}\")")
 
 	Lib.append_function(sheet, "reload_scene_with", "Reload Scene With", "Scenes",
@@ -145,9 +149,12 @@ static func build() -> bool:
 		"_start_transition(\"\", transition, seconds, ease)")
 	_default(sheet, "transition", "fade")
 	_param_options(sheet, "transition", ["fade", "wipe", "dissolve", "iris", "blinds", "pixelate", "page curl"])
+	_param_desc(sheet, "transition", "The shape drawn over the reload. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
 	_default(sheet, "seconds", "0.6")
+	_param_desc(sheet, "seconds", "How long the whole reload takes, on and off again. Held over a floor while no flashing is on.")
 	_default(sheet, "ease", "smooth")
 	_param_options(sheet, "ease", ["linear", "smooth", "in", "out"])
+	_param_desc(sheet, "ease", "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 	_quoted_argument(sheet, "reload_scene_with(\"{transition}\", {seconds}, \"{ease}\")")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
@@ -359,6 +366,18 @@ static func _transition_lines() -> PackedStringArray:
 static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
+
+
+## Sets the help text on the last-appended ACE's parameter - the line the params dialog shows under
+## the field. It is also what CARRIES the starting value into the shipped pack: the emitter writes a
+## parameter's default only on the one-line @ace_param form, and only a parameter that has something
+## to say gets that form. So a row whose default matters says what the field is for.
+static func _param_desc(sheet: EventSheetResource, param_id: String, help: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.description = help
+			parameter.desc = help
 
 
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:

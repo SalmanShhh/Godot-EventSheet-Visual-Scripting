@@ -59,6 +59,7 @@ static func run() -> bool:
 	passed = _no_flashing_is_a_ceiling_here_too() and passed
 	passed = _a_step_plays() and passed
 	passed = _the_transition_walk() and passed
+	passed = _a_dropped_row_is_a_whole_sentence() and passed
 	passed = _every_shape_has_a_shader() and passed
 	return passed
 
@@ -258,6 +259,35 @@ static func _the_transition_walk() -> bool:
 	return SUPPORT.pins(P, rows)
 
 
+## A DROPPED ROW IS A WHOLE SENTENCE, which is the jam rule in one assertion: Moment, Define Moment
+## and the two transitions have to arrive with a name, a shape and a number already in them, so the
+## row does something the moment it lands rather than after four fields are typed.
+##
+## The starting values are read back off the PUBLISHED definitions rather than off the builder, which
+## is the whole point: a builder's default that never reaches the emitted pack is not a default, and
+## for a long while these four rows' did not - a dropped Moment played nothing at a strength of zero
+## and a dropped transition was a tenth of a second with no shape.
+static func _a_dropped_row_is_a_whole_sentence() -> bool:
+	var juice: Dictionary = _published(JUICE_SCRIPT)
+	var flow: Dictionary = _published(SCENE_FLOW_SCRIPT)
+	return SUPPORT.pins(P, [
+		["a dropped Moment names one", _starting_value(juice, "Moment", "moment_name"), "impact"],
+		["and plays it whole", _starting_value(juice, "Moment", "strength"), "1"],
+		["Define Moment names one too", _starting_value(juice, "Define Moment", "moment_name"),
+			"impact"],
+		["and the file it points at is picked, not typed",
+			_field_hint(juice, "Define Moment", "moment"), "resource_path"],
+		["a dropped Go To Scene With has a shape",
+			_starting_value(flow, "Go To Scene With", "transition"), "fade"],
+		["a time", _starting_value(flow, "Go To Scene With", "seconds"), "0.6"],
+		["and a walk", _starting_value(flow, "Go To Scene With", "ease"), "smooth"],
+		["and Reload Scene With arrives the same way",
+			"%s %s %s" % [_starting_value(flow, "Reload Scene With", "transition"),
+				_starting_value(flow, "Reload Scene With", "seconds"),
+				_starting_value(flow, "Reload Scene With", "ease")], "fade 0.6 smooth"],
+	])
+
+
 ## THE SHADERS ARE THE TRANSITIONS. A shape whose file is missing covers the screen with nothing and
 ## never uncovers it, so every word the pack offers is checked against a file that exists, compiles,
 ## and declares the one dial the walk turns.
@@ -287,6 +317,34 @@ static func _every_shape_has_a_shader() -> bool:
 	]
 	flow.free()
 	return SUPPORT.pins(P, rows)
+
+
+## Everything one pack publishes, keyed by the name a reader sees.
+static func _published(script_path: String) -> Dictionary:
+	var by_name: Dictionary = {}
+	for definition: ACEDefinition in EventSheetPackReadingCheck.definitions_for_script(script_path):
+		by_name[definition.display_name] = definition
+	return by_name
+
+
+## What one field of one published row holds the moment the row is dropped.
+static func _starting_value(published: Dictionary, display_name: String, parameter_id: String) -> String:
+	return str(_field(published, display_name, parameter_id).get("default_value", ""))
+
+
+## And which editor that field opens as.
+static func _field_hint(published: Dictionary, display_name: String, parameter_id: String) -> String:
+	return str(_field(published, display_name, parameter_id).get("hint", ""))
+
+
+static func _field(published: Dictionary, display_name: String, parameter_id: String) -> Dictionary:
+	var found: Variant = published.get(display_name, null)
+	if not (found is ACEDefinition):
+		return {}
+	for parameter: Variant in (found as ACEDefinition).parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == parameter_id:
+			return parameter as Dictionary
+	return {}
 
 
 ## One Juice behaviour, built and never added to a tree - which is what a headless test has.

@@ -753,13 +753,17 @@ static func build() -> bool:
 		"_moment_screen_searched = false\nvar played: Resource = _moment_named(moment_name)\nif played == null:\n\tpush_warning(\"Moment: nothing is called \\\"%s\\\" - define it with Define Moment, or put a moment file of that name in %s.\" % [moment_name, MOMENT_DIRECTORY])\n\treturn\nfor step: Variant in _moment_steps(played):\n\tif step is Dictionary:\n\t\t_play_moment_step(step as Dictionary, strength)",
 		"Moment [b]{moment_name}[/b] at [b]{strength}[/b]")
 	_default(sheet, "moment_name", "impact")
+	_param_desc(sheet, "moment_name", "Which moment to play. The six that ship are impact, kill, triumph, danger, calm and cut; Define Moment adds your own.")
 	_default(sheet, "strength", "1")
+	_param_desc(sheet, "strength", "Scales every amount in the moment. 1 is the moment as written, 0.5 a lighter version of the same beat.")
 	Lib.append_function(sheet, "define_moment", "Define Moment", "Juice", "Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.",
 		[["moment_name", "String"], ["moment", "Resource"]],
 		"var word: String = moment_name.strip_edges().to_lower()\nif word.is_empty():\n\treturn\nif moment == null:\n\t_moments.erase(word)\n\treturn\n_moments[word] = moment",
 		"Define moment [b]{moment_name}[/b] as [b]{moment}[/b]")
 	_default(sheet, "moment_name", "impact")
+	_param_desc(sheet, "moment_name", "The name every Moment row will use for this file afterwards.")
 	_param_hint(sheet, "moment", "resource_path")
+	_param_desc(sheet, "moment", "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
@@ -991,6 +995,18 @@ static func _param_options(sheet: EventSheetResource, param_id: String, choices:
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.options = typed
+
+
+## Sets the help text on the last-appended ACE's parameter - the line the params dialog shows under
+## the field. It is also what CARRIES the starting value into the shipped pack: the emitter writes a
+## parameter's default only on the one-line @ace_param form, and only a parameter that has something
+## to say gets that form. So a row whose default matters says what the field is for.
+static func _param_desc(sheet: EventSheetResource, param_id: String, help: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.description = help
+			parameter.desc = help
 
 
 ## Sets a UI hint on the last-appended ACE's parameter - what the dialog offers instead of a plain

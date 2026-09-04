@@ -238,8 +238,10 @@ func quit_game() -> void:
 ## @ace_category("Scenes")
 ## @ace_description("Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.")
 ## @ace_display_template("Go to scene [b]{path}[/b] with a [b]{transition}[/b] over [b]{seconds}[/b] s")
-## @ace_param_options(transition fade, wipe, dissolve, iris, blinds, pixelate, page curl)
-## @ace_param_options(ease linear, smooth, in, out)
+## @ace_param(path, desc: "The scene to open. Its res:// path, or an expression that answers with one.")
+## @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
+## @ace_param(seconds, default: 0.6, desc: "How long the whole change takes, on and off again. Held over a floor while no flashing is on.")
+## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.go_to_scene_with({path}, "{transition}", {seconds}, "{ease}")")
 func go_to_scene_with(path: String, transition: String, seconds: float, ease: String) -> void:
@@ -252,8 +254,9 @@ func go_to_scene_with(path: String, transition: String, seconds: float, ease: St
 ## @ace_category("Scenes")
 ## @ace_description("Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.")
 ## @ace_display_template("Reload with a [b]{transition}[/b] over [b]{seconds}[/b] s")
-## @ace_param_options(transition fade, wipe, dissolve, iris, blinds, pixelate, page curl)
-## @ace_param_options(ease linear, smooth, in, out)
+## @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the reload. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
+## @ace_param(seconds, default: 0.6, desc: "How long the whole reload takes, on and off again. Held over a floor while no flashing is on.")
+## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.reload_scene_with("{transition}", {seconds}, "{ease}")")
 func reload_scene_with(transition: String, seconds: float, ease: String) -> void:
@@ -311,12 +314,17 @@ static func transition_phase(fraction: float) -> String:
 		return "swap"
 	return "out" if walk < 0.5 else "in"
 
+## The shortest a transition may be right now: the ordinary floor, or the accessibility one for a
+## player who has asked for no flashing. A transition is one of the three things this project holds
+## over that floor, beside a post-stack walk and a moment step.
 ## @ace_hidden
 static func transition_floor_seconds() -> float:
 	if bool(Engine.get_meta(TRANSITION_NO_FLASHING_META, false)):
 		return TRANSITION_FLASH_FLOOR_SECONDS
 	return TRANSITION_FLOOR_SECONDS
 
+## Starts one shaded transition, or does nothing at all if another is already running - the same
+## one-at-a-time rule the shipped fade follows.
 ## @ace_hidden
 func _start_transition(path: String, shape: String, seconds: float, ease_word: String) -> void:
 	if is_transitioning():
