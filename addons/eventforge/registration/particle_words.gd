@@ -41,6 +41,13 @@ extends RefCounted
 ## The two emitter classes this vocabulary speaks for, one per dimension. Separate entries rather
 ## than one list, because a 2D row and a 3D row are still two rows: their hosts are GPUParticles2D
 ## and GPUParticles3D, and neither is the other's parent.
+##
+## AND THE HALF THAT IS DELIBERATELY NOT HERE, said out loud so its absence is a decision rather than
+## an oversight: CPUParticles2D and CPUParticles3D answer all seven of these words as properties of
+## their own. They have no process material at all, so they would need neither the own-it courtesy
+## nor the is-it-really-a-process-material guard, and every template here is written around both -
+## which makes them a second shape rather than two more entries in this list. They are the untaken
+## half of this table, not a class it forgot.
 const HOSTS: Array[Dictionary] = [
 	{"host": "GPUParticles2D", "suffix": "", "which": "2D"},
 	{"host": "GPUParticles3D", "suffix": "3D", "which": "3D"}
