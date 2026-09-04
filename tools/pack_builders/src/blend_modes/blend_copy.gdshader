@@ -6,9 +6,12 @@
 //
 // THE COST, said once: the item reads back what has already been drawn under it
 // (`hint_screen_texture`), blends its own pixel into that, and draws the answer. That is one
-// screen read for every pixel the item covers, every frame it is visible - a look for the few
-// things that want it rather than for every sprite in the scene. It also means the item has to
-// be drawn AFTER whatever it is blending with: later in the tree, or on a higher z index.
+// screen read for every pixel the item covers, every frame it is visible - and the read itself
+// costs more than that sentence suggests. Godot serves `hint_screen_texture` out of a BackBufferCopy
+// of the WHOLE viewport, taken per blending item, so ten blended sprites are ten full-screen copies
+// however small each sprite is. That is a look for the few things that want it rather than for
+// every sprite in the scene. It also means the item has to be drawn AFTER whatever it is blending
+// with: later in the tree, or on a higher z index.
 //
 // `strength` walks between what was already on the screen (0) and the whole mode (1), so the
 // same shader fades a look in without a second one.
