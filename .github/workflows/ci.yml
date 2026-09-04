@@ -52,7 +52,13 @@ jobs:
       # The behaviour packs are compiler output and have had a drift gate for a long time; it had
       # no CI step of its own, so it ran only when somebody remembered. The verdict is a printed
       # line rather than an exit code alone, so the line is what this greps.
+      #
+      # `shell: bash` is what puts pipefail on: the default shell runs with `-e` alone, so a pipe
+      # takes tee's exit code and the audit's own exit 1 - which it uses for the problems the
+      # drifted line does not mention, an unsound successor map among them - was being thrown away.
+      # Both halves are the gate: the exit code, and the line that says which question was asked.
       - name: Behaviour packs must match their builders
+        shell: bash
         run: |
           ~/godot/godot --headless --path . --script tools/audit_addons.gd 2>&1 | tee audit.log
           grep -qE 'drifted=0' audit.log
