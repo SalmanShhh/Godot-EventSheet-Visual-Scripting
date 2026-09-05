@@ -291,9 +291,27 @@ static func script_pack_surface(source: String) -> Dictionary:
 			"name": shown_match.get_string(1) if shown_match != null else symbol_match.get_string(1).capitalize(),
 			"params": symbol_match.get_string(2).strip_edges(),
 			"category": category_match.get_string(1) if category_match != null else "",
-			"description": _flatten_doc_comment(description_match.get_string(1)) if description_match != null else "",
+			"description": _flatten_doc_comment(description_match.get_string(1)) if description_match != null else _prose_description(chunk),
 		})
 	return surface
+
+
+## The plain `##` prose above a member, as its one-line description - the fallback for a verb that
+## carries no `@ace_description`, which is the shape a pack ships when its author wrote an ordinary
+## Godot doc comment instead. Both readers of a pack already take prose that way (the semantic
+## analyzer and the importer's lifter each fall back to the joined doc lines), so a reference built
+## without this fallback quietly listed those verbs with no description at all.
+##
+## Annotation lines are skipped by their leading `@`, and what is left is joined with a space, which
+## is exactly how the other two readers fold a multi-line comment into one sentence.
+static func _prose_description(chunk: String) -> String:
+	var prose: PackedStringArray = PackedStringArray()
+	for line: String in chunk.split("\n"):
+		var text: String = line.strip_edges().trim_prefix("##").strip_edges()
+		if text.is_empty() or text.begins_with("@"):
+			continue
+		prose.append(text)
+	return " ".join(prose)
 
 
 ## Doc comments continue across lines as "## …"; flatten to one readable line.

@@ -33,6 +33,28 @@ static func run() -> bool:
 		str(announce.get("description")).contains("instance-backed ACE")
 		and not str(announce.get("description")).contains("\n"), true) and all_passed
 
+	# A verb whose description is a plain `##` doc comment rather than an `@ace_description` line.
+	# Packs ship that shape whenever their author wrote an ordinary Godot doc comment, and both
+	# readers of a pack already take it as the description - so the reference must too, or those
+	# verbs are listed with nothing said about them.
+	var prose_source: String = "\n".join(PackedStringArray([
+		"## Puts the host on a corner, an edge or the whole rectangle of its",
+		"## parent - the one action this behavior exists for.",
+		"## @ace_action",
+		"## @ace_name(\"Anchor To\")",
+		"## @ace_category(\"Anchor\")",
+		"func anchor_to(corner: String) -> void:",
+		"\tpass"
+	]))
+	var prose_surface: Dictionary = EventSheetVocabularyDoc.script_pack_surface(prose_source)
+	var prose_actions: Array = prose_surface.get("actions", []) as Array
+	all_passed = _check("a doc-comment description is read as the verb's description",
+		str((prose_actions[0] as Dictionary).get("description")) if prose_actions.size() == 1 else "<no single action>",
+		"Puts the host on a corner, an edge or the whole rectangle of its parent - the one action this behavior exists for.") and all_passed
+	all_passed = _check("the annotations above a doc-comment verb stay out of its description",
+		str((prose_actions[0] as Dictionary).get("name")) if prose_actions.size() == 1 else "<no single action>",
+		"Anchor To") and all_passed
+
 	# Sheet sections: identity line + the publish surface, nested one heading deeper.
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.custom_class_name = "VocabFixture"

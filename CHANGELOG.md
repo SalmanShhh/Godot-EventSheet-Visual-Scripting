@@ -590,6 +590,14 @@
   chosen by the date, so the whole fleet is swept within a week and a failure names the drifting
   line. `EVENTFORGE_PACK_GATE=all` sweeps everything in one run, and a comma-separated list of
   builder names checks just those.
+- **The vocabulary reference stopped losing a verb whose description is a doc comment.** The
+  reference is built by scanning each pack for `## @ace_description("...")`, and that was the ONLY
+  place it looked - so every verb that says what it does in a plain `##` doc comment, which is the
+  shape a pack ships whenever its author wrote an ordinary Godot doc comment, was listed with its
+  name, its parameters and nothing else. Whole packs read that way; the blend modes pack had not a
+  sentence in it. The scanner now falls back to the prose exactly as the two readers of a pack
+  already do - skip the annotation lines, join what is left with a space - so the reference says
+  what the picker says. Regenerate with `tools/vocabulary_doc.gd` to pick the sentences up.
 
 ### Fixed in the general-purpose reading pass
 
