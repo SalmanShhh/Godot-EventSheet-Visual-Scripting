@@ -637,8 +637,28 @@ static func _run_band() -> bool:
 	archives.events.append(archive_row)
 	var archive_bands: Array[Dictionary] = EventSheetFileFacts.bands(archives)
 	ok = _check("packing puts both paths on the band", archive_bands.size(), 2) and ok
+	# EACH PATH IS CLASSIFIED ON ITS OWN. A pack READS a folder and WRITES an archive, and the band
+	# used to answer one word for the whole row - so both halves read "read and written", which is
+	# untrue of each of them.
 	ok = _check("the folder it read", str(archive_bands[0].get("value", "")),
-		"user://runs - read and written") and ok
+		"user://runs - read") and ok
+	ok = _check("and the archive it wrote", str(archive_bands[1].get("value", "")),
+		"user://runs.zip - written") and ok
+
+	# The other way round: an unpack READS its archive and WRITES the folder it lands in.
+	var unpacking: EventSheetResource = EventSheetResource.new()
+	unpacking.host_class = "Node"
+	var unpack_row: EventRow = EventRow.new()
+	unpack_row.trigger_provider_id = "Core"
+	unpack_row.trigger_id = "OnReady"
+	unpack_row.actions.append(_action("UnpackZipIntoFolder", {"archive": "\"user://mods.zip\"",
+		"folder": "\"user://mods\""}))
+	unpacking.events.append(unpack_row)
+	var unpack_bands: Array[Dictionary] = EventSheetFileFacts.bands(unpacking)
+	ok = _check("the archive it read", str(unpack_bands[0].get("value", "")),
+		"user://mods.zip - read") and ok
+	ok = _check("and the folder it wrote into", str(unpack_bands[1].get("value", "")),
+		"user://mods - written") and ok
 	return ok
 
 

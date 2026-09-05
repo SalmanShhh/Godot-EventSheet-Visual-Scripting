@@ -92,6 +92,10 @@ const READING_CALLS: Array[String] = [
 	"rename_absolute", "copy_absolute",
 ]
 
+## The handle classes a place is opened through on a LATER line than the one that names the class.
+## Both archive verbs are written this way, which is why a per-field reading has to follow the name.
+const HANDLE_CLASSES: Array[String] = ["ZIPReader", "ZIPPacker"]
+
 ## What a path is doing in this sheet, as the band says it.
 const TOUCH_WRITTEN: String = "written"
 const TOUCH_READ: String = "read"
@@ -177,10 +181,23 @@ static func touched_paths(sheet: EventSheetResource) -> Array[Dictionary]:
 		if touch.is_empty():
 			continue
 		var echo: String = str(row.get("echo", ""))
-		for path: String in row.get("paths", PackedStringArray()):
-			_record(found, seen, path, touch, echo)
+		# A PATH FIELD IS CLASSIFIED ON ITS OWN, because one row can read one file and write another:
+		# an unpack only ever READS its archive and only ever WRITES its folder, and a band saying
+		# "read and written" of both was saying something untrue about each of them. A literal found
+		# inside the emitted line has no field to be scoped by and keeps the row's own word.
+		var by_field: PackedStringArray = PackedStringArray()
+		for entry: Variant in row.get("paths", []):
+			var slot: Dictionary = entry as Dictionary
+			var field_path: String = bare(str(slot.get("path", "")))
+			if not field_path.is_empty():
+				by_field.append(field_path)
+			_record(found, seen, str(slot.get("path", "")), str(slot.get("touch", touch)), echo)
 		for path: String in place_literals(text):
-			_record(found, seen, path, touch, echo)
+			# A path already read off a FIELD of this same row keeps the field's word. The emitted
+			# line holds it too, and reading it a second time with the row's general word would put
+			# back exactly the answer the field reading was there to correct.
+			if not by_field.has(bare(path)):
+				_record(found, seen, path, touch, echo)
 	return found
 
 
@@ -211,6 +228,68 @@ static func touch_of(template: String) -> String:
 	if writes:
 		return TOUCH_WRITTEN
 	return TOUCH_READ if reads else ""
+
+
+## What one row's template does to the path in ONE of its fields, rather than to files in general.
+## The lines of the template that MENTION that field are the scope: an unpack's `{archive}` is only
+## ever opened for reading and its `{folder}` is only ever made and written into, so scoping the
+## question to the slot answers each of them truly where the row's own word answered both wrongly.
+##
+## A HANDLE CARRIES ITS CLASS DOWN TO THE LINE THAT USES IT. `var reader := ZIPReader.new()` is one
+## line and `reader.open({archive})` is another, so the line holding the slot names no reading call
+## at all - the same shape the Doctor's own res:// check follows a packer's name for. The class name
+## is folded into the scoped text when the line calls a handle bound to one.
+##
+## AND A SLOT THE SCOPE CANNOT ANSWER FOR keeps the row's own word: a field spelled into a line that
+## names no file call - or one already substituted away before this is asked - is not a field this
+## can say anything better about, and a quieter wrong answer would be worse than the honest general
+## one.
+static func touch_of_path(template: String, param_id: String) -> String:
+	var mark: String = "{%s}" % param_id
+	var scoped: PackedStringArray = PackedStringArray()
+	for line: String in template.split("\n"):
+		if line.contains(mark):
+			scoped.append(_with_handle_classes(line, template, mark))
+	if scoped.is_empty():
+		return touch_of(template)
+	var scoped_touch: String = touch_of("\n".join(scoped))
+	return scoped_touch if not scoped_touch.is_empty() else touch_of(template)
+
+
+## One line of a template with the class name folded in of any handle this SLOT is the opened place
+## of, so a call written on a name says what kind of thing that name is. Only the two archive
+## classes: they are the only file API in this vocabulary whose place is opened through a handle
+## bound on an earlier line.
+##
+## AND ONLY WHERE THE SLOT IS THE THING BEING OPENED - `<name>.open({slot}` and nothing looser. A
+## packer's `write_file(...)` line also carries the packer's name, and the folder read INSIDE that
+## call is a read however the bytes are used afterwards; folding the class in there would put the
+## archive's own word back onto the folder, which is the answer this whole reading exists to correct.
+static func _with_handle_classes(line: String, template: String, mark: String) -> String:
+	var text: String = line
+	for class_text: String in HANDLE_CLASSES:
+		for handle_name: String in _handle_names(template, class_text):
+			if line.contains("%s.open(%s" % [handle_name, mark]):
+				text += " " + class_text
+				break
+	return text
+
+
+## The names one template binds to a handle class, as `var <name> := <class>.new()` spells it.
+static func _handle_names(template: String, class_text: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var mark: String = class_text + ".new("
+	for line: String in template.split("\n"):
+		var at: int = line.find(mark)
+		if at < 0:
+			continue
+		var left: String = line.substr(0, at).strip_edges()
+		if not left.ends_with("="):
+			continue
+		left = left.trim_suffix("=").trim_suffix(":").strip_edges().trim_prefix("var ").strip_edges()
+		if not left.is_empty() and not left.contains(" ") and not names.has(left):
+			names.append(left)
+	return names
 
 
 ## One path's reading: the path exactly as the row holds it, and the word for what the sheet does to
@@ -321,7 +400,8 @@ static func _record(found: Array[Dictionary], seen: Dictionary, raw_path: String
 ## Every row of one list, in sheet order, as
 ##   {"text", "echo", "paths"}
 ## where `text` is the row's emitted code with its own values filled in, `echo` its first line, and
-## `paths` the values of its path FIELDS. Groups and sub-events are walked into, because a group is a
+## `paths` its path FIELDS, each as {"path", "touch"} - the value the field holds and what the
+## template does to THAT slot. Groups and sub-events are walked into, because a group is a
 ## bracket around rows rather than another sheet, and a verbatim block is a row of the file like any
 ## other - a hand-written FileAccess call is a file this sheet touches.
 static func _walk_rows(items: Array, found: Array[Dictionary]) -> void:
@@ -331,7 +411,7 @@ static func _walk_rows(items: Array, found: Array[Dictionary]) -> void:
 			continue
 		if item is RawCodeRow:
 			var code: String = (item as RawCodeRow).code
-			found.append({"text": code, "echo": _first_line_of(code), "paths": PackedStringArray()})
+			found.append({"text": code, "echo": _first_line_of(code), "paths": []})
 			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
@@ -344,7 +424,7 @@ static func _walk_rows(items: Array, found: Array[Dictionary]) -> void:
 				if entry is RawCodeRow:
 					var lane_code: String = (entry as RawCodeRow).code
 					found.append({"text": lane_code, "echo": _first_line_of(lane_code),
-						"paths": PackedStringArray()})
+						"paths": []})
 					continue
 				var read: Dictionary = _row_reading(entry as Resource)
 				if not read.is_empty():
@@ -352,8 +432,9 @@ static func _walk_rows(items: Array, found: Array[Dictionary]) -> void:
 		_walk_rows(event_row.sub_events, found)
 
 
-## One row's emitted text, its first line, and the values of its path fields. The verb's descriptor
-## says which parameters are paths; the row says what is in them.
+## One row's emitted text, its first line, and its path fields. The verb's descriptor says which
+## parameters are paths; the row says what is in them; and the template says, slot by slot, what is
+## done to each.
 static func _row_reading(ace: Resource) -> Dictionary:
 	if ace == null:
 		return {}
@@ -370,11 +451,14 @@ static func _row_reading(ace: Resource) -> Dictionary:
 	var text: String = baked if not baked.strip_edges().is_empty() else descriptor.codegen_template
 	for key: Variant in values.keys():
 		text = text.replace("{%s}" % str(key), str(values[key]))
-	var paths: PackedStringArray = PackedStringArray()
+	var paths: Array[Dictionary] = []
+	var source: String = baked if not baked.strip_edges().is_empty() \
+		else descriptor.codegen_template
 	for entry: Variant in descriptor.params:
 		var param: ACEParam = entry as ACEParam
 		if param != null and param.hint == PATH_HINT:
-			paths.append(str(values.get(param.id, param.default_value)))
+			paths.append({"path": str(values.get(param.id, param.default_value)),
+				"touch": touch_of_path(source, param.id)})
 	return {"text": text, "echo": _first_line_of(text), "paths": paths}
 
 
