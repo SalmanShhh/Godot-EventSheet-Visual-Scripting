@@ -61,6 +61,26 @@ Set global defaults for new springs in the Inspector, or override one spring at 
 
 ---
 
+### A spring under any property
+
+The named springs above are numbers a row reads back and writes wherever it likes. The other half of
+the pack skips the reading: **Spring Property To** and **Bump Property** take a property path - the
+same spelling the Inspector shows, `modulate`, `position`, `rotation_degrees`, `scale:x` - and the
+behavior writes that property every frame until the spring settles.
+
+Any number, `Vector2`, `Vector3`, or `Color` property works. The type is read once, on the first row
+that names the property, and the spring hands the same type back. So a camera's zoom, a light's
+energy, a post effect's strength, a label's font size, and a bar's value are all the same row with a
+different path in it - there is no pack per target.
+
+A **Bump** is the fastest juice there is: it adds velocity and never moves the target, so the
+property leaves where it was and comes back on its own. One row, no duration, nothing to undo.
+
+Springs under properties share the bank's frame budget: when every spring on a behavior has settled,
+the per-frame tick switches itself off and the node costs nothing until the next row starts one.
+
+---
+
 ## Setup
 
 **1. Attach the behavior.** Add a `SpringBehavior` as a child node of a `Node2D` (open the pack sheet and use Tools > Attach to Selected Node, or drop the pack node in as a child). The behavior acts on its parent, so the parent must be a Node2D or a subclass. One behavior gives that node as many named springs as you want.
@@ -117,12 +137,17 @@ All ACEs live in the **Spring** category and act on the `SpringBehavior` of the 
 | Resume Spring | `spring_name` (String) | Resumes a paused spring toward its target. |
 | Remove Spring | `spring_name` (String) | Deletes a named spring (numeric and/or color). |
 | Reset All Springs | (none) | Clears every spring on this behavior. |
+| Spring Property To | `property_path` (String), `target_value` (Variant) | Springs any property of the host toward a value - a number, a Vector2, a Vector3, or a Color - addressed by the path the Inspector shows. The property's type is read once, on the first row that springs it. |
+| Bump Property | `property_path` (String), `amount` (Variant) | Kicks that property's spring by an amount and lets it settle back on its own. No duration, nothing to clean up, and the target never moves - so the property returns to where it was. |
+| Set Spring Damping And Frequency | `property_path` (String), `damping` (float), `frequency` (float) | The two numbers a spring really has: how fast the bounce dies out (`0` loose, `1` dead) and how many swings a second it wants. |
+| Clamp Spring Between | `property_path` (String), `min_value` (float), `max_value` (float) | Holds that spring between two numbers: it stops dead at the wall instead of pushing through it. The same number on both sides takes the clamp off again. |
 
 ### Conditions
 
 | Condition | Parameters | Description |
 |---|---|---|
 | Is Springing | `spring_name` (String) | Whether the named numeric spring exists and is still moving toward its target. |
+| Spring Is Settled | `property_path` (String) | Whether nothing is springing that property - it has arrived, or it was never sprung at all. |
 
 ### Expressions
 
@@ -132,13 +157,15 @@ All ACEs live in the **Spring** category and act on the `SpringBehavior` of the 
 | Spring Velocity | `spring_name` (String) | float | The named spring's current velocity (0 if it does not exist). |
 | Spring Progress | `spring_name` (String) | float | How far the spring has travelled from its start toward its target, 0 to 1 (1 if it does not exist). |
 | Color Value | `spring_name` (String) | Color | The current color of a named color spring (white if it does not exist). |
+| Spring Value Of | `property_path` (String) | float | What that property's spring reads right now, as a number: the value itself for a number, `x` for a vector, red for a color. `0` if nothing has sprung it. |
+| Spring Velocity Of | `property_path` (String) | float | How fast that property's spring is moving right now. Drive a lean, a blur, or a stretch off it so the motion shows its own speed. `0` if nothing has sprung it. |
 
 ### Triggers
 
 | Trigger | Fires when |
 |---|---|
 | On Spring Started | A settled spring is kicked back into motion by **Spring To** or **Spring Color**. Reports the spring's name. |
-| On Spring Reached | A spring settles onto its target, numeric or color. Reports the spring's name (host springs report their internal names). |
+| On Spring Reached | A spring settles onto its target, numeric or color. Reports the spring's name (host springs report their internal names, and a spring under a property reports that property's path). |
 
 ### Inspector properties
 

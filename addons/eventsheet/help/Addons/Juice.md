@@ -11,10 +11,11 @@ Juice is a Godot EventSheets behavior pack that adds game feel to a scene withou
 3. [Setup](#setup)
 4. [Moments - a whole beat in one row](#moments---a-whole-beat-in-one-row)
 5. [The Feedback Player - the list an object carries](#the-feedback-player---the-list-an-object-carries)
-6. [ACE reference](#ace-reference)
-7. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-8. [Use cases](#use-cases)
-9. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [Channels - a shake heard by everything listening](#channels---a-shake-heard-by-everything-listening)
+7. [ACE reference](#ace-reference)
+8. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+9. [Use cases](#use-cases)
+10. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -246,6 +247,75 @@ everywhere at full strength, exactly as Moment does.
 **Set Moment Strength** is the other dial: one number every moment this node plays is scaled by,
 for a quiet scene at 0.4, a boss fight at 1.5, or whatever the player chose in the options menu.
 **Moment Strength** answers what that number is.
+
+### Backwards, reverted, skipped, put back
+
+A hover-in and a hover-out are one moment played two ways, and an intro somebody has seen twenty
+times is a moment they want to be over. Four rows cover all of it, and none of them needs a second
+moment kept in step with the first by hand.
+
+```
+On Card mouse entered
+  -> Card | JuiceBehavior: Moment "hover" at 1.0
+On Card mouse exited
+  -> Card | JuiceBehavior: Revert moment "hover"
+On Skip pressed
+  -> Game | JuiceBehavior: Skip moment "intro" to the end
+On Level exiting
+  -> Game | JuiceBehavior: Restore what moment "" changed
+```
+
+**Play Moment Backwards** plays the file from its last step to its first. Every step is in the walk
+either way - a beat in reverse is still the whole beat - and the amounts are scaled and held to the
+no-flashing ceiling exactly as they are forwards.
+
+**Revert Moment** turns a moment that is STILL PLAYING around from where it is. Every value its
+steps wrote walks home to what it was when the beat began, over the beat's own length, so a
+hover-out does not have to know how far the hover-in got. The steps that cannot be undone - a shake
+already felt, a hitstop already let go, a shockwave already crossed - are stepped over on the way
+back rather than fired again.
+
+**Skip Moment To End** ends the beat now, on the values it would have finished on: a held effect
+lands at its full strength, a freeze lets time go, a shake settles.
+
+**Restore Moment Values** puts back every value a moment moved - to what it was the FIRST time that
+moment touched it, not what the last play left behind. Leave the name empty and every moment this
+node has played is put back, which is what a scene wants on the way out. It plays nothing, and it
+never undoes anything that was not a moment's doing.
+
+What a moment can put back is the five things its step words write: the host's tint (a flash), the
+host's scale (a punch), the camera's zoom (a zoom), the time scale (a slowmo or a hitstop), and the
+strength of each post effect it holds (a hold or a pulse). A value this game has no way to reach - a
+camera zoom with no camera, a post effect with no post stack - is simply not recorded, and is
+therefore never written over.
+
+### What a moment says while it plays
+
+A moment used to happen and the sheet heard nothing. Four triggers and three expressions fix that,
+and they are ordinary signals on the behaviour, so anything that can hang off a trigger can hang off
+a beat.
+
+```
+On JuiceBehavior moment finished
+  -> Music | MusicBehavior: Fade layer "drums" to 0 over 2 s
+On JuiceBehavior moment step
+  -> Debug | Print: "step " & Juice.MomentStepName("intro")
+```
+
+**On Moment Started** fires as the beat opens, **On Moment Step** once per step with the step's own
+name, **On Moment Skipped** when a Skip To End cuts it, and **On Moment Finished** when the beat is
+over - carrying whether it was cut short. A step is named by its own `label` key when it has one,
+else by the word it is made of (`shake`, `flash`), else by where it sits in the list, so a trigger
+always carries something you can find in the file.
+
+**Moment Is Playing** is true between the first step and the end of the longest one; **Moment Is
+Reverting** is true only while a beat is walking home; **Moment Was Cut Short** answers for the LAST
+play of a name, so it is still askable inside On Moment Finished. **Moment Progress** runs 0 to 1,
+**Moment Elapsed** counts the seconds, and **Moment Step Name** answers what the last step was
+called. The name may be left empty on the two conditions that ask about any moment at all.
+
+A beat whose steps are all instant has no length: it starts and finishes in the same frame, which is
+the honest answer rather than a made-up tail.
 
 ### Moments and Reduce Flashing
 
@@ -494,6 +564,62 @@ comes from an expression all earn nothing rather than a guess.
 
 ---
 
+## Channels - a shake heard by everything listening
+
+A quake should shake every prop in the level. A hit should shake the health panel. Neither wants a
+list of references, and neither is really about the camera. **A channel is a GROUP** - the same
+groups the Node dock shows - so one row says the shake and everything listening hears it.
+
+```
+On Truck passed
+  -> Truck | JuiceBehavior: Shake channel "props" with 0.5 for 0.6 s
+```
+
+Nothing new is invented for this. Shake Channel is one `call_group`; a listener is a node in that
+group; and the Node dock already tells you which groups a node is in.
+
+### Becoming a listener
+
+**Listen On Channel** puts this node in the group and says what it shakes when the channel speaks:
+
+| Word | What moves |
+|---|---|
+| **the camera** | The camera the player is looking through - the pack's own screenshake, held up for as long as the broadcast asked for |
+| **this node** | The node the behavior is attached to, riding the same noise around the pose it was found in - a HUD panel, a lamp, a sign |
+| **the screen** | The screen's own colour channels, through this pack's Chromatic Shake |
+
+```
+On Fridge ready
+  -> Fridge | JuiceBehavior: Listen on channel "props" and shake "this node"
+On HealthPanel ready
+  -> HealthPanel | JuiceBehavior: Listen on channel "hud" and shake "this node"
+On Camera ready
+  -> Camera | JuiceBehavior: Listen on channel "world" and shake "the camera"
+```
+
+The answer is the node's, not the channel's: a lamp that listens on `props` and on `quake` rattles
+the same way for both. A node that wants to do two different things is two nodes.
+
+**Stop Listening On Channel** takes it off one channel and settles it back to the pose it was found
+in. Every other channel it listens on is left alone.
+
+### What it costs
+
+Nothing, until something shakes. Listening is a group membership, which costs no frames at all; a
+broadcast wakes the tick the behavior already had, and the tick parks itself again the frame the
+shake has faded to nothing. A level full of shakers is free while the level is quiet.
+
+The player's effect-strength dial is applied once. A node listener and a screen listener scale by it
+as the broadcast arrives; a camera listener does not, because the camera mixer applies the same dial
+itself and doing it twice would square it. That is also why a camera listener holds the trauma the
+mixer already reads up rather than drawing a second shake over it - two shakes on one camera never
+look like one hit.
+
+The Juice 3D pack answers the same broadcast with the same three words, so a single Shake Channel
+row reaches a prop in a 3D level and a panel on the 2D interface and shakes both.
+
+---
+
 ## ACE reference
 
 On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
@@ -553,6 +679,13 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Play Moment At | `moment_name` (String), `strength` (float), `from` (Node), `within` (float), `falloff` (String) | Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Opens at impact, 1, 600, linear. |
 | Set Moment Strength | `value` (float) | Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. The moments themselves are untouched. Opens at 1. |
 | Moment Step | `verb` (String), `amount` (float), `effect` (String), `seconds` (float), `strength` (float) | Plays ONE step of a moment with no file behind it - the same step a moment file holds, played by the same code. Use it to write a beat straight into a sheet, or as the step of a Moment block. Opens at shake, 0.4, 0, 1. |
+| Play Moment Backwards | `moment_name` (String), `strength` (float) | Plays a moment from its LAST step to its first - a hover-out is the hover-in read the other way. Every step is played either way, and the amounts are scaled and held to the no-flashing ceiling exactly as they are forwards. Opens at hover, 1. |
+| Revert Moment | `moment_name` (String) | Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home over the beat's own length, and the steps that cannot be undone are stepped over. Opens at hover. |
+| Skip Moment To End | `moment_name` (String) | Ends a moment now, on the values it would have finished on: a held effect lands at full strength, a freeze lets time go, a shake settles. Fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true. Opens at intro. |
+| Restore Moment Values | `moment_name` (String) | Puts back every value a moment moved, to what it was the first time that moment touched it. Leave the name empty and every moment this node has played is put back - what a scene wants on the way out. |
+| Shake Channel | `channel` (String), `magnitude` (float), `seconds` (float) | Says one shake to a whole channel: everything listening on it shakes, and nothing else hears a thing. A channel is a GROUP, so a quake reaches the props and a hit reaches the HUD with no reference between them. Opens at props, 0.5, 0.6. |
+| Listen On Channel | `channel` (String), `shakes` (String) | Makes this node a listener on that channel, and says what it shakes when the channel speaks: the camera, this node, or the screen. One answer per node, for every channel it listens on. Opens at props, this node. |
+| Stop Listening On Channel | `channel` (String) | Takes this node off a channel and settles it back to the pose it was found in. Every other channel it listens on is left alone. Opens at props. |
 
 ### Conditions
 
@@ -561,6 +694,9 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Is Shaking | (none) | Whether the camera is currently shaking (trauma is above zero). |
 | Is Hitstopped | (none) | Whether a hitstop freeze is active right now. |
 | Is Chromatic Shaking | (none) | Whether a chromatic shake is running right now - true from the row that fires it until the duration is up or Stop Chromatic Shake takes it off. |
+| Moment Is Playing | `moment_name` (String) | Whether a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all. |
+| Moment Is Reverting | `moment_name` (String) | Whether a moment is walking back to where it started rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is on its way home. |
+| Moment Was Cut Short | `moment_name` (String) | Whether the LAST play of this moment did not run its course - it was skipped to the end, or reverted. Ask it inside On Moment Finished. Opens at intro. |
 
 ### Expressions
 
@@ -570,6 +706,9 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Ticker Value | `ticker_name` (String) | float | What a ticker currently SHOWS - the eased value Count To is rolling. Print or draw this instead of the real variable. |
 | Chromatic Shake Magnitude | (none) | float | How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing. Zero when nothing is shaking - drive a rumble or a HUD wobble from it and the whole hit reads as one thing. |
 | Moment Strength | (none) | float | The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written. |
+| Moment Progress | `moment_name` (String) | float | How far through a moment this node is, 0 at its first frame to 1 at its last. A moment that is not playing answers 0. |
+| Moment Elapsed | `moment_name` (String) | float | How many seconds a moment has been playing. Draw a bar over a long beat, or hold a row back until a beat is a certain way in. |
+| Moment Step Name | `moment_name` (String) | String | What the LAST step of a moment was called - its own label when it has one, else the word it is made of. The same name On Moment Step carries. |
 
 ### Triggers
 
@@ -584,6 +723,10 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | On Squash Finished | A Squash & Stretch tween or a Spring Squash spring settles back to rest. |
 | On Slowmo Finished | Slowmo has ramped back to normal time scale. |
 | On Hitstop Finished | A hitstop freeze ends and the previous time scale is restored. |
+| On Moment Started | A moment opens on this node (carries the moment's name). |
+| On Moment Step | One step of a moment is taken (carries the moment's name and the step's own name). |
+| On Moment Skipped | A Skip Moment To End cuts a beat short (carries the moment's name). |
+| On Moment Finished | A moment is over (carries the moment's name and whether it was cut short). |
 
 ### Inspector properties
 

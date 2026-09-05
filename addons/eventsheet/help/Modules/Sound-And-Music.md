@@ -131,6 +131,78 @@ code. Two actions really are called **Play Sound** and two conditions really are
 | Audio Playback Speed | The current global playback speed scale. | `AudioServer.playback_speed_scale` |
 | Audio Output Latency | Output latency in seconds. | `AudioServer.get_output_latency()` |
 
+### Sweeps and snapshots (picker section: Audio Server)
+
+The rows above SWITCH a bus: it is dry, then it is underwater. These ones MOVE it, which is what a
+hit actually sounds like - the room going under for a tenth of a second and coming back.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Muffle Bus | Walks a low-pass filter's cutoff down over time, so everything brighter goes quiet. | `EventForgeBusMix.muffle(self, {bus}, {cutoff_hz}, {seconds})` |
+| Dive Bus Volume | Walks a bus's level down through an amplify effect, never through the player's own volume. | `EventForgeBusMix.dive(self, {bus}, {volume_db}, {seconds})` |
+| Wash Bus | Grows a reverb's wet amount behind the sound, its dry left alone. | `EventForgeBusMix.wash(self, {bus}, {wetness}, {seconds})` |
+| Restore Bus | Walks every kind this bus was swept by back to where it rested before the first sweep. | `EventForgeBusMix.restore(self, {bus}, {seconds})` |
+| Snapshot Buses As | Writes down every bus's level, mute and solo under a name you choose. | `EventForgeBusMix.snapshot({snapshot_name})` |
+| Recall Bus Snapshot | Puts a snapshotted mix back: levels walked, mutes and solos cut. | `EventForgeBusMix.recall(self, {snapshot_name}, {seconds})` |
+| Bus Is Sweeping | True while a sweep on this bus is still walking. | `EventForgeBusMix.is_sweeping({bus})` |
+| Bus Snapshot Exists | True once a snapshot of that name has been taken this run. | `EventForgeBusMix.has_snapshot({snapshot_name})` |
+
+Four things worth knowing before you use them:
+
+- **The effect is added once and kept.** The first Muffle on a bus adds an `AudioEffectLowPassFilter`
+  to it, opened so wide it does nothing; every later Muffle reuses that one. Same for the amplify a
+  Dive moves and the reverb a Wash moves. Your bus layout in the Audio panel therefore gains one
+  slot per kind the first time a game runs one of these rows, and never gains another.
+- **The player's volume is never touched.** A Dive moves an amplify effect, not the bus volume the
+  options screen set, because that number is the player's and a beat that moved it would leave their
+  setting wherever the beat happened to end.
+- **Home is where the mix was.** The value an effect rested at before the FIRST sweep touched it is
+  what Restore Bus walks back to - not where the last beat left it. So a moment can muffle and dive
+  without ever saying how to come back, and one Restore Bus at the end of it puts the room right.
+- **No snapshot ships.** There is no house "underwater" and no house "paused", because a game's mix
+  is the game's. Take the first one from the live desk at startup - `Snapshot Buses As "normal"` -
+  and every later recall has somewhere honest to come back to.
+
+The work itself is `eventsheet_addons/bus_mix.gd`, a real file in your project that a debugger steps
+into: a sweep is one `Tween` walking one float, which the engine parks and frees the moment it lands,
+so a swept bus costs nothing at rest.
+
+### The sequencer: a grid of moments on a beat (picker section: Sequencer)
+
+Lights that pulse on the beat are, in most games, a counter and a modulo in a per-frame row, and
+changing the pattern means rewriting the arithmetic. What the pattern actually is is a grid: a track
+per thing that can fire, a step per beat subdivision, and a name in the cells that should fire. A
+**SequenceResource** is that grid - its tempo, how many steps a bar holds, and its tracks - and these
+rows play it.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Play Sequence | Starts stepping a grid on this object, at a tempo (0 means the file's own). | `EventForgeSequencer.play(self, {sequence}, {bpm})` |
+| Stop Sequence | Stops it and parks the head, keeping where it stopped. | `EventForgeSequencer.stop(self)` |
+| Set Sequence Tempo | Changes the tempo without restarting the grid. | `EventForgeSequencer.set_tempo(self, {bpm})` |
+| Jump To Sequence Step | Moves the head; the step named is the next one said out loud. | `EventForgeSequencer.jump_to(self, {step})` |
+| Sequence Is Playing | True while a grid is being stepped on this object. | `EventForgeSequencer.is_playing(self)` |
+| Current Sequence Step | Which step the head last said, and -1 before it has said any. | `EventForgeSequencer.current_step(self)` |
+| On Sequence Step | Runs on every crossed cell, with the track, the step and the name in it. | `signal sequence_stepped(track, step, name)` |
+
+Four things worth knowing:
+
+- **A crossed cell is said twice**, both times in the engine's own plumbing. Once as this node's
+  `sequence_stepped` signal, which On Sequence Step connects to - a plain signal your sheet declares
+  for itself. And once to the GROUP the track is named after: every node in it that can play a moment
+  by name is asked to, so a `lights` track reaches every light listening on it and no reference is
+  held anywhere.
+- **The song is the clock.** With a Music autoload in the tree the grid reads the song's own beat
+  position and cannot drift from what the player hears. With no song it counts its own beats from the
+  tempo it was given, which is also what keeps a browser tab that throttles frames landing on time.
+- **Tracks are their own length.** A four-cell track and a three-cell track run against each other,
+  each wrapping at its own end - which is where a cross-rhythm comes from and costs nothing.
+- **Nothing ships.** There is no house pattern and no house track name. A new SequenceResource is
+  empty, and the first track is the first thing you add.
+
+A dropped frame never eats a beat: a frame long enough to cross three steps says all three, in order.
+The work is `eventsheet_addons/sequencer.gd`, and a stopped head processes nothing at all.
+
 ### The options-menu forms (picker section: Game Options)
 
 | Name | What it does | Ships as |

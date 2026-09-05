@@ -142,6 +142,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `call_group` | [Call Method On Group](ace:Core/CallGroup) | Groups | Vocabulary |
 | `came_from` | [Current World Look](ace:Core/WorldCurrentLook) | Environment | Vocabulary |
 | `camera_attributes` | [Camera Exposure](ace:Core/CamExposureWorld) | Camera | Vocabulary |
+| `can_be_felt` | [Haptics Can Be Felt](ace:Core/HapticsCanBeFelt) | Vibration | Vocabulary |
 | `can_process` | [Node Is Running](ace:Core/NodeIsActive) | Nodes: Activation | Vocabulary |
 | `cancel_request` | [Cancel Request](ace:Core/AjaxCancel) | AJAX | Vocabulary |
 | `canceled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
@@ -185,6 +186,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `content_scale_factor` | [Pixel Size](ace:Core/RenderingPixelSize) | Rendering | Vocabulary |
 | `content_scale_mode` | [Scale The Game](ace:Core/RenderingScaleTheGame) | Rendering | Vocabulary |
 | `content_scale_stretch` | [Keep Pixels Sharp](ace:Core/RenderingKeepPixelsSharp) | Rendering | Vocabulary |
+| `continuous_start` | [Haptic Continuous Start](ace:Core/HapticContinuousStart) | Vibration | Vocabulary |
+| `continuous_stop` | [Haptic Continuous Stop](ace:Core/HapticContinuousStop) | Vibration | Vocabulary |
 | `copy_absolute` | [Copy File](ace:Core/CopyFile) | Files | Vocabulary |
 | `cos` | [Cosine](ace:Core/CosValue) | Helpers | Vocabulary |
 | `count` | [Count Of](ace:Core/ArrayCount) | Variables: Array | Vocabulary |
@@ -201,6 +204,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `current_animation_length` | [Animation Length](ace:Core/AnimationLength) | Animation | Vocabulary |
 | `current_animation_position` | [Animation Position](ace:Core/AnimationPosition) | Animation | Vocabulary |
 | `current_scene` | [Current Scene Root](ace:Core/GetSceneRoot) | Nodes | Vocabulary |
+| `current_step` | [Current Sequence Step](ace:Core/SequenceCurrentStep) | Sequencer | Vocabulary |
 | `current_tab` | [Switch To Tab](ace:Core/SwitchToTab) | UI | Vocabulary |
 | `curve` | [Random Place Along Path](ace:Core/PlaceAlongPath) | Spawn | Vocabulary |
 | `damping` | [Set Spring Damping](ace:Core/SetDampedSpringDamping) | Joints | Vocabulary |
@@ -223,6 +227,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `distance_squared_to` | [Look At (flat)](ace:Core/LookAtFlat) | Movement | Vocabulary |
 | `distance_to` | [Distance To](ace:Core/DistanceTo) | Math & Random | Vocabulary |
 | `distance_to_target` | [Distance To Target](ace:Core/GetNavDistance) | General Expressions | Vocabulary |
+| `dive` | [Dive Bus Volume](ace:Core/AudioDiveBusVolume) | Audio Server | Vocabulary |
 | `dof_blur_amount` | [Focus Everywhere](ace:Core/CamFocusEverywhere) | Camera | Vocabulary |
 | `dof_blur_far_distance` | [Focus Distance](ace:Core/CamFocusDistance) | Camera | Vocabulary |
 | `dof_blur_far_enabled` | [Focus On](ace:Core/CamFocusOn) | Camera | Vocabulary |
@@ -244,6 +249,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `emit` | [Emit Signal](ace:Core/EmitSignal) | Signals / Scene / Input | Vocabulary |
 | `emit_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
 | `emitting` | [Set Emitting](ace:Core/SetEmitting) | Particles | Vocabulary |
+| `emphasis` | [Haptic Emphasis](ace:Core/HapticEmphasis) | Vibration | Vocabulary |
 | `enabled` | [Turn On](ace:Core/LightLitOn) | Lighting | Vocabulary |
 | `end` | [Fit Limits To](ace:Core/CameraFitLimits) | Camera | Vocabulary |
 | `ends_with` | [Text Ends With](ace:Core/StringEndsWith) | Variables: String | Vocabulary |
@@ -529,6 +535,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `has_overlapping_bodies` | [Has Overlapping Bodies](ace:Core/HasOverlappingBodies) | Collisions | Vocabulary |
 | `has_point` | [Is Inside Area](ace:Core/IsInsideArea) | General Conditions | Vocabulary |
 | `has_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
+| `has_snapshot` | [Bus Snapshot Exists](ace:Core/AudioHasBusSnapshot) | Audio Server | Vocabulary |
 | `has_translation_for_locale` | [Language Is Available](ace:Core/LanguageIsAvailable) | Translation | Vocabulary |
 | `hash` | [Seeded Value](ace:Core/SeededValue) | Procedural | Vocabulary |
 | `hear` | [Make Noise](ace:Core/MakeNoise) | Stealth | Vocabulary |
@@ -602,6 +609,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_queued_for_deletion` | [Crowd Is Down To This One](ace:Core/CrowdIsDownToThisOne) | Crowd | Vocabulary |
 | `is_server` | [Is Host](ace:Core/IsHost) | Multiplayer | Vocabulary |
 | `is_stopped` | [Is Timer Stopped](ace:Core/IsTimerStopped) | General Conditions | Vocabulary |
+| `is_sweeping` | [Bus Is Sweeping](ace:Core/AudioBusIsSweeping) | Audio Server | Vocabulary |
 | `is_touchscreen_available` | [Touchscreen Available](ace:Core/IsTouchscreen) | Touch | Vocabulary |
 | `is_typed` | [Is Typed](ace:Core/ArrayIsTyped) | Variables: Array | Vocabulary |
 | `is_valid` | is set | Object | Object expressions |
@@ -609,6 +617,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_valid_int` | [Text Is A Whole Number](ace:Core/TextIsAWholeNumber) | Compare: Text | Vocabulary |
 | `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
 | `join` | [Join To Text](ace:Core/ArrayJoin) | Variables: Array | Vocabulary |
+| `jump_to` | [Jump To Sequence Step](ace:Core/SequenceJumpTo) | Sequencer | Vocabulary |
 | `keys` | [Dictionary Keys](ace:Core/DictKeys) | Variables: Dictionary | Vocabulary |
 | `kill` | [Blend Toward](ace:Core/BlendToward) | Animation | Vocabulary |
 | `layer` | [Set Layer Order](ace:Core/SetLayerOrder) | Layers | Vocabulary |
@@ -686,6 +695,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `move_to_front` | [Move To Top Of Layer](ace:Core/MoveToTopOfLayer) | Layers | Vocabulary |
 | `move_toward` | [Move Toward](ace:Core/MoveTowardValue) | Helpers | Vocabulary |
 | `msaa_2d` | [Set Anti-aliasing](ace:Core/WindowSetAntiAliasing) | Game Window | Vocabulary |
+| `muffle` | [Muffle Bus](ace:Core/AudioMuffleBus) | Audio Server | Vocabulary |
 | `multiplayer_peer` | [Leave The Game](ace:Core/LeaveGame) | Multiplayer | Vocabulary |
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
@@ -783,6 +793,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `range` | [Root Owner Of](ace:Core/RootOwnerOf) | Ownership | Vocabulary |
 | `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
 | `read_file` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
+| `recall` | [Recall Bus Snapshot](ace:Core/AudioRecallBusSnapshot) | Audio Server | Vocabulary |
 | `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
 | `reduce` | [Reduce](ace:Core/ArrayReduce) | Variables: Array | Vocabulary |
 | `refuse_new_connections` | [Stop Accepting Players](ace:Core/StopAcceptingPlayers) | Multiplayer | Vocabulary |
@@ -817,6 +828,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `resource_path` | [Set Exposure](ace:Core/EnvSetExposure) | Environment | Vocabulary |
 | `rest_length` | [Set Spring Rest Length](ace:Core/SetDampedSpringLength) | Joints | Vocabulary |
 | `restart` | [Restart / Burst](ace:Core/RestartParticles) | Particles | Vocabulary |
+| `restore` | [Restore Bus](ace:Core/AudioRestoreBus) | Audio Server | Vocabulary |
 | `retire` | [Retire](ace:Core/Retire) | Destroy | Vocabulary |
 | `return` | [Translated Column Of Table](ace:Core/TranslatedColumn) | Translation | Vocabulary |
 | `reverse` | [Reverse Array](ace:Core/ArrayReverse) | Variables: Array | Vocabulary |
@@ -908,6 +920,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_setting` | [Set Setting](ace:Core/SetProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
 | `set_shader_parameter` | [Set Effect Dial](ace:Core/EffectSetDial) | Effects | Vocabulary |
 | `set_surface_override_material` | [Set Material Of Surface](ace:Core/MaterialSetSurfaceMaterial) | Material | Vocabulary |
+| `set_tempo` | [Set Sequence Tempo](ace:Core/SequenceSetTempo) | Sequencer | Vocabulary |
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
@@ -937,6 +950,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `snapped` | [Snap Point To Grid](ace:Core/SnapPointToGrid) | Math & Random | Vocabulary |
 | `snappedf` | [Snap To Step](ace:Core/Snapped) | Math & Random | Vocabulary |
 | `snappedi` | snapped to | System | Expressions |
+| `snapshot` | [Snapshot Buses As](ace:Core/AudioSnapshotBuses) | Audio Server | Vocabulary |
 | `softness` | [Set Pin Softness](ace:Core/SetPinJointSoftness) | Joints | Vocabulary |
 | `sort` | [Sort Array](ace:Core/ArraySort) | Variables: Array | Vocabulary |
 | `space` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
@@ -1058,6 +1072,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `volumetric_fog_enabled` | [Is Volumetric Fog On](ace:Core/EnvIsVolumetricFog) | Environment | Vocabulary |
 | `volumetric_fog_length` | [Volumetric Reach](ace:Core/EnvVolumetricReach) | Environment | Vocabulary |
 | `warp_mouse` | [Move Cursor To](ace:Core/MouseMoveCursorTo) | Mouse | Vocabulary |
+| `wash` | [Wash Bus](ace:Core/AudioWashBus) | Audio Server | Vocabulary |
 | `weekday` | [Date: Weekday](ace:Core/DateWeekday) | Time | Vocabulary |
 | `window_get_mode` | [Is Fullscreen](ace:Core/IsFullscreen) | Display | Vocabulary |
 | `window_get_size` | [Window Width](ace:Core/GetWindowWidth) | Display | Vocabulary |

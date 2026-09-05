@@ -6,6 +6,11 @@ distance-field canvas shader, so the outline is solved per pixel: a ring is roun
 a hairline is one crisp pixel, and there is no texture to author and nothing tessellated on
 the CPU.
 
+Ten more nodes do the same in 3D: **Line 3D**, **Disc 3D**, **Rect 3D**, **Polygon 3D**,
+**Polyline 3D** and **Regular Polygon 3D**, plus a **Sphere**, a **Cuboid**, a **Cone** and a
+**Torus**. They read the same drawing - one shader include, shared by both halves - so a dash
+tuned on a 2D line and the same dash on its 3D twin cannot drift apart.
+
 You add them from Godot's own Create Node dialog, tune them in the Inspector, and drive them
 from rows.
 
@@ -49,6 +54,93 @@ Is placing          -> Footprint    | Scroll Dashes: 1
 
 All seven share the stroke, colour, fill, border, dash and drawing fields below.
 
+## The ten shapes in 3D
+
+The 3D half is the same drawing in a world with a camera in it. Each node is a
+`MeshInstance3D`, so its Visibility, Cast Shadow and Cull Margin are Godot's own; there is no
+hidden child holding a mesh and no second transform to keep in step.
+
+| Node | What it is | Its own fields |
+|---|---|---|
+| **Line 3D** | A line between two points anywhere in space, drawn as a strip - the grapple rope, the laser sight, the tether. | Start point, end point |
+| **Disc 3D** | A disc, and by an inner radius and two angles also a ring, a pie and an arc. | Radius, inner radius, start angle, end angle |
+| **Rect 3D** | A rectangle with rounded corners (one number, or four). | Size, corner radius |
+| **Polygon 3D** | A closed outline through points you drag in the 3D viewport. | Points |
+| **Polyline 3D** | A path through points, open or closed, with caps. | Points, closed |
+| **Regular Polygon 3D** | N equal sides at a radius: the hex tile marker, the summoning ring. | Sides, radius, angle |
+| **Sphere** | The engine's own sphere, wearing the family's colour, blend and depth fields. | Radius |
+| **Cuboid** | The engine's own box, same fields. | Size |
+| **Cone** | A cone with an optional cap - the spotlight volume, the arrow head. | Radius, height, capped |
+| **Torus** | The engine's own torus - the portal ring, the halo, the hoop. | Radius, inner radius |
+
+### Geometry: flat, billboard, volumetric
+
+The first six carry a **Geometry** row of three buttons at the top of the Inspector, and it is
+the choice the rest of the Inspector hangs off:
+
+- **flat** - the shape lives on the node's own XY plane. A range ring on the ground, a panel on
+  a wall, a zone marker on the floor.
+- **billboard** - the same shape, turned to face the camera every frame. That turn happens in
+  the **vertex** stage: four vertices of work per shape, no redraw and no CPU pass over
+  anything. A Line 3D reads it differently and rightly: a line always faces you *along its own
+  axis*, so its billboard is a strip built between its two points rather than a card that spins.
+- **volumetric** - real geometry a light and a depth buffer treat like anything else. A Line 3D,
+  a Polyline 3D, a Polygon 3D and a Regular Polygon 3D become a **tube** along their own
+  outline at the detail level you set; a Disc 3D becomes a cylinder (or a torus once it has an
+  inner radius) and a Rect 3D a slab as deep as its stroke is wide. The four wrappers are always
+  this.
+
+A volumetric shape is a surface rather than a distance field, so it wears its own colour and
+its blend word and nothing else: **the dashes, the caps and the colour modes are what the flat
+and billboard forms are for.** The Inspector says so by hiding those fields when the shape is
+volumetric, rather than leaving them there meaning nothing.
+
+### The 3D numbers are the node's own units
+
+A stroke five centimetres wide is `0.05`, and a disc half a metre across has a radius of `0.5`.
+That is the one thing to know coming from the 2D twins, and it is why **Thickness** is followed
+by a **unit** row of two buttons rather than by the 2D half's converting dropdown:
+
+- **world** - the number is the node's own units.
+- **screen** - the number is PIXELS, and the shape keeps that weight however far away the camera
+  gets. A pixel is not a length in 3D until something says how far away the shape is, so this is
+  a run-time mode rather than a view of one stored number: the shader reads how much of the
+  shape one pixel covers where it lands, which is exact for a shape seen at an angle, for an
+  orthographic camera, and for any scale on the node. **Point Is Inside Shape** uses the same
+  reading, so a hairline that looks four pixels wide is four pixels wide to click.
+
+Angles keep the converting dropdown, because degrees, turns and radians convert exactly and
+without a camera: the Disc 3D's start and end angle and the Regular Polygon 3D's angle all show
+one. The number stored is always degrees, so nothing an emitted script reads ever moves.
+
+### Depth: sorted, or drawn through walls
+
+**Depth** is two buttons on every 3D shape. `test` sorts the shape against the world the
+ordinary way. `through walls` draws it over everything in front of it - the gizmo line, the
+range ring you have to see from anywhere. It is honest about its cost: a depth test is a
+`render_mode`, decided when a shader compiles, so `through walls` is a second shader rather
+than a flag on the same one, which is why the pack ships ten spatial files and not five.
+
+### Handles and previews in 3D
+
+Each 3D shape shows the same **live preview card** at the top of its Inspector, and drags its
+geometry by **handles in the 3D viewport**: the Line 3D's two ends, the Disc 3D's radius, the
+Polygon 3D's and Polyline 3D's points, the Regular Polygon 3D's radius, and the Sphere's, the
+Cone's and the Torus's radius. A handle drags on the plane facing the camera, so looking down
+the node's own Z gives an exact reading on the shape's own plane.
+
+### The rows are the same rows
+
+Every row the 2D half ships, the 3D half ships too, with one addition: **Set Geometry**
+(`flat`, `billboard`, `volumetric`). `Set Thickness` takes `world` or `screen` here rather than
+the 2D half's three units, and `Point Is Inside Shape` takes a `Vector3`.
+
+```
+Player | Is grappling  -> Rope      | Set Property: start, Player.hand.global_position
+                       -> Rope      | Set Property: end, Player.grapple_point
+Turret | On ready      -> RangeRing | Set Shape Radius: Turret.range
+```
+
 ## ACE reference
 
 Every row is **node-scoped**: you pick which shape it acts on, exactly like a built-in row on
@@ -72,6 +164,8 @@ all seven rather than seven identical entries.
 | **Set Shape Radius** | new_radius (float) | The radius of a Disc or a Regular Polygon. |
 | **Set Shape Sides** | count (int) | How many sides a Regular Polygon has. |
 | **Set Arc** | from_degrees (float), to_degrees (float) | A Disc's sweep. 0 to 360 is the whole disc; less is the pie or arc a cooldown, a vision cone or a health ring is drawn as. |
+| **Apply Shape Style** | style_file (ShapeStyle) | Puts a style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back. |
+| **Apply Shape Style To Group** | group_name (String), style_file (ShapeStyle) | The same, for every shape in a group at once - the whole HUD re-skinned from one file. |
 
 Each shape also publishes the one or two fields that are its own sentence, as ordinary
 property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), **Closed**
@@ -84,6 +178,7 @@ property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), *
 |---|---|---|
 | **Shape Is Visible** | none | The shape is drawn at all: visible in the tree, and not fully transparent. |
 | **Point Is Inside Shape** | point (Vector2) | A world point lands inside the shape: inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it. |
+| **Shape Style Is** | style_file (ShapeStyle) | The shape is wearing that exact style file. The test a row makes before re-skinning, and the one an exception is written against. |
 
 ### Expressions
 
@@ -100,6 +195,7 @@ nothing.
 
 | Group | Field | Notes |
 |---|---|---|
+| (top) | Style | A **Shape Style** file this shape wears instead of its own look, with a **Save As Style** button above it. Empty is the usual case. See "Styles you own" below. |
 | Stroke | Thickness | A number with a **unit dropdown** at its right edge: pixels, world units or screen units. Switching the dropdown converts the number in front of you; the stored value is always pixels, so nothing an emitted script reads ever moves. |
 | Stroke | Thickness scale | With the node, or fixed on screen (what a HUD line wants). |
 | Stroke | Caps | None, square or round, as three icon buttons. |
@@ -135,6 +231,45 @@ radius.
 | `per corner` | A colour per corner. | Rect, Triangle |
 
 The border has its own colour and thickness, and the fill respects the blend.
+
+## Styles you own
+
+Twenty aim lines in one game want one thickness, one cap and one dash pattern. A **Shape Style**
+is that answer as a file: a resource holding the LOOK half of a shape's fields, which any 2D shape
+can wear.
+
+**The pack ships no styles.** There is no house list to pick from, because a look is the game's,
+not the plugin's. The first style in a project is one you save out of a shape you tuned: set the
+thickness, the caps, the colours and the dashes on one Line until it looks right, then press
+**Save As Style** at the top of its Inspector. That writes a `.tres` beside the scene, named after
+the node, and the shape wears the file it just wrote - so nothing on screen moves.
+
+**Wearing one.** Drop the file into another shape's **Style** slot (a drag from the FileSystem dock
+does it). Every field the style speaks for now reads from the file, and those fields go **grey** in
+the Inspector rather than disappearing: you can still read what the shape would look like on its
+own, and emptying the slot hands it straight back. Nothing is copied into the shape, so editing the
+style file changes every shape wearing it at once, in the editor as well as in the game.
+
+| A style speaks for | It never speaks for |
+|---|---|
+| Thickness, thickness scale, caps | An end point, a radius, a size, a list of points, an angle |
+| Colour mode, colour, second colour, gradient | Fill and border toggles, which are the shape's own |
+| Dashed, dash space, snap, size, count, spacing, style | The dash **offset**, which is what Scroll Dashes animates |
+| Blend | Anti-alias width |
+
+A shape that **has not got** a field the style carries is untouched by it: a Triangle has no dashes,
+so a dashed style leaves it a plain triangle rather than inventing fields for it.
+
+**From rows.** `Apply Shape Style` on one shape, `Apply Shape Style To Group` for a whole HUD, and
+`Shape Style Is` for the exception:
+
+```
+On setting changed "high_contrast"
+  -> Shapes | Apply Shape Style To Group  "hud_lines", preload("res://ui/hud_thick.tres")
+```
+
+**2D only.** The 3D shapes measure their thickness in world units with a unit of their own, so a
+style holding pixels would be a lie there rather than a shortcut; a 3D shape has no Style slot.
 
 ## Use cases
 
@@ -360,6 +495,18 @@ tool wants.
 - **Many of a kind still want a MultiMesh.** Seven hundred identical dashed rings are seven
   hundred draws here. That is fine for a HUD and wrong for a particle field; the drawing rows
   on the Drawing Canvas are the answer for a crowd.
+- **The 3D half is one quad too.** A flat or billboard shape is the same four vertices, wearing
+  the spatial version of the same body; the billboard turn is vertex work, not a rebuild. A
+  volumetric shape is the only one that builds a mesh, and it builds it when its own geometry
+  changes - never when a colour, a blend word or a dash offset does.
+- **Ten spatial files, one drawing.** Five blends times two depth readings, because both are
+  `render_mode` and neither can be a uniform. All ten are five lines around the same include
+  the canvas half reads, so the arithmetic has exactly one copy.
+- **Nothing in the 3D half is Forward+ only either.** An unshaded spatial shader with these
+  blends runs on Mobile and on Compatibility, which is what a phone and a browser ship with.
+- **A screen-unit stroke costs nothing extra.** It is read from the screen-space derivatives of
+  the shape's own coordinates in the fragment - no camera lookup on the CPU, no per-frame
+  uniform push, and no `_process`.
 
 ## Already written it by hand? It reads as this pack
 

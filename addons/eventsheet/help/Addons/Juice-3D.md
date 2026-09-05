@@ -22,10 +22,11 @@ so what you learned there carries over.
 
 1. [Where this pack shines](#where-this-pack-shines)
 2. [Setup](#setup)
-3. [ACE reference](#ace-reference)
-4. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+3. [Channels - a shake heard by everything listening](#channels---a-shake-heard-by-everything-listening)
+4. [ACE reference](#ace-reference)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -53,6 +54,44 @@ so what you learned there carries over.
    The active `Camera3D` is found automatically; `Use Camera` pins a specific one.
 3. It composes with the FPS Controller out of the box - both packs under the same player is the
    intended pairing.
+
+## Channels - a shake heard by everything listening
+
+A distant collapse should rattle every hanging lamp in the level. A hit should shake the health
+panel. Neither wants a list of references. **A channel is a GROUP** - the same groups the Node dock
+shows - so one row says the shake and everything listening hears it.
+
+```
+On Ceiling collapsed
+  -> Ceiling | Juice3DBehavior: Shake channel "props" with 0.5 for 0.6 s
+```
+
+Nothing new is invented for this. Shake Channel is one `call_group`; a listener is a node in that
+group; and the Node dock already tells you which groups a node is in.
+
+**Listen On Channel** puts this node in the group and says what it shakes when the channel speaks:
+
+| Word | What moves |
+|---|---|
+| **the camera** | The active `Camera3D`, through this pack's own trauma shake, held up for as long as the broadcast asked for |
+| **this node** | The `Node3D` the behavior is attached to, in all three axes, around the pose it was found in - a lamp, a sign, a prop |
+| **the screen** | The screen's own colour channels, through this pack's Chromatic Shake |
+
+```
+On Lamp ready
+  -> Lamp | Juice3DBehavior: Listen on channel "props" and shake "this node"
+```
+
+The answer is the node's, not the channel's: a lamp that listens on `props` and on `quake` rattles
+the same way for both. **Stop Listening On Channel** takes it off one channel and settles it back to
+the pose it was found in, leaving every other channel it listens on alone.
+
+The 2D **Juice** pack answers the same broadcast with the same three words, so a single Shake
+Channel row reaches a prop in the level and a panel on the interface and shakes both. And it costs
+nothing until something shakes: listening is a group membership, a broadcast wakes the tick this
+behavior already had, and the tick parks itself again the frame the shake has faded to nothing.
+
+---
 
 ## ACE reference
 
@@ -97,6 +136,9 @@ placed on.
 | Play Sound With Intensity | `path` (String), `intensity` (float) | Plays a sound scaled by a 0-1 intensity - drive it, Shake, and Punch Scale from ONE hit-power value. Opens at 0.5. |
 | Count To | `ticker_name` (String), `target` (float), `duration` (float) | Eases a named display value toward a target - scores ROLL instead of snapping. Read via Ticker Value. Opens at score, 100, 0.6. |
 | Set Ticker | `ticker_name` (String), `value` (float) | Sets a display value instantly (cancelling any roll). |
+| Shake Channel | `channel` (String), `magnitude` (float), `seconds` (float) | Says one shake to a whole channel: everything listening on it shakes, and nothing else hears a thing. A channel is a GROUP, so a collapse reaches the hanging lamps with no reference between them. A 2D listener and a 3D one answer the same broadcast. Opens at props, 0.5, 0.6. |
+| Listen On Channel | `channel` (String), `shakes` (String) | Makes this node a listener on that channel, and says what it shakes when the channel speaks: the camera, this node, or the screen. One answer per node, for every channel it listens on. Opens at props, this node. |
+| Stop Listening On Channel | `channel` (String) | Takes this node off a channel and settles it back to the pose it was found in. Every other channel it listens on is left alone. Opens at props. |
 
 ### Conditions and expressions
 

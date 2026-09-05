@@ -6,6 +6,178 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Beat, bump and broadcast: a whole beat of feedback, written down and played by name
+
+- **A moment written as ROWS: the Moment block, 1 block kind and 4 rows.** A file is the right home
+  for a beat whose steps all happen at once; a beat with TIMING in it wants to be read in order.
+  **Moment** is a block whose children are its steps, a timing word on the left and any actions at
+  all on the right - a pack verb, a tween, a spawn, an emitted signal - and **Moment Step** is the
+  row that plays one of the ten felt words inside one. The four timing words are the whole grammar:
+  **At** (that many seconds after the beat began), **Then** (after the step above it started),
+  **Hold** (when the slowest step above has finished, plus a delay of its own) and **Loop Back**
+  (back to the last Hold for that many more passes), each on the game clock or the real one. The
+  block compiles to ONE ordinary coroutine on the host,
+  `func moment_<name>(strength: float = 1.0, from: Node = null)`, so what a sheet plays is a
+  function a hand-written script could have held - and a hand-written one of that shape opens back
+  as the block. **New Moment...**, **Add Step...** and **Delete Step** are the gestures, each a
+  single Ctrl+Z, and reordering is dragging rows, because rows already drag.
+- **The two doors between a beat's rows and a beat's file.** **Save Moment As File...** writes a
+  block's steps out as a `MomentResource`, naming any step whose timing a file cannot carry rather
+  than writing it down half; **Open Moment File As Block...** reads one back as a block whose steps
+  all start together, which is exactly what the file meant. **Moment** looks for a beat written as
+  rows on the host FIRST and falls through to a file when there is none, so a game can keep some of
+  its beats in files and write the rest in the sheet without either row knowing the difference.
+- **Where it happened, and how far it reaches: 3 rows.** **Play Moment At** takes a place and a
+  range, and the strength falls off between the two (`linear`, `smooth` or `none`), so a moment that
+  happened outside the range does not play at all and the distance is measured once per play, from
+  the place to whoever is watching. **Set Moment Strength** is the one number every beat this node
+  plays is scaled by - the effects slider in the options screen - and **Moment Strength** answers
+  what that number is, which is what the slider reads to draw itself.
+- **Backwards, reverted, skipped, put back: 4 rows.** **Play Moment Backwards** plays a beat from
+  its last step to its first. **Revert Moment** turns a beat that is STILL PLAYING around from where
+  it is, walking every value its steps wrote home over the beat's own length, so a hover-out does
+  not have to know how far the hover-in got. **Skip Moment To End** ends it now, on the values it
+  would have finished on. **Restore Moment Values** puts back what a beat moved, to what it was the
+  FIRST time that beat touched it rather than what the last play left; an empty name puts back every
+  beat this node has played, which is what a scene wants on the way out.
+- **A beat talks back: 4 triggers, 3 questions and 3 readings.** **On Moment Started**, **On Moment
+  Step** (carrying the step's own label), **On Moment Skipped** and **On Moment Finished** (carrying
+  whether it was cut short) are ordinary signals on the behaviour, so anything that can hang off a
+  trigger can hang off a beat. **Moment Is Playing**, **Moment Is Reverting** and **Moment Was Cut
+  Short** are the questions; **Moment Progress**, **Moment Elapsed** and **Moment Step Name** are the
+  readings.
+- **Channels - one row heard by everything listening: 3 rows, in 2D and in 3D.** A channel is a
+  GROUP, the same groups the Node dock shows. **Shake Channel** says the shake once and every
+  listener hears it; **Listen On Channel** puts a node in the group and says what it shakes when the
+  channel speaks - **the camera**, **this node**, or **the screen** - and **Stop Listening On
+  Channel** takes it off one channel and settles it back, leaving the others alone. The answer is
+  the node's, not the channel's. Juice 3D answers the same broadcast with the same three words, so
+  one row reaches a prop in a 3D level and a panel on the 2D interface and shakes both.
+- **The Feedback Player: the list an object carries.** A new node in the Juice pack whose Inspector
+  IS the list. Each feedback is a CARD - a stripe coloured by its family, a drag handle, a fold
+  arrow, a tick box, its label, a duration badge and a menu - over a searchable grouped **Add a
+  feedback** dropdown. The head counts the cards and adds up the LONGEST PATH through the list,
+  which is the same number **Feedbacks Duration** answers. The ten felt words are DERIVED from the
+  pack's own verbs (titles, help and fields), so a pack that grows a word grows a card with it;
+  seven more are written down - **Pause**, **Hold**, **Loop Start**, **Loop Back**, **Tween
+  Property**, **Emit Signal** and **Play Player**, which plays another player from inside this one
+  at a share of this play's strength. A card's enable key is ABSENT when it is on, which is what
+  keeps a plain card identical to a moment file's step. Three homes, one shape: node list,
+  `MomentResource` steps and Moment block rows all time themselves through one runner.
+- **The player's own rows: 12 for playing it.** **Play Feedbacks**, **Play Feedbacks And Wait**,
+  **Play Backwards**, **Play On Channel**, **Stop Feedbacks**, **Skip To End**, **Restore Initial
+  Values**, **Revert**, **Pause Feedbacks** and **Resume Feedbacks**, over the **Is Playing** and
+  **Has Played** questions, the **Feedbacks Progress** and **Feedbacks Duration** readings, and the
+  **On Feedbacks Started** / **On Feedbacks Finished** / **On Feedback Signal** triggers.
+- **Everything the Inspector's list does, as rows: 19 of them, each naming ONE card by its LABEL.**
+  **Add Feedback**, **Insert Feedback Before**, **Replace Feedback**, **Remove Feedback**, **Move
+  Feedback To**, **Enable Feedback**, **Disable Feedback**, **Set Feedback Field**, **Set Feedback
+  Timing**, **Set Feedback Chance**, **Set Feedback Label**, **Duplicate Feedback**, **Clear
+  Feedbacks**, **Copy Feedbacks From**, **Load Moment File**, **Save Moment File**, **Set Player
+  Strength**, **Set Player Cooldown** and **Set Can Play While Playing**. Addressing by label is the
+  whole scheme, so a list tuned in the Inspector and a list a sheet retunes can never disagree about
+  which step is meant, and the Add / Insert / Replace rows take a feedback in the same card the
+  Inspector unfolds. An edit row never writes into a shared moment file: the first edit takes a copy
+  into this list and lets the file slot go.
+- **And the rows a designed list cannot have, because the game is running: 10 more.** **Mute
+  Feedback Category** and **Mute Feedback Category On Channel** silence a whole family at once,
+  which is THE accessibility option - one row per switch. **Scale Feedback Amounts** is the
+  effect-strength slider, where half is still the same beat, and **Retime Feedbacks** the snappier
+  version with nothing retuned. **Shuffle Feedbacks Between**, **Pick One Feedback Of**, **Jump To
+  Feedback**, **Skip Feedback Once**, **Set Loop Count**, **Hold Here** and **Release Hold** move
+  the head of a play that is already going.
+- **Asking the list, and hearing it: 3 questions, 1 loop, 7 readings and 5 triggers.** **Feedback Is
+  Playing**, **Has Feedback** and **Feedback Is Enabled**; **For Each Feedback**, which is what a
+  settings screen is made of, one switch per label; **Feedback Count**, **Feedback Label At**,
+  **Feedback Field**, **Feedback Progress**, **Feedback Duration**, **Current Feedback** and **Loops
+  Left**; and **On Feedback Started**, **On Feedback Finished**, **On Feedback Skipped** (carrying
+  why: off, muted, chance, strength, or skipped once), **On Hold Reached** and **On Loop**.
+- **The buttons live on the strip, never in a row.** Select a row about a beat - a player row, a
+  Moment row, a Moment block's head - and the resting toolbar shows a **Moment** segment: Play,
+  Stop, Skip, Restore, Open and a strength. It drives the very same preview the Inspector strip
+  drives, on the player selected in the Scene dock, so the two can never show different pictures of
+  one list, and it goes away when the selection moves. The sheet grows no widget of its own.
+- **A row that plays a feedback nobody has says so, quietly.** Rename a card and every row that
+  named it goes on compiling, goes on running, and does nothing. The row takes the quiet amber
+  state, and the sentence is in the Doctor's **Feedbacks** section and in the row's help strip once
+  the row is selected. It stays quiet without evidence: a sheet no scene runs, a scene with no
+  Feedback Player in it, and a label that comes from an expression all earn nothing rather than a
+  guess.
+- **A spring under any property of the host: 7 rows.** **Spring Property To** and **Bump Property**
+  take a property path spelled exactly as the Inspector shows it (`modulate`, `position`,
+  `rotation_degrees`, `scale:x`) and write it every frame until the spring settles. Any number,
+  `Vector2`, `Vector3` or `Color` works, the type is read once, and a Bump adds velocity without
+  ever moving the target - so the property leaves where it was and comes back on its own, with no
+  duration and nothing to undo. **Set Spring Damping And Frequency** is the two numbers a spring
+  really has, **Clamp Spring Between** stops it dead at a wall, and **Spring Is Settled**, **Spring
+  Value Of** and **Spring Velocity Of** read it back, so a lean or a stretch can be driven off the
+  motion's own speed. There is no pack per target.
+- **Any property along a curve you own, and the way back: 3 rows.** **Tween Property Along Curve**
+  reads a `Curve` file four ways - `to destination`, `relative`, `absolute` and `remap` - so an
+  overshoot and a flare are shapes you drag rather than easings you pick from a fixed set. **Tween
+  Property And Wait** is the same tween with the rows under it waiting on it, and **Tween Property
+  Back** returns to the value the property held before the FIRST curve tween touched it, however
+  many have run since. Two starter curves ship beside the pack as ordinary files nothing names.
+- **Blink patterns - a rhythm of appearing and disappearing, as a file: 4 rows.** A
+  **BlinkPatternResource** is a list of phases, each one \"on for this long, off for that long, this
+  many times\", so six fast winks and then three slow ones is two phases. **Blink** plays one on the
+  host, **Stop Blink** ends it and hands the host back fully visible, **Is Blinking** is the guard
+  and **Blink Phase** answers which phase is playing, counting from 1. A pattern is never a strobe:
+  under the project's no-flashing setting no part of a blink may be shorter than 0.4 s and the host
+  steps between full and faint opacity instead of disappearing.
+- **A bus swept rather than switched, and the mix written down under a name: 8 rows.** **Muffle
+  Bus** walks a low-pass cutoff down, **Dive Bus Volume** walks a level down through an amplify
+  effect (never through the volume the player set in the options screen), **Wash Bus** grows a
+  reverb's wet amount with its dry left alone, and **Restore Bus** walks every kind this bus was
+  swept by back to where it rested BEFORE the first sweep - home is where the mix was, not where the
+  last beat left it. **Snapshot Buses As** and **Recall Bus Snapshot** write a whole desk down under
+  a name and put it back, levels walked and mutes cut; **Bus Is Sweeping** and **Bus Snapshot
+  Exists** are the guards. The effect is added once and reused, so a bus layout gains one slot per
+  kind and never gains another, and no snapshot ships, because a game's mix is the game's.
+- **A hit felt in the hand as a shape you own: 8 rows.** A **HapticPatternResource** is how hard,
+  how long, how many times and the air between the pulses, and **Haptic** plays one on whatever the
+  player is holding. **Haptic Emphasis** is one short strong knock with no file behind it, **Haptic
+  Continuous Start** and **Haptic Continuous Stop** are the engine rumble, **Haptic Is Playing** and
+  **Haptics Can Be Felt** are the questions, and **Set Haptic Strength** / **Haptic Strength** are
+  the player's own dial, which every haptic row multiplies itself by - so 0 turns the whole
+  vocabulary off with no branch anywhere in a sheet. Nothing ships, because how a game feels in the
+  hand is the game's. On the web and on a desktop with no pad the rows do nothing at all, quietly,
+  and the Doctor's ship-it section says so ONCE for the whole project rather than per row.
+- **A grid of moments on a beat: 7 rows.** A **SequenceResource** is a track per thing that can
+  fire, a step per beat subdivision and a name in the cells that should. **Play Sequence**, **Stop
+  Sequence**, **Set Sequence Tempo** and **Jump To Sequence Step** run it; **Sequence Is Playing**
+  and **Current Sequence Step** read it; **On Sequence Step** answers each crossed cell. A crossed
+  cell is said TWICE, both times in the engine's own plumbing: as this node's own
+  `sequence_stepped` signal, and to the GROUP the track is named after, so a `lights` track reaches
+  every light listening on it with no reference held anywhere. With a Music autoload in the tree the
+  grid runs on the SONG's beat and cannot drift from what the player hears; without one it counts
+  its own, which is what keeps a throttled browser tab landing on the beat. Tracks are their own
+  length, so a cross-rhythm costs nothing, and a frame long enough to cross three steps says all
+  three, in order.
+- **A bar whose underlay follows the value down after a hit: 3 rows.** **Set Bar Lag** gives a named
+  bar an underlay that stays where the value used to be, waits, then slides down - so a player sees
+  how much they just lost rather than only how much they have left. It WATCHES the bar rather than
+  being told, so a value set by a row, by a sheet writing the Range, or by an animation all trail
+  the same; a bar going up has nothing to trail. **Bar Lag Value** reads where the underlay has got
+  to and **Is Bar Lagging** is true while it is still catching up.
+- **Two fixes this pass's own reading found.** A beat fired again while the first is still in the
+  air now CLOSES the first one, cut short, instead of running two copies of it over each other -
+  which is what the cut-short flag on **On Moment Finished** is for. And the toolbar's Moment
+  segment spells its whole prefix in the strength box, so the number in it says what it is a
+  strength of.
+- **What all of it costs, said out loud.** Every tick in this pass parks itself when it has nothing
+  to do (`set_process(false)`), so a Feedback Player with no play running, a settled spring bank, a
+  stopped sequencer head, a HUD with no bar lagging and a level full of channel listeners with
+  nothing shaking are all exactly free; nothing allocates per frame; a walk that is a tween is one
+  `Tween` the engine parks and frees the moment it lands. The costs that are real are named rather
+  than hidden: a screen effect is a full-screen pass, a reverb Wash is the costliest of the three
+  audio sweeps, and a screen reader is counted once for the project. On the web there is no rumble
+  and no thread is assumed anywhere.
+- **Written down: [Composing Juice: The Beat A Hit Is Made Of](docs/GUIDE-COMPOSING-JUICE.md)**, one
+  whole two-lane event per section, and the Inspector guide gains the Feedback Player as the worked
+  example of a card schema derived from a pack's own verbs.
+
+
 ### Fixed on the boot path
 
 - **Enabling the plugin costs a third of a second again, not nineteen.** The Feedback Player's card
