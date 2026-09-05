@@ -3357,7 +3357,9 @@ static var _own_function_names: Dictionary = {}
 ## a row is the opposite case. Left in, every helper-backed row in every emitted file would read as
 ## "Call function __eventsheets_…" instead of as the sentence that wrote it. The bytes are identical
 ## either way - only the words move - which is exactly why the words are worth getting right.
-const SHARED_HELPER_PREFIX := "__eventsheets_"
+## THE COMPILER'S OWN CONSTANT, not a second copy of the spelling. The prefix is the emitter's, and
+## the day it changes there must be nothing here to change with it.
+const SHARED_HELPER_PREFIX := SheetCompiler.SHARED_HELPER_PREFIX
 
 
 ## Notes the file's own function headers. Every `func name(` at the top level of the source, whether
