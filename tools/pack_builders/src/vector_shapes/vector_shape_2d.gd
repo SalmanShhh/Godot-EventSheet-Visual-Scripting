@@ -87,6 +87,15 @@ var _material_blend: String = ""
 # The strip a gradient fill is sampled from, baked when the gradient changes rather than per draw.
 var _gradient_strip: GradientTexture1D = null
 
+# True only while the scroll tick is writing dash_offset. It is what tells shape_changed that this
+# write is one number moving rather than a shape that has changed, so a scrolling pattern costs one
+# uniform a frame instead of a whole rebuild.
+var _scrolling: bool = false
+
+# The fade a Fade Shape Over row started, kept so a second one takes the colour over instead of
+# fighting the first for it.
+var _fade: Tween = null
+
 func _enter_tree() -> void:
 	_offer_dash_icons()
 	set_process(false)
@@ -107,8 +116,19 @@ func _process(delta: float) -> void:
 	var working: bool = false
 	if not is_zero_approx(_dash_scroll_speed):
 		# Whole numbers tile, so a pattern that has scrolled for an hour is exactly where it started.
-		set("dash_offset", fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0))
-		queue_redraw()
+		#
+		# A SCROLL MOVES ONE NUMBER. Writing the field the ordinary way calls the shape's own setter,
+		# which redraws the whole quad: every uniform pushed again, the outline padded into a fresh
+		# array, and the gradient strip re-baked into a new texture - sixty times a second for as
+		# long as the dashes run. So the write is marked as a scroll, the setter's redraw is skipped,
+		# and the one uniform that actually moved is handed over here. A material that does not exist
+		# yet has never drawn, so that case takes the ordinary path and builds one.
+		var moved: float = fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0)
+		_scrolling = _material != null
+		set("dash_offset", moved)
+		if _scrolling:
+			_material.set_shader_parameter("dash_offset", moved)
+			_scrolling = false
 		working = true
 	if shape_is_tethered():
 		_follow_tether()
@@ -133,13 +153,18 @@ func _follow_tether() -> void:
 	if not shape_is_tethered():
 		untether()
 		return
-	var ends: PackedVector2Array = PackedVector2Array([_tether_a.global_position, _tether_b.global_position])
-	if ends == _tether_seen:
+	# Read into the array already held rather than building a new one to compare: this runs every
+	# frame a tether is up, and most of those frames it goes on to do nothing at all.
+	var from_point: Vector2 = _tether_a.global_position
+	var to_point: Vector2 = _tether_b.global_position
+	if _tether_seen.size() == 2 and _tether_seen[0] == from_point and _tether_seen[1] == to_point:
 		return
-	_tether_seen = ends
-	global_position = ends[0]
+	_tether_seen.resize(2)
+	_tether_seen[0] = from_point
+	_tether_seen[1] = to_point
+	global_position = from_point
 	if get("end_point") is Vector2:
-		set("end_point", to_local(ends[1]))
+		set("end_point", to_local(to_point))
 	shape_changed()
 
 ## Puts the shape where the pointer is, snapped to a grid when one was asked for. A pointer that has
@@ -235,14 +260,21 @@ func shape_bounds() -> Rect2:
 	return Rect2(Vector2(-32.0, -32.0), Vector2(64.0, 64.0))
 
 ## Redraws after a field a shape script wrote - the one line every setter in the seven scripts
-## calls, so a change made in the Inspector and a change made by a row look the same.
+## calls, so a change made in the Inspector and a change made by a row look the same. The one write
+## it does NOT redraw for is a dash scroll, which moves a single uniform and hands the shader that
+## uniform itself rather than paying for the whole shape once a frame.
 ## @ace_hidden
 func shape_changed() -> void:
+	if _scrolling:
+		return
 	_gradient_strip = null
 	queue_redraw()
 
 ## The shape's thickness in pixels, after the scale rule: a stroke set to keep its weight on screen
-## divides by the node's own scale, so zooming a camera in does not fatten a HUD line.
+## divides by THE NODE'S OWN SCALE, so a shape parented under something scaled up keeps the weight
+## it was typed at. It is the node's scale and not the camera's, because the quad this number also
+## sizes is built here on the CPU and a Camera2D zoom tells a redrawn shape nothing - a shape
+## nothing has written to does not redraw when a camera moves.
 ## @ace_hidden
 func _pixel_thickness() -> float:
 	var value: float = _number("thickness", 2.0)
@@ -615,15 +647,20 @@ func scroll_dashes(patterns_per_second: float = 1.0) -> void:
 		set_process(true)
 
 ## Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb,
-## since every other field is an ordinary property a Tween row already drives.
+## since every other field is an ordinary property a Tween row already drives. A second fade TAKES
+## OVER from the first rather than fighting it for the colour: two tweens writing one property is a
+## shape that flickers between two answers for as long as they overlap.
 func fade_shape_over(to_alpha: float = 0.0, seconds: float = 0.25) -> void:
+	if _fade != null and _fade.is_valid():
+		_fade.kill()
+	_fade = null
 	var tint: Color = _colour("colour")
 	var target: Color = Color(tint.r, tint.g, tint.b, clampf(to_alpha, 0.0, 1.0))
 	if seconds <= 0.0:
 		set_shape_colour(target)
 		return
-	var tween: Tween = create_tween()
-	tween.tween_method(set_shape_colour, tint, target, seconds)
+	_fade = create_tween()
+	_fade.tween_method(set_shape_colour, tint, target, seconds)
 
 ## True while the shape is drawn at all: visible in the tree, and not fully transparent.
 func shape_is_visible() -> bool:

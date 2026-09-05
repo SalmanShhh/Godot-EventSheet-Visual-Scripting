@@ -91,6 +91,20 @@ var _refresh_queued: bool = false
 # change the geometry (a colour, a dash offset) never rebuilds it.
 var _volume_key: String = ""
 
+# True only while the scroll tick is writing dash_offset. It is what tells shape_changed that this
+# write is one number moving rather than a shape that has changed, so a scrolling pattern costs one
+# uniform a frame instead of an AABB, an outline array and forty uniforms.
+var _scrolling_3d: bool = false
+
+# The fade a Fade Shape Over row started, kept so a second one takes the colour over instead of
+# fighting the first for it.
+var _fade_3d: Tween = null
+
+# Whether the editor has been handed the dash-style icon renderer yet, this session. The 2D twin
+# carries the same flag: without it every shape entering the tree reloads the API script and walks
+# its whole method list to register the provider that is already registered.
+static var _icons_offered_3d: bool = false
+
 func _enter_tree() -> void:
 	_offer_dash_icons_3d()
 	set_process(false)
@@ -101,8 +115,19 @@ func _process(delta: float) -> void:
 		set_process(false)
 		return
 	# Whole numbers tile, so a pattern that has scrolled for an hour is exactly where it started.
-	# Writing the field is the whole tick: its own setter is what hands the shader the new offset.
-	set("dash_offset", fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0))
+	#
+	# A SCROLL MOVES ONE NUMBER. Writing the field the ordinary way calls the shape's own setter,
+	# which queues the whole deferred refresh: the custom AABB recomputed, the outline padded into a
+	# fresh array, forty uniforms pushed again and the gradient strip re-baked into a new texture -
+	# every frame for as long as the dashes run. So the write is marked as a scroll, the setter's
+	# refresh is skipped, and the one uniform that actually moved is handed over here. A material
+	# that does not exist yet has never drawn, so that case takes the ordinary path and builds one.
+	var moved: float = fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0)
+	_scrolling_3d = _material_3d != null
+	set("dash_offset", moved)
+	if _scrolling_3d:
+		_material_3d.set_shader_parameter("dash_offset", moved)
+		_scrolling_3d = false
 
 ## The shape's own kind number, as the shader numbers them - the same numbers the 2D twins use,
 ## because it is the same drawing. Every shape script answers with its own.
@@ -157,9 +182,13 @@ func shape_geometry() -> String:
 
 ## Redraws after a field a shape script wrote - the one line every setter in the shape scripts calls,
 ## so a change made in the Inspector and a change made by a row look the same. The work itself is
-## deferred, which is what turns a scene load's burst of writes into one rebuild.
+## deferred, which is what turns a scene load's burst of writes into one rebuild. The one write it
+## does NOT refresh for is a dash scroll, which moves a single uniform and hands the shader that
+## uniform itself rather than paying for the whole shape once a frame.
 ## @ace_hidden
 func shape_changed() -> void:
+	if _scrolling_3d:
+		return
 	_gradient_strip = null
 	if _refresh_queued:
 		return
@@ -491,8 +520,9 @@ static func screen_thickness_in_units(pixels: float, distance: float, viewport_h
 ## pack, and a shipped game never runs this at all.
 ## @ace_hidden
 func _offer_dash_icons_3d() -> void:
-	if not Engine.is_editor_hint():
+	if _icons_offered_3d or not Engine.is_editor_hint():
 		return
+	_icons_offered_3d = true
 	var api_path: String = "res://addons/eventsheet/api/eventsheets.gd"
 	if not ResourceLoader.exists(api_path):
 		return
@@ -576,15 +606,20 @@ func scroll_dashes(patterns_per_second: float = 1.0) -> void:
 	set_process(not is_zero_approx(patterns_per_second))
 
 ## Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb,
-## since every other field is an ordinary property a Tween row already drives.
+## since every other field is an ordinary property a Tween row already drives. A second fade TAKES
+## OVER from the first rather than fighting it for the colour: two tweens writing one property is a
+## shape that flickers between two answers for as long as they overlap.
 func fade_shape_over(to_alpha: float = 0.0, seconds: float = 0.25) -> void:
+	if _fade_3d != null and _fade_3d.is_valid():
+		_fade_3d.kill()
+	_fade_3d = null
 	var tint: Color = _colour("colour")
 	var target: Color = Color(tint.r, tint.g, tint.b, clampf(to_alpha, 0.0, 1.0))
 	if seconds <= 0.0:
 		set_shape_colour(target)
 		return
-	var tween: Tween = create_tween()
-	tween.tween_method(set_shape_colour, tint, target, seconds)
+	_fade_3d = create_tween()
+	_fade_3d.tween_method(set_shape_colour, tint, target, seconds)
 
 ## True while the shape is drawn at all: visible in the tree, and not fully transparent.
 func shape_is_visible() -> bool:

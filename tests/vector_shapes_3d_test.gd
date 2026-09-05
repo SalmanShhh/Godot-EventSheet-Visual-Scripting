@@ -96,6 +96,7 @@ static func run() -> bool:
 	all_passed = _pin_the_one_drawing() and all_passed
 	all_passed = _pin_the_screen_unit() and all_passed
 	all_passed = _pin_the_shapes() and all_passed
+	all_passed = _pin_the_scroll_tick_3d() and all_passed
 	all_passed = _pin_the_rows() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
 	all_passed = _pin_the_published_fields() and all_passed
@@ -258,6 +259,26 @@ static func _pin_the_rows() -> bool:
 ## covenant, held for all eleven rather than for the one file the folder walk happens to reach first.
 ## Each shape also still asks for the preview card, which is what puts a picture of it at the top of
 ## its own Inspector.
+## A DASH SCROLL IS ONE NUMBER MOVING here too. The 3D setter queues the whole deferred refresh - a
+## recomputed AABB, a rebuilt outline array, forty uniforms and a fresh gradient strip - so the scroll
+## tick marks its write and hands the shader the one uniform instead. Pinned by the two things that
+## are visible without a world: no refresh is queued, and the baked gradient survives.
+static func _pin_the_scroll_tick_3d() -> bool:
+	var shape: Object = (load(PACK_DIR + "shape_line_3d.gd") as GDScript).new()
+	var strip: GradientTexture1D = GradientTexture1D.new()
+	shape.set("_gradient_strip", strip)
+	shape.set("_refresh_queued", false)
+	shape.set("_scrolling_3d", true)
+	shape.call("shape_changed")
+	var passed: bool = SUPPORT.pins(PREFIX, [
+		["a scroll tick queues no refresh", shape.get("_refresh_queued"), false],
+		["and leaves the baked gradient where it is", shape.get("_gradient_strip") == strip, true],
+	])
+	shape.set("_scrolling_3d", false)
+	shape.free()
+	return passed
+
+
 static func _pin_the_shipped_scripts() -> bool:
 	var rows: Array = []
 	for file_name: String in PACK_SCRIPTS_3D:

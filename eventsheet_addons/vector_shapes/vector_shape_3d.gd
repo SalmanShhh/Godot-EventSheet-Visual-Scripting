@@ -82,6 +82,20 @@ var _refresh_queued: bool = false
 # The mesh a volumetric shape last built, and the reading it was built for, so a field that does not
 # change the geometry (a colour, a dash offset) never rebuilds it.
 var _volume_key: String = ""
+
+# True only while the scroll tick is writing dash_offset. It is what tells shape_changed that this
+# write is one number moving rather than a shape that has changed, so a scrolling pattern costs one
+# uniform a frame instead of an AABB, an outline array and forty uniforms.
+var _scrolling_3d: bool = false
+
+# The fade a Fade Shape Over row started, kept so a second one takes the colour over instead of
+# fighting the first for it.
+var _fade_3d: Tween = null
+
+# Whether the editor has been handed the dash-style icon renderer yet, this session. The 2D twin
+# carries the same flag: without it every shape entering the tree reloads the API script and walks
+# its whole method list to register the provider that is already registered.
+static var _icons_offered_3d: bool = false
 ## The rectangle the shape needs on its own plane, before its stroke is padded onto it.
 ## @ace_hidden
 func shape_plane_bounds() -> Rect2:
@@ -348,13 +362,16 @@ func scroll_dashes(patterns_per_second: float) -> void:
 ## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
 ## @ace_codegen_template("$VectorShape3D.fade_shape_over({to_alpha}, {seconds})")
 func fade_shape_over(to_alpha: float, seconds: float) -> void:
+	if _fade_3d != null and _fade_3d.is_valid():
+		_fade_3d.kill()
+	_fade_3d = null
 	var tint: Color = _colour("colour")
 	var target: Color = Color(tint.r, tint.g, tint.b, clampf(to_alpha, 0.0, 1.0))
 	if seconds <= 0.0:
 		set_shape_colour(target)
 		return
-	var tween: Tween = create_tween()
-	tween.tween_method(set_shape_colour, tint, target, seconds)
+	_fade_3d = create_tween()
+	_fade_3d.tween_method(set_shape_colour, tint, target, seconds)
 
 ## @ace_action
 ## @ace_name("Set Shape Points")
@@ -486,8 +503,19 @@ func _process(delta: float) -> void:
 		set_process(false)
 		return
 	# Whole numbers tile, so a pattern that has scrolled for an hour is exactly where it started.
-	# Writing the field is the whole tick: its own setter is what hands the shader the new offset.
-	set("dash_offset", fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0))
+	#
+	# A SCROLL MOVES ONE NUMBER. Writing the field the ordinary way calls the shape's own setter,
+	# which queues the whole deferred refresh: the custom AABB recomputed, the outline padded into a
+	# fresh array, forty uniforms pushed again and the gradient strip re-baked into a new texture -
+	# every frame for as long as the dashes run. So the write is marked as a scroll, the setter's
+	# refresh is skipped, and the one uniform that actually moved is handed over here. A material
+	# that does not exist yet has never drawn, so that case takes the ordinary path and builds one.
+	var moved: float = fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0)
+	_scrolling_3d = _material_3d != null
+	set("dash_offset", moved)
+	if _scrolling_3d:
+		_material_3d.set_shader_parameter("dash_offset", moved)
+		_scrolling_3d = false
 
 ## The shape's own kind number, as the shader numbers them - the same numbers the 2D twins use,
 ## because it is the same drawing. Every shape script answers with its own.
@@ -530,9 +558,13 @@ func shape_geometry() -> String:
 
 ## Redraws after a field a shape script wrote - the one line every setter in the shape scripts calls,
 ## so a change made in the Inspector and a change made by a row look the same. The work itself is
-## deferred, which is what turns a scene load's burst of writes into one rebuild.
+## deferred, which is what turns a scene load's burst of writes into one rebuild. The one write it
+## does NOT refresh for is a dash scroll, which moves a single uniform and hands the shader that
+## uniform itself rather than paying for the whole shape once a frame.
 ## @ace_hidden
 func shape_changed() -> void:
+	if _scrolling_3d:
+		return
 	_gradient_strip = null
 	if _refresh_queued:
 		return
@@ -724,8 +756,9 @@ static func screen_thickness_in_units(pixels: float, distance: float, viewport_h
 ## pack, and a shipped game never runs this at all.
 ## @ace_hidden
 func _offer_dash_icons_3d() -> void:
-	if not Engine.is_editor_hint():
+	if _icons_offered_3d or not Engine.is_editor_hint():
 		return
+	_icons_offered_3d = true
 	var api_path: String = "res://addons/eventsheet/api/eventsheets.gd"
 	if not ResourceLoader.exists(api_path):
 		return

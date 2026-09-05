@@ -80,6 +80,7 @@ static func run() -> bool:
 	all_passed = _pin_the_dash_across_its_stroke() and all_passed
 	all_passed = _pin_the_arithmetic() and all_passed
 	all_passed = _pin_the_shapes() and all_passed
+	all_passed = _pin_the_scroll_tick() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
 	all_passed = _pin_the_published_fields() and all_passed
 	_cleanup()
@@ -250,6 +251,30 @@ static func _pin_the_shapes() -> bool:
 	triangle.free()
 	line.free()
 	return passed
+
+
+## A DASH SCROLL IS ONE NUMBER MOVING, not a shape that has changed. The scroll tick writes
+## dash_offset and hands the shader that one uniform; if it went through the ordinary redraw instead,
+## a scrolling pattern would re-push every uniform, rebuild the padded outline array and re-bake the
+## gradient into a NEW texture, sixty times a second for as long as it ran.
+##
+## The baked gradient is what the pin can see without a viewport: a scroll leaves it alone, and any
+## other change drops it so the next draw re-bakes it.
+static func _pin_the_scroll_tick() -> bool:
+	var shape: Object = (load(PACK_DIR + "shape_line_2d.gd") as GDScript).new()
+	var strip: GradientTexture1D = GradientTexture1D.new()
+	shape.set("_gradient_strip", strip)
+	shape.set("_scrolling", true)
+	shape.call("shape_changed")
+	var kept: bool = shape.get("_gradient_strip") == strip
+	shape.set("_scrolling", false)
+	shape.call("shape_changed")
+	var dropped: bool = shape.get("_gradient_strip") == null
+	shape.free()
+	return SUPPORT.pins(PREFIX, [
+		["a scroll tick leaves the baked gradient where it is", kept, true],
+		["and any other change drops it, so the next draw bakes a fresh one", dropped, true],
+	])
 
 
 ## Every shipped script parses, opens as a sheet and re-emits itself byte for byte - the lossless
