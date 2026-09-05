@@ -65,9 +65,11 @@ const SUPPORT := preload("res://tests/support.gd")
 ##     value of their own, so the reflected `called: String = ""` fell through as the SOURCE TEXT of
 ##     an empty literal and landed inside the template's quotes as four quote characters. Each now
 ##     names the word its row opens on.
-## A default still cannot say whether it is a WORD or a LITERAL - both readers strip one surrounding
-## pair of quotes off it - so the answer for a word-shaped parameter is always the same: quote the
-## slot in the template, and let the default be the word.
+## A starting value can now SAY which kind it is - `default_word:` for text a quoted slot receives,
+## `default_code:` for GDScript an unquoted one takes verbatim, `default:` for the shorthand a number
+## or a bare word wants - and that is what lets a word be EMPTY, which is what those three rows
+## needed. This gate reads the spelling too: a value the author named is filled in as written, empty
+## or not, so a row that opens on a cleared box is compiled with the cleared box.
 const KNOWN_FAILING: Dictionary = {
 }
 
@@ -251,6 +253,15 @@ static func run() -> bool:
 	# so the round-trip trip-wire this file exists for can never become a vacuous pass.
 	ok = _check("a bare-word default on a bare slot fails, a quoted one builds",
 		_quoted_default_probe(), {"bare": false, "quoted": true}) and ok
+	# The second self-check, and the one the spelled starting values needed: an EMPTY value the author
+	# NAMED is a starting value like any other, and this harness read it as an absence and filled a
+	# stand-in over it - so the three rows fixed by naming the empty word were never once compiled
+	# with the empty word, and a future `default_word: ""` on a BARE slot, which writes `f(, 1)` and
+	# does not parse, would have been green here. Pinned as the PAIR, because only the difference
+	# proves the spelling is read at all: the same empty value with no spelling beside it is still an
+	# absence, and still takes the stand-in.
+	ok = _check("an empty starting value the author named is compiled, an unnamed one takes a stand-in",
+		_empty_default_probe(), {"named": false, "unnamed": true}) and ok
 	return ok
 
 
@@ -283,6 +294,38 @@ static func _quoted_default_probe() -> Dictionary:
 		"bare": _probe_compiles("enemies"),
 		"quoted": _probe_compiles("\"enemies\"")
 	}
+
+
+## Whether the harness tells a starting value the author NAMED from one nobody wrote, as the pair
+## {named, unnamed}: an empty word said out loud must reach the call (and, on a bare slot, fail
+## there), while an empty value with no spelling beside it must still take a typed stand-in.
+##
+## The template names TWO slots, because that is the shape the defect takes: one empty slot at the
+## end of a call is `f()`, which parses perfectly well and would have proved nothing. `f(, 1)` is
+## the line a person would actually be handed.
+static func _empty_default_probe() -> Dictionary:
+	return {
+		"named": _empty_probe_compiles("word"),
+		"unnamed": _empty_probe_compiles("")
+	}
+
+
+## Whether one synthetic row whose first slot is empty compiles, with `spelling` deciding whether
+## that emptiness was said out loud.
+static func _empty_probe_compiles(spelling: String) -> bool:
+	var definition: ACEDefinition = ACEDefinition.new()
+	definition.provider_id = "PackDefaultRowsProbe"
+	definition.id = "method:empty_probe"
+	definition.ace_type = ACEDefinition.ACEType.ACTION
+	definition.parameters = [
+		{"id": "target", "type": TYPE_STRING, "default_value": "", "default_spelling": spelling},
+		{"id": "amount", "type": TYPE_INT, "default_value": "1"},
+	]
+	var template: String = "Codex.discover({target}, {amount})"
+	var fill: Dictionary = _fill_params(definition, template)
+	if fill.get("skip", false):
+		return false     # the probe never reached a compile, which the pinned pair reports as such
+	return _compile_failure(definition, template, fill["params"]).is_empty()
 
 
 ## Whether one synthetic row carrying `default_text` on a bare slot compiles, through the fill and
@@ -339,7 +382,13 @@ static func _fill_params(definition: ACEDefinition, template: String,
 		if template.contains("{%s.}" % id) or template.contains("{, %s}" % id):
 			params[id] = default_value
 			continue
-		if not default_value.is_empty():
+		# AN EMPTY VALUE THE AUTHOR NAMED IS A STARTING VALUE, and this gate exists to compile the
+		# row a person drops. `default_word: ""` is the whole reason that spelling was added - a row
+		# whose help says "empty names it after its effect" opens on a cleared box - and reading it
+		# as "no starting value" here was how the three rows fixed by naming it were never once
+		# compiled with it. A future `default_word: ""` on a BARE slot emits `f(, 1)`, which does not
+		# parse, and would have sailed through this gate behind a typed stand-in.
+		if not default_value.is_empty() or _names_its_own_default(parameter):
 			params[id] = default_value
 			continue
 		# No starting value at all, so the harness supplies one - and WHICH one depends on the slot.
@@ -358,6 +407,17 @@ static func _fill_params(definition: ACEDefinition, template: String,
 		params[id] = "v"
 	params["uid"] = "0"
 	return {"params": params}
+
+
+## True when the pack SAID what this parameter starts on, rather than leaving it to fall through to
+## the method's own default or to the type's zero.
+##
+## The two are the same empty string in `default_value`, and only the SPELLING tells them apart: a
+## value read from `default_word:` or `default_code:` was written down by a person, so an empty one
+## is a cleared box they chose. Anything else that arrives empty is an absence, and the harness fills
+## an absence with a stand-in rather than compiling a row against a value nobody would type.
+static func _names_its_own_default(parameter: Dictionary) -> bool:
+	return not str(parameter.get("default_spelling", "")).is_empty()
 
 
 ## The same fill, but with every bare placeholder standing in as the scaffold's untyped `v`.

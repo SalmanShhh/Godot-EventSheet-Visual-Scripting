@@ -557,6 +557,7 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				var word_defaults: Dictionary = overrides.get("param_defaults", {})
 				word_defaults[param_name] = _unquoted_once(value)
 				overrides["param_defaults"] = word_defaults
+				_record_default_spelling(overrides, param_name, "word")
 			"default_code":
 				# GDScript, for a slot the template does NOT quote - `moment({moment_name})`. Nothing
 				# is trimmed, so `"impact"` keeps the quotes the call needs and a row dropped at its
@@ -564,6 +565,7 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				var code_defaults: Dictionary = overrides.get("param_defaults", {})
 				code_defaults[param_name] = value
 				overrides["param_defaults"] = code_defaults
+				_record_default_spelling(overrides, param_name, "code")
 			"autocomplete":
 				var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
 				param_autocomplete[param_name] = _split_pipe_values(value)
@@ -572,6 +574,21 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				var param_descriptions: Dictionary = overrides.get("param_descriptions", {})
 				param_descriptions[param_name] = value.trim_prefix("\"").trim_suffix("\"")
 				overrides["param_descriptions"] = param_descriptions
+
+
+## Which key a parameter's starting value was WRITTEN with, kept beside the value itself.
+##
+## It is not decoration. A value read from `default_word:` or `default_code:` was said out loud by
+## the author, so an EMPTY one is a starting value like any other - a row that opens on a cleared
+## box. A value that arrived any other way is either a plain `default:` (which cannot be empty, since
+## an empty one is written as nothing at all) or a fallback nobody wrote. Without this, "the author
+## named the empty word" and "nobody named anything" are the same empty string, and the pack gate
+## that compiles every row at its own starting values could not tell them apart - so the three rows
+## fixed by naming the empty word were never actually compiled with it.
+func _record_default_spelling(overrides: Dictionary, param_name: String, spelling: String) -> void:
+	var spellings: Dictionary = overrides.get("param_default_spellings", {})
+	spellings[param_name] = spelling
+	overrides["param_default_spellings"] = spellings
 
 
 ## One surrounding pair of quotes off a value, and no more - the rule the importer's lifter reads

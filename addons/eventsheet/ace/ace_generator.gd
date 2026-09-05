@@ -466,6 +466,10 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 	var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
 	var param_descriptions: Dictionary = overrides.get("param_descriptions", {})
 	var param_defaults: Dictionary = overrides.get("param_defaults", {})
+	# WHICH KEY the starting value was written with, carried through so a reader can tell a value the
+	# author named from one nothing named. It matters for exactly one value - the empty one - which is
+	# a real starting value under `default_word:` and an absence everywhere else.
+	var param_default_spellings: Dictionary = overrides.get("param_default_spellings", {})
 	# Godot reports default_args for the LAST N arguments, so the first defaulted argument sits at
 	# index (arg_count - default_count). Anything before that genuinely has no default.
 	var gdscript_defaults: Array = default_args if default_args is Array else []
@@ -538,6 +542,8 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 			"description": str(parameter_override.get("description", param_descriptions.get(argument_name, ""))),
 			"type": param_type,
 			"default_value": default_text,
+			"default_spelling": str(parameter_override.get("default_spelling",
+				param_default_spellings.get(argument_name, ""))),
 			"property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
 			"hint": hint_value,
 			"hint_string": str(parameter_override.get("hint_string", "")),
