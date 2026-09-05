@@ -6079,10 +6079,10 @@ multiply,multiplicar
 premultiplied alpha,alfa premultiplicado
 Reads the surface's blend back: `material_override.blend_mode`. Use it in any value field.,Lee de vuelta la mezcla de la superficie: `material_override.blend_mode`. Úsalo en cualquier campo de valor.
 blend,mezcla
-Set Transparency,Fijar la transparencia
+Set Transparency,Fijar el modo de transparencia
 "How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.","Cómo maneja la superficie el ser transparente en absoluto. El recorte deja cada píxel o entero o del todo fuera, que es lo que quieren las hojas y las vallas y lo que menos cuesta. Primero le da a esta malla su propia copia del material, para que un material compartido con otras mallas nunca cambie bajo ellas. Escribe `material_override.transparency`, la sustitución que lleva toda GeometryInstance3D."
 Set transparency to {value},Poner el modo de transparencia en {value}
-Transparency,Transparencia
+Transparency,Modo de transparencia
 "How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.","Cómo maneja la superficie el ser transparente en absoluto. El recorte deja cada píxel o entero o del todo fuera, que es lo que quieren las hojas y las vallas y lo que menos cuesta."
 solid,sólido
 alpha,alfa
@@ -6092,7 +6092,7 @@ alpha with depth pre-pass,alfa con pre-pase de profundidad
 Scissor threshold,Umbral de recorte
 Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,Dónde corta el alfa por recorte: un píxel más transparente que esto no se dibuja en absoluto. Solo el alfa por recorte lo lee.
 Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,Lee de vuelta el modo de transparencia de la superficie: `material_override.transparency`. Úsalo en cualquier campo de valor.
-transparency,transparencia
+transparency,modo de transparencia
 Set Sides,Fijar las caras
 "Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.","Qué caras de la superficie se dibujan. Ambas es lo que quiere una hoja plana, una cortina o un muro de una sola cara; cuesta el doble de dibujo. Primero le da a esta malla su propia copia del material, para que un material compartido con otras mallas nunca cambie bajo ellas. Escribe `material_override.cull_mode`, la sustitución que lleva toda GeometryInstance3D."
 Set sides to {value},Poner las caras en {value}

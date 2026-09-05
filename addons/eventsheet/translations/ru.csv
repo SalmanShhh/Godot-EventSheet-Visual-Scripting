@@ -6082,7 +6082,7 @@ blend,смешивание
 Set Transparency,Задать режим прозрачности
 "How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.transparency`, the override every GeometryInstance3D wears.","Как поверхность вообще обходится с прозрачностью. Отсечение оставляет каждый пиксель либо целиком, либо совсем без него - это то, что нужно листве и заборам, и стоит дешевле всего. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.transparency` - переопределение, которое есть у каждого GeometryInstance3D."
 Set transparency to {value},Задать режим прозрачности {value}
-Transparency,Прозрачность
+Transparency,Режим прозрачности
 "How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.","Как поверхность вообще обходится с прозрачностью. Отсечение оставляет каждый пиксель либо целиком, либо совсем без него - это то, что нужно листве и заборам, и стоит дешевле всего."
 solid,непрозрачно
 alpha,альфа
@@ -6092,7 +6092,7 @@ alpha with depth pre-pass,альфа с предпроходом глубины
 Scissor threshold,Порог отсечения
 Where alpha scissor cuts: a pixel more see-through than this is not drawn at all. Only alpha scissor reads it.,Где режет альфа-отсечение: пиксель прозрачнее этого не рисуется вовсе. Читает его только альфа-отсечение.
 Reads the surface's transparency back: `material_override.transparency`. Use it in any value field.,Читает режим прозрачности поверхности обратно: `material_override.transparency`. Годится в любом поле значения.
-transparency,прозрачность
+transparency,режим прозрачности
 Set Sides,Задать стороны
 "Which faces of the surface are drawn. Both is what a flat leaf, a curtain or a single-sided wall wants; it costs twice the drawing. Gives this mesh its own copy of the material first, so a material shared with other meshes never changes under them. Writes `material_override.cull_mode`, the override every GeometryInstance3D wears.","Какие грани поверхности рисуются. Обе - это то, чего хочет плоский лист, занавес или стена в одну сторону; рисования становится вдвое больше. Сначала даёт этому мешу собственную копию материала, поэтому материал, общий с другими мешами, никогда не меняется под ними. Пишет `material_override.cull_mode` - переопределение, которое есть у каждого GeometryInstance3D."
 Set sides to {value},Задать стороны {value}

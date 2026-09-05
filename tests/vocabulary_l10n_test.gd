@@ -500,7 +500,11 @@ const DISTINCT_PAIRS: Array[Array] = [
 	["Set Blend", "Set Blending"],
 	["Set blend to {value}", "Set blending to {value}"],
 	["Blend", "Blending"],
-	["blend", "blending"]
+	["blend", "blending"],
+	["Set See-Through", "Set Transparency"],
+	["Set see-through to {value}", "Set transparency to {value}"],
+	["See-through", "Transparency"],
+	["See-through", "transparency"]
 ]
 
 
