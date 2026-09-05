@@ -35,87 +35,6 @@ var _chosen: String = ""
 # Internal monotonic clock (seconds), ticked in _process so cooldowns need no wiring.
 var _clock: float = 0.0
 var _use_shared: bool = false
-# Reads a book source (a StoryletResource OR a parsed JSON object) and lists the references a load
-# would silently skip - a row naming a storylet id (or a choice on it) that is not defined - plus
-# blank and duplicate storylet ids. Empty when the book is clean. Shared by both validate ACEs.
-func _validate_book(source: Variant) -> PackedStringArray:
-	var problems: PackedStringArray = []
-	if source == null:
-		problems.append("no book (null)")
-		return problems
-	# A grid that is present but is not a list of rows loads as NOTHING. Report the shape, otherwise
-	# a book whose content silently vanishes (a JSON object where an array belongs) reads as clean.
-	for field: String in ["storylets", "requirements", "choices", "choice_requirements", "effects", "choice_effects", "meta"]:
-		var raw: Variant = source.get(field)
-		if raw == null:
-			continue
-		if not raw is Array:
-			problems.append("%s: expected a list of rows, got %s (the whole grid is skipped)" % [field, type_string(typeof(raw))])
-			continue
-		var at: int = 0
-		for entry: Variant in raw:
-			if not entry is Dictionary:
-				problems.append("%s[%d]: not a row, got %s (skipped)" % [field, at, type_string(typeof(entry))])
-			at += 1
-	# Ids a load would actually RESOLVE: the ones this book defines plus the ones already registered
-	# (the loader is additive), so a row pointing at a storylet from an earlier load or a Define
-	# Storylet action is not mis-reported as dangling. `book_ids` stays book-local for duplicate ids.
-	var known: Dictionary = {}
-	var choices: Dictionary = {}
-	for live_id: String in _lib:
-		known[live_id] = true
-		var live_choices: Dictionary = {}
-		for c: Dictionary in _lib[live_id].get("choices", []):
-			live_choices[str(c.get("id", ""))] = true
-		choices[live_id] = live_choices
-	var book_ids: Dictionary = {}
-	var i: int = 0
-	for row: Dictionary in _rows(source, "storylets"):
-		var sid: String = str(_cell(row, "id", ""))
-		if sid.is_empty():
-			problems.append("storylets[%d]: blank id (row skipped)" % i)
-		else:
-			if book_ids.has(sid):
-				problems.append("storylets[%d]: duplicate id '%s' (overrides the earlier one)" % [i, sid])
-			book_ids[sid] = true
-			known[sid] = true
-		i += 1
-	i = 0
-	for row: Dictionary in _rows(source, "choices"):
-		var sid2: String = str(_cell(row, "storylet", ""))
-		if not known.has(sid2):
-			problems.append("choices[%d]: unknown storylet '%s'" % [i, sid2])
-		else:
-			if not choices.has(sid2):
-				choices[sid2] = {}
-			choices[sid2][str(_cell(row, "choice_id", ""))] = true
-		i += 1
-	for field: String in ["requirements", "effects", "meta"]:
-		i = 0
-		for row: Dictionary in _rows(source, field):
-			var rid: String = str(_cell(row, "storylet", ""))
-			if not known.has(rid):
-				problems.append("%s[%d]: unknown storylet '%s'" % [field, i, rid])
-			i += 1
-	for field: String in ["choice_requirements", "choice_effects"]:
-		i = 0
-		for row: Dictionary in _rows(source, field):
-			var rid2: String = str(_cell(row, "storylet", ""))
-			var cid: String = str(_cell(row, "choice_id", ""))
-			if not (choices.get(rid2, {}) as Dictionary).has(cid):
-				problems.append("%s[%d]: no choice '%s' on storylet '%s'" % [field, i, cid, rid2])
-			i += 1
-	return problems
-# Validates a JSON storybook: reports a parse failure (with Godot's message) or a non-object root,
-# else the same structural problems as _validate_book. Uses the instance JSON API so a bad string
-# is a returned error, not a console spew.
-func _validate_json(json_text: String) -> PackedStringArray:
-	var reader: JSON = JSON.new()
-	if reader.parse(json_text) != OK:
-		return PackedStringArray(["not valid JSON: " + reader.get_error_message()])
-	if not reader.data is Dictionary:
-		return PackedStringArray(["JSON root is not an object (expected { \"storylets\": [ ... ] })"])
-	return _validate_book(reader.data)
 
 func _process(delta: float) -> void:
 	_clock += delta
@@ -166,7 +85,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").")
 ## @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
-## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, {op}, {value})")
+## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, "{op}", {value})")
 func add_requirement(id: String, quality_key: String, op: String, value: Variant) -> void:
 	_story(id).reqs.append({"key": quality_key, "op": op, "value": value})
 
@@ -185,7 +104,7 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 ## @ace_description("A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.")
 ## @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
-## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, {op}, {value})")
+## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, "{op}", {value})")
 func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value: Variant) -> void:
 	var c: Dictionary = _choice(id, choice_id)
 	if not c.is_empty():
@@ -197,7 +116,7 @@ func add_choice_requirement(id: String, choice_id: String, quality_key: String, 
 ## @ace_description("A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.")
 ## @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
-## @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, {op}, {key}, {value})")
+## @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, "{op}", {key}, {value})")
 func add_choice_effect(id: String, choice_id: String, op: String, key: String, value: Variant) -> void:
 	var c: Dictionary = _choice(id, choice_id)
 	if not c.is_empty():
@@ -209,7 +128,7 @@ func add_choice_effect(id: String, choice_id: String, op: String, key: String, v
 ## @ace_description("A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.")
 ## @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
-## @ace_codegen_template("Storylets.add_effect({id}, {op}, {key}, {value})")
+## @ace_codegen_template("Storylets.add_effect({id}, "{op}", {key}, {value})")
 func add_effect(id: String, op: String, key: String, value: Variant) -> void:
 	_story(id).effects.append({"op": op, "key": key, "value": value})
 
@@ -228,7 +147,7 @@ func add_meta(id: String, key: String, value: Variant) -> void:
 ## @ace_description("A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.")
 ## @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
-## @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, {op}, {other_key})")
+## @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, "{op}", {other_key})")
 func add_requirement_key(id: String, quality_key: String, op: String, other_key: String) -> void:
 	_story(id).reqs.append({"key": quality_key, "op": op, "value": other_key, "value_key": true})
 
@@ -247,7 +166,7 @@ func add_chance_requirement(id: String, percent: float) -> void:
 ## @ace_description("An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.")
 ## @ace_param_options(mode not_recent=was NOT drawn recently, recent=was drawn recently)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
-## @ace_codegen_template("Storylets.add_recency_requirement({id}, {mode}, {within})")
+## @ace_codegen_template("Storylets.add_recency_requirement({id}, "{mode}", {within})")
 func add_recency_requirement(id: String, mode: String, within: int) -> void:
 	_story(id).reqs.append({"op": mode, "value": within})
 
@@ -875,6 +794,78 @@ func _effect_from_row(row: Dictionary) -> Dictionary:
 	# Turns one Effects-grid row into an effect dict.
 	return {"op": str(_cell(row, "op", "set")), "key": str(_cell(row, "key", "")), "value": _norm_value(_cell(row, "value", ""))}
 
+func _validate_book(source: Variant) -> PackedStringArray:
+	# Reads a book source (a StoryletResource OR a parsed JSON object) and lists the references a load
+	# would silently skip - a row naming a storylet id (or a choice on it) that is not defined - plus
+	# blank and duplicate storylet ids. Empty when the book is clean. Shared by both validate ACEs.
+	var problems: PackedStringArray = []
+	if source == null:
+		problems.append("no book (null)")
+		return problems
+	# A grid that is present but is not a list of rows loads as NOTHING. Report the shape, otherwise
+	# a book whose content silently vanishes (a JSON object where an array belongs) reads as clean.
+	for field: String in ["storylets", "requirements", "choices", "choice_requirements", "effects", "choice_effects", "meta"]:
+		var raw: Variant = source.get(field)
+		if raw == null:
+			continue
+		if not raw is Array:
+			problems.append("%s: expected a list of rows, got %s (the whole grid is skipped)" % [field, type_string(typeof(raw))])
+			continue
+		var at: int = 0
+		for entry: Variant in raw:
+			if not entry is Dictionary:
+				problems.append("%s[%d]: not a row, got %s (skipped)" % [field, at, type_string(typeof(entry))])
+			at += 1
+	# Ids a load would actually RESOLVE: the ones this book defines plus the ones already registered
+	# (the loader is additive), so a row pointing at a storylet from an earlier load or a Define
+	# Storylet action is not mis-reported as dangling. `book_ids` stays book-local for duplicate ids.
+	var known: Dictionary = {}
+	var choices: Dictionary = {}
+	for live_id: String in _lib:
+		known[live_id] = true
+		var live_choices: Dictionary = {}
+		for c: Dictionary in _lib[live_id].get("choices", []):
+			live_choices[str(c.get("id", ""))] = true
+		choices[live_id] = live_choices
+	var book_ids: Dictionary = {}
+	var i: int = 0
+	for row: Dictionary in _rows(source, "storylets"):
+		var sid: String = str(_cell(row, "id", ""))
+		if sid.is_empty():
+			problems.append("storylets[%d]: blank id (row skipped)" % i)
+		else:
+			if book_ids.has(sid):
+				problems.append("storylets[%d]: duplicate id '%s' (overrides the earlier one)" % [i, sid])
+			book_ids[sid] = true
+			known[sid] = true
+		i += 1
+	i = 0
+	for row: Dictionary in _rows(source, "choices"):
+		var sid2: String = str(_cell(row, "storylet", ""))
+		if not known.has(sid2):
+			problems.append("choices[%d]: unknown storylet '%s'" % [i, sid2])
+		else:
+			if not choices.has(sid2):
+				choices[sid2] = {}
+			choices[sid2][str(_cell(row, "choice_id", ""))] = true
+		i += 1
+	for field: String in ["requirements", "effects", "meta"]:
+		i = 0
+		for row: Dictionary in _rows(source, field):
+			var rid: String = str(_cell(row, "storylet", ""))
+			if not known.has(rid):
+				problems.append("%s[%d]: unknown storylet '%s'" % [field, i, rid])
+			i += 1
+	for field: String in ["choice_requirements", "choice_effects"]:
+		i = 0
+		for row: Dictionary in _rows(source, field):
+			var rid2: String = str(_cell(row, "storylet", ""))
+			var cid: String = str(_cell(row, "choice_id", ""))
+			if not (choices.get(rid2, {}) as Dictionary).has(cid):
+				problems.append("%s[%d]: no choice '%s' on storylet '%s'" % [field, i, cid, rid2])
+			i += 1
+	return problems
+
 func _load_grids(source: Variant) -> void:
 	# The shared loader core: reads the grids off a book source (a StoryletResource or a parsed JSON
 	# object) and replays them into the live library. Additive and forgiving - a row naming an undefined
@@ -915,6 +906,17 @@ func _parse_book(json_text: String) -> Dictionary:
 	if reader.parse(json_text) != OK:
 		return {}
 	return reader.data if reader.data is Dictionary else {}
+
+func _validate_json(json_text: String) -> PackedStringArray:
+	# Validates a JSON storybook: reports a parse failure (with Godot's message) or a non-object root,
+	# else the same structural problems as _validate_book. Uses the instance JSON API so a bad string
+	# is a returned error, not a console spew.
+	var reader: JSON = JSON.new()
+	if reader.parse(json_text) != OK:
+		return PackedStringArray(["not valid JSON: " + reader.get_error_message()])
+	if not reader.data is Dictionary:
+		return PackedStringArray(["JSON root is not an object (expected { \"storylets\": [ ... ] })"])
+	return _validate_book(reader.data)
 
 func _activate(id: String) -> void:
 	# Marks a storylet as played now: records the play + cooldown start + active + draw history,

@@ -46,8 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"storylet_weaver/storylet_weaver_addon.gd:mode",
-	"storylet_weaver/storylet_weaver_addon.gd:op",
 	"tile_movement/tile_movement_behavior.gd:direction",
 	"utility_ai/utility_ai_addon.gd:curve",
 	"wrap/wrap_behavior.gd:space",
@@ -122,6 +120,12 @@ const ACTIONS := [
 		"$StatForge.add_threshold_rule(\"low_hp\", \"health\", 25.0, \"falling\", true)",
 		{"rule_id": "\"low_hp\"", "stat": "\"health\"", "value": "25.0", "direction": "falling",
 			"repeating": "true"}],
+	[STORYLETS, "Storylets.add_requirement({id}, {quality_key}, \"{op}\", {value})",
+		"Storylets.add_requirement(\"tavern\", \"courage\", \">=\", 3)",
+		{"id": "\"tavern\"", "quality_key": "\"courage\"", "op": ">=", "value": "3"}],
+	[STORYLETS, "Storylets.add_recency_requirement({id}, \"{mode}\", {within})",
+		"Storylets.add_recency_requirement(\"tavern\", \"not_recent\", 5)",
+		{"id": "\"tavern\"", "mode": "not_recent", "within": "5"}],
 ]
 
 const CONDITIONS := [

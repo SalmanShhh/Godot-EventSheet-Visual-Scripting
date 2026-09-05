@@ -420,6 +420,7 @@ static func build() -> bool:
 		[["id", "String"], ["quality_key", "String"], ["op", "String"], ["value", "Variant"]],
 		"_story(id).reqs.append({\"key\": quality_key, \"op\": op, \"value\": value})")
 	_op_options(req_fn, "op")
+	_quoted_call(req_fn, "Storylets.add_requirement({id}, {quality_key}, \"{op}\", {value})")
 	sheet.functions.append(req_fn)
 	Lib.append_function(sheet, "add_choice", "Add Choice", "Storylets", "Adds a labelled choice the player can pick on this storylet (resolve it with Choose).",
 		[["id", "String"], ["choice_id", "String"], ["text", "String"]],
@@ -428,11 +429,14 @@ static func build() -> bool:
 		[["id", "String"], ["choice_id", "String"], ["quality_key", "String"], ["op", "String"], ["value", "Variant"]],
 		"var c: Dictionary = _choice(id, choice_id)\nif not c.is_empty():\n\tc.reqs.append({\"key\": quality_key, \"op\": op, \"value\": value})")
 	_op_options(choice_req_fn, "op")
+	_quoted_call(choice_req_fn,
+		"Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, \"{op}\", {value})")
 	sheet.functions.append(choice_req_fn)
 	var choice_eff_fn: EventFunction = Lib.exposed_function("add_choice_effect", "Add Choice Effect", "Storylets", "A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.",
 		[["id", "String"], ["choice_id", "String"], ["op", "String"], ["key", "String"], ["value", "Variant"]],
 		"var c: Dictionary = _choice(id, choice_id)\nif not c.is_empty():\n\tc.effects.append({\"op\": op, \"key\": key, \"value\": value})")
 	_effect_op_options(choice_eff_fn, "op")
+	_quoted_call(choice_eff_fn, "Storylets.add_choice_effect({id}, {choice_id}, \"{op}\", {key}, {value})")
 	sheet.functions.append(choice_eff_fn)
 
 	# --- Effects & meta (data-driven consequences + arbitrary payload) ---
@@ -440,6 +444,7 @@ static func build() -> bool:
 		[["id", "String"], ["op", "String"], ["key", "String"], ["value", "Variant"]],
 		"_story(id).effects.append({\"op\": op, \"key\": key, \"value\": value})")
 	_effect_op_options(effect_fn, "op")
+	_quoted_call(effect_fn, "Storylets.add_effect({id}, \"{op}\", {key}, {value})")
 	sheet.functions.append(effect_fn)
 	Lib.append_function(sheet, "add_meta", "Add Meta", "Storylets", "Attaches an arbitrary key-value to a storylet (a speaker, a portrait, a sound). Read it back with Active Meta / Storylet Meta - the engine never interprets it.",
 		[["id", "String"], ["key", "String"], ["value", "Variant"]],
@@ -450,6 +455,7 @@ static func build() -> bool:
 		[["id", "String"], ["quality_key", "String"], ["op", "String"], ["other_key", "String"]],
 		"_story(id).reqs.append({\"key\": quality_key, \"op\": op, \"value\": other_key, \"value_key\": true})")
 	_op_options(key_req_fn, "op")
+	_quoted_call(key_req_fn, "Storylets.add_requirement_key({id}, {quality_key}, \"{op}\", {other_key})")
 	sheet.functions.append(key_req_fn)
 	Lib.append_function(sheet, "add_chance_requirement", "Add Chance Requirement", "Storylets", "A probability gate: the storylet is eligible only percent% of the time, re-rolled on every Evaluate/Draw. Use it to make a beat show only sometimes.",
 		[["id", "String"], ["percent", "float"]],
@@ -458,6 +464,7 @@ static func build() -> bool:
 		[["id", "String"], ["mode", "String"], ["within", "int"]],
 		"_story(id).reqs.append({\"op\": mode, \"value\": within})")
 	_recency_options(recency_fn, "mode")
+	_quoted_call(recency_fn, "Storylets.add_recency_requirement({id}, \"{mode}\", {within})")
 	sheet.functions.append(recency_fn)
 
 	# --- Qualities (the game-state mirror) ---
@@ -637,6 +644,17 @@ static func build() -> bool:
 	})
 	Lib.feature_verbs(sheet, ["define_storylet", "draw"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/storylet_weaver/storylet_weaver_addon")
+
+
+## Gives a verb a call template that QUOTES its dropdown argument. A dropdown key is inserted into
+## the call verbatim, so a String argument picked from a list of words has to carry its own quotes in
+## the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter wraps a key
+## that already starts with a quote in a second pair, and the scanner strips one pair back off).
+## Without this a row picking "at least" asked `add_requirement(id, key, >=, 3)`, which is not an
+## expression at all, and the game did not parse. The call is spelled in full because this pack ships
+## as an AUTOLOAD: the name in front of it is the singleton's, not a node path.
+static func _quoted_call(fn: EventFunction, call: String) -> void:
+	fn.codegen_template_override = call
 
 
 ## Gives the requirement op parameter the shared comparison dropdown. _matches_requirement compares
