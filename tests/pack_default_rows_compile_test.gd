@@ -24,10 +24,12 @@
 # those parameters gains its help sentence the default starts shipping, and this gate is what turns
 # red instead of the game.
 #
-# THE PARSE ERRORS THIS PRINTS MID-SUITE ARE DELIBERATE. Every row on `KNOWN_FAILING` below is still
-# compiled rather than skipped, so a row that starts compiling is reported as a stale line to delete
-# instead of sitting on the list for ever - and Godot writes each of those failures to stderr on its
-# way past. A run of this file that prints no engine parse errors at all is the surprising one.
+# THE PARSE ERRORS THIS PRINTS MID-SUITE ARE DELIBERATE. The detector self-check at the bottom
+# compiles `Codex.discover(enemies, slime)` on purpose, and Godot writes that failure to stderr on
+# its way past. So does every row on `KNOWN_FAILING` below, which is compiled rather than skipped so
+# that a row which starts compiling is reported as a stale line to delete instead of sitting on the
+# list for ever. The list is empty today, so the probe's own error is the only one a green run
+# writes - a `Parse Error` naming `Codex` mid-suite is this file working, not this file failing.
 @tool
 class_name PackDefaultRowsCompileTest
 extends RefCounted
@@ -38,21 +40,22 @@ const SUPPORT := preload("res://tests/support.gd")
 ## defect written down rather than hidden, and it is DELETED the day the cause is fixed - never
 ## added to make a red run green. Keyed `<pack file>/<ace id>`.
 ##
-## The eighteen lines here are ONE defect wearing two faces, and neither face has a one-line fix.
-##
-## A starting value reaches an emitted pack as bare annotation text between `default: ` and the next
-## `, `, and BOTH readers strip one surrounding pair of quotes off it. So a default cannot say
-## whether it is a WORD (for a slot the template quotes) or a LITERAL (for a slot it does not):
-##   - Juice and Juice 3D quote nothing, and their starting words `impact`, `hover`, `intro` and
-##     `props` reach the call as undefined identifiers.
-##   - Screen FX and Post Kit quote the slot, and the reflected `called: String = ""` reaches the
-##     call as the source text `""` inside those quotes, which is four quote characters.
-## Quoting the slot in the first group would change a SHIPPED `codegen_template`, which is frozen;
-## quoting the default in either group is undone by the readers. The fix is a spelling a default can
-## carry through the round trip, which is a change to the emitter and both readers together, so it is
-## written down here rather than smuggled into a pass about something else.
+## It is EMPTY, and staying empty is the point: a row a beginner drops has to parse, because a sheet
+## that looks right over a game that does not build is the worst way to learn that something is
+## wrong. The eighteen lines that stood here were one defect wearing two faces, and both faces were
+## answered by the fleet's own law rather than by a new spelling:
+##   - Juice and Juice 3D took a word - `impact`, `hover`, `intro`, `props` - through an UNQUOTED
+##     slot, so the starting word reached the call as an undefined identifier. The templates now
+##     carry the quotes, the way every other pack offering a word already does, and the starting
+##     value stays the bare word an author types.
+##   - Screen FX and Post Kit quote their slot correctly, but three parameters carried no starting
+##     value of their own, so the reflected `called: String = ""` fell through as the SOURCE TEXT of
+##     an empty literal and landed inside the template's quotes as four quote characters. Each now
+##     names the word its row opens on.
+## A default still cannot say whether it is a WORD or a LITERAL - both readers strip one surrounding
+## pair of quotes off it - so the answer for a word-shaped parameter is always the same: quote the
+## slot in the template, and let the default be the word.
 const KNOWN_FAILING: Dictionary = {
-	"post_kit_behavior.gd/method:add_post_effect": "the reflected `called: String = \"\"` lands inside the template's own quotes"
 }
 
 ## Rows whose template is correct GDScript but only compiles inside a context this standalone
