@@ -10,6 +10,12 @@
 // uniform, so "the same drawing, blended differently" has to be one file per blend. Sharing the body
 // through an include is the only way to have five blends and one copy of the drawing.
 //
+// The 3D twins read THIS FILE TOO. `vector_shapes_3d.gdshaderinc` defines VECTOR_SHAPES_SPATIAL and
+// includes it, so a spatial shape gets the same distance fields, the same dashes and the same
+// colour modes, and the canvas fragment at the bottom is left out for the spatial one it declares
+// instead. That is the whole reason the drawing is a function rather than a fragment body: two
+// shader types cannot share a fragment, but they can share everything the fragment does.
+//
 // PRECISION: every distance here is in local pixels around a shape whose own numbers a designer
 // typed, so the arithmetic stays in the hundreds. Nothing accumulates over frames and nothing is
 // divided by a value that approaches zero (every divisor is guarded), which is what keeps this
@@ -177,11 +183,19 @@ float rounded_box_distance(vec2 p, vec2 half_size, vec4 radii) {
 }
 
 
-void fragment() {
-	vec2 p = quad_origin + UV * quad_size;
-	float aa = max(aa_width, 0.0001);
-	float half_thickness = max(thickness_px, 0.01) * 0.5;
-
+// THE WHOLE DRAWING, AS ONE FUNCTION, so that both shader families read the same bytes for it: the
+// canvas one below and the spatial one in the include beside this file. A dash tuned on a 2D line
+// and the same dash on its 3D twin cannot drift, because there is one copy of the arithmetic.
+//
+//   p                where this pixel is, in the shape's own coordinates
+//   uv               the quad's own 0-to-1 reading, which a per-corner fill needs
+//   half_thickness   half the stroke's width, in those same coordinates
+//   half_border      half the border's width, in those same coordinates
+//   aa               how wide the fade at an edge is, in those same coordinates
+//
+// The two callers differ only in what they hand over: a canvas shape works in pixels, and a spatial
+// one works in the node's own units and converts a screen-unit stroke through the camera first.
+vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, float aa) {
 	float outline = 1e20;    // distance to the outline: negative inside a filled shape
 	float stroke = 1e20;     // distance to the stroke drawn on that outline
 	float along = 0.0;       // how far along the outline this pixel is
@@ -229,7 +243,7 @@ void fragment() {
 			span = horizontal ? 2.0 * h.x : 2.0 * h.y;
 			along = horizontal ? (p.x + h.x) : (p.y + h.y);
 		}
-		t = colour_mode == 2 ? clamp(length(p / max(h, vec2(0.01))), 0.0, 1.0) : UV.x;
+		t = colour_mode == 2 ? clamp(length(p / max(h, vec2(0.01))), 0.0, 1.0) : uv.x;
 	} else {
 		// Everything made of segments: the line (two points), the polyline, and the closed
 		// polygon, triangle and regular polygon, whose points the node works out on the CPU.
@@ -294,13 +308,12 @@ void fragment() {
 	// Coverage. A filled shape is its inside, with the border laid over the edge of it; an unfilled
 	// one is its stroke alone. The dash pattern cuts whichever of the two is a line around an edge,
 	// which is why a filled rect's dashes are its border's and a line's dashes are its own.
-	vec4 body = shape_colour(t, UV);
+	vec4 body = shape_colour(t, uv);
 	vec4 result = vec4(body.rgb, 0.0);
 	if (filled) {
 		float fill_alpha = 1.0 - smoothstep(-aa, aa, outline);
 		result = vec4(body.rgb, body.a * fill_alpha);
 		if (border_on) {
-			float half_border = max(border_px, 0.01) * 0.5;
 			float edge_alpha = 1.0 - smoothstep(-aa, aa, abs(outline) - half_border);
 			if (dashed) {
 				edge_alpha = min(edge_alpha, dash_coverage(along, span, perp, half_border, aa));
@@ -314,5 +327,16 @@ void fragment() {
 		}
 		result = vec4(body.rgb, body.a * stroke_alpha);
 	}
-	COLOR = vec4(result.rgb, result.a * COLOR.a);
+	return result;
 }
+
+
+// The canvas half: one quad in the node's own pixels. It is skipped when a spatial shader includes
+// this file, which declares a fragment of its own - a shader has one, whichever type it is.
+#ifndef VECTOR_SHAPES_SPATIAL
+void fragment() {
+	vec4 drawn = vector_shape_at(quad_origin + UV * quad_size, UV, max(thickness_px, 0.01) * 0.5,
+		max(border_px, 0.01) * 0.5, max(aa_width, 0.0001));
+	COLOR = vec4(drawn.rgb, drawn.a * COLOR.a);
+}
+#endif
