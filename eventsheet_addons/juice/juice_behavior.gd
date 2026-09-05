@@ -1147,9 +1147,9 @@ func play_moment_at(moment_name: String, strength: float, from: Node, within: fl
 ## @ace_action
 ## @ace_name("Set Moment Strength")
 ## @ace_category("Juice")
-## @ace_description("Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It scales what Play Moment At feels; the moments themselves are untouched.")
+## @ace_description("Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.")
 ## @ace_display_template("Set moment strength to [b]{value}[/b]")
-## @ace_param(value, default: 1, desc: "1 is the moments as written, 0.5 half as much of everything, 0 nothing felt at all.")
+## @ace_param(value, default: 1, desc: "1 is Play Moment At as written, 0.5 half as much of everything it feels, 0 nothing felt at all.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.set_moment_strength({value})")
 func set_moment_strength(value: float) -> void:
@@ -1158,7 +1158,7 @@ func set_moment_strength(value: float) -> void:
 ## @ace_expression
 ## @ace_name("Moment Strength")
 ## @ace_category("Juice")
-## @ace_description("The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.")
+## @ace_description("The number Play Moment At scales a moment by before the distance is paid for - what Set Moment Strength last wrote, and 1 until it has been written. A plain Moment row does not read it: that row plays a beat at the strength written on the row itself.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.moment_strength()")
 func moment_strength() -> float:

@@ -796,13 +796,13 @@ moment(moment_name, here)",
 	_default(sheet, "falloff", "linear")
 	_param_desc(sheet, "falloff", "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
 	_quoted_argument(sheet, "play_moment_at({moment_name}, {strength}, {from}, {within}, \"{falloff}\")")
-	Lib.append_function(sheet, "set_moment_strength", "Set Moment Strength", "Juice", "Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It scales what Play Moment At feels; the moments themselves are untouched.",
+	Lib.append_function(sheet, "set_moment_strength", "Set Moment Strength", "Juice", "Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.",
 		[["value", "float"]],
 		"_moment_strength = maxf(value, 0.0)",
 		"Set moment strength to [b]{value}[/b]")
 	_default(sheet, "value", "1")
-	_param_desc(sheet, "value", "1 is the moments as written, 0.5 half as much of everything, 0 nothing felt at all.")
-	Lib.number(sheet, "moment_strength", "Moment Strength", "Juice", "The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.",
+	_param_desc(sheet, "value", "1 is Play Moment At as written, 0.5 half as much of everything it feels, 0 nothing felt at all.")
+	Lib.number(sheet, "moment_strength", "Moment Strength", "Juice", "The number Play Moment At scales a moment by before the distance is paid for - what Set Moment Strength last wrote, and 1 until it has been written. A plain Moment row does not read it: that row plays a beat at the strength written on the row itself.",
 		[], "return _moment_strength", TYPE_FLOAT)
 	Lib.append_function(sheet, "moment_step", "Moment Step", "Juice", "Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.",
 		[["verb", "String"], ["amount", "float"], ["effect", "String"], ["seconds", "float"], ["strength", "float"]],
