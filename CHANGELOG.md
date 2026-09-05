@@ -5000,6 +5000,68 @@ A second adversarial pass read the fixes above against the code that carries the
   four the physics table now claims BY NAME. That is the difference between a percentage and a diff,
   and it is why the corpus pins entry lines apart from the share that reads as rows.
 
+### Fixed in the general-purpose reading pass
+
+- **A name the file uses twice is answered for by nobody, wherever it is asked.** The declaration map
+  already dropped a member a function parameter shadows; the object-class map beside it registered
+  every `@onready` name with no such filter, and the receiver reading asks THAT map first. So
+  `func _on_area_entered(body)` beside an `@onready var body: CharacterBody2D` read every row in that
+  handler against a class the parameter is not - a wrong claim, with the file's bytes identical either
+  way. The refusal now happens before any map is asked, and the set has grown to include a `var`
+  declared inside a body: `var sprite := $Other as AnimatedSprite2D` beside an `@onready var sprite:
+  Sprite2D` is a warning in GDScript rather than an error, and it compiles.
+- **A written-out node path resolves whole or not at all.** The bare last segment of a path was
+  registered as a class key, so `$Player/Sprite` was read off a declaration of `$Enemy/Sprite` - and
+  two nodes named the same under different parents is the commonest scene shape there is. A receiver
+  with a parent written into it now only resolves on its whole spelling, and a leaf two declarations
+  answer differently carries no entry at all.
+- **A class your project declares answers for the verbs and properties it inherits.** The fallback to
+  the class a file extends fired only where the receiver had no class name of its own, so
+  `sheet.duplicate()` on your own `Resource` subclass declined - honestly, and for the bigger half of
+  the API a real game calls. Both derived readings now walk the base chain by script path while the
+  base is another project class, and the engine class it ends at answers for the rest.
+- **A shared helper the compiler wrote is not one of your functions.** A call to `__eventsheets_*` was
+  offered back in the sheet's own Functions vocabulary ("Call function `__eventsheets_tile_under`"),
+  and the helper's own declaration read as "function `__eventsheets_tile_under`" on the workbench. It
+  is the compiler's plumbing, appended to a file it emits; it now reads as "shared helper" and is
+  never named as a function of the sheet.
+- **The Lift Workbench says which layer answered.** The claim column named a derived row by its ACE
+  descriptor - "Call Method" - which is exactly what an un-derived Call Method row says, so the one
+  place a developer sits to ask what claims a line could not tell the plainest reading from the layer
+  that read the API back. It now reads `derived · Node2D.rotate (node)`. A row a curated recogniser
+  claims still says its own words, unchanged.
+- **A name above ASCII no longer leaks into a ledger shape.** A character GDScript accepts inside an
+  identifier but the lifter's ASCII atom does not fell through to the punctuation branch and was
+  printed VERBATIM, in a shape whose whole job is to carry none of the author's words. It is blanked
+  now - and deliberately not merged with an ASCII name beside it, so the two ideas of what a name is
+  still agree. The Reading page also says the thing its ranking cannot promise: a shape keeps the verb
+  and blanks the receiver while a curated table is keyed on the class AND the verb, so a bucket may be
+  several tables, and every count there is a count of LINES.
+- **The two orders the lift tables are asked in are walked against each other.** The lifter asks its
+  families in a hand-ordered list; the reading behind the workbench, the Doctor's Reading page and the
+  corpus gate ask them in sorted path order - and every fixture gate asks each entry of its own family
+  only, so a spelling one family claims and another would claim first was invisible to all of them.
+  Every entry's own generated fixture is now put to the reading and has to come back attributed to the
+  family that wrote it. Clean today, and it stays that way.
+- **The corpus gate holds the derived layer to a number.** Every percent pin there is already 100, so
+  the share cannot move, and the general reading's residue is printed rather than pinned because it
+  moves on a cosmetic rename. The statements the derived layer has WORDS for is neither, so it is
+  pinned per file across the eight corpus files.
+- **The head of a local declaration is one shared fragment.** `var x[: Type] :?= v` was spelled by
+  hand at fourteen sites across five recogniser families, each with its own idea of which types the
+  colon may carry. It joins the shared capture grammar; the physics query family migrates to it, and
+  the remaining thirteen are named for the next pass rather than moved in one go.
+- **Four `user://` fixtures go out with the tests that wrote them,** and the corpus gate drops the
+  family tables and the derived caches it warmed. CI runs the suite serially in one process, where a
+  leftover file and a warm cache are the next test's starting conditions.
+- **Two commits on this branch carry other passes' work, and cannot be unmade.** `f129474d`
+  ("the reading page is photographed on a floor of its own") carries 729 lines belonging to the
+  shapes-and-Inspector pass beside its own 24-line preview change, and `c4e4b51a` ("a compiler-emitted
+  shared helper is not the author's own function") contains only the spawning pass's move of two
+  runtime files and never carried the change its message describes. That change is in this pass
+  instead, with the tests it should have shipped with. The cause was a shared git index and a plain
+  `git commit` after `git add`; every commit here is made by pathspec.
+
 ### Collisions, written down
 
 - **A guide for what touches what.** It leads with the decision the rest of the subject hangs off -
