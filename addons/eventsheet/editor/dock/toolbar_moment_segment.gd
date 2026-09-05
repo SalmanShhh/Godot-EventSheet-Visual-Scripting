@@ -140,7 +140,10 @@ func build(toolbar: Node) -> Control:
 	_strength.max_value = STRENGTH_MAX
 	_strength.step = STRENGTH_STEP
 	_strength.value = 1.0
-	_strength.prefix = "strength"
+	# "at 1.0" rather than "strength 1.0": the box is narrow, and a prefix that has to be cut in half
+	# to fit says less than the two characters that do.
+	_strength.prefix = "at"
+	_strength.custom_minimum_size = Vector2(88.0, 0.0)
 	_strength.tooltip_text = "What the preview scales every amount in the beat by - the same number the play row asks for."
 	_segment.add_child(_strength)
 	_parts.append(_strength)
