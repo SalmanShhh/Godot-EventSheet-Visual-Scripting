@@ -175,11 +175,17 @@ static func res_write_findings(sources: Dictionary) -> Array[Dictionary]:
 static func res_write_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var statements: PackedStringArray = _statements_of(source)
-	var packers: PackedStringArray = _packer_names(statements)
+	var packers: PackedStringArray = _names_bound_to(statements,
+		EventForgeFilePlaces.PACKER_CLASS)
 	var folders: PackedStringArray = _written_folder_handles(statements)
+	var configs: PackedStringArray = _names_bound_to(statements,
+		EventForgeFilePlaces.CONFIG_CLASS)
 	for line: String in statements:
 		var literals: PackedStringArray = _write_path_literals(line)
-		literals.append_array(_packer_open_literals(line, packers))
+		literals.append_array(_handle_call_literals(line, packers,
+			EventForgeFilePlaces.OPEN_CALL))
+		literals.append_array(_handle_call_literals(line, configs,
+			EventForgeFilePlaces.SAVE_CALL))
 		literals.append_array(_folder_handle_literals(line, folders))
 		for literal: String in literals:
 			if EventForgeFilePlaces.place_of("\"%s\"" % literal) == EventForgeFilePlaces.PLACE_RES:
@@ -193,13 +199,14 @@ static func res_write_lines(source: String) -> PackedStringArray:
 ## write is followed by the name, which is also what keeps a ZIPReader's identical `open(` out of the
 ## answer. Only a plain `<name> = ZIPPacker.new()` is followed; a packer held in an array or a field
 ## is one this check has nothing to say about, exactly as a built path is.
-static func _packer_names(statements: PackedStringArray) -> PackedStringArray:
+static func _names_bound_to(statements: PackedStringArray,
+		class_text: String) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	for line: String in statements:
-		if not line.contains(EventForgeFilePlaces.PACKER_CLASS):
+		if not line.contains(class_text):
 			continue
 		var equals_at: int = line.find("=")
-		if equals_at < 0 or equals_at > line.find(EventForgeFilePlaces.PACKER_CLASS):
+		if equals_at < 0 or equals_at > line.find(class_text):
 			continue
 		var left: String = line.substr(0, equals_at).strip_edges().trim_suffix(":")
 		left = left.trim_prefix("var ").split(":")[0].strip_edges()
@@ -208,11 +215,13 @@ static func _packer_names(statements: PackedStringArray) -> PackedStringArray:
 	return names
 
 
-## The path literals one line hands to a packer's `open`, which is the line that WRITES the archive.
-static func _packer_open_literals(line: String, packers: PackedStringArray) -> PackedStringArray:
+## The path literals one line hands to a named handle's own call - a packer's `open`, which is the
+## line that WRITES the archive, or a settings file's `save`, which is the line that writes it.
+static func _handle_call_literals(line: String, handles: PackedStringArray,
+		call_text: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for packer_name: String in packers:
-		var mark: String = packer_name + EventForgeFilePlaces.OPEN_CALL
+	for packer_name: String in handles:
+		var mark: String = packer_name + call_text
 		var at: int = line.find(mark)
 		while at >= 0:
 			for literal: String in _quoted_literals(_arguments_after(line, at + mark.length())):
@@ -301,18 +310,27 @@ static func _folder_handle_literals(line: String, handles: PackedStringArray) ->
 
 
 ## The path literals one line hands to a WRITE. `FileAccess.open(p, FileAccess.WRITE)` writes and
-## `FileAccess.open(p, FileAccess.READ)` does not, so the mode is read rather than assumed; every
-## DirAccess call named here writes by existing.
+## `FileAccess.open(p, FileAccess.READ)` does not, so the mode is read rather than assumed - of all
+## four openers, because each takes the same constant in the same place; every DirAccess call named
+## here writes by existing. The picture writers come last and carry no name in front of them, for the
+## reason the list they are read from states.
 static func _write_path_literals(line: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for call_text: String in EventForgeFilePlaces.WRITE_CALLS:
 		var at: int = line.find(call_text)
 		while at >= 0:
 			var arguments: String = _arguments_after(line, at + call_text.length())
-			if call_text != "FileAccess.open(" or _opens_for_writing(arguments):
+			if not call_text.begins_with(EventForgeFilePlaces.OPEN_CALL_PREFIX) 					or _opens_for_writing(arguments):
 				for literal: String in _quoted_literals(arguments):
 					found.append(literal)
 			at = line.find(call_text, at + call_text.length())
+	for call_text: String in EventForgeFilePlaces.IMAGE_WRITE_CALLS:
+		var image_at: int = line.find(call_text)
+		while image_at >= 0:
+			for literal: String in _quoted_literals(
+					_arguments_after(line, image_at + call_text.length())):
+				found.append(literal)
+			image_at = line.find(call_text, image_at + call_text.length())
 	return found
 
 

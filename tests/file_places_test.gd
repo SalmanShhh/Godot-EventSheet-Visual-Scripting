@@ -445,6 +445,41 @@ static func _test_doctor_checks() -> bool:
 		EventSheetFilesDoctor.res_write_lines(CLEAN_TWO_DIR_HANDLES),
 		PackedStringArray()) and passed
 
+	# THE OTHER SPELLINGS OF A WRITE. The reading knew six, and a project writing through any of the
+	# rest hit the export trap in silence - including the shipped Save System pack's own encrypted
+	# open, which is the one write most projects make.
+	passed = _check("an encrypted write to res:// is the export trap like any other",
+		EventSheetFilesDoctor.res_write_lines(
+			"func save() -> void:\n\tvar f = FileAccess.open_encrypted_with_pass(\"res://save.dat\","
+			+ " FileAccess.WRITE, \"key\")\n"),
+		PackedStringArray(["var f = FileAccess.open_encrypted_with_pass(\"res://save.dat\","
+			+ " FileAccess.WRITE, \"key\")"])) and passed
+	passed = _check("and a compressed one",
+		EventSheetFilesDoctor.res_write_lines("func save() -> void:\n\tvar f ="
+			+ " FileAccess.open_compressed(\"res://log.txt\", FileAccess.WRITE)\n").size(),
+		1) and passed
+	# THE MODE IS STILL READ, of all four openers rather than only the plain one: reading the game's
+	# own files is exactly what res:// is for.
+	passed = _check("an encrypted READ of res:// is what res:// is for",
+		EventSheetFilesDoctor.res_write_lines("func load_it() -> void:\n\tvar f ="
+			+ " FileAccess.open_encrypted_with_pass(\"res://data.dat\", FileAccess.READ, \"key\")\n"),
+		PackedStringArray()) and passed
+	passed = _check("a settings file saved to res:// through its own name is reported",
+		EventSheetFilesDoctor.res_write_lines("func save() -> void:\n\tvar config ="
+			+ " ConfigFile.new()\n\tconfig.save(\"res://settings.cfg\")\n"),
+		PackedStringArray(["config.save(\"res://settings.cfg\")"])) and passed
+	passed = _check("a picture written into the project folder too",
+		EventSheetFilesDoctor.res_write_lines("func shoot() -> void:\n\tvar shot ="
+			+ " get_viewport().get_texture().get_image()\n\tshot.save_png(\"res://shot.png\")\n"),
+		PackedStringArray(["shot.save_png(\"res://shot.png\")"])) and passed
+	passed = _check("and a single folder made there",
+		EventSheetFilesDoctor.res_write_lines("func build() -> void:\n\t"
+			+ "DirAccess.make_dir_absolute(\"res://levels\")\n").size(), 1) and passed
+	passed = _check("while the same picture under user:// is the right thing to do",
+		EventSheetFilesDoctor.res_write_lines("func shoot() -> void:\n\tvar shot ="
+			+ " get_viewport().get_texture().get_image()\n\tshot.save_png(\"user://shot.png\")\n"),
+		PackedStringArray()) and passed
+
 	var unguarded: Array[Dictionary] = EventSheetFilesDoctor.unguarded_read_findings(
 		{"res://trap.gd": BUG_UNGUARDED})
 	passed = _check("an unguarded read is a NOTE, never a warning", _severities(unguarded),

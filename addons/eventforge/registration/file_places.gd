@@ -103,11 +103,38 @@ const PATH_PARAMS: Dictionary = {
 const WRITE_CALLS: PackedStringArray = [
 	"FileAccess.open(", "DirAccess.remove_absolute(", "DirAccess.rename_absolute(",
 	"DirAccess.copy_absolute(", "DirAccess.make_dir_recursive_absolute(",
+	# The other three ways FileAccess opens a file, each of which takes the same WRITE mode in the
+	# same second argument. `open_encrypted_with_pass` is the shipped Save System pack's own
+	# spelling, so a check that could not see it was blind to the one write most projects make.
+	"FileAccess.open_compressed(", "FileAccess.open_encrypted(",
+	"FileAccess.open_encrypted_with_pass(",
+	# Its recursive twin is above; this one makes a single folder whose parent is already there.
+	"DirAccess.make_dir_absolute(",
 	# The engine's own resource writer. A packed scene or a `.tres` written to res:// is the export
 	# trap said one more way - it lands in the project folder in the editor and nowhere at all in the
 	# exported build - and Save Branch As Scene File is spelled with exactly this call.
 	"ResourceSaver.save(",
 ]
+
+## THE MODE IS ASKED OF EVERY `FileAccess.open`, whichever of the four it is: each takes the same
+## WRITE / READ_WRITE / READ constant in its second argument, and a READ of res:// is what res:// is
+## for. Read as a prefix so a fifth opener the engine grows is asked the same question by default.
+const OPEN_CALL_PREFIX := "FileAccess.open"
+
+## The picture writers, and the one place in this file a call is matched with no name in front of it.
+## They are methods on an `Image`, so they are written on whatever holds one - a name, a call, a
+## property - and following every one of those would be following the whole language. These five
+## names belong to Image alone in the engine's own API and each takes the path as its FIRST argument,
+## which is what makes matching the method enough.
+const IMAGE_WRITE_CALLS: PackedStringArray = [
+	".save_png(", ".save_jpg(", ".save_jpeg(", ".save_webp(", ".save_exr(",
+]
+
+## A SETTINGS FILE IS WRITTEN THROUGH A NAME, exactly as an archive is: `var config := ConfigFile.new()`
+## on one line and `config.save(path)` on another. So the name is followed rather than the call text
+## matched - which is also what keeps `ResourceSaver.save(` above from being counted twice.
+const CONFIG_CLASS := "ConfigFile.new("
+const SAVE_CALL := ".save("
 
 ## The archive writer, and the call that names the file it writes. An archive written to res:// is
 ## the export trap said one more way - and the files band already reads a packing row as WRITTEN off
