@@ -4160,10 +4160,13 @@ against Godot 4.7 before it was repaired.
   simplified, the folder keeping its trailing slash so `user://mods` cannot accept
   `user://mods_of_mine`), and an entry that climbs out closes the archive, stops the whole unpack and
   raises **On Unpack Refused** with the entry and the reason on it.
-- **A huge archive meets a progress bar, not a frozen game.** **On Unpack Progress** reports the
-  entries and the bytes that have landed, once per entry; **On Unpack Finished** ends a run that
-  reached the last entry. Like the Ask rows, the emitted loop calls all three answers **by name**, so
-  a sheet that unpacks needs an event for each or the script does not compile.
+- **The run reports itself, entry by entry.** **On Unpack Progress** carries the entries and the
+  bytes that have landed and how many entries the archive holds in all - the two numbers a bar is
+  made of - and **On Unpack Finished** ends a run that reached the last entry, with a third number
+  saying how many entries did NOT land. The loop has no waiting in it, so those reports arrive in a
+  burst and a bar reads how far the run got rather than the run happening; the trigger says so.
+  Like the Ask rows, the emitted loop calls all three answers **by name**, so a sheet that unpacks
+  needs an event for each or the script does not compile.
 - **The band grew a watch reading.** A folder read once and a folder read every two seconds for the
   rest of the session are not the same thing to say about a sheet, so a row that starts a watch reads
   as `watching user://mods every 2.0 s` - the interval included, because that is the half a path
@@ -4493,9 +4496,11 @@ These are the places the two disagreed.
   traversal spelling tried on Windows - `../`, `..\`, `a://../../../`, `sub/../../`, absolute,
   drive-lettered, scheme-prefixed. What it cannot see is a symlink or junction already sitting inside
   the target folder, an entry named `x:y.txt` landing as a Windows alternate data stream on a file
-  called `x`, and an entry the reader cannot decode landing as a 0-byte file that is counted as one
-  that landed. An entry is also read whole into memory before it is written. All four are in the
-  guide and the module page now.
+  called `x`, and an entry the OS refuses outright - a reserved device name, an empty name - being
+  dropped where the write guard sits. An entry is also read whole into memory before it is written.
+  All of them are in the guide and the module page now. (The fourth of them, an entry the reader
+  cannot decode landing as a 0-byte file and counted as one that landed, is a bug rather than a limit
+  and is fixed below.)
 - **Both loaders' fallback slots say what they do not answer for.** "When there is no file at that
   path" was the whole story on the row, while a file that IS there and cannot be decoded answers
   null and an engine message instead - the guard asks whether a file exists, not whether it is a
@@ -4514,6 +4519,90 @@ These are the places the two disagreed.
   one, about a quiet file not being a cleared file - fell off the bottom of the page. A reader
   shown that picture would have taken silence for a clean bill of health, which is the exact
   misreading the sentence was written to prevent.
+
+#### Fixed, read back a second time
+
+A second adversarial pass read the fixes above against the code that carries them.
+
+- **The unpack landed a 0-byte file for an entry it could not read, and counted it.**
+  `ZIPReader.read_file` answers with an EMPTY byte array for an entry it could not decode - a
+  truncated archive, a header that lies about its length, a CRC that does not match - after printing
+  an engine message about it. That empty answer was written out, counted as an entry that had landed
+  and reported through **On Unpack Finished**, so a corrupt or hostile archive left a file the game
+  then read as content. The reader offers no size to compare against, so an empty read is SKIPPED
+  rather than written, and counted; an entry that really is empty reads exactly the same way and is
+  skipped with it, which the row says out loud, because a rule that cannot tell those two apart must
+  say which way it errs. An entry the machine refuses to WRITE was vanishing the same way - not
+  counted, not refused, no word anywhere - and joins the same number. **On Unpack Finished** carries
+  it as its third; the suite drives it with an archive written by hand whose stored entry claims 64
+  bytes over the seven it holds.
+- **A progress bar needs a denominator, and the row was not a bar's friend anyway.** **On Unpack
+  Progress** reported what had landed and never how much there was, so nothing could divide; and the
+  claim that a huge archive meets a progress bar rather than a frozen game was untrue, because the
+  loop has no `await` in it and the window cannot repaint until the row returns. The total is counted
+  before the loop, over the entries the loop will TRY (the folder entries it steps over are not among
+  them, or a bar could never reach the end), and the words on the trigger, in the guide and here say
+  what the reports are: how far the run got, not the run happening. An unpack that yields between
+  entries would be a coroutine row of its own, not this one quietly becoming one.
+- **A script or a resource file from outside fell between the two trust checks.** The scene reading
+  only ever accepted `.tscn` and `.scn`, and the door trace needs a path that came through one of the
+  game's own doors or a folder the file watches or unpacks into - so `load("user://mods/hack.gd")`
+  and `load("user://mods/weapon.tres")` with no door in the file earned nothing at all from either. A
+  `.gd` IS code and a `.tres` names one the way a scene table does. A seventh Files check reads those
+  three extensions, with no one-click door on it: **Scene File Is Data-Only** reads a SCENE table and
+  answers false for anything else, so offering it there would be offering a fix that cannot work.
+- **The door trace missed the shortest way anybody writes it.** A lambda written into the connect
+  call - `files_dropped.connect(func(files): load(files[0]))` - had its whole text stored as if it
+  were a handler NAME, so no `func ` line ever matched and the trace started from nothing. Its own
+  parameter list is read where it is written now. An unpack folder held in a name is followed back to
+  the literal it was bound to, exactly as a watched folder already was, which is what the guide
+  already claimed of both. And four shapes the trace is quiet about on purpose are written down: a
+  hand-written unpack with no make-folder line, a path handed to `OS.execute` / `OS.create_process` /
+  `OS.shell_open` (which runs a stranger's PROGRAM, wider than any loader), text read off disk and
+  set as a script's `source_code`, and a door in one file with the load in another. The two that
+  reach code are said in the finding itself, not only in a source comment.
+- **The export-trap check knew six ways to write a file and the engine has more.** A literal `res://`
+  write through `FileAccess.open_compressed`, `open_encrypted` or `open_encrypted_with_pass` - the
+  shipped Save System pack's own spelling, and so the one write most projects make - was silent, and
+  so were `DirAccess.make_dir_absolute`, a `ConfigFile` saved through its own name, and the five
+  `Image` writers. All are read now, and the WRITE mode is asked of all four `FileAccess` openers
+  rather than of the plain one alone: an encrypted READ of `res://` is exactly what `res://` is for.
+- **The files band said one word about a whole row.** An unpack only ever READS its archive and only
+  ever WRITES the folder it lands in, and a pack is the other way round - but the band classified per
+  ROW, so `user://pack.zip - read and written` and `user://mods - read and written` were both untrue
+  of the path they were said about. Each path FIELD is classified on its own now, scoped to the lines
+  of the template that mention that slot, with a handle carrying its class down to the line that
+  opens a place through it. A path one row reads and another writes still says *read and written*,
+  which is the case that phrase is for.
+- **An ask whose native chooser will not open now falls through to the one that will.**
+  `DisplayServer.file_dialog_show` returns an Error and the row emitted it as a bare statement inside
+  the true half of an `if`, so a platform that reports the feature and then fails to open the window -
+  a Linux build with no portal running - showed the player nothing and ran neither **On A File
+  Chosen** nor **On The Ask Cancelled**, which is exactly what the row's help promises. The fallback
+  hangs on one question now - no native chooser, OR asking for one did not open it - so both roads
+  end at the engine's own window.
+- **Three honesty gaps in the shipped watcher, and the builder helper that made one of them
+  impossible.** **Watch Folder** is the row a reader types a number into and it was the one place the
+  tenth-of-a-second floor was not stated. Its two parameters shipped named, typed and undescribed,
+  because the pack-builder helper took `[id, type]` pairs and had no channel for help text at all -
+  an optional third entry is that parameter's own help now, and no existing builder changes. And the
+  look's reading is the modified time and nothing else, so a copy made with its timestamps preserved
+  is different content under an unchanged stamp: asking the size as well would mean opening every
+  watched file on every look, a cost this poll does not pay behind anybody's back, so the trigger and
+  the guide say what the look can and cannot see and name **Look Now** as the way round it.
+- **Free File Path says what it costs.** "How many numbers to try before giving up" reads as
+  stopping, and the line maps every candidate and filters the whole list, so a taken path costs
+  `at_most` `file_exists` questions however early the free one turns up. Stopping would want a loop,
+  and a loop is not an expression - this row answers inside a path slot, which is what keeps it a
+  parameter rather than a second way to write a file. The unpack's folder slot says its own re-reads
+  for the same reason: once to make the folder, once to resolve it, once per entry.
+- **Five compiled scripts these tests left on the machine that ran them.** A compile writes its
+  output where it is told, and three files-pass tests compiled to `user://` while sweeping only their
+  own test folder, so `__safe_name_gen.gd`, `__safe_name_round_trip.gd`, `_scene_trust_authored.gd`,
+  `_scene_trust_quiet.gd` and `__fileace_compiled.gd` were all still in `app_userdata` after a run.
+  CI runs the whole suite serially in one process, so what one test leaves behind is state the next
+  one sees.
+
 
 ### Every call on a known class is a row
 
