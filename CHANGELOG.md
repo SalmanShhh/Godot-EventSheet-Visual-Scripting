@@ -161,6 +161,22 @@
 
 ### Fixed in the vocabulary and the picker
 
+- **Every shipped pack row is now compiled with the value it opens on.** The built-in vocabulary
+  has had that gate for a while; the packs, which is where a hand-written call template and a
+  dropdown of words actually live, never did. The new one walks every pack the scanner finds, fills
+  each parameter with its shipped starting value, emits the call through the real codegen and parses
+  it: 163 packs, 4016 rows. **Eighteen rows do not compile**, and they are named with their cause
+  rather than hidden. They are one defect wearing two faces: a starting value reaches a pack as bare
+  annotation text and both readers strip one surrounding pair of quotes off it, so a default cannot
+  say whether it is a WORD or a LITERAL. Juice's **Moment**, **Define Moment**, **Play Moment
+  Backwards**, **Revert Moment**, **Skip To End**, **Was Cut Short**, **Moment Progress**, **Moment
+  Elapsed**, **Moment Step Name**, **Shake Channel**, **Listen On Channel** and **Stop Listening On
+  Channel** (and the last three again in Juice 3D) quote nothing, so their starting words `impact`,
+  `hover`, `intro` and `props` reach the call as undefined identifiers; Screen FX's **Add Post
+  Effect** and **Move Post Effect Before** and Post Kit's **Add Post Effect** quote the slot, so the
+  empty starting name reaches it as four quote characters. Until a default can carry its own
+  quoting, each of those rows needs its name typed in by hand before the sheet compiles.
+
 - **A dropdown whose answer is BLANK offers it.** Several verbs are built around an empty value
   meaning something - **Scale Feedback Amounts** says in its own description to leave the family
   empty to move the whole list, and **Add Child (existing node)** offers "keeping its place" as the
