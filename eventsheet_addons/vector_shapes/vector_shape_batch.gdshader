@@ -66,7 +66,14 @@ void fragment() {
 	vec4 s = shape_numbers;
 	vec2 p = (UV * 2.0 - 1.0) * batch_extent(s);
 	float half_thickness = max(thickness_px, 0.01) * 0.5;
-	float aa = max(aa_width, 0.0001);
+	// HOW BIG A PIXEL IS, HERE, in the shape's own coordinates - the same reading the placed half
+	// takes, from the screen-space derivatives of the point being drawn. A fade measured in the
+	// canvas's own pixels instead would fatten when the canvas is scaled up and alias when a
+	// Camera2D zooms out, because neither moves the numbers a row was typed in.
+	vec2 along_x = dFdx(p);
+	vec2 along_y = dFdy(p);
+	float units_per_pixel = max(sqrt(abs(along_x.x * along_y.y - along_x.y * along_y.x)), 0.000001);
+	float aa = max(aa_width, 0.0001) * units_per_pixel;
 
 	float outline = 1e20;   // negative inside a filled shape
 	float stroke = 1e20;    // distance to the stroke drawn on its outline
