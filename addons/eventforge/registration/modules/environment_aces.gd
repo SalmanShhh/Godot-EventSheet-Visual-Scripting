@@ -318,15 +318,25 @@ static func _glow_level_rows() -> Array[ACEDescriptor]:
 ## The whole-shape row's template: the own-it lines, the glow switched on, the seven numbers named
 ## once in a local of their own, and the loop that hands them to the engine one at a time. The local
 ## is uid-suffixed so two of these rows in one function cannot collide.
+##
+## THE LOOP COUNTS THE ENGINE'S WAY, from 0, because `set_glow_level` takes an INDEX and not the
+## number the Inspector prints: `glow_levels/1` is index 0 and `glow_levels/7` is index 6, and index
+## 7 is out of bounds. So the counter is both the argument and the subscript, with no offset between
+## them - a loop from 1 would shift every level by one and error on its last turn.
 static func _glow_spread_template() -> String:
-	return "%s%s.glow_enabled = true\nvar __glow_{uid}: PackedFloat32Array = {%s}\nfor __level_{uid}: int in range(1, %d):\n\t%s.%s(__level_{uid}, __glow_{uid}[__level_{uid} - 1])" % [
-		W.OWN_LINES, W.ENVIRONMENT_MEMBER, SPREAD_PARAM, W.GLOW_LEVEL_COUNT + 1,
+	return "%s%s.glow_enabled = true\nvar __glow_{uid}: PackedFloat32Array = {%s}\nfor __level_{uid}: int in range(%d):\n\t%s.%s(__level_{uid}, __glow_{uid}[__level_{uid}])" % [
+		W.OWN_LINES, W.ENVIRONMENT_MEMBER, SPREAD_PARAM, W.GLOW_LEVEL_COUNT,
 		W.ENVIRONMENT_MEMBER, W.GLOW_LEVEL_SET_CALL]
 
 
 ## One level's template: the own-it lines, the glow switched on, and the engine's own call.
+##
+## THE ROW SAYS 1 TO 7 AND THE CALL SUBTRACTS. A reader names the level the Inspector names -
+## `glow_levels/1` is level 1 - but `set_glow_level` takes the index behind that name, which is one
+## lower, so the emitted line spells the subtraction where anyone reading the code can see it. The
+## field holds an expression, so it is bracketed before the subtraction rather than after it.
 static func _glow_level_template() -> String:
-	return "%s%s.glow_enabled = true\n%s.%s({%s}, {%s})" % [W.OWN_LINES, W.ENVIRONMENT_MEMBER,
+	return "%s%s.glow_enabled = true\n%s.%s(({%s}) - 1, {%s})" % [W.OWN_LINES, W.ENVIRONMENT_MEMBER,
 		W.ENVIRONMENT_MEMBER, W.GLOW_LEVEL_SET_CALL, LEVEL_PARAM, AMOUNT_PARAM]
 
 

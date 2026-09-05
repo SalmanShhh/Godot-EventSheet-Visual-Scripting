@@ -217,24 +217,62 @@ static func _test_the_glow_levels() -> bool:
 		"wide": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0]
 	})
 	return SUPPORT.pins("environment_words_test", [
+		# The counter is the engine's INDEX, which counts from 0: `glow_levels/1` is index 0 and
+		# `glow_levels/7` is index 6. A loop from 1 would write every number one level too wide and
+		# error out of bounds on its last turn, so the counter subscripts the array unshifted.
 		["the whole shape is one loop over the seven levels",
 			_templates().get("EnvSetGlowLevels", ""),
 			OWN_LINES + "environment.glow_enabled = true\n"
 				+ "var __glow_{uid}: PackedFloat32Array = {spread}\n"
-				+ "for __level_{uid}: int in range(1, 8):\n"
-				+ "\tenvironment.set_glow_level(__level_{uid}, __glow_{uid}[__level_{uid} - 1])"],
-		["and one level by hand is the engine's own call",
+				+ "for __level_{uid}: int in range(7):\n"
+				+ "\tenvironment.set_glow_level(__level_{uid}, __glow_{uid}[__level_{uid}])"],
+		# The row says the Inspector's number, 1 to 7, and the line subtracts on the reader's behalf.
+		["and one level by hand is the engine's own call, one lower than the name",
 			_templates().get("EnvSetGlowLevel", ""),
 			OWN_LINES + "environment.glow_enabled = true\n"
-				+ "environment.set_glow_level({level}, {amount})"],
+				+ "environment.set_glow_level(({level}) - 1, {amount})"],
 		["the shape a reader writes is the seven numbers themselves",
 			_fields("EnvSetGlowLevels"), "spread=PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])"],
 		# The field is a TYPED one with suggestions, not a dropdown: three shapes chosen inside the
 		# plugin must not be the only three the row can reach.
 		["and any seven numbers are typeable, the three being suggestions",
 			[_options_of("EnvSetGlowLevels", "spread").size(),
-				_suggestions_of("EnvSetGlowLevels", "spread").size()], [0, 3]]
+				_suggestions_of("EnvSetGlowLevels", "spread").size()], [0, 3]],
+		# THE TEMPLATES ARE RUN, not just read, because the bug they carried was an off-by-one no
+		# string comparison can see: the numbers land where the reader named them, or they do not.
+		["the seven numbers land on the seven levels the reader wrote",
+			_glow_levels_after(_templates().get("EnvSetGlowLevels", ""), {
+				"spread": "PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])"
+			}), [1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0]],
+		# Level 3 is `glow_levels/3`, the third number - not the fourth, which is what an unshifted
+		# index would have written. The rest keep Godot's own starting numbers.
+		["and level 3 by hand is the third of them, the others left alone",
+			_glow_levels_after(_templates().get("EnvSetGlowLevel", ""), {
+				"level": "3", "amount": "0.5"
+			}), [0.0, 0.8, 0.5, 0.1, 0.0, 0.0, 0.0]]
 	]) and ok
+
+
+## Runs an emitted glow template against a REAL Environment and reads the seven levels back off it.
+## The template is filled the way the dock fills one (`{uid}` baked, parameters substituted), wrapped
+## in a throwaway script and executed, so what is pinned is what the engine ended up holding rather
+## than what the string looked like. `glow_levels/1` through `glow_levels/7` are the property names
+## Godot prints; the call behind them counts from 0, which is the whole point of the pin.
+static func _glow_levels_after(template: String, params: Dictionary) -> Array:
+	var body: String = template.replace("{uid}", "1")
+	for name: String in params:
+		body = body.replace("{%s}" % name, str(params[name]))
+	var script := GDScript.new()
+	script.source_code = "extends RefCounted\nvar environment: Environment = null\nfunc apply() -> void:\n\t" \
+		+ body.replace("\n", "\n\t") + "\n"
+	script.reload()
+	var runner: Object = script.new()
+	runner.call("apply")
+	var written: Object = runner.get("environment")
+	var levels: Array = []
+	for level: int in range(1, W.GLOW_LEVEL_COUNT + 1):
+		levels.append(snappedf(float(written.get("glow_levels/%d" % level)), 0.01))
+	return levels
 
 
 ## The flag and the quality are two different objects - the Environment's and the RenderingServer's -

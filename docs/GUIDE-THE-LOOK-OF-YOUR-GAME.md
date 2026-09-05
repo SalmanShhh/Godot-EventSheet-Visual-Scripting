@@ -304,9 +304,14 @@ func _ready() -> void:
 		environment = environment.duplicate()
 	environment.glow_enabled = true
 	var __glow_1: PackedFloat32Array = PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])
-	for __level_1: int in range(1, 8):
-		environment.set_glow_level(__level_1, __glow_1[__level_1 - 1])
+	for __level_1: int in range(7):
+		environment.set_glow_level(__level_1, __glow_1[__level_1])
 ```
+
+The loop counts from 0 because `set_glow_level` takes an index, not the number the Inspector prints:
+`glow_levels/1` is index 0 and `glow_levels/7` is index 6. Set Glow Level, the row that reaches a
+single one of them, lets you say the Inspector's number and subtracts for you - level 3 emits
+`set_glow_level((3) - 1, ...)`.
 
 **The trap this removes.** Turning the glow up by raising its strength is what most projects do, and
 it washes the whole screen. The shape of the blur is the dial that decides whether a glow reads as a

@@ -404,6 +404,11 @@ const WORDS: Array[Dictionary] = [
 ## them as `glow_levels/1` through `glow_levels/7` and reaches them through `set_glow_level(i, n)`.
 ## Seven numbers is not a row a person can read, so the shipped row offers three tables to pick from
 ## and a second row sets one level by hand.
+##
+## THE TWO NUMBERINGS DO NOT AGREE, which is the trap here: the property names count from 1 and the
+## call's index counts from 0, so `glow_levels/1` is `set_glow_level(0, n)` and `glow_levels/7` is
+## `set_glow_level(6, n)`. Index 7 is out of bounds and errors. Rows say the Inspector's number to a
+## reader and subtract before they call.
 const GLOW_LEVEL_COUNT: int = 7
 const GLOW_LEVEL_SET_CALL: String = "set_glow_level"
 const GLOW_LEVEL_GET_CALL: String = "get_glow_level"
