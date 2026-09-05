@@ -330,11 +330,15 @@ static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> b
 		"folder": ROOT.path_join("probe/sneaky")})
 	var honest: String = director._code_reason({"scripts": false, "kind": "folder",
 		"folder": ROOT.path_join("mods/big_swords")})
+	var two_code: String = director._code_reason({"scripts": false, "kind": "folder",
+		"folder": ROOT.path_join("probe/two_code")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a folder with no code file in it can still be refused, by what its scene carries",
 			hidden, "world.tscn carries a script, and this row loads data only"],
 		["and a folder of plain resources is still refused nothing", honest, ""],
+		["a refusal that names one of several code files names the first in NAME order",
+			two_code, "it carries 2 code file(s), starting with alpha.gd, and this row loads data only"],
 	])
 
 
@@ -684,6 +688,13 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	_write(ROOT.path_join("probe/sneaky/world.tscn"), _scene_text([
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
+
+	# Two code files, written in the order that is NOT their sorted order, so the file the refusal
+	# names is the walk's answer rather than the disk's.
+	_write(ROOT.path_join("probe/two_code/mod.json"), JSON.stringify({
+		"name": "Two", "version": "1.0", "scripts": false}, "\t"))
+	_write(ROOT.path_join("probe/two_code/zebra.gd"), "extends Node\n")
+	_write(ROOT.path_join("probe/two_code/alpha.gd"), "extends Node\n")
 
 	# A BINARY resource with a script on it, and a scene that names it. Neither file is a `.gd`, and
 	# `.material` was not one of the four extensions this reading used to know, so the mod cleared as

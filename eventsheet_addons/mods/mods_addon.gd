@@ -874,6 +874,11 @@ func _code_reason(record: Dictionary) -> String:
 		if not bool(index.get("read", false)):
 			return "its file list could not be read, so a data-only row cannot tell whether it carries code"
 		var carried: PackedStringArray = _code_in(index.get("paths", PackedStringArray()))
+		# SORTED BEFORE ONE OF THEM IS NAMED. A pack's own table and a folder's own walk are both
+		# in whatever order they were written, so the file the refusal names would otherwise be
+		# whichever one happened to come first - a different sentence on two machines about the
+		# same mod, which a player comparing notes with the developer cannot make sense of.
+		carried.sort()
 		if not carried.is_empty():
 			return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 				carried.size(), carried[0]]
@@ -882,6 +887,7 @@ func _code_reason(record: Dictionary) -> String:
 		return _pck_resource_reason(pack_path, index.get("entries", []) as Array)
 	var folder: String = str(record.get("folder", ""))
 	var in_folder: PackedStringArray = _code_in(_files_under(folder))
+	in_folder.sort()
 	if not in_folder.is_empty():
 		return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 			in_folder.size(), in_folder[0].get_file()]
