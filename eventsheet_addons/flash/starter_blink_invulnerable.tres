@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BlinkPatternResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/flash/blink_pattern_resource.gd" id="1_blink"]
+
+[resource]
+script = ExtResource("1_blink")
+pattern_name = "Invulnerable"
+phases = Array[Dictionary]([{
+"count": 6,
+"off": 0.08,
+"on": 0.08
+}, {
+"count": 3,
+"off": 0.16,
+"on": 0.24
+}])

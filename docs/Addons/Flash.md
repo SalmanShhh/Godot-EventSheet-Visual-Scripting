@@ -51,6 +51,31 @@ The whole pack fits in a few ideas. Learn these and there is nothing left to loo
 
 ---
 
+### Patterns: a rhythm as a file
+
+**Flash** has one rhythm, the `interval` knob. A **blink pattern** has as many as you like: it is a
+`BlinkPatternResource` file holding a list of phases, and a phase is *on for this long, off for that
+long, this many times*. Six fast winks and then three slow ones is two phases:
+
+```
+phases = [
+    {"on": 0.08, "off": 0.08, "count": 6},
+    {"on": 0.24, "off": 0.16, "count": 3},
+]
+```
+
+The **Blink** row plays a pattern on the host, and **Blink Phase** answers which phase is playing,
+counting from 1, so a row can tell the fast winks from the slow ones that follow them. One starter
+file ships beside the pack, `starter_blink_invulnerable.tres`; it is an ordinary resource - retune
+it, rename it, duplicate it into the rhythm this game actually wants, or delete it.
+
+A pattern is never a strobe. When the project has asked for no flashing (the plain `no_flashing`
+metadata on `Engine` that every flashing thing here reads), no part of a blink is allowed to be
+shorter than `0.4` seconds, and the host stays on the screen and steps between full and faint
+opacity instead of disappearing. The pattern still plays, at a rate nobody can be hurt by.
+
+---
+
 ## Setup
 
 **1. Attach the behavior.** Add a `FlashBehavior` as a child node of the node you want to blink (open the pack sheet and use Tools > Attach to Selected Node, or drop the pack node in as a child). The parent must be a `CanvasItem`; if it is not, the behavior prints a warning and does nothing. One behavior per node that flashes.
@@ -88,10 +113,16 @@ All Flash ACEs target the `FlashBehavior` on the node they are placed on - there
 | Set Interval | `value` (float) | Sets the blink speed - the seconds between visibility toggles - live. |
 | Add To Interval | `amount` (float) | Adds to the current interval, slowing the blink (a negative amount speeds it up). |
 | Subtract From Interval | `amount` (float) | Subtracts from the current interval, speeding the blink up. |
+| Blink | `pattern` (Resource), `seconds` (float) | Plays a **BlinkPatternResource** file on the host: a list of phases, each one "on for this long, off for that long, this many times". `seconds` stops it early; `0` plays the pattern out. |
+| Stop Blink | (none) | Ends the blink now and hands the host back fully visible, wherever in the pattern it had got to. |
 
 ### Conditions
 
-Flash ships no conditions of its own. To branch on whether a node is currently shown or hidden, read the host's own `visible` property in a general comparison condition.
+| Condition | Parameters | Description |
+|---|---|---|
+| Is Blinking | (none) | Whether a blink pattern is playing on this host right now. |
+
+To branch on whether a node is currently shown or hidden, read the host's own `visible` property in a general comparison condition.
 
 | Condition | Parameters | Description |
 |---|---|---|
