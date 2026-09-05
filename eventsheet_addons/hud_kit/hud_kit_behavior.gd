@@ -45,6 +45,9 @@ func _ui(control_name: String) -> Node:
 	if found != null:
 		ui_cache[control_name] = found
 	return found
+# The bars whose underlay is behind them right now, and the ones that turned out to be gone.
+# Two lists made once and reused, because the tick below may not write the book it is walking.
+var _lag_lost: PackedStringArray = PackedStringArray()
 
 func _ready() -> void:
 	if auto_connect_buttons:
@@ -106,13 +109,20 @@ func set_bar_lag(bar_name: String, seconds: float, lag_colour: Color) -> void:
 	if not target is Range:
 		return
 	var bar: Range = target as Range
+	var watcher: Callable = _bar_moved.bind(bar_name)
 	if seconds <= 0.0:
 		bar_lags.erase(bar_name)
+		if bar.value_changed.is_connected(watcher):
+			bar.value_changed.disconnect(watcher)
 		var gone: Node = bar.get_node_or_null("__bar_lag")
 		if gone != null:
 			gone.queue_free()
 		return
-	bar_lags[bar_name] = {"seconds": seconds, "colour": lag_colour, "ghost": bar.value, "last": bar.value, "wait": 0.0}
+	bar_lags[bar_name] = {"seconds": seconds, "colour": lag_colour, "ghost": bar.value, "last": bar.value, "wait": 0.0, "awake": true}
+	# The bar itself says when it moved, so the tick below is spent only between that word and the
+	# underlay catching up. Connected once per armed bar, and let go of when the lag is taken away.
+	if not bar.value_changed.is_connected(watcher):
+		bar.value_changed.connect(watcher)
 	set_process(true)
 
 ## @ace_action
@@ -353,27 +363,43 @@ func is_bar_lagging(bar_name: String) -> bool:
 	return not is_equal_approx(float((record as Dictionary)["ghost"]), bar_value(bar_name))
 
 func _process(delta: float) -> void:
-	# The underlay's own tick, and the whole of its cost. It PARKS itself the first frame it finds
-	# nothing to follow, so a HUD with no lagging bar on it runs no code at all - and a Set Bar Lag
-	# row turns it back on. Nothing is allocated here per frame: the record is the one made when the
-	# lag was armed, and the underlay is one ColorRect made once and moved.
+	# The underlay's own tick, and the whole of its cost. It PARKS itself the moment every armed
+	# underlay has caught up with its bar, so a HUD standing still runs no code at all however many
+	# lags are armed on it - and the BARS wake it: Set Bar Lag arms one, and each bar's own
+	# value_changed says when there is something to follow again. Nothing is allocated here per
+	# frame: the book is walked in place, the record is the one made when the lag was armed, the
+	# underlay is one ColorRect made once and moved, and the bars that went missing are named in
+	# the one list above and dropped afterwards, because a book cannot be walked and written at once.
 	if bar_lags.is_empty():
 		set_process(false)
 		return
-	for bar_name: String in bar_lags.keys():
-		_follow_bar(bar_name, delta)
+	var following: bool = false
+	_lag_lost.clear()
+	for bar_name: Variant in bar_lags:
+		var record: Dictionary = bar_lags[bar_name]
+		if not bool(record.get("awake", true)):
+			continue
+		var target: Node = _ui(str(bar_name))
+		if not target is Range:
+			_lag_lost.append(str(bar_name))
+			continue
+		if _follow_bar(str(bar_name), target as Range, delta):
+			following = true
+		else:
+			record["awake"] = false
+	for lost_name: String in _lag_lost:
+		bar_lags.erase(lost_name)
+	if not following:
+		set_process(false)
 
-func _follow_bar(bar_name: String, delta: float) -> void:
-	# One bar's underlay, moved one frame. A LOSS is what an underlay is for, so a drop restarts the
-	# wait and the underlay is left where it was until the wait is spent; after that it slides down to
-	# the value, taking the lag seconds to cross the whole bar. A GAIN has nothing to show, so the
-	# underlay lands with the bar rather than trailing a good thing.
+func _follow_bar(bar_name: String, bar: Range, delta: float) -> bool:
+	# One bar's underlay, moved one frame, and whether it is still behind the bar afterwards. A LOSS
+	# is what an underlay is for, so a drop restarts the wait and the underlay is left where it was
+	# until the wait is spent; after that it slides down to the value, taking the lag seconds to cross
+	# the whole bar. A GAIN has nothing to show, so the underlay lands with the bar rather than
+	# trailing a good thing - and an underlay that has landed answers false, which is what lets the
+	# tick above park until the bar says it moved again.
 	var record: Dictionary = bar_lags[bar_name]
-	var target: Node = _ui(bar_name)
-	if not target is Range:
-		bar_lags.erase(bar_name)
-		return
-	var bar: Range = target as Range
 	var span: float = maxf(bar.max_value - bar.min_value, 0.001)
 	var seconds: float = maxf(float(record["seconds"]), 0.001)
 	var ghost: float = float(record["ghost"])
@@ -388,6 +414,17 @@ func _follow_bar(bar_name: String, delta: float) -> void:
 		ghost = move_toward(ghost, bar.value, span * delta / seconds)
 	record["ghost"] = ghost
 	_draw_bar_lag(bar, bar.value, ghost, record["colour"])
+	return float(record["wait"]) > 0.0 or not is_equal_approx(ghost, bar.value)
+
+func _bar_moved(_value: float, bar_name: String) -> void:
+	# The bar said its value moved, so its underlay has somewhere to be again. Being TOLD rather
+	# than looking is the whole of why an armed lag costs nothing while its bar stands still, and
+	# Range says this however the value was set - a Set Bar row, a sheet writing the Range, an
+	# animation - so nothing has to be routed through this pack to be trailed.
+	var record: Variant = bar_lags.get(bar_name)
+	if record is Dictionary:
+		(record as Dictionary)["awake"] = true
+		set_process(true)
 
 func _draw_bar_lag(bar: Range, value: float, ghost: float, colour: Color) -> void:
 	# The underlay itself: one ColorRect inside the bar, covering the stretch between where the bar

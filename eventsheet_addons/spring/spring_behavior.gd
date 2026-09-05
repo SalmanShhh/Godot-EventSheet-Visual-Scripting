@@ -32,6 +32,12 @@ var springs: Dictionary = {}
 var color_springs: Dictionary = {}
 var property_springs: Dictionary = {}
 
+## The names of the springs that landed this frame, said once the banks have all been walked.
+## One list made once and reused rather than a fresh one per frame, and it is what lets the
+## banks be walked in place: a row answering On Spring Reached may start or remove a spring,
+## and a book cannot be walked and written at the same time.
+var _reached: PackedStringArray = PackedStringArray()
+
 ## The most of a velocity a damping may take away in a second. The decay below is EXPONENTIAL,
 ## so a damping of exactly 1 leaves nothing of the velocity after any step at all: the spring
 ## stops dead where it stands, never reaches its target, and never settles - which means the
@@ -225,39 +231,47 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# Each spring integrates itself (framerate-independent); host springs write to the parent.
-	for spring_name: Variant in springs.keys():
+	#
+	# The banks are walked IN PLACE. keys() and values() each build a fresh array, and this runs
+	# every frame a spring is moving, so the four of them were four allocations per frame for no
+	# reading anybody needed. Walking in place has one condition - the book may not be written
+	# while it is being walked - and a row answering On Spring Reached is allowed to start or
+	# remove a spring, so the names that landed are collected here and said at the end.
+	_reached.clear()
+	for spring_name: Variant in springs:
 		var entry: SpringEntry = springs[spring_name]
 		if not entry.active:
 			continue
 		if entry.integrate(delta):
-			spring_reached.emit(str(spring_name))
+			_reached.append(str(spring_name))
 		_apply_to_host(str(spring_name), entry.value)
 	# Colour springs integrate identically (Color supports +, - and *float component-wise).
-	for color_name: Variant in color_springs.keys():
+	for color_name: Variant in color_springs:
 		var centry: ColorSpringEntry = color_springs[color_name]
 		if not centry.active:
 			continue
 		if centry.integrate(delta):
-			spring_reached.emit(str(color_name))
+			_reached.append(str(color_name))
 	# A bank with nothing left to settle costs nothing per frame; every spring verb turns
-	# processing back on. Re-read after the emits above, so a row that starts a new spring
-	# from On Spring Reached keeps its frames.
+	# processing back on. Decided BEFORE the names are said, which is what keeps the frames of a
+	# row that starts a new spring from On Spring Reached: the verb it calls turns them back on.
 	var still_settling: bool = false
-	for pending: Variant in springs.values():
-		if (pending as SpringEntry).active:
+	for pending: Variant in springs:
+		if (springs[pending] as SpringEntry).active:
 			still_settling = true
 			break
 	if not still_settling:
-		for color_pending: Variant in color_springs.values():
-			if (color_pending as ColorSpringEntry).active:
+		for color_pending: Variant in color_springs:
+			if (color_springs[color_pending] as ColorSpringEntry).active:
 				still_settling = true
 				break
 	set_process(still_settling)
 	# Springs under a PROPERTY of the host: each writes its own value back where it came from.
 	# This runs after the named bank above and only ever turns processing back ON, so a property
-	# spring keeps the frames the named springs just parked.
+	# spring keeps the frames the named springs just parked. Walked in place for the same reason,
+	# with the names that landed added to the same one list.
 	var property_settling: bool = false
-	for property_path: Variant in property_springs.keys():
+	for property_path: Variant in property_springs:
 		var property_entry: PropertySpring = property_springs[property_path]
 		if not property_entry.active:
 			continue
@@ -265,11 +279,15 @@ func _process(delta: float) -> void:
 		if host != null:
 			host.set_indexed(property_entry.path, property_entry.unpack())
 		if landed:
-			spring_reached.emit(str(property_path))
+			_reached.append(str(property_path))
 		else:
 			property_settling = true
 	if property_settling:
 		set_process(true)
+	# And now the names, with nothing left being walked: a row answering one of them may start a
+	# spring, remove one, or empty the whole bank, and none of that can trip a walk already over.
+	for landed_name: String in _reached:
+		spring_reached.emit(landed_name)
 
 ## @ace_action
 ## @ace_featured

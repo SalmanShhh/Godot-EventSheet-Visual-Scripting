@@ -3,8 +3,9 @@
 # The pack's named springs are numbers a row reads back; these are springs that write themselves
 # onto the host every frame, addressed by the property path the Inspector shows. This loads the
 # COMPILED pack and drives the real integrator by hand - no scene tree, no physics - to prove the
-# four things a row promises: a colour settles ON its target, a bump is velocity and nothing else,
-# a clamp stops the value at the wall, and a bank with nothing left to settle gives the frame back.
+# five things a row promises: a colour settles ON its target, a bump is velocity and nothing else,
+# a clamp stops the value at the wall, a bank with nothing left to settle gives the frame back, and
+# a spring that reaches its target says so by name, once, on the frame it got there.
 @tool
 class_name SpringPropertyTest
 extends RefCounted
@@ -27,7 +28,57 @@ static func run() -> bool:
 	all_passed = _a_bump_returns(script) and all_passed
 	all_passed = _a_clamp_holds(script) and all_passed
 	all_passed = _the_deadest_damping_still_settles(script) and all_passed
+	all_passed = _a_landing_is_said_once_and_then_forgotten(script) and all_passed
 	return all_passed
+
+
+## The tick walks its three banks IN PLACE - no keys() and no values() per frame, because that was
+## four fresh arrays every frame a spring was moving. Walking in place has one condition: the book
+## may not be written while it is being walked, and a row answering On Spring Reached is allowed to
+## start a spring or empty the bank. So the names that landed are collected into ONE list, made
+## once and reused, and said after the parking decision has been taken.
+##
+## Which makes three things pinnable by value, and they are the three this walk could get wrong:
+## the trigger still fires with the right name, the tick still parks, and the list is EMPTIED each
+## frame rather than growing - a reused list that was never cleared would say every name it had ever
+## held, every frame, for the rest of the scene.
+static func _a_landing_is_said_once_and_then_forgotten(script: GDScript) -> bool:
+	var behavior: Node = script.new()
+	var host: Node2D = Node2D.new()
+	behavior.host = host
+	var said: Array = []
+	behavior.spring_reached.connect(func(named: String) -> void: said.append(named))
+	behavior.spring_property_to("rotation", 1.0)
+	var widest: int = 0
+	var landing_frame: PackedStringArray = PackedStringArray()
+	var ticks: int = 0
+	for _index: int in TICK_BUDGET:
+		behavior._process(0.016)
+		ticks += 1
+		widest = maxi(widest, behavior._reached.size())
+		if not behavior._reached.is_empty():
+			landing_frame = behavior._reached.duplicate()
+		if behavior.property_spring_is_settled("rotation"):
+			break
+	var parked: bool = behavior.is_processing()
+	# One more frame with nothing left to settle: the list is emptied and nothing is said again.
+	behavior._process(0.016)
+	var after: PackedStringArray = behavior._reached.duplicate()
+	var said_after: Array = said.duplicate()
+	var passed: bool = SUPPORT.pins(PREFIX, [
+		["a spring that reaches its target says so, by name and once", said, ["rotation"]],
+		["the frame it landed on is the frame that named it", landing_frame,
+			PackedStringArray(["rotation"])],
+		["and never holds more than the names that landed on that one frame", widest, 1],
+		["it settles inside the tick budget", ticks < TICK_BUDGET, true],
+		["the node parks once everything has settled", parked, false],
+		["the list is emptied at the top of the next frame rather than grown", after,
+			PackedStringArray([])],
+		["so a settled spring is never announced a second time", said_after, ["rotation"]],
+	])
+	behavior.free()
+	host.free()
+	return passed
 
 
 ## The heaviest damping the row offers - the 1 its own description calls "never overshoots" - is

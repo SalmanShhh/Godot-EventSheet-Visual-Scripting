@@ -9,10 +9,14 @@
 #     player the good news twice.
 #   * IT WATCHES THE BAR rather than being told, so a value written by any means at all trails the
 #     same way - which is why Set Bar keeps its three arguments and its bytes.
-#   * IT PARKS. A HUD with no lagging bar on it processes nothing at all.
+#   * IT PARKS, AND THE BAR WAKES IT. A HUD with no lagging bar on it processes nothing at all, and
+#     an ARMED lag costs nothing either once its underlay has caught up: the tick stops, and the
+#     bar's own value_changed is what turns it back on. Taking the lag away lets go of that watcher.
 #
 # The whole thing is stepped by hand: the follower takes a delta, so what a frame does is arithmetic
-# a test can pin rather than something only a running game can be asked about.
+# a test can pin rather than something only a running game can be asked about. The follower is
+# handed the bar it is following, because the tick above it is the one that looks a name up - and
+# the one that drops a name whose bar has gone, since a book cannot be walked and written at once.
 @tool
 class_name BarLagTest
 extends RefCounted
@@ -35,6 +39,7 @@ static func run() -> bool:
 	ok = _test_a_gain_has_nothing_to_trail() and ok
 	ok = _test_the_underlay_is_drawn_over_the_empty_part() and ok
 	ok = _test_a_hud_with_no_lag_parks() and ok
+	ok = _test_an_armed_lag_parks_and_the_bar_wakes_it() and ok
 	ok = _test_taking_the_lag_away_takes_the_underlay_with_it() and ok
 	return ok
 
@@ -66,8 +71,9 @@ static func _test_the_underlay_waits_then_follows() -> bool:
 	kit.set_bar_lag(BAR_NAME, LAG_SECONDS, Color.RED)
 	bar.value = 20.0
 	var read_at: Array[float] = []
+	var still_behind: Array = []
 	for frame: int in 5:
-		kit._follow_bar(BAR_NAME, FRAME)
+		still_behind.append(kit._follow_bar(BAR_NAME, bar, FRAME))
 		read_at.append(kit.bar_lag_value(BAR_NAME))
 	var ok: bool = SUPPORT.pins("bar_lag_test", [
 		["the first frame of the wait leaves the underlay where the bar was", read_at[0], 100.0],
@@ -76,7 +82,9 @@ static func _test_the_underlay_waits_then_follows() -> bool:
 			read_at[2], 50.0],
 		["and lands on the value rather than passing it", read_at[3], 20.0],
 		["where it stays", read_at[4], 20.0],
-		["so the bar is no longer lagging", kit.is_bar_lagging(BAR_NAME), false]
+		["so the bar is no longer lagging", kit.is_bar_lagging(BAR_NAME), false],
+		["and the follower says, frame by frame, whether it is still behind the bar - which is what the tick above it parks on",
+			still_behind, [true, true, true, false, false]]
 	])
 	hud.free()
 	return ok
@@ -91,9 +99,9 @@ static func _test_a_gain_has_nothing_to_trail() -> bool:
 	kit.set_bar_lag(BAR_NAME, LAG_SECONDS, Color.RED)
 	bar.value = 20.0
 	for frame: int in 4:
-		kit._follow_bar(BAR_NAME, FRAME)
+		kit._follow_bar(BAR_NAME, bar, FRAME)
 	bar.value = 80.0
-	kit._follow_bar(BAR_NAME, FRAME)
+	kit._follow_bar(BAR_NAME, bar, FRAME)
 	var ok: bool = SUPPORT.pins("bar_lag_test", [
 		["a gain takes the underlay with it at once", kit.bar_lag_value(BAR_NAME), 80.0],
 		["with nothing left trailing", kit.is_bar_lagging(BAR_NAME), false]
@@ -112,11 +120,11 @@ static func _test_the_underlay_is_drawn_over_the_empty_part() -> bool:
 	kit.set_bar_lag(BAR_NAME, LAG_SECONDS, Color.RED)
 	bar.value = 20.0
 	for frame: int in 3:
-		kit._follow_bar(BAR_NAME, FRAME)
+		kit._follow_bar(BAR_NAME, bar, FRAME)
 	var underlay: ColorRect = bar.get_node_or_null("__bar_lag") as ColorRect
 	var mid: Dictionary = {"x": underlay.position.x, "w": underlay.size.x, "shown": underlay.visible}
 	for frame: int in 2:
-		kit._follow_bar(BAR_NAME, FRAME)
+		kit._follow_bar(BAR_NAME, bar, FRAME)
 	var ok: bool = SUPPORT.pins("bar_lag_test", [
 		["one rectangle is added inside the bar and no more", bar.get_child_count(), 1],
 		["it starts where the bar's fill ends", mid["x"], 20.0],
@@ -146,6 +154,50 @@ static func _test_a_hud_with_no_lag_parks() -> bool:
 	return ok
 
 
+## An ARMED lag parks too, which is the half of the claim a HUD that uses the feature depends on: the
+## tick runs while the underlay is behind its bar and stops the frame it catches up, and the BAR is
+## what turns it back on - Range says value_changed however the value was set, so a hit landing from
+## a sheet, an animation or a tween wakes the same underlay without being routed through this pack.
+##
+## The waking is driven through the handler the bar's signal is wired to rather than by writing the
+## bar. That is not a shortcut around the wiring - the wiring itself is pinned below, by asking the
+## bar whether that exact handler is connected to its value_changed - but a Range emits nothing at
+## all while it is outside a SceneTree, and this suite has none, so writing the bar would pin a
+## silence that says nothing about the code. What the handler is HANDED here is what the signal
+## carries in a live tree: the new value, and the name the row armed.
+static func _test_an_armed_lag_parks_and_the_bar_wakes_it() -> bool:
+	var hud: Node = _hud()
+	var bar: ProgressBar = hud.find_child(BAR_NAME, true, false) as ProgressBar
+	var kit: Node = hud.get_child(1)
+	kit.set_bar_lag(BAR_NAME, LAG_SECONDS, Color.RED)
+	var armed_ticking: bool = kit.is_processing()
+	var wired: bool = bar.value_changed.is_connected(Callable(kit, "_bar_moved").bind(BAR_NAME))
+	bar.value = 20.0
+	# Four frames is the whole walk at this lag: two of waiting, one at the crossing rate, one that
+	# lands - the same four the frame-by-frame pins above read the underlay at.
+	for frame: int in 4:
+		kit._process(FRAME)
+	var caught_up: float = kit.bar_lag_value(BAR_NAME)
+	var asleep: bool = not bool((kit.bar_lags[BAR_NAME] as Dictionary)["awake"])
+	kit._process(FRAME)
+	var parked: bool = kit.is_processing()
+	# And the bar's own word wakes it: the record is following again and the tick is back on.
+	kit._bar_moved(5.0, BAR_NAME)
+	var awake_again: bool = bool((kit.bar_lags[BAR_NAME] as Dictionary)["awake"])
+	var ticking_again: bool = kit.is_processing()
+	var ok: bool = SUPPORT.pins("bar_lag_test", [
+		["arming a lag starts the tick", armed_ticking, true],
+		["and wires the bar's own value_changed to the handler that wakes it", wired, true],
+		["the underlay catches the bar up", caught_up, 20.0],
+		["and the record that caught up stops asking for frames", asleep, true],
+		["so the frame after it landed, the HUD is processing nothing at all", parked, false],
+		["the word the bar sends wakes the record again", awake_again, true],
+		["and turns the tick back on with it", ticking_again, true]
+	])
+	hud.free()
+	return ok
+
+
 ## A lag of no seconds is how a lag is taken away: the record goes, and so does the rectangle.
 static func _test_taking_the_lag_away_takes_the_underlay_with_it() -> bool:
 	var hud: Node = _hud()
@@ -153,14 +205,18 @@ static func _test_taking_the_lag_away_takes_the_underlay_with_it() -> bool:
 	var kit: Node = hud.get_child(1)
 	kit.set_bar_lag(BAR_NAME, LAG_SECONDS, Color.RED)
 	bar.value = 20.0
-	kit._follow_bar(BAR_NAME, FRAME)
+	kit._follow_bar(BAR_NAME, bar, FRAME)
 	var armed: bool = bar.get_node_or_null("__bar_lag") != null
+	var watched: bool = bar.value_changed.is_connected(Callable(kit, "_bar_moved").bind(BAR_NAME))
 	kit.set_bar_lag(BAR_NAME, 0.0, Color.RED)
 	var ok: bool = SUPPORT.pins("bar_lag_test", [
 		["the underlay was there", armed, true],
+		["and the bar was being listened to while the lag was armed", watched, true],
 		["a lag of no seconds forgets the bar", kit.is_bar_lagging(BAR_NAME), false],
 		["and reading it back answers the bar's own value again",
 			kit.bar_lag_value(BAR_NAME), 20.0],
+		["taking the lag away lets go of the bar's own word too, so nothing is left listening",
+			bar.value_changed.is_connected(Callable(kit, "_bar_moved").bind(BAR_NAME)), false],
 		["a bar the kit cannot find is forgotten rather than followed for ever",
 			_forgets_a_bar_that_is_gone(), true]
 	])
@@ -186,7 +242,9 @@ static func _hud() -> Node:
 
 
 ## The kit follows a bar by NAME, so a bar that has been taken out of the scene is dropped from the
-## book rather than followed for ever.
+## book rather than followed for ever. It is the TICK that drops it, not the follower: the follower
+## is handed a bar and has none to lose, and the book cannot be written while the tick is walking
+## it, so the names that turned out to be gone are collected and erased after the walk.
 static func _forgets_a_bar_that_is_gone() -> bool:
 	var hud: Node = _hud()
 	var bar: ProgressBar = hud.find_child(BAR_NAME, true, false) as ProgressBar
@@ -195,7 +253,7 @@ static func _forgets_a_bar_that_is_gone() -> bool:
 	hud.remove_child(bar)
 	bar.free()
 	kit.ui_cache.clear()
-	kit._follow_bar(BAR_NAME, FRAME)
+	kit._process(FRAME)
 	var forgotten: bool = not kit.bar_lags.has(BAR_NAME)
 	hud.free()
 	return forgotten
