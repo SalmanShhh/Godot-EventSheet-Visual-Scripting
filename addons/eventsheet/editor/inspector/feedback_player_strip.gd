@@ -56,7 +56,9 @@ func _init(player: Node = null) -> void:
 	_player = player
 	add_theme_constant_override("separation", 4)
 	_head = Label.new()
-	_head.add_theme_font_size_override("font_size", 11)
+	# Through the palette, not a literal: a literal font size ignores the editor's own display
+	# scale, so the head reads at half height on a HiDPI screen while everything around it grows.
+	_head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	add_child(_head)
 	add_child(_build_buttons())
 	_timeline = _build_timeline()
