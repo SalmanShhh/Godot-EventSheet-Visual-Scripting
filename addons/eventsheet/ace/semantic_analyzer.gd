@@ -568,11 +568,9 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 
 ## One surrounding pair of quotes off a value, and no more - the rule the importer's lifter reads
 ## the same keys by, so the vocabulary a pack PUBLISHES and the sheet an author OPENS can never
-## disagree about a starting value.
+## disagree about a starting value. Shared with it rather than written out again here.
 func _unquoted_once(value: String) -> String:
-	if value.length() >= 2 and value.begins_with("\"") and value.ends_with("\""):
-		return value.substr(1, value.length() - 2)
-	return value
+	return SpecText.unquoted_once(value)
 
 
 func _split_pipe_values(value: String) -> Array:
@@ -668,11 +666,11 @@ func _split_outside_quotes(text: String, separator: String) -> Array[String]:
 
 
 ## Strips one surrounding quote pair, for a value that arrived through the raw-parens extractor.
+## The same trim as `_unquoted_once`, with the edges taken off first: a raw payload arrives with
+## whatever spacing the annotation was written with, and a value read through a split has already
+## been stripped by the caller. Two names for one rule, never two copies of it.
 func _unquoted(text: String) -> String:
-	var trimmed: String = text.strip_edges()
-	if trimmed.length() >= 2 and trimmed.begins_with("\"") and trimmed.ends_with("\""):
-		return trimmed.substr(1, trimmed.length() - 2)
-	return trimmed
+	return _unquoted_once(text.strip_edges())
 
 
 ## The raw parenthesized payload of an annotation, quotes preserved (unlike
