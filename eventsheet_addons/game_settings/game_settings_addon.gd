@@ -160,7 +160,7 @@ var _assists: Dictionary = {}
 ## @ace_display_template("Declare setting [b]{setting_name}[/b] default [b]{default_value}[/b] kind [b]{kind}[/b]")
 ## @ace_param_options(kind percent=Percent (0-100 slider), toggle=Yes/No, choice=Choice, number=Number, text=Text)
 ## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
-## @ace_codegen_template("Settings.declare_setting({setting_name}, {default_value}, {kind}, {choices}, {page}, {label})")
+## @ace_codegen_template("Settings.declare_setting({setting_name}, {default_value}, "{kind}", {choices}, {page}, {label})")
 func declare_setting(setting_name: String, default_value: Variant, kind: String = "percent", choices: String = "", page: String = "", label: String = "") -> void:
 	_declared[setting_name] = {"default": default_value, "kind": kind, "choices": choices, "page": page, "label": label}
 
@@ -714,7 +714,7 @@ func pending_binding_words() -> String:
 ## @ace_param_hint(action input_action)
 ## @ace_param_options(device keyboard=Keyboard or mouse, pad=Gamepad)
 ## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
-## @ace_codegen_template("Settings.listen_for_binding({action}, {device})")
+## @ace_codegen_template("Settings.listen_for_binding({action}, "{device}")")
 func listen_for_binding(action: String, device: String) -> void:
 	if not InputMap.has_action(action):
 		push_warning("Settings: '%s' is not in the Input Map - add it in Project Settings first." % action)

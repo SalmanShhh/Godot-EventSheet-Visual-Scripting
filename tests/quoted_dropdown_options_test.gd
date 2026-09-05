@@ -46,8 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"game_settings/game_settings_addon.gd:device",
-	"game_settings/game_settings_addon.gd:kind",
 	"nav_agent_3d/nav_agent_3d_behavior.gd:mode",
 	"pin/pin_behavior.gd:axes",
 	"pin/pin_behavior.gd:mode",
@@ -100,6 +98,13 @@ const ACTIONS := [
 	[FOLLOW_PATH, "$PathFollowBehavior.follow_path({path}, {speed}, \"{mode}\")",
 		"$PathFollowBehavior.follow_path($Route, 120.0, \"loop\")",
 		{"path": "$Route", "speed": "120.0", "mode": "loop"}],
+	[GAME_SETTINGS,
+		"Settings.declare_setting({setting_name}, {default_value}, \"{kind}\", {choices}, {page}, {label})",
+		"Settings.declare_setting(\"music\", 80.0, \"percent\", \"\", \"audio\", \"Music\")",
+		{"setting_name": "\"music\"", "default_value": "80.0", "kind": "percent", "choices": "\"\"",
+			"page": "\"audio\"", "label": "\"Music\""}],
+	[GAME_SETTINGS, "Settings.listen_for_binding({action}, \"{device}\")",
+		"Settings.listen_for_binding(\"jump\", \"pad\")", {"action": "\"jump\"", "device": "pad"}],
 ]
 
 const CONDITIONS := [

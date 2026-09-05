@@ -327,6 +327,9 @@ static func build() -> bool:
 		{"key": "keyboard", "label": "Keyboard or mouse"},
 		{"key": "pad", "label": "Gamepad"},
 	])
+	_quoted_call(sheet, "listen_for_binding", "Settings.listen_for_binding({action}, \"{device}\")")
+	_quoted_call(sheet, "declare_setting",
+		"Settings.declare_setting({setting_name}, {default_value}, \"{kind}\", {choices}, {page}, {label})")
 	Lib.verb_sentences(sheet, {
 		"declare_setting": "Declare setting [b]{setting_name}[/b] default [b]{default_value}[/b] kind [b]{kind}[/b]",
 		"set_setting": "Set setting [b]{setting_name}[/b] to [b]{value}[/b]",
@@ -1196,6 +1199,21 @@ static func _kind_options(fn: EventFunction, param_id: String) -> void:
 				{"key": "text", "label": "Text"},
 			]
 			parameter.default_value = "percent"
+
+
+## Gives a published verb a call template that QUOTES one dropdown argument. A dropdown key is
+## inserted into the call verbatim, so a String argument picked from a list of words has to carry its
+## own quotes in the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter
+## wraps a key that already starts with a quote in a second pair, and the scanner strips one pair back
+## off). Without this a row picking Gamepad asked `listen_for_binding(action, pad)`, an undefined
+## identifier, and the game did not parse. The call is spelled in full because this pack ships as an
+## AUTOLOAD: the name in front of it is the singleton's, not a node path.
+static func _quoted_call(sheet: EventSheetResource, function_name: String, call: String) -> void:
+	for function_resource: Resource in sheet.functions:
+		if function_resource is EventFunction and (function_resource as EventFunction).function_name == function_name:
+			(function_resource as EventFunction).codegen_template_override = call
+			return
+	push_warning("game_settings: no function named %s on this sheet (typo?)" % function_name)
 
 
 ## Gives a trailing parameter a GDScript default, so the row can leave it out entirely.
