@@ -261,9 +261,9 @@ func _volume_material() -> StandardMaterial3D:
 	_solid_material.no_depth_test = _word("depth", "test") != "test"
 	return _solid_material
 
-## The engine's own blend number for one of the pack's five blend words. Subtract has no spatial
-## blend of its own, so it reads as the multiply that is nearest to it rather than silently as the
-## ordinary one.
+## The engine's own blend number for one of the pack's five blend words. Four of the five are a
+## spatial blend the engine already ships. `premultiplied` is the one that is not, so it reads as
+## the multiply that is nearest to it rather than silently as the ordinary one.
 ## @ace_hidden
 static func solid_blend_mode(blend: String) -> BaseMaterial3D.BlendMode:
 	match blend:
