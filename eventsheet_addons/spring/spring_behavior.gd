@@ -32,6 +32,13 @@ var springs: Dictionary = {}
 var color_springs: Dictionary = {}
 var property_springs: Dictionary = {}
 
+## The most of a velocity a damping may take away in a second. The decay below is EXPONENTIAL,
+## so a damping of exactly 1 leaves nothing of the velocity after any step at all: the spring
+## stops dead where it stands, never reaches its target, and never settles - which means the
+## per-frame tick never parks either. A thousandth of it left is still heavier damping than any
+## motion needs, and it is a spring rather than a freeze.
+const DAMPING_CEILING: float = 0.999
+
 ## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).
 class SpringEntry:
 	var value: float = 0.0
@@ -45,8 +52,9 @@ class SpringEntry:
 	## Semi-implicit, framerate-independent step; returns true on the frame it settles.
 	func integrate(delta: float) -> bool:
 		velocity += (target - value) * stiffness * delta
-		# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).
-		velocity *= pow(1.0 - damping, delta)
+		# Damping is the fraction of velocity LOST PER SECOND (framerate-independent), held under
+		# the ceiling so the heaviest damping is still a spring rather than a freeze.
+		velocity *= pow(1.0 - clampf(damping, 0.0, SpringBehavior.DAMPING_CEILING), delta)
 		value += velocity * delta
 		if absf(target - value) < precision and absf(velocity) < precision:
 			value = target
@@ -66,7 +74,7 @@ class ColorSpringEntry:
 	var active: bool = false
 	func integrate(delta: float) -> bool:
 		velocity = velocity + (target - value) * stiffness * delta
-		velocity = velocity * pow(1.0 - damping, delta)
+		velocity = velocity * pow(1.0 - clampf(damping, 0.0, SpringBehavior.DAMPING_CEILING), delta)
 		value = value + velocity * delta
 		if absf(target.r - value.r) < precision and absf(target.g - value.g) < precision and absf(target.b - value.b) < precision and absf(target.a - value.a) < precision:
 			value = target
@@ -164,8 +172,9 @@ class PropertySpring:
 	## One framerate-independent step per live component; true on the frame it settles.
 	func integrate(delta: float) -> bool:
 		var settled: bool = true
-		# Damping is the fraction of velocity LOST PER SECOND, as it is for the named springs.
-		var decay: float = pow(1.0 - damping, delta)
+		# Damping is the fraction of velocity LOST PER SECOND, as it is for the named springs, and
+		# under the same ceiling for the same reason.
+		var decay: float = pow(1.0 - clampf(damping, 0.0, SpringBehavior.DAMPING_CEILING), delta)
 		for index: int in components:
 			var rest: float = goal(index)
 			var speed: float = velocity[index]

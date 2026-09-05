@@ -26,7 +26,34 @@ static func run() -> bool:
 	all_passed = _a_colour_settles(script) and all_passed
 	all_passed = _a_bump_returns(script) and all_passed
 	all_passed = _a_clamp_holds(script) and all_passed
+	all_passed = _the_deadest_damping_still_settles(script) and all_passed
 	return all_passed
+
+
+## The heaviest damping the row offers - the 1 its own description calls "never overshoots" - is
+## still a spring: it reaches the number it was pointed at, and the tick parks afterwards. The decay
+## is exponential, so at exactly 1 nothing of the velocity survives a step and the spring would stand
+## still for ever with the frame it is standing still in still being paid for.
+static func _the_deadest_damping_still_settles(script: GDScript) -> bool:
+	var behavior: Node = script.new()
+	var host: Node2D = Node2D.new()
+	behavior.host = host
+	behavior.set_property_spring("rotation", 1.0, 2.0)
+	behavior.spring_property_to("rotation", 1.0)
+	var ticks: int = 0
+	for _index: int in TICK_BUDGET:
+		behavior._process(0.016)
+		ticks += 1
+		if behavior.property_spring_is_settled("rotation"):
+			break
+	var passed: bool = SUPPORT.pins(PREFIX, [
+		["a spring damped to the top still settles", behavior.property_spring_is_settled("rotation"), true],
+		["and lands on the number it was pointed at", snappedf(behavior.property_spring_value("rotation"), 0.001), 1.0],
+		["and gives the frame back afterwards", behavior.is_processing(), false],
+	])
+	behavior.free()
+	host.free()
+	return passed
 
 
 ## A spring on the host's modulate: four channels, one entry, and it lands on the colour asked for.
