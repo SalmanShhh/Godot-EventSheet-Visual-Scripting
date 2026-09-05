@@ -379,3 +379,131 @@ static func declared_name_of_line(line: String) -> String:
 		break
 	var name_text: String = rest.substr(0, stop).strip_edges()
 	return name_text if not name_text.is_empty() and not RESERVED.has(name_text) else ""
+
+
+## {name: true} for every name a LOOP HEAD or a MATCH ARM binds anywhere in this sheet - the other
+## half of a shadow, and the half a `var` line cannot show. `for body in get_children():` names the
+## thing the loop walks with, and `var sprite:` inside a match arm names the value that arm caught;
+## both are that name for the length of their body, and a member of the same name is the wrong
+## answer for every row underneath - the parameter mistake, one shape further in.
+##
+## DELIBERATELY NOT PART OF `declared_locals`. That set is what the sheet DECLARES as a Local row, a
+## Set Local action or a hand-written `var` line, and the drag refusals read it to work out where a
+## declaration reaches. A loop head is not a row anybody can drag and an arm's binding belongs to the
+## pattern rather than to the body, so neither of them is a declaration that answer should carry.
+## What they DO change is which names a flat type map may speak for, which is this set's one reader.
+##
+## Walked over the whole tree - subtrees, groups, functions, and the events under a match arm -
+## because a shadow anywhere in the file is one the flat map cannot see around.
+static func bound_name_set(sheet: EventSheetResource) -> Dictionary:
+	var names: Dictionary = {}
+	if sheet == null:
+		return names
+	_collect_bound(sheet.events, names, 0)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_collect_bound((function_entry as EventFunction).events, names, 0)
+	return names
+
+
+static func _collect_bound(items: Array, names: Dictionary, depth: int) -> void:
+	if depth > 64:
+		return
+	for item: Variant in items:
+		if item is EventRow:
+			var event_row: EventRow = item as EventRow
+			# The loop a pick filter IS. The importer lifts `for name in collection:` into one, so
+			# the name the loop walks with is on the row rather than anywhere in its text.
+			for filter_entry: Variant in event_row.pick_filters:
+				if filter_entry is PickFilter:
+					_note_bound(names, (filter_entry as PickFilter).iterator_name)
+			_collect_bound(event_row.actions, names, depth + 1)
+			_collect_bound(event_row.sub_events, names, depth + 1)
+		elif item is EventGroup:
+			_collect_bound((item as EventGroup).events, names, depth + 1)
+		elif item is EventFunction:
+			_collect_bound((item as EventFunction).events, names, depth + 1)
+		elif item is MatchRow:
+			var match_row: MatchRow = item as MatchRow
+			for case_entry: Variant in match_row.cases:
+				if not (case_entry is MatchCase):
+					continue
+				for bound: String in pattern_bound_names((case_entry as MatchCase).pattern):
+					_note_bound(names, bound)
+				_collect_bound((case_entry as MatchCase).events, names, depth + 1)
+			# The arms a row still holds as TEXT and never took apart into cases. A pattern is the
+			# part in front of the colon, which is the only thing read here.
+			for line: String in match_row.branches_text.split("\n"):
+				var text: String = line.strip_edges()
+				if not text.ends_with(":"):
+					continue
+				for bound: String in pattern_bound_names(text.left(text.length() - 1)):
+					_note_bound(names, bound)
+		elif item is RawCodeRow:
+			# A loop the importer left as text - inside a verbatim block, or under an arm - binds
+			# its name exactly as a lifted one does.
+			for line: String in (item as RawCodeRow).code.split("\n"):
+				_note_bound(names, loop_name_of_line(line))
+
+
+static func _note_bound(names: Dictionary, candidate: String) -> void:
+	var name_text: String = candidate.strip_edges()
+	if name_text.is_empty() or RESERVED.has(name_text):
+		return
+	names[name_text] = true
+
+
+## The name a `for name in …` / `for name: Type in …` head walks with, or "" when the line is not a
+## loop head. The head has to go on to say what it walks - the `in`, or the colon that carries the
+## element type - so a line merely opening with the word is not mistaken for one.
+static func loop_name_of_line(line: String) -> String:
+	var text: String = line.strip_edges()
+	if not text.begins_with("for "):
+		return ""
+	var rest: String = text.substr(4).strip_edges()
+	var stop: int = rest.length()
+	for index in rest.length():
+		var character: String = rest[index]
+		if character.is_valid_identifier() or character == "_" or character.is_valid_int():
+			continue
+		stop = index
+		break
+	var tail: String = rest.substr(stop).strip_edges()
+	if not (tail.begins_with("in ") or tail.begins_with(":")):
+		return ""
+	var name_text: String = rest.left(stop).strip_edges()
+	return name_text if not name_text.is_empty() and not RESERVED.has(name_text) else ""
+
+
+## Every name a MATCH PATTERN binds, in the order it binds them: the `var name` of a plain capture,
+## and each one inside an array or dictionary pattern (`[var head, var tail]`, `{"kind": var kind}`),
+## however deeply those are nested. A pattern binds by the word `var` and nothing else, so the scan
+## is for that word and the identifier behind it - and a `var` written inside a STRING literal of the
+## pattern is skipped, because a string is a value the arm matches rather than a name it binds.
+static func pattern_bound_names(pattern: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var text: String = pattern
+	var index: int = 0
+	var previous_word: String = ""
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			index = _string_end(text, index) + 1
+			previous_word = ""
+			continue
+		if not (character.is_valid_identifier() or character == "_"):
+			index += 1
+			continue
+		var start: int = index
+		while index < text.length():
+			var next_character: String = text[index]
+			if next_character.is_valid_identifier() or next_character == "_" \
+					or next_character.is_valid_int():
+				index += 1
+				continue
+			break
+		var word: String = text.substr(start, index - start)
+		if previous_word == "var" and not word.is_empty() and not RESERVED.has(word):
+			names.append(word)
+		previous_word = word
+	return names

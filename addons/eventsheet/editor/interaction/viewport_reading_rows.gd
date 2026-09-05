@@ -1665,9 +1665,18 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 ## walks the Local rows, the Set Local actions and the hand-written `var` lines a body still holds as
 ## text. Script-level members are NOT in that set - they are LocalVariable entries of the sheet
 ## itself, which that walk does not enter - so a member never shadows itself.
+##
+## AND THE TWO SHAPES THAT DECLARE A NAME WITHOUT WRITING `var` ON A LINE OF THEIR OWN
+## (EventSheetLocalScope.bound_name_set): the loop head, whose name lives on the pick filter the
+## importer lifted `for body in get_children():` into, and the match arm, whose `var sprite:` is a
+## pattern rather than a statement. Neither is reached by a walk looking for declarations, and a
+## member of the same name would otherwise answer for every row inside that loop or that arm - the
+## wrong class, with the bytes identical either way, which is the same defect the parameter half of
+## this set was written to close.
 static func shadowed_name_set(sheet: EventSheetResource) -> Dictionary:
 	var shadowed: Dictionary = parameter_names_in(sheet)
 	shadowed.merge(EventSheetLocalScope.declared_locals(sheet))
+	shadowed.merge(EventSheetLocalScope.bound_name_set(sheet))
 	return shadowed
 
 

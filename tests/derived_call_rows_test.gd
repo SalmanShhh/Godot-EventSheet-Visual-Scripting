@@ -86,6 +86,7 @@ static func run() -> bool:
 	ok = _test_the_pickers_derived_section() and ok
 	ok = _test_the_row_is_the_line() and ok
 	ok = _test_a_shadowed_member_is_nobodys() and ok
+	ok = _test_a_bound_name_is_nobodys() and ok
 	ok = _test_two_paths_ending_in_one_name() and ok
 	ok = _test_what_it_costs() and ok
 	_tidy_up()
@@ -155,6 +156,86 @@ static func _test_a_shadowed_member_is_nobodys() -> bool:
 		str(EventSheetDerivedCalls.receiver_facts("beat", context, class_map, {}).get("class", "")),
 		"Timer") and ok
 	ok = _check("with the bytes untouched either way", EventSheets.round_trips(source), true) and ok
+	return ok
+
+
+## THE TWO SHADOWS THAT NEVER WRITE `var` ON A LINE OF THEIR OWN. A loop head names the thing it
+## walks with (`for body in get_children():`) and a match arm names the value it caught
+## (`var sprite:`), and neither is reached by a walk looking for declarations: the loop's name lives
+## on the pick filter the importer lifted it into, and the arm's is a pattern rather than a
+## statement. Left out, a member of the same name answers for every row inside that loop or that arm,
+## which is the parameter defect one shape further in - the wrong class, with the bytes identical
+## either way.
+##
+## AND THE REFUSAL STOPS THERE. A member nothing binds still reads, so the set is a shadow list and
+## not a way of switching the layer off; and the two text readers under it are pinned on their own,
+## because a scan that took `format(x)` for a loop head would refuse names no one ever bound.
+static func _test_a_bound_name_is_nobodys() -> bool:
+	var source: String = "\n".join(PackedStringArray([
+		"extends Node2D",
+		"",
+		"@onready var body: CharacterBody2D = $Body",
+		"@onready var sprite: Sprite2D = $Sprite",
+		"@onready var beat: Timer = $Beat",
+		"",
+		"",
+		"func spin_all() -> void:",
+		"\tfor body in get_children():",
+		"\t\tbody.rotate(0.5)",
+		"",
+		"",
+		"func pick() -> void:",
+		"\tmatch get_child(0):",
+		"\t\tvar sprite:",
+		"\t\t\tsprite.rotate(0.5)",
+		"",
+		"",
+		"func tick() -> void:",
+		"\tbeat.start()",
+		""
+	]))
+	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
+	var shadowed: Dictionary = EventSheetViewportReadingRows.shadowed_name_set(sheet)
+	var class_map: Dictionary = EventSheetViewportReadingRows.object_class_map(sheet)
+	var context: Dictionary = EventSheetViewportReadingRows.sentence_context_extras(sheet)
+	var ok: bool = _check("a loop head's own name is known to the shadow set",
+		shadowed.has("body"), true)
+	ok = _check("and a match arm's binding is known to it too", shadowed.has("sprite"), true) and ok
+	ok = _check("so the call inside the loop is claimed by nobody",
+		EventSheetDerivedCalls.derived_pieces("body.rotate(0.5)", context, class_map, {}), {}) and ok
+	ok = _check("and the call under the arm is claimed by nobody either",
+		EventSheetDerivedCalls.derived_pieces("sprite.rotate(0.5)", context, class_map, {}),
+		{}) and ok
+	# The refusal is a shadow list, not a switch: a member no loop and no arm binds still reads.
+	ok = _check("while the member nothing binds still answers",
+		str(EventSheetDerivedCalls.receiver_facts("beat", context, class_map, {}).get("class", "")),
+		"Timer") and ok
+	ok = _check("with the bytes untouched either way", EventSheets.round_trips(source), true) and ok
+	# The two text readers underneath, on their own spellings. A typed loop binds its name as plainly
+	# as an untyped one; a line that merely OPENS with those three letters binds nothing.
+	for pair: Array in [
+		["for body in get_children():", "body"],
+		["\tfor tile: Vector2i in used_cells:", "tile"],
+		["format(x)", ""],
+		["for_each(x)", ""]
+	]:
+		ok = _check("the loop head `%s` binds %s" % [str(pair[0]).strip_edges(),
+			"nothing" if str(pair[1]).is_empty() else str(pair[1])],
+			EventSheetLocalScope.loop_name_of_line(str(pair[0])), str(pair[1])) and ok
+	# A pattern binds by the word `var`, however deeply the arm nests it - and never inside a string,
+	# which is a value the arm matches rather than a name it binds.
+	for pair: Array in [
+		["var sprite", PackedStringArray(["sprite"])],
+		["[var head, var tail]", PackedStringArray(["head", "tail"])],
+		["{\"kind\": var kind, \"at\": [var x, var y]}", PackedStringArray(["kind", "x", "y"])],
+		["\"var not_a_name\"", PackedStringArray()],
+		["_", PackedStringArray()]
+	]:
+		ok = _check("the pattern `%s` binds %s" % [str(pair[0]),
+			", ".join(pair[1] as PackedStringArray) if not (pair[1] as PackedStringArray).is_empty()
+			else "nothing"],
+			EventSheetLocalScope.pattern_bound_names(str(pair[0])),
+			pair[1] as PackedStringArray) and ok
 	return ok
 
 

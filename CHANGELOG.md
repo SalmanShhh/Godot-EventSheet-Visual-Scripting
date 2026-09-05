@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed in the general-purpose reading pass
+
+- **A loop's own name and a match arm's own name are no longer read as the member they shadow.** The
+  reading layer already refused to answer for a name a file uses both as a member and as a function
+  parameter or a body `var`, because there is no scope in a flat map to tell the two apart. The two
+  shapes that declare a name WITHOUT writing `var` on a line of their own were not in that set: the
+  head of `for body in get_children():`, whose name lives on the loop the importer lifted it into,
+  and the `var sprite:` of a match arm, which is a pattern rather than a statement. So
+  `body.rotate(0.5)` inside that loop read as **CharacterBody2D.rotate** and `sprite.rotate(0.5)`
+  under that arm as **Sprite2D.rotate** - a class neither of them is, with the bytes identical either
+  way. Both are read as the code they are now, nested array and dictionary patterns included, and a
+  member no loop and no arm binds still reads exactly as it did.
+
 ### What plays, prompts, speaks and moves
 
 - **Music that follows the game, as a pack: 24 rows.** The Audio rows play a sound on a player, which
