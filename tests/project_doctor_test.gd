@@ -49,7 +49,45 @@ const SUPPORT := preload("res://tests/support.gd")
 ## more than the doubling rule would ask of 36, which is the point - the sections that were slow are
 ## the ones a regression would show up in first, and a budget with that much room left is one that
 ## still fails before anybody stops reading it.
-const DOCTOR_BUDGET_MS: int = 65000
+##
+## MEASURED AGAIN 2026-09-05, section by section, in a detached worktree at HEAD, and this time the
+## answer is that no section is the culprit. The audit is 80 sections (57 built-in checks and 23
+## registered through the public seam) over 1,566 scripts, and its cost is ONE thing: 149 scripts
+## opened as sheets, costing 112 to 118 seconds of a 174 to 192 second run. That is 58 to 68 percent
+## of the audit, and it is the only figure worth quoting from that machine, which had other Godot
+## processes on it - the totals moved by 75 percent between runs while the RATIOS did not.
+##
+## Of that import cost, 96 to 100 percent is the ACE lift itself, measured against the importer's
+## own `lift: false` path on three files of different sizes. It is already shared one-per-file by
+## sheet_of(): the 149 are 149 distinct files, imported once each, so there is no duplicate read
+## left to remove. Steady state is about 2.3 ms per line over about 2.1 MB of source, and the one
+## fixed cost, the lifter's index, is built once per process and not once per file.
+##
+## Ranked, the three most expensive sections are the OLDEST registered ones - Effects (49 imports),
+## Lighting (11) and Multiplayer (22) - and every section the wave added since the last measurement
+## comes to 3.4 percent of the run between them: Streaming 0.3 ms, Animation 77 ms, Tilemap 147 ms,
+## Save Memory 165 ms, Damage 457 ms, Feedbacks 1.9 s. The Files section, which looked like the
+## candidate because its text sweep grew, is 47 ms. What grew is the CORPUS, not any check: about
+## 150 packs and 1,566 scripts, and a gate that correctly matches more files opens more files.
+##
+## SO THE BUDGET MOVES, which the two notes above were right to refuse and which is right now. 65
+## seconds had stopped being a budget: it failed 4 of the last 8 runs on the GitHub runner and
+## passed twice more within 400 ms of the cliff, on commits that touched nothing near the doctor,
+## so a real regression could not have been told apart from the noise.
+##
+## The number is the RUNNER's, not a local one. The assertion runs twice in CI and the binding one
+## is the headless-safe gate (tools/run_perf.gd), which measures 5 to 6 seconds slower than the same
+## assertion in the full suite on the same commit. Eight consecutive gate runs on ubuntu-latest
+## measured 51.7, 61.3, 64.6, 64.9, 65.2, 65.3, 65.6 and 66.2 seconds. 95 seconds is 43 percent
+## clear of the worst of those.
+##
+## AND IT IS DELIBERATELY NOT HIGHER, for the same reason 65 was once deliberately low. What this
+## gate protects is the one-import-per-script sharing: lose it and the same files go through the
+## importer a dozen times over, which roughly doubles the audit and lands past 95 from a 66-second
+## start. The usual "roughly double the measurement" rule would put this at 130 and pass with that
+## sharing gone. If it ever needs raising again the answer is not a bigger number, it is an indexed
+## reverse lifter, so a line costs one lookup instead of a walk over a vocabulary that keeps growing.
+const DOCTOR_BUDGET_MS: int = 95000
 
 
 static func run() -> bool:
