@@ -78,6 +78,43 @@
   space so a shape far from the origin stays mediump-safe. Many of a kind still want a MultiMesh,
   and the guide says so.
 
+
+### Fixed after a reading of the shapes and inspector pass
+
+- **A dashed ring's dashes are as wide as the ring.** A dash is cut across the stroke it rides, and
+  the cut was handed the STROKE THICKNESS - right for every shape whose stroke sits on its outline,
+  and wrong for a ring, whose stroke IS the ring and is as wide as the gap between its two radii.
+  With the shipped defaults an 18 pixel ring wore 2 pixel dashes down the middle of itself. Both
+  halves did it: the shared body a placed Disc wears, and the instanced half a Draw Arc row fills a
+  MultiMesh with. A filled ring's dashed border is cut across its outline for the same reason.
+- **A draw style that changes every frame stops adding a node to the canvas every frame.** A batch
+  is keyed by its style's own values, so a colour tweened onto **Set Draw Style**, or a **Push Draw
+  Style** handed a fresh resource each tick, minted a key a frame - and every one of them left a
+  MultiMeshInstance2D behind for the life of the canvas. Measured on a canvas drawing one arc in a
+  tweened colour: ninety frames, ninety-one children, still climbing. A batch nothing has drawn for
+  a few draws now gives its node back to a shelf the next key takes it off, and it is a steady five.
+  The queueing path stopped allocating per shape too - the style in force is shared rather than
+  copied onto every shape, and the batch key is worked out once as the shape is queued instead of
+  three times.
+- **Scrolling dashes cost the one number that moved.** Writing `dash_offset` called the shape's own
+  setter, which said the shape had changed: every frame a pattern scrolled, a 2D shape re-pushed all
+  thirty-odd uniforms, padded its outline into a fresh array and re-created its `GradientTexture1D`,
+  and a 3D one added a recomputed AABB on top. The scroll now hands the shader that one uniform.
+  Beside it: a tether stopped building an array a frame to compare its ends, **Fade Shape Over**
+  takes over from a fade already running instead of fighting it for the colour, and the 3D
+  dash-icon offer stopped re-registering itself for every shape that enters the tree in the editor.
+- **The fade at a shape's edge is one SCREEN pixel.** The 2D anti-alias width was measured in the
+  node's own pixels, so a scaled node or a zoomed Camera2D fattened or aliased the edge. It now
+  reads how far one screen pixel reaches from the screen-space derivatives of the point being
+  drawn - which is what the 3D half has always done, so the two halves fade alike.
+- **A drawing prefab's step is pictured with the ends it draws.** The preview card and the
+  FileSystem thumbnail drew a line step that never named its ends as ROUND, while the card, the
+  runtime and the stamp all read it as cut square - so a prefab saved before the step card existed
+  looked softer in the thumbnail than it looked in the game.
+- **The prefab step card asks about a thickness once.** A line and a ring each carried two controls
+  for one idea: the Thickness field's own unit dropdown, which always stores pixels, and an extra
+  Unit row beside it writing a key no renderer read.
+
 ### Beat, bump and broadcast: a whole beat of feedback, written down and played by name
 
 - **The Feedback Player's seven ASKING rows spell a card's address the way its editing rows do.**
@@ -378,6 +415,18 @@
   actually compiled now, prints `PARSE FAIL <path>` with the parse error under it, and exits 1. It
   also prints `builders=<n>` beside `audited=` and `drifted=`, so a tree whose pack builders and
   shipped folders have drifted apart says so here rather than at the next full regeneration.
+- **A condition's or an expression's parameters can say what they are for again.** A pack builder
+  gives a parameter its own help sentence as the third entry of its row, and `append_function` -
+  the ACTION maker - kept it. Its two siblings dropped it silently: `exposed_function`, behind
+  `Lib.condition` and `Lib.number`, and the Builder's `_exposed`, behind `src.verb`,
+  `src.condition`, `src.expression` and `src.object_expression`. Between them that is every
+  CONDITION and EXPRESSION in the fleet, so those parameters shipped with a name, a type and
+  nothing else. The lost sentence was not the whole cost: the compiler writes a parameter's
+  `## @ace_param(...)` line only for a parameter that HAS help, and a builder's STARTING VALUE for
+  that parameter rides on the same line - so a parameter that said nothing also shipped no default,
+  which is how a wrong one sat unnoticed in the Feedback Player. Both makers keep the third entry
+  now, the Feedback Player's local workaround for it is gone, and the Spring pack's three asking
+  rows ship the help they were always given.
 
 ### Fixed in the general-purpose reading pass
 

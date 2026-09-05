@@ -542,7 +542,9 @@ tool wants.
 - **The `canvas_item` path, so every renderer.** Nothing here needs Forward+. It draws the
   same on Compatibility, which is what a phone and a browser ship with.
 - **Nothing is allocated per frame.** The uniforms are pushed when a field changes, not on a
-  tick, and a shape with no dash scroll has no `_process` at all.
+  tick, and a shape with no dash scroll has no `_process` at all. A shape that IS scrolling its
+  dashes writes the one uniform that moved, rather than redrawing the whole shape sixty times a
+  second for a number that only ever slides along.
 - **Precision is kept mediump-safe.** The distance arithmetic works in the shape's own local
   space rather than in world pixels, so a shape placed far from the origin does not go blocky
   on a mobile GPU.

@@ -231,10 +231,11 @@ the searchable dropdown under the list; drag a card by its handle to change the 
 
 The eight stored keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what
 they always did, so a prefab saved before the card existed opens, edits and saves as the same file.
-Beside them a step may carry optional keys the card writes: `unit` (how the thickness number is
-read - the number itself is always pixels), `scale_mode`, `blend`, `color_mode`, `color_b`, `caps`,
-and the dash set (`dashed`, `dash_size`, `dash_spacing`, `dash_offset`, `dash_style`). A step
-carrying none of them draws exactly what it always drew.
+Beside them a step may carry optional keys the card writes: `scale_mode`, `blend`, `color_mode`,
+`color_b`, `caps`, and the dash set (`dashed`, `dash_size`, `dash_spacing`, `dash_offset`,
+`dash_style`). A step carrying none of them draws exactly what it always drew. A thickness is read
+in whichever unit its own dropdown is showing (px, world, screen) and is always STORED in pixels, so
+switching the view never moves a stored value.
 
 **What the picture can show.** The canvas and the preview draw with the engine's own draw calls,
 which know a line's ends, its dashes and the scale rule - so those are drawn, in the viewport and in
