@@ -751,7 +751,7 @@ static func build() -> bool:
 	# ── Moments (one row for a whole beat of feedback) ──
 	Lib.append_function(sheet, "moment", "Moment", "Juice", "Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.",
 		[["moment_name", "String"], ["strength", "float"]],
-		"var played: Resource = _moment_named(moment_name)\nif played == null:\n\tpush_warning(\"Moment: nothing is called \\\"%s\\\" - define it with Define Moment, or put a moment file of that name in %s.\" % [moment_name, MOMENT_DIRECTORY])\n\treturn\nfor step: Variant in _moment_steps(played):\n\tif step is Dictionary:\n\t\t_play_moment_step(step as Dictionary, strength)",
+		"if _play_moment_block(moment_name, strength):\n\treturn\nvar played: Resource = _moment_named(moment_name)\nif played == null:\n\tpush_warning(\"Moment: nothing is called \\\"%s\\\" - define it with Define Moment, or put a moment file of that name in %s.\" % [moment_name, MOMENT_DIRECTORY])\n\treturn\nfor step: Variant in _moment_steps(played):\n\tif step is Dictionary:\n\t\t_play_moment_step(step as Dictionary, strength)",
 		"Moment [b]{moment_name}[/b] at [b]{strength}[/b]")
 	_default(sheet, "moment_name", "impact")
 	_param_desc(sheet, "moment_name", "Which moment to play. The six that ship are impact, kill, triumph, danger, calm and cut; Define Moment adds your own.")
@@ -792,6 +792,21 @@ moment(moment_name, here)",
 	_param_desc(sheet, "value", "1 is the moments as written, 0.5 half as much of everything, 0 nothing felt at all.")
 	Lib.number(sheet, "moment_strength", "Moment Strength", "Juice", "The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.",
 		[], "return _moment_strength", TYPE_FLOAT)
+	Lib.append_function(sheet, "moment_step", "Moment Step", "Juice", "Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.",
+		[["verb", "String"], ["amount", "float"], ["effect", "String"], ["seconds", "float"], ["strength", "float"]],
+		"_play_moment_step({\"verb\": verb, \"amount\": amount, \"effect\": effect, \"seconds\": seconds}, strength)",
+		"Moment step [b]{verb}[/b] at [b]{amount}[/b] for [b]{seconds}[/b] s")
+	_param_options(sheet, "verb", ["shake", "hitstop", "slowmo", "flash", "punch", "zoom", "shockwave", "chromatic", "pulse", "hold"])
+	_default(sheet, "verb", "shake")
+	_param_desc(sheet, "verb", "What this step does - the same ten words a moment file's steps are made of.")
+	_default(sheet, "amount", "0.4")
+	_param_desc(sheet, "amount", "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, and for a hitstop how hard the freeze is between 0 and 1.")
+	_param_desc(sheet, "effect", "The extra word two steps need: the colour a flash goes to, and the name of the post effect a pulse or a hold reaches for. Leave it empty for the rest.")
+	_default(sheet, "seconds", "0")
+	_param_desc(sheet, "seconds", "How long it lasts. 0 lets the step use its own natural length.")
+	_default(sheet, "strength", "1")
+	_param_desc(sheet, "strength", "Scales what a player sees, exactly as a moment's own strength does. 1 is the step as written.")
+	_quoted_argument(sheet, "moment_step(\"{verb}\", {amount}, \"{effect}\", {seconds}, {strength})")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
@@ -839,8 +854,13 @@ static func _moment_lines() -> PackedStringArray:
 		"## they see held under this and every time held over the floor, so nothing a moment plays can strobe.",
 		"## The clamp lives HERE, in the layer that was added, and never inside the verbs this pack shipped",
 		"## first: their bytes are a promise.",
-		"const MOMENT_FLASH_CEILING: float = 0.3",
-		"const MOMENT_FLASH_FLOOR_SECONDS: float = 0.4",
+		"##",
+		"## The two numbers are the moment runner's, beside this file, because a beat written as rows in a",
+		"## sheet is held to the same ceiling as one kept in a file and a game that changes its mind about",
+		"## the number should change it once. They are still named here so a game reading this pack finds",
+		"## them where it always did.",
+		"const MOMENT_FLASH_CEILING: float = MomentRunner.FLASH_CEILING",
+		"const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS",
 		"",
 		"# The Engine meta the whole project keeps that answer in is NO_FLASHING_META, declared once with",
 		"# the chromatic shake above and read by both: one meta, one name for it.",
@@ -902,6 +922,26 @@ static func _moment_lines() -> PackedStringArray:
 		"\t\t_moments[word] = found",
 		"\t\treturn found",
 		"\treturn null",
+		"",
+		"## A moment written as ROWS rather than as a file. A Moment block compiles to one coroutine on the",
+		"## host - `func moment_<name>(strength, from)` - so a name the host answers to that way is played by",
+		"## the very same rows that play a file, and a game can keep some of its beats in files and write the",
+		"## rest down in the sheet without either row knowing the difference.",
+		"##",
+		"## The beat is STARTED and not waited for, which is what a Moment row has always done: it runs on its",
+		"## own clock while the event that fired it carries on. Nothing is handed to the block as a place,",
+		"## because a row that has a place of its own has already paid for the distance and paying twice would",
+		"## quieten a near hit for being near.",
+		"## @ace_hidden",
+		"func _play_moment_block(moment_name: String, strength: float) -> bool:",
+		"\tvar word: String = moment_name.strip_edges().replace(\" \", \"_\")",
+		"\tif host == null or not word.is_valid_identifier():",
+		"\t\treturn false",
+		"\tvar written: String = \"moment_\" + word",
+		"\tif not host.has_method(written):",
+		"\t\treturn false",
+		"\thost.call(written, strength, null)",
+		"\treturn true",
 		"",
 		"## A moment's steps, whatever it was made of - the moment resource class, or anything else carrying a",
 		"## `steps` array of the same shape. Read through `get` so this pack never has to name that class, and",
@@ -1052,19 +1092,20 @@ static func _moment_lines() -> PackedStringArray:
 		"## so no step can be the one that forgot. The effect-strength dial is deliberately NOT applied here -",
 		"## whichever layer draws applies it (the camera mixer for a shake, the post stack for the screen),",
 		"## and applying it twice over would square it.",
+		"##",
+		"## The arithmetic is the moment runner's, beside this file - the same call a moment written as",
+		"## rows makes - so the ceiling is one number in one place and a beat is held to it whichever of",
+		"## its homes it was written in.",
 		"## @ace_hidden",
 		"func _moment_allowed(amount: float) -> float:",
-		"\tif bool(Engine.get_meta(NO_FLASHING_META, false)):",
-		"\t\treturn clampf(amount, -MOMENT_FLASH_CEILING, MOMENT_FLASH_CEILING)",
-		"\treturn amount",
+		"\treturn MomentRunner.scaled(amount, 1.0)",
 		"",
 		"## And what a step's TIME really becomes: never quicker than the floor while no flashing is on,",
-		"## because a small amplitude arriving ten times a second is still a strobe.",
+		"## because a small amplitude arriving ten times a second is still a strobe. The same runner",
+		"## answers it, for the same reason.",
 		"## @ace_hidden",
 		"func _moment_slowed(seconds: float) -> float:",
-		"\tif bool(Engine.get_meta(NO_FLASHING_META, false)):",
-		"\t\treturn maxf(seconds, MOMENT_FLASH_FLOOR_SECONDS)",
-		"\treturn maxf(seconds, 0.0)"
+		"\treturn MomentRunner.seconds_of(seconds)"
 	])
 
 

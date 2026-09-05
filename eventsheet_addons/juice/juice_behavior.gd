@@ -261,8 +261,13 @@ const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
 ## they see held under this and every time held over the floor, so nothing a moment plays can strobe.
 ## The clamp lives HERE, in the layer that was added, and never inside the verbs this pack shipped
 ## first: their bytes are a promise.
-const MOMENT_FLASH_CEILING: float = 0.3
-const MOMENT_FLASH_FLOOR_SECONDS: float = 0.4
+##
+## The two numbers are the moment runner's, beside this file, because a beat written as rows in a
+## sheet is held to the same ceiling as one kept in a file and a game that changes its mind about
+## the number should change it once. They are still named here so a game reading this pack finds
+## them where it always did.
+const MOMENT_FLASH_CEILING: float = MomentRunner.FLASH_CEILING
+const MOMENT_FLASH_FLOOR_SECONDS: float = MomentRunner.FLASH_FLOOR_SECONDS
 
 # The Engine meta the whole project keeps that answer in is NO_FLASHING_META, declared once with
 # the chromatic shake above and read by both: one meta, one name for it.
@@ -1007,6 +1012,8 @@ func set_ticker(ticker_name: String, value: float) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.moment({moment_name}, {strength})")
 func moment(moment_name: String, strength: float) -> void:
+	if _play_moment_block(moment_name, strength):
+		return
 	var played: Resource = _moment_named(moment_name)
 	if played == null:
 		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
@@ -1070,6 +1077,21 @@ func set_moment_strength(value: float) -> void:
 ## @ace_codegen_template("$JuiceBehavior.moment_strength()")
 func moment_strength() -> float:
 	return _moment_strength
+
+## @ace_action
+## @ace_name("Moment Step")
+## @ace_category("Juice")
+## @ace_description("Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.")
+## @ace_display_template("Moment step [b]{verb}[/b] at [b]{amount}[/b] for [b]{seconds}[/b] s")
+## @ace_param(verb, options: shake|hitstop|slowmo|flash|punch|zoom|shockwave|chromatic|pulse|hold, default: shake, desc: "What this step does - the same ten words a moment file's steps are made of.")
+## @ace_param(amount, default: 0.4, desc: "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, and for a hitstop how hard the freeze is between 0 and 1.")
+## @ace_param(effect, desc: "The extra word two steps need: the colour a flash goes to, and the name of the post effect a pulse or a hold reaches for. Leave it empty for the rest.")
+## @ace_param(seconds, default: 0, desc: "How long it lasts. 0 lets the step use its own natural length.")
+## @ace_param(strength, default: 1, desc: "Scales what a player sees, exactly as a moment's own strength does. 1 is the step as written.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_step("{verb}", {amount}, "{effect}", {seconds}, {strength})")
+func moment_step(verb: String, amount: float, effect: String, seconds: float, strength: float) -> void:
+	_play_moment_step({"verb": verb, "amount": amount, "effect": effect, "seconds": seconds}, strength)
 
 ## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
 ## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
@@ -1440,6 +1462,26 @@ func is_chromatic_shaking() -> bool:
 func chromatic_shake_magnitude() -> float:
 	return _chroma_shake_magnitude
 
+## A moment written as ROWS rather than as a file. A Moment block compiles to one coroutine on the
+## host - `func moment_<name>(strength, from)` - so a name the host answers to that way is played by
+## the very same rows that play a file, and a game can keep some of its beats in files and write the
+## rest down in the sheet without either row knowing the difference.
+##
+## The beat is STARTED and not waited for, which is what a Moment row has always done: it runs on its
+## own clock while the event that fired it carries on. Nothing is handed to the block as a place,
+## because a row that has a place of its own has already paid for the distance and paying twice would
+## quieten a near hit for being near.
+## @ace_hidden
+func _play_moment_block(moment_name: String, strength: float) -> bool:
+	var word: String = moment_name.strip_edges().replace(" ", "_")
+	if host == null or not word.is_valid_identifier():
+		return false
+	var written: String = "moment_" + word
+	if not host.has_method(written):
+		return false
+	host.call(written, strength, null)
+	return true
+
 ## A moment's steps, whatever it was made of - the moment resource class, or anything else carrying a
 ## `steps` array of the same shape. Read through `get` so this pack never has to name that class, and
 ## goes on working in a game that only installed Juice.
@@ -1568,18 +1610,19 @@ func _first_time_without_a_screen() -> bool:
 ## so no step can be the one that forgot. The effect-strength dial is deliberately NOT applied here -
 ## whichever layer draws applies it (the camera mixer for a shake, the post stack for the screen),
 ## and applying it twice over would square it.
+##
+## The arithmetic is the moment runner's, beside this file - the same call a moment written as
+## rows makes - so the ceiling is one number in one place and a beat is held to it whichever of
+## its homes it was written in.
 ## @ace_hidden
 func _moment_allowed(amount: float) -> float:
-	if bool(Engine.get_meta(NO_FLASHING_META, false)):
-		return clampf(amount, -MOMENT_FLASH_CEILING, MOMENT_FLASH_CEILING)
-	return amount
+	return MomentRunner.scaled(amount, 1.0)
 
 ## And what a step's TIME really becomes: never quicker than the floor while no flashing is on,
-## because a small amplitude arriving ten times a second is still a strobe.
+## because a small amplitude arriving ten times a second is still a strobe. The same runner
+## answers it, for the same reason.
 ## @ace_hidden
 func _moment_slowed(seconds: float) -> float:
-	if bool(Engine.get_meta(NO_FLASHING_META, false)):
-		return maxf(seconds, MOMENT_FLASH_FLOOR_SECONDS)
-	return maxf(seconds, 0.0)
+	return MomentRunner.seconds_of(seconds)
 
 # Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.) A whole beat of feedback is one row: Moment plays a file of steps - impact, kill, triumph, danger, calm and cut ship beside this pack as starters to edit.
