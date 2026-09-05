@@ -131,6 +131,36 @@ static func _build_base() -> bool:
 	src.verb("apply_shape_style_to_group", "Apply Shape Style To Group",
 		"Puts one Shape Style file into every shape in a group at once - the whole HUD re-skinned from one file, which is what a style is for.",
 		[["group_name", "String"], ["style_file", "ShapeStyle"]])
+	src.verb("tether_between", "Tether Between",
+		"Runs the shape between two nodes and keeps it there: its start follows the first, its end follows the second, and it redraws only on the frames one of them actually moved. The leash, the grapple rope, the wire between a machine and its switch.",
+		[["first", "Node2D"], ["second", "Node2D"]])
+	src.verb("untether", "Untether",
+		"Lets go of both nodes. The shape stays exactly where the last frame left it, and its tick parks.",
+		[])
+	src.verb("fill_ring_to", "Fill Ring To",
+		"Sweeps a Disc's arc to a fraction of the way round - 0 is empty, 1 is the whole ring. The cooldown, the stamina wheel, the loading circle, in one row per frame.",
+		[["fraction", "float"]])
+	src.verb("follow_cursor", "Follow Cursor",
+		"Puts the shape under the pointer every frame, snapped to a grid of that many pixels (0 for no snap) - the placement footprint, the brush outline, the target marker. Stop Following ends it and parks the tick.",
+		[["snap_to", "float"]])
+	src.verb("stop_following", "Stop Following",
+		"Stops the shape following the pointer. It stays where it was left.",
+		[])
+	src.verb("fit_around", "Fit Around",
+		"Sizes the shape to what a node covers, plus a margin, and centres it on it - the selection box round a picked unit, the highlight round a card, the ring round a building.",
+		[["node", "Node2D"], ["margin", "float"]])
+	src.verb("show_shape_for", "Show For",
+		"Shows the shape and hides it again after so many seconds - the hit marker, the ping, the flash of a footprint that says \"placed\".",
+		[["seconds", "float"]])
+	src.condition("shape_is_tethered", "Shape Is Tethered",
+		"True while the shape is running between two nodes that both still exist.",
+		[])
+	src.condition("ring_is_full", "Ring Is Full",
+		"True while a Disc's arc goes the whole way round - the cooldown that has finished, the wheel that is charged.",
+		[])
+	src.expression("point_along_shape_at", "Point Along Shape At",
+		"The point a fraction of the way along the shape's outline, in the shape's own coordinates - 0 is the start, 0.5 the middle, 1 the end. Where to put a marker on a route, a spark on a wire, a label on a border.",
+		[["fraction", "float"]], TYPE_VECTOR2)
 	src.condition("shape_is_visible", "Shape Is Visible",
 		"True while the shape is drawn at all: visible in the tree, and not fully transparent.",
 		[])
@@ -156,11 +186,19 @@ static func _build_base() -> bool:
 		"set_arc": "Set arc from [b]{from_degrees}[/b] to [b]{to_degrees}[/b] degrees",
 		"apply_shape_style": "Apply shape style [b]{style_file}[/b]",
 		"apply_shape_style_to_group": "Apply shape style [b]{style_file}[/b] to group [b]{group_name}[/b]",
+		"tether_between": "Tether between [b]{first}[/b] and [b]{second}[/b]",
+		"fill_ring_to": "Fill ring to [b]{fraction}[/b]",
+		"follow_cursor": "Follow the cursor, snapped to [b]{snap_to}[/b]",
+		"fit_around": "Fit around [b]{node}[/b] with a margin of [b]{margin}[/b]",
+		"show_shape_for": "Show for [b]{seconds}[/b] seconds",
+		"shape_is_tethered": "the shape is tethered",
+		"ring_is_full": "the ring is full",
+		"point_along_shape_at": "the point [b]{fraction}[/b] along the shape",
 		"shape_is_visible": "the shape is visible",
 		"shape_style_is": "the shape style is [b]{style_file}[/b]",
 		"point_is_inside_shape": "[b]{point}[/b] is inside the shape",
 	})
-	Lib.feature_verbs(src.sheet, ["set_thickness", "set_dashes", "scroll_dashes"])
+	Lib.feature_verbs(src.sheet, ["set_thickness", "set_dashes", "scroll_dashes", "tether_between", "fill_ring_to"])
 	_target_every_verb(src.sheet, PACK_CLASS)
 	return Lib.publish(src, "%s/vector_shape_2d" % PACK_DIR)
 

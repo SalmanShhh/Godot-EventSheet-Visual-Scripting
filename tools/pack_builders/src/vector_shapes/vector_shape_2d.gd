@@ -66,6 +66,18 @@ static var _icons_offered: bool = false
 # How fast the dashes are scrolling, in patterns per second. Zero parks the tick entirely.
 var _dash_scroll_speed: float = 0.0
 
+# The two nodes a tether runs between, and where they were when it last redrew. A tether whose ends
+# have not moved does no work at all, which is most frames of most tethers.
+var _tether_a: Node2D = null
+var _tether_b: Node2D = null
+var _tether_seen: PackedVector2Array = PackedVector2Array()
+
+# How far a followed cursor is snapped, in pixels, and -1 when the shape is not following one.
+var _cursor_snap: float = -1.0
+
+# What is left of a Show For, in seconds. Zero is nothing counting down.
+var _show_seconds: float = 0.0
+
 # The material this shape wears, rebuilt when the blend word changes and never per frame.
 var _material: ShaderMaterial = null
 
@@ -89,12 +101,116 @@ func _draw() -> void:
 	draw_rect(quad, Color.WHITE)
 
 func _process(delta: float) -> void:
-	if is_zero_approx(_dash_scroll_speed):
+	# Four things can want a frame - scrolling dashes, a tether, a followed cursor and a Show For
+	# counting down - and the shape stops processing the moment none of them does. A parked shape
+	# costs nothing per frame, which is the rule every pack here follows.
+	var working: bool = false
+	if not is_zero_approx(_dash_scroll_speed):
+		# Whole numbers tile, so a pattern that has scrolled for an hour is exactly where it started.
+		set("dash_offset", fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0))
+		queue_redraw()
+		working = true
+	if shape_is_tethered():
+		_follow_tether()
+		working = true
+	if _cursor_snap >= 0.0:
+		_follow_pointer()
+		working = true
+	if _show_seconds > 0.0:
+		_show_seconds = maxf(_show_seconds - delta, 0.0)
+		if is_zero_approx(_show_seconds):
+			visible = false
+		else:
+			working = true
+	if not working:
 		set_process(false)
+
+## Puts the shape's two ends on the nodes it is tethered between, and does NOTHING AT ALL when
+## neither of them has moved since the last frame. A shape with no end point to move (a disc, a
+## rect) still follows the first node, which is the sensible half of the same sentence.
+## @ace_hidden
+func _follow_tether() -> void:
+	if not shape_is_tethered():
+		untether()
 		return
-	# Whole numbers tile, so a pattern that has scrolled for an hour is exactly where it started.
-	set("dash_offset", fposmod(_number("dash_offset", 0.0) + _dash_scroll_speed * delta, 1024.0))
-	queue_redraw()
+	var ends: PackedVector2Array = PackedVector2Array([_tether_a.global_position, _tether_b.global_position])
+	if ends == _tether_seen:
+		return
+	_tether_seen = ends
+	global_position = ends[0]
+	if get("end_point") is Vector2:
+		set("end_point", to_local(ends[1]))
+	shape_changed()
+
+## Puts the shape where the pointer is, snapped to a grid when one was asked for. A pointer that has
+## not left the spot the shape is already on writes nothing.
+## @ace_hidden
+func _follow_pointer() -> void:
+	if not is_inside_tree():
+		return
+	var at: Vector2 = get_global_mouse_position()
+	if _cursor_snap > 0.0:
+		at = (at / _cursor_snap).round() * _cursor_snap
+	if at.is_equal_approx(global_position):
+		return
+	global_position = at
+
+## What a node covers, in world coordinates - what a Fit Around row sizes itself to. A node that
+## draws a rectangle (a sprite, a texture rect) is measured by it; anything else is measured by the
+## collision shapes and drawable children under it. An empty rectangle is a node with nothing to
+## measure, which Fit Around leaves alone rather than shrinking to a point.
+## @ace_hidden
+static func node_bounds(node: Node2D) -> Rect2:
+	if not is_instance_valid(node):
+		return Rect2()
+	var local: Rect2 = Rect2()
+	var found: bool = false
+	if node.has_method("get_rect"):
+		local = node.call("get_rect")
+		found = true
+	for child: Node in node.get_children():
+		var piece: Rect2 = Rect2()
+		if child is CollisionShape2D and (child as CollisionShape2D).shape != null:
+			piece = shape_extents((child as CollisionShape2D).shape)
+			piece.position += (child as CollisionShape2D).position
+		elif child is Node2D and child.has_method("get_rect"):
+			piece = child.call("get_rect")
+			piece.position += (child as Node2D).position
+		else:
+			continue
+		local = local.merge(piece) if found else piece
+		found = true
+	if not found:
+		return Rect2()
+	var shifted: Transform2D = node.global_transform
+	var corners: PackedVector2Array = PackedVector2Array([
+		shifted * local.position,
+		shifted * (local.position + Vector2(local.size.x, 0.0)),
+		shifted * (local.position + local.size),
+		shifted * (local.position + Vector2(0.0, local.size.y))
+	])
+	var low: Vector2 = corners[0]
+	var high: Vector2 = corners[0]
+	for corner: Vector2 in corners:
+		low = low.min(corner)
+		high = high.max(corner)
+	return Rect2(low, high - low)
+
+## The box one collision shape fills, in its own coordinates. The three shapes a level is actually
+## built out of are measured; anything else answers with nothing rather than a guess.
+## @ace_hidden
+static func shape_extents(shape: Shape2D) -> Rect2:
+	if shape is RectangleShape2D:
+		var size: Vector2 = (shape as RectangleShape2D).size
+		return Rect2(-size * 0.5, size)
+	if shape is CircleShape2D:
+		var radius: float = (shape as CircleShape2D).radius
+		return Rect2(Vector2(-radius, -radius), Vector2(radius, radius) * 2.0)
+	if shape is CapsuleShape2D:
+		var capsule: CapsuleShape2D = shape as CapsuleShape2D
+		var half: Vector2 = Vector2(capsule.radius, capsule.height * 0.5)
+		return Rect2(-half, half * 2.0)
+	return Rect2()
 
 ## The shape's own kind number, as the shader numbers them. Every shape script answers with its own.
 ## @ace_hidden
@@ -493,7 +609,10 @@ func set_dash_offset(offset: float = 0.0) -> void:
 ## costs nothing per frame.
 func scroll_dashes(patterns_per_second: float = 1.0) -> void:
 	_dash_scroll_speed = patterns_per_second
-	set_process(not is_zero_approx(patterns_per_second))
+	# A speed asks for the tick; a zero does NOT take it away, because a tether or a followed
+	# cursor may be using it. The tick parks itself on the first frame nothing at all wants it.
+	if not is_zero_approx(patterns_per_second):
+		set_process(true)
 
 ## Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb,
 ## since every other field is an ordinary property a Tween row already drives.
@@ -598,3 +717,86 @@ func apply_shape_style_to_group(group_name: String, style_file: ShapeStyle) -> v
 ## and the one an exception is written against.
 func shape_style_is(style_file: ShapeStyle) -> bool:
 	return get("style") == style_file
+
+
+func tether_between(first: Node2D, second: Node2D) -> void:
+	_tether_a = first
+	_tether_b = second
+	_tether_seen = PackedVector2Array()
+	if not shape_is_tethered():
+		return
+	set_process(true)
+	_follow_tether()
+
+
+func untether() -> void:
+	_tether_a = null
+	_tether_b = null
+	_tether_seen = PackedVector2Array()
+
+
+func shape_is_tethered() -> bool:
+	return is_instance_valid(_tether_a) and is_instance_valid(_tether_b)
+
+
+func fill_ring_to(fraction: float = 1.0) -> void:
+	set("end_angle", _number("start_angle", 0.0) + 360.0 * clampf(fraction, 0.0, 1.0))
+	shape_changed()
+
+
+func ring_is_full() -> bool:
+	return absf(_number("end_angle", 360.0) - _number("start_angle", 0.0)) >= 359.9
+
+
+func point_along_shape_at(fraction: float = 0.5) -> Vector2:
+	var outline: PackedVector2Array = shape_points()
+	if outline.is_empty():
+		return Vector2.ZERO
+	var walk: PackedVector2Array = outline.duplicate()
+	if shape_is_closed():
+		walk.append(walk[0])
+	if walk.size() < 2:
+		return walk[0]
+	var total: float = 0.0
+	for index: int in walk.size() - 1:
+		total += walk[index].distance_to(walk[index + 1])
+	if total <= 0.0:
+		return walk[0]
+	var wanted: float = clampf(fraction, 0.0, 1.0) * total
+	var travelled: float = 0.0
+	for index: int in walk.size() - 1:
+		var step: float = walk[index].distance_to(walk[index + 1])
+		if travelled + step >= wanted:
+			return walk[index].lerp(walk[index + 1], (wanted - travelled) / maxf(step, 0.0001))
+		travelled += step
+	return walk[walk.size() - 1]
+
+
+func follow_cursor(snap_to: float = 0.0) -> void:
+	_cursor_snap = maxf(snap_to, 0.0)
+	set_process(true)
+	_follow_pointer()
+
+
+func stop_following() -> void:
+	_cursor_snap = -1.0
+
+
+func fit_around(node: Node2D, margin: float = 0.0) -> void:
+	var bounds: Rect2 = node_bounds(node)
+	if bounds.size.is_zero_approx():
+		return
+	bounds = bounds.grow(margin)
+	global_position = bounds.get_center()
+	if get("size") is Vector2:
+		set("size", bounds.size)
+	elif get("radius") != null:
+		set("radius", maxf(bounds.size.x, bounds.size.y) * 0.5)
+	shape_changed()
+
+
+func show_shape_for(seconds: float = 1.0) -> void:
+	_show_seconds = maxf(seconds, 0.0)
+	visible = _show_seconds > 0.0
+	if visible:
+		set_process(true)

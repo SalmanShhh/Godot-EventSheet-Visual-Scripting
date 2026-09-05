@@ -332,11 +332,15 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 
 
 // The canvas half: one quad in the node's own pixels. It is skipped when a spatial shader includes
-// this file, which declares a fragment of its own - a shader has one, whichever type it is.
+// this file, which declares a fragment of its own - a shader has one, whichever type it is - and
+// skipped again for the INSTANCED half beside it, whose fragment reads a shape's numbers off the
+// instance rather than out of these uniforms so a hundred of them are one draw call.
 #ifndef VECTOR_SHAPES_SPATIAL
+#ifndef VECTOR_SHAPES_BATCH
 void fragment() {
 	vec4 drawn = vector_shape_at(quad_origin + UV * quad_size, UV, max(thickness_px, 0.01) * 0.5,
 		max(border_px, 0.01) * 0.5, max(aa_width, 0.0001));
 	COLOR = vec4(drawn.rgb, drawn.a * COLOR.a);
 }
+#endif
 #endif
