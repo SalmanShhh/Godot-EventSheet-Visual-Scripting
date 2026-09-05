@@ -29,6 +29,7 @@
 class_name WatcherAndArchivesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const MODULE_PATH := "res://addons/eventforge/registration/modules/file_aces.gd"
 const PACK_PATH := "res://eventsheet_addons/folder_watcher/folder_watcher_behavior.gd"
 
@@ -207,9 +208,9 @@ static func _run_archive_runtime() -> bool:
 	_fresh_dir(OUT_DIR)
 	DirAccess.make_dir_recursive_absolute(BLOCKED_DIR)
 	var packer: ZIPPacker = ZIPPacker.new()
-	if packer.open(BLOCKED) != OK:
-		print("  [FAIL] watcher_and_archives_test: the blocked archive could not be written")
-		return false
+	var opened: int = packer.open(BLOCKED)
+	if opened != OK:
+		return _check("the blocked archive could not be written", error_string(opened), "(written)")
 	for entry: Array in [["landed.txt", "here"], ["taken", "cannot land"]]:
 		packer.start_file(str(entry[0]))
 		packer.write_file(str(entry[1]).to_utf8_buffer())
@@ -326,9 +327,9 @@ static func _put_int(into: PackedByteArray, value: int, width: int) -> void:
 static func _run_guard() -> bool:
 	var ok: bool = true
 	var packer: ZIPPacker = ZIPPacker.new()
-	if packer.open(HOSTILE) != OK:
-		print("  [FAIL] watcher_and_archives_test: the hostile archive could not be written")
-		return false
+	var opened: int = packer.open(HOSTILE)
+	if opened != OK:
+		return _check("the hostile archive could not be written", error_string(opened), "(written)")
 	# One innocent entry, then one that climbs two folders out of the target and lands beside it.
 	for entry: Array in [["safe.txt", "safe"], ["../../escaped.txt", "escaped"]]:
 		packer.start_file(str(entry[0]))
@@ -452,9 +453,11 @@ static func _run_lift() -> bool:
 		var event_row: EventRow = entry as EventRow
 		if event_row != null:
 			trigger_ids.append(str(event_row.trigger_id))
-	ok = _check("the three answers open as their own events",
-		trigger_ids.has("OnUnpackProgress") and trigger_ids.has("OnUnpackRefused")
-			and trigger_ids.has("OnUnpackFinished"), true) and ok
+	# Asked one answer at a time, so a failure names WHICH of the three did not open rather than
+	# reading `false` for the whole trio.
+	for answer: String in ["OnUnpackProgress", "OnUnpackRefused", "OnUnpackFinished"]:
+		ok = _check("the three answers open as their own events: %s" % answer,
+			trigger_ids.has(answer), true) and ok
 	ok = _check("and saving it again reproduces the file byte for byte",
 		str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
 	DirAccess.remove_absolute(PROBE_SCRIPT)
@@ -787,8 +790,9 @@ static func _run_emitted(ace_id: String, params: Dictionary) -> Array:
 		lines.append("\t" + line)
 	var script: GDScript = GDScript.new()
 	script.source_code = "\n".join(lines) + "\n"
-	if script.reload() != OK:
-		print("  [FAIL] watcher_and_archives_test: the emitted %s did not compile" % ace_id)
+	var reloaded: int = script.reload()
+	if reloaded != OK:
+		_check("the emitted %s did not compile" % ace_id, error_string(reloaded), "(compiles)")
 		return []
 	var runner: RefCounted = script.new()
 	runner.call("probe")
@@ -931,7 +935,4 @@ static func _quote(text: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		return true
-	print("  [FAIL] watcher_and_archives_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
-	return false
+	return SUPPORT.check("watcher_and_archives_test", label, actual, expected)
