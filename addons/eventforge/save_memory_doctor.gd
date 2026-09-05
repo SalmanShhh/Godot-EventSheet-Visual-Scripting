@@ -81,7 +81,9 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 	var sorted: PackedStringArray = paths.duplicate()
 	sorted.sort()
 	for path: String in sorted:
+		# The sentence goes through the editor's own translator like every other Doctor note, so
+		# the one line this section says is not the one English line in a translated inbox.
 		findings.append(_finding("info", CHECK_NO_SAVE_PACK, path,
-			"%s asks the save what it has already seen, and this project registers no %s autoload - so the memory goes to user://remembered.cfg instead: one answer for the whole computer rather than one per save, and nothing clears it, because Start New Run belongs to that pack. Install the Save System pack and register it, or use Only Once Ever, which says per-machine on the label." % [
+			EventSheetL10n.translate("%s asks the save what it has already seen, and this project registers no %s autoload - so the memory goes to user://remembered.cfg instead: one answer for the whole computer rather than one per save, and nothing clears it, because Start New Run belongs to that pack. Install the Save System pack and register it, or use Only Once Ever, which says per-machine on the label.") % [
 				path.get_file(), SAVE_AUTOLOAD], path))
 	return findings
