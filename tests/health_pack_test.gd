@@ -84,6 +84,7 @@ static func run() -> bool:
 	all_passed = _the_difficulty_factor_scales_the_hit() and all_passed
 	all_passed = _assists_are_counted_from_the_death() and all_passed
 	all_passed = _a_hit_of_no_kind_says_so() and all_passed
+	all_passed = _the_two_readings_read_the_lines_projects_write() and all_passed
 	return all_passed
 
 
@@ -408,6 +409,30 @@ static func _the_doctor_sees_both_disagreements() -> bool:
 		["every one of them is a quiet note", str(findings[1]["severity"]), "info"],
 		["a project that has written no set down is not told it misspelled anything",
 			Array(quiet_checks), ["damage", "damage-guard-against-nothing"]]
+	])
+
+
+## THE TWO READINGS, over the lines a project really writes. Both are pure over a string, so the
+## two shapes that used to defeat them are asked here directly rather than through a project: an
+## amount that is a call of its own - `maxf(a, b)` has a comma in it - and a method of the project's
+## own whose name merely ENDS in one of the three opinion words.
+static func _the_two_readings_read_the_lines_projects_write() -> bool:
+	var facts: GDScript = load(DAMAGE_TYPE_FACTS)
+	if facts == null:
+		return _check("the damage type facts load", false, true)
+	var with_a_call: String = "$Health.take_typed_damage(maxf(hit, floor_damage), \"fire\", self)"
+	var with_scaled_by: String = "$Health.take_typed_damage(12.0, \"ice\", self, \"damage_taken\")"
+	var not_an_opinion: String = "armour.plate_resist(\"cold\")"
+	var an_opinion: String = "$Health.resist(\"holy\", 50.0)"
+	return SUPPORT.pins("health_pack_test", [
+		["an amount with a comma in it still names its kind",
+			Array(facts.call("types_dealt", with_a_call)), ["fire"]],
+		["and the kind read is the kind, not the difficulty factor after it",
+			Array(facts.call("types_dealt", with_scaled_by)), ["ice"]],
+		["a method whose name ends in one of the words is not an opinion",
+			Array(facts.call("types_opined", not_an_opinion)), []],
+		["while the row that is one still is",
+			Array(facts.call("types_opined", an_opinion)), ["holy"]]
 	])
 
 

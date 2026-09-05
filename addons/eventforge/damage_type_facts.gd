@@ -50,8 +50,18 @@ const NAMES_PATTERN := "type_names = PackedStringArray\\(([^)]*)\\)"
 ## Two patterns rather than one, because the type sits in a different argument in each: the typed
 ## damage row takes an amount first, while resisting, immunity and weakness lead with the kind. The
 ## Doctor's two findings are exactly the difference between what these two answer.
-const DEALT_PATTERN := "take_typed_damage\\([^,)]*, ?\"([^\"]*)\""
-const OPINION_PATTERN := "(?:resist|immune_to|weak_to)\\( ?\"([^\"]*)\""
+##
+## THE AMOUNT MAY BE A CALL OF ITS OWN. `take_typed_damage(maxf(a, b), "fire", self)` is ordinary
+## authored code, and an amount that stopped at the first comma read nothing from it - so a kind the
+## project really did deal went unseen, and the unknown-type finding it should have earned never
+## came. One level of brackets is allowed inside the amount now, and the search is LAZY, so the kind
+## captured is the second argument rather than the last string on the line - which is Scaled By.
+##
+## AND A NAME THAT ENDS IN ONE OF THE THREE WORDS IS NOT ONE OF THEM. `armour_resist("cold")` is a
+## project's own method, not this pack's Resist row, and with nothing in front of the word it was
+## read as an opinion about a kind nothing deals - a finding about a line that is not about damage.
+const DEALT_PATTERN := "take_typed_damage\\((?:[^\"()]|\\([^()]*\\))*?, ?\"([^\"]*)\""
+const OPINION_PATTERN := "(?<![A-Za-z0-9_])(?:resist|immune_to|weak_to)\\( ?\"([^\"]*)\""
 
 
 ## Every damage type name any set in this project declares, sorted and without repeats.
