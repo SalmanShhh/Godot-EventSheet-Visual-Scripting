@@ -59,6 +59,8 @@ static func run() -> bool:
 	passed = _glyphs_are_looked_up_per_device(script) and passed
 	passed = _no_flashing_clamps_the_flash(script) and passed
 	passed = _the_starters_ship() and passed
+	passed = _the_press_that_opened_a_prompt_is_not_its_answer(script) and passed
+	passed = _a_sequence_over_a_sequence_ends_the_first(script) and passed
 	return passed
 
 
@@ -71,19 +73,29 @@ static func run() -> bool:
 ## builder's intent.
 static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 	var source: String = FileAccess.get_file_as_string(PACK)
-	var templates: int = 0
 	var not_the_autoload: int = 0
+	var published: PackedStringArray = PackedStringArray()
+	var moments: PackedStringArray = PackedStringArray()
 	for line: String in source.split("\n"):
 		if not line.begins_with("## @ace_codegen_template("):
 			continue
-		templates += 1
 		if not line.begins_with("## @ace_codegen_template(\"Prompts."):
 			not_the_autoload += 1
-	var triggers: int = source.count("## @ace_trigger")
+			continue
+		published.append(line.substr(line.find("Prompts.") + 8).split("(")[0])
+	for line: String in source.split("\n"):
+		if line.begins_with("signal "):
+			moments.append(line.substr(7).split("(")[0])
 	return SUPPORT.pins(TEST, [
 		["every published verb addresses the autoload by name", not_the_autoload, 0],
-		["and all fourteen of them are published", templates, 14],
-		["with three triggers beside them", triggers, 3],
+		# NAMED, not counted: a pin on the number goes green on a run where one row arrived and
+		# another went missing, and says nothing about either.
+		["and every verb the builder declares is one of them", _sorted(published),
+			["cancel_prompt", "device", "force_device", "glyph_for", "grade_is", "hold_prompt",
+				"last_grade", "mash_prompt", "prompt", "prompt_is_open", "prompt_on_beat",
+				"prompt_time_left", "sequence", "sequence_progress"]],
+		["with its three moments beside them", _sorted(moments),
+			["prompt_hit", "prompt_missed", "sequence_finished"]],
 		["nothing is scoped to a node, because an autoload has no host to act on",
 			source.contains("var host: Node"), false],
 		["the grades are the Timed Input rows' own two words plus the miss",
@@ -440,3 +452,75 @@ static func _the_starters_ship() -> bool:
 ## pin was red for.
 static func _round(value: float) -> float:
 	return roundf(value * 10000.0) / 10000.0
+
+
+## THE PRESS THAT OPENED A PROMPT IS NOT ITS ANSWER. "On jump just pressed -> Prompt jump" is how
+## half of these rows will be written, and a control stays "just pressed" for the whole of the frame
+## it went down on - so without a guard the prompt opens and lands perfect on that same frame, before
+## anything is drawn, and a mash prompt starts with one press already counted.
+static func _the_press_that_opened_a_prompt_is_not_its_answer(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var on_the_opening_frame: bool = director.fresh_press(true, 12, 12)
+	var on_the_next_frame: bool = director.fresh_press(true, 12, 13)
+	var nothing_pressed: bool = director.fresh_press(false, 12, 13)
+	# The whole shape, driven: a prompt opened BY a press, then stepped with that press still down.
+	director.prompt("ui_accept", 1.0, null)
+	var opened: int = director._opened_frame
+	director.step(director._opened_at + 0.001, 0.016,
+		director.fresh_press(true, opened, opened), false)
+	var still_open: bool = director.prompt_is_open()
+	director.step(director._opened_at + 0.1, 0.016,
+		director.fresh_press(true, opened, opened + 1), false)
+	var answered: bool = not director.prompt_is_open()
+	var graded: String = director.last_grade()
+	director.free()
+	var masher: Node = script.new()
+	masher.mash_prompt("ui_accept", 2, 1.0, null)
+	var opened_at: int = masher._opened_frame
+	masher.step(masher._opened_at + 0.001, 0.016,
+		masher.fresh_press(true, opened_at, opened_at), false)
+	var counted: int = masher._mash_count
+	masher.free()
+	return SUPPORT.pins(TEST, [
+		["a press on the frame the prompt opened is not an answer", on_the_opening_frame, false],
+		["the same press one frame later is", on_the_next_frame, true],
+		["and no press is no answer whichever frame it is", nothing_pressed, false],
+		["a prompt opened by a press of its own control is still waiting", still_open, true],
+		["the next frame answers it", answered, true],
+		["and grades it as the reaction it was", graded, "perfect"],
+		["a mash does not count the press that opened it", counted, 0],
+	])
+
+
+## A SEQUENCE STARTED OVER A RUNNING ONE ends the first, uncompleted, the way a plain prompt does.
+## Overwriting the queue in silence leaves a cutscene waiting on a trigger that never comes, which is
+## the hardest kind of bug to find in a game.
+static func _a_sequence_over_a_sequence_ends_the_first(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var endings: Array = []
+	director.sequence_finished.connect(func(completed: bool) -> void: endings.append(completed))
+	director.sequence("ui_left, ui_right", 1.0, null)
+	director.sequence("ui_accept", 1.0, null)
+	var the_first_ended: String = str(endings[0]) if endings.size() == 1 else "fired %d times" % endings.size()
+	var now_asking_for: String = director._action
+	var progress: float = director.sequence_progress()
+	# A sequence given no controls at all is not a reason to end the one that is running.
+	director.sequence("   ", 1.0, null)
+	var untouched: String = director._action
+	var no_second_ending: int = endings.size()
+	director.free()
+	return SUPPORT.pins(TEST, [
+		["the sequence that was running ends, uncompleted, once", the_first_ended, "false"],
+		["and the new one is what the player is being asked for", now_asking_for, "ui_accept"],
+		["starting again at no progress", _round(progress), 0.0],
+		["a sequence with no controls in it changes nothing", untouched, "ui_accept"],
+		["and ends nothing", no_second_ending, 1],
+	])
+
+
+## A list of names in one order, whatever order they were gathered in - so a pin reads as the names
+## the pack publishes rather than as the order a file happens to hold them in.
+static func _sorted(names: PackedStringArray) -> Array:
+	var sorted: Array = Array(names)
+	sorted.sort()
+	return sorted

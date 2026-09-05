@@ -90,6 +90,13 @@ var _action: String = ""
 var _opened_at: float = 0.0
 var _deadline: float = 0.0
 
+## The FRAME the prompt opened on. A press stays "just pressed" for the whole of the frame it happened
+## on, so a prompt opened BY that press - "on jump just pressed, prompt jump", which is how half of
+## these rows will be written - would find the press still down and grade itself perfect before the
+## player saw anything. The opening frame is skipped for that reason, and only for that reason: every
+## frame after it reads the controls as they are.
+var _opened_frame: int = -1
+
 ## A hold: how long the control has to be held down, and how long it has been held so far. Letting
 ## go resets the count, because a hold that survived being let go is not a hold.
 var _hold_needed: float = 0.0
@@ -344,6 +351,7 @@ func _open_prompt(kind: String, action: String, seconds: float, at: Node) -> voi
 	_kind = kind
 	_action = action
 	_opened_at = now()
+	_opened_frame = int(Engine.get_process_frames())
 	_deadline = _opened_at + maxf(seconds, 0.01)
 	_held_for = 0.0
 	_mash_count = 0
@@ -400,6 +408,14 @@ func _finish_sequence(completed: bool) -> void:
 ## @ace_hidden
 func _just_pressed(action: String) -> bool:
 	return not action.is_empty() and InputMap.has_action(action) and Input.is_action_just_pressed(action)
+
+## Whether a press counts for the prompt that is open: one that arrived on the frame the prompt opened
+## does not. The press that OPENED a prompt is still down on that frame - Godot holds "just pressed"
+## for the whole frame - so without this a prompt opened by a press of its own control lands perfect
+## at once, and a mash prompt starts with one press already counted.
+## @ace_hidden
+func fresh_press(just_pressed: bool, opened_frame: int, frame: int) -> bool:
+	return just_pressed and frame != opened_frame
 
 ## Whether a control is being held right now, asked the same safe way.
 ## @ace_hidden
@@ -600,7 +616,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	var at_moment: float = now()
 	step_notes(at_moment, _pressed_note_action())
-	step(at_moment, delta, _just_pressed(_action), _held(_action))
+	step(at_moment, delta, fresh_press(_just_pressed(_action), _opened_frame,
+		int(Engine.get_process_frames())), _held(_action))
 	_draw_frame(at_moment)
 	if _at_rest():
 		set_process(false)
@@ -629,6 +646,10 @@ func sequence(actions: String, seconds: float, at: Node) -> void:
 		if debug_mode:
 			push_warning("Prompts: Sequence was given no controls, so there was nothing to ask for.")
 		return
+	# The sequence that was running ends here, as an uncompleted one - the same courtesy a plain
+	# prompt does it. Overwriting the queue in silence would leave a cutscene waiting on the trigger
+	# for ever.
+	_leave_sequence()
 	_queue = wanted
 	_queue_total = wanted.size()
 	_queue_done = 0
