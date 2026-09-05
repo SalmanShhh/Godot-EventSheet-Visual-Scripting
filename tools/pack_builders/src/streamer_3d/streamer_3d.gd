@@ -49,6 +49,13 @@ var _pinned: Dictionary = {}
 ## fact rather than an error, so it is remembered once and never asked for again - otherwise
 ## the streamer would want it every frame and never call the world settled.
 var _absent: Dictionary = {}
+## Cell -> true for a cell whose scene is there and could not be made into a chunk: the
+## threaded load failed, the loader refused the request, or the file turned out not to be a
+## scene at all. It is remembered for the same reason a hole is - a cell nothing recorded is
+## wanted again the very next frame, which is one engine error per frame for ever and a world
+## that never settles. Stream Chunks Around clears it, so fixing the file and starting again
+## is the way back.
+var _refused: Dictionary = {}
 ## Cells the radius wants, nearest ring first, rebuilt every frame from where the followed
 ## node is now.
 var _wanted: Array[Vector3i] = []
@@ -118,7 +125,8 @@ func _point_of(node: Node3D) -> Vector3:
 ## Adds a cell to a list unless it is already loaded, already requested or already on it.
 ## @ace_hidden
 func _queue_cell(into: Array[Vector3i], cell: Vector3i) -> void:
-	if _loaded.has(cell) or _requested.has(cell) or _absent.has(cell) or into.has(cell):
+	if _loaded.has(cell) or _requested.has(cell) or _absent.has(cell) or _refused.has(cell) \
+			or into.has(cell):
 		return
 	into.append(cell)
 
@@ -195,13 +203,17 @@ func _release_far_chunks(center: Vector3i) -> void:
 ## Takes one chunk out of the world. On Chunk Unloading fires BEFORE the free, so a row still
 ## has the node in front of it and can save what the player changed in it; the drop that follows
 ## is deferred, which is what keeps a chunk from disappearing out of a signal a sheet is inside.
+## The cell leaves the loaded set AFTER the signal, for the same reason: inside that trigger the
+## chunk is still in the world, so Chunk Is Loaded At and Loaded Chunk Count answer about the
+## world the row is looking at rather than the one it is about to become.
 ## @ace_hidden
 func _unload_cell(cell: Vector3i) -> void:
 	var chunk: Node = _loaded.get(cell, null) as Node
-	_loaded.erase(cell)
 	if chunk == null or not is_instance_valid(chunk):
+		_loaded.erase(cell)
 		return
 	chunk_unloading.emit(chunk, cell)
+	_loaded.erase(cell)
 	_drop_chunk(chunk)
 
 ## Starts AT MOST ONE threaded request this frame - the whole reason a streamed world does
@@ -220,12 +232,15 @@ func _start_one_request() -> void:
 			_absent[cell] = true
 			continue
 		if _request_load(path) != OK:
+			_refused[cell] = true
 			continue
 		_requested[cell] = path
 		return
 
 ## Takes in the requests that have finished, until the millisecond budget for this frame is
-## spent. A request that failed is dropped rather than retried for ever.
+## spent. A request that did not end in a chunk - it failed, or the file was not a scene - is
+## written down as refused rather than dropped, because a cell nothing remembers is wanted
+## again next frame and asked for again for ever.
 ## @ace_hidden
 func _collect_finished() -> void:
 	var deadline: int = Time.get_ticks_usec() + int(maxf(budget_ms, 0.0) * 1000.0)
@@ -235,8 +250,11 @@ func _collect_finished() -> void:
 		if state == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			continue
 		_requested.erase(cell)
-		if state == ResourceLoader.THREAD_LOAD_LOADED:
-			_place_chunk(cell, _take_chunk(path))
+		var chunk: Node = _take_chunk(path) if state == ResourceLoader.THREAD_LOAD_LOADED else null
+		if chunk == null:
+			_refused[cell] = true
+		else:
+			_place_chunk(cell, chunk)
 		if Time.get_ticks_usec() >= deadline:
 			return
 
@@ -276,6 +294,12 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _streaming and (_around == null or not is_instance_valid(_around)):
+		# What was being followed is gone - the player died, the level was thrown away. There is
+		# no centre to build a wanted set around any more, so the streamer stops following rather
+		# than asking an unanswerable question every frame for the rest of the game.
+		_around = null
+		_streaming = false
 	if _streaming and _around != null and is_instance_valid(_around):
 		var center: Vector3i = _cell_of_point(_point_of(_around))
 		_refill_wanted(center)
@@ -294,6 +318,7 @@ func stream_around(around: Node3D, radius_cells: int, folder: String) -> void:
 	_radius_cells = maxi(radius_cells, 0)
 	_folder = _tidy_folder(folder)
 	_absent.clear()
+	_refused.clear()
 	_streaming = around != null and not _folder.is_empty()
 	_idle_announced = false
 	if _streaming:

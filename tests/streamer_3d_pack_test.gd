@@ -28,6 +28,8 @@ extends \"res://eventsheet_addons/streamer_3d/streamer_3d_behavior.gd\"
 
 var requested_paths: Array[String] = []
 var absent_paths: Array[String] = []
+var failed_paths: Array[String] = []
+var broken_paths: Array[String] = []
 
 func _chunk_scene_exists(path: String) -> bool:
 	return not absent_paths.has(path)
@@ -36,11 +38,13 @@ func _request_load(path: String) -> int:
 	requested_paths.append(path)
 	return OK
 
-func _load_state(_path: String) -> int:
+func _load_state(path: String) -> int:
+	if failed_paths.has(path):
+		return ResourceLoader.THREAD_LOAD_FAILED
 	return ResourceLoader.THREAD_LOAD_LOADED
 
-func _take_chunk(_path: String) -> Node:
-	return Node3D.new()
+func _take_chunk(path: String) -> Node:
+	return null if broken_paths.has(path) else Node3D.new()
 
 func _drop_chunk(chunk: Node) -> void:
 	chunk.free()
@@ -66,6 +70,9 @@ static func run() -> bool:
 	passed = _unloading_reaches_the_sheet_before_the_free(stub) and passed
 	passed = _idle_fires_once_when_the_world_settles(stub) and passed
 	passed = _a_missing_chunk_scene_is_skipped_in_silence(stub) and passed
+	passed = _a_chunk_that_will_not_build_is_asked_for_once(stub) and passed
+	passed = _the_world_a_row_sees_while_a_chunk_leaves(stub) and passed
+	passed = _a_streamer_whose_node_is_gone_parks_its_tick(stub) and passed
 	return passed
 
 
@@ -343,4 +350,89 @@ static func _a_missing_chunk_scene_is_skipped_in_silence(stub: GDScript) -> bool
 			requested.has("res://world/chunks/chunk_0_0_0.tscn"), false],
 		["the other eight of the ring still arrive", loaded, 8],
 		["and the streamer settles instead of retrying the hole for ever", quiet, true],
+	])
+
+
+## The other half of the hole: a cell whose scene IS there and cannot be turned into a chunk. A
+## failed threaded load and a file that is not a PackedScene both end with nothing to place, and
+## a cell that nothing writes down is wanted again the very next frame - which is one engine
+## error per frame for ever, a streamer that never says it is idle, and a loading screen that
+## never goes away. Each is asked for exactly once.
+static func _a_chunk_that_will_not_build_is_asked_for_once(stub: GDScript) -> bool:
+	var streamer: Node = stub.new()
+	var around: Node3D = Node3D.new()
+	streamer.cell_size = Vector3(100.0, 100.0, 100.0)
+	streamer.failed_paths = ["res://world/chunks/chunk_0_0_0.tscn"] as Array[String]
+	streamer.broken_paths = ["res://world/chunks/chunk_1_0_0.tscn"] as Array[String]
+	var idle_count: Array[int] = [0]
+	streamer.streaming_idle.connect(func() -> void: idle_count[0] += 1)
+	streamer.stream_around(around, 1, "res://world/chunks")
+	for tick: int in range(20):
+		streamer._process(0.016)
+	var requested: Array = streamer.requested_paths.duplicate()
+	var failed_asks: int = requested.count("res://world/chunks/chunk_0_0_0.tscn")
+	var broken_asks: int = requested.count("res://world/chunks/chunk_1_0_0.tscn")
+	var loaded: int = streamer.loaded_chunk_count()
+	var quiet: bool = not streamer.is_loading_chunks()
+	var settled: int = idle_count[0]
+	streamer.free()
+	around.free()
+	return SUPPORT.pins(TEST, [
+		["a chunk whose load failed is asked for once", failed_asks, 1],
+		["a file that is not a scene is asked for once", broken_asks, 1],
+		["the other seven of the ring still arrive", loaded, 7],
+		["the streamer stops loading instead of retrying for ever", quiet, true],
+		["and the world settles exactly once", settled, 1],
+	])
+
+
+## Inside On Chunk Unloading the chunk is still in the world, so the two questions a row would
+## ask about it there answer about the world it is looking at - not about the one it is a frame
+## away from becoming.
+static func _the_world_a_row_sees_while_a_chunk_leaves(stub: GDScript) -> bool:
+	var streamer: Node = stub.new()
+	var around: Node3D = Node3D.new()
+	streamer.cell_size = Vector3(100.0, 100.0, 100.0)
+	streamer.keep_radius_cells = 0
+	var seen: Array = []
+	streamer.chunk_unloading.connect(func(_chunk: Node, cell: Vector3i) -> void:
+		seen.append([streamer.chunk_is_loaded_at(Vector3(cell) * 100.0 + Vector3(50.0, 50.0, 50.0)),
+			streamer.loaded_chunk_count()]))
+	streamer.stream_around(around, 0, "res://world/chunks")
+	for tick: int in range(3):
+		streamer._process(0.016)
+	around.position = Vector3(0.0, 0.0, 950.0)
+	for tick: int in range(3):
+		streamer._process(0.016)
+	var after: int = streamer.loaded_chunk_count()
+	streamer.free()
+	around.free()
+	return SUPPORT.pins(TEST, [
+		["the leaving chunk is still loaded while the row runs", seen[0] if seen.size() == 1 else [],
+			[true, 1]],
+		["and it is gone once the row is over", after, 1],
+	])
+
+
+## A streamer whose followed node has been freed has no centre to build a wanted set around. It
+## stops following rather than asking an unanswerable question every frame for the rest of the
+## game, which is what lets its tick park itself.
+static func _a_streamer_whose_node_is_gone_parks_its_tick(stub: GDScript) -> bool:
+	var streamer: Node = stub.new()
+	var around: Node3D = Node3D.new()
+	streamer.cell_size = Vector3(100.0, 100.0, 100.0)
+	streamer.stream_around(around, 0, "res://world/chunks")
+	for tick: int in range(3):
+		streamer._process(0.016)
+	var ticking_while_followed: bool = streamer.is_processing()
+	around.free()
+	for tick: int in range(3):
+		streamer._process(0.016)
+	var ticking_after: bool = streamer.is_processing()
+	var quiet: bool = not streamer.is_loading_chunks()
+	streamer.free()
+	return SUPPORT.pins(TEST, [
+		["a streamer following something ticks", ticking_while_followed, true],
+		["a streamer whose node was freed parks its tick", ticking_after, false],
+		["and it asks for nothing more", quiet, true],
 	])
