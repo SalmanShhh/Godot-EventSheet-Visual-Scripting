@@ -4086,7 +4086,18 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# synthesizes for it (`__marker_<uid>`), which exists only inside a sheet that applied the row.
 	# There is no hand-written line for it to claim, and the shipped Reached Marker already speaks
 	# for the marker comparison a person writes by hand.
-	"AnimationJustPastMarker"
+	"AnimationJustPastMarker",
+	# The two blend-tree writes whose template is `set("parameters/<something>/<field>", value)`.
+	# That line already HAS a reading, and a richer one: the shipped animation aspect says
+	# `CharacterBody3D ▸ Animation ▸ Set Locomotion blend to pace`, naming the object the tree
+	# belongs to and grouping the line with the travel and one-shot lines written beside it.
+	# Admitted to the reverse index these two claim the line first and it reads
+	# `System ▸ set Locomotion blend to pace` instead - the object gone, the aspect gone, and two
+	# of four lines of one block reading in a different shape from the other two. Same rule as the
+	# rows above: a lift is worth making only when it reads at least as well as the line it
+	# replaced. Both author the same bytes either way, so the picker keeps its blend-tree words and
+	# a hand-written tree keeps the sentence that already opens it.
+	"SetBlendPosition", "SetTreeTimeScale"
 ]
 
 
