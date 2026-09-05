@@ -72,6 +72,13 @@ const FILE_PATH: String = "user://moment_block_test_boss_hit.tres"
 ## class cache has not caught up with fails for the wrong reason.
 const JUICE_SCRIPT: String = "res://eventsheet_addons/juice/juice_behavior.gd"
 
+## The five scripts the compiles and round trips below write. Named once and used at both the
+## compile and the clean-up, so the two cannot drift apart.
+const COMPILED: Array[String] = [
+	"user://moment_block_test.gd", "user://moment_range_test.gd", "user://moment_loop_test.gd",
+	"user://moment_bridge_test.gd", "user://moment_authored_test.gd",
+]
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -83,7 +90,17 @@ static func run() -> bool:
 	passed = _pin_the_file_bridge() and passed
 	passed = _pin_the_two_homes() and passed
 	passed = _pin_the_authoring() and passed
+	_cleanup()
 	return passed
+
+
+## Everything this test wrote. A compile writes to where it is told to compile, so each round trip
+## leaves a script in the user folder - and on CI the whole suite runs serially in one process, so
+## what one test leaves behind is state the next one sees.
+static func _cleanup() -> void:
+	for path: String in COMPILED:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 
 ## The coroutine a block compiles to, by value - and the same text twice, because emission being

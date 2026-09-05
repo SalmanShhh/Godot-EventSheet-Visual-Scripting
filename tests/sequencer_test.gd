@@ -53,7 +53,15 @@ static func run() -> bool:
 	ok = _test_a_jump_moves_the_head() and ok
 	ok = _test_a_stopped_head_steps_nothing() and ok
 	ok = _test_a_crossed_cell_is_said_out_loud() and ok
+	_cleanup()
 	return ok
+
+
+## The listener script this test wrote. On CI the whole suite runs serially in one process, so a
+## file left in the user folder is state the next test sees.
+static func _cleanup() -> void:
+	if FileAccess.file_exists(LISTENER_PATH):
+		DirAccess.remove_absolute(LISTENER_PATH)
 
 
 ## The seven rows, by the bytes they emit. Every one of them acts on the object the row is on, which
