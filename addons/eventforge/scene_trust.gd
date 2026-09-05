@@ -68,7 +68,16 @@ const SCENE_EXTENSIONS: PackedStringArray = [".tscn", ".scn"]
 ## scene is Scene File Is Data-Only - a question that reads a SCENE TABLE and answers false for
 ## anything else. A door that put it over a `.gd` would be a fix that cannot work, so the finding
 ## these raise carries no door and says what to do in words instead.
-const CODE_FILE_EXTENSIONS: PackedStringArray = [".gd", ".tres", ".res"]
+##
+## AND THE TWO THAT ARE NOT TABLES BUT CONTAINERS. A `.gdextension` names a NATIVE library, which is
+## machine code the engine loads into its own process - the widest of all of these, and the one no
+## sandbox in the language reaches. A `.pck` or a `.zip` handed to `ProjectSettings.load_resource_pack`
+## is wider still in a different direction: it MOUNTS its contents into `res://`, which is the one
+## place the rest of this plugin treats as the game's own by construction, so a stranger's pack does
+## not merely add code - it can replace the game's.
+const CODE_FILE_EXTENSIONS: PackedStringArray = [
+	".gd", ".tres", ".res", ".gdextension", ".pck", ".zip",
+]
 
 ## The calls that BUILD what a file describes. `preload(` is deliberately not one: it takes a
 ## constant path, so a preloaded scene is a file the game shipped with by construction.
@@ -77,9 +86,13 @@ const CODE_FILE_EXTENSIONS: PackedStringArray = [".gd", ".tres", ".res"]
 ## spelled with its DOT because it is a method on the tree and is always written on something
 ## (`get_tree().change_scene_to_file(...)`); the loaders are spelled without one because they are
 ## reached by their own name.
+##
+## `ProjectSettings.load_resource_pack(` is one of them for the reason its extensions above give: it
+## builds nothing at the moment it runs and everything after it may be, because the pack's scripts,
+## scenes and resources ARE `res://` from then on.
 const LOAD_CALLS: PackedStringArray = [
 	"load(", "ResourceLoader.load(", "ResourceLoader.load_threaded_request(",
-	".change_scene_to_file(",
+	".change_scene_to_file(", "ProjectSettings.load_resource_pack(",
 ]
 
 ## The marks the reading of a `.tscn` is written with. A scene file is a run of TAGS - `[gd_scene]`,
@@ -145,11 +158,23 @@ static func loaded_scene_paths(line: String) -> PackedStringArray:
 static func untrusted_scene_paths(line: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for path_expression: String in loaded_scene_paths(line):
-		var place: String = EventForgeFilePlaces.place_of(path_expression)
-		if place == EventForgeFilePlaces.PLACE_USER \
-				or place == EventForgeFilePlaces.PLACE_ABSOLUTE:
+		if outside_the_games_own(path_expression):
 			found.append(path_expression)
 	return found
+
+
+## True when a path expression names a file this project cannot vouch for. The player's folder and an
+## absolute OS path are the two obvious ones - and the third is the one a `res://` prefix hides: a
+## literal that CLIMBS OUT (`res://../payload.gd`) begins with the scheme that means the game's own
+## files and names a file beside the project, which is not the same thing at all. The emitted
+## question already refuses a climb inside a scene table for exactly this reason; the readings that
+## decide whether to ask it now refuse one too, so the two halves say one thing.
+static func outside_the_games_own(path_expression: String) -> bool:
+	var place: String = EventForgeFilePlaces.place_of(path_expression)
+	if place == EventForgeFilePlaces.PLACE_USER or place == EventForgeFilePlaces.PLACE_ABSOLUTE:
+		return true
+	return place == EventForgeFilePlaces.PLACE_RES \
+		and EventForgeFilePlaces.literal_of(path_expression).contains(CLIMB_OUT)
 
 
 ## The script and resource paths one line builds that this project cannot vouch for: the same reading
@@ -162,11 +187,9 @@ static func untrusted_code_file_paths(line: String) -> PackedStringArray:
 		while at >= 0:
 			var argument: String = _first_argument(
 				_arguments_after(line, at + call_text.length()))
-			if names_a_code_file(argument) and not found.has(argument):
-				var place: String = EventForgeFilePlaces.place_of(argument)
-				if place == EventForgeFilePlaces.PLACE_USER \
-						or place == EventForgeFilePlaces.PLACE_ABSOLUTE:
-					found.append(argument)
+			if names_a_code_file(argument) and not found.has(argument) \
+					and outside_the_games_own(argument):
+				found.append(argument)
 			at = _call_at(line, call_text, at + call_text.length())
 	return found
 

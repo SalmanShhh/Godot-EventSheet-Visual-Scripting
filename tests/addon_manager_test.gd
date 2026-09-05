@@ -77,6 +77,20 @@ static func run() -> bool:
 		EventSheetAddonManagerDialog.is_safe_entry("/etc/passwd"), false) and all_passed
 	all_passed = _check("a drive-letter entry is refused",
 		EventSheetAddonManagerDialog.is_safe_entry("C:/somewhere/else.gd"), false) and all_passed
+	# THE COLON IS REFUSED WHEREVER IT IS, not only in front. On Windows a name carrying one opens an
+	# ALTERNATE DATA STREAM on the file beside it - content that lands on disk and that no folder
+	# listing ever shows - and a colon in the middle of a path is a drive-relative name (`C:pack.gd`
+	# means "the current folder of drive C"). Neither is a file name, and the guard already refused
+	# both by construction; these say so out loud, because a later guard written for `..` alone would
+	# have let them through.
+	all_passed = _check("an alternate-data-stream name is refused",
+		EventSheetAddonManagerDialog.is_safe_entry("readme.txt:payload"), false) and all_passed
+	all_passed = _check("and a colon anywhere further in is refused too",
+		EventSheetAddonManagerDialog.is_safe_entry("my_pack/inner:stream.gd"), false) and all_passed
+	all_passed = _check("a step out written with backslashes is refused",
+		EventSheetAddonManagerDialog.is_safe_entry("..\\..\\project.godot"), false) and all_passed
+	all_passed = _check("and a leading backslash is refused",
+		EventSheetAddonManagerDialog.is_safe_entry("\\etc\\passwd"), false) and all_passed
 	all_passed = _check("a pack that reads shows no score",
 		EventSheetAddonManagerDialog.reading_badge_text({"reads_percent": 100}), "") and all_passed
 	all_passed = _check("a pack that does not carries it",

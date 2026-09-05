@@ -601,7 +601,7 @@ static func untrusted_code_file_findings(sources: Dictionary) -> Array[Dictionar
 		var message: String = EventSheetL10n.translate("%s loads a script or a resource file the game did not ship with. First: %s.") % [
 			script_path.get_file(), lines[0]]
 		message += _and_more(lines)
-		message += " " + EventSheetL10n.translate("A .gd file IS code, and a .tres or a .res is a table that can name one, so loading either runs its author's code with everything this game can reach: the player's files, their network, their machine.")
+		message += " " + EventSheetL10n.translate("A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.")
 		message += " " + EventSheetL10n.translate("There is no question to ask first about these the way there is about a scene file, because the file being read is not a scene. Read it as DATA instead - Read Text File (or a fallback) for text, Table From File for rows and columns, JSON for a structure - or, if this game means to run code its players wrote, say so where they can read it.")
 		message += " " + EventSheetL10n.translate("This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about.")
 		findings.append(_finding("warning", CHECK_UNTRUSTED_CODE_FILE, script_path, message,

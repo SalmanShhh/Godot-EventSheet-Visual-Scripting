@@ -550,6 +550,53 @@ static func _test_the_other_code_files() -> bool:
 	ok = _check("and this one says nothing about a .tscn",
 		EventSheetFilesDoctor.untrusted_code_file_lines(UNASKED).size(), 0) and ok
 
+	# THE res:// PREFIX IS NOT A PROMISE. A literal that climbs out of the project begins with the
+	# scheme that means the game's own files and names a file beside the project - which is the very
+	# shape the emitted question already refuses inside a scene table, so the reading that decides
+	# whether to ask it has to refuse one too.
+	const CLIMBED_OUT_SCRIPT: String = "extends Node
+
+
+func _ready() -> void:
+	var mod = load(\"res://../payload.gd\")
+"
+	const CLIMBED_OUT_SCENE: String = "extends Node
+
+
+func _ready() -> void:
+	add_child(load(\"res://../payload.tscn\").instantiate())
+"
+	# The two that are containers rather than tables, and the call that mounts one over res://.
+	const NATIVE_LIBRARY: String = "extends Node
+
+
+func _ready() -> void:
+	var lib = load(\"user://mods/speed.gdextension\")
+"
+	const PACK_MOUNTED: String = "extends Node
+
+
+func _ready() -> void:
+	ProjectSettings.load_resource_pack(\"user://mods/extra.pck\")
+"
+	const SHIPPED_PACK: String = "extends Node
+
+
+func _ready() -> void:
+	ProjectSettings.load_resource_pack(\"res://dlc/extra.pck\")
+"
+	ok = _check("a script reached by climbing out of res:// is reported",
+		EventSheetFilesDoctor.untrusted_code_file_lines(CLIMBED_OUT_SCRIPT).size(), 1) and ok
+	ok = _check("and so is a scene reached the same way",
+		EventSheetFilesDoctor.untrusted_scene_lines(CLIMBED_OUT_SCENE).size(), 1) and ok
+	ok = _check("a native library out of the player's folder is reported",
+		EventSheetFilesDoctor.untrusted_code_file_lines(NATIVE_LIBRARY).size(), 1) and ok
+	ok = _check("and a pack mounted over the game's own files from there",
+		EventSheetFilesDoctor.untrusted_code_file_lines(PACK_MOUNTED),
+		PackedStringArray(["ProjectSettings.load_resource_pack(\"user://mods/extra.pck\")"])) and ok
+	ok = _check("while the game's own downloadable content is nobody's business",
+		EventSheetFilesDoctor.untrusted_code_file_lines(SHIPPED_PACK).size(), 0) and ok
+
 	var filed: Array[Dictionary] = EventSheetFilesDoctor.untrusted_code_file_findings(
 		{"res://mods.gd": SCRIPT_LOADED})
 	ok = _check("it is filed under its own id", filed.size() == 1

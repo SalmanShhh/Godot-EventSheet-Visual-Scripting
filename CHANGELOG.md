@@ -5047,6 +5047,23 @@ A boundary review read the three lift families, the guards and the pages against
   then held against `ClassDB` in both directions - nothing in them the engine does not have, and
   nothing the engine has that they do not - so the next `save` method Godot grows fails the suite
   rather than going quiet.
+- **A `res://` prefix is not a promise, and two containers are not tables.** `load("res://../payload.gd")`
+  begins with the scheme that means the game's own files and names a file BESIDE the project, and
+  both trust readings cleared it for exactly that reason - while the question the rows emit already
+  refuses a climb inside a scene table, so the two halves of one boundary disagreed. One reading
+  decides now, for scenes and for the rest alike, and it refuses a climb. Beside it, three
+  extensions joined the list: a `.gdextension` is a NATIVE library, machine code loaded into the
+  engine's own process, and a `.pck` or a `.zip` handed to `ProjectSettings.load_resource_pack` is
+  wider still in a different direction - it MOUNTS its contents into `res://`, so a stranger's pack
+  does not merely add code, it can replace the game's. That call is one of the loaders now, and the
+  finding's words name what each of them really is. A pack the game ships with stays nobody's
+  business.
+- **The archive guard's colon refusal is written down.** An entry name carrying a colon opens an
+  alternate data stream on Windows - content that lands on disk and that no folder listing shows -
+  and a colon further in is a drive-relative name. The import guard refused both by construction and
+  nothing said so, which is how a later guard written for `..` alone would have quietly lost them.
+  Four pins now stand where one did: the stream name, the colon further in, a step out spelled with
+  backslashes, and a leading backslash.
 
 
 ### Every call on a known class is a row
