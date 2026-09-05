@@ -219,6 +219,7 @@ static func build() -> bool:
 		[["action_name", "String"], ["input_key", "String"], ["curve", "String"], ["weight", "float"], ["curve_center", "float"], ["curve_slope", "float"]],
 		"if not _actions.has(action_name):\n\treturn\n(_actions[action_name].considerations as Array).append({\"input\": input_key, \"curve\": curve, \"weight\": maxf(weight, 0.0), \"center\": curve_center, \"slope\": curve_slope})")
 	_param_options(sheet, "curve", ["linear", "inverse", "quadratic", "inverse_quadratic", "logistic", "threshold", "bell"])
+	_quoted_argument(sheet, "add_consideration({action_name}, {input_key}, \"{curve}\", {weight}, {curve_center}, {curve_slope})")
 	_default(sheet, "curve", "linear")
 	_default(sheet, "weight", "1.0")
 	_default(sheet, "curve_center", "0.5")
@@ -333,6 +334,17 @@ static func build() -> bool:
 	})
 	Lib.feature_verbs(sheet, ["add_action", "set_input", "evaluate"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/utility_ai/utility_ai_addon")
+
+
+## Gives the last-appended ACE a call template that QUOTES its dropdown argument. A dropdown key is
+## inserted into the call verbatim, so a String argument picked from a list of words has to carry its
+## own quotes in the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter
+## wraps it again and the scanner strips one pair back off). Without this a row picking logistic
+## asked `add_consideration(name, key, logistic, ...)`, an undefined identifier, and the game did not
+## parse. The call prefix is the pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
 
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value

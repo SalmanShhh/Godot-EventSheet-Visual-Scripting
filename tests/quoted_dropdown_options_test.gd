@@ -46,7 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"utility_ai/utility_ai_addon.gd:curve",
 	"wrap/wrap_behavior.gd:space",
 ]
 
@@ -127,6 +126,11 @@ const ACTIONS := [
 		{"id": "\"tavern\"", "mode": "not_recent", "within": "5"}],
 	[TILE_MOVEMENT, "$TileMovementBehavior.simulate_step(\"{direction}\")",
 		"$TileMovementBehavior.simulate_step(\"up\")", {"direction": "up"}],
+	[UTILITY_AI,
+		"$UtilityBrain.add_consideration({action_name}, {input_key}, \"{curve}\", {weight}, {curve_center}, {curve_slope})",
+		"$UtilityBrain.add_consideration(\"flee\", \"health\", \"inverse\", 1.0, 0.5, 1.0)",
+		{"action_name": "\"flee\"", "input_key": "\"health\"", "curve": "inverse", "weight": "1.0",
+			"curve_center": "0.5", "curve_slope": "1.0"}],
 ]
 
 const CONDITIONS := [
