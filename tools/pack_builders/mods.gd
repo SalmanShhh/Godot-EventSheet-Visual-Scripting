@@ -125,6 +125,20 @@ static func build() -> bool:
 ## Pre-fills the last-declared verb's parameter default, so a dropped row opens with a usable value
 ## instead of an empty field (authoring-time metadata only - defaults never appear in the compiled
 ## .gd of a game that uses the row).
+##
+## THE VALUES BELOW ARE EXPRESSIONS, because every slot in this pack's templates is bare: a bare slot
+## takes whatever the field holds and splices it into the call, so a String argument has to arrive
+## already carrying its quotes. That is the same reading the shipped `codegen_template`s freeze, and
+## it is why a word is spelled here as "word" rather than as word.
+##
+## A quoted value spelled this way DOES NOT SURVIVE the annotation round trip, and it does not have
+## to today: the emitter writes a `default:` segment only for a parameter that also carries help
+## (`SheetCompiler._param_annotation_lines` returns early on an empty description), and no parameter
+## in this file declares any, so none of these values reaches the shipped pack at all. The day one of
+## them gains its help sentence the default starts shipping, both annotation readers strip one
+## surrounding pair of quotes off it, and the row writes a bare word no game declares.
+## `tests/pack_default_rows_compile_test.gd` compiles every shipped row with the value it opens on,
+## so that day ends in a red gate rather than in a game that does not parse.
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:

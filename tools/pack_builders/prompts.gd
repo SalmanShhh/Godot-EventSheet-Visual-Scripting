@@ -151,6 +151,23 @@ static func build() -> bool:
 ## Pre-fills the last-declared verb's parameter default, so a dropped row opens with a usable value
 ## instead of an empty field (authoring-time metadata only - defaults never appear in the compiled
 ## .gd of a game that uses the row).
+##
+## THIS PACK HOLDS BOTH SPELLINGS, and which one a value takes is decided by its own template.
+## `force_device` and `grade_is` go through `_quoted_call` below, so their slot carries the quotes
+## and their starting value is the bare word the field holds - `auto`, `perfect`. Every other slot
+## here is bare, which means it splices whatever the field holds straight into the call, so a String
+## argument has to arrive already carrying its quotes: that is why `sequence`'s list of actions is
+## spelled as "ui_left, ui_right, ui_accept" rather than as the bare words. Both readings are frozen
+## by the shipped `codegen_template`s, so the value follows the template and never the other way.
+##
+## A quoted value spelled this way DOES NOT SURVIVE the annotation round trip, and it does not have
+## to today: the emitter writes a `default:` segment only for a parameter that also carries help
+## (`SheetCompiler._param_annotation_lines` returns early on an empty description), and no parameter
+## in this file declares any, so none of these values reaches the shipped pack at all. The day one of
+## them gains its help sentence the default starts shipping, both annotation readers strip one
+## surrounding pair of quotes off it, and the row writes a bare word no game declares.
+## `tests/pack_default_rows_compile_test.gd` compiles every shipped row with the value it opens on,
+## so that day ends in a red gate rather than in a game that does not parse.
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:
