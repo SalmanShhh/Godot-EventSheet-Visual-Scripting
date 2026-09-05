@@ -95,7 +95,7 @@ var _said_no_compositor: bool = false
 ## @ace_name("Add Post Effect")
 ## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
 ## @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect. Each one runs a compute shader over the whole frame, so each one costs a pass over every pixel the camera drew.")
-## @ace_param(called, default: vignette, desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
+## @ace_param(called, default_word: "", desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
 ## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
 ## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
 ## @ace_codegen_template("$PostKitBehavior.add_post_effect("{effect}", "{called}", {strength})")

@@ -345,7 +345,7 @@ func _seed_dials() -> void:
 ## @ace_name("Add Post Effect")
 ## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
 ## @ace_param(effect, options: vignette=Vignette|film grain=Film grain|scanlines=Scanlines|pixelate=Pixelate|colour grade=Colour grade|dither=Dither|fisheye=Fisheye|glitch=Glitch|letterbox=Letterbox|bloom=Bloom|saturate=Saturate|desaturate=Desaturate, default: vignette, desc: "Which effect. Each one reads the screen back, so each one costs a screen read per pixel it covers.")
-## @ace_param(called, default: vignette, desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
+## @ace_param(called, default_word: "", desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
 ## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.add_post_effect("{effect}", "{called}", {strength})")
@@ -526,7 +526,7 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, secon
 ## @ace_name("Move Post Effect Before")
 ## @ace_display_template("Draw [b]{called}[/b] before [b]{before}[/b]")
 ## @ace_param(called, default: vignette, desc: "The entry to move.")
-## @ace_param(before, default: film grain, desc: "The entry it should be drawn before. Empty moves it to the very end, so it has the last word.")
+## @ace_param(before, default_word: "", desc: "The entry it should be drawn before. Empty moves it to the very end, so it has the last word.")
 ## @ace_icon("res://eventsheet_addons/screen_fx/icon.svg")
 ## @ace_codegen_template("$ScreenFx.move_post_effect_before("{called}", "{before}")")
 func move_post_effect_before(called: String = "vignette", before: String = "") -> void:
