@@ -23,14 +23,15 @@
 ### Fixed: eighteen shipped rows that did not compile with the values they open on
 
 - **Every row in Juice, Juice 3D, Screen FX and Post Kit now parses the moment it is dropped.** A
-  new gate walks all 163 bundled packs, fills each of their 4,016 actions and conditions with its
-  SHIPPED starting values and compiles the call. Eighteen rows did not build: `Moment`,
-  `Define Moment`, `Play Moment At`, `Play Moment Backwards`, `Revert Moment`, `Skip Moment To End`,
-  `Restore Moment Values`, `Moment Is Playing`, `Moment Is Reverting`, `Moment Was Cut Short`,
-  `Moment Progress`, `Moment Elapsed`, `Moment Step Name`, `Shake Channel`, `Listen On Channel` and
-  `Stop Listening On Channel` in Juice, the last three again in Juice 3D, and `Add Post Effect` and
-  `Move Post Effect Before` in Screen FX and Post Kit. A dropped row that does not compile is the
-  worst kind of defect for a beginner: the sheet looks right and the game does not parse.
+  new gate walks all 163 provider scripts the bundled packs publish, fills each of their 4,016
+  actions and conditions with its SHIPPED starting values and compiles the call. Eighteen rows did
+  not build: `Moment`, `Define Moment`, `Play Moment At`, `Play Moment Backwards`, `Revert Moment`,
+  `Skip Moment To End`, `Restore Moment Values`, `Moment Is Playing`, `Moment Is Reverting`, `Moment
+  Was Cut Short`, `Moment Progress`, `Moment Elapsed`, `Moment Step Name`, `Shake Channel`, `Listen
+  On Channel` and `Stop Listening On Channel` in Juice, the last three again in Juice 3D, and `Add
+  Post Effect` and `Move Post Effect Before` in Screen FX and Post Kit. A dropped row that does not
+  compile is the worst kind of defect for a beginner: the sheet looks right and the game does not
+  parse.
 - **Juice and Juice 3D: the moment name and the channel name are quoted by the TEMPLATE.** Both
   took a word - `impact`, `hover`, `intro`, `props` - through an unquoted slot, so the starting word
   reached the call as an undefined identifier. Every one of those rows now carries the quotes in its
@@ -231,21 +232,22 @@
 
 ### Fixed in the vocabulary and the picker
 
-- **Every shipped pack row is now compiled with the value it opens on.** The built-in vocabulary
-  has had that gate for a while; the packs, which is where a hand-written call template and a
-  dropdown of words actually live, never did. The new one walks every pack the scanner finds, fills
-  each parameter with its shipped starting value, emits the call through the real codegen and parses
-  it: 163 packs, 4016 rows. **Eighteen rows do not compile**, and they are named with their cause
-  rather than hidden. They are one defect wearing two faces: a starting value reaches a pack as bare
-  annotation text and both readers strip one surrounding pair of quotes off it, so a default cannot
-  say whether it is a WORD or a LITERAL. Juice's **Moment**, **Define Moment**, **Play Moment
-  Backwards**, **Revert Moment**, **Skip To End**, **Was Cut Short**, **Moment Progress**, **Moment
-  Elapsed**, **Moment Step Name**, **Shake Channel**, **Listen On Channel** and **Stop Listening On
-  Channel** (and the last three again in Juice 3D) quote nothing, so their starting words `impact`,
-  `hover`, `intro` and `props` reach the call as undefined identifiers; Screen FX's **Add Post
-  Effect** and **Move Post Effect Before** and Post Kit's **Add Post Effect** quote the slot, so the
-  empty starting name reaches it as four quote characters. Until a default can carry its own
-  quoting, each of those rows needs its name typed in by hand before the sheet compiles.
+- **Every shipped pack row is now compiled with the value it opens on.** The built-in vocabulary has
+  had that gate for a while; the packs, which is where a hand-written call template and a dropdown
+  of words actually live, never did. The new one walks every pack the scanner finds, fills each
+  parameter with its shipped starting value, emits the call through the real codegen and parses it:
+  163 provider scripts, 4016 rows. **Eighteen rows do not compile**, and they are named with their
+  cause rather than hidden. They are one defect wearing two faces: a starting value reaches a pack
+  as bare annotation text and both readers strip one surrounding pair of quotes off it, so a default
+  cannot say whether it is a WORD or a LITERAL. Juice's **Moment**, **Define Moment**, **Play Moment
+  Backwards**, **Revert Moment**, **Skip Moment To End**, **Moment Was Cut Short**, **Moment
+  Progress**, **Moment Elapsed**, **Moment Step Name**, **Shake Channel**, **Listen On Channel** and
+  **Stop Listening On Channel** (and the last three again in Juice 3D) quote nothing, so their
+  starting words `impact`, `hover`, `intro` and `props` reach the call as undefined identifiers;
+  Screen FX's **Add Post Effect** and **Move Post Effect Before** and Post Kit's **Add Post Effect**
+  quote the slot, so the empty starting name reaches it as four quote characters. Until a default
+  can carry its own quoting, each of those rows needs its name typed in by hand before the sheet
+  compiles.
 
 - **A dropdown whose answer is BLANK offers it.** Several verbs are built around an empty value
   meaning something - **Scale Feedback Amounts** says in its own description to leave the family
