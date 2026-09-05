@@ -1708,7 +1708,11 @@ static func _split_option_pairs(value: String) -> Array:
 			var closing: int = entry.find("\"", 1)
 			equals_index = entry.find("=", closing + 1) if closing > 0 else -1
 		if equals_index <= 0:
-			pairs.append({"key": entry, "label": entry})
+			# An entry with no label is its own label - and it is UNQUOTED here, exactly as the
+			# analyzer unquotes it, because the quotes an emitted key wears are the escape that let
+			# it hold a separator (or be empty at all), never characters of the key itself.
+			var bare: String = _unquoted_once(entry)
+			pairs.append({"key": bare, "label": bare})
 			continue
 		var key: String = _unquoted_once(entry.substr(0, equals_index).strip_edges())
 		pairs.append({"key": key, "label": entry.substr(equals_index + 1).strip_edges()})
@@ -1760,13 +1764,57 @@ static func _parse_successor_annotation(inner: String) -> Dictionary:
 	return read
 
 
-## One text split on a separator that is OUTSIDE any quoted string - the same reading the analyzer
-## gives an annotation, so the line written back is the line that was read. A separator inside a
-## string literal is a character of that literal and nothing else.
+## The brackets a value may be WRITTEN with - a Dictionary or Array literal, a constructor call. A
+## separator between them belongs to that literal, not to the line around it.
+const VALUE_OPENERS: String = "{[("
+const VALUE_CLOSERS: String = "}])"
+
+
+## True when every bracket outside a quoted string in `text` is closed by its own kind, in order.
+## Asked BEFORE the split so a malformed line - prose with a stray `(`, a truncated annotation -
+## reads exactly the way it read before groups were understood at all, rather than swallowing the
+## rest of the line into one runaway segment.
+static func _brackets_balance(text: String) -> bool:
+	var open_kinds: Array[String] = []
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var here: String = text[index]
+		if not quote.is_empty():
+			if here == "\\" and index + 1 < text.length():
+				index += 2
+				continue
+			if here == quote:
+				quote = ""
+			index += 1
+			continue
+		if here == "\"" or here == "'":
+			quote = here
+		elif VALUE_OPENERS.contains(here):
+			open_kinds.append(VALUE_CLOSERS[VALUE_OPENERS.find(here)])
+		elif VALUE_CLOSERS.contains(here):
+			if open_kinds.is_empty() or open_kinds[open_kinds.size() - 1] != here:
+				return false
+			open_kinds.remove_at(open_kinds.size() - 1)
+		index += 1
+	return quote.is_empty() and open_kinds.is_empty()
+
+
+## One text split on a separator that is OUTSIDE any quoted string AND outside any bracketed value -
+## the same reading the analyzer gives an annotation, so the line written back is the line that was
+## read. A separator inside a string literal, or between the braces of a Dictionary default, is a
+## character of that value and nothing else: `default: {"verb": "shake", "amount": 0.4}` is ONE
+## segment, not three, and a default cut at its first comma is a line the byte gate then refuses,
+## which degrades the whole verb to a verbatim block.
+##
+## A text whose brackets do not balance is split the older, group-blind way, so nothing that parsed
+## before parses differently now.
 static func _split_outside_quotes(text: String, separator: String) -> PackedStringArray:
+	var respect_groups: bool = _brackets_balance(text)
 	var parts: PackedStringArray = PackedStringArray()
 	var held: String = ""
 	var quote: String = ""
+	var depth: int = 0
 	var index: int = 0
 	while index < text.length():
 		var here: String = text[index]
@@ -1786,7 +1834,17 @@ static func _split_outside_quotes(text: String, separator: String) -> PackedStri
 			held += here
 			index += 1
 			continue
-		if text.substr(index, separator.length()) == separator:
+		if respect_groups and VALUE_OPENERS.contains(here):
+			depth += 1
+			held += here
+			index += 1
+			continue
+		if respect_groups and VALUE_CLOSERS.contains(here) and depth > 0:
+			depth -= 1
+			held += here
+			index += 1
+			continue
+		if depth == 0 and text.substr(index, separator.length()) == separator:
 			parts.append(held)
 			held = ""
 			index += separator.length()

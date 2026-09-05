@@ -1,0 +1,163 @@
+# Godot EventSheets - one `@ace_param` line, read the same way by both of its readers.
+#
+# A pack's annotations are parsed TWICE: the importer's lifter reads them back when the file is
+# opened as a sheet, and the semantic analyzer reads them when the pack publishes its vocabulary.
+# The two split the same line, so a line they disagree about publishes one vocabulary and opens as
+# another - and because the lift is gated on the compiler re-emitting the block byte for byte, a
+# mis-split default degrades the whole verb to a verbatim code block.
+#
+# That is exactly what a Dictionary default did: `default: {"verb": "shake", "amount": 0.4}` was cut
+# at the first comma INSIDE the literal, so the line read back was not the line on disk and 22 of
+# the Feedback Player's 54 verbs opened as raw code. The split now understands brackets as well as
+# quotes, and a text whose brackets do not balance falls back to the older, group-blind split so
+# nothing that parsed before parses differently.
+#
+# Pinned by VALUE - the segments themselves, and the default each reader ends up holding - because a
+# count of segments is the same number for a right answer and a wrong one.
+@tool
+class_name AnnotationValueSplitTest
+extends RefCounted
+
+const SUPPORT := preload("res://tests/support.gd")
+
+## The three shapes a comma can hide in, and the plain line that must not change.
+const DICTIONARY_DEFAULT: String = "{\"verb\": \"shake\", \"amount\": 0.4, \"seconds\": 0.2}"
+const ARRAY_DEFAULT: String = "[1.0, 2.0, 3.0]"
+const CALL_DEFAULT: String = "Vector2(0.5, 0.5)"
+const COMMA_IN_QUOTES: String = "\"a, b\""
+
+
+static func run() -> bool:
+	var ok: bool = true
+
+	# ---- 1. The split itself, on both readers, as the segments each returns ----
+	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
+	var cases: Array = [
+		["a Dictionary default is one segment",
+			"step, hint: feedback_step, default: %s, desc: \"Help.\"" % DICTIONARY_DEFAULT,
+			["step", " hint: feedback_step", " default: %s" % DICTIONARY_DEFAULT, " desc: \"Help.\""]],
+		["an Array default is one segment",
+			"sizes, default: %s, desc: \"Help.\"" % ARRAY_DEFAULT,
+			["sizes", " default: %s" % ARRAY_DEFAULT, " desc: \"Help.\""]],
+		["a constructor default is one segment",
+			"offset, default: %s, desc: \"Help.\"" % CALL_DEFAULT,
+			["offset", " default: %s" % CALL_DEFAULT, " desc: \"Help.\""]],
+		["a quoted string holding a comma is one segment",
+			"word, default: %s, desc: \"Slow, steady.\"" % COMMA_IN_QUOTES,
+			["word", " default: %s" % COMMA_IN_QUOTES, " desc: \"Slow, steady.\""]],
+		["a line with no brackets at all splits exactly as it always did",
+			"amount, hint: expression, default: 1.0, desc: \"Help.\"",
+			["amount", " hint: expression", " default: 1.0", " desc: \"Help.\""]],
+		["an UNBALANCED bracket falls back to the older, group-blind split",
+			"amount, desc: half (of it, roughly",
+			["amount", " desc: half (of it", " roughly"]],
+	]
+	for entry: Variant in cases:
+		var row: Array = entry as Array
+		var wanted: Array = row[2] as Array
+		ok = _check("lifter: %s" % row[0], _as_array(EventSheetACELifter._split_outside_quotes(str(row[1]), ",")), wanted) and ok
+		ok = _check("analyzer: %s" % row[0], _as_array(analyzer._split_outside_quotes(str(row[1]), ",")), wanted) and ok
+
+	# ---- 2. The default each reader ends up holding, off the whole annotation line ----
+	for entry: Variant in [
+		["a Dictionary", DICTIONARY_DEFAULT], ["an Array", ARRAY_DEFAULT], ["a constructor", CALL_DEFAULT],
+	]:
+		var row: Array = entry as Array
+		var line: String = "## @ace_param(step, hint: feedback_step, default: %s, desc: \"Help.\")" % row[1]
+		ok = _check("lifter reads %s default whole" % row[0], _lifter_default(line, "step"), str(row[1])) and ok
+		ok = _check("analyzer reads %s default whole" % row[0], _analyzer_default(line, "step"), str(row[1])) and ok
+		ok = _check("lifter keeps the help beside %s default" % row[0], _lifter_description(line, "step"), "Help.") and ok
+
+	# A quoted default still loses exactly one pair of quotes, which is what makes a word a word.
+	var quoted_line: String = "## @ace_param(word, default: \"a, b\", desc: \"Slow, steady.\")"
+	ok = _check("a quoted default holding a comma survives whole", _lifter_default(quoted_line, "word"), "a, b") and ok
+	ok = _check("the analyzer agrees about it", _analyzer_default(quoted_line, "word"), "a, b") and ok
+
+	# ---- 3. The round trip the lift gate actually asks for ----
+	# The compiler writes the line back from what the lifter read; a mis-split is invisible until the
+	# two texts are held against each other, which is the comparison the byte gate makes.
+	for entry: Variant in [DICTIONARY_DEFAULT, ARRAY_DEFAULT, CALL_DEFAULT, "1.0"]:
+		var written: String = "## @ace_param(step, hint: feedback_step, default: %s, desc: \"Help.\")" % entry
+		ok = _check("re-emitting the line reproduces it: %s" % entry, _reemit(written, "step"), written) and ok
+
+	# And the one shape that CANNOT round-trip, pinned so nobody ships it again: a default whose
+	# value carries its own quotes is read WITHOUT them and written back bare, so the line on disk
+	# and the line the compiler makes of it differ and the byte gate refuses the whole verb. A
+	# word's quotes belong in the call template, never in the value the sheet stores.
+	ok = _check("a default that carries its own quotes comes back bare",
+		_reemit("## @ace_param(word, default: \"shake\", desc: \"Help.\")", "word"),
+		"## @ace_param(word, default: shake, desc: \"Help.\")") and ok
+
+	# ---- 4. An option that is the EMPTY word ships quoted, so it is still there on the way back ----
+	# Written bare it was nothing at all: `options: |audio|camera` came back as the words after the
+	# gap, and the "or leave it empty" entry the list offered silently stopped existing.
+	var empty_first: Array = ["", "audio", "camera"]
+	ok = _check("an empty option is written as a quoted empty word",
+		SheetCompiler._param_option_text(""), "\"\"") and ok
+	ok = _check("the option list keeps its empty entry through a round trip",
+		_option_keys(_emit_options(empty_first)), empty_first) and ok
+	ok = _check("a plain option list is written exactly as it was",
+		_emit_options(["audio", "camera"]), "audio|camera") and ok
+
+	return ok
+
+
+## The `default:` one `@ace_param` line leaves the lifter holding for a parameter.
+static func _lifter_default(line: String, param_id: String) -> String:
+	var fields: Dictionary = EventSheetACELifter._parse_annotations("## @ace_action\n" + line)
+	return str((fields.get("param_defaults", {}) as Dictionary).get(param_id, "<none>"))
+
+
+## The help text beside it - proof the split did not swallow the key after the default.
+static func _lifter_description(line: String, param_id: String) -> String:
+	var fields: Dictionary = EventSheetACELifter._parse_annotations("## @ace_action\n" + line)
+	return str((fields.get("param_descriptions", {}) as Dictionary).get(param_id, "<none>"))
+
+
+## The same question asked of the analyzer, through its own param-spec reader.
+static func _analyzer_default(line: String, param_id: String) -> String:
+	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
+	var overrides: Dictionary = {}
+	var inner: String = line.trim_prefix("## @ace_param(").trim_suffix(")")
+	analyzer._parse_param_spec(inner, overrides)
+	return str((overrides.get("param_defaults", {}) as Dictionary).get(param_id, "<none>"))
+
+
+## One annotation line read by the lifter and written back by the compiler - the gate's own question.
+static func _reemit(line: String, param_id: String) -> String:
+	var fields: Dictionary = EventSheetACELifter._parse_annotations("## @ace_action\n" + line)
+	var ace_param: ACEParam = ACEParam.new()
+	ace_param.id = param_id
+	ace_param.hint = str((fields.get("param_hints", {}) as Dictionary).get(param_id, ""))
+	ace_param.default_value = (fields.get("param_defaults", {}) as Dictionary).get(param_id, "")
+	ace_param.description = str((fields.get("param_descriptions", {}) as Dictionary).get(param_id, ""))
+	var written: PackedStringArray = SheetCompiler._param_annotation_lines(ace_param)
+	return written[0] if written.size() > 0 else "<nothing written>"
+
+
+## An options list as the compiler writes it into an `options:` value.
+static func _emit_options(options: Array) -> String:
+	var texts: PackedStringArray = PackedStringArray()
+	for option_value: Variant in options:
+		texts.append(SheetCompiler._param_option_text(option_value))
+	return "|".join(texts)
+
+
+## The keys the lifter reads back out of such a value - the list the picker would offer.
+static func _option_keys(value: String) -> Array:
+	var keys: Array = []
+	for pair: Variant in EventSheetACELifter._split_option_pairs(value):
+		keys.append(str((pair as Dictionary).get("key", "")))
+	return keys
+
+
+## A PackedStringArray as a plain Array, so a pinned row reads as the segments themselves.
+static func _as_array(parts: Variant) -> Array:
+	var output: Array = []
+	for part: Variant in parts:
+		output.append(str(part))
+	return output
+
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	return SUPPORT.check("annotation_value_split_test", label, actual, expected)

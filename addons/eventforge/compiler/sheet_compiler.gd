@@ -3054,14 +3054,20 @@ static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
 ## Labels have no such escape (the entry itself is comma delimited), so a label containing a comma
 ## degrades to its bare key rather than emitting an annotation that parses into garbage: the
 ## dropdown still offers the right value, it just loses the prettier wording.
+##
+## An EMPTY key ships quoted for the same reason: written bare it is nothing at all, so
+## `options: |audio|camera` came back from the scanner as the six words after the gap and the
+## "or leave it empty" entry the list was offering silently stopped existing. `""|audio|camera`
+## is the same list with its first entry still in it.
 static func _param_option_text(option_value: Variant) -> String:
 	if not option_value is Dictionary:
-		return str(option_value)
+		var plain: String = str(option_value)
+		return "\"\"" if plain.is_empty() else plain
 	var pair: Dictionary = option_value as Dictionary
 	var key: String = str(pair.get("key", ""))
 	var label: String = str(pair.get("label", key))
 	var key_text: String = key
-	if key.contains("=") or key.contains(",") or key.contains("|") or key.begins_with("\""):
+	if key.is_empty() or key.contains("=") or key.contains(",") or key.contains("|") or key.begins_with("\""):
 		key_text = "\"%s\"" % key
 	if label == key or label.is_empty() or label.contains(","):
 		return key_text
