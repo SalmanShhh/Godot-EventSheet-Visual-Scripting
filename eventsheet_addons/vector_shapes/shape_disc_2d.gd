@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 2d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeDisc2D
 extends VectorShape2D
 ## A disc, and by two angles and an inner radius also a ring, a pie and an arc - the cooldown ring, the vision cone and the health arc are all this one node.

@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 3d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeDisc3D
 extends VectorShape3D
 ## A disc, and by two angles and an inner radius also a ring, a pie and an arc - the range ring on the ground, the scanning cone, the cooldown wheel over a unit's head.

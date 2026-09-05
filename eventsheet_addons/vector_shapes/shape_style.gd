@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, style, 2d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeStyle
 extends Resource
 ## A stroke style twenty shapes can share: thickness, caps, colour mode and colours, dashes and blend, as a file. Drop one into a 2D shape's Style slot and those fields are read from the file; save one out of a shape you have tuned with Save As Style.

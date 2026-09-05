@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 3d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeLine3D
 extends VectorShape3D
 ## A line between two points in space, drawn as a strip that faces the camera or the node's own plane - the grapple rope, the laser sight, the tether. Caps, a colour at each end, and dashes that scroll.

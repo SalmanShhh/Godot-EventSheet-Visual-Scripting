@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 3d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeCuboid3D
 extends VectorShape3D
 ## The engine's own box with the family's colour, blend and depth fields on it - the block-out volume, the crate, the trigger you want to see.

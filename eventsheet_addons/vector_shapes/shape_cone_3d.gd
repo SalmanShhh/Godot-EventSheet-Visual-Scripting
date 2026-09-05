@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 3d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeCone3D
 extends VectorShape3D
 ## A cone with an optional cap, wearing the family's colour, blend and depth fields - the spotlight volume, the arrow head, the vision cone you can walk around.

@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 2d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeLine2D
 extends VectorShape2D
 ## A straight line from the node's origin to a point you drag, drawn by distance so it is one crisp pixel wide at any zoom. Caps, a colour at each end, and dashes that scroll.

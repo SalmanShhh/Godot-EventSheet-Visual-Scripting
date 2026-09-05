@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 3d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeRect3D
 extends VectorShape3D
 ## A rectangle with rounded corners (one number, or four), a fill, a border, and dashes on that border - the panel over a machine, the selection box on the floor, the plate behind a health bar.

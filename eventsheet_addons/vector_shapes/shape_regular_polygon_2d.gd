@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 2d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeRegularPolygon2D
 extends VectorShape2D
 ## A shape of N equal sides at a radius: a triangle, a hexagon, a near-circle - filled, bordered and dashable, from two numbers.

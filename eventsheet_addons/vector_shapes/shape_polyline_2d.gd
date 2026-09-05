@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 2d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapePolyline2D
 extends VectorShape2D
 ## A path through points you drag in the viewport, open or closed, with caps and dashes - the route preview, the tether, the drawn trail.

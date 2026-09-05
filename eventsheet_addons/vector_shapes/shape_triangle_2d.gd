@@ -2,7 +2,7 @@
 ## @ace_tags(visual, shapes, drawing, 2d)
 ## @ace_category("Vector Shapes")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeTriangle2D
 extends VectorShape2D
 ## Three corners, the first of them the node's own origin, with a colour per corner if you want one - the arrow head, the wedge, the pointer.
