@@ -49,6 +49,9 @@ static func _pin_the_targets() -> bool:
 			"\t$Reticle.scroll_dashes(0.0)\n")), ""],
 		["and neither is the pack's own declaration of the verb",
 			",".join(EventSheetShapesDoctor.scrolled_targets("func scroll_dashes(speed: float) -> void:\n")), ""],
+		["nor the annotation that spells the row's template, which a substring test cannot tell apart",
+			",".join(EventSheetShapesDoctor.scrolled_targets(
+				"## @ace_codegen_template(\"$VectorShape2D.scroll_dashes({patterns_per_second})\")\n")), ""],
 		["a target named twice is named once", ",".join(EventSheetShapesDoctor.scrolled_targets(
 			"\t$Ring.scroll_dashes(1.0)\n\t$Ring.scroll_dashes(2.0)\n")), "$Ring"],
 		["a node path resolves to its last step",

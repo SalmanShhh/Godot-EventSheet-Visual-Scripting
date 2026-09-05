@@ -62,14 +62,21 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 
 
 ## Every script of the project that marches a shape's dashes, in path order. The substring sweep is
-## the whole corpus question: a project with no shape in it pays one test per file and stops.
+## the cheap question - a project with no shape in it pays one test per file and stops - and a file
+## that passes it is then asked the REAL one, because the summary counts these and a count has to
+## mean what it says. The pack's own scripts pass the substring test on the annotation that spells
+## the row's template, and there is no sheet there at all.
 static func scripts_scrolling_dashes() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheets.project_scripts():
 		if script_path.begins_with(PLUGIN_DIRECTORY):
 			continue
-		if EventSheetProjectDoctor.source_of(script_path).contains(SCROLL_CALL):
-			found.append(script_path)
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if not source.contains(SCROLL_CALL):
+			continue
+		if scrolled_targets(source).is_empty():
+			continue
+		found.append(script_path)
 	return found
 
 
@@ -125,6 +132,10 @@ static func scrolled_targets(source: String) -> PackedStringArray:
 	var targets: PackedStringArray = PackedStringArray()
 	for raw_line: String in source.split("\n"):
 		var line: String = raw_line.strip_edges()
+		# A comment is never a row. The pack spells its own template inside an annotation, so the
+		# declaration of the verb and the line that runs it look alike to a substring test.
+		if line.begins_with("#"):
+			continue
 		var at: int = line.find(SCROLL_CALL)
 		if at <= 0:
 			continue
