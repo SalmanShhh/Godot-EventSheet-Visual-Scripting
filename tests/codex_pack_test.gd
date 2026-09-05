@@ -72,11 +72,16 @@ static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 		templates += 1
 		if not line.begins_with("## @ace_codegen_template(\"Codex."):
 			not_the_autoload += 1
-	return SUPPORT.pins(TEST, [
+	# The instance is held rather than dropped: the pack is a Node, so an inline `script.new()` is a
+	# node nobody frees, and it takes the script's own reference count out with it at exit.
+	var codex: Node = script.new()
+	var passed: bool = SUPPORT.pins(TEST, [
 		["the pack declares codegen templates", templates > 0, true],
 		["every one of them addresses the Codex autoload", not_the_autoload, 0],
-		["the pack answers the save seam", script.new().has_method(&"save_state"), true],
+		["the pack answers the save seam", codex.has_method(&"save_state"), true],
 	])
+	codex.free()
+	return passed
 
 
 # ── A set, not a list ─────────────────────────────────────────────────────────────────────────
