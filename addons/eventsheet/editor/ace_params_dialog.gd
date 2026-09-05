@@ -816,8 +816,16 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 		else:
 			option_key = str(option_entry)
 			option_label = option_key
-		if option_key.is_empty():
-			continue
+			# A bare "" in a plain list is a stray separator rather than a choice anyone wrote.
+			if option_key.is_empty():
+				continue
+		# A BLANK IS AN ANSWER. Some verbs are built around one - "leave the family empty to scale
+		# every card", "leave it where it is" - and a strict dropdown that quietly omitted the blank
+		# made the thing the verb's own description tells you to do impossible to pick. A blank the
+		# author gave no words of its own draws under a placeholder, because an item with no text at
+		# all reads as a rendering fault; the value stored and emitted is still exactly "".
+		if option_label.is_empty():
+			option_label = EventSheetL10n.translate("(none)")
 		dropdown.add_item(option_label)
 		var index: int = dropdown.item_count - 1
 		dropdown.set_item_metadata(index, option_key)

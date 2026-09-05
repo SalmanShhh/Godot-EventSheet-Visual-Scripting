@@ -14,6 +14,16 @@
 #
 # Pinned by VALUE - the segments themselves, and the default each reader ends up holding - because a
 # count of segments is the same number for a right answer and a wrong one.
+#
+# THE WHOLE JOURNEY, not just the reading. An option whose key is the EMPTY word taught this file
+# that surviving both readers is not the same as reaching a person: the pair came back intact and
+# was then dropped three more times on the way to the dropdown, because every normalizer between
+# here and the picker identified an option by its first NON-EMPTY field. A verb whose description
+# says "leave the family empty to move the whole list" published a list with no way to leave it
+# empty, and a built-in whose blank choice carried a LABEL had that label promoted to the key - so
+# picking it would have written the words "keeping its place" into somebody's GDScript. Sections 5
+# and 6 therefore follow one blank all the way: analyzer, generator, adapter, dropdown, and the
+# emitted line it opens and saves back as.
 @tool
 class_name AnnotationValueSplitTest
 extends RefCounted
@@ -98,8 +108,122 @@ static func run() -> bool:
 		_option_keys(_emit_options(empty_first)), empty_first) and ok
 	ok = _check("a plain option list is written exactly as it was",
 		_emit_options(["audio", "camera"]), "audio|camera") and ok
+	# The SECOND writer of the same grammar - the annotation stub a published verb is offered as -
+	# spells the blank the same way. Two writers of one grammar disagreeing means a verb authored
+	# through the stub loses the choice a verb authored through the compiler keeps.
+	ok = _check("the annotation stub writes the empty option quoted too",
+		EventSheetACEAnnotationStub._comment_options(
+			[{"key": "", "label": ""}, {"key": "audio", "label": "audio"}]),
+		"\"\"|audio") and ok
+
+	# ---- 5. The rest of the journey: read back is not the same as PUBLISHED ----
+	# Surviving both readers only got the pair as far as the override dictionary. Three normalizers
+	# stood between that and the picker, and each of them decided an option was identified by its
+	# first NON-EMPTY field - so the blank was read past to the label, or dropped outright, and the
+	# verb's own "leave it empty" instruction named something no dropdown could offer.
+	var blank_first: Array = [{"key": "", "label": ""}, {"key": "audio", "label": "audio"}]
+	ok = _check("the generator keeps an option that spells an empty key",
+		EventSheetACEGenerator.new()._normalize_options_to_key_label(blank_first), blank_first) and ok
+	# An entry that names NONE of key/value/label is still nothing, and a bare "" in a plain list is
+	# still a stray separator - the fix is about a key that was spelled, not about junk.
+	ok = _check("an option naming no field at all is still dropped",
+		EventSheetACEGenerator.new()._normalize_options_to_key_label([{"note": "x"}, "audio"]),
+		[{"key": "audio", "label": "audio"}]) and ok
+	ok = _check("a bare empty entry in a plain list is still dropped",
+		EventSheetACEGenerator.new()._normalize_options_to_key_label(["", "audio"]),
+		[{"key": "audio", "label": "audio"}]) and ok
+
+	# The builtin half, through the adapter every built-in descriptor reaches the picker by. Add
+	# Child's "keeping its place" IS the empty key, and reading past it made the key those three
+	# words - which the template would have written into somebody's file as bare GDScript.
+	var keep_param: ACEParam = ACEParam.of("keep", "String", "", "Its place", "", "",
+		[{"key": "", "label": "keeping its place"}, {"key": "false", "label": "snapping to it"}])
+	ok = _check("the adapter keeps the empty key rather than promoting the label",
+		_adapted_options(keep_param),
+		[{"key": "", "label": "keeping its place"}, {"key": "false", "label": "snapping to it"}]) and ok
+
+	# ---- 6. The picker draws it, and the row it writes still compiles and re-emits ----
+	# A strict OptionButton that skipped the blank is where the whole chain was finally invisible:
+	# every earlier layer could hold the pair and the reader still could not choose it.
+	ok = _check("the picker offers the blank as a selectable item, keyed on the empty string",
+		_dropdown_items(blank_first), [["(none)", ""], ["audio", "audio"]]) and ok
+	ok = _check("an author-given label on the blank is the words shown",
+		_dropdown_items([{"key": "", "label": "keeping its place"}]),
+		[["keeping its place", ""]]) and ok
+	ok = _check("the blank is the item selected when the parameter opens empty",
+		_dropdown_selected(blank_first, ""), "(none)") and ok
+
+	# The verb the whole thing was reported against, as it actually publishes today.
+	ok = _check("the shipped verb publishes the blank its own description tells you to use",
+		_published_option_keys("res://eventsheet_addons/juice/feedback_player.gd",
+			"method:scale_feedback_amounts", "category"),
+		["", "audio", "transform", "camera", "screen", "pause", "loop", "signal"]) and ok
+
+	# And the line a row carrying that blank becomes still opens and saves byte for byte.
+	var blank_row_source: String = "extends Node2D\n\n\nfunc _ready() -> void:\n\t$FeedbackPlayer.scale_feedback_amounts(\"\", 0.5)\n"
+	ok = _check("a row saved with the blank key re-emits byte for byte",
+		SUPPORT.reemit(blank_row_source, "user://annotation_value_split_blank_option.gd"),
+		blank_row_source) and ok
 
 	return ok
+
+
+## One ACEParam's options as the ACEDefinition adapter hands them to the picker, with the `note`
+## key (empty for every option that declares none) dropped so the pin reads as the pair itself.
+static func _adapted_options(param: ACEParam) -> Array:
+	var descriptor: ACEDescriptor = ACEDescriptor.new()
+	descriptor.ace_id = "AnnotationValueSplitProbe"
+	descriptor.params = [param] as Array[ACEParam]
+	var definition: ACEDefinition = EventSheetACEAdapter.from_eventforge_descriptor(descriptor)
+	var output: Array = []
+	for parameter: Variant in definition.parameters:
+		for option: Variant in (parameter as Dictionary).get("options", []):
+			var pair: Dictionary = (option as Dictionary).duplicate()
+			pair.erase("note")
+			output.append(pair)
+	return output
+
+
+## What the params dialog's dropdown actually holds, as [shown words, stored value] rows - the two
+## halves a strict OptionButton keeps apart, and the only place the stored "" can be seen.
+static func _dropdown_items(options: Array) -> Array:
+	var dropdown: OptionButton = ACEParamsDialog.new()._create_options_field("probe", options, "")
+	var rows: Array = []
+	for index: int in range(dropdown.item_count):
+		rows.append([dropdown.get_item_text(index), str(dropdown.get_item_metadata(index))])
+	dropdown.free()
+	return rows
+
+
+## The words the dropdown opens on for a parameter whose starting value is `opening_value`.
+static func _dropdown_selected(options: Array, opening_value: Variant) -> String:
+	var dropdown: OptionButton = ACEParamsDialog.new()._create_options_field("probe", options, opening_value)
+	var shown: String = dropdown.get_item_text(dropdown.selected) if dropdown.selected >= 0 else "<nothing selected>"
+	dropdown.free()
+	return shown
+
+
+## The option keys a SHIPPED provider script publishes for one parameter - the vocabulary as the
+## picker receives it, reflected exactly the way the live registry reflects an installed pack. The
+## annotations are read off DISK, so this has to go through the real file rather than a source
+## string, which would carry no annotations at all.
+static func _published_option_keys(script_path: String, ace_id: String, param_id: String) -> Array:
+	var script: Script = load(script_path) as Script
+	if script == null or not script.can_instantiate():
+		return ["<no such script>"]
+	var instance: Object = script.new()
+	var keys: Array = []
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_object(instance):
+		if definition.id != ace_id:
+			continue
+		for parameter: Variant in definition.parameters:
+			if str((parameter as Dictionary).get("id", "")) != param_id:
+				continue
+			for option: Variant in (parameter as Dictionary).get("options", []):
+				keys.append(str((option as Dictionary).get("key", "")))
+	if instance is Node:
+		(instance as Node).free()
+	return keys
 
 
 ## The `default:` one `@ace_param` line leaves the lifter holding for a parameter.

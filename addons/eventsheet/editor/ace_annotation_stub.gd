@@ -421,7 +421,13 @@ static func _comment_options(option_pairs: Array) -> String:
 		var option_dict: Dictionary = pair
 		var option_key: String = str(option_dict.get("key", ""))
 		var option_label: String = str(option_dict.get("label", option_key))
-		if option_key.contains("="):
+		if option_key.is_empty():
+			# The BLANK choice ships quoted, exactly as the compiler's own writer spells it. Written
+			# bare it is two separators with nothing between them, which reads back as a stray "|"
+			# and the choice is gone - the one option whose absence is invisible in the text.
+			entries.append("\"\"" if option_label.is_empty() or option_label == option_key \
+				else "\"\"=%s" % option_label)
+		elif option_key.contains("="):
 			entries.append("\"%s\"=%s" % [option_key, option_label])
 		elif option_label == option_key or option_label.is_empty():
 			entries.append(option_key)

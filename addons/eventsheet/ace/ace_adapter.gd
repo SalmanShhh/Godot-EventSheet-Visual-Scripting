@@ -79,12 +79,19 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 		for option in param.options:
 			if option is Dictionary:
 				var option_dict: Dictionary = option as Dictionary
-				var option_key: String = str(option_dict.get("key", ""))
-				if option_key.is_empty():
-					option_key = str(option_dict.get("value", ""))
-				if option_key.is_empty():
-					option_key = str(option_dict.get("label", ""))
-				if option_key.is_empty():
+				# PRESENT, not non-empty: an entry that spells `key` owns its key even when the key
+				# is "" - a blank IS the answer for a parameter whose empty value means "all of
+				# them" or "leave it where it is". Reading past a blank key to the label turned the
+				# choice into the WORDS beside it, which then shipped into emitted GDScript as a
+				# bare phrase. An entry naming none of the three fields is still nothing at all.
+				var option_key: String = ""
+				if option_dict.has("key"):
+					option_key = str(option_dict["key"])
+				elif option_dict.has("value"):
+					option_key = str(option_dict["value"])
+				elif option_dict.has("label"):
+					option_key = str(option_dict["label"])
+				else:
 					continue
 				# An option may declare the line that reads UNDER it in the dialog's list
 				# ("double speed, keeps momentum"). Optional, and empty for every option that

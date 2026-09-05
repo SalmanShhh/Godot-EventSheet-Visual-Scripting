@@ -628,18 +628,28 @@ func _normalize_options_to_key_label(raw_options: Variant) -> Array:
 	for option_entry in raw_options:
 		if option_entry is Dictionary:
 			var option_dict: Dictionary = option_entry as Dictionary
-			var option_key: String = str(option_dict.get("key", ""))
-			if option_key.is_empty():
-				option_key = str(option_dict.get("value", ""))
-			if option_key.is_empty():
-				option_key = str(option_dict.get("label", ""))
-			if option_key.is_empty():
+			# WHICH FIELD NAMES THE KEY is decided by which field is PRESENT, never by which one
+			# happens to be non-empty. A blank is an answer some verbs are built around ("leave the
+			# family empty to move the whole list"), so an entry that spells `key` owns its key even
+			# when that key is "" - reading past it to `value` or `label` would silently turn the
+			# blank choice into the words next to it, and dropping it would take the choice away.
+			# Only an entry that names none of the three is nothing at all.
+			var option_key: String = ""
+			if option_dict.has("key"):
+				option_key = str(option_dict["key"])
+			elif option_dict.has("value"):
+				option_key = str(option_dict["value"])
+			elif option_dict.has("label"):
+				option_key = str(option_dict["label"])
+			else:
 				continue
 			output.append({
 				"key": option_key,
 				"label": str(option_dict.get("label", option_key))
 			})
 			continue
+		# A BARE blank is not the same statement as an entry that spells `key: ""`: in a plain list
+		# it is a stray separator ("a||b"), which is why this half still drops it.
 		var scalar: String = str(option_entry)
 		if scalar.is_empty():
 			continue
