@@ -22,6 +22,10 @@ EventForgeBridge="*uid://duh4jgpamtcwn"
 
 enabled=PackedStringArray("res://addons/eventforge/plugin.cfg")
 
+[eventsheets]
+
+doctor/skipped_folders=PackedStringArray("tests", "tools")
+
 [input]
 
 ui_left={
