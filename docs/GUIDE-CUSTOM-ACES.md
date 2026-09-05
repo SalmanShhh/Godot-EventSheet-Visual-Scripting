@@ -408,6 +408,13 @@ func hold_shield(seconds: float, quality: String, op: String) -> void:
   | `moment({moment_name}, {strength})` | not quoted | `default_code: "impact"` - GDScript, taken verbatim, quotes and all. Also `default_code: Vector2(1, 1)`, `default_code: null`. |
   | either, for a number or a bare word | - | `default: 1.0` - the shorthand, and what nearly every line is. |
 
+  **Write a word bare.** The quotes on a `default_word:` are an escape, not decoration: use them only
+  when the word is empty, holds a comma, or wears quotes of its own. `default_word: "x"` for a simple
+  word reads correctly and then saves back as `default_word: x`, which is a different line from the
+  one on disk - and a block the compiler does not reproduce exactly opens as raw code, so a quoted
+  simple word costs you the whole verb. Opening such a file says so on the row rather than leaving
+  you to guess.
+
   The shorthand cannot say which kind it is: both annotation readers trim one surrounding quote pair
   off a `default:`, so `default: "impact"` arrives as the bare word `impact` and an unquoted slot then
   writes `moment(impact, 1)` - an undefined identifier, in a row that looked right on the canvas.

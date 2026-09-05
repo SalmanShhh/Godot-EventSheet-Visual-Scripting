@@ -36,6 +36,18 @@ const ARRAY_DEFAULT: String = "[1.0, 2.0, 3.0]"
 const CALL_DEFAULT: String = "Vector2(0.5, 0.5)"
 const COMMA_IN_QUOTES: String = "\"a, b\""
 
+## One verb whose only fault is a word wearing quotes it does not need. It reads correctly, and it
+## re-emits BARE, so its block no longer reproduces the file and the whole verb opens as code.
+const QUOTED_WORD_SOURCE: String = """extends Node
+
+
+## @ace_action
+## @ace_name("Set Mood")
+## @ace_param(mood, default_word: "calm", desc: "The mood it moves to.")
+func set_mood(mood: String = "calm") -> void:
+	print(mood)
+"""
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -292,7 +304,39 @@ static func run() -> bool:
 		_published_default("res://eventsheet_addons/screen_fx/screen_fx.gd",
 			"method:add_post_effect", "called"), "") and ok
 
+
+	# ---- 8. A verb that stays code says WHICH of its own lines cost it that ----
+	# Bare is the canonical spelling of a word; the quotes are an escape for a word that is empty,
+	# holds a comma, or wears quotes of its own. A hand-written `default_word: "calm"` is therefore
+	# read correctly, written back BARE, and the block no longer reproduces its source - so the byte
+	# gate refuses the lift and the whole verb opens as verbatim GDScript. That is the right call and
+	# it used to be a silent one: the file still round-trips, so no gate anywhere says a word about
+	# it, and the author sees a block of code where their verb was. The row now carries the reason.
+	ok = _check("a quoted simple word names itself on the row it costs",
+		_lift_note(QUOTED_WORD_SOURCE),
+		"this annotation line is not saved the way it is written, so the whole verb stays code: " +
+		"\"## @ace_param(mood, default_word: \"calm\", desc: \"The mood it moves to.\")\" would be " +
+		"saved as \"## @ace_param(mood, default_word: calm, desc: \"The mood it moves to.\")\"") and ok
+	ok = _check("and the file still comes back byte for byte, which is why nothing else could see it",
+		SUPPORT.reemit(QUOTED_WORD_SOURCE, "user://annotation_value_split_quoted_word.gd"),
+		QUOTED_WORD_SOURCE) and ok
+	# The same verb spelled canonically lifts, and carries no note at all - the pin that keeps the
+	# note from becoming something every opened pack wears.
+	ok = _check("the canonical spelling lifts, with nothing to explain",
+		_lift_note(QUOTED_WORD_SOURCE.replace("default_word: \"calm\"", "default_word: calm")),
+		"<nothing stayed code>") and ok
+
 	return ok
+
+
+## The importer's own note on the first row that stayed verbatim code - the words a reader gets in
+## the row's tooltip and behind its amber badge.
+static func _lift_note(source: String) -> String:
+	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
+	for row: Variant in sheet.events:
+		if row is RawCodeRow and not (row as RawCodeRow).lift_note.strip_edges().is_empty():
+			return (row as RawCodeRow).lift_note
+	return "<nothing stayed code>"
 
 
 ## The starting value a SHIPPED provider script publishes for one parameter - the vocabulary as the

@@ -632,8 +632,15 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						pending_header_text = ""
 						# Per-function gate: the lifted function must re-emit header + body exactly, or it
 						# stays raw and the run re-anchors after it (a bad body used to revert the file).
-						if bool(function_lift.get("ok", false)) and SheetCompiler.emit_function_block_text(function_lift.get("function"), sheet) != expected_block:
-							function_lift = {"ok": false}
+						if bool(function_lift.get("ok", false)):
+							var emitted_block: String = SheetCompiler.emit_function_block_text(function_lift.get("function"), sheet)
+							if emitted_block != expected_block:
+								# A verb that fails this gate opens as a verbatim block, and the reader
+								# is owed the reason when the reason is one line of its own annotations.
+								var why: String = _annotation_difference_note(expected_block, emitted_block)
+								if not why.is_empty():
+									row.lift_note = why
+								function_lift = {"ok": false}
 						if bool(function_lift.get("ok", false)):
 							saw_function = true
 							var lifted_function: Variant = function_lift.get("function")
@@ -814,9 +821,17 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					var annotated_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), tail_annotations, true, tail_gd_lines, tail_doc)
 					if bool(annotated_lift.get("ok", false)):
 						var candidate: EventFunction = annotated_lift.get("function")
-						if candidate != null and SheetCompiler._find_function_by_name(sheet, candidate.function_name) == null and SheetCompiler.emit_function_block_text(candidate, sheet) == tail_text + "\n" + mid_row.code:
-							mid_function = candidate
-							strip_tail = true
+						if candidate != null and SheetCompiler._find_function_by_name(sheet, candidate.function_name) == null:
+							var emitted_annotated: String = SheetCompiler.emit_function_block_text(candidate, sheet)
+							if emitted_annotated == tail_text + "\n" + mid_row.code:
+								mid_function = candidate
+								strip_tail = true
+							else:
+								# Same gate, same debt: say which annotation line did not come back.
+								var annotated_why: String = _annotation_difference_note(
+									tail_text + "\n" + mid_row.code, emitted_annotated)
+								if not annotated_why.is_empty():
+									mid_row.lift_note = annotated_why
 			if mid_function == null:
 				# The tail (if any) stays where it is - but a `## @ace_*` block that could NOT be
 				# absorbed must not be orphaned by anchoring the bare function under it.
@@ -1738,6 +1753,38 @@ static func _parse_param_spec(spec: String, fields: Dictionary) -> void:
 				(fields["param_default_spellings"] as Dictionary)[param_name] = "code"
 			"desc":
 				(fields["param_descriptions"] as Dictionary)[param_name] = _unquoted_once(value)
+
+
+## Why an annotated verb stayed a block of raw code, in the words of the one line that did not come
+## back - or "" when the difference is not on an annotation line and this file has nothing to add.
+##
+## A verb is lifted only when the compiler reproduces its whole block byte for byte, and a block
+## that fails opens as verbatim GDScript with no explanation at all. Almost always the cause is one
+## annotation line written in a form the emitter does not write back. The one that keeps happening
+## is a quoted simple word: `default_word: "x"` is read as the word `x` by both readers, exactly as
+## intended, and then written back BARE, because bare is the canonical spelling of a word and the
+## quotes exist only for a word that is empty, holds a comma, or wears quotes of its own. The line
+## means the right thing and still costs the author their whole verb, so the row now says so.
+static func _annotation_difference_note(source_block: String, emitted_block: String) -> String:
+	var written: PackedStringArray = source_block.split("\n")
+	var read_back: PackedStringArray = emitted_block.split("\n")
+	for index: int in range(written.size()):
+		var written_line: String = written[index]
+		if index < read_back.size() and written_line == read_back[index]:
+			continue
+		if not written_line.strip_edges().begins_with("##"):
+			return ""
+		var read_line: String = read_back[index].strip_edges() if index < read_back.size() else "(nothing)"
+		return "this annotation line is not saved the way it is written, so the whole verb stays code: %s would be saved as %s" % [
+			_short_quote(written_line.strip_edges()), _short_quote(read_line)]
+	return ""
+
+
+## One line as a note quotes it: long enough to recognise, short enough that the tooltip stays a
+## tooltip. Cut deterministically, so two machines reading the same file say the same thing.
+static func _short_quote(line: String) -> String:
+	const WIDTH: int = 90
+	return "\"%s\"" % (line if line.length() <= WIDTH else line.substr(0, WIDTH) + "...")
 
 
 ## An `options:` value as the {key, label} pairs an ACEParam holds - `a|b` plain, `set=Set it` labeled.

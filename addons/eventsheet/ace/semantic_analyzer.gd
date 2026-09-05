@@ -546,6 +546,14 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				# written bare, or quoted to hold a comma, its own quotes, or NOTHING at all. The
 				# empty word is the whole point: a row that opens on a cleared box is what a verb
 				# whose description says "empty names it after its effect" is offering.
+				#
+				# BARE IS THE CANONICAL SPELLING, and the quotes are an escape, not decoration. Both
+				# readings are the same value, but the emitter writes a simple word back bare - so a
+				# hand-written `default_word: "x"` reads correctly here and then re-emits as
+				# `default_word: x`, which is a different line, which fails the importer's byte gate,
+				# which opens the whole verb as a block of raw code. Quote a word only when it is
+				# empty, holds a comma, or wears quotes of its own; the importer names the line when
+				# it costs somebody a verb.
 				var word_defaults: Dictionary = overrides.get("param_defaults", {})
 				word_defaults[param_name] = _unquoted_once(value)
 				overrides["param_defaults"] = word_defaults
