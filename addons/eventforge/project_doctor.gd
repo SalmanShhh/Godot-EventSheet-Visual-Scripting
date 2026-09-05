@@ -3015,6 +3015,13 @@ static func sheet_of(path: String) -> EventSheetResource:
 	return sheet
 
 
+## The audit's script walk with NOTHING HELD - a fresh listing that warms no cache.
+##
+## Its one caller is the listing-order gate, and that is the whole point rather than a sign this is
+## dead: the suite runs serially in one process, so a walk that filled the cache here would be
+## inherited by every later test that pins what a cold project answers. Ask `_project_scripts()` for
+## the audit's list and `all_project_scripts()` for the whole one; ask this only when the asking must
+## leave no trace.
 static func _walk_project_scripts() -> PackedStringArray:
 	return _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
 		return path.ends_with(".gd"))
