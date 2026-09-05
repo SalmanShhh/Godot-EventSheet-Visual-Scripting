@@ -86,6 +86,17 @@ var _duck_rate: float = 0.0
 var _duck_hold: float = 0.0
 var _duck_release: float = 0.4
 
+## Where a HELD duck comes back up to when its hold runs out. Nothing, usually - but a stinger that
+## lands over a line of dialogue interrupted a duck that is still wanted, and coming back up to full
+## there would raise the music over the voice it was ducked under. So the stinger writes down what it
+## found and the hold hands the music back to it.
+var _duck_return_db: float = 0.0
+
+## The tracks that have been started this session, by the name each answered to. A song is played from
+## its beginning the first time it is asked for and from its loop point every time after, which is the
+## whole of what an intro is: heard once, skipped on the way back in.
+var _heard: Dictionary = {}
+
 ## Layer levels, by layer name: where each is, where it is walking to, and how fast. A layer nobody
 ## has faded is silent, so a track's layers all start under the base stream.
 var _layer_levels: Dictionary = {}
@@ -170,6 +181,7 @@ func _ready() -> void:
 		deck.name = "Deck%d" % index
 		deck.bus = music_bus
 		deck.volume_db = linear_to_db(SILENT_LEVEL)
+		deck.finished.connect(_deck_finished.bind(index))
 		add_child(deck)
 		_decks.append(deck)
 	# Nothing is playing yet, so nothing is walking: the frame starts parked and every row that
@@ -179,8 +191,12 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	advance(delta)
 	_apply_volumes()
-	if is_playing():
-		_fire_beats(_position(), _latency())
+	if is_playing() and _front_is_running():
+		var at: float = _position()
+		if loop_reached(at):
+			_take_the_loop()
+			at = _position()
+		_fire_beats(at, _latency())
 	if _at_rest():
 		set_process(false)
 
@@ -188,7 +204,7 @@ func _process(delta: float) -> void:
 ## @ace_featured
 ## @ace_name("Play")
 ## @ace_category("Music")
-## @ace_description("Plays a track, crossfading down whatever was playing over the fade seconds. A fade of 0 is a cut. The name is looked up as a file in the Music Folder, or given as a full res:// path.")
+## @ace_description("Plays a track, crossfading down whatever was playing over the fade seconds. A fade of 0 is a cut. The name is looked up as a file in the Music Folder, or given as a full res:// path. A song is played from its beginning the first time it is asked for and from its loop point every time after, so a track with an intro is heard whole once and comes straight back in at the loop.")
 ## @ace_display_template("Play [b]{track}[/b], fade [b]{fade}[/b] s")
 ## @ace_icon("res://eventsheet_addons/music/icon.svg")
 ## @ace_codegen_template("Music.play({track}, {fade})")
@@ -272,8 +288,12 @@ func stinger(path: String, duck_db: float) -> void:
 	add_child(shot)
 	shot.finished.connect(shot.queue_free)
 	shot.play()
-	duck(duck_db, 0.15)
-	_hold_duck(maxf(stream.get_length() - 0.15, 0.0), 0.4)
+	# A STINGER NEVER LIFTS A DUCK. The music may already be under a line of dialogue, and that line
+	# is still being spoken when the sting ends - so the sting ducks at least as far as whatever it
+	# found, and hands the music back to THAT rather than to full volume.
+	var standing: float = _duck_target_db
+	duck(maxf(absf(duck_db), absf(standing)), 0.15)
+	_hold_duck(maxf(stream.get_length() - 0.15, 0.0), 0.4, standing)
 
 ## @ace_action
 ## @ace_featured
@@ -289,6 +309,7 @@ func duck(db: float, seconds: float) -> void:
 	if seconds <= 0.0:
 		_duck_db = _duck_target_db
 	_duck_hold = 0.0
+	_duck_return_db = 0.0
 	set_process(true)
 
 ## @ace_action
@@ -304,6 +325,7 @@ func unduck(seconds: float) -> void:
 	if seconds <= 0.0:
 		_duck_db = 0.0
 	_duck_hold = 0.0
+	_duck_return_db = 0.0
 	set_process(true)
 
 ## @ace_action
@@ -364,7 +386,7 @@ func set_layers(layers: String, seconds: float) -> void:
 ## @ace_action
 ## @ace_name("Switch To Clip")
 ## @ace_category("Music")
-## @ace_description("Switches an interactive track to another of its clips by name. The stream's own transition rules decide when the change lands - on the bar, at the end of the clip, through a filler. Needs the track's stream to be an AudioStreamInteractive, which Godot 4.3 and later provide.")
+## @ace_description("Switches an interactive track to another of its clips by name. The stream's own transition rules decide when the change lands - on the bar, at the end of the clip, through a filler. Needs the track's stream to be an AudioStreamInteractive, which Godot 4.3 and later provide. An interactive stream does not report a playback position, so the beat readings and the beat moments are silent on a track driven this way: a song answers either the clips or the beat, not both.")
 ## @ace_display_template("Switch to clip [b]{clip}[/b]")
 ## @ace_icon("res://eventsheet_addons/music/icon.svg")
 ## @ace_codegen_template("Music.switch_to_clip({clip})")
@@ -451,10 +473,15 @@ func beat_phase() -> float:
 ## @ace_expression
 ## @ace_name("Next Beat At")
 ## @ace_category("Music")
-## @ace_description("The moment the next beat lands, on the same engine clock the Timed Input rows measure a press with - put it in Beat Grade's Beat At slot and a press is graded against the song.")
+## @ace_description("The moment the next beat lands, on the same engine clock the Timed Input rows measure a press with - put it in Beat Grade's Beat At slot and a press is graded against the song. It answers 0 while nothing is playing, which is a rhythm lane's cue to place its note by its own lead instead.")
 ## @ace_icon("res://eventsheet_addons/music/icon.svg")
 ## @ace_codegen_template("Music.next_beat_at()")
 func next_beat_at() -> float:
+	# NOTHING PLAYING HAS NO NEXT BEAT. Answering one anyway - which a position of zero quietly does -
+	# would put a rhythm lane's notes a fraction of a beat away instead of the lead it asked for, in
+	# every project that has this director installed and no track running.
+	if not is_playing():
+		return 0.0
 	return Time.get_ticks_msec() / 1000.0 + seconds_to_beat(_position(), _latency())
 
 ## @ace_expression
@@ -466,21 +493,32 @@ func next_beat_at() -> float:
 func layer_volume(layer: String) -> float:
 	return float(_layer_levels.get(layer.strip_edges().to_lower(), 0.0))
 
+## The moment of the music the player is HEARING right now: where the stream has got to, less the
+## output latency the audio device adds on the way out. Every beat answer below is measured from
+## this rather than from the raw position, which is the honest way to stay on the beat - on a
+## machine with a big buffer the two are a tenth of a second apart, and a tenth of a second is the
+## difference between a perfect and a miss.
 ## @ace_hidden
 func heard_position(position: float, latency: float) -> float:
 	return position - latency
 
+## Which beat a moment of the music is on, as a fraction: 2.5 is halfway between the third beat and
+## the fourth. Everything else about the beat is this number rounded, split or subtracted.
 ## @ace_hidden
 func beat_at(position: float, latency: float) -> float:
 	if _bpm <= 0.0:
 		return 0.0
 	return (heard_position(position, latency) - _beat_offset) * _bpm / 60.0
 
+## How far through its beat a moment is, from 0 on the beat to just under 1 before the next - the
+## number a pulse, a bob or a light breathes on.
 ## @ace_hidden
 func beat_phase_at(position: float, latency: float) -> float:
 	var walked: float = beat_at(position, latency)
 	return walked - floorf(walked)
 
+## Seconds from a moment of the music to the NEXT whole beat after it. On an exact beat that is a
+## whole beat away, not nothing: the beat you are standing on has already happened.
 ## @ace_hidden
 func seconds_to_beat(position: float, latency: float) -> float:
 	if _bpm <= 0.0:
@@ -488,6 +526,10 @@ func seconds_to_beat(position: float, latency: float) -> float:
 	var walked: float = beat_at(position, latency)
 	return (floorf(walked) + 1.0 - walked) * 60.0 / _bpm
 
+## A number written on a track resource, or the fallback when the file carries no such field. This
+## is how the pack reads a track WITHOUT naming its class: a project that installed the director
+## without the track resource beside it still parses, and a track somebody wrote themselves works
+## as long as it spells the same fields.
 ## @ace_hidden
 func _track_number(track: Resource, field: String, fallback: float) -> float:
 	if track == null:
@@ -497,10 +539,14 @@ func _track_number(track: Resource, field: String, fallback: float) -> float:
 		return float(value)
 	return fallback
 
+## How many beats a bar of the current track holds, never less than one. It is the track's own
+## fact, so a waltz bars in three and a march in four with nothing here changing.
 ## @ace_hidden
 func bar_beats() -> int:
 	return maxi(int(_track_number(_track, "beats_per_bar", 4.0)), 1)
 
+## Where the front deck's stream has got to, in seconds. Zero when nothing is playing, and zero
+## with no players at all, which is what lets the beat arithmetic above be driven by hand.
 ## @ace_hidden
 func _position() -> float:
 	var deck: AudioStreamPlayer = _deck(_front)
@@ -508,16 +554,26 @@ func _position() -> float:
 		return 0.0
 	return deck.get_playback_position()
 
+## What the audio device adds between the mix and the speaker, in seconds, LESS how long ago the last
+## mix was. The playback position steps forward one mix chunk at a time rather than smoothly, so on
+## its own it is up to a chunk behind by the end of a frame - and a chunk is tens of milliseconds,
+## which is the difference between a perfect and a good. This is the engine's own recipe for the
+## question "where is the song right now", and the answer moves smoothly because of the second term.
 ## @ace_hidden
 func _latency() -> float:
-	return AudioServer.get_output_latency()
+	return AudioServer.get_output_latency() - AudioServer.get_time_since_last_mix()
 
+## How loud a deck should be right now, in decibels: its own level, dropped by however far the
+## music is ducked. One place, so the crossfade and the duck can never fight over volume_db.
 ## @ace_hidden
 func deck_db(index: int) -> float:
 	if index < 0 or index >= _levels.size():
 		return -80.0
 	return linear_to_db(maxf(_levels[index], SILENT_LEVEL)) + _duck_db
 
+## Frees a deck: it stops, forgets its stream, and reads as idle. A deck that has faded all the way
+## out is released here rather than left playing silently, because a silent stream still costs a
+## mix and still moves its own playback position.
 ## @ace_hidden
 func _release_deck(index: int) -> void:
 	if index < 0 or index >= _deck_tracks.size():
@@ -532,6 +588,8 @@ func _release_deck(index: int) -> void:
 		deck.stop()
 		deck.stream = null
 
+## What Current Track answers with for a track: the name written on the resource when it carries
+## one, and otherwise the word the row asked for.
 ## @ace_hidden
 func _track_key(called: String, track: Resource) -> String:
 	if track != null:
@@ -540,6 +598,8 @@ func _track_key(called: String, track: Resource) -> String:
 			return str(named).strip_edges()
 	return called.strip_edges()
 
+## Starts a track on the free deck and walks the other one out - which is the whole of Play,
+## Crossfade To and a scene change's music, spelled once.
 ## @ace_hidden
 func _start_track(track_name: String, fade: float) -> void:
 	var found: Resource = _track_named(track_name)
@@ -568,7 +628,10 @@ func _start_track(track_name: String, fade: float) -> void:
 	_layer_levels = {}
 	_layer_targets = {}
 	_layer_rates = {}
-	_deck_tracks[incoming] = _track_key(track_name, found)
+	var key: String = _track_key(track_name, found)
+	var first_play: bool = not _heard.has(key)
+	_heard[key] = true
+	_deck_tracks[incoming] = key
 	_level_targets[incoming] = 1.0
 	_level_targets[outgoing] = 0.0
 	_fade_rate = 0.0 if fade <= 0.0 else 1.0 / fade
@@ -582,24 +645,65 @@ func _start_track(track_name: String, fade: float) -> void:
 		deck.stream = stream
 		deck.volume_db = deck_db(incoming)
 		deck.stream_paused = false
-		deck.play(_loop_start())
+		deck.play(start_position(first_play))
 	set_process(true)
 
+## Where a track's loop begins: the seconds its own Loop From names, and 0 for a track that names
+## none. A play COMING BACK to a song starts here, which is how an intro is heard once.
 ## @ace_hidden
 func _loop_start() -> float:
 	return maxf(_track_number(_track, "loop_from", 0.0), 0.0)
 
+## Where a play starts: the beginning the first time this song is asked for, and its loop point every
+## time after. A song with a four-bar intro plays the intro when the level opens and comes straight
+## back in at the loop when the fight ends - which is what the track's two loop fields are for, and
+## what starting every play at the loop point took away.
 ## @ace_hidden
-func _hold_duck(seconds: float, release: float) -> void:
+func start_position(first_play: bool) -> float:
+	return 0.0 if first_play else _loop_start()
+
+## Whether the front deck has reached the point its track loops BACK from. Only a track that names a
+## Loop To beyond its Loop From loops here: a stream that loops itself is left to do it, and a track
+## that names neither plays through to its end.
+## @ace_hidden
+func loop_reached(position: float) -> bool:
+	var loop_to: float = _track_number(_track, "loop_to", 0.0)
+	return loop_to > _loop_start() and position >= loop_to
+
+## Sends the front deck back to its loop point and lets the beat count from there. The beat numbers
+## start again with the loop, which is what a bar counter driving a level wants: the same bar of the
+## music is the same number every time round.
+## @ace_hidden
+func _take_the_loop() -> void:
+	var deck: AudioStreamPlayer = _deck(_front)
+	if deck == null:
+		return
+	deck.seek(_loop_start())
+	_last_beat = -1
+	_last_bar = -1
+
+## Holds the duck down for a while, names how long it takes to come back up, and says WHERE it comes
+## back up to - what a stinger does for its own length, without a timer node anywhere. `back_to` is
+## the duck that was already in force when the hold started: 0 for a stinger over nothing, and the
+## dialogue duck for a stinger that landed over a line.
+## @ace_hidden
+func _hold_duck(seconds: float, release: float, back_to: float) -> void:
 	_duck_hold = maxf(seconds, 0.0)
 	_duck_release = maxf(release, 0.0)
+	_duck_return_db = minf(back_to, 0.0)
 
+## One frame of every walk the director has running: the crossfade, the duck and each layer. It is
+## a plain function of delta and the state above rather than a tween, which is what lets a test
+## drive a whole crossfade in four calls and pin the level at each one - and what makes a fade that
+## is halfway through survive a pause, a scene change and a slow frame without a node to lose.
 ## @ace_hidden
 func advance(delta: float) -> void:
 	_advance_levels(delta)
 	_advance_duck(delta)
 	_advance_layers(delta)
 
+## The crossfade: both decks walk towards their targets at the same rate, so what one loses the
+## other gains. A deck that has arrived at silence with nothing else asked of it is released.
 ## @ace_hidden
 func _advance_levels(delta: float) -> void:
 	if _fade_rate > 0.0:
@@ -610,6 +714,12 @@ func _advance_levels(delta: float) -> void:
 		if is_zero_approx(_levels[index]) and is_zero_approx(_level_targets[index]):
 			_release_deck(index)
 
+## The duck: down over its seconds, held for as long as it was asked to hold, then back up on its
+## own. A duck that was given no time simply arrives, so nothing here has to special-case it.
+##
+## The hold eats its own share of the frame and only the LEFTOVER walks, which matters on the frame
+## a hold runs out: spending the whole delta on the walk as well would start the climb a frame's
+## worth of the way up, and on a long frame that is an audible jump rather than a fade.
 ## @ace_hidden
 func _advance_duck(delta: float) -> void:
 	var walked: float = delta
@@ -619,10 +729,15 @@ func _advance_duck(delta: float) -> void:
 		walked = delta - spent
 		if _duck_hold <= 0.0:
 			_duck_hold = 0.0
-			unduck(_duck_release)
+			if _duck_return_db < 0.0:
+				duck(-_duck_return_db, _duck_release)
+			else:
+				unduck(_duck_release)
 	if _duck_rate > 0.0 and walked > 0.0:
 		_duck_db = move_toward(_duck_db, _duck_target_db, _duck_rate * walked)
 
+## The layers: each one walks its own level at its own rate, because a game brings the drums up
+## over a second and drops the strings out over four.
 ## @ace_hidden
 func _advance_layers(delta: float) -> void:
 	for key: Variant in _layer_targets.keys():
@@ -632,6 +747,9 @@ func _advance_layers(delta: float) -> void:
 		_layer_levels[key] = move_toward(float(_layer_levels.get(key, 0.0)),
 			float(_layer_targets[key]), rate * delta)
 
+## Writes the levels the walks above arrived at onto the players and onto the synchronized stream's
+## own volumes. Split from advance so that everything the director decides can be driven and
+## pinned without an audio device, and only the writing needs one.
 ## @ace_hidden
 func _apply_volumes() -> void:
 	for index: int in range(_decks.size()):
@@ -648,6 +766,9 @@ func _apply_volumes() -> void:
 		var level: float = float(_layer_levels.get(_layer_order[index], 0.0))
 		synchronized.set_sync_stream_volume(index + 1, linear_to_db(maxf(level, SILENT_LEVEL)))
 
+## Fires the beat triggers for a moment of the music, once each per beat. Nothing fires while
+## nothing is playing, and the first beat of a new track always arrives because the numbers are
+## reset when one starts.
 ## @ace_hidden
 func _fire_beats(position: float, latency: float) -> void:
 	var whole: int = floori(beat_at(position, latency))
@@ -662,6 +783,25 @@ func _fire_beats(position: float, latency: float) -> void:
 		_last_bar = bar_index
 		bar.emit(bar_index)
 
+## Whether the front deck's stream is actually running. NOT the same question as Is Playing: between
+## the frame a track ends and the frame the engine says so, the name is still written down.
+## @ace_hidden
+func _front_is_running() -> bool:
+	var deck: AudioStreamPlayer = _deck(_front)
+	return deck != null and deck.playing
+
+## A deck whose stream reached its end. A track that does not loop simply stops, and nothing else here
+## would ever notice: the name would stay written down, Is Playing would go on saying yes, the frame
+## would never park, and the next beat would be counted from a position of zero - which reads as the
+## beat BEFORE the first one.
+## @ace_hidden
+func _deck_finished(index: int) -> void:
+	_release_deck(index)
+	set_process(true)
+
+## Whether there is nothing left to do: no track on either deck and the duck back where it started.
+## The director parks its own frame when this is true, so a game with the music stopped pays for
+## nothing.
 ## @ace_hidden
 func _at_rest() -> bool:
 	for playing: String in _deck_tracks:

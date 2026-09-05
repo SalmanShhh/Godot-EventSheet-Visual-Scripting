@@ -45,7 +45,7 @@ static func build() -> bool:
 
 	# ── The song ──────────────────────────────────────────────────────────────────────────
 	src.verb("play", "Play",
-		"Plays a track, crossfading down whatever was playing over the fade seconds. A fade of 0 is a cut. The name is looked up as a file in the Music Folder, or given as a full res:// path.",
+		"Plays a track, crossfading down whatever was playing over the fade seconds. A fade of 0 is a cut. The name is looked up as a file in the Music Folder, or given as a full res:// path. A song is played from its beginning the first time it is asked for and from its loop point every time after, so a track with an intro is heard whole once and comes straight back in at the loop.",
 		[["track", "String"], ["fade", "float"]])
 	_default(src.sheet, "track", "\"forest\"")
 	_default(src.sheet, "fade", "1.0")
@@ -99,7 +99,7 @@ static func build() -> bool:
 	_default(src.sheet, "layers", "\"drums, strings\"")
 	_default(src.sheet, "seconds", "1.0")
 	src.verb("switch_to_clip", "Switch To Clip",
-		"Switches an interactive track to another of its clips by name. The stream's own transition rules decide when the change lands - on the bar, at the end of the clip, through a filler. Needs the track's stream to be an AudioStreamInteractive, which Godot 4.3 and later provide.",
+		"Switches an interactive track to another of its clips by name. The stream's own transition rules decide when the change lands - on the bar, at the end of the clip, through a filler. Needs the track's stream to be an AudioStreamInteractive, which Godot 4.3 and later provide. An interactive stream does not report a playback position, so the beat readings and the beat moments are silent on a track driven this way: a song answers either the clips or the beat, not both.",
 		[["clip", "String"]])
 	_default(src.sheet, "clip", "\"chorus\"")
 
@@ -130,7 +130,7 @@ static func build() -> bool:
 		"How far through its beat the song is, from 0 on the beat to just under 1 before the next - the number a pulse, a bob or a breathing light rides on.",
 		[], TYPE_FLOAT)
 	src.expression("next_beat_at", "Next Beat At",
-		"The moment the next beat lands, on the same engine clock the Timed Input rows measure a press with - put it in Beat Grade's Beat At slot and a press is graded against the song.",
+		"The moment the next beat lands, on the same engine clock the Timed Input rows measure a press with - put it in Beat Grade's Beat At slot and a press is graded against the song. It answers 0 while nothing is playing, which is a rhythm lane's cue to place its note by its own lead instead.",
 		[], TYPE_FLOAT)
 	src.expression("layer_volume", "Layer Volume",
 		"How loud one of the track's layers is right now, from 0 to 1.",

@@ -57,6 +57,10 @@ static func run() -> bool:
 	passed = _layers_become_one_synchronized_stream(script) and passed
 	passed = _a_track_file_round_trips() and passed
 	passed = _next_beat_at_rides_the_engine_clock(script) and passed
+	passed = _a_stinger_over_a_duck_leaves_the_duck(script) and passed
+	passed = _a_song_with_an_intro_plays_it_once(script) and passed
+	passed = _a_track_that_ends_stops_being_the_track(script) and passed
+	_forget_tracks()
 	return passed
 
 
@@ -69,20 +73,28 @@ static func run() -> bool:
 ## bytes rather than against the builder's intent.
 static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 	var source: String = FileAccess.get_file_as_string(PACK)
-	var templates: int = 0
 	var not_the_autoload: int = 0
+	var published: PackedStringArray = PackedStringArray()
 	for line: String in source.split("\n"):
 		if not line.begins_with("## @ace_codegen_template("):
 			continue
-		templates += 1
 		if not line.begins_with("## @ace_codegen_template(\"Music."):
 			not_the_autoload += 1
+			continue
+		published.append(line.substr(line.find("Music.") + 6).split("(")[0])
 	var director: Node = script.new()
 	var runs_while_paused: bool = director.has_method("pause_music") and director.has_method("resume_music")
 	director.free()
 	return SUPPORT.pins(TEST, [
 		["every published verb addresses the autoload by name", not_the_autoload, 0],
-		["and all twenty-one of them are published", templates, 21],
+		# NAMED, not counted: a pin on the number goes green on a run where one row arrived and
+		# another went missing, and says nothing about either.
+		["and every verb the builder declares is one of them", _sorted(published),
+			["beat_number", "beat_phase", "crossfade_to", "current_track", "duck", "fade_layer",
+				"is_playing", "layer_volume", "next_beat_at", "pause_music", "play",
+				"position_in_bars", "resume_music", "seconds_to_next_beat", "set_layers",
+				"set_music_volume", "set_tempo", "stinger", "stop_music", "switch_to_clip",
+				"unduck"]],
 		["nothing is scoped to a node, because an autoload has no host to act on",
 			source.contains("var host: Node"), false],
 		["the tree's pause does not silence the song by itself",
@@ -186,7 +198,7 @@ static func _ducking_walks_in_decibels(script: GDScript) -> bool:
 static func _a_held_duck_comes_back_up_on_its_own(script: GDScript) -> bool:
 	var director: Node = script.new()
 	director.duck(10.0, 0.0)
-	director._hold_duck(1.0, 0.5)
+	director._hold_duck(1.0, 0.5, 0.0)
 	director.advance(0.5)
 	var still_down: float = director._duck_db
 	director.advance(0.5)
@@ -352,7 +364,8 @@ static func _a_track_file_round_trips() -> bool:
 		["the tempo", _round(written.bpm), 120.0],
 		["the offset to the first beat", _round(written.beat_offset), 0.0],
 		["how many beats a bar holds", int(written.beats_per_bar), 4],
-		["and where the loop goes back to", _round(written.loop_from), 4.0],
+		["where the loop goes back to", _round(written.loop_from), 4.0],
+		["and where it goes back FROM", _round(written.loop_to), 8.0],
 	])
 
 
@@ -360,16 +373,107 @@ static func _a_track_file_round_trips() -> bool:
 ## measures a press with - rather than in stream time, which is what lets a press be graded against
 ## the song with no arithmetic in the sheet at all.
 static func _next_beat_at_rides_the_engine_clock(script: GDScript) -> bool:
-	var director: Node = script.new()
+	var director: Node = _director(script)
+	var with_nothing_playing: float = director.next_beat_at()
+	director.play("Battle", 0.0)
 	director.set_tempo(120.0, 0.0)
 	var ahead: float = director.next_beat_at() - Time.get_ticks_msec() / 1000.0
 	var beat_seconds: float = director.seconds_to_next_beat()
+	# Asked with the latency named rather than measured: what the audio device on THIS machine
+	# adds is a fact about the machine, and a pin that read it would answer differently in CI.
+	var from_a_standing_start: float = director.seconds_to_beat(0.0, 0.0)
 	director.free()
 	return SUPPORT.pins(TEST, [
+		# NOTHING PLAYING HAS NO NEXT BEAT: a lane that took an answer here would place its notes
+		# a fraction of a beat away instead of the lead it asked for.
+		["a director with nothing playing answers no beat at all",
+			_round(with_nothing_playing), 0.0],
 		["the next beat is a moment in the future, not a position in the stream",
 			absf(ahead - beat_seconds) < 0.05, true],
 		["and at 120 bpm from a standing start that is half a second away",
-			_round(beat_seconds), 0.5],
+			_round(from_a_standing_start), 0.5],
+	])
+
+
+## A STINGER OVER A LINE OF DIALOGUE. The music is already ducked under a voice when the sting lands,
+## and the voice is still speaking when the sting ends - so the hold has to hand the music back to the
+## duck it interrupted rather than to full volume, and the sting must not RAISE a deeper duck on its
+## way in. Both halves are pinned, because either one alone puts the music over the line.
+static func _a_stinger_over_a_duck_leaves_the_duck(script: GDScript) -> bool:
+	var director: Node = script.new()
+	director.duck(8.0, 0.0)
+	var under_the_voice: float = director._duck_db
+	# What Stinger does once its sound is loaded: duck at least as far as what it found, and hold.
+	var standing: float = director._duck_target_db
+	director.duck(maxf(3.0, absf(standing)), 0.0)
+	director._hold_duck(0.5, 0.25, standing)
+	var under_the_sting: float = director._duck_db
+	director.advance(0.5)
+	director.advance(0.25)
+	var after_the_sting: float = director._duck_db
+	director.advance(1.0)
+	var still_under_the_voice: float = director._duck_db
+	director.unduck(0.0)
+	var when_the_line_ends: float = director._duck_db
+	director.free()
+	return SUPPORT.pins(TEST, [
+		["a line of dialogue ducks the music", _round(under_the_voice), -8.0],
+		["a quieter sting does not lift the duck it landed over", _round(under_the_sting), -8.0],
+		["and when the sting ends the music comes back to the duck, not to full",
+			_round(after_the_sting), -8.0],
+		["and stays there for as long as the line lasts", _round(still_under_the_voice), -8.0],
+		["until the row that ducked it brings it up", _round(when_the_line_ends), 0.0],
+	])
+
+
+## AN INTRO IS HEARD ONCE. A song written with an intro carries a loop point, and starting every play
+## at that point means the intro never plays at all - which is the opposite of what the field is for.
+## The first play of a song starts at its beginning; every play after it comes in at the loop.
+static func _a_song_with_an_intro_plays_it_once(script: GDScript) -> bool:
+	var director: Node = _director(script)
+	var before_anything: float = director.start_position(true)
+	director.play("Forest", 0.0)
+	var opened_from: float = director.start_position(true)
+	var came_back_to: float = director.start_position(false)
+	var heard_it: bool = director._heard.has("Forest")
+	var not_yet_at_the_loop: bool = director.loop_reached(7.9)
+	var at_the_loop: bool = director.loop_reached(8.0)
+	director.play("Battle", 0.0)
+	var a_track_with_no_loop: bool = director.loop_reached(60.0)
+	director.free()
+	return SUPPORT.pins(TEST, [
+		["with no track at all, a play starts at the beginning", _round(before_anything), 0.0],
+		["the first time a song is asked for it plays from the beginning, intro and all",
+			_round(opened_from), 0.0],
+		["and every time after it comes in at the loop point the track wrote down",
+			_round(came_back_to), 4.0],
+		["which is remembered by the name the track answers to", heard_it, true],
+		["a track is not at its loop end a tenth of a second early", not_yet_at_the_loop, false],
+		["and is when it reaches the point it named", at_the_loop, true],
+		["a track that names no loop end plays through", a_track_with_no_loop, false],
+	])
+
+
+## A TRACK THAT ENDS. A stream that does not loop simply stops, and nothing in the director would
+## notice on its own: the name would stay written down, Is Playing would answer yes for ever, the
+## frame would never park, and the beat would be counted from a position of zero - a beat BEFORE the
+## first one. The deck's own finished signal is what says so, and this is the answer it leads to.
+static func _a_track_that_ends_stops_being_the_track(script: GDScript) -> bool:
+	var director: Node = _director(script)
+	director.play("Battle", 0.0)
+	var while_it_plays: bool = director.is_playing()
+	var running_with_no_players: bool = director._front_is_running()
+	director._deck_finished(director._front)
+	var after_it_ends: bool = director.is_playing()
+	var named: String = director.current_track()
+	var nothing_left_to_do: bool = director._at_rest()
+	director.free()
+	return SUPPORT.pins(TEST, [
+		["a track that was started is playing", while_it_plays, true],
+		["and with no audio device in the room, no deck is running", running_with_no_players, false],
+		["a track that reached its end is no longer playing", after_it_ends, false],
+		["and there is nothing left to name", named, ""],
+		["so the director parks its own frame", nothing_left_to_do, true],
 	])
 
 
@@ -396,12 +500,30 @@ static func _write_tracks() -> void:
 	forest.bpm = 120.0
 	forest.beats_per_bar = 4
 	forest.loop_from = 4.0
+	forest.loop_to = 8.0
 	ResourceSaver.save(forest, TRACK_FOLDER + "forest.tres")
 	var battle: Resource = track_script.new()
 	battle.track_name = "Battle"
 	battle.stream = _silence()
 	battle.bpm = 140.0
 	ResourceSaver.save(battle, TRACK_FOLDER + "battle.tres")
+
+
+## The tracks this test wrote, taken back off the machine. A serial run of the whole suite inherits
+## whatever the run before it left in user://, so a test that writes files puts them away again.
+static func _forget_tracks() -> void:
+	for name: String in ["forest.tres", "battle.tres"]:
+		if FileAccess.file_exists(TRACK_FOLDER + name):
+			DirAccess.remove_absolute(TRACK_FOLDER + name)
+	DirAccess.remove_absolute(TRACK_FOLDER)
+
+
+## A list of names in one order, whatever order they were gathered in - so a pin reads as the names
+## the pack publishes rather than as the order a file happens to hold them in.
+static func _sorted(names: PackedStringArray) -> Array:
+	var sorted: Array = Array(names)
+	sorted.sort()
+	return sorted
 
 
 ## One audio stream, carrying nothing. The director never reads a sample - it reads the position -
