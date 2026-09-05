@@ -69,6 +69,30 @@ const SEPARATOR: String = ",[ \\t]*"
 ## widens it for the family beside it too.
 const DECLARATION_HEAD: String = "[ \\t]*(?::[ \\t]*[A-Za-z_][A-Za-z0-9_.]*[ \\t]*)?:?=[ \\t]*"
 
+## THE COPIES STILL OUT THERE, so the debt is written where somebody widening the head above will
+## look. Four families spell the same run by hand, thirteen times between them:
+##
+##   layout_on_top_lift.gd   1
+##   multiplayer_lift.gd     3
+##   scene_save_lift.gd      3
+##   undoable_edit_lift.gd   6
+##
+## Each of them is narrower than this fragment - most take only a bare name or an untyped
+## assignment, and three of them will only carry the type `Node` - so replacing one is a behaviour
+## change to be made and gated per family, not a sweep. `scene_lights.gd` looks like a fourteenth and
+## is NOT one: it captures the declared type as a group of its own and makes the whole value
+## optional, which is a different question asked of the same characters.
+##
+## The line numbers are deliberately not written down - they move with every edit to those files, and
+## a list that rots is worse than no list. What finds them exactly, today and after the next edit:
+##
+##   rg ':\?=' addons/eventforge/importer/
+##
+## Widening this fragment does NOT widen them. Until a family reaches for this instead, a spelling
+## this one takes can still be one its own head refuses, and the honest outcome of that is a run
+## nobody claims rather than a wrong reading - which is the reason the debt is survivable and the
+## reason it is still debt.
+
 ## The fragments by the word a table author asks for them by. Eight, because these are the spans the
 ## families actually repeat; the list doubles as what a by-example builder may name.
 ##
