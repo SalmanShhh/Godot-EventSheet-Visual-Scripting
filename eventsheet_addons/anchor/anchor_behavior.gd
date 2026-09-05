@@ -87,12 +87,13 @@ func set_keep_size(enabled: bool) -> void:
 func set_follow_resizes(enabled: bool) -> void:
 	follow_resizes = enabled
 
+## Puts the host on a corner, an edge or the whole rectangle of its parent - the one
+## action this behavior exists for.
 ## @ace_action
 ## @ace_name("Anchor To")
-## @ace_description("Puts the host on a corner, an edge or the whole rectangle of its parent - the one action this behavior exists for.")
 ## @ace_param_options(corner top left=The top-left corner, top right=The top-right corner, bottom left=The bottom-left corner, bottom right=The bottom-right corner, centre=The middle, full rect=The whole parent, top edge=Across the top, bottom edge=Across the bottom, left edge=Down the left, right edge=Down the right)
 ## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.anchor_to({corner})")
+## @ace_codegen_template("$AnchorBehavior.anchor_to("{corner}")")
 func anchor_to(corner: String) -> void:
 	if host == null or not CORNER_PRESETS.has(corner):
 		return
@@ -101,17 +102,18 @@ func anchor_to(corner: String) -> void:
 	host.set_anchors_and_offsets_preset(CORNER_PRESETS[corner], mode)
 	anchored.emit(corner)
 
+## True while the host is anchored to the given corner - what a row asks before moving it
+## somewhere else.
 ## @ace_condition
 ## @ace_name("Is Anchored To")
-## @ace_description("True while the host is anchored to the given corner - what a row asks before moving it somewhere else.")
 ## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
 ## @ace_codegen_template("$AnchorBehavior.is_anchored_to({corner})")
 func is_anchored_to(corner: String) -> bool:
 	return anchored_to == corner
 
+## The corner the host is anchored to right now, as its word - what a row shows or compares.
 ## @ace_expression
 ## @ace_name("Anchored Corner")
-## @ace_description("The corner the host is anchored to right now, as its word - what a row shows or compares.")
 ## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
 ## @ace_codegen_template("$AnchorBehavior.anchored_corner()")
 func anchored_corner() -> String:

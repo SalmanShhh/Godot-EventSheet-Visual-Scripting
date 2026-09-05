@@ -23,6 +23,20 @@ const JUICE := "res://eventsheet_addons/juice/juice_behavior.gd"
 const JUICE_3D := "res://eventsheet_addons/juice_3d/juice_3d_behavior.gd"
 const BOUND_TO := "res://eventsheet_addons/bound_to/bound_to_behavior.gd"
 const PROMPTS := "res://eventsheet_addons/prompts/prompts_addon.gd"
+const ANCHOR := "res://eventsheet_addons/anchor/anchor_behavior.gd"
+const DRUNKEN_WALKERS := "res://eventsheet_addons/drunken_walkers/drunken_walkers_addon.gd"
+const FOLLOW_PATH := "res://eventsheet_addons/follow_path/path_follow_behavior.gd"
+const GAME_SETTINGS := "res://eventsheet_addons/game_settings/game_settings_addon.gd"
+const NAV_AGENT_3D := "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd"
+const PIN := "res://eventsheet_addons/pin/pin_behavior.gd"
+const PIN_3D := "res://eventsheet_addons/pin_3d/pin_3d_behavior.gd"
+const PLATFORMER := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
+const ROTATE := "res://eventsheet_addons/rotate/rotate_behavior.gd"
+const STAT_FORGE := "res://eventsheet_addons/stat_forge/stat_forge_behavior.gd"
+const STORYLETS := "res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd"
+const TILE_MOVEMENT := "res://eventsheet_addons/tile_movement/tile_movement_behavior.gd"
+const UTILITY_AI := "res://eventsheet_addons/utility_ai/utility_ai_addon.gd"
+const WRAP := "res://eventsheet_addons/wrap/wrap_behavior.gd"
 const PACKS_DIR := "res://eventsheet_addons"
 
 ## The dropdown parameters still inserted BARE, as "<pack script>:<param id>" - an OVERRIDE list, not
@@ -32,7 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"anchor/anchor_behavior.gd:corner",
 	"drunken_walkers/drunken_walkers_addon.gd:placement",
 	"drunken_walkers/drunken_walkers_addon.gd:preset",
 	"drunken_walkers/drunken_walkers_addon.gd:source",
@@ -55,8 +68,11 @@ const KNOWN_BARE := [
 	"wrap/wrap_behavior.gd:space",
 ]
 
-## [pack, the template the pack ships, what a row picking the first option emits]. The picked values
-## are the words a designer sees in the dropdown, spelled exactly as the option keys are.
+## [pack, the template the pack ships, what a row picking an option emits] and, optionally, a fourth
+## entry naming the words THIS row picks. The picked values are what a designer sees in the dropdown,
+## spelled exactly as the option keys are; a plain String argument beside them carries its own quotes
+## in the VALUE, which is the difference the whole file is about. Rows without a fourth entry take
+## PICKED as it stands.
 const ACTIONS := [
 	[SCENE_FLOW, "$SceneFlowBehavior.go_to_scene_with({path}, \"{transition}\", {seconds}, \"{ease}\")",
 		"$SceneFlowBehavior.go_to_scene_with(\"res://levels/forest.tscn\", \"wipe\", 1.0, \"smooth\")"],
@@ -72,6 +88,8 @@ const ACTIONS := [
 		"$JuiceBehavior.slowmo(0.15, 0.25, \"realtime\")"],
 	[JUICE_3D, "$Juice3DBehavior.chromatic_shake({magnitude}, {duration}, \"{mode}\", {angle_degrees})",
 		"$Juice3DBehavior.chromatic_shake(12.0, 0.3, \"reducing\", -1.0)"],
+	[ANCHOR, "$AnchorBehavior.anchor_to(\"{corner}\")",
+		"$AnchorBehavior.anchor_to(\"top left\")", {"corner": "top left"}],
 ]
 
 const CONDITIONS := [
@@ -112,7 +130,7 @@ static func _test_the_emitted_calls() -> bool:
 		action.provider_id = "Pinned"
 		action.ace_id = "method:pinned"
 		action.codegen_template = str(pinned[1])
-		action.params = PICKED.duplicate()
+		action.params = _picked(pinned)
 		all_passed = _check("a picked option emits a word: %s" % str(pinned[2]),
 			ActionCodegen.generate_action(action), str(pinned[2])) and all_passed
 	for pinned: Array in CONDITIONS:
@@ -120,7 +138,7 @@ static func _test_the_emitted_calls() -> bool:
 		condition.provider_id = "Pinned"
 		condition.ace_id = "method:pinned"
 		condition.codegen_template = str(pinned[1])
-		condition.params = PICKED.duplicate()
+		condition.params = _picked(pinned)
 		all_passed = _check("a picked option asks with a word: %s" % str(pinned[2]),
 			ConditionCodegen.generate_condition(condition), str(pinned[2])) and all_passed
 	return all_passed
@@ -202,6 +220,16 @@ static func _keys_are_all_numbers(options: String) -> bool:
 		if key.is_empty() or not (key.is_valid_int() or key.is_valid_float()):
 			return false
 	return true
+
+
+## The words one pinned row picks: PICKED, overlaid with the row's own fourth entry when it has one.
+## A shared table alone could not spell both Pin's "position and angle" and Juice's "reducing" for the
+## same parameter name, and pinning one of them wrong would have hidden which pack the row was about.
+static func _picked(pinned: Array) -> Dictionary:
+	var params: Dictionary = PICKED.duplicate()
+	if pinned.size() > 3:
+		params.merge(pinned[3] as Dictionary, true)
+	return params
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

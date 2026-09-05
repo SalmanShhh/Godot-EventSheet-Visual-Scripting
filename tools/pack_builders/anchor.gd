@@ -56,6 +56,11 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Anchor To\")",
 		"## @ace_param_options(corner top left=The top-left corner, top right=The top-right corner, bottom left=The bottom-left corner, bottom right=The bottom-right corner, centre=The middle, full rect=The whole parent, top edge=Across the top, bottom edge=Across the bottom, left edge=Down the left, right edge=Down the right)",
+		# The corner is a WORD picked off the dropdown above, and a dropdown key is inserted into
+		# the call verbatim - so the quotes belong in the TEMPLATE, never in the key (a quoted key
+		# does not survive the annotation round trip). Without them a row picking Top right asked
+		# `anchor_to(top right)`, which is not an identifier at all, and the game did not parse.
+		"## @ace_codegen_template(\"$AnchorBehavior.anchor_to(\"{corner}\")\")",
 		"func anchor_to(corner: String) -> void:",
 		"\tif host == null or not CORNER_PRESETS.has(corner):",
 		"\t\treturn",
