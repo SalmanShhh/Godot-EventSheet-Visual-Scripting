@@ -1098,7 +1098,7 @@ func set_ticker(ticker_name: String, value: float) -> void:
 ## @ace_param(moment_name, default: impact, desc: "Which moment to play. The six that ship are impact, kill, triumph, danger, calm and cut; Define Moment adds your own.")
 ## @ace_param(strength, default: 1, desc: "Scales every amount in the moment. 1 is the moment as written, 0.5 a lighter version of the same beat.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment({moment_name}, {strength})")
+## @ace_codegen_template("$JuiceBehavior.moment("{moment_name}", {strength})")
 func moment(moment_name: String, strength: float) -> void:
 	if _play_moment_block(moment_name, strength):
 		return
@@ -1116,7 +1116,7 @@ func moment(moment_name: String, strength: float) -> void:
 ## @ace_param(moment_name, default: impact, desc: "The name every Moment row will use for this file afterwards.")
 ## @ace_param(moment, hint: resource_path, default: preload("res://eventsheet_addons/juice/impact.tres"), desc: "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.define_moment({moment_name}, {moment})")
+## @ace_codegen_template("$JuiceBehavior.define_moment("{moment_name}", {moment})")
 func define_moment(moment_name: String, moment: Resource) -> void:
 	var word: String = moment_name.strip_edges().to_lower()
 	if word.is_empty():
@@ -1137,7 +1137,7 @@ func define_moment(moment_name: String, moment: Resource) -> void:
 ## @ace_param(within, default: 600, desc: "How far the moment reaches, in the same units the game measures in. 0 = everywhere.")
 ## @ace_param(falloff, options: linear|smooth|none, default: linear, desc: "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.play_moment_at({moment_name}, {strength}, {from}, {within}, "{falloff}")")
+## @ace_codegen_template("$JuiceBehavior.play_moment_at("{moment_name}", {strength}, {from}, {within}, "{falloff}")")
 func play_moment_at(moment_name: String, strength: float, from: Node, within: float, falloff: String) -> void:
 	var here: float = MomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
 	if here <= 0.0:
@@ -1187,7 +1187,7 @@ func moment_step(verb: String, amount: float, effect: String, seconds: float, st
 ## @ace_param(moment_name, default: hover, desc: "Which moment to play in reverse - the same name Moment takes.")
 ## @ace_param(strength, default: 1, desc: "Scales every amount in the moment, exactly as playing it forwards does.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_backwards({moment_name}, {strength})")
+## @ace_codegen_template("$JuiceBehavior.moment_backwards("{moment_name}", {strength})")
 func moment_backwards(moment_name: String, strength: float) -> void:
 	var written: String = _moment_block_method(moment_name, "_backwards")
 	if not written.is_empty():
@@ -1209,7 +1209,7 @@ func moment_backwards(moment_name: String, strength: float) -> void:
 ## @ace_display_template("Revert moment [b]{moment_name}[/b]")
 ## @ace_param(moment_name, default: hover, desc: "Which moment to turn around. A moment that is not playing is left alone.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_revert({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_revert("{moment_name}")")
 func moment_revert(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1240,7 +1240,7 @@ func moment_revert(moment_name: String) -> void:
 ## @ace_display_template("Skip moment [b]{moment_name}[/b] to the end")
 ## @ace_param(moment_name, default: intro, desc: "Which moment to jump to the end of. A moment that is not playing is left alone.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_skip_to_end({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_skip_to_end("{moment_name}")")
 func moment_skip_to_end(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1263,7 +1263,7 @@ func moment_skip_to_end(moment_name: String) -> void:
 ## @ace_display_template("Restore what moment [b]{moment_name}[/b] changed")
 ## @ace_param(moment_name, desc: "Which moment's values to put back. Leave it empty for every moment this node has played.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_restore_values({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_restore_values("{moment_name}")")
 func moment_restore_values(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
@@ -1278,7 +1278,7 @@ func moment_restore_values(moment_name: String) -> void:
 ## @ace_description("True while a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all.")
 ## @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is playing.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_is_playing({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_is_playing("{moment_name}")")
 func moment_is_playing(moment_name: String) -> bool:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
@@ -1291,7 +1291,7 @@ func moment_is_playing(moment_name: String) -> bool:
 ## @ace_description("True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.")
 ## @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is reverting.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_is_reverting({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_is_reverting("{moment_name}")")
 func moment_is_reverting(moment_name: String) -> bool:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
@@ -1309,7 +1309,7 @@ func moment_is_reverting(moment_name: String) -> bool:
 ## @ace_description("True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.")
 ## @ace_param(moment_name, default: intro, desc: "Which moment's last play to ask about.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_was_cut_short({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_was_cut_short("{moment_name}")")
 func moment_was_cut_short(moment_name: String) -> bool:
 	return bool(_moment_cut.get(_moment_key(moment_name), false))
 
@@ -1319,7 +1319,7 @@ func moment_was_cut_short(moment_name: String) -> bool:
 ## @ace_description("How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.")
 ## @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_progress({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_progress("{moment_name}")")
 func moment_progress(moment_name: String) -> float:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1333,7 +1333,7 @@ func moment_progress(moment_name: String) -> float:
 ## @ace_description("How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.")
 ## @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_elapsed({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_elapsed("{moment_name}")")
 func moment_elapsed(moment_name: String) -> float:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1347,7 +1347,7 @@ func moment_elapsed(moment_name: String) -> float:
 ## @ace_description("What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.")
 ## @ace_param(moment_name, default: intro, desc: "Which moment to ask about.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_step_name({moment_name})")
+## @ace_codegen_template("$JuiceBehavior.moment_step_name("{moment_name}")")
 func moment_step_name(moment_name: String) -> String:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1363,7 +1363,7 @@ func moment_step_name(moment_name: String) -> String:
 ## @ace_param(magnitude, default: 0.5, desc: "How hard: 0 to 1 for a listener shaking the camera, pixels for one shaking itself or the screen.")
 ## @ace_param(seconds, default: 0.6, desc: "How long the shake lasts before it has faded to nothing.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.shake_channel({channel}, {magnitude}, {seconds})")
+## @ace_codegen_template("$JuiceBehavior.shake_channel("{channel}", {magnitude}, {seconds})")
 func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
 	if not is_inside_tree():
 		return
@@ -1377,7 +1377,7 @@ func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
 ## @ace_param(channel, default: props, desc: "Which channel to listen on - a group name. Say it once, at the start of the scene.")
 ## @ace_param(shakes, options: the camera|this node|the screen, default: this node, desc: "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.listen_on_channel({channel}, "{shakes}")")
+## @ace_codegen_template("$JuiceBehavior.listen_on_channel("{channel}", "{shakes}")")
 func listen_on_channel(channel: String, shakes: String) -> void:
 	add_to_group(StringName(channel), true)
 	_channel_shakes = shakes
@@ -1389,7 +1389,7 @@ func listen_on_channel(channel: String, shakes: String) -> void:
 ## @ace_display_template("Stop listening on channel [b]{channel}[/b]")
 ## @ace_param(channel, default: props, desc: "Which channel to stop hearing.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_listening_on_channel({channel})")
+## @ace_codegen_template("$JuiceBehavior.stop_listening_on_channel("{channel}")")
 func stop_listening_on_channel(channel: String) -> void:
 	if is_in_group(StringName(channel)):
 		remove_from_group(StringName(channel))

@@ -769,6 +769,7 @@ static func build() -> bool:
 	_param_desc(sheet, "moment_name", "Which moment to play. The six that ship are impact, kill, triumph, danger, calm and cut; Define Moment adds your own.")
 	_default(sheet, "strength", "1")
 	_param_desc(sheet, "strength", "Scales every amount in the moment. 1 is the moment as written, 0.5 a lighter version of the same beat.")
+	_quoted_argument(sheet, "moment(\"{moment_name}\", {strength})")
 	Lib.append_function(sheet, "define_moment", "Define Moment", "Juice", "Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.",
 		[["moment_name", "String"], ["moment", "Resource"]],
 		"var word: String = moment_name.strip_edges().to_lower()\nif word.is_empty():\n\treturn\nif moment == null:\n\t_moments.erase(word)\n\treturn\n_moments[word] = moment",
@@ -778,6 +779,7 @@ static func build() -> bool:
 	_param_hint(sheet, "moment", "resource_path")
 	_param_desc(sheet, "moment", "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
 	_default(sheet, "moment", "preload(\"res://eventsheet_addons/juice/impact.tres\")")
+	_quoted_argument(sheet, "define_moment(\"{moment_name}\", {moment})")
 	Lib.append_function(sheet, "play_moment_at", "Play Moment At", "Juice", "Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.",
 		[["moment_name", "String"], ["strength", "float"], ["from", "Node"], ["within", "float"], ["falloff", "String"]],
 		"var here: float = MomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
@@ -795,7 +797,7 @@ moment(moment_name, here)",
 	_param_options(sheet, "falloff", ["linear", "smooth", "none"])
 	_default(sheet, "falloff", "linear")
 	_param_desc(sheet, "falloff", "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
-	_quoted_argument(sheet, "play_moment_at({moment_name}, {strength}, {from}, {within}, \"{falloff}\")")
+	_quoted_argument(sheet, "play_moment_at(\"{moment_name}\", {strength}, {from}, {within}, \"{falloff}\")")
 	Lib.append_function(sheet, "set_moment_strength", "Set Moment Strength", "Juice", "Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.",
 		[["value", "float"]],
 		"_moment_strength = maxf(value, 0.0)",
@@ -829,51 +831,61 @@ moment(moment_name, here)",
 	_param_desc(sheet, "moment_name", "Which moment to play in reverse - the same name Moment takes.")
 	_default(sheet, "strength", "1")
 	_param_desc(sheet, "strength", "Scales every amount in the moment, exactly as playing it forwards does.")
+	_quoted_argument(sheet, "moment_backwards(\"{moment_name}\", {strength})")
 	Lib.append_function(sheet, "moment_revert", "Revert Moment", "Juice", "Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: Dictionary = _moment_plays[key]\n# The beat's own tweens are stopped before the way home is walked: a value being lerped back\n# while the tween that took it out is still writing would be two hands on the same number.\n_moment_let_go((play[\"start\"] as Dictionary).keys())\nvar from: Dictionary = {}\nfor touched: String in (play[\"start\"] as Dictionary).keys():\n\tvar now: Variant = _moment_value_of(touched)\n\tif now != null:\n\t\tfrom[touched] = now\nplay[\"from\"] = from\nplay[\"reverting\"] = true\nplay[\"revert_span\"] = maxf(float(play[\"span\"]), 0.001)\nplay[\"revert_left\"] = float(play[\"revert_span\"])\nfor at: int in MomentRunner.revert_order(play[\"steps\"]):\n\tvar step: Variant = (play[\"steps\"] as Array)[at]\n\tif step is Dictionary:\n\t\t_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))\nset_process(true)",
 		"Revert moment [b]{moment_name}[/b]")
 	_default(sheet, "moment_name", "hover")
 	_param_desc(sheet, "moment_name", "Which moment to turn around. A moment that is not playing is left alone.")
+	_quoted_argument(sheet, "moment_revert(\"{moment_name}\")")
 	Lib.append_function(sheet, "moment_skip_to_end", "Skip Moment To End", "Juice", "Ends a moment NOW, on the values it would have finished on: a held effect lands at its full strength, a freeze lets time go, a shake settles. The way out of an intro somebody has seen twenty times, and the way a cutscene skip leaves nothing half-played. It fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: Dictionary = _moment_plays[key]\nvar ends: Dictionary = play[\"end\"]\nfor touched: String in ends.keys():\n\t_moment_write_value(touched, ends[touched])\nfor step: Variant in (play[\"steps\"] as Array):\n\tif step is Dictionary and str((step as Dictionary).get(\"verb\", \"\")).strip_edges().to_lower() == \"shake\":\n\t\tstop_shake()\n\t\tbreak\nmoment_skipped.emit(key)\n_moment_end(key, true)",
 		"Skip moment [b]{moment_name}[/b] to the end")
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to jump to the end of. A moment that is not playing is left alone.")
+	_quoted_argument(sheet, "moment_skip_to_end(\"{moment_name}\")")
 	Lib.append_function(sheet, "moment_restore_values", "Restore Moment Values", "Juice", "Puts back every value a moment moved, to what it was the first time that moment touched it - the tint, the scale, the zoom, the time scale, the effects held on the screen. Leave the name empty and every moment this node has played is put back, which is what a scene wants on the way out. It plays nothing and undoes nothing that was not a moment's doing.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif key.is_empty():\n\tfor named: Variant in _moment_ledger.keys():\n\t\t_moment_put_back(str(named))\n\treturn\n_moment_put_back(key)",
 		"Restore what moment [b]{moment_name}[/b] changed")
 	_param_desc(sheet, "moment_name", "Which moment's values to put back. Leave it empty for every moment this node has played.")
+	_quoted_argument(sheet, "moment_restore_values(\"{moment_name}\")")
 	Lib.condition(sheet, "moment_is_playing", "Moment Is Playing", "Juice", "True while a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif key.is_empty():\n\treturn not _moment_plays.is_empty()\nreturn _moment_plays.has(key)")
 	_param_desc(sheet, "moment_name", "Which moment to ask about. Empty asks whether any moment is playing.")
+	_quoted_argument(sheet, "moment_is_playing(\"{moment_name}\")")
 	Lib.condition(sheet, "moment_is_reverting", "Moment Is Reverting", "Juice", "True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif key.is_empty():\n\tfor play: Variant in _moment_plays.values():\n\t\tif play is Dictionary and bool((play as Dictionary)[\"reverting\"]):\n\t\t\treturn true\n\treturn false\nif not _moment_plays.has(key):\n\treturn false\nreturn bool((_moment_plays[key] as Dictionary)[\"reverting\"])")
 	_param_desc(sheet, "moment_name", "Which moment to ask about. Empty asks whether any moment is reverting.")
+	_quoted_argument(sheet, "moment_is_reverting(\"{moment_name}\")")
 	Lib.condition(sheet, "moment_was_cut_short", "Moment Was Cut Short", "Juice", "True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.",
 		[["moment_name", "String"]],
 		"return bool(_moment_cut.get(_moment_key(moment_name), false))")
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment's last play to ask about.")
+	_quoted_argument(sheet, "moment_was_cut_short(\"{moment_name}\")")
 	Lib.number(sheet, "moment_progress", "Moment Progress", "Juice", "How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn 0.0\nvar play: Dictionary = _moment_plays[key]\nreturn MomentRunner.progress_of(float(play[\"span\"]) - float(play[\"left\"]), float(play[\"span\"]))", TYPE_FLOAT)
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to measure.")
+	_quoted_argument(sheet, "moment_progress(\"{moment_name}\")")
 	Lib.number(sheet, "moment_elapsed", "Moment Elapsed", "Juice", "How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn 0.0\nvar play: Dictionary = _moment_plays[key]\nreturn maxf(float(play[\"span\"]) - float(play[\"left\"]), 0.0)", TYPE_FLOAT)
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to measure.")
+	_quoted_argument(sheet, "moment_elapsed(\"{moment_name}\")")
 	Lib.number(sheet, "moment_step_name", "Moment Step Name", "Juice", "What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.",
 		[["moment_name", "String"]],
 		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn \"\"\nreturn str((_moment_plays[key] as Dictionary)[\"step\"])", TYPE_STRING)
 	_default(sheet, "moment_name", "intro")
 	_param_desc(sheet, "moment_name", "Which moment to ask about.")
+	_quoted_argument(sheet, "moment_step_name(\"{moment_name}\")")
 
 	# ── Channels: a shake said once, and heard by everything listening ──
 	Lib.append_function(sheet, "shake_channel", "Shake Channel", "Juice", "Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a passing truck reaches the props, a hit reaches the HUD panels, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen.",
@@ -886,6 +898,7 @@ moment(moment_name, here)",
 	_param_desc(sheet, "magnitude", "How hard: 0 to 1 for a listener shaking the camera, pixels for one shaking itself or the screen.")
 	_default(sheet, "seconds", "0.6")
 	_param_desc(sheet, "seconds", "How long the shake lasts before it has faded to nothing.")
+	_quoted_argument(sheet, "shake_channel(\"{channel}\", {magnitude}, {seconds})")
 	Lib.append_function(sheet, "listen_on_channel", "Listen On Channel", "Juice", "Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.",
 		[["channel", "String"], ["shakes", "String"]],
 		"add_to_group(StringName(channel), true)\n_channel_shakes = shakes",
@@ -895,13 +908,14 @@ moment(moment_name, here)",
 	_param_options(sheet, "shakes", ["the camera", "this node", "the screen"])
 	_default(sheet, "shakes", "this node")
 	_param_desc(sheet, "shakes", "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
-	_quoted_argument(sheet, "listen_on_channel({channel}, \"{shakes}\")")
+	_quoted_argument(sheet, "listen_on_channel(\"{channel}\", \"{shakes}\")")
 	Lib.append_function(sheet, "stop_listening_on_channel", "Stop Listening On Channel", "Juice", "Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.",
 		[["channel", "String"]],
 		"if is_in_group(StringName(channel)):\n\tremove_from_group(StringName(channel))\n_channel_put_back()",
 		"Stop listening on channel [b]{channel}[/b]")
 	_default(sheet, "channel", "props")
 	_param_desc(sheet, "channel", "Which channel to stop hearing.")
+	_quoted_argument(sheet, "stop_listening_on_channel(\"{channel}\")")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {

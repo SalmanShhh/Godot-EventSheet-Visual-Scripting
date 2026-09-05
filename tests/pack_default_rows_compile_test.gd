@@ -52,18 +52,6 @@ const SUPPORT := preload("res://tests/support.gd")
 ## carry through the round trip, which is a change to the emitter and both readers together, so it is
 ## written down here rather than smuggled into a pass about something else.
 const KNOWN_FAILING: Dictionary = {
-	"juice_behavior.gd/method:moment": "starting value `impact` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:define_moment": "starting value `impact` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_backwards": "starting value `hover` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_revert": "starting value `hover` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_skip_to_end": "starting value `intro` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_was_cut_short": "starting value `intro` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_progress": "starting value `intro` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_elapsed": "starting value `intro` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:moment_step_name": "starting value `intro` on the unquoted {moment_name}",
-	"juice_behavior.gd/method:shake_channel": "starting value `props` on the unquoted {channel}",
-	"juice_behavior.gd/method:listen_on_channel": "starting value `props` on the unquoted {channel}",
-	"juice_behavior.gd/method:stop_listening_on_channel": "starting value `props` on the unquoted {channel}",
 	"juice_3d_behavior.gd/method:shake_channel": "starting value `props` on the unquoted {channel}",
 	"juice_3d_behavior.gd/method:listen_on_channel": "starting value `props` on the unquoted {channel}",
 	"juice_3d_behavior.gd/method:stop_listening_on_channel": "starting value `props` on the unquoted {channel}",
