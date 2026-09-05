@@ -25,10 +25,12 @@
 # THE DIFFICULTY QUESTION IS ASKED OF CALLS, never of definitions: the words it looks for carry the
 # autoload's own name (`Settings.difficulty_factor(`), because the pack that DEFINES those verbs is a
 # project script too, and a check that counted `func difficulty_factor` as a reading would be answered
-# by the pack itself and never fire for anybody. The one reading it cannot see is the Health pack's
-# Scaled By field, which names a factor without naming the verb - a project whose only use of the
-# difficulty is that field is told about a menu that does something. That is the safe direction to be
-# wrong in: a note nobody needed is worse than a note that never came.
+# by the pack itself and never fire for anybody. There are FOUR readings, not one, and counting only
+# the factor called a menu useless in every project that branches on the word instead of multiplying
+# by a number: Difficulty Is and Difficulty Name are readings, and so is the Health row's Scaled By
+# field, which names a factor without naming any verb and is found by the shape of the call. The
+# direction to be wrong in is still the safe one: a note nobody needed is worse than one that never
+# came, so a reading this cannot see keeps the section quiet rather than making it talk.
 #
 # THE QUIET SHEET: none of the three draws anything in the sheet. The row wears the amber state, and
 # the words live in the triage inbox and in the row's help strip when it is selected.
@@ -46,12 +48,26 @@ const CHECK_UNBOUND := "options-unbound-action"
 const CHECK_PRESET_GAP := "options-preset-gap"
 const CHECK_DIFFICULTY_UNREAD := "options-difficulty-unread"
 
-## The call sites that put a difficulty in force, and the one that reads a factor back out of it.
-## Both are spelled with the autoload's name in front, so the pack that DEFINES the verbs is never
-## mistaken for a project that uses them.
+## The call sites that put a difficulty in force. Spelled with the autoload's name in front, so the
+## pack that DEFINES the verbs is never mistaken for a project that uses them.
 const DIFFICULTY_CHOSEN_WORDS: PackedStringArray = ["Settings.use_difficulty(",
 	"Settings.use_difficulty_from("]
-const DIFFICULTY_READ_WORD := "Settings.difficulty_factor("
+
+## Every way a project READS the difficulty back. There are four, and counting only the first of
+## them called a menu useless in every project that branches on the word instead of multiplying by a
+## number - Difficulty Is is how a sheet says "on hard, three more in the wave", and it changes the
+## game as surely as a factor does. Difficulty Name is the same reading with the word in hand.
+const DIFFICULTY_READ_WORDS: PackedStringArray = ["Settings.difficulty_factor(",
+	"Settings.difficulty_is(", "Settings.difficulty_name("]
+
+## And the fourth: the Health pack's Scaled By field, which names a factor without naming any verb.
+## A typed damage row whose LAST argument is a non-empty string literal is a row scaled by a named
+## factor - `take_typed_damage(12.0, "fire", self, "damage_taken")` - while the three-argument form
+## ends in a node and matches nothing. One level of brackets is allowed inside the amount, because
+## an amount is often a call of its own. The pre-read in front of it is the row's own name, so an
+## ordinary file pays one substring test and never builds the pattern at all.
+const SCALED_PRE_READ := "take_typed_damage("
+const DIFFICULTY_SCALED_PATTERN := "take_typed_damage\\((?:[^\"()]|\\([^()]*\\)|\"[^\"]*\")*, ?\"[^\"]+\"\\)"
 
 ## Where Project Settings keeps one input action, and the key its bindings live under.
 const INPUT_PREFIX := "input/"
@@ -85,12 +101,13 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## Whether a script is worth keeping for the difficulty question at all - the pre-read, deliberately
 ## looser than the rule behind it: it decides what is carried, not what is reported.
 static func _says_difficulty(source: String) -> bool:
-	if source.contains(DIFFICULTY_READ_WORD):
-		return true
+	for word: String in DIFFICULTY_READ_WORDS:
+		if source.contains(word):
+			return true
 	for word: String in DIFFICULTY_CHOSEN_WORDS:
 		if source.contains(word):
 			return true
-	return false
+	return source.contains(SCALED_PRE_READ)
 
 
 ## Every input action this project declares, in the order Project Settings holds them. The engine's
@@ -141,7 +158,7 @@ static func _difficulty_findings(sources: Array[Dictionary]) -> Array[Dictionary
 	var chooses: String = ""
 	for entry: Dictionary in sources:
 		var source: String = str(entry["source"])
-		if source.contains(DIFFICULTY_READ_WORD):
+		if _reads_difficulty(source):
 			return findings
 		if chooses.is_empty():
 			for word: String in DIFFICULTY_CHOSEN_WORDS:
@@ -153,6 +170,18 @@ static func _difficulty_findings(sources: Array[Dictionary]) -> Array[Dictionary
 	findings.append(_finding("info", CHECK_DIFFICULTY_UNREAD, chooses,
 		EventSheetL10n.translate("%s chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt.") % chooses.get_file(), ""))
 	return findings
+
+
+## Whether one script READS the difficulty in any of the four ways a project has of doing it: the
+## factor, the word, the question, and the Health row's Scaled By field. The regex is asked LAST and
+## only of a script that mentions the row at all, so the ordinary file pays one substring test.
+static func _reads_difficulty(source: String) -> bool:
+	for word: String in DIFFICULTY_READ_WORDS:
+		if source.contains(word):
+			return true
+	if not source.contains(SCALED_PRE_READ):
+		return false
+	return RegEx.create_from_string(DIFFICULTY_SCALED_PATTERN).search(source) != null
 
 
 ## What one action is bound to, straight out of Project Settings. An action declared with no events

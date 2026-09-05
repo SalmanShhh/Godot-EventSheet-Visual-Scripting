@@ -153,6 +153,30 @@ static func _test_the_doctor_notices_a_difficulty_nothing_reads() -> bool:
 	ok = _check("and a project that never chooses one is said nothing about",
 		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(), [])),
 		PackedStringArray()) and ok
+	# THE OTHER THREE READINGS. A factor is not the only way a difficulty is felt: a sheet that
+	# branches on the word changes the game as surely as one that multiplies by a number, and so
+	# does a damage row that names a factor in its Scaled By field without naming any verb. Each of
+	# these three on its own answers the question, and the three-argument damage row - the one that
+	# names NO factor - does not, which is what keeps the finding honest.
+	for reading: Array in [
+			["asking the word", "	if Settings.difficulty_is(\"hard\"):
+		spawn(3)"],
+			["showing the word", "	label.text = Settings.difficulty_name()"],
+			["a damage row scaled by a named factor",
+				"	$Health.take_typed_damage(12.0, \"fire\", self, \"damage_taken\")"],
+			["even when its amount is a call of its own",
+				"	$Health.take_typed_damage(maxf(a, b), \"fire\", self, \"damage_taken\")"]]:
+		var script: Dictionary = {"path": "res://reader.gd", "source": str(reading[1])}
+		ok = _check("%s is reading the difficulty" % str(reading[0]),
+			_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(),
+				[chooser, script])), PackedStringArray()) and ok
+	var unscaled: Dictionary = {"path": "res://enemy.gd",
+		"source": "	$Health.take_typed_damage(12.0, \"fire\", self)"}
+	ok = _check("while a typed hit that names no factor is not a reading",
+		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(),
+			[chooser, unscaled])),
+		PackedStringArray([
+			"menu.gd chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt."])) and ok
 	return ok
 
 
