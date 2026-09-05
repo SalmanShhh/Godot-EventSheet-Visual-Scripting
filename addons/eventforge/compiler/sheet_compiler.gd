@@ -3148,6 +3148,16 @@ static func param_default_part(param_id: String, leading_parts: PackedStringArra
 ## take one surrounding pair of quotes off either of them: bare and quoted mean the same value, and
 ## only the line around them decides which one survives the split.
 static func _param_default_candidates(starting_value: String, spelling: String) -> PackedStringArray:
+	if spelling == "code" and starting_value.is_empty():
+		# `default_code:` with nothing after it is not an empty value, it is a slot that inserts
+		# NOTHING - a row dropped at its defaults would emit `moment(, 1)`, which does not parse. The
+		# empty things an author can actually mean each have a spelling: `default_code: ""` is the
+		# empty string literal, and `default_word: ""` is the cleared box on a slot the template
+		# quotes itself.
+		push_warning(("EventSheets: a parameter asks for `default_code:` with no code in it, which " +
+			"would write a slot that inserts nothing, so it ships without a starting value. Write " +
+			"`default_code: \"\"` for the empty string, or `default_word: \"\"` for an empty word."))
+		return PackedStringArray()
 	var preferred: String = _param_default_text(starting_value, spelling)
 	if preferred.is_empty():
 		return PackedStringArray()

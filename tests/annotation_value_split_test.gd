@@ -265,6 +265,13 @@ static func run() -> bool:
 		ok = _check("and the help text beside it is still there: %s" % row[0],
 			_lifter_description(written, "word"), "Help, with a comma.") and ok
 
+	# And an empty `default_code:`, which is not an empty value at all: written out it is a slot that
+	# inserts NOTHING, so a row dropped at its defaults emits `moment(, 1)` and does not parse. The
+	# two empty things an author can actually mean each have a spelling - `default_code: ""` is the
+	# empty string literal, pinned above, and `default_word: ""` is the cleared box.
+	ok = _check("an empty default_code ships no starting value rather than a slot that inserts nothing",
+		_emit_param_line("", "code"), "## @ace_param(word, desc: \"Help, with a comma.\")") and ok
+
 	# The THIRD writer of the same grammar - the stub a published verb is offered as - spells the two
 	# kinds with the same two keys. It used to double the quotes instead (`""idle""`), and had to
 	# REFUSE a quoted value that also held a comma, because the extra pair closes before the comma
