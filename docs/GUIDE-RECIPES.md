@@ -262,6 +262,64 @@ Read it and the second half goes away, because a finding's identity is the findi
 check, its file and its subject - not where it sits on the page. A finding that moved is not new. A
 finding whose wording changed is not new. The same warning about a **different** file is.
 
+### Telling it which folders your project is
+
+The Doctor has never walked `addons/`: a plugin's code is not your game, and a finding you are not
+going to fix is noise. Most projects hold a second kind of that code - a test tree, a folder of
+build scripts, a folder of samples imported from somewhere else. Name those folders and the audit
+stops walking them:
+
+```
+Project Settings > EventSheets > Doctor > Skipped Folders
+
+eventsheets/doctor/skipped_folders = ["tests", "tools"]
+```
+
+Entries are folder **names**, matched at any depth, the same way `addons` always has been - so
+`tests` covers `res://tests/` and `res://demo/tests/` alike. A leading `res://` and a trailing slash
+are trimmed if you write them. The list is **empty by default**: a project that sets nothing is
+audited exactly as it was before the setting existed.
+
+This is a real trade rather than a display filter. Those files stop being read at all, so the
+findings about them go, and so does anything the audit could only have learned by reading them - a
+pack used only from a folder you skipped now reads as unused. What you get back is time: opening
+scripts as sheets is most of what an audit costs, so a project whose own code is the minority of its
+files gets the seconds back along with the quiet.
+
+One thing stays in wherever it lives: an event sheet saved as a `.tres`. Those reach the audit
+through the same project-wide sheet listing that **Find in Project** reads, which a Doctor setting
+has no business narrowing, and what they carry is an error rather than a note - a committed
+generated script that no longer matches the sheet it came from.
+
+### Telling it which folders your project is
+
+The Doctor has never walked `addons/`: a plugin's code is not your game, and a finding you are not
+going to fix is noise. Most projects hold a second kind of that code - a test tree, a folder of
+build scripts, a folder of samples imported from somewhere else. Name those folders and the audit
+stops walking them:
+
+```
+Project Settings ▸ EventSheets ▸ Doctor ▸ Skipped Folders
+
+eventsheets/doctor/skipped_folders = ["tests", "tools"]
+```
+
+Entries are folder **names**, matched at any depth, the same way `addons` always has been - so
+`tests` covers `res://tests/` and `res://demo/tests/` alike. A leading `res://` and a trailing slash
+are trimmed if you write them. The list is **empty by default**: a project that sets nothing is
+audited exactly as it was before the setting existed.
+
+This is a real trade rather than a display filter. Those files stop being read at all, so the
+findings about them go, and so does anything the audit could only have learned by reading them - a
+pack used only from a folder you skipped now looks unused. What you get back is time: opening
+scripts as sheets is most of what an audit costs, so a project whose own code is the minority of its
+files gets the seconds back along with the quiet.
+
+One thing stays in wherever it lives: an event sheet saved as a `.tres`. Those reach the audit
+through the same project-wide sheet listing that **Find in Project** reads, which a Doctor setting
+has no business narrowing, and what they carry is an error rather than a note - a committed
+generated script that no longer matches the sheet it came from.
+
 ---
 
 ## 7. Author Your Own Behavior and ACEs
