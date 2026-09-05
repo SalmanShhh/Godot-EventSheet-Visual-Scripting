@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Fixed: a starting value that read back as something else
+
+- **Both readers of an annotation line now split it the same way.** A pack's
+  `## @ace_param(...)` line is parsed twice - by the importer when a file opens as a sheet, and by
+  the provider scanner when the pack publishes its vocabulary - and the two disagreed about a
+  `default_code:` written with single quotes or holding a backslash-escaped one.
+  `default_code: 'a, b'` published as `'a` while the sheet opened on `'a, b'`; `default_code: "\""`
+  published nothing and swallowed the parameter's help text. Neither could be seen from outside: the
+  byte gate asks whether the compiler reproduces the file, and the compiler writes back what the
+  IMPORTER read, so the pack shipped the wrong starting value to the picker with every gate green.
+  The split is one function in one file now, and both readers call it.
+- **The emitter reads its own line back before it ships one.** Whether a starting value needs quotes
+  was decided by looking at the value - quote it when it is empty, holds a comma, or begins with a
+  quote - and that guess was wrong in both directions. A word like `say "hi, there"` hides its comma
+  between a balanced pair and reads back perfectly plain, while the protective quotes the rule added
+  closed before that comma and cut the line in half; a word ending in one unbalanced quote survives
+  no form at all and takes the help text after it down as well. Every line is now written out, split
+  back through the readers' own reader, and shipped only if it reproduces the value it was written
+  from - the plain form first, the quoted one second. A value neither form survives ships with **no**
+  starting value and a warning naming the parameter, because the alternative is a line the byte gate
+  refuses, which opens the whole verb as a block of raw code.
+
 ### Fixed: forty-two dropdowns that held a word they never showed
 
 - **A dropdown with no starting value of its own opens on its first word, and now holds that word

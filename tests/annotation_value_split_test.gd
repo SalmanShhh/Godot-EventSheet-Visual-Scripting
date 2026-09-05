@@ -212,6 +212,59 @@ static func run() -> bool:
 			_lifter_description(line, "word"), "Help, with a comma.") and ok
 		ok = _check("re-emitting reproduces the line: %s" % row[0], _reemit(line, "word"), line) and ok
 
+	# THE EMITTER READS ITS OWN LINE BACK before shipping it. The rule it used to write a word by -
+	# quote it when it is empty, holds a comma, or begins with a quote - is a guess about what will
+	# survive the split, and two shapes proved the guess wrong in both directions: `say "hi, there"`
+	# hides its comma between a balanced inner pair and reads back perfectly BARE, while the
+	# protective pair the rule adds closes before that comma and cuts the line in half; and `abc"`
+	# carries one unbalanced quote that no form survives, so the `, desc: "..."` after it is read as
+	# more of the value and the parameter's help text stops existing.
+	#
+	# So both forms are written out and read back, and the one that reproduces the value ships. When
+	# neither does the default is DROPPED with a warning, because a line that cannot be read back is
+	# a line the compiler cannot reproduce - and a verb whose annotation block fails the byte gate
+	# degrades to a block of raw code in every sheet that opens it. Pinned as the LINE, and then as
+	# the value that line reads back as, because a line that looks right and reads back wrong is the
+	# whole defect.
+	for entry: Variant in [
+		["a plain word is written bare", "vignette", "word",
+			"default_word: vignette", "vignette"],
+		["an empty word is written quoted, which is what lets it be said at all", "", "word",
+			"default_word: \"\"", ""],
+		["a word carrying a plain comma is written quoted", "a, b", "word",
+			"default_word: \"a, b\"", "a, b"],
+		["a word hiding its comma between its own quotes is written BARE, because quoting it splits the line",
+			"say \"hi, there\"", "word", "default_word: say \"hi, there\"", "say \"hi, there\""],
+		["a word wearing quotes of its own is written inside a second pair", "\"x\"", "word",
+			"default_word: \"\"x\"\"", "\"x\""],
+		["code is written verbatim, whatever it is quoted with", "'a, b'", "code",
+			"default_code: 'a, b'", "'a, b'"],
+		["a plain value still ships under the shorthand", "1.0", "",
+			"default: 1.0", "1.0"],
+	]:
+		var row: Array = entry as Array
+		var written: String = _emit_param_line(str(row[1]), str(row[2]))
+		ok = _check("the emitter writes it so it reads back: %s" % row[0], written,
+			"## @ace_param(word, %s, desc: \"Help, with a comma.\")" % row[3]) and ok
+		ok = _check("and the lifter gives that value straight back: %s" % row[0],
+			_lifter_default(written, "word"), str(row[4])) and ok
+		ok = _check("and the help beside it survives: %s" % row[0],
+			_lifter_description(written, "word"), "Help, with a comma.") and ok
+
+	# The two shapes NO form of a word survives. Dropping the starting value is the smaller loss by a
+	# long way: the alternative is a line the byte gate refuses, which is the whole verb opening as a
+	# block of raw code. The help text is what proves the point - it is still there.
+	for entry: Variant in [
+		["a word ending in one unbalanced quote", "abc\""],
+		["a word that is nothing but a quote", "\""],
+	]:
+		var row: Array = entry as Array
+		var written: String = _emit_param_line(str(row[1]), "word")
+		ok = _check("no starting value rather than a line that cannot be read back: %s" % row[0],
+			written, "## @ace_param(word, desc: \"Help, with a comma.\")") and ok
+		ok = _check("and the help text beside it is still there: %s" % row[0],
+			_lifter_description(written, "word"), "Help, with a comma.") and ok
+
 	# The THIRD writer of the same grammar - the stub a published verb is offered as - spells the two
 	# kinds with the same two keys. It used to double the quotes instead (`""idle""`), and had to
 	# REFUSE a quoted value that also held a comma, because the extra pair closes before the comma
@@ -310,6 +363,18 @@ static func _published_option_keys(script_path: String, ace_id: String, param_id
 	if instance is Node:
 		(instance as Node).free()
 	return keys
+
+
+## The `@ace_param` line the emitter writes for one starting value and spelling, with a help text
+## that carries a comma - the separator the whole grammar turns on.
+static func _emit_param_line(starting_value: String, spelling: String) -> String:
+	var ace_param: ACEParam = ACEParam.new()
+	ace_param.id = "word"
+	ace_param.default_value = starting_value
+	ace_param.default_spelling = spelling
+	ace_param.description = "Help, with a comma."
+	var written: PackedStringArray = SheetCompiler._param_annotation_lines(ace_param)
+	return written[0] if written.size() > 0 else "<nothing written>"
 
 
 ## The `default:` one `@ace_param` line leaves the lifter holding for a parameter.

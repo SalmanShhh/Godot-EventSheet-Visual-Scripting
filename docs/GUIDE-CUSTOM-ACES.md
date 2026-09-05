@@ -414,11 +414,14 @@ func hold_shield(seconds: float, quality: String, op: String) -> void:
   `default_word:` and `default_code:` are the same value with its kind said out loud; `default:` keeps
   meaning exactly what it always meant, so nothing already written changes.
 
-  Two things worth knowing. A word that both begins with a quote AND holds a comma has no spelling -
-  the pair protecting its quotes closes before the comma and the line splits there (the same
-  limitation an option label has). And on a parameter that also has `options:`, a `default_code:`
-  string literal has its quotes taken off to match against the option keys, which are bare words - so
-  on a dropdown, use `default_word:`.
+  Two things worth knowing. You do not have to work out whether your value needs quotes: the emitter
+  writes the line, splits it back with the reader's own split, and ships it only if the value comes
+  back whole - trying the plain form first and the quoted one second. A value that survives neither
+  (a word ending in one unbalanced quote, say) ships with NO starting value and a warning naming the
+  parameter, because a line that reads back wrong takes the help text after it down too, and a block
+  the compiler cannot reproduce opens as raw code. And on a parameter that also has `options:`, a
+  `default_code:` string literal has its quotes taken off to match against the option keys, which are
+  bare words - so on a dropdown, use `default_word:`.
 - **`options:`** entries may be `value=Label`: the dropdown READS the label and INSERTS the value.
   Entries split on `|` here (so commas stay free for prose); `@ace_param_options` splits on `,`
   instead. A key that itself contains `=` ships quoted - `"<="=at most` - because the split is on the

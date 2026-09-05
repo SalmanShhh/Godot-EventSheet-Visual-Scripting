@@ -28,6 +28,12 @@ const CollisionFilters := preload("res://addons/eventforge/registration/collisio
 ## the filters are: the compiler runs before the editor's class cache has seen anything.
 const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
 
+## The one reading of an annotation spec line - the split both annotation readers use. The emitter
+## reads its OWN output back through it before shipping a line, because a line that does not read
+## back the way it was meant publishes one vocabulary and opens as another. Loaded by path for the
+## same reason the two above are.
+const SpecText := preload("res://addons/eventforge/registration/annotation_spec_text.gd")
+
 const VERSION: String = "0.17.0"
 
 ## The prefix EVERY shared helper this compiler writes carries. They are the compiler's own plumbing -
@@ -3037,10 +3043,12 @@ static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
 	if not ace_param.autocomplete.is_empty():
 		parts.append("autocomplete: %s" % "|".join(ace_param.autocomplete))
 	var starting_value: String = str(ace_param.default_value).strip_edges()
-	var default_part: String = _param_default_text(starting_value, ace_param.default_spelling)
+	var desc_part: String = "desc: \"%s\"" % help
+	var default_part: String = param_default_part(ace_param.id, parts, desc_part,
+		starting_value, ace_param.default_spelling)
 	if not default_part.is_empty():
 		parts.append(default_part)
-	parts.append("desc: \"%s\"" % help)
+	parts.append(desc_part)
 	written.append("## @ace_param(%s, %s)" % [ace_param.id, ", ".join(parts)])
 	return written
 
@@ -3068,10 +3076,13 @@ static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
 ##   `default_code: <expr>` GDScript, taken verbatim by both readers. `"impact"` keeps its quotes;
 ##                          `Vector2(1, 1)` and `""` mean themselves.
 ##
-## The one shape no spelling reaches is a WORD that both begins with a quote and holds a comma: the
-## extra pair that protects its quotes is closed before the comma, so the segment splits there. It is
-## the same limitation an option LABEL has, for the same reason, and it is written down rather than
-## worked around.
+## NO SHAPE IS ASSUMED TO READ BACK. Those rules are a PREFERENCE, not a proof, and two shapes proved
+## them wrong: a word ending in one unbalanced quote (`abc"`) and a word hiding a comma between a
+## balanced inner pair (`say "hi, there"`) each wrote a line that came back as something else and took
+## the help text beside it with them. So the emitter reads its OWN line back before shipping it - see
+## `param_default_part`, which tries the preferred form, then the other form of the same key, and
+## drops the default with a warning if neither reads back. A word that both begins with a quote AND
+## holds a comma is usually the one that lands there.
 static func _param_default_text(starting_value: String, spelling: String) -> String:
 	if spelling == "code":
 		return "default_code: %s" % starting_value
@@ -3082,13 +3093,104 @@ static func _param_default_text(starting_value: String, spelling: String) -> Str
 	return "default: %s" % starting_value
 
 
-## One word in the form both annotation readers give straight back: quoted when bare would be
+## One word in the form both annotation readers USUALLY give straight back: quoted when bare would be
 ## misread - empty, holding a comma, or wearing its own quotes - and bare otherwise, which is what
-## every word a pack ships today already is.
+## every word a pack ships today already is. It is the first thing tried, never the last word on it:
+## `param_default_part` proves the line this produces and falls back to the other form when it fails.
 static func _param_word_text(word: String) -> String:
 	if word.is_empty() or word.contains(",") or word.begins_with("\""):
 		return "\"%s\"" % word
 	return word
+
+
+## The starting-value part of an `@ace_param` line, PROVED against the readers' own split before it
+## is written - or dropped, loudly, when no spelling of it reads back.
+##
+## Writing a line is only half of the promise. The other half is that the line comes back: the two
+## readers split it on commas outside quotes and brackets, so a value carrying an unbalanced quote
+## rewrites where every later segment begins. `default_word: abc"` opens the quote and never closes
+## it, so the `, desc: "..."` after it is read as more of the value and the parameter's help text
+## stops existing; `default_word: "say "hi, there""` - the protective pair the rules above add -
+## closes before the comma and splits the line in half, while the same word written BARE reads back
+## perfectly. Which way round it goes cannot be worked out by looking at the word, so it is not
+## guessed: both forms are written out, read back through `SpecText`, and the first one that
+## reproduces the value is the one shipped.
+##
+## When neither does, the default is DROPPED and a warning names the parameter. That is the smaller
+## loss by a long way: a line that does not read back is a line the compiler cannot reproduce, and a
+## verb whose annotation block fails the byte gate degrades to a block of raw code in every sheet
+## that opens it. One starting value goes missing instead of a whole verb.
+##
+## A line that does not read back even with NO default is left exactly as it was: the fault is
+## somewhere else on it (an odd quote in the help text, say), dropping the default would not fix it,
+## and quietly changing an unrelated line is not this function's business.
+static func param_default_part(param_id: String, leading_parts: PackedStringArray, desc_part: String,
+		starting_value: String, spelling: String) -> String:
+	var candidates: PackedStringArray = _param_default_candidates(starting_value, spelling)
+	if candidates.is_empty():
+		return ""
+	for candidate: String in candidates:
+		if _spec_reads_default_back(param_id, leading_parts, candidate, desc_part,
+				starting_value, spelling):
+			return candidate
+	if not _spec_segments_align(param_id, leading_parts, "", desc_part):
+		return candidates[0]
+	push_warning(("EventSheets: the starting value for parameter '%s' cannot be written as an " +
+		"@ace_param line that reads back (it is \"%s\"), so the parameter ships without one. " +
+		"A word that both begins with a quote and holds a comma is the usual cause.")
+		% [param_id, starting_value])
+	return ""
+
+
+## The forms one starting value may be written as, most preferred first. Code has exactly one - the
+## value IS GDScript, and quoting it would change what it means - so a `default_code:` that does not
+## read back has nowhere else to go. A word and the shorthand each have two, because both readers
+## take one surrounding pair of quotes off either of them: bare and quoted mean the same value, and
+## only the line around them decides which one survives the split.
+static func _param_default_candidates(starting_value: String, spelling: String) -> PackedStringArray:
+	var preferred: String = _param_default_text(starting_value, spelling)
+	if preferred.is_empty():
+		return PackedStringArray()
+	if spelling == "code":
+		return PackedStringArray([preferred])
+	var key: String = "default_word" if spelling == "word" else "default"
+	var bare: String = "%s: %s" % [key, starting_value]
+	var quoted: String = "%s: \"%s\"" % [key, starting_value]
+	return PackedStringArray([preferred, quoted if preferred == bare else bare])
+
+
+## True when the line these parts make splits back into exactly these parts AND hands the default
+## segment back as the value it was written from - the reader's own split, and the reader's own rule
+## for the key that was used, so this can never be a second opinion about either.
+static func _spec_reads_default_back(param_id: String, leading_parts: PackedStringArray,
+		default_part: String, desc_part: String, starting_value: String, spelling: String) -> bool:
+	if not _spec_segments_align(param_id, leading_parts, default_part, desc_part):
+		return false
+	var value: String = default_part.substr(default_part.find(":") + 1).strip_edges()
+	# `default_code:` is taken verbatim by both readers; the other two keys lose one quote pair.
+	if spelling != "code":
+		value = SpecText.unquoted_once(value)
+	return value == starting_value
+
+
+## True when the `@ace_param` line these parts make splits back into exactly these parts. A part that
+## rewrites where the next one begins - an unbalanced quote, a comma outside every quote and bracket -
+## fails here, which is the whole question being asked.
+static func _spec_segments_align(param_id: String, leading_parts: PackedStringArray,
+		default_part: String, desc_part: String) -> bool:
+	var parts: PackedStringArray = PackedStringArray()
+	parts.append_array(leading_parts)
+	if not default_part.is_empty():
+		parts.append(default_part)
+	parts.append(desc_part)
+	var segments: PackedStringArray = SpecText.split_outside_quotes(
+		"%s, %s" % [param_id, ", ".join(parts)], ",")
+	if segments.size() != parts.size() + 1 or segments[0].strip_edges() != param_id:
+		return false
+	for index: int in range(parts.size()):
+		if segments[index + 1].strip_edges() != parts[index]:
+			return false
+	return true
 
 
 ## One dropdown option, in the form the provider scanner reads back out of the emitted pack.
