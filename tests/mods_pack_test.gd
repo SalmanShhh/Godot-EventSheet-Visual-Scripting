@@ -398,6 +398,29 @@ static func _a_real_pack_file_is_read_off_its_own_bytes(script: GDScript) -> boo
 			"world.tscn carries a script, and this row loads data only"],
 		["and a pack carrying a code file is still refused by its name", codey_reason,
 			"it carries 1 code file(s), starting with res://codey/cheat.gd, and this row loads data only"],
+	]) and _the_older_pack_formats_are_read_too(script)
+
+
+## THE FORMATS NO ENGINE STILL WRITES. A pack a player downloads was written by whichever engine the
+## game that made it shipped with, so the reader takes formats 1 to 4 - but only 4 is a shape the
+## packer here can produce, which left three quarters of that claim resting on the reader's own
+## reasoning. The older two are written out byte by byte instead and read back through the same door.
+static func _the_older_pack_formats_are_read_too(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var oldest: Dictionary = director._pack_index(ROOT.path_join("probe/oldest.pck"))
+	var old: Dictionary = director._pack_index(ROOT.path_join("probe/old.pck"))
+	var old_reason: String = director._code_reason({"scripts": false, "kind": "pack",
+		"path": ROOT.path_join("probe/old.pck")})
+	director.free()
+	var held: PackedStringArray = PackedStringArray([
+		"res://old/items/blade.tres", "res://old/cheat.gd"])
+	return SUPPORT.pins("mods_pack_test", [
+		["a pack in the first format is read", bool(oldest.get("read")), true],
+		["and its file list is the files it holds", oldest.get("paths"), held],
+		["a pack in the third format is read as well", bool(old.get("read")), true],
+		["with the same list", old.get("paths"), held],
+		["and the code in it is what refuses the mod", old_reason,
+			"it carries 1 code file(s), starting with res://old/cheat.gd, and this row loads data only"],
 	])
 
 
@@ -719,6 +742,11 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
 
+	# The two older pack shapes, which no engine still writes.
+	for older: Array in [[1, "probe/oldest.pck"], [3, "probe/old.pck"]]:
+		_pack_in_format(ROOT.path_join(str(older[1])), int(older[0]),
+			PackedStringArray(["res://old/items/blade.tres", "res://old/cheat.gd"]))
+
 	# A mod whose only code is a shader file. It is not a script, and it is not data either.
 	_write(ROOT.path_join("probe/shady/mod.json"), JSON.stringify({
 		"name": "Shady", "version": "1.0", "scripts": false}, "\t"))
@@ -800,6 +828,46 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 ## expectation cannot drift apart over a header line.
 static func _scene_text(lines: PackedStringArray) -> String:
 	return "[gd_scene format=3]\n\n" + "\n".join(lines) + "\n"
+
+
+## A `.pck` in a format no engine writes any more, laid out byte by byte here: the magic, the pack
+## version, the three engine-version words, the flags and the base a format-2 pack gained, the
+## sixteen reserved words, and then one entry per file - length, padded path, place, size, checksum,
+## and the flags word only a format-2 pack carries.
+##
+## IT IS WRITTEN RATHER THAN PACKED BECAUSE NOTHING CAN PACK IT. `PCKPacker` writes today's format,
+## so the older shapes - which is what a pack a player downloaded from a game built years ago IS -
+## can only be pinned by a fixture that spells them out. The reader claims to read every format up
+## to today's; this is the half of that claim the engine cannot demonstrate.
+static func _pack_in_format(pack_path: String, version: int, paths: PackedStringArray) -> void:
+	_make_folder(pack_path.get_base_dir())
+	var file: FileAccess = FileAccess.open(pack_path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_32(0x43504447)
+	file.store_32(version)
+	file.store_32(4)
+	file.store_32(3)
+	file.store_32(0)
+	if version >= 2:
+		file.store_32(0)
+		file.store_64(0)
+	for _reserved: int in 16:
+		file.store_32(0)
+	file.store_32(paths.size())
+	for path: String in paths:
+		var raw: PackedByteArray = path.to_utf8_buffer()
+		while raw.size() % 4 != 0:
+			raw.append(0)
+		file.store_32(raw.size())
+		file.store_buffer(raw)
+		file.store_64(0)
+		file.store_64(0)
+		for _checksum: int in 16:
+			file.store_8(0)
+		if version >= 2:
+			file.store_32(0)
+	file.close()
 
 
 ## A real `.pck`, written by the engine's own packer from files already on disk. Nothing loads it -
