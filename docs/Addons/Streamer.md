@@ -269,6 +269,20 @@ the round trip is what makes a folder of chunks editable rather than a build art
 - **A hole in the grid is allowed.** The pack skips a cell whose scene is not there, in silence -
   a world may genuinely be island-shaped. The Doctor's Streaming section is what tells you about a
   hole in a grid that is otherwise complete.
+- **A chunk scene that is THERE and will not load is refused for good.** A file that is not a scene,
+  or one the loader turns down, is written off after a single attempt - remembered like a hole, so
+  the world settles instead of erroring once a frame for ever. Fixing the file is not enough on its
+  own: **Stream Chunks Around** is what clears that memory, so run it again (or restart) after the
+  fix.
+- **Ask for chunks before naming the folder and they wait.** **Keep Chunk** and **Preload Chunks
+  Around** can be used before **Stream Chunks Around** has said where the chunk scenes live. Those
+  cells sit in the queue and are loaded the moment a folder is named, rather than being looked for
+  at a path with no folder in it and written off as holes; the streamer says so once and parks its
+  tick until it has somewhere to look.
+- **A streamer whose followed node is freed puts down what it was carrying.** The wanted set is an
+  answer about a node that no longer exists, so it is dropped along with the follow - the radius of
+  chunks around a place the game has left is never loaded in behind you. **Stream Chunks Around**
+  starts it again.
 - **The host sits at the origin, unscaled.** A chunk is placed at its cell's own corner in the
   HOST's space, while the cell a player is in is read off their GLOBAL position. A World node moved
   to (2000, 0), rotated or scaled therefore puts every chunk one transform away from the cell it

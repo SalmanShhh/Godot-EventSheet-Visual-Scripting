@@ -292,6 +292,16 @@
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads "this project's tilesets go up to -1".
+- **A streamer that stops following puts down what it was carrying.** Both Streamer packs already
+  stopped following a node that had been freed - but the wanted set was left exactly as the last
+  refill had built it, and nothing empties that list except the requests it feeds. So a streamer
+  whose player had died went on loading a whole radius of chunks, one a frame, around a place the
+  game had left. The lists are cleared with the follow now, which is what Stop Streaming has always
+  done. **And a chunk asked for before there is a folder waits for one**: Keep Chunk and Preload
+  Chunks Around used before Stream Chunks Around had named the folder looked for each cell at a path
+  with no folder in it, found nothing, and wrote every one of them down as a HOLE - which is
+  remembered for ever, so the preload silently cancelled itself. Those cells wait in the queue, the
+  streamer says so once and parks its tick, and naming a folder is what wakes it.
 - **A shader is code, and a data-only load now says so.** A `.gdshader` in a mod folder, and a
   `Shader` or `VisualShader` written inside a scene or named beside one, were neither refused nor
   mentioned: the tier said "no script comes in with this mod" while a stranger's shader came in with

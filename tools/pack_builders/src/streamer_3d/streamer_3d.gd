@@ -66,6 +66,9 @@ var _asked: Array[Vector3i] = []
 ## Whether On Streaming Idle has already been told about this quiet moment, so it fires once
 ## when the world settles rather than every frame afterwards.
 var _idle_announced: bool = true
+## Whether the "asked before there was a folder" note has been said. Once per streamer: the
+## situation lasts until a row fixes it, and a warning per frame is not a warning.
+var _said_no_folder: bool = false
 
 ## @ace_trigger
 ## @ace_name("On Chunk Loaded")
@@ -221,6 +224,17 @@ func _unload_cell(cell: Vector3i) -> void:
 ## a level-design fact, and the Doctor is where it is reported.
 ## @ace_hidden
 func _start_one_request() -> void:
+	if _folder.is_empty():
+		# Keep Chunk and Preload Chunks Around may be asked before Stream Chunks Around has said
+		# where the chunk scenes live - a teleport that preloads its destination in the row above
+		# the one that starts streaming. There is no path to build yet, so the cells WAIT: asking
+		# for them now would find no scene at "chunk_3_4_0.tscn", write each one down as a hole,
+		# and a hole is remembered for ever, so the preload would have quietly cancelled itself.
+		# Said once, because a note repeated every frame is a note nobody reads.
+		if not _asked.is_empty() and not _said_no_folder:
+			_said_no_folder = true
+			push_warning("Streamer 3D: chunks were asked for before Stream Chunks Around named the folder they live in - they are waiting for it.")
+		return
 	while not _asked.is_empty() or not _wanted.is_empty():
 		var cell: Vector3i = _asked.pop_front() if not _asked.is_empty() else _wanted.pop_front()
 		if _loaded.has(cell) or _requested.has(cell):
@@ -298,8 +312,16 @@ func _process(_delta: float) -> void:
 		# What was being followed is gone - the player died, the level was thrown away. There is
 		# no centre to build a wanted set around any more, so the streamer stops following rather
 		# than asking an unanswerable question every frame for the rest of the game.
+		#
+		# AND IT PUTS DOWN WHAT IT WAS CARRYING. The wanted set is the last refill's answer about
+		# a node that no longer exists, and nothing empties it but the requests it feeds: leaving
+		# it full meant a whole radius of chunks - (2r+1) cubed of them - still loading in one at
+		# a time around a place the game has left. Stop Streaming clears both lists, and this is
+		# the same moment by another name.
 		_around = null
 		_streaming = false
+		_wanted.clear()
+		_asked.clear()
 	if _streaming and _around != null and is_instance_valid(_around):
 		var center: Vector3i = _cell_of_point(_point_of(_around))
 		_refill_wanted(center)
@@ -307,9 +329,11 @@ func _process(_delta: float) -> void:
 	_start_one_request()
 	_collect_finished()
 	_announce_idle_when_settled()
-	if not _streaming and _asked.is_empty() and _wanted.is_empty() and _requested.is_empty():
+	if not _streaming and _requested.is_empty() 			and (_folder.is_empty() or (_asked.is_empty() and _wanted.is_empty())):
 		# Nothing to follow and nothing in flight: park the tick rather than spend a frame
-		# every frame asking an empty question.
+		# every frame asking an empty question. Cells asked for before a folder was named park
+		# it too - they are waiting on a row, not on a frame, and Stream Chunks Around starts
+		# the tick again with somewhere to look.
 		set_process(false)
 
 

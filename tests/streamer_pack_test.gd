@@ -86,7 +86,40 @@ static func run() -> bool:
 	passed = _a_chunk_that_will_not_build_is_asked_for_once(stub) and passed
 	passed = _the_world_a_row_sees_while_a_chunk_leaves(stub) and passed
 	passed = _a_streamer_whose_node_is_gone_parks_its_tick(stub) and passed
+	passed = _a_chunk_asked_for_before_a_folder_waits_for_one(stub) and passed
 	return passed
+
+
+## Keep Chunk and Preload Chunks Around can be asked before Stream Chunks Around has said where the
+## chunk scenes live - a teleport preloading its destination in the row above the one that starts
+## streaming. There was no folder to build a path from, so each cell was looked for at
+## "chunk_3_4.tscn", found nowhere, and written down as a HOLE - which is remembered for ever, so
+## the preload cancelled itself and the chunk never arrived. It waits for the folder now.
+static func _a_chunk_asked_for_before_a_folder_waits_for_one(stub: GDScript) -> bool:
+	var streamer: Node = stub.new()
+	streamer.cell_size = Vector2(100.0, 100.0)
+	streamer.keep_chunk(Vector2i(3, 4))
+	streamer._process(0.016)
+	var written_off: int = streamer._absent.size()
+	var still_asked: int = streamer._asked.size()
+	var asked_for_nothing: Array[String] = streamer.requested_paths.duplicate()
+	var parked: bool = not streamer.is_processing()
+	var around: Node2D = Node2D.new()
+	streamer.stream_around(around, 0, "res://world/chunks")
+	streamer._process(0.016)
+	var asked_for_now: Array[String] = streamer.requested_paths.duplicate()
+	around.free()
+	streamer.free()
+	return SUPPORT.pins(TEST, [
+		["a chunk asked for before the folder is known is not written off as a hole",
+			written_off, 0],
+		["it waits in the queue instead", still_asked, 1],
+		["and nothing is asked for while there is nowhere to ask", asked_for_nothing,
+			PackedStringArray() as Array[String]],
+		["the streamer parks rather than spending a frame on it every frame", parked, true],
+		["and the moment a folder is named, that is the chunk it asks for", asked_for_now,
+			["res://world/chunks/chunk_3_4.tscn"] as Array[String]],
+	])
 
 
 ## The stub, written out and loaded. `extends "res://..."` needs a real file on both sides, so
@@ -420,8 +453,31 @@ static func _a_streamer_whose_node_is_gone_parks_its_tick(stub: GDScript) -> boo
 	var ticking_after: bool = streamer.is_processing()
 	var quiet: bool = not streamer.is_loading_chunks()
 	streamer.free()
+	# THE SAME, WITH A RADIUS. Parking the tick is only half of stopping: the wanted set is the
+	# last refill's answer about a node that no longer exists, and nothing empties it but the
+	# requests it feeds - so a streamer that stopped following went on loading a whole radius of
+	# chunks, one a frame, around a place the game had left.
+	var wide: Node = stub.new()
+	var followed: Node2D = Node2D.new()
+	wide.cell_size = Vector2(100.0, 100.0)
+	wide.stream_around(followed, 2, "res://world/chunks")
+	wide._process(0.016)
+	var waiting_while_followed: int = wide._wanted.size() + wide._asked.size()
+	followed.free()
+	wide._process(0.016)
+	var waiting_after: int = wide._wanted.size() + wide._asked.size()
+	var asked_for_then: int = wide.requested_paths.size()
+	for tick: int in range(5):
+		wide._process(0.016)
+	var asked_for_now: int = wide.requested_paths.size()
+	wide.free()
 	return SUPPORT.pins(TEST, [
 		["a streamer following something ticks", ticking_while_followed, true],
 		["a streamer whose node was freed parks its tick", ticking_after, false],
 		["and it asks for nothing more", quiet, true],
+		["a radius that has a node to measure from wants the ring around it",
+			waiting_while_followed, 24],
+		["and a streamer whose node is gone puts every one of them down", waiting_after, 0],
+		["so the chunks around a place the game has left are never asked for",
+			asked_for_now, asked_for_then],
 	])
