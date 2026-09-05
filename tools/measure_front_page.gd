@@ -23,7 +23,7 @@
 #   git worktree add ../ef-measure HEAD
 #   godot --headless --path ../ef-measure --script tools/measure_front_page.gd -- --reading
 # Without that, an uncommitted script counts as one of the plugin's files and its lines land in the
-# percentage. The vocabulary half is safe anywhere: it asks the registry, which only holds what the
+# share. The vocabulary half is safe anywhere: it asks the registry, which only holds what the
 # providers registered.
 #
 # WHAT IS MEASURED, EXACTLY:
@@ -39,7 +39,19 @@
 #   output and the third is written to be read by a runner rather than by a person. Each file is
 #   opened as a sheet through the same reader the canvas reads (EventSheetLiftReading), and three
 #   numbers come out: how many files there are, how many of them hold no script block at all
-#   (`block_rows == 0`), and the share of all their lines that arrive as rows rather than as blocks.
+#   (`block_rows == 0`), and `drawn` - the share of all their lines that arrive as rows rather than
+#   as blocks.
+#
+# WHAT IS DELIBERATELY NOT CHECKED, AND WHY. The front page's third figure - "89.9% of those rows in
+# the sheet's own words" - is the NAMING question, not the drawing one, and the two are different
+# numbers that must never be swapped: DRAWING asks how much of a file the canvas shows as rows
+# instead of as a wall of code, NAMING asks how many of those rows a vocabulary has words for. A
+# folder can draw entirely as rows and still hold hundreds of lines no vocabulary claims, which is
+# the whole reason `tools/reading_shape_census.gd` prints its two numbers apart and labels them.
+# `drawn` below is the DRAWING share, so it is printed under its own name and checked against
+# nothing. Deriving the naming one means agreeing first on what its denominator is - every row, or
+# every row that carries a verb - and that is a decision to make in front of the sentence rather
+# than a line to add here. Until somebody makes it, that literal stays hand-typed and stays said.
 #
 # DETERMINISTIC: the walk is sorted, nothing printed is a time or a path outside the project, and
 # two runs over an unchanged tree print the same bytes.
@@ -68,9 +80,6 @@ const SENTENCES: Array[Dictionary] = [
 	{"key": "files", "pattern": "\\*\\*([\\d,]+) files, [\\d,]+ of them at zero script blocks",
 		"needs_reading": true},
 	{"key": "zero_blocks", "pattern": "\\*\\*[\\d,]+ files, ([\\d,]+) of them at zero script blocks",
-		"needs_reading": true},
-	{"key": "percent",
-		"pattern": "of them at zero script blocks, and ([\\d.]+)% of those rows",
 		"needs_reading": true}
 ]
 
@@ -88,8 +97,8 @@ func _init() -> void:
 		int(measured["parameters"])])
 	if with_reading:
 		measured.merge(_reading(limit), true)
-		print("files=%d zero_blocks=%d percent=%s" % [int(measured["files"]),
-			int(measured["zero_blocks"]), _one_decimal(float(measured["percent"]))])
+		print("files=%d zero_blocks=%d drawn=%s" % [int(measured["files"]),
+			int(measured["zero_blocks"]), _one_decimal(float(measured["drawn"]))])
 	else:
 		print("files=(not measured - pass --reading)")
 	_report(measured, with_reading, limit)
@@ -138,10 +147,10 @@ func _reading(limit: int) -> Dictionary:
 			zero_blocks += 1
 		read_lines += int(coverage.get("read_lines", 0))
 		total_lines += int(coverage.get("total_lines", 0))
-	var percent: float = 100.0
+	var drawn: float = 100.0
 	if total_lines > 0:
-		percent = 100.0 * float(read_lines) / float(total_lines)
-	return {"files": files, "zero_blocks": zero_blocks, "percent": percent,
+		drawn = 100.0 * float(read_lines) / float(total_lines)
+	return {"files": files, "zero_blocks": zero_blocks, "drawn": drawn,
 		"read_lines": read_lines, "total_lines": total_lines}
 
 
@@ -170,8 +179,7 @@ func _report(measured: Dictionary, with_reading: bool, limit: int) -> void:
 				% [str(sentence["pattern"]), RECORD_FILE])
 			continue
 		var quoted: String = found.get_string(1)
-		var said: String = _one_decimal(float(measured[key])) if key == "percent" \
-			else _thousands(int(measured[key]))
+		var said: String = _thousands(int(measured[key]))
 		if quoted == said:
 			continue
 		drifted.append("  line %d says %s, measured %s  (%s)"
@@ -203,8 +211,9 @@ func _thousands(value: int) -> String:
 	return "-%s" % grouped if value < 0 else grouped
 
 
-## A percentage as the front page writes one: one decimal place, never rounded up past what was
-## measured, because a share the tree does not have is the one thing this must not print.
+## A share to one decimal place, never rounded up past what was measured, because a share the tree
+## does not have is the one thing this must not print. Printed, and checked against nothing - see
+## the header on the drawing question and the naming one.
 func _one_decimal(value: float) -> String:
 	return "%.1f" % (floorf(value * 10.0) / 10.0)
 
