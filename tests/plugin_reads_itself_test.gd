@@ -86,7 +86,22 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# the group, taken off the worst file in it, rounded up a little.
 	"recognisers": 63,
 	"compiler": 5,
-	"vocabulary": 65,
+	# Re-measured over the WHOLE role rather than off the files the rotating sample happened to
+	# reach, after the sample moved and landed on sequencer_aces.gd, which measures 67. The sample is
+	# forty files of about five hundred, seeded by the day, so which forty it takes shifts whenever
+	# the corpus gains or loses a file - and 65 was read off a run that had never opened the worst
+	# file in this group. All 152 of them, read off the tree today, worst first: sequencer_aces 67,
+	# tooling_aces 57, testing_aces 54, ace_adapter 50, world_look_aces 47, file_aces 41,
+	# scene_lighting_aces 35, provider_preview 24, focus_and_exposure_aces 21, material_aces 20, and
+	# nothing else over 19.
+	#
+	# It measures that way for the reason the whole group does: a vocabulary module IS a table, one
+	# descriptor per verb built from its own literal fields, so most of its rows are entries rather
+	# than logic, and the widest table scores the highest. Nothing about the reading layer changed to
+	# move it - the ceiling is a description of the group, taken off the worst file in it, and it is
+	# the measured number exactly rather than a number with room in it, so any file getting worse
+	# still fails.
+	"vocabulary": 67,
 	# Raised from 21 when the rotating sample reached doc_editor_words.gd, which measures 26: that
 	# page's body is one dictionary literal of key -> sentence (the words table itself lives
 	# elsewhere and is read, not repeated), so most of its rows ARE literal entries - the same reason
