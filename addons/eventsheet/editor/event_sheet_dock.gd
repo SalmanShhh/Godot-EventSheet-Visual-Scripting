@@ -7024,8 +7024,18 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	# strip while a row about a beat is selected, and go away when it is not. The sheet row itself
 	# never grows a button - this is where the buttons for a selection live.
 	if _moment_segment != null and _viewport != null:
-		_moment_segment.follow(_active_view().get_selected_ace_resource())
+		_moment_segment.follow(_active_view().get_selected_ace_resource(), _selected_block_kind(_row_data))
 	_properties_bar.refresh()
+
+
+## The block kind the selected row is the head of, or "" for every other row. A block's head carries
+## no ACE resource, so a segment that reads only the selection's ACE can never see one - which is
+## why this is asked separately rather than derived inside the segment.
+func _selected_block_kind(row_data: EventRowData) -> String:
+	if row_data == null or row_data.source_resource == null:
+		return ""
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(row_data.source_resource)
+	return "" if kind == null else kind.kind_id
 
 
 ## Writes a variable's initial value from the row's own inline field, through the undo funnel.

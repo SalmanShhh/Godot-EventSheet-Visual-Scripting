@@ -288,7 +288,20 @@ static func _segment_pins() -> bool:
 			EventSheetMomentSegment.SUBJECT_BLOCK],
 		["every other row earns nothing at all", EventSheetMomentSegment.subject_of(other_row), {}],
 		["and a row with nothing selected earns nothing", EventSheetMomentSegment.subject_of(null), {}],
-		["the segment is five doors and a strength", EventSheetMomentSegment.BUTTONS.size(), 5]
+		["the segment is five doors and a strength", EventSheetMomentSegment.BUTTONS.size(), 5],
+		# The wiring, not the pure function: the head of a moment block is a row the registry knows
+		# by kind, and that kind is the word the dock hands the segment.
+		["the registry knows a moment block by the kind the segment answers for",
+			EventSheetBlockRegistry.kind_for(MomentBlockRow.new()).kind_id,
+			EventSheetMomentSegment.MOMENT_BLOCK_KIND],
+		# A list on a node can be walked in the editor; a beat the running game plays cannot, so the
+		# doors stay shut rather than moving whichever player the scene happened to have.
+		["a player's list opens the doors",
+			EventSheetMomentSegment.previewable(EventSheetMomentSegment.subject_of(player_row)), true],
+		["a named moment leaves them shut",
+			EventSheetMomentSegment.previewable(EventSheetMomentSegment.subject_of(moment_row)), false],
+		["and so does a block's head",
+			EventSheetMomentSegment.previewable(EventSheetMomentSegment.subject_of(null, "moment")), false]
 	])
 
 

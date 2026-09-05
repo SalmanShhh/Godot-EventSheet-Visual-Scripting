@@ -16,6 +16,12 @@
 # never show two different pictures of one list. Nothing is written to the scene that is not put
 # back - the strip captures the object's rest state before it moves anything.
 #
+# AND ONLY A LIST CAN BE SAMPLED. A moment written as a block of rows, or played by name out of a
+# file, is a coroutine on a running host: there is no list on a node for the strip to walk. So the
+# doors are DISABLED on those rows, wearing the reason, and the segment says which beat is selected
+# without pretending it can play it. Silently driving whichever player the scene happened to have
+# would move an object the row has nothing to do with.
+#
 # THE READING HALF IS PURE + STATIC (what a row is about, what the segment's buttons are called), so
 # the suite pins every word without an editor, a viewport or a display server.
 @tool
@@ -52,6 +58,11 @@ const BUTTONS: Array = [
 	["inspector", "Open", "Edit", "Select the Feedback Player this row is about, so its list opens in the Inspector."]
 ]
 
+## What a door says when it is on a beat the editor cannot sample. One sentence, on every disabled
+## button, because a button that does nothing without saying why is the thing this segment exists
+## not to be.
+const NO_PREVIEW_REASON: String = "Only a Feedback Player's list can be previewed here - this beat is a moment the game plays, so there is nothing on a node to sample."
+
 ## What the strength field offers. A beat is tuned between nothing and twice as much; the box takes
 ## anything, these are only the ends of its drag.
 const STRENGTH_MIN: float = 0.0
@@ -64,6 +75,8 @@ var _title: Label = null
 var _strength: SpinBox = null
 var _strip: Control = null
 var _subject: Dictionary = {}
+## The doors by name, so following a selection can say which of them this row can actually use.
+var _buttons: Dictionary = {}
 
 ## The controls the segment shows and hides. The CONTAINER is not one of them: it stays on the strip
 ## for good, because the strip's resting/expanded sweep decides what is visible by container and a
@@ -114,6 +127,13 @@ static func title_for(subject: Dictionary) -> String:
 	return ""
 
 
+## Whether the segment's doors can honestly act on this subject: a Feedback Player's list is a list
+## on a node, which the Inspector's strip walks; a Moment row or block is a coroutine the running
+## game plays, which nothing in the editor holds. PURE + STATIC.
+static func previewable(subject: Dictionary) -> bool:
+	return str(subject.get("kind", "")) == SUBJECT_PLAYER
+
+
 ## Builds the segment and adds it to the strip. It starts hidden, and every button keeps its words
 ## whether or not the running editor theme lends it an icon.
 func build(toolbar: Node) -> Control:
@@ -134,6 +154,7 @@ func build(toolbar: Node) -> Control:
 		button.pressed.connect(func() -> void: activate(pressed_kind))
 		_segment.add_child(button)
 		_parts.append(button)
+		_buttons[pressed_kind] = button
 	_strength = SpinBox.new()
 	_strength.name = "EventSheetMomentSegmentStrength"
 	_strength.min_value = STRENGTH_MIN
@@ -164,11 +185,22 @@ func follow(row_resource: Resource, block_kind: String = "") -> void:
 		part.visible = not _subject.is_empty()
 	if _title != null:
 		_title.text = title_for(_subject)
+	var sampled: bool = previewable(_subject)
+	for entry: Array in BUTTONS:
+		var button: Button = _buttons.get(str(entry[0])) as Button
+		if button == null:
+			continue
+		button.disabled = not sampled
+		button.tooltip_text = str(entry[3]) if sampled else NO_PREVIEW_REASON
+	if _strength != null:
+		_strength.editable = sampled
 
 
 ## One button, pressed. Answers whether it did anything, so the suite and the dock read the same
 ## verdict rather than watching the scene for a side effect.
 func activate(kind: String) -> bool:
+	if not previewable(_subject):
+		return false
 	var player: Node = _player()
 	if player == null:
 		return false
