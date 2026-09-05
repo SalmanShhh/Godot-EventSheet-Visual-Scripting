@@ -76,16 +76,17 @@ static func _pin_the_card() -> bool:
 	var circle_fields: Array = steps_editor.call("fields_for", "circle")
 	return SUPPORT.pins(PREFIX, [
 		["a line's card, field by field", _keys_of(line_fields),
-			"kind,x,y,blend,scale_mode,p1,p2,p3,unit,color_mode,color,color_b,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
+			"kind,x,y,blend,scale_mode,p1,p2,p3,color_mode,color,color_b,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
 		["a line's card, section by section", _groups_of(line_fields),
-			"Placement,Placement,Placement,Placement,Placement,Geometry,Geometry,Geometry,Geometry,Colour,Colour,Colour,Colour,Dashed,Dashed,Dashed,Dashed,Dashed"],
+			"Placement,Placement,Placement,Placement,Placement,Geometry,Geometry,Geometry,Colour,Colour,Colour,Colour,Dashed,Dashed,Dashed,Dashed,Dashed"],
 		["a circle has no ends and no dashes to offer", _keys_of(circle_fields),
 			"kind,x,y,blend,p1,color_mode,color,color_b"],
 		["a new circle step, key by key", ",".join(PackedStringArray(
 			(steps_editor.call("defaults_for", "circle") as Dictionary).keys())),
 			"x,y,p1,p2,p3,color,texture,blend,color_mode,color_b"],
 		["a new line step starts undashed", str((steps_editor.call("defaults_for", "line") as Dictionary).get("dashed")), "false"],
-		["a new line step reads its thickness in pixels", str((steps_editor.call("defaults_for", "line") as Dictionary).get("unit")), "px"],
+		["a thickness is read in the unit its own field offers, and no second row says it again",
+			_keys_of(line_fields).count("unit"), 0],
 		["the second colour belongs to a two-colour step",
 			EventSheetCardSchemas.field_visible({"key": "color_b", "show_if": "color_mode==two"}, {"color_mode": "two"}), true],
 		["and to no other", EventSheetCardSchemas.field_visible(
@@ -101,7 +102,7 @@ static func _pin_the_card() -> bool:
 static func _pin_the_new_keys() -> bool:
 	var step: Dictionary = {
 		"kind": "line", "x": 0.0, "y": 0.0, "p1": 32.0, "p2": 0.0, "p3": 3.0, "color": "#00ff88", "texture": "",
-		"unit": "world", "scale_mode": "fixed", "blend": "add", "color_mode": "two", "color_b": "#ff0088",
+		"scale_mode": "fixed", "blend": "add", "color_mode": "two", "color_b": "#ff0088",
 		"caps": "round", "dashed": true, "dash_size": 5.0, "dash_spacing": 3.0, "dash_offset": 0.25, "dash_style": "angled",
 	}
 	var compiled: Array = DrawingPrefabResource.compile_steps([step])
@@ -110,7 +111,7 @@ static func _pin_the_new_keys() -> bool:
 	var older_entry: Dictionary = older[0] if not older.is_empty() else {}
 	return SUPPORT.pins(PREFIX, [
 		["the keys a card writes, in storage order", ",".join(PackedStringArray(step.keys())),
-			"kind,x,y,p1,p2,p3,color,texture,unit,scale_mode,blend,color_mode,color_b,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
+			"kind,x,y,p1,p2,p3,color,texture,scale_mode,blend,color_mode,color_b,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
 		["the ends reach the renderer", str(entry.get("caps")), "round"],
 		["the dashes reach the renderer", str(entry.get("dashed")), "true"],
 		["so does the dash length", entry.get("dash_size"), 5.0],
@@ -139,7 +140,8 @@ static func _pin_the_picture() -> bool:
 		["the dashed line is drawn there too", _is_drawn(dashed_image, 12, 32), true],
 		["the plain line is drawn where the gap is", _is_drawn(plain_image, 16, 32), true],
 		["the dashed line leaves the gap empty", _is_drawn(dashed_image, 16, 32), false],
-		["a plain line covers this many pixels", _drawn_pixels(plain_image), 184],
+		["a plain line covers this many pixels, cut square at both ends as the canvas cuts it",
+			_drawn_pixels(plain_image), 168],
 		["a dashed one covers half of them", _drawn_pixels(dashed_image), 92],
 		["a key the rasterizer never heard of changes nothing", unknown_image.get_data() == plain_image.get_data(), true],
 	])

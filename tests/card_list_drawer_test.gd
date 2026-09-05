@@ -359,7 +359,7 @@ static func _prefab_pins() -> bool:
 
 	# The shape vocabulary is the schema's: each shape still titles its own slots, never p1/p2/p3.
 	var schema: Dictionary = PREFAB_STEPS.ShapeStepsEditor.build_schema()
-	ok = _eq("line still titles p1/p2/p3 as End X/End Y/Thickness", _field_labels(schema, "line"), "Shape|Offset X|Offset Y|Blend|Scale|End X|End Y|Thickness|Unit|Colour mode|Colour|Second colour|End caps|Dashed|Dash|Gap|Offset|Style") and ok
+	ok = _eq("line still titles p1/p2/p3 as End X/End Y/Thickness", _field_labels(schema, "line"), "Shape|Offset X|Offset Y|Blend|Scale|End X|End Y|Thickness|Colour mode|Colour|Second colour|End caps|Dashed|Dash|Gap|Offset|Style") and ok
 	ok = _eq("circle still titles p1 as Radius", _field_labels(schema, "circle"), "Shape|Offset X|Offset Y|Blend|Radius|Colour mode|Colour|Second colour") and ok
 	ok = _eq("a stamp still names its texture", _field_labels(schema, "stamp"), "Shape|Offset X|Offset Y|Blend|Scale|Spin|Texture|Colour mode|Colour|Second colour") and ok
 	ok = _eq("the prefab declares no enable key (nothing would honour it)",

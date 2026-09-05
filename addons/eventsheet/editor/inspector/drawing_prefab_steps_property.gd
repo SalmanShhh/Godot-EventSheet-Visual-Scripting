@@ -50,14 +50,15 @@ func _update_property() -> void:
 ## how it blends, its geometry, its colours, and its dashes - and the Add button is the searchable
 ## dropdown every card list has.
 ##
+## A THICKNESS IS READ IN THE UNIT ITS OWN FIELD OFFERS. The Thickness row carries the unit dropdown
+## (px, world, screen) and always STORES pixels, exactly as a shape node does, so switching the view
+## never moves a stored value - and there is no second control saying the same thing beside it.
+##
 ## THE EIGHT SHIPPED KEYS ARE UNTOUCHED. kind, x, y, p1, p2, p3, color and texture mean exactly what
 ## they always did, so a prefab saved before this card existed opens, draws, edits and saves as the
 ## same bytes. What the card adds beside them is OPTIONAL - a step without them draws the way it
 ## always drew, and only a step somebody actually adds or edits gains one:
 ##
-##   unit         how the thickness number is READ (px / world / screen). The number itself is
-##                always pixels, exactly as a shape stores it, so switching the dropdown never
-##                moves a stored value.
 ##   scale_mode   whether the thickness follows the stamp's scale (uniform) or holds its width
 ##                however the whole prefab is scaled (fixed).
 ##   blend        how the step meets what is behind it.
@@ -89,9 +90,9 @@ class ShapeStepsEditor:
 	## The placement, colour and dash sections are common and are appended around these.
 	const SHAPE_FIELDS: Dictionary = {
 		"circle": [{"key": "p1", "label": "Radius"}],
-		"ring": [{"key": "p1", "label": "Radius"}, {"key": "p2", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}, {"key": "unit", "label": "Unit", "drawer": "options:px,world,screen"}],
+		"ring": [{"key": "p1", "label": "Radius"}, {"key": "p2", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
 		"rect": [{"key": "p1", "label": "Width"}, {"key": "p2", "label": "Height"}],
-		"line": [{"key": "p1", "label": "End X"}, {"key": "p2", "label": "End Y"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}, {"key": "unit", "label": "Unit", "drawer": "options:px,world,screen"}],
+		"line": [{"key": "p1", "label": "End X"}, {"key": "p2", "label": "End Y"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
 		"cone": [{"key": "p1", "label": "Facing"}, {"key": "p2", "label": "FOV"}, {"key": "p3", "label": "Radius"}],
 		"stamp": [{"key": "p1", "label": "Scale"}, {"key": "p2", "label": "Spin"}, {"key": "texture", "label": "Texture", "drawer": "texture_preview"}],
 	}
@@ -118,7 +119,6 @@ class ShapeStepsEditor:
 	## before the key existed, so a step added today and a step added a year ago draw the same
 	## picture until somebody changes one.
 	const OPTIONAL_DEFAULTS: Dictionary = {
-		"unit": "px",
 		"scale_mode": "uniform",
 		"blend": "normal",
 		"color_mode": "single",
