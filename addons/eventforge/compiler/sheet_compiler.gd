@@ -2729,6 +2729,11 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 ## COROUTINE_ACE_IDS warns about one under a per-frame trigger, and the row builder's
 ## `action_awaits` draws the hourglass on the canvas. A row added to two of them and not
 ## the third suspends the handler without saying so anywhere a reader looks.
+##
+## THE LIST IS FOR ONE CASE ONLY: a LIFTED builtin action, which carries its ace_id and no baked
+## template (the template re-resolves at emit). Every other awaiting row is already answered by the
+## template beside the id, because all three readers ask the template first - so a pack verb, a
+## custom ACE and a row a picker applied never belong here, and adding one buys nothing.
 const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait", "play_and_wait"]
 
 

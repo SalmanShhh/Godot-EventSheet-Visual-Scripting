@@ -14959,6 +14959,11 @@ func _action_without_trailing_notes(action: ACEAction) -> Dictionary:
 ## decides whether it warns about one under a per-frame trigger, and this one decides
 ## whether the canvas draws the hourglass. A row in two of them and not the third is a row
 ## that suspends without saying so, which is exactly how Save A Still landed here late.
+##
+## THE LIST IS FOR ONE CASE ONLY: a LIFTED builtin action, which carries its ace_id and no baked
+## template (the template re-resolves at emit). Every other awaiting row is already answered by the
+## template beside the id, because all three readers ask the template first - so a pack verb, a
+## custom ACE and a row a picker applied never belong here, and adding one buys nothing.
 static func action_awaits(action: ACEAction) -> bool:
 	if action == null:
 		return false
