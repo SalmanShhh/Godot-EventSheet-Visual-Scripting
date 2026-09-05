@@ -43,6 +43,13 @@ const POOL_PACK_PATH: String = "res://eventsheet_addons/object_pool/object_pool_
 const KEY: String = "&\"owner\""
 
 
+## The three files the round trips compile to. Named once and used at both the compile and the
+## clean-up, so the two cannot drift apart.
+const ROUND_TRIP := "user://eventforge_ownership_trip.gd"
+const STOW_TRIP := "user://eventforge_ownership_stow_trip.gd"
+const FOLD_TRIP := "user://eventforge_ownership_fold_trip.gd"
+
+
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_every_row_writes_the_one_key() and passed
@@ -53,7 +60,17 @@ static func run() -> bool:
 	passed = _test_the_credit_runs_through_the_health_pack() and passed
 	passed = _test_the_pool_forgets_on_the_way_back() and passed
 	passed = _test_the_handwritten_rows_open_as_the_rows_they_are() and passed
+	_cleanup()
 	return passed
+
+
+## Everything this test wrote. A re-emission compiles to where it is told to compile, so each of
+## the three round trips leaves a script beside the user folder - and on CI the whole suite runs
+## serially in one process, so what one test leaves behind is state the next one sees.
+static func _cleanup() -> void:
+	for path: String in [ROUND_TRIP, STOW_TRIP, FOLD_TRIP]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 
 # ── 1. One key ──
@@ -301,7 +318,7 @@ static func _test_the_handwritten_rows_open_as_the_rows_they_are() -> bool:
 			for action: Resource in (row as EventRow).actions:
 				if action is ACEAction:
 					claimed = str((action as ACEAction).ace_id)
-	var reemitted: String = SUPPORT.reemit(source, "user://eventforge_ownership_trip.gd")
+	var reemitted: String = SUPPORT.reemit(source, ROUND_TRIP)
 	# DISOWN DEGRADES RATHER THAN CORRUPTS, and that is pinned rather than wished for: its template
 	# is a two-line `if has_meta` / `remove_meta`, which the general meta rows already say character
 	# for character, so a hand-written one opens as those two rows instead of as Disown. It says the
@@ -343,9 +360,9 @@ static func _test_the_handwritten_rows_open_as_the_rows_they_are() -> bool:
 		["a hand-written disown opens as the meta rows that already say it",
 			Array(stow_rows), ["HasMeta", "RemoveMeta"]],
 		["and that file comes back byte for byte too",
-			SUPPORT.reemit(stowed, "user://eventforge_ownership_stow_trip.gd"), stowed],
+			SUPPORT.reemit(stowed, STOW_TRIP), stowed],
 		["a file holding the owner walk comes back byte for byte",
-			SUPPORT.reemit(folded, "user://eventforge_ownership_fold_trip.gd"), folded]
+			SUPPORT.reemit(folded, FOLD_TRIP), folded]
 	])
 
 
