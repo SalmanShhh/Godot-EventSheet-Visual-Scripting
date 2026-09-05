@@ -93,6 +93,38 @@ static func project_types() -> Array[Dictionary]:
 	return found
 
 
+## The starter set the plugin ships, read the same way and kept apart from the project's own answer.
+##
+## THE COMPLETION AND THE DOCTOR WANT DIFFERENT ANSWERS, and this is the seam between them. The
+## Doctor must never count the starter, or every project that merely installed the pack would be
+## told it had written its damage types down and then told off for every kind the starter does not
+## name. A completion list has the opposite duty: a field that suggests nothing on the first day is
+## a field that teaches nobody the word it wants, and the starter is exactly the four words a new
+## project is about to use. So the starter is offered until the project writes a set of its own, at
+## which point the project's own list is the only one worth reading.
+static func starter_types() -> Array[Dictionary]:
+	var seen: Dictionary = {}
+	for path: String in _resource_files():
+		if not _is_shipped(path) or not source_of(path).contains(SET_MARKER):
+			continue
+		for name_of_type: String in type_names(source_of(path)):
+			if not seen.has(name_of_type):
+				seen[name_of_type] = path
+	var names: Array = seen.keys()
+	names.sort()
+	var found: Array[Dictionary] = []
+	for name_of_type: String in names:
+		found.append({"name": name_of_type, "path": str(seen[name_of_type])})
+	return found
+
+
+## What a type field should offer: this project's own kinds, and the shipped starter's while the
+## project has written none of its own down.
+static func types_to_suggest() -> Array[Dictionary]:
+	var mine: Array[Dictionary] = project_types()
+	return mine if not mine.is_empty() else starter_types()
+
+
 ## True when this project holds a text-format DamageTypeSet at all. The Doctor asks this before it
 ## says anything about an unknown type: a project that has written no set down has not disagreed with
 ## anything, and silence is the only honest report.

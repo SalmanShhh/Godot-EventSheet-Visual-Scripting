@@ -689,12 +689,17 @@ static func _tile_data_key_entries() -> Array[Dictionary]:
 
 ## Every kind of damage the project has written down, quoted, because the field it fills takes a
 ## name as a string. Read as TEXT by EventForgeDamageTypeFacts rather than by loading anything - a
-## set's script ships in a pack the reader may not have installed. A project with no set answers with
-## an empty list, which is a plain field rather than a wrong one: a type this list has never seen is
-## not wrong, it is simply one nobody has written down yet.
+## set's script ships in a pack the reader may not have installed.
+##
+## A PROJECT THAT HAS WRITTEN NONE DOWN IS OFFERED THE SHIPPED STARTER, which is the opposite of
+## what the Doctor does with the same file and for the opposite reason: a note about a starter
+## nobody chose would be a note nobody wanted, while a field that suggests nothing on the first day
+## teaches nobody the word it wants. The moment the project writes a set of its own, that set is the
+## only one read. A kind this list has never seen is still not wrong - it is one nobody has written
+## down yet - so the field takes whatever is typed into it either way.
 static func _damage_type_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	for kind: Dictionary in EventForgeDamageTypeFacts.project_types():
+	for kind: Dictionary in EventForgeDamageTypeFacts.types_to_suggest():
 		entries.append({"text": "\"%s\"" % str(kind["name"]),
 			"detail": str(kind["path"]).get_file(), "kind": KIND_MEMBER})
 	return entries

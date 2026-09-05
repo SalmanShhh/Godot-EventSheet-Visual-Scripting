@@ -450,12 +450,22 @@ static func _the_shipped_starter_is_not_the_projects_own_set() -> bool:
 	for path: String in facts.call("project_set_files") as PackedStringArray:
 		if path.begins_with("res://eventsheet_addons/damage_type_set_resource/") or path.begins_with("res://tools/pack_builders/"):
 			shipped_among_them.append(path)
+	# THE OTHER READER OF THE SAME FILE WANTS THE OPPOSITE ANSWER. The Doctor must not count the
+	# starter or it would report on a set nobody chose; the type field must offer it or it would
+	# suggest nothing at all until somebody had already typed the word it was going to teach them.
+	var suggested: PackedStringArray = PackedStringArray()
+	for kind: Dictionary in facts.call("types_to_suggest") as Array:
+		suggested.append(str(kind["name"]))
 	return SUPPORT.pins("health_pack_test", [
 		["no set the pack ships counts as one this project wrote",
 			Array(shipped_among_them), []],
 		["and it is a real set all the same, or the filter would be proving nothing",
 			Array(facts.call("type_names", facts.call("source_of", TYPE_SET_STARTER))),
-			["physical", "fire", "ice", "poison"]]
+			["physical", "fire", "ice", "poison"]],
+		["a project that has written no set down is still not one that has",
+			facts.call("has_any_set"), false],
+		["while the field it types a kind into offers the starter's four words",
+			Array(suggested), ["fire", "ice", "physical", "poison"]]
 	])
 
 
