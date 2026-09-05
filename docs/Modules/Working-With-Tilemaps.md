@@ -129,7 +129,7 @@ appends after everything else, so nothing above it moves.
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Save Layer To File | Writes the layer's tiles to a file, exactly as the engine stores them. | `__eventsheets_save_tile_layer(self, {path})` |
-| Load Layer From File | Puts the tiles from a file back onto the layer. A file that is not there leaves the layer alone. | `__eventsheets_load_tile_layer(self, {path})` |
+| Load Layer From File | Puts the tiles from a file back onto the layer. A file that is not there leaves the layer alone; one saved against a different tileset fills cells with ids this tileset cannot draw. | `__eventsheets_load_tile_layer(self, {path})` |
 | Copy Layer | Copies every tile of one layer onto another in one go. A level editor's undo is two of these. | `self.tile_map_data = {from}.tile_map_data` |
 
 ### The 3D twin - GridMap

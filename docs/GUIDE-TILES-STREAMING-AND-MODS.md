@@ -175,6 +175,12 @@ and a ghost phases through the wall.
 A `TileMapLayer` keeps its tiles in one property, `tile_map_data`, as the bytes the engine itself
 stores them in. Three rows use that fact.
 
+**The file holds tile numbers, not pictures.** A saved layer is source ids and atlas coordinates
+into the tileset it was drawn with. Load it onto a layer with a DIFFERENT tileset - one whose
+sources were renumbered, or somebody else's - and the cells fill with ids that tileset has nothing
+to draw. Nothing errors, and nothing warns. Ship the tileset with the levels, or write your own
+version number beside the file and refuse a level that does not match.
+
 **Save Layer To File** and **Load Layer From File** write and read those bytes, so a level the player
 built is a file in their own folder:
 

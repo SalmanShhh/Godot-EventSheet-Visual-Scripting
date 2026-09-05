@@ -5894,7 +5894,7 @@ Tilemaps (TileMapLayer, Godot 4.3+)
 - **Set Navigation On Layer** (`on: bool, target: String`) - Turns the layer's navigation regions on or off - what a door opening or a bridge dropping has to do before agents will route through it.
 - **Set Collision On Layer** (`on: bool, target: String`) - Turns the layer's collision on or off - a ghost phase, a drop-through floor, a background layer that should never stop anything.
 - **Save Layer To File** (`target: String, path: String`) - Writes the layer's tiles to a file, exactly as the engine stores them. This is a level the player built, kept - Load Layer From File reads it straight back.
-- **Load Layer From File** (`target: String, path: String`) - Puts the tiles from a file back onto the layer, replacing whatever it held. A file that is not there leaves the layer alone rather than clearing it.
+- **Load Layer From File** (`target: String, path: String`) - Puts the tiles from a file back onto the layer, replacing whatever it held. A file that is not there leaves the layer alone rather than clearing it. The file holds tile NUMBERS, not pictures: one written from a layer with a different tileset fills cells with ids this tileset has nothing to draw, and nothing errors - save the tileset with the level, or write your own version number beside it.
 - **Copy Layer** (`target: String, from: String`) - Copies every tile of one layer onto another in one go, as the bytes the engine keeps them in. A level editor's undo is two of these: one onto a spare layer before the edit, and one back afterwards.
 
 #### Expressions
