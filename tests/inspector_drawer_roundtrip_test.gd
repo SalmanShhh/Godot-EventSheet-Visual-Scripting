@@ -639,6 +639,39 @@ static func _unit_drawer() -> bool:
 	passed = _near("the emitted value is in the STORED unit", float(emitted[0]) if not emitted.is_empty() else -1.0, 180.0) and passed
 	field.free()
 
+	# THE SAME PROMISE, ON THE FIELD A SHAPE'S THICKNESS IS ACTUALLY DRAWN WITH. The pins above build
+	# the widget from a unit list written here; this one builds it the way the shipped card does -
+	# through the marker a shape and a prefab step both carry, parsed by the same parser - and then
+	# flips the view on a real thickness. `px` and `world` are the same number in Godot 2D, so the
+	# view is flipped to `screen`, where a moved reading is visible and a moved STORED value would be.
+	var thickness_spec: Dictionary = EventSheetAttributeDrawers.parse_unit_spec("kinds=px|world|screen,store=px")
+	var thickness: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(
+		thickness_spec.get("units", PackedStringArray()), str(thickness_spec.get("store", "")))
+	var thickness_writes: Array = []
+	thickness.value_changed.connect(func(value: float) -> void: thickness_writes.append(value))
+	thickness.set_value(4.0)
+	passed = _eq("a shape's thickness field stores pixels", thickness_spec.get("store", ""), "px") and passed
+	passed = _near("it shows the 4 px a shape stores", thickness.get_shown_value(), 4.0) and passed
+	thickness.set_view_unit("screen")
+	# The conversion is exact; what the field can SHOW of it is limited by the spin box's own 0.001
+	# step, and both are pinned so a change to either is named rather than absorbed by the other.
+	passed = _near("a 4 px stroke is that share of a screen",
+		EventSheetDrawerWidgets.convert_unit("px", "screen", 4.0),
+		4.0 / EventSheetDrawerWidgets.screen_unit_pixels()) and passed
+	passed = _near("flipping the view to screen units re-reads the number",
+		thickness.get_shown_value(),
+		snappedf(4.0 / EventSheetDrawerWidgets.screen_unit_pixels(), 0.001)) and passed
+	passed = _eq("and the reading really did move off the stored number",
+		is_equal_approx(thickness.get_shown_value(), 4.0), false) and passed
+	passed = _near("and the STORED thickness has not moved", thickness.get_value(), 4.0) and passed
+	passed = _eq("nothing was written, so the file cannot have moved either",
+		thickness_writes.size(), 0) and passed
+	passed = _eq("and the field agrees which unit it is being read in", thickness.get_view_unit(), "screen") and passed
+	thickness.set_view_unit("px")
+	passed = _near("flipping back reads the same stored number again", thickness.get_shown_value(), 4.0) and passed
+	passed = _near("which is still the one a shape stores", thickness.get_value(), 4.0) and passed
+	thickness.free()
+
 	# Emission + the byte-exact lift back.
 	var unit_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:unit:kinds=px|world|screen,store=world\") var thickness: float = 2.0"
 	passed = _eq("unit emits its marker (the units and the stored one ride along)",
