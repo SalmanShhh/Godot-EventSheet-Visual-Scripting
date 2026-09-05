@@ -12,6 +12,9 @@
 #     what Restore Bus walks back to, not where the last beat left it.
 #   * A SNAPSHOT IS THE MIX. Level, silence and focus, written down under a name the project chose
 #     and put back - three values per bus, and nothing shipped for anybody.
+#   * NOTHING GETS STUCK IN THE AIR. The book holds the sweeps themselves rather than a count of
+#     them, so a sweep whose host was freed halfway through - the one that never gets to say it
+#     finished - answers for itself and Bus Is Sweeping goes false rather than staying true.
 #
 # The bus is made here and taken away again, so the mixing desk this test finished with is the one it
 # found. Same for the three books the runtime keeps on the Engine: whatever was there before this
@@ -41,6 +44,7 @@ static func run() -> bool:
 	ok = _test_a_sweep_lands_on_its_target() and ok
 	ok = _test_the_walk_home_is_where_the_mix_was() and ok
 	ok = _test_nothing_is_left_in_the_air() and ok
+	ok = _test_a_sweep_whose_host_is_gone_is_not_stuck() and ok
 	ok = _test_a_snapshot_puts_three_values_back() and ok
 	ok = _test_a_snapshot_nobody_took_changes_nothing() and ok
 	_put_the_books_back(kept)
@@ -166,6 +170,33 @@ static func _test_nothing_is_left_in_the_air() -> bool:
 	])
 	_drop_bus()
 	return ok
+
+
+## A SWEEP WHOSE HOST WENT AWAY IS NOT STILL IN THE AIR. This is the arena freed halfway through a
+## dive, which is the case the whole book is written for: the engine drops the tween with the node,
+## so the callback at the end of the sweep - the one that would have said it had finished - is never
+## reached. A book that COUNTED sweeps would sit at one for the rest of the process and Bus Is
+## Sweeping would answer true for ever on a bus nothing is touching. The book holds the tweens
+## instead and asks each whether it is still valid, so a walk that is gone answers for itself.
+##
+## The dead entry is seeded by hand as a null, which is exactly what a freed host leaves behind, and
+## a sweep whose host is alive cannot be made here at all - a Tween needs a live scene tree and this
+## suite has none. The book is pinned as the names it still holds rather than as a number of them.
+static func _test_a_sweep_whose_host_is_gone_is_not_stuck() -> bool:
+	## A second bus in the same book, never asked about, so the pins can show that the tidying is
+	## the asking rather than a sweep of everything.
+	var unasked: String = TEST_BUS + "Unasked"
+	Engine.set_meta(EventForgeBusMix.SWEEPING_META, {TEST_BUS: [null], unasked: [null]})
+	var stuck: bool = EventForgeBusMix.is_sweeping(TEST_BUS)
+	var still_held: PackedStringArray = PackedStringArray()
+	for bus: Variant in (Engine.get_meta(EventForgeBusMix.SWEEPING_META, {}) as Dictionary).keys():
+		still_held.append(str(bus))
+	still_held.sort()
+	return SUPPORT.pins("audio_moments_test", [
+		["a sweep whose host was freed is not still in the air", stuck, false],
+		["the bus it was walking on is dropped from the book rather than answering true for the rest of the process, and a bus nobody asked after is left exactly as it was",
+			still_held, PackedStringArray([unasked])]
+	])
 
 
 ## The three things a snapshot remembers about one bus, changed and put back. Nothing ships: the mix

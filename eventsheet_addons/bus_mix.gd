@@ -109,10 +109,10 @@ static func sweep(host: Node, bus: String, kind: String, to: float, seconds: flo
 	if seconds <= 0.0 or host == null or not host.is_inside_tree():
 		write(to, bus, kind)
 		return
-	_sweeping_by(bus, 1)
 	var tween: Tween = host.create_tween()
 	tween.tween_method(func(value: float) -> void: write(value, bus, kind), from, to, seconds)
-	tween.tween_callback(func() -> void: _sweeping_by(bus, -1))
+	tween.tween_callback(func() -> void: _swept(bus, tween))
+	_sweeping_with(bus, tween)
 
 
 ## Finds or adds the effect one kind is swept through, and writes down the value it was resting at
@@ -159,7 +159,7 @@ static func write(value: float, bus: String, kind: String) -> void:
 ## True while any sweep on this bus is still in the air - the question a row asks before starting a
 ## second beat over the top of the first.
 static func is_sweeping(bus: String) -> bool:
-	return int(_sweeping().get(bus, 0)) > 0
+	return not _walking_on(bus).is_empty()
 
 
 ## Writes down every bus's level, silence and focus under a name the project chose. Taken from the
@@ -296,14 +296,49 @@ static func _rest_at(bus: String, kind: String, value: float) -> void:
 	resting[bus] = per_bus
 
 
-## Counts a sweep in or out of the air on one bus.
-static func _sweeping_by(bus: String, change: int) -> void:
-	var sweeping: Dictionary = _sweeping()
-	var left: int = int(sweeping.get(bus, 0)) + change
-	if left > 0:
-		sweeping[bus] = left
+## Notes one sweep as being in the air on a bus.
+##
+## The book holds the TWEENS rather than a count of them. A count is only ever right while every
+## sweep gets to say it has finished, and a sweep whose host leaves the tree never does: the engine
+## drops the tween with the node, the callback at the end of it is never reached, and the bus would
+## read as sweeping for the rest of the process - which is exactly the arena freed halfway through a
+## dive that this file is written for. A tween that is gone answers for itself, so nothing has to be
+## remembered to put it right.
+static func _sweeping_with(bus: String, tween: Tween) -> void:
+	var walking: Array = _walking_on(bus)
+	walking.append(tween)
+	_sweeping()[bus] = walking
+
+
+## And notes one as finished, forgetting the bus once nothing is left walking on it. The tween that
+## is finishing is the one calling this, so it is left out rather than asked: it is still valid for
+## as long as its own last step is running.
+static func _swept(bus: String, done: Tween) -> void:
+	var walking: Array = []
+	for held: Variant in _walking_on(bus):
+		var tween: Tween = held as Tween
+		if tween != null and tween != done and tween.is_valid():
+			walking.append(tween)
+	if walking.is_empty():
+		_sweeping().erase(bus)
 	else:
-		sweeping.erase(bus)
+		_sweeping()[bus] = walking
+
+
+## The sweeps still walking on one bus: the ones the book holds that are still valid. A tween is
+## invalid once it has finished, been killed, or lost the node it was bound to, which is all three
+## ways a sweep can end - so this is the whole question, and the book is tidied by asking it.
+static func _walking_on(bus: String) -> Array:
+	var walking: Array = []
+	for held: Variant in (_sweeping().get(bus, []) as Array):
+		var tween: Tween = held as Tween
+		if tween != null and tween.is_valid():
+			walking.append(tween)
+	if walking.is_empty():
+		_sweeping().erase(bus)
+	else:
+		_sweeping()[bus] = walking
+	return walking
 
 
 ## The three books this file keeps, each made the first time it is opened.
