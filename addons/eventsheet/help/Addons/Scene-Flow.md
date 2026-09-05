@@ -196,7 +196,7 @@ export filters in the export preset so the file ships with the game.
 
 ### What the bar is set to
 
-**Loading Progress** answers from 0 to 1, and it is the **slower** of the two things being waited
+**Scene Load Progress** answers from 0 to 1, and it is the **slower** of the two things being waited
 on: how much of the scene is off the disk, and how much of the shortest time has been served. A bar
 that races to the end on a fast disk and then sits there for a second reads as a hang, so this one
 never runs ahead of the wait it belongs to. **On Loading Progress** fires every time that number
@@ -219,7 +219,7 @@ On Any Key Pressed
   -> LoadingScreen | SceneFlowBehavior: Enter Loaded Scene
 ```
 
-**Is Loading** is true for the whole of it - the wait, the beat where it is waiting for a key, and
+**Scene Is Loading** is true for the whole of it - the wait, the beat where it is waiting for a key, and
 the covered change into the new scene - so any row can be gated on "still loading".
 
 ### A quiet note from the Doctor
@@ -260,14 +260,14 @@ All ACEs live in the **Scenes** category and target the `SceneFlowBehavior` beha
 | Condition | Parameters | Description |
 |---|---|---|
 | Is Transitioning | (none) | Whether a faded transition is currently running. True from the moment a Fade To Scene / Fade Reload Scene begins until its fade-in finishes. |
-| Is Loading | (none) | Whether a background load started by Go To Scene With Loading is still in flight. True while the screen is up, including the beat where it is waiting for a key and the covered change into the new scene. |
+| Scene Is Loading | (none) | Whether a background load started by Go To Scene With Loading is still in flight. True while the screen is up, including the beat where it is waiting for a key and the covered change into the new scene. |
 
 ### Expressions
 
 | Expression | Parameters | Returns | Description |
 |---|---|---|---|
 | Current Scene Path | (none) | String | The `res://` file path of the scene running right now (empty string if there is somehow no current scene). |
-| Loading Progress | (none) | float | How far the wait has got, from 0 to 1: the slower of how much of the scene is off the disk and how much of the shortest time has been served. Zero when nothing is loading. |
+| Scene Load Progress | (none) | float | How far the wait has got, from 0 to 1: the slower of how much of the scene is off the disk and how much of the shortest time has been served. Zero when nothing is loading. |
 | Loading Tip | (none) | String | The one line picked out of the tips file when this load started. It stays put for the whole wait, because a tip that changes while somebody is reading it is worse than no tip. Empty when there is no tips file, or nothing is loading. |
 
 ### Triggers
@@ -275,7 +275,7 @@ All ACEs live in the **Scenes** category and target the `SceneFlowBehavior` beha
 | Trigger | Fires when |
 |---|---|
 | On Transition Finished | A transition started by Go To Scene With or Reload Scene With has finished: the new scene is up and the cover is off. It arrives on the Scene Flow node in the NEW scene, carrying the shape the transition was (`fade`, `iris`, and so on), so one handler can tell them apart. |
-| On Loading Progress | The loading reading moved. It arrives on the Scene Flow node standing in the loading screen and carries nothing: Loading Progress answers with the number, so the row that sets a bar reads as a sentence. |
+| On Loading Progress | The loading reading moved. It arrives on the Scene Flow node standing in the loading screen and carries nothing: Scene Load Progress answers with the number, so the row that sets a bar reads as a sentence. |
 | On Loading Finished | The wait is over: the scene is off the disk and the shortest time has been served. With Wait For Key off the swap follows immediately; with it on, this is the moment to show "press any key". |
 
 Everything else you drive from your own game events - a button press, a player-died signal, a
@@ -591,11 +591,11 @@ wait with the condition.
 
 ```
 On Pause Pressed
-  + PauseMenu | SceneFlowBehavior: Is Loading  [inverted]
+  + PauseMenu | SceneFlowBehavior: Scene Is Loading  [inverted]
   -> PauseMenu: set visible = true
 ```
 
-Is Loading is true for the whole screen, the press-any-key beat and the covered change into the new
+Scene Is Loading is true for the whole screen, the press-any-key beat and the covered change into the new
 scene, so one inverted condition covers every part of the wait.
 
 ### Other use cases

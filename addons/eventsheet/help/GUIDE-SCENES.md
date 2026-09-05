@@ -204,17 +204,17 @@ know:
 
 ```
 On Loading Progress
-  -> Set Property  Bar, "value", Loading Progress()
+  -> Set Property  Bar, "value", Scene Load Progress()
 
 On Ready
   -> Set Text  TipLabel, Loading Tip()
 ```
 
-**Loading Progress** is the SLOWER of the two waits, not the read alone: a bar that races to the end
+**Scene Load Progress** is the SLOWER of the two waits, not the read alone: a bar that races to the end
 on a fast disk and then sits there reads as a hang, which is the thing a loading screen exists to
 prevent. **Loading Tip** picks one line out of a text file when the load starts and keeps it there
 for the whole wait, because a tip that changes while somebody is reading it is worse than no tip.
-**Is Loading** is true for the whole of it, including the beat at the end, which is what a pause menu
+**Scene Is Loading** is true for the whole of it, including the beat at the end, which is what a pause menu
 tests before it agrees to open.
 
 With **Wait For Key** on, the wait ends at **On Loading Finished** and the screen stays up until a row

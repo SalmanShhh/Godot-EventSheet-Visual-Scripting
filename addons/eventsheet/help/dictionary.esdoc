@@ -354,6 +354,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_command_palette` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
 | `get_connected_joypads` | [Has Gamepads](ace:Core/GamepadHasAny) | Gamepad | Vocabulary |
 | `get_connection_status` | [Is Connected](ace:Core/IsConnected) | Multiplayer | Vocabulary |
+| `get_connections` | [Pause Countdown](ace:Core/PauseCountdown) | Time | Vocabulary |
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
 | `get_csv_line` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `get_current_node` | [Current State Is](ace:Core/AnimationStateIs) | Animation | Vocabulary |

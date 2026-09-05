@@ -371,6 +371,8 @@ Node script extending `CharacterBody2D`.
 
 #### Actions
 - **Discover** (`set_name: String, entry_id: String`) - Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.
+- **Forget Entry** (`set_name: String, entry_id: String`) - Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.
+- **Forget Set** (`set_name: String`) - Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.
 
 #### Expressions
 - **Discovered Count** (`set_name: String`) - How many entries of a set have been found - the left-hand number of a 14-out-of-60 line.
@@ -1314,6 +1316,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Ticker** (`ticker_name: String, value: float`) - Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.
 - **Moment** (`moment_name: String, strength: float`) - Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.
 - **Define Moment** (`moment_name: String, moment: Resource`) - Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.
+- **Play Moment At** (`moment_name: String, strength: float, from: Node, within: float, falloff: String`) - Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.
+- **Set Moment Strength** (`value: float`) - Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It scales what Play Moment At feels; the moments themselves are untouched.
 - **Set Host Tint** (`color: Color, strength: float`)
 - **Clear Host Tint**
 - **Set Screen Tint** (`color: Color, strength: float`)
@@ -1321,6 +1325,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Clear Screen Tint**
 
 #### Expressions
+- **Moment Strength** - The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.
 - **Trauma**
 - **Ticker Value** (`ticker_name: String`)
 - **Chromatic Shake Magnitude**
@@ -2250,7 +2255,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Transitioning**
-- **Is Loading**
+- **Scene Is Loading**
 
 #### Actions
 - **Fade To Scene** (`path: String`) - Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).
@@ -2260,12 +2265,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Quit Game** - Quits the game (a no-op on platforms that forbid it, like web).
 - **Go To Scene With** (`path: String, transition: String, seconds: float, ease: String`) - Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.
 - **Reload Scene With** (`transition: String, seconds: float, ease: String`) - Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.
-- **Go To Scene With Loading** (`scene: String, min_seconds: float, wait_for_key: bool`) - Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Loading Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.
+- **Go To Scene With Loading** (`scene: String, min_seconds: float, wait_for_key: bool`) - Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Scene Load Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.
 - **Enter Loaded Scene** - Enters the scene a loading screen has been holding. Does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to leave on the loading screen; it is what Wait For Key waits for.
 
 #### Expressions
 - **Current Scene Path**
-- **Loading Progress**
+- **Scene Load Progress**
 - **Loading Tip**
 
 ### ScreenFx (`res://eventsheet_addons/screen_fx/screen_fx.gd`)
@@ -3899,7 +3904,7 @@ NAMED CLOCKS: cooldowns, countdowns and stopwatches as words.
 - **Cooldown Seconds Left** (`name: String`) - The seconds still to wait on a named cooldown, or zero when it is finished. The number a HUD label shows.
 - **Cooldown Fraction** (`name: String`) - How far a named cooldown has recharged, from 0 the instant it starts to 1 when it is ready. The value a radial bar or a fading icon is set to, with no maths on the row.
 - **Countdown Seconds Left** (`name: String`) - The seconds still to run on a named countdown, zero when it has finished or was never started, and the paused number while it is paused. The value a bar is set to.
-- **Countdown Text** (`name: String`) - A named countdown as minutes and seconds, so 83 seconds left reads "01:23". The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.
+- **Countdown Text** (`name: String`) - A named countdown as minutes and seconds, so 83 seconds left reads "01:23" - and with tenths under ten seconds, where "00:09.4" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.
 - **Stopwatch Seconds** (`name: String`) - How long a named stopwatch has been running, in seconds, or zero when it was never started. The number a best-time comparison uses.
 - **Stopwatch Text** (`name: String`) - A named stopwatch as minutes and seconds, so 83 seconds reads "01:23". The text a run-timer label is set to, with no formatting on the row.
 - **Lap Seconds** (`name: String`) - How long the last lap took, in seconds - the split the most recent Record Lap row marked. Zero until the first lap is recorded.
@@ -5691,7 +5696,7 @@ System (event-sheet System parity)
 - **Tween Effect Parameter** (`param: String, from: String, to: String, seconds: String, target: String`) - Drives one of an effect's parameters from one value to another over time.
 - **Forget First Time** (`key: String`) - Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run.
 - **Mark Seen** (`key: String`) - Marks a name as met in this save without any row having asked first - unlocking a page from a cheat menu, carrying a story flag over, skipping a tutorial the player has turned off. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.
-- **Forget Seen** (`key: String`) - Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. A row that has already answered for that name this session keeps its answer until the next run. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.
+- **Forget Seen** (`key: String`) - Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. It takes effect at once, including for a row that has already answered for that name. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.
 - **Spawn Scene As** (`path: String, spawn_name: String, values: String, parent: String, position: String`) - Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.
 - **Report Failure** (`verb: String, reason: String`) - Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.
 - **Report Success** (`verb: String`) - Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.
