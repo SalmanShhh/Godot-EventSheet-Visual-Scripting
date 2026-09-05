@@ -51,6 +51,8 @@ const GEOMETRIES := ["flat", "billboard", "volumetric"]
 static func build() -> bool:
 	if not _build_base():
 		return false
+	if not _build_style():
+		return false
 	for shape: Array in _shapes():
 		if not _build_shape(shape):
 			return false
@@ -123,9 +125,18 @@ static func _build_base() -> bool:
 	src.verb("set_arc", "Set Arc",
 		"Sets a Disc's sweep, in degrees: 0 to 360 is the whole disc, and anything less is the pie or the arc a cooldown, a vision cone or a health ring is drawn as.",
 		[["from_degrees", "float"], ["to_degrees", "float"]])
+	src.verb("apply_shape_style", "Apply Shape Style",
+		"Puts a Shape Style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back.",
+		[["style_file", "ShapeStyle"]])
+	src.verb("apply_shape_style_to_group", "Apply Shape Style To Group",
+		"Puts one Shape Style file into every shape in a group at once - the whole HUD re-skinned from one file, which is what a style is for.",
+		[["group_name", "String"], ["style_file", "ShapeStyle"]])
 	src.condition("shape_is_visible", "Shape Is Visible",
 		"True while the shape is drawn at all: visible in the tree, and not fully transparent.",
 		[])
+	src.condition("shape_style_is", "Shape Style Is",
+		"True while the shape is wearing that exact Shape Style file - the test a row makes before re-skinning, and the one an exception is written against.",
+		[["style_file", "ShapeStyle"]])
 	src.condition("point_is_inside_shape", "Point Is Inside Shape",
 		"True when a point (in world coordinates) lands inside the shape - inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it.",
 		[["point", "Vector2"]])
@@ -143,12 +154,29 @@ static func _build_base() -> bool:
 		"set_dashes": "Set dashes [b]{count}[/b], spacing [b]{spacing}[/b], [b]{style}[/b]",
 		"scroll_dashes": "Scroll dashes at [b]{patterns_per_second}[/b] per second",
 		"set_arc": "Set arc from [b]{from_degrees}[/b] to [b]{to_degrees}[/b] degrees",
+		"apply_shape_style": "Apply shape style [b]{style_file}[/b]",
+		"apply_shape_style_to_group": "Apply shape style [b]{style_file}[/b] to group [b]{group_name}[/b]",
 		"shape_is_visible": "the shape is visible",
+		"shape_style_is": "the shape style is [b]{style_file}[/b]",
 		"point_is_inside_shape": "[b]{point}[/b] is inside the shape",
 	})
 	Lib.feature_verbs(src.sheet, ["set_thickness", "set_dashes", "scroll_dashes"])
 	_target_every_verb(src.sheet, PACK_CLASS)
 	return Lib.publish(src, "%s/vector_shape_2d" % PACK_DIR)
+
+
+## The style file: the look half of a shape's fields, as a resource the project owns. The pack ships
+## NO styles - a style is saved out of a shape somebody tuned (the Save As Style button on any 2D
+## shape), because a house style shipped in the pack would be a look nobody asked for.
+static func _build_style() -> bool:
+	var src: Lib.PackSource = Lib.pack_from_source("vector_shapes", "Resource", "ShapeStyle",
+		"A stroke style twenty shapes can share: thickness, caps, colour mode and colours, dashes and blend, as a file. Drop one into a 2D shape's Style slot and those fields are read from the file; save one out of a shape you have tuned with Save As Style.",
+		Lib.manifest().category("Vector Shapes").tags(["visual", "shapes", "drawing", "style", "2d"]))
+	src.sheet.tool_mode = true  # so a style edited in the Inspector repaints the shapes wearing it
+	src.note("A Shape Style is a look, not a shape: the fields it speaks for are the ones a designer re-uses (thickness and its scale rule, caps, the colour mode and its colours, the dash pattern, the blend), and never a radius, an end point or a list of points. A shape that has not got a field the style carries is untouched by it. This pack is an event sheet - extend it by editing it.")
+	src.block("style_fields")
+	src.block("style_runtime")
+	return Lib.publish(src, "%s/shape_style" % PACK_DIR)
 
 
 ## The seven shapes, each as [file name, class name, what it is, which shared field pieces it has].
@@ -190,6 +218,7 @@ static func _build_shape(shape: Array) -> bool:
 	var src: Lib.PackSource = Lib.pack_from_source("vector_shapes", PACK_CLASS, pack_class, description,
 		Lib.manifest().category("Vector Shapes").tags(["visual", "shapes", "drawing", "2d"]))
 	src.sheet.tool_mode = true
+	src.block("fields_style")
 	src.block("%s_geometry" % piece_prefix)
 	src.block("fields_stroke")
 	if parts.has("caps"):

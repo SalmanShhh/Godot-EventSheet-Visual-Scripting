@@ -7,6 +7,22 @@ class_name ShapeDisc2D
 extends VectorShape2D
 ## A disc, and by two angles and an inner radius also a ring, a pie and an arc - the cooldown ring, the vision cone and the health arc are all this one node.
 
+# @inspector_action save_as_style Save As Style
+## A Shape Style file this shape wears instead of its own look. Empty is the usual case - the fields
+## below are this shape's own. With one dropped in, every field the style speaks for is read from
+## the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
+## pattern; the button above writes the current fields out as a new style file to reuse.
+## @ace_hidden
+@export var style: ShapeStyle = null:
+	set(value):
+		if style != null and style.changed.is_connected(style_changed_externally):
+			style.changed.disconnect(style_changed_externally)
+		style = value
+		if style != null and not style.changed.is_connected(style_changed_externally):
+			style.changed.connect(style_changed_externally)
+		notify_property_list_changed()
+		shape_changed()
+
 # @inspector_preview
 # @inspector_handle radius length
 # @inspector_handle start_angle angle
@@ -209,6 +225,12 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 	if str(property.name) == "dash_count" and not bool(_word("dash_space", "count") == "count"):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
+	# A field a style speaks for is still THIS shape's field, and still what the file stores - it is
+	# simply not what the shape draws with while the style is in the slot. So it is shown greyed
+	# rather than hidden: you can read what the shape would look like on its own, and clearing the
+	# slot hands it straight back.
+	if style_speaks_for(str(property.name)):
+		property.usage |= PROPERTY_USAGE_READ_ONLY
 
 ## @ace_hidden
 func shape_kind_id() -> int:

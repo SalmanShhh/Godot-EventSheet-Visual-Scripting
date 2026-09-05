@@ -139,7 +139,7 @@ func _pixel_thickness() -> float:
 ## inherited one), so it reads them by name.
 ## @ace_hidden
 func _number(key: String, fallback: float) -> float:
-	var value: Variant = get(key)
+	var value: Variant = _read(key)
 	if value is float or value is int:
 		return float(value)
 	return fallback
@@ -147,7 +147,7 @@ func _number(key: String, fallback: float) -> float:
 ## One exported word, or the fallback.
 ## @ace_hidden
 func _word(key: String, fallback: String) -> String:
-	var value: Variant = get(key)
+	var value: Variant = _read(key)
 	if value is String or value is StringName:
 		return str(value)
 	return fallback
@@ -155,16 +155,83 @@ func _word(key: String, fallback: String) -> String:
 ## One exported tick box, or false.
 ## @ace_hidden
 func _flag(key: String) -> bool:
-	var value: Variant = get(key)
+	var value: Variant = _read(key)
 	return value is bool and value
 
 ## One exported colour, or white.
 ## @ace_hidden
 func _colour(key: String) -> Color:
-	var value: Variant = get(key)
+	var value: Variant = _read(key)
 	if value is Color:
 		return value
 	return Color.WHITE
+
+## What the shape draws one field with: the style's value when a style is in the slot and speaks
+## for that field, and the shape's own otherwise.
+##
+## THE SHAPE'S OWN FIELD IS ASKED FIRST, and a field this shape has not got ends the question there.
+## That is what lets one style carry a dash pattern and a Triangle wear it: the Triangle declares no
+## `dashed`, so nothing reads it, and the style's dashes stay for the shapes that have them.
+## @ace_hidden
+func _read(key: String) -> Variant:
+	var own: Variant = get(key)
+	if own == null:
+		return null
+	var chosen: Variant = get("style")
+	if chosen is ShapeStyle:
+		var styled: Variant = (chosen as ShapeStyle).value_for(key)
+		if styled != null:
+			return styled
+	return own
+
+## Whether a style is speaking for one of this shape's fields right now - what the Inspector greys
+## on, and what a reader of the shape asks before believing a number in the file.
+## @ace_hidden
+func style_speaks_for(property_name: String) -> bool:
+	return get("style") is ShapeStyle and ShapeStyle.styled_keys().has(property_name)
+
+## The one line a style file's own `changed` signal runs: the shape it is dropped into redraws, and
+## its Inspector re-reads which fields are the style's.
+## @ace_hidden
+func style_changed_externally() -> void:
+	notify_property_list_changed()
+	shape_changed()
+
+## This shape's current look as a style resource - every field a style speaks for, copied out. The
+## shape is left exactly as it is; what is done with the answer is the caller's business.
+## @ace_hidden
+func style_from_fields() -> ShapeStyle:
+	var made: ShapeStyle = ShapeStyle.new()
+	for key: String in ShapeStyle.styled_keys():
+		var value: Variant = get(key)
+		if value != null:
+			made.set(key, value)
+	return made
+
+## Writes this shape's look out as a new style file beside the scene it sits in, and wears it. The
+## button in the Inspector header; nothing about the shape changes on screen, because the file holds
+## exactly what the shape was already drawing with. Answers the path it wrote, or "" when it could
+## not write one.
+## @ace_hidden
+func save_as_style() -> String:
+	var made: ShapeStyle = style_from_fields()
+	var folder: String = "res://"
+	if not scene_file_path.is_empty():
+		folder = scene_file_path.get_base_dir()
+	elif owner != null and not owner.scene_file_path.is_empty():
+		folder = owner.scene_file_path.get_base_dir()
+	var stem: String = String(name).to_snake_case()
+	var path: String = "%s/%s_style.tres" % [folder, stem]
+	var attempt: int = 2
+	while ResourceLoader.exists(path):
+		path = "%s/%s_style_%d.tres" % [folder, stem, attempt]
+		attempt += 1
+	if ResourceSaver.save(made, path) != OK:
+		push_warning("Save As Style could not write %s" % path)
+		return ""
+	made.take_over_path(path)
+	set("style", made)
+	return path
 
 ## The material this shape draws with, built once per blend word. The Shader itself is shared by
 ## every shape in the project; only the uniforms are this node's.
@@ -513,3 +580,21 @@ func set_arc(from_degrees: float = 0.0, to_degrees: float = 360.0) -> void:
 	set("start_angle", from_degrees)
 	set("end_angle", to_degrees)
 	shape_changed()
+
+## Puts a Shape Style file into this shape's Style slot - the look (thickness, caps, colours,
+## dashes, blend) is read from the file from now on, and an empty slot hands the shape its own
+## fields back.
+func apply_shape_style(style_file: ShapeStyle) -> void:
+	set("style", style_file)
+
+## Puts a Shape Style file into every shape in a group at once - the whole HUD re-skinned from one
+## file, which is what a style is for.
+func apply_shape_style_to_group(group_name: String, style_file: ShapeStyle) -> void:
+	if not is_inside_tree() or group_name.strip_edges().is_empty():
+		return
+	get_tree().call_group(StringName(group_name), "apply_shape_style", style_file)
+
+## True while this shape is wearing that exact style file - the test a row makes before re-skinning,
+## and the one an exception is written against.
+func shape_style_is(style_file: ShapeStyle) -> bool:
+	return get("style") == style_file
