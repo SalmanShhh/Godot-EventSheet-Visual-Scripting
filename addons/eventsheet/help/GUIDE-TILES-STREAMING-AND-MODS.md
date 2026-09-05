@@ -175,6 +175,12 @@ and a ghost phases through the wall.
 A `TileMapLayer` keeps its tiles in one property, `tile_map_data`, as the bytes the engine itself
 stores them in. Three rows use that fact.
 
+**The file holds tile numbers, not pictures.** A saved layer is source ids and atlas coordinates
+into the tileset it was drawn with. Load it onto a layer with a DIFFERENT tileset - one whose
+sources were renumbered, or somebody else's - and the cells fill with ids that tileset has nothing
+to draw. Nothing errors, and nothing warns. Ship the tileset with the levels, or write your own
+version number beside the file and refuse a level that does not match.
+
 **Save Layer To File** and **Load Layer From File** write and read those bytes, so a level the player
 built is a file in their own folder:
 
@@ -360,10 +366,12 @@ with a row, which is why neither of them is something a sheet could tell you:
   who walks into one of those cells finds nothing there, and finds it on somebody else's machine
   rather than yours. A deliberately sparse world of distant islands is not a grid with holes and
   earns no finding.
-- **A chunk carrying a camera.** Every `Camera2D` or `Camera3D` makes itself current as it enters the
-  tree, so a chunk with one in it snaps the view to whichever piece of scenery arrived last. It is
-  correct while that chunk is the scene being edited and wrong the moment it is one tile of a world,
-  which is exactly why it survives being looked at.
+- **A chunk carrying a camera.** A `Camera2D` or `Camera3D` saved as the **current** one takes the
+  view the moment its chunk enters the tree, and where a viewport has no current camera at all the
+  first chunk to arrive keeps it. Neither is what the chunk was authored to do, and a camera that is
+  neither changes nothing - the note is about a habit that is correct while that chunk is the scene
+  being edited and wrong the moment it is one tile of a world, which is exactly why it survives
+  being looked at.
 
 Both are read from the scenes' **text**, never by loading them - auditing a streamed world by loading
 all of it would be the one thing the pack exists to avoid.
@@ -427,9 +435,23 @@ Every loading row takes a **data only** parameter, and it is the most consequent
 guide.
 
 **Data only, on.** Before the mod is taken at all, its actual contents are read - a pack file's own
-file table off the front of the file, a folder's own files - and a mod carrying any script, library
-or native binary is refused, with the reason in words a player can read. The manifest's own `scripts`
-flag is treated as a **declaration, not a guarantee**: the loader checks the real files as well.
+file table, a folder's own files - and a mod carrying any script, library or native binary is
+refused, with the reason in words a player can read. The manifest's own `scripts` flag is treated as
+a **declaration, not a guarantee**: the loader checks the real files as well.
+
+**And a file is not cleared by its name.** A `.tscn` or a `.tres` is a table of values, and one of
+the values it may carry is a script - written inside the file, named by a path beside it, or spelled
+as a property value the engine resolves by loading or by compiling. Godot builds all of that the
+moment the file is loaded. So every scene and every resource a mod holds is read as TEXT as well,
+and one carrying a script, a value that builds something, or a path leading out of the mod is
+refused by name. A file this reading cannot read - a scene saved in the binary form, an encrypted
+entry inside a pack - is refused rather than cleared, because unfamiliar is not the same as safe.
+
+**What data-only is not.** It is a promise that no stranger's CODE comes in with the mod. It is not
+a promise that the mod is inert: a cleared scene can still hold a connection naming one of your own
+methods, or an animation track that calls one at a keyframe. None of that brings somebody else's
+code into your game; all of it can reach yours. A mod is somebody else's data, and what it can reach
+deserves the same thought as any other input.
 
 **Data only, off.** Code in the mod loads and runs. **It runs with everything your game itself can
 reach** - the player's files, their network, their machine. Godot has no sandbox to put it in, this
@@ -456,8 +478,9 @@ appearing to work; switching the mod off and restarting is the way. Folder mods 
   intend players to write to. `res://` is read-only in an exported game and fails silently.
 - **Do not end a chunk prefix with a digit.** The numbers at the end of the file name are the
   address, and `level_2_3_4.tscn` cannot be told apart from a stacked cell.
-- **Do not put a camera in a chunk.** It will make itself current the moment it streams in. The
-  Doctor names them, but the habit is the fix.
+- **Do not put a camera in a chunk.** One saved as the current camera takes the view the moment it
+  streams in, and where nothing else is current the first chunk to arrive keeps it. The Doctor names
+  them, but the habit is the fix.
 - **A tilemap is not split by the split tool.** Convert a hand-built level to chunks by moving nodes;
   a tilemap that must be chunked is redrawn per chunk, or left as one layer the world sits on.
 - **Ship data-only mods unless you have decided otherwise, and say what you decided.** The refusal

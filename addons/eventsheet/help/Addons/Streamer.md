@@ -269,8 +269,13 @@ the round trip is what makes a folder of chunks editable rather than a build art
 - **A hole in the grid is allowed.** The pack skips a cell whose scene is not there, in silence -
   a world may genuinely be island-shaped. The Doctor's Streaming section is what tells you about a
   hole in a grid that is otherwise complete.
-- **Keep the camera out of the chunks.** A camera in a chunk makes itself current when the chunk
-  streams in, so the view jumps to whichever piece arrived last. The Doctor reports that one too.
+- **The host sits at the origin, unscaled.** A chunk is placed at its cell's own corner in the
+  HOST's space, while the cell a player is in is read off their GLOBAL position. A World node moved
+  to (2000, 0), rotated or scaled therefore puts every chunk one transform away from the cell it
+  belongs to. Move the camera, not the world.
+- **Keep the camera out of the chunks.** A camera saved as the **current** one takes the view the
+  moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps
+  it. A camera that is neither changes nothing, so this is a habit rather than a crash. The Doctor reports that one too.
 
 ## Already written it by hand? It reads as this pack
 
