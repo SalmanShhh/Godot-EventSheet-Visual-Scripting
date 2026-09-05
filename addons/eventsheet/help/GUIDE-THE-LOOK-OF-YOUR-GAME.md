@@ -306,10 +306,15 @@ Level** sets any single one of the seven by hand as well.
 
 <!-- caption: The neon sign, and the sun through the window -->
 ```
-On Ready  ->  World | Set glow levels to tight
+On Ready  ->  World | Set glow levels to PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])
           ->  World | Set glow blend to screen
           ->  World | Set glow threshold to 0.9
 ```
+
+The row says the seven numbers rather than the word "tight", and that is on purpose: the field is a
+plain one a reader types into, and the three shapes are autocomplete. A row that read back as
+somebody else's word for a shape would be saying the plugin owns the shape, when what the row holds
+is the numbers. **Set glow blend** on the line under it is a real dropdown, so it does say its word.
 
 ```gdscript
 func _ready() -> void:

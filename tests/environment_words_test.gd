@@ -52,7 +52,41 @@ static func run() -> bool:
 	ok = _test_a_hand_written_line_reads_as_the_word() and ok
 	ok = _test_the_doctor_says_the_renderer() and ok
 	ok = _test_the_doctor_says_the_backdrop() and ok
+	ok = _test_a_saved_sheet_reopens_byte_for_byte() and ok
 	return ok
+
+
+## THE PANORAMA ROW WRITES A TEXTURE NOW AND WROTE A `load()` BEFORE, and the question a change like
+## that always raises is what happens to a file already holding the older line. The answer is the
+## lossless contract rather than a migration: a line no reading claims comes back as the honest
+## verbatim block it went in as, so BOTH spellings survive opening and saving untouched. Nothing in
+## the tree can hold the old form - these rows landed after the last release - but the file that
+## proves it is cheap and this vocabulary had no round-trip pin of any kind before it.
+const SKY_ROUNDTRIP := "extends WorldEnvironment\n" \
+	+ "\n" \
+	+ "\n" \
+	+ "func _ready() -> void:\n" \
+	+ "\tif environment == null:\n" \
+	+ "\t\tenvironment = Environment.new()\n" \
+	+ "\telif not environment.resource_path.is_empty():\n" \
+	+ "\t\tenvironment = environment.duplicate()\n" \
+	+ "\tif environment.sky == null:\n" \
+	+ "\t\tenvironment.sky = Sky.new()\n" \
+	+ "\telif not environment.sky.resource_path.is_empty():\n" \
+	+ "\t\tenvironment.sky = environment.sky.duplicate()\n" \
+	+ "\tenvironment.sky.sky_material = PanoramaSkyMaterial.new()\n" \
+	+ "\tenvironment.sky.sky_material.panorama = load(\"res://sky/dusk.exr\")\n" \
+	+ "\tenvironment.background_mode = Environment.BG_SKY\n" \
+	+ "\tenvironment.glow_enabled = true\n" \
+	+ "\tvar __glow_1: PackedFloat32Array = PackedFloat32Array([1.0, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0])\n" \
+	+ "\tfor __level_1: int in range(7):\n" \
+	+ "\t\tenvironment.set_glow_level(__level_1, __glow_1[__level_1])\n"
+
+
+static func _test_a_saved_sheet_reopens_byte_for_byte() -> bool:
+	return SUPPORT.check("environment_words_test",
+		"a sheet holding the older panorama line saves back byte for byte",
+		SUPPORT.reemit(SKY_ROUNDTRIP, "user://_environment_words_roundtrip.gd"), SKY_ROUNDTRIP)
 
 
 ## Every word resolves to a property Environment really has - the one thing the whole vocabulary is
