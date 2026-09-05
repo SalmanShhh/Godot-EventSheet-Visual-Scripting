@@ -490,6 +490,26 @@ signal file_appeared"),
 	ok = _check("and the walk is sorted, so two machines raise the same events in the same order",
 		pack.contains("names.sort()"), true) and ok
 	ok = _check("the three events are triggers", pack.count("## @ace_trigger"), 3) and ok
+	# THE FLOOR IS SAID WHERE THE ROW IS PICKED. The variable and the band both know it; the action
+	# that takes the number said nothing, so the one place a reader types a 0 was the one place the
+	# rule was missing.
+	ok = _check("the action that takes the interval says the floor it will be raised to",
+		pack.contains("A tenth of a second is the shortest gap honoured, so a zero or a negative"
+			+ " number is a look every tenth of a second rather than a look every frame."),
+		true) and ok
+	# AND EVERY PARAMETER SAYS WHAT IT IS FOR, which every builtin verb is gated on and no pack
+	# function could carry at all until the builder helper grew a channel for it.
+	ok = _check("the folder slot says what it is for",
+		pack.contains("## @ace_param(folder, desc: \"The folder to watch."), true) and ok
+	ok = _check("and the interval slot says its cost and its floor",
+		pack.contains("## @ace_param(every_seconds, desc: \"Seconds between looks."), true) and ok
+	ok = _check("the interval's help names the floor as the number it is honoured as",
+		pack.contains("A TENTH OF A SECOND IS THE FLOOR: a zero or a negative number is honoured"
+			+ " as 0.1"), true) and ok
+	# WHAT THE LOOK CANNOT SEE is on the trigger a reader meets, not only in the builder. A copy made
+	# with its timestamps preserved is different content under an unchanged stamp.
+	ok = _check("the changed trigger says the reading is the modified time and nothing else",
+		pack.contains("THE READING IS THE MODIFIED TIME AND NOTHING ELSE"), true) and ok
 	for signal_name: String in ["file_appeared", "file_changed", "file_removed"]:
 		ok = _check("%s hands back a path" % signal_name,
 			pack.contains("signal %s(path: String)" % signal_name), true) and ok

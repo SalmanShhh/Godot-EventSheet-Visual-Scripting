@@ -52,6 +52,12 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 ## as `## @ace_display_template(...)` and may carry BBCode-lite ([b]/[i]) for the event-sheet
 ## styled read; empty keeps the auto-derived "Name {param}" form (which the viewport already
 ## bolds automatically).
+##
+## A PARAMETER MAY SAY WHAT IT IS FOR. Each entry of `params` is `[id, type]`, and a THIRD entry is
+## that parameter's own help - the sentence the picker and the help strip show under its box, which
+## the compiler writes out as `## @ace_param(id, help: ...)`. Without it a pack's parameters ship
+## with a name and a type and nothing else, which every builtin verb would fail its own gate for.
+## The third entry is optional so no existing builder has to change.
 static func append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, display_template: String = "") -> void:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
@@ -64,6 +70,8 @@ static func append_function(sheet: EventSheetResource, function_name: String, di
 		var parameter: ACEParam = ACEParam.new()
 		parameter.id = str(param_pair[0])
 		parameter.type_name = str(param_pair[1])
+		if param_pair.size() > 2:
+			parameter.description = str(param_pair[2])
 		event_function.params.append(parameter)
 	var body_row: RawCodeRow = RawCodeRow.new()
 	body_row.code = body

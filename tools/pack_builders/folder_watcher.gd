@@ -62,6 +62,12 @@ static func build() -> bool:
 		"## at the last look. Usually that means newer; a file restored from a backup or copied back",
 		"## over is older and is still a change. A program that writes a file in several goes can raise",
 		"## this more than once per save, and two writes inside the same second read as one.",
+		"##",
+		"## THE READING IS THE MODIFIED TIME AND NOTHING ELSE, so a replacement that carries the time",
+		"## the old file had is invisible here: a copy made with its timestamps preserved, or a file",
+		"## put back by a restore tool, is different content under an unchanged stamp. Asking the size",
+		"## as well would mean opening every watched file on every look, which is a cost this row does",
+		"## not pay behind your back - so what it can and cannot see is said instead.",  
 		"## @ace_trigger",
 		"## @ace_name(\"On A File Changed\")",
 		"signal file_changed(path: String)",
@@ -159,8 +165,10 @@ static func build() -> bool:
 	sheet.events.append(tick)
 
 	Lib.append_function(sheet, "watch_folder", "Watch Folder", "Folder Watcher",
-		"Starts watching a folder, looking every so many seconds. This is a POLL: the folder is read on that interval and compared with the reading before it, because Godot raises no file-change notification of its own at run time. The first look is the baseline and raises nothing - a folder that already holds files is not a folder where things just happened.",
-		[["folder", "String"], ["every_seconds", "float"]], "\n".join(PackedStringArray([
+		"Starts watching a folder, looking every so many seconds. This is a POLL: the folder is read on that interval and compared with the reading before it, because Godot raises no file-change notification of its own at run time. The first look is the baseline and raises nothing - a folder that already holds files is not a folder where things just happened. A tenth of a second is the shortest gap honoured, so a zero or a negative number is a look every tenth of a second rather than a look every frame.",
+		[["folder", "String", "The folder to watch. Its files are read on the interval below; the folders inside it are not walked, and a folder that is not there yet raises nothing until it appears. Prefer user:// - res:// is the game's own files and is a packed archive once the game is exported."],
+		["every_seconds", "float", "Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for one holding thousands of files. A TENTH OF A SECOND IS THE FLOOR: a zero or a negative number is honoured as 0.1, because a look every frame is not what anybody means by an interval."]],
+		"\n".join(PackedStringArray([
 		"watched_folder = folder",
 		"look_every_seconds = every_seconds",
 		"# The baseline: what is there now, recorded without raising anything.",
