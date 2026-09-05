@@ -733,6 +733,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ESCAPE:
 		release_mouse()
 
+## Shrinks/restores the capsule + drops/raises the Head so crouching physically lowers the
+## body. The capsule shortens toward the FLOOR (the shape node shifts down by half the lost
+## height) so the feet stay planted. The shape resource is duplicated on first use - capsule
+## resources are commonly shared across scenes, and crouching one character must not shrink
+## every other user of that resource.
 ## @ace_hidden
 func _apply_crouch_shape(low: bool) -> void:
 	var shape_node := _capsule()
@@ -756,6 +761,9 @@ func _apply_crouch_shape(low: bool) -> void:
 	if head != null and standing_height > 0.0:
 		head.position.y = head_base_y - ((standing_height - minf(crouch_height, standing_height)) if low else 0.0)
 
+## Headroom test for standing up: sweeps the (crouched) body upward by the height it would
+## regain; any hit means a ceiling is in the way and the crouch holds. The sweep needs a
+## live physics space - outside the tree (headless tools/tests) standing is always allowed.
 ## @ace_hidden
 func _can_stand_up() -> bool:
 	if host == null or standing_height <= 0.0 or not host.is_inside_tree():

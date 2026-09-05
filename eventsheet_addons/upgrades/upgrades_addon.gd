@@ -48,14 +48,6 @@ var _points_account: String = ""
 var _last_skill: String = ""
 # The node whose StatForge stack an unlocked skill's grants are applied to (optional).
 var _stats: Node = null
-# The ids a skill needs unlocked first, in the order the asset's comma-separated cell lists them.
-func _requires_of(id: String) -> PackedStringArray:
-	var out: PackedStringArray = PackedStringArray()
-	for part: String in str(_skill_row(id).get("requires", "")).split(","):
-		var required: String = part.strip_edges()
-		if not required.is_empty() and not out.has(required):
-			out.append(required)
-	return out
 # The Currency Ledger autoload, when a points account was named and the singleton is there.
 func _points_ledger() -> Node:
 	if _points_account.is_empty() or not is_inside_tree():
@@ -581,6 +573,15 @@ func _skill_row(id: String) -> Dictionary:
 		if entry is Dictionary and str((entry as Dictionary).get("id", "")) == id:
 			return entry as Dictionary
 	return {}
+
+func _requires_of(id: String) -> PackedStringArray:
+	# The ids a skill needs unlocked first, in the order the asset's comma-separated cell lists them.
+	var out: PackedStringArray = PackedStringArray()
+	for part: String in str(_skill_row(id).get("requires", "")).split(","):
+		var required: String = part.strip_edges()
+		if not required.is_empty() and not out.has(required):
+			out.append(required)
+	return out
 
 func _points() -> int:
 	# The unspent points, wherever they are kept.

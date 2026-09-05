@@ -65,55 +65,6 @@ var _swipe_distance: float = 0.0
 var _swipe_seconds: float = 0.0
 var _shape_name: String = ""
 var _shape_closeness: float = 0.0
-# A stroke reduced to something comparable: SAMPLE_COUNT points spaced evenly along its
-# length, moved so their middle sits at the origin, and scaled so the longest side of their
-# box is 1. After this a big circle and a small one are the same numbers, which is the whole
-# reason a drawn gesture can be recognised at all.
-## @ace_hidden
-func _normalise(points: PackedVector2Array) -> PackedVector2Array:
-	var resampled: PackedVector2Array = _resample(points)
-	if resampled.is_empty():
-		return resampled
-	var centre: Vector2 = Vector2.ZERO
-	for point: Vector2 in resampled:
-		centre += point
-	centre /= float(resampled.size())
-	var low: Vector2 = resampled[0]
-	var high: Vector2 = resampled[0]
-	for point: Vector2 in resampled:
-		low = low.min(point)
-		high = high.max(point)
-	var span: float = maxf(maxf(high.x - low.x, high.y - low.y), 0.001)
-	var out: PackedVector2Array = PackedVector2Array()
-	for point: Vector2 in resampled:
-		out.append((point - centre) / span)
-	return out
-# SAMPLE_COUNT points spaced evenly along the stroke's length. Walking the length rather than
-# taking every Nth point is what makes a slow corner and a fast straight weigh the same.
-## @ace_hidden
-func _resample(points: PackedVector2Array) -> PackedVector2Array:
-	var out: PackedVector2Array = PackedVector2Array()
-	var total: float = _stroke_length(points)
-	if points.size() < 2 or total <= 0.0:
-		return out
-	var step: float = total / float(SAMPLE_COUNT - 1)
-	var walked: float = 0.0
-	var index: int = 1
-	var cursor: Vector2 = points[0]
-	out.append(cursor)
-	while out.size() < SAMPLE_COUNT and index < points.size():
-		var leg: float = cursor.distance_to(points[index])
-		if walked + leg >= step and leg > 0.0:
-			cursor = cursor.lerp(points[index], (step - walked) / leg)
-			out.append(cursor)
-			walked = 0.0
-		else:
-			walked += leg
-			cursor = points[index]
-			index += 1
-	while out.size() < SAMPLE_COUNT:
-		out.append(points[points.size() - 1])
-	return out
 
 ## @ace_action
 ## @ace_featured
@@ -380,6 +331,57 @@ func _stroke_length(points: PackedVector2Array) -> float:
 	for index: int in range(1, points.size()):
 		total += points[index].distance_to(points[index - 1])
 	return total
+
+## @ace_hidden
+func _normalise(points: PackedVector2Array) -> PackedVector2Array:
+	# A stroke reduced to something comparable: SAMPLE_COUNT points spaced evenly along its
+	# length, moved so their middle sits at the origin, and scaled so the longest side of their
+	# box is 1. After this a big circle and a small one are the same numbers, which is the whole
+	# reason a drawn gesture can be recognised at all.
+	var resampled: PackedVector2Array = _resample(points)
+	if resampled.is_empty():
+		return resampled
+	var centre: Vector2 = Vector2.ZERO
+	for point: Vector2 in resampled:
+		centre += point
+	centre /= float(resampled.size())
+	var low: Vector2 = resampled[0]
+	var high: Vector2 = resampled[0]
+	for point: Vector2 in resampled:
+		low = low.min(point)
+		high = high.max(point)
+	var span: float = maxf(maxf(high.x - low.x, high.y - low.y), 0.001)
+	var out: PackedVector2Array = PackedVector2Array()
+	for point: Vector2 in resampled:
+		out.append((point - centre) / span)
+	return out
+
+## @ace_hidden
+func _resample(points: PackedVector2Array) -> PackedVector2Array:
+	# SAMPLE_COUNT points spaced evenly along the stroke's length. Walking the length rather than
+	# taking every Nth point is what makes a slow corner and a fast straight weigh the same.
+	var out: PackedVector2Array = PackedVector2Array()
+	var total: float = _stroke_length(points)
+	if points.size() < 2 or total <= 0.0:
+		return out
+	var step: float = total / float(SAMPLE_COUNT - 1)
+	var walked: float = 0.0
+	var index: int = 1
+	var cursor: Vector2 = points[0]
+	out.append(cursor)
+	while out.size() < SAMPLE_COUNT and index < points.size():
+		var leg: float = cursor.distance_to(points[index])
+		if walked + leg >= step and leg > 0.0:
+			cursor = cursor.lerp(points[index], (step - walked) / leg)
+			out.append(cursor)
+			walked = 0.0
+		else:
+			walked += leg
+			cursor = points[index]
+			index += 1
+	while out.size() < SAMPLE_COUNT:
+		out.append(points[points.size() - 1])
+	return out
 
 ## @ace_hidden
 func _closest_shape(points: PackedVector2Array) -> Dictionary:

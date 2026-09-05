@@ -120,36 +120,38 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+## Eases the ripple in to the given strength. Strength is a share of the picture's width:
+## 0.01 is a shimmer, 0.05 is water, 0.15 is a hallucination.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Wave")
-## @ace_description("Eases the ripple in to the given strength. Strength is a share of the picture's width: 0.01 is a shimmer, 0.05 is water, 0.15 is a hallucination.")
 ## @ace_display_template("Wave at [b]{strength}[/b] over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/wave/icon.svg")
 ## @ace_codegen_template("$WaveBehavior.wave({strength}, {seconds})")
 func wave(strength: float = 0.03, seconds: float = 0.4) -> void:
 	_walk_dial(PUSH_DIAL, maxf(strength, 0.0), maxf(seconds, 0.0))
 
+## Eases the ripple back out to still. A ripple stopped instantly snaps the picture sideways,
+## which is why this takes a time rather than a switch.
 ## @ace_action
 ## @ace_name("Settle")
-## @ace_description("Eases the ripple back out to still. A ripple stopped instantly snaps the picture sideways, which is why this takes a time rather than a switch.")
 ## @ace_display_template("Settle over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/wave/icon.svg")
 ## @ace_codegen_template("$WaveBehavior.settle({seconds})")
 func settle(seconds: float = 0.4) -> void:
 	_walk_dial(PUSH_DIAL, 0.0, maxf(seconds, 0.0))
 
+## True while the picture is still moving.
 ## @ace_condition
 ## @ace_name("Is Waving")
-## @ace_description("True while the picture is still moving.")
 ## @ace_icon("res://eventsheet_addons/wave/icon.svg")
 ## @ace_codegen_template("$WaveBehavior.is_waving()")
 func is_waving() -> bool:
 	return _dial(PUSH_DIAL, 0.0) > 0.0005
 
+## How hard the ripple is pushing right now, as a share of the picture's width.
 ## @ace_expression
 ## @ace_name("Wave Strength")
-## @ace_description("How hard the ripple is pushing right now, as a share of the picture's width.")
 ## @ace_icon("res://eventsheet_addons/wave/icon.svg")
 ## @ace_codegen_template("$WaveBehavior.wave_strength()")
 func wave_strength() -> float:

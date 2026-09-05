@@ -121,10 +121,12 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+## Washes the host towards a colour and lets it drain back over the given time. A second
+## flash while one is running restarts it rather than stacking, so a fast string of hits
+## reads as one bright thing rather than as a stuck white square.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Flash")
-## @ace_description("Washes the host towards a colour and lets it drain back over the given time. A second flash while one is running restarts it rather than stacking, so a fast string of hits reads as one bright thing rather than as a stuck white square.")
 ## @ace_display_template("Flash [b]{colour}[/b] for [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/hit_flash/icon.svg")
 ## @ace_codegen_template("$HitFlashBehavior.flash({colour}, {seconds})")
@@ -133,17 +135,18 @@ func flash(colour: Color = Color.WHITE, seconds: float = 0.15) -> void:
 	_set_dial(AMOUNT_DIAL, 1.0)
 	_walk_dial(AMOUNT_DIAL, 0.0, maxf(seconds, 0.0))
 
+## Ends the wash now, whatever was left of it. The row for an interruption: the hit was
+## cancelled, the enemy died mid-flash, the scene is moving on.
 ## @ace_action
 ## @ace_name("Stop Flashing")
-## @ace_description("Ends the wash now, whatever was left of it. The row for an interruption: the hit was cancelled, the enemy died mid-flash, the scene is moving on.")
 ## @ace_icon("res://eventsheet_addons/hit_flash/icon.svg")
 ## @ace_codegen_template("$HitFlashBehavior.stop_flashing()")
 func stop_flashing() -> void:
 	_set_dial(AMOUNT_DIAL, 0.0)
 
+## True while any of the wash is still showing.
 ## @ace_condition
 ## @ace_name("Is Flashing")
-## @ace_description("True while any of the wash is still showing.")
 ## @ace_icon("res://eventsheet_addons/hit_flash/icon.svg")
 ## @ace_codegen_template("$HitFlashBehavior.is_flashing()")
 func is_flashing() -> bool:

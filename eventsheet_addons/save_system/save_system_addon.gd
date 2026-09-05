@@ -147,25 +147,6 @@ var _never_save: PackedStringArray = PackedStringArray()
 var _carried: PackedStringArray = PackedStringArray()
 # Set by Use Upgraded Save so Load Game knows to pick the migrated record back up.
 var _upgrade_applied: bool = false
-func _backups_for(target_slot: int) -> PackedStringArray:
-	var found: Array = []
-	var dir_path: String = _backup_dir_for(target_slot)
-	var dir: DirAccess = DirAccess.open(dir_path)
-	if dir == null:
-		return PackedStringArray()
-	dir.list_dir_begin()
-	var entry: String = dir.get_next()
-	while not entry.is_empty():
-		# A .tmp is a write in flight, or the wreck of one - never part of the ring.
-		if not dir.current_is_dir() and not entry.ends_with(".tmp"):
-			found.append(dir_path.path_join(entry))
-		entry = dir.get_next()
-	dir.list_dir_end()
-	# Newest first, by SEQUENCE NUMBER rather than by name: a plain text sort puts "10000"
-	# below "9999", so a slot past ten thousand writes would invert its own ring - handing
-	# Restore Slot From Backup the oldest file while the prune deleted the newest.
-	found.sort_custom(func(first: String, second: String) -> bool: return _backup_index_of(first) > _backup_index_of(second))
-	return PackedStringArray(found)
 
 ## Runs this event's actions once per slot that has a save file - the load menu, as
 ## one row. Read the current one as `slot_index`, then fill the tile with Slot Detail
@@ -1111,6 +1092,26 @@ func _backup_dir_for(target_slot: int) -> String:
 func _backup_index_of(path: String) -> int:
 	# The sequence number in front of a ring entry's name ("0007.save_0.dat" -> 7).
 	return int(path.get_file().get_slice(".", 0))
+
+func _backups_for(target_slot: int) -> PackedStringArray:
+	var found: Array = []
+	var dir_path: String = _backup_dir_for(target_slot)
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return PackedStringArray()
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while not entry.is_empty():
+		# A .tmp is a write in flight, or the wreck of one - never part of the ring.
+		if not dir.current_is_dir() and not entry.ends_with(".tmp"):
+			found.append(dir_path.path_join(entry))
+		entry = dir.get_next()
+	dir.list_dir_end()
+	# Newest first, by SEQUENCE NUMBER rather than by name: a plain text sort puts "10000"
+	# below "9999", so a slot past ten thousand writes would invert its own ring - handing
+	# Restore Slot From Backup the oldest file while the prune deleted the newest.
+	found.sort_custom(func(first: String, second: String) -> bool: return _backup_index_of(first) > _backup_index_of(second))
+	return PackedStringArray(found)
 
 func _push_backup(target_slot: int) -> String:
 	var chosen: int = slot if target_slot < 0 else target_slot

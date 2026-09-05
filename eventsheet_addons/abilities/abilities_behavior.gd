@@ -576,17 +576,19 @@ func get_cooldown_progress(id: String) -> float:
 func get_stacks(id: String) -> int:
 	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
 
+## The same readiness question in the skill words. A game whose active skills and whose passive
+## tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to
+## remember that one of them is spelled "ability".
 ## @ace_condition
 ## @ace_name("Is Skill Ready")
-## @ace_description("The same readiness question in the skill words. A game whose active skills and whose passive tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to remember that one of them is spelled "ability".")
 ## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_skill_ready({id})")
 func is_skill_ready(id: String) -> bool:
 	return is_ready(id)
 
+## A skill's remaining charges, in the skill words - the number a hotbar prints on the icon.
 ## @ace_expression
 ## @ace_name("Skill Charges")
-## @ace_description("A skill's remaining charges, in the skill words - the number a hotbar prints on the icon.")
 ## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.skill_charges({id})")
 func skill_charges(id: String) -> int:

@@ -28,28 +28,6 @@ var _log: Array[String] = []
 const _LOG_LIMIT: int = 200
 
 ## @ace_action
-## @ace_name("Wait For Event")
-## @ace_category("Events")
-## @ace_description("Suspends this event until the named message is broadcast, or until the give-up time passes. The rows below it run when it resolves, so read what happened with the Wait For Event Succeeded / Wait For Event Timed Out conditions. A give-up time of 0 waits forever.")
-## @ace_display_template("Wait for event [b]{channel}[/b], give up after [b]{seconds}[/b]s")
-## @ace_param(channel, hint: expression, desc: "The message to wait for. Any sheet anywhere can be the one that broadcasts it.")
-## @ace_param(seconds, desc: "Give up after this long. 0 waits forever - only safe under a one-shot trigger.")
-## @ace_icon("res://eventsheet_addons/event_bus/icon.svg")
-## @ace_codegen_template("await EventBus.wait_for({channel}, {seconds})")
-func wait_for(channel: String = "door_opened", seconds: float = 8.0) -> void:
-	# Watching the counter rather than awaiting the signal is what lets the give-up time
-	# interrupt the wait: GDScript cannot await two signals and take whichever lands first.
-	var seen: int = int(_counts.get(channel, 0))
-	var deadline: int = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
-	_wait_outcomes[channel] = 0
-	while int(_counts.get(channel, 0)) == seen:
-		if seconds > 0.0 and Time.get_ticks_msec() >= deadline:
-			_wait_outcomes[channel] = 2
-			return
-		await get_tree().process_frame
-	_wait_outcomes[channel] = 1
-
-## @ace_action
 ## @ace_featured
 ## @ace_name("Broadcast Event")
 ## @ace_category("Events")
@@ -199,6 +177,28 @@ func deliver_to(members: Array, method_name: String, payload: Dictionary) -> voi
 	for member: Variant in members:
 		if member is Node and (member as Node).has_method(method_name):
 			(member as Node).call(method_name, payload)
+
+## @ace_action
+## @ace_name("Wait For Event")
+## @ace_category("Events")
+## @ace_description("Suspends this event until the named message is broadcast, or until the give-up time passes. The rows below it run when it resolves, so read what happened with the Wait For Event Succeeded / Wait For Event Timed Out conditions. A give-up time of 0 waits forever.")
+## @ace_display_template("Wait for event [b]{channel}[/b], give up after [b]{seconds}[/b]s")
+## @ace_param(channel, hint: expression, desc: "The message to wait for. Any sheet anywhere can be the one that broadcasts it.")
+## @ace_param(seconds, desc: "Give up after this long. 0 waits forever - only safe under a one-shot trigger.")
+## @ace_icon("res://eventsheet_addons/event_bus/icon.svg")
+## @ace_codegen_template("await EventBus.wait_for({channel}, {seconds})")
+func wait_for(channel: String = "door_opened", seconds: float = 8.0) -> void:
+	# Watching the counter rather than awaiting the signal is what lets the give-up time
+	# interrupt the wait: GDScript cannot await two signals and take whichever lands first.
+	var seen: int = int(_counts.get(channel, 0))
+	var deadline: int = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
+	_wait_outcomes[channel] = 0
+	while int(_counts.get(channel, 0)) == seen:
+		if seconds > 0.0 and Time.get_ticks_msec() >= deadline:
+			_wait_outcomes[channel] = 2
+			return
+		await get_tree().process_frame
+	_wait_outcomes[channel] = 1
 
 ## @ace_hidden
 func save_state() -> Dictionary:

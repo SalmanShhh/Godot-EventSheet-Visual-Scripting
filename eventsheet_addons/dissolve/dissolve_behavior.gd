@@ -129,10 +129,12 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+## Burns the host away over the given time and fires On Dissolved when there is nothing left.
+## No time at all burns it away on the spot, which is the row for a thing that pops out of
+## existence rather than fading.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Dissolve")
-## @ace_description("Burns the host away over the given time and fires On Dissolved when there is nothing left. No time at all burns it away on the spot, which is the row for a thing that pops out of existence rather than fading.")
 ## @ace_display_template("Dissolve over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/dissolve/icon.svg")
 ## @ace_codegen_template("$DissolveBehavior.dissolve({seconds})")
@@ -143,9 +145,10 @@ func dissolve(seconds: float = 0.8) -> void:
 		return
 	burn.finished.connect(_burnt_away)
 
+## Burns the host back in from nothing over the given time. The host is shown again first, so
+## the row works whether or not the last dissolve hid it.
 ## @ace_action
 ## @ace_name("Appear")
-## @ace_description("Burns the host back in from nothing over the given time. The host is shown again first, so the row works whether or not the last dissolve hid it.")
 ## @ace_display_template("Appear over [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/dissolve/icon.svg")
 ## @ace_codegen_template("$DissolveBehavior.appear({seconds})")
@@ -154,17 +157,18 @@ func appear(seconds: float = 0.8) -> void:
 		host.visible = true
 	_walk_dial(BURN_DIAL, 0.0, maxf(seconds, 0.0))
 
+## True once the host has burned all the way away.
 ## @ace_condition
 ## @ace_name("Is Gone")
-## @ace_description("True once the host has burned all the way away.")
 ## @ace_icon("res://eventsheet_addons/dissolve/icon.svg")
 ## @ace_codegen_template("$DissolveBehavior.is_gone()")
 func is_gone() -> bool:
 	return _dial(BURN_DIAL, 0.0) >= 0.999
 
+## How much of the host has burned away, 0 to 1 - for a health bar that empties with the burn,
+## or a sound that follows it.
 ## @ace_expression
 ## @ace_name("Burnt Away")
-## @ace_description("How much of the host has burned away, 0 to 1 - for a health bar that empties with the burn, or a sound that follows it.")
 ## @ace_icon("res://eventsheet_addons/dissolve/icon.svg")
 ## @ace_codegen_template("$DissolveBehavior.burnt_away()")
 func burnt_away() -> float:

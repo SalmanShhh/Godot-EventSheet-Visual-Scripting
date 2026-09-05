@@ -79,25 +79,6 @@ func _spawn_parent() -> Node:
 	if is_inside_tree() and get_tree() != null and get_tree().current_scene != null:
 		return get_tree().current_scene
 	return self
-# Everything the plan does not say clearly, derived from the entries themselves - a beat with no
-# scene, a scene that is not in the project, a count of 0, a spawn that joins no group. The report
-# prints these verbatim instead of quietly rounding them away.
-func _problems() -> PackedStringArray:
-	var out: PackedStringArray = PackedStringArray()
-	var index: int = 0
-	for entry: Dictionary in _entries:
-		var where: String = "beat %d at %ss" % [index + 1, String.num(float(entry.at), 2)]
-		var scene_path: String = str(entry.scene)
-		if scene_path.is_empty():
-			out.append("%s: no scene path - it spawns nothing" % where)
-		elif not ResourceLoader.exists(scene_path):
-			out.append("%s: scene not found in this project (%s)" % [where, scene_path])
-		if int(entry.count) <= 0:
-			out.append("%s: count is 0 - it spawns nothing" % where)
-		if str(entry.group).is_empty():
-			out.append("%s: no group name - its spawns join no group" % where)
-		index += 1
-	return out
 
 func _process(delta: float) -> void:
 	advance(delta)
@@ -492,6 +473,26 @@ func _num(value: Variant) -> float:
 	if value is String and (value as String).is_valid_float():
 		return (value as String).to_float()
 	return 0.0
+
+func _problems() -> PackedStringArray:
+	# Everything the plan does not say clearly, derived from the entries themselves - a beat with no
+	# scene, a scene that is not in the project, a count of 0, a spawn that joins no group. The report
+	# prints these verbatim instead of quietly rounding them away.
+	var out: PackedStringArray = PackedStringArray()
+	var index: int = 0
+	for entry: Dictionary in _entries:
+		var where: String = "beat %d at %ss" % [index + 1, String.num(float(entry.at), 2)]
+		var scene_path: String = str(entry.scene)
+		if scene_path.is_empty():
+			out.append("%s: no scene path - it spawns nothing" % where)
+		elif not ResourceLoader.exists(scene_path):
+			out.append("%s: scene not found in this project (%s)" % [where, scene_path])
+		if int(entry.count) <= 0:
+			out.append("%s: count is 0 - it spawns nothing" % where)
+		if str(entry.group).is_empty():
+			out.append("%s: no group name - its spawns join no group" % where)
+		index += 1
+	return out
 
 ## @ace_hidden
 func save_state() -> Dictionary:

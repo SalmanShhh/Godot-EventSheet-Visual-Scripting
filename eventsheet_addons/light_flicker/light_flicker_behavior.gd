@@ -115,10 +115,11 @@ func _apply_light(brightness: float, reach_scale: float) -> void:
 	if also_flicker_reach and not _reach_property.is_empty():
 		host.set(_reach_property, _authored_reach * reach_scale)
 
+## Starts the flicker, either now or after a delay. The delay is what a row uses when a torch
+## should catch a moment after the thing that lit it.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Start Flickering")
-## @ace_description("Starts the flicker, either now or after a delay. The delay is what a row uses when a torch should catch a moment after the thing that lit it.")
 ## @ace_display_template("Start flickering after [b]{after_seconds}[/b] s")
 ## @ace_lift_example("[[target|node: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])")
 ## @ace_lift_example("[[target|node: $LightFlickerBehavior]].start_flickering()")
@@ -130,9 +131,12 @@ func start_flickering(after_seconds: float = 0.0) -> void:
 	# A delayed start still counts its delay down per frame - waiting is not idle.
 	set_process(true)
 
+## Stops the flicker and leaves the light at one steady brightness - the number the row
+## names, so a torch that goes out settles dark and one that is merely calmed settles lit.
+## A flame that was flickering its reach puts that back to whatever the scene was authored
+## with, rather than leaving the radius of the frame it stopped on.
 ## @ace_action
 ## @ace_name("Stop Flickering")
-## @ace_description("Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. A flame that was flickering its reach puts that back to whatever the scene was authored with, rather than leaving the radius of the frame it stopped on.")
 ## @ace_display_template("Stop flickering and settle at [b]{settle_at}[/b]")
 ## @ace_lift_example("[[target|node: $LightFlickerBehavior]].stop_flickering([[settle_at|argument: 1.0]])")
 ## @ace_lift_example("[[target|node: $LightFlickerBehavior]].stop_flickering()")
@@ -147,9 +151,10 @@ func stop_flickering(settle_at: float = 1.0) -> void:
 		return
 	_apply_light(settle_at, 1.0)
 
+## True while the light is actually flickering - false while it waits out a delay, and false
+## once it has been stopped.
 ## @ace_condition
 ## @ace_name("Is Flickering")
-## @ace_description("True while the light is actually flickering - false while it waits out a delay, and false once it has been stopped.")
 ## @ace_icon("res://eventsheet_addons/light_flicker/icon.svg")
 ## @ace_codegen_template("$LightFlickerBehavior.is_flickering()")
 func is_flickering() -> bool:

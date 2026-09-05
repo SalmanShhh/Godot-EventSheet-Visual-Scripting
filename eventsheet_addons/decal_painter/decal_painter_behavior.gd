@@ -94,6 +94,7 @@ func _physics_process(delta: float) -> void:
 	if aging == 0 and _blobs.is_empty():
 		set_physics_process(false)
 
+## Registers a spawned decal in the FIFO ledger and enforces the cap.
 ## @ace_hidden
 func _track(decal: Decal, lifetime: float) -> void:
 	_decals.append({"node": decal, "born": _clock, "lifetime": lifetime})
@@ -117,9 +118,10 @@ func decal_count() -> int:
 			alive += 1
 	return alive
 
+## Stamps a decal onto the world at a position - splats, scorch marks, target rings.
+## Lifetime 0 keeps it forever (until the max-decals cap recycles it).
 ## @ace_action
 ## @ace_name("Spawn Decal")
-## @ace_description("Stamps a decal onto the world at a position - splats, scorch marks, target rings. Lifetime 0 keeps it forever (until the max-decals cap recycles it).")
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.spawn_decal({texture}, {x}, {y}, {z}, {size}, {rotation_deg}, {lifetime})")
 func spawn_decal(texture: Texture2D, x: float, y: float, z: float, size: float, rotation_deg: float, lifetime: float) -> void:
@@ -131,9 +133,10 @@ func spawn_decal(texture: Texture2D, x: float, y: float, z: float, size: float, 
 	decal.rotate_y(deg_to_rad(rotation_deg))
 	_track(decal, maxf(lifetime, 0.0))
 
+## Keeps a soft shadow blob ground-snapped under a node - the classic character
+## shadow, no asset needed. The floor is found by raycast against the collision mask.
 ## @ace_action
 ## @ace_name("Spawn Blob Shadow")
-## @ace_description("Keeps a soft shadow blob ground-snapped under a node - the classic character shadow, no asset needed. The floor is found by raycast against the collision mask.")
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.spawn_blob_shadow({follow}, {radius}, {opacity}, {collision_mask_3d})")
 func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_mask_3d: int) -> void:
@@ -149,9 +152,9 @@ func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_ma
 	# A shadow follows its character every physics frame, so it needs the tick back.
 	set_physics_process(true)
 
+## Removes the blob shadow following a node.
 ## @ace_action
 ## @ace_name("Stop Blob Shadow")
-## @ace_description("Removes the blob shadow following a node.")
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.stop_blob_shadow({follow})")
 func stop_blob_shadow(follow: Node) -> void:
@@ -166,9 +169,11 @@ func stop_blob_shadow(follow: Node) -> void:
 			kept.append(blob)
 	_blobs = kept
 
+## Projects a 2D Drawing Canvas's LIVE texture onto the world as a decal - draw a
+## line-of-sight fan or telegraph in 2D and paint it on the 3D floor. Pass the
+## DrawingCanvas behavior node; the decal updates as the canvas draws.
 ## @ace_action
 ## @ace_name("Spawn Canvas Decal")
-## @ace_description("Projects a 2D Drawing Canvas's LIVE texture onto the world as a decal - draw a line-of-sight fan or telegraph in 2D and paint it on the 3D floor. Pass the DrawingCanvas behavior node; the decal updates as the canvas draws.")
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.spawn_canvas_decal({canvas}, {x}, {y}, {z}, {size}, {rotation_deg})")
 func spawn_canvas_decal(canvas: Node, x: float, y: float, z: float, size: float, rotation_deg: float) -> void:
@@ -176,9 +181,9 @@ func spawn_canvas_decal(canvas: Node, x: float, y: float, z: float, size: float,
 		return
 	spawn_decal(canvas.call("canvas_texture") as Texture2D, x, y, z, size, rotation_deg, 0.0)
 
+## Frees every spawned decal and blob shadow.
 ## @ace_action
 ## @ace_name("Clear Decals")
-## @ace_description("Frees every spawned decal and blob shadow.")
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.clear_decals()")
 func clear_decals() -> void:
@@ -193,9 +198,9 @@ func clear_decals() -> void:
 	# An empty canvas has nothing to age and nothing to follow.
 	set_physics_process(false)
 
+## Changes the FIFO cap - the oldest decals free immediately if over it.
 ## @ace_action
 ## @ace_name("Set Max Decals")
-## @ace_description("Changes the FIFO cap - the oldest decals free immediately if over it.")
 ## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.set_max_decals({count})")
 func set_max_decals(count: int) -> void:

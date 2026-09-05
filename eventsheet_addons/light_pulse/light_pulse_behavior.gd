@@ -86,10 +86,11 @@ func _bind_to_light() -> bool:
 func _apply_light(brightness: float) -> void:
 	host.set(_brightness_property, brightness)
 
+## Starts the pulse, either now or after a delay - the delay is what a row uses when a beacon
+## should come up a moment after the thing that switched it on.
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Start Pulsing")
-## @ace_description("Starts the pulse, either now or after a delay - the delay is what a row uses when a beacon should come up a moment after the thing that switched it on.")
 ## @ace_display_template("Start pulsing after [b]{after_seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/light_pulse/icon.svg")
 ## @ace_codegen_template("$LightPulseBehavior.start_pulsing({after_seconds})")
@@ -99,9 +100,9 @@ func start_pulsing(after_seconds: float = 0.0) -> void:
 	# A delayed start still counts its delay down per frame - waiting is not idle.
 	set_process(true)
 
+## Stops the pulse and leaves the light at one steady brightness - the number the row names.
 ## @ace_action
 ## @ace_name("Stop Pulsing")
-## @ace_description("Stops the pulse and leaves the light at one steady brightness - the number the row names.")
 ## @ace_display_template("Stop pulsing and settle at [b]{settle_at}[/b]")
 ## @ace_icon("res://eventsheet_addons/light_pulse/icon.svg")
 ## @ace_codegen_template("$LightPulseBehavior.stop_pulsing({settle_at})")
@@ -114,9 +115,10 @@ func stop_pulsing(settle_at: float = 1.0) -> void:
 		return
 	_apply_light(settle_at)
 
+## True while the light is actually pulsing - false while it waits out a delay, and false
+## once it has been stopped.
 ## @ace_condition
 ## @ace_name("Is Pulsing")
-## @ace_description("True while the light is actually pulsing - false while it waits out a delay, and false once it has been stopped.")
 ## @ace_icon("res://eventsheet_addons/light_pulse/icon.svg")
 ## @ace_codegen_template("$LightPulseBehavior.is_pulsing()")
 func is_pulsing() -> bool:
