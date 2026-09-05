@@ -39,23 +39,22 @@ static func run() -> bool:
 	# ---- the emitted pack .gd points at its own icon, in both @icon and every @ace_icon ----
 	for pack: String in pack_dirs:
 		var pack_icon: String = "%s/%s/icon.svg" % [ADDONS_DIR, pack]
-		var gd_path: String = _pack_script_path(pack)
-		ok = _check(ok, not gd_path.is_empty(), "%s has a pack .gd" % pack)
-		if gd_path.is_empty():
-			continue
-		var source: String = FileAccess.get_file_as_string(gd_path)
-		ok = _check(ok, source.contains("@icon(\"%s\")" % pack_icon), "%s @icon points at its own icon.svg" % pack)
-		ok = _check(ok, not source.contains("behavior.svg"), "%s no longer references the shared behavior.svg" % pack)
-		var ace_icon_prefix: String = "## @ace_icon(\""
-		var search_from: int = 0
-		while true:
-			var found: int = source.find(ace_icon_prefix, search_from)
-			if found == -1:
-				break
-			var value_start: int = found + ace_icon_prefix.length()
-			var value_end: int = source.find("\")", value_start)
-			ok = _check(ok, source.substr(value_start, value_end - value_start) == pack_icon, "%s @ace_icon points at its own icon.svg" % pack)
-			search_from = value_end
+		var gd_paths: PackedStringArray = _pack_class_scripts(pack)
+		ok = _check(ok, gd_paths.size() > 0, "%s has a pack .gd" % pack)
+		for gd_path: String in gd_paths:
+			var source: String = FileAccess.get_file_as_string(gd_path)
+			ok = _check(ok, source.contains("@icon(\"%s\")" % pack_icon), "%s @icon points at its own icon.svg" % pack)
+			ok = _check(ok, not source.contains("behavior.svg"), "%s no longer references the shared behavior.svg" % pack)
+			var ace_icon_prefix: String = "## @ace_icon(\""
+			var search_from: int = 0
+			while true:
+				var found: int = source.find(ace_icon_prefix, search_from)
+				if found == -1:
+					break
+				var value_start: int = found + ace_icon_prefix.length()
+				var value_end: int = source.find("\")", value_start)
+				ok = _check(ok, source.substr(value_start, value_end - value_start) == pack_icon, "%s @ace_icon points at its own icon.svg" % pack)
+				search_from = value_end
 
 	# ---- builtin category -> EditorIcons mapping: full coverage of the live vocabulary ----
 	var categories: Dictionary = {}
@@ -126,20 +125,30 @@ static func run() -> bool:
 	return ok
 
 
-## The pack's main .gd (the only .gd directly inside the pack folder). Empty when none exists.
-static func _pack_script_path(pack: String) -> String:
+## Every script directly inside the pack folder that DECLARES A CLASS, sorted so the answer does
+## not depend on the order the filesystem hands entries back.
+##
+## A pack is not always one file. It may ship a helper beside its class - a scene's script, a
+## second runtime the emitted lines call - and `@icon` is a property of a class, so a script with
+## no `class_name` has no icon to declare and is not asked for one. Every script that DOES declare
+## one is asked, rather than whichever the directory listed first: that used to be the whole test,
+## and it quietly stopped reading the pack's own class the day a pack gained a second file.
+static func _pack_class_scripts(pack: String) -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray()
 	var pack_dir: DirAccess = DirAccess.open("%s/%s" % [ADDONS_DIR, pack])
 	if pack_dir == null:
-		return ""
-	pack_dir.list_dir_begin()
-	var entry: String = pack_dir.get_next()
-	while not entry.is_empty():
-		if not pack_dir.current_is_dir() and entry.ends_with(".gd"):
-			pack_dir.list_dir_end()
-			return "%s/%s/%s" % [ADDONS_DIR, pack, entry]
-		entry = pack_dir.get_next()
-	pack_dir.list_dir_end()
-	return ""
+		return paths
+	for entry: String in pack_dir.get_files():
+		if not entry.ends_with(".gd"):
+			continue
+		var path: String = "%s/%s/%s" % [ADDONS_DIR, pack, entry]
+		for source_line: String in FileAccess.get_file_as_string(path).split("
+"):
+			if source_line.begins_with("class_name "):
+				paths.append(path)
+				break
+	paths.sort()
+	return paths
 
 
 static func _check(ok: bool, condition: bool, label: String) -> bool:
