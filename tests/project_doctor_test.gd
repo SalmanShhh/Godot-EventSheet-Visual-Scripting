@@ -69,7 +69,8 @@ const SUPPORT := preload("res://tests/support.gd")
 ## Save Memory 165 ms, Damage 457 ms, Feedbacks 1.9 s. The Files section, which looked like the
 ## candidate because its text sweep grew, is 47 ms. What grew is the CORPUS, not any check, and in
 ## THIS repository the corpus is mostly not a game: of the non-addons scripts the audit walks, 932
-## are under tests/ and 420 under tools/, and those two trees are 106 of the 149 opened files and
+## are under tests/ and 417 under tools/ (`git ls-files "*.gd" | grep -v "^addons/"`, so the count
+## is one a reader can reproduce), and those two trees are 106 of the 149 opened files and
 ## about 72 percent of the import cost. Scoping the corpus is therefore the real remaining lever,
 ## and it is a bigger one than the lifter (which already rejects an impossible entry by length and
 ## by a required literal before it runs a regex). It is not free: findings on those files would go,
