@@ -26,6 +26,13 @@ extends Resource
 ## Human-readable GDScript type name. Drives the UI control choice.
 @export var type_name: String = "String"
 @export var default_value: Variant = ""
+## WHICH ANNOTATION KEY the starting value was spelled with, so the line the value was read from
+## can be written back byte for byte. Empty for the plain `default:` shorthand (what every shipped
+## line uses), "word" for `default_word:` - text a template's own quotes receive, and the only
+## spelling that can say the value is EMPTY - and "code" for `default_code:` - GDScript an unquoted
+## slot receives verbatim, quotes and all. It says nothing about the value itself: it is the
+## spelling the file used, remembered so the file re-emits unchanged.
+@export var default_spelling: String = ""
 ## For SHEET-FUNCTION parameters only: an optional GDScript default argument, emitted into the
 ## function signature as `name: type = <this>` (so the parameter is optional). Distinct from
 ## default_value (a picker pre-fill); empty = a required parameter. GDScript requires defaulted

@@ -3037,11 +3037,58 @@ static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
 	if not ace_param.autocomplete.is_empty():
 		parts.append("autocomplete: %s" % "|".join(ace_param.autocomplete))
 	var starting_value: String = str(ace_param.default_value).strip_edges()
-	if not starting_value.is_empty():
-		parts.append("default: %s" % starting_value)
+	var default_part: String = _param_default_text(starting_value, ace_param.default_spelling)
+	if not default_part.is_empty():
+		parts.append(default_part)
 	parts.append("desc: \"%s\"" % help)
 	written.append("## @ace_param(%s, %s)" % [ace_param.id, ", ".join(parts)])
 	return written
+
+
+## The starting-value half of an `@ace_param` line - the one key that has to say WHICH KIND of
+## value it carries, because the two kinds reach the emitted call by different routes.
+##
+## A row's starting value is text a field holds; whether that text needs quotes is decided by the
+## verb's own template, and only the author knows which way round it is. `moment({moment_name})`
+## inserts the value AS CODE, so the value has to be `"impact"`, quotes and all. `add_post_effect(
+## "{called}", ...)` quotes the slot itself, so the value is the bare word `vignette`. The plain
+## `default:` key cannot tell those apart - both annotation readers trim one surrounding quote pair
+## off it, so a quoted value arrives bare, and an empty one is never written at all. That is one
+## defect wearing two faces: a row that emitted `moment(impact, 1)` - an undefined identifier - and
+## a row that emitted four quote characters where a name belonged.
+##
+## So the kind is SPELLED, in one of three keys, and the param remembers which key it was read from
+## (`ACEParam.default_spelling`) so the line is written back exactly as it was found:
+##   `default: <text>`      the shorthand every shipped line uses, unchanged in both directions. Read
+##                          as a word, one surrounding quote pair trimmed; an empty one writes
+##                          nothing, which leaves the method's own GDScript default in charge.
+##   `default_word: <text>` a word, said out loud. Quoted here only when bare would be misread - when
+##                          it is EMPTY (which `default:` drops), when it holds the comma the spec
+##                          splits on, or when it wears quotes of its own that the trim would eat.
+##   `default_code: <expr>` GDScript, taken verbatim by both readers. `"impact"` keeps its quotes;
+##                          `Vector2(1, 1)` and `""` mean themselves.
+##
+## The one shape no spelling reaches is a WORD that both begins with a quote and holds a comma: the
+## extra pair that protects its quotes is closed before the comma, so the segment splits there. It is
+## the same limitation an option LABEL has, for the same reason, and it is written down rather than
+## worked around.
+static func _param_default_text(starting_value: String, spelling: String) -> String:
+	if spelling == "code":
+		return "default_code: %s" % starting_value
+	if spelling == "word":
+		return "default_word: %s" % _param_word_text(starting_value)
+	if starting_value.is_empty():
+		return ""
+	return "default: %s" % starting_value
+
+
+## One word in the form both annotation readers give straight back: quoted when bare would be
+## misread - empty, holding a comma, or wearing its own quotes - and bare otherwise, which is what
+## every word a pack ships today already is.
+static func _param_word_text(word: String) -> String:
+	if word.is_empty() or word.contains(",") or word.begins_with("\""):
+		return "\"%s\"" % word
+	return word
 
 
 ## One dropdown option, in the form the provider scanner reads back out of the emitted pack.

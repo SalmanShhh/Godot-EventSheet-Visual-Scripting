@@ -9,8 +9,10 @@
 # The traps these pins exist to catch, each verified against the parsers:
 #   - an annotation value is read VERBATIM (first "(" to last ")", one quote pair trimmed),
 #     so escaping an inner quote as \" ships the backslash into the emitted GDScript;
-#   - the param spec splits on commas outside quotes and trims one quote pair off a default,
-#     so a value that IS a quoted literal ships wrapped in a second pair;
+#   - the param spec splits on commas outside quotes and trims one quote pair off a `default:`,
+#     so a value that IS a quoted literal is spelled `default_code:` instead and read verbatim
+#     (the doubled pair this used to write broke the moment the value also held a comma, and the
+#     stub had to refuse such a value outright);
 #   - nothing in the pipeline unescapes "\n", so a multi-line template cannot ride a comment
 #     annotation at all (the registrar's real GDScript string can);
 #   - `pass` under a non-void return type is a parse error, so condition/expression skeletons
@@ -51,7 +53,8 @@ static func _section(label: String, passed: bool) -> bool:
 
 ## Queue Animation is node-scoped to AnimationPlayer and got the automatic target prefix, so it
 ## pins the shipped-not-authored template, the injected param staying out of the vocabulary, and
-## a default that is itself a quoted literal.
+## a default that is itself a quoted literal - which is GDScript for a slot the template leaves
+## unquoted, so it is spelled with the key that says so.
 static func _run_node_scoped(registry: EventSheetACERegistry) -> bool:
 	var all_passed: bool = true
 	var definition: ACEDefinition = registry.find_definition("Core", "QueueAnimation")
@@ -67,9 +70,9 @@ static func _run_node_scoped(registry: EventSheetACERegistry) -> bool:
 	all_passed = _check("the shipped template ships as-is, quotes unescaped",
 		_line_starting_with(stub, "## @ace_codegen_template("),
 		"## @ace_codegen_template(\"{target.}queue({animation})\")") and all_passed
-	all_passed = _check("a quoted-literal default ships wrapped in a second quote pair",
+	all_passed = _check("a quoted-literal default is spelled as the code it is",
 		_line_starting_with(stub, "## @ace_param(animation"),
-		"## @ace_param(animation, hint: animation_reference, default: \"\"idle\"\", desc: \"The clip to play once the current one finishes.\")") and all_passed
+		"## @ace_param(animation, hint: animation_reference, default_code: \"idle\", desc: \"The clip to play once the current one finishes.\")") and all_passed
 	all_passed = _check("the injected On node param is plumbing, not vocabulary",
 		_line_starting_with(stub, "## @ace_param(target"), "") and all_passed
 	all_passed = _check("the authored row caption survives",
@@ -216,7 +219,7 @@ static func _run_quoted_description(registry: EventSheetACERegistry) -> bool:
 	var stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
 	all_passed = _check("a quoted description rides the comment dialect",
 		_line_starting_with(stub, "## @ace_param(name"),
-		"## @ace_param(name, hint: expression, default: \"\"Space\"\", desc: \"A key name like \"Space\" or \"A\".\")") and all_passed
+		"## @ace_param(name, hint: expression, default_code: \"Space\", desc: \"A key name like \"Space\" or \"A\".\")") and all_passed
 	all_passed = _check("and nothing had to be noted about it",
 		_line_starting_with(stub, "# PARAM HELP"), "") and all_passed
 	all_passed = _check("the registrar escapes the same text as real GDScript",

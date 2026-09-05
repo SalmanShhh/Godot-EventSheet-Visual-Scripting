@@ -1599,7 +1599,7 @@ static func _is_connected_handler(header: String, connections: Dictionary) -> bo
 ## Reverse of _emit_expose_annotations: parses a `## @ace_*` block into EventFunction
 ## exposure fields. {} = unrecognized shape (lift falls back).
 static func _parse_annotations(code: String) -> Dictionary:
-	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "lift_examples": PackedStringArray(), "param_options": {}, "param_hints": {}, "param_autocomplete": {}, "param_defaults": {}, "param_descriptions": {}}
+	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "lift_examples": PackedStringArray(), "param_options": {}, "param_hints": {}, "param_autocomplete": {}, "param_defaults": {}, "param_default_spellings": {}, "param_descriptions": {}}
 	var recognized: bool = false
 	var doc_lines: PackedStringArray = PackedStringArray()
 	for line: String in code.split("\n"):
@@ -1716,7 +1716,20 @@ static func _parse_param_spec(spec: String, fields: Dictionary) -> void:
 						suggestions.append(suggestion.strip_edges())
 				(fields["param_autocomplete"] as Dictionary)[param_name] = suggestions
 			"default":
+				# The shorthand every shipped line uses: read as a WORD, one surrounding quote pair
+				# off. Left exactly as it always was, so no line already on disk changes meaning.
 				(fields["param_defaults"] as Dictionary)[param_name] = _unquoted_once(value)
+			"default_word":
+				# A word for a slot the template quotes itself. Read the way `default:` is read, but
+				# SPELLED - which is what lets it be empty, and what lets the compiler write the same
+				# key back rather than dropping a value it could not tell from an absent one.
+				(fields["param_defaults"] as Dictionary)[param_name] = _unquoted_once(value)
+				(fields["param_default_spellings"] as Dictionary)[param_name] = "word"
+			"default_code":
+				# GDScript for a slot the template leaves unquoted. Verbatim, so `"impact"` keeps the
+				# quotes the emitted call needs.
+				(fields["param_defaults"] as Dictionary)[param_name] = value
+				(fields["param_default_spellings"] as Dictionary)[param_name] = "code"
 			"desc":
 				(fields["param_descriptions"] as Dictionary)[param_name] = _unquoted_once(value)
 
@@ -1992,6 +2005,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	var lifted_param_hints: Dictionary = annotations.get("param_hints", {})
 	var lifted_param_autocomplete: Dictionary = annotations.get("param_autocomplete", {})
 	var lifted_param_defaults: Dictionary = annotations.get("param_defaults", {})
+	var lifted_param_default_spellings: Dictionary = annotations.get("param_default_spellings", {})
 	var lifted_param_descriptions: Dictionary = annotations.get("param_descriptions", {})
 	for lifted_param: ACEParam in event_function.params:
 		if lifted_param_options.has(lifted_param.id):
@@ -2004,6 +2018,12 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 				lifted_param.autocomplete.append(str(suggestion))
 		if lifted_param_defaults.has(lifted_param.id):
 			lifted_param.default_value = str(lifted_param_defaults[lifted_param.id])
+		if lifted_param_default_spellings.has(lifted_param.id):
+			# WHICH key said it, remembered so emission writes that key back. Without this an
+			# explicitly EMPTY word is indistinguishable from a param that named no default at all,
+			# and the line the compiler makes of the file would differ from the line on disk - which
+			# the byte gate answers by degrading the whole verb to a verbatim code block.
+			lifted_param.default_spelling = str(lifted_param_default_spellings[lifted_param.id])
 		if lifted_param_descriptions.has(lifted_param.id):
 			# Both spellings, because an ACEParam carries the event-sheet alias beside the name - and
 			# a reader that only ever looks at one of them must not find an empty description.

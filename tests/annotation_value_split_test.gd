@@ -165,7 +165,77 @@ static func run() -> bool:
 		SUPPORT.reemit(blank_row_source, "user://annotation_value_split_blank_option.gd"),
 		blank_row_source) and ok
 
+	# ---- 7. WHICH KIND a starting value is, said out loud ----
+	# A starting value is text a field holds, and whether that text needs quotes is decided by the
+	# verb's own TEMPLATE - which the value has no way of knowing. `moment({moment_name})` inserts it
+	# as code, so the value must be `"impact"`, quotes and all; `add_post_effect("{called}", ...)`
+	# quotes the slot itself, so the value is the bare word `vignette`. The shorthand `default:`
+	# cannot tell the two apart - section 3 pins the quotes coming straight back off it - so eighteen
+	# shipped rows wrote GDScript nobody could parse: one wrote `moment(impact, 1)`, an undefined
+	# identifier, and another wrote four quote characters where a name belonged.
+	#
+	# So the kind is SPELLED. `default_word:` is text the template quotes, protected here only when
+	# bare would be misread, which is what finally lets a default be EMPTY; `default_code:` is
+	# GDScript, verbatim. Pinned through BOTH readers and then re-emitted, because a spelling only
+	# one reader understands publishes one vocabulary and opens as another, and a spelling that
+	# cannot be written back is a verb the byte gate degrades to a block of raw code.
+	for entry: Variant in [
+		["the shorthand is read and written exactly as it always was", "default: impact", "impact"],
+		["a word, said out loud", "default_word: vignette", "vignette"],
+		["a word that is EMPTY, which the shorthand cannot say at all", "default_word: \"\"", ""],
+		["a word with a quote inside it", "default_word: say \"hi\"", "say \"hi\""],
+		["code, keeping the quotes its call needs", "default_code: \"impact\"", "\"impact\""],
+		["code that is the empty string literal", "default_code: \"\"", "\"\""],
+		["code holding the comma the spec splits on", "default_code: \"a, b\"", "\"a, b\""],
+	]:
+		var row: Array = entry as Array
+		var line: String = "## @ace_param(word, %s, desc: \"Help, with a comma.\")" % row[1]
+		ok = _check("lifter: %s" % row[0], _lifter_default(line, "word"), str(row[2])) and ok
+		ok = _check("analyzer: %s" % row[0], _analyzer_default(line, "word"), str(row[2])) and ok
+		ok = _check("the help survives beside it: %s" % row[0],
+			_lifter_description(line, "word"), "Help, with a comma.") and ok
+		ok = _check("re-emitting reproduces the line: %s" % row[0], _reemit(line, "word"), line) and ok
+
+	# The THIRD writer of the same grammar - the stub a published verb is offered as - spells the two
+	# kinds with the same two keys. It used to double the quotes instead (`""idle""`), and had to
+	# REFUSE a quoted value that also held a comma, because the extra pair closes before the comma
+	# and the segment split there. There is nothing left for it to refuse.
+	for entry: Variant in [
+		["a quoted literal is code", "\"idle\"", "default_code: \"idle\""],
+		["a literal holding a comma needs no refusal now", "\"a, b\"", "default_code: \"a, b\""],
+		["a word carrying a comma is a protected word", "a, b", "default_word: \"a, b\""],
+		["a plain value still ships under the shorthand", "1.0", "default: 1.0"],
+	]:
+		var row: Array = entry as Array
+		ok = _check("the stub spells it the pipeline's way: %s" % row[0],
+			EventSheetACEAnnotationStub._comment_default(str(row[1])), str(row[2])) and ok
+
+	# And the receipt that the spelling reached a PERSON: the row the whole defect was reported
+	# against opens on a cleared box again, which is what its own description offers.
+	ok = _check("the shipped row opens on the empty name its description names",
+		_published_default("res://eventsheet_addons/screen_fx/screen_fx.gd",
+			"method:add_post_effect", "called"), "") and ok
+
 	return ok
+
+
+## The starting value a SHIPPED provider script publishes for one parameter - the vocabulary as the
+## picker receives it. Read through the real file because annotations are read off DISK.
+static func _published_default(script_path: String, ace_id: String, param_id: String) -> String:
+	var script: Script = load(script_path) as Script
+	if script == null or not script.can_instantiate():
+		return "<no such script>"
+	var instance: Object = script.new()
+	var answer: String = "<no such parameter>"
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_object(instance):
+		if definition.id != ace_id:
+			continue
+		for parameter: Variant in definition.parameters:
+			if str((parameter as Dictionary).get("id", "")) == param_id:
+				answer = str((parameter as Dictionary).get("default_value", ""))
+	if instance is Node:
+		(instance as Node).free()
+	return answer
 
 
 ## One ACEParam's options as the ACEDefinition adapter hands them to the picker, with the `note`
@@ -254,6 +324,7 @@ static func _reemit(line: String, param_id: String) -> String:
 	ace_param.id = param_id
 	ace_param.hint = str((fields.get("param_hints", {}) as Dictionary).get(param_id, ""))
 	ace_param.default_value = (fields.get("param_defaults", {}) as Dictionary).get(param_id, "")
+	ace_param.default_spelling = str((fields.get("param_default_spellings", {}) as Dictionary).get(param_id, ""))
 	ace_param.description = str((fields.get("param_descriptions", {}) as Dictionary).get(param_id, ""))
 	var written: PackedStringArray = SheetCompiler._param_annotation_lines(ace_param)
 	return written[0] if written.size() > 0 else "<nothing written>"

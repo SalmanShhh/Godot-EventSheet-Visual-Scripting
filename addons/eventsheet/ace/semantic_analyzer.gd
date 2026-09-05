@@ -532,9 +532,30 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				# What the row shows the MOMENT it is dropped. Without this the picker fell back to
 				# type-zero, so a param whose sensible value was 1.0 read as 0.0 and quietly did
 				# nothing until the author noticed.
+				#
+				# The shorthand, and what every shipped line says: read as a WORD, one surrounding
+				# quote pair off. It cannot say which kind of value it is, which is what the two
+				# keys below are for - and it is left exactly as it always was, so every line
+				# already in a project keeps meaning what it meant.
 				var param_defaults: Dictionary = overrides.get("param_defaults", {})
 				param_defaults[param_name] = value.trim_prefix("\"").trim_suffix("\"")
 				overrides["param_defaults"] = param_defaults
+			"default_word":
+				# A WORD, for a slot the template quotes itself - `add_post_effect("{called}", ...)`.
+				# One surrounding pair comes off, exactly as `default:` reads, so the word may be
+				# written bare, or quoted to hold a comma, its own quotes, or NOTHING at all. The
+				# empty word is the whole point: a row that opens on a cleared box is what a verb
+				# whose description says "empty names it after its effect" is offering.
+				var word_defaults: Dictionary = overrides.get("param_defaults", {})
+				word_defaults[param_name] = _unquoted_once(value)
+				overrides["param_defaults"] = word_defaults
+			"default_code":
+				# GDScript, for a slot the template does NOT quote - `moment({moment_name})`. Nothing
+				# is trimmed, so `"impact"` keeps the quotes the call needs and a row dropped at its
+				# defaults writes a string rather than an undefined identifier.
+				var code_defaults: Dictionary = overrides.get("param_defaults", {})
+				code_defaults[param_name] = value
+				overrides["param_defaults"] = code_defaults
 			"autocomplete":
 				var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
 				param_autocomplete[param_name] = _split_pipe_values(value)
@@ -543,6 +564,15 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				var param_descriptions: Dictionary = overrides.get("param_descriptions", {})
 				param_descriptions[param_name] = value.trim_prefix("\"").trim_suffix("\"")
 				overrides["param_descriptions"] = param_descriptions
+
+
+## One surrounding pair of quotes off a value, and no more - the rule the importer's lifter reads
+## the same keys by, so the vocabulary a pack PUBLISHES and the sheet an author OPENS can never
+## disagree about a starting value.
+func _unquoted_once(value: String) -> String:
+	if value.length() >= 2 and value.begins_with("\"") and value.ends_with("\""):
+		return value.substr(1, value.length() - 2)
+	return value
 
 
 func _split_pipe_values(value: String) -> Array:

@@ -202,12 +202,7 @@ static func _comment_param_line(parameter: Dictionary, notes: Array[String]) -> 
 			spec_parts.append("options: %s" % _comment_options(option_pairs))
 	var default_value: String = str(parameter.get("default_value", ""))
 	if not default_value.is_empty():
-		if default_value.begins_with("\"") and default_value.contains(","):
-			notes.append("# STARTING VALUE (%s): %s cannot ride @ace_param - one quote pair is trimmed off a default" % [parameter_id, default_value])
-			notes.append("# and the spec splits on commas outside quotes, so a quoted literal carrying a comma has no")
-			notes.append("# one-line form. Give the method a GDScript default instead: func x(%s = %s)." % [parameter_id, default_value])
-		else:
-			spec_parts.append("default: %s" % _comment_default(default_value))
+		spec_parts.append(_comment_default(default_value))
 	var description: String = _one_line(str(parameter.get("description", "")))
 	if not description.is_empty():
 		if _description_survives_one_line(description):
@@ -436,13 +431,27 @@ static func _comment_options(option_pairs: Array) -> String:
 	return "|".join(entries)
 
 
-## A starting value as the param grammar reads it back. The parser trims ONE surrounding quote
-## pair and splits the spec on commas outside quotes, so a value that is already a quoted
-## literal, or that carries a comma, ships wrapped in one extra pair; everything else ships bare.
+## A starting value as the param grammar reads it back, spelled with the key that says which KIND
+## of value it is - the same three keys the compiler writes and both annotation readers read, so a
+## stub an author pastes is a line the pipeline already agrees about.
+##
+## A value that is itself a quoted literal is GDScript for a slot the template leaves unquoted, so
+## it ships under `default_code:` and is read verbatim. A value carrying the comma the spec splits
+## on is a word that has to be protected, so it ships under `default_word:` and one pair comes back
+## off. Everything else - a number, a bare word, a call whose brackets balance - ships under the
+## plain `default:` shorthand, exactly as it always has.
+##
+## The doubled pair this used to write (`""idle""`) said the same thing in a spelling that broke
+## the moment the value also held a comma: the extra pair closes before the comma, so the segment
+## split there and the stub had to REFUSE such a value and send the author to a GDScript default
+## instead. There is nothing left to refuse.
 static func _comment_default(default_value: String) -> String:
-	if default_value.begins_with("\"") or default_value.contains(","):
-		return "\"%s\"" % default_value
-	return default_value
+	var spelling: String = ""
+	if default_value.begins_with("\""):
+		spelling = "code"
+	elif default_value.contains(","):
+		spelling = "word"
+	return SheetCompiler._param_default_text(default_value, spelling)
 
 
 ## An annotation value is read VERBATIM, so quotes and backslashes must survive untouched.
