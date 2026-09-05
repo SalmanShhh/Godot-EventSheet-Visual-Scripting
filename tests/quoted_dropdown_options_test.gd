@@ -21,6 +21,39 @@ const PHYSICS_CAR := "res://eventsheet_addons/physics_car/physics_car_behavior.g
 const SLIDE_MOVE := "res://eventsheet_addons/slide_move/slide_move_behavior.gd"
 const JUICE := "res://eventsheet_addons/juice/juice_behavior.gd"
 const JUICE_3D := "res://eventsheet_addons/juice_3d/juice_3d_behavior.gd"
+const BOUND_TO := "res://eventsheet_addons/bound_to/bound_to_behavior.gd"
+const PROMPTS := "res://eventsheet_addons/prompts/prompts_addon.gd"
+const PACKS_DIR := "res://eventsheet_addons"
+
+## The dropdown parameters still inserted BARE, as "<pack script>:<param id>" - an OVERRIDE list, not
+## a permission. Every line here is the same defect this file is named for: a row that picks one of
+## the words emits an undefined identifier and the game does not parse. They are recorded so the
+## sweep below can walk the WHOLE fleet - a hand-written list of five packs is exactly why Is At
+## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
+## this gate red until its line is deleted. Delete lines from here; never add one.
+const KNOWN_BARE := [
+	"anchor/anchor_behavior.gd:corner",
+	"drunken_walkers/drunken_walkers_addon.gd:placement",
+	"drunken_walkers/drunken_walkers_addon.gd:preset",
+	"drunken_walkers/drunken_walkers_addon.gd:source",
+	"follow_path/path_follow_behavior.gd:mode",
+	"game_settings/game_settings_addon.gd:device",
+	"game_settings/game_settings_addon.gd:kind",
+	"nav_agent_3d/nav_agent_3d_behavior.gd:mode",
+	"pin/pin_behavior.gd:axes",
+	"pin/pin_behavior.gd:mode",
+	"pin_3d/pin_3d_behavior.gd:axes",
+	"pin_3d/pin_3d_behavior.gd:mode",
+	"platformer_pathfinding/platformer_pathfinding_behavior.gd:mode",
+	"rotate/rotate_behavior.gd:type",
+	"stat_forge/stat_forge_behavior.gd:direction",
+	"stat_forge/stat_forge_behavior.gd:mode",
+	"storylet_weaver/storylet_weaver_addon.gd:mode",
+	"storylet_weaver/storylet_weaver_addon.gd:op",
+	"tile_movement/tile_movement_behavior.gd:direction",
+	"utility_ai/utility_ai_addon.gd:curve",
+	"wrap/wrap_behavior.gd:space",
+]
 
 ## [pack, the template the pack ships, what a row picking the first option emits]. The picked values
 ## are the words a designer sees in the dropdown, spelled exactly as the option keys are.
@@ -43,12 +76,14 @@ const ACTIONS := [
 
 const CONDITIONS := [
 	[SLIDE_MOVE, "$SlideMove.can_slide(\"{direction}\")", "$SlideMove.can_slide(\"left\")"],
+	[BOUND_TO, "$BoundToBehavior.is_at_bound(\"{side}\")", "$BoundToBehavior.is_at_bound(\"left\")"],
+	[PROMPTS, "Prompts.grade_is(\"{grade}\")", "Prompts.grade_is(\"perfect\")"],
 ]
 
 const PICKED := {"path": "\"res://levels/forest.tscn\"", "transition": "wipe", "seconds": "1.0",
 	"ease": "smooth", "direction": "left", "magnitude": "12.0", "duration": "0.3",
 	"mode": "reducing", "angle_degrees": "-1.0", "target_scale": "0.15",
-	"hold_duration": "0.25", "duration_clock": "realtime"}
+	"hold_duration": "0.25", "duration_clock": "realtime", "side": "left", "grade": "perfect"}
 
 
 static func run() -> bool:
@@ -91,25 +126,82 @@ static func _test_the_emitted_calls() -> bool:
 	return all_passed
 
 
-## The shape that caused the bug must not come back: in these packs, every parameter that has an
-## options annotation is quoted inside the template of the function it belongs to. The walk pairs
-## each options line with the next template line below it, which is how the pack lays them out.
+## The shape that caused the bug must not come back, and the question is asked of the WHOLE FLEET
+## rather than of a list somebody remembered to extend: every pack script under eventsheet_addons/
+## is walked, and the bare dropdown parameters it finds must be exactly the ones KNOWN_BARE already
+## names. A new one is a new defect; a name that has been quoted since is a line to delete.
+##
+## The walk pairs each options line with the next template line below it, which is how a pack lays
+## them out. Options whose keys are all NUMBERS are left alone: those index an int parameter (the
+## home leash's distance metric), and a number belongs in the call bare.
 static func _test_no_bare_word_dropdown_is_left() -> bool:
-	var all_passed: bool = true
-	for pack: String in [SCENE_FLOW, PHYSICS_CAR, SLIDE_MOVE, JUICE, JUICE_3D]:
-		var lines: PackedStringArray = FileAccess.get_file_as_string(pack).split("\n")
-		var pending: Array[String] = []
-		for line: String in lines:
-			var text: String = line.strip_edges()
-			if text.begins_with("## @ace_param_options("):
-				var inside: String = text.trim_prefix("## @ace_param_options(").trim_suffix(")")
-				pending.append(inside.get_slice(" ", 0))
-			elif text.begins_with("## @ace_codegen_template("):
-				for param_id: String in pending:
-					all_passed = _check("%s quotes {%s} in %s" % [pack.get_file(), param_id, text],
-						text.contains("\\\"{%s}\\\"" % param_id) or text.contains("\"{%s}\"" % param_id), true) and all_passed
-				pending.clear()
-	return all_passed
+	var found: PackedStringArray = PackedStringArray()
+	for pack: String in _pack_scripts():
+		for param_id: String in _bare_word_params(pack):
+			found.append("%s:%s" % [pack.trim_prefix(PACKS_DIR + "/"), param_id])
+	found.sort()
+	var expected: PackedStringArray = PackedStringArray(KNOWN_BARE)
+	expected.sort()
+	return _check("the dropdown parameters left bare across every pack",
+		"\n".join(found), "\n".join(expected))
+
+
+## Every pack script under eventsheet_addons/ - one per folder, plus the root single-file packs,
+## the same population the drift audit walks.
+static func _pack_scripts() -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray()
+	var packs_dir: DirAccess = DirAccess.open(PACKS_DIR)
+	if packs_dir == null:
+		return paths
+	for file_name: String in packs_dir.get_files():
+		if file_name.ends_with(".gd"):
+			paths.append("%s/%s" % [PACKS_DIR, file_name])
+	for folder: String in packs_dir.get_directories():
+		if folder.begins_with("."):
+			continue
+		var inner: DirAccess = DirAccess.open("%s/%s" % [PACKS_DIR, folder])
+		if inner == null:
+			continue
+		for file_name: String in inner.get_files():
+			if file_name.ends_with(".gd"):
+				paths.append("%s/%s/%s" % [PACKS_DIR, folder, file_name])
+	paths.sort()
+	return paths
+
+
+## The parameter ids this pack offers a word dropdown for and then inserts into the call BARE,
+## deduplicated (one parameter spelled the same way in three functions is one defect to fix).
+static func _bare_word_params(pack: String) -> PackedStringArray:
+	var bare: PackedStringArray = PackedStringArray()
+	var pending: Array[String] = []
+	for line: String in FileAccess.get_file_as_string(pack).split("\n"):
+		var text: String = line.strip_edges()
+		if text.begins_with("## @ace_param_options("):
+			var inside: String = text.trim_prefix("## @ace_param_options(").trim_suffix(")")
+			var param_id: String = inside.get_slice(" ", 0)
+			if not _keys_are_all_numbers(inside.substr(param_id.length())):
+				pending.append(param_id)
+		elif text.begins_with("## @ace_codegen_template("):
+			for param_id: String in pending:
+				var quoted: bool = text.contains("\\\"{%s}\\\"" % param_id) \
+					or text.contains("\"{%s}\"" % param_id)
+				if not quoted and not bare.has(param_id):
+					bare.append(param_id)
+			pending.clear()
+	bare.sort()
+	return bare
+
+
+## Whether every key in an options list is a number - "0=Straight line, 1=Horizontal only" indexes
+## an int parameter, so its call is right to be bare and the sweep must not ask it for quotes.
+static func _keys_are_all_numbers(options: String) -> bool:
+	for entry: String in options.split(","):
+		var key: String = entry.strip_edges()
+		if key.contains("="):
+			key = key.get_slice("=", 0).strip_edges()
+		if key.is_empty() or not (key.is_valid_int() or key.is_valid_float()):
+			return false
+	return true
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

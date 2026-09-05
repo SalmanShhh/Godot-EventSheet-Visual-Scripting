@@ -97,7 +97,8 @@ static func build() -> bool:
 		"Shows every glyph for one device from now on, whatever the player last touched - the options screen showing a layout on purpose, the tutorial card printed for a console. \"auto\" hands it back to the last input event.",
 		[["device_name", "String"]])
 	_options(src.sheet, "device_name", ["auto", "keyboard", "pad", "xbox", "playstation", "nintendo"])
-	_default(src.sheet, "device_name", "\"auto\"")
+	_default(src.sheet, "device_name", "auto")
+	_quoted_call(src.sheet, "Prompts.force_device(\"{device_name}\")")
 
 	# ── Questions ─────────────────────────────────────────────────────────────────────────
 	src.condition("prompt_is_open", "Prompt Is Open",
@@ -107,7 +108,8 @@ static func build() -> bool:
 		"True when the last prompt to end ended this way - \"perfect\", \"good\" or \"miss\". The same three words a note is graded in, so one branch serves both.",
 		[["grade", "String"]])
 	_options(src.sheet, "grade", ["perfect", "good", "miss"])
-	_default(src.sheet, "grade", "\"perfect\"")
+	_default(src.sheet, "grade", "perfect")
+	_quoted_call(src.sheet, "Prompts.grade_is(\"{grade}\")")
 	src.expression("last_grade", "Last Grade",
 		"How the last prompt ended, as a word: \"perfect\", \"good\" or \"miss\". Empty until the first one ends.",
 		[], TYPE_STRING)
@@ -164,6 +166,19 @@ static func _hint(sheet: EventSheetResource, param_id: String, hint: String) -> 
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.hint = hint
+
+
+## Hand-writes the CALL the last-declared verb compiles to, replacing the automatic one.
+##
+## A dropdown key is inserted into the call verbatim, so a String argument picked from a list of
+## words has to carry its own quotes HERE, in the template - a quoted key does not survive the
+## annotation round trip (the emitter wraps a key that already starts with a quote in a second pair,
+## and the scanner strips one pair back off). Without this a row picking "perfect" asked
+## `Prompts.grade_is(perfect)`, an undefined identifier, and the game did not parse. The prefix is
+## the pack's own autoload name, the same one the automatic template uses.
+static func _quoted_call(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = call
 
 
 ## Sets the dropdown options[] on the last-declared verb's parameter, so the row offers the words it

@@ -348,6 +348,21 @@
 
 ### Fixed in the compiler and the pack gate
 
+- **Is At Bound and Grade Is take their word with the quotes on it.** Bound To's **Is At Bound** and
+  the Prompts pack's **Grade Is** each offer a dropdown of words and then inserted the picked one
+  into the call BARE, so a row asking about the left edge compiled `is_at_bound(left)` and a row
+  asking for a perfect grade compiled `grade_is(perfect)` - an undefined identifier either way, and
+  the game did not parse. A dropdown key reaches the call verbatim, so the quotes belong in the call
+  TEMPLATE and never in the parameter's starting value, which is where Grade Is had been keeping
+  them; both carry them in the template now, and **Set Bound Space** and **Force Device**, the two
+  actions sitting beside them under the same defect, come with them.
+- **The sweep that was meant to catch that walks every pack instead of five.** It held a list of
+  five pack scripts written out by hand, which is exactly why these four were never caught. It now
+  walks EVERY pack under `eventsheet_addons/`, treats a dropdown whose keys are all NUMBERS as
+  rightly bare (those index an int parameter, like the home leash's distance metric), and keeps the
+  packs still carrying the defect in a named list that turns red when one of them is quoted and its
+  line is not deleted - so the debt is written down where the gate is, and shrinking it is the only
+  edit the list accepts.
 - **A `while` loop that awaits no longer emits a guard naming a variable nothing declared.** The
   unpick-on-free rule guards each iteration of an awaiting loop so an object freed during the wait
   is skipped, and it writes that guard in terms of the loop's ITERATOR. Only a

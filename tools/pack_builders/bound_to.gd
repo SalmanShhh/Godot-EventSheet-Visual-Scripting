@@ -53,6 +53,11 @@ static func build() -> bool:
 		"## @ace_name(\"Is At Bound\")",
 		"## @ace_description(\"True while the host is pressed against a bound. side: left / right / top / bottom / any.\")",
 		"## @ace_param_options(side left=Left edge, right=Right edge, top=Top edge, bottom=Bottom edge, any=Any edge)",
+		# The side is a WORD picked off the dropdown above, and a dropdown key is inserted into the
+		# call verbatim - so the quotes belong in the TEMPLATE, never in the key (a quoted key does
+		# not survive the annotation round trip). Without them a row picking Left edge asked
+		# `is_at_bound(left)`, an undefined identifier, and the game did not parse.
+		"## @ace_codegen_template(\"$BoundToBehavior.is_at_bound(\"{side}\")\")",
 		"func is_at_bound(side: String = \"any\") -> bool:",
 		"\tif side == \"any\":",
 		"\t\treturn not _pressed_sides.is_empty()",
@@ -62,6 +67,8 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Set Bound Space\")",
 		"## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)",
+		# Same rule as Is At Bound above: the picked word carries its quotes in the template.
+		"## @ace_codegen_template(\"$BoundToBehavior.set_bound_space(\"{space}\")\")",
 		"func set_bound_space(space: String) -> void:",
 		"\tif space in [\"screen\", \"custom\"]:",
 		"\t\tbound_space = space",

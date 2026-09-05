@@ -324,7 +324,7 @@ func prompt_on_beat(action: String, lane: Node) -> void:
 ## @ace_display_template("Force device [b]{device_name}[/b]")
 ## @ace_param_options(device_name auto, keyboard, pad, xbox, playstation, nintendo)
 ## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.force_device({device_name})")
+## @ace_codegen_template("Prompts.force_device("{device_name}")")
 func force_device(device_name: String) -> void:
 	var word: String = device_name.strip_edges().to_lower()
 	_forced_device = "" if word == "auto" else word
@@ -345,7 +345,7 @@ func prompt_is_open() -> bool:
 ## @ace_display_template("Grade is [b]{grade}[/b]")
 ## @ace_param_options(grade perfect, good, miss)
 ## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.grade_is({grade})")
+## @ace_codegen_template("Prompts.grade_is("{grade}")")
 func grade_is(grade: String) -> bool:
 	return _last_grade == grade.strip_edges().to_lower()
 
