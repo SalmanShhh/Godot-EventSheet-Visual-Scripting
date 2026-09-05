@@ -20,9 +20,15 @@ extends RefCounted
 # this file is the form around it plus the two file operations, and `save_run` / `open_run` are the
 # tested surface - the suite drives the same functions the buttons do.
 
-## Where a moment file is offered first: beside the pack whose row plays one, which is where the
-## six that ship already live. A suggestion in a field, never a rule - the path is typed.
-const SUGGESTED_DIRECTORY: String = "res://eventsheet_addons/juice/"
+## Where a moment file the PROJECT writes is offered first: a folder of the game's own. Not beside
+## the pack, because that folder is regenerated from the pack builders and a beat saved into it is a
+## beat a rebuild could walk over. The Juice behaviour looks here FIRST when a Moment row names a
+## beat, so a file saved where this suggests is found by name with nothing else set up. A suggestion
+## in a field, never a rule - the path is typed.
+const SUGGESTED_DIRECTORY: String = "res://moments/"
+
+## And where the six that SHIP live, which is what an Open offers first.
+const SHIPPED_DIRECTORY: String = "res://eventsheet_addons/juice/"
 
 ## The four timing words a step may carry, and how the form says each one. The stored word is
 ## the key: it is the shape a saved sheet holds, and it never changes.
@@ -82,7 +88,7 @@ func open_read() -> void:
 	_build_dialog()
 	_dialog.title = "Open Moment File As Block"
 	_dialog.ok_button_text = "Add the block"
-	_path_edit.text = SUGGESTED_DIRECTORY + "impact.tres"
+	_path_edit.text = SHIPPED_DIRECTORY + "impact.tres"
 	_note.text = ("The file's steps arrive as rows that all start together, which is what a file "
 		+ "means. Give them a Then or a Hold afterwards and the beat is yours.")
 	_dialog.popup_centered()
@@ -200,6 +206,13 @@ static func save_run(block: MomentBlockRow, path: String) -> Dictionary:
 		if step is Dictionary:
 			typed.append(step as Dictionary)
 	written.set("steps", typed)
+	# The folder a moment is saved into is the game's own, and a game that has never saved one has
+	# not got it yet: make it rather than refusing over a folder the writer would have made by hand.
+	var folder: String = target.get_base_dir()
+	if not folder.is_empty() and not DirAccess.dir_exists_absolute(folder):
+		var made: int = DirAccess.make_dir_recursive_absolute(folder)
+		if made != OK:
+			return {"ok": false, "said": "The folder %s could not be made (%s)." % [folder, error_string(made)]}
 	var problem: int = ResourceSaver.save(written, target)
 	if problem != OK:
 		return {"ok": false, "said": "The file could not be written (%s)." % error_string(problem)}
@@ -260,7 +273,7 @@ func _build_dialog() -> void:
 	_dialog.min_size = Vector2i(460, 0)
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	_path_edit = LineEdit.new()
-	_path_edit.placeholder_text = SUGGESTED_DIRECTORY + "impact.tres"
+	_path_edit.placeholder_text = SHIPPED_DIRECTORY + "impact.tres"
 	box.add_child(EventSheetPopupUI.form_row("File", _path_edit))
 	_note = EventSheetPopupUI.hint_label("")
 	box.add_child(_note)

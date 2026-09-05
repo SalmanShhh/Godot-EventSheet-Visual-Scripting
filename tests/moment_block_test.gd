@@ -21,6 +21,10 @@ const SUPPORT := preload("res://tests/support.gd")
 const RUNNER := preload("res://eventsheet_addons/juice/moment_runner.gd")
 const PREFIX := "moment_block_test"
 
+## Where a game keeps the beats it wrote itself. Named once here, and asked of both the door that
+## suggests it and the pack that looks in it, so the two can never drift apart.
+const JUICE_PROJECT_MOMENTS: String = "res://moments/"
+
 ## The fixture moment, as the file holds it. Written out in full because every other pin in this
 ## file is measured against it.
 const IMPACT_TEXT: String = """func moment_impact(strength: float = 1.0, from: Node = null) -> void:
@@ -249,7 +253,15 @@ static func _pin_the_file_bridge() -> bool:
 		["the door reads it back as a block", reopened != null, true],
 		["with the steps it went in with", str(EventSheetMomentFile.steps_of(reopened).get("steps", []) if reopened != null else []), str(FILE_STEPS)],
 		["a file that is not there is said so rather than guessed at",
-			bool(EventSheetMomentFileDoor.open_run("user://no_such_moment.tres").get("ok", true)), false]
+			bool(EventSheetMomentFileDoor.open_run("user://no_such_moment.tres").get("ok", true)), false],
+		# Where a saved beat is offered: a folder of the GAME's, never the pack folder a rebuild
+		# regenerates - and the pack looks in that folder first, so a file saved where the door
+		# suggests is found by the name it was saved under.
+		["a saved moment is offered a folder of the game's own",
+			EventSheetMomentFileDoor.SUGGESTED_DIRECTORY, JUICE_PROJECT_MOMENTS],
+		["and the pack looks there before its own",
+			(load(JUICE_SCRIPT) as GDScript).get_script_constant_map()["PROJECT_MOMENT_DIRECTORY"],
+			JUICE_PROJECT_MOMENTS]
 	]
 	if FileAccess.file_exists(FILE_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(FILE_PATH))
