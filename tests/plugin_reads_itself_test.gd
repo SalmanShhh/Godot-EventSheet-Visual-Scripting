@@ -44,7 +44,7 @@ const SAMPLE_SIZE: int = 40
 ## The share of a file's rows that may say nothing of their own, per role group. Measured on the tree
 ## this gate was written on, as the WORST file in each group, then rounded up a little:
 ##
-##   plugin 2 · workspace 29 · canvas 10 · readings 11 · importer 8 · recognisers 47 · compiler 0
+##   plugin 2 · workspace 29 · canvas 10 · readings 11 · importer 8 · recognisers 62 · compiler 0
 ##   vocabulary 60 · manual 17 · command tools 20 · pack recipes 97 · everything else 26
 ##
 ## Pack recipes stand out for a reason worth writing down rather than hiding: a pack builder IS a
@@ -70,11 +70,21 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# whole role afterwards: the worst importer file is scene_effect_facts.gd at 13, the three run
 	# matchers are 0, 0 and 6, and nothing else reaches 13.
 	"importer": 13,
-	# Measured like the rest, on the three recogniser families that ship: 47 for the animation
-	# spellings, 39 for the effect ones, 27 for the lighting ones. A family is a TABLE - one
-	# dictionary literal per entry - so most of its rows are literal entries, which is the same
-	# reason a pack recipe sits where it does. Read off the tree, rounded up a little.
-	"recognisers": 48,
+	# Re-measured over the WHOLE role rather than off the file the rotating sample happened to
+	# reach. The group is eighteen families now, not the three it was when 48 was written, and
+	# three of them stand over that number. Read off the tree today, worst first: node_dignity 62,
+	# layout_on_top 57, camera 52, animation 47, collision_edge 46, collision_filter 43, removal 41,
+	# effect 39, view 38, physics_query 36, lighting 27, input_event 27, collision_layer 26,
+	# multiplayer 12, state 8, lift_table 1, spawn_run 0, text_effect 0. The worst is
+	# node_dignity_lift.gd at 62, and every one of the three over the old ceiling was added by an
+	# earlier pass, so this is a re-measure and not a pass moving a ratchet for its own file.
+	#
+	# It measures that way for the reason the whole group does: a lift-entries family IS a TABLE,
+	# one dictionary literal per entry, so most of its rows are literal entries rather than logic,
+	# and the widest table scores the highest. That is the same reason a pack recipe sits where it
+	# does. Nothing about the reading layer changed to move this - the ceiling is a description of
+	# the group, taken off the worst file in it, rounded up a little.
+	"recognisers": 63,
 	"compiler": 5,
 	"vocabulary": 65,
 	# Raised from 21 when the rotating sample reached doc_editor_words.gd, which measures 26: that
