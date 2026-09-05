@@ -212,7 +212,6 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
 		return {"findings": findings, "rows": listed}
 	var catalog: Dictionary = vocabulary if not vocabulary.is_empty() else EventForgeSuccessors.catalog()
 	var known: Callable = EventSheetMigrationFindings.resolver_over(catalog)
-	var importer := GDScriptImporter.new()
 	var read: PackedStringArray = paths.duplicate()
 	read.sort()
 	var measured: int = 0
@@ -223,7 +222,7 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
 	var worst_path: String = ""
 	var worst_count: int = 0
 	for path: String in read:
-		var sheet: EventSheetResource = _opened(importer, path)
+		var sheet: EventSheetResource = _opened(path)
 		if sheet == null:
 			continue
 		measured += 1
@@ -252,10 +251,10 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
 
 ## One path as a sheet, whichever of the two formats it is: a `.tres` is loaded as the resource it
 ## already is, and anything else is opened through the importer the way the editor opens it.
-static func _opened(importer: GDScriptImporter, path: String) -> EventSheetResource:
+static func _opened(path: String) -> EventSheetResource:
 	if path.get_extension().to_lower() == "tres":
 		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
-	return importer.import_external(path)
+	return EventSheetProjectDoctor.sheet_of(path)
 
 
 ## What one opened sheet contributes to the section. Pure over the findings a sheet earned, so the

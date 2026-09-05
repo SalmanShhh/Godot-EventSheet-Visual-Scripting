@@ -77,7 +77,7 @@ static func _marked_in(text: String) -> bool:
 ## code; `callers` is how many other scripts call something this one declares, which is what a rename
 ## of it would have to check. Pure over a path, so the wording is pinned without a Doctor run.
 static func adoption(script_path: String) -> Dictionary:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 	if sheet == null:
 		return {}
 	var coverage: Dictionary = EventSheetReadingCoverage.measure(sheet)

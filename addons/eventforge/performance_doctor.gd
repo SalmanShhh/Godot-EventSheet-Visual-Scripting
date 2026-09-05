@@ -125,7 +125,6 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	if scripts.is_empty():
 		return findings
-	var importer := GDScriptImporter.new()
 	var measured: int = 0
 	var safe_fixes: int = 0
 	# The summary points at the script with the MOST findings, because that is the one worth
@@ -136,7 +135,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	for script_path: String in _smallest_first(scripts):
 		if measured >= MEASURED_LIMIT or Time.get_ticks_msec() > deadline:
 			break
-		var sheet: EventSheetResource = importer.import_external(script_path)
+		var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 		if sheet == null:
 			continue
 		measured += 1

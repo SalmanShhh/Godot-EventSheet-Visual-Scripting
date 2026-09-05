@@ -73,7 +73,6 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	if scripts.is_empty():
 		return findings
-	var importer := GDScriptImporter.new()
 	var read: int = 0
 	var total: int = 0
 	var unread_scripts: int = 0
@@ -83,7 +82,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var worst_path: String = scripts[0]
 	var worst_percent: int = 101
 	for script_path: String in scripts:
-		var sheet: EventSheetResource = importer.import_external(script_path)
+		var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 		if sheet == null:
 			continue
 		measured += 1

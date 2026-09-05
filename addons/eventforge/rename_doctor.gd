@@ -79,11 +79,10 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var read: PackedStringArray = paths.duplicate()
 	read.sort()
-	var importer := GDScriptImporter.new()
 	var measured: int = 0
 	var affected: int = 0
 	for path: String in read:
-		var sheet: EventSheetResource = _opened(importer, path)
+		var sheet: EventSheetResource = _opened(path)
 		if sheet == null:
 			continue
 		measured += 1
@@ -118,7 +117,7 @@ static func _scene_of(script_path: String) -> String:
 
 ## One path as a sheet, whichever of the two formats it is: a `.tres` is loaded as the resource it
 ## already is, and anything else is opened through the importer the way the editor opens it.
-static func _opened(importer: GDScriptImporter, path: String) -> EventSheetResource:
+static func _opened(path: String) -> EventSheetResource:
 	if path.get_extension().to_lower() == "tres":
 		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
-	return importer.import_external(path)
+	return EventSheetProjectDoctor.sheet_of(path)

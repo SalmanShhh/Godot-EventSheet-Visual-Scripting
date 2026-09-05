@@ -153,7 +153,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 ## nothing is written, and the scene it is attached to is asked for by the same index the head's
 ## bands read, because the self-spawning rule needs to know which scene this script runs in.
 static func sheet_findings(script_path: String) -> Array[Dictionary]:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 	if sheet == null:
 		return []
 	var scenes: PackedStringArray = EventSheetSceneReplication.scenes_using(script_path)

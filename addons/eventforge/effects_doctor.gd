@@ -159,7 +159,7 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 	var source: String = EventSheetProjectDoctor.source_of(script_path)
 	if not _says_any(source, SHEET_WORDS):
 		return []
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 	if sheet == null:
 		return []
 	return _filed(script_path, EventSheetEffectFindings.findings(sheet), CHECK_FOR_KIND, CHECK_ID)

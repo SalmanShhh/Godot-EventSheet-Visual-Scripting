@@ -124,13 +124,32 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 ## is opened as a sheet in memory, measured and dropped - nothing is written, and a script saying
 ## nothing about the environment costs one substring test.
 static func sheet_findings(script_path: String) -> Array[Dictionary]:
-	# The member every one of those rows reaches through. A substring test, deliberately loose: a
-	# script that never says the word cannot be one of these sheets, and a script that does is judged
-	# by the ROWS rather than by the word (EventSheetLightingFindings.reaches_the_environment).
-	var source: String = EventSheetProjectDoctor.source_of(script_path)
-	if not source.contains(EventForgeSceneLightingACEs.ENVIRONMENT_MEMBER):
+	if not reaches_the_environment(EventSheetProjectDoctor.source_of(script_path)):
 		return []
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 	if sheet == null:
 		return []
 	return _filed(script_path, EventSheetLightingFindings.findings(sheet), CHECK_FOR_KIND, CHECK_ID)
+
+
+## True when a script has a LINE that reaches through the world's environment - the same question
+## the rows are judged by (EventSheetLightingFindings.reaches_the_environment), asked of the text
+## first so a script that cannot earn a finding is never opened as a sheet at all.
+##
+## It is asked LINE BY LINE, the way the Multiplayer section asks the importer's own question, and
+## that is not a detail: the row test looks at the glyph BEFORE the member to tell `environment.fog`
+## from somebody's `environment_hue`, and over one long string the glyph before a line's first word
+## is the newline, which the test rightly refuses. Split first and every line is judged as the row
+## test judges it.
+##
+## The gate used to be the bare word, which meant every script merely MENTIONING an environment - a
+## comment, a type name, a test about the word - bought a full sheet build for rows it does not have,
+## and a sheet build is the most expensive thing this audit does.
+static func reaches_the_environment(source: String) -> bool:
+	if not source.contains(EventForgeSceneLightingACEs.ENVIRONMENT_MEMBER):
+		return false
+	for line: String in source.split("
+"):
+		if EventSheetLightingFindings.reaches_the_environment(line):
+			return true
+	return false

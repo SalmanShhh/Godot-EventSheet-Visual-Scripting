@@ -34,6 +34,11 @@ static var _project_scripts_walked: bool = false
 ## path -> that file's text, for the length of one audit - see `source_of`.
 static var _source_cache: Dictionary = {}
 
+## And the same sharing one step further along: a script already opened as a SHEET. Twelve sections
+## of this report need the rows rather than the text, and most of them look at the same scripts, so
+## the same files were going through the importer a dozen times for one report.
+static var _sheet_cache: Dictionary = {}
+
 ## True only while `run()` is between its first check and its last. The sharing below is scoped to
 ## that window rather than to the session: a check called on its own (which is how every check is
 ## tested) may be handed a fixture that was just rewritten under it, and a read held from before the
@@ -233,6 +238,7 @@ static func run() -> Dictionary:
 	# audit once should not carry the project's source for the rest of the session.
 	_run_in_progress = false
 	_source_cache.clear()
+	_sheet_cache.clear()
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
 		var severity: String = str(finding.get("severity"))
@@ -2887,6 +2893,7 @@ static func clear_project_scripts() -> void:
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
 	_source_cache.clear()
+	_sheet_cache.clear()
 
 
 ## One file's text, read once per audit and handed to every check that asks for it.
@@ -2914,6 +2921,31 @@ static func source_of(path: String) -> String:
 	if _run_in_progress and path.begins_with("res://"):
 		_source_cache[path] = text
 	return text
+
+
+## One script opened as a sheet, imported once per audit and handed to every section that asks.
+##
+## Twelve sections need the ROWS rather than the text, and most of them are asking about the same
+## scripts - the project's own - so the same files were being put through the importer a dozen times
+## for one report, which was by a wide margin the most expensive thing the audit did. This is the
+## same rule as the text read above one step further along: one import, many readers.
+##
+## IT IS A READING CACHE. The sheet is handed out exactly as it was imported, and every reader of it
+## here is a pure findings function that walks rows and returns dictionaries, so nothing writes
+## through the shared copy. A caller that means to EDIT a sheet must import its own.
+##
+## Held under the same two guards the text read is held under, for the same two reasons: only inside
+## a run, because a section asked on its own is usually being asked about a fixture rewritten between
+## the asks; and only for `res://`, because a `user://` path is a temporary file written and re-read
+## inside one process. A path that imports to nothing is remembered as nothing, so a file that is not
+## a sheet is not re-opened once per section either.
+static func sheet_of(path: String) -> EventSheetResource:
+	if _sheet_cache.has(path):
+		return _sheet_cache[path] as EventSheetResource
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	if _run_in_progress and path.begins_with("res://"):
+		_sheet_cache[path] = sheet
+	return sheet
 
 
 static func _walk_project_scripts() -> PackedStringArray:
@@ -3467,11 +3499,10 @@ static func check_menu_ids(findings: Array[Dictionary]) -> void:
 ## engine's own guide says so) and it is where the modes band offers to declare them - so this costs
 ## one open per autoload rather than a walk of the project.
 static func check_game_modes(findings: Array[Dictionary]) -> void:
-	var importer := GDScriptImporter.new()
 	for script_path: String in EventSheetModeFacts.autoload_scripts():
 		if not source_of(script_path).contains("enum %s" % EventSheetModeFacts.ENUM_NAME):
 			continue
-		var sheet: EventSheetResource = importer.import_external(script_path)
+		var sheet: EventSheetResource = sheet_of(script_path)
 		if sheet == null:
 			continue
 		for finding: Dictionary in EventSheetModeFacts.findings(sheet):
@@ -3489,11 +3520,10 @@ static func check_game_modes(findings: Array[Dictionary]) -> void:
 ## cached walk every other script-reading check here shares, and the gate below is a match over text
 ## that walk already holds - so an object that declares no states costs nothing.
 static func check_object_states(findings: Array[Dictionary]) -> void:
-	var importer := GDScriptImporter.new()
 	for script_path: String in _project_scripts():
 		if not _declares_state_enum(source_of(script_path)):
 			continue
-		var sheet: EventSheetResource = importer.import_external(script_path)
+		var sheet: EventSheetResource = sheet_of(script_path)
 		if sheet == null:
 			continue
 		for finding: Dictionary in EventSheetStateFacts.findings(sheet):

@@ -121,7 +121,7 @@ static func report(scripts: PackedStringArray,
 ## bands use, because every rule here needs the node's own numbers.
 static func sheet_findings(script_path: String,
 		scenes: PackedStringArray = PackedStringArray()) -> Array[Dictionary]:
-	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 	if sheet == null:
 		return []
 	return _filed(script_path, EventSheetCollisionFindings.findings(sheet, script_path, scenes), CHECK_FOR_KIND, CHECK_ID)
