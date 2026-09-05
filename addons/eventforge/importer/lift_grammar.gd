@@ -57,6 +57,18 @@ const NODE_CHAIN: String = "\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9
 ## canonicalised into a byte-gate failure.
 const SEPARATOR: String = ",[ \\t]*"
 
+## THE HEAD OF A LOCAL DECLARATION, from just after the name to the start of the value: the three
+## spellings Godot takes for one idea (`x = v`, `x := v`, `x: Type = v`) as one optional-type-then-
+## assign run. `var ` and the name itself are left to the caller, because a family names its own
+## capture and some of them keep the whole head as a splice group.
+##
+## Whichever the author wrote is MATCHED rather than required, so it rides back out as itself - the
+## splice keeps every byte outside a param capture, and there is no canonical spelling here for the
+## byte gate to trip over. This is the fragment five families were spelling by hand at a dozen sites,
+## each with its own idea of which types the colon may carry; written once, a family that widens it
+## widens it for the family beside it too.
+const DECLARATION_HEAD: String = "[ \\t]*(?::[ \\t]*[A-Za-z_][A-Za-z0-9_.]*[ \\t]*)?:?=[ \\t]*"
+
 ## The fragments by the word a table author asks for them by. Eight, because these are the spans the
 ## families actually repeat; the list doubles as what a by-example builder may name.
 ##

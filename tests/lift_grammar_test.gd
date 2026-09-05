@@ -47,6 +47,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_fragments() and ok
 	ok = _test_a_literal_run() and ok
+	ok = _test_the_declaration_head() and ok
 	ok = _test_an_example_becomes_an_entry() and ok
 	ok = _test_a_bad_example_is_refused() and ok
 	ok = _test_derived_entries_behave_like_the_shipped_ones() and ok
@@ -139,6 +140,33 @@ static func _test_the_fragments() -> bool:
 		"": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.expression("v"), "v", text)) and ok
 	return ok
+
+
+## THE HEAD OF A LOCAL DECLARATION, which five families were spelling by hand at a dozen sites before
+## it was a fragment. All three of Godot's spellings for one idea are matched and whichever the author
+## wrote rides back out as itself, spacing included - the head is a run to be splice back, not a
+## canonical form. A line with no `var` in front of it and a declaration with no value are refused,
+## which is where a family's own pattern picks up.
+##
+## `var x == 1` is not refused here and does not have to be: the head takes the first `=` and hands
+## `= 1` back as the value. There is no such statement in GDScript, so no opened file can reach it,
+## and the family's own pattern around the value decides everything a real line is claimed on.
+static func _test_the_declaration_head() -> bool:
+	var pattern: String = "^var[ \t]+(?<name>%s)%s(?<value>.+)$" % [
+		G.IDENTIFIER, G.DECLARATION_HEAD]
+	return SUPPORT.pin_table("lift_grammar_test/declaration_head", {
+		"var speed = 300.0": "speed=300.0",
+		"var speed := 300.0": "speed=300.0",
+		"var speed: float = 300.0": "speed=300.0",
+		"var query: PhysicsRayQueryParameters2D = make()": "query=make()",
+		"var speed=300.0": "speed=300.0",
+		"var speed == 300.0": "speed== 300.0",
+		"speed := 300.0": NO_MATCH,
+		"var speed": NO_MATCH
+	}, func(text: String) -> String:
+		var found: RegExMatch = RegEx.create_from_string(pattern).search(text)
+		return NO_MATCH if found == null else "%s=%s" % [found.get_string("name"),
+			found.get_string("value")])
 
 
 ## The author's own text as a pattern: metacharacters escaped so a dot means a dot, and a comma

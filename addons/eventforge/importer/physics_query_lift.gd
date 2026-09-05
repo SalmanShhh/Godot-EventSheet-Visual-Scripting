@@ -54,10 +54,11 @@ const MARK: String = "direct_space_state"
 const NAME: String = EventForgeLiftGrammar.IDENTIFIER
 
 ## The head of a local declaration, from just after the name to the value: the three spellings Godot
-## takes (`x = v`, `x := v`, `x: Type = v`) as one optional-type-then-assign run. It is matched rather
-## than required so that whichever the author wrote rides back out as itself - the splice keeps every
-## byte outside a param capture, so there is no canonical spelling for the byte gate to trip over.
-const ASSIGN: String = "[ \\t]*(?::[ \\t]*[A-Za-z_][A-Za-z0-9_.]*[ \\t]*)?:?=[ \\t]*"
+## takes (`x = v`, `x := v`, `x: Type = v`) as one optional-type-then-assign run. THE SHARED
+## GRAMMAR'S, not this family's own: five families were spelling the same run by hand at a dozen
+## sites, and the day one of them widens which types the colon may carry the others must widen with
+## it. Named here so the four patterns below still read as sentences.
+const ASSIGN: String = EventForgeLiftGrammar.DECLARATION_HEAD
 
 ## The two ends of a ray, as the `create` call carries them. `to` is the EXPRESSION that runs to the
 ## closing bracket - the wide span, so `global_position + Vector2(0, 100)` is one value and not two -
