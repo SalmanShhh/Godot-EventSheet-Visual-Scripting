@@ -95,6 +95,12 @@ const _SW_DONE: String = "(%s - ((get_meta(%s, 0.0) as SceneTreeTimer).time_left
 ## Written here rather than reached for so the emitted line owes nothing to another row.
 const _CLOCK_TEXT: String = "(\"%%02d:%%02d\" %% [int(maxf(%s, 0.0)) / 60, int(maxf(%s, 0.0)) %% 60])"
 
+## The same clock with TENTHS under ten seconds, which is what a countdown wants and a stopwatch
+## does not: the last seconds of a round timer are the ones a player watches, and a label that sits
+## on "00:03" for a whole second reads as a stopped clock. Under ten seconds the minutes are
+## always zero, so the two shapes are "00:09.4" and "01:23" and the column never moves.
+const _CLOCK_TEXT_TENTHS: String = "((\"00:%%04.1f\" %% maxf(%s, 0.0)) if maxf(%s, 0.0) < 10.0 else (\"%%02d:%%02d\" %% [int(maxf(%s, 0.0)) / 60, int(maxf(%s, 0.0)) %% 60]))"
+
 
 ## The words in the picker. Four families, one store, one clock choice.
 static func get_descriptors() -> Array[ACEDescriptor]:
@@ -177,9 +183,10 @@ static func _countdown_descriptors() -> Array[ACEDescriptor]:
 		CAT, "countdown [b]{name}[/b] seconds left",
 		"The seconds still to run on a named countdown, zero when it has finished or was never started, and the paused number while it is paused. The value a bar is set to.")
 		.param("name", "\"round\"", "Named", "The countdown's name.", "expression"))
-	descriptors.append(F.expr("CountdownText", "Countdown Text", _CLOCK_TEXT % [_CN_LEFT, _CN_LEFT],
+	descriptors.append(F.expr("CountdownText", "Countdown Text",
+		_CLOCK_TEXT_TENTHS % [_CN_LEFT, _CN_LEFT, _CN_LEFT, _CN_LEFT],
 		CAT, "countdown [b]{name}[/b] as text",
-		"A named countdown as minutes and seconds, so 83 seconds left reads \"01:23\". The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.")
+		"A named countdown as minutes and seconds, so 83 seconds left reads \"01:23\" - and with tenths under ten seconds, where \"00:09.4\" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.")
 		.param("name", "\"round\"", "Named", "The countdown's name.", "expression")
 		.featured())
 	descriptors.append(F.cond("CountdownIsRunning", "Countdown Is Running",

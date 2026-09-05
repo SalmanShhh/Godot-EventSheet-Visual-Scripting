@@ -246,7 +246,8 @@ static func _countdowns_run() -> bool:
 
 	rows.append(["a countdown nobody started is not running", host.call("countdown_is_running", "round"), false])
 	rows.append(["and reads zero", _seconds(host, "countdown_seconds_left", "round"), 0.0])
-	rows.append(["and shows a zeroed clock", host.call("countdown_text", "round"), "00:00"])
+	rows.append(["and shows a zeroed clock, in the tenths shape the last seconds use",
+		host.call("countdown_text", "round"), "00:00.0"])
 
 	host.call("start_countdown", "round", 90.0, false)
 	rows.append(["a started countdown is running", host.call("countdown_is_running", "round"), true])
@@ -255,6 +256,18 @@ static func _countdowns_run() -> bool:
 
 	_step(host, "__ef_countdown_round", 83.0)
 	rows.append(["stepped on, the text follows it", host.call("countdown_text", "round"), "01:23"])
+
+	# THE LAST TEN SECONDS, which are the ones a player watches: a clock that sits on "00:03" for a
+	# whole second reads as a stopped clock, so under ten seconds the text carries tenths. The
+	# minutes are zero there by construction, so the column never moves.
+	_step(host, "__ef_countdown_round", 10.0)
+	rows.append(["at exactly ten seconds it is still whole seconds",
+		host.call("countdown_text", "round"), "00:10"])
+	_step(host, "__ef_countdown_round", 9.44)
+	rows.append(["just under ten it counts in tenths", host.call("countdown_text", "round"), "00:09.4"])
+	_step(host, "__ef_countdown_round", 0.5)
+	rows.append(["and the last half second says so", host.call("countdown_text", "round"), "00:00.5"])
+	_step(host, "__ef_countdown_round", 83.0)
 
 	host.call("pause_countdown", "round")
 	rows.append(["a paused countdown is not running", host.call("countdown_is_running", "round"), false])
