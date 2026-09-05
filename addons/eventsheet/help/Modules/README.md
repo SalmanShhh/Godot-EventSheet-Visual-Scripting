@@ -69,6 +69,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Scenes, Pausing And Turning Nodes Off](Scenes-Pausing-And-Turning-Nodes-Off.md) - change what is on screen, pause the whole game, and the difference between hidden, disabled and paused.
 - [Spawning Copies Of Scenes](Spawning-Copies-Of-Scenes.md) - the spawn sentence, the name it leaves behind for the rows after it, the four expressions that answer where a copy lands, destroying without leaving ghosts, the crowd and its cap, a table of kinds, routing through a pool, and the same sentences over the network.
 - [Groups, Tags And Systems](Groups-Tags-And-Systems.md) - a group as a tag, as a set to count and total, and as a system you run one method over.
+- [Ownership](Ownership.md) - who made this: the one metadata key every row reads, the chain from bullet to turret to player, and the friendly-fire guard built out of it.
 - [Triggers, Signals And When Rows Run](Triggers-Signals-And-When-Rows-Run.md) - the lifecycle and per-frame triggers, scene-tree and Area signals, On Signal and Emit Signal, and the gates that turn "every tick" into "once".
 - [Multiplayer](Multiplayer.md) - messages one peer runs on the others, who is the host, who owns which object, and this peer's own id.
 - [Making Web Requests](Making-Web-Requests.md) - the AJAX object: ask a server for something, send it something, and read the answer back as text.
