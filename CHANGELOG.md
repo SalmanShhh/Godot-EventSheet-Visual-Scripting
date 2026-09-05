@@ -426,6 +426,54 @@
   off and left the step field and its help paragraph registered, so a callable made in the boot file
   outlived the plugin that made it.
 
+### Fixed after a boundary reading of the juice composition pass
+
+- **The no-flashing ceiling is for the amounts a player SEES, and a property tween is not one.**
+  Every Tween Property card on a Feedback Player went through the same clamp a shake does, so with
+  the project's no-flashing setting on, a card walking `position:x` to 200 walked it to 0.3 and no
+  card could take less than four tenths of a second. The Juice node had always held the clamp to
+  the seven amplitude words; that list now lives in the moment runner, where the block, the file
+  and the node's own list all read it - so a beat is held to the same ceiling wherever it was
+  written down, and a tween, a signal and a nested play are held to none of it.
+- **Restore and Revert on the Juice node stop the beat's own tweens before putting a value back.**
+  A moment's flash, punch and zoom each leave a tween walking the value they took, so a Restore
+  that only wrote the ledger value was written over on the very next frame and a Revert was fought
+  the whole way home by the tween it was undoing. The tweens a MOMENT started are kept under the
+  name of the value each writes and let go of first - and only a moment's, so a Flash row fired
+  straight from a sheet is nobody's beat to undo.
+- **Skip To End skips what it starts, and does not decide a card twice.** A Play Player card
+  reached by a skip started a normal, fully timed play that the closed outer list had no way to
+  tell anything afterwards - so a cutscene skip left a nested beat running at full length. It is
+  told to skip now. And the card the head was ON was answered a second time by the skip: a chance
+  was rolled again for a decision already made, a Skip Next Time was consumed twice over, and a
+  card the walk was in the middle of was felt again. The walk says when it has taken the head, and
+  each card's roll is thrown once per play, so the skip reads the answer rather than making a new one.
+- **A `restart` tells the plays it interrupts.** Ending an old play to start a new one cleared the
+  list and closed the play but said nothing to the players a Play Player card had started, so half
+  the beat carried on underneath the restart. It now ends the way Stop Feedbacks ends: the held head
+  is woken, the children are stopped, and the play is closed.
+- **A moment file two players share is not written into by either of them.** The loop counters were
+  written into the step dictionaries of the file's OWN array, so two objects playing one file counted
+  each other's loops down and the `.tres` on disk came back from a play changed. The counters and
+  the chance rolls belong to the play now, keyed by where the card sits.
+- **Save Moment File leaves out the three cards a file cannot play.** A moment file's steps are
+  played by the Moment row, which knows the ten moment words and nothing else - but a property
+  tween, a signal and a nested player were written into the file anyway, to be met later by the arm
+  that warns about a word nothing is called. They are named in the warning and left out, beside the
+  switched-off cards and the timing words that already were.
+- **A bus sweep whose host is freed halfway through no longer leaves the bus sweeping for ever.**
+  The count of sweeps in the air was balanced by a callback at the end of the tween, and a tween
+  dies with the node it was bound to - so an arena freed mid-dive left `Bus Is Sweeping` true on
+  Engine meta for the rest of the process, which is exactly the case the file is written for. The
+  book holds the tweens themselves and asks whether each is still valid, so a sweep that never
+  finished answers for itself.
+- **Two per-frame ticks stop allocating, and an armed bar lag parks.** The Spring behaviour built
+  four arrays a frame walking its banks by `keys()` and `values()`; the HUD Kit's underlay built one
+  a frame while its own comment said it allocated nothing. Both walk their books in place now. And a
+  bar lag that had caught up went on ticking for ever, polling the bar's value: the bar's own
+  `value_changed` says when there is something to follow, so a HUD standing still costs nothing
+  however many lags are armed on it.
+
 ### Fixed on the boot path
 
 - **Enabling the plugin costs a third of a second again, not nineteen.** The Feedback Player's card
