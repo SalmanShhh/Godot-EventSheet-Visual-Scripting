@@ -101,7 +101,14 @@ static func _the_rows_emit_what_they_promise() -> bool:
 		["the first-time helper emits with the baked uid",
 			output.contains("func __first_time_in_save_f1(key: String) -> bool:"), true],
 		["it asks the store once per key and keeps the answer",
-			output.contains("\tif __seenkeys_f1.has(key):\n\t\treturn false\n\t__seenkeys_f1[key] = true"), true],
+			output.contains("\tvar __cache: Dictionary = __seen_cache_f1()\n\tif __cache.has(key):\n\t\treturn bool(__cache[key])"), true],
+		["the answer is kept where all four rows share it, rather than one copy per row",
+			output.contains("Engine.set_meta(&\"__ef_seen_in_save\", {})"), true],
+		["and the store's own signals empty it when the save changes underneath",
+			output.contains("__store.connect(&\"new_run_started\", __forget_seen_cache_f1)")
+				and output.contains("__store.connect(&\"after_load\", __forget_seen_cache_f1)"), true],
+		["so Mark Seen writes the shared answer as well as the store",
+			output.contains("__seencache_m1[str(\"%s\")] = true" % KEY_A), true],
 		["Has Seen brings its own reader rather than the consuming one",
 			output.contains("func __seen_in_save_h1(key: String) -> bool:"), true],
 		["and declares no first-time helper of its own",
@@ -186,6 +193,15 @@ static func _the_slot_is_the_memory() -> bool:
 	var seen_again: bool = asking.__seen_in_save_t(KEY_A)
 	var never: bool = asking.__seen_in_save_t("first_time_test_never")
 
+	# THE NODE THAT SURVIVES THE NEW RUN. An autoload sheet or a HUD that outlives the scene asks
+	# these rows from the SAME object before and after Start New Run, which is why the answer
+	# cannot simply be kept for the life of the object: the row's own words promise that a new run
+	# brings the first time back, and the slot really has been wiped. Same harness, both sides.
+	var surviving: Variant = _first_time_harness(keeper)
+	var before_new_run: bool = surviving.__first_time_in_save_t(KEY_A)
+	keeper.start_new_run(TEST_SLOT)
+	var after_new_run: bool = surviving.__first_time_in_save_t(KEY_A)
+
 	var pins: bool = SUPPORT.pins(TEST, [
 		["true the first time", first, true],
 		["false the second time, same run", again, false],
@@ -195,9 +211,12 @@ static func _the_slot_is_the_memory() -> bool:
 		["Has Seen says yes", seen, true],
 		["and says yes again, because asking does not use it up", seen_again, true],
 		["a key nothing marked is not seen", never, false],
+		["a node that lives through it says no before the new run", before_new_run, false],
+		["and the first time comes back for it after one", after_new_run, true],
 	])
 	keeper.delete_slot()
 	keeper.free()
+	_forget_cache()
 	return pins
 
 
@@ -210,6 +229,7 @@ static func _the_slot_is_the_memory() -> bool:
 ## Doctor's note is about.
 static func _without_the_save_pack_it_is_the_remembered_file() -> bool:
 	_forget_in_file(KEY_A)
+	_forget_cache()
 	var run: Variant = _first_time_harness(null)
 	var first: bool = run.__first_time_in_save_t(KEY_A)
 	var next_run: Variant = _first_time_harness(null)
@@ -222,6 +242,7 @@ static func _without_the_save_pack_it_is_the_remembered_file() -> bool:
 		["and it is in that file, in this family's own section", bool(file.get_value(SECTION, KEY_A, false)), true],
 	])
 	_forget_in_file(KEY_A)
+	_forget_cache()
 	return pins
 
 
@@ -248,6 +269,7 @@ static func _marking_and_forgetting_write_the_same_memory() -> bool:
 	var first_after_forget: bool = _first_time_harness(keeper).__first_time_in_save_t(KEY_A)
 
 	_forget_in_file(KEY_A)
+	_forget_cache()
 	var file_writer: Variant = _write_harness(null)
 	file_writer.mark()
 	var file_seen: bool = _has_seen_harness(null).__seen_in_save_t(KEY_A)
@@ -265,6 +287,7 @@ static func _marking_and_forgetting_write_the_same_memory() -> bool:
 	keeper.delete_slot()
 	keeper.free()
 	_forget_in_file(KEY_A)
+	_forget_cache()
 	return pins
 
 
@@ -333,6 +356,15 @@ static func _indented(ace_id: String, uid: String) -> String:
 	for line: String in body.split("\n"):
 		lines.append("\t" + line)
 	return "\n".join(lines)
+
+
+## THE SHARED CACHE, EMPTIED. The four rows keep their answers in one Engine-metadata dictionary,
+## which is process-wide by design: it is what lets a name marked in one event be answered by a row
+## in another without a file read per frame. A test that switches stores under it - a real save
+## node in one section, no store at all in the next - has to say so, exactly as it clears the
+## shared remembered file between sections.
+static func _forget_cache() -> void:
+	Engine.remove_meta(&"__ef_seen_in_save")
 
 
 ## The fallback's own answer for one key, cleared - so a run of this test never depends on what an
