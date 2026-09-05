@@ -99,7 +99,18 @@ static func run() -> bool:
 	all_passed = _pin_the_rows() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
 	all_passed = _pin_the_published_fields() and all_passed
+	_cleanup()
 	return all_passed
+
+
+## The scripts the round trip above wrote. A compile writes to where it is told to compile, so each
+## re-emission leaves a copy of a shape in the user folder - and on CI the whole suite runs serially
+## in one process, so what one test leaves behind is state the next one sees.
+static func _cleanup() -> void:
+	for file_name: String in PACK_SCRIPTS_3D:
+		var written: String = "user://vector_shapes_3d_%s" % file_name
+		if FileAccess.file_exists(written):
+			DirAccess.remove_absolute(written)
 
 
 ## Every spatial variant compiles, and they all offer the same uniforms - which is the point of an

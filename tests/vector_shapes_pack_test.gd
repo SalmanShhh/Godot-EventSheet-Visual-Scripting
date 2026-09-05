@@ -76,7 +76,18 @@ static func run() -> bool:
 	all_passed = _pin_the_shapes() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
 	all_passed = _pin_the_published_fields() and all_passed
+	_cleanup()
 	return all_passed
+
+
+## The scripts the round trip above wrote. A compile writes to where it is told to compile, so each
+## re-emission leaves a copy of a shape in the user folder - and on CI the whole suite runs serially
+## in one process, so what one test leaves behind is state the next one sees.
+static func _cleanup() -> void:
+	for file_name: String in PACK_SCRIPTS:
+		var written: String = "user://vector_shapes_%s" % file_name
+		if FileAccess.file_exists(written):
+			DirAccess.remove_absolute(written)
 
 
 ## The fields each shape publishes as a row, read back out of the shipped source the same way the
