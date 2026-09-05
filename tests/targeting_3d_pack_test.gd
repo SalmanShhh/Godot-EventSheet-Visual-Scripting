@@ -448,6 +448,36 @@ static func _test_snapping_on_aim_down_sights() -> bool:
 	high.free()
 	lock.set("members", [target])
 
+	# AND IT KEEPS EVERYTHING ELSE ITS BASIS CARRIED. Building the turn with Basis.looking_at made a
+	# fresh, level, orthonormal basis, so the snap also flattened a host pitched or rolled by its own
+	# animation and reset one that was scaled - looking_at answers 0 pitch, an up axis straight up
+	# and a scale of 1 whatever it was handed. This host is pitched, rolled, scaled 2 and yawed a
+	# quarter turn away from a target straight down the camera's forward, so the snap is exactly 90
+	# degrees of yaw and nothing else: the three quantities the rebuild used to lose are read before
+	# and after and have to be the same, and the heading has to be the target's.
+	var away: Node3D = _at(Vector3(0.0, 0.0, -10.0))
+	lock.set("members", [away])
+	host.transform = Transform3D.IDENTITY
+	host.rotation = Vector3(deg_to_rad(20.0), deg_to_rad(90.0), deg_to_rad(15.0))
+	host.scale = Vector3(2.0, 2.0, 2.0)
+	var was: Basis = host.transform.basis
+	var flat_before: Vector3 = Vector3(-was.z.x, 0.0, -was.z.z).normalized()
+	lock.snap_on_aim_down_sights(45.0)
+	var turned: Basis = host.transform.basis
+	var flat_after: Vector3 = Vector3(-turned.z.x, 0.0, -turned.z.z).normalized()
+	all_passed = _check("a snap leaves a pitched host at the pitch it had",
+		is_equal_approx((-turned.z).normalized().y, (-was.z).normalized().y), true) and all_passed
+	all_passed = _check("and a rolled one at the roll it had",
+		is_equal_approx(turned.y.normalized().y, was.y.normalized().y), true) and all_passed
+	all_passed = _check("and a scaled one at the scale it was built with",
+		turned.get_scale().distance_to(was.get_scale()) < 0.0001, true) and all_passed
+	all_passed = _check("while the heading it turned onto is the target's",
+		flat_after.distance_to(Vector3(0.0, 0.0, -1.0)) < 0.0001, true) and all_passed
+	all_passed = _check("and it really turned the quarter circle to get there",
+		snappedf(rad_to_deg(flat_before.angle_to(flat_after)), 0.001), 90.0) and all_passed
+	away.free()
+	lock.set("members", [target])
+
 	# A turn wider than the row allows is refused outright: the host does not move at all.
 	host.transform = Transform3D.IDENTITY
 	lock.snap_on_aim_down_sights(5.0)

@@ -320,7 +320,20 @@ func snap_on_aim_down_sights(max_degrees: float) -> void:
 	# tipped a CharacterBody3D nose-up at a target on a ledge above it, which is not what "snap onto
 	# the target" means anywhere. Only the heading is taken; the pitch and roll the body had are the
 	# pitch and roll it keeps, and the camera goes on doing the looking up and down.
+	#
+	# AND IT IS TURNED, NOT REBUILT. A basis built fresh from the heading is orthonormal and level by
+	# construction, so building one threw away everything else the host's basis carried: a body
+	# leaning into a corner came out upright, a model scaled to 2 came out at 1, and a host already
+	# pitched by its own animation was flattened. The basis it has is ROTATED about the world's up
+	# axis by the difference between the two headings instead, which moves the heading and nothing
+	# else. A host with no heading of its own - pointing exactly straight up or down - has no turn
+	# to measure, so it is declined for the same reason a target straight overhead is.
 	var heading: Vector3 = Vector3(toward.x, 0.0, toward.z)
 	if heading.is_zero_approx():
 		return
-	host.global_transform = Transform3D(Basis.looking_at(heading.normalized(), Vector3.UP), _place_of(host).origin)
+	var place: Transform3D = _place_of(host)
+	var faced: Vector3 = Vector3(-place.basis.z.x, 0.0, -place.basis.z.z)
+	if faced.is_zero_approx():
+		return
+	var turn: float = faced.normalized().signed_angle_to(heading.normalized(), Vector3.UP)
+	host.global_transform = Transform3D(Basis(Vector3.UP, turn) * place.basis, place.origin)

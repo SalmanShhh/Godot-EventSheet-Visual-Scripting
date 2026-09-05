@@ -1121,6 +1121,12 @@
   because 1.0 was divided by a tint that had never been applied to it. Each channel is compared with
   what the behaviour actually wrote instead: still that value and the remembered colour is what is
   underneath, anything else and somebody wrote it on purpose, so it IS the colour underneath.
+- **A snap turns the body without rebuilding it.** Snap On Aim Down Sights takes only the heading, and
+  it took it by building a fresh basis out of it - which is level and orthonormal by construction, so
+  it also threw away the pitch an animation had put on the host, any roll it was leaning at, and its
+  scale: a model scaled to 2 came out of a snap at 1. The basis it has is rotated about the world's up
+  axis by the difference between the two headings now, which moves the heading and nothing else.
+
 ### Making it feel like something: how pictures meet, and the beat a hit is made of
 
 - **Twenty ways one picture meets the one behind it, as one row.** Godot draws five blend modes by
