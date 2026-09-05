@@ -1872,6 +1872,39 @@
 - **Fifty-three keys this pass owed are filled in all eight locales.** The guarded reads, the
   rename, the picture fields and the glow levels had landed keyed and unharvested, and the
   coverage gate had been red on their blank cells.
+- **The glow's seven levels land on the levels the row named.** `set_glow_level` takes an index
+  counting from 0, while the property names Godot prints count from 1: `glow_levels/1` is index 0
+  and index 7 is out of bounds. Set Glow Levels looped 1 to 7, so every one of the seven numbers
+  landed a level too wide and the last turn errored, and Set Glow Level passed the reader's number
+  straight through. The loop counts the engine's way now and the single-level row says the
+  Inspector's number and subtracts. The pins RUN both templates against a real `Environment` and
+  read the seven levels back, because an off-by-one is invisible to a string comparison.
+- **The blend untangle finishes, and gains a gate.** German and Simplified Chinese still gave Set
+  Blend and Set Blending the same sentence, and seven locales gave their two parameter labels one
+  word, so a translated picker still offered one name for two different rows. The 2D family now
+  carries the blend MODE noun in each locale - the noun German, Russian and Chinese had already
+  reached for on the verb row and nowhere else. The same collapse in the see-through AMOUNT against
+  the transparency MODE is fixed in Spanish, French, Italian and Russian. A new gate reads the
+  catalog rather than any one language: a pair of English keys that name two different things has
+  to be two words in every bundled file.
+- **The Korean rows say scene, and bind the object marker to its noun.** The word for scene was
+  truncated to a non-word in nine places across five rows, and twenty-two surface rows spelled the
+  marker as a separate word with a fixed 을 where a vowel-final noun needs 를.
+- **This vocabulary's Spanish and French rows settle on one verb.** Three Spanish rows and five
+  French ones had drifted to the other of the two verbs these rows otherwise use eighteen times out
+  of twenty-one, and one Spanish row had dropped its article. French also wrote `le horizon` six
+  times, and two Russian dropdown values were adverbs where their siblings are mode words.
+- **Three code blocks in the look guide are what the rows really emit.** The Fade Glow block dropped
+  the preamble the row carries, the sprite blending block dropped the `if material is
+  CanvasItemMaterial:` line that is the very guard the paragraph under it promises, and the
+  graphics-menu example used a row called Setting Is On that no pack ships, a condition standing in
+  a value field, and a bare number where the quality is a dropdown of words. Four claims in the same
+  guide were false as well, and fifty-nine shipped rows appeared in it under no name at all - so the
+  guide now carries a reference table naming every row of all five families.
+- **A sheet holding the older panorama line saves back byte for byte.** The panorama row used to
+  emit `load({path})` and now emits the texture its picture field holds. A line no reading claims
+  comes back as the verbatim block it went in as, so both spellings survive opening and saving
+  untouched; nothing released can hold the older one, and it is pinned rather than migrated.
 
 ### The wave, the aim, the free spot and the way back out
 
@@ -5072,6 +5105,17 @@ A boundary review read the three lift families, the guards and the pages against
   not exist. All of them say seven, the missing bullet is written, and it says the thing the check's
   own finding says: it is the one boundary check with no fix button, because the door offered for a
   scene reads a scene table and would be a fix that cannot work here.
+- **Two unpack answers changed shape, and the pages that read them back say so.** **On Unpack
+  Progress** grew the archive total and **On Unpack Finished** grew the count of entries that did
+  not land, so the headers the compiler writes are not the ones an earlier build wrote. The answers
+  are read off the WHOLE header - nothing connects them, the emitted loop calls them by name, so the
+  header is the only thing that says what the function is - which means a file holding an older
+  spelling opens with those handlers as ordinary functions. That is deliberate rather than
+  overlooked: an old header kept as a second key would lift to the trigger and then be re-emitted
+  with the CURRENT one, which the byte gate throws away, and which would otherwise be a silent
+  rewrite of somebody's own signature. Nothing shipped can hold the old header. Three negative pins
+  stand where none did - the old spelling, an untyped one, and a nearby name - and each file comes
+  back byte for byte.
 
 
 ### Every call on a known class is a row

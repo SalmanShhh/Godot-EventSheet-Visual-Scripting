@@ -433,6 +433,55 @@ static func _run_lift() -> bool:
 	ok = _check("and saving it again reproduces the file byte for byte",
 		str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
 	DirAccess.remove_absolute(PROBE_SCRIPT)
+	ok = _run_lift_refusals() and ok
+	return ok
+
+
+## THE ANSWERS ARE READ OFF THE WHOLE HEADER, WHICH IS A NARROW PROMISE AND HAS TO BE PINNED AS ONE.
+## A handler lifts to its trigger only when its header is byte for byte the one the compiler writes,
+## because the header is the ONLY thing that says what the function is - nothing connects it, the
+## emitted loop calls it by name. So a header spelled any other way is an ordinary function of
+## somebody's, and the honest thing is to leave it as one.
+##
+## THE PARAMETERS OF TWO OF THEM CHANGED while this family was unreleased: progress grew the archive
+## total and finish grew the count that did not land. The old spellings are deliberately NOT kept as
+## second keys. A file holding one would lift to the trigger and then be re-emitted with the CURRENT
+## header, which is either thrown away by the byte gate - leaving exactly the reading below - or, if
+## it were not, a silent rewrite of somebody's own function signature. Neither is worth having, and
+## nothing shipped can hold the old header.
+static func _run_lift_refusals() -> bool:
+	# The header the family emitted before the archive total and the skipped count were added.
+	const BEFORE: String = "func _on_unpack_progress(entries: int, bytes: int) -> void:"
+	# The same answer written the way a beginner writes one - no types, no return arrow.
+	const UNTYPED: String = "func _on_unpack_finished(entries, bytes, skipped):"
+	# A name close enough to be a typo and far enough to be somebody's own function.
+	const NEARBY: String = "func _on_unpack_done(entries: int, bytes: int, skipped: int) -> void:"
+	var ok: bool = true
+	for header: String in [BEFORE, UNTYPED, NEARBY]:
+		var source: String = "extends Node
+
+
+%s
+	print(entries, bytes)
+" % header
+		var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
+		if file == null:
+			return _check("the probe script could be written", PROBE_SCRIPT, "(unwritable)")
+		file.store_string(source)
+		file.close()
+		var sheet: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+		EventSheetACELifter.reset_progress()
+		EventSheetACELifter.attempt_lift(sheet, source)
+		var triggers: Array[String] = []
+		for entry: Variant in sheet.events:
+			var event_row: EventRow = entry as EventRow
+			if event_row != null:
+				triggers.append(str(event_row.trigger_id))
+		ok = _check("%s is a plain function, not an answer" % header, triggers,
+			([] as Array[String])) and ok
+		ok = _check("and the file holding it comes back byte for byte",
+			str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", "")), source) and ok
+		DirAccess.remove_absolute(PROBE_SCRIPT)
 	return ok
 
 
