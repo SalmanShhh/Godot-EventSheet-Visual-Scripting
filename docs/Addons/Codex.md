@@ -64,6 +64,8 @@ references in *italic*, exactly as the rows draw them:
 | Action | Parameters | Description |
 |---|---|---|
 | Discover | `set_name` (String), `entry_id` (String) | Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row. An empty entry name is refused rather than recorded as a nameless page. |
+| Forget Entry | `set_name` (String), `entry_id` (String) | Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone. |
+| Forget Set | `set_name` (String) | Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants. |
 
 ### Conditions
 
@@ -116,6 +118,11 @@ On Save Game Pressed -> SaveSystem: Save All Addons
 
 Nothing is written behind the game's back. A project that saves nothing keeps its codex for the
 session and loses it on quit, which is the same contract Currency Ledger and Upgrades hold.
+
+Loading a save that carries no codex of its own leaves the collection where it is, which is the
+same empty-state rule every autoload pack here follows: an empty snapshot is a save with
+nothing to say, not an instruction to forget. **Forget Set** is the instruction to forget, so
+a New Game in the same session starts the book empty by saying so in a row.
 
 ## Use cases
 

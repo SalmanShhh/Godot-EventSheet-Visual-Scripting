@@ -36,6 +36,19 @@ static func build() -> bool:
 		[["set_name", "String"], ["entry_id", "String"]])
 	_default(src.sheet, "set_name", "\"enemies\"")
 	_default(src.sheet, "entry_id", "\"slime\"")
+	# THE WAY BACK OUT. Without these two the book could only ever grow: a New Game in the same
+	# session, a cheat menu that locks a page again and a set of run-only discoveries all had no
+	# row, and load_state leaves a codex alone when the save carries none of its own (the same
+	# empty-state rule every autoload pack here follows), so nothing but a restart emptied it.
+	src.verb("forget_entry", "Forget Entry",
+		"Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.",
+		[["set_name", "String"], ["entry_id", "String"]])
+	_default(src.sheet, "set_name", "\"enemies\"")
+	_default(src.sheet, "entry_id", "\"slime\"")
+	src.verb("forget_set", "Forget Set",
+		"Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.",
+		[["set_name", "String"]])
+	_default(src.sheet, "set_name", "\"enemies\"")
 	src.condition("has_discovered", "Has Discovered",
 		"Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.",
 		[["set_name", "String"], ["entry_id", "String"]])
@@ -52,6 +65,8 @@ static func build() -> bool:
 
 	Lib.verb_sentences(src.sheet, {
 		"discover": "Discover [b]{entry_id}[/b] in [b]{set_name}[/b]",
+		"forget_entry": "Forget [b]{entry_id}[/b] in [b]{set_name}[/b]",
+		"forget_set": "Forget everything in [b]{set_name}[/b]",
 		"has_discovered": "Has discovered [b]{entry_id}[/b] in [b]{set_name}[/b]",
 		"discovered_count": "discovered count of [b]{set_name}[/b]",
 		"total_entries": "total entries in [b]{set_name}[/b]",

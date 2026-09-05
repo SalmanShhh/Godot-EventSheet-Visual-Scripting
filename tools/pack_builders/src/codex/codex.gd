@@ -119,6 +119,18 @@ func discover(set_name: String, entry_id: String) -> void:
 		push_warning("Codex: \"%s\" was discovered in the \"%s\" set, but no entry file in %s answers to it - For Each Discovered will skip it." % [entry_id, set_name, _set_folder(set_name)])
 	first_discovered.emit(set_name, entry_id)
 
+func forget_entry(set_name: String, entry_id: String) -> void:
+	var ids: Dictionary = _found.get(set_name, {})
+	if not ids.has(entry_id):
+		return
+	ids.erase(entry_id)
+	_found[set_name] = ids
+
+
+func forget_set(set_name: String) -> void:
+	_found.erase(set_name)
+
+
 func has_discovered(set_name: String, entry_id: String) -> bool:
 	return (_found.get(set_name, {}) as Dictionary).has(entry_id)
 

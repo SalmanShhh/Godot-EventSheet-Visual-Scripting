@@ -48,6 +48,7 @@ static func run() -> bool:
 	_write_entries()
 	passed = _the_pack_ships_as_the_autoload(script) and passed
 	passed = _the_set_counts_by_value(script) and passed
+	passed = _the_way_back_out(script) and passed
 	passed = _first_discovered_fires_once(script) and passed
 	passed = _the_folder_is_the_set(script) and passed
 	passed = _the_loop_hands_back_pages(script) and passed
@@ -98,6 +99,40 @@ static func _the_set_counts_by_value(script: GDScript) -> bool:
 		["a set nothing has touched is empty", codex.discovered_count("rooms"), 0],
 		["an entry with no name is refused", _discovered_after_empty_name(script), 0],
 	])
+	codex.free()
+	return pins
+
+
+## THE WAY BACK OUT. A set that can only ever grow leaks across saves: a New Game in the same
+## session, a page a cheat menu locked again, a run-only discovery. Load All Addons deliberately
+## leaves a codex alone when the save carries none of its own - the same empty-state rule every
+## autoload pack here follows - so forgetting is a row rather than a side effect of loading.
+static func _the_way_back_out(script: GDScript) -> bool:
+	var codex: Node = _director(script)
+	codex.discover("enemies", "slime")
+	codex.discover("enemies", "bat")
+	codex.discover("items", "key")
+	var rows: Array = []
+
+	codex.forget_entry("enemies", "slime")
+	rows.append(["a forgotten entry is not discovered any more",
+		codex.has_discovered("enemies", "slime"), false])
+	rows.append(["and the rest of its set is left alone", codex.discovered_count("enemies"), 1])
+	rows.append(["and so is the entry that is still in", codex.has_discovered("enemies", "bat"), true])
+
+	codex.forget_entry("enemies", "ghost")
+	rows.append(["forgetting one nobody ever found changes nothing",
+		codex.discovered_count("enemies"), 1])
+
+	codex.forget_set("enemies")
+	rows.append(["forgetting a whole set empties it", codex.discovered_count("enemies"), 0])
+	rows.append(["and the other set keeps everything it had", codex.discovered_count("items"), 1])
+
+	codex.discover("enemies", "slime")
+	rows.append(["a set that was emptied can be filled again",
+		codex.has_discovered("enemies", "slime"), true])
+
+	var pins: bool = SUPPORT.pins(TEST, rows)
 	codex.free()
 	return pins
 

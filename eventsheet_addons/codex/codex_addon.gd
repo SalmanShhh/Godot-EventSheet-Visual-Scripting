@@ -76,6 +76,30 @@ func discover(set_name: String, entry_id: String) -> void:
 		push_warning("Codex: \"%s\" was discovered in the \"%s\" set, but no entry file in %s answers to it - For Each Discovered will skip it." % [entry_id, set_name, _set_folder(set_name)])
 	first_discovered.emit(set_name, entry_id)
 
+## @ace_action
+## @ace_name("Forget Entry")
+## @ace_category("Codex")
+## @ace_description("Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.")
+## @ace_display_template("Forget [b]{entry_id}[/b] in [b]{set_name}[/b]")
+## @ace_icon("res://eventsheet_addons/codex/icon.svg")
+## @ace_codegen_template("Codex.forget_entry({set_name}, {entry_id})")
+func forget_entry(set_name: String, entry_id: String) -> void:
+	var ids: Dictionary = _found.get(set_name, {})
+	if not ids.has(entry_id):
+		return
+	ids.erase(entry_id)
+	_found[set_name] = ids
+
+## @ace_action
+## @ace_name("Forget Set")
+## @ace_category("Codex")
+## @ace_description("Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.")
+## @ace_display_template("Forget everything in [b]{set_name}[/b]")
+## @ace_icon("res://eventsheet_addons/codex/icon.svg")
+## @ace_codegen_template("Codex.forget_set({set_name})")
+func forget_set(set_name: String) -> void:
+	_found.erase(set_name)
+
 ## @ace_condition
 ## @ace_featured
 ## @ace_name("Has Discovered")
