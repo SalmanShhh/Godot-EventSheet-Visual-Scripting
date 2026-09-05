@@ -78,7 +78,14 @@ static func _label_and_length_pins() -> bool:
 		["a beat lasts as long as its slowest step", RUNNER.length_of(steps), 0.5],
 		["a beat of instant steps has no length", RUNNER.length_of([{"verb": "shake"}]), 0.0],
 		["progress runs from nothing to all of it", [RUNNER.progress_of(0.0, 0.5), RUNNER.progress_of(0.25, 0.5), RUNNER.progress_of(9.0, 0.5)], [0.0, 0.5, 1.0]],
-		["a beat with no length is over the moment it begins", RUNNER.progress_of(0.0, 0.0), 1.0]
+		["a beat with no length is over the moment it begins", RUNNER.progress_of(0.0, 0.0), 1.0],
+		# A card that says 0 seconds asks the step to use its own natural length, and the layer that
+		# plays a flash or a punch holds it to one. The book has to count the same number, or the
+		# beat is finished while what it started is still on the screen.
+		["a step told nothing lasts as long as its word does", RUNNER.step_seconds("flash", 0.0), RUNNER.NATURAL_SECONDS],
+		["a step told a length lasts that long", RUNNER.step_seconds("flash", 0.4), 0.4],
+		["a word with no length of its own is instant", RUNNER.step_seconds("shake", 0.0), 0.0],
+		["and a beat of one natural step lasts that long", RUNNER.length_of([{"verb": "punch"}]), RUNNER.NATURAL_SECONDS]
 	])
 
 

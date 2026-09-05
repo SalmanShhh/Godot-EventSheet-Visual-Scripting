@@ -117,6 +117,13 @@ static func _tree(host: Node) -> SceneTree:
 	if host != null and host.is_inside_tree():
 		return host.get_tree()
 	return Engine.get_main_loop() as SceneTree
+## The shortest a step of these words really lasts when its card asks for 0 - "let it use its
+## own natural length". The layer that plays them holds them to this floor, so the book has to
+## count the same number: a beat counted as instant is over in the book while the flash it
+## started is still on the screen, which turns On Moment Finished into a lie and makes Revert
+## impossible for exactly as long as there is something to revert.
+const NATURAL_SECONDS: float = 0.05
+const NATURALLY_TIMED_VERBS: PackedStringArray = ["flash", "punch", "zoom", "chromatic", "pulse"]
 
 ## What one amount really becomes: scaled by the strength this play has, then held under the
 ## ceiling while no flashing is on. ONE function, so no step can be the one that forgot.
@@ -211,6 +218,13 @@ static func step_label(step: Dictionary, index: int) -> String:
 		return verb
 	return "step %d" % (index + 1)
 
+## How long ONE step lasts: what its card says, or the natural length of its word when the card
+## says nothing. A word with no natural length of its own is instant, which is the honest answer.
+static func step_seconds(verb: String, seconds: float) -> float:
+	if seconds > 0.0:
+		return seconds
+	return NATURAL_SECONDS if NATURALLY_TIMED_VERBS.has(verb.strip_edges().to_lower()) else 0.0
+
 ## How long a beat LASTS: the longest of its steps, because a moment's steps all begin together
 ## and the beat is over when the slowest one is. A moment of instant steps has no length at all,
 ## which is the honest answer rather than a made-up tail.
@@ -218,7 +232,9 @@ static func length_of(steps: Array) -> float:
 	var longest: float = 0.0
 	for step: Variant in steps:
 		if step is Dictionary:
-			longest = maxf(longest, maxf(float((step as Dictionary).get("seconds", 0.0)), 0.0))
+			var card: Dictionary = step as Dictionary
+			var lasts: float = step_seconds(str(card.get("verb", "")), maxf(float(card.get("seconds", 0.0)), 0.0))
+			longest = maxf(longest, lasts)
 	return longest
 
 ## How far through a play is, from 0 at its first frame to 1 at its last. A beat with no length
