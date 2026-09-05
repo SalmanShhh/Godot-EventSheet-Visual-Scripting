@@ -123,12 +123,40 @@ const ANTIALIAS_WIDTH: float = 1.0
 ## How many segments a raster arc is drawn with when there is no shader to solve it per pixel.
 const RASTER_ARC_SEGMENTS: int = 64
 
+## How many draws a batch may sit out before its node is shelved for re-use, and how many shelved
+## nodes are kept. Both are small on purpose: a canvas that has finished with two hundred styles
+## must not go on paying for two hundred nodes, and a style that comes back a frame later must not
+## pay to rebuild one.
+const BATCH_IDLE_DRAWS: int = 2
+const BATCH_SHELF_LIMIT: int = 8
+
 # The style stack. The last entry is the style in force; an empty stack is the defaults above.
 var _styles: Array = []
 
-# One MultiMeshInstance2D per kind-and-style seen this session, kept and re-filled rather than
-# rebuilt: a frame that draws two hundred arcs allocates nothing at all.
+# One MultiMeshInstance2D per kind-and-style being drawn, kept and re-filled rather than rebuilt.
+# A frame that draws two hundred arcs in one style builds no node and no material; what it does
+# build is the plan the fill reads, which is a list of small dictionaries and is deliberately data
+# so the batching decision can be checked without a canvas at all.
 var _batches: Dictionary = {}
+
+# How many draws each batch has sat out. A STYLE IS PART OF THE KEY, and a style can be a colour
+# being tweened or a thickness that moves every frame, so the set of keys a canvas has ever drawn
+# is unbounded while the set it is drawing right now is not. A batch nothing has drawn for
+# BATCH_IDLE_DRAWS goes back on the shelf below instead of sitting in the SubViewport for ever.
+var _batch_idle: Dictionary = {}
+
+# Retired batch nodes, kept to be handed straight back out. A style that changes every frame gives
+# one back and claims one each draw, so the canvas settles at a handful of nodes rather than
+# growing one per frame for the life of the game.
+var _batch_shelf: Array = []
+
+# The style the cached keys below were worked out for, and one key per shape kind in it. The style
+# in force is ONE dictionary shared by every shape drawn in it, so the key it makes is too: this is
+# what keeps a frame of two hundred arcs from sorting the same thirteen field names two hundred
+# times. A shape that overrides a style field (a filled rounded rect) has a style of its own and
+# takes the plain path.
+var _key_style: Dictionary = {}
+var _keys_by_kind: Dictionary = {}
 
 # The shader every batch wears, loaded once per session, and whether we have looked for it yet.
 static var _batch_shader: Shader = null
@@ -215,7 +243,11 @@ func to_canvas(point: Vector2) -> Vector2:
 
 func _run_draw_commands() -> void:
 	# The styled shapes this frame can instance, and the keys those batches took - everything
-	# else, styled or not, is drawn the raster way in the order it was queued.
+	# else, styled or not, is drawn the raster way in the order it was queued. THE TWO HALVES DO
+	# NOT INTERLEAVE: the instanced shapes are children of the SubViewport and the raster ones are
+	# drawn by the drawer under them, so a texture queued AFTER an arc still lands beneath it. A
+	# frame that needs one exact stacking order is a persistent canvas, which draws every shape
+	# the raster way.
 	var batched: Array = []
 	var taken: Dictionary = {}
 	if _use_batches():
@@ -747,17 +779,49 @@ func draw_texture_in_rect(texture_res: Texture2D, x: float, y: float, width: flo
 ## a texture) rides the command, where it belongs to that one shape.
 func _push_shape(kind: String, at: Vector2, angle: float, numbers: Vector4, extra: Dictionary) -> void:
 	_ensure()
-	var style: Dictionary = current_style().duplicate()
+	# The style in force rides the command AS IT IS. Nothing ever edits a stored style in place -
+	# Set, Push, Pop and Reset each replace one - so a hundred shapes drawn in one style share the
+	# one dictionary, and only a shape that has to CHANGE a field takes a copy of its own.
+	var style: Dictionary = _style_in_force()
+	var own_style: bool = false
 	var command: Dictionary = {"kind": kind, "styled": true, "at": to_canvas(at), "angle": angle, "numbers": numbers}
 	for key: String in extra:
 		if STYLE_DEFAULTS.has(key):
+			if not own_style:
+				style = style.duplicate()
+				own_style = true
 			style[key] = extra[key]
 		else:
 			command[key] = extra[key]
 	command["style"] = style
 	if _use_batches() and BATCH_KINDS.has(kind):
-		_reserve_batch(batch_key(kind, style))
+		# Worked out once here and carried on the command, because the plan and the raster fallback
+		# each ask for it again and a key is a sort and a dozen joins.
+		var shape_key: String = _batch_key_in_force(kind, style, own_style)
+		command["batch_key"] = shape_key
+		_reserve_batch(shape_key)
 	_push(command)
+
+## The style in force WITHOUT a copy, for the queueing path above. current_style() is the public
+## reading and still hands back a copy, because a caller that edited what it got back would be
+## editing the canvas's own defaults - which are a constant.
+func _style_in_force() -> Dictionary:
+	if _styles.is_empty():
+		return STYLE_DEFAULTS
+	return _styles[_styles.size() - 1]
+
+## One shape's batch key, cached per style. The style in force is one dictionary shared by every
+## shape drawn in it, so its key per kind is worked out on the first shape and read by the rest; a
+## shape carrying a style of its own is spelled out the plain way, once.
+func _batch_key_in_force(kind: String, style: Dictionary, own_style: bool) -> String:
+	if own_style:
+		return batch_key(kind, style)
+	if not is_same(style, _key_style):
+		_key_style = style
+		_keys_by_kind.clear()
+	if not _keys_by_kind.has(kind):
+		_keys_by_kind[kind] = batch_key(kind, style)
+	return str(_keys_by_kind[kind])
 
 ## A list of positions as points on the canvas, however the row spelled them.
 func _as_points(points: Array) -> PackedVector2Array:
@@ -797,7 +861,7 @@ static func plan_batches(commands: Array) -> Array:
 		if not BATCH_KINDS.has(kind):
 			continue
 		var style: Dictionary = command.get("style", {})
-		var key: String = batch_key(kind, style)
+		var key: String = str(command["batch_key"]) if command.has("batch_key") else batch_key(kind, style)
 		if not by_key.has(key):
 			by_key[key] = {"key": key, "kind": kind, "kind_id": BATCH_KINDS.find(kind), "style": style, "instances": []}
 			order.append(key)
@@ -834,7 +898,8 @@ static func plan_raster(commands: Array, taken: Dictionary) -> Array:
 		if not bool(command.get("styled", false)):
 			out.append(command)
 			continue
-		if taken.has(batch_key(str(command.get("kind", "")), command.get("style", {}))):
+		var key: String = str(command["batch_key"]) if command.has("batch_key") else batch_key(str(command.get("kind", "")), command.get("style", {}))
+		if taken.has(key):
 			continue
 		var drawn: Dictionary = raster_shape(command)
 		if not drawn.is_empty():
@@ -994,26 +1059,39 @@ static func arrow_points(at: Vector2, angle: float, half_length: float, head: fl
 	var side: Vector2 = Vector2(0.0, head_width * 0.5).rotated(angle)
 	return PackedVector2Array([tail, tip, base - side, tip, base + side, tip])
 
-## Makes sure a batch has somewhere to draw: one MultiMeshInstance2D per kind-and-style, built the
-## first time that pairing is drawn and re-filled every frame after. Called as a shape is QUEUED,
-## never while the canvas is drawing, so nothing is added to the tree mid-draw.
+## Makes sure a batch has somewhere to draw: one MultiMeshInstance2D per kind-and-style, taken off
+## the shelf if a retired one is waiting and built otherwise, then re-filled every draw after.
+## Called as a shape is QUEUED, never while the canvas is drawing, so nothing joins the tree
+## mid-draw.
 func _reserve_batch(key: String) -> void:
 	if _batches.has(key) or _viewport == null:
 		return
-	var holder: MultiMesh = MultiMesh.new()
-	holder.transform_format = MultiMesh.TRANSFORM_2D
-	holder.use_custom_data = true
-	holder.mesh = batch_mesh()
-	var node: MultiMeshInstance2D = MultiMeshInstance2D.new()
-	node.multimesh = holder
-	var shaded: ShaderMaterial = ShaderMaterial.new()
-	shaded.shader = batch_shader()
-	node.material = shaded
-	_viewport.add_child(node)
+	var node: MultiMeshInstance2D = null
+	while node == null and not _batch_shelf.is_empty():
+		var shelved: Variant = _batch_shelf.pop_back()
+		if is_instance_valid(shelved):
+			node = shelved
+	if node == null:
+		var holder: MultiMesh = MultiMesh.new()
+		holder.transform_format = MultiMesh.TRANSFORM_2D
+		holder.use_custom_data = true
+		holder.mesh = batch_mesh()
+		node = MultiMeshInstance2D.new()
+		node.multimesh = holder
+		var shaded: ShaderMaterial = ShaderMaterial.new()
+		shaded.shader = batch_shader()
+		node.material = shaded
+		_viewport.add_child(node)
+	node.visible = true
 	_batches[key] = node
+	_batch_idle[key] = 0
 
-## Fills this frame's batches, and empties the ones the frame did not draw so a kind that has
-## stopped being drawn stops appearing.
+## Fills this draw's batches, empties the ones it did not draw so a kind that has stopped being
+## drawn stops appearing, and RETIRES the ones nothing has drawn for a few draws in a row. That
+## last part is the whole reason this is not a dictionary that only grows: a batch is keyed by its
+## style's own values, so a colour being tweened onto Set Draw Style, or a Push Draw Style handed a
+## fresh resource each tick, mints a key a frame - and would otherwise leave a node behind in the
+## SubViewport for every one of them, for the life of the canvas.
 func _fill_batches(plan: Array) -> void:
 	var drawn: Dictionary = {}
 	for batch: Dictionary in plan:
@@ -1033,8 +1111,42 @@ func _fill_batches(plan: Array) -> void:
 			var numbers: Vector4 = instance["numbers"]
 			holder.set_instance_custom_data(index, Color(numbers.x, numbers.y, numbers.z, numbers.w))
 	for key: String in _batches:
-		if not drawn.has(key):
-			(_batches[key] as MultiMeshInstance2D).multimesh.instance_count = 0
+		if drawn.has(key):
+			_batch_idle[key] = 0
+			continue
+		(_batches[key] as MultiMeshInstance2D).multimesh.instance_count = 0
+		_batch_idle[key] = int(_batch_idle.get(key, 0)) + 1
+	for key: String in batches_to_retire(_batch_idle, drawn):
+		_shelve_batch(key)
+
+## Which batches a draw retires: the ones it did not draw, once each has sat out more draws than
+## BATCH_IDLE_DRAWS. A plain reading of two dictionaries, and static, so the rule can be checked
+## without a canvas at all - which matters here, because the thing it prevents (one more node in
+## the SubViewport every frame, for ever) is invisible until a game has been running a while.
+static func batches_to_retire(idle: Dictionary, drawn: Dictionary) -> PackedStringArray:
+	var retired: PackedStringArray = PackedStringArray()
+	for key: String in idle:
+		if not drawn.has(key) and int(idle[key]) > BATCH_IDLE_DRAWS:
+			retired.append(key)
+	retired.sort()
+	return retired
+
+## Takes a batch nothing is drawing off its key and puts its node on the shelf to be handed out
+## again. The node stays a child of the SubViewport - hidden and emptied - so claiming it back
+## costs nothing at all; past the shelf's limit it is freed instead, because a canvas that has
+## finished with two hundred styles should not go on holding two hundred nodes.
+func _shelve_batch(key: String) -> void:
+	var node: MultiMeshInstance2D = _batches[key]
+	_batches.erase(key)
+	_batch_idle.erase(key)
+	if not is_instance_valid(node):
+		return
+	node.visible = false
+	node.multimesh.instance_count = 0
+	if _batch_shelf.size() >= BATCH_SHELF_LIMIT:
+		node.queue_free()
+		return
+	_batch_shelf.append(node)
 
 ## Hands one batch's style to its material - the same uniforms a placed shape sets, so the two draw
 ## the same dashes, the same caps and the same colour modes.

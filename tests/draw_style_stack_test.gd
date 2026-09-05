@@ -33,6 +33,8 @@ static func run() -> bool:
 	ok = _test_the_stack() and ok
 	ok = _test_reading_a_style_file() and ok
 	ok = _test_one_multimesh_per_kind() and ok
+	ok = _test_a_batch_nobody_draws_is_given_back() and ok
+	ok = _test_the_key_rides_the_command() and ok
 	ok = _test_the_raster_fallback() and ok
 	ok = _test_the_quad_reaches_the_shape() and ok
 	return ok
@@ -117,6 +119,56 @@ static func _test_one_multimesh_per_kind() -> bool:
 		split.append([batch["kind"], (batch["instances"] as Array).size()])
 	return SUPPORT.pin_value(P, "two styles over the same five shapes",
 		split, [["arc", 2], ["arc", 1], ["grid", 1], ["grid", 1]]) and ok
+
+
+## A BATCH IS KEYED BY ITS STYLE'S OWN VALUES, so a colour being tweened onto Set Draw Style, or a
+## Push Draw Style handed a fresh resource each tick, is a new key every frame. Nothing about that is
+## wrong - two styles genuinely cannot ride one draw call - but a canvas that only ever ADDED a node
+## per key would gain one node a frame for the whole life of the game.
+##
+## The rule that stops it is a plain reading of two dictionaries, which is why it can be pinned here:
+## a batch this draw did not draw counts one more idle draw, and past BATCH_IDLE_DRAWS its node goes
+## back on the shelf to be handed out to the next key. The pin is which keys retire, by name, in
+## sorted order - a count would not say which one was let go.
+static func _test_a_batch_nobody_draws_is_given_back() -> bool:
+	var idle: Dictionary = {"arc|thin": 0, "arc|fading": CanvasSurface.BATCH_IDLE_DRAWS, "grid|gone": CanvasSurface.BATCH_IDLE_DRAWS + 1, "arc|older": CanvasSurface.BATCH_IDLE_DRAWS + 9}
+	return SUPPORT.pins(P, [
+		["a batch this draw drew is never retired, however long it had been idle",
+			CanvasSurface.batches_to_retire(idle, {"arc|older": true}), PackedStringArray(["grid|gone"])],
+		["a batch has to sit out more than the idle allowance before it goes",
+			CanvasSurface.batches_to_retire(idle, {}), PackedStringArray(["arc|older", "grid|gone"])],
+		["a draw that drew everything retires nothing",
+			CanvasSurface.batches_to_retire(idle, {"arc|thin": true, "arc|fading": true, "grid|gone": true, "arc|older": true}), PackedStringArray()],
+		["the allowance is small enough that a style nobody uses does not linger",
+			CanvasSurface.BATCH_IDLE_DRAWS <= 4, true],
+	])
+
+
+## The key a shape belongs under is worked out ONCE, as the shape is queued, and rides the command:
+## the plan and the raster fallback each used to spell it out again, and a key is a sort of the
+## style's field names and a join per field. A command that carries one is planned under it; a
+## command written by hand (a test, or anything reading a queue it did not build) still gets the key
+## the style says it should have.
+static func _test_the_key_rides_the_command() -> bool:
+	var carried: Array = [{
+		"kind": "arc", "styled": true, "at": Vector2.ZERO, "angle": 0.0,
+		"numbers": Vector4(16.0, 0.0, 0.0, TAU), "style": CanvasSurface.STYLE_DEFAULTS,
+		"batch_key": "a key the shape was queued under"
+	}]
+	var planned: Array = CanvasSurface.plan_batches(carried)
+	var spelled: Array = CanvasSurface.plan_batches([{
+		"kind": "arc", "styled": true, "at": Vector2.ZERO, "angle": 0.0,
+		"numbers": Vector4(16.0, 0.0, 0.0, TAU), "style": CanvasSurface.STYLE_DEFAULTS
+	}])
+	return SUPPORT.pins(P, [
+		["a queued shape is planned under the key it was queued with",
+			str(planned[0]["key"]) if not planned.is_empty() else "no batch", "a key the shape was queued under"],
+		["a command with no key is still planned under the one its style makes",
+			str(spelled[0]["key"]) if not spelled.is_empty() else "no batch",
+			CanvasSurface.batch_key("arc", CanvasSurface.STYLE_DEFAULTS)],
+		["and the raster half skips a taken batch by the key the command carries",
+			CanvasSurface.plan_raster(carried, {"a key the shape was queued under": true}).size(), 0],
+	])
 
 
 ## With no batch taken, every styled shape is drawn the raster way - the same five shapes, as the
