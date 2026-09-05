@@ -62,14 +62,23 @@ var _about: Dictionary = {"name": "", "version": "", "author": "", "reason": ""}
 const CODE_EXTENSIONS: Array[String] = [
 	"gd", "gdc", "gde", "cs", "gdextension", "gdnlib", "gdns", "dll", "so", "dylib", "wasm"]
 
-## The file extensions that are a RESOURCE TABLE: a scene or a resource, saved as text or in the
-## binary form. A file with one of these names is not code by its name, and it may carry code all
-## the same - a scene holding a script written inside it, a node property whose value the engine
+## Every extension the engine reads as a RESOURCE TABLE: a scene or a resource, saved as text or in
+## the binary form. A file with one of these names is not code by its name, and it may carry code
+## all the same - a scene holding a script written inside it, a node property whose value the engine
 ## resolves by loading a path or by compiling source carried in the file, a resource naming a
 ## script beside it. Godot builds all of that the moment the file is loaded, so a mod carrying one
 ## runs a stranger's code while every file in it is called data. These are therefore READ rather
 ## than merely named, which is the difference between the tier's promise and its name.
-const RESOURCE_EXTENSIONS: Array[String] = ["tscn", "scn", "tres", "res"]
+##
+## THE LIST IS THE ENGINE'S OWN, ASKED AT RUN TIME. Godot recognises a couple of dozen of these -
+## `.material`, `.mesh`, `.theme`, `.shape`, `.stylebox`, `.translation` beside the familiar four -
+## and a list typed out here is a hole shaped exactly like whichever ones it forgot: a
+## StandardMaterial3D saved as `evil.material` with a script set on it, named by a scene the mod
+## also ships, was cleared as data because nothing here had heard of that extension. So the answer
+## comes from the resource loader itself, which means it is the list of the engine the game actually
+## ships with rather than the list of the engine this was written against. Asked once and kept,
+## because it cannot change while the game runs.
+var _resource_extension_cache: PackedStringArray = PackedStringArray()
 
 ## The two heads a resource table written as TEXT begins with. A file that begins with neither is
 ## the binary form, or something else entirely, and its table cannot be read as text at all - an
@@ -759,6 +768,14 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 			return "%s names the script %s, and this row loads data only" % [name, place]
 	return ""
 
+## Every extension the engine itself reads as a resource or a scene - the files this row opens and
+## reads rather than merely names. See the note beside the cache above.
+## @ace_hidden
+func _resource_extensions() -> PackedStringArray:
+	if _resource_extension_cache.is_empty():
+		_resource_extension_cache = ResourceLoader.get_recognized_extensions_for_type("Resource")
+	return _resource_extension_cache
+
 ## True when a path is CODE by its own extension, whatever a tag claims its type is. The type is a
 ## word in a file a stranger wrote; the extension is what the engine will compile.
 ## @ace_hidden
@@ -877,7 +894,7 @@ func _folder_resource_reason(folder: String) -> String:
 	var paths: PackedStringArray = _files_under(folder)
 	paths.sort()
 	for path: String in paths:
-		if not path.get_extension().to_lower() in RESOURCE_EXTENSIONS:
+		if not _resource_extensions().has(path.get_extension().to_lower()):
 			continue
 		var reason: String = _resource_reason(path.get_file(),
 			FileAccess.get_file_as_string(path), folder)
@@ -895,7 +912,7 @@ func _zip_resource_reason(path: String) -> String:
 		return "its archive could not be opened, so a data-only row cannot tell whether it carries code"
 	var inner_paths: PackedStringArray = PackedStringArray()
 	for inner: String in reader.get_files():
-		if not inner.ends_with("/") and inner.get_extension().to_lower() in RESOURCE_EXTENSIONS:
+		if not inner.ends_with("/") and _resource_extensions().has(inner.get_extension().to_lower()):
 			inner_paths.append(inner)
 	inner_paths.sort()
 	var reason: String = ""
@@ -917,7 +934,7 @@ func _pck_resource_reason(path: String, entries: Array) -> String:
 		return "its file could not be opened, so a data-only row cannot tell whether it carries code"
 	var wanted: Array[Dictionary] = []
 	for entry: Dictionary in entries:
-		if str(entry.get("path", "")).get_extension().to_lower() in RESOURCE_EXTENSIONS:
+		if _resource_extensions().has(str(entry.get("path", "")).get_extension().to_lower()):
 			wanted.append(entry)
 	wanted.sort_custom(func(first: Dictionary, second: Dictionary) -> bool:
 		return str(first.get("path", "")) < str(second.get("path", "")))

@@ -50,6 +50,9 @@ const ROOT := "user://mods_pack_test"
 ## a data-only load that has to run a stranger's code to find out whether it may is not a tier.
 const MARKER := "user://mods_pack_test/probe/crafted_ran.txt"
 
+## And the one a script carried inside a BINARY resource writes, for the same assertion.
+const BINARY_MARKER := "user://mods_pack_test/probe/binary_ran.txt"
+
 
 ## The Game Settings autoload as this pack talks to it: four methods, and a dictionary behind them.
 ## It is handed to the director directly rather than found in a tree, which is the reason
@@ -87,6 +90,7 @@ static func run() -> bool:
 	passed = _a_zip_is_read_without_being_loaded(script) and passed
 	passed = _a_scene_carrying_a_script_is_not_data(script) and passed
 	passed = _a_script_hidden_in_a_scene_is_still_a_script(script) and passed
+	passed = _a_binary_resource_is_not_cleared_by_its_extension(script) and passed
 	passed = _a_crafted_manifest_never_gets_to_run(script) and passed
 	passed = _a_real_pack_file_is_read_off_its_own_bytes(script) and passed
 	passed = _a_mod_tres_that_is_not_a_manifest_keeps_its_folders_name(script) and passed
@@ -253,6 +257,34 @@ static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
 			"world.scn is saved in a form this row cannot read, so it cannot be cleared of code"],
 		["and so is a type spelled with an escape the engine would decode", escaped,
 			"world.tscn holds an escape inside a resource tag, so it cannot be cleared of code"],
+	])
+
+
+## A FILE IS NOT CLEARED BY AN EXTENSION NOBODY LISTED. Godot reads a couple of dozen extensions as
+## a resource, and this row knew four of them - so a StandardMaterial3D saved as `evil.material`
+## with a script set on it, named by a scene the mod also ships, was never read at all and the mod
+## cleared as data. The list is the resource loader's own now, so the file is opened, found to be
+## bytes no text reading can clear, and refused by name.
+static func _a_binary_resource_is_not_cleared_by_its_extension(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var folder: String = ROOT.path_join("probe/binary")
+	var known: bool = director._resource_extensions().has("material")
+	var scene_reason: String = director._resource_reason("world.tscn",
+		FileAccess.get_file_as_string(folder.path_join("world.tscn")), folder)
+	var reason: String = director._code_reason({"scripts": false, "kind": "folder", "folder": folder})
+	director.free()
+	# The same probe rule as the crafted manifest: building the file proves it really does bring a
+	# stranger's script into the game, so the refusal above is refusing something.
+	var built: Resource = load(folder.path_join("evil.material"))
+	var brought_a_script: bool = built != null and built.get_script() != null
+	built = null
+	DirAccess.remove_absolute(BINARY_MARKER)
+	return SUPPORT.pins("mods_pack_test", [
+		["the extensions read are the engine's own, not four written down here", known, true],
+		["the scene naming the mod's own material is data", scene_reason, ""],
+		["and the material it names is refused, because no text reading can clear it", reason,
+			"evil.material is saved in a form this row cannot read, so it cannot be cleared of code"],
+		["building it does bring a script in, so this is a real probe", brought_a_script, true],
 	])
 
 
@@ -652,6 +684,28 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	_write(ROOT.path_join("probe/sneaky/world.tscn"), _scene_text([
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
+
+	# A BINARY resource with a script on it, and a scene that names it. Neither file is a `.gd`, and
+	# `.material` was not one of the four extensions this reading used to know, so the mod cleared as
+	# data and the engine built both. The script lives OUTSIDE the mod, so the mod's own file walk
+	# cannot be what refuses it.
+	# It extends the material class it is saved as, because `.material` is the extension the engine
+	# recognises for THAT class - a plain Resource saved under that name is not saved at all.
+	_write(ROOT.path_join("hostile/evil_material.gd"),
+		"extends StandardMaterial3D\n\n\nfunc _init() -> void:\n"
+		+ "\tvar marker: FileAccess = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % BINARY_MARKER
+		+ "\tif marker != null:\n\t\tmarker.store_string(\"ran\")\n\t\tmarker.close()\n")
+	_write(ROOT.path_join("probe/binary/mod.json"), JSON.stringify({
+		"name": "Binary", "version": "1.0", "scripts": false}, "\t"))
+	var evil_script: GDScript = load(ROOT.path_join("hostile/evil_material.gd"))
+	if evil_script != null:
+		ResourceSaver.save(evil_script.new(), ROOT.path_join("probe/binary/evil.material"))
+	_write(ROOT.path_join("probe/binary/world.tscn"), _scene_text([
+		"[ext_resource type=\"Material\" path=\"%s\" id=\"1\"]" % ROOT.path_join("probe/binary/evil.material"),
+		"[node name=\"Thing\" type=\"MeshInstance3D\"]",
+		"material_override = ExtResource(\"1\")"]))
+	# Building the fixture ran it once, which is the whole point of it. The marker starts absent.
+	DirAccess.remove_absolute(BINARY_MARKER)
 
 	# A crafted mod: a mod.tres naming a script in the mod's own folder, and a script that writes a
 	# file the moment anything builds it. Hand-written rather than saved, because the whole point is

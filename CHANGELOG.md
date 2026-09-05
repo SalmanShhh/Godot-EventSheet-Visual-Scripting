@@ -292,6 +292,14 @@
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads "this project's tilesets go up to -1".
+- **The files a data-only load reads are the ones the ENGINE calls resources, not four written
+  down.** Godot recognises a couple of dozen resource extensions - `.material`, `.mesh`, `.theme`,
+  `.shape`, `.stylebox`, `.translation` beside `.tscn`, `.scn`, `.tres` and `.res` - and the reading
+  knew the last four, so every other one was never opened at all: a StandardMaterial3D saved as
+  `evil.material` with a script set on it, named by a scene the mod also shipped, cleared as data
+  and ran on load. The list is asked of the resource loader at run time now, which makes it the list
+  of the engine the game actually ships with, and a resource saved in the binary form is refused by
+  name rather than cleared, exactly as a binary scene already was.
 - **A crafted mod manifest never gets to run, and a script a mod brought is never named past.** Two
   halves of the same hole. A `mod.tres` was handed to `load()` so its five fields could be asked of
   the object that came back, and BUILDING a resource file runs the script it names: a manifest
