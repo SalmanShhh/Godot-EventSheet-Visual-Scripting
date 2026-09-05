@@ -22,7 +22,7 @@ func _enter_tree() -> void:
 signal transition_finished(shape: String)
 ## Fires every time the loading reading MOVES, on the Scene Flow node standing in the loading
 ## screen - which is exactly where a row that sets a bar wants to be. It carries nothing:
-## Loading Progress answers with the number, so the row reads as a sentence.
+## Scene Load Progress answers with the number, so the row reads as a sentence.
 ## @ace_trigger
 ## @ace_name("On Loading Progress")
 signal loading_progress_changed
@@ -197,7 +197,7 @@ static func transition_shader(shape: String) -> Shader:
 
 # --- Loading screens: a screen of your own while the next scene comes off the disk ---
 
-## The group the one running background load joins, so Is Loading, Loading Progress and
+## The group the one running background load joins, so Scene Is Loading, Scene Load Progress and
 ## Loading Tip are ONE question with one answer rather than three fields that can disagree.
 ## It is a group rather than a member because the poller OUTLIVES the scene the row was in:
 ## the node that started the load is replaced by the loading screen a moment later.
@@ -440,7 +440,7 @@ func reload_scene_with(transition: String, seconds: float, ease: String) -> void
 ## @ace_featured
 ## @ace_name("Go To Scene With Loading")
 ## @ace_category("Scenes")
-## @ace_description("Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Loading Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.")
+## @ace_description("Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Scene Load Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.")
 ## @ace_display_template("Go to scene [b]{scene}[/b] with loading, at least [b]{min_seconds}[/b] s")
 ## @ace_param(scene, desc: "The scene to open. Its res:// path, or an expression that answers with one.")
 ## @ace_param(min_seconds, default: 1.0, desc: "The shortest the loading screen stays up, in seconds. One second is enough to be read as a beat rather than as a flicker; zero enters the moment the load lands.")
@@ -537,7 +537,7 @@ func _start_transition(path: String, shape: String, seconds: float, ease_word: S
 	runner.target_path = path
 	get_tree().root.add_child(runner)
 
-## HOW FAR THE WAIT HAS GOT, from 0 to 1 - what Loading Progress answers with and what a bar is
+## HOW FAR THE WAIT HAS GOT, from 0 to 1 - what Scene Load Progress answers with and what a bar is
 ## set to. It is the SLOWER of the two things being waited on: how much of the scene is off the
 ## disk, and how much of the minimum time has been served. A bar that races to the end and then
 ## sits there reads as a hang, so this one never runs ahead of the wait it belongs to.
@@ -580,7 +580,7 @@ static func loading_tip_at(tips: PackedStringArray, index: int) -> String:
 ## true while the screen is up - including the beat where it is waiting for a key, and the
 ## covered change into the new scene - so a row can gate anything on "still loading".
 ## @ace_condition
-## @ace_name("Is Loading")
+## @ace_name("Scene Is Loading")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.is_loading()")
 func is_loading() -> bool:
@@ -589,7 +589,7 @@ func is_loading() -> bool:
 ## How far the wait has got, from 0 to 1. Multiply by 100 for a percentage, or set a bar whose
 ## maximum is 1 straight from it. Zero when nothing is loading.
 ## @ace_expression
-## @ace_name("Loading Progress")
+## @ace_name("Scene Load Progress")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.loading_progress()")
 func loading_progress() -> float:
@@ -648,4 +648,4 @@ func _start_loading(path: String, min_seconds: float, wait_for_key: bool) -> voi
 	else:
 		_start_transition(screen, loading_transition, fade_seconds, "smooth")
 
-# Scene Flow behavior: scene changes with a polished fade, from one node. The fade runner parents itself to the TREE ROOT (not the dying scene), so the fade-out, the swap, and the fade-in all survive the change. Fade To Scene / Go To Scene / Fade Reload / Reload / Quit Game cover a whole menu's needs with zero code. Go To Scene With and Reload Scene With draw a shape over the change instead - fade, wipe, dissolve, iris, blinds, pixelate or page curl - and On Transition Finished fires on the Scene Flow node in the scene it arrived at. Go To Scene With Loading puts a screen of your own in the middle of that change while the next scene comes off the disk: On Loading Progress and Loading Progress move a bar, Loading Tip reads a line out of a text file you own, and Enter Loaded Scene is what a press-any-key row does.
+# Scene Flow behavior: scene changes with a polished fade, from one node. The fade runner parents itself to the TREE ROOT (not the dying scene), so the fade-out, the swap, and the fade-in all survive the change. Fade To Scene / Go To Scene / Fade Reload / Reload / Quit Game cover a whole menu's needs with zero code. Go To Scene With and Reload Scene With draw a shape over the change instead - fade, wipe, dissolve, iris, blinds, pixelate or page curl - and On Transition Finished fires on the Scene Flow node in the scene it arrived at. Go To Scene With Loading puts a screen of your own in the middle of that change while the next scene comes off the disk: On Loading Progress and Scene Load Progress move a bar, Loading Tip reads a line out of a text file you own, and Enter Loaded Scene is what a press-any-key row does.

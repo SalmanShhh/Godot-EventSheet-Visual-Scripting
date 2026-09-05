@@ -70,7 +70,7 @@ static func _test_the_stubbed_status() -> bool:
 	])
 
 
-## THE READING, from 0 to 1: what Loading Progress answers with and what a bar is set to. It is the
+## THE READING, from 0 to 1: what Scene Load Progress answers with and what a bar is set to. It is the
 ## SLOWER of the two waits, which is the whole point - a bar that races to the end on a fast disk
 ## and then sits there for a second reads as a hang, and a game that looks hung is worse than a game
 ## that is slow.
@@ -166,8 +166,8 @@ static func _test_the_shipped_rows() -> bool:
 		["the press-any-key door is a verb of its own",
 			shipped.contains("func enter_loaded_scene() -> void:"), true],
 		["the question a row asks while a screen is up",
-			shipped.contains("## @ace_name(\"Is Loading\")"), true],
-		["the number a bar is set to", shipped.contains("## @ace_name(\"Loading Progress\")"), true],
+			shipped.contains("## @ace_name(\"Scene Is Loading\")"), true],
+		["the number a bar is set to", shipped.contains("## @ace_name(\"Scene Load Progress\")"), true],
 		["the line a label shows", shipped.contains("## @ace_name(\"Loading Tip\")"), true],
 		["the bar's own trigger", shipped.contains("## @ace_name(\"On Loading Progress\")"), true],
 		["and the arrival's", shipped.contains("## @ace_name(\"On Loading Finished\")"), true],
