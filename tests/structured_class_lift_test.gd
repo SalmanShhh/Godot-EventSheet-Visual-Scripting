@@ -20,6 +20,12 @@ const RADIO := "class Radio:\n\tenum Band {\n\t\tAM,\n\t\tFM = 4,\n\t}\n\tsignal
 const NESTED := "class Outer:\n\tvar hp: int = 3\n\tclass Inner:\n\t\tvar x: int = 0"
 
 
+## Where the two round-trip fixtures are written. user://, and deleted on the way out - a suite run
+## leaves nothing behind it, in the repository or beside it.
+const ROUND_TRIP_PATH: String = "user://structured_class_rt.gd"
+const WHOLE_FILE_PATH: String = "user://structured_class_file.gd"
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -119,14 +125,19 @@ static func run() -> bool:
 		and (outer_row.children[1] as EventRowData).children.size() == 1, true) and ok
 
 	# ── The covenant: a pure view - the raw code is untouched, so the file re-emits verbatim ──
-	var reemitted: String = SUPPORT.compile_output(sheet, "user://structured_class_rt.gd")
+	var reemitted: String = SUPPORT.compile_output(sheet, ROUND_TRIP_PATH)
 	ok = _check("the sheet re-emits both classes verbatim",
 		reemitted.contains(RADIO) and reemitted.contains(NESTED), true) and ok
 	var whole_file: String = "class_name RadioHost\nextends Node\n\n" + RADIO + "\n\nvar volume: int = 5\n"
 	ok = _check("a whole file holding such a class round-trips byte-exactly",
-		SUPPORT.reemit(whole_file, "user://structured_class_file.gd"), whole_file) and ok
+		SUPPORT.reemit(whole_file, WHOLE_FILE_PATH), whole_file) and ok
 
 	dock.free()
+	# SERIAL-CI HYGIENE: the two round-trip fixtures were written under user:// by the compiler, and
+	# CI runs the suite serially in one process - so they go out with the test rather than being left
+	# for whatever asks that path next.
+	for written: String in [ROUND_TRIP_PATH, WHOLE_FILE_PATH]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(written))
 	return ok
 
 

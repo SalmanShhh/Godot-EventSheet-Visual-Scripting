@@ -59,16 +59,20 @@ const SUPPORT := preload("res://tests/support.gd")
 const CORPUS_DIR: String = "res://tests/corpus/"
 
 ## The reading of each file, as values. `percent` is the share that reads as rows,
-## `entry` the lines a lift-table entry claims by name, `code` the lines that stay a script block.
+## `entry` the lines a lift-table entry claims by name, `code` the lines that stay a script block, and
+## `derived` the statements the DERIVED layer has words for - the one number that moves when the layer
+## reading the API back gains or loses ground. It is pinned rather than printed because the general
+## reading residue beside it cannot be: that number moves on a cosmetic rename in the reverse index,
+## while this one only moves when a receiver stops being nameable or a class stops answering.
 const PINS: Dictionary = {
-	"door_state_machine.gd": {"percent": 100, "entry": 0, "code": 1},
-	"guard_sight.gd": {"percent": 100, "entry": 4, "code": 0},
-	"mission_hud.gd": {"percent": 100, "entry": 0, "code": 8},
-	"network_lobby.gd": {"percent": 100, "entry": 5, "code": 0},
-	"pause_menu.gd": {"percent": 100, "entry": 4, "code": 0},
-	"pickup_juice.gd": {"percent": 100, "entry": 0, "code": 1},
-	"player_controller.gd": {"percent": 100, "entry": 0, "code": 0},
-	"player_stats.gd": {"percent": 100, "entry": 0, "code": 0}
+	"door_state_machine.gd": {"percent": 100, "entry": 0, "code": 1, "derived": 0},
+	"guard_sight.gd": {"percent": 100, "entry": 4, "code": 0, "derived": 0},
+	"mission_hud.gd": {"percent": 100, "entry": 0, "code": 8, "derived": 0},
+	"network_lobby.gd": {"percent": 100, "entry": 5, "code": 0, "derived": 3},
+	"pause_menu.gd": {"percent": 100, "entry": 4, "code": 0, "derived": 0},
+	"pickup_juice.gd": {"percent": 100, "entry": 0, "code": 1, "derived": 1},
+	"player_controller.gd": {"percent": 100, "entry": 0, "code": 0, "derived": 1},
+	"player_stats.gd": {"percent": 100, "entry": 0, "code": 0, "derived": 0}
 }
 
 
@@ -114,7 +118,22 @@ static func run() -> bool:
 			int(counts[EventSheetLiftReading.LAYER_ENTRY]), int(pins["entry"])) and all_passed
 		all_passed = _check("%s lines that stay code (pinned %d)" % [name, int(pins["code"])],
 			int(counts[EventSheetLiftReading.LAYER_CODE]), int(pins["code"])) and all_passed
-	return _test_the_ledger(files) and all_passed
+		# THE DERIVED LAYER, measured on a whole real file. Every other pin above counts lines the
+		# canvas draws as rows; this one counts the statements whose words were read off the API
+		# rather than written by hand, which is the only number in this gate that moves when that
+		# layer stops being able to name a receiver.
+		var measured: Dictionary = EventSheetGenericRows.derived_measure(
+			reading.get("sheet", null) as EventSheetResource)
+		all_passed = _check("%s statements the derived layer names (pinned %d)" % [name,
+			int(pins["derived"])], int(measured.get("derived", 0)),
+			int(pins["derived"])) and all_passed
+	all_passed = _test_the_ledger(files) and all_passed
+	# SERIAL-CI HYGIENE: the readings above warm the family tables for the life of the process, and
+	# CI runs the suite serially in one process - so a later test asking for cold tables gets them.
+	EventSheetLiftReading.clear_cache()
+	EventSheetDerivedCalls.clear_cache()
+	EventSheetDerivedProperties.clear_cache()
+	return all_passed
 
 
 ## The census over the WHOLE corpus, as values. Everything the Doctor's Reading page and the census

@@ -117,6 +117,12 @@ const INPUT_HANDLER := HANDLER \
 	+ "\tif event.is_action(\"aim\"):\n\t\tprint(\"d\")\n"
 
 
+## Where the two round-trip fixtures are written. user://, and deleted on the way out - a suite run
+## leaves nothing behind it, in the repository or beside it.
+const NAMED_PROPERTY_PATH: String = "user://eventforge_named_property.gd"
+const REFUSAL_PATH: String = "user://eventforge_named_property_refusal.gd"
+
+
 static func run() -> bool:
 	var ok: bool = _test_the_input_event_questions()
 	ok = _test_the_named_property() and ok
@@ -124,6 +130,11 @@ static func run() -> bool:
 	ok = _test_the_notification_triggers() and ok
 	ok = _test_the_physics_queries() and ok
 	ok = _test_the_property_refusals() and ok
+	# SERIAL-CI HYGIENE: the two round-trip fixtures were written under user:// by the compiler, and
+	# CI runs the suite serially in one process - so they go out with the test rather than being left
+	# for whatever asks that path next.
+	for written: String in [NAMED_PROPERTY_PATH, REFUSAL_PATH]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(written))
 	return ok
 
 
@@ -193,7 +204,7 @@ static func _test_the_input_event_questions() -> bool:
 ## line follows it.
 static func _test_the_named_property() -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(NAMED_PROPERTY,
-		true, "user://eventforge_named_property.gd")
+		true, NAMED_PROPERTY_PATH)
 	var found: Dictionary = {}
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
@@ -281,7 +292,7 @@ static func _test_the_property_refusals() -> bool:
 	}, func(block: String) -> bool:
 		var source: String = "extends Node\n\nvar health: int = 100:\n%s\n" % block
 		var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true,
-			"user://eventforge_named_property_refusal.gd")
+			REFUSAL_PATH)
 		for entry: Variant in sheet.events:
 			if entry is LocalVariable and (entry as LocalVariable).has_named_accessors():
 				return true
