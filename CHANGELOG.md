@@ -292,6 +292,14 @@
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads "this project's tilesets go up to -1".
+- **A shader is code, and a data-only load now says so.** A `.gdshader` in a mod folder, and a
+  `Shader` or `VisualShader` written inside a scene or named beside one, were neither refused nor
+  mentioned: the tier said "no script comes in with this mod" while a stranger's shader came in with
+  it. A shader is compiled and run like anything else - on the graphics card, where what it can do
+  is spend the frame, wedge the driver and paint over the screen - so it is refused, in its own
+  words rather than reported as a script, and the game's own `res://` shader stays as welcome as the
+  game's own script. The rule is written in the pack, the pack page and the tiles guide, where the
+  rest of the tier is written.
 - **The files a data-only load reads are the ones the ENGINE calls resources, not four written
   down.** Godot recognises a couple of dozen resource extensions - `.material`, `.mesh`, `.theme`,
   `.shape`, `.stylebox`, `.translation` beside `.tscn`, `.scn`, `.tres` and `.res` - and the reading

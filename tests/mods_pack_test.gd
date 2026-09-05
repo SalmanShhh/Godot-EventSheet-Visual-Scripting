@@ -230,6 +230,17 @@ static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
 	var claimed_other: String = director._resource_reason("world.tscn", _scene_text([
 		"[ext_resource type=\"Texture2D\" path=\"user://mods/mine/hack.gd\" id=\"1\"]"]),
 		mine)
+	var shader_inside: String = director._resource_reason("world.tscn", _scene_text([
+		"[sub_resource type=\"Shader\" id=\"1\"]",
+		"code = \"shader_type canvas_item;\""]), mine)
+	var visual_shader: String = director._resource_reason("world.tscn", _scene_text([
+		"[sub_resource type=\"VisualShader\" id=\"1\"]"]), mine)
+	var shader_beside: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"Shader\" path=\"user://mods/mine/water.gdshader\" id=\"1\"]"]),
+		mine)
+	var game_shader: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"Shader\" path=\"res://shaders/water.gdshader\" id=\"1\"]"]),
+		mine)
 	var binary: String = director._resource_reason("world.scn", "RSRC binary bytes", mine)
 	var escaped: String = director._resource_reason("world.tscn", _scene_text([
 		"[sub_resource type=\"GD\\u0053cript\" id=\"1\"]"]), mine)
@@ -253,6 +264,13 @@ static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
 			"world.tscn names the script user://mods/mine/hack.gd, and this row loads data only"],
 		["and a tag claiming another type over a code file is refused by the file's own name",
 			claimed_other, "world.tscn names the script user://mods/mine/hack.gd, and this row loads data only"],
+		["a shader written inside the file is code too", shader_inside,
+			"world.tscn carries a shader, and this row loads data only"],
+		["and so is a visual one", visual_shader,
+			"world.tscn carries a shader, and this row loads data only"],
+		["a shader the mod brought with it is refused", shader_beside,
+			"world.tscn names the shader user://mods/mine/water.gdshader, and this row loads data only"],
+		["and the game's own shader is not, exactly like the game's own script", game_shader, ""],
 		["a file that cannot be read as text is refused rather than cleared", binary,
 			"world.scn is saved in a form this row cannot read, so it cannot be cleared of code"],
 		["and so is a type spelled with an escape the engine would decode", escaped,
@@ -336,6 +354,8 @@ static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> b
 		"folder": ROOT.path_join("probe/deep")})
 	var deeper: String = director._code_reason({"scripts": false, "kind": "folder",
 		"folder": ROOT.path_join("probe/deeper")})
+	var shady: String = director._code_reason({"scripts": false, "kind": "folder",
+		"folder": ROOT.path_join("probe/shady")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a folder with no code file in it can still be refused, by what its scene carries",
@@ -347,6 +367,8 @@ static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> b
 			deep, "it carries 1 code file(s), starting with deep.gd, and this row loads data only"],
 		["and a folder deeper than the walk reaches is refused rather than cleared", deeper,
 			"it holds more files, or deeper folders, than this row can read, so it cannot be cleared of code"],
+		["a folder whose only code is a shader is refused in the shader's own words", shady,
+			"it carries 1 shader file(s), starting with water.gdshader, and this row loads data only"],
 	])
 
 
@@ -696,6 +718,11 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	_write(ROOT.path_join("probe/sneaky/world.tscn"), _scene_text([
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
+
+	# A mod whose only code is a shader file. It is not a script, and it is not data either.
+	_write(ROOT.path_join("probe/shady/mod.json"), JSON.stringify({
+		"name": "Shady", "version": "1.0", "scripts": false}, "\t"))
+	_write(ROOT.path_join("probe/shady/water.gdshader"), "shader_type canvas_item;\n")
 
 	# Two mods with a `.gd` at the bottom of a chain of folders: one deeper than the walk used to
 	# reach and still within it, one deeper than it reaches at all.

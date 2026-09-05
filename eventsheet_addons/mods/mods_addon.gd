@@ -62,6 +62,17 @@ var _about: Dictionary = {"name": "", "version": "", "author": "", "reason": ""}
 const CODE_EXTENSIONS: Array[String] = [
 	"gd", "gdc", "gde", "cs", "gdextension", "gdnlib", "gdns", "dll", "so", "dylib", "wasm"]
 
+## The file extensions that are a SHADER, and the tail every shader type's name ends in. A shader is
+## code as well: it is compiled and it runs, on the graphics card rather than on the processor. What
+## it can do is spend the frame, wedge the driver and paint whatever it likes over the screen - not
+## the player's files and not their network, which is why it is refused in its own words rather than
+## reported as a script - and none of that is something a mod folder may do while the row that took
+## it says it loaded data only. So a data-only load refuses a shader, by its file name, by a type
+## written inside a resource, and by a type named beside one.
+const SHADER_EXTENSIONS: Array[String] = ["gdshader", "gdshaderinc"]
+const SHADER_TYPE_TAIL: String = "Shader"
+const SHADER_INCLUDE_TYPE: String = "ShaderInclude"
+
 ## Every extension the engine reads as a RESOURCE TABLE: a scene or a resource, saved as text or in
 ## the binary form. A file with one of these names is not code by its name, and it may carry code
 ## all the same - a scene holding a script written inside it, a node property whose value the engine
@@ -686,6 +697,9 @@ func _path_of_bytes(raw: PackedByteArray) -> String:
 ## WHAT MAKES IT REFUSE, and every one of them is a way a file called data runs code:
 ##   a script written INSIDE it    - a `[sub_resource]` whose type ends in `Script` is source code
 ##                                   carried in the file itself, in any language the engine has.
+##   a shader, wherever it is      - written inside the file as a `Shader` sub_resource, or named
+##                                   beside it as one. A shader is compiled and run too; it simply
+##                                   runs on the graphics card.
 ##   a script named BESIDE it      - an `[ext_resource]` whose type ends in `Script`, or which names
 ##                                   a file that is code by its extension, is a file the engine loads
 ##                                   and attaches when this one is built. Under `res://` it is the
@@ -752,9 +766,12 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		if kind.is_empty():
 			return "%s holds a tag with no type, so it cannot be cleared of code" % name
 		if tag_name == "sub_resource":
-			# Source code written INSIDE the file, in whatever language the engine has.
+			# Source code written INSIDE the file, in whatever language the engine has - and a
+			# shader written inside it is source code too, for the other processor.
 			if kind.ends_with(SCRIPT_TYPE_TAIL):
 				return "%s carries a script, and this row loads data only" % name
+			if _type_is_shader(kind):
+				return "%s carries a shader, and this row loads data only" % name
 			continue
 		var place: String = str(fields.get("path", ""))
 		if place.is_empty() or place.contains(CLIMB_OUT):
@@ -778,6 +795,8 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		# loaded it BEFORE that walk ever ran - which is exactly what a crafted manifest did.
 		if kind.ends_with(SCRIPT_TYPE_TAIL) or _names_code(place):
 			return "%s names the script %s, and this row loads data only" % [name, place]
+		if _type_is_shader(kind) or _names_shader(place):
+			return "%s names the shader %s, and this row loads data only" % [name, place]
 	return ""
 
 ## Every extension the engine itself reads as a resource or a scene - the files this row opens and
@@ -793,6 +812,18 @@ func _resource_extensions() -> PackedStringArray:
 ## @ace_hidden
 func _names_code(place: String) -> bool:
 	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in CODE_EXTENSIONS
+
+## And true when it is a SHADER by its own extension, for the same reason.
+## @ace_hidden
+func _names_shader(place: String) -> bool:
+	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in SHADER_EXTENSIONS
+
+## True when a resource tag's TYPE is a shader - `Shader`, `VisualShader`, `ShaderInclude`. Read as
+## a tail for the same reason a script type is: the shader type this reading has never heard of is
+## exactly the one a crafted file would name.
+## @ace_hidden
+func _type_is_shader(kind: String) -> bool:
+	return kind.ends_with(SHADER_TYPE_TAIL) or kind == SHADER_INCLUDE_TYPE
 
 ## Where a tag closes, or -1 when it does not close on the text so far. Quotes are respected, so a
 ## `]` inside a value does not end a tag early, and a tag written over more than one line is
@@ -850,7 +881,17 @@ func _tag_fields(rest: String) -> Dictionary:
 func _code_in(paths: PackedStringArray) -> PackedStringArray:
 	var carried: PackedStringArray = PackedStringArray()
 	for path: String in paths:
-		if path.get_file().trim_suffix(".remap").get_extension().to_lower() in CODE_EXTENSIONS:
+		if _names_code(path):
+			carried.append(path)
+	return carried
+
+## And the shader files in it, kept apart from the code files so the refusal can say which of the
+## two a mod was refused for. Both are code; only one of them can reach the player's machine.
+## @ace_hidden
+func _shaders_in(paths: PackedStringArray) -> PackedStringArray:
+	var carried: PackedStringArray = PackedStringArray()
+	for path: String in paths:
+		if _names_shader(path):
 			carried.append(path)
 	return carried
 
@@ -894,10 +935,11 @@ func _files_under(folder: String) -> PackedStringArray:
 ## which is what the mod SAYS about itself and is checked first only so a mod that admits it gets
 ## the plainer sentence.
 ##
-## TWO QUESTIONS, NOT ONE. A file that is code BY ITS NAME - a `.gd`, a `.dll` - is found in the
-## list of names. A file that is a resource table by its name may carry code all the same, so every
-## scene and every resource the mod holds is READ as well. Deciding by extension alone was a
-## data-only tier a `.tscn` with a script written inside it walked straight through.
+## TWO QUESTIONS, NOT ONE. A file that is code BY ITS NAME - a `.gd`, a `.dll`, a `.gdshader`, which
+## is code for the other processor - is found in the list of names. A file that is a resource table
+## by its name may carry code all the same, so every scene and every resource the mod holds is READ
+## as well. Deciding by extension alone was a data-only tier a `.tscn` with a script written inside
+## it walked straight through.
 ## @ace_hidden
 func _code_reason(record: Dictionary) -> String:
 	if bool(record.get("scripts", false)):
@@ -916,16 +958,27 @@ func _code_reason(record: Dictionary) -> String:
 		if not carried.is_empty():
 			return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 				carried.size(), carried[0]]
+		var shaders: PackedStringArray = _shaders_in(index.get("paths", PackedStringArray()))
+		shaders.sort()
+		if not shaders.is_empty():
+			return "it carries %d shader file(s), starting with %s, and this row loads data only" % [
+				shaders.size(), shaders[0]]
 		if pack_path.get_extension().to_lower() == "zip":
 			return _zip_resource_reason(pack_path)
 		return _pck_resource_reason(pack_path, index.get("entries", []) as Array)
 	var folder: String = str(record.get("folder", ""))
-	var in_folder: PackedStringArray = _code_in(_files_under(folder))
+	var files: PackedStringArray = _files_under(folder)
 	var was_truncated: bool = _folder_was_truncated
+	var in_folder: PackedStringArray = _code_in(files)
 	in_folder.sort()
 	if not in_folder.is_empty():
 		return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 			in_folder.size(), in_folder[0].get_file()]
+	var in_folder_shaders: PackedStringArray = _shaders_in(files)
+	in_folder_shaders.sort()
+	if not in_folder_shaders.is_empty():
+		return "it carries %d shader file(s), starting with %s, and this row loads data only" % [
+			in_folder_shaders.size(), in_folder_shaders[0].get_file()]
 	if was_truncated:
 		return "it holds more files, or deeper folders, than this row can read, so it cannot be cleared of code"
 	return _folder_resource_reason(folder)
