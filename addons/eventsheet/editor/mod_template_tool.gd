@@ -27,8 +27,10 @@ const DEFAULT_CONTENT_FOLDER := "items"
 
 
 ## Writes the template and hands back a receipt: `folder`, the `written` paths in the order they
-## were written, and `problem` (empty when there is none). Nothing is written when there is a
-## problem, so a half-made template is never left behind.
+## were written, and `problem` (empty when there is none). Nothing at all is written when the
+## FOLDER cannot be used - no name was given, it already holds a manifest, or it could not be made
+## - so somebody's work is never written over. Once writing has started a later file may still
+## fail, and the receipt then names both: the problem, and the files that really did reach disk.
 static func export_template(folder: String, declared: Dictionary, content_folder: String = DEFAULT_CONTENT_FOLDER,
 		also_resource: bool = true) -> Dictionary:
 	var receipt: Dictionary = {"folder": folder, "written": PackedStringArray(), "problem": ""}
@@ -48,7 +50,8 @@ static func export_template(folder: String, declared: Dictionary, content_folder
 		return receipt
 	written.append(folder.path_join("mod.json"))
 	if not _write(folder.path_join("README.txt"), readme_text(declared, content_folder)):
-		receipt["problem"] = "Could not write the README into %s." % folder
+		receipt["problem"] = "The mod.json was written. The README was not: %s could not take it." % folder
+		receipt["written"] = written
 		return receipt
 	written.append(folder.path_join("README.txt"))
 	if not content_folder.strip_edges().is_empty():

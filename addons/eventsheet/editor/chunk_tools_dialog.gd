@@ -121,9 +121,8 @@ func _refresh_reading(strip: EventSheetPopupUI.HelpStrip) -> void:
 	var values: Dictionary = _form.values()
 	var folder: String = str(values.get("folder", ""))
 	var scene_path: String = str(values.get("scene", ""))
-	var cell: String = "%d x %d" % [int(values.get("width", 0)), int(values.get("height", 0))]
-	if bool(values.get("stacked", false)):
-		cell += " x %d" % int(values.get("depth", 0))
+	var cell: String = cell_words(int(values.get("width", 0)), int(values.get("height", 0)),
+		int(values.get("depth", 0)), bool(values.get("stacked", false)))
 	if _splitting:
 		var prefix: String = str(values.get("prefix", EventSheetChunkTools.DEFAULT_PREFIX))
 		strip.set_reading("Split %s into %s, one scene per %s cell" % [scene_path, folder, cell],
@@ -131,6 +130,17 @@ func _refresh_reading(strip: EventSheetPopupUI.HelpStrip) -> void:
 		return
 	strip.set_reading("Merge the cells in %s into %s, placed %s apart" % [folder, scene_path, cell],
 		scene_path)
+
+
+## One cell as the reading line says it: the axes the SPLIT actually uses, in their own order. A
+## flat grid is width by DEPTH - a 2D scene's own y is the depth axis and its height is ignored -
+## so a reading that said width by height described a split the tool does not do, and a reader who
+## typed 512 into Cell height watched their world go into chunks 1024 deep. Height only joins the
+## sentence when height is a cell axis, which is the one case it is read in.
+static func cell_words(width: int, height: int, depth: int, stacked: bool) -> String:
+	if stacked:
+		return "%d x %d x %d" % [width, height, depth]
+	return "%d x %d" % [width, depth]
 
 
 ## What the tool will and will not do, said before it is run rather than discovered afterwards.

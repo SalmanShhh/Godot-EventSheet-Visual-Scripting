@@ -11,7 +11,8 @@
 #   - a 2D scene's depth axis is its own y, which is what the flat file names spell;
 #   - a child with no place in the world (a Timer, a Control) is named rather than guessed at;
 #   - the files a split writes are the names the packs and the Doctor read;
-#   - split then merge returns every child to the position it was authored at.
+#   - split then merge returns every child to the position it was authored at;
+#   - the dialog's reading line names the axes the split uses, not the ones the fields are in.
 @tool
 class_name ChunkToolsTest
 extends RefCounted
@@ -33,6 +34,7 @@ static func run() -> bool:
 	passed = _a_split_writes_the_names_the_packs_read() and passed
 	passed = _merging_puts_every_child_back() and passed
 	passed = _the_receipt_says_what_happened() and passed
+	passed = _the_reading_line_says_the_axes_the_split_uses() and passed
 	return passed
 
 
@@ -144,6 +146,22 @@ static func _the_receipt_says_what_happened() -> bool:
 		["and a problem is the whole answer", EventSheetChunkToolsDialog.receipt_words(
 			{"problem": "res://nope.tscn is not a scene."}, true),
 			"res://nope.tscn is not a scene."],
+	])
+
+
+## The dialog's reading line, before the button is pressed. A flat grid splits on width and DEPTH -
+## a 2D scene's own y is the depth axis, and Cell height is ignored - so a reading that said width
+## by height described a split the tool does not do, and a reader who typed 512 into Cell height
+## for a 512-pixel-tall chunk got chunks 1024 deep.
+static func _the_reading_line_says_the_axes_the_split_uses() -> bool:
+	return SUPPORT.pins(TEST, [
+		["a flat grid reads as the two axes it is cut on",
+			EventSheetChunkToolsDialog.cell_words(1024, 512, 768, false), "1024 x 768"],
+		["and height joins the sentence only where height is a cell axis",
+			EventSheetChunkToolsDialog.cell_words(1024, 512, 768, true), "1024 x 512 x 768"],
+		["the flat reading is the cell the tool would use",
+			EventSheetChunkTools.cell_of(Vector3(1030.0, 0.0, 780.0), Vector3(1024.0, 512.0, 768.0),
+				true), Vector3i(1, 0, 1)],
 	])
 
 

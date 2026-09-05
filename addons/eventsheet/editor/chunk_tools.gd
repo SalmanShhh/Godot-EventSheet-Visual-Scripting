@@ -18,9 +18,11 @@ extends RefCounted
 #
 # WHAT IT DOES NOT DO, said plainly: it moves the DIRECT CHILDREN of the scene's root, by their
 # own position, and nothing else. A child whose position is not where it appears - one driven by a
-# script, parented under another node, or drawn by a tilemap - is left in the root chunk and named
-# in the receipt rather than guessed at. A tilemap is one node holding a whole world of cells and
-# splitting it would mean rewriting its data; that is a job for the tilemap's own tools.
+# script, parented under another node, or drawn by a tilemap - is left where it already is and
+# named in the receipt rather than guessed at. Split writes no root chunk, so "left behind" means
+# left in the original scene, which Split never changes: a name in that list is a node the chunk
+# folder does not hold. A tilemap is one node holding a whole world of cells and splitting it
+# would mean rewriting its data; that is a job for the tilemap's own tools.
 
 ## What a chunk scene's root is called. One name, so a merged scene reads the same way whichever
 ## tool wrote it.
@@ -55,7 +57,8 @@ static func plan_split(root: Node, cell_size: Vector3, flat: bool) -> Dictionary
 			placed = true
 		if not placed:
 			# A Control, a Timer, an AudioStreamPlayer: it has no place in the world, so it has
-			# no cell either. It stays in the root chunk and is named, never guessed at.
+			# no cell either. It stays in the scene being read - which Split never changes - and
+			# is named in the receipt, never guessed at.
 			left_behind.append(child.name)
 			continue
 		if not cells.has(cell):
