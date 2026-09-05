@@ -168,7 +168,7 @@ Press **Browse…** beside the field and pick the file - it writes the line for 
 
 ```
 On Ready
-  -> Game | JuiceBehavior: Define Moment  "hit"  preload("res://feel/my_hit.tres")
+  -> Game | JuiceBehavior: Define Moment  "hit"  preload("res://moments/my_hit.tres")
 
 On Enemy Hit
   -> Enemy | JuiceBehavior: Moment  "hit"  1.0

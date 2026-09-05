@@ -403,12 +403,12 @@ A moment of your own is a new `MomentResource` anywhere in your project, pointed
 
 <!-- caption: A moment kept in your own folder, named once for the whole game -->
 ```
-On Ready       ->  Game | Define Moment: "hit", res://feel/my_hit.tres
+On Ready       ->  Game | Define Moment: "hit", res://moments/my_hit.tres
 On Enemy Hit   ->  Enemy | Moment: "hit", 1.0
 ```
 
 ```gdscript
-$JuiceBehavior.define_moment("hit", preload("res://feel/my_hit.tres"))
+$JuiceBehavior.define_moment("hit", preload("res://moments/my_hit.tres"))
 $JuiceBehavior.moment("hit", 1.0)
 ```
 
