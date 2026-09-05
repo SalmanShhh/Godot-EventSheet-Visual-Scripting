@@ -496,16 +496,29 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 		# Default resolution, most explicit first: an @ace_param(default:) the author wrote, then the
 		# method's own GDScript default, then type-zero. The middle step is what makes a plain
 		# `func fire(power: float = 25.0)` land in the picker already reading 25.0.
+		var normalized_options: Array = _normalize_options_to_key_label(parameter_override.get("options", []))
 		var default_text: Variant = parameter_override.get("default_value", null)
 		if default_text == null and param_defaults.has(argument_name):
 			default_text = str(param_defaults[argument_name])
 		if default_text == null and argument_index >= first_defaulted and first_defaulted >= 0:
 			var gdscript_default: Variant = gdscript_defaults[argument_index - first_defaulted]
-			default_text = SheetCompiler._to_code_literal(gdscript_default)
+			# A DROPDOWN's reflected default is read as the WORD it is, not as the source text that
+			# spells it. `func is_at_bound(side: String = "any")` reaches here as the String `any`,
+			# and `_to_code_literal` would hand back the six characters `"any"` - quote marks and
+			# all - which equals none of the dropdown's bare keys. The params dialog selects an index
+			# only on an exact key match, so that default left the OptionButton on item 0 and Is At
+			# Bound opened reading "left" while its own method said "any". Only a String is read this
+			# way, and only when the parameter has options: everywhere else the source text IS the
+			# right answer, and an option key cannot be quoted in the first place (the annotation
+			# round trip strips such a pair back off, which is why word dropdowns carry their quotes
+			# in the TEMPLATE). Reading it here rather than un-quoting afterwards also leaves an
+			# annotation free to carry a default that keeps its own quotes.
+			if gdscript_default is String and not normalized_options.is_empty():
+				default_text = str(gdscript_default)
+			else:
+				default_text = SheetCompiler._to_code_literal(gdscript_default)
 		if default_text == null:
 			default_text = _default_value_for_type(param_type)
-		var normalized_options: Array = _normalize_options_to_key_label(parameter_override.get("options", []))
-		default_text = _default_against_options(default_text, normalized_options)
 		output.append({
 			"id": argument_name,
 			"display_name": str(parameter_override.get("display_name", _analyzer.build_property_display_name(argument_name))),
@@ -521,29 +534,6 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 		})
 	return output
 
-
-## A dropdown's starting value, read the way its own keys are spelled.
-##
-## The two ways a default reaches this function disagree about quotes. An `@ace_param(default: …)`
-## arrives already unquoted (the analyzer trims one surrounding pair off it), but a default REFLECTED
-## from the method signature arrives as SOURCE TEXT - `func is_at_bound(side: String = "any")` gives
-## `"any"`, quote characters and all. An option key is a bare word, so the quoted form equals none of
-## them, and `ACEParamsDialog._create_options_field` selects an index only on an exact key match: a
-## default that matches nothing leaves the OptionButton on item 0, and the row opens on the FIRST
-## word rather than on the one the method names. Is At Bound shipped reading "left" when its
-## signature said "any".
-##
-## So one surrounding pair of quotes comes off a String default the moment the parameter has options.
-## It is safe in both directions: an annotation default has already been trimmed and carries none,
-## and an option key cannot itself be quoted (the annotation round trip strips such a pair back off,
-## which is why word dropdowns carry their quotes in the TEMPLATE instead).
-func _default_against_options(default_text: Variant, normalized_options: Array) -> Variant:
-	if normalized_options.is_empty() or not (default_text is String):
-		return default_text
-	var text: String = default_text
-	if text.length() >= 2 and text.begins_with("\"") and text.ends_with("\""):
-		return text.substr(1, text.length() - 2)
-	return text
 
 
 ## Derives a widget hint from a parameter's NAME when no annotation set one, so common

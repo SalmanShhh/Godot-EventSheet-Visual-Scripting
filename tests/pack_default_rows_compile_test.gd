@@ -37,8 +37,9 @@
 # red instead of the game.
 #
 # THE PARSE ERRORS THIS PRINTS MID-SUITE ARE DELIBERATE. The detector self-check at the bottom
-# compiles `Codex.discover(enemies, slime)` on purpose, and Godot writes that failure to stderr on
-# its way past. So does every row on `KNOWN_FAILING` below, which is compiled rather than skipped so
+# compiles `Codex.discover(enemies)` on purpose - half of a pair whose other half, with the word
+# quoted, must build - and Godot writes that failure to stderr on its way past. So does every row on
+# `KNOWN_FAILING` below, which is compiled rather than skipped so
 # that a row which starts compiling is reported as a stale line to delete instead of sitting on the
 # list for ever. The list is empty today, so the probe's own error is the only one a green run
 # writes - a `Parse Error` naming `Codex` mid-suite is this file working, not this file failing.
@@ -116,6 +117,7 @@ const NO_TEMPLATED_ROWS: Array[String] = [
 ## a fleet size the fleet never had.
 const PROVIDER_SCRIPTS_WALKED: int = 163
 const ROWS_COMPILED: int = 4016
+const DROPDOWN_CHOICES_COMPILED: int = 301
 
 
 static func run() -> bool:
@@ -165,6 +167,18 @@ static func run() -> bool:
 			var fill: Dictionary = _fill_params(definition, template)
 			if fill.get("skip", false):
 				skipped.append("%s (%s)" % [key, str(fill.get("reason", ""))])
+				# The ROW is not compiled - it has a slot only the author can fill, and compiling it
+				# against an invented value would report on a row nobody drops. Its DROPDOWNS are a
+				# different question, and one this gate must still ask: thirteen of the fleet's word
+				# lists live on such a row, Follow Path's mode and Declare Setting's kind among them.
+				# So the bare slot takes the scaffold's own untyped `v` - a value that says nothing
+				# about the row and lets every word in the list be tried.
+				for variant: Dictionary in _option_variants(definition, _stand_in_fill(definition, template)):
+					options_checked += 1
+					var stand_in_failure: String = _compile_failure(definition, template, variant["params"])
+					if not stand_in_failure.is_empty():
+						failures.append("with %s = %s: %s" % [
+							str(variant["param"]), str(variant["value"]), stand_in_failure])
 				continue
 			checked += 1
 			var params: Dictionary = fill["params"]
@@ -186,6 +200,9 @@ static func run() -> bool:
 			# asks this of the builtin vocabulary; this asks it of the packs, through the same fill.
 			for variant: Dictionary in _option_variants(definition, params):
 				options_checked += 1
+				for base: String in _undeclared_singletons(
+						ActionCodegen._apply_template(template, variant["params"]), HOST_CLASS):
+					declared_bases["%s	%s" % [base, definition.provider_id]] = true
 				var option_failure: String = _compile_failure(definition, template, variant["params"])
 				if not option_failure.is_empty():
 					failures.append("with %s = %s: %s" % [
@@ -209,7 +226,8 @@ static func run() -> bool:
 	# this gate into a vacuous pass.
 	ok = _check("the gate walks the whole shipped fleet", scripts_walked.size() >= PROVIDER_SCRIPTS_WALKED, true) and ok
 	ok = _check("the gate compiles every shipped row", checked >= ROWS_COMPILED, true) and ok
-	ok = _check("the gate compiles the other words in every dropdown", options_checked > 0, true) and ok
+	ok = _check("the gate compiles the other words in every dropdown",
+		options_checked >= DROPDOWN_CHOICES_COMPILED, true) and ok
 	# Nothing the scanner handed over went missing between the two. Derived rather than counted, so
 	# it stays true as packs land and false the moment a script leaves the walk unaccounted for.
 	ok = _check("every scanned script is either walked or named",
@@ -231,7 +249,8 @@ static func run() -> bool:
 		_unknown_bases(declared_bases), "") and ok
 	# The detector self-check: a default that is a quoted string literal on a BARE slot must FAIL,
 	# so the round-trip trip-wire this file exists for can never become a vacuous pass.
-	ok = _check("a quoted-literal default on a bare slot is caught", _quoted_default_probe(), false) and ok
+	ok = _check("a bare-word default on a bare slot fails, a quoted one builds",
+		_quoted_default_probe(), {"bare": false, "quoted": true}) and ok
 	return ok
 
 
@@ -245,24 +264,39 @@ static func _unvisited(table: Dictionary, seen: Dictionary) -> String:
 	return "\n".join(stale)
 
 
-## Whether the harness still catches the defect this file is named for, asked THROUGH THE HARNESS.
+## Whether the harness still catches the defect this file is named for, asked THROUGH THE HARNESS,
+## as the pair {bare, quoted}: a bare word default must NOT compile and a quoted one must.
 ##
 ## A synthetic definition with one bare `{target}` slot defaulting to the word `enemies` - what
 ## `default: "enemies"` becomes once either annotation reader has stripped its outer quotes - is put
 ## through the same `_fill_params` and `_compile_failure` every shipped row goes through. A
 ## hand-typed source string would have proved only that Godot rejects bad GDScript; this proves that
-## THIS harness's fill and wrap still carry such a row to a failure. False is the answer it is named
-## for, so a fill or wrap change that started quietly excusing the shape turns the gate red.
-static func _quoted_default_probe() -> bool:
+## THIS harness's fill and wrap still carry such a row to a failure.
+##
+## The template names ONE slot and nothing else undefined, and the second half of the pair is a
+## POSITIVE CONTROL on the same definition. Between them they pin the DIFFERENCE the quotes make,
+## which is the only thing this probe is for: with a second bare identifier in the line, or with no
+## control, a fill that started quoting every word - the exact regression guarded against - would
+## still have produced a parse error and left the gate green.
+static func _quoted_default_probe() -> Dictionary:
+	return {
+		"bare": _probe_compiles("enemies"),
+		"quoted": _probe_compiles("\"enemies\"")
+	}
+
+
+## Whether one synthetic row carrying `default_text` on a bare slot compiles, through the fill and
+## the wrap every shipped row uses.
+static func _probe_compiles(default_text: String) -> bool:
 	var definition: ACEDefinition = ACEDefinition.new()
 	definition.provider_id = "PackDefaultRowsProbe"
 	definition.id = "method:probe"
 	definition.ace_type = ACEDefinition.ACEType.ACTION
-	definition.parameters = [{"id": "target", "type": TYPE_STRING, "default_value": "enemies"}]
-	var template: String = "Codex.discover({target}, slime)"
+	definition.parameters = [{"id": "target", "type": TYPE_STRING, "default_value": default_text}]
+	var template: String = "Codex.discover({target})"
 	var fill: Dictionary = _fill_params(definition, template)
 	if fill.get("skip", false):
-		return true      # the probe never reached a compile, which is a failure of the probe itself
+		return false     # the probe never reached a compile, which the pinned pair reports as such
 	return _compile_failure(definition, template, fill["params"]).is_empty()
 
 
@@ -287,7 +321,8 @@ static func _compile_failure(definition: ACEDefinition, template: String, params
 ## Then a plain default, used verbatim. Then a literal of the parameter's declared type. A parameter
 ## with none of those is a bare placeholder the author must fill, and the row is REPORTED as skipped
 ## rather than compiled against a value nobody would type.
-static func _fill_params(definition: ACEDefinition, template: String) -> Dictionary:
+static func _fill_params(definition: ACEDefinition, template: String,
+		stand_in_for_placeholders: bool = false) -> Dictionary:
 	var params: Dictionary = {}
 	for entry: Variant in definition.parameters:
 		if not (entry is Dictionary):
@@ -318,9 +353,22 @@ static func _fill_params(definition: ACEDefinition, template: String) -> Diction
 		if str(parameter.get("hint", "")) == "expression":
 			params[id] = "0"
 			continue
-		return {"skip": true, "reason": "bare placeholder for '%s'" % id}
+		if not stand_in_for_placeholders:
+			return {"skip": true, "reason": "bare placeholder for '%s'" % id}
+		params[id] = "v"
 	params["uid"] = "0"
 	return {"params": params}
+
+
+## The same fill, but with every bare placeholder standing in as the scaffold's untyped `v`.
+##
+## Used for ONE question only: the other words in a dropdown that happens to sit on a row carrying a
+## slot the author must fill. `v` is a value nobody would type, which is exactly why the row itself
+## is never compiled against it - but a word list is a promise about the WORDS, and the promise
+## holds whatever the row's other slots end up holding.
+static func _stand_in_fill(definition: ACEDefinition, template: String) -> Dictionary:
+	var fill: Dictionary = _fill_params(definition, template, true)
+	return fill.get("params", {}) as Dictionary
 
 
 ## The dropdown value a freshly dropped row carries: the shipped default when it names one of the
