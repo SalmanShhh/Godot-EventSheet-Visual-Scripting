@@ -528,6 +528,14 @@ tool wants.
 
 ## What it costs
 
+- **120 rows in the picker, for nineteen nodes.** 48 of them are the verbs on the two bases - one
+  **Set Thickness** works on all seven 2D shapes, one **Set Geometry** on all ten 3D ones - and the
+  other 72 are the handful of geometry fields each shape publishes on its own (a Line's end point,
+  a Disc's inner radius). A shape carries thirty-odd exported fields and a row per field would have
+  been close to four hundred entries; every field a verb already says is marked hidden and still
+  reaches a sheet through Set Property and Tween Property. The **Shape Style** file publishes
+  nothing at all: it is edited in the Inspector and put in force by the shape's own **Apply Shape
+  Style**, so a row that wrote a style no shape wears would be a row that changes nothing.
 - **One quad and one draw per shape.** The distance field is solved in the fragment shader
   over the shape's own bounding quad. A dashed ring of any radius costs exactly the same as a
   plain one: the dashes are arithmetic in the fragment, not extra geometry and not extra

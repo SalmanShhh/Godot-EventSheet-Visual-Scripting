@@ -19,10 +19,14 @@ const PREFIX := "shape_style_test"
 ## Where a style written by the test goes - never res://, which is the repository.
 const WRITE_DIR := "user://shape_style_test"
 
+## Where the pack ships.
+const PACK_DIR := "res://eventsheet_addons/vector_shapes/"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _pin_the_keys() and all_passed
+	all_passed = _pin_the_picker_surface() and all_passed
 	all_passed = _pin_the_override() and all_passed
 	all_passed = _pin_the_greying() and all_passed
 	all_passed = _pin_the_group_verb() and all_passed
@@ -44,6 +48,39 @@ static func _pin_the_keys() -> bool:
 		["a key it does not hold answers nothing", str(style.value_for("end_point")), "<null>"],
 		["a key it holds answers its value", float(style.value_for("thickness")), 2.0],
 	])
+
+
+## WHAT THE PICKER OFFERS ON A STYLE: NOTHING, AND THAT IS THE DESIGN. A style is edited in the
+## Inspector and put in force by the SHAPE's own Apply Shape Style. A reflected row per field would
+## write a style the compiler makes on the spot and no shape wears - it would compile, it would run,
+## and no pixel would move - while duplicating by name the rows the shape base already publishes. So
+## every field on the file is marked hidden, and the three verbs that ARE about a style live on the
+## shape where they can reach one.
+##
+## The pin is the LIST both ways rather than a count: a dropped hidden marker names the field it put
+## back in the picker, and a verb renamed off the base names itself.
+static func _pin_the_picker_surface() -> bool:
+	var style_ids: PackedStringArray = _published_ids(PACK_DIR + "shape_style.gd")
+	var base_ids: PackedStringArray = _published_ids(PACK_DIR + "vector_shape_2d.gd")
+	var style_verbs: PackedStringArray = PackedStringArray()
+	for ace_id: String in base_ids:
+		if ace_id.to_lower().contains("style"):
+			style_verbs.append(ace_id)
+	return SUPPORT.pins(PREFIX, [
+		["the style file publishes no row of its own", ",".join(style_ids), ""],
+		["the style verbs live on the shape, where they can reach one", ",".join(style_verbs),
+			"method:apply_shape_style,method:apply_shape_style_to_group,method:shape_style_is"],
+	])
+
+
+## Every ace_id one shipped script publishes to the picker, sorted - asked of the registry rather
+## than of the file's text, so an analyzer that stopped reading the hidden marker fails here too.
+static func _published_ids(script_path: String) -> PackedStringArray:
+	var ids: PackedStringArray = PackedStringArray()
+	for definition: ACEDefinition in EventSheetPackReadingCheck.definitions_for_script(script_path):
+		ids.append(definition.id)
+	ids.sort()
+	return ids
 
 
 ## A style in the slot is what the shape draws with; the shape's own fields are untouched. And a
