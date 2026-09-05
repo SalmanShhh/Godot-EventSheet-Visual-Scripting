@@ -115,6 +115,24 @@
   for one idea: the Thickness field's own unit dropdown, which always stores pixels, and an extra
   Unit row beside it writing a key no renderer read.
 
+### Fixed in the vocabulary and the picker
+
+- **A dropdown whose answer is BLANK offers it.** Several verbs are built around an empty value
+  meaning something - **Scale Feedback Amounts** says in its own description to leave the family
+  empty to move the whole list, and **Add Child (existing node)** offers "keeping its place" as the
+  blank - and no dropdown in the editor could be set to one. Three normalizers between the
+  annotation and the picker each decided an option was identified by its first NON-EMPTY field, so a
+  key spelled as empty was read past to the words beside it, or dropped outright. The built-in half
+  was the worse of the two: picking "keeping its place" would have written those three words into
+  the emitted line as bare GDScript. A key that is spelled is now the key, empty or not; a blank
+  with no words of its own draws as `(none)` and stores exactly `""`. An entry naming no key,
+  value or label at all is still nothing, and a bare `""` in a plain list is still a stray
+  separator.
+- **The annotation stub spells a blank option the way the compiler does.** A published verb offered
+  as an `@ace_param` line wrote its empty option bare, which reads back as a stray `|` - so a
+  verb authored through the stub lost the choice a verb authored through the compiler kept. Both
+  writers ship it quoted now.
+
 ### Beat, bump and broadcast: a whole beat of feedback, written down and played by name
 
 - **The Feedback Player's seven ASKING rows spell a card's address the way its editing rows do.**
