@@ -43,7 +43,9 @@ What changed in the build you have installed (v0.17.0), in the words the release
   **Save As Style** at the top of a shape you tuned. A shape wearing one greys those fields rather
   than hiding them, nothing is copied in, and emptying the slot hands the shape straight back to
   itself. **Apply Shape Style**, **Apply Shape Style To Group** for a whole HUD at once, and
-  **Shape Style Is** for the exception.
+  **Shape Style Is** for the exception - all three on the SHAPE, where they can reach one. The style
+  file itself publishes no row: it is edited in the Inspector, and a row that wrote a style no shape
+  wears would be a row that changes nothing.
 - **The rest of the vocabulary: 14 more rows.** **Set Thickness** (in `px`, `world` or `screen`
   units, where a screen unit keeps a HUD line's weight on every phone), **Set Arc**, **Fill Ring
   To** (the cooldown, the stamina wheel, the loading circle in one row), **Set Shape Radius**,
@@ -66,13 +68,16 @@ What changed in the build you have installed (v0.17.0), in the words the release
   goes into a single **MultiMesh** wearing that distance-field shader - two hundred arcs are one
   draw call - and without them the same rows and the same numbers draw the raster way instead.
 - **A drawing prefab's step reads as a card.** Each step in the steps list is a card titled by its
-  shape and read as four short sections: **Placement** (the shape, its offset, its blend, whether a
-  stroke's thickness follows the stamp's scale), **Geometry** (that shape's own fields, thickness on
-  a unit dropdown), **Colour** (the mode, the swatches, a line's end caps) and **Dashed**, which
-  unfolds from its checkbox and ties the dash to its gap with the equals button. The eight stored
-  keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what they always did,
-  so a prefab saved before the card existed opens, edits and saves as the same bytes; the card's
-  extra keys are optional, and a step carrying none of them draws what it always drew.
+  shape and read as four short sections: **Placement** (the shape, its offset, whether a stroke's
+  thickness follows the stamp's scale), **Geometry** (that shape's own fields, thickness on a unit
+  dropdown), **Colour** (the swatch, a line's end caps) and **Dashed**, which unfolds from its
+  checkbox and ties the dash to its gap with the equals button. Every field on the card is one a
+  draw call reads: there is no per-step blend and no second colour, because a draw call has no blend
+  mode of its own and a step of numbers has nowhere to keep a ramp - those looks are what the Vector
+  Shapes nodes are for. The eight stored keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`,
+  `texture` - mean exactly what they always did, so a prefab saved before the card existed opens,
+  edits and saves as the same bytes; the card's extra keys are optional, and a step carrying none of
+  them draws what it always drew.
 - **Renderer honesty, said in the guide rather than found out.** Nothing in either half needs
   Forward+: the 2D shapes are the `canvas_item` path and the 3D ones an unshaded spatial shader, so
   both run on Mobile and on Compatibility, which is what a phone and a browser ship with. The only
@@ -137,6 +142,26 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **The prefab step card asks about a thickness once.** A line and a ring each carried two controls
   for one idea: the Thickness field's own unit dropdown, which always stores pixels, and an extra
   Unit row beside it writing a key no renderer read.
+
+### Fixed after a boundary reading of the shapes and inspector pass
+
+- **A Shape Style stops publishing 38 rows that change nothing.** Every field on the style file was
+  reflected into the picker, so **Set Thickness**, **Add To Dash Count** and thirty-six more stood
+  beside the shape's own rows of the same name - and each of them wrote a style the compiler made on
+  the spot and no shape wore. They compiled, they ran, and no pixel moved. A style is edited in the
+  Inspector and put in force by the shape's own **Apply Shape Style**, so the file now publishes
+  nothing at all and the pack registers **120** rows rather than 158. The three verbs that ARE about
+  a style were always on the shape, where they can reach one.
+- **The prefab step card stops offering a blend and a second colour it cannot draw.** Blend, Colour
+  mode and Second colour were written into the step and read by nothing: the one normaliser that
+  feeds all three renderers dropped them, and \"gradient\" was a choice with no ramp field to point
+  at. A `_draw()` call has no blend mode of its own - blending is a material on the whole node - and
+  a step of numbers has nowhere to keep a Gradient, so those looks belong to the Vector Shapes
+  nodes, which are each their own node. Every field left on the card is one a draw call reads.
+- **The Doctor has a section for the shapes.** One quiet check: a sheet that marches a shape's
+  dashes on a shape whose dashes are off, and which no row in that sheet turns on. It only speaks
+  when it can see the node in a scene and read that its dashes are off, so a shape dashed in the
+  Inspector is never asked about.
 
 ### Fixed in the vocabulary and the picker
 
@@ -535,6 +560,24 @@ What changed in the build you have installed (v0.17.0), in the words the release
   which is how a wrong one sat unnoticed in the Feedback Player. Both makers keep the third entry
   now, the Feedback Player's local workaround for it is gone, and the Spring pack's three asking
   rows ship the help they were always given.
+- **Sixteen packs ship the prose their builders actually wrote.** A verb's description had been
+  reaching the shipped file as one long `## @ace_description(\"...\")` line, because the reader that
+  opens a pack threw away the plain `##` doc comment above an annotated function and folded the
+  words into the annotation instead. It keeps that prose now, so a rebuild writes the paragraph the
+  builder authored, above the annotation block, where Godot's own doc comment belongs - and the
+  same fix restores two `@ace_hidden` helpers in the FPS Controller whose explanations had simply
+  been dropped. Nothing is lost either way: both readers of a pack take plain `##` prose as the
+  description when no `@ace_description` is present. The sixteen were regenerated, and five of them
+  also move a private helper back to the position their builder declares it in.
+- **The pack gate now runs the BUILDERS, not just the shipped packs against themselves.**
+  `tools/audit_addons.gd` opens each shipped pack, recompiles it and compares it to itself, so it
+  cannot see a pack whose builder would today write something else - it printed `drifted=0` over
+  those sixteen stale files for as long as they sat there.
+  `tests/pack_builder_matches_shipped_test.gd` used to rebuild three packs by name, none of them
+  affected. It now rebuilds three pinned packs on every run plus a slice of every other builder
+  chosen by the date, so the whole fleet is swept within a week and a failure names the drifting
+  line. `EVENTFORGE_PACK_GATE=all` sweeps everything in one run, and a comma-separated list of
+  builder names checks just those.
 
 ### Fixed in the general-purpose reading pass
 
