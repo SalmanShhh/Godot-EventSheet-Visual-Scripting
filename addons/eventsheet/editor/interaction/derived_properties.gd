@@ -216,22 +216,31 @@ static func _joined_words(facts: Dictionary, read: Dictionary) -> String:
 	return "\n".join(said)
 
 
-## One property resolved, uncached. Declared-in-the-file first, then the engine class.
+## One property resolved, uncached. The file's own declarations first, then the ones it inherits - up
+## through the project classes it extends, and finally off the engine class at the bottom of the
+## chain. The same walk the method reading does, and for the same reason: a class the project
+## declares answers to every property its base does, and reading only the `var` lines somebody typed
+## in that one file would decline `modulate` on every custom node in the game.
 static func _read_property(class_text: String, script_path: String, property: String) -> Dictionary:
-	var host: String = class_text
-	if not script_path.is_empty():
-		var declared: Dictionary = EventSheetScriptMembers.of_script(script_path)
+	var path: String = script_path.strip_edges()
+	var seen: Dictionary = {}
+	var engine_class: String = ""
+	while not path.is_empty() and not seen.has(path):
+		seen[path] = true
+		var declared: Dictionary = EventSheetScriptMembers.of_script(path)
 		for entry: Variant in (declared.get("properties", []) as Array):
 			var member: Dictionary = entry
 			if str(member.get("name", "")) != property:
 				continue
 			return {"doc": str(member.get("doc", "")), "credit": "", "doc_id": "",
 				"type": str(member.get("args", ""))}
-		# The class the FILE extends answers for everything it did not declare itself, so an
-		# ordinary engine property on a project script still reads.
 		var base: String = str(declared.get("base", "")).strip_edges()
-		if host.is_empty() and ClassDB.class_exists(base):
-			host = base
+		path = EventSheetDerivedCalls.script_of_class(base)
+		if path.is_empty():
+			engine_class = base
+	# The engine class at the bottom of the chain answers for everything nobody declared. A receiver
+	# with no script behind it at all is already an engine class, and answers for itself.
+	var host: String = engine_class if ClassDB.class_exists(engine_class) else class_text
 	if host.is_empty() or not ClassDB.class_exists(host):
 		return {}
 	var known: Dictionary = _properties_of(host)

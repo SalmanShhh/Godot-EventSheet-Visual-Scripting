@@ -41,8 +41,9 @@ extends RefCounted
 ## The renderer maps it; the constant lives here so the reading and the painting share one word.
 const TONE_DERIVED: String = "derived"
 
-## Where a receiver's class came from. Stable strings - a test pins them, and the workbench's
-## per-line claim shows them, so a reading that starts answering from somewhere else is visible.
+## Where a receiver's class came from. Stable strings, and shown rather than kept: the workbench's
+## claim column reads `derived · CharacterBody2D.rotate (node)` off them and the line-by-line
+## provenance tool prints them, so a reading that starts answering from somewhere else is visible.
 const SOURCE_SELF: String = "self"
 const SOURCE_NODE: String = "node"
 const SOURCE_DECLARED: String = "declared"
@@ -119,6 +120,12 @@ static func derived_pieces(code: String, context: Dictionary, class_map: Diction
 static func receiver_facts(target: String, context: Dictionary, class_map: Dictionary,
 		autoloads: Dictionary) -> Dictionary:
 	var receiver: String = target.strip_edges()
+	# A NAME THIS FILE USES TWO WAYS IS NOBODY'S, and it is refused before any map is asked. Every map
+	# below is flat and carries no function scope, so a `body` parameter beside a `body` member would
+	# be answered for by the member in every body that shadows it - a wrong class, with the bytes
+	# identical either way. The set is the sentence context's, worked out once per rebuild.
+	if (context.get("shadowed_names", {}) as Dictionary).has(receiver):
+		return {}
 	if receiver.is_empty() or receiver == "self":
 		var host: String = str(context.get("self_class", "")).strip_edges()
 		var own_path: String = str(context.get("self_script_path", "")).strip_edges()
@@ -126,20 +133,36 @@ static func receiver_facts(target: String, context: Dictionary, class_map: Dicti
 			return {}
 		return {"class": host, "script_path": own_path, "source": SOURCE_SELF}
 	var mapped: String = str(class_map.get(receiver, "")).strip_edges()
-	if mapped.is_empty():
+	# THE LEAF OF A PATH ANSWERS FOR NOBODY BUT ITSELF. `Sprite` under one parent and `Sprite` under
+	# another are two nodes, and two nodes of that name under different parents is the commonest scene
+	# shape there is - so a written-out path only resolves on its WHOLE spelling. A single-segment
+	# reference (`$Body`, `%HpBar`) has no parent to disagree about and still reads through its bare
+	# name, which is the spelling the map registers it under.
+	if mapped.is_empty() and not _names_a_child_of_something(receiver):
 		mapped = str(class_map.get(EventSheetSentence.object_of_reference(receiver), "")).strip_edges()
 	if is_class_text(mapped):
-		return {"class": mapped, "script_path": _script_of_class(mapped), "source": SOURCE_NODE}
+		return {"class": mapped, "script_path": script_of_class(mapped), "source": SOURCE_NODE}
 	var declared: String = str((context.get("variable_types", {}) as Dictionary).get(receiver, "")).strip_edges()
 	if is_class_text(declared):
-		return {"class": declared, "script_path": _script_of_class(declared), "source": SOURCE_DECLARED}
+		return {"class": declared, "script_path": script_of_class(declared), "source": SOURCE_DECLARED}
 	if autoloads.has(receiver):
 		var singleton_path: String = str(autoloads[receiver]).strip_edges()
 		if not singleton_path.is_empty():
 			return {"class": "", "script_path": singleton_path, "source": SOURCE_AUTOLOAD}
 	if is_class_text(receiver):
-		return {"class": receiver, "script_path": _script_of_class(receiver), "source": SOURCE_CLASS}
+		return {"class": receiver, "script_path": script_of_class(receiver), "source": SOURCE_CLASS}
 	return {}
+
+
+## True when a receiver is a node path with a PARENT written into it - `$Enemy/Sprite`,
+## `%Room/Door`. Those may only be resolved on their whole spelling: the last segment alone is a name
+## any number of nodes under any number of parents can carry, and answering one path from another
+## path's declaration is a wrong claim rather than a missing one.
+static func _names_a_child_of_something(receiver: String) -> bool:
+	var text: String = receiver.strip_edges()
+	if not (text.begins_with("$") or text.begins_with("%")):
+		return false
+	return text.substr(1).trim_prefix("\"").trim_suffix("\"").contains("/")
 
 
 ## True when a piece of declared type text names a CLASS - something a method can be called on and
@@ -230,31 +253,45 @@ static func clear_cache() -> void:
 # ── the pieces ──────────────────────────────────────────────────────────────────
 
 
-## One method resolved, uncached. Declared-in-the-file first, then the engine class.
+## One method resolved, uncached. The file's own declarations first, then the ones it inherits - up
+## through the project classes it extends, and finally off the engine class at the bottom of the
+## chain.
+##
+## THE INHERITANCE WALK IS THE WHOLE GENERALITY. A class the project declares answers to every verb
+## its base does: `sheet.duplicate()` on an `EventSheetResource` is Resource's own verb, and reading
+## only the declarations somebody typed in that one file would decline it - honestly, but for the
+## bigger half of the API a project actually calls. So the base chain is walked by script path while
+## the base is another project class, and the engine class it ends at answers for the rest.
 static func _read_method(class_text: String, script_path: String, method: String) -> Dictionary:
-	if not script_path.is_empty():
-		var declared: Dictionary = EventSheetScriptMembers.of_script(script_path)
+	var path: String = script_path.strip_edges()
+	var seen: Dictionary = {}
+	var engine_class: String = ""
+	while not path.is_empty() and not seen.has(path):
+		seen[path] = true
+		var declared: Dictionary = EventSheetScriptMembers.of_script(path)
 		for entry: Variant in (declared.get("methods", []) as Array):
 			var member: Dictionary = entry
 			if str(member.get("name", "")) != method:
 				continue
 			return {"params": parameter_names(str(member.get("args", ""))),
 				"doc": str(member.get("doc", "")), "credit": "", "doc_id": ""}
-		# The class the FILE extends answers for everything it did not declare itself, so a
-		# `queue_free()` on a project script still reads as the engine's own verb.
 		var base: String = str(declared.get("base", "")).strip_edges()
-		if class_text.is_empty() and ClassDB.class_exists(base):
-			class_text = base
-	if class_text.is_empty() or not ClassDB.class_exists(class_text):
+		path = script_of_class(base)
+		if path.is_empty():
+			engine_class = base
+	# The engine class at the bottom of the chain answers for everything nobody declared. A receiver
+	# with no script behind it at all is already an engine class, and answers for itself.
+	var host: String = engine_class if ClassDB.class_exists(engine_class) else class_text
+	if host.is_empty() or not ClassDB.class_exists(host):
 		return {}
-	if not ClassDB.class_has_method(class_text, method, false):
+	if not ClassDB.class_has_method(host, method, false):
 		return {}
-	var described: String = EventSheetDocEngineReference.member_description(class_text, method)
+	var described: String = EventSheetDocEngineReference.member_description(host, method)
 	return {
-		"params": EventSheetViewportReadingRows.method_parameter_names(class_text, method),
+		"params": EventSheetViewportReadingRows.method_parameter_names(host, method),
 		"doc": described,
 		"credit": "" if described.strip_edges().is_empty() else EventSheetDocEngineReference.CREDIT_LINE,
-		"doc_id": doc_id_for(class_text, method),
+		"doc_id": doc_id_for(host, method),
 	}
 
 
@@ -276,8 +313,10 @@ static func parameter_names(args: String) -> PackedStringArray:
 
 
 ## The script a project class is declared in, or "" for an engine class (which has none) and for a
-## name the project does not declare.
-static func _script_of_class(class_text: String) -> String:
+## name the project does not declare. Public because the property reading walks the same base chain
+## this one does, and two ideas of what a project class's file is would be two ideas of where a
+## member is declared.
+static func script_of_class(class_text: String) -> String:
 	return str(_class_path_map().get(class_text.strip_edges(), ""))
 
 

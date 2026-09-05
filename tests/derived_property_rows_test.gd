@@ -231,6 +231,21 @@ static func _test_the_words_ride() -> bool:
 	ok = _check("what the file extends answers for the rest", inherited.is_empty(), false) and ok
 	ok = _check("and that property's page is the engine's",
 		str(inherited.get("doc_id", "")), "engine:Node2D.modulate") and ok
+	# AND A CLASS THE PROJECT DECLARED ANSWERS FOR WHAT IT INHERITS TOO. A receiver resolved to a
+	# project class carries that class's NAME as well as its script, and reading only the `var` lines
+	# somebody typed in that one file would decline every property it inherits.
+	var declared_class: Dictionary = {"class": "EventSheetResource",
+		"script_path": EventSheetDerivedCalls.script_of_class("EventSheetResource"),
+		"source": EventSheetDerivedCalls.SOURCE_DECLARED}
+	var project_inherited: Dictionary = EventSheetDerivedProperties.property_facts(
+		declared_class, "resource_name")
+	ok = _check("a project class answers for the properties it inherits",
+		project_inherited.is_empty(), false) and ok
+	ok = _check("...off the engine class at the bottom of its chain",
+		str(project_inherited.get("doc_id", "")), "engine:Resource.resource_name") and ok
+	ok = _check("...and a property no class in that chain has is still nobody's",
+		EventSheetDerivedProperties.property_facts(declared_class, "modulate").is_empty(),
+		true) and ok
 	ok = _check("a property the class does not have has no page",
 		EventSheetDerivedProperties.doc_id_for("Light2D", "definitely_not_a_property"), "") and ok
 	ok = _check("and one it does have opens the engine's own reference",

@@ -109,7 +109,14 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		# Which of this file's objects are camera PIVOTS - nodes whose only children in the scene
 		# are a camera or the arm one hangs off. Turning one of those is not a turn, it is the
 		# camera going round what it looks at, and only the SCENE can say which nodes those are.
-		"orbit_pivots": orbit_pivot_map(sheet)
+		"orbit_pivots": orbit_pivot_map(sheet),
+		# ──────────────────────────────────────────────────────────────────────────────────────
+		# The names this file uses BOTH as a member and as a parameter or a body local. The derived
+		# reading refuses on them before it asks any map: the object-class map is flat and carries no
+		# function scope, so without this a handler's `body` parameter would be read as the member of
+		# the same name and every row inside that handler would be named against a class the
+		# parameter is not - a wrong claim, with the bytes identical either way.
+		"shadowed_names": shadowed_name_set(sheet)
 	}
 	extras.merge(patterns, true)
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
@@ -1626,7 +1633,7 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
 	var enum_names: Dictionary = (enum_member_map(sheet).get("names", {}) as Dictionary)
-	var shadowed: Dictionary = parameter_names_in(sheet)
+	var shadowed: Dictionary = shadowed_name_set(sheet)
 	for entry: Variant in sheet.events:
 		var variable: LocalVariable = entry as LocalVariable
 		if variable == null or variable.name.strip_edges().is_empty():
@@ -1641,6 +1648,27 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 		if _is_fraction_range(variable.export_hint):
 			percent_members[variable.name] = true
 	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
+
+
+## Every name this file uses BOTH as a script-level member and as something narrower - a function
+## parameter, or a `var` declared inside a body. The set the declaration map and the derived reading
+## both refuse on, because neither of them carries function scope and a name used two ways would
+## otherwise be answered for by the member in every body that shadows it.
+##
+## `func _on_body_entered(body):` beside a `var body: CharacterBody2D` is the commonest handler shape
+## in Godot; `var sprite := $Other as AnimatedSprite2D` beside an `@onready var sprite: Sprite2D` is
+## the same collision one line further in, and GDScript accepts both with a warning rather than an
+## error. There is no scope here to tell the two apart, so a name the file uses both ways is answered
+## for by nobody: the rows keep the plainer view they already had.
+##
+## The body half is the sheet's own local declarations (EventSheetLocalScope.declared_locals), which
+## walks the Local rows, the Set Local actions and the hand-written `var` lines a body still holds as
+## text. Script-level members are NOT in that set - they are LocalVariable entries of the sheet
+## itself, which that walk does not enter - so a member never shadows itself.
+static func shadowed_name_set(sheet: EventSheetResource) -> Dictionary:
+	var shadowed: Dictionary = parameter_names_in(sheet)
+	shadowed.merge(EventSheetLocalScope.declared_locals(sheet))
+	return shadowed
 
 
 ## Every name a function or a handler in this sheet takes as a PARAMETER, as a set. The one thing the
@@ -2321,11 +2349,20 @@ static func _one_less(bound: String) -> String:
 ## object: the derived call and property layers ask their receiver's class of this map, and until the
 ## scene was read the one shape they could not answer for was the sigil Godot itself hands out.
 ##
+## A BARE LAST SEGMENT ONLY RESOLVES WHERE THE DECLARATIONS AGREE ABOUT IT. `$Enemy/Sprite` and
+## `$Player/Sprite` are two nodes with one name, and two nodes named the same under different parents
+## is the commonest scene shape there is - so a leaf two declarations answer differently carries no
+## entry at all, and a leaf something more specific already claims (a variable's own name, a scene
+## mark) keeps that claim. The written-out path itself always resolves, with the sigil and without it.
+##
 ## NOTHING NEW TO CHECK COMES OF IT. The Doctor's shipped `%token` validation already reports a name
 ## no scene carries; a name this map cannot resolve is simply missing here, the row keeps its plain
 ## reading, and the sheet says nothing about it beyond the quiet row state it already wears.
 static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 	var map: Dictionary = {}
+	# Bare last segments of the node paths the declarations read, staged until every declaration has
+	# been seen: `Sprite` is a name any number of nodes under any number of parents can carry.
+	var leaves: Dictionary = {}
 	if sheet == null:
 		return map
 	# The scene's marks go in FIRST, so a declaration written in the file below still wins: what
@@ -2355,9 +2392,33 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 		var node_reference: String = EventSheetSentence.node_lookup_text(variable.default_value.strip_edges())
 		if node_reference.begins_with("%") or node_reference.begins_with("$"):
 			map[node_reference] = declared_type
-			map[node_reference.substr(1)] = declared_type
-			map[EventSheetSentence.object_of_reference(node_reference)] = declared_type
+			var without_sigil: String = node_reference.substr(1)
+			if without_sigil.contains("/"):
+				map[without_sigil] = declared_type
+			# The BARE LAST SEGMENT is the one spelling two declarations can collide on: `$Enemy/Sprite`
+			# and `$Player/Sprite` are two nodes with one name. Staged rather than written, and settled
+			# below once every declaration has had its say.
+			_claim_leaf(leaves, EventSheetSentence.object_of_reference(node_reference), declared_type)
+	# A leaf the declarations agree about, and that nothing more specific already claims, resolves to
+	# its class. A leaf two of them answer differently is nobody's - the same "absent" every reader
+	# above already degrades on, and better than the last declaration in file order winning silently.
+	for leaf: String in leaves:
+		var leaf_class: String = str(leaves[leaf])
+		if not leaf_class.is_empty() and not map.has(leaf):
+			map[leaf] = leaf_class
 	return map
+
+
+## Stages one bare leaf name. A leaf claimed twice with the same class is still that class; claimed
+## with two, it is emptied and stays empty however many more declarations name it.
+static func _claim_leaf(leaves: Dictionary, leaf: String, declared_type: String) -> void:
+	if leaf.is_empty():
+		return
+	if not leaves.has(leaf):
+		leaves[leaf] = declared_type
+		return
+	if str(leaves[leaf]) != declared_type:
+		leaves[leaf] = ""
 
 
 ## The prefixes a plugin puts in front of every class it declares. They are there to keep the
@@ -2566,6 +2627,14 @@ static func code_card_default_folded(reading_mode: bool) -> bool:
 ## The raw function name a one-call statement invokes ("add_look" from "add_look(a, b)" or from
 ## "self.add_look(a, b)"), or "" when the line is not a plain call. The sentence layer hands back
 ## a DISPLAY verb; this recovers the name to look the function up by.
+##
+## A COMPILER-EMITTED SHARED HELPER IS NOT THE AUTHOR'S OWN FUNCTION, so it is not named here. Those
+## helpers are this compiler's plumbing - one definition per file, appended last, never something
+## anybody sat down and write words for - and both callers of this ask it exactly one question: is
+## the callee one of the sheet's OWN functions. Answering `__eventsheets_tile_under` put an internal
+## name in front of a reader as "Call function", in the sheet's own Functions vocabulary, for a
+## function they never wrote and cannot open. The line falls through to the plainer reading instead,
+## where it is what it is: a call, said as code.
 static func called_function_name(code: String) -> String:
 	var text: String = code.strip_edges()
 	var open_at: int = text.find("(")
@@ -2575,6 +2644,8 @@ static func called_function_name(code: String) -> String:
 	if callee.contains("."):
 		callee = callee.substr(callee.rfind(".") + 1)
 	if not EventSheetViewportLenses.is_identifier(callee):
+		return ""
+	if callee.begins_with(SheetCompiler.SHARED_HELPER_PREFIX):
 		return ""
 	return callee
 

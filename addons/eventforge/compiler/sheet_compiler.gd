@@ -30,6 +30,12 @@ const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
 
 const VERSION: String = "0.17.0"
 
+## The prefix EVERY shared helper this compiler writes carries. They are the compiler's own plumbing -
+## one definition per file, appended last, never something anybody sat down and wrote - so a reader
+## opening an emitted file must not be shown them as the author's own functions, and the reading layer
+## asks this rather than keeping a second copy of the spelling.
+const SHARED_HELPER_PREFIX: String = "__eventsheets_"
+
 ## The name of the shared aimed-floor helper the cursor and floor expressions call. One
 ## definition per file, whichever of them the picker wrote first.
 const AIMED_CURSOR_HELPER: String = "__eventsheets_aim_floor"

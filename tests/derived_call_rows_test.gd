@@ -86,6 +86,7 @@ static func run() -> bool:
 	ok = _test_the_pickers_derived_section() and ok
 	ok = _test_the_row_is_the_line() and ok
 	ok = _test_a_shadowed_member_is_nobodys() and ok
+	ok = _test_two_paths_ending_in_one_name() and ok
 	ok = _test_what_it_costs() and ok
 	_tidy_up()
 	return ok
@@ -97,31 +98,121 @@ static func run() -> bool:
 ## every row inside the handler would be named against a class the parameter is not. There is no
 ## scope in the map to tell them apart, so a name the file uses BOTH ways is answered for by nobody
 ## and the rows keep the plainer view they already had.
+##
+## ASKED OF THE MAPS THE CANVAS ASKS. The refusal is only worth anything if it holds against the real
+## object-class map and the real sentence context: that map registers every @onready name with no
+## shadow filter of its own, so a test that handed the reading an empty map would prove the guarded
+## map and never touch the one the reading asks first.
+##
+## AND A BODY LOCAL SHADOWS JUST AS HARD AS A PARAMETER. `var sprite := $Other as AnimatedSprite2D`
+## inside a function, beside an `@onready var sprite: Sprite2D`, is a warning in GDScript rather than
+## an error - it compiles, and the rows under it are about the local.
 static func _test_a_shadowed_member_is_nobodys() -> bool:
-	var source: String = "\n".join(PackedStringArray([
+	var source: String = "
+".join(PackedStringArray([
 		"extends Node2D",
 		"",
-		"var body: CharacterBody2D = null",
+		"@onready var body: CharacterBody2D = $Body",
 		"@onready var beat: Timer = $Beat",
+		"@onready var sprite: Sprite2D = $Sprite",
+		"",
 		"",
 		"func _on_area_entered(body: Node2D) -> void:",
-		"\tbody.rotate(0.5)",
+		"	body.rotate(0.5)",
+		"",
+		"",
+		"func flash() -> void:",
+		"	var sprite := $Other as AnimatedSprite2D",
+		"	sprite.play(\"hit\")",
 		""
 	]))
 	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
 	var declared: Dictionary = EventSheetViewportReadingRows.declared_type_map(sheet)
+	var shadowed: Dictionary = EventSheetViewportReadingRows.shadowed_name_set(sheet)
 	var ok: bool = _check("a handler's own parameter names are known to the map",
 		EventSheetViewportReadingRows.parameter_names_in(sheet).has("body"), true)
+	ok = _check("and a var declared inside a body is known to it too", shadowed.has("sprite"),
+		true) and ok
 	ok = _check("so a member a parameter shadows is answered for by nobody",
 		(declared.get("types", {}) as Dictionary).has("body"), false) and ok
+	ok = _check("and a member a body local shadows either",
+		(declared.get("types", {}) as Dictionary).has("sprite"), false) and ok
 	ok = _check("while the member nothing shadows still answers",
 		str((declared.get("types", {}) as Dictionary).get("beat", "")), "Timer") and ok
-	# And the reading that rests on it: the shadowed receiver is not claimed as the member's class.
-	var context: Dictionary = {"self_class": "Node2D", "self_script_path": "",
-		"variable_types": declared.get("types", {})}
-	ok = _check("and the derived reading declines the shadowed receiver",
-		EventSheetDerivedCalls.receiver_facts("body", context, {}, {}), {}) and ok
+	# The maps the CANVAS asks, in the order it asks them: the object-class map carries every
+	# @onready name whether or not something shadows it, so the refusal has to hold against it.
+	var class_map: Dictionary = EventSheetViewportReadingRows.object_class_map(sheet)
+	var context: Dictionary = EventSheetViewportReadingRows.sentence_context_extras(sheet)
+	ok = _check("the object-class map still carries the member under its own name",
+		str(class_map.get("body", "")), "CharacterBody2D") and ok
+	ok = _check("and the derived reading declines the shadowed receiver all the same",
+		EventSheetDerivedCalls.receiver_facts("body", context, class_map, {}), {}) and ok
+	ok = _check("so the call inside the handler is claimed by nobody",
+		EventSheetDerivedCalls.derived_pieces("body.rotate(0.5)", context, class_map, {}), {}) and ok
+	ok = _check("and the call under the body local is claimed by nobody either",
+		EventSheetDerivedCalls.derived_pieces("sprite.play(\"hit\")", context, class_map, {}),
+		{}) and ok
+	ok = _check("while the receiver nothing shadows still reads",
+		str(EventSheetDerivedCalls.receiver_facts("beat", context, class_map, {}).get("class", "")),
+		"Timer") and ok
 	ok = _check("with the bytes untouched either way", EventSheets.round_trips(source), true) and ok
+	return ok
+
+
+## TWO PATHS THAT END IN THE SAME NAME ARE TWO NODES. `$Enemy/Sprite` and `$Player/Sprite` is the
+## commonest scene shape there is, and reading the second off the first's declaration is a wrong
+## claim rather than a missing one - the row would take a class the node has not got, and a verb that
+## class answers to would be printed over a node that does not.
+##
+## Two halves, and both are pinned: the map stops handing the bare leaf out where two declarations
+## disagree about it, and a receiver written as a path with a parent in it only ever resolves on its
+## whole spelling.
+static func _test_two_paths_ending_in_one_name() -> bool:
+	var source: String = "
+".join(PackedStringArray([
+		"extends Node2D",
+		"",
+		"@onready var enemy_sprite: AnimatedSprite2D = $Enemy/Sprite",
+		"@onready var hp_bar: ProgressBar = %HpBar",
+		"",
+		"",
+		"func hide_player() -> void:",
+		"	$Player/Sprite.hide()",
+		""
+	]))
+	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
+	var class_map: Dictionary = EventSheetViewportReadingRows.object_class_map(sheet)
+	var context: Dictionary = EventSheetViewportReadingRows.sentence_context_extras(sheet)
+	var ok: bool = _check("the whole path resolves",
+		str(class_map.get("$Enemy/Sprite", "")), "AnimatedSprite2D")
+	ok = _check("and so does the same path without its sigil",
+		str(class_map.get("Enemy/Sprite", "")), "AnimatedSprite2D") and ok
+	ok = _check("a single-segment reference still reads under its bare name",
+		str(class_map.get("HpBar", "")), "ProgressBar") and ok
+	# The receiver half: the leaf is in the map (one declaration, nothing disagrees), and the OTHER
+	# path is refused anyway, because a path with a parent written into it resolves whole or not at all.
+	ok = _check("but another parent's child of that name is nobody's",
+		EventSheetDerivedCalls.receiver_facts("$Player/Sprite", context, class_map, {}), {}) and ok
+	ok = _check("so the row under it is not claimed",
+		EventSheetDerivedCalls.derived_pieces("$Player/Sprite.hide()", context, class_map, {}),
+		{}) and ok
+	# The map half: two declarations that disagree about a leaf hand it to nobody.
+	var two: String = "
+".join(PackedStringArray([
+		"extends Node2D",
+		"",
+		"@onready var enemy_sprite: AnimatedSprite2D = $Enemy/Sprite",
+		"@onready var player_sprite: Sprite2D = $Player/Sprite",
+		""
+	]))
+	var both: Dictionary = EventSheetViewportReadingRows.object_class_map(
+		EventSheets.open_gd_as_sheet(two))
+	ok = _check("two declarations that disagree about a leaf leave it unclaimed",
+		both.has("Sprite"), false) and ok
+	ok = _check("while each whole path still answers for itself", "%s/%s" % [
+		str(both.get("$Enemy/Sprite", "")), str(both.get("$Player/Sprite", ""))],
+		"AnimatedSprite2D/Sprite2D") and ok
+	ok = _check("with the bytes untouched either way", EventSheets.round_trips(two), true) and ok
 	return ok
 
 
@@ -282,6 +373,21 @@ static func _test_the_docs_ride() -> bool:
 		inherited.is_empty(), false) and ok
 	ok = _check("and that member's page is the engine's",
 		str(inherited.get("doc_id", "")), "engine:Node2D.queue_free") and ok
+	# AND IT ANSWERS FOR A CLASS THE PROJECT DECLARED TOO, which is the bigger half of the API a real
+	# game calls. A receiver resolved to a project class carries that class's NAME as well as its
+	# script, and reading only the members somebody typed in that one file would decline every verb
+	# it inherits - honestly, but for most of what the class can do.
+	var declared_class: Dictionary = {"class": "EventSheetResource",
+		"script_path": EventSheetDerivedCalls.script_of_class("EventSheetResource"),
+		"source": EventSheetDerivedCalls.SOURCE_DECLARED}
+	var project_inherited: Dictionary = EventSheetDerivedCalls.method_facts(declared_class, "duplicate")
+	ok = _check("a project class answers for the verbs it inherits",
+		project_inherited.is_empty(), false) and ok
+	ok = _check("...off the engine class at the bottom of its chain",
+		str(project_inherited.get("doc_id", "")), "engine:Resource.duplicate") and ok
+	ok = _check("...and a verb no class in that chain has is still nobody's",
+		EventSheetDerivedCalls.method_facts(declared_class, "move_and_slide").is_empty(),
+		true) and ok
 	ok = _check("a reading with no words said about it hovers as nothing extra",
 		EventSheetDerivedCalls.hover_text({"doc": "", "credit": ""}), "") and ok
 	ok = _check("and the engine's own words carry the credit its licence asks for",
