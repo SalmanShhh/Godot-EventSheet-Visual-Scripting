@@ -68,40 +68,95 @@ func _enclosing_rect(xform: Transform2D, local_rect: Rect2) -> Rect2:
 	var min_p: Vector2 = c0.min(c1).min(c2).min(c3)
 	var max_p: Vector2 = c0.max(c1).max(c2).max(c3)
 	return Rect2(min_p, max_p - min_p)
-# --- Dashed shapes: ONE dash primitive turns any polyline into disjoint dash segments, drawn in a
-# single draw_multiline call. Line = 2 points, ring = a sampled circle, rect = 4 closed corners - the
-# same routine serves all three and any future dashed shape. ---
-## Walks a polyline by arc length, carrying the dash phase across vertices so the rhythm stays
-## continuous around ring and rect corners, and returns endpoint PAIRS for draw_multiline. dash_len
-## is floored at 0.5 and gap at 0 so a zero-gap value degrades to a solid stroke, never an infinite loop.
-static func _dash_polyline(points: PackedVector2Array, dash_len: float, gap_len: float) -> PackedVector2Array:
-	var out: PackedVector2Array = PackedVector2Array()
-	var d: float = maxf(dash_len, 0.5)
-	var g: float = maxf(gap_len, 0.0)
-	var period: float = d + g
-	if points.size() < 2 or period <= 0.0:
-		return out
-	var phase: float = 0.0
-	for i: int in range(points.size() - 1):
-		var a: Vector2 = points[i]
-		var b: Vector2 = points[i + 1]
-		var seg: Vector2 = b - a
-		var seg_len: float = seg.length()
-		if seg_len <= 0.0001:
-			continue
-		var dir: Vector2 = seg / seg_len
-		var t: float = 0.0
-		while t < seg_len:
-			var pos: float = fmod(phase + t, period)
-			if pos < d:
-				var t_end: float = minf(t + (d - pos), seg_len)
-				out.append(a + dir * t)
-				out.append(a + dir * t_end)
-				t = t_end
-			else:
-				t += period - pos
-		phase = fmod(phase + seg_len, period)
-	return out
+
+# --- The draw style, and the shapes drawn in it ---
+#
+# A raster row carries its own width and colour, which is right for one line and wrong for thirty.
+# The rows below take neither: the canvas keeps a STYLE, they draw in it, and Push and Pop nest one
+# inside another so a debug overlay is a style and then its shapes.
+#
+# HOW THEY DRAW. When the Vector Shapes pack is installed and the canvas is redrawing every frame,
+# each styled shape goes into a MultiMesh per shape kind - one draw call for every arc in the frame
+# however many there are - wearing the same distance-field shader a placed shape wears. Without that
+# pack, and in the persistent mode that bakes strokes into the raster once, exactly the same shapes
+# are drawn the raster way instead. Nothing else changes: the same rows, the same numbers.
+
+## Where the shape shader the batches wear lives once the Vector Shapes pack is installed. Its
+## absence is not a fault - it is the canvas drawing the same shapes the raster way.
+const BATCH_SHADER_PATH: String = "res://eventsheet_addons/vector_shapes/vector_shape_batch.gdshader"
+
+## The shape kinds one MultiMesh each is filled with, in the order the batch shader numbers them.
+## A kind NOT in this list is always drawn the raster way: a polygon and a polyline are meshes
+## rather than a distance field, and text and a texture are neither.
+const BATCH_KINDS: PackedStringArray = ["arc", "pie", "rounded_rect", "regular_polygon", "grid", "cross", "arrow"]
+
+## What a draw style says, and what the canvas draws with before anything sets one. The keys are
+## spelled the way a Shape Style file spells them, so a style tuned on a placed shape is read here
+## unchanged and a resource that carries only some of them leaves the rest alone.
+const STYLE_DEFAULTS: Dictionary = {
+	"thickness": 2.0,
+	"caps": "round",
+	"colour": Color.WHITE,
+	"colour_b": Color.WHITE,
+	"colour_mode": "single",
+	"filled": false,
+	"dashed": false,
+	"dash_space": "count",
+	"dash_snap": "tiling",
+	"dash_size": 12.0,
+	"dash_count": 12,
+	"dash_spacing": 0.5,
+	"dash_style": "plain"
+}
+
+## The cap words, the colour modes, the dash snaps and the dash ends, each in the shader's own
+## order - the position in the list IS the number the shader is handed.
+const CAP_WORDS: PackedStringArray = ["none", "square", "round"]
+const COLOUR_MODE_WORDS: PackedStringArray = ["single", "two", "radial", "angular", "gradient", "per corner"]
+const DASH_SNAP_WORDS: PackedStringArray = ["off", "tiling", "end to end"]
+const DASH_STYLE_WORDS: PackedStringArray = ["plain", "angled", "rounded"]
+
+## How wide the fade at a drawn edge is, in pixels. One number on both sides of the wire: the quad a
+## shape is drawn on is grown by it here, and the shader fades over it there.
+const ANTIALIAS_WIDTH: float = 1.0
+
+## How many segments a raster arc is drawn with when there is no shader to solve it per pixel.
+const RASTER_ARC_SEGMENTS: int = 64
+
+# The style stack. The last entry is the style in force; an empty stack is the defaults above.
+var _styles: Array = []
+
+# One MultiMeshInstance2D per kind-and-style seen this session, kept and re-filled rather than
+# rebuilt: a frame that draws two hundred arcs allocates nothing at all.
+var _batches: Dictionary = {}
+
+# The shader every batch wears, loaded once per session, and whether we have looked for it yet.
+static var _batch_shader: Shader = null
+static var _batch_shader_sought: bool = false
+
+# The unit quad every batch instances, built once per session.
+static var _batch_mesh: ArrayMesh = null
+## The shader every batch wears, loaded once per session. Null when the Vector Shapes pack is not
+## installed, which is what sends the same shapes down the raster path.
+static func batch_shader() -> Shader:
+	if not _batch_shader_sought:
+		_batch_shader_sought = true
+		if ResourceLoader.exists(BATCH_SHADER_PATH):
+			_batch_shader = load(BATCH_SHADER_PATH)
+	return _batch_shader
+## The unit quad every instanced shape is drawn on, from -1 to 1 with its UV over the same square,
+## built once per session. The instance transform scales it to the shape's own reach.
+static func batch_mesh() -> ArrayMesh:
+	if _batch_mesh != null:
+		return _batch_mesh
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector2Array([Vector2(-1.0, -1.0), Vector2(1.0, -1.0), Vector2(1.0, 1.0), Vector2(-1.0, 1.0)])
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(1.0, 1.0), Vector2(0.0, 1.0)])
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0, 1, 2, 0, 2, 3])
+	_batch_mesh = ArrayMesh.new()
+	_batch_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return _batch_mesh
 
 ## Applies configuration (from the behavior's exports) and rebuilds the surface if it already exists.
 func configure(width: int, height: int, clear_each_frame: bool, coords: String, show_on_host: bool) -> void:
@@ -159,7 +214,16 @@ func to_canvas(point: Vector2) -> Vector2:
 	return point - _host.global_position + Vector2(canvas_width, canvas_height) * 0.5
 
 func _run_draw_commands() -> void:
-	for command: Dictionary in _commands:
+	# The styled shapes this frame can instance, and the keys those batches took - everything
+	# else, styled or not, is drawn the raster way in the order it was queued.
+	var batched: Array = []
+	var taken: Dictionary = {}
+	if _use_batches():
+		for batch: Dictionary in plan_batches(_commands):
+			if _batches.has(str(batch["key"])):
+				batched.append(batch)
+				taken[str(batch["key"])] = true
+	for command: Dictionary in plan_raster(_commands, taken):
 		match str(command["kind"]):
 			"line":
 				_drawer.draw_line(command["a"], command["b"], command["color"], command["width"])
@@ -189,6 +253,19 @@ func _run_draw_commands() -> void:
 					else:
 						_drawer.draw_texture_rect(node_tex, command["dest_rect"], false, command["modulate"])
 					_drawer.draw_set_transform_matrix(Transform2D.IDENTITY)
+			"arc":
+				_drawer.draw_arc(command["at"], command["radius"], command["from"], command["to"], RASTER_ARC_SEGMENTS, command["color"], command["width"])
+			"polyline":
+				_drawer.draw_polyline(command["points"], command["color"], command["width"])
+			"text":
+				var face: Font = ThemeDB.fallback_font
+				if face != null:
+					_drawer.draw_string(face, command["at"], str(command["message"]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(command["size"]), command["color"])
+			"texture_rect":
+				var drawn_texture: Texture2D = command["texture"]
+				if drawn_texture != null:
+					_drawer.draw_texture_rect(drawn_texture, command["rect"], false, command["color"])
+	_fill_batches(batched)
 	_commands.clear()
 
 func _push(command: Dictionary) -> void:
@@ -444,8 +521,43 @@ func _animated_sprite_info(sprite: AnimatedSprite2D, tint: Color) -> Dictionary:
 		dest_pos -= frame_size * 0.5
 	return {"texture": tex, "src_rect": Rect2(), "dest_rect": Rect2(dest_pos, frame_size), "modulate": tint, "flip_h": sprite.flip_h, "flip_v": sprite.flip_v}
 
+## Walks a polyline by arc length, carrying the dash phase across vertices so the rhythm stays
+## continuous around ring and rect corners, and returns endpoint PAIRS for draw_multiline. dash_len
+## is floored at 0.5 and gap at 0 so a zero-gap value degrades to a solid stroke, never an infinite loop.
+static func _dash_polyline(points: PackedVector2Array, dash_len: float, gap_len: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var d: float = maxf(dash_len, 0.5)
+	var g: float = maxf(gap_len, 0.0)
+	var period: float = d + g
+	if points.size() < 2 or period <= 0.0:
+		return out
+	var phase: float = 0.0
+	for i: int in range(points.size() - 1):
+		var a: Vector2 = points[i]
+		var b: Vector2 = points[i + 1]
+		var seg: Vector2 = b - a
+		var seg_len: float = seg.length()
+		if seg_len <= 0.0001:
+			continue
+		var dir: Vector2 = seg / seg_len
+		var t: float = 0.0
+		while t < seg_len:
+			var pos: float = fmod(phase + t, period)
+			if pos < d:
+				var t_end: float = minf(t + (d - pos), seg_len)
+				out.append(a + dir * t)
+				out.append(a + dir * t_end)
+				t = t_end
+			else:
+				t += period - pos
+		phase = fmod(phase + seg_len, period)
+	return out
+
 ## Dashes a polyline and pushes the segments as one multiline command (a single draw call).
 func _push_dashes(points: PackedVector2Array, dash_length: float, gap_length: float, width: float, color: Color) -> void:
+	# --- Dashed shapes: ONE dash primitive turns any polyline into disjoint dash segments, drawn in a
+	# single draw_multiline call. Line = 2 points, ring = a sampled circle, rect = 4 closed corners - the
+	# same routine serves all three and any future dashed shape. ---
 	var segments: PackedVector2Array = _dash_polyline(points, dash_length, gap_length)
 	if segments.is_empty():
 		return
@@ -531,3 +643,378 @@ func _physics_process(_delta: float) -> void:
 	# the frame until another Start Ribbon.
 	if _ribbons.is_empty():
 		set_physics_process(false)
+
+## The style the next drawn shape will wear.
+func current_style() -> Dictionary:
+	if _styles.is_empty():
+		return STYLE_DEFAULTS.duplicate()
+	return _styles[_styles.size() - 1]
+
+## Replaces the style in force. Every styled row after this one draws in it until it is replaced,
+## popped or reset. A null style is the canvas's own defaults.
+func set_draw_style(style: Resource) -> void:
+	var fields: Dictionary = style_fields(style)
+	if _styles.is_empty():
+		_styles.append(fields)
+	else:
+		_styles[_styles.size() - 1] = fields
+
+## Sets a style with the one in force kept underneath it, to come back on Pop Draw Style.
+func push_draw_style(style: Resource) -> void:
+	_styles.append(style_fields(style))
+
+## Goes back to the style that was in force before the last Push Draw Style.
+func pop_draw_style() -> void:
+	if not _styles.is_empty():
+		_styles.remove_at(_styles.size() - 1)
+
+## Drops the whole stack: the canvas draws in its own defaults again.
+func reset_draw_style() -> void:
+	_styles.clear()
+
+## One style resource read as the fields the canvas draws with. Read BY NAME rather than by class,
+## so a Shape Style file, a shape node's own style or a project's own resource with the same field
+## names all work, and a resource that has not got a field leaves that field alone.
+static func style_fields(style: Resource) -> Dictionary:
+	var fields: Dictionary = STYLE_DEFAULTS.duplicate()
+	if style == null:
+		return fields
+	for key: String in STYLE_DEFAULTS:
+		var value: Variant = style.get(key)
+		if value == null:
+			continue
+		if typeof(value) == typeof(fields[key]):
+			fields[key] = value
+		elif (value is float or value is int) and (fields[key] is float or fields[key] is int):
+			fields[key] = float(value) if fields[key] is float else int(value)
+	return fields
+
+## Draws an arc of a circle in the current style: a cooldown sweep, a health ring, a turn radius.
+func draw_arc_shape(x: float, y: float, radius: float, from_degrees: float, to_degrees: float) -> void:
+	_push_shape("arc", Vector2(x, y), 0.0, Vector4(radius, 0.0, deg_to_rad(from_degrees), deg_to_rad(maxf(to_degrees, from_degrees))), {})
+
+## Draws a filled wedge of a circle in the current style - the same two angles as an arc, filled in.
+func draw_pie(x: float, y: float, radius: float, from_degrees: float, to_degrees: float) -> void:
+	_push_shape("pie", Vector2(x, y), 0.0, Vector4(radius, 0.0, deg_to_rad(from_degrees), deg_to_rad(maxf(to_degrees, from_degrees))), {})
+
+## Draws a rectangle with rounded corners, from its CENTRE, filled or as an outline.
+func draw_rounded_rect(x: float, y: float, width: float, height: float, corner_radius: float, filled: bool) -> void:
+	_push_shape("rounded_rect", Vector2(x, y), 0.0, Vector4(width * 0.5, height * 0.5, maxf(corner_radius, 0.0), 0.0), {"filled": filled})
+
+## Draws a shape of N equal sides at a radius, from its centre - a hexagon grid cell, a warning
+## triangle, a stop sign.
+func draw_regular_polygon(x: float, y: float, radius: float, sides: int, angle_degrees: float, filled: bool) -> void:
+	_push_shape("regular_polygon", Vector2(x, y), 0.0, Vector4(radius, float(maxi(sides, 3)), deg_to_rad(angle_degrees), 0.0), {"filled": filled})
+
+## Draws a grid of rulings filling a box, from its centre - the level editor's floor, the debug
+## overlay's ruler.
+func draw_grid(x: float, y: float, width: float, height: float, cell_size: float) -> void:
+	_push_shape("grid", Vector2(x, y), 0.0, Vector4(width * 0.5, height * 0.5, maxf(cell_size, 1.0), 0.0), {})
+
+## Draws a cross - the marker on a spot, the "no" over a placement.
+func draw_cross(x: float, y: float, arm_length: float, angle_degrees: float) -> void:
+	_push_shape("cross", Vector2(x, y), deg_to_rad(angle_degrees), Vector4(maxf(arm_length, 0.01), 0.0, 0.0, 0.0), {})
+
+## Draws an arrow from one point to another, its head sized in pixels - a force, a facing, a route.
+func draw_arrow(from_x: float, from_y: float, to_x: float, to_y: float, head_size: float) -> void:
+	var from_point: Vector2 = Vector2(from_x, from_y)
+	var to_point: Vector2 = Vector2(to_x, to_y)
+	var span: Vector2 = to_point - from_point
+	var head: float = maxf(head_size, 1.0)
+	_push_shape("arrow", (from_point + to_point) * 0.5, span.angle(), Vector4(maxf(span.length() * 0.5, 0.01), head, head, 0.0), {})
+
+## Draws a closed outline through a list of positions, filled or hollow. A polygon is a mesh rather
+## than a distance field, so it is drawn the raster way whatever else the frame is doing.
+func draw_polygon_shape(points: Array, filled: bool) -> void:
+	_push_shape("polygon", Vector2.ZERO, 0.0, Vector4.ZERO, {"filled": filled, "points": _as_points(points)})
+
+## Draws a path through a list of positions, open or closed - a route preview, a drawn trail.
+func draw_polyline_shape(points: Array, closed: bool) -> void:
+	_push_shape("polyline", Vector2.ZERO, 0.0, Vector4.ZERO, {"closed": closed, "points": _as_points(points)})
+
+## Draws a line of text at a spot, in the style's own colour - a state name over an enemy, a number
+## over a tile.
+func draw_text(message: String, x: float, y: float, size: float) -> void:
+	_push_shape("text", Vector2(x, y), 0.0, Vector4(maxf(size, 1.0), 0.0, 0.0, 0.0), {"message": message})
+
+## Draws a texture stretched into a box, from its centre, tinted by the style's colour.
+func draw_texture_in_rect(texture_res: Texture2D, x: float, y: float, width: float, height: float) -> void:
+	_push_shape("texture", Vector2(x, y), 0.0, Vector4(width * 0.5, height * 0.5, 0.0, 0.0), {"texture": texture_res})
+
+## One styled shape, queued the way every other draw is. The style is COPIED onto the command, so a
+## shape drawn now and the same shape drawn after the style changed keep their own looks. Anything
+## in `extra` that a style speaks for joins the style; everything else (a list of points, a message,
+## a texture) rides the command, where it belongs to that one shape.
+func _push_shape(kind: String, at: Vector2, angle: float, numbers: Vector4, extra: Dictionary) -> void:
+	_ensure()
+	var style: Dictionary = current_style().duplicate()
+	var command: Dictionary = {"kind": kind, "styled": true, "at": to_canvas(at), "angle": angle, "numbers": numbers}
+	for key: String in extra:
+		if STYLE_DEFAULTS.has(key):
+			style[key] = extra[key]
+		else:
+			command[key] = extra[key]
+	command["style"] = style
+	if _use_batches() and BATCH_KINDS.has(kind):
+		_reserve_batch(batch_key(kind, style))
+	_push(command)
+
+## A list of positions as points on the canvas, however the row spelled them.
+func _as_points(points: Array) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	for entry: Variant in points:
+		if entry is Vector2:
+			out.append(to_canvas(entry))
+	return out
+
+## Whether this frame's styled shapes go through the instanced path. Two things say yes: the Vector
+## Shapes pack is installed, so there is a shader to draw them with, and the canvas redraws every
+## frame - a PERSISTENT canvas bakes its strokes into the raster once, which is the whole point of
+## it, and a MultiMesh re-drawn into a surface that never clears would pile up on itself.
+func _use_batches() -> bool:
+	return auto_clear and batch_shader() != null
+
+## Which batch a styled command belongs in: its kind and the style it was drawn in. Two arcs in one
+## style are one draw; the same two in two styles are two, because a style is shader uniforms.
+static func batch_key(kind: String, style: Dictionary) -> String:
+	var keys: Array = style.keys()
+	keys.sort()
+	var parts: PackedStringArray = PackedStringArray([kind])
+	for key: String in keys:
+		parts.append("%s=%s" % [key, style[key]])
+	return "|".join(parts)
+
+## This frame's instanced draws: one entry per kind-and-style, in the order the frame first drew
+## each, holding every instance of it. This is the whole of the batching decision, and it is a plain
+## reading of the queue so it can be checked without a canvas at all.
+static func plan_batches(commands: Array) -> Array:
+	var order: PackedStringArray = PackedStringArray()
+	var by_key: Dictionary = {}
+	for command: Dictionary in commands:
+		if not bool(command.get("styled", false)):
+			continue
+		var kind: String = str(command.get("kind", ""))
+		if not BATCH_KINDS.has(kind):
+			continue
+		var style: Dictionary = command.get("style", {})
+		var key: String = batch_key(kind, style)
+		if not by_key.has(key):
+			by_key[key] = {"key": key, "kind": kind, "kind_id": BATCH_KINDS.find(kind), "style": style, "instances": []}
+			order.append(key)
+		var instances: Array = by_key[key]["instances"]
+		instances.append({
+			"at": command["at"],
+			"angle": float(command["angle"]),
+			"numbers": command["numbers"],
+			"extent": batch_extent(kind, command["numbers"], style)
+		})
+	var plan: Array = []
+	for key: String in order:
+		plan.append(by_key[key])
+	return plan
+
+## How far a shape reaches from its own centre, in pixels: how big the quad it is instanced onto
+## has to be. THE BATCH SHADER WORKS THE SAME NUMBER OUT from the same four numbers, and the two
+## must agree - a quad smaller than its shape clips it.
+static func batch_extent(kind: String, numbers: Vector4, style: Dictionary) -> float:
+	var margin: float = maxf(float(style.get("thickness", 2.0)), 0.01) * 0.5 + ANTIALIAS_WIDTH + 2.0
+	if kind == "rounded_rect" or kind == "grid":
+		return maxf(absf(numbers.x), absf(numbers.y)) + margin
+	if kind == "arrow":
+		return maxf(absf(numbers.x), absf(numbers.z)) + margin
+	return absf(numbers.x) + margin
+
+## This frame's raster draws, in the order they were queued: every command that is not a styled
+## shape exactly as it was pushed, and every styled shape turned into the one primitive that draws
+## it. `taken` holds the batch keys the MultiMesh path has already claimed this frame, so a shape
+## whose batch could not be built is still drawn rather than silently dropped.
+static func plan_raster(commands: Array, taken: Dictionary) -> Array:
+	var out: Array = []
+	for command: Dictionary in commands:
+		if not bool(command.get("styled", false)):
+			out.append(command)
+			continue
+		if taken.has(batch_key(str(command.get("kind", "")), command.get("style", {}))):
+			continue
+		var drawn: Dictionary = raster_shape(command)
+		if not drawn.is_empty():
+			out.append(drawn)
+	return out
+
+## One styled shape as the raster primitive that draws it - the same shape, solved on the CPU. The
+## dash pattern the shader would have cut is walked by the shared dash primitive instead, so a
+## dashed arc is dashed either way.
+static func raster_shape(command: Dictionary) -> Dictionary:
+	var style: Dictionary = command.get("style", {})
+	var colour: Color = style.get("colour", Color.WHITE)
+	var width: float = maxf(float(style.get("thickness", 2.0)), 0.5)
+	var filled: bool = bool(style.get("filled", false))
+	var at: Vector2 = command.get("at", Vector2.ZERO)
+	var numbers: Vector4 = command.get("numbers", Vector4.ZERO)
+	match str(command.get("kind", "")):
+		"arc":
+			return {"kind": "arc", "at": at, "radius": numbers.x, "from": numbers.z, "to": numbers.w, "width": width, "color": colour}
+		"pie":
+			var wedge: PackedVector2Array = PackedVector2Array([at])
+			for step: int in 33:
+				wedge.append(at + Vector2.from_angle(lerpf(numbers.z, numbers.w, float(step) / 32.0)) * numbers.x)
+			return {"kind": "polygon", "points": wedge, "color": colour}
+		"rounded_rect":
+			var outline: PackedVector2Array = rounded_rect_points(at, Vector2(numbers.x, numbers.y), numbers.z)
+			if filled:
+				return {"kind": "polygon", "points": outline, "color": colour}
+			outline.append(outline[0])
+			return {"kind": "polyline", "points": outline, "width": width, "color": colour}
+		"regular_polygon":
+			var corners: PackedVector2Array = regular_polygon_points(at, numbers.x, int(numbers.y), numbers.z)
+			if filled:
+				return {"kind": "polygon", "points": corners, "color": colour}
+			corners.append(corners[0])
+			return {"kind": "polyline", "points": corners, "width": width, "color": colour}
+		"grid":
+			return {"kind": "multiline", "points": grid_points(at, Vector2(numbers.x, numbers.y), numbers.z), "width": width, "color": colour}
+		"cross":
+			var arm: Vector2 = Vector2(numbers.x, 0.0).rotated(float(command.get("angle", 0.0)))
+			var down: Vector2 = arm.orthogonal()
+			return {"kind": "multiline", "points": PackedVector2Array([at - arm, at + arm, at - down, at + down]), "width": width, "color": colour}
+		"arrow":
+			return {"kind": "multiline", "points": arrow_points(at, float(command.get("angle", 0.0)), numbers.x, numbers.y, numbers.z), "width": width, "color": colour}
+		"polygon":
+			var points: PackedVector2Array = command.get("points", PackedVector2Array())
+			if points.size() < 3:
+				return {}
+			if filled:
+				return {"kind": "polygon", "points": points, "color": colour}
+			var ring: PackedVector2Array = points.duplicate()
+			ring.append(ring[0])
+			return {"kind": "polyline", "points": ring, "width": width, "color": colour}
+		"polyline":
+			var path: PackedVector2Array = command.get("points", PackedVector2Array())
+			if path.size() < 2:
+				return {}
+			var walk: PackedVector2Array = path.duplicate()
+			if bool(command.get("closed", false)):
+				walk.append(walk[0])
+			return {"kind": "polyline", "points": walk, "width": width, "color": colour}
+		"text":
+			return {"kind": "text", "at": at, "message": str(command.get("message", "")), "size": numbers.x, "color": colour}
+		"texture":
+			return {"kind": "texture_rect", "texture": command.get("texture"), "rect": Rect2(at - Vector2(numbers.x, numbers.y), Vector2(numbers.x, numbers.y) * 2.0), "color": colour}
+	return {}
+
+## The outline of a rounded rectangle centred on a point, as points - what the raster half draws
+## when there is no shader to solve the corner per pixel.
+static func rounded_rect_points(at: Vector2, half_size: Vector2, corner: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var radius: float = clampf(corner, 0.0, minf(half_size.x, half_size.y))
+	var centres: Array = [
+		Vector2(half_size.x - radius, half_size.y - radius),
+		Vector2(-half_size.x + radius, half_size.y - radius),
+		Vector2(-half_size.x + radius, -half_size.y + radius),
+		Vector2(half_size.x - radius, -half_size.y + radius)
+	]
+	for quadrant: int in 4:
+		var start: float = float(quadrant) * PI * 0.5
+		for step: int in 5:
+			out.append(at + centres[quadrant] + Vector2.from_angle(start + PI * 0.5 * float(step) / 4.0) * radius)
+	return out
+
+## The corners of a shape of N equal sides, centred on a point.
+static func regular_polygon_points(at: Vector2, radius: float, sides: int, angle: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var count: int = maxi(sides, 3)
+	for corner: int in count:
+		out.append(at + Vector2.from_angle(angle + TAU * float(corner) / float(count)) * radius)
+	return out
+
+## The rulings of a grid filling a box, as the endpoint pairs one draw call takes.
+static func grid_points(at: Vector2, half_size: Vector2, cell: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var step: float = maxf(cell, 1.0)
+	var across: int = mini(int(half_size.x / step), 512)
+	var down: int = mini(int(half_size.y / step), 512)
+	for index: int in range(-across, across + 1):
+		var x: float = at.x + float(index) * step
+		out.append(Vector2(x, at.y - half_size.y))
+		out.append(Vector2(x, at.y + half_size.y))
+	for index: int in range(-down, down + 1):
+		var y: float = at.y + float(index) * step
+		out.append(Vector2(at.x - half_size.x, y))
+		out.append(Vector2(at.x + half_size.x, y))
+	return out
+
+## An arrow's shaft and the two sides of its head, as the endpoint pairs one draw call takes.
+static func arrow_points(at: Vector2, angle: float, half_length: float, head: float, head_width: float) -> PackedVector2Array:
+	var tip: Vector2 = at + Vector2(half_length, 0.0).rotated(angle)
+	var tail: Vector2 = at - Vector2(half_length, 0.0).rotated(angle)
+	var base: Vector2 = at + Vector2(half_length - head, 0.0).rotated(angle)
+	var side: Vector2 = Vector2(0.0, head_width * 0.5).rotated(angle)
+	return PackedVector2Array([tail, tip, base - side, tip, base + side, tip])
+
+## Makes sure a batch has somewhere to draw: one MultiMeshInstance2D per kind-and-style, built the
+## first time that pairing is drawn and re-filled every frame after. Called as a shape is QUEUED,
+## never while the canvas is drawing, so nothing is added to the tree mid-draw.
+func _reserve_batch(key: String) -> void:
+	if _batches.has(key) or _viewport == null:
+		return
+	var holder: MultiMesh = MultiMesh.new()
+	holder.transform_format = MultiMesh.TRANSFORM_2D
+	holder.use_custom_data = true
+	holder.mesh = batch_mesh()
+	var node: MultiMeshInstance2D = MultiMeshInstance2D.new()
+	node.multimesh = holder
+	var shaded: ShaderMaterial = ShaderMaterial.new()
+	shaded.shader = batch_shader()
+	node.material = shaded
+	_viewport.add_child(node)
+	_batches[key] = node
+
+## Fills this frame's batches, and empties the ones the frame did not draw so a kind that has
+## stopped being drawn stops appearing.
+func _fill_batches(plan: Array) -> void:
+	var drawn: Dictionary = {}
+	for batch: Dictionary in plan:
+		var key: String = str(batch["key"])
+		if not _batches.has(key):
+			continue
+		drawn[key] = true
+		var node: MultiMeshInstance2D = _batches[key]
+		_push_style_uniforms(node.material, batch["style"], int(batch["kind_id"]))
+		var holder: MultiMesh = node.multimesh
+		var instances: Array = batch["instances"]
+		holder.instance_count = instances.size()
+		for index: int in instances.size():
+			var instance: Dictionary = instances[index]
+			var extent: float = float(instance["extent"])
+			holder.set_instance_transform_2d(index, Transform2D(float(instance["angle"]), Vector2(extent, extent), 0.0, instance["at"]))
+			var numbers: Vector4 = instance["numbers"]
+			holder.set_instance_custom_data(index, Color(numbers.x, numbers.y, numbers.z, numbers.w))
+	for key: String in _batches:
+		if not drawn.has(key):
+			(_batches[key] as MultiMeshInstance2D).multimesh.instance_count = 0
+
+## Hands one batch's style to its material - the same uniforms a placed shape sets, so the two draw
+## the same dashes, the same caps and the same colour modes.
+func _push_style_uniforms(target: ShaderMaterial, style: Dictionary, kind_id: int) -> void:
+	if target == null:
+		return
+	var thickness: float = maxf(float(style.get("thickness", 2.0)), 0.01)
+	var space: String = str(style.get("dash_space", "count"))
+	target.set_shader_parameter("batch_kind", kind_id)
+	target.set_shader_parameter("thickness_px", thickness)
+	target.set_shader_parameter("aa_width", ANTIALIAS_WIDTH)
+	target.set_shader_parameter("filled", bool(style.get("filled", false)))
+	target.set_shader_parameter("caps", maxi(CAP_WORDS.find(str(style.get("caps", "round"))), 0))
+	target.set_shader_parameter("colour_a", style.get("colour", Color.WHITE))
+	target.set_shader_parameter("colour_b", style.get("colour_b", Color.WHITE))
+	target.set_shader_parameter("colour_mode", maxi(COLOUR_MODE_WORDS.find(str(style.get("colour_mode", "single"))), 0))
+	target.set_shader_parameter("dashed", bool(style.get("dashed", false)))
+	target.set_shader_parameter("dash_snap", maxi(DASH_SNAP_WORDS.find(str(style.get("dash_snap", "tiling"))), 0))
+	target.set_shader_parameter("dash_style", maxi(DASH_STYLE_WORDS.find(str(style.get("dash_style", "plain"))), 0))
+	target.set_shader_parameter("dash_offset", 0.0)
+	target.set_shader_parameter("dash_count", int(style.get("dash_count", 12)) if space == "count" else 0)
+	target.set_shader_parameter("dash_gap_share", clampf(float(style.get("dash_spacing", 0.5)), 0.0, 0.95))
+	var size: float = maxf(float(style.get("dash_size", 12.0)), 0.0)
+	var gap: float = maxf(float(style.get("dash_spacing", 6.0)), 0.0)
+	target.set_shader_parameter("dash_length_px", size * thickness if space == "relative" else size)
+	target.set_shader_parameter("dash_gap_px", gap * thickness if space == "relative" else gap)

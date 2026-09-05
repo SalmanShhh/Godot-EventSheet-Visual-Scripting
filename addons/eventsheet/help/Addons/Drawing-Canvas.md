@@ -72,6 +72,21 @@ dock, or in an opened script, is not a mystery.
 | Start Ribbon | `follow` (Node), `point_count`, `width`, `color` | A trail following a node (last N frames of history). |
 | Set Ribbon Texture | `follow`, `texture` | Skins a running ribbon, stretched along its length. |
 | Stop Ribbon | `follow` | Ends that node's ribbon. |
+| Set Draw Style | `style` (Resource) | Hands the canvas a draw style. Every STYLED row after it draws with that file's thickness, caps, colour and dashes, until it is replaced, popped or reset. |
+| Push Draw Style | `style` (Resource) | The same, with the style in force kept underneath it. |
+| Pop Draw Style | (none) | Back to the style that was in force before the last Push. |
+| Reset Draw Style | (none) | Drops the whole stack: the canvas draws in its own defaults again. |
+| Draw Arc | `x`, `y`, `radius`, `from_degrees`, `to_degrees` | An arc of a circle in the current style - the cooldown sweep, the turn radius, the range band. |
+| Draw Pie | `x`, `y`, `radius`, `from_degrees`, `to_degrees` | A filled wedge: the same two angles as an arc, filled in. |
+| Draw Rounded Rect | `x`, `y`, `width`, `height`, `corner_radius`, `filled` | A rectangle with rounded corners, from its CENTRE. |
+| Draw Regular Polygon | `x`, `y`, `radius`, `sides`, `angle_degrees`, `filled` | N equal sides at a radius - the hex cell, the warning triangle. |
+| Draw Polygon | `points` (Array), `filled` | A closed outline through a list of positions. Concave outlines are allowed. |
+| Draw Polyline | `points` (Array), `closed` | A path through a list of positions - the route preview, the drawn trail. |
+| Draw Text | `message`, `x`, `y`, `size` | A line of text in the style's colour - the state name over an enemy, the number over a tile. |
+| Draw Texture | `texture`, `x`, `y`, `width`, `height` | A texture stretched into a box, from its centre, tinted by the style's colour. |
+| Draw Grid | `x`, `y`, `width`, `height`, `cell_size` | Rulings filling a box - the editor floor, the overlay's ruler. |
+| Draw Cross | `x`, `y`, `arm_length`, `angle_degrees` | A cross - the marker on a spot, the refusal over a placement. |
+| Draw Arrow | `from_x`, `from_y`, `to_x`, `to_y`, `head_size` | An arrow between two points - a force, a facing, a debug vector. |
 
 ### Conditions and expressions
 
@@ -96,6 +111,43 @@ an expression named after the property reads it, a **Set ...** action writes it,
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
 alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
+
+## The draw style, and the shapes drawn in it
+
+The rows at the top of the table each carry their own width and their own colour, which is right
+for one line and tiring for thirty. The rows at the bottom carry NEITHER: the canvas keeps a
+**style**, and they draw in whatever it is.
+
+```
+Debug Overlay is on -> Canvas | Set Draw Style: debug_thin.tres
+For each Enemy      -> Canvas | Draw Arc: Enemy.x, Enemy.y, Enemy.range, -45, 45
+                    -> Canvas | Draw Text: Enemy.state, Enemy.x, Enemy.y - 40, 14
+```
+
+The style is a **Shape Style** file - the same resource a placed Vector Shape node wears, so a look
+tuned on a node is the look the rows draw in. Any resource with the same field names does: the
+canvas reads them by name, and a field the file has not got is left at the canvas's own default.
+**Push** and **Pop** nest, so a section of an overlay can borrow a style and hand it back.
+
+### How they draw
+
+Two paths, one set of rows, and nothing to choose between them in the sheet:
+
+- **Instanced.** When the Vector Shapes pack is installed AND the canvas is in per-frame redraw
+  mode (`auto_clear` on), every styled shape of one kind in one style goes into a single MultiMesh
+  wearing that pack's distance-field shader. Two hundred arcs in a frame are **one draw call**, and
+  they are the same crisp arcs a placed Disc draws.
+- **Raster.** Without that pack, and in the persistent mode that bakes strokes into the surface
+  once, exactly the same shapes are drawn the ordinary way instead - one primitive each. The rows,
+  the numbers and the style are identical; the arc is solved with segments rather than per pixel.
+
+Two shapes worth knowing about: a **polygon** and a **polyline** are meshes rather than distance
+fields, so they always take the raster path (drawing hundreds of them is what Godot's own
+`Line2D` and `Polygon2D` are for), and so do **text** and **texture**, which are neither.
+
+Instanced shapes are drawn after the raster ones in a frame, and each kind lands in one batch, so
+two batched kinds in one frame do not interleave with each other. When the order between two styled
+shapes matters, draw them in different frames or turn the canvas persistent.
 
 ## Reading it from expressions - the Self section
 
@@ -374,6 +426,32 @@ On enemy died
 `Paste Node` bakes the enemy's last frame - facing, flip and death tint included - at its world spot. Pair
 it with a slow fade on the whole canvas texture for bodies that decay over time. `Paste Node At` does the
 same from an off-screen template sprite when you want the decal somewhere other than the node's position.
+
+### 19. A debug overlay that is one style and then shapes
+
+Canvas with `auto_clear` on, so the overlay is redrawn every frame.
+
+```
+Debug is on -> Canvas | Set Draw Style: debug_thin.tres
+For each Enemy in enemies -> Canvas | Draw Arc: Enemy.x, Enemy.y, Enemy.range, -45, 45
+                          -> Canvas | Draw Cross: Enemy.target_x, Enemy.target_y, 8, 45
+                          -> Canvas | Draw Text: Enemy.state, Enemy.x, Enemy.y - 40, 14
+```
+
+Thirty rows carrying a width and a colour become one style and three shapes. With the Vector Shapes
+pack installed, every arc in that loop is one draw call and every cross is another.
+
+### 20. A level editor's floor grid
+
+```
+On ready -> Canvas | Set Auto Clear: true
+Every tick -> Canvas | Set Draw Style: grid_faint.tres
+           -> Canvas | Draw Grid: 0, 0, 2048, 2048, Editor.cell_size
+           -> Canvas | Draw Rounded Rect: Cursor.x, Cursor.y, Editor.cell_size, Editor.cell_size, 4, false
+```
+
+**Draw Grid** is one shape however many rulings it has, and the rounded rect under the cursor is
+the placement preview - both in the same faint style, so the two cannot drift apart.
 
 ### Other use cases
 
