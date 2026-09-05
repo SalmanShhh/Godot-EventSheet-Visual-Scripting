@@ -2,6 +2,82 @@
 
 ## [Unreleased]
 
+### Stroke, cap and dash: a shape you place, crisp at any zoom, and the look twenty of them share
+
+- **Seven shape nodes in 2D: Line, Disc, Rect, Polygon, Polyline, Triangle and Regular Polygon.**
+  Each is one Node2D drawing one quad through one distance-field canvas shader, so the outline is
+  solved per pixel: a ring is round at 4x zoom, a hairline is one crisp pixel, and there is nothing
+  tessellated on the CPU and no texture to author. A **Disc** is four shapes by two numbers - a
+  disc, a ring, a pie and an arc - and a **Regular Polygon** is a triangle, a hexagon or a
+  near-circle by a side count. They are added from Godot's own Create Node dialog, they draw in the
+  editor as well as in the game, and they sit **beside** Line2D and Polygon2D rather than over them:
+  ribbons with a texture, a width curve, or thousands of points still belong to the engine's nodes.
+- **The same drawing in 3D, ten nodes on one spatial shader.** **Line 3D**, **Disc 3D**, **Rect
+  3D**, **Polygon 3D**, **Polyline 3D** and **Regular Polygon 3D** wear a **Geometry** word -
+  `flat` on their own plane, `billboard` turned to the camera in the vertex stage, or `volumetric`,
+  real geometry a light and a depth buffer treat like anything else - and **Sphere**, **Cuboid**,
+  **Cone** and **Torus** are always the last of the three. Both halves read ONE shader include, so a
+  dash tuned on a 2D line and the same dash on its 3D twin cannot drift apart. Every node is a
+  `MeshInstance3D`, so Visibility, Cast Shadow and Cull Margin are Godot's own and there is no
+  hidden child holding a mesh.
+- **Dashes with a count, a snap and an offset that scrolls: 3 rows.** The **Dashed** section is
+  a space (`world`, `relative` to the thickness, or a fixed `count` however long the shape is), a
+  snap (`off`, `tiling`, or `end to end`, which puts a dash on every corner of a rect and every
+  vertex of a polygon), a size or a count, a spacing, an offset and a style (`plain`, `angled`,
+  `rounded`). **Set Dashes**, **Set Dash Offset** and **Scroll Dashes** are the rows; scrolling at 0
+  stops the ants AND parks the tick, and whole-number offsets tile, so a loop that has been running
+  for an hour is still in step. The dash is arithmetic in the fragment, so a dashed ring of any
+  radius costs exactly what a plain one does.
+- **Colour modes, fills and borders: 4 rows.** `single`, `two`, `radial`, `angular`, `gradient` and
+  `per corner`, each mode showing only the swatches it needs. **Set Shape Colour**, **Set Colours**,
+  **Set Gradient** (Godot's own Gradient resource) and **Set Fill**. A filled shape draws its
+  **border** rather than its stroke, which is how a fill and an outline are stopped from ever
+  sitting a pixel apart.
+- **A look you save out of a shape, not a list we picked for you: 3 rows.** A **Shape Style** is a
+  `.tres` holding the LOOK half of a shape's fields - thickness, caps, colours, dashes, blend - and
+  the pack ships **none**, because a look is the game's. The first one in a project is written by
+  **Save As Style** at the top of a shape you tuned. A shape wearing one greys those fields rather
+  than hiding them, nothing is copied in, and emptying the slot hands the shape straight back to
+  itself. **Apply Shape Style**, **Apply Shape Style To Group** for a whole HUD at once, and
+  **Shape Style Is** for the exception.
+- **The rest of the vocabulary: 15 more rows.** **Set Thickness** (in `px`, `world` or `screen`
+  units, where a screen unit keeps a HUD line's weight on every phone), **Set Arc**, **Fill Ring
+  To** (the cooldown, the stamina wheel, the loading circle in one row), **Set Shape Radius**,
+  **Set Shape Sides**, **Set Shape Points**, **Set Geometry**, **Tether Between** two nodes and
+  **Untether**, **Follow Cursor** with a snap and **Stop Following**, **Fit Around** a node with a
+  margin, **Show For** so many seconds, and **Fade Shape Over**. The questions are **Shape Is
+  Visible**, **Point Is Inside Shape** (the pick test for a shape you can click, with no collision
+  body under it), **Shape Is Tethered** and **Ring Is Full**; the readings are **Shape Length**,
+  **Shape Area** and **Point Along Shape At**, which walks the outline by LENGTH so a marker at 0.5
+  is halfway ALONG the path rather than halfway through its points.
+- **The canvas keeps a style now: 4 rows, and eleven more shapes drawn in it.** Every drawing row
+  carried its own width and its own colour, which is right for one line and thirty rows of noise for
+  a debug overlay. **Set Draw Style**, **Push Draw Style**, **Pop Draw Style** and **Reset Draw
+  Style** put a look in force until it is replaced, popped or reset, read BY NAME off any resource -
+  so a Shape Style tuned on a placed node is the look the rows draw in. The new rows carry neither a
+  width nor a colour: **Draw Arc**, **Draw Pie**, **Draw Rounded Rect**, **Draw Regular Polygon**,
+  **Draw Polygon**, **Draw Polyline**, **Draw Text**, **Draw Texture**, **Draw Grid**, **Draw
+  Cross** and **Draw Arrow**, as pack rows and as the built-in twins beside them. With the shape
+  nodes installed and the canvas redrawing every frame, every styled shape of one kind in one style
+  goes into a single **MultiMesh** wearing that distance-field shader - two hundred arcs are one
+  draw call - and without them the same rows and the same numbers draw the raster way instead.
+- **A drawing prefab's step reads as a card.** Each step in the steps list is a card titled by its
+  shape and read as four short sections: **Placement** (the shape, its offset, its blend, whether a
+  stroke's thickness follows the stamp's scale), **Geometry** (that shape's own fields, thickness on
+  a unit dropdown), **Colour** (the mode, the swatches, a line's end caps) and **Dashed**, which
+  unfolds from its checkbox and ties the dash to its gap with the equals button. The eight stored
+  keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what they always did,
+  so a prefab saved before the card existed opens, edits and saves as the same bytes; the card's
+  extra keys are optional, and a step carrying none of them draws what it always drew.
+- **Renderer honesty, said in the guide rather than found out.** Nothing in either half needs
+  Forward+: the 2D shapes are the `canvas_item` path and the 3D ones an unshaded spatial shader, so
+  both run on Mobile and on Compatibility, which is what a phone and a browser ship with. The only
+  reason there is more than one shader file is the blend mode, which is a `render_mode` fixed at
+  compile time and impossible to make a uniform. Nothing is allocated per frame, a shape with no
+  dash scroll has no `_process` at all, and the distance arithmetic works in the shape's own local
+  space so a shape far from the origin stays mediump-safe. Many of a kind still want a MultiMesh,
+  and the guide says so.
+
 ### Beat, bump and broadcast: a whole beat of feedback, written down and played by name
 
 - **A moment written as ROWS: the Moment block, 1 block kind and 4 rows.** A file is the right home
