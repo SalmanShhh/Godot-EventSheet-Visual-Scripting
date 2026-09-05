@@ -431,6 +431,23 @@ static func _test_snapping_on_aim_down_sights() -> bool:
 	all_passed = _check("a near-enough target is snapped onto",
 		(-host.transform.basis.z).distance_to(toward) < 0.0001, true) and all_passed
 
+	# A TARGET ABOVE THE HOST TURNS THE BODY, IT DOES NOT TIP IT. The host of a third-person game is
+	# the body; the camera is what looks up and down. Writing the whole aim into the body's
+	# transform tilted a CharacterBody3D nose-up at anything on a ledge.
+	host.transform = Transform3D.IDENTITY
+	var high: Node3D = _at(Vector3(2.0, 6.0, -10.0))
+	lock.set("members", [high])
+	lock.snap_on_aim_down_sights(45.0)
+	var faced: Vector3 = -host.transform.basis.z
+	all_passed = _check("a target above the host does not tilt the body",
+		is_zero_approx(faced.y), true) and all_passed
+	all_passed = _check("the body faces the target's heading",
+		faced.distance_to(Vector3(2.0, 0.0, -10.0).normalized()) < 0.0001, true) and all_passed
+	all_passed = _check("and stays the way up it was",
+		host.transform.basis.y.distance_to(Vector3.UP) < 0.0001, true) and all_passed
+	high.free()
+	lock.set("members", [target])
+
 	# A turn wider than the row allows is refused outright: the host does not move at all.
 	host.transform = Transform3D.IDENTITY
 	lock.snap_on_aim_down_sights(5.0)

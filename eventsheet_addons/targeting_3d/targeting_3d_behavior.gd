@@ -248,7 +248,15 @@ func snap_on_aim_down_sights(max_degrees: float) -> void:
 	# The snap is left undone rather than made from a reference that has collapsed.
 	if absf(toward.dot(Vector3.UP)) > 0.999:
 		return
-	host.global_transform = Transform3D(Basis.looking_at(toward, Vector3.UP), _place_of(host).origin)
+	# THE HOST IS TURNED, NOT TIPPED. The host of a third-person game is the body, and the camera
+	# the cone is measured around is elsewhere - so writing the whole aim into the body's transform
+	# tipped a CharacterBody3D nose-up at a target on a ledge above it, which is not what "snap onto
+	# the target" means anywhere. Only the heading is taken; the pitch and roll the body had are the
+	# pitch and roll it keeps, and the camera goes on doing the looking up and down.
+	var heading: Vector3 = Vector3(toward.x, 0.0, toward.z)
+	if heading.is_zero_approx():
+		return
+	host.global_transform = Transform3D(Basis.looking_at(heading.normalized(), Vector3.UP), _place_of(host).origin)
 
 ## @ace_condition
 ## @ace_name("Is Locked On")
