@@ -110,6 +110,15 @@ var _order: Array = []
 var _head: int = 0
 var _head_strength: float = 1.0
 var _restore_to: Array = []
+## The tweens this player started, so a Revert or a Restore can stop them before it puts a value
+## back. Without the handle the tween goes on writing over the restored value the very next frame,
+## which is a Restore that visibly does nothing.
+var _tweens: Array[Tween] = []
+
+## And the players this play set going through a Play Player card. A nested play obeys the outer
+## one: stopping, skipping or restoring the list that started it does the same to them.
+var _nested: Array[Node] = []
+
 var _juice_node: Node = null
 var _told_no_juice: bool = false
 ## The Juice behaviour beside this node - found by the step call it answers rather than by its class,
@@ -245,7 +254,7 @@ func play_backwards(at_strength: float) -> void:
 func play_on_channel(channel: String, at_strength: float) -> void:
 	if channel.strip_edges().is_empty() or not is_inside_tree():
 		return
-	get_tree().call_group(channel, "play", at_strength)
+	get_tree().call_group(channel, "play_feedbacks_from_channel", at_strength)
 
 ## @ace_action
 ## @ace_featured
@@ -259,6 +268,7 @@ func stop() -> void:
 		return
 	_live.clear()
 	_resumed.emit()
+	_told_nested("stop")
 	_close()
 
 ## @ace_action
@@ -277,6 +287,7 @@ func skip_to_end() -> void:
 	var from: int = _head
 	var at_strength: float = _head_strength
 	_close()
+	_told_nested("skip_to_end")
 	for index: int in range(from, left.size()):
 		if not (left[index] is Dictionary):
 			continue
@@ -291,6 +302,8 @@ func skip_to_end() -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$FeedbackPlayer.restore()")
 func restore() -> void:
+	_stop_tweens()
+	_told_nested("restore")
 	for entry: Variant in _restore_to:
 		var card: Dictionary = entry as Dictionary
 		var object: Object = card.get("object") as Object
@@ -622,7 +635,7 @@ func load_moment_file(path: String) -> void:
 ## @ace_action
 ## @ace_name("Save Moment File")
 ## @ace_category("Feedback Player")
-## @ace_description("Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written; the timing a list adds is this node's own.")
+## @ace_description("Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written: a card that is switched off, and the timing words a list adds, are named in a warning and left out.")
 ## @ace_display_template("Save moment file to [b]{path}[/b]")
 ## @ace_param(path, default: user://my_moment.tres, desc: "Where to write it. At run time that is a user:// path, which is the only place a game may write.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
@@ -633,14 +646,20 @@ func save_moment_file(path: String) -> void:
 		push_warning("Feedback Player: this project has no moment file script, so Save Moment File did nothing.")
 		return
 	var written: Array[Dictionary] = []
+	var left_behind: PackedStringArray = PackedStringArray()
 	for entry: Variant in _steps_now():
 		if not (entry is Dictionary):
 			continue
 		var card: Dictionary = entry as Dictionary
+		if not bool(card.get("active", true)) or _is_timing(str(card.get("verb", ""))):
+			left_behind.append(_label_of(card))
+			continue
 		written.append({"verb": str(card.get("verb", "")), "amount": float(card.get("amount", 1.0)), "effect": str(card.get("effect", "")), "seconds": float(card.get("seconds", 0.0))})
 	var file: Resource = kind.new()
 	file.set("moment_name", name)
 	file.set("steps", written)
+	if not left_behind.is_empty():
+		push_warning("Feedback Player: a moment file holds no timing and no card that is switched off, so these were left out of the file: %s." % ", ".join(left_behind))
 	if ResourceSaver.save(file, path) != OK:
 		push_warning("Feedback Player: \"%s\" could not be written, so Save Moment File saved nothing." % path)
 
@@ -977,7 +996,11 @@ func _may_start() -> bool:
 	if playing and while_playing == IGNORE:
 		return false
 	if playing and while_playing == RESTART:
+		# The interrupted walk stops where it is, and its play is CLOSED here rather than left
+		# open: a sheet pairing On Feedbacks Started with On Feedbacks Finished must get both,
+		# and the walk that was cut short will never reach the end that would have said so.
 		_live.clear()
+		_close()
 	_last_played_at = now
 	return true
 
@@ -1132,19 +1155,48 @@ func _do_step(card: Dictionary, at_strength: float) -> void:
 	var amount: float = float(card.get("amount", 1.0))
 	var effect: String = str(card.get("effect", ""))
 	var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0)
+	# The player's own strength scales EVERY kind of card, not only the felt ones: a whole
+	# object's feedback turned down has to turn down the tween that moves it too.
+	var at: float = at_strength * maxf(strength, 0.0)
 	match word:
 		TWEEN_PROPERTY:
-			_tween_property(effect, MomentRunner.scaled(amount, at_strength), MomentRunner.seconds_of(seconds))
+			_tween_property(effect, MomentRunner.scaled(amount, at), MomentRunner.seconds_of(seconds))
 		EMIT_SIGNAL:
 			on_feedback_signal.emit(effect)
 		PLAY_PLAYER:
 			var other: Node = get_node_or_null(NodePath(effect))
 			if other != null and other.has_method("play"):
-				other.call("play", at_strength * maxf(amount, 0.0))
+				if not _nested.has(other):
+					_nested.append(other)
+				other.call("play", at * maxf(amount, 0.0))
 		_:
 			var juice: Node = _juice()
 			if juice != null:
-				juice.call("moment_step", word, amount, effect, seconds, at_strength * maxf(strength, 0.0))
+				juice.call("moment_step", word, amount, effect, seconds, at)
+
+## What a broadcast on a channel arrives as. A NAME OF THIS PACK'S OWN, never the bare word play:
+## an audio, video or animation player in the same group answers to that one too, and call_group
+## swallows the error - so a channel meant for feedback would quietly start somebody's music.
+func play_feedbacks_from_channel(at_strength: float) -> void:
+	play(at_strength)
+
+## Everything this play set going through a Play Player card, told the same thing the outer list was
+## just told. A nested play is part of the beat around it: stopping, skipping or restoring the list
+## that started it has to reach the ones it started, or half the beat carries on alone.
+func _told_nested(what: String) -> void:
+	for other: Node in _nested:
+		if is_instance_valid(other) and other.has_method(what):
+			other.call(what)
+	if what != "restore":
+		_nested.clear()
+
+## The tweens this player started, stopped and forgotten. A value put back while the tween that moved
+## it is still running is written over on the very next frame, so a Restore stops them first.
+func _stop_tweens() -> void:
+	for walked: Tween in _tweens:
+		if is_instance_valid(walked):
+			walked.kill()
+	_tweens.clear()
 
 ## A property on the host walked to a value, with what it was written down first so Restore can put
 ## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing.
@@ -1159,12 +1211,24 @@ func _tween_property(property: String, value: float, seconds: float) -> void:
 	if seconds <= 0.0:
 		host.set(property, value)
 		return
-	create_tween().tween_property(host, NodePath(property), value, seconds)
+	# The handle is KEPT: a Restore that only writes the value back is written over again by this
+	# very tween on the next frame. Restoring stops them first.
+	# The ones that have finished are let go of here rather than kept for the life of the node.
+	for held: int in range(_tweens.size() - 1, -1, -1):
+		if not is_instance_valid(_tweens[held]) or not _tweens[held].is_running():
+			_tweens.remove_at(held)
+	var walked: Tween = create_tween()
+	_tweens.append(walked)
+	walked.tween_property(host, NodePath(property), value, seconds)
 
 ## How much of the slowest step above is still to run when a Hold is reached - the number the hold
 ## word waits for. Read back over the cards between this hold and the one above it.
 func _longest_above(order: Array, index: int) -> float:
 	var longest: float = 0.0
+	# A card's delay is waited out by the walk itself, so by the time the Hold is reached the
+	# cards above it have already been running for the sum of the delays under them. What is
+	# LEFT of each one is its length less that, which is what the head of the list draws.
+	var spent: float = 0.0
 	var walk: int = index - 1
 	while walk >= 0:
 		var card: Dictionary = order[walk] as Dictionary
@@ -1172,9 +1236,16 @@ func _longest_above(order: Array, index: int) -> float:
 		if word == HOLD_UNTIL:
 			break
 		if bool(card.get("active", true)):
-			longest = maxf(longest, maxf(float(card.get("seconds", 0.0)), 0.0))
+			var delay: float = maxf(float(card.get("delay", 0.0)), 0.0)
+			var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.0)
+			if word == PAUSE:
+				spent += delay + seconds
+			else:
+				if word != LOOP_START and word != LOOP_BACK:
+					longest = maxf(longest, seconds - spent)
+				spent += delay
 		walk -= 1
-	return longest
+	return maxf(longest, 0.0)
 
 ## Where a Loop Back sends the head: the nearest Hold or Loop Start above it that the card is willing
 ## to land on. -1 when there is none, which makes the loop a step that does nothing.
@@ -1206,6 +1277,7 @@ func _begin(order: Array, at_strength: float) -> int:
 	_order = order
 	_head = 0
 	_head_strength = at_strength
+	_nested.clear()
 	for entry: Variant in order:
 		if entry is Dictionary:
 			(entry as Dictionary)["loops_left"] = int((entry as Dictionary).get("loops", 1))

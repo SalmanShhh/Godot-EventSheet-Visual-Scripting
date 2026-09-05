@@ -28,6 +28,78 @@ static func run() -> bool:
 	ok = _walk_pins() and ok
 	ok = _gate_pins() and ok
 	ok = _preview_pins() and ok
+	ok = _outer_and_inner_pins() and ok
+	ok = _file_pins() and ok
+	return ok
+
+
+## WHAT THE OUTER PLAY REACHES. A Play Player card starts another list, and that list is part of the
+## beat around it - so the player it started is remembered and told what the outer one is told. And
+## the player's own strength scales every kind of card, not only the felt ones: a tween that moves
+## the object is exactly what an accessibility setting turning a whole object down has to reach.
+static func _outer_and_inner_pins() -> bool:
+	var player: Node = PLAYER.new()
+	var host: Node2D = Node2D.new()
+	player.host = host
+	var inner: Node = PLAYER.new()
+	inner.name = "Inner"
+	inner.steps = [{"verb": "shake", "amount": 1.0, "seconds": 0.0}] as Array[Dictionary]
+	player.add_child(inner)
+	player.steps = [{"verb": "play_player", "effect": "Inner", "amount": 1.0, "seconds": 0.0}] as Array[Dictionary]
+	player.play(1.0)
+	var remembered: int = (player._nested as Array).size()
+	player._told_nested("stop")
+	var let_go: int = (player._nested as Array).size()
+
+	host.rotation = 0.0
+	player.strength = 0.5
+	player.steps = [{"verb": "tween_property", "effect": "rotation", "amount": 2.0, "seconds": 0.0}] as Array[Dictionary]
+	player.play(1.0)
+	var moved: float = snappedf(host.rotation, 0.001)
+
+	# The fold a Hold waits for, over cards the walk has already waited the delays of.
+	var order: Array = [
+		{"verb": "shake", "seconds": 0.2},
+		{"verb": "flash", "delay": 0.3, "seconds": 0.05},
+		{"verb": "hold_until", "seconds": 0.0}
+	]
+	var fold: float = snappedf(player._longest_above(order, 2), 0.001)
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["a nested play is remembered by the list that started it", remembered, 1],
+		["and let go of once it has been told", let_go, 0],
+		["the player's own strength scales a tween card too", moved, 1.0],
+		["a Hold waits for what is LEFT of the cards above it", fold, 0.05],
+		["a channel speaks a name of this pack's own",
+			player.has_method("play_feedbacks_from_channel"), true]
+	])
+	player.free()
+	host.free()
+	return ok
+
+
+## A moment file holds ten words and no timing, so what a list saves out is the cards a file can
+## hold - and the ones it cannot are named rather than written in as playing steps.
+static func _file_pins() -> bool:
+	var player: Node = PLAYER.new()
+	player.steps = [
+		{"verb": "shake", "amount": 0.4, "seconds": 0.1},
+		{"verb": "flash", "amount": 1.0, "seconds": 0.1, "active": false},
+		{"verb": "pause", "seconds": 0.2}
+	] as Array[Dictionary]
+	var path: String = "user://feedback_player_test_moment.tres"
+	player.save_moment_file(path)
+	var written: Resource = load(path) if ResourceLoader.exists(path) else null
+	var kept: Array = (written.get("steps") as Array) if written != null else []
+	var words: PackedStringArray = PackedStringArray()
+	for card: Variant in kept:
+		if card is Dictionary:
+			words.append(str((card as Dictionary).get("verb", "")))
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["only the cards a file can hold are written", words, PackedStringArray(["shake"])]
+	])
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	player.free()
 	return ok
 
 
