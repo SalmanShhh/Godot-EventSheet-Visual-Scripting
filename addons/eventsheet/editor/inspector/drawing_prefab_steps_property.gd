@@ -46,8 +46,8 @@ func _update_property() -> void:
 
 
 ## The shape-aware steps list: the SHARED card-list drawer, handed the prefab's own vocabulary. Each
-## step is a card titled by its shape, read top to bottom as four short sections - where it sits and
-## how it blends, its geometry, its colours, and its dashes - and the Add button is the searchable
+## step is a card titled by its shape, read top to bottom as four short sections - where it sits, its
+## geometry, its colour, and its dashes - and the Add button is the searchable
 ## dropdown every card list has.
 ##
 ## A THICKNESS IS READ IN THE UNIT ITS OWN FIELD OFFERS. The Thickness row carries the unit dropdown
@@ -61,9 +61,6 @@ func _update_property() -> void:
 ##
 ##   scale_mode   whether the thickness follows the stamp's scale (uniform) or holds its width
 ##                however the whole prefab is scaled (fixed).
-##   blend        how the step meets what is behind it.
-##   color_mode   single, two (a blend along the step) or gradient.
-##   color_b      the far end of a two-colour step.
 ##   caps         what the two ends of a line look like: none, square or round.
 ##   dashed       the dash pattern on a line: the length of one dash, the gap after it (the two are
 ##   dash_size    linked by the "=" beside them), how far the pattern is moved along, and which of
@@ -71,11 +68,18 @@ func _update_property() -> void:
 ##   dash_offset
 ##   dash_style
 ##
-## WHAT THE PICTURE CAN AND CANNOT SHOW. The canvas and the thumbnail draw with the engine's own
-## draw calls, which know caps, dashes, the scale rule and a single colour - so those are drawn. A
-## two-colour or gradient step and a blend other than normal are STORED and drawn flat: the crisp,
-## blended, gradient version of the same shape is what the Vector Shapes nodes are for, and the
-## guide says so rather than the card pretending.
+## EVERY FIELD ON THE CARD CHANGES THE PICTURE. The three renderers a prefab has - the stamp node,
+## the canvas gizmo and the off-thread thumbnail - all draw with the engine's own `_draw()` calls,
+## and one `compile_steps` normaliser feeds all three. So a field is on this card only when that
+## normaliser carries it and a draw call reads it: caps, dashes, the scale rule and one colour.
+##
+## WHICH IS WHY THERE IS NO BLEND ROW, AND NO SECOND COLOUR. A `_draw()` call has no blend mode of
+## its own - blending is a `CanvasItemMaterial` on the NODE, one for every step it draws - so a
+## per-step blend is not something any of the three renderers could honour without a node per step.
+## A ramp needs a Gradient to point at, and a step is a Dictionary of numbers with nowhere to keep
+## one. Those looks are what the Vector Shapes nodes are for: each is its own node, so each carries
+## its own material and its own ramp. A control that stored a word no renderer read would be a
+## control that changes nothing, which is worse than not offering it.
 class ShapeStepsEditor:
 	extends EventSheetCardListDrawer
 
@@ -120,9 +124,6 @@ class ShapeStepsEditor:
 	## picture until somebody changes one.
 	const OPTIONAL_DEFAULTS: Dictionary = {
 		"scale_mode": "uniform",
-		"blend": "normal",
-		"color_mode": "single",
-		"color_b": "#ffffff",
 		"caps": "none",
 		"dashed": false,
 		"dash_size": 8.0,
@@ -163,14 +164,13 @@ class ShapeStepsEditor:
 		return {"kinds": kinds}
 
 
-	## One shape's fields, in the order the card draws them: where it sits and how it blends, what it
-	## is, what colour it is, and (for a shape with a length to run one along) its dashes.
+	## One shape's fields, in the order the card draws them: where it sits, what it is, what colour it
+	## is, and (for a shape with a length to run one along) its dashes.
 	static func fields_for(kind: String) -> Array:
 		var fields: Array = [
 			{"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(PackedStringArray(KINDS)), "group": GROUP_PLACEMENT},
 			{"key": "x", "label": "Offset X", "group": GROUP_PLACEMENT},
 			{"key": "y", "label": "Offset Y", "group": GROUP_PLACEMENT},
-			{"key": "blend", "label": "Blend", "drawer": "options:normal,add,subtract,multiply,premultiplied", "group": GROUP_PLACEMENT},
 		]
 		if THICKNESS_KINDS.has(kind):
 			fields.append({"key": "scale_mode", "label": "Scale", "drawer": "toggle_row:uniform,fixed:segmented", "group": GROUP_PLACEMENT})
@@ -178,9 +178,7 @@ class ShapeStepsEditor:
 			var shape_field: Dictionary = (field as Dictionary).duplicate()
 			shape_field["group"] = GROUP_GEOMETRY
 			fields.append(shape_field)
-		fields.append({"key": "color_mode", "label": "Colour mode", "drawer": "options:single,two,gradient", "group": GROUP_COLOUR})
 		fields.append({"key": "color", "label": "Colour", "drawer": "swatch_row", "group": GROUP_COLOUR})
-		fields.append({"key": "color_b", "label": "Second colour", "drawer": "swatch_row", "show_if": "color_mode==two", "group": GROUP_COLOUR})
 		if CAPPED_KINDS.has(kind):
 			fields.append({"key": "caps", "label": "End caps", "drawer": "toggle_row:none,square,round:segmented", "group": GROUP_COLOUR})
 		if DASHABLE_KINDS.has(kind):

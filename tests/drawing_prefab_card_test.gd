@@ -35,6 +35,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _pin_the_round_trip() and all_passed
 	all_passed = _pin_the_card() and all_passed
+	all_passed = _pin_every_field_reaches_a_renderer() and all_passed
 	all_passed = _pin_the_new_keys() and all_passed
 	all_passed = _pin_the_picture() and all_passed
 	return all_passed
@@ -76,24 +77,48 @@ static func _pin_the_card() -> bool:
 	var circle_fields: Array = steps_editor.call("fields_for", "circle")
 	return SUPPORT.pins(PREFIX, [
 		["a line's card, field by field", _keys_of(line_fields),
-			"kind,x,y,blend,scale_mode,p1,p2,p3,color_mode,color,color_b,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
+			"kind,x,y,scale_mode,p1,p2,p3,color,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
 		["a line's card, section by section", _groups_of(line_fields),
-			"Placement,Placement,Placement,Placement,Placement,Geometry,Geometry,Geometry,Colour,Colour,Colour,Colour,Dashed,Dashed,Dashed,Dashed,Dashed"],
+			"Placement,Placement,Placement,Placement,Geometry,Geometry,Geometry,Colour,Colour,Dashed,Dashed,Dashed,Dashed,Dashed"],
 		["a circle has no ends and no dashes to offer", _keys_of(circle_fields),
-			"kind,x,y,blend,p1,color_mode,color,color_b"],
+			"kind,x,y,p1,color"],
 		["a new circle step, key by key", ",".join(PackedStringArray(
 			(steps_editor.call("defaults_for", "circle") as Dictionary).keys())),
-			"x,y,p1,p2,p3,color,texture,blend,color_mode,color_b"],
+			"x,y,p1,p2,p3,color,texture"],
 		["a new line step starts undashed", str((steps_editor.call("defaults_for", "line") as Dictionary).get("dashed")), "false"],
 		["a thickness is read in the unit its own field offers, and no second row says it again",
 			_keys_of(line_fields).count("unit"), 0],
-		["the second colour belongs to a two-colour step",
-			EventSheetCardSchemas.field_visible({"key": "color_b", "show_if": "color_mode==two"}, {"color_mode": "two"}), true],
-		["and to no other", EventSheetCardSchemas.field_visible(
-			{"key": "color_b", "show_if": "color_mode==two"}, {"color_mode": "single"}), false],
 		["the dash fields belong to a dashed step", EventSheetCardSchemas.field_visible(
 			{"key": "dash_size", "show_if": "dashed"}, {"dashed": true}), true],
 		["the dash and the gap are linked", str(_field_named(line_fields, "dash_size").get("link")), "dash_spacing"],
+	])
+
+
+## NO CONTROL THAT CHANGES NOTHING. A prefab has three renderers - the stamp node, the canvas gizmo
+## and the off-thread thumbnail - and one normaliser, `compile_steps`, feeds all three. So a field
+## the card offers on ANY shape has to be a key that normaliser carries through, or it is a control
+## somebody turns and no picture answers. The pin is the LIST of the ones that do not, so a field
+## added to the card without a home in the entry is named rather than counted.
+static func _pin_every_field_reaches_a_renderer() -> bool:
+	var editor: GDScript = load(STEPS_PROPERTY_PATH) as GDScript
+	var steps_editor: GDScript = editor.get_script_constant_map().get("ShapeStepsEditor") as GDScript
+	var kinds: Array = steps_editor.get_script_constant_map().get("KINDS", [])
+	var orphans: PackedStringArray = PackedStringArray()
+	for kind: Variant in kinds:
+		var step: Dictionary = (steps_editor.call("defaults_for", str(kind)) as Dictionary).duplicate()
+		step["kind"] = str(kind)
+		var compiled: Array = DrawingPrefabResource.compile_steps([step])
+		var entry: Dictionary = compiled[0] if not compiled.is_empty() else {}
+		for field: Variant in steps_editor.call("fields_for", str(kind)):
+			var key: String = str((field as Dictionary).get("key", ""))
+			# `texture` is carried as the loaded `tex`, which is the same key under the renderer's name.
+			if key == "texture":
+				continue
+			if not entry.has(key) and not orphans.has(key):
+				orphans.append(key)
+	orphans.sort()
+	return SUPPORT.pins(PREFIX, [
+		["every field a card offers reaches the entry the renderers draw with", ",".join(orphans), ""],
 	])
 
 
@@ -102,7 +127,7 @@ static func _pin_the_card() -> bool:
 static func _pin_the_new_keys() -> bool:
 	var step: Dictionary = {
 		"kind": "line", "x": 0.0, "y": 0.0, "p1": 32.0, "p2": 0.0, "p3": 3.0, "color": "#00ff88", "texture": "",
-		"scale_mode": "fixed", "blend": "add", "color_mode": "two", "color_b": "#ff0088",
+		"scale_mode": "fixed",
 		"caps": "round", "dashed": true, "dash_size": 5.0, "dash_spacing": 3.0, "dash_offset": 0.25, "dash_style": "angled",
 	}
 	var compiled: Array = DrawingPrefabResource.compile_steps([step])
@@ -111,7 +136,7 @@ static func _pin_the_new_keys() -> bool:
 	var older_entry: Dictionary = older[0] if not older.is_empty() else {}
 	return SUPPORT.pins(PREFIX, [
 		["the keys a card writes, in storage order", ",".join(PackedStringArray(step.keys())),
-			"kind,x,y,p1,p2,p3,color,texture,scale_mode,blend,color_mode,color_b,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
+			"kind,x,y,p1,p2,p3,color,texture,scale_mode,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
 		["the ends reach the renderer", str(entry.get("caps")), "round"],
 		["the dashes reach the renderer", str(entry.get("dashed")), "true"],
 		["so does the dash length", entry.get("dash_size"), 5.0],
