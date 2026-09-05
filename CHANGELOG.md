@@ -135,6 +135,17 @@
 
 ### Fixed in the clock and loading pass
 
+- **The Doctor stopped lifting the same script twice, and stopped lifting scripts with nothing to
+  say.** Opening a script as a sheet is by a wide margin the most expensive thing the audit does, and
+  twelve of its sections need the rows rather than the text. Each of them was putting its own copy of
+  the same files through the importer, so a script two sections both cared about was lifted twice for
+  one report; they now share one import the way they already share one read, dropped with it when the
+  report is finished. And the Lighting section's gate was the bare word `environment`, so every
+  script merely MENTIONING one - a comment, a type name, a test about the word - bought a full sheet
+  build for rows it does not have. It now asks the same question the rows are judged by, line by
+  line, the way the Multiplayer section asks the importer's own. The report is byte-identical either
+  way; there are simply fewer scripts opened to produce it.
+
 - **A clock a row replaces is retired, so a trigger fires once and at its own moment.** Put On
   Cooldown, Start Countdown, Schedule At, Start Stopwatch and Pause Countdown wrote a new
   `SceneTreeTimer` over the metadata holding the old one - but a `SceneTreeTimer` is held by the
