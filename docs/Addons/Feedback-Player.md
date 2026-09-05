@@ -246,7 +246,7 @@ Enemy: On damaged
   -> HitFeedback | Feedback Player: Play Feedbacks  Damage.amount / Enemy.max_hp
 ```
 
-A scratch plays a light version of the same beat, a finisher plays it at full strength, and the list was tuned once.
+A glancing hit plays a light version of the same beat, a finisher plays it at full strength, and the list was tuned once.
 
 ### 2. Wait for the beat before the death animation
 
