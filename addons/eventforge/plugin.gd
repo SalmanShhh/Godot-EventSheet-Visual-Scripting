@@ -23,6 +23,12 @@ const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspect
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
 const INSPECTOR_HANDLES_PATH: String = "res://addons/eventsheet/editor/inspector/handle_plugin.gd"
+const FEEDBACK_PLAYER_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_inspector_plugin.gd"
+const FEEDBACK_CARD_SCHEMA_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_card_schema.gd"
+## The name the Feedback Player's export marker asks its card vocabulary for. Spelled here as a
+## literal rather than read off the schema file: naming that class would compile it, and the ACE
+## reflection behind it, into every editor boot to register one callable.
+const FEEDBACK_CARD_SCHEMA_NAME: String = "feedback_steps"
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
@@ -49,6 +55,7 @@ var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 # Loosely typed on purpose (boot-lazy): loaded by path in _enter_tree so their subtrees stay off the boot compile.
 var _drawing_prefab_inspector: EditorInspectorPlugin = null
 var _drawing_prefab_preview_gen: EditorResourcePreviewGenerator = null
+var _feedback_player_inspector: EditorInspectorPlugin = null
 # Viewport handles for any script whose decor declares them (loaded by path). It draws and drags in
 # the 2D viewport through this plugin's canvas forwarding, and in 3D through a gizmo plugin of its own.
 var _inspector_handles: RefCounted = null
@@ -337,6 +344,17 @@ func _enter_tree() -> void:
 	# Cosmetic - a prefab still edits as a plain steps table and draws identically without this plugin.
 	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
 	add_inspector_plugin(_drawing_prefab_inspector)
+	# FeedbackPlayer: the strip under its list (how long the beat is, the buttons that play it in the
+	# editor, the debug timeline, and the two doors to a moment file). The list itself is drawn by the
+	# shared card-list drawer through the ordinary marker on its export, so nothing is claimed here.
+	_feedback_player_inspector = load(FEEDBACK_PLAYER_INSPECTOR_PATH).new()
+	add_inspector_plugin(_feedback_player_inspector)
+	# And the vocabulary that list is drawn WITH, registered as a callable rather than as a table: the
+	# kinds are derived from the Juice pack's own verbs, which are known when an Inspector opens and
+	# not when the plugin boots. The lambda loads the schema file on first ask, so registering it
+	# costs nothing at boot.
+	EventSheets.register_card_schema(FEEDBACK_CARD_SCHEMA_NAME,
+		func() -> Dictionary: return load(FEEDBACK_CARD_SCHEMA_PATH).call("schema"))
 	# Tier 3 attribute drawers (progress bars…): purely cosmetic - generated scripts
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
@@ -513,6 +531,10 @@ func _exit_tree() -> void:
 	if _live_values_debugger != null:
 		remove_debugger_plugin(_live_values_debugger)
 		_live_values_debugger = null
+	if _feedback_player_inspector != null:
+		remove_inspector_plugin(_feedback_player_inspector)
+		_feedback_player_inspector = null
+		EventSheets.unregister_card_schema(FEEDBACK_CARD_SCHEMA_NAME)
 	if _attribute_drawers_plugin != null:
 		remove_inspector_plugin(_attribute_drawers_plugin)
 		_attribute_drawers_plugin = null
