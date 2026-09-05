@@ -36,6 +36,7 @@ static func run() -> bool:
 	ok = _restore_pins() and ok
 	ok = _skip_pins() and ok
 	ok = _revert_pins() and ok
+	ok = _let_go_pins() and ok
 	ok = _signal_pins() and ok
 	ok = _clamp_pins() and ok
 	return ok
@@ -222,6 +223,80 @@ static func _revert_pins() -> bool:
 		["a reverted beat finished cut short", cut_short, true],
 		["the tick parks once nothing is left in the air", parked, false]
 	])
+
+
+## THE WAY HOME LETS GO FIRST. A beat's flash, punch and zoom are TWEENS, and a tween keeps writing
+## the value it was given for as long as it is walking - so a Restore or a Revert that only wrote the
+## old value back would be written over again on the very next frame, and the row would look like one
+## that does nothing. Both ways home stop the beat's own walks before they write.
+##
+## Only the beat's OWN walks: a Flash row a sheet fired by hand is nobody's beat to put back, and
+## killing it would be undoing something no moment did. That is why the book is pinned as a whole
+## rather than as a count - the key the beat touched goes, and the one it never touched stays.
+##
+## The book is seeded by hand, because a Tween needs a live scene tree to be made in and this suite
+## has none. An entry that is not a live tween is exactly what a freed host leaves behind, which is
+## the case the letting-go has to survive anyway.
+static func _let_go_pins() -> bool:
+	# A key no step here touches, seeded into the book so the pins can show what is NOT let go.
+	var untouched: String = RUNNER.TOUCH_CAMERA_ZOOM
+	var behavior: Node = PACK.new()
+	var stage: ColorRect = ColorRect.new()
+	behavior.host = stage
+	stage.modulate = Color(0.2, 0.4, 0.6, 1.0)
+	stage.scale = Vector2(1.5, 1.5)
+	_opened(behavior, "impact", [
+		{"verb": "flash", "amount": 0.5, "effect": "white", "seconds": 0.0},
+		{"verb": "punch", "amount": 0.3, "seconds": 0.0}
+	])
+	behavior._moment_tweens[RUNNER.TOUCH_HOST_TINT] = null
+	behavior._moment_tweens[RUNNER.TOUCH_HOST_SCALE] = null
+	behavior._moment_tweens[untouched] = null
+	var held_before: PackedStringArray = _tween_book(behavior)
+	# The beat has been felt: both values are somewhere else now.
+	stage.modulate = Color.WHITE
+	stage.scale = Vector2(2.5, 2.5)
+	behavior.moment_restore_values("impact")
+	var put_back: Array = [stage.modulate, stage.scale]
+	var held_after_restore: PackedStringArray = _tween_book(behavior)
+	behavior.free()
+	stage.free()
+	# And the same question of the walk home, which lets go of the values IT is about to write.
+	var reverting: Node = PACK.new()
+	var hovered: ColorRect = ColorRect.new()
+	reverting.host = hovered
+	hovered.modulate = Color(0.0, 0.0, 0.0, 1.0)
+	_opened(reverting, "hover", [{"verb": "flash", "amount": 1.0, "effect": "white", "seconds": 0.4}])
+	reverting._moment_tweens[RUNNER.TOUCH_HOST_TINT] = null
+	reverting._moment_tweens[untouched] = null
+	hovered.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	reverting.moment_revert("hover")
+	var held_after_revert: PackedStringArray = _tween_book(reverting)
+	reverting._process(0.4)
+	var walked_home: Color = hovered.modulate
+	reverting.free()
+	hovered.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the beat is holding a walk on each of the three values", held_before,
+			PackedStringArray([untouched, RUNNER.TOUCH_HOST_SCALE, RUNNER.TOUCH_HOST_TINT])],
+		["restore puts the two the beat recorded back", put_back,
+			[Color(0.2, 0.4, 0.6, 1.0), Vector2(1.5, 1.5)]],
+		["and lets go of their walks, so nothing writes over them next frame - leaving the one walk the beat never started",
+			held_after_restore, PackedStringArray([untouched])],
+		["a revert lets go of the same values before it walks them home", held_after_revert,
+			PackedStringArray([untouched])],
+		["and still gets home", walked_home, Color(0.0, 0.0, 0.0, 1.0)]
+	])
+
+
+## The tween book as sorted names, which is what a pin about letting go is really asking: not how
+## many walks are held, but WHICH values are still being written by one.
+static func _tween_book(behavior: Node) -> PackedStringArray:
+	var named: PackedStringArray = PackedStringArray()
+	for key: Variant in (behavior._moment_tweens as Dictionary).keys():
+		named.append(str(key))
+	named.sort()
+	return named
 
 
 ## The four signals, in the order a play says them, with the step labels a sheet reads. Backwards
