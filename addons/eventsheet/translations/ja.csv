@@ -7164,3 +7164,38 @@ Levels,段
 "Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. It takes effect at once, including for a row that has already answered for that name. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",この名前をセーブから消し、「このセーブで初めて」がもう一度その名前で発火するようにします - テスト用、あるいは自分のフラグを自分で戻す章のためです。効果はすぐに現れます。すでにその名前に答えた行にも当てはまります。 セーブシステムのパックがツリーにあるとき、この記憶はセーブスロットの中に置かれます。だからセーブごとに別々に答え、新しい周回を始める行がほかのものと一緒に消します。そのパックがない場合は、マシン単位の行が使うのと同じ user://remembered.cfg に落ちます - つまりコンピューター全体でひとつの答えになります。
 "%s asks the save what it has already seen, and this project registers no %s autoload - so the memory goes to user://remembered.cfg instead: one answer for the whole computer rather than one per save, and nothing clears it, because Start New Run belongs to that pack. Install the Save System pack and register it, or use Only Once Ever, which says per-machine on the label.",%s はセーブに何をすでに見たかを尋ねますが、このプロジェクトは %s オートロードを登録していません。そのため記憶は user://remembered.cfg に行きます - セーブごとにひとつではなくコンピューター全体でひとつの答えになり、新しい周回を始めるはそのパックのものなので、何も消しません。セーブシステムのパックを入れて登録するか、ラベルにマシン単位と書いてある一度きりを使ってください。
 "A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"" - and with tenths under ten seconds, where ""00:09.4"" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","名前付きカウントダウンを分と秒で返します。残り 83 秒なら ""01:23"" です。十秒を切ると十分の一秒まで表示し、""00:09.4"" は、時間が減っていくのが分かる時計と、止まって見える時計との違いです。時計ラベルにそのまま設定できる文字列で、行の中で書式を組む必要はありません。1 時間を超えるカウントダウンは繰り上がらず、分のまま数え続けます。"
+"%s deals damage of type ""%s"", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.","%s は ""%s"" 種別のダメージを与えますが、このプロジェクトのどの DamageTypeSet もその名前を持っていません。綴りの誤りは何にも耐性を持たず、ゲーム自身が知らせることもありません。"
+"%s guards against damage of type ""%s"", which nothing in this project deals. The guard will never be tested.","%s は ""%s"" 種別のダメージに備えていますが、このプロジェクトではその種別を与えるものがありません。その備えが試されることはありません。"
+"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.",ダメージ: %d 個のスクリプトが種別つきのダメージを与えるか、それに備えています。%d 個の種別はどのセットにも書かれておらず、%d 個の備えは誰も与えない種別に向いています。
+Claim,所有者にする
+"Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.",ノードが誰かのものであることを記します - いま撃った弾、仕掛けた罠、呼び出した手下。プロジェクト内のすべての所有行がここに書かれたものを読むので、キルの手柄、アシスト、同士討ちの判定はすべてこの一行から生まれます。もう一度所有者にすると、所有者が置き換わるだけです。
+Ownership,所有
+Claim [i]{node}[/i] for [i]{owner}[/i],[i]{node}[/i] を [i]{owner}[/i] のものにする
+The thing being claimed - usually the node that was just spawned.,所有されるもの - たいていは、いま生成されたノードです。
+Owner,所有者
+"Who it belongs to. Left as it is, that is the node running this row - the shooter, the turret, the trap.",誰のものか。そのままにすると、この行を実行しているノード - 撃った者、砲台、罠 - になります。
+Disown,所有を外す
+"Takes the owner off a node, so it belongs to nobody again. A recycled node carries no credit from its last life, which is why a pool disowns on the way back to the shelf; a dropped weapon that anyone may pick up is the same idea.",ノードから所有者を外し、再び誰のものでもない状態にします。使い回されるノードは前の生の手柄を持ち越さないので、プールは棚に戻すときに所有を外します。誰でも拾える落とした武器も同じ考え方です。
+Disown [i]{node}[/i],[i]{node}[/i] の所有を外す
+The node that stops belonging to anyone.,誰のものでもなくなるノード。
+Claimed By,直接の所有者
+"The node that claimed this one, one step up - the turret that fired the bullet, not the player behind the turret. Reads as nothing when it was never claimed, and when the owner itself has gone. For the far end of the chain, use Root Owner Of.",このノードを所有した一段上のノード - 弾を撃った砲台であって、砲台の後ろにいるプレイヤーではありません。一度も所有されていないとき、そして所有者そのものがいなくなったときは、何も返しません。連なりの果てを知りたいときは「根の所有者」を使います。
+who claimed [i]{node}[/i],[i]{node}[/i] を所有した相手
+The node whose owner is being read.,所有者を読み取る対象のノード。
+Root Owner Of,根の所有者
+"The far end of the owner chain: bullet to turret to player answers with the player. This is the one a kill feed, a score row and an assist list all want, because it is the person rather than the thing they were holding. A node nobody claimed answers with itself, and a chain whose far end has been freed answers with nothing.",所有の連なりの果て: 弾、砲台、プレイヤーとたどればプレイヤーを返します。キルログも得点行もアシスト一覧も欲しいのはこれです。手に持っていた物ではなく人だからです。誰にも所有されていないノードは自分自身を返し、果てが解放されてしまった連なりは何も返しません。
+root owner of [i]{node}[/i],[i]{node}[/i] の根の所有者
+The node the chain is walked from.,連なりをたどり始めるノード。
+Is Owned By,所有されている
+"True while a node traces back to the owner you name. Both sides are walked to the root, so a bullet fired by a turret the player built counts as the player's - and as the turret's, because the turret traces back to the same person.",ノードが、指定した所有者にたどり着く間は真になります。両側とも根までたどるので、プレイヤーが建てた砲台の撃った弾はプレイヤーのものと数えられ、砲台のものとも数えられます。砲台も同じ人物にたどり着くからです。
+[i]{node}[/i] is owned by [i]{owner}[/i],[i]{node}[/i] は [i]{owner}[/i] のもの
+The thing being asked about.,問い合わせの対象。
+Who it should trace back to.,たどり着くべき相手。
+Is Mine,自分のもの
+"True while a node traces back to the same owner this row does - my bullet, my turret, my summon, or me. The friendly half of the pair: Hit Is Not My Owner is the same question asked the other way.",ノードが、この行と同じ所有者にたどり着く間は真になります - 自分の弾、自分の砲台、自分が呼び出したもの、あるいは自分自身。組になっている優しいほうで、「当たった相手は自分の所有者ではない」は同じ問いを裏返したものです。
+[i]{node}[/i] is mine,[i]{node}[/i] は自分のもの
+Hit Is Not My Owner,当たった相手は自分の所有者ではない
+"The friendly-fire guard, for any hit trigger: true while the thing that was hit does not trace back to whoever fired this. Put the trigger's own collider in the field - the bullet stops shooting the player who fired it, and the turret that player built, without a single flag.",同士討ちを防ぐ問いで、どんな命中トリガーにも使えます: 当たったものが、これを撃った相手にたどり着かない間は真です。トリガーが渡してきたコライダーそのものを欄に入れてください - フラグを一つも立てずに、弾は撃った本人にも、その人が建てた砲台にも当たらなくなります。
+hit [i]{hit}[/i] is not my owner,当たった [i]{hit}[/i] は自分の所有者ではない
+Hit,当たった相手
+"What was hit - the collider, body or area the trigger above handed you.",何に当たったか - 上のトリガーが渡してきたコライダー、ボディ、エリア。

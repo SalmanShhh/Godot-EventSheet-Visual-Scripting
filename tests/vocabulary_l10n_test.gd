@@ -377,6 +377,9 @@ const FULLY_KEYED_ACES: Array[String] = [
 	"ResumeCountdown", "signal:countdown_finished", "StartStopwatch", "RecordLap",
 	"StopwatchSeconds", "StopwatchText", "LapSeconds", "LapText", "FirstTimeInSave",
 	"HasSeenInSave", "MarkSeenInSave", "ForgetSeenInSave",
+	# Who made this: the two rows that write the one owner key, the two that read the chain, and
+	# the three that compare its far end.
+	"Claim", "Disown", "ClaimedBy", "RootOwnerOf", "IsOwnedBy", "IsMine", "HitIsNotMyOwner",
 ]
 
 

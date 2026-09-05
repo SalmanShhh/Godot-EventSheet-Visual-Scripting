@@ -7164,3 +7164,38 @@ Levels,层级
 "Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. It takes effect at once, including for a row that has already answered for that name. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.",在本存档中清掉一个名字，好让「本存档中的第一次」再次为它触发 - 用于测试，或用于一个会重置自己标记的章节。它立即生效，对已经为该名字作过答的行也一样。 当存档系统包在场景树里时，这份记忆存放在存档槽内，因此每个存档各自作答，「开始新一轮」会连同其他内容一起清掉它；没有该包时，它退回到按机器记忆的那些行所用的同一个 user://remembered.cfg，也就是整台电脑只有一个答案。
 "%s asks the save what it has already seen, and this project registers no %s autoload - so the memory goes to user://remembered.cfg instead: one answer for the whole computer rather than one per save, and nothing clears it, because Start New Run belongs to that pack. Install the Save System pack and register it, or use Only Once Ever, which says per-machine on the label.",%s 会问存档已经见过什么，而本项目没有注册 %s 自动加载，所以这份记忆改去 user://remembered.cfg：整台电脑只有一个答案，而不是每个存档各有一个，并且没有东西会清掉它，因为开始新一轮属于那个包。装上存档系统包并注册它，或者改用标签上就写着按机器的永远只有一次。
 "A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"" - and with tenths under ten seconds, where ""00:09.4"" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","把具名倒计时写成分和秒，于是剩 83 秒读作 ""01:23""；不足十秒时会显示到十分之一秒，""00:09.4"" 就是一只能让人感到时间在流走的钟，和一只看起来停住的钟之间的差别。这就是时钟标签要设置的文本，行内不必做任何格式化。超过一小时的倒计时会继续按分钟计，而不是回卷。"
+"%s deals damage of type ""%s"", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.","%s 造成 ""%s"" 类型的伤害，但本项目中没有任何 DamageTypeSet 写下这个名字。拼错的名字什么也抵抗不了，游戏本身也永远不会报告它。"
+"%s guards against damage of type ""%s"", which nothing in this project deals. The guard will never be tested.","%s 防备 ""%s"" 类型的伤害，但本项目里没有任何东西造成这种伤害。这道防备永远不会被检验。"
+"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.",伤害：%d 个脚本造成或防备带类型的伤害，%d 个类型没有任何集合写下，%d 处防备针对无人造成的类型。
+Claim,认领
+"Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.",把一个节点标记为属于某人 - 你刚发射的子弹、你刚布下的陷阱、你刚召唤的随从。项目里每一条归属行读的都是这里写下的东西，所以击杀归属、助攻和友军伤害判定全都出自这一行。再认领一次只是替换掉所有者。
+Ownership,归属
+Claim [i]{node}[/i] for [i]{owner}[/i],把 [i]{node}[/i] 认领给 [i]{owner}[/i]
+The thing being claimed - usually the node that was just spawned.,被认领的东西 - 通常是刚刚生成的那个节点。
+Owner,所有者
+"Who it belongs to. Left as it is, that is the node running this row - the shooter, the turret, the trap.",它属于谁。保持原样时，就是执行这一行的节点 - 开枪的人、炮塔、陷阱。
+Disown,解除归属
+"Takes the owner off a node, so it belongs to nobody again. A recycled node carries no credit from its last life, which is why a pool disowns on the way back to the shelf; a dropped weapon that anyone may pick up is the same idea.",把所有者从一个节点上取下，让它重新不属于任何人。被回收的节点不该带着上一条命的功劳，所以对象池在放回架子时会解除归属；任何人都能捡起的掉落武器也是同一个想法。
+Disown [i]{node}[/i],解除 [i]{node}[/i] 的归属
+The node that stops belonging to anyone.,不再属于任何人的那个节点。
+Claimed By,认领者
+"The node that claimed this one, one step up - the turret that fired the bullet, not the player behind the turret. Reads as nothing when it was never claimed, and when the owner itself has gone. For the far end of the chain, use Root Owner Of.","认领了这个节点的上一级节点 - 是开火的炮塔，而不是炮塔背后的玩家。从未被认领时，以及所有者本身已经消失时，读作空。想知道整条链的尽头，请用""根所有者""。"
+who claimed [i]{node}[/i],谁认领了 [i]{node}[/i]
+The node whose owner is being read.,要读取其所有者的那个节点。
+Root Owner Of,根所有者
+"The far end of the owner chain: bullet to turret to player answers with the player. This is the one a kill feed, a score row and an assist list all want, because it is the person rather than the thing they were holding. A node nobody claimed answers with itself, and a chain whose far end has been freed answers with nothing.",归属链的尽头：子弹到炮塔再到玩家，答案是玩家。击杀播报、计分行和助攻名单要的都是它，因为那是人，而不是他手里拿的东西。没有人认领过的节点答的是它自己，尽头已被释放的链条则什么也不答。
+root owner of [i]{node}[/i],[i]{node}[/i] 的根所有者
+The node the chain is walked from.,从哪个节点开始沿链上行。
+Is Owned By,属于
+"True while a node traces back to the owner you name. Both sides are walked to the root, so a bullet fired by a turret the player built counts as the player's - and as the turret's, because the turret traces back to the same person.",当一个节点向上追溯到你指定的所有者时为真。两边都会追到根，所以玩家建造的炮塔打出的子弹既算作玩家的，也算作炮塔的 - 因为炮塔追溯到的是同一个人。
+[i]{node}[/i] is owned by [i]{owner}[/i],[i]{node}[/i] 属于 [i]{owner}[/i]
+The thing being asked about.,被询问的那个东西。
+Who it should trace back to.,它应当追溯到谁。
+Is Mine,是我的
+"True while a node traces back to the same owner this row does - my bullet, my turret, my summon, or me. The friendly half of the pair: Hit Is Not My Owner is the same question asked the other way.","当一个节点追溯到与这一行相同的所有者时为真 - 我的子弹、我的炮塔、我召唤的东西，或者我自己。这是这一对里友好的一半：""命中的不是我的所有者""是同一个问题反过来问。"
+[i]{node}[/i] is mine,[i]{node}[/i] 是我的
+Hit Is Not My Owner,命中的不是我的所有者
+"The friendly-fire guard, for any hit trigger: true while the thing that was hit does not trace back to whoever fired this. Put the trigger's own collider in the field - the bullet stops shooting the player who fired it, and the turret that player built, without a single flag.",友军伤害的那道防线，任何命中触发器都能用：当被命中的东西追溯不到开火者时为真。把触发器给你的碰撞体本身放进这个字段 - 不用任何标记，子弹就不再打到开火的玩家，也不再打到那位玩家建造的炮塔。
+hit [i]{hit}[/i] is not my owner,命中的 [i]{hit}[/i] 不是我的所有者
+Hit,命中对象
+"What was hit - the collider, body or area the trigger above handed you.",命中了什么 - 上面的触发器交给你的碰撞体、刚体或区域。

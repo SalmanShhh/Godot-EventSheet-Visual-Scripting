@@ -110,7 +110,7 @@ static func report(sources: Array[Dictionary], declared: PackedStringArray,
 					first_path = path
 				undeclared += 1
 				findings.append(_finding("info", CHECK_UNKNOWN_TYPE, path,
-					"%s deals damage of type \"%s\", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself." % [
+					EventSheetL10n.translate("%s deals damage of type \"%s\", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.") % [
 						path.get_file(), kind], kind))
 		if dealt_anywhere.is_empty():
 			continue
@@ -121,9 +121,9 @@ static func report(sources: Array[Dictionary], declared: PackedStringArray,
 				first_path = path
 			unguarded += 1
 			findings.append(_finding("info", CHECK_GUARD_UNUSED, path,
-				"%s guards against damage of type \"%s\", which nothing in this project deals. The guard will never be tested." % [
+				EventSheetL10n.translate("%s guards against damage of type \"%s\", which nothing in this project deals. The guard will never be tested.") % [
 					path.get_file(), kind], kind))
 	findings.insert(0, _finding("info", CHECK_ID, first_path,
-		"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals." % [
+		EventSheetL10n.translate("Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.") % [
 			speaking, undeclared, unguarded], ""))
 	return findings

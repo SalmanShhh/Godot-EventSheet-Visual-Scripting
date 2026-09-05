@@ -171,6 +171,11 @@ const OWED_WHOLE_MODULES: Array[String] = [
 	# Cooldowns, countdowns and stopwatches as clocks with names on them. One module, shipped
 	# whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/cooldown_aces.gd",
+	# Who made this: the one metadata key, the two rows that write it, the two that read the chain
+	# and the three that compare its far end. Kill credit, assists and friendly fire all read what
+	# these say, so the words a player never sees are still the words an author reads all day. One
+	# module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/ownership_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files

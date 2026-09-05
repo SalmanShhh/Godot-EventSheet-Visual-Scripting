@@ -7164,3 +7164,38 @@ Levels,단계
 "Clears a name in this save so First Time In This Save fires for it again - testing, or a chapter that resets its own flags. It takes effect at once, including for a row that has already answered for that name. The memory lives in the SAVE SLOT when the Save System pack is in the tree, so each save answers for itself and Start New Run clears it; without that pack it falls back to the same user://remembered.cfg the per-machine rows use, which means one answer for the whole computer.","이 세이브에서 그 이름을 지워, 이 세이브에서 처음이 그 이름으로 다시 발동하게 합니다. 테스트용이거나, 자기 플래그를 스스로 되돌리는 챕터를 위한 것입니다. 효과는 즉시 나타나며, 이미 그 이름에 답한 행에도 적용됩니다. 저장 시스템 팩이 트리에 있으면 이 기억은 세이브 슬롯 안에 놓입니다. 그래서 세이브마다 따로 답하고, 새 회차 시작이 다른 것들과 함께 지웁니다. 그 팩이 없으면 기기 단위 행들이 쓰는 것과 같은 user://remembered.cfg로 물러납니다. 즉 컴퓨터 전체에 하나의 답이 됩니다."
 "%s asks the save what it has already seen, and this project registers no %s autoload - so the memory goes to user://remembered.cfg instead: one answer for the whole computer rather than one per save, and nothing clears it, because Start New Run belongs to that pack. Install the Save System pack and register it, or use Only Once Ever, which says per-machine on the label.","%s 은(는) 세이브에 무엇을 이미 보았는지 묻지만, 이 프로젝트는 %s 오토로드를 등록하지 않습니다. 그래서 기억은 user://remembered.cfg로 갑니다. 세이브마다 하나가 아니라 컴퓨터 전체에 하나의 답이 되고, 새 회차 시작은 그 팩의 것이라 아무것도 지우지 않습니다. 저장 시스템 팩을 설치해 등록하거나, 라벨에 기기 단위라고 적힌 평생 한 번만을 쓰세요."
 "A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"" - and with tenths under ten seconds, where ""00:09.4"" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","이름이 붙은 카운트다운을 분과 초로 돌려줍니다. 83초 남았으면 ""01:23""입니다. 10초 미만에서는 십분의 일 초까지 보여 주며, ""00:09.4""는 시간이 줄어드는 것이 느껴지는 시계와 멈춰 보이는 시계의 차이입니다. 시계 라벨에 그대로 넣는 문자열이며, 행에서 서식을 만들 필요가 없습니다. 한 시간이 넘는 카운트다운도 넘어가지 않고 분으로 계속 셉니다."
+"%s deals damage of type ""%s"", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.","%s 은(는) ""%s"" 종류의 피해를 주지만, 이 프로젝트의 어떤 DamageTypeSet도 그 이름을 적어 두지 않았습니다. 철자가 틀린 이름은 아무것도 막지 못하고, 게임이 스스로 알려주지도 않습니다."
+"%s guards against damage of type ""%s"", which nothing in this project deals. The guard will never be tested.","%s 은(는) ""%s"" 종류의 피해에 대비하지만, 이 프로젝트에서는 그 종류를 주는 것이 없습니다. 그 대비는 시험받을 일이 없습니다."
+"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.","피해: %d개의 스크립트가 종류가 있는 피해를 주거나 그것에 대비합니다. %d개의 종류는 어떤 세트에도 적혀 있지 않고, %d개의 대비는 아무도 주지 않는 종류를 향합니다."
+Claim,소유 지정
+"Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.","노드가 누군가의 것임을 표시합니다 - 방금 쏜 총알, 방금 설치한 덫, 방금 소환한 하수인. 프로젝트의 모든 소유 행이 여기에 적힌 것을 읽으므로 처치 기여, 어시스트, 아군 사격 판정이 모두 이 한 줄에서 나옵니다. 다시 지정하면 소유자가 바뀔 뿐입니다."
+Ownership,소유
+Claim [i]{node}[/i] for [i]{owner}[/i],[i]{node}[/i] 을(를) [i]{owner}[/i] 의 것으로 지정
+The thing being claimed - usually the node that was just spawned.,소유로 지정할 대상 - 보통은 방금 생성된 노드입니다.
+Owner,소유자
+"Who it belongs to. Left as it is, that is the node running this row - the shooter, the turret, the trap.","누구의 것인지. 그대로 두면 이 행을 실행하는 노드 - 쏜 쪽, 포탑, 덫 - 이 됩니다."
+Disown,소유 해제
+"Takes the owner off a node, so it belongs to nobody again. A recycled node carries no credit from its last life, which is why a pool disowns on the way back to the shelf; a dropped weapon that anyone may pick up is the same idea.","노드에서 소유자를 떼어 내 다시 누구의 것도 아니게 만듭니다. 재사용되는 노드는 지난 삶의 기여를 끌고 오지 않으므로, 풀은 선반으로 돌려보낼 때 소유를 해제합니다. 누구나 주울 수 있게 떨어뜨린 무기도 같은 생각입니다."
+Disown [i]{node}[/i],[i]{node}[/i] 의 소유 해제
+The node that stops belonging to anyone.,더 이상 누구의 것도 아니게 되는 노드.
+Claimed By,직접 소유자
+"The node that claimed this one, one step up - the turret that fired the bullet, not the player behind the turret. Reads as nothing when it was never claimed, and when the owner itself has gone. For the far end of the chain, use Root Owner Of.","이 노드를 소유한 한 단계 위의 노드 - 총알을 쏜 포탑이지, 포탑 뒤의 플레이어가 아닙니다. 한 번도 지정되지 않았을 때, 그리고 소유자 자체가 사라졌을 때는 아무것도 답하지 않습니다. 사슬의 끝을 알고 싶으면 ""뿌리 소유자""를 쓰세요."
+who claimed [i]{node}[/i],[i]{node}[/i] 을(를) 소유한 쪽
+The node whose owner is being read.,소유자를 읽어 올 노드.
+Root Owner Of,뿌리 소유자
+"The far end of the owner chain: bullet to turret to player answers with the player. This is the one a kill feed, a score row and an assist list all want, because it is the person rather than the thing they were holding. A node nobody claimed answers with itself, and a chain whose far end has been freed answers with nothing.","소유 사슬의 끝: 총알에서 포탑, 포탑에서 플레이어로 따라가면 플레이어를 답합니다. 킬 로그도, 점수 행도, 어시스트 목록도 원하는 것이 바로 이것입니다. 손에 쥐고 있던 물건이 아니라 사람이기 때문입니다. 아무도 소유하지 않은 노드는 자기 자신을 답하고, 끝이 이미 해제된 사슬은 아무것도 답하지 않습니다."
+root owner of [i]{node}[/i],[i]{node}[/i] 의 뿌리 소유자
+The node the chain is walked from.,사슬을 따라가기 시작할 노드.
+Is Owned By,소유되어 있음
+"True while a node traces back to the owner you name. Both sides are walked to the root, so a bullet fired by a turret the player built counts as the player's - and as the turret's, because the turret traces back to the same person.","노드가 지정한 소유자로 거슬러 올라가는 동안 참입니다. 양쪽 모두 뿌리까지 따라가므로, 플레이어가 세운 포탑이 쏜 총알은 플레이어의 것으로 세어지고, 포탑의 것으로도 세어집니다. 포탑 역시 같은 사람에게로 이어지기 때문입니다."
+[i]{node}[/i] is owned by [i]{owner}[/i],[i]{node}[/i] 은(는) [i]{owner}[/i] 의 것
+The thing being asked about.,물어보는 대상.
+Who it should trace back to.,거슬러 올라가 닿아야 할 상대.
+Is Mine,내 것임
+"True while a node traces back to the same owner this row does - my bullet, my turret, my summon, or me. The friendly half of the pair: Hit Is Not My Owner is the same question asked the other way.","노드가 이 행과 같은 소유자로 이어지는 동안 참입니다 - 내 총알, 내 포탑, 내가 소환한 것, 또는 나 자신. 짝을 이루는 두 행 중 우호적인 쪽이며, ""맞은 쪽은 내 소유자가 아님""은 같은 질문을 뒤집은 것입니다."
+[i]{node}[/i] is mine,[i]{node}[/i] 은(는) 내 것
+Hit Is Not My Owner,맞은 쪽은 내 소유자가 아님
+"The friendly-fire guard, for any hit trigger: true while the thing that was hit does not trace back to whoever fired this. Put the trigger's own collider in the field - the bullet stops shooting the player who fired it, and the turret that player built, without a single flag.","아군 사격을 막는 물음이며, 어떤 명중 트리거에도 쓸 수 있습니다: 맞은 것이 이것을 쏜 쪽으로 이어지지 않는 동안 참입니다. 트리거가 건네준 콜라이더를 그대로 칸에 넣으세요 - 플래그 하나 없이, 총알은 쏜 본인에게도, 그 사람이 세운 포탑에도 맞지 않게 됩니다."
+hit [i]{hit}[/i] is not my owner,맞은 [i]{hit}[/i] 은(는) 내 소유자가 아님
+Hit,맞은 쪽
+"What was hit - the collider, body or area the trigger above handed you.","무엇에 맞았는지 - 위의 트리거가 건네준 콜라이더, 바디 또는 영역."
