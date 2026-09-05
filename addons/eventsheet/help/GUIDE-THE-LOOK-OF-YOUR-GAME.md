@@ -31,6 +31,7 @@ the vocabulary, the looks are yours.
 - [The lens, exposure and what stays sharp](#the-lens-exposure-and-what-stays-sharp)
 - [A look is a file you author](#a-look-is-a-file-you-author)
 - [Particles, seven words on two objects](#particles-seven-words-on-two-objects)
+- [Every row, by name](#every-row-by-name)
 - [Opening a project that already writes these lines](#opening-a-project-that-already-writes-these-lines)
 - [What the Doctor checks](#what-the-doctor-checks)
 - [The traps](#the-traps)
@@ -142,8 +143,18 @@ func _on_body_entered(body: Node) -> void:
 		material_override = material_override.duplicate()
 	material_override.emission_enabled = true
 	material_override.emission_energy_multiplier = 4.0
+	if material_override == null:
+		material_override = get_active_material(0).duplicate() if get_active_material(0) != null else StandardMaterial3D.new()
+	elif not material_override.resource_path.is_empty():
+		material_override = material_override.duplicate()
+	material_override.emission_enabled = true
 	create_tween().tween_property(material_override, "emission_energy_multiplier", 0.0, 0.35)
 ```
+
+Every row carries its own preamble, which is why the guard appears three times: a row is complete on
+its own, so deleting the middle one leaves the other two correct. The **Fade** row carries the switch
+as well - a fade that arrived on a material which had never glowed would otherwise tween a number
+nothing reads.
 
 **The switch is on the same line as the word.** Glow does nothing at all until `emission_enabled` is
 true, and surface opacity does nothing until the material is in alpha transparency. Both facts are
@@ -169,9 +180,9 @@ wearing that file.
 
 <!-- caption: A frost shell over the helmet's visor, and off again -->
 ```
-On Frozen  ->  Knight | Layer over surface 2 with res://fx/frost.tres
+On Frozen  ->  Knight | Layer res://fx/frost.tres over surface 2
 
-On Thawed  ->  Knight | Remove layer from surface 2
+On Thawed  ->  Knight | Remove the layer over surface 2
 ```
 
 The slot is a plain number, and the help says why: a surface's name lives inside the imported mesh
@@ -206,12 +217,13 @@ func fire() -> void:
 		material = CanvasItemMaterial.new()
 	elif material is CanvasItemMaterial and not material.resource_path.is_empty():
 		material = material.duplicate()
-	material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	if material is CanvasItemMaterial:
+		material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 ```
 
-**An item wearing a shader is left completely alone.** Blending and light response live inside a
-`ShaderMaterial` rather than on a property these rows could set, so the rows write nothing at all
-rather than failing, and the reads are written as a cast so a shaded item answers with the value a
+**An item wearing a shader is left completely alone.** That last `if` is what does it: blending and
+light response live inside a `ShaderMaterial` rather than on a property these rows could set, so the
+rows write nothing at all rather than failing, and the reads are written as a cast so a shaded item answers with the value a
 new material starts on rather than reaching through something that is not there. The Doctor says so
 once, quietly, rather than a row going wrong in silence.
 
@@ -226,7 +238,7 @@ echo on the row shows the property underneath.
 | saturation, contrast, picture brightness | the colour adjustments, with `adjustment_enabled` written for you |
 | exposure | how bright the finished picture is before the tone map |
 | glow bloom, glow threshold, glow blend | which bright things bleed, and how the bleed is mixed back |
-| fog floor, fog floor thickness | where fog sits and how dense it is at that height |
+| fog floor, fog floor thickness | where fog sits, and how fast it thins out above that |
 | aerial perspective, fog sun glow | distance haze, and the sun lighting the fog up |
 | volumetric thickness, volumetric colour, volumetric reach, volumetric fog | real fog light travels through |
 | reflections, indirect light, global illumination | the three screen-space and world-space lighting switches |
@@ -234,9 +246,12 @@ echo on the row shows the property underneath.
 | tone map | how real brightness is squeezed into what a screen can show |
 | colour grade | a picture that says what every colour turns into |
 
-Every one of them is a **Set**, a read-it-back expression, and for the numbers a **Fade**. The four
-that are switches are **Turn X On**, **Turn X Off** and **Is X On**, because "Turn reflections off" is
-the sentence a reader writes and "Set reflections false" is the one they have to decode.
+Every one of them is a **Set** and a read-it-back expression, and most of the numbers also have a
+**Fade**. Two do not: **glow threshold** and **fog floor** are thresholds rather than amounts - a
+number you cross rather than a number you travel along - so walking one over a second and a half says
+nothing a reader wanted. The four that are switches are **Turn X On**, **Turn X Off** and **Is X On**,
+because "Turn reflections off" is the sentence a reader writes and "Set reflections false" is the one
+they have to decode.
 
 <!-- caption: Walking into the poison cave, and back out of it -->
 ```
@@ -323,7 +338,9 @@ There are two fogs in Godot and they are not the same thing, which is worth sayi
 one of them is free and one of them is not.
 
 **Ordinary fog** is a depth effect: it tints the picture by how far away each pixel is. **Fog floor**
-is the height it sits at, **fog floor thickness** is how dense it is there, **aerial perspective**
+is the height it sits at, **fog floor thickness** is how fast it thins out going up - 0 leaves it the
+same all the way, a small number keeps it lying on the ground the way a morning mist does -
+**aerial perspective**
 blends distant things toward the sky colour, and **fog sun glow** is the sun lighting the fog up
 around it. All four write `fog_enabled` for you, and all four draw on every renderer.
 
@@ -371,14 +388,21 @@ well.
 
 <!-- caption: A graphics menu that only offers what this build can draw -->
 ```
-On Ready                    ->  Options | Set setting "reflections" enabled to Renderer Is forward_plus
+On Ready                    ->  Set setting reflections to true
+  Renderer is forward_plus
 
-On Reflections Toggled      ->  World | Turn reflections on at quality 2
-  Setting Is On, "reflections"
+On Reflections Toggled      ->  World | Turn reflections on at medium
+  Setting reflections is true
 
 On Reflections Toggled      ->  World | Turn reflections off
   Else
 ```
+
+Three details in that sheet are worth reading twice. **Renderer Is** is a condition, so it sits in the
+left lane rather than in a value field. **Set Setting** and **Setting Is** come from the Game Settings
+pack and run through its autoload, so neither carries an object column. And the quality is a dropdown
+of the engine's own constants read out as words - no roughness, low, medium, high - so the row says
+`medium` and never a bare number.
 
 ## The sky is three objects past the node
 
@@ -529,7 +553,7 @@ Speed**, **Smallest Particle Size** and **Biggest Particle Size**.
 ```
 On Storm Started  ->  Rain | Set gravity to Vector2(300, 900)
                   ->  Rain | Set amount to 1200
-                  ->  Rain | Fade particle colour to #7fa8d0 over 3.0 s
+                  ->  Rain | Fade colour to #7fa8d0 over 3.0 s
 ```
 
 ```gdscript
@@ -551,6 +575,105 @@ row says why rather than offering a fade that would quietly cost frames.
 **An emitter driven by a particle shader is left completely alone**, for the same reason a shaded
 sprite is: gravity and spread live inside that shader and there is no property here to set. Every
 material write sits inside the guard that asks.
+
+## Every row, by name
+
+The sections above are the vocabulary in the order a game needs it. This is the same vocabulary as a
+list, so a row you half remember can be found by its own name. The names are the ones the picker
+shows; the sentence a row reads as in the sheet is usually shorter, because the object column has
+already said which node.
+
+**Material - 31 rows, on a `MeshInstance3D` unless the last four say otherwise.**
+
+| Row | What it does |
+|---|---|
+| Set Colour, Colour, Fade Colour | the flat colour of the surface, before any light falls on it |
+| Set Glow, Glow, Fade Glow | how hard the surface gives off light of its own |
+| Set Roughness, Roughness, Fade Roughness | how scattered the reflections are: 0 a mirror, 1 chalk |
+| Set Metal, Metal, Fade Metal | how metal the surface reads: 0 plastic, 1 bare metal |
+| Set Surface Opacity, Surface Opacity, Fade Surface Opacity | how solid the surface is: 1 solid, 0 invisible |
+| Set Texture, Texture | the picture painted over the surface |
+| Set Blend, Blend | how the surface is mixed with what is drawn behind it |
+| Set Transparency, Transparency | how the surface handles being see-through at all |
+| Set Sides, Sides | which faces of the surface are drawn |
+| Set Material Of Surface, Material Of Surface | one surface's own material, leaving the others alone |
+| Layer Over Surface, Remove Layer | a second material drawn over one surface, and off again |
+| Set Blending, Blending | how a sprite is mixed with what is behind it (any `CanvasItem`) |
+| Set Light Response, Light Response | how the 2D lights reach a sprite (any `CanvasItem`) |
+
+**Environment - 65 rows, on a `WorldEnvironment`.** Each of the first thirteen words is a Set, a
+read-it-back expression and, where the row is marked, a Fade.
+
+| Row | What it does |
+|---|---|
+| Set / Fade Saturation, Saturation | how colourful the whole picture is: 1 untouched, 0 grey |
+| Set / Fade Contrast, Contrast | how far the darks and the lights are pushed apart |
+| Set / Fade Picture Brightness, Picture Brightness | how bright the finished picture is after every light has spoken |
+| Set / Fade Exposure, Exposure | how much light the camera lets in before the picture is made |
+| Set / Fade Glow Bloom, Glow Bloom | how much of the picture bleeds into the glow, not just the bright parts |
+| Set Glow Threshold, Glow Threshold | how bright a thing has to be before it glows at all (no Fade) |
+| Set Fog Floor, Fog Floor | the height the fog lies at, in metres (no Fade) |
+| Set / Fade Fog Floor Thickness, Fog Floor Thickness | how fast the fog thins out above its floor |
+| Set / Fade Aerial Perspective, Aerial Perspective | how much of the sky's colour the far distance picks up |
+| Set / Fade Fog Sun Glow, Fog Sun Glow | how much the fog lights up around the sun |
+| Set / Fade Volumetric Thickness, Volumetric Thickness | how thick the air itself is, for fog that lights up |
+| Set / Fade Volumetric Colour, Volumetric Colour | the colour the thick air is, before light falls through it |
+| Set / Fade Volumetric Reach, Volumetric Reach | how far from the camera the thick air is worked out |
+| Set Backdrop, Backdrop | what is drawn behind everything else |
+| Set Tone Map, Tone Map | how real brightness is squeezed into the range a screen shows |
+| Set Glow Blend, Glow Blend | how the glow is mixed back over the picture |
+| Set Colour Grade, Colour Grade | a picture that says what every colour in the scene turns into |
+| Set Glow Levels, Set Glow Level | all seven blur levels at once, or one of them by hand |
+| Turn Volumetric Fog On / Off, Is Volumetric Fog On | the fog that fills the air rather than sitting flat |
+| Turn Reflections On / Off, Are Reflections On | shiny surfaces reflecting what is already on screen |
+| Turn Indirect Light On / Off, Is Indirect Light On | a lit surface throwing its colour onto its neighbours |
+| Turn Global Illumination On / Off, Is Global Illumination On | light bouncing around the whole scene by itself |
+| Turn Occlusion On At Quality, Turn Occlusion Off, Is Occlusion On | corners and creases darkened, and how carefully |
+| Turn Indirect Light / Global Illumination / Reflections On At Quality | the switch and the `RenderingServer` quality in one row |
+| Use World Look, Blend To World Look, Current World Look, On World Look Blended | a whole saved world put on at once, or crossed to |
+
+**Sky - 17 rows, on the same `WorldEnvironment`.** Every one of the five colours and numbers has a
+Set, a read and a Fade.
+
+| Row | What it does |
+|---|---|
+| Set / Fade Sky Top, Sky Top | the colour of the sky straight overhead |
+| Set / Fade Sky Horizon, Sky Horizon | the colour the sky fades to where it meets the ground |
+| Set / Fade Sky Ground, Sky Ground | the colour drawn below the horizon |
+| Set / Fade Sun Size, Sun Size | how wide the sun's disc is drawn, in degrees |
+| Set / Fade Sky Energy, Sky Energy | how bright the whole sky is: 1 is untouched |
+| Use Procedural Sky | Godot's own drawn sky behind everything, backdrop and all |
+| Use Panorama Sky | one picture wrapped around the whole world as the sky |
+
+**Camera attributes - 15 rows.** The first six ship twice: once on a `Camera3D` for that camera, and
+once on a `WorldEnvironment` for every camera that has none of its own. The names are the same on
+both, so a sheet reads the same either way.
+
+| Row | What it does |
+|---|---|
+| Set / Fade Camera Exposure, Camera Exposure | how much light the lens lets in: 1 untouched, 2 twice as bright |
+| Turn Auto Exposure On / Off, Is Auto Exposure On | the lens opening and closing by itself with the picture |
+| Focus On, Focus Everywhere | what the sharp part of the picture sits on, and off again |
+| Focus Distance | how many metres away the picture stops being sharp |
+
+**Particles - 55 rows.** The seven words ship twice, on `GPUParticles2D` and `GPUParticles3D`, with
+the same names on both; the switches at the top of the table also have `CPUParticles2D` twins.
+
+| Row | What it does |
+|---|---|
+| On Particles Finished | fires once when a one-shot burst finishes playing |
+| Set Emitting, Is Emitting | starts or stops the emitter, and asks whether it is running |
+| Restart / Burst | restarts the particle system from the beginning |
+| Set One-Shot | a single burst then stop, rather than looping |
+| Set Amount, Amount | how many particles the emitter spawns |
+| Set Speed Scale | speeds the whole effect up or slows it down |
+| Set / Fade Particle Gravity, Particle Gravity | which way the particles fall, and how hard |
+| Set / Fade Particle Spread, Particle Spread | how wide the particles fan out, in degrees |
+| Set / Fade Particle Speed, Slowest / Fastest Particle Speed | how fast a new particle sets off, both ends |
+| Set / Fade Particle Size, Smallest / Biggest Particle Size | how big a new particle is, both ends |
+| Set / Fade Particle Colour, Particle Colour | the colour every particle is tinted |
+| Set / Fade Particle Lifetime, Particle Lifetime | how many seconds one particle lasts before it goes out |
+| Set Particle Amount, Particle Amount | how many particles the emitter keeps in the air (no Fade) |
 
 ## Opening a project that already writes these lines
 
@@ -607,10 +730,13 @@ chain, so a layer laid over a surface counts its wearers too.
   here can be spelled that way.
 - **A row whose template opens with an `if` has no "On node" field.** The own-it lines are a guard,
   and a guard cannot be written around a node named in the middle of it, so those rows act on the node
-  the sheet is attached to. Only the reads that are plain member reads carry the field - **Camera
-  Exposure**, **Is Auto Exposure On**, **Focus Distance**, **Particle Amount**, **Particle Lifetime**
-  and **Material Of Surface**. A read that reaches through the resource, like **Particle Gravity** or
-  **Blending**, opens with the same guard and answers for the sheet's own node.
+  the sheet is attached to. A read that is a plain member read carries the field, and that is every
+  one of the environment reads - all twenty-two of them, the fog and glow and colour numbers and the
+  five **Is X On** conditions alike - plus **Material Of Surface**, the camera's **Camera Exposure**,
+  **Is Auto Exposure On** and **Focus Distance**, and the emitter's **Is Emitting**, **Amount**,
+  **Particle Lifetime** and **Particle Amount**. A read that reaches through a resource instead, like
+  **Particle Gravity**, **Blending** or any of the five sky colours, opens with the same guard and
+  answers for the sheet's own node.
 - **Forward+ only means silence, not an error.** Reflections, indirect light, global illumination,
   volumetric fog and auto exposure are set and ignored on Mobile and Compatibility. Ask **Renderer Is**
   before offering them in a settings menu.
