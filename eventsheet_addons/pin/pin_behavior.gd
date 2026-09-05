@@ -363,22 +363,24 @@ func pin_path_progress() -> float:
 	var follower: PathFollow2D = anchor as PathFollow2D
 	return follower.progress_ratio if follower != null else 0.0
 
+## Chooses what the host copies from its anchor, and how it travels there.
+## Option labels carry no commas on purpose - the picker splits the list on them, so a comma
+## inside a label would offer half a sentence as a ninth mode nothing answers to.
 ## @ace_action
 ## @ace_name("Set Pin Mode")
-## @ace_description("Chooses what the host copies from its anchor, and how it travels there. Option labels carry no commas on purpose - the picker splits the list on them, so a comma inside a label would offer half a sentence as a ninth mode nothing answers to.")
 ## @ace_param_options(mode position=Follow its place only, angle=Follow its angle only, position and angle=Follow both, rope=Hang on a rope and pull only when taut, bar=Hold at exactly the length, soft=Follow with a lag, spring=Overshoot and settle, size=Copy its scale only)
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
-## @ace_codegen_template("$PinBehavior.set_pin_mode({mode})")
+## @ace_codegen_template("$PinBehavior.set_pin_mode("{mode}")")
 func set_pin_mode(mode: String) -> void:
 	if mode in ["position", "angle", "position and angle", "rope", "bar", "soft", "spring", "size"]:
 		pin_mode = mode
 
+## Chooses which axes of the place follow: both of them, the column only, or the height only.
 ## @ace_action
 ## @ace_name("Set Pin Axes")
-## @ace_description("Chooses which axes of the place follow: both of them, the column only, or the height only.")
 ## @ace_param_options(axes both=Follow both axes, x only=Follow the column only, y only=Follow the height only)
 ## @ace_icon("res://eventsheet_addons/pin/icon.svg")
-## @ace_codegen_template("$PinBehavior.set_pin_axes({axes})")
+## @ace_codegen_template("$PinBehavior.set_pin_axes("{axes}")")
 func set_pin_axes(axes: String) -> void:
 	if axes in ["both", "x only", "y only"]:
 		pin_axes = axes
