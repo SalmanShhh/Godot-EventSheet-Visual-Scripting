@@ -127,8 +127,8 @@ static func file_steps_of(list: Array) -> Dictionary:
 func _build_buttons() -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 3)
-	for entry: Array in [["Play", _on_play], ["Stop", _on_stop], ["Skip", _on_skip],
-			["Restore", _on_restore], ["Debug view", _on_debug], ["Save as file", _on_save],
+	for entry: Array in [["Play", play], ["Stop", stop], ["Skip", skip],
+			["Restore", restore], ["Debug view", _on_debug], ["Save as file", _on_save],
 			["Load from file", _on_load]]:
 		var button: Button = Button.new()
 		button.text = str(entry[0])
@@ -183,8 +183,12 @@ func _on_debug() -> void:
 
 ## Start sampling. The host's rest state is written down first, so Stop and Restore have something
 ## exact to put back rather than a guess at what the numbers were.
-func _on_play() -> void:
-	_on_restore()
+##
+## PUBLIC, because these four doors have TWO homes: the buttons under the list here, and the
+## toolbar's Moment segment while a row about this player is selected. One preview, driven from
+## either place, so the two can never show different pictures of the same beat.
+func play() -> void:
+	restore()
 	var target: Node = _host()
 	if target == null:
 		return
@@ -202,22 +206,22 @@ func _on_play() -> void:
 	_timer.start()
 
 
-func _on_stop() -> void:
+func stop() -> void:
 	if _timer != null:
 		_timer.stop()
-	_on_restore()
+	restore()
 	if _timeline != null:
 		_timeline.queue_redraw()
 
 
 ## Jump to the end of the plan - the same door the running node's Skip To End is, in the one form an
 ## editor can honestly offer: the last frame of the beat, drawn.
-func _on_skip() -> void:
+func skip() -> void:
 	_time = duration_of(steps_of(_player))
 	_tick()
 
 
-func _on_restore() -> void:
+func restore() -> void:
 	var target: Node = _host()
 	if target != null:
 		for property: Variant in _base:
@@ -229,7 +233,7 @@ func _tick() -> void:
 	var target: Node = _host()
 	var pack: Script = load(PACK_PATH) as Script
 	if target == null or pack == null:
-		_on_stop()
+		stop()
 		return
 	var params: Dictionary = {"steps": steps_of(_player), "strength": float(_player.get("strength"))}
 	var written: Variant = pack.call("editor_preview_sample", params, _base, _time)
@@ -240,7 +244,7 @@ func _tick() -> void:
 	if _timeline != null:
 		_timeline.queue_redraw()
 	if _time > duration_of(steps_of(_player)) + FRAME_SECONDS:
-		_on_stop()
+		stop()
 
 
 ## The object this player is under - the one a beat is felt on.

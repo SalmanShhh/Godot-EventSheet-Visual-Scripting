@@ -349,6 +349,7 @@ var _hierarchy_edits: EventSheetHierarchyEdits = EventSheetHierarchyEdits.new() 
 var _global_variables: EventSheetGlobalVariables = EventSheetGlobalVariables.new()  # Add ▸ Global variable…: one value the project shares, written into an autoload (dock/global_variables.gd)
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
 var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
+var _moment_segment: EventSheetMomentSegment = null  # the strip's contextual Moment segment, assigned by the toolbar build (dock/toolbar_moment_segment.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
 var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
@@ -7019,6 +7020,11 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_ensure_scene_link().follow_row(_row_data)
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
+	# The toolbar's contextual Moment segment: Play, Stop, Skip, Restore and a strength appear on the
+	# strip while a row about a beat is selected, and go away when it is not. The sheet row itself
+	# never grows a button - this is where the buttons for a selection live.
+	if _moment_segment != null and _viewport != null:
+		_moment_segment.follow(_active_view().get_selected_ace_resource())
 	_properties_bar.refresh()
 
 

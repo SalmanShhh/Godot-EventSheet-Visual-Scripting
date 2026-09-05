@@ -62,6 +62,10 @@ var _full_toolbar: bool = false
 ## and only this is written to the project's metadata.
 var _remembered_full_toolbar: bool = false
 
+## The strip's contextual Moment segment, kept so the dock's one selection handler can hand it every
+## selection and the suite can reach it without walking the strip.
+var _moment_segment: EventSheetMomentSegment = null
+
 ## The two history icons, kept so their disabled state can follow the undo history the way Godot's
 ## own toolbars do.
 var _undo_button: Button = null
@@ -766,15 +770,24 @@ func build(root: Node) -> void:
 	# adds the row - the popup swallows the key, and the add happens on the other side of it.
 	_dock._ask_field.attach(_quick_add_edit)
 	_toolbar.add_child(_quick_add_edit)
+	# ── THE CONTEXTUAL SEGMENTS ────────────────────────────────────────────────────────────────
+	# A segment appears for what is SELECTED and goes away when the selection moves. The Moment
+	# segment is the first: Play, Stop, Skip, Restore and a strength for a row about a beat, because
+	# a sheet row is two lanes and never a button. It rests with the seven so the sweep leaves it
+	# alone - the segment itself decides what is visible inside it.
+	_moment_segment = EventSheetMomentSegment.new()
+	_moment_segment.init(_dock)
+	var moment_segment: Control = _moment_segment.build(_toolbar)
+	_dock._moment_segment = _moment_segment
 	# ── THE CHEVRON ────────────────────────────────────────────────────────────────────────────
 	# The whole strip, one click away, and back again. It is a plain Button carrying a glyph rather
 	# than an editor icon, so it reads the same on a build whose editor theme has no arrow to lend.
 	_expander = _add_toolbar_button(_toolbar, "»", _toggle_full_toolbar_from_chevron, "", "")
 	_expander.name = "EventSheetToolbarExpander"
-	# The resting seven, in reading order. The play slot is empty until the run-controls pass fills
-	# it, and an empty container simply draws nothing.
+	# The resting seven, in reading order, plus the contextual segment. The play slot is empty until
+	# the run-controls pass fills it, and an empty container simply draws nothing.
 	_resting_controls = [menu_button, save_button, _undo_button, _redo_button, play_slot,
-		_quick_add_edit, _expander]
+		_quick_add_edit, moment_segment, _expander]
 	_full_toolbar = _stored_full_toolbar()
 	_remembered_full_toolbar = _full_toolbar
 	_apply_toolbar_expansion()

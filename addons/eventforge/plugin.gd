@@ -29,6 +29,13 @@ const FEEDBACK_CARD_SCHEMA_PATH: String = "res://addons/eventsheet/editor/inspec
 ## literal rather than read off the schema file: naming that class would compile it, and the ACE
 ## reflection behind it, into every editor boot to register one callable.
 const FEEDBACK_CARD_SCHEMA_NAME: String = "feedback_steps"
+## The parameter HINT the Feedback Player's step parameters carry, the field that answers it, and
+## the paragraph the params dialog's help strip says about that field. The paragraph is spelled here
+## rather than on the field so registering it costs no load at boot - the field is only fetched the
+## first time a row with a step in it is opened.
+const FEEDBACK_STEP_HINT: String = "feedback_step"
+const FEEDBACK_STEP_FIELD_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_step_field.gd"
+const FEEDBACK_STEP_HELP: String = "The feedback itself. Press Card to fill it in as the card the Feedback Player's list unfolds in the Inspector - the same kinds, the same fields, the same keys. The box holds what the row will emit, so an expression can be typed straight into it instead."
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
@@ -355,6 +362,15 @@ func _enter_tree() -> void:
 	# costs nothing at boot.
 	EventSheets.register_card_schema(FEEDBACK_CARD_SCHEMA_NAME,
 		func() -> Dictionary: return load(FEEDBACK_CARD_SCHEMA_PATH).call("schema"))
+	# And the SAME card, opened from a row: Add Feedback, Insert Feedback Before and Replace Feedback
+	# each take a step, and a step typed into a plain parameter box is a dictionary with no kinds, no
+	# fields and no help. The registered field opens the card instead, so a feedback authored by a row
+	# and one authored in the list are the same dictionary spelled the same way. Loaded by path on
+	# first ask, for the same reason the schema is.
+	EventSheets.register_param_editor(FEEDBACK_STEP_HINT,
+		func(_param: Dictionary, initial_text: String) -> LineEdit:
+			return load(FEEDBACK_STEP_FIELD_PATH).new(initial_text))
+	EventSheets.register_param_help(FEEDBACK_STEP_HINT, FEEDBACK_STEP_HELP)
 	# Tier 3 attribute drawers (progress bars…): purely cosmetic - generated scripts
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
