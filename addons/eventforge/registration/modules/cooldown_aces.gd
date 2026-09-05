@@ -31,6 +31,15 @@
 # compiles - the emitted line asks `has_signal` first - and nothing connects the event, which the
 # Project Doctor already reports for this shape of trigger.
 #
+# WHAT A HAND-WRITTEN LINE READS BACK AS, said here because it is a CHOICE rather than an
+# oversight. The two conditions are one expression each, so a file that spells one reopens as the
+# row it means. The starting rows are not: each is a run of statements that retires a clock, makes
+# another, connects it to a signal and writes two pieces of metadata, and no reader ever types that
+# by hand. A table entry claiming such a run would be a recogniser with nothing true to recognise
+# and a real chance of claiming somebody else's timer code, so these rows deliberately do not have
+# one: a hand-written run comes back as the honest verbatim block it is and re-emits byte for byte,
+# which is the degrade the lossless contract asks for. cooldown_aces_test pins both halves.
+#
 # ace_ids and codegen_templates are a compatibility covenant: frozen once shipped (deprecate, never
 # rename).
 @tool

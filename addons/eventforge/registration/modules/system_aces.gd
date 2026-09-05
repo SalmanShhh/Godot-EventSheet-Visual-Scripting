@@ -208,6 +208,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# so a name marked in one event is answered correctly by a row in another without either of
 	# them touching the disk.
 	#
+	# WHAT A HAND-WRITTEN LINE READS BACK AS, and why the two writers have no recogniser. The two
+	# conditions are one helper call each, so a file that spells one reopens as the row. Mark Seen
+	# and Forget Seen are runs of statements that choose a store, write it and update the shared
+	# cache - a shape nobody types by hand and one a recogniser could only claim by guessing - so
+	# they deliberately degrade to the honest verbatim block and re-emit byte for byte, exactly as
+	# the shipped Forget First Time beside them always has. first_time_in_save_test pins that
+	# parity rather than assuming it.
+	#
 	# AND IT IS EMPTIED WHEN THE SAVE CHANGES UNDER IT. A cache kept for the session would outlive
 	# the save it describes: Start New Run wipes the slot and loading a slot swaps it, and a node
 	# that survives both (an autoload sheet, a HUD that outlives the scene) would go on answering
