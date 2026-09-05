@@ -239,18 +239,6 @@ func _in_bounds(walker: Walker, choices: Array[int]) -> Array[int]:
 		if _inside(walker.x + candidate.x, walker.y + candidate.y):
 			legal.append(index)
 	return legal
-## The cells holding a value, as linear indices in a stable left-to-right, top-to-bottom order.
-## Cached until the next write, because painting a map asks for this once per cell.
-## @ace_hidden
-func _cells_holding(value: int) -> PackedInt32Array:
-	if _index_cache.has(value):
-		return _index_cache[value] as PackedInt32Array
-	var found: PackedInt32Array = PackedInt32Array()
-	for index: int in _cells.size():
-		if _cells[index] == value:
-			found.append(index)
-	_index_cache[value] = found
-	return found
 ## A weights list from the comma-separated spelling the action takes. An empty string restores
 ## equal weights, negatives floor to 0, and anything that is not a number falls back to 1.
 ## @ace_hidden
@@ -409,7 +397,7 @@ func set_seed(seed_text: String) -> void:
 ## @ace_display_template("draw randomness from [b]{source}[/b]")
 ## @ace_param_options(source internal=Internal seeded, shared=Shared Advanced Random, injected=Injected queue)
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_random_source({source})")
+## @ace_codegen_template("DrunkenWalkers.set_random_source("{source}")")
 func set_random_source(source: String) -> void:
 	var wanted: String = source.strip_edges().to_lower()
 	if wanted in ["internal", "shared", "injected"]:
@@ -459,7 +447,7 @@ func add_walker(id: String, start_x: int, start_y: int, steps: int, directions: 
 ## @ace_display_template("add a [b]{preset}[/b] walker [b]{id}[/b] at ([b]{start_x}[/b], [b]{start_y}[/b]), tagged [b]{tag}[/b], carving [b]{carve_value}[/b]")
 ## @ace_param_options(preset cave=Cave, corridors=Corridors, river=River, ore_vein=Ore Vein, lightning=Lightning, blob=Blob)
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.add_walker_from_preset({preset}, {id}, {start_x}, {start_y}, {tag}, {carve_value})")
+## @ace_codegen_template("DrunkenWalkers.add_walker_from_preset("{preset}", {id}, {start_x}, {start_y}, {tag}, {carve_value})")
 func add_walker_from_preset(preset: String, id: String, start_x: int, start_y: int, tag: String, carve_value: int) -> void:
 	_ensure_started()
 	var recipe_name: String = preset.strip_edges().to_lower().replace("_", " ")
@@ -757,7 +745,7 @@ func drop_marks_along_walk(walker_id: String, tag: String, every_steps: int, cha
 ## @ace_display_template("scatter [b]{count}[/b] [b]{tag}[/b] marks on [b]{value}[/b] cells, [b]{placement}[/b], spacing [b]{min_spacing}[/b]")
 ## @ace_param_options(placement any=Any cell, interior=Interior only, edge=Edge only)
 ## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.scatter_marks({count}, {tag}, {value}, {placement}, {min_spacing})")
+## @ace_codegen_template("DrunkenWalkers.scatter_marks({count}, {tag}, {value}, "{placement}", {min_spacing})")
 func scatter_marks(count: int, tag: String, value: int, placement: String, min_spacing: float) -> void:
 	_ensure_started()
 	var rule: String = placement.strip_edges().to_lower()
@@ -1234,6 +1222,8 @@ func mark_y() -> int:
 func mark_tag() -> String:
 	return _ctx_mark_tag
 
+## Allocates the grid and seeds the stream, once. Called from _ready and from every entry point,
+## so a generator driven from code before it enters the tree behaves exactly like one in a scene.
 ## @ace_hidden
 func _ensure_started() -> void:
 	if _started:
@@ -1249,6 +1239,7 @@ func _ensure_started() -> void:
 		_seed_text = start_seed
 		_rng.seed = hash(start_seed)
 
+## Fills a fresh buffer of the given size with the Empty Value.
 ## @ace_hidden
 func _allocate(width: int, height: int) -> void:
 	_width = maxi(1, width)
@@ -1258,10 +1249,16 @@ func _allocate(width: int, height: int) -> void:
 	_cells.fill(empty_value)
 	_index_cache.clear()
 
+## Whether the cell is on the grid at all. Off-grid is not an error anywhere in this pack, it is
+## simply a cell that matches nothing and can never be stepped into.
 ## @ace_hidden
 func _inside(x: int, y: int) -> bool:
 	return x >= 0 and y >= 0 and x < _width and y < _height
 
+## One value from the stream, in [0, 1). EVERY stochastic decision in this pack comes through
+## here, which is what makes the seed reproduce a whole map: internal is the pack's own seeded
+## generator, shared borrows the Advanced Random autoload so one seed drives a whole game, and
+## injected reads the queue Inject Random filled. A dry queue falls back rather than failing.
 ## @ace_hidden
 func _next_random() -> float:
 	if random_source == "injected":
@@ -1278,6 +1275,9 @@ func _next_random() -> float:
 			return float(shared.random_value())
 	return _rng.randf()
 
+## Writes one cell and fires On Cell Carved when the value actually changed. Everything that
+## carves - walkers, dilation, outlining - goes through this one door, which is why the trigger
+## can promise "only on a change" without any caller having to remember it.
 ## @ace_hidden
 func _write(x: int, y: int, value: int, walker_id: String) -> void:
 	if not _inside(x, y):
@@ -1298,16 +1298,24 @@ func _write(x: int, y: int, value: int, walker_id: String) -> void:
 	_ctx_carved_value = 0
 	_ctx_walker_id = kept_id
 
+## Heading number `index` of a walker's direction set: `directions` evenly spaced headings
+## anchored at the start angle, so entry 0 is always the start angle.
 ## @ace_hidden
 func _heading_of(walker: Walker, index: int) -> float:
 	return fposmod(walker.start_angle + float(index) * 360.0 / float(maxi(1, walker.directions)), 360.0)
 
+## The relative weight of direction `index`: what the weights list says, or 1 for an entry it
+## does not reach. Negative entries are floored to 0, which is how a weight rules a heading out.
 ## @ace_hidden
 func _weight_of(walker: Walker, index: int) -> float:
 	if index < walker.weights.size():
 		return maxf(0.0, walker.weights[index])
 	return 1.0
 
+## The weighted pick, spending EXACTLY ONE value whether or not weights are set - so adding
+## weights to a walker never shifts anything downstream of it in the stream. All-zero weights
+## fall back to an even pick rather than deadlocking, so a walker can never be stuck by its own
+## weights.
 ## @ace_hidden
 func _pick(walker: Walker, choices: Array[int]) -> float:
 	var roll: float = _next_random()
@@ -1326,6 +1334,8 @@ func _pick(walker: Walker, choices: Array[int]) -> float:
 			return _heading_of(walker, index)
 	return _heading_of(walker, choices[choices.size() - 1])
 
+## Stamps the walker's brush at its current cell: the square brush, or the oriented dig rectangle
+## when either dig dimension is set.
 ## @ace_hidden
 func _stamp(walker: Walker) -> void:
 	if walker.brush_width != 0 or walker.brush_height != 0:
@@ -1339,6 +1349,11 @@ func _stamp(walker: Walker) -> void:
 		for column: int in size:
 			_write(walker.x + column - low, walker.y + row - low, walker.carve_value, walker.id)
 
+## The dig rectangle: a brush that TURNS WITH THE WALKER. Width is measured across the heading and
+## is always centred, so a corridor keeps its width around every corner. Depth is measured along
+## the heading and is signed: positive digs ahead of the walker, negative digs behind it, and both
+## include the walker's own cell. On a diagonal the rectangle is filled solidly rather than left as
+## the lattice of holes a naive rotation would produce.
 ## @ace_hidden
 func _stamp_dig(walker: Walker) -> void:
 	var fallback: int = maxi(1, walker.brush_size)
@@ -1355,6 +1370,7 @@ func _stamp_dig(walker: Walker) -> void:
 			var point: Vector2 = base + forward * (float(along) * forward_sign) + across * float(side - low)
 			_write(roundi(point.x), roundi(point.y), walker.carve_value, walker.id)
 
+## Publishes a walker as the context the trigger expressions read.
 ## @ace_hidden
 func _set_context(walker: Walker) -> void:
 	_ctx_walker_id = walker.id
@@ -1364,6 +1380,8 @@ func _set_context(walker: Walker) -> void:
 	_ctx_walker_angle = fposmod(walker.heading, 360.0)
 	_ctx_walker_steps_left = walker.steps_left
 
+## Puts the walker context back to its resting reading, so an expression asked outside a trigger
+## answers 0 and "" rather than whatever the last walker happened to leave behind.
 ## @ace_hidden
 func _clear_context() -> void:
 	_ctx_walker_id = ""
@@ -1373,6 +1391,8 @@ func _clear_context() -> void:
 	_ctx_walker_angle = 0.0
 	_ctx_walker_steps_left = 0
 
+## Ends a walker once, whatever ended it, and fires On Walker Finished with its final cell in
+## context - so chaining logic never stalls, not even on a walker that ran out of legal moves.
 ## @ace_hidden
 func _finish(walker: Walker) -> void:
 	if walker.finished:
@@ -1385,6 +1405,14 @@ func _finish(walker: Walker) -> void:
 	walker_finished.emit(walker.id)
 	_clear_context()
 
+## One step. Returns false when the walker cannot continue, which is the only way a walk ends.
+##
+## The randomness is spent here, in this order, and nowhere else in a walk: one value on the turn
+## check, one more if it turns, and one more again if the heading it is holding would leave the
+## grid and has to be re-rolled - one value for that re-roll whichever pool it draws from, so
+## widening at a corner never shifts the stream. The turn check is rolled even when the turn
+## chance is 1, on purpose: it means changing a probability changes THAT decision and leaves
+## every later one exactly where it was in the stream.
 ## @ace_hidden
 func _advance(walker: Walker, emit_stepped: bool) -> bool:
 	if walker.finished:
@@ -1439,11 +1467,29 @@ func _advance(walker: Walker, emit_stepped: bool) -> bool:
 		return false
 	return true
 
+## Runs one registered walker to the end of its budget. Batch runs skip On Walker Stepped.
 ## @ace_hidden
 func _run_to_end(walker: Walker) -> void:
 	while _advance(walker, false):
 		pass
 
+## The cells holding a value, as linear indices in a stable left-to-right, top-to-bottom order.
+## Cached until the next write, because painting a map asks for this once per cell.
+## @ace_hidden
+func _cells_holding(value: int) -> PackedInt32Array:
+	if _index_cache.has(value):
+		return _index_cache[value] as PackedInt32Array
+	var found: PackedInt32Array = PackedInt32Array()
+	for index: int in _cells.size():
+		if _cells[index] == value:
+			found.append(index)
+	_index_cache[value] = found
+	return found
+
+## Whether a mark of this tag may sit here: minimum spacing is a EUCLIDEAN distance in cells and
+## only ever applies BETWEEN MARKS OF THE SAME TAG, so coins never crowd enemies out. A spacing of
+## 0 still forbids two marks of one tag stacking on a single cell, so you never get a double coin
+## by accident. Marks already on the grid count, not just the ones this pass placed.
 ## @ace_hidden
 func _spacing_allows(x: int, y: int, tag: String, min_spacing: float) -> bool:
 	var limit: float = maxf(0.0, min_spacing)
@@ -1457,6 +1503,7 @@ func _spacing_allows(x: int, y: int, tag: String, min_spacing: float) -> bool:
 			return false
 	return true
 
+## Records a mark and fires On Mark Placed with it in context.
 ## @ace_hidden
 func _place_mark(x: int, y: int, tag: String) -> void:
 	_marks.append({"x": x, "y": y, "tag": tag})
@@ -1468,6 +1515,8 @@ func _place_mark(x: int, y: int, tag: String) -> void:
 	_ctx_mark_y = 0
 	_ctx_mark_tag = ""
 
+## Whether a cell passes the placement rule. Off-grid neighbours never match, which is what makes
+## a cell on the grid border always an edge cell and never an interior one, with no special case.
 ## @ace_hidden
 func _placement_allows(x: int, y: int, value: int, placement: String) -> bool:
 	match placement:
@@ -1478,6 +1527,7 @@ func _placement_allows(x: int, y: int, value: int, placement: String) -> bool:
 		_:
 			return true
 
+## How many of the eight surrounding cells hold a value. Off-grid neighbours never match.
 ## @ace_hidden
 func _neighbours_holding(x: int, y: int, value: int) -> int:
 	var found: int = 0
@@ -1488,6 +1538,8 @@ func _neighbours_holding(x: int, y: int, value: int) -> int:
 			found += 1
 	return found
 
+## One field of a walker definition, under either spelling: the documented definition key, or the
+## snake_case name the same field wears everywhere else in a Godot project.
 ## @ace_hidden
 func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> Variant:
 	if data.has(key):
@@ -1496,6 +1548,13 @@ func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> 
 		return data[alias]
 	return fallback
 
+## The whole generator as one Dictionary, and the door a save pack comes in through: any node
+## answering save_state / load_state is snapshotted with no registration and no base class, and an
+## autoload is walked by name, so a save pack picks this generator up as "DrunkenWalkers" the
+## moment it is registered. Save State As Text is this same record, stringified.
+##
+## The RNG seed and state travel as TEXT: they are 64-bit integers, and a JSON number is a double,
+## which would quietly round the biggest of them and land the reload on a different stream.
 ## @ace_hidden
 func save_state() -> Dictionary:
 	_ensure_started()
@@ -1515,6 +1574,9 @@ func save_state() -> Dictionary:
 		"walkers": saved_walkers, "marks": _marks.duplicate(true),
 	}
 
+## Puts a saved record back, SILENTLY: no On Cell Carved and no On Mark Placed for restored
+## content, which is why a repaint after a load reads Count Cells and the index expressions rather
+## than waiting for a trigger.
 ## @ace_hidden
 func load_state(state: Dictionary) -> void:
 	_started = true

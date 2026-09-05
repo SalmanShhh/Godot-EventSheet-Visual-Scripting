@@ -46,9 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"drunken_walkers/drunken_walkers_addon.gd:placement",
-	"drunken_walkers/drunken_walkers_addon.gd:preset",
-	"drunken_walkers/drunken_walkers_addon.gd:source",
 	"follow_path/path_follow_behavior.gd:mode",
 	"game_settings/game_settings_addon.gd:device",
 	"game_settings/game_settings_addon.gd:kind",
@@ -90,6 +87,17 @@ const ACTIONS := [
 		"$Juice3DBehavior.chromatic_shake(12.0, 0.3, \"reducing\", -1.0)"],
 	[ANCHOR, "$AnchorBehavior.anchor_to(\"{corner}\")",
 		"$AnchorBehavior.anchor_to(\"top left\")", {"corner": "top left"}],
+	[DRUNKEN_WALKERS, "DrunkenWalkers.set_random_source(\"{source}\")",
+		"DrunkenWalkers.set_random_source(\"shared\")", {"source": "shared"}],
+	[DRUNKEN_WALKERS,
+		"DrunkenWalkers.add_walker_from_preset(\"{preset}\", {id}, {start_x}, {start_y}, {tag}, {carve_value})",
+		"DrunkenWalkers.add_walker_from_preset(\"ore_vein\", \"veins\", 4, 6, \"ore\", 2)",
+		{"preset": "ore_vein", "id": "\"veins\"", "start_x": "4", "start_y": "6", "tag": "\"ore\"",
+			"carve_value": "2"}],
+	[DRUNKEN_WALKERS,
+		"DrunkenWalkers.scatter_marks({count}, {tag}, {value}, \"{placement}\", {min_spacing})",
+		"DrunkenWalkers.scatter_marks(12, \"ore\", 1, \"interior\", 2.0)",
+		{"count": "12", "tag": "\"ore\"", "value": "1", "placement": "interior", "min_spacing": "2.0"}],
 ]
 
 const CONDITIONS := [

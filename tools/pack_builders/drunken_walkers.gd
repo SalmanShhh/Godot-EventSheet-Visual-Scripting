@@ -90,6 +90,7 @@ static func build() -> bool:
 		"Switches where every decision draws from: this pack's own seeded generator, the shared Advanced Random autoload, or the injected queue Inject Random fills. You may switch mid-run, so one pass can audit through a single stream while the rest does not.",
 		[["source", "String"]])
 	_options(src.sheet, "source", _SOURCES)
+	_quoted_call(src.sheet, "DrunkenWalkers.set_random_source(\"{source}\")")
 	src.verb("inject_random", "Inject Random",
 		"Queues one value between 0 and 1 for the injected source, generation consuming them in order. Budget roughly two per walker step plus one per mark candidate. A queue that runs dry falls back to the internal generator rather than failing, and says so in Debug Mode.",
 		[["value", "float"]])
@@ -104,6 +105,7 @@ static func build() -> bool:
 		[["preset", "String"], ["id", "String"], ["start_x", "int"], ["start_y", "int"],
 			["tag", "String"], ["carve_value", "int"]])
 	_options(src.sheet, "preset", _PRESETS)
+	_quoted_call(src.sheet, "DrunkenWalkers.add_walker_from_preset(\"{preset}\", {id}, {start_x}, {start_y}, {tag}, {carve_value})")
 	src.verb("define_walker", "Define Walker",
 		"Registers a walker from a whole JSON definition in one string, which suits definitions that live in a data file or a level editor. Anything you leave out takes its default. Both spellings of every field are accepted, so startX and start_x both work.",
 		[["definition", "String"]])
@@ -154,6 +156,7 @@ static func build() -> bool:
 		[["count", "int"], ["tag", "String"], ["value", "int"], ["placement", "String"],
 			["min_spacing", "float"]])
 	_options(src.sheet, "placement", _PLACEMENTS)
+	_quoted_call(src.sheet, "DrunkenWalkers.scatter_marks({count}, {tag}, {value}, \"{placement}\", {min_spacing})")
 	src.verb("clear_marks", "Clear Marks",
 		"Removes every mark carrying a tag, an empty tag removing all of them. The grid is untouched, so clearing marks and re-scattering only re-rolls the placement.",
 		[["tag", "String"]])
@@ -316,6 +319,18 @@ static func build() -> bool:
 		"run_all_walkers", "step_walker", "scatter_marks", "outline_cells", "draw_cells_to_tilemap",
 		"count_cells"])
 	return Lib.publish(src, "res://eventsheet_addons/drunken_walkers/drunken_walkers_addon")
+
+
+## Gives the last-declared verb a call template that QUOTES its dropdown argument. A dropdown key is
+## inserted into the call verbatim, so a String argument picked from a list of words has to carry its
+## own quotes in the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter
+## wraps a key that already starts with a quote in a second pair, and the scanner strips one pair
+## back off). Without this a row picking Ore Vein asked `add_walker_from_preset(ore_vein, ...)`, an
+## undefined identifier, and the game did not parse. The call is spelled in full because this pack
+## ships as an AUTOLOAD: the name in front of it is the singleton's, not a node path.
+static func _quoted_call(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = call
 
 
 ## Sets the dropdown options[] on the last-declared verb's parameter, so the row offers the words
