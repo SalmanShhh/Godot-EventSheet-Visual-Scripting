@@ -1230,7 +1230,7 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 ## decides whether the emitted handler is a coroutine at all, and the row builder's `action_awaits`
 ## draws the hourglass on the canvas. Adding a row to two of them and not the third is the failure
 ## this comment exists to stop.
-const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill"]
+const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait"]
 
 
 ## Flags a coroutine action (await / Wait / budget-yield) under a per-frame trigger: the next tick fires

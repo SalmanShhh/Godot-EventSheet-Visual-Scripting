@@ -49,6 +49,31 @@ The pack is small on purpose. Five ideas cover the whole thing.
 
 ---
 
+### Curves you own
+
+The transition and easing above are Godot's own set. **Tween Property Along Curve** takes something
+else: a `Curve` resource file, drawn in the Inspector, owned by your project. The curve is the shape
+of the motion, and `mode` says how that shape is read:
+
+| Mode | What the property does |
+|---|---|
+| `to destination` | Travels from where it is to `final_value` along the curve. The everyday one. |
+| `relative` | Adds `final_value` times the curve to where it started - a nudge that returns if the curve does. |
+| `absolute` | Takes `final_value` times the curve as its value outright: the curve *is* the motion. |
+| `remap` | Ignores `final_value` and maps the curve's `0` and `1` onto `from_value` and `to_value`. |
+
+A curve that rises past `1` and settles back is an overshoot; one that spikes early and falls away is
+a flare. Two starter curves ship beside the pack - `starter_curve_overshoot.tres` and
+`starter_curve_flare.tres` - and they are ordinary files: open one, drag its points, rename it,
+duplicate it into the curve this game actually wants, or delete both. Nothing in the pack names them,
+and there is no house set of curves anywhere in the plugin.
+
+The first curve tween on a property records what that property held. **Tween Property Back** returns
+to that number, however many tweens have run since - which is what a hover-out, a lid closing, or a
+panel sliding home is, without the number being typed twice.
+
+---
+
 ## Setup
 
 **1. Attach the behavior.** Add a `TweenBehavior` as a child node of the `Node2D` you want to animate (open the pack sheet and use Tools > Attach to Selected Node, or drop the pack node in as a child). One behavior per node you want to move.
@@ -95,6 +120,9 @@ All ACEs live in the **Tween** category and target the `TweenBehavior` on the no
 | Tween Rotation | `degrees` (float), `duration` (float) | Rotates the host to the given absolute angle in degrees. |
 | Tween Alpha | `alpha` (float), `duration` (float) | Fades the host's `modulate` alpha to `alpha` (clamped 0 - 1). |
 | Stop Tweens | (none) | Kills the running tween; the host stays exactly where it is. |
+| Tween Property Along Curve | `property_path` (String), `final_value` (float), `seconds` (float), `curve` (Curve), `mode` (String), `from_value` (float), `to_value` (float) | Tweens a number property along a `Curve` file you own, in one of four readings (see [Curves you own](#curves-you-own)). Remembers the value the property held before the first of these touched it. |
+| Tween Property And Wait | same as above | The same tween, waited on: the rows under it run when the property has arrived. An awaiting row, so the sheet draws it with the hourglass. |
+| Tween Property Back | `property_path` (String), `seconds` (float) | Returns the property to the value it held before the first curve tween touched it, over the behavior's own transition and easing. |
 
 ### Conditions
 
