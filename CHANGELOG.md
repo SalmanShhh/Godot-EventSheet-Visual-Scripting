@@ -23,6 +23,14 @@
   `global_position + Vector2(0, 100)` is still one value), the three-argument spelling is a row of
   its own that reads the mask as the mask, and the four-argument spelling - the one that also
   excludes bodies, which no shipped row means - stays the honest code it is.
+- **Asking what a line became now names the vocabulary that took it, on every line of a run.** A run
+  of statements only matches at the statement it opens on, and the provenance tool behind
+  `tools/explain.gd` asked the run families at the line you typed - so the second and third
+  statements of a ray, a layout, a camera move or a scene save fell through to the general reverse
+  index and were answered `index Core::SetLocalVarInferred`, a row the editor never makes of that
+  line, while the sheet itself read them as `physics_query_lift - ray_query_run_2d`. The tool finds
+  the run where it OPENS, through the same reader the canvas reads, so every line a run took names
+  the entry that claimed it and how many statements it took.
 
 ### What plays, prompts, speaks and moves
 

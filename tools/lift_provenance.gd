@@ -239,7 +239,15 @@ static func claims(source: String, number: int, script_path: String = "") -> Arr
 	var table: Answer = _table_answer(statement)
 	if table != null:
 		found.append(table)
-	found.append_array(_matcher_answers(lines, number, statement, term, table))
+	# A LINE A RUN SWALLOWED IS ANSWERED AS THAT RUN. A run only matches at the statement it opens
+	# on, so asking the run families at the line somebody typed answered nothing for a run's second
+	# and third statements and let them fall through to the reverse index - which named a row
+	# (`Core::SetLocalVarInferred` for the middle line of the ray the manual prints) that the editor
+	# never makes of that line, because the run had already taken it. The run is found where it
+	# OPENS instead, so those lines say the entry that claimed them, exactly as the canvas's own
+	# per-line reading says it.
+	var opening: int = int(_run_openings(lines).get(number, number))
+	found.append_array(_matcher_answers(lines, number, opening, statement, term, table))
 	if found.is_empty():
 		var index: Answer = _index_answer(statement, term)
 		if index != null:
@@ -362,8 +370,8 @@ static func _origin_of(family: String, entry_id: String) -> String:
 ## the lifter asks them (it reaches its condition-spelling seam from the branch path alone). A family
 ## whose condition matcher happens to accept a bare expression would otherwise be reported here as a
 ## claim the editor would never make.
-static func _matcher_answers(lines: PackedStringArray, number: int, statement: String, term: String,
-		table: Answer) -> Array[Answer]:
+static func _matcher_answers(lines: PackedStringArray, number: int, opening: int,
+		statement: String, term: String, table: Answer) -> Array[Answer]:
 	var found: Array[Answer] = []
 	var claimed_family: String = table.where if table != null else ""
 	var is_branch: bool = term != statement
@@ -389,7 +397,7 @@ static func _matcher_answers(lines: PackedStringArray, number: int, statement: S
 		if not family.has_method(EventSheetACELifter.RUN_SPELLING_METHOD):
 			continue
 		var run: Dictionary = family.call(EventSheetACELifter.RUN_SPELLING_METHOD, lines,
-			number - 1, _indent_of(lines[number - 1]))
+			opening - 1, _indent_of(lines[opening - 1]))
 		if run.is_empty():
 			continue
 		var file_name: String = family.resource_path.get_file()
@@ -409,6 +417,48 @@ static func _matcher_answers(lines: PackedStringArray, number: int, statement: S
 		found.append(Answer.new(Layer.EXAMPLE if by_example else Layer.TABLE, file_name,
 			"%s -> %s over %d lines" % [entry_id, str(run.get("ace_id", "")), over]))
 	return found
+
+
+## WHERE THE RUN THAT SWALLOWED EACH LINE OPENS, as {line number: opening line number}. Only the
+## lines a run took are in it; everything else answers for itself.
+##
+## Walked once over the whole file, in file order, exactly as the lifter walks a body and as the
+## canvas's own per-line reading walks it: a run that claims K statements takes all K and the walk
+## resumes after them, so the second statement of a run can never open a second one.
+##
+## The TABLES are asked through the reader the canvas reads (EventSheetLiftReading.table_run_claim),
+## so this tool and the editor cannot disagree about which lines a run covers; the families that
+## match a run BY HAND are asked after them, through the lifter's own constants, so a run claimed
+## either way covers the lines it took.
+static func _run_openings(lines: PackedStringArray) -> Dictionary:
+	var openings: Dictionary = {}
+	var index: int = 0
+	while index < lines.size():
+		var consumed: int = _run_length(lines, index)
+		if consumed <= 0:
+			index += 1
+			continue
+		for step: int in range(consumed):
+			openings[index + step + 1] = index + 1
+		index += consumed
+	return openings
+
+
+## How many statements a run opening at `index` (0-based) takes, or 0 when nothing claims a run
+## there.
+static func _run_length(lines: PackedStringArray, index: int) -> int:
+	var claimed: Dictionary = EventSheetLiftReading.table_run_claim(lines, index)
+	if not claimed.is_empty():
+		return maxi(1, int(claimed.get("consumed", 1)))
+	var depth: int = _indent_of(lines[index])
+	for family: GDScript in EventSheetACELifter.RUN_FAMILIES:
+		if not family.has_method(EventSheetACELifter.RUN_SPELLING_METHOD):
+			continue
+		var run: Dictionary = family.call(EventSheetACELifter.RUN_SPELLING_METHOD, lines, index,
+			depth)
+		if not run.is_empty():
+			return maxi(1, int(run.get("consumed", 1)))
+	return 0
 
 
 ## Layer 4: the general reverse index, asked as the whole lifter and only where nothing above

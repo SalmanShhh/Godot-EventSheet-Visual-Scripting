@@ -87,6 +87,22 @@ func open_pause_menu() -> void:
 
 const RUN_LINE: int = 5
 
+## A buffer whose three statements are the ray the engine's own pages print - a family whose WHOLE
+## vocabulary is runs, which is why it is here beside the layout one. Every one of its lines has to
+## name the entry that took it: the middle one read as `Core::SetLocalVarInferred` while the run was
+## only ever looked for at the line being asked about, and that is a row the editor never makes of it.
+const PHYSICS_RUN: String = """extends CharacterBody2D
+
+
+func look() -> void:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, Vector2(0, 100))
+	var sight := space_state.intersect_ray(query)
+	print(sight)
+"""
+
+const PHYSICS_RUN_LINE: int = 5
+
 ## A third buffer that cannot round-trip, for the read-only proof: it ends without a last newline
 ## and the emitter always writes one, so re-emitting it can never reproduce it. The closing quotes
 ## sit against `pass` for that reason - a newline before them would make this file round-trip and
@@ -200,8 +216,37 @@ static func _test_a_run_of_statements() -> bool:
 	var ok: bool = _check("a run claimed by a table entry is a table claim, over its statements",
 		_claims_of(RUN, RUN_LINE, ""),
 		["  1. table    layout_on_top_lift.gd  layout_on_top_written -> AddLayoutOnTop over 3 lines"])
-	ok = _check("and a line inside the run is still asked on its own",
-		_claims_of(RUN, RUN_LINE + 1, ""), ["  4. index    Core::SetNodeName"]) and ok
+	# AND SO IS EVERY LINE THE RUN TOOK. A run matches only at the statement it opens on, so asking
+	# the families at the line somebody typed answered nothing for the second and third statements
+	# and let them fall through to the reverse index - `Core::SetNodeName` here, and
+	# `Core::SetLocalVarInferred` for the middle line of the ray below. Neither is a row the editor
+	# makes of that line: the run took it before any single-line layer was asked, which is what the
+	# canvas's own per-line reading says of it. The run is found where it OPENS now, so a line inside
+	# one says the entry that claimed it.
+	ok = _check("and every line the run took says the same entry",
+		_claims_of(RUN, RUN_LINE + 1, ""),
+		["  1. table    layout_on_top_lift.gd  layout_on_top_written -> AddLayoutOnTop over 3 lines"]) and ok
+	# The family whose WHOLE vocabulary is runs, which is where this was found: the three statements
+	# a ray asked of the physics world is. All three lines, so the pin fails if only the opening one
+	# is answered - which is the state this replaced.
+	for line: int in [PHYSICS_RUN_LINE, PHYSICS_RUN_LINE + 1, PHYSICS_RUN_LINE + 2]:
+		ok = _check("line %d of the ray the manual prints names the family that took it" % line,
+			_claims_of(PHYSICS_RUN, line, ""),
+			["  1. table    physics_query_lift.gd  ray_query_run_2d -> CastRayInto2D over 3 lines"]) and ok
+	# And the editor's own reading of the same three lines, so the two cannot drift apart: this is
+	# the answer the tool was reporting the reverse index over.
+	var reading: Dictionary = EventSheetLiftReading.read(PHYSICS_RUN)
+	var said: PackedStringArray = PackedStringArray()
+	for line: Variant in reading.get("lines", []) as Array:
+		var entry: Dictionary = line as Dictionary
+		if int(entry.get("number", 0)) < PHYSICS_RUN_LINE \
+				or int(entry.get("number", 0)) > PHYSICS_RUN_LINE + 2:
+			continue
+		said.append("%s · %s" % [str(entry.get("family", "")), str(entry.get("entry_id", ""))])
+	ok = _check("...which is what the canvas's own per-line reading says of them", said,
+		PackedStringArray(["physics_query_lift · ray_query_run_2d",
+			"physics_query_lift · ray_query_run_2d",
+			"physics_query_lift · ray_query_run_2d"])) and ok
 	return ok
 
 
