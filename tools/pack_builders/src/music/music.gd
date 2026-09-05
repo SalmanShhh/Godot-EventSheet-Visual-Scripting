@@ -417,9 +417,16 @@ func _advance_levels(delta: float) -> void:
 ## The duck: down over its seconds, held for as long as it was asked to hold, then back up on its
 ## own. A duck that was given no time simply arrives, so nothing here has to special-case it.
 ##
-## The hold eats its own share of the frame and only the LEFTOVER walks, which matters on the frame
-## a hold runs out: spending the whole delta on the walk as well would start the climb a frame's
-## worth of the way up, and on a long frame that is an audible jump rather than a fade.
+## A HOLD DELAYS THE RELEASE, NOT THE DESCENT. The walk down to the level that was asked for runs
+## every frame, hold or no hold: a sting asks for its own 0.15 s down and then holds for the whole
+## length of the sound, so a descent that waited for the hold to run out would never run at all and
+## the sting would be inaudible - the music would sit at the level it was already at and then be
+## handed back to it.
+##
+## Only the return upwards waits. The hold eats its own share of the frame and only the LEFTOVER
+## walks that return, which matters on the frame a hold runs out: spending the whole delta on the
+## climb as well would start it a frame's worth of the way up, and on a long frame that is an
+## audible jump rather than a fade.
 ## @ace_hidden
 func _advance_duck(delta: float) -> void:
 	var walked: float = delta
@@ -427,6 +434,10 @@ func _advance_duck(delta: float) -> void:
 		var spent: float = minf(_duck_hold, delta)
 		_duck_hold -= spent
 		walked = delta - spent
+		# The descent walks the held share of the frame, before the release below reads _duck_db to
+		# work out how fast to come back up from it.
+		if _duck_rate > 0.0:
+			_duck_db = move_toward(_duck_db, _duck_target_db, _duck_rate * spent)
 		if _duck_hold <= 0.0:
 			_duck_hold = 0.0
 			if _duck_return_db < 0.0:

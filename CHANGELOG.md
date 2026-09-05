@@ -86,6 +86,16 @@
 
 ### Fixed in the music, prompts, text and animation pass
 
+- **A stinger ducks the music it lands over, instead of being inaudible.** Stinger asks for a
+  0.15 s descent to the depth the row named and then holds the duck for the length of its sound,
+  but the walk downwards only ever got the frame time the hold had not already eaten, which on any
+  frame shorter than the hold is none at all. The duck therefore sat at whatever level it was
+  already on for the whole sting and was handed straight back to it: over silence it never left 0,
+  and a sting deeper than the line of dialogue it landed over never reached its own depth. A hold
+  now delays the RETURN and nothing else, so the descent walks while the hold runs. A 6 dB sting
+  over silence is 6 dB down after its own 0.15 s, stays there while the sound plays, and is back at
+  full once the hold has run out.
+
 - **The strength dial means the same thing whichever effect the row picked.** Set Text With Effect
   and Wrap Selection In Effect put one Strength field in front of seven knobs that are not one
   scale - a wave's height is tens of pixels and a rainbow's frequency is about one - and the field

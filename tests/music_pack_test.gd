@@ -18,6 +18,7 @@
 #   - seconds to the next beat is a WHOLE beat when you are standing exactly on one;
 #   - a duck walks in decibels at the rate its seconds asked for, and a duck given no time arrives;
 #   - a stinger holds the duck for its own length and then comes back up with nobody asking;
+#   - a hold delays the RETURN and not the descent, so a sting over silence is audible at all;
 #   - a layer that nothing has faded is silent, and Set Layers states the WHOLE mix rather than
 #     changing one thing about it;
 #   - a crossfade hands over between two decks and releases the one that reached silence, so a
@@ -59,6 +60,7 @@ static func run() -> bool:
 	passed = _next_beat_at_rides_the_engine_clock(script) and passed
 	passed = _a_stinger_over_a_duck_leaves_the_duck(script) and passed
 	passed = _two_stings_over_each_other_still_come_back_up(script) and passed
+	passed = _a_sting_over_silence_ducks_while_it_holds(script) and passed
 	passed = _no_beat_fires_before_the_first_one(script) and passed
 	passed = _a_song_with_an_intro_plays_it_once(script) and passed
 	passed = _a_track_that_ends_stops_being_the_track(script) and passed
@@ -469,6 +471,59 @@ static func _two_stings_over_each_other_still_come_back_up(script: GDScript) -> 
 			_round(still_under_the_voice), -8.0],
 		["which is not rest, because the line is still being spoken", runs_on, false],
 		["until the row that ducked it brings it up", _round(when_the_line_ends), 0.0],
+	])
+
+
+## A STING OVER SILENCE HAS TO BE AUDIBLE. A stinger asks for a descent of its own - 0.15 s down to
+## the decibels the row named - and then holds for the length of the sound. A hold delays the RETURN
+## and nothing else, so the descent has to walk while the hold runs: a walk that only got the frame
+## time the hold had not eaten would never walk at all, and a sting over silence would sit at 0 for
+## its whole length and be handed back to 0 at the end. That is a flourish nobody can hear, and it
+## is invisible to a test that drives a phase in one call, so the frames here are hand-stepped at
+## 0.05 s, the size a game's own frame is.
+static func _a_sting_over_silence_ducks_while_it_holds(script: GDScript) -> bool:
+	var director: Node = script.new()
+	# A two-second sting, 6 dB deep, over nothing at all.
+	director._begin_sting(6.0, 2.0)
+	var after_the_descent: float = 0.0
+	var while_it_holds: float = 0.0
+	var elapsed: float = 0.0
+	while elapsed < 2.6:
+		director.advance(0.05)
+		elapsed += 0.05
+		if absf(elapsed - 0.15) < 0.001:
+			after_the_descent = director._duck_db
+		if absf(elapsed - 1.0) < 0.001:
+			while_it_holds = director._duck_db
+	var back_up: float = director._duck_db
+	var parks: bool = director._at_rest()
+	# The same sting over a line of dialogue, deeper than the line's own duck: it has to reach its
+	# own depth inside the descent it asked for, and still hand the music back to the line.
+	var under: Node = script.new()
+	under.duck(8.0, 0.0)
+	under._begin_sting(12.0, 2.0)
+	var deeper_than_the_line: float = 0.0
+	var since: float = 0.0
+	while since < 2.6:
+		under.advance(0.05)
+		since += 0.05
+		if absf(since - 0.15) < 0.001:
+			deeper_than_the_line = under._duck_db
+	var still_under_the_voice: float = under._duck_db
+	var runs_on: bool = under._at_rest()
+	director.free()
+	under.free()
+	return SUPPORT.pins(TEST, [
+		["a sting over silence is all the way down after its own descent",
+			_round(after_the_descent), -6.0],
+		["and stays down while the sting is playing", _round(while_it_holds), -6.0],
+		["and is back at full once the hold has run out", _round(back_up), 0.0],
+		["and the director parks its own frame again", parks, true],
+		["a deeper sting over a line reaches its own depth within the same descent",
+			_round(deeper_than_the_line), -12.0],
+		["and still hands the music back to the line's duck",
+			_round(still_under_the_voice), -8.0],
+		["which is not rest, because the line is still being spoken", runs_on, false],
 	])
 
 
