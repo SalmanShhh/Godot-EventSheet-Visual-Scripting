@@ -60,21 +60,9 @@ const TWEEN_PROPERTY: String = "tween_property"
 const EMIT_SIGNAL: String = "emit_signal"
 const PLAY_PLAYER: String = "play_player"
 
-## Which family a word's stripe is coloured by. An OVERRIDE list: a word absent from it takes the
-## uncategorised colour under its own name, which is what a pack's new word gets until somebody
-## decides which family it belongs to.
-const FAMILY_OF: Dictionary = {
-	"shake": "camera",
-	"zoom": "camera",
-	"punch": "transform",
-	"flash": "transform",
-	"hitstop": "pause",
-	"slowmo": "pause",
-	"shockwave": "screen",
-	"chromatic": "screen",
-	"pulse": "screen",
-	"hold": "screen"
-}
+## The Feedback Player itself, which is where a word's FAMILY is written down.
+const PLAYER_PATH: String = "res://eventsheet_addons/juice/feedback_player.gd"
+const FAMILY_CONSTANT: String = "CATEGORY_OF"
 
 ## The one derived title that would collide with a timing word's. The pack's screen-effect "hold"
 ## and the list's own Hold are different things, and two cards called Hold in one dropdown is a
@@ -107,6 +95,32 @@ const STRIPES: Dictionary = {
 ## The pack, read once per session: a file on disk that does not change while the editor is open.
 static var _reading_cache: Dictionary = {}
 static var _reading_done: bool = false
+
+## And the family table, read once for the same reason.
+static var _family_cache: Dictionary = {}
+static var _family_done: bool = false
+
+
+## Which family a word's stripe is coloured by. NOT written here: it is the Feedback Player's own
+## CATEGORY_OF, read off the shipped pack, because the running game asks the same question when Mute
+## Feedback Category decides what to skip and a word must not be able to belong to one family in the
+## Inspector and another in the game. Still an OVERRIDE list at the far end - a word the pack does
+## not place takes the uncategorised colour under its own name.
+##
+## The constant is read off the SCRIPT rather than off an instance: a pack script is not a `@tool`
+## script and cannot be instantiated in the editor at all, but its constants are known the moment it
+## is loaded. A project that deleted the pack reads an empty table and colours by word.
+static func family_of() -> Dictionary:
+	if _family_done:
+		return _family_cache
+	_family_done = true
+	var pack: GDScript = load(PLAYER_PATH) as GDScript if ResourceLoader.exists(PLAYER_PATH) else null
+	if pack == null:
+		return _family_cache
+	var declared: Variant = pack.get_script_constant_map().get(FAMILY_CONSTANT)
+	if declared is Dictionary:
+		_family_cache = declared as Dictionary
+	return _family_cache
 
 
 ## The whole vocabulary: the ten derived words first, in the order the pack lists them, then the
@@ -182,7 +196,7 @@ static func derived_kinds(reading: Dictionary) -> Array:
 			fields.insert(1, _param_field(params, EFFECT_KEY, "text"))
 		kinds.append({
 			"kind": word,
-			"category": str(FAMILY_OF.get(word, "")),
+			"category": str(family_of().get(word, "")),
 			"label": str(TITLE_OF.get(word, twin.get("label", word.capitalize()))),
 			"help": str(twin.get("help", (params.get(WORD_KEY, {}) as Dictionary).get("help", ""))),
 			"fields": fields,

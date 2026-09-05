@@ -118,6 +118,7 @@ const FINDINGS_SCENE_TRUST := "scene_trust"
 const FINDINGS_TOOL_EDITS := "tool_edits"
 const FINDINGS_MIGRATION := "migration"
 const FINDINGS_RENAME := "rename"
+const FINDINGS_FEEDBACK := "feedback"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -9713,6 +9714,12 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 						return _viewport != null \
 							and (_viewport._find_definition(provider_id, ace_id) != null
 								or ACERegistry.find_descriptor(provider_id, ace_id) != null))
+			FINDINGS_FEEDBACK:
+				# A row that names a feedback the scene's Feedback Player has not got. The evidence is
+				# the scene's saved bytes rather than a guess, so a sheet no scene runs and a scene
+				# with no player in it both earn nothing at all.
+				_sheet_findings_cache[family] = EventSheetFeedbackFindings.findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "")
 			FINDINGS_RENAME:
 				# The rows a rename made somewhere else left pointing at nothing. The witness is
 				# built from the sheet's own file and the scene that runs it, and it answers with
@@ -9758,6 +9765,8 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 		EventSheetMigrationFindings.for_event(_sheet_findings(FINDINGS_MIGRATION), event_row)))
 	about.append_array(_tagged(FINDINGS_RENAME,
 		EventSheetRenameFindings.for_event(_sheet_findings(FINDINGS_RENAME), event_row)))
+	about.append_array(_tagged(FINDINGS_FEEDBACK,
+		EventSheetFeedbackFindings.for_event(_sheet_findings(FINDINGS_FEEDBACK), event_row)))
 	return about
 
 
