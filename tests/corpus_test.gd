@@ -24,13 +24,17 @@
 #
 # WHAT IS PINNED, AND WHY IT IS PINNED AS VALUES:
 #
-#   1. BYTE-EXACT round-trip on every file. Open it as a sheet, save it untouched, get the same
+#   1. IT COMPILES, asked of every file before anything else is asked of it. Nothing else in this
+#      gate needs it to - a reading opens text and a re-emission writes text back - so a file naming
+#      a member its own base class does not have passed every pin below while being a file the
+#      engine refuses to load, which is the one thing these files must never be.
+#   2. BYTE-EXACT round-trip on every file. Open it as a sheet, save it untouched, get the same
 #      bytes. This is the lossless contract measured on whole real files, and it never relaxes.
-#   2. Per file, the reading as three NUMBERS: the share that reads as rows, how many lines a
+#   3. Per file, the reading as three NUMBERS: the share that reads as rows, how many lines a
 #      lift-table entry claims by name, and how many stay honest code. Counts, not tolerances -
 #      moving one means editing this file, which is the point. A coverage change becomes a
 #      deliberate, visible diff instead of a floor quietly absorbing it.
-#   3. THE LEDGER over the whole corpus, as values. The Doctor's Reading page and
+#   4. THE LEDGER over the whole corpus, as values. The Doctor's Reading page and
 #      tools/reading_shape_census.gd are both built on one census, and until a corpus file had
 #      repeated shapes in it that census had no whole-file coverage at all: the ranking, the one-off
 #      tail and the notes counter could all have gone wrong without moving a single pin. Now the
@@ -83,6 +87,14 @@ static func run() -> bool:
 		if not PINS.has(name):
 			continue
 		var pins: Dictionary = PINS[name]
+		# THE FILE HAS TO COMPILE, and it is asked before anything else is asked of it. Nothing below
+		# needs it to: a reading opens the text, a re-emission writes the text back, and a file naming
+		# a member its own base class does not have passes every pin here while being a file the
+		# engine refuses to load. That is the one thing this corpus must not be - these are scripts a
+		# real developer would plausibly have written, and one that cannot run is not one of those.
+		# The engine's own loader answers, so the verdict here is the verdict the game would get.
+		all_passed = _check("%s compiles" % name, ResourceLoader.load(path, "GDScript") != null,
+			true) and all_passed
 		var source: String = FileAccess.get_file_as_string(path)
 		var reading: Dictionary = EventSheetLiftReading.read(source, path)
 		var counts: Dictionary = EventSheetLiftReading.layer_counts(reading)

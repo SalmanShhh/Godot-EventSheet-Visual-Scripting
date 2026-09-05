@@ -10,6 +10,7 @@ var is_open: bool = false
 @onready var resume_button: Button = $Panel/Resume
 @onready var quit_button: Button = $Panel/Quit
 @onready var save_timer: Timer = $SaveTimer
+@onready var panel: Panel = $Panel
 
 
 func _ready() -> void:
@@ -34,9 +35,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_PAUSED:
-			modulate = Color(0.8, 0.8, 0.9)
+			panel.modulate = Color(0.8, 0.8, 0.9)
 		NOTIFICATION_UNPAUSED:
-			modulate = Color(1.0, 1.0, 1.0)
+			panel.modulate = Color(1.0, 1.0, 1.0)
 		NOTIFICATION_WM_CLOSE_REQUEST:
 			save_and_quit()
 		NOTIFICATION_PREDELETE:
