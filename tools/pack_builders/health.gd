@@ -512,6 +512,15 @@ static func build() -> bool:
 		"if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():",
 		"\treturn",
 		"_credit_hit(from)",
+		"# THE REPORT SAYS THIS HIT, not the last typed one. Nothing else can clear it: plain Take",
+		"# Damage is frozen, so one fire critical five minutes ago left Damage Type Is fire and Last",
+		"# Hit Was A Crit true under every hit that followed. A hit that names its source but no kind",
+		"# is of no kind, was no critical, and landed for what it was given - the pools and the health",
+		"# of Take Damage still have the last word on where that number goes.",
+		"last_damage_type = \"\"",
+		"last_hit_was_crit = false",
+		"last_damage_before_mitigation = amount",
+		"last_damage_dealt = amount",
 		"take_damage(amount)"
 	])), "Take [b]{amount}[/b] damage from [i]{from}[/i]")
 	_field(sheet, "from", "self", "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")

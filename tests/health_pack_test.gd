@@ -83,6 +83,7 @@ static func run() -> bool:
 	all_passed = _a_handwritten_typed_hit_comes_back_byte_for_byte() and all_passed
 	all_passed = _the_difficulty_factor_scales_the_hit() and all_passed
 	all_passed = _assists_are_counted_from_the_death() and all_passed
+	all_passed = _a_hit_of_no_kind_says_so() and all_passed
 	return all_passed
 
 
@@ -296,6 +297,49 @@ static func _assists_are_counted_from_the_death() -> bool:
 		["and the one that is still there is", boss_stamps.has(helper), true]
 	])
 	for node: Node in [victim, boss, helper, killer]:
+		node.free()
+	return passed
+
+
+## THE REPORT IS ABOUT THE HIT THAT JUST LANDED. Take Damage Of Type writes four readings, and
+## before this nothing ever cleared them - so one fire critical left Damage Type Is fire and Last
+## Hit Was A Crit true under every hit that followed, and a HUD popping "as crit" under On Damaged
+## popped it for the rest of the fight. Take Damage From writes the untyped report instead.
+##
+## Plain Take Damage is FROZEN and can clear nothing, so what it leaves standing is pinned here too:
+## it is a number and nothing else, which is what the guide now says of it.
+static func _a_hit_of_no_kind_says_so() -> bool:
+	var script: GDScript = load(PACK)
+	var shooter: Node = Node.new()
+	shooter.name = "Shooter"
+	var hazard: Node = Node.new()
+	hazard.name = "Hazard"
+	var victim: Node = _fresh(script)
+	victim.set("crit_chance", 1.0)
+	victim.set("crit_multiplier", 2.0)
+	victim.call("take_typed_damage", 10.0, "fire", shooter, "")
+	var was_fire: bool = victim.call("damage_type_is", "fire")
+	var was_crit: bool = victim.call("last_hit_was_a_crit")
+	victim.call("take_damage_from", 5.0, hazard)
+	var still_fire: bool = victim.call("damage_type_is", "fire")
+	var still_crit: bool = victim.call("last_hit_was_a_crit")
+
+	# The frozen row, said plainly rather than wished away: it changes the health and nothing else.
+	var plain: Node = _fresh(script)
+	plain.call("take_typed_damage", 10.0, "ice", shooter, "")
+	plain.call("take_damage", 5.0)
+	var after_plain_type: String = plain.call("last_damage_type_value")
+
+	var passed: bool = SUPPORT.pins("health_pack_test", [
+		["a typed critical reports its kind", was_fire, true],
+		["and reports that it was one", was_crit, true],
+		["a hit of no kind afterwards is of no kind", still_fire, false],
+		["and was not a critical either", still_crit, false],
+		["it reports what it was given", victim.call("last_damage_dealt_value"), 5.0],
+		["and who dealt it", victim.call("last_hit_from_value") == hazard, true],
+		["while plain Take Damage leaves the last report standing", after_plain_type, "ice"]
+	])
+	for node: Node in [victim, plain, shooter, hazard]:
 		node.free()
 	return passed
 
