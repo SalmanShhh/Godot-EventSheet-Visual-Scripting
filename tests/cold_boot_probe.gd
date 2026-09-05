@@ -46,11 +46,20 @@ const FIRST_SHEET: String = "res://demo/showcase/boomer_level/boomer_level.gd"
 ## Everything `_enter_tree` reaches by path. Named here as strings for the same reason the plugin
 ## names them as strings: a class name in this file would compile its subtree before the clock
 ## starts, and the measurement would then miss the very thing it is measuring.
+##
+## THIS LIST HAS TO TRACK `_enter_tree`. A by-path load the plugin does and this list does not name
+## is boot cost nothing measures - which is how the Feedback Player's Inspector plugin and the
+## registry store below arrived unbudgeted. A `load()` inside a lambda is NOT one of these: the
+## card schema and the step field are fetched the first time something asks for them, and a session
+## that opens no Inspector never pays for either.
 const BY_PATH_BOOT_OBJECTS: Array[String] = [
 	"res://addons/eventforge/editor/export_tools_plugin.gd",
 	"res://addons/eventforge/editor/import_tools_plugin.gd",
 	"res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd",
+	"res://addons/eventsheet/editor/inspector/feedback_player_inspector_plugin.gd",
+	"res://addons/eventsheet/api/extension_registries.gd",
 	"res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd",
+	"res://addons/eventsheet/editor/inspector/handle_plugin.gd",
 	"res://addons/eventsheet/editor/drawing_canvas_gizmo.gd",
 	"res://addons/eventsheet/editor/drawing_prefab_gizmo.gd",
 	"res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd",

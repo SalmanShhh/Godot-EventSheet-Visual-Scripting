@@ -34,6 +34,11 @@ const FEEDBACK_CARD_SCHEMA_NAME: String = "feedback_steps"
 ## rather than on the field so registering it costs no load at boot - the field is only fetched the
 ## first time a row with a step in it is opened.
 const FEEDBACK_STEP_HINT: String = "feedback_step"
+## The three extension registries, reached BY PATH. The public `EventSheets` API writes to the same
+## dictionaries, but naming that class here would compile the compiler, the importer, the Doctor and
+## the viewport into every editor start - which is what it did, turning a ~330 ms boot closure into
+## ~19,000 ms. The store names nothing, so registering through it costs a parse of a few lines.
+const EXTENSION_REGISTRIES_PATH: String = "res://addons/eventsheet/api/extension_registries.gd"
 const FEEDBACK_STEP_FIELD_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_step_field.gd"
 const FEEDBACK_STEP_HELP: String = "The feedback itself. Press Card to fill it in as the card the Feedback Player's list unfolds in the Inspector - the same kinds, the same fields, the same keys. The box holds what the row will emit, so an expression can be typed straight into it instead."
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
@@ -360,17 +365,18 @@ func _enter_tree() -> void:
 	# kinds are derived from the Juice pack's own verbs, which are known when an Inspector opens and
 	# not when the plugin boots. The lambda loads the schema file on first ask, so registering it
 	# costs nothing at boot.
-	EventSheets.register_card_schema(FEEDBACK_CARD_SCHEMA_NAME,
+	var extension_registries: Script = load(EXTENSION_REGISTRIES_PATH)
+	extension_registries.call("register_card_schema", FEEDBACK_CARD_SCHEMA_NAME,
 		func() -> Dictionary: return load(FEEDBACK_CARD_SCHEMA_PATH).call("schema"))
 	# And the SAME card, opened from a row: Add Feedback, Insert Feedback Before and Replace Feedback
 	# each take a step, and a step typed into a plain parameter box is a dictionary with no kinds, no
 	# fields and no help. The registered field opens the card instead, so a feedback authored by a row
 	# and one authored in the list are the same dictionary spelled the same way. Loaded by path on
 	# first ask, for the same reason the schema is.
-	EventSheets.register_param_editor(FEEDBACK_STEP_HINT,
+	extension_registries.call("register_param_editor", FEEDBACK_STEP_HINT,
 		func(_param: Dictionary, initial_text: String) -> LineEdit:
 			return load(FEEDBACK_STEP_FIELD_PATH).new(initial_text))
-	EventSheets.register_param_help(FEEDBACK_STEP_HINT, FEEDBACK_STEP_HELP)
+	extension_registries.call("register_param_help", FEEDBACK_STEP_HINT, FEEDBACK_STEP_HELP)
 	# Tier 3 attribute drawers (progress bars…): purely cosmetic - generated scripts
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
@@ -550,7 +556,7 @@ func _exit_tree() -> void:
 	if _feedback_player_inspector != null:
 		remove_inspector_plugin(_feedback_player_inspector)
 		_feedback_player_inspector = null
-		EventSheets.unregister_card_schema(FEEDBACK_CARD_SCHEMA_NAME)
+		load(EXTENSION_REGISTRIES_PATH).call("unregister_card_schema", FEEDBACK_CARD_SCHEMA_NAME)
 	if _attribute_drawers_plugin != null:
 		remove_inspector_plugin(_attribute_drawers_plugin)
 		_attribute_drawers_plugin = null

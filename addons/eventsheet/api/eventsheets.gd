@@ -1206,16 +1206,19 @@ static func scripts_calling(function_name: String, own_script: String = "") -> P
 
 # ── Extension seams (custom features plug in here) ─────────────────────────────────────
 
+## Where the param-editor, param-help and card-schema registries actually live. They sit in a file
+## of their own because `plugin.gd` has to write to them at editor boot, and naming THIS class from
+## a boot file compiles the compiler, the importer, the Doctor and the viewport into every editor
+## start (measured: a ~330 ms boot closure became ~19,000 ms when one registration was made through
+## the API). The methods below are unchanged and stay the way every feature reaches them.
+const EXTENSION_REGISTRIES := preload("res://addons/eventsheet/api/extension_registries.gd")
+
 ## Row context-menu items: [{label, filter: Callable(resource)->bool, action: Callable(resource)}].
 static var _row_menu_items: Array[Dictionary] = []
 ## Lifecycle listeners: event name -> Array[Callable].
 static var _lifecycle: Dictionary = {"opened": [], "saved": [], "compiled": []}
 ## Extension starters: [{label, build: Callable()->EventSheetResource}] - ids 1000+ in the dialog.
 static var _starters: Array[Dictionary] = []
-## Param editors: hint or type_name -> Callable(param_dict, initial_text) -> LineEdit.
-static var _param_editors: Dictionary = {}
-## Param help strip paragraphs: hint -> the sentence the strip says about a field of that kind.
-static var _param_help: Dictionary = {}
 ## Welcome Preferences rows: Array[Callable() -> Control].
 static var _preference_builders: Array[Callable] = []
 ## Dictionary-defined ACEs live in the registry's extras (see register_simple_ace).
@@ -1471,11 +1474,11 @@ static func param_spec(config: Dictionary) -> Dictionary:
 ## has no hint); `factory(param_dict, initial_text)` must return a LineEdit (subclass and style
 ## it freely - add buttons, popups, validation - the dialog reads the final value from .text).
 static func register_param_editor(tag: String, factory: Callable) -> void:
-	_param_editors[tag] = factory
+	EXTENSION_REGISTRIES.register_param_editor(tag, factory)
 
 
 static func param_editor_for(tag: String) -> Callable:
-	return _param_editors.get(tag, Callable())
+	return EXTENSION_REGISTRIES.param_editor_for(tag)
 
 
 ## What the Parameters dialog's help strip says about a parameter carrying this HINT - the
@@ -1486,13 +1489,13 @@ static func param_editor_for(tag: String) -> Callable:
 ## One paragraph per hint; last registration wins, and a registration overrides the builtin text.
 ## Keep it to a sentence or two: the strip is a foot, not a manual.
 static func register_param_help(hint: String, paragraph: String) -> void:
-	_param_help[hint] = paragraph
+	EXTENSION_REGISTRIES.register_param_help(hint, paragraph)
 
 
 ## The registered paragraph for a hint, or "" when nothing was registered for it (the builtin table
 ## answers then).
 static func param_help_for(hint: String) -> String:
-	return str(_param_help.get(hint, ""))
+	return EXTENSION_REGISTRIES.param_help_for(hint)
 
 
 ## Commit-time validation for a param HINT (the generic seam the feature-tag nudge uses):
@@ -1668,25 +1671,21 @@ static func inspector_preview_renderer_for(script_path: String) -> Callable:
 ##
 ## One schema per name; last registration wins. Nothing here reaches generated game code - the cards
 ## are Inspector chrome, and the property is a plain Array of Dictionaries in the running game.
-static var _card_schemas: Dictionary = {}
-
-
+##
+## The store itself is the shared one above, so a schema the plugin registers at boot without
+## touching this class is the same schema a card drawer finds through it.
 static func register_card_schema(schema_name: String, provider: Callable) -> void:
-	_card_schemas[schema_name] = provider
+	EXTENSION_REGISTRIES.register_card_schema(schema_name, provider)
 
 
 static func unregister_card_schema(schema_name: String) -> void:
-	_card_schemas.erase(schema_name)
+	EXTENSION_REGISTRIES.unregister_card_schema(schema_name)
 
 
 ## The schema registered under a name, or an empty Dictionary when nothing was registered (a card
 ## list whose pack is absent still edits, and still saves the bytes it was opened with).
 static func card_schema(schema_name: String) -> Dictionary:
-	var provider: Variant = _card_schemas.get(schema_name)
-	if not (provider is Callable) or not (provider as Callable).is_valid():
-		return {}
-	var answer: Variant = (provider as Callable).call()
-	return answer if answer is Dictionary else {}
+	return EXTENSION_REGISTRIES.card_schema(schema_name)
 
 
 ## A card schema DERIVED from ACE descriptors: one kind per verb, its label and help from the words

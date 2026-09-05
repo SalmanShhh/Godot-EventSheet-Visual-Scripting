@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed on the boot path
+
+- **Enabling the plugin costs a third of a second again, not nineteen.** The Feedback Player's card
+  schema and its step field are registered while the plugin enters the tree, and they were
+  registered through the public `EventSheets` API. Naming that class from a boot file compiles it,
+  and between them its methods name the compiler, the importer, the Doctor, the viewport and the
+  dock - so the whole plugin was compiled at every editor start, in every project, whether or not
+  anyone opened a sheet. The cold-boot closure went from ~330 ms to ~19,000 ms locally and CI's
+  1,200 ms budget went red. The three registries a boot file actually writes to now live in
+  `extension_registries.gd`, a file that names nothing, which `EventSheets` forwards to and the
+  plugin reaches by path; the API's own method shapes are unchanged. `plugin_boot_lazy_test` gained
+  the lint that would have caught it: no boot file may call the public API at all.
+
 ### Fixed in the compiler and the pack gate
 
 - **A `while` loop that awaits no longer emits a guard naming a variable nothing declared.** The

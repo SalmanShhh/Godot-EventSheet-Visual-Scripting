@@ -111,6 +111,22 @@ const READING_SUBTREE := [
 	"EventSheetSceneSheet", "EventSheetParseErrors",
 ]
 
+## THE PUBLIC API, which no boot file may call. `EventSheets` is the plugin's front door, and
+## between them its methods name the compiler, the importer, the Doctor, the viewport and the dock -
+## so one call to it from a boot file compiles the whole plugin into every editor start. That is
+## exactly what happened when the Feedback Player's card schema and step field were registered
+## through the API in `_enter_tree`: the cold-boot closure went from ~330 ms to ~19,000 ms, and the
+## budget test's 1,200 ms assertion went red. The three registries a boot file actually needs live
+## in `extension_registries.gd`, which names nothing and is reached by path.
+##
+## The token keeps its DOT on purpose. These files print "[Godot EventSheets] ..." on code lines, so
+## a bare identifier check would match the message text rather than a call and could never pass.
+const PUBLIC_API_TOKEN: String = "EventSheets."
+
+## The store those registrations go to instead. A boot file writes to it and the API reads through
+## it, so the two must be the same state - asserted below rather than assumed.
+const EXTENSION_REGISTRIES_PATH: String = "res://addons/eventsheet/api/extension_registries.gd"
+
 ## Every path a deferred feature is reached through - each must exist, or the feature breaks at
 ## runtime on the exact click that needs it, with the whole suite green.
 const LAZY_PATHS := [
@@ -138,6 +154,10 @@ const LAZY_PATHS := [
 	"res://addons/eventsheet/editor/trace_hit_counts.gd",
 	"res://addons/eventsheet/editor/docs/doc_why_panel.gd",
 	"res://addons/eventsheet/editor/dock/test_report_panel.gd",
+	# The registry store the plugin registers the Feedback Player's card schema and step field
+	# through at boot. A rename would leave the plugin registering nothing, so a feedback authored
+	# by a row would open a plain text box instead of the card - with the suite green.
+	EXTENSION_REGISTRIES_PATH,
 ]
 
 
@@ -159,6 +179,14 @@ static func run() -> bool:
 			all_passed = _check("%s never names %s in code" % [boot_path.get_file(), reading_class],
 				boot_code.contains(reading_class), false) and all_passed
 
+	# 1c. And the public API, over every boot file at once - the single heaviest name any of them
+	# could hold, and the one that carried the whole plugin into every editor start once already.
+	for boot_path: String in FORBIDDEN:
+		var api_code: String = _code_only(boot_path)
+		all_passed = _check("%s never calls the %s API in code" % [
+			boot_path.get_file(), PUBLIC_API_TOKEN.trim_suffix(".")],
+			api_code.contains(PUBLIC_API_TOKEN), false) and all_passed
+
 	# 2. The lazy targets exist and the load-by-path dispatch works.
 	for lazy_path: String in LAZY_PATHS:
 		all_passed = _check("lazy target exists: %s" % lazy_path.get_file(), ResourceLoader.exists(lazy_path), true) and all_passed
@@ -168,6 +196,17 @@ static func run() -> bool:
 	var doctor: Script = load("res://addons/eventforge/project_doctor.gd")
 	all_passed = _check("lazy doctor dispatch works (unknown script has no sheet)",
 		doctor.sheet_for_script("res://nope_never_generated.gd"), "") and all_passed
+
+	# 3. The store a boot file writes to and the API a feature reads through are the SAME state.
+	# That is the whole point of the split: a forward that quietly kept a dictionary of its own
+	# would leave the Feedback Player's card registered nowhere the Inspector ever looks, and every
+	# lint above would still pass.
+	var registries: Script = load(EXTENSION_REGISTRIES_PATH)
+	registries.call("register_param_help", "zz_boot_probe", "Registered through the store.")
+	all_passed = _check("a boot-path registration is visible through the public API",
+		EventSheets.param_help_for("zz_boot_probe"), "Registered through the store.") and all_passed
+	# And emptied again, so a later test of a serial run does not meet this probe's leftovers.
+	registries.call("register_param_help", "zz_boot_probe", "")
 
 	return all_passed
 
