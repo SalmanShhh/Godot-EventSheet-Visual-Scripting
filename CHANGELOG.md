@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Maintenance: what a commit from this wave carries
+
+During the 2026-09-04 and 2026-09-05 build wave several sessions worked this one checkout at the
+same time, and a checkout has ONE git index: a staging command in one session could pick up another
+session's files, and a `git pull --rebase --autostash` that could not finish left changes staged
+that nobody's commit had asked for. So a handful of commits from those two days carry files
+belonging to other slices under a subject line that names only their own - `f129474d` and
+`c4e4b51a` are the two already named in this file, and they are not quite the only ones. The
+CONTENT is correct: every one of those files landed with its own tests and its own gates green, and
+the history has deliberately NOT been rewritten to tidy the subject lines, because rewriting
+published history costs more than the confusion it saves. Bisecting either of those days, trust the
+file diff over the subject line.
+
 ### Fixed: a starting value that read back as something else
 
 - **Both readers of an annotation line now split it the same way.** A pack's
