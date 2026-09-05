@@ -43,18 +43,23 @@ const TREE_PROBE := "user://animation_tree_probe.tres"
 const SCRIPT_PROBE := "user://animation_tree_probe.gd"
 const COMPILE_PROBE := "user://animation_tree_compile_probe.gd"
 
-## A rig with one of everything the reader has to tell apart: a state machine with three states, a
-## ONE-dimensional blend space, and a layer that takes an amount rather than a position.
-const FIXTURE_SCENE := """[gd_scene load_steps=5 format=3]
+## A rig with one of everything the reader has to tell apart: a state machine with four states, a
+## ONE-dimensional blend space, a layer that takes an amount rather than a position, and - the shape
+## that catches a flattening reader - a two-dimensional space that lives INSIDE the machine, whose
+## parameter path is therefore the whole way down to it.
+const FIXTURE_SCENE := """[gd_scene load_steps=6 format=3]
 
 [sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_a"]
 
 [sub_resource type="AnimationNodeBlend2" id="AnimationNodeBlend2_a"]
 
+[sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_b"]
+
 [sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_a"]
 states/Idle/node = SubResource("AnimationNodeAnimation_a")
 states/Run/node = SubResource("AnimationNodeAnimation_b")
 states/Swing/node = SubResource("AnimationNodeAnimation_c")
+states/Aiming/node = SubResource("AnimationNodeBlendSpace2D_b")
 
 [sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_a"]
 nodes/Locomotion/node = SubResource("AnimationNodeBlendSpace1D_a")
@@ -202,11 +207,21 @@ static func _run_parameter_paths() -> bool:
 		_emitted(MODULE_PATH, "SetBlendPosition", {"space": "Locomotion", "value": "move_input", "target": ""}),
 		"set(\"parameters/Locomotion/blend_position\", move_input)"])
 	rows.append(["blending toward it is a tween on that same property",
-		_emitted(MODULE_PATH, "BlendToward", {"space": "Locomotion", "value": "Vector2.RIGHT", "seconds": "0.2", "target": "self"}),
-		"create_tween().tween_property(self, \"parameters/Locomotion/blend_position\", Vector2.RIGHT, 0.2)"])
+		_emitted(MODULE_PATH, "BlendToward", {"space": "Locomotion", "value": "Vector2.RIGHT", "seconds": "0.2", "target": "self", "uid": "a1"}),
+		"\n".join(PackedStringArray([
+			"if self.has_meta(&\"blend_Locomotion\"):",
+			"\t(self.get_meta(&\"blend_Locomotion\") as Tween).kill()",
+			"var __blend_a1: Tween = self.create_tween()",
+			"self.set_meta(&\"blend_Locomotion\", __blend_a1)",
+			"__blend_a1.tween_property(self, \"parameters/Locomotion/blend_position\", Vector2.RIGHT, 0.2)"]))])
 	rows.append(["a layer is an amount rather than a position",
-		_emitted(MODULE_PATH, "BlendLayer", {"layer": "Aim", "amount": "1.0", "seconds": "0.2", "target": "$Anim"}),
-		"create_tween().tween_property($Anim, \"parameters/Aim/blend_amount\", 1.0, 0.2)"])
+		_emitted(MODULE_PATH, "BlendLayer", {"layer": "Aim", "amount": "1.0", "seconds": "0.2", "target": "$Anim", "uid": "a1"}),
+		"\n".join(PackedStringArray([
+			"if $Anim.has_meta(&\"blend_Aim\"):",
+			"\t($Anim.get_meta(&\"blend_Aim\") as Tween).kill()",
+			"var __blend_a1: Tween = $Anim.create_tween()",
+			"$Anim.set_meta(&\"blend_Aim\", __blend_a1)",
+			"__blend_a1.tween_property($Anim, \"parameters/Aim/blend_amount\", 1.0, 0.2)"]))])
 	rows.append(["an advance condition is written where the transition reads it",
 		_emitted(MODULE_PATH, "SetTreeCondition", {"condition": "is_running", "value": "true", "target": ""}),
 		"set(\"parameters/conditions/is_running\", true)"])
@@ -237,7 +252,7 @@ static func _run_root_motion() -> bool:
 		{"tree": "$Anim", "scale": "1.0", "target": "", "uid": "a1"})
 	rows.append(["the 3D row turns the animator's step by the body's own facing first",
 		three_d.split("\n")[0],
-		"velocity = (basis * $Anim.get_root_motion_position()) / delta * 1.0"])
+		"velocity = ((basis * $Anim.get_root_motion_position()) / delta * 1.0) if delta > 0.0 else Vector3.ZERO"])
 	rows.append(["and turns the body by the root's own turn",
 		three_d.split("\n")[1], "quaternion *= $Anim.get_root_motion_rotation()"])
 	# The fixture: a body already facing left (a quarter turn about up) and an animation that steps
@@ -254,18 +269,29 @@ static func _run_root_motion() -> bool:
 	rows.append(["the 2D twin reads the step once, into a local of its own",
 		two_d.split("\n")[0], "var __root_a1: Vector3 = $Anim.get_root_motion_position()"])
 	rows.append(["and takes the two dimensions it has, leaving the third alone",
-		two_d.split("\n")[1], "velocity = Vector2(__root_a1.x, __root_a1.y) / delta * 1.0"])
+		two_d.split("\n")[1],
+			"velocity = (Vector2(__root_a1.x, __root_a1.y) / delta * 1.0) if delta > 0.0 else Vector2.ZERO"])
 	rows.append(["turning by the root's turn about the one axis 2D has",
 		two_d.split("\n")[2], "rotation += $Anim.get_root_motion_rotation().get_euler().z"])
 	rows.append(["a step of three by four in a quarter of a step is four times that",
 		_value("Vector2(Vector3(3, 4, 9).x, Vector3(3, 4, 9).y) / 0.25 * 1.0"), Vector2(12.0, 16.0)])
+	# A FRAME OF NO TIME IS NO MOVEMENT. Engine.time_scale = 0 is how a game freezes, and a step
+	# divided by a frame of zero is an infinity written into velocity - which throws the body out
+	# of the level on the next Move And Slide. RUN, both twins, at the frame time that does it.
+	rows.append(["a frozen frame moves the 2D body nowhere rather than infinitely far",
+		_value("(Vector2(1, 1) / 0.0 * 1.0) if 0.0 > 0.0 else Vector2.ZERO"), Vector2.ZERO])
+	rows.append(["and the 3D body likewise",
+		_value("((Basis.IDENTITY * Vector3(0, 0, 1)) / 0.0 * 1.0) if 0.0 > 0.0 else Vector3.ZERO"),
+			Vector3.ZERO])
+	rows.append(["while an ordinary frame still steps",
+		_value("(Vector2(1, 1) / 0.5 * 1.0) if 0.5 > 0.0 else Vector2.ZERO"), Vector2(2.0, 2.0)])
 	# The row acts on another body when one is named, on EVERY line it names one - which is why it
 	# carries its own target rather than taking the automatic prefix.
 	var retargeted: String = _emitted(MODULE_PATH, "ApplyRootMotion3D",
 		{"tree": "$Anim", "scale": "1.0", "target": "$Rider", "uid": "a1"})
 	rows.append(["the retargeted 3D row names the other body on both sides",
 		retargeted.split("\n")[0],
-		"$Rider.velocity = ($Rider.basis * $Anim.get_root_motion_position()) / delta * 1.0"])
+		"$Rider.velocity = (($Rider.basis * $Anim.get_root_motion_position()) / delta * 1.0) if delta > 0.0 else Vector3.ZERO"])
 	return SUPPORT.pins("animation_tree_aces_test", rows)
 
 
@@ -354,9 +380,12 @@ static func _run_bones() -> bool:
 	rows.append(["a bone's place is read back out of skeleton space into the world's",
 		_emitted(SKELETON_PATH, "BonePosition3D", {"bone": "\"Head\"", "target": ""}),
 		"(global_transform * get_bone_global_pose(find_bone(\"Head\"))).origin"])
+	# THE POSE IS IN THE WORLD'S SPACE, as the field says - and the engine call wants one in the
+	# SKELETON'S, which is the trap the reading row above corrects for in the other direction. The
+	# row divides the skeleton out, so a pose read from Bone Position means what it says.
 	rows.append(["an override is a pose AND how much of it wins",
 		_emitted(SKELETON_PATH, "SetBonePoseOverride", {"bone": "\"Spine\"", "pose": "Transform3D.IDENTITY", "amount": "0.5", "target": ""}),
-		"set_bone_global_pose_override(find_bone(\"Spine\"), Transform3D.IDENTITY, 0.5, true)"])
+		"set_bone_global_pose_override(find_bone(\"Spine\"), global_transform.affine_inverse() * Transform3D.IDENTITY, 0.5, true)"])
 	rows.append(["and the 2D twin says the same thing to a 2D skeleton",
 		_emitted(SKELETON_PATH, "SetBonePoseOverride2D", {"bone": "2", "pose": "Transform2D.IDENTITY", "amount": "0.5", "target": ""}),
 		"set_bone_local_pose_override(2, Transform2D.IDENTITY, 0.5, true)"])
@@ -374,13 +403,20 @@ static func _run_tree_reading() -> bool:
 	rows.append(["the scene's one tree is found", trees.size(), 1])
 	rows.append(["named as the scene names it", str(trees[0].get("name", "")) if not trees.is_empty() else "", "Anim"])
 	rows.append(["every state of the machine is read, however deep it sits",
-		Array(EventSheetSceneAnimationTree.state_names(trees)), ["Idle", "Run", "Swing"]])
-	rows.append(["the spaces are the nodes that take a position",
-		Array(EventSheetSceneAnimationTree.space_names(trees)), ["Locomotion"]])
+		Array(EventSheetSceneAnimationTree.state_names(trees)), ["Idle", "Run", "Swing", "Aiming"]])
+	# A SPACE IS OFFERED UNDER ITS PATH, because the path is what the row writes: a space inside a
+	# state machine is `parameters/Machine/Aiming/blend_position`, and a bare "Aiming" dropped into
+	# that string names a parameter the tree does not have - accepted by set() and silent for ever.
+	rows.append(["the spaces are the nodes that take a position, each under the path it sits at",
+		Array(EventSheetSceneAnimationTree.space_names(trees)), ["Locomotion", "Machine/Aiming"]])
 	rows.append(["the layers are the ones that take an amount",
 		Array(EventSheetSceneAnimationTree.layer_names(trees)), ["Aim"]])
 	rows.append(["and a one-dimensional space says it is one",
 		EventSheetSceneAnimationTree.dimensions_of(trees, "Locomotion"), 1])
+	rows.append(["and a nested one says how many it has, asked by that same path",
+		EventSheetSceneAnimationTree.dimensions_of(trees, "Machine/Aiming"), 2])
+	rows.append(["while its bare name is a parameter nothing has",
+		EventSheetSceneAnimationTree.dimensions_of(trees, "Aiming"), 0])
 	rows.append(["a name no tree declares has no dimensions at all",
 		EventSheetSceneAnimationTree.dimensions_of(trees, "Nonesuch"), 0])
 	rows.append(["a misspelled state is caught",

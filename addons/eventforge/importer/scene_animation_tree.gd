@@ -64,6 +64,14 @@ static func for_script(script_path: String) -> Array[Dictionary]:
 ## where `states` is a PackedStringArray of every state name anywhere in the tree and `spaces` an
 ## Array of {"name", "class", "dimensions"} - `dimensions` being 1 or 2 for a blend space and 0 for a
 ## layer, which has an amount rather than a position.
+##
+## A SPACE'S NAME IS ITS PATH INSIDE THE TREE, because that is what the rows write. Godot names a
+## parameter after where the node sits: a blend space at the top of the tree is
+## `parameters/Locomotion/blend_position`, and one inside a state machine called Machine is
+## `parameters/Machine/Aiming/blend_position`. A reader that flattened the tree into bare names would
+## offer "Aiming" to a field that writes `parameters/Aiming/blend_position` - a path the tree does not
+## have, accepted in silence by `set()` and doing nothing for ever. So a nested space is offered under
+## its path, and the row that drops that into its own string is right without changing.
 static func for_scene(scene_path: String) -> Array[Dictionary]:
 	var stamp: String = EventForgeFileStamp.of(scene_path)
 	if _cache.has(stamp):
@@ -206,7 +214,7 @@ static func _read_scene(scene_path: String) -> Array[Dictionary]:
 		var states: PackedStringArray = PackedStringArray()
 		var spaces: Array[Dictionary] = []
 		_walk_written(str((node.get("properties", {}) as Dictionary).get(ROOT_PROPERTY, "")),
-			subs, externals, states, spaces, 0)
+			subs, externals, states, spaces, 0, "")
 		trees.append({
 			"name": str(node.get("name", "")),
 			"path": str(node.get("path", "")),
@@ -227,14 +235,14 @@ const MAX_DEPTH: int = 8
 ## One WRITTEN value - `SubResource("…")` or `ExtResource("…")` - resolved to the resource it names
 ## and walked. Everything else (a blank, a built-in default) is nothing to follow.
 static func _walk_written(written: String, subs: Dictionary, externals: Dictionary,
-		states: PackedStringArray, spaces: Array[Dictionary], depth: int) -> void:
+		states: PackedStringArray, spaces: Array[Dictionary], depth: int, prefix: String) -> void:
 	if depth > MAX_DEPTH or written.is_empty():
 		return
 	var reference: String = _reference_id(written, "SubResource")
 	if not reference.is_empty():
 		var resource: Dictionary = subs.get(reference, {})
 		if not resource.is_empty():
-			_walk_resource(resource.get("properties", {}), subs, externals, states, spaces, depth)
+			_walk_resource(resource.get("properties", {}), subs, externals, states, spaces, depth, prefix)
 		return
 	var external: String = _reference_id(written, "ExtResource")
 	if external.is_empty():
@@ -247,12 +255,12 @@ static func _walk_written(written: String, subs: Dictionary, externals: Dictiona
 	var main: Dictionary = file_subs.get("", {})
 	if main.is_empty():
 		return
-	_walk_resource(main.get("properties", {}), file_subs, file_externals, states, spaces, depth + 1)
+	_walk_resource(main.get("properties", {}), file_subs, file_externals, states, spaces, depth + 1, prefix)
 
 
 ## One resolved resource: the children it names, each filed under what its own class makes it.
 static func _walk_resource(written: Dictionary, subs: Dictionary, externals: Dictionary,
-		states: PackedStringArray, spaces: Array[Dictionary], depth: int) -> void:
+		states: PackedStringArray, spaces: Array[Dictionary], depth: int, prefix: String) -> void:
 	for key: Variant in written.keys():
 		var line_key: String = str(key)
 		if not line_key.ends_with(CHILD_SUFFIX):
@@ -268,9 +276,12 @@ static func _walk_resource(written: Dictionary, subs: Dictionary, externals: Dic
 				line_key.length() - NODE_PREFIX.length() - CHILD_SUFFIX.length())
 		if child_name.is_empty():
 			continue
+		# A STATE IS TRAVELLED TO BY NAME and a space is written to by PATH, so the two are gathered
+		# differently on purpose: `travel(&"Idle")` names the state inside its own machine, while
+		# `parameters/Machine/Aiming/blend_position` names the whole way down to the space.
 		var child_written: String = str(written[key])
-		_note_blend_node(child_name, _class_written(child_written, subs, externals), spaces)
-		_walk_written(child_written, subs, externals, states, spaces, depth + 1)
+		_note_blend_node(prefix + child_name, _class_written(child_written, subs, externals), spaces)
+		_walk_written(child_written, subs, externals, states, spaces, depth + 1, prefix + child_name + "/")
 
 
 ## Files the walk has already opened, keyed by stamp: a rig that points four trees at one `.tres`
