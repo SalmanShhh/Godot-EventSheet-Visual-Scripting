@@ -393,9 +393,10 @@ player who typed nothing gets a file instead of an error.
 **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
 does not erase the first. The rule is the one every desktop uses and it is spelled out in the emitted
 line: `shot.png`, then `shot_1.png`, then `shot_2.png`, up to the number in the slot. The path is
-read once, the numbers are only tried when the path you wanted is taken, and a run that fills every
-number answers the path you asked for - which the row's own help says out loud, because that next
-write overwrites.
+read once, and the numbers are only tried when the path you wanted is taken - though once they are,
+all of them are asked about rather than only up to the first free one, which the slot's own help says
+out loud. A run that fills every number answers the path you asked for, so that next write
+overwrites, and the row says that too.
 
 ```gdscript
 extends Node

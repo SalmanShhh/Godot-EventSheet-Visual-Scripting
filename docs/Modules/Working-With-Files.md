@@ -219,10 +219,13 @@ is the slot's, and it is the one that matters most here: a name written as `type
 bare `.validate_filename()` after it would validate the `".json"` and hand `..` through untouched,
 through the one row that exists to stop it.
 
-**Free File Path reads the path once and only counts when it has to.** The numbers are tried only
-when the path you asked for is taken, and a run that fills every one of them answers the path you
-asked for - so the write after it overwrites, which is why the row asks you for a number you are
-comfortable with rather than choosing one.
+**Free File Path reads the path once and only counts when it has to - but then it counts all the
+way.** The numbers are tried only when the path you asked for is taken, and once they are, every one
+of them is asked about: the line builds all the candidates and keeps the free ones rather than
+stopping at the first, because stopping wants a loop and a loop is not an expression. So a taken path
+costs `at_most` file_exists questions whichever number turns out to be free. A run that fills every
+one of them answers the path you asked for - so the write after it overwrites, which is why the row
+asks you for a number you are comfortable with rather than choosing one.
 
 ### Files: scene files
 
