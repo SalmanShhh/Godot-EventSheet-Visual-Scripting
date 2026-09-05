@@ -32,7 +32,7 @@ const FALLOFF_NONE: String = "none"
 
 ## The runtime the emitted coroutine calls: plain GDScript shipped with the Juice pack, in the
 ## folder the project owns, so an emitted moment goes on parsing with the editor addon deleted.
-const RUNNER: String = "EventForgeMomentRunner"
+const RUNNER: String = "MomentRunner"
 
 ## The prefix every moment's function name carries, so a moment is findable in a file by eye and
 ## the lift has one shape to look for.

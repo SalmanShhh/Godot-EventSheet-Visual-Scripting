@@ -768,7 +768,7 @@ static func build() -> bool:
 	_default(sheet, "moment", "preload(\"res://eventsheet_addons/juice/impact.tres\")")
 	Lib.append_function(sheet, "play_moment_at", "Play Moment At", "Juice", "Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.",
 		[["moment_name", "String"], ["strength", "float"], ["from", "Node"], ["within", "float"], ["falloff", "String"]],
-		"var here: float = EventForgeMomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
+		"var here: float = MomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
 if here <= 0.0:
 	return
 moment(moment_name, here)",

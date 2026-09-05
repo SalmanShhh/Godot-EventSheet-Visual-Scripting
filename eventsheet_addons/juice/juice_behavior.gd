@@ -1046,7 +1046,7 @@ func define_moment(moment_name: String, moment: Resource) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.play_moment_at({moment_name}, {strength}, {from}, {within}, "{falloff}")")
 func play_moment_at(moment_name: String, strength: float, from: Node, within: float, falloff: String) -> void:
-	var here: float = EventForgeMomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
+	var here: float = MomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
 	if here <= 0.0:
 		return
 	moment(moment_name, here)

@@ -26,24 +26,24 @@ const PREFIX := "moment_block_test"
 const IMPACT_TEXT: String = """func moment_impact(strength: float = 1.0, from: Node = null) -> void:
 	shake(0.4 * strength)
 	hitstop()
-	await EventForgeMomentRunner.at(self, 0.05, "game")
+	await MomentRunner.at(self, 0.05, "game")
 	play_sound()
-	await EventForgeMomentRunner.hold(self, 0.3, 0.1, "game")
+	await MomentRunner.hold(self, 0.3, 0.1, "game")
 	tween_scale(1.0, 0.2)"""
 
 ## The same moment with a place and a range: one line at the top turns the play's strength into
 ## the strength it really has here, and the distance is measured ONCE per play.
 const RANGED_TEXT: String = """func moment_blast(strength: float = 1.0, from: Node = null) -> void:
-	strength = EventForgeMomentRunner.strength_at(self, strength, from, 600.0, "smooth")
+	strength = MomentRunner.strength_at(self, strength, from, 600.0, "smooth")
 	shockwave(strength)"""
 
 ## A loop: everything since the last Hold runs again, the count being how many EXTRA passes.
 const LOOPED_TEXT: String = """func moment_pulse(strength: float = 1.0, from: Node = null) -> void:
 	a()
 	for _moment_loop: int in 3:
-		await EventForgeMomentRunner.hold(self, 0.0, 0.0, "game")
+		await MomentRunner.hold(self, 0.0, 0.0, "game")
 		b()
-		await EventForgeMomentRunner.then(self, 0.1, "game")
+		await MomentRunner.then(self, 0.1, "game")
 		c()"""
 
 

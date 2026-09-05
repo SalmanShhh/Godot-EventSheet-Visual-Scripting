@@ -5,7 +5,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## EventForgeMomentRunner is the ONE piece of code every home of a moment runs through: a Moment
+## MomentRunner is the ONE piece of code every home of a moment runs through: a Moment
 ## block's emitted coroutine, a moment FILE played by the Juice pack's Moment row, and the list a
 ## feedback node holds. Three places to write a moment down, one thing that plays it - so a beat
 ## behaves the same wherever it was written, and a fix lands once.
@@ -13,10 +13,15 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## It publishes no verbs. It is a library the emitted code names by class, which is why it ships
 ## where the user's own files live rather than inside the plugin: deleting the editor addon must
 ## leave every emitted line still parsing.
+##
+## And that is why the class is named for what it does rather than for the plugin that offered it.
+## A pack's code is the user's after the editor is gone, so a line in their own folder calling a
+## plugin-sounding name reads like a dependency it does not have. The look runtime beside it made
+## the same move for the same reason.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "RefCounted"
-	sheet.custom_class_name = "EventForgeMomentRunner"
+	sheet.custom_class_name = "MomentRunner"
 	sheet.class_description = "The one runner behind every moment: the waits a moment block is timed by, the strength an amount is scaled by, and the falloff that makes a far impact quieter."
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(_runner_lines())

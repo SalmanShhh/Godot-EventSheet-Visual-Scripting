@@ -1,6 +1,6 @@
 ## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/juice/icon.svg")
-class_name EventForgeMomentRunner
+class_name MomentRunner
 extends RefCounted
 ## The one runner behind every moment: the waits a moment block is timed by, the strength an amount is scaled by, and the falloff that makes a far impact quieter.
 
