@@ -878,8 +878,9 @@ func release_hold() -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.")
 ## @ace_display_template("Feedback [b]{label}[/b] is playing")
+## @ace_param(label, default: shake, desc: "The label of the card being asked about.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.feedback_is_playing({label})")
+## @ace_codegen_template("$FeedbackPlayer.feedback_is_playing("{label}")")
 func feedback_is_playing(label: String) -> bool:
 	return playing and now_playing == label.strip_edges()
 
@@ -888,8 +889,9 @@ func feedback_is_playing(label: String) -> bool:
 ## @ace_category("Feedback Player")
 ## @ace_description("True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.")
 ## @ace_display_template("Has feedback [b]{label}[/b]")
+## @ace_param(label, default: shake, desc: "The label to look for.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.has_feedback({label})")
+## @ace_codegen_template("$FeedbackPlayer.has_feedback("{label}")")
 func has_feedback(label: String) -> bool:
 	return _index_of(label) >= 0
 
@@ -898,8 +900,9 @@ func has_feedback(label: String) -> bool:
 ## @ace_category("Feedback Player")
 ## @ace_description("True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.")
 ## @ace_display_template("Feedback [b]{label}[/b] is enabled")
+## @ace_param(label, default: shake, desc: "The label of the card being asked about.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.feedback_is_enabled({label})")
+## @ace_codegen_template("$FeedbackPlayer.feedback_is_enabled("{label}")")
 func feedback_is_enabled(label: String) -> bool:
 	var at: int = _index_of(label)
 	return at >= 0 and bool((_steps_now()[at] as Dictionary).get("active", true))
@@ -917,6 +920,7 @@ func feedback_count() -> int:
 ## @ace_name("Feedback Label At")
 ## @ace_category("Feedback Player")
 ## @ace_description("The name of the card at a place in the list, so a settings screen can list a beat without knowing what is in it. The first card is 1; a number past the end answers with nothing.")
+## @ace_param(position, default: 1, desc: "Which card. The first in the list is 1.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$FeedbackPlayer.feedback_label_at({position})")
 func feedback_label_at(position: int) -> String:
@@ -930,9 +934,10 @@ func feedback_label_at(position: int) -> String:
 ## @ace_name("Feedback Field")
 ## @ace_category("Feedback Player")
 ## @ace_description("What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Feedback Field, so a slider can be shown at the value the list actually holds.")
-## @ace_param_options(field amount, effect, seconds, delay, interval, repeat, chance, loops)
+## @ace_param(label, default: shake, desc: "The label of the card being read.")
+## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value to read.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.feedback_field({label}, "{field}")")
+## @ace_codegen_template("$FeedbackPlayer.feedback_field("{label}", "{field}")")
 func feedback_field(label: String, field: String) -> Variant:
 	return _card_named(label).get(field, null)
 
@@ -940,8 +945,9 @@ func feedback_field(label: String, field: String) -> Variant:
 ## @ace_name("Feedback Progress")
 ## @ace_category("Feedback Player")
 ## @ace_description("How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.")
+## @ace_param(label, default: shake, desc: "The label of the card being watched.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.feedback_progress({label})")
+## @ace_codegen_template("$FeedbackPlayer.feedback_progress("{label}")")
 func feedback_progress(label: String) -> float:
 	return _progress_of(label)
 
@@ -949,8 +955,9 @@ func feedback_progress(label: String) -> float:
 ## @ace_name("Feedback Duration")
 ## @ace_category("Feedback Player")
 ## @ace_description("How long ONE card lasts, its own wait included - beside Feedbacks Duration, which is how long the whole beat lasts.")
+## @ace_param(label, default: shake, desc: "The label of the card being measured.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.feedback_duration({label})")
+## @ace_codegen_template("$FeedbackPlayer.feedback_duration("{label}")")
 func feedback_duration(label: String) -> float:
 	var card: Dictionary = _card_named(label)
 	return maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("delay", 0.0)), 0.0)
@@ -968,8 +975,9 @@ func current_feedback() -> String:
 ## @ace_name("Loops Left")
 ## @ace_category("Feedback Player")
 ## @ace_description("How many times round a Loop Back card still has to go in the play that is running.")
+## @ace_param(label, default: loop_back, desc: "The label of the Loop Back card.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.loops_left({label})")
+## @ace_codegen_template("$FeedbackPlayer.loops_left("{label}")")
 func loops_left(label: String) -> int:
 	var card: Dictionary = _card_named(label)
 	return int(card.get("loops_left", card.get("loops", 0)))

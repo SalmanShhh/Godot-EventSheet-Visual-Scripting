@@ -80,6 +80,15 @@
 
 ### Beat, bump and broadcast: a whole beat of feedback, written down and played by name
 
+- **The Feedback Player's seven ASKING rows spell a card's address the way its editing rows do.**
+  Has Feedback, Feedback Is Playing, Feedback Is Enabled, Feedback Field, Feedback Progress,
+  Feedback Duration and Loops Left each took the label bare, so a row that named `shake` asked
+  `has_feedback(shake)` and the game did not parse - while the twenty-four rows that EDIT the same
+  card by the same label had already been taught to carry the quotes in the call. The quotes now
+  live in the call template for all thirty-one, so one word means one thing across the pack, and
+  Feedback Field stops quoting its field and not its label. Their starting values reach the shipped
+  file for the first time as well: a parameter's `default:` is written only beside its help, and the
+  helper these seven are built through was dropping the help sentence the builder gave it.
 - **A moment written as ROWS: the Moment block, 1 block kind and 4 rows.** A file is the right home
   for a beat whose steps all happen at once; a beat with TIMING in it wants to be read in order.
   **Moment** is a block whose children are its steps, a timing word on the left and any actions at
