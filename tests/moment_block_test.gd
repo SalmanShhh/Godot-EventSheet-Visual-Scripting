@@ -9,6 +9,11 @@
 #                    folded into one - the arithmetic no other test can see.
 #   the round trip   the block re-opened out of its own emitted text, step for step, and the
 #                    file re-emitted byte for byte.
+#   the spellings    the same moment written three ways - the emitter's own, one with the commas
+#                    tight, one with a space too many - because a wait this reader cannot claim
+#                    must refuse the whole block rather than keep the wait as ordinary code.
+#   the live block   which block a step is added to after an edit has replaced the sheet's rows
+#                    with duplicates: the one in the sheet, never the one the right-click held.
 #   the loop         a Loop Back as a `for` around the stretch since the last Hold, and the count.
 #   the runner       the strength maths every home of a moment shares: what an amount becomes at a
 #                    strength, what it may become while no flashing is on, and how much of it
@@ -89,14 +94,23 @@ const JUICE_SCRIPT: String = "res://eventsheet_addons/juice/juice_behavior.gd"
 const COMPILED: Array[String] = [
 	"user://moment_block_test.gd", "user://moment_range_test.gd", "user://moment_loop_test.gd",
 	"user://moment_bridge_test.gd", "user://moment_authored_test.gd",
-	"user://moment_loop_hold_test.gd",
+	"user://moment_loop_hold_test.gd", "user://moment_spelling_test.gd",
 ]
+
+## The wait the three spellings below differ in, and the two respellings of it. Each is a whole
+## file's one line changed: the emitter's own, the same call with its commas tight, and the same
+## call with a space too many. Both respellings are this grammar's own sentence in a spelling the
+## reader cannot claim.
+const CANONICAL_WAIT: String = "await MomentRunner.at(self, 0.05, \"game\")"
+const TIGHT_WAIT: String = "await MomentRunner.at(self,0.05,\"game\")"
+const SPACED_WAIT: String = "await MomentRunner.at(self,  0.05, \"game\")"
 
 
 static func run() -> bool:
 	var passed: bool = true
 	passed = _pin_the_emission() and passed
 	passed = _pin_the_round_trip() and passed
+	passed = _pin_the_three_spellings() and passed
 	passed = _pin_the_loop() and passed
 	passed = _pin_the_hold_that_opens_a_loop() and passed
 	passed = _pin_the_strength() and passed
@@ -105,6 +119,7 @@ static func run() -> bool:
 	passed = _pin_the_two_homes() and passed
 	passed = _pin_the_block_beats_book() and passed
 	passed = _pin_the_authoring() and passed
+	passed = _pin_the_live_block_a_step_lands_on() and passed
 	_cleanup()
 	return passed
 
@@ -155,6 +170,52 @@ static func _pin_the_round_trip() -> bool:
 		# The duration the emitter folded into the Hold's line is put back where it came from.
 		["the step's duration comes back with it", String.num(block.live_steps()[1].lasts, 4) if block != null else "", "0.3"],
 		["the file re-emits byte for byte", SUPPORT.reemit(source, "user://moment_block_test.gd"), source],
+	])
+
+
+## THREE SPELLINGS OF ONE MOMENT, each a whole file through the importer. The emitter's own opens
+## as the block it always did. A wait respelled - commas tight, or a space too many - is this
+## grammar's own sentence in a form this reader cannot claim, and the whole block is refused: the
+## function stays the plain function it reads as, and the file re-emits byte for byte. Before the
+## refusal the block lifted anyway, because a statement nobody read is written straight back out:
+## the byte gate passed while the sheet showed a step reading "At 0 s" whose actions held a literal
+## await line, and the schedule was worked out as though those waits were not there.
+static func _pin_the_three_spellings() -> bool:
+	var canonical: String = SUPPORT.compile_output(_sheet_with(_impact_block()),
+		"user://moment_spelling_test.gd")
+	var tight: String = canonical.replace(CANONICAL_WAIT, TIGHT_WAIT)
+	var spaced: String = canonical.replace(CANONICAL_WAIT, SPACED_WAIT)
+	var opened: EventSheetResource = SUPPORT.reopen(canonical, true, "user://moment_spelling_test.gd")
+	var tight_open: EventSheetResource = SUPPORT.reopen(tight, true, "user://moment_spelling_test.gd")
+	var spaced_open: EventSheetResource = SUPPORT.reopen(spaced, true, "user://moment_spelling_test.gd")
+	var block: MomentBlockRow = _first_block(opened)
+	var readings: Array = []
+	if block != null:
+		for step: MomentStepRow in block.live_steps():
+			readings.append(step.reading())
+	return SUPPORT.pins(PREFIX, [
+		# The respellings are the emitted file with one line changed, so the pins below are three
+		# readings of the same moment rather than three different moments.
+		["the emitter writes the wait one way", _function_text(canonical).contains(CANONICAL_WAIT), true],
+		["the tight spelling is that file with the one line respelled",
+			_function_text(tight).contains(TIGHT_WAIT), true],
+		["and the spaced spelling likewise", _function_text(spaced).contains(SPACED_WAIT), true],
+		["the emitter's own spelling opens as a moment block", _row_kinds(opened),
+			["raw", "raw", "moment"]],
+		["with the step readings it always had", readings,
+			["At 0 s", "At 0.05 s", "Hold, then 0.1 s"]],
+		["and the file holds no ordinary function of that name", _plain_function_names(opened), []],
+		["a comma-tight wait is no moment block at all", _row_kinds(tight_open), ["raw", "raw"]],
+		["it stays the plain function it reads as", _plain_function_names(tight_open),
+			["moment_impact"]],
+		["and that file re-emits byte for byte",
+			SUPPORT.reemit(tight, "user://moment_spelling_test.gd"), tight],
+		["a wait with a space too many is no moment block either", _row_kinds(spaced_open),
+			["raw", "raw"]],
+		["it too stays the plain function it reads as", _plain_function_names(spaced_open),
+			["moment_impact"]],
+		["and that file re-emits byte for byte too",
+			SUPPORT.reemit(spaced, "user://moment_spelling_test.gd"), spaced],
 	])
 
 
@@ -387,6 +448,122 @@ static func _pin_the_authoring() -> bool:
 	return SUPPORT.pins(PREFIX, rows)
 
 
+## WHICH BLOCK A STEP LANDS ON. Every committed edit replaces the sheet's resources with snapshot
+## duplicates, so the block a right-click handed the step form is an orphan by the time the form is
+## confirmed - and a step appended to an orphan is a step nobody ever sees, reported as "Step
+## added." The form therefore finds the block again in the LIVE sheet: by the name it was opened
+## on, else by its place among the sheet's Moment blocks, and null when neither finds it.
+static func _pin_the_live_block_a_step_lands_on() -> bool:
+	var dock: Control = _stub_dock()
+	var door: EventSheetMomentFileDoor = EventSheetMomentFileDoor.new()
+	door.init(dock)
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	var impact: MomentBlockRow = _impact_block()
+	var blast: MomentBlockRow = _ranged_block()
+	sheet.events.append(impact)
+	sheet.events.append(blast)
+	dock._current_sheet = sheet
+	# What open_step remembers, spelled the way open_step spells it - the block object included,
+	# because the point of the pins below is that the object is the one thing that goes stale.
+	door._block = impact
+	door._step_block_name = impact.moment_name
+	door._step_block_place = door._place_of_block(impact)
+	var places: Array = [door._place_of_block(impact), door._place_of_block(blast),
+		door._place_of_block(MomentBlockRow.new())]
+	# The edit: the sheet the dock holds is now a deep duplicate, and every row in it is a new
+	# object. The block the form was opened on is an orphan from here on.
+	var live: EventSheetResource = sheet.duplicate(true)
+	dock._current_sheet = live
+	var found: MomentBlockRow = door._live_step_block()
+	# The name has moved on since the form was opened, so the place is what is left to go on.
+	door._step_block_name = "renamed_since"
+	door._step_block_place = 1
+	var by_place: MomentBlockRow = door._live_step_block()
+	var bare: EventSheetResource = EventSheetResource.new()
+	bare.host_class = "Node2D"
+	dock._current_sheet = bare
+	var gone: MomentBlockRow = door._live_step_block()
+	var rows: Array = [
+		["a block's place is where it sits among the sheet's Moment blocks", places, [0, 1, -1]],
+		["the block found after the snapshot is the one of that name",
+			found.moment_name if found != null else "", "impact"],
+		["and it is the sheet's own row", found == live.events[0], true],
+		["never the orphan the right-click handed over", found == impact, false],
+		["a name that no longer matches falls back to the block's place",
+			by_place.moment_name if by_place != null else "", "blast"],
+		["and that too is the sheet's own row", by_place == live.events[1], true],
+		["a sheet with no Moment block left finds none", gone == null, true],
+	]
+	# The form itself, driven with the fields the dialog would have filled in - and still holding
+	# the orphan the right-click gave it.
+	dock._current_sheet = live
+	door._block = impact
+	door._step_block_name = "impact"
+	door._step_block_place = 0
+	var timing: OptionButton = OptionButton.new()
+	for word: String in EventSheetMomentFileDoor.TIMING_WORDS:
+		timing.add_item(EventSheetMomentFileDoor.TIMING_WORDS[word])
+	timing.select(0)
+	var number: LineEdit = LineEdit.new()
+	number.text = "0.05"
+	var code: LineEdit = LineEdit.new()
+	code.text = "play_sound()"
+	door._step_timing = timing
+	door._step_number = number
+	door._step_code = code
+	door._apply_step()
+	var landed: Array = []
+	for step: MomentStepRow in (live.events[0] as MomentBlockRow).live_steps():
+		landed.append("%s|%s" % [step.reading(), _statements(step)])
+	var orphaned: Array = []
+	for step: MomentStepRow in impact.live_steps():
+		orphaned.append(step.reading())
+	rows.append(["the step lands on the live block", landed, [
+		"At 0 s|shake(0.4 * strength);hitstop()",
+		"At 0.05 s|play_sound()",
+		"Hold, then 0.1 s|tween_scale(1.0, 0.2)",
+		"At 0.05 s|play_sound()",
+	]])
+	rows.append(["and nothing was appended to the orphan", orphaned,
+		["At 0 s", "At 0.05 s", "Hold, then 0.1 s"]])
+	rows.append(["and the form says so", dock.said, "Step added."])
+	rows.append(["without calling it a failure", dock.was_error, false])
+	# The block genuinely gone: a failure said out loud, and nothing added anywhere.
+	dock._current_sheet = bare
+	door._block = impact
+	door._step_block_name = "impact"
+	door._step_block_place = 0
+	door._apply_step()
+	rows.append(["a block that is gone is said so rather than appended to", dock.said,
+		"That Moment block is no longer in the sheet, so the step was not added."])
+	rows.append(["and that is a failure", dock.was_error, true])
+	rows.append(["and the sheet gained no block to hold it", _first_block(bare) == null, true])
+	timing.free()
+	number.free()
+	code.free()
+	dock.free()
+	return SUPPORT.pins(PREFIX, rows)
+
+
+## A dock the two step-form helpers can be asked their questions through: the sheet they read, the
+## funnel they commit through, and the status line they answer on. Built from source rather than
+## from the real dock, which needs an editor around it - these two helpers only ever ask the dock
+## for its current sheet.
+static func _stub_dock() -> Control:
+	var script := GDScript.new()
+	script.source_code = ("extends Control\n\n\nvar _current_sheet: Resource = null\n"
+		+ "var said: String = \"\"\nvar was_error: bool = false\n\n\n"
+		+ "func _set_status(text: String, error: bool = false) -> void:\n"
+		+ "\tsaid = text\n\twas_error = error\n\n\n"
+		+ "func _perform_undoable_sheet_edit(_action_name: String, operation: Callable) -> bool:\n"
+		+ "\tif _current_sheet == null:\n\t\treturn false\n\treturn bool(operation.call())\n")
+	script.reload()
+	var dock: Control = Control.new()
+	dock.set_script(script)
+	return dock
+
+
 ## The fixture block: three steps, the middle one lasting long enough for the Hold to have
 ## something to wait for.
 static func _impact_block() -> MomentBlockRow:
@@ -482,6 +659,36 @@ static func _first_block(sheet: EventSheetResource) -> MomentBlockRow:
 		if entry is MomentBlockRow:
 			return entry as MomentBlockRow
 	return null
+
+
+## What a reopened sheet's top-level rows ARE, in order - each row's own kind word, so a pin says
+## which shape a file came back as rather than how many rows it made.
+static func _row_kinds(sheet: EventSheetResource) -> Array:
+	var kinds: Array = []
+	if sheet == null:
+		return kinds
+	for entry: Variant in sheet.events:
+		var row: Object = entry as Object
+		if row == null:
+			kinds.append("null")
+		elif row.has_method("get_row_kind"):
+			kinds.append(str(row.call("get_row_kind")))
+		else:
+			kinds.append(row.get_class())
+	return kinds
+
+
+## The ordinary functions a reopened sheet holds, by name. A moment this reader cannot claim is
+## refused as a block and stays exactly this: a function of that name, like any other in the file.
+static func _plain_function_names(sheet: EventSheetResource) -> Array:
+	var names: Array = []
+	if sheet == null:
+		return names
+	for entry: Variant in sheet.functions:
+		var written: EventFunction = entry as EventFunction
+		if written != null:
+			names.append(written.function_name)
+	return names
 
 
 ## One step's statements, joined, so a pin can read a whole step on one line.

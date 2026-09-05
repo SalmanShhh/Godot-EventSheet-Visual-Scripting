@@ -49,6 +49,13 @@ var _path_edit: LineEdit = null
 var _note: Label = null
 var _saving: bool = true
 var _block: MomentBlockRow = null
+## Which Moment block the step form is about, remembered the way a block can still be FOUND after an
+## edit: its name, and where it sat among the sheet's blocks when the form was opened. The block
+## object itself is not enough - every committed edit replaces the sheet's resources with snapshot
+## duplicates, so the one the right-click handed over may be an orphan by the time the form is
+## confirmed, and a step appended to an orphan is a step nobody ever sees.
+var _step_block_name: String = ""
+var _step_block_place: int = -1
 ## The step form: a timing word, its number, and the one statement the step starts with.
 var _step_dialog: ConfirmationDialog = null
 var _step_timing: OptionButton = null
@@ -101,6 +108,8 @@ func open_step(block: MomentBlockRow) -> void:
 		_dock._set_status("Right-click a Moment block to add a step to it.", true)
 		return
 	_block = block
+	_step_block_name = block.moment_name
+	_step_block_place = _place_of_block(block)
 	if _step_dialog == null:
 		_step_dialog = ConfirmationDialog.new()
 		_step_dialog.title = "Add Moment Step"
@@ -311,11 +320,52 @@ func _apply_step() -> void:
 	var typed: String = _step_number.text.strip_edges()
 	var number: float = typed.to_float() if typed.is_valid_float() else 0.0
 	var code_line: String = _step_code.text
-	var block: MomentBlockRow = _block
+	# Found again in the LIVE sheet rather than used as it was remembered. See the note on the two
+	# fields above: the remembered block can be an orphan, and appending to one of those reports
+	# success while the sheet is untouched.
+	var block: MomentBlockRow = _live_step_block()
+	if block == null:
+		_dock._set_status("That Moment block is no longer in the sheet, so the step was not added.",
+			true)
+		return
 	var added: bool = _dock._perform_undoable_sheet_edit("Add Moment Step",
 		func() -> bool:
 			return step_added(block, timing, number, code_line))
 	_dock._set_status("Step added." if added else "The step could not be added.", not added)
+
+
+## Where one block sits among the sheet's Moment blocks, or -1 when it is not one of them. Counted
+## rather than searched by identity so the answer survives the snapshot duplicates an edit makes.
+func _place_of_block(block: MomentBlockRow) -> int:
+	if _dock == null or _dock._current_sheet == null:
+		return -1
+	var place: int = 0
+	for entry: Variant in _dock._current_sheet.events:
+		if entry is MomentBlockRow:
+			if entry == block:
+				return place
+			place += 1
+	return -1
+
+
+## The block the step form is about, as the live sheet holds it now: the one of that name, or the
+## one in that place when the name is shared or has since been changed. Null when neither finds it,
+## which is a block that is genuinely gone and a step that must not be silently dropped.
+func _live_step_block() -> MomentBlockRow:
+	if _dock == null or _dock._current_sheet == null:
+		return null
+	var place: int = 0
+	var by_place: MomentBlockRow = null
+	for entry: Variant in _dock._current_sheet.events:
+		var block: MomentBlockRow = entry as MomentBlockRow
+		if block == null:
+			continue
+		if block.moment_name == _step_block_name:
+			return block
+		if place == _step_block_place:
+			by_place = block
+		place += 1
+	return by_place
 
 
 ## The name form's button: an empty moment, ready for its steps.
