@@ -131,6 +131,7 @@ Attach to a node to move it.
 ## Visuals and juice
 
 - [Juice](Juice.md) - screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, squash and stretch, slowmo, and hitstop (2D).
+- [Feedback Player](Feedback-Player.md) - the list of feedbacks one object carries: a node under it holding cards (shakes, flashes, holds, loops, a property walked, a word said), played by one row whose strength scales every amount in the list. The list is the same shape a moment file holds, so a beat saves out, loads back and moves between objects, and every card is addressable by label while the game runs.
 - [Juice 3D](Juice-3D.md) - camera shake, weapon recoil, head bob, jitter, lean, and FOV punch/zoom on the active Camera3D.
 - [Camera Rail](Camera-Rail.md) - a shot list for a camera: Fly Along walks it down a drawn path over a number of seconds, Hold parks it on a beat, Blend To travels it onto another camera and hands the view over, and Cut To switches outright. On Shot Finished chains the next shot, so a cutscene is rows rather than a coroutine. Camera Rail 3D is the twin, keeping a node in frame and carrying the lens through a blend.
 - [Light Flicker](Light-Flicker.md) - a flame, as a behaviour: any light's brightness walks between two numbers on a noise field, with the flame's numbers in the Inspector and Start / Stop Flickering as the rows. 2D and 3D both, because it asks the host which property it spells brightness with.
@@ -148,6 +149,16 @@ Attach to a node to move it.
 - [Fade](Fade.md) - fade any sprite or UI in and out by animating its transparency.
 - [Spring](Spring.md) - springy, bouncy motion toward a target value.
 - [Tween](Tween.md) - animate a property to a value over time with easing.
+
+## Sound, feel and rhythm
+
+The runtime files in `eventsheet_addons/` that the built-in vocabulary calls. There is nothing to
+attach: the rows are already in the picker, and what the project owns is the shape file each one
+plays.
+
+- [Haptics](Haptics.md) - what a hit feels like in the hand: a haptic pattern file you own (how hard, how long, how many times, the air between) played on whatever the player is holding, plus a one-knock emphasis and a continuous rumble that is two calls rather than a call a frame. Every amplitude is scaled by the player's own haptic dial, and a machine with nothing to rumble is silent rather than noisy.
+- [Sequencer](Sequencer.md) - a grid of moments on a beat: tracks down the side, steps across the top, and a name in a cell. Every crossed cell is said as the node's own signal and to the group the track is named after, tracks wrap at their own length so cross-rhythms cost nothing, and the song's clock wins whenever there is a song.
+- [Bus Mix](Bus-Mix.md) - a bus swept rather than switched: a muffle walking a low-pass cutoff down, a dive walking a level through an amplify (never the volume the player chose), a wash growing a reverb behind the sound, one Restore Bus that puts them all back where they rested, and named snapshots of the whole desk.
 
 ## UI and flow
 
