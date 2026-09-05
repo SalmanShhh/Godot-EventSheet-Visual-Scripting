@@ -165,7 +165,7 @@ func apply(persist: bool = true) -> Dictionary:
 		if check.button_pressed:
 			pairs[check.name] = EventSheetGameCatalog.variant_path(base, str(check.name))
 	var outcome: Dictionary = EventSheetGameCatalog.set_remap(base, pairs, persist)
-	var frozen: PackedStringArray = EventSheetGameCatalog.frozen_preloads(base, EventSheets.project_scripts())
+	var frozen: PackedStringArray = EventSheetGameCatalog.frozen_preloads(base, EventSheetProjectDoctor.all_project_scripts())
 	if not frozen.is_empty():
 		outcome["frozen"] = frozen
 		outcome["message"] = "%s\n%s preloads it, so the choice is fixed when that script loads and a live language switch never swaps it - use a plain load() under On Language Changed." % [

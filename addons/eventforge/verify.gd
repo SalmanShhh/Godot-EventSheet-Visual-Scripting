@@ -128,7 +128,7 @@ static func corpus(requested: PackedStringArray = PackedStringArray(),
 		skipped: PackedStringArray = PackedStringArray()) -> PackedStringArray:
 	var listed: PackedStringArray = requested.duplicate()
 	if listed.is_empty():
-		listed = EventSheets.project_scripts()
+		listed = EventSheetProjectDoctor.all_project_scripts()
 		listed.append_array(EventSheetTemplates.non_template_sheets(
 			EventSheetProjectFind.list_project_sheets()))
 	var kept: PackedStringArray = PackedStringArray()
@@ -446,7 +446,7 @@ static func _migration_rows(requested: PackedStringArray, paths: PackedStringArr
 		return {"rows": EventSheetMigrationDoctor.rows(paths), "files": paths.size(), "note": ""}
 	var sheets: PackedStringArray = EventSheetTemplates.non_template_sheets(
 		EventSheetProjectFind.list_project_sheets())
-	var scripts: PackedStringArray = EventSheets.project_scripts()
+	var scripts: PackedStringArray = EventSheetProjectDoctor.all_project_scripts()
 	var corpus_paths: PackedStringArray = EventSheetMigrationDoctor.corpus(sheets, scripts,
 		read_every_script)
 	return {"rows": EventSheetMigrationDoctor.rows(corpus_paths), "files": corpus_paths.size(),

@@ -127,7 +127,7 @@ static func request() -> bool:
 		# ONE scan, two halves: every scene, then every script. One module, one cache, one drop - and
 		# the halves in that order because the scene answers have a caller that blocks on them.
 		_pending = EventSheetSceneConnections.scene_paths().duplicate()
-		_pending_scripts = EventSheets.project_scripts()
+		_pending_scripts = EventSheetProjectDoctor.all_project_scripts()
 		_next = 0
 		_next_script = 0
 		_holders.clear()

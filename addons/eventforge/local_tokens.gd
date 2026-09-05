@@ -218,7 +218,7 @@ static func index_over(paths: PackedStringArray) -> Dictionary:
 static func project_index() -> Dictionary:
 	if _index_built:
 		return _index
-	_index = index_over(EventSheets.project_scripts())
+	_index = index_over(EventSheetProjectDoctor.all_project_scripts())
 	_index_built = true
 	return _index
 

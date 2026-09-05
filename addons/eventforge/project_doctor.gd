@@ -31,6 +31,11 @@ static var _extension_checks: Array[Dictionary] = []
 static var _project_scripts_cache: PackedStringArray = PackedStringArray()
 static var _project_scripts_walked: bool = false
 
+## And the same walk WITHOUT the project's declared folders taken out of it - the whole project, for
+## the readers that are not the audit. See `all_project_scripts`.
+static var _all_scripts_cache: PackedStringArray = PackedStringArray()
+static var _all_scripts_walked: bool = false
+
 ## path -> that file's text, for the length of one audit - see `source_of`.
 static var _source_cache: Dictionary = {}
 
@@ -2919,7 +2924,10 @@ static func _skill_tree_assets() -> PackedStringArray:
 		return asset != null and asset.get("skills") is Array)
 
 
-## Every project GDScript, excluding addons/ (the plugin's own code is not a user's game).
+## THE AUDIT'S corpus: every project GDScript, excluding addons/ (the plugin's own code is not a
+## user's game) and excluding the folders this project declared out of its audit. Only the audit's
+## own readers may have this one - anything that would be WRONG rather than merely noisy about a
+## file it cannot see asks `all_project_scripts()` instead, and that function says which four do.
 ##
 ## HELD between asks. Around forty checks want this list and the walk costs about sixty milliseconds
 ## on a thousand-file project, so asking it once per check spent over two seconds of every audit
@@ -2940,6 +2948,8 @@ static func _project_scripts() -> PackedStringArray:
 static func clear_project_scripts() -> void:
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
+	_all_scripts_cache = PackedStringArray()
+	_all_scripts_walked = false
 	_source_cache.clear()
 	_sheet_cache.clear()
 
@@ -2999,6 +3009,33 @@ static func sheet_of(path: String) -> EventSheetResource:
 static func _walk_project_scripts() -> PackedStringArray:
 	return _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
 		return path.ends_with(".gd"))
+
+
+## Every project GDScript outside `addons/`, INCLUDING the folders this project declared out of its
+## audit. The whole project, as the filesystem has it.
+##
+## THE AUDIT IS NOT THE ONLY READER OF THIS WALK, and that is the whole reason this pair exists. The
+## Doctor's own corpus is `_project_scripts()` and it IS narrowed, because a finding about a folder
+## the reader called uninteresting is exactly the noise the setting removes. But four readers here
+## are not the audit, and narrowing them would not make a report quieter - it would make the editor
+## and the compiler WRONG:
+##
+##   - the baked-local token index, where a name colliding with one in a skipped folder is still a
+##     collision the emitted code has to avoid;
+##   - the project share index behind the "called by" band and the rename notes, where a caller the
+##     editor cannot see is a rename that silently breaks working code;
+##   - the sheet-contract gate, which asks whether files round-trip rather than whether they are
+##     worth advising about;
+##   - the language-variants dialog, which lists what the project actually preloads.
+##
+## Held between asks and dropped by `clear_project_scripts()`, exactly like the narrowed list.
+static func all_project_scripts() -> PackedStringArray:
+	if _all_scripts_walked:
+		return _all_scripts_cache
+	_all_scripts_cache = _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
+		return path.ends_with(".gd"), false)
+	_all_scripts_walked = true
+	return _all_scripts_cache
 
 
 ## The directories no sweep here steps into: this plugin's own code, which the reader did not write.
@@ -3082,12 +3119,16 @@ static func is_in_skipped_folder(path: String) -> bool:
 ## functions from the scripts and its list of calls from the scenes - so filtering one and not the
 ## other would not narrow the report, it would MANUFACTURE findings, accusing a scene of calling a
 ## function whose script the walk had just been told to look away from.
+##
+## `apply_project_scope` is false for the ONE walk that must see the whole project whatever the
+## project declared - see `all_project_scripts`.
 static func _walk_files(skipped_directories: PackedStringArray,
-		keeps: Callable) -> PackedStringArray:
+		keeps: Callable, apply_project_scope: bool = true) -> PackedStringArray:
 	var skipped: PackedStringArray = skipped_directories.duplicate()
-	for folder: String in declared_skipped_folders():
-		if not skipped.has(folder):
-			skipped.append(folder)
+	if apply_project_scope:
+		for folder: String in declared_skipped_folders():
+			if not skipped.has(folder):
+				skipped.append(folder)
 	var found: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
 	while not pending.is_empty():
