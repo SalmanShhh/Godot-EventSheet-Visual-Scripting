@@ -510,4 +510,25 @@ func _tick(status: String, entry: Dictionary) -> void:
 				health.call("heal", healing)
 	status_ticked.emit(status, stacks)
 
+## Ends everything the moment this node leaves the tree, however it left it - a pooled enemy stowed
+## on the shelf, a room unloaded, a node freed. A status is a clock, a tint, a boost and sometimes a
+## particle scene, and `_process` merely STOPS off-tree rather than tidying any of that up: without
+## this, a burning enemy handed back by an object pool came out of the pool still burning, still
+## orange, and still feeding its multiplier.
+##
+## Every ending goes through _end, so the boost stops, the particles go, the colour comes back and
+## On Status Expired fires exactly as a clock running out would. The keys are a snapshot and a
+## handler may end others, so each is asked whether it is still on before it is read.
+##
+## MOVING A NODE TO A NEW PARENT IS A LEAVE AND A RETURN, so it ends the statuses too. That is the
+## same rule said once rather than two rules: what is on this node is what has happened to it since
+## it arrived where it is.
+## @ace_hidden
+func _exit_tree() -> void:
+	for status: String in _active.keys():
+		if _active.has(status):
+			_end(status)
+	_immune.clear()
+	set_process(false)
+
 # Status Effects: attach under anything that can be burned, poisoned, slowed or frozen. Apply Status puts a StatusEffectResource on it for a time; the file says what the effect does and how a second application stacks. Ticks go through the Health pack's typed damage, so resistances and armour apply. Stun and freeze move nothing themselves - ask about them with Has Status where the movement is decided. This pack is an event sheet - extend it by editing it.

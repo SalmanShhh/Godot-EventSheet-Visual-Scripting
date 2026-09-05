@@ -63,6 +63,7 @@ static func run() -> bool:
 	passed = _extending_a_status_extends_its_multiplier() and passed
 	passed = _a_status_may_end_with_no_tree_under_it() and passed
 	passed = _an_owner_who_has_gone_is_credited_to_nobody() and passed
+	passed = _leaving_the_tree_ends_everything() and passed
 	passed = _a_handwritten_apply_comes_back_byte_for_byte() and passed
 	return passed
 
@@ -424,6 +425,45 @@ static func _a_status_may_end_with_no_tree_under_it() -> bool:
 		["and the row that cleans up after it still ran", expired, ["burn"]]
 	])
 	(made["host"] as Node).free()
+	return passed
+
+
+## LEAVING THE TREE IS AN ENDING. A pooled enemy is not freed - it is taken out of the tree and put
+## back later - so a burn that merely stopped ticking off-tree came back on with the node, tint and
+## all. The engine calls `_exit_tree` for a stow exactly as it does for a free, so that is where the
+## ending lives, and it is the ordinary ending: the clock goes, the colour comes back, and the row
+## under On Status Expired runs.
+static func _leaving_the_tree_ends_everything() -> bool:
+	var made: Dictionary = _host_with_health()
+	var status: Node = made["status"]
+	var host: Node2D = made["host"]
+	var expired: Array = []
+	status.connect("status_expired", func(word: String) -> void: expired.append(word))
+	status.call("apply", "burn", 30.0, 1)
+	status.call("make_immune", "poison", 30.0)
+	var on_before: bool = bool(status.call("has", "burn"))
+	var tinted: Color = host.modulate
+	# The stow itself: no tree under this test, so the callback the engine would run is run here,
+	# which is how every other clock in this file is driven too.
+	status.call("_exit_tree")
+	var passed: bool = SUPPORT.pins("status_effects_pack_test", [
+		["the burn was on while the node was in the tree", on_before, true],
+		["and it had coloured the host", is_equal_approx(tinted.g, 0.62), true],
+		["leaving the tree ends it", status.call("has", "burn"), false],
+		["the row that cleans up after a status still runs", expired, ["burn"]],
+		["the colour goes back with it", host.modulate, Color(1.0, 1.0, 1.0, 1.0)],
+		["and an immunity is not still counting down on the shelf",
+			status.is_processing(), false]
+	])
+	# And a node handed back out of the pool is clean: applying again is a first application, not a
+	# second one on top of what it was carrying when it went away.
+	status.call("apply", "burn", 2.0, 1)
+	passed = SUPPORT.pins("status_effects_pack_test", [
+		["a re-handed node takes the status afresh", float(status.call("status_time_left", "burn")), 2.0],
+		["on one stack", int(status.call("status_stacks", "burn")), 1]
+	]) and passed
+	status.call("remove_status", "burn")
+	host.free()
 	return passed
 
 

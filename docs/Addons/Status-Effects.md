@@ -49,6 +49,8 @@ It is the wrong tool when a condition is permanent (that is a property, or a gro
 
 **The tint is mixed, not set.** Every active effect's tint is multiplied together and applied to the host's modulate; the host's own colour is remembered when the first one goes on and put back when the last one comes off. A host that is not a CanvasItem - a 3D enemy, a plain Node - is simply left alone and its statuses work exactly the same. While a player has asked for no flashing, the shift is held under the same ceiling the screen effects use.
 
+**Leaving the tree ends everything.** A status is a clock, a colour, sometimes a multiplier and sometimes a particle scene, and all four end the moment the node leaves the scene tree - which is what a pool does when it stows an enemy, and what unloading a room does to everything in it. Without that a pooled enemy came back out of the pool still burning. On Status Expired fires for each one exactly as a clock running out would. Moving a node to a new parent is a leave and a return, so it ends the statuses too: what is on a node is what has happened to it since it arrived where it is.
+
 **Speed Factor is a product you multiply by.** It is the product of every active effect's speed factor: 1 with nothing on, 0.5 under one slow, 0 under a root. The movement pack multiplies its speed by it, which is how one file turns every kind of movement in the game slow.
 
 **Multipliers run through the Boosts pack.** An effect with a Multiplier Tag starts a tagged boost while it lasts and stops it when it ends, and Extend Status extends both clocks together. Boosts stays the multiplier engine; a project without it simply gets no multiplier, which is the honest answer rather than an error.
