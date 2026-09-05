@@ -18,6 +18,13 @@
 # EventSheetReadingCoverage underneath), so this page, the head bar's chip on an opened file and the
 # corpus pins in the suite can never quote three different percentages for the same bytes.
 #
+# A SHAPE IS ONE BUCKET, NOT ONE TABLE. The shape keeps the verb and blanks the receiver, while a
+# curated table is keyed on the class AND the verb - so `node.play(text)` gathers an
+# AnimatedSprite2D's play beside an AudioStreamPlayer's, which are two tables rather than one. Every
+# count on this page is therefore a count of LINES: where writing words would pay most, not how many
+# entries one table would gain. The page never says otherwise, and a reader taking a count for an
+# entry count would be taking the wrong number.
+#
 # THE PAGE OBEYS THE BAND SCALE LAW twice over. The commonest shapes are named and the rest are
 # counted; each named shape opens a few of its own lines and counts the rest. And the tail is its own
 # entry: the lines whose shape nothing else in the project repeats are COUNTED, never expanded - a

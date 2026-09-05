@@ -139,6 +139,18 @@ static func _test_the_shape() -> bool:
 		# A trailing comment is not part of the statement; a `#` inside a string is.
 		"	queue_free()  # bye": "queue_free()",
 		"	print(\"# not a comment\")": "print(text)",
+		# A NAME THE ASCII ATOM CANNOT SPELL IS STILL BLANKED, never printed: a shape whose whole job
+		# is to carry none of the author's words must not carry their bytes either. The run is blanked
+		# on its own rather than merged into the name beside it, so the atom stays exactly the
+		# lifter's and `über` is a name to neither of them.
+		"	über = 2": "name name=number",
+		"	日本語()": "name()",
+		# TWO CLASSES, ONE VERB, ONE BUCKET. The receiver is blanked and the verb is kept, so these
+		# two are the same shape - and a curated table is keyed on the class as well as the verb, so
+		# that bucket is two tables rather than one. Pinned because it is what the ledger's counts
+		# mean: lines worth writing words for, never entries one table would gain.
+		"	sprite.play(\"run\")": "name.play(text)",
+		"	music.play(\"theme\")": "name.play(text)",
 		# Nothing to shape.
 		"	# @group:juice": "",
 		"		": ""
@@ -153,6 +165,10 @@ static func _test_the_shape() -> bool:
 ## The scanner and the lifter's grammar agree about what a name is, on words picked to sit either
 ## side of the line. Keywords are left out on purpose: they are names to the grammar and words to the
 ## scanner, which is the one deliberate difference between them.
+##
+## `über` is in the table for the OTHER half of the same rule: it is not a name to either of them,
+## and the pin below proves the scanner does not quietly widen its atom to take it. What it must do
+## instead - blank the run rather than print it - is pinned in the shape table above.
 static func _test_the_name_atom_is_the_lifters() -> bool:
 	var identifier: RegEx = RegEx.create_from_string("^%s$" % EventForgeLiftGrammar.IDENTIFIER)
 	var samples: PackedStringArray = ["player", "_private", "x1", "Vector2", "__group_juice_active",

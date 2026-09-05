@@ -32,7 +32,17 @@
 # recogniser family matches with (EventForgeLiftGrammar.IDENTIFIER: a letter or underscore, then
 # letters, digits and underscores). The scanner spells it as a character test rather than a regex
 # because it runs per character rather than per line, and the suite pins the two against each other
-# on a table of samples so the day one widens the other cannot quietly stay behind.
+# on a table of samples so the day one widens the other cannot quietly stay behind. A character
+# ABOVE ASCII is not in that atom and is not punctuation either - GDScript accepts a unicode
+# identifier - so such a run is blanked whole rather than emitted verbatim: a shape must never carry
+# an author's own bytes, and the atom stays the lifter's.
+#
+# A SHAPE IS KEYED ON THE VERB, AND A CURATED TABLE IS KEYED ON (CLASS, VERB). So one shape can hold
+# more than one table's worth of lines: `node.play(text)` gathers an AnimatedSprite2D's play, an
+# AnimationPlayer's, an AudioStreamPlayer's and a VideoStreamPlayer's, which are four tables rather
+# than one. The ranking is therefore a ranking of CANDIDATE WEIGHT - where writing words would pay
+# most - and not a promise that one table would claim a whole bucket. A count here is a count of
+# LINES, never of table entries, and nothing in the ledger says otherwise.
 #
 # WHAT IS KEPT VERBATIM, AND WHY:
 #   - KEYWORDS. `if`, `and`, `func`, `enum`, `true`. These are the language's words, not the author's,
@@ -135,6 +145,17 @@ static func shape_of(statement: String) -> String:
 			# A keyword is a word for spacing, but it is not a VALUE: `not %Unique` has to keep
 			# reading the `%` as a node.
 			token_is_value = not KEYWORDS.has(word)
+		elif character.unicode_at(0) > 127:
+			# A CHARACTER THE NAME ATOM CANNOT SPELL IS STILL SOMEBODY'S NAME, never punctuation.
+			# GDScript accepts a unicode identifier and the lifter's ASCII atom does not, so without
+			# this the run fell through to the branch below and was emitted VERBATIM - the author's
+			# own bytes, in a shape whose whole job is to have none. The run is blanked whole, and it
+			# is deliberately NOT merged with an ASCII name beside it: the atom stays exactly the
+			# lifter's, and `über` shapes as two blanks rather than becoming a name the grammar
+			# would not match.
+			while index < text.length() and text[index].unicode_at(0) > 127:
+				index += 1
+			token = BLANK_NAME
 		else:
 			index += 1
 			token = character
