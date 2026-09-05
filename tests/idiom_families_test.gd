@@ -165,6 +165,34 @@ static func _test_the_physics_queries() -> bool:
 		+ " | ray_query_masked_run_2d | ray_query_line_2d") and ok
 	ok = SUPPORT.pin_value("idiom_families_test", "the queries save back byte for byte",
 		_round_trips(PHYSICS_QUERIES), true) and ok
+	# THE MASK SAID INSIDE `create`. While the end point ran to the closing bracket, a three-argument
+	# call matched the PLAIN run with the mask swallowed into it: the row said the ray ended at
+	# `target.global_position, 2` and said nothing about a mask, while the code masked to layer 2.
+	# Byte-exact, and wrong about what the line does. The end point refuses a top-level comma now, so
+	# the three-argument spelling is a row of its own and the four-argument one is honest code.
+	ok = SUPPORT.pin_table("idiom_families_test/physics_query_runs", {
+		"global_position, target.global_position": "ray_query_run_2d | to=target.global_position",
+		"global_position, target.global_position, 2":
+			"ray_query_create_masked_run_2d | to=target.global_position | mask=2",
+		# An end point with a call in it is still ONE value: its commas are inside a bracket.
+		"global_position, global_position + Vector2(0, 100)":
+			"ray_query_run_2d | to=global_position + Vector2(0, 100)",
+		# The four-argument spelling adds an exclude list no row here means, so nothing claims it.
+		"global_position, target.global_position, 2, [self]": ""
+	}, func(arguments: String) -> String:
+		var run: PackedStringArray = PackedStringArray([
+			"\tvar space_state := get_world_2d().direct_space_state",
+			"\tvar query := PhysicsRayQueryParameters2D.create(%s)" % arguments,
+			"\tvar sight := space_state.intersect_ray(query)"])
+		var hit: Dictionary = EventForgePhysicsQueryLift.match_run(run, 0, 1)
+		if hit.is_empty():
+			return ""
+		var params: Dictionary = hit.get("params", {}) as Dictionary
+		var said: PackedStringArray = PackedStringArray([str(hit.get("entry_id", "")),
+			"to=%s" % str(params.get("to", ""))])
+		if params.has("mask"):
+			said.append("mask=%s" % str(params.get("mask", "")))
+		return " | ".join(said)) and ok
 	return ok
 
 

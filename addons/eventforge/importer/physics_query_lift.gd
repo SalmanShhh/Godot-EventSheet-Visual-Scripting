@@ -60,17 +60,36 @@ const NAME: String = EventForgeLiftGrammar.IDENTIFIER
 ## it. Named here so the four patterns below still read as sentences.
 const ASSIGN: String = EventForgeLiftGrammar.DECLARATION_HEAD
 
-## The two ends of a ray, as the `create` call carries them. `to` is the EXPRESSION that runs to the
-## closing bracket - the wide span, so `global_position + Vector2(0, 100)` is one value and not two -
-## and `from` is the plain one in front of it.
+## ONE ARGUMENT OF THE CALL, however it is written: any run of text whose commas are all INSIDE a
+## bracket. `global_position + Vector2(0, 100)` is one value and not two, `[$Player.get_rid()]` is
+## one, and `target.global_position, 2` is not one at all - which is the whole point. Two levels of
+## nesting are read, which is every spelling a ray's end point is written in; anything deeper is
+## simply not claimed and the run keeps the reading it had.
+const ARGUMENT: String = "(?:[^,()\\[\\]]|\\((?:[^()]|\\([^()]*\\))*\\)|\\[(?:[^\\[\\]]|\\[[^\\[\\]]*\\])*\\])+"
+
+## The two ends of a ray, as the `create` call carries them. `to` is the argument span above, and
+## `from` is the plain one in front of it.
 ##
-## PLAIN MEANS NO BRACKET OF ANY KIND, not merely no comma. The shared grammar's argument span stops
-## at a comma or a closing bracket, which reads `create(Vector2(0, 0), b)` as a `from` of `Vector2(0`
-## and a `to` of `0), b`: two chips that are not expressions, spliced back into a line that still
-## saves byte for byte, so nothing downstream would ever have said the split was wrong. A span that
-## refuses brackets outright cannot make that mistake - a `from` with a call in it is simply not
-## claimed, and the run keeps the reading it had.
-const ENDS: String = "(?<from>[^,()\\[\\]]+)" + EventForgeLiftGrammar.SEPARATOR + "(?<to>.+)"
+## `to` REFUSES A TOP-LEVEL COMMA, which is what makes a three-argument `create` a different row
+## rather than a wrong reading of this one. While it ran to the closing bracket,
+## `create(from, target.global_position, 2)` matched THIS entry with the mask swallowed into the end
+## point: the row said its ray ended at `target.global_position, 2` and said nothing about a mask,
+## while the code masked to layer 2 - byte-exact, and wrong about what the line does. The mask now
+## has an entry of its own and a spelling this one declines is left as the code it is.
+##
+## PLAIN MEANS NO BRACKET OF ANY KIND for `from`, not merely no comma. The shared grammar's argument
+## span stops at a comma or a closing bracket, which reads `create(Vector2(0, 0), b)` as a `from` of
+## `Vector2(0` and a `to` of `0), b`: two chips that are not expressions, spliced back into a line
+## that still saves byte for byte, so nothing downstream would ever have said the split was wrong. A
+## span that refuses brackets outright cannot make that mistake - a `from` with a call in it is
+## simply not claimed, and the run keeps the reading it had.
+const ENDS: String = "(?<from>[^,()\\[\\]]+)" + EventForgeLiftGrammar.SEPARATOR + "(?<to>%s)" % ARGUMENT
+
+## The same two ends with the layer mask `create` takes as its THIRD argument. Its own entry rather
+## than a wider `to`, because the two are different rows to a reader: a mask said in the call is the
+## row's mask, and a mask folded into the end point is a chip that reads
+## `target.global_position, 2` over a row whose mask column says nothing at all.
+const ENDS_MASKED: String = ENDS + EventForgeLiftGrammar.SEPARATOR + "(?<mask>%s)" % ARGUMENT
 
 static var _entries: Array[Dictionary] = []
 
@@ -99,6 +118,8 @@ static func lift_entries() -> Array[Dictionary]:
 		_entries = [
 			_masked_run(ACE_ID_2D, "2D", "ray_query_masked_run_2d"),
 			_masked_run(ACE_ID_3D, "3D", "ray_query_masked_run_3d"),
+			_create_masked_run(ACE_ID_2D, "2D", "ray_query_create_masked_run_2d"),
+			_create_masked_run(ACE_ID_3D, "3D", "ray_query_create_masked_run_3d"),
 			_plain_run(ACE_ID_2D, "2D", "ray_query_run_2d"),
 			_plain_run(ACE_ID_3D, "3D", "ray_query_run_3d"),
 			_one_line(ACE_ID_2D, "2D", "ray_query_line_2d"),
@@ -137,6 +158,23 @@ static func _masked_run(ace_id: String, dimension: String, id: String) -> Dictio
 	}
 
 
+## The same run with the mask said in the CALL rather than on a line of its own - `create`'s own
+## third argument, which is how the engine's pages spell a masked ray in one statement. Its own entry
+## because a wider end point cannot tell the two apart: read as one value, `target.global_position, 2`
+## is an end point nothing ends at and a mask the row never mentions.
+static func _create_masked_run(ace_id: String, dimension: String, id: String) -> Dictionary:
+	return {
+		"id": id,
+		"ace_id": ace_id,
+		"mark": MARK,
+		"statements": [_space_statement(dimension), _query_statement(dimension, true),
+			_cast_statement()],
+		"params": ["into", "from", "to", "mask"],
+		"shape": _create_run_shape(dimension),
+		"slots": _slots(true)
+	}
+
+
 ## The compact spelling: the query nested inside the call, no locals at all.
 static func _one_line(ace_id: String, dimension: String, id: String) -> Dictionary:
 	return {
@@ -157,10 +195,11 @@ static func _space_statement(dimension: String) -> Dictionary:
 	return {"pattern": "^var[ \\t]+(?<space>%s)%s%s$" % [NAME, ASSIGN, _space_pattern(dimension)]}
 
 
-## `var query := PhysicsRayQueryParameters2D.create(from, to)` - the ray, described.
-static func _query_statement(dimension: String) -> Dictionary:
+## `var query := PhysicsRayQueryParameters2D.create(from, to)` - the ray, described. `masked` asks
+## for the three-argument spelling, whose third argument is the layer mask.
+static func _query_statement(dimension: String, masked: bool = false) -> Dictionary:
 	return {"pattern": "^var[ \\t]+(?<query>%s)%s%s\\.create\\(%s\\)$" % [
-		NAME, ASSIGN, _query_class(dimension), ENDS]}
+		NAME, ASSIGN, _query_class(dimension), ENDS_MASKED if masked else ENDS]}
 
 
 ## `var sight := space_state.intersect_ray(query)` - the question, and where the answer lands.
@@ -178,6 +217,15 @@ static func _run_shape(dimension: String, masked: bool) -> String:
 		written.append("query.collision_mask = {mask}")
 	written.append("var {into} := space_state.intersect_ray(query)")
 	return "\n".join(written)
+
+
+## The three-argument run as one canonical text - the mask said inside `create` rather than on a
+## line of its own.
+static func _create_run_shape(dimension: String) -> String:
+	return "\n".join(PackedStringArray([
+		"var space_state := %s" % _space_call(dimension),
+		"var query := %s.create({from}, {to}, {mask})" % _query_class(dimension),
+		"var {into} := space_state.intersect_ray(query)"]))
 
 
 ## The sample values the fixture line is written with. Both dimensions share them: the words are a

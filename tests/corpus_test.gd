@@ -17,8 +17,9 @@
 #   player_stats.gd        properties in both of Godot's spellings: two that name the functions that
 #                          guard them, one that writes its accessor inline
 #   guard_sight.gd         the three questions a project puts to the physics world directly: the ray
-#                          in the three statements the manual prints, the same ray written compactly
-#                          on one line, and the shape and point queries that stay code
+#                          in the three statements the manual prints, the same ray with its layer
+#                          mask said inside `create`, the same ray written compactly on one line,
+#                          and the shape and point queries that stay code
 #   mission_hud.gd         two multi-line text templates and the labels they fill - the file the
 #                          LEDGER is measured on, because it is the one with lines nothing claims
 #
@@ -66,7 +67,7 @@ const CORPUS_DIR: String = "res://tests/corpus/"
 ## while this one only moves when a receiver stops being nameable or a class stops answering.
 const PINS: Dictionary = {
 	"door_state_machine.gd": {"percent": 100, "entry": 0, "code": 1, "derived": 0},
-	"guard_sight.gd": {"percent": 100, "entry": 4, "code": 0, "derived": 0},
+	"guard_sight.gd": {"percent": 100, "entry": 7, "code": 0, "derived": 0},
 	"mission_hud.gd": {"percent": 100, "entry": 0, "code": 8, "derived": 0},
 	"network_lobby.gd": {"percent": 100, "entry": 5, "code": 0, "derived": 3},
 	"pause_menu.gd": {"percent": 100, "entry": 4, "code": 0, "derived": 0},

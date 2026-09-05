@@ -14,6 +14,15 @@
   under that arm as **Sprite2D.rotate** - a class neither of them is, with the bytes identical either
   way. Both are read as the code they are now, nested array and dictionary patterns included, and a
   member no loop and no arm binds still reads exactly as it did.
+- **A ray masked inside `create` says which layers it hits instead of hiding them in its end point.**
+  The end point of a hand-written ray ran to the closing bracket, so
+  `PhysicsRayQueryParameters2D.create(from, target.global_position, 2)` matched the PLAIN run with
+  the mask swallowed: the row said the ray ended at `target.global_position, 2` and its mask column
+  said nothing, while the code masked to layer 2 - byte-exact, and wrong about what the line does.
+  An end point is one argument now (its commas all inside a bracket, so
+  `global_position + Vector2(0, 100)` is still one value), the three-argument spelling is a row of
+  its own that reads the mask as the mask, and the four-argument spelling - the one that also
+  excludes bodies, which no shipped row means - stays the honest code it is.
 
 ### What plays, prompts, speaks and moves
 

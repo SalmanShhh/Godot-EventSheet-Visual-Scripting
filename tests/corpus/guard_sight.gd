@@ -22,6 +22,13 @@ func _physics_process(delta: float) -> void:
 		chase(delta)
 
 
+func can_reach(where: Vector2) -> bool:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, where, 1)
+	var blocked := space_state.intersect_ray(query)
+	return blocked.is_empty()
+
+
 func swing() -> void:
 	var reach := PhysicsShapeQueryParameters2D.new()
 	var circle := CircleShape2D.new()
