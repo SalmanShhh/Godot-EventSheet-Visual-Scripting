@@ -335,7 +335,7 @@ same whether or not your script is `@tool`.
 | `@ace_succeeded_by(Provider::AceId, renames: old=new, defaults: param=value)` | THE FORWARDING ADDRESS: where the newer spelling of this member lives. Three facts and no more - the successor's id, what this member's parameters are called over there, and a value for each parameter the old row never had - which is exactly enough for a rewritten row to land complete. Both lists split on `|`, and both are optional. Nothing about this member changes: same id, same template, same place in the picker, and every sheet already using it compiles byte for byte as before. It is not deprecation, and the two are separate on purpose - a superseded verb can be a perfectly ordinary thing to have written, and a deprecated one may have nowhere to go. Chains resolve to the end (A -> B -> C offers C); a cycle, or an address nobody is at, is a build error in the pack audit rather than a surprise with a sheet open. |
 | `@ace_codegen_template(code)` | Replace the auto-generated call with your own GDScript (you own the whole template then). |
 | `@ace_display_template(text)` | Override the row/picker phrasing; `{param_id}` slots substitute live values. Substituted values draw **bold** automatically (the C3 emphasis), so you rarely need styling - but the template may carry BBCode-lite (`[b]`, `[i]`, `[color=...]`) for custom emphasis, which then supersedes the automatic one (typed value tints still apply). The bundled vocabulary uses the house grammar - `[b]` around value slots, `[i]` around node/object slots ("add `[i]{target}[/i]` to `[b]{group}[/b]`") - and the Health pack's authored sentences ("Heal `[b]{amount}[/b]` HP") show the pack-side pattern. Translation-safe: a marked template that misses the catalog retries its STRIPPED sentence as the key, so a locale translated before you added styling keeps its translation (shown plain, still auto-bolded). A user's literal `[b]` inside a param value is always data, never styling. |
-| `@ace_param(name, hint: h, default: v, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, the value the row shows the moment it is dropped, a fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. See the [param grammar](#the-param-grammar-defaults-labels-and-comparison) below for `default:`, labeled options, and `hint: comparison`. |
+| `@ace_param(name, hint: h, default: v, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, the value the row shows the moment it is dropped, a fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. `default:` has two siblings that say which KIND the starting value is - `default_word:` for text the template quotes (the only one that can say EMPTY) and `default_code:` for GDScript it inserts verbatim. See the [param grammar](#the-param-grammar-defaults-labels-and-comparison) below for all three, labeled options, and `hint: comparison`. |
 | `@ace_param_hint(param_name hint)` | Set a parameter's widget (see the [hint table](#parameter-hints-the-widget-vocabulary)). |
 | `@ace_param_options(param_name a,b,c)` | Give a parameter a fixed dropdown. Entries may be labeled `value=Label` (`@ace_param_options(mode fit=Fit to screen, fill=Fill)`), so the menu reads as English while the row inserts the value. **A String key is inserted into the generated call verbatim**, so the QUOTES belong in the template: an ease picked from `linear,ease_in` emits `fly_along($Route, 4, ease_in)` - an identifier nothing declares - unless the ACE ships `@ace_codegen_template("$CameraRailBehavior.fly_along({path}, {seconds}, \"{ease}\")")` (in a pack builder, `codegen_template_override`). Quoting the key in the options list instead does NOT survive: the annotation scanner reads the quotes back off, so the key is the bare word again by the time it is spliced. |
 | `@ace_param_autocomplete(param_name a,b,c)` | Give a parameter an editable suggestion list. |
@@ -398,8 +398,27 @@ func hold_shield(seconds: float, quality: String, op: String) -> void:
 - **`default:`** is what the row shows on drop. Resolution runs most-explicit-first: this annotation,
   then the method's own GDScript default (`func fire(power: float = 25.0)` already lands reading
   25.0), then the type's zero - so a parameter whose sensible value is `1.0` but has neither reads
-  `0.0` and quietly does nothing until someone notices. A quoted default has its quote pair stripped,
-  so write `default: "walk"` for a String.
+  `0.0` and quietly does nothing until someone notices.
+- **A starting value has a KIND, and your template decides which.** The value is text a field holds;
+  whether that text needs quotes depends on how the template inserts it, and only you know:
+
+  | Your template | The slot | Write |
+  | --- | --- | --- |
+  | `add_effect("{called}", {strength})` | quoted by the template | `default_word: vignette` - a WORD. Say `default_word: ""` for a row that opens on a cleared box. |
+  | `moment({moment_name}, {strength})` | not quoted | `default_code: "impact"` - GDScript, taken verbatim, quotes and all. Also `default_code: Vector2(1, 1)`, `default_code: null`. |
+  | either, for a number or a bare word | - | `default: 1.0` - the shorthand, and what nearly every line is. |
+
+  The shorthand cannot say which kind it is: both annotation readers trim one surrounding quote pair
+  off a `default:`, so `default: "impact"` arrives as the bare word `impact` and an unquoted slot then
+  writes `moment(impact, 1)` - an undefined identifier, in a row that looked right on the canvas.
+  `default_word:` and `default_code:` are the same value with its kind said out loud; `default:` keeps
+  meaning exactly what it always meant, so nothing already written changes.
+
+  Two things worth knowing. A word that both begins with a quote AND holds a comma has no spelling -
+  the pair protecting its quotes closes before the comma and the line splits there (the same
+  limitation an option label has). And on a parameter that also has `options:`, a `default_code:`
+  string literal has its quotes taken off to match against the option keys, which are bare words - so
+  on a dropdown, use `default_word:`.
 - **`options:`** entries may be `value=Label`: the dropdown READS the label and INSERTS the value.
   Entries split on `|` here (so commas stay free for prose); `@ace_param_options` splits on `,`
   instead. A key that itself contains `=` ships quoted - `"<="=at most` - because the split is on the

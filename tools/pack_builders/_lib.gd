@@ -58,6 +58,22 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 ## the compiler writes out as `## @ace_param(id, help: ...)`. Without it a pack's parameters ship
 ## with a name and a type and nothing else, which every builtin verb would fail its own gate for.
 ## The third entry is optional so no existing builder has to change.
+##
+## A STARTING VALUE HAS A KIND, AND YOUR TEMPLATE DECIDES WHICH. `parameter.default_value` is text a
+## field holds; whether that text needs quotes depends on how your codegen template inserts it, and
+## nothing can work that out for you. Say which on `parameter.default_spelling`:
+##   template quotes the slot - `add_effect("{called}", {strength})`  ->  default_spelling = "word"
+##       default_value is the bare word (`vignette`), and "" is a row that opens on a cleared box.
+##   template does not - `moment({moment_name}, {strength})`          ->  default_spelling = "code"
+##       default_value is GDScript taken verbatim: `"impact"`, quotes and all, or `Vector2(1, 1)`.
+##   a number or a bare word either way                               ->  leave it empty
+##       the shorthand, and what nearly every parameter in the fleet is.
+## Left empty, the value ships as a plain `default:`, whose quote pair BOTH annotation readers trim -
+## so a `"impact"` written that way arrives bare and an unquoted slot emits `moment(impact, 1)`, an
+## undefined identifier in a row that looked right on the canvas. An empty value ships as no default
+## at all, which leaves the method's own GDScript default in charge - `""` in a signature then
+## reaches a quoted slot as its source text and writes four quote characters where a name belonged.
+## Those were the two faces of one defect across eighteen shipped rows; spelling the kind is the fix.
 static func append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, display_template: String = "") -> void:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
@@ -100,7 +116,10 @@ static func require_resource(sheet: EventSheetResource, var_name: String, displa
 ## over, because this is the maker behind every CONDITION and EXPRESSION in the fleet: the
 ## sentence is the help the picker shows under the box, AND it is what the compiler needs before
 ## it writes an `## @ace_param(...)` line at all - so a parameter that says nothing also ships no
-## starting value, and a default set on one would be metadata that never left the builder.
+## starting value, and a default set on one would be metadata that never left the builder. A
+## starting value that IS set says its kind on `parameter.default_spelling`: "word" for text your
+## template's own quotes receive (and the only spelling that can say EMPTY), "code" for GDScript an
+## unquoted slot receives verbatim, empty for the plain shorthand a number or a bare word wants.
 static func exposed_function(function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
@@ -956,7 +975,10 @@ class PackSource extends RefCounted:
 	#
 	# A `params` row's optional THIRD entry is that parameter's own help, the same third entry every
 	# other maker in this library takes. It is what the compiler reads before it writes an
-	# `## @ace_param(...)` line, so without it the parameter ships no help AND no starting value.
+	# `## @ace_param(...)` line, so without it the parameter ships no help AND no starting value. A
+	# starting value that IS set says its kind on `parameter.default_spelling`: "word" for text your
+	# template's own quotes receive (and the only spelling that can say EMPTY), "code" for GDScript
+	# an unquoted slot receives verbatim, empty for the shorthand a number or a bare word wants.
 	func _exposed(function_name: String, display_name: String, description: String, params: Array, category: String) -> EventFunction:
 		var event_function: EventFunction = EventFunction.new()
 		event_function.function_name = function_name

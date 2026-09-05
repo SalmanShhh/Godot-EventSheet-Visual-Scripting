@@ -18,7 +18,9 @@
 - **The pack gate compiles every word in a dropdown, not only the one the row opens on.** A
   dropdown is a promise that each of its items writes code the game builds, and the item nobody
   picked while authoring is the one whose spelling was never tried. The built-in vocabulary has had
-  that pass for a while; the packs now get it too, through the same fill, for 255 further calls.
+  that pass for a while; the packs now get it too, for 301 further calls - including the thirteen
+  word lists that sit on a row carrying a slot only the author can fill, whose other slots take a
+  stand-in so the words themselves are still tried.
 
 ### Fixed: eighteen shipped rows that did not compile with the values they open on
 
@@ -38,11 +40,35 @@
   own call template, which is the rule every other pack offering a word already follows, and the
   starting value stays the bare word an author types into the box. A sheet that already spells the
   name with quotes of its own emits exactly the same line as before.
-- **Screen FX and Post Kit: three parameters name the word their row opens on.** `Add Post Effect`
-  and `Move Post Effect Before` quote their slots correctly, but `called` and `before` carried no
-  starting value, so the method's own `= ""` fell through as the SOURCE TEXT of an empty literal and
-  landed inside the template's quotes as four quote characters. Leaving the box empty still works
-  and still names an entry after its effect; the rows just no longer open on something unparseable.
+- **Screen FX and Post Kit: three parameters open on the empty box their help describes.** `Add
+  Post Effect` and `Move Post Effect Before` quote their slots correctly, but `called` and `before`
+  carried no starting value, so the method's own `= ""` fell through as the SOURCE TEXT of an empty
+  literal and landed inside the template's quotes as four quote characters. Each of the three now
+  SAYS its starting value is the empty word, which is what its own description was already offering
+  - "empty names it after its effect", "empty moves it to the very end" - so an author who renames
+  the effect gets the entry renamed with it instead of a stale name they never typed.
+
+### A starting value can say which kind it is
+
+- **`default_word:` and `default_code:`, beside the `default:` every pack already writes.** A row's
+  starting value is text a field holds, and whether that text needs quotes is decided by the verb's
+  own call template - which the value had no way of saying. Both annotation readers trim one
+  surrounding quote pair off a `default:`, so `default: "impact"` arrived as the bare word `impact`
+  and a template that did not quote its slot wrote `moment(impact, 1)`, an undefined identifier in a
+  row that looked right on the canvas; and an empty starting value was written as no default at all,
+  so a method's own `= ""` reached a quoted slot as source text and wrote four quote characters. Two
+  faces of one gap, and eighteen shipped rows fell into it. **`default_word:`** is text the template
+  quotes - and the only spelling that can say the value is EMPTY. **`default_code:`** is GDScript
+  the template inserts verbatim, quotes and all. **`default:`** is unchanged in both directions, so
+  every line already written keeps meaning exactly what it meant and no pack's bytes move for it.
+- **All three writers of the grammar agree, and the round trip is byte-exact.** The compiler writes
+  the keys, the importer's lifter and the semantic analyzer both read them, and each parameter
+  remembers WHICH key it was read from - without that, an explicitly empty word cannot be told from a
+  parameter that named no default, the line the compiler makes of a file differs from the line on
+  disk, and the byte gate degrades the whole verb to a block of raw code. The authoring stub a
+  right-click hands you writes the same two keys, which retires the doubled `""idle""` pair it used
+  to emit and, with it, the one starting value it had to REFUSE outright: a quoted literal carrying a
+  comma, whose extra pair closed before the comma and split the line in half.
 
 ### The audit knows which folders are yours
 
