@@ -275,6 +275,13 @@ static func _doctor_says_the_risk_and_the_doors() -> bool:
 		message.contains("follows names inside ONE file"), true) and ok
 	ok = _check("and that saying nothing is not clearing it",
 		message.contains("is not a file it has cleared"), true) and ok
+	# AND THE TWO SHAPES THAT REACH CODE WITHOUT A LOADER are named where a reader meets them, not
+	# only in the source header. A path handed to the operating system runs a stranger's PROGRAM,
+	# and text set as a script's source becomes code with no loader involved at all.
+	ok = _check("it names the calls that run a program rather than load a file",
+		message.contains("OS.execute, OS.create_process or OS.shell_open"), true) and ok
+	ok = _check("and text turned into a script's source",
+		message.contains("set as a script's source becomes code"), true) and ok
 	# THE PACK MOUNT SAYS THE EXTRA TRUE THING, and only about a file that holds one. A load is not a
 	# mount, so a finding about a load must not carry the mount's sentence.
 	ok = _check("a load says nothing about mounting",
@@ -336,6 +343,20 @@ static func _bug_fixtures() -> Dictionary:
 		"a chosen file, asked for and taken threaded": "extends Node\n\n\n"
 			+ "func _on_file_chosen(path: String) -> void:\n"
 			+ "\tvar skin := ResourceLoader.load_threaded_get(path)\n\tprint(skin)\n",
+		# A LAMBDA IS A HANDLER WITH NO NAME, and it is the shortest way anybody writes this. The
+		# lambda's whole TEXT was stored as if it were a handler name, no `func ` line ever matched
+		# it, and the trace started from nothing - so the loudest shape in the file went unread.
+		"a dropped file, loaded by a lambda on the connect line": "extends Node\n\n\n"
+			+ "func _ready() -> void:\n\tget_window().files_dropped.connect("
+			+ "func(files: PackedStringArray) -> void: add_child(load(files[0]).instantiate()))\n",
+		# AND AN UNPACK FOLDER HELD IN A NAME is the same folder as a literal one, exactly as a
+		# watched folder held in a name is. The watch followed the name back to what it was bound
+		# to; the unpack did not, so half of the shapes it claims to read went unread.
+		"a file under an unpack folder held in a name": "extends Node\n\n\nfunc unpack() -> void:\n"
+			+ "\tvar target := \"user://unpacked\"\n\tvar __reader_a := ZIPReader.new()\n"
+			+ "\tif __reader_a.open(\"user://pack.zip\") == OK:\n"
+			+ "\t\tDirAccess.make_dir_recursive_absolute(target)\n\t\t__reader_a.close()\n\n\n"
+			+ "func apply() -> void:\n\tprint(load(\"user://unpacked/main.tscn\"))\n",
 		"a file out of an unpacked archive, loaded": "extends Node\n\n\nfunc unpack() -> void:\n"
 			+ "\tvar __reader_a := ZIPReader.new()\n\tif __reader_a.open(\"user://pack.zip\") == OK:\n"
 			+ "\t\tDirAccess.make_dir_recursive_absolute(\"user://unpacked\")\n"
@@ -374,6 +395,12 @@ static func _clean_fixtures() -> Dictionary:
 			+ "func apply(config: Resource) -> void:\n\tadd_child(load(config.path).instantiate())\n",
 		"no doors at all": "extends Node\n\n\nfunc _ready() -> void:\n"
 			+ "\tadd_child(load(\"res://ui/toast.tscn\").instantiate())\n",
+		# The lambda shape, reaching a reader that answers with pixels. Reading a lambda's parameters
+		# as outside names must not make every lambda a finding.
+		"a dropped file, read as an image by a lambda": "extends Node\n\n\nfunc _ready() -> void:\n"
+			+ "\tget_window().files_dropped.connect(func(files: PackedStringArray) -> void:"
+			+ " $Portrait.texture = ImageTexture.create_from_image("
+			+ "Image.load_from_file(files[0])))\n",
 	}
 
 

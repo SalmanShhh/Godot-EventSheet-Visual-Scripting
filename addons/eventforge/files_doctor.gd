@@ -1,5 +1,5 @@
 # Godot EventSheets - the Doctor's Files section: three path mistakes the editor never mentions, and
-# two readings of the one trust boundary nothing else in the engine draws.
+# three readings of the one trust boundary nothing else in the engine draws.
 #
 # The first three are the same shape of bug. The line is correct GDScript, it runs, and the editor is
 # silent - and then it behaves differently, or not at all, on the machine the game is sent to.
@@ -26,7 +26,7 @@
 #                              that is what the sheet meant - and its door is a respelling: the same
 #                              read with the fallback said out loud.
 #
-# The last two are not bugs at all, which is exactly why nothing reports them:
+# The next three are not bugs at all, which is exactly why nothing reports them:
 #
 #   A LOAD OF OUTSIDE CONTENT   A path that came in through one of the game's own doors - a drop on
 #                               the window, the player's file chooser, a watched folder, an unpacked
@@ -470,7 +470,7 @@ static func loads_outside_findings(sources: Dictionary) -> Array[Dictionary]:
 		if _mounts_a_pack(lines):
 			message += " " + EventSheetL10n.translate("One of those lines MOUNTS a pack rather than loading a file: load_resource_pack puts everything inside it under res:// from then on, and unless its second argument says otherwise it REPLACES the game's own files with the ones it carries. Nothing runs at that moment and everything after it may be somebody else's - including the files the rest of this project treats as the game's own by construction.")
 		message += " " + EventSheetL10n.translate("Read it as DATA instead, and the file cannot bring behaviour with it: Image From File for a picture, Read Text File (or a fallback) for text, Table From File for rows and columns. If this game means to run code its players wrote, say so where they can read it - that is a decision, not an accident.")
-		message += " " + EventSheetL10n.translate("This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.")
+		message += " " + EventSheetL10n.translate("This follows names inside ONE file - a path stored on this object, walked out of a list, handed to a lambda a door's signal calls, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared. And it reads the LOADERS: a path handed to OS.execute, OS.create_process or OS.shell_open runs a stranger's PROGRAM rather than loading their file, and text read off disk and set as a script's source becomes code with no loader in sight - neither of those is reported here.")
 		findings.append(_finding("warning", CHECK_LOADS_OUTSIDE, script_path, message, lines[0]))
 	return findings
 

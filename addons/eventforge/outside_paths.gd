@@ -32,6 +32,25 @@
 # quiet file is therefore not a proof; a loud one is a line to look at - and the finding says so, so
 # a reader is never left thinking silence was an all-clear.
 #
+# AND FOUR SHAPES IT IS QUIET ABOUT ON PURPOSE, written down because a limit nobody wrote down reads
+# as a limit that is not there:
+#
+#   AN UNPACK WITH NO MAKE-FOLDER LINE   The folder an archive lands in is read off the
+#                                        `make_dir_recursive_absolute` line beside the reader, which
+#                                        is how every row this plugin emits writes one. A
+#                                        hand-written unpack into a folder that already exists has
+#                                        no such line, so this file learns no folder from it.
+#   A PROGRAM RATHER THAN A FILE         `OS.execute`, `OS.create_process` and `OS.shell_open` hand a
+#                                        path to the operating system, which runs it. That is wider
+#                                        than any loader here and it is not a load, so the loaders
+#                                        below do not name it and the finding says so in words.
+#   TEXT TURNED INTO CODE BY HAND        `GDScript.new()` with `source_code` set from a file read and
+#                                        `reload()` called makes code out of characters with no
+#                                        loader involved at all.
+#   ANOTHER FILE'S DOOR                  The trace is per file, so a path a door opened in one script
+#                                        and a load written in another are two halves this never
+#                                        joins.
+#
 # NOTHING HERE IS A LIST OF ROW IDS. The seeds are the SIGNALS and the HANDLER NAMES the doors are
 # spelled with, so the same reading answers for a sheet's emitted script and for the hand-written code
 # a person typed themselves - which is the only way the finding can appear on both.
@@ -138,6 +157,14 @@ static func outside_folders(statements: PackedStringArray) -> PackedStringArray:
 			unpacking = false
 			if not into.is_empty() and not into.contains(".get_base_dir()") and not folders.has(into):
 				folders.append(into)
+				# AND AN UNPACK FOLDER MAY BE HELD IN A NAME TOO, exactly as a watched one may:
+				# `var target := "user://unpacked"` on one line and the make-folder line on another
+				# is the same folder said twice. The watch above followed the name back to the
+				# literal it was bound to and this did not, so `load("user://unpacked/main.tscn")`
+				# went unread whenever the folder was written as a name.
+				var bound: String = _literal_bound_to(into, statements)
+				if not bound.is_empty() and not folders.has(bound):
+					folders.append(bound)
 	return folders
 
 
@@ -163,6 +190,30 @@ static func _literal_bound_to(name_text: String, statements: PackedStringArray) 
 			return ""
 		found = right
 	return found
+
+
+## True when a connect's argument is a lambda written on the spot rather than a name: it opens on the
+## keyword and its own bracket follows, which is the one spelling GDScript has for it.
+static func _is_lambda(text: String) -> bool:
+	if not text.begins_with("func"):
+		return false
+	var rest: String = text.substr(4).strip_edges()
+	return rest.begins_with("(")
+
+
+## The parameter names a function head declares, read off the text between its brackets. Used for a
+## lambda, whose head is written inside the call it is handed to; the same splitting the named
+## handlers above go through, so a typed or defaulted parameter reads the same either way.
+static func _parameters_of(head: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var open_at: int = head.find("(")
+	if open_at < 0:
+		return names
+	for argument: String in _split_arguments(arguments_after(head, open_at + 1)):
+		var parameter: String = argument.split(":")[0].split("=")[0].strip_edges()
+		if not parameter.is_empty() and not names.has(parameter):
+			names.append(parameter)
+	return names
 
 
 ## True for a bare identifier - no dots, no brackets, no spaces.
@@ -224,11 +275,21 @@ static func _outside_names(statements: PackedStringArray) -> Dictionary:
 
 
 ## The parameter names of every function in this file that answers a door: one connected to a door's
-## signal, or one spelled with a door's own handler name.
+## signal, one spelled with a door's own handler name, or a LAMBDA written into the connect call
+## itself.
+##
+## A LAMBDA IS A HANDLER WITH NO NAME. `files_dropped.connect(func(files): load(files[0]))` is the
+## shortest way anybody writes this and it is the one shape the reading missed: the lambda's TEXT was
+## stored as if it were a handler name, and no `func ` line in the file ever matched it, so the whole
+## trace started from nothing. Its own parameter list is read instead, right where it is written -
+## which is also all that is needed, because whatever a lambda does with its parameters it does on
+## the same line or on the indented lines under it, and those are statements of this file like any
+## other.
 static func _door_parameters(statements: PackedStringArray) -> PackedStringArray:
 	var handlers: Dictionary = {}
 	for handler_name: String in OUTSIDE_HANDLERS:
 		handlers[handler_name] = true
+	var names: PackedStringArray = PackedStringArray()
 	for line: String in statements:
 		for signal_name: String in OUTSIDE_SIGNALS:
 			var mark: String = "%s.connect(" % signal_name
@@ -236,10 +297,15 @@ static func _door_parameters(statements: PackedStringArray) -> PackedStringArray
 			if at < 0:
 				continue
 			var connected: String = _first_argument(arguments_after(line, at + mark.length()))
-			if not connected.is_empty():
-				var pieces: PackedStringArray = connected.split(".")
-				handlers[pieces[pieces.size() - 1].strip_edges()] = true
-	var names: PackedStringArray = PackedStringArray()
+			if connected.is_empty():
+				continue
+			if _is_lambda(connected):
+				for parameter: String in _parameters_of(connected):
+					if not names.has(parameter):
+						names.append(parameter)
+				continue
+			var pieces: PackedStringArray = connected.split(".")
+			handlers[pieces[pieces.size() - 1].strip_edges()] = true
 	for line: String in statements:
 		if not line.begins_with("func "):
 			continue
