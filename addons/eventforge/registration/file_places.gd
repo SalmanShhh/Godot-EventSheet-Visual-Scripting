@@ -126,15 +126,28 @@ const OPEN_CALL_PREFIX := "FileAccess.open"
 ## property - and following every one of those would be following the whole language. These five
 ## names belong to Image alone in the engine's own API and each takes the path as its FIRST argument,
 ## which is what makes matching the method enough.
+##
+## THE LIST IS THE ENGINE'S, and the suite asks the engine rather than a reader: every `Image` method
+## whose name begins with `save_` and does not end in `_to_buffer` writes a file and belongs here.
+## `save_jpeg` sat in this list and is not a method Godot has - the spelling is `save_jpg` - so a
+## reader who trusted it was promised a call would be caught that never could be, while `save_dds`,
+## which is real, was missed.
 const IMAGE_WRITE_CALLS: PackedStringArray = [
-	".save_png(", ".save_jpg(", ".save_jpeg(", ".save_webp(", ".save_exr(",
+	".save_png(", ".save_jpg(", ".save_webp(", ".save_exr(", ".save_dds(",
 ]
 
 ## A SETTINGS FILE IS WRITTEN THROUGH A NAME, exactly as an archive is: `var config := ConfigFile.new()`
 ## on one line and `config.save(path)` on another. So the name is followed rather than the call text
 ## matched - which is also what keeps `ResourceSaver.save(` above from being counted twice.
+##
+## ALL THREE OF ITS WRITERS, for the same reason `FileAccess.open_encrypted_with_pass` is in the list
+## above: a settings file written with a password is still a settings file, and `save_encrypted_pass`
+## does not contain `.save(`, so a check reading only the plain spelling was blind to exactly the
+## write a game that encrypts its settings makes every time it saves.
 const CONFIG_CLASS := "ConfigFile.new("
-const SAVE_CALL := ".save("
+const CONFIG_SAVE_CALLS: PackedStringArray = [
+	".save(", ".save_encrypted(", ".save_encrypted_pass(",
+]
 
 ## The archive writer, and the call that names the file it writes. An archive written to res:// is
 ## the export trap said one more way - and the files band already reads a packing row as WRITTEN off

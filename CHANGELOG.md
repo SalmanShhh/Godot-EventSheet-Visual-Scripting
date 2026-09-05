@@ -5025,6 +5025,16 @@ A boundary review read the three lift families, the guards and the pages against
   which is why the byte gate above could never have caught it. A trailing comment is refused the way
   the `PackedScene.new()` and `ResourceSaver.save` lines beside it already refuse one; a hash inside
   a string (`get_node("Level#1")`) is not a comment and the run is still the row.
+- **The write sweep's method names are the engine's now, and the suite asks the engine.** The
+  picture-writer list held `Image.save_jpeg`, which is not a method Godot has - the spelling is
+  `save_jpg` - so the check promised to catch a call nobody can write, while `save_dds`, which is
+  real, went unseen. `ConfigFile.save_encrypted` and `save_encrypted_pass` were missing for a
+  sharper reason: a settings file is followed by its NAME and then matched on `.save(`, which
+  `save_encrypted_pass` does not contain, so the one write a game that encrypts its settings makes
+  every time raised nothing at all when it was aimed at `res://`. Both lists are pinned by value and
+  then held against `ClassDB` in both directions - nothing in them the engine does not have, and
+  nothing the engine has that they do not - so the next `save` method Godot grows fails the suite
+  rather than going quiet.
 
 
 ### Every call on a known class is a row

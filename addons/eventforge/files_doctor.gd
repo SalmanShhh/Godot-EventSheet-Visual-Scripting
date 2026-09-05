@@ -184,8 +184,8 @@ static func res_write_lines(source: String) -> PackedStringArray:
 		var literals: PackedStringArray = _write_path_literals(line)
 		literals.append_array(_handle_call_literals(line, packers,
 			EventForgeFilePlaces.OPEN_CALL))
-		literals.append_array(_handle_call_literals(line, configs,
-			EventForgeFilePlaces.SAVE_CALL))
+		for save_call: String in EventForgeFilePlaces.CONFIG_SAVE_CALLS:
+			literals.append_array(_handle_call_literals(line, configs, save_call))
 		literals.append_array(_folder_handle_literals(line, folders))
 		for literal: String in literals:
 			if EventForgeFilePlaces.place_of("\"%s\"" % literal) == EventForgeFilePlaces.PLACE_RES:

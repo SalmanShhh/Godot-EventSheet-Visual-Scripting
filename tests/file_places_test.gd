@@ -479,6 +479,7 @@ static func _test_doctor_checks() -> bool:
 		EventSheetFilesDoctor.res_write_lines("func shoot() -> void:\n\tvar shot ="
 			+ " get_viewport().get_texture().get_image()\n\tshot.save_png(\"user://shot.png\")\n"),
 		PackedStringArray()) and passed
+	passed = _test_the_write_calls_are_the_engines() and passed
 
 	var unguarded: Array[Dictionary] = EventSheetFilesDoctor.unguarded_read_findings(
 		{"res://trap.gd": BUG_UNGUARDED})
@@ -506,6 +507,93 @@ static func _test_doctor_checks() -> bool:
 			passed = _check("%s offers %s" % [str(pair[0]), str(pair[1])],
 				str((offered[0] as Dictionary).get("id", "")), str(pair[1])) and passed
 	return passed
+
+
+## THE WRITE VOCABULARY, ASKED OF THE ENGINE RATHER THAN OF A READER. A hand-kept list of method
+## names is a list that drifts, and it had: `Image.save_jpeg` was in it and is not a method Godot
+## has, so the check promised to catch a call that cannot be written, while `save_dds`, which is
+## real, was missed - and `ConfigFile.save_encrypted_pass` does not contain `.save(`, so the one
+## write a game that encrypts its settings makes was invisible. The lists are pinned by VALUE below,
+## and then held against `ClassDB` in both directions: nothing in them the engine does not have, and
+## nothing the engine has that they do not.
+static func _test_the_write_calls_are_the_engines() -> bool:
+	var passed: bool = _check("the picture writers are the five the engine has",
+		P.IMAGE_WRITE_CALLS,
+		PackedStringArray([".save_png(", ".save_jpg(", ".save_webp(", ".save_exr(", ".save_dds("]))
+	passed = _check("and a settings file is written all three of its ways",
+		P.CONFIG_SAVE_CALLS,
+		PackedStringArray([".save(", ".save_encrypted(", ".save_encrypted_pass("])) and passed
+	passed = _check("every picture writer named is a method Image really has",
+		_absent_from_class("Image", P.IMAGE_WRITE_CALLS), PackedStringArray()) and passed
+	passed = _check("and every settings writer named is one ConfigFile really has",
+		_absent_from_class("ConfigFile", P.CONFIG_SAVE_CALLS), PackedStringArray()) and passed
+	# The other direction, which is the one that goes stale on its own: a `save` method the engine
+	# grows is a write nothing here would see. A `_to_buffer` twin answers with bytes and writes no
+	# file, which is why it is not one of these.
+	passed = _check("and no picture writer the engine has is missing",
+		_writers_of("Image"), _named_in(P.IMAGE_WRITE_CALLS)) and passed
+	passed = _check("nor any settings writer", _writers_of("ConfigFile"),
+		_named_in(P.CONFIG_SAVE_CALLS)) and passed
+
+	passed = _check("an encrypted settings file saved to res:// is the export trap too",
+		EventSheetFilesDoctor.res_write_lines("func save() -> void:
+	var config ="
+			+ " ConfigFile.new()
+	config.save_encrypted_pass(\"res://settings.cfg\", \"key\")
+"),
+		PackedStringArray(["config.save_encrypted_pass(\"res://settings.cfg\", \"key\")"])) and passed
+	passed = _check("and one saved with a key",
+		EventSheetFilesDoctor.res_write_lines("func save() -> void:
+	var config ="
+			+ " ConfigFile.new()
+	config.save_encrypted(\"res://settings.cfg\", key)
+").size(),
+		1) and passed
+	passed = _check("a DDS written into the project folder is reported",
+		EventSheetFilesDoctor.res_write_lines("func shoot() -> void:
+	var shot ="
+			+ " get_viewport().get_texture().get_image()
+	shot.save_dds(\"res://shot.dds\")
+"),
+		PackedStringArray(["shot.save_dds(\"res://shot.dds\")"])) and passed
+	passed = _check("while an encrypted settings file under user:// is the right thing to do",
+		EventSheetFilesDoctor.res_write_lines("func save() -> void:
+	var config ="
+			+ " ConfigFile.new()
+	config.save_encrypted_pass(\"user://settings.cfg\", \"key\")
+"),
+		PackedStringArray()) and passed
+	return passed
+
+
+## The names in a call list, with the dot and the bracket taken off, sorted.
+static func _named_in(calls: PackedStringArray) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for call_text: String in calls:
+		names.append(call_text.trim_prefix(".").trim_suffix("("))
+	names.sort()
+	return names
+
+
+## The names in a call list the class does not have, sorted. Empty is the answer that passes.
+static func _absent_from_class(class_text: String, calls: PackedStringArray) -> PackedStringArray:
+	var absent: PackedStringArray = PackedStringArray()
+	for name: String in _named_in(calls):
+		if not ClassDB.class_has_method(class_text, name, true):
+			absent.append(name)
+	return absent
+
+
+## Every method of a class that writes a FILE and is spelled `save...`, sorted. A `_to_buffer` twin
+## answers with bytes and writes nothing, which is why it is not one of these.
+static func _writers_of(class_text: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for method: Dictionary in ClassDB.class_get_method_list(class_text, true):
+		var name: String = str(method.get("name", ""))
+		if name.begins_with("save") and not name.ends_with("_to_buffer"):
+			names.append(name)
+	names.sort()
+	return names
 
 
 # ── 6. The fixes, and their receipts ─────────────────────────────────────────────────────────
