@@ -176,6 +176,76 @@ Define Moment is game-wide: one row at startup and every Juice node's Moment row
 Point the same name at a different file later - during a boss fight, in a nightmare level - and every
 row that plays it changes with it.
 
+### A moment written as rows
+
+A file is the right home for a beat whose steps all happen at once. A beat with TIMING in it - the
+shake now, the sound a frame later, the scale settling only once the sound has finished - wants to
+be read in order, and that is what a **Moment block** is: a block of rows in the sheet whose
+children are its steps, a timing word on the left and any actions at all on the right.
+
+```
+Moment  impact  (strength, from)
+  At 0 s          -> Enemy | JuiceBehavior: Moment Step  "shake"  0.4
+  At 0.05 s       -> Enemy | Audio: Play Sound  "hit.ogg"
+  Hold, then 0.1 s -> Enemy | Tween: Scale To  1.0  over  0.2 s
+```
+
+The four timing words are the whole grammar:
+
+| Word | When the step runs |
+|---|---|
+| At | That many seconds after the moment began. Two steps At the same number happen together. |
+| Then | That many seconds after the step above it started. |
+| Hold | When the slowest step above has finished, plus a delay of its own. |
+| Loop Back | Back to the last Hold (or the top) for that many more passes. |
+
+A step that says how long it lasts is what a Hold waits for; a step that says nothing counts as
+instant, which is the common case. Reorder the steps by dragging the rows, the way you reorder any
+rows - there is no widget in the block to press.
+
+The block compiles to one ordinary coroutine on the host - `func moment_impact(strength: float =
+1.0, from: Node = null)` - so what a sheet plays is a function a hand-written script could have
+held, and a hand-written one of that shape opens back as the block. **Moment "impact"** plays it:
+the row looks for a moment written as rows on the host first and falls through to a file when there
+is none, so a game can keep some of its beats in files and write the rest down in the sheet without
+either row knowing the difference.
+
+**Starting one.** Right-click empty space in the sheet and pick **New Moment…**; the name you give
+it is the name the Moment row plays it by. **Add Step…** on the block head (or on any of its steps)
+asks for the timing word, its number, and the first thing the step does - everything after that is
+the sheet's own gestures: more actions on the row, drag to reorder, **Delete Step** to take one off.
+Every one of them is a single Ctrl+Z.
+
+Right-click the block head for the two doors between the homes:
+
+- **Save Moment As File…** writes the steps out as a `MomentResource`. A file has no timing and
+  knows only the ten step words, so a block with a Hold in it, or a step that spawns something, is
+  named in the refusal rather than quietly dropped - keep that beat as a block.
+- **Open Moment File As Block…** reads a file back as a block whose steps all start together, which
+  is exactly what the file meant. Give them a Then or a Hold afterwards and the beat is yours. The
+  same item sits on the sheet's empty-space menu, for the first block in a sheet that has none.
+
+### Where it happened, and how far it reaches
+
+A moment played on every enemy in a room is one beat felt ten times over. **Play Moment At** takes a
+place and a range instead: the strength falls off between the two, and a moment that happened
+outside the range does not play at all.
+
+```
+On Explosion
+  -> Player | JuiceBehavior: Moment "kill" at 1.0 from *Bomb* within 600 (smooth)
+```
+
+The falloff is a word on the row - `linear` is a straight line to the edge, `smooth` rounds the
+shoulders so a near blast keeps more of itself, `none` holds full strength right up to the edge -
+and the distance is measured once per play, from the place to whoever is watching (the active
+camera, or the host itself in a game with no camera). A range of 0 is no range: the moment plays
+everywhere at full strength, exactly as Moment does.
+
+**Set Moment Strength** is the other dial: one number every moment this node plays is scaled by,
+for a quiet scene at 0.4, a boss fight at 1.5, or whatever the player chose in the options menu.
+**Moment Strength** answers what that number is.
+
 ### Moments and Reduce Flashing
 
 Every moment obeys the player's accessibility answer. When the built-in **Set No Flashing** row has
@@ -243,6 +313,9 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Set Ticker | `ticker_name` (String), `value` (float) | Sets a display value instantly (cancelling any roll) - initialise at 0, or snap on reset. |
 | Moment | `moment_name` (String), `strength` (float) | Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount a player sees, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack. Opens at impact, 1. |
 | Define Moment | `moment_name` (String), `moment` (Resource) | Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it for a moment kept elsewhere in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again. |
+| Play Moment At | `moment_name` (String), `strength` (float), `from` (Node), `within` (float), `falloff` (String) | Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Opens at impact, 1, 600, linear. |
+| Set Moment Strength | `value` (float) | Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. The moments themselves are untouched. Opens at 1. |
+| Moment Step | `verb` (String), `amount` (float), `effect` (String), `seconds` (float), `strength` (float) | Plays ONE step of a moment with no file behind it - the same step a moment file holds, played by the same code. Use it to write a beat straight into a sheet, or as the step of a Moment block. Opens at shake, 0.4, 0, 1. |
 
 ### Conditions
 
@@ -259,6 +332,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Trauma | (none) | float | The current trauma level, 0 to 1 - drive a rumble strength or a shaking HUD element from it. |
 | Ticker Value | `ticker_name` (String) | float | What a ticker currently SHOWS - the eased value Count To is rolling. Print or draw this instead of the real variable. |
 | Chromatic Shake Magnitude | (none) | float | How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing. Zero when nothing is shaking - drive a rumble or a HUD wobble from it and the whole hit reads as one thing. |
+| Moment Strength | (none) | float | The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written. |
 
 ### Triggers
 
