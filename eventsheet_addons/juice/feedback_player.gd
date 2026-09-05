@@ -1168,7 +1168,7 @@ func _do_step(card: Dictionary, at_strength: float) -> void:
 	var at: float = at_strength * maxf(strength, 0.0)
 	match word:
 		TWEEN_PROPERTY:
-			_tween_property(effect, MomentRunner.scaled(amount, at), MomentRunner.seconds_of(seconds))
+			_tween_property(effect, amount * at, maxf(seconds, 0.0))
 		EMIT_SIGNAL:
 			on_feedback_signal.emit(effect)
 		PLAY_PLAYER:
@@ -1214,6 +1214,13 @@ func _tween_property(property: String, value: float, seconds: float) -> void:
 	var before: Variant = host.get(property)
 	if before == null:
 		push_warning("Feedback Player: %s has no property called \"%s\", so that step did nothing." % [host.name, property])
+	# The no-flashing ceiling and floor belong to the words a player SEES, and the runner beside
+	# this file holds that list for every home a moment has. None of this node's own three words
+	# is one of them: a property tween's target is a position, a width or an angle, a signal
+	# carries no amount at all, and a nested player is handed a strength rather than an amplitude.
+	# Holding a tween to 200 pixels down to 0.3 would not be less flashing, it would be the wrong
+	# number. The ten moment words below ARE in the list, and the Juice node holds them to it as
+	# they arrive.
 		return
 	_restore_to.append({"object": host, "property": property, "value": before})
 	if seconds <= 0.0:

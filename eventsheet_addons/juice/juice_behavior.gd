@@ -298,8 +298,12 @@ const MOMENT_VERBS: PackedStringArray = ["shake", "hitstop", "slowmo", "flash", 
 ## these are scaled by the strength on the row and held under the ceiling: a hitstop's freeze scale,
 ## a slowmo's time scale and a zoom's percentage are numbers of a different kind, and doubling one of
 ## those would not mean twice as much of anything.
-const MOMENT_AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",
-	"chromatic", "pulse", "hold"]
+##
+## The list itself lives in the moment runner beside this pack. A moment has three homes - a block
+## of rows, a moment file, and the list a feedback node holds - and a word held to the ceiling in
+## one of them and not in another would be a different beat depending on where somebody wrote it
+## down. The name stays here so a sheet that already reads it goes on reading it.
+const MOMENT_AMPLITUDE_VERBS: PackedStringArray = MomentRunner.AMPLITUDE_VERBS
 
 ## Moments defined by name, shared by every Juice node in the game, because a moment is a fact about
 ## the game rather than about one object: Define Moment once at startup and every node's Moment row

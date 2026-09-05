@@ -49,7 +49,25 @@ const FLASH_FLOOR_SECONDS: float = 0.4
 ## hitstop has already let the frame go, a shockwave has already crossed the screen: there is no
 ## half of one of those to undo, so the way back steps over them rather than playing them again.
 ## Every other word writes a value, and a value can be walked home.
+##
+## This is NOT the same question as touched_by below, and punch and hitstop answer both. One
+## way is about the way BACK: there is no half of a punch or a freeze to play in reverse, so
+## the revert walk steps over them. Touched by is about the value each one WROTE: a punch left
+## a scale behind and a hitstop left a time scale, and a Restore puts those back. A step can
+## leave nothing to replay and still leave something to put right.
 const ONE_WAY_VERBS: PackedStringArray = ["shake", "hitstop", "punch", "shockwave", "chromatic"]
+
+## The step words whose amount is an AMPLITUDE - how much of something a player SEES, from none
+## of it to all of it. ONLY these are held under the ceiling and over the floor above, because
+## only these are what a no-flashing setting is about. A hitstop's freeze fraction, a slowmo's
+## time scale, a zoom's percentage and the value a property is walked to are numbers of other
+## kinds: holding one of those to 0.3 would not be less flashing, it would be the wrong number.
+##
+## ONE list, here, because a moment has three homes - a block of rows, a moment file, and the
+## list a feedback node holds - and a word held to the ceiling in one of them and not in another
+## would be a different beat depending on where somebody wrote it down.
+const AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",
+	"chromatic", "pulse", "hold"]
 
 ## The names the values a moment writes are kept under, so the beat that recorded one and the row
 ## that puts it back are spelling the same thing. A post effect's key carries the effect's own
@@ -143,6 +161,11 @@ static func seconds_of(seconds: float) -> float:
 ## Whether this player has asked for no flashing.
 static func no_flashing() -> bool:
 	return bool(Engine.get_meta(NO_FLASHING_META, false))
+
+## Whether one step word's amount is an amplitude, and so whether the ceiling and the floor have
+## anything to say about it at all. The one question every home of a moment asks before clamping.
+static func is_amplitude(verb: String) -> bool:
+	return AMPLITUDE_VERBS.has(verb.strip_edges().to_lower())
 
 ## How much of the strength survives one distance. Pure arithmetic, so it is the piece a test can
 ## pin without a camera, a viewport or a frame: 1 at the middle, 0 at the edge and beyond, and the
