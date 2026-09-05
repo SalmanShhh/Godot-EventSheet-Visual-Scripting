@@ -158,7 +158,6 @@ var _region_fix_notes: Array[EventRowData] = []
 const PATTERN_CHIP_MARK := "⟡"
 
 # Compiled once and shared: both of these run per row (or per action) on the paint path.
-static var _await_loop_regex: RegEx = null
 static var _super_call_regex: RegEx = null
 
 # The rest of this file's matchers, likewise compiled once. Every one of these used to be built
@@ -10738,34 +10737,14 @@ static func _trimmed_seconds(text: String) -> String:
 ## The seconds a function body loops on when it IS the await spelling of Every X seconds - a body
 ## whose first two statements are `while true:` and `await get_tree().create_timer(X).timeout`.
 ## "" for every other body, so nothing else is ever re-titled.
+##
+## The SHAPE is the lifter's, asked here rather than spelled a second time: the lift leaves such a
+## function verbatim precisely so this card can be titled with its beat, and a reader that disagreed
+## with it about which bodies qualify would be a function that lifts and then reads as a helper. Only
+## the display spelling of the number is this file's own.
 static func await_loop_seconds(code: String) -> String:
-	var lines: PackedStringArray = code.split("\n")
-	var header_index: int = -1
-	for index: int in range(lines.size()):
-		var text: String = lines[index].strip_edges()
-		if text.is_empty():
-			continue
-		if not text.begins_with("func ") and not text.begins_with("static func "):
-			return ""
-		header_index = index
-		break
-	if header_index < 0:
-		return ""
-	var body: PackedStringArray = PackedStringArray()
-	for index: int in range(header_index + 1, lines.size()):
-		if not lines[index].strip_edges().is_empty():
-			body.append(lines[index].strip_edges())
-	if body.size() < 2 or body[0] != "while true:":
-		return ""
-	# Compiled once and shared: this runs for every function card the canvas paints.
-	if _await_loop_regex == null:
-		_await_loop_regex = RegEx.new()
-		if _await_loop_regex.compile("^await get_tree\\(\\)\\.create_timer\\((.+)\\)\\.timeout$") != OK:
-			return ""
-	var await_match: RegExMatch = _await_loop_regex.search(body[1])
-	if await_match == null:
-		return ""
-	return _trimmed_seconds(await_match.get_string(1).strip_edges())
+	var seconds: String = EventSheetACELifter.await_beat_seconds(code)
+	return seconds if seconds.is_empty() else _trimmed_seconds(seconds)
 
 
 # ── `super` reads as calling the included sheet ─────────────────────────────────────────────────

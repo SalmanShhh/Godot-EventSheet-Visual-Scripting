@@ -79,6 +79,25 @@
   and the guide says so.
 
 
+### Fixed in the opened-script reading
+
+- **A wired handler reads as its trigger again, and a `while true: await` body as the beat it is.**
+  Three readings the notes promise had quietly stopped happening on hand-written scripts: a
+  repeating Timer's handler (`⟳ System  Every 2 seconds (SpawnTimer)`), a one-shot's (`On Timeout`),
+  and the await spelling of a beat (`⟳ System  Every 0.5 seconds  (while running)`). All three had
+  become plain functions filed under the Helpers bar, and the connect line above them re-read as a
+  Wire action. The trailing lift reads only the connects at the TOP of a `_ready`, and a
+  hand-written one opens with `super._ready()` or a `wait_time` line, so that map was empty and every
+  handler under it looked like a helper - and lifting one as a helper SPENDS it, because the
+  mid-file pass, which does read the whole file's connects and would have anchored it as its
+  trigger, never sees it again. A handler the file wires is now left for that pass, and a
+  `while true: await ...` body stays the verbatim card its beat title is drawn over. Only ever when
+  the run has collected nothing, though: re-anchoring throws away everything lifted so far, and a
+  handler sitting after a run of lifted verbs is not worth the file degrading to code blocks. The
+  shape is spelled once now, in the lifter, and the canvas asks it rather than keeping a second copy
+  that could drift.
+
+
 ### Fixed after a reading of the shapes and inspector pass
 
 - **A dashed ring's dashes are as wide as the ring.** A dash is cut across the stroke it rides, and

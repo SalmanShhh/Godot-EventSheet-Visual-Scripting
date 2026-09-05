@@ -594,7 +594,28 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						else:
 							failed = true
 				else:
-					if not lift_functions:
+					# A function this file WIRES is a handler, and a `while true: await ...` body is a beat.
+					# Neither is a helper, and the trailing scan cannot say so: its connection map reads only
+					# the leading connects of a `_ready` in the tail, so a hand-written `_ready` (which puts
+					# `super._ready()` or a `wait_time` line first) leaves the map empty and every handler
+					# below it looks like a plain function. Lifting one here SPENDS it: it becomes an
+					# EventFunction, and the mid-file pass - which does read the whole file's connects, and
+					# would have anchored it as its trigger - never sees it again.
+					#
+					# So hand it to that pass instead, by leaving it raw. Only ever when this run is still
+					# EMPTY, though: re-anchoring throws away everything collected so far, and a handler
+					# sitting after a run of lifted verbs is not worth the whole file degrading to code
+					# blocks (43 verbatim rows in one pack, measured). Nothing collected, nothing lost - the
+					# run simply re-anchors one row on. The handler case is asked with the anchor itself,
+					# byte gate and all, so a handler that could not anchor cleanly is not left raw for a
+					# pass that would refuse it too.
+					var nothing_lost: bool = lifted_events.is_empty() and lifted_functions.is_empty()
+					var wired_handler: bool = nothing_lost \
+							and _is_connected_handler(header, all_connections) \
+							and not _anchor_handler_events(row, all_connections, sheet.tool_mode).is_empty()
+					if wired_handler or (nothing_lost and not await_beat_seconds(row.code).is_empty()):
+						failed = true
+					elif not lift_functions:
 						failed = true  # event-only pass: helper funcs stay raw; the run restarts after
 					else:
 						var function_lift: Dictionary = _lift_sheet_function(row.code.split("\n"), pending_annotations, false, pending_annotation_lines, pending_doc_comment)
@@ -756,6 +777,12 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			# hide load-bearing boilerplate inside the Functions panel. Private HELPERS
 			# (`_get_pool`) still lift - only known virtual names are excluded.
 			if _is_engine_virtual_header(mid_header):
+				mid_index += 1
+				continue
+			# A beat written as `while true: await ...` is a TRIGGER, not a verb with a name: the canvas
+			# titles the card with the beat it keeps. Anchoring it as a function here would spend it the
+			# same way the trailing scan would, so it stays the verbatim card that reading is drawn over.
+			if not await_beat_seconds(mid_row.code).is_empty():
 				mid_index += 1
 				continue
 			# A `## @ace_*` block, a plain `##` doc, or an `@rpc`-style annotation right above
@@ -3399,6 +3426,47 @@ static func _is_known_connect_line(line: String, connections: Dictionary) -> boo
 		return false
 	var claimed: Variant = connections.get(str(parsed["handler"]))
 	return claimed is Dictionary and str((claimed as Dictionary).get("line", "")) == line
+
+
+# Compiled once and shared: the canvas asks this of every function card it paints.
+static var _await_beat_regex: RegEx = null
+
+
+## The seconds a function body loops on when it IS the await spelling of a repeating beat - a body
+## whose first two statements are `while true:` and `await get_tree().create_timer(X).timeout`.
+## "" for every other body, so nothing else is ever claimed.
+##
+## THE ONE SPELLING OF THAT SHAPE, because two readers ask about it and they have to agree: the lift
+## leaves such a function verbatim (it is a beat, not a helper - its header is a trigger rather than
+## a name), and the canvas titles that verbatim card with the beat. Spelled twice, the two would
+## drift into a function that lifts here and then reads as a helper there.
+static func await_beat_seconds(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	var header_index: int = -1
+	for index: int in range(lines.size()):
+		var text: String = lines[index].strip_edges()
+		if text.is_empty():
+			continue
+		if not text.begins_with("func ") and not text.begins_with("static func "):
+			return ""
+		header_index = index
+		break
+	if header_index < 0:
+		return ""
+	var body: PackedStringArray = PackedStringArray()
+	for index: int in range(header_index + 1, lines.size()):
+		if not lines[index].strip_edges().is_empty():
+			body.append(lines[index].strip_edges())
+	if body.size() < 2 or body[0] != "while true:":
+		return ""
+	if _await_beat_regex == null:
+		_await_beat_regex = RegEx.new()
+		if _await_beat_regex.compile("^await get_tree\\(\\)\\.create_timer\\((.+)\\)\\.timeout$") != OK:
+			return ""
+	var await_match: RegExMatch = _await_beat_regex.search(body[1])
+	if await_match == null:
+		return ""
+	return await_match.get_string(1).strip_edges()
 
 
 ## The plain function names the file under lift declares, so a call to one of them can be read as the
