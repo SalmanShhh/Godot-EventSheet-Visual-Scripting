@@ -643,6 +643,11 @@ has nothing to be checked against and is passed over in silence rather than repo
 - **Set Condition does not move the machine.** It writes a boolean the transitions read; the tree
   decides when to advance. If nothing moves, the transition is not drawn to advance on that
   condition.
+- **The state-machine rows address the tree's ROOT machine.** Travel To State, Jump To, Current
+  State Is, Is In Any State, Time In State and the two state moments all go through
+  `parameters/playback`, which is the root machine's own playback object. A state machine nested
+  inside another one keeps its playback at `parameters/<its node name>/playback` - the Tree
+  Parameter reading fetches that; these rows do not reach it.
 - **The look-at modifier has to exist.** Point Bone At in 3D sets dials on a `LookAtModifier3D` under
   the skeleton. There is no row that creates one, because a modifier's place in the modifier stack is
   a rig decision.

@@ -3582,7 +3582,7 @@ Play One-Shot Animation,Проиграть одиночную анимацию
 "Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","Запускает одиночную анимацию на дереве смешивания - выстрел, реакцию на удар, взмах рукой - поверх того, что персонаж уже делает."
 One-shot,Одиночная анимация
 Current State Is,Текущее состояние
-True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,"Истинно, пока машина состояний дерева смешивания находится в названном состоянии - на этом ветвятся отход после приземления или окно атаки."
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.,"Истинно, пока машина состояний дерева смешивания находится в названном состоянии - на этом ветвятся отход после приземления или окно атаки. Речь о КОРНЕВОЙ машине состояний дерева: машина, вложенная в другую, не затрагивается."
 Set Hearing Distance (3D),Задать дальность слышимости (3D)
 Audio,Звук
 Sets how far a 3D positional sound carries. Past this distance it is silent.,"Задаёт, как далеко разносится позиционный 3D-звук. Дальше этого расстояния он не слышен."

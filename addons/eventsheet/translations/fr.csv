@@ -3582,7 +3582,7 @@ Play One-Shot Animation,Jouer une animation ponctuelle
 "Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","Déclenche une animation ponctuelle sur un arbre de mélange - un tir, une réaction à un coup, un signe de la main - par-dessus ce que le personnage fait déjà."
 One-shot,Animation ponctuelle
 Current State Is,L'état actuel est
-True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,Vrai tant que la machine à états d'un arbre de mélange est dans l'état nommé - ce sur quoi se branche une récupération d'atterrissage ou une fenêtre d'attaque.
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.,Vrai tant que la machine à états d'un arbre de mélange est dans l'état nommé - ce sur quoi se branche une récupération d'atterrissage ou une fenêtre d'attaque. Il s'agit de la machine à états RACINE de l'arbre : une machine imbriquée dans une autre n'est pas atteinte.
 Set Hearing Distance (3D),Définir la distance d'audition (3D)
 Audio,Audio
 Sets how far a 3D positional sound carries. Past this distance it is silent.,"Définit jusqu'où porte un son positionnel 3D. Au-delà de cette distance, il est muet."

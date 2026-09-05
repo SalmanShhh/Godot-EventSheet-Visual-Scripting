@@ -3582,7 +3582,7 @@ Play One-Shot Animation,원샷 애니메이션 재생
 "Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","블렌드 트리에서 원샷 애니메이션을 실행합니다. 사격, 피격 반응, 손 흔들기 같은 동작을 캐릭터가 이미 하고 있는 동작 위에 겹칩니다."
 One-shot,원샷
 Current State Is,현재 상태가
-True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,블렌드 트리의 상태 머신이 지정한 상태에 있는 동안 참입니다. 착지 경직이나 공격 판정 구간을 분기할 때 씁니다.
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.,블렌드 트리의 상태 머신이 지정한 상태에 있는 동안 참입니다. 착지 경직이나 공격 판정 구간을 분기할 때 씁니다. 트리의 루트 상태 머신을 가리킵니다. 다른 상태 머신 안에 중첩된 것에는 닿지 않습니다.
 Set Hearing Distance (3D),들리는 거리 설정 (3D)
 Audio,오디오
 Sets how far a 3D positional sound carries. Past this distance it is silent.,3D 위치 사운드가 어디까지 닿는지 설정합니다. 이 거리를 넘으면 들리지 않습니다.

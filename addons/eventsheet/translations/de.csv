@@ -3582,7 +3582,7 @@ Play One-Shot Animation,Einmal-Animation abspielen
 "Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","Löst auf einem Blend Tree eine Einmal-Animation aus - ein Schuss, eine Trefferreaktion, ein Winken - über dem, was die Figur ohnehin gerade tut."
 One-shot,Einmal-Animation
 Current State Is,Aktueller Zustand ist
-True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,"Wahr, solange die Zustandsmaschine eines Blend Trees im genannten Zustand ist - worauf eine Landeerholung oder ein Angriffsfenster verzweigt."
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.,"Wahr, solange die Zustandsmaschine eines Blend Trees im genannten Zustand ist - worauf eine Landeerholung oder ein Angriffsfenster verzweigt. Gemeint ist die WURZEL-Zustandsmaschine des Baums: eine in einer anderen verschachtelte Maschine wird nicht erreicht."
 Set Hearing Distance (3D),Hörweite setzen (3D)
 Audio,Audio
 Sets how far a 3D positional sound carries. Past this distance it is silent.,"Legt fest, wie weit ein 3D-Klang mit Position trägt. Jenseits dieser Entfernung ist er stumm."

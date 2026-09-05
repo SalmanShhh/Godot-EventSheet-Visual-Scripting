@@ -3582,7 +3582,7 @@ Play One-Shot Animation,播放一次性动画
 "Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.",在混合树上触发一次性动画 - 开枪、受击反应、挥手 - 叠加在角色当前正在做的动作之上。
 One-shot,一次性动画
 Current State Is,当前状态为
-True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,当混合树的状态机处于指定状态时为真 - 落地硬直或攻击判定窗口就以此分支。
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.,当混合树的状态机处于指定状态时为真 - 落地硬直或攻击判定窗口就以此分支。这里指的是树的根状态机：嵌套在另一个状态机中的状态机不会被触及。
 Set Hearing Distance (3D),设置可听距离（3D）
 Audio,音频
 Sets how far a 3D positional sound carries. Past this distance it is silent.,设置 3D 位置音效能传多远。超过这个距离就完全听不见了。

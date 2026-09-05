@@ -3257,18 +3257,18 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 #### Triggers
 - **On Animation Frame** (`animation: String, frame: String`) - Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.
 - **On Animation Event** (`event_name: String`) - Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.
-- **On State Entered** - Runs the moment the state machine enters a state, with the state's name handed to the event. The state machine's own answer to "the swing has started" - no polling, no per-frame question.
-- **On State Left** - Runs the moment the state the machine was in finishes, with its name handed to the event - the recovery that begins when the swing ends.
+- **On State Entered** - Runs the moment the state machine enters a state, with the state's name handed to the event. The state machine's own answer to "the swing has started" - no polling, no per-frame question. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
+- **On State Left** - Runs the moment the state the machine was in finishes, with its name handed to the event - the recovery that begins when the swing ends. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
 - **On Animation Reached Marker** (`animation: String, marker: String`) - Runs on the one frame a clip's play head crosses a named moment on its timeline - the frame the hit lands on. Applying it adds the crossing as a condition you can see and edit, so the moment is a row rather than a number nobody can find.
 
 #### Conditions
 - **Has Animation** (`animation: String, target: String`) - True when this player owns a clip by that name - guard a Play so a missing animation never errors.
 - **Is Playing** (`target: String`) - True while this animation player is running an animation.
-- **Current State Is** (`state: String, target: String`) - True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.
+- **Current State Is** (`state: String, target: String`) - True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
 - **Is Between** (`animation: String, from_time: String, to_time: String, target: String`) - True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.
 - **Is Animation Frame** (`animation: String, frame: String, target: String`) - True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.
 - **Reached Marker** (`animation: String, marker: String, target: String`) - True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.
-- **Is In Any State** (`states: String, target: String`) - True while the state machine is in ANY of the states listed - the attack that may start from a stand or a run, the interrupt that only some states allow. The single-state question already ships beside it.
+- **Is In Any State** (`states: String, target: String`) - True while the state machine is in ANY of the states listed - the attack that may start from a stand or a run, the interrupt that only some states allow. The single-state question already ships beside it. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
 - **Just Reached Marker** (`animation: String, marker: String, target: String`) - True on the ONE frame the play head crosses a named moment, and false on every frame after it - the difference between "the hit has landed" and "the hit landed a while ago". Reached Marker beside it stays true for the rest of the clip, which is the right question for a window rather than for a moment.
 
 #### Actions
@@ -3282,7 +3282,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Play One-Shot Animation** (`name: String, target: String`) - Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.
 - **Pause For** (`seconds: String, target: String`) - Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.
 - **Play Then** (`animation: String, next: String, target: String`) - Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.
-- **Jump To** (`state: String, target: String`) - Puts the state machine into a state at once, ignoring every transition between here and there - a respawn, a cutscene cut, a hard reset. Travel To State is the everyday one; this is the cut.
+- **Jump To** (`state: String, target: String`) - Puts the state machine into a state at once, ignoring every transition between here and there - a respawn, a cutscene cut, a hard reset. Travel To State is the everyday one; this is the cut. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
 - **Set Blend Position** (`space: String, value: Vector2, target: String`) - Moves where a blend space is sampled - the stick's direction into a walk-run-turn space, the aim height into a lean. A one-dimensional space takes a number and a two-dimensional one takes a Vector2; the field lists the spaces the tree really has.
 - **Blend Toward** (`space: String, value: Vector2, seconds: String, target: Node`) - The same move, taken over time instead of at once - the stick snaps, the blend should not. A tween on the tree's own parameter, so nothing has to be stepped by hand. Asked again while the last one is still walking, it takes the last one off first: an every-tick row leaves one tween moving the blend, not one per frame all pulling at the same number.
 - **Blend Layer** (`layer: String, amount: String, seconds: String, target: Node`) - Mixes a layer in or out over time - the aim pose that fades on when a target is locked, the hurt overlay that fades off. The layer is a Blend2 or an Add2 in the tree, and the amount is 0 for none of it and 1 for all of it. Asked again while the last one is still walking, it takes the last one off first, so a row in a tick event leaves one tween moving the layer rather than one per frame.
@@ -3295,7 +3295,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Animation Position** (`target: String`) - How many seconds into the current animation the play head is - sync an effect to a frame or drive a progress bar.
 - **Animation Length** (`target: String`) - The current animation's total length in seconds - pair with Animation Position for a normalized 0-to-1 progress.
 - **Animation Speed** (`target: String`) - The player's current speed scale (1 = normal).
-- **Time In State** (`target: String`) - How many seconds the state machine has been playing its current state - the number a recovery window, a charge-up or a progress bar is measured against.
+- **Time In State** (`target: String`) - How many seconds the state machine has been playing its current state - the number a recovery window, a charge-up or a progress bar is measured against. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
 
 ### Around Objects (`res://addons/eventforge/registration/modules/around_objects_aces.gd`)
 the things AROUND an object: picking, layers and Z order, text, the browser.
@@ -3622,7 +3622,7 @@ Collections (rich variables)
 - **Fill Array** (`var_name: String, value: String`) - Sets every slot in the array to the same value.
 - **Set Part Of** (`var_name: String, part: String, value: String`) - Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.
 - **Set AnimationTree Active** (`active: String, target: String`) - Turns this AnimationTree's playback on or off.
-- **Travel To State** (`state: String, target: String`) - Tells the state machine to transition to the named animation state.
+- **Travel To State** (`state: String, target: String`) - Tells the state machine to transition to the named animation state. This is the tree's ROOT state machine: a machine nested inside another one is not reached.
 - **Set Blend** (`path: String, value: String, target: String`) - Sets an AnimationTree parameter like a blend amount, condition or timescale.
 - **Start Ramp Clock** - Marks minute zero for this node's Ramped values - call it when the run actually starts, not in menus.
 

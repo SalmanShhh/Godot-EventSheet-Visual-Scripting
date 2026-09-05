@@ -62,7 +62,13 @@
   tree kept in a `.tres` as readily as one kept in the scene, and **2 new Doctor checks** say the two
   things a blend tree accepts in silence: a travel to a state no tree declares, and a vector written
   into a one-dimensional blend space where everything but the x is dropped without a word. Notes,
-  never errors, and only where a scene can answer.
+  never errors, and only where a scene can answer. **Every state-machine row says which machine it
+  means**: Travel To State, Jump To, Current State Is, Is In Any State, Time In State and the two
+  state moments all go through `parameters/playback`, which is the ROOT machine's playback, so a
+  state machine nested inside another one is not reached. That was true from the first of them and
+  written down nowhere a user reads; it is in each of the seven descriptions and in the guide's tips
+  now, with the nested machine's own `parameters/<node>/playback` named as what the Tree Parameter
+  reading fetches instead.
 - **Bones, in 2D and in 3D: 6 rows.** The one part of an animated character the sheet could not reach.
   **Point Bone At** sets the four dials on the engine's own `LookAtModifier3D` rather than doing the
   maths again, and its 2D twin turns a Bone2D a frame's share at a time. **Bone Position** multiplies

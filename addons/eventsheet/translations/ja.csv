@@ -3582,7 +3582,7 @@ Play One-Shot Animation,ワンショットアニメを再生
 "Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.",ブレンドツリー上でワンショットアニメを再生します。発砲、被弾リアクション、手を振る動作などを、キャラクターが今やっている動きに重ねられます。
 One-shot,ワンショット
 Current State Is,現在の状態が…
-True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,ブレンドツリーのステートマシンが指定した状態にある間、真になります。着地の硬直や攻撃の受付時間を分岐させるのに使います。
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on. This is the tree's ROOT state machine: a machine nested inside another one is not reached.,ブレンドツリーのステートマシンが指定した状態にある間、真になります。着地の硬直や攻撃の受付時間を分岐させるのに使います。これはツリーのルートのステートマシンです。別のステートマシンの中に入れ子になったものには届きません。
 Set Hearing Distance (3D),聞こえる距離を設定 (3D)
 Audio,オーディオ
 Sets how far a 3D positional sound carries. Past this distance it is silent.,3D 位置つきサウンドがどこまで届くかを設定します。この距離を超えると無音になります。
