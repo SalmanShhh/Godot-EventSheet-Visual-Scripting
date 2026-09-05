@@ -10,7 +10,10 @@
 # one threaded request per frame, the keep radius that stops a border step reloading what it just
 # freed, and On Chunk Unloading reaching the sheet while the chunk is still a node. The file loads
 # the COMPILED pack, extends it with a stub loader - the seams the pack keeps small on purpose -
-# and drives `_process` by hand, with no scene tree, no physics and no disk.
+# and drives `_process` by hand, with no scene tree, no physics and no disk. Two of those promises
+# are about STOPPING: a streamer whose followed node was freed puts the wanted set down with the
+# follow, and a chunk asked for before a folder was named waits for one instead of being written
+# off as a hole that is then remembered for ever.
 @tool
 class_name Streamer3DPackTest
 extends RefCounted
@@ -74,11 +77,15 @@ static func run() -> bool:
 	passed = _the_world_a_row_sees_while_a_chunk_leaves(stub) and passed
 	passed = _a_streamer_whose_node_is_gone_parks_its_tick(stub) and passed
 	passed = _a_chunk_asked_for_before_a_folder_waits_for_one(stub) and passed
+	# The stub is a file this test wrote under user://, and the script it became is already loaded,
+	# so the file goes again on the way out exactly as it went on the way in.
+	DirAccess.remove_absolute(STUB_PATH)
 	return passed
 
 
 ## The stub, written out and loaded.
 static func _stub_script() -> GDScript:
+	DirAccess.remove_absolute(STUB_PATH)
 	var file: FileAccess = FileAccess.open(STUB_PATH, FileAccess.WRITE)
 	if file == null:
 		return null

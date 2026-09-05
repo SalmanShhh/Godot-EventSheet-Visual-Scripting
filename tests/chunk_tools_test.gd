@@ -29,13 +29,28 @@ const CELL := Vector3(100.0, 100.0, 100.0)
 
 
 static func run() -> bool:
+	_clear()
 	var passed: bool = _a_child_belongs_to_the_cell_its_position_falls_in()
 	passed = _a_child_with_no_place_in_the_world_is_named() and passed
 	passed = _a_split_writes_the_names_the_packs_read() and passed
 	passed = _merging_puts_every_child_back() and passed
 	passed = _the_receipt_says_what_happened() and passed
 	passed = _the_reading_line_says_the_axes_the_split_uses() and passed
+	_clear()
 	return passed
+
+
+## The scene, the folder of chunks and the merged scene this test writes, removed on the way in as
+## well as on the way out: a run that crashed half way through must not decide what the next one
+## sees, and a fixture left under user:// is one the NEXT test finds.
+static func _clear() -> void:
+	DirAccess.remove_absolute(WORLD_PATH)
+	DirAccess.remove_absolute(MERGED_PATH)
+	if not DirAccess.dir_exists_absolute(CHUNK_FOLDER):
+		return
+	for file_name: String in DirAccess.get_files_at(CHUNK_FOLDER):
+		DirAccess.remove_absolute(CHUNK_FOLDER.path_join(file_name))
+	DirAccess.remove_absolute(CHUNK_FOLDER)
 
 
 # ── The plan ──────────────────────────────────────────────────────────────────────────────────

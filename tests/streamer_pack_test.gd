@@ -23,6 +23,10 @@
 #   - a chunk that will not build - the load failed, or the file is not a scene - is asked for
 #     ONCE and then left alone, so the world settles instead of erroring every frame for ever;
 #   - a streamer whose followed node has been freed parks its own tick.
+#   - and it puts down the wanted set with it, so a whole radius of chunks is not loaded in
+#     around a place the game has left;
+#   - a chunk asked for before a folder is named WAITS for one instead of being written off as a
+#     hole that is then remembered for ever.
 @tool
 class_name StreamerPackTest
 extends RefCounted
@@ -87,6 +91,9 @@ static func run() -> bool:
 	passed = _the_world_a_row_sees_while_a_chunk_leaves(stub) and passed
 	passed = _a_streamer_whose_node_is_gone_parks_its_tick(stub) and passed
 	passed = _a_chunk_asked_for_before_a_folder_waits_for_one(stub) and passed
+	# The stub is a file this test wrote under user://, and the script it became is already loaded,
+	# so the file goes again on the way out exactly as it went on the way in.
+	DirAccess.remove_absolute(STUB_PATH)
 	return passed
 
 
@@ -125,6 +132,7 @@ static func _a_chunk_asked_for_before_a_folder_waits_for_one(stub: GDScript) -> 
 ## The stub, written out and loaded. `extends "res://..."` needs a real file on both sides, so
 ## the source is written to user:// rather than built from a string in memory.
 static func _stub_script() -> GDScript:
+	DirAccess.remove_absolute(STUB_PATH)
 	var file: FileAccess = FileAccess.open(STUB_PATH, FileAccess.WRITE)
 	if file == null:
 		return null

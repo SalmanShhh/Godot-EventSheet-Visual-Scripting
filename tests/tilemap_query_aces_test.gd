@@ -77,6 +77,7 @@ terrain_set_1/terrain_0/name = "Water"
 
 
 static func run() -> bool:
+	_clear()
 	var ok: bool = _vocabulary()
 	ok = _emitted_file() and ok
 	ok = _answers() and ok
@@ -85,7 +86,17 @@ static func run() -> bool:
 	ok = _reading_back() and ok
 	ok = _tileset_facts() and ok
 	ok = _doctor() and ok
+	_clear()
 	return ok
+
+
+## The three files this test writes under user:// - the compile it verifies from, the hand-written
+## script it round-trips, and the layer's own bytes - removed on the way in as well as on the way
+## out. A run that crashed half way through must not decide what the next one sees, and a fixture
+## left behind is one the NEXT test finds.
+static func _clear() -> void:
+	for path: String in [EMITTED_PATH, HANDWRITTEN_PATH, LAYER_FILE]:
+		DirAccess.remove_absolute(path)
 
 
 # ── 1. the vocabulary ───────────────────────────────────────────────────────────────────
