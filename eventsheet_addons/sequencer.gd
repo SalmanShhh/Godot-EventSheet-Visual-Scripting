@@ -38,6 +38,8 @@ const STEPPED_SIGNAL: StringName = &"sequence_stepped"
 ## The autoload a song's clock is read from, and the two things it has to be able to answer. Asked by
 ## NAME and by method, never by class, so this file names no pack.
 const MUSIC_AUTOLOAD: String = "Music"
+## The same word as a path, spelled once, so the per-frame look-up builds nothing.
+const MUSIC_PATH: NodePath = ^"Music"
 const BEAT_NUMBER_METHOD: StringName = &"beat_number"
 const BEAT_PHASE_METHOD: StringName = &"beat_phase"
 
@@ -48,6 +50,10 @@ const BEAT_PHASE_METHOD: StringName = &"beat_phase"
 const PLAY_METHOD: StringName = &"play_moment"
 const MOMENT_METHOD: StringName = &"moment"
 const PLAY_METHODS: Array[StringName] = [PLAY_METHOD, MOMENT_METHOD]
+
+## The answer a frame that crossed nothing gives: one list, made once and never written to, because
+## a head that is playing answers this on nearly every frame it is asked.
+const NOTHING_CROSSED: Array[Dictionary] = []
 
 ## Whose sequence this is - the node the signal is raised on.
 var host: Node = null
@@ -184,11 +190,15 @@ func _process(delta: float) -> void:
 ##
 ## Separate from the saying so the whole of the timing can be stepped by hand and pinned by value.
 func advance(delta: float) -> Array[Dictionary]:
-	var crossed: Array[Dictionary] = []
 	if not playing or sequence == null:
-		return crossed
+		return NOTHING_CROSSED
 	beat_position = position_after(delta)
 	var reached: int = step_at(beat_position, sequence.steps_per_beat())
+	if last_step >= reached:
+		# The frames BETWEEN two steps are almost all of them, and they answer with the one shared
+		# empty list rather than making a new one nothing will be put in.
+		return NOTHING_CROSSED
+	var crossed: Array[Dictionary] = []
 	while last_step < reached:
 		last_step += 1
 		crossed.append_array(sequence.cells_at(last_step))
@@ -210,7 +220,7 @@ func position_after(delta: float) -> float:
 func music_clock() -> Node:
 	if not is_inside_tree():
 		return null
-	var found: Node = get_tree().root.get_node_or_null(NodePath(MUSIC_AUTOLOAD))
+	var found: Node = get_tree().root.get_node_or_null(MUSIC_PATH)
 	if found == null or not found.has_method(BEAT_NUMBER_METHOD) or not found.has_method(BEAT_PHASE_METHOD):
 		return null
 	return found
