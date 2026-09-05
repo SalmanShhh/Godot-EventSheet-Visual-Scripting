@@ -437,10 +437,12 @@ func _advance_duck(delta: float) -> void:
 		_duck_db = move_toward(_duck_db, _duck_target_db, _duck_rate * walked)
 
 ## The layers: each one walks its own level at its own rate, because a game brings the drums up
-## over a second and drops the strings out over four.
+## over a second and drops the strings out over four. The targets are walked DIRECTLY rather than
+## through their keys(), because this runs every frame a track is playing and keys() would build a
+## throwaway array each time; the loop writes the levels, never the dictionary it is walking.
 ## @ace_hidden
 func _advance_layers(delta: float) -> void:
-	for key: Variant in _layer_targets.keys():
+	for key: Variant in _layer_targets:
 		var rate: float = float(_layer_rates.get(key, 0.0))
 		if rate <= 0.0:
 			continue
