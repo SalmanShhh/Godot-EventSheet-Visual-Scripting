@@ -15,11 +15,11 @@
 - **The same drawing in 3D, ten nodes on one spatial shader.** **Line 3D**, **Disc 3D**, **Rect
   3D**, **Polygon 3D**, **Polyline 3D** and **Regular Polygon 3D** wear a **Geometry** word -
   `flat` on their own plane, `billboard` turned to the camera in the vertex stage, or `volumetric`,
-  real geometry a light and a depth buffer treat like anything else - and **Sphere**, **Cuboid**,
-  **Cone** and **Torus** are always the last of the three. Both halves read ONE shader include, so a
-  dash tuned on a 2D line and the same dash on its 3D twin cannot drift apart. Every node is a
-  `MeshInstance3D`, so Visibility, Cast Shadow and Cull Margin are Godot's own and there is no
-  hidden child holding a mesh.
+  real geometry the depth buffer treats like anything else, drawn unshaded so the colour you picked
+  is the colour on screen - and **Sphere**, **Cuboid**, **Cone** and **Torus** are always the last
+  of the three. Both halves read ONE shader include, so a dash tuned on a 2D line and the same dash
+  on its 3D twin cannot drift apart. Every node is a `MeshInstance3D`, so Visibility, Cast Shadow
+  and Cull Margin are Godot's own and there is no hidden child holding a mesh.
 - **Dashes with a count, a snap and an offset that scrolls: 3 rows.** The **Dashed** section is
   a space (`world`, `relative` to the thickness, or a fixed `count` however long the shape is), a
   snap (`off`, `tiling`, or `end to end`, which puts a dash on every corner of a rect and every

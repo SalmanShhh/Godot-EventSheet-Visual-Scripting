@@ -84,7 +84,8 @@ the choice the rest of the Inspector hangs off:
   the **vertex** stage: four vertices of work per shape, no redraw and no CPU pass over
   anything. A Line 3D reads it differently and rightly: a line always faces you *along its own
   axis*, so its billboard is a strip built between its two points rather than a card that spins.
-- **volumetric** - real geometry a light and a depth buffer treat like anything else. A Line 3D,
+- **volumetric** - real geometry the depth buffer treats like anything else, drawn unshaded, so
+  the colour you pick is the colour on screen and no light has an opinion about it. A Line 3D,
   a Polyline 3D, a Polygon 3D and a Regular Polygon 3D become a **tube** along their own
   outline at the detail level you set; a Disc 3D becomes a cylinder (or a torus once it has an
   inner radius) and a Rect 3D a slab as deep as its stroke is wide. The four wrappers are always
