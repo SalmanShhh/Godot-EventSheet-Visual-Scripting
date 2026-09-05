@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://eventsheet_addons/scene_flow/scene_flow_behavior.gd" id="1_scene_flow"]
+[ext_resource type="Script" path="res://eventsheet_addons/scene_flow/loading_screen.gd" id="2_loading_screen"]
 
 [sub_resource type="Animation" id="Animation_spin"]
 resource_name = "spin"
@@ -31,6 +32,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+script = ExtResource("2_loading_screen")
 
 [node name="Backdrop" type="ColorRect" parent="."]
 anchors_preset = 15

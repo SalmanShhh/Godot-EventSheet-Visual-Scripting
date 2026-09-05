@@ -27,6 +27,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const P := "scene_flow_pack_test"
 const PACK_PATH := "res://eventsheet_addons/scene_flow/scene_flow_behavior.gd"
 const STARTER_SCREEN := "res://eventsheet_addons/scene_flow/loading_screen.tscn"
+const STARTER_SHEET := "res://eventsheet_addons/scene_flow/loading_screen.gd"
 const STARTER_TIPS := "res://eventsheet_addons/scene_flow/tips.txt"
 
 ## A tips file as somebody would really keep one: a note to itself at the top, a blank line for air,
@@ -219,6 +220,21 @@ static func _test_the_starters() -> bool:
 				"[node name=\"LoadBar\" type=\"ProgressBar\" parent=\".\"]"), true],
 		["whose top is one, because that is what the reading answers with",
 			FileAccess.get_file_as_string(STARTER_SCREEN).contains("max_value = 1.0"), true],
+		# AND THE BAR MOVES. A starter whose bar sits at zero and whose tip label is empty teaches
+		# the wrong thing about what these rows do, so the scene carries the three rows that drive
+		# it - as an ordinary sheet the reader can open, not as machinery hidden in the pack.
+		["the screen carries a sheet of its own", FileAccess.file_exists(STARTER_SHEET), true],
+		["which the scene really points at",
+			FileAccess.get_file_as_string(STARTER_SCREEN).contains(
+				"script = ExtResource(\"2_loading_screen\")"), true],
+		["it sets the bar from the reading, every time the reading moves",
+			_starter_sheet().contains("$SceneFlow.loading_progress_changed.connect(_on_loading_progress_changed)")
+				and _starter_sheet().contains("$LoadBar.value = $SceneFlow.loading_progress()"), true],
+		["it reads the tip once, when the screen opens",
+			_starter_sheet().contains("$Tip.text = $SceneFlow.loading_tip()"), true],
+		["and the press-any-key line waits for the end of the wait",
+			_starter_sheet().contains("$SceneFlow.loading_finished.connect(_on_loading_finished)")
+				and _starter_sheet().contains("$PressAnyKey.visible = true"), true],
 		["a tips file ships beside it", FileAccess.file_exists(STARTER_TIPS), true],
 		["with tips in it and its own note left out", starter_tips.size(), 8],
 		["the screen knob opens empty, so nothing is pointed at either of them",
@@ -226,6 +242,11 @@ static func _test_the_starters() -> bool:
 		["and so does the tips knob",
 			shipped.contains("var loading_tips_file: String = \"\""), true],
 	])
+
+
+## The starter screen's own sheet, read off disk - the three rows the scene is shipped wired to.
+static func _starter_sheet() -> String:
+	return FileAccess.get_file_as_string(STARTER_SHEET)
 
 
 ## THE DOCTOR'S QUIET NOTE: a big scene opened with nothing over it. It is an info note with the

@@ -200,13 +200,19 @@ static func build() -> bool:
 	if not Lib.save_pack(sheet, "res://eventsheet_addons/scene_flow/scene_flow_behavior"):
 		return false
 	# THE SHADERS ARE THE TRANSITIONS: a shape whose file is missing draws nothing, so they ship in
-	# the same build as the script that loads them. The loading screen and its tips file ship the
-	# same way, and for the opposite reason: they are STARTERS rather than machinery. Nothing points
-	# at them until a project fills in the two Inspector knobs, and both are meant to be copied into
-	# the project's own folders and rewritten - which is why the pack ships one of each and never a
-	# list of screens or a table of tips it owns.
+	# the same build as the script that loads them. The loading screen, its sheet and its tips file
+	# ship the same way, and for the opposite reason: they are STARTERS rather than machinery.
+	# Nothing points at them until a project fills in the two Inspector knobs, and all three are
+	# meant to be copied into the project's own folders and rewritten - which is why the pack ships
+	# one of each and never a list of screens or a table of tips it owns.
+	#
+	# THE SCREEN'S SHEET IS PART OF THE STARTER. A loading screen whose bar never moves and whose
+	# tip label is empty teaches the wrong thing about what these rows do, so the scene carries the
+	# three rows that drive it - the tip read once on ready, the bar following On Loading Progress,
+	# the press-any-key line shown at On Loading Finished - as an ordinary event sheet the reader
+	# can open, and not as machinery hidden in the pack.
 	return Lib.ship_files("scene_flow", "res://eventsheet_addons/scene_flow/scene_flow_behavior",
-		PackedStringArray(["gdshader", "tscn", "txt"]))
+		PackedStringArray(["gd", "gdshader", "tscn", "txt"]))
 
 
 ## The TRANSITIONS half of the pack: the shapes, the runner that draws one, and the one progress
