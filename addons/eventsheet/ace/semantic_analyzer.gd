@@ -591,6 +591,13 @@ func _split_pipe_values(value: String) -> Array:
 const COMPARISON_OPTIONS: Array = EventForgeACEFactory.COMPARISON_OPTIONS
 
 
+## The one reading of an annotation spec line, shared with the importer's lifter and the compiler that
+## writes those lines back. Named by path rather than by class: this file is reached on paths a boot
+## takes, and naming the importer from the provider scanner would tie the two together for a helper
+## that belongs to neither.
+const SpecText := preload("res://addons/eventforge/registration/annotation_spec_text.gd")
+
+
 ## Splits an `options:` value into {key, label} pairs, so a dropdown can READ as English while
 ## INSERTING the real token. `a|b` stays plain (key == label); `set=Set it|inc=Increase it` labels
 ## each. Splits outside quotes only, so a quoted key may contain the `|` separator.
@@ -632,62 +639,31 @@ func _option_pair(raw_entry: String) -> Dictionary:
 	return {"key": key, "label": label}
 
 
-## The brackets a value may be WRITTEN with - a Dictionary or Array literal, a constructor call. A
-## separator between them belongs to that literal, not to the line around it.
-const VALUE_OPENERS: String = "{[("
-const VALUE_CLOSERS: String = "}])"
-
-
 ## True when every bracket outside a quoted string in `text` is closed by its own kind, in order.
 ## Asked BEFORE the split so a malformed line - prose with a stray `(`, a truncated annotation -
 ## reads exactly the way it read before groups were understood at all.
-func _brackets_balance(text: String) -> bool:
-	var open_kinds: Array[String] = []
-	var in_quotes: bool = false
-	for index in range(text.length()):
-		var character: String = text.substr(index, 1)
-		if character == "\"":
-			in_quotes = not in_quotes
-			continue
-		if in_quotes:
-			continue
-		if VALUE_OPENERS.contains(character):
-			open_kinds.append(VALUE_CLOSERS[VALUE_OPENERS.find(character)])
-		elif VALUE_CLOSERS.contains(character):
-			if open_kinds.is_empty() or open_kinds[open_kinds.size() - 1] != character:
-				return false
-			open_kinds.remove_at(open_kinds.size() - 1)
-	return not in_quotes and open_kinds.is_empty()
-
-
-## Splits on a separator only outside double quotes AND outside a bracketed value, so
-## `desc: "Slow, steady"` keeps its comma and `default: {"verb": "shake", "amount": 0.4}` stays ONE
-## segment rather than being cut at the comma inside the literal. This has to give the same answer
-## as the importer's own split of the same line: a pack's annotations are read by both, and a line
-## the two disagreed about would publish one vocabulary and open as another.
 ##
-## A text whose brackets do not balance is split the older, group-blind way, so nothing that parsed
-## before parses differently now.
+## The scan itself is the shared one, because the importer's lifter asks the same question of the
+## same line and an answer only one of them gives is a vocabulary published from a reading the sheet
+## never opens on.
+func _brackets_balance(text: String) -> bool:
+	return SpecText.brackets_balance(text)
+
+
+## Splits on a separator only outside a quoted string AND outside a bracketed value, so
+## `desc: "Slow, steady"` keeps its comma and `default: {"verb": "shake", "amount": 0.4}` stays ONE
+## segment rather than being cut at the comma inside the literal.
+##
+## THE SPLIT IS THE LIFTER'S OWN, not a second reading of the same grammar. A pack's annotations are
+## parsed by both, and a line the two disagreed about publishes one vocabulary and opens as another -
+## with every gate green, because the byte gate asks whether the COMPILER reproduces the file and the
+## compiler writes back what the LIFTER read. That is not a hypothetical: this file once toggled on
+## `"` alone, so `default_code: 'a, b'` published as `'a` while the sheet opened on `'a, b'`, and
+## a `default_code: "\""` holding an escaped quote swallowed the help text beside it.
 func _split_outside_quotes(text: String, separator: String) -> Array[String]:
-	var respect_groups: bool = _brackets_balance(text)
 	var segments: Array[String] = []
-	var current: String = ""
-	var in_quotes: bool = false
-	var depth: int = 0
-	for index in range(text.length()):
-		var character: String = text.substr(index, 1)
-		if character == "\"":
-			in_quotes = not in_quotes
-		if respect_groups and not in_quotes and VALUE_OPENERS.contains(character):
-			depth += 1
-		elif respect_groups and not in_quotes and depth > 0 and VALUE_CLOSERS.contains(character):
-			depth -= 1
-		elif character == separator and not in_quotes and depth == 0:
-			segments.append(current)
-			current = ""
-			continue
-		current += character
-	segments.append(current)
+	for part: String in SpecText.split_outside_quotes(text, separator):
+		segments.append(part)
 	return segments
 
 

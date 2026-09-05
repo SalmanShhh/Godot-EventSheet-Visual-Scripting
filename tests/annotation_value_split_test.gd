@@ -61,6 +61,20 @@ static func run() -> bool:
 		["an UNBALANCED bracket falls back to the older, group-blind split",
 			"amount, desc: half (of it, roughly",
 			["amount", " desc: half (of it", " roughly"]],
+		# A quote is the single one as well as the double, and a backslash inside a string escapes
+		# whatever follows it. Both are code an author may legitimately write as a starting value, and
+		# the two readers used to answer them DIFFERENTLY: the analyzer's split toggled on the double
+		# quote alone, so it cut a single-quoted value at its comma and read past an escaped quote
+		# into the help text, while the lifter, which understood both, read them whole. The
+		# disagreement was invisible in BOTH directions, because the byte gate asks whether the
+		# COMPILER reproduces the file and the compiler writes back what the LIFTER read - so the pack
+		# published one starting value, the sheet opened on another, and every gate stayed green.
+		["a single-quoted value keeps the comma inside it",
+			"word, default_code: 'a, b', desc: \"Help.\"",
+			["word", " default_code: 'a, b'", " desc: \"Help.\""]],
+		["a backslash-escaped quote does not close the string",
+			"word, default_code: \"\\\"\", desc: \"Help.\"",
+			["word", " default_code: \"\\\"\"", " desc: \"Help.\""]],
 	]
 	for entry: Variant in cases:
 		var row: Array = entry as Array
@@ -187,6 +201,8 @@ static func run() -> bool:
 		["code, keeping the quotes its call needs", "default_code: \"impact\"", "\"impact\""],
 		["code that is the empty string literal", "default_code: \"\"", "\"\""],
 		["code holding the comma the spec splits on", "default_code: \"a, b\"", "\"a, b\""],
+		["code quoted the OTHER way, comma and all", "default_code: 'a, b'", "'a, b'"],
+		["code that is one escaped quote", "default_code: \"\\\"\"", "\"\\\"\""],
 	]:
 		var row: Array = entry as Array
 		var line: String = "## @ace_param(word, %s, desc: \"Help, with a comma.\")" % row[1]
