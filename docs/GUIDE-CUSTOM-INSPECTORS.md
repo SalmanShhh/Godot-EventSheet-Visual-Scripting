@@ -224,7 +224,11 @@ That last line is the whole editor code a pack needs: `card_schema_from_aces` **
 
 **Three rules a card list obeys, because it is somebody's saved file.** Loading never writes (defaults are seeded when a card is **added**, never when one is read, so a file saved before the schema grew a field round-trips byte for byte); an edit keeps the stored **type** (a number written as a float stays a float, a colour written as `"#rrggbb"` stays a String); and an **absent** enable key means enabled, so switching a card back on erases the key rather than writing a `true` the file never had.
 
-**Use case.** The Drawing Prefab's steps are this drawer: each step is a card titled by its shape, whose fields are that shape's own (a circle shows "Radius", a line shows "End X / End Y"), with the eight stored keys untouched.
+**A long card reads in sections.** A field may name the `group` it sits under, and the drawer draws that heading where the name changes - so a card of eighteen fields reads as four short groups (where it sits, what it is, what colour, whether it dashes) rather than as one column. It is a heading, not a second fold: the card is already the fold, and a fold inside it would hide the field somebody opened the card to change.
+
+**A field can appear for one mode only.** `show_if` takes either a key (the field appears while that key is on - a checkbox above a section) or `key==word` (the field appears only while that key IS that word - a second colour that belongs to a two-colour step and to no other).
+
+**Use case.** The Drawing Prefab's steps are this drawer: each step is a card titled by its shape, whose fields are that shape's own (a circle shows "Radius", a line shows "End X / End Y"), grouped into Placement, Geometry, Colour and Dashed, with the eight stored keys untouched.
 
 ### Toggle buttons (String with Options)
 

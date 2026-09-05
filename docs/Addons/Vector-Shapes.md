@@ -164,6 +164,8 @@ all seven rather than seven identical entries.
 | **Set Shape Radius** | new_radius (float) | The radius of a Disc or a Regular Polygon. |
 | **Set Shape Sides** | count (int) | How many sides a Regular Polygon has. |
 | **Set Arc** | from_degrees (float), to_degrees (float) | A Disc's sweep. 0 to 360 is the whole disc; less is the pie or arc a cooldown, a vision cone or a health ring is drawn as. |
+| **Apply Shape Style** | style_file (ShapeStyle) | Puts a style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back. |
+| **Apply Shape Style To Group** | group_name (String), style_file (ShapeStyle) | The same, for every shape in a group at once - the whole HUD re-skinned from one file. |
 
 Each shape also publishes the one or two fields that are its own sentence, as ordinary
 property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), **Closed**
@@ -176,6 +178,7 @@ property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), *
 |---|---|---|
 | **Shape Is Visible** | none | The shape is drawn at all: visible in the tree, and not fully transparent. |
 | **Point Is Inside Shape** | point (Vector2) | A world point lands inside the shape: inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it. |
+| **Shape Style Is** | style_file (ShapeStyle) | The shape is wearing that exact style file. The test a row makes before re-skinning, and the one an exception is written against. |
 
 ### Expressions
 
@@ -192,6 +195,7 @@ nothing.
 
 | Group | Field | Notes |
 |---|---|---|
+| (top) | Style | A **Shape Style** file this shape wears instead of its own look, with a **Save As Style** button above it. Empty is the usual case. See "Styles you own" below. |
 | Stroke | Thickness | A number with a **unit dropdown** at its right edge: pixels, world units or screen units. Switching the dropdown converts the number in front of you; the stored value is always pixels, so nothing an emitted script reads ever moves. |
 | Stroke | Thickness scale | With the node, or fixed on screen (what a HUD line wants). |
 | Stroke | Caps | None, square or round, as three icon buttons. |
@@ -227,6 +231,45 @@ radius.
 | `per corner` | A colour per corner. | Rect, Triangle |
 
 The border has its own colour and thickness, and the fill respects the blend.
+
+## Styles you own
+
+Twenty aim lines in one game want one thickness, one cap and one dash pattern. A **Shape Style**
+is that answer as a file: a resource holding the LOOK half of a shape's fields, which any 2D shape
+can wear.
+
+**The pack ships no styles.** There is no house list to pick from, because a look is the game's,
+not the plugin's. The first style in a project is one you save out of a shape you tuned: set the
+thickness, the caps, the colours and the dashes on one Line until it looks right, then press
+**Save As Style** at the top of its Inspector. That writes a `.tres` beside the scene, named after
+the node, and the shape wears the file it just wrote - so nothing on screen moves.
+
+**Wearing one.** Drop the file into another shape's **Style** slot (a drag from the FileSystem dock
+does it). Every field the style speaks for now reads from the file, and those fields go **grey** in
+the Inspector rather than disappearing: you can still read what the shape would look like on its
+own, and emptying the slot hands it straight back. Nothing is copied into the shape, so editing the
+style file changes every shape wearing it at once, in the editor as well as in the game.
+
+| A style speaks for | It never speaks for |
+|---|---|
+| Thickness, thickness scale, caps | An end point, a radius, a size, a list of points, an angle |
+| Colour mode, colour, second colour, gradient | Fill and border toggles, which are the shape's own |
+| Dashed, dash space, snap, size, count, spacing, style | The dash **offset**, which is what Scroll Dashes animates |
+| Blend | Anti-alias width |
+
+A shape that **has not got** a field the style carries is untouched by it: a Triangle has no dashes,
+so a dashed style leaves it a plain triangle rather than inventing fields for it.
+
+**From rows.** `Apply Shape Style` on one shape, `Apply Shape Style To Group` for a whole HUD, and
+`Shape Style Is` for the exception:
+
+```
+On setting changed "high_contrast"
+  -> Shapes | Apply Shape Style To Group  "hud_lines", preload("res://ui/hud_thick.tres")
+```
+
+**2D only.** The 3D shapes measure their thickness in world units with a unit of their own, so a
+style holding pixels would be a lie there rather than a shortcut; a 3D shape has no Style slot.
 
 ## Use cases
 

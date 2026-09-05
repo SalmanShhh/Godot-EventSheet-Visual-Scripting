@@ -170,6 +170,26 @@ scales, and rotates as one - rings-and-crosshair markers, explosion scorches, ma
 minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you
 press Space.
 
+**The step card.** Each step in the Inspector is a card titled by its shape, read top to bottom as
+four short sections: **Placement** (which shape, its offset, its blend, and for a stroke whether its
+thickness follows the stamp's scale), **Geometry** (that shape's own fields, with the thickness on a
+unit dropdown), **Colour** (the mode, the swatches, and a line's end caps), and **Dashed**, which
+unfolds from its checkbox and ties the dash to its gap with the "=" beside them. Add a shape from
+the searchable dropdown under the list; drag a card by its handle to change the draw order.
+
+The eight stored keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what
+they always did, so a prefab saved before the card existed opens, edits and saves as the same file.
+Beside them a step may carry optional keys the card writes: `unit` (how the thickness number is
+read - the number itself is always pixels), `scale_mode`, `blend`, `color_mode`, `color_b`, `caps`,
+and the dash set (`dashed`, `dash_size`, `dash_spacing`, `dash_offset`, `dash_style`). A step
+carrying none of them draws exactly what it always drew.
+
+**What the picture can show.** The canvas and the preview draw with the engine's own draw calls,
+which know a line's ends, its dashes and the scale rule - so those are drawn, in the viewport and in
+the thumbnail. A two-colour or gradient step, and a blend other than normal, are stored and drawn
+flat: the crisp, blended, gradient version of the same shape is what the **Vector Shapes** nodes are
+for, and a shape you place is the right tool when the picture matters more than the stamping.
+
 **Scales to thousands.** A prefab parses its steps (colors, kinds, stamp textures) once and caches the
 result, so Draw Prefab and the DrawingPrefabStamp node stay cheap when a thousand-plus stamps share one
 prefab - each draw reuses the compiled steps instead of re-parsing. The cache refreshes when the resource
