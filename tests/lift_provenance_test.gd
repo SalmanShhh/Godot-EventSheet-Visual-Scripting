@@ -103,6 +103,20 @@ func look() -> void:
 
 const PHYSICS_RUN_LINE: int = 5
 
+## A buffer whose receiver is an AUTOLOAD, which is the one receiver with no class name: it resolves
+## to a SCRIPT, and it is registered in `project.godot` by UID rather than by path. Both of those
+## showed in the printed line - a leading dot where a class should be, and a `uid://` nobody can go
+## and open. It names THIS project's own autoload on purpose: the reader asks ProjectSettings, so a
+## fabricated one would prove nothing about what a developer sees.
+const AUTOLOAD_CALL: String = """extends Node
+
+
+func _ready() -> void:
+	EventForgeBridge.unregister_provider("demo")
+"""
+
+const AUTOLOAD_CALL_LINE: int = 5
+
 ## A third buffer that cannot round-trip, for the read-only proof: it ends without a last newline
 ## and the emitter always writes one, so re-emitting it can never reproduce it. The closing quotes
 ## sit against `pass` for that reason - a newline before them would make this file round-trip and
@@ -131,6 +145,7 @@ static func run() -> bool:
 	ok = _test_the_claim_never_writes_to_the_file_it_asks_about() and ok
 	ok = _test_the_three_known_lines() and ok
 	ok = _test_a_run_of_statements() and ok
+	ok = _test_an_autoload_receiver_is_named() and ok
 	ok = _test_the_by_example_layer_is_told_apart() and ok
 	ok = _test_the_printed_shape() and ok
 	ok = _test_which_builder_path_shaped_it() and ok
@@ -248,6 +263,19 @@ static func _test_a_run_of_statements() -> bool:
 			"physics_query_lift · ray_query_run_2d",
 			"physics_query_lift · ray_query_run_2d"])) and ok
 	return ok
+
+
+## THE RECEIVER WITH NO CLASS NAME. An autoload resolves to a SCRIPT, so naming the member after the
+## class printed a leading dot with nothing in front of it; and an autoload is registered by UID, so
+## the file column printed a `uid://` a developer cannot open. Both are answered the way the canvas's
+## own reading answers them - the member on its own, and the path the UID stands for.
+static func _test_an_autoload_receiver_is_named() -> bool:
+	return _check("an autoload names its member and the file the UID stands for",
+		_claims_of(AUTOLOAD_CALL, AUTOLOAD_CALL_LINE, ""), [
+			"  4. index    Core::CallMethod",
+			"  5. call     res://addons/eventforge/runtime/eventforge_bridge.gd"
+			+ "  unregister_provider (receiver: autoload)"
+		])
 
 
 ## The one thing the provenance reader can say that the per-line reading beside it cannot: WHICH

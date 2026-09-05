@@ -493,15 +493,41 @@ static func _derived_answers(source: String, statement: String,
 	var call: Dictionary = EventSheetDerivedCalls.derived_pieces(statement, context, class_map,
 		autoloads)
 	if not call.is_empty():
-		found.append(Answer.new(Layer.CALL, str(call.get("script_path", "")), "%s.%s (receiver: %s)"
-			% [str(call.get("class", "")), str(call.get("method", "")), str(call.get("source", ""))]))
+		found.append(Answer.new(Layer.CALL, _openable_path(str(call.get("script_path", ""))),
+			_member_text(str(call.get("class", "")), str(call.get("method", "")),
+				str(call.get("source", "")))))
 	var written: Dictionary = EventSheetDerivedProperties.derived_reading(
 		EventSheetSentence.statement(statement, context), context, class_map, autoloads)
 	if not written.is_empty():
-		found.append(Answer.new(Layer.PROPERTY, str(written.get("script_path", "")),
-			"%s.%s (receiver: %s)" % [str(written.get("class", "")),
-				str(written.get("property", "")), str(written.get("source", ""))]))
+		found.append(Answer.new(Layer.PROPERTY, _openable_path(str(written.get("script_path", ""))),
+			_member_text(str(written.get("class", "")), str(written.get("property", "")),
+				str(written.get("source", "")))))
 	return found
+
+
+## What a derived answer NAMES: the class the receiver resolved to, the member found on it, and how
+## the receiver was resolved. An AUTOLOAD resolves to a script rather than to a class and has no
+## class name at all, so its member is named on its own instead of after a leading dot - the same
+## guard the canvas's own per-line reading makes, and without it the line read `.play (receiver:
+## autoload)`.
+static func _member_text(read_class: String, member: String, source: String) -> String:
+	var named: String = read_class.strip_edges()
+	named = "%s.%s" % [named, member] if not named.is_empty() else member
+	return "%s (receiver: %s)" % [named, source]
+
+
+## A script path as a developer can go and open it. An autoload is registered in `project.godot` by
+## UID, and `uid://b8x...` is not a file anybody can look at - so it is resolved back to the
+## `res://` path it stands for. A UID nothing answers for is left exactly as it was written, which
+## is the honest answer for a project whose autoload points at a file that has moved.
+static func _openable_path(path: String) -> String:
+	var text: String = path.strip_edges()
+	if not text.begins_with("uid://"):
+		return text
+	var id: int = ResourceUID.text_to_id(text)
+	if id == ResourceUID.INVALID_ID or not ResourceUID.has_id(id):
+		return text
+	return ResourceUID.get_id_path(id)
 
 
 # ── the pieces ──────────────────────────────────────────────────────────────────
