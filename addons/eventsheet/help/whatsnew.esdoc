@@ -6,6 +6,37 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Fixed on the boot path
+
+- **Enabling the plugin costs a third of a second again, not nineteen.** The Feedback Player's card
+  schema and its step field are registered while the plugin enters the tree, and they were
+  registered through the public `EventSheets` API. Naming that class from a boot file compiles it,
+  and between them its methods name the compiler, the importer, the Doctor, the viewport and the
+  dock - so the whole plugin was compiled at every editor start, in every project, whether or not
+  anyone opened a sheet. The cold-boot closure went from ~330 ms to ~19,000 ms locally and CI's
+  1,200 ms budget went red. The three registries a boot file actually writes to now live in
+  `extension_registries.gd`, a file that names nothing, which `EventSheets` forwards to and the
+  plugin reaches by path; the API's own method shapes are unchanged. `plugin_boot_lazy_test` gained
+  the lint that would have caught it: no boot file may call the public API at all.
+
+### Fixed in the compiler and the pack gate
+
+- **A `while` loop that awaits no longer emits a guard naming a variable nothing declared.** The
+  unpick-on-free rule guards each iteration of an awaiting loop so an object freed during the wait
+  is skipped, and it writes that guard in terms of the loop's ITERATOR. Only a
+  `for <name> in <collection>` header declares one: a `while` has no loop variable at all, so the
+  guard was written over the fallback name `item` and the emitted file stopped parsing
+  (`Identifier \"item\" not declared`). Any coroutine that watches a counter and awaits a frame hit
+  it. The guard is emitted for a for-each over a pick and nothing else now; a `while` and a
+  `range()` repeat get none, and the for-each keeps its own iterator's name.
+- **The pack gate can see a pack that does not compile.** `tools/audit_addons.gd` asked whether the
+  shipped script `load()`s, and in Godot 4 a script with a parse error still loads - as a non-null,
+  invalid GDScript. So the parse half of the gate could never fail: a pack that did not compile was
+  counted healthy, printed `drifted=0`, and exited 0. The gate asks the loaded script whether it
+  actually compiled now, prints `PARSE FAIL <path>` with the parse error under it, and exits 1. It
+  also prints `builders=<n>` beside `audited=` and `drifted=`, so a tree whose pack builders and
+  shipped folders have drifted apart says so here rather than at the next full regeneration.
+
 ### Fixed in the general-purpose reading pass
 
 - **A loop's own name and a match arm's own name are no longer read as the member they shadow.** The
@@ -18,6 +49,23 @@ What changed in the build you have installed (v0.17.0), in the words the release
   under that arm as **Sprite2D.rotate** - a class neither of them is, with the bytes identical either
   way. Both are read as the code they are now, nested array and dictionary patterns included, and a
   member no loop and no arm binds still reads exactly as it did.
+- **A ray masked inside `create` says which layers it hits instead of hiding them in its end point.**
+  The end point of a hand-written ray ran to the closing bracket, so
+  `PhysicsRayQueryParameters2D.create(from, target.global_position, 2)` matched the PLAIN run with
+  the mask swallowed: the row said the ray ended at `target.global_position, 2` and its mask column
+  said nothing, while the code masked to layer 2 - byte-exact, and wrong about what the line does.
+  An end point is one argument now (its commas all inside a bracket, so
+  `global_position + Vector2(0, 100)` is still one value), the three-argument spelling is a row of
+  its own that reads the mask as the mask, and the four-argument spelling - the one that also
+  excludes bodies, which no shipped row means - stays the honest code it is.
+- **Asking what a line became now names the vocabulary that took it, on every line of a run.** A run
+  of statements only matches at the statement it opens on, and the provenance tool behind
+  `tools/explain.gd` asked the run families at the line you typed - so the second and third
+  statements of a ray, a layout, a camera move or a scene save fell through to the general reverse
+  index and were answered `index Core::SetLocalVarInferred`, a row the editor never makes of that
+  line, while the sheet itself read them as `physics_query_lift - ray_query_run_2d`. The tool finds
+  the run where it OPENS, through the same reader the canvas reads, so every line a run took names
+  the entry that claimed it and how many statements it took.
 
 ### What plays, prompts, speaks and moves
 
