@@ -35,6 +35,7 @@
 class_name UserContentDoorsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const MODULE_PATH := "res://addons/eventforge/registration/modules/file_aces.gd"
 const PROBE_PNG := "user://user_content_probe.png"
 const PROBE_WAV := "user://user_content_probe.wav"
@@ -264,9 +265,11 @@ static func _run_loaders() -> bool:
 		{"path": "folder + \"/\" + name", "fallback": "null"})
 	ok = _check("a path built out of pieces is asked as a whole what its extension is",
 		joined_sound.contains("(folder + \"/\" + name).get_extension().to_lower()"), true) and ok
-	ok = _check("and no bare last-operand reading of it survives anywhere in the line",
-		joined_sound.contains("\".ogg\".get_extension()")
-			or joined_sound.contains("name.get_extension()"), false) and ok
+	# Each bare reading is asked on its own, so a failure names WHICH one crept back in.
+	ok = _check("and no bare last-operand reading of it survives anywhere in the line: the literal's",
+		joined_sound.contains("\".ogg\".get_extension()"), false) and ok
+	ok = _check("and no bare last-operand reading of it survives anywhere in the line: the name's",
+		joined_sound.contains("name.get_extension()"), false) and ok
 
 	# AND THE WHOLE LINE ANSWERS INSIDE SOMEBODY ELSE'S SENTENCE. This is the one expression here
 	# whose value is a conditional even with the fallback slot left blank, so it is the one that
@@ -483,8 +486,9 @@ static func _compiled(sheet: EventSheetResource) -> String:
 static func _value(expression: String) -> Variant:
 	var script: GDScript = GDScript.new()
 	script.source_code = "@tool\nextends RefCounted\n\n\nstatic func probe() -> Variant:\n\treturn %s\n" % expression
-	if script.reload() != OK:
-		print("  [FAIL] user_content_doors_test: an emitted expression did not compile")
+	var reloaded: int = script.reload()
+	if reloaded != OK:
+		_check("an emitted expression did not compile", error_string(reloaded), "(compiles)")
 		return null
 	return script.call("probe")
 
@@ -603,7 +607,4 @@ static func _quote(text: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		return true
-	print("  [FAIL] user_content_doors_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
-	return false
+	return SUPPORT.check("user_content_doors_test", label, actual, expected)
