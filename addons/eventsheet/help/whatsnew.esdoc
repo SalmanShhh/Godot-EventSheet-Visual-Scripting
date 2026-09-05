@@ -3719,7 +3719,7 @@ These are the places the two disagreed.
   `@ace_lift_example` and the gate it passes at build time, and the corpus rule - a new family adds
   the file that motivated it, pins move up, and the commit that moves one states the delta.
 - **The front-page figures are re-measured, module by module.** **2,171 built-in verbs across 92
-  vocabulary modules, 107 of them triggers, and 3,500 parameters between them** - where the page said
+  vocabulary modules, 107 of them triggers, and 3,491 parameters between them** - where the page said
   1,846 verbs across 84 modules, 98 triggers and 2,943 parameters. The whole of that delta is not this
   pass's: the front page counts the vocabulary the release ships, and the release is being built by
   more than one subject at a time. What is worth saying is the rule, because a figure whose rule
@@ -3728,17 +3728,26 @@ These are the places the two disagreed.
   row - the receiver a node-scoped row carries included. Descriptions were measured in the same walk:
   **zero blank descriptions and zero blank parameter descriptions**, which is what lets any of these
   be published rather than only counted. The doc-set indexes carry the same sum, said as the 2,064
-  actions, conditions and expressions the picker holds beside those 107 triggers.
+  actions, conditions and expressions the picker holds beside those 107 triggers. Both walks were run
+  over a CLEAN checkout rather than over the working tree, in a worktree of their own: a tree with
+  somebody else's half-finished files in it counts those too, and a figure no clean checkout can
+  reproduce is a figure that goes red the first time anybody checks it.
 - **And the repository's own reading, published honestly, before and after.** The census was re-run
-  over the whole of `addons/` and `tools/` at the close of this pass: **1,041 files, 1,039 of them at
-  zero script blocks, 9 block lines in all, 296,258 lines, 227,685 rows, and 90% of those rows in the
-  sheet's own words.** The page said 918 files, 916, 9, and 89%. So the repository's own percentage
-  moved, which is the number this pass set out to move - and the honest reading of that one point is
-  not a victory lap. **The wordless-row measure is a regex over a row's TEXT and cannot see the
-  derived layer at all**, which is written into the measure's own comment: a statement the derived
-  reading names still scores exactly as it did before, because the row's CODE is unchanged. So the
-  point came from the tree growing larger and better-worded around it rather than from this pass's
-  headline layer, and the nine block lines did not move at all.
+  over the whole of `addons/` and `tools/` at the close of this pass: **1,045 files, 1,043 of them at
+  zero script blocks, 9 block lines in all, 298,484 lines, 229,279 rows, and 89.9% of those rows in
+  the sheet's own words.** The page said 918 files, 916, 9, and 89%. The file count and the line
+  count grew, the nine block lines did not move, and the share is where an honest word is owed: an
+  earlier run of this same census read 90%, this one reads 89.945%, and the two are six hundredths of
+  a point apart on either side of a whole number. So the percentage is published WITH its decimal
+  from here on. A figure that flips between two whole numbers while nothing moved is a figure telling
+  a reader something that did not happen, and one decimal is the cheapest way to stop it.
+- **The share did not move, and the reason it could not is the point.** **The wordless-row measure is
+  a regex over a row's TEXT and cannot see the derived layer at all**, which is written into the
+  measure's own comment: a statement the derived reading names scores exactly as it did before,
+  because the row's CODE is unchanged. This pass's headline layer is invisible to that number by
+  construction, so the census says how large and how well-worded the repository's own source is - it
+  was never the scoreboard for the layer, and reading it as one would have been the silent magic this
+  pass exists to refuse.
 - **The measure that WAS built to move as a visible diff is the corpus's, and it moved three times.**
   `pause_menu.gd` from 40 lines of code to none, `player_stats.gd` from 75% and two code lines to
   100% and none, and `guard_sight.gd` from 44 lines named only by the general reading to 40, with the
