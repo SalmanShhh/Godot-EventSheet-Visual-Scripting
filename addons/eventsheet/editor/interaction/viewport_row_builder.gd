@@ -14964,7 +14964,7 @@ static func action_awaits(action: ACEAction) -> bool:
 		return false
 	if action.is_awaited or action.await_call:
 		return true
-	if ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait"].has(action.ace_id):
+	if ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait", "play_and_wait"].has(action.ace_id):
 		return true
 	return action.codegen_template.contains("await ")
 

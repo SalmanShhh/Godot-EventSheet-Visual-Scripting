@@ -1230,7 +1230,7 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 ## decides whether the emitted handler is a coroutine at all, and the row builder's `action_awaits`
 ## draws the hourglass on the canvas. Adding a row to two of them and not the third is the failure
 ## this comment exists to stop.
-const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait"]
+const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait", "play_and_wait"]
 
 
 ## Flags a coroutine action (await / Wait / budget-yield) under a per-frame trigger: the next tick fires
@@ -1256,7 +1256,14 @@ static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings
 			return
 	for action: Variant in event.actions:
 		var flagged: String = ""
-		if action is ACEAction and COROUTINE_ACE_IDS.has((action as ACEAction).ace_id):
+		# The id list catches a lifted builtin (whose template re-resolves at emit); the template
+		# catches every pack row that awaits without being named here, which is what stops a new
+		# awaiting verb from being invisible to this check until somebody remembers the list.
+		var awaited: bool = false
+		if action is ACEAction:
+			var ace: ACEAction = action as ACEAction
+			awaited = COROUTINE_ACE_IDS.has(ace.ace_id) or ace.codegen_template.contains("await ")
+		if awaited:
 			flagged = (action as ACEAction).ace_id
 		elif action is RawCodeRow and (action as RawCodeRow).code.contains("await "):
 			flagged = "await"

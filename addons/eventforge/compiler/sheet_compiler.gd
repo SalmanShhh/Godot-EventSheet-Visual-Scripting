@@ -2729,7 +2729,7 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 ## COROUTINE_ACE_IDS warns about one under a per-frame trigger, and the row builder's
 ## `action_awaits` draws the hourglass on the canvas. A row added to two of them and not
 ## the third suspends the handler without saying so anywhere a reader looks.
-const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait"]
+const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait", "play_and_wait"]
 
 
 static func _subtree_awaits(event_row: EventRow) -> bool:
