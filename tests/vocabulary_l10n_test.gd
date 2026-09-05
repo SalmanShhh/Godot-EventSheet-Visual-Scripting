@@ -74,6 +74,7 @@ static func run() -> bool:
 	passed = _test_covered_modules_stay_covered() and passed
 	passed = _test_menu_commands_have_keys() and passed
 	passed = _test_the_catalog_actually_translates() and passed
+	passed = _test_two_words_stay_two_words() and passed
 	return passed
 
 
@@ -481,6 +482,50 @@ static func _test_the_catalog_actually_translates() -> bool:
 
 
 # ── Reading the CSVs ──
+
+
+# ── 7. Two words stay two words ──
+
+
+## TWO ROWS THAT MEAN DIFFERENT THINGS MUST NOT READ THE SAME. Lockstep and coverage both pass on a
+## file where two neighbouring keys were handed one word, and that is the failure a translated picker
+## actually shows: two rows on the same shelf, spelled identically, and no way to tell from the sheet
+## which one is which. The English pairs below are the ones a locale has already collapsed once - a
+## surface's blend against a sprite's blend mode, and a per-instance see-through AMOUNT against the
+## material's transparency MODE.
+##
+## The pairs are English keys, so this reads as a question about the CATALOG rather than about any
+## one language's taste: whatever two words a locale picks, they have to be two.
+const DISTINCT_PAIRS: Array[Array] = [
+	["Set Blend", "Set Blending"],
+	["Set blend to {value}", "Set blending to {value}"],
+	["Blend", "Blending"],
+	["blend", "blending"]
+]
+
+
+static func _test_two_words_stay_two_words() -> bool:
+	var passed: bool = true
+	for locale: String in LOCALES:
+		var cells: Dictionary = _cells_by_key("%s.csv" % locale)
+		var collapsed: Array[String] = []
+		for pair: Array in DISTINCT_PAIRS:
+			var left: String = str(cells.get(pair[0], ""))
+			var right: String = str(cells.get(pair[1], ""))
+			if left == right:
+				collapsed.append("%s = %s = \"%s\"" % [pair[0], pair[1], left])
+		passed = _check("%s tells the pairs apart" % locale, collapsed,
+			PackedStringArray() as Array[String]) and passed
+	return passed
+
+
+## The catalog as key -> translated cell, for a question that is about one row rather than the file.
+static func _cells_by_key(file_name: String) -> Dictionary:
+	var cells: Dictionary = {}
+	for row: PackedStringArray in _read_rows(file_name):
+		if row.size() > 1 and not cells.has(row[0]):
+			cells[row[0]] = row[1]
+	return cells
 
 
 static func _read_rows(file_name: String) -> Array:

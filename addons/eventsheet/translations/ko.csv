@@ -6122,13 +6122,13 @@ Remove Layer,겹친 층 제거
 "Takes the second material back off a surface this mesh owns. A surface still drawing with a shared material file is left alone on purpose: the layer on it belongs to every mesh wearing that file, and taking it off here would take it off all of them.","이 메시가 소유한 표면에서 두 번째 머티리얼을 다시 떼어냅니다. 아직 공유 머티리얼 파일로 그리고 있는 표면은 일부러 건드리지 않습니다. 그 위의 층은 그 파일을 입은 모든 메시의 것이라, 여기서 떼면 모두에게서 떼어지기 때문입니다."
 Remove the layer over surface {surface},표면 {surface} 위의 층 제거
 "Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.","어떤 표면에서 층을 떼어낼지. 표면은 0부터 번호가 매겨집니다. 메시 표면 수가 이 메시에 몇 개가 있는지 알려 주며, 표면이 하나뿐인 메시에는 표면 0만 있습니다."
-Set Blending,블렌드 방식 설정
+Set Blending,블렌드 모드 설정
 "How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.blend_mode`.","스프라이트를 이미 뒤에 그려진 것과 어떻게 섞을지. 더하기는 불, 불꽃, 빛줄기가 원하는 것이고, 곱하기는 그림자나 얼룩이 원하는 것입니다. 아무것도 입지 않았거나 공유 머티리얼 파일로 그리고 있을 때는 이 항목에 먼저 고유한 CanvasItemMaterial을 줍니다. 그래서 다른 항목이 입은 머티리얼이 그 아래에서 바뀌는 일이 없습니다. 셰이더를 입은 항목은 그대로 둡니다. 거기서는 블렌드와 빛이 셰이더 안에 있기 때문입니다. `CanvasItemMaterial.blend_mode`을(를) 씁니다."
-Set blending to {value},블렌드를 {value}(으)로 설정
-Blending,블렌드
+Set blending to {value},블렌드 모드를 {value}(으)로 설정
+Blending,블렌드 모드
 "How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants.","스프라이트를 이미 뒤에 그려진 것과 어떻게 섞을지. 더하기는 불, 불꽃, 빛줄기가 원하는 것이고, 곱하기는 그림자나 얼룩이 원하는 것입니다."
 "Reads the sprite's blending back: `CanvasItemMaterial.blend_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.",스프라이트의 블렌드를 읽습니다: `CanvasItemMaterial.blend_mode`. 셰이더를 입은 스프라이트나 머티리얼이 아예 없는 스프라이트는 새 머티리얼이 시작하는 값으로 답합니다. 어떤 값 필드에서든 쓸 수 있습니다.
-blending,블렌드
+blending,블렌드 모드
 Set Light Response,빛 반응 설정
 "How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.light_mode`.","2D 조명이 스프라이트에 어떻게 닿는지. 셰이딩 없음은 조명이 무엇을 하든 최대 밝기를 유지하며, HUD 조각과 불 켜진 창문이 원하는 것입니다. 빛만은 빛이 닿는 곳에만 그리고 다른 곳에는 그리지 않습니다. 아무것도 입지 않았거나 공유 머티리얼 파일로 그리고 있을 때는 이 항목에 먼저 고유한 CanvasItemMaterial을 줍니다. 그래서 다른 항목이 입은 머티리얼이 그 아래에서 바뀌는 일이 없습니다. 셰이더를 입은 항목은 그대로 둡니다. 거기서는 블렌드와 빛이 셰이더 안에 있기 때문입니다. `CanvasItemMaterial.light_mode`을(를) 씁니다."
 Set light response to {value},빛 반응을 {value}(으)로 설정

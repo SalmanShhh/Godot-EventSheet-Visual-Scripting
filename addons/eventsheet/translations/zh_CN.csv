@@ -6124,11 +6124,11 @@ Remove the layer over surface {surface},移除表面 {surface} 上的叠加层
 "Which surface to take the layer off. Surfaces are numbered from 0; Mesh Surface Count says how many this mesh has, and a mesh with one surface only has surface 0.",从哪个表面取下叠加层。 表面从 0 开始编号；网格表面数会告诉你这个网格有几个表面，只有一个表面的网格只有表面 0。
 Set Blending,设置混合方式
 "How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.blend_mode`.",精灵如何与它身后已经画好的东西混合。相加是火焰、火花和光束想要的；相乘是阴影或污渍想要的。 当这个项目没有材质、或者正在用共享材质文件绘制时，先给它一份自己的 CanvasItemMaterial，这样其他项目穿着的材质就绝不会在它们身下被改动。穿着着色器的项目会被留着不动：那里的混合和光照都住在着色器里。写入 `CanvasItemMaterial.blend_mode`。
-Set blending to {value},将混合设为 {value}
-Blending,混合
+Set blending to {value},将混合方式设为 {value}
+Blending,混合方式
 "How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants.",精灵如何与它身后已经画好的东西混合。相加是火焰、火花和光束想要的；相乘是阴影或污渍想要的。
 "Reads the sprite's blending back: `CanvasItemMaterial.blend_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.",读回精灵的混合：`CanvasItemMaterial.blend_mode`。穿着着色器的精灵，或者完全没有材质的精灵，会返回新材质的起始值。可用于任何取值字段。
-blending,混合
+blending,混合方式
 Set Light Response,设置受光反应
 "How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.light_mode`.",2D 灯光如何照到精灵上。无光照会让它始终保持满亮度，无论灯光怎么变 - 这正是 HUD 部件和亮着的窗户想要的；仅光照只在有光落下的地方绘制它，别处一概不画。 当这个项目没有材质、或者正在用共享材质文件绘制时，先给它一份自己的 CanvasItemMaterial，这样其他项目穿着的材质就绝不会在它们身下被改动。穿着着色器的项目会被留着不动：那里的混合和光照都住在着色器里。写入 `CanvasItemMaterial.light_mode`。
 Set light response to {value},将受光反应设为 {value}
