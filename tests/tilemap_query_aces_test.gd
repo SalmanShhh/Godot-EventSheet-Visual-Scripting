@@ -415,12 +415,18 @@ static func _reading_a_file_once_is_a_thing_a_caller_asks_for() -> bool:
 	var still_held: String = EventForgeTileSetFacts.source_of(path)
 	EventForgeTileSetFacts.forget()
 	var let_go: String = EventForgeTileSetFacts.source_of(path)
+	# The read underneath is the AUDIT's, so an audit that has already read a file does not read it
+	# again for the tilemap section. Asked as the two readers answering the same file the same way,
+	# because the sharing is a seam rather than a value anybody can see.
+	var doctor_says: String = EventSheetProjectDoctor.source_of(path)
 	DirAccess.remove_absolute(path)
 	return SUPPORT.pins(NAME, [
 		["nothing is held by default", [without, still_fresh], ["first", "second"]],
 		["a caller that is remembering reads each file once", [held, still_held],
 			["second", "second"]],
 		["and forgetting is really forgetting", let_go, "third"],
+		["the read underneath is the audit's own, so one run reads a file once", doctor_says,
+			let_go],
 	])
 
 

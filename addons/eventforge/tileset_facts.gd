@@ -59,6 +59,11 @@ const WALK_KEY := "the walk"
 static var _held: Dictionary = {}
 static var _holding: bool = false
 
+## The audit, and the one read of it this file makes. Held for the process because it is one script,
+## and loading it twice would be two caches again - which is the thing this seam exists to stop.
+const DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
+static var _doctor: GDScript = null
+
 
 ## Read every file once until `forget()`. For a caller about to ask several of these questions in a
 ## row - the Doctor's Tilemap section asks three - which otherwise walks the project and reads every
@@ -167,11 +172,28 @@ static func terrains(source: String) -> Array[Dictionary]:
 static func source_of(path: String) -> String:
 	if _holding and _held.has(path):
 		return str(_held[path])
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	var text: String = "" if file == null else file.get_as_text()
+	var text: String = _read(path)
 	if _holding:
 		_held[path] = text
 	return text
+
+
+## The read itself, taken through THE DOCTOR'S OWN per-run cache rather than off the disk again.
+## An audit reads the project's scenes and resources for around thirty checks and shares one read
+## between them; this file was opening the same `.tscn` files a second time for the tilemap section,
+## so a project's bytes were read twice for one report. Outside a run that cache holds nothing and
+## the call is a plain read, which is exactly what this did before.
+##
+## The Doctor is reached BY PATH rather than by name, the same lazy rule the plugin's boot path
+## follows: this file is read by the completion seam as well, and naming the audit here would make
+## every field opening depend on it at parse time.
+static func _read(path: String) -> String:
+	if _doctor == null:
+		_doctor = load(DOCTOR_PATH) as GDScript
+	if _doctor != null:
+		return str(_doctor.call("source_of", path))
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	return "" if file == null else file.get_as_text()
 
 
 ## Every text-format resource and scene in the project, sorted, bounded, and skipping this plugin's
