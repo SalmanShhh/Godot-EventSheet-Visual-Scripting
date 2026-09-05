@@ -34,13 +34,30 @@ const ROW_MENU_FIND_ALL_REFERENCES := 9710
 ## the ids above: far outside every shared dispatcher's range.
 const ROW_MENU_ADOPT_BEHAVIOR := 9720
 const ROW_MENU_EXPLAIN_READING := 9730
+
+## The two doors between a moment written as ROWS and a moment kept as a FILE: save this block
+## out, and read one back in. Same rule as the ids above - far outside every shared dispatcher's
+## range - and both open a form rather than acting on the click, because each one names a file.
+const ROW_MENU_MOMENT_SAVE_FILE := 9740
+const ROW_MENU_MOMENT_OPEN_FILE := 9750
 const FIND_ALL_REFERENCES_TOOLTIP := "Every place this name is used, across the open sheets and the project - grouped by sheet, with event numbers. F3 / Shift+F3 step through them."
 
 var _dock: Control = null
+## The moment file form, built once and kept: one dialog serves both directions.
+var _moment_door: EventSheetMomentFileDoor = null
 
 
 func init(dock: Control) -> void:
 	_dock = dock
+
+
+## The moment file door, made the first time it is asked for so a sheet that never holds a
+## Moment block never builds a dialog.
+func moment_door() -> EventSheetMomentFileDoor:
+	if _moment_door == null:
+		_moment_door = EventSheetMomentFileDoor.new()
+		_moment_door.init(_dock)
+	return _moment_door
 
 
 ## The key that does the same thing, shown at the right of a menu item, so the shortcut is
@@ -275,6 +292,18 @@ func build_all() -> void:
 			_dock.explain_pattern_reading()
 		elif id == ROW_MENU_ADOPT_BEHAVIOR:
 			_dock.adopt_pattern_behavior())
+	# ── The moment file doors (appended block - keep together) ────────────────────────────────
+	# Saving rides the row menu (the block being saved is the one clicked); reading rides the empty
+	# space menu as well, because the first moment a sheet opens has no block to right-click yet.
+	for menu: PopupMenu in [_dock._row_context_menu, _dock._empty_space_context_menu]:
+		menu.id_pressed.connect(func(id: int) -> void:
+			if id == ROW_MENU_MOMENT_SAVE_FILE:
+				moment_door().open_save(_dock._context_row.source_resource as MomentBlockRow \
+					if _dock._context_row != null else null)
+			elif id == ROW_MENU_MOMENT_OPEN_FILE:
+				moment_door().open_read())
+	_dock._empty_space_context_menu.add_separator()
+	_dock._empty_space_context_menu.add_item("Open Moment File As Block…", ROW_MENU_MOMENT_OPEN_FILE)
 
 
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
@@ -331,6 +360,15 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			menu.add_item("Edit Entry…", _dock.ACTION_MENU_DECL_EDIT_ENTRY)
 			menu.add_item("Remove Entry", _dock.ACTION_MENU_DECL_REMOVE_ENTRY)
 		return
+	# A Moment block reads as a SECTION row and its steps as ordinary condition/action rows, so the
+	# generic items would act on the wrong anchor - checked here for the same reason the declaration
+	# row above is. The two doors between its rows and a moment FILE are the whole extra vocabulary a
+	# moment has; everything else it does (add a step, reorder, disable) is the sheet's own gestures.
+	var moment_block: MomentBlockRow = row_data.source_resource as MomentBlockRow if row_data != null else null
+	if moment_block != null:
+		menu.add_item("Save Moment As File…", ROW_MENU_MOMENT_SAVE_FILE)
+		menu.add_item("Open Moment File As Block…", ROW_MENU_MOMENT_OPEN_FILE)
+		menu.add_separator()
 	var verb_function: EventFunction = row_data.source_resource as EventFunction if row_data != null else null
 	var data_class_raw: RawCodeRow = _data_class_row_target(row_data)
 	if verb_function != null:

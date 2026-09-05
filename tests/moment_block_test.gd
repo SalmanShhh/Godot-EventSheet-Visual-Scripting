@@ -46,6 +46,25 @@ const LOOPED_TEXT: String = """func moment_pulse(strength: float = 1.0, from: No
 		await MomentRunner.then(self, 0.1, "game")
 		c()"""
 
+## The two steps a moment FILE holds, in the order and the spelling a file writes them.
+const FILE_STEPS: Array = [
+	{"amount": 0.45, "effect": "", "seconds": 0.0, "verb": "shake"},
+	{"amount": 0.0, "effect": "", "seconds": 0.06, "verb": "hitstop"}
+]
+
+## And the block those two steps open as: every step at the start, because that is what a file
+## means, each one the single row that plays it.
+const FILE_BLOCK_TEXT: String = """func moment_Boss_Hit(strength: float = 1.0, from: Node = null) -> void:
+	$JuiceBehavior.moment_step("shake", 0.45, "", 0.0, strength)
+	$JuiceBehavior.moment_step("hitstop", 0.0, "", 0.06, strength)"""
+
+## Where the round trip through a real file happens. Taken away again at the end of the section.
+const FILE_PATH: String = "user://moment_block_test_boss_hit.tres"
+
+## The pack whose row plays one step of a moment, loaded by path: a test that names a class the
+## class cache has not caught up with fails for the wrong reason.
+const JUICE_SCRIPT: String = "res://eventsheet_addons/juice/juice_behavior.gd"
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -54,6 +73,8 @@ static func run() -> bool:
 	passed = _pin_the_loop() and passed
 	passed = _pin_the_strength() and passed
 	passed = _pin_the_range() and passed
+	passed = _pin_the_file_bridge() and passed
+	passed = _pin_the_two_homes() and passed
 	return passed
 
 
@@ -148,6 +169,76 @@ static func _pin_the_range() -> bool:
 		["none holds full strength to the edge", String.num(RUNNER.falloff_factor(599.0, 600.0, "none"), 4), "1.0"],
 		["no range at all is no falloff", String.num(RUNNER.falloff_factor(9999.0, 0.0, "linear"), 4), "1.0"],
 	])
+
+
+## THE TWO WRITTEN-DOWN HOMES, in both directions. A file opens as a block whose steps all start
+## together and each play one step; a block of exactly that shape saves back as the same steps. And
+## a block a file CANNOT hold says which rows it cannot hold, rather than dropping them.
+static func _pin_the_file_bridge() -> bool:
+	var opened: MomentBlockRow = EventSheetMomentFile.block_of("Boss Hit", FILE_STEPS)
+	var text: String = _function_text(SUPPORT.compile_output(_sheet_with(opened),
+		"user://moment_bridge_test.gd"))
+	var back: Dictionary = EventSheetMomentFile.steps_of(opened)
+	var refused: Dictionary = EventSheetMomentFile.steps_of(_impact_block())
+	var wrote: Dictionary = EventSheetMomentFileDoor.save_run(opened, FILE_PATH)
+	var read: Dictionary = EventSheetMomentFileDoor.open_run(FILE_PATH)
+	var reopened: MomentBlockRow = read.get("block") as MomentBlockRow
+	var rows: Array = [
+		["a file opens as a block whose steps all start together", text, FILE_BLOCK_TEXT],
+		["a name with a space in it becomes one a function can carry", opened.moment_name, "Boss_Hit"],
+		["the same block saves back as the same steps", str(back.get("steps", [])), str(FILE_STEPS)],
+		["and leaves nothing behind", str(back.get("left_behind", PackedStringArray())), "[]"],
+		# A file has no timing and no verb outside the ten, so the fixture block's Hold and its
+		# hand-written statements are exactly what it cannot hold - named, not dropped.
+		["a block a file cannot hold names the rows it cannot", str(refused.get("left_behind", PackedStringArray())),
+			str(PackedStringArray(["At 0 s", "At 0.05 s", "Hold, then 0.1 s"]))],
+		["and carries none of them", str(refused.get("steps", [])), "[]"],
+		["the door writes the file", bool(wrote.get("ok", false)), true],
+		["and says what it wrote", str(wrote.get("said", "")), "moment_block_test_boss_hit.tres written - 2 step(s)."],
+		["the door reads it back as a block", reopened != null, true],
+		["with the steps it went in with", str(EventSheetMomentFile.steps_of(reopened).get("steps", []) if reopened != null else []), str(FILE_STEPS)],
+		["a file that is not there is said so rather than guessed at",
+			bool(EventSheetMomentFileDoor.open_run("user://no_such_moment.tres").get("ok", true)), false]
+	]
+	if FileAccess.file_exists(FILE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(FILE_PATH))
+	rows.append(["and the file the test wrote is taken away with it", FileAccess.file_exists(FILE_PATH), false])
+	return SUPPORT.pins(PREFIX, rows)
+
+
+## ONE ROW, EITHER HOME. The Moment row plays a beat written as a block on the host exactly as
+## readily as one kept in a file, and the no-flashing ceiling both are held to is one number in one
+## place - the runner's - rather than two that can drift.
+static func _pin_the_two_homes() -> bool:
+	var juice: Node = (load(JUICE_SCRIPT) as GDScript).new()
+	var written := GDScript.new()
+	written.source_code = ("extends Node2D\n\n\nvar played: Array = []\n\n\n"
+		+ "func moment_impact(strength: float = 1.0, from: Node = null) -> void:\n"
+		+ "\tplayed.append([strength, from])\n")
+	written.reload()
+	var host: Node2D = Node2D.new()
+	host.set_script(written)
+	juice.host = host
+	juice.moment("impact", 0.5)
+	var rows: Array = [
+		["a moment written as rows on the host is played by the Moment row", str(host.played), str([[0.5, null]])],
+		["a name the host does not answer to falls through to the file",
+			juice._play_moment_block("kill", 1.0), false],
+		["a name that is no identifier at all is nobody's block",
+			juice._play_moment_block("not a name!", 1.0), false],
+		["a moment named with spaces finds the block written with underscores",
+			juice._play_moment_block(" impact ", 0.25), true],
+		["the ceiling a step is held under is the runner's own number",
+			juice.MOMENT_FLASH_CEILING, RUNNER.FLASH_CEILING],
+		["and so is the floor its time is held over",
+			juice.MOMENT_FLASH_FLOOR_SECONDS, RUNNER.FLASH_FLOOR_SECONDS],
+		["one step of a moment is a row of its own", juice.has_method("moment_step"), true]
+	]
+	juice.moment_step("shake", 0.4, "", 0.0, 0.5)
+	rows.append(["and it plays the step at the strength it was given", String.num(juice.trauma, 4), "0.2"])
+	host.free()
+	juice.free()
+	return SUPPORT.pins(PREFIX, rows)
 
 
 ## The fixture block: three steps, the middle one lasting long enough for the Hold to have
