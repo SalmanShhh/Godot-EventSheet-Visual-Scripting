@@ -27,6 +27,8 @@
 class_name ReadingShapesTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 ## Where the staged pair is written. user://, so a run leaves nothing under res://.
 const STAGED_DIR: String = "user://reading_shapes_staged"
 const STAGED_A: String = STAGED_DIR + "/coin.gd"
@@ -370,10 +372,9 @@ static func _write(path: String, text: String) -> void:
 	file.close()
 
 
+## Every pin here, through the suite's ONE assertion vocabulary. A local spelling only because every
+## pin in this file says the same prefix - the printing, and the `expected:` / `actual:` pair the
+## report tool parses, are `tests/support.gd`'s. It says a passing pin out loud now, which a reader
+## looking for a name in a green run needs and which the silent form here never gave them.
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		return true
-	print("[FAIL] reading_shapes_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
+	return SUPPORT.check("reading_shapes_test", label, actual, expected)

@@ -33,6 +33,8 @@
 class_name DerivedPropertyRowsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 ## Where the staged script lives. user://, so a run leaves nothing under res://.
 const STAGED_DIR: String = "user://derived_property_rows_staged"
 const STAGED_SCRIPT: String = STAGED_DIR + "/lantern.gd"
@@ -90,12 +92,11 @@ static func run() -> bool:
 	return ok
 
 
+## Every pin here, through the suite's ONE assertion vocabulary. A local spelling only because every
+## pin in this file says the same prefix - the printing, and the `expected:` / `actual:` pair the
+## report tool parses, are `tests/support.gd`'s.
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] derived_property_rows_test: %s" % label)
-		return true
-	print("[FAIL] derived_property_rows_test: %s - expected %s, got %s" % [label, expected, actual])
-	return false
+	return SUPPORT.check("derived_property_rows_test", label, actual, expected)
 
 
 ## 1. The three shapes, each as the object column and the words after it. The Inspector's own order,

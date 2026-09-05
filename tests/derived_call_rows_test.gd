@@ -33,6 +33,8 @@
 class_name DerivedCallRowsTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
 ## A sheet that is really placed in a scene, for the shelf half: the room's script, whose scene
 ## holds a Hero wearing a script of its own.
 const ROOM: String = "res://tests/fixtures/interop_corpus/room.gd"
@@ -294,12 +296,11 @@ static func _test_two_paths_ending_in_one_name() -> bool:
 	return ok
 
 
+## Every pin here, through the suite's ONE assertion vocabulary. A local spelling only because every
+## pin in this file says the same prefix - the printing, and the `expected:` / `actual:` pair the
+## report tool parses, are `tests/support.gd`'s.
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] derived_call_rows_test: %s" % label)
-		return true
-	print("[FAIL] derived_call_rows_test: %s - expected %s, got %s" % [label, expected, actual])
-	return false
+	return SUPPORT.check("derived_call_rows_test", label, actual, expected)
 
 
 ## 1. The receiver, and the refusals. `<class> via <source>` for a resolved one, "" for a receiver
