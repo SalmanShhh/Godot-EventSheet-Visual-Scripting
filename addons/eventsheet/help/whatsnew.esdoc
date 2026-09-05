@@ -631,6 +631,23 @@ What changed in the build you have installed (v0.17.0), in the words the release
   sentence in it. The scanner now falls back to the prose exactly as the two readers of a pack
   already do - skip the annotation lines, join what is left with a space - so the reference says
   what the picker says. Regenerate with `tools/vocabulary_doc.gd` to pick the sentences up.
+- **A wrapped doc comment reads as its whole sentence, not its first line.** The caption a verb
+  wears in its right lane, and the Description panel of an opened pack, both took the FIRST prose
+  line of a doc comment. That was survivable while a description arrived as one long
+  `@ace_description` line, because one line is what it was. Prose wraps at the width its author was
+  writing to, so the first line is a fragment far more often than a sentence: Anchor To read \"Puts
+  the host on a corner, an edge or the whole rectangle of its\" and stopped, and twenty-seven of the
+  forty verbs that moved to prose wrap to two lines or more. Both fold the whole comment into one
+  line now, the same way the analyzer and the importer do, so the row, the picker and the opened
+  file say the same words. The Feedback Player's card help, which read descriptions the same
+  one-place way the reference did, gained the same fallback.
+- **The pack gate sees a pack that keeps its scripts a folder deeper.** It indexed the shipped
+  scripts two folder levels down, and the post-processing kit ships seven effects below that, under
+  `post_kit/effects/` - so all seven would have been reported as scripts no pack ships, on the day
+  the rotation happened to reach that builder and with no diff to explain it. The walk is recursive
+  now. The rotation itself counts real days rather than composing a number out of the calendar,
+  which was skipping a slice at the end of every short month and stretching the promised week to
+  thirteen days for four of the seven slices.
 
 ### Fixed in the general-purpose reading pass
 

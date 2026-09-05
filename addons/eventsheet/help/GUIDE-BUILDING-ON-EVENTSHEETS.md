@@ -240,7 +240,7 @@ EventSheets.register_doctor_check("my_pack.missing_tables", func(sheet_paths: Pa
 
 A check receives every non-template sheet path plus the shared findings array, and appends findings shaped `{"severity": "error"|"warning"|"info", "check": <your id>, "path": ..., "message": ...}`. Severity decides consequence: errors fail CI, warnings fail `--strict` CI, infos are advisory. The Doctor covenant applies to your check too: **never write inside res://** (verification work goes to `user://` temporary files). Re-registering an id replaces the previous check, so plugin reloads never duplicate; `unregister_doctor_check(id)` removes it.
 
-Two corpora are worth knowing about. `EventSheets.project_scripts()` is every `.gd` outside `addons/` - the list to scan when the failure lives in emitted code, because `sheet_paths` finds only `.tres` sheets while `.gd` is the default format. And when a check is about a resource being **shared**:
+Two corpora are worth knowing about. `EventSheets.project_scripts()` is the audit's own: every `.gd` outside `addons/`, minus the folders the project declared through `eventsheets/doctor/skipped_folders`. It is the list to scan when the failure lives in emitted code, because `sheet_paths` finds only `.tres` sheets while `.gd` is the default format, and it is the right list for a check because a finding about a folder the reader declared uninteresting is noise. Reach past it only when your check would be **wrong** rather than merely noisy about a file it cannot see - a name that must be unique across the whole project, say - and say so in the code. And when a check is about a resource being **shared**:
 
 ```gdscript
 # Which OTHER scenes load this file. One indexed scan of the project, shared by everything
