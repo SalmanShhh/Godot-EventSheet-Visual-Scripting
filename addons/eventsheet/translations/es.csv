@@ -6103,7 +6103,7 @@ back,reverso
 both,ambas
 Reads the surface's sides back: `material_override.cull_mode`. Use it in any value field.,Lee de vuelta las caras de la superficie: `material_override.cull_mode`. Úsalo en cualquier campo de valor.
 sides,caras
-Set Material Of Surface,Establecer material de la superficie
+Set Material Of Surface,Fijar el material de la superficie
 "Gives ONE surface of the mesh its own material, leaving the others alone - which is what a model with a body, a visor and a pack needs, and what Set Mesh Material cannot do because it paints all of them at once. Writes `MeshInstance3D.set_surface_override_material`.","Da a UNA superficie de la malla su propio material y deja las demás en paz - que es lo que necesita un modelo con cuerpo, visor y mochila, y lo que Establecer material de la malla no puede hacer porque las pinta todas a la vez. Escribe `MeshInstance3D.set_surface_override_material`."
 Set material of surface {surface} to {material},Establecer el material de la superficie {surface} a {material}
 Surface,Superficie
@@ -6129,9 +6129,9 @@ Blending,Modo de mezcla
 "How the sprite is mixed with whatever is already drawn behind it. Add is what fire, sparks and light shafts want; multiply is what a shadow or a stain wants.","Cómo se mezcla el sprite con lo que ya hay dibujado detrás. Sumar es lo que quieren el fuego, las chispas y los haces de luz; multiplicar es lo que quiere una sombra o una mancha."
 "Reads the sprite's blending back: `CanvasItemMaterial.blend_mode`. A sprite wearing a shader, or wearing no material at all, answers with the value a new material starts on. Use it in any value field.","Lee la mezcla del sprite: `CanvasItemMaterial.blend_mode`. Un sprite que lleva un shader, o que no lleva material alguno, responde con el valor con el que arranca un material nuevo. Úsalo en cualquier campo de valor."
 blending,modo de mezcla
-Set Light Response,Establecer respuesta a la luz
+Set Light Response,Fijar la respuesta a la luz
 "How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else. Gives this item its own CanvasItemMaterial first when it is drawing with nothing or with a shared material file, so a material worn by other items never changes under them. An item wearing a shader is left alone: blend and light live inside the shader there. Writes `CanvasItemMaterial.light_mode`.","Cómo llegan las luces 2D al sprite. Sin sombreado lo mantiene a pleno brillo hagan lo que hagan las luces, que es lo que quieren una pieza de HUD y una ventana encendida; solo luz lo dibuja únicamente donde cae una luz y en ningún otro sitio. Da primero a este elemento su propio CanvasItemMaterial cuando dibuja sin material o con un archivo de material compartido, para que un material que llevan otros elementos nunca cambie bajo ellos. Un elemento que lleva un shader se deja en paz: allí la mezcla y la luz viven dentro del shader. Escribe `CanvasItemMaterial.light_mode`."
-Set light response to {value},Establecer la respuesta a la luz a {value}
+Set light response to {value},Poner la respuesta a la luz en {value}
 Light response,Respuesta a la luz
 "How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else.","Cómo llegan las luces 2D al sprite. Sin sombreado lo mantiene a pleno brillo hagan lo que hagan las luces, que es lo que quieren una pieza de HUD y una ventana encendida; solo luz lo dibuja únicamente donde cae una luz y en ningún otro sitio."
 normal,normal

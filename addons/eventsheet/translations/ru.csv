@@ -6084,7 +6084,7 @@ Set Transparency,Задать режим прозрачности
 Set transparency to {value},Задать режим прозрачности {value}
 Transparency,Режим прозрачности
 "How the surface handles being see-through at all. Scissor keeps every pixel either fully there or fully gone, which is what leaves and fences want and what costs the least.","Как поверхность вообще обходится с прозрачностью. Отсечение оставляет каждый пиксель либо целиком, либо совсем без него - это то, что нужно листве и заборам, и стоит дешевле всего."
-solid,непрозрачно
+solid,непрозрачный
 alpha,альфа
 alpha scissor,альфа-отсечение
 alpha hash,альфа-хеш
@@ -6134,7 +6134,7 @@ Set Light Response,Задать отклик на свет
 Set light response to {value},Задать отклик на свет равным {value}
 Light response,Отклик на свет
 "How the 2D lights reach the sprite. Unshaded keeps it at full brightness whatever the lights do, which is what a HUD piece and a lit window want; light only draws it where a light falls and nowhere else.","Как двумерный свет достаёт до спрайта. Без затенения держит его на полной яркости, что бы ни делал свет - именно это нужно элементу интерфейса и освещённому окну; только свет рисует его лишь там, куда падает свет, и больше нигде."
-normal,обычно
+normal,обычный
 unshaded,без затенения
 light only,только свет
 Light Response,Отклик на свет
