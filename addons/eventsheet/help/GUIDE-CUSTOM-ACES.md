@@ -408,17 +408,38 @@ func hold_shield(seconds: float, quality: String, op: String) -> void:
   | `moment({moment_name}, {strength})` | not quoted | `default_code: "impact"` - GDScript, taken verbatim, quotes and all. Also `default_code: Vector2(1, 1)`, `default_code: null`. |
   | either, for a number or a bare word | - | `default: 1.0` - the shorthand, and what nearly every line is. |
 
+  **A starting value needs a `desc:` beside it to survive.** All three spellings ride on the one-line
+  `@ace_param` form, and a parameter with no help text is written the older, shorter way instead -
+  `@ace_param_options` and `@ace_param_hint`, which hold a dropdown and a widget hint and have
+  nowhere to put a starting value. So a `default_word:` on a parameter you never described is
+  dropped when the pack is emitted. Give the parameter one line of help: the picker shows it anyway,
+  and it is what keeps the starting value.
+
+  **Write a word bare.** The quotes on a `default_word:` are an escape, not decoration: use them only
+  when the word is empty, holds a comma, or wears quotes of its own. `default_word: "x"` for a simple
+  word reads correctly and then saves back as `default_word: x`, which is a different line from the
+  one on disk - and a block the compiler does not reproduce exactly opens as raw code, so a quoted
+  simple word costs you the whole verb. Opening such a file says so on the row rather than leaving
+  you to guess.
+
   The shorthand cannot say which kind it is: both annotation readers trim one surrounding quote pair
   off a `default:`, so `default: "impact"` arrives as the bare word `impact` and an unquoted slot then
   writes `moment(impact, 1)` - an undefined identifier, in a row that looked right on the canvas.
   `default_word:` and `default_code:` are the same value with its kind said out loud; `default:` keeps
   meaning exactly what it always meant, so nothing already written changes.
 
-  Two things worth knowing. A word that both begins with a quote AND holds a comma has no spelling -
-  the pair protecting its quotes closes before the comma and the line splits there (the same
-  limitation an option label has). And on a parameter that also has `options:`, a `default_code:`
-  string literal has its quotes taken off to match against the option keys, which are bare words - so
-  on a dropdown, use `default_word:`.
+  Two things worth knowing. You do not have to work out whether your value needs quotes: the emitter
+  writes the line, splits it back with the reader's own split, and ships it only if the value comes
+  back whole - trying the plain form first and the quoted one second. A value that survives neither
+  (a word ending in one unbalanced quote, say) ships with NO starting value and a warning naming the
+  parameter, because a line that reads back wrong takes the help text after it down too, and a block
+  the compiler cannot reproduce opens as raw code. And on a parameter that also has `options:`, use
+  `default_word:`. A starting value written in an annotation reaches the dropdown exactly as it
+  reads, and option keys are bare words - so `default_code: "impact"` arrives with its quotes,
+  matches no key, and the dropdown opens on its first word instead. (Nothing takes those quotes off
+  for you. The one place a quoted value IS unwrapped is a default read off the method signature -
+  `func is_at_bound(side: String = "any")` - because that is source text rather than a word, and only
+  when the parameter has options.)
 - **`options:`** entries may be `value=Label`: the dropdown READS the label and INSERTS the value.
   Entries split on `|` here (so commas stay free for prose); `@ace_param_options` splits on `,`
   instead. A key that itself contains `=` ships quoted - `"<="=at most` - because the split is on the
