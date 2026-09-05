@@ -389,6 +389,109 @@ The player publishes its own vocabulary in the **Feedback Player** category, rea
 | Feedbacks Progress | expression | How far down the list the play has got, 0 to 1 |
 | Feedbacks Duration | expression | The longest path through the list, in seconds |
 
+### Editing the list while the game runs
+
+Everything the Inspector's list does has a row, and every one of them names ONE card by its
+**label** - the name you typed on the card, or, for a card you never named, its own word. That is
+the whole addressing scheme: a list you tuned in the Inspector and a list your sheet retunes can
+never disagree about which step is meant.
+
+The weapon-change beat, in two rows:
+
+| Lane | Row |
+| --- | --- |
+| condition | Player: **On weapon changed** |
+| action | FireFeedback: **Replace feedback "kick" with** `{"verb": "recoil", "amount": Weapon.recoil}` |
+| action | FireFeedback: **Set feedback "shot" effect to** `Weapon.sound` |
+
+The replacement keeps the old card's name unless it brings one of its own, so every other row that
+addressed it goes on working.
+
+| Row | Kind | What it does |
+| --- | --- | --- |
+| Add Feedback | action | Adds a card, at the end or after the one you name |
+| Insert Feedback Before | action | Adds a card immediately above the one you name |
+| Replace Feedback | action | Swaps one card for another, in place, keeping its name |
+| Remove Feedback | action | Takes one card out |
+| Move Feedback To | action | Moves a card to a place in the list (the first is 1) |
+| Enable Feedback / Disable Feedback | actions | The card's tick box, both ways |
+| Set Feedback Field | action | Writes one value on one card: amount, effect, seconds, delay, interval, repeat, chance, loops |
+| Set Feedback Timing | action | Delay, repeats, the gap between them, and which clock |
+| Set Feedback Chance | action | How often that card is felt at all, as a percentage |
+| Set Feedback Label | action | Renames a card - and with it what the rest of the sheet says |
+| Duplicate Feedback | action | Copies a card in under a name of its own |
+| Clear Feedbacks | action | Empties the list |
+| Copy Feedbacks From | action | Takes another player's whole list, as a copy |
+| Load Moment File / Save Moment File | actions | The two doors between this list and a file |
+| Set Player Strength / Set Player Cooldown | actions | The object's own volume knob, and the shortest gap between plays |
+| Set Can Play While Playing | action | Restart, ignore, or overlap |
+
+The Add, Insert and Replace rows each take a **feedback**, and the parameter opens the card - the
+same card the Inspector's list unfolds, with the same kinds and the same fields. What ends up in the
+box is the dictionary the row emits, so an expression can be typed straight in instead.
+
+An edit row never writes into a moment file: a player whose file slot is filled is playing a beat
+other objects may be playing too, so the first edit takes a copy of it into this list and lets the
+slot go. The beat is unchanged; it is this object's own now.
+
+### And then some
+
+The rows a designed list cannot have, because they are about a game that is running:
+
+| Row | Kind | What it does |
+| --- | --- | --- |
+| Mute Feedback Category | action | Silences a whole family at once - audio, transform, camera, screen, pause, loop, signal. THE accessibility option: one row per switch |
+| Mute Feedback Category On Channel | action | The same switch, thrown for every player in a group |
+| Scale Feedback Amounts | action | Multiplies how much a family does - the effect-strength slider, where half is still the same beat |
+| Retime Feedbacks | action | Multiplies every length, wait and gap - a snappier version with nothing retuned |
+| Shuffle Feedbacks Between | action | Reorders the stretch between two cards at random |
+| Pick One Feedback Of | action | Ticks one of `shake_a`, `shake_b`, `shake_c` and unticks the rest |
+| Jump To Feedback | action | Moves the head of a running play to a card |
+| Skip Feedback Once | action | Steps over one card next time, then forgets about it |
+| Set Loop Count | action | How many times a Loop Back card goes round |
+| Hold Here / Release Hold | actions | Stops the head where it is, and carries on from the same card. Nothing ticks while it waits |
+
+### Asking, and hearing
+
+| Row | Kind | What it answers |
+| --- | --- | --- |
+| Feedback Is Playing | condition | True while the head is on that card |
+| Has Feedback | condition | True when the list holds a card by that name |
+| Feedback Is Enabled | condition | True when that card's box is ticked |
+| For Each Feedback | looping condition | Runs the actions under it once per card, with each label in hand |
+| Feedback Count | expression | How many cards the list holds |
+| Feedback Label At | expression | The name of the card at a place (the first is 1) |
+| Feedback Field | expression | What one card says at one of its fields |
+| Feedback Progress | expression | How far through ONE card the play is, 0 to 1 |
+| Feedback Duration | expression | How long ONE card lasts, its own wait included |
+| Current Feedback | expression | The label of the card the head is on |
+| Loops Left | expression | How many times round a Loop Back still has to go |
+| On Feedback Started / On Feedback Finished | triggers | The two ends of one card, carrying its label |
+| On Feedback Skipped | trigger | The label and why: off, muted, chance, strength, or skipped once |
+| On Hold Reached | trigger | A Hold card began waiting |
+| On Loop | trigger | A Loop Back sent the head round, with the loops left |
+
+A settings screen is **For Each Feedback** over the list, one switch per label, each one
+**Disable Feedback** on the label it is about.
+
+### Where the buttons are
+
+The sheet never grows one. Select a row about a beat - a player row, a Moment row, a Moment block's
+head - and the resting toolbar shows a **Moment** segment: Play, Stop, Skip, Restore, Open, and a
+strength. It plays through the very same preview the Inspector strip drives, on the player selected
+in the Scene dock (or the first one in the open scene), so the two can never show different pictures
+of one list. The segment goes away when the selection moves.
+
+![The resting toolbar with a player row selected: a Moment segment of Play, Stop, Skip, Restore, Open and a strength](../images/toolbar-moment-segment.png)
+
+### When a label names nothing
+
+Rename a card and every row that named it goes on compiling, goes on running, and does nothing. The
+editor says so before the game runs: the row takes the quiet amber state, and the sentence is in the
+Doctor's **Feedbacks** section and in the row's help strip once the row is selected. It stays quiet
+without evidence - a sheet no scene runs, a scene with no Feedback Player in it, and a label that
+comes from an expression all earn nothing rather than a guess.
+
 ---
 
 ## ACE reference
