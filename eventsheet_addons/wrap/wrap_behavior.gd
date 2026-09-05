@@ -149,7 +149,7 @@ func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 ## @ace_name("Set Wrap Space")
 ## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
 ## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_wrap_space({space})")
+## @ace_codegen_template("$WrapBehavior.set_wrap_space("{space}")")
 func set_wrap_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		wrap_space = space

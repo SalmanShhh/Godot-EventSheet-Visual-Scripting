@@ -45,8 +45,11 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## sweep below can walk the WHOLE fleet - a hand-written list of five packs is exactly why Is At
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
+##
+## It is EMPTY, and staying empty is the point: every pack that offers a word dropdown quotes it in
+## the template. A name back on this list is a pack shipping a row that emits an undefined
+## identifier, and the answer is to quote that template rather than to write the name down.
 const KNOWN_BARE := [
-	"wrap/wrap_behavior.gd:space",
 ]
 
 ## [pack, the template the pack ships, what a row picking an option emits] and, optionally, a fourth
@@ -131,6 +134,8 @@ const ACTIONS := [
 		"$UtilityBrain.add_consideration(\"flee\", \"health\", \"inverse\", 1.0, 0.5, 1.0)",
 		{"action_name": "\"flee\"", "input_key": "\"health\"", "curve": "inverse", "weight": "1.0",
 			"curve_center": "0.5", "curve_slope": "1.0"}],
+	[WRAP, "$WrapBehavior.set_wrap_space(\"{space}\")",
+		"$WrapBehavior.set_wrap_space(\"custom\")", {"space": "custom"}],
 ]
 
 const CONDITIONS := [

@@ -57,6 +57,7 @@ func _wrap_rect() -> Rect2:
 ## @ace_action
 ## @ace_name("Set Wrap Space")
 ## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
+## @ace_codegen_template("$WrapBehavior.set_wrap_space("{space}")")
 func set_wrap_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		wrap_space = space

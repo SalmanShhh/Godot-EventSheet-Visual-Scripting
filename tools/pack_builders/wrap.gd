@@ -4,6 +4,13 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
+## Set Wrap Space's `space` is a WORD picked off a dropdown, and a dropdown key is inserted into the
+## call verbatim - so the quotes live in the source's `@ace_codegen_template`, never in the key (a
+## quoted key does not survive the annotation round trip). Without them a row picking A custom
+## rectangle asked `set_wrap_space(custom)`, an undefined identifier, and the game did not parse.
+## The note lives here rather than beside the function, because a `#` comment in the source piece is
+## collected into the emitted FUNCTION BODY and would ship to every user of the pack.
+##
 ## Wrap: Asteroids-style screen wrapping - once the host is FULLY outside one edge of the
 ## screen (or a custom rectangle) it teleports to the opposite edge, per axis. The
 ## event-sheet-parity Wrap behavior: attach and ships fly off the right and return on the left.
