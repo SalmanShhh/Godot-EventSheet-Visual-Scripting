@@ -67,10 +67,12 @@ static func build() -> bool:
 	# The shaders ARE the pack: without them a shape draws nothing at all. They ship in the same
 	# build, from the same source folders, byte-stable like everything else here - the canvas half
 	# and the spatial half into one folder, because they are one pack.
-	if not Lib.ship_files("vector_shapes", "%s/vector_shapes" % PACK_DIR,
+	# Both bases are spelled out rather than built from PACK_DIR: the shipment gate reads these calls
+	# out of this file as text, so a path assembled at run time is a path no gate can follow.
+	if not Lib.ship_files("vector_shapes", "res://eventsheet_addons/vector_shapes/vector_shapes",
 			PackedStringArray(["gdshader", "gdshaderinc"])):
 		return false
-	return Lib.ship_files("vector_shapes_3d", "%s/vector_shapes_3d" % PACK_DIR,
+	return Lib.ship_files("vector_shapes_3d", "res://eventsheet_addons/vector_shapes/vector_shapes_3d",
 		PackedStringArray(["gdshader", "gdshaderinc"]))
 
 
