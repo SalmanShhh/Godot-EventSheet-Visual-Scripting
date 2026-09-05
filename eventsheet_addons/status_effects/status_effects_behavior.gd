@@ -52,14 +52,14 @@ var _active: Dictionary = {}
 ## What cannot land right now: the status word -> the seconds of immunity left.
 var _immune: Dictionary = {}
 
-## The host's own colour under the tint, and the tint last written over it. Both are kept because
-## THIS IS NOT THE ONLY SCRIPT THAT WRITES modulate: an invincibility flash blinking the alpha while
-## a burn is on used to be captured as the host's "own" colour and then written back for good, which
-## left the sprite half transparent for the rest of the level. So the colour underneath is worked
-## out from what is on the sprite NOW, with the tint divided back out, and the remembered one only
-## answers for a channel a tint drove too near zero to divide.
+## The host's own colour under the tint, and the exact colour this behaviour last WROTE over it.
+## Both are kept because THIS IS NOT THE ONLY SCRIPT THAT WRITES modulate: an invincibility flash
+## blinking the alpha while a burn is on used to be captured as the host's "own" colour and then
+## written back for good, which left the sprite half transparent for the rest of the level. So the
+## colour underneath is worked out at every re-mix by asking, channel by channel, whether what is on
+## the sprite is still what this behaviour put there.
 var _base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
-var _tint_factor: Color = Color(1.0, 1.0, 1.0, 1.0)
+var _tint_written: Color = Color(1.0, 1.0, 1.0, 1.0)
 var _tint_applied: bool = false
 
 ## The two Engine meta this project keeps its accessibility answers in - the same two the built-in
@@ -75,11 +75,6 @@ const TINT_CEILING: float = 0.3
 ## The tick this pack falls back to when an effect file asks for one of zero seconds, which would
 ## otherwise be a tick every frame - or, worse, a loop that never advances.
 const MINIMUM_TICK_SECONDS: float = 0.05
-
-## The least a tint channel may be and still be divided back out of the host's colour. A tint that
-## multiplied a channel by nothing has taken the colour underneath it away with it, so the one
-## remembered when the tint went on is the only honest answer for that channel.
-const TINT_FLOOR: float = 0.01
 
 ## The ownership key this whole project credits kills through, written by the Claim row.
 const OWNER_META: StringName = &"owner"
@@ -475,9 +470,10 @@ func _retint() -> void:
 	# What the tint comes to once the strength dial has had its say - white when nothing is on, and
 	# white when the dial is at zero, which is the same thing to everything below.
 	var wanted: Color = Color(1.0, 1.0, 1.0, 1.0).lerp(mixed, _tint_strength())
-	# The colour underneath, read fresh: whatever is on the sprite now with the tint this behaviour
-	# last wrote divided back out. That is what keeps another writer's change - a flash, a fade, a
-	# hit blink - standing when the last status leaves.
+	# The colour underneath, read fresh: every channel still holding what this behaviour last wrote
+	# is the tint's own doing and the remembered colour answers for it, and every channel that does
+	# not is somebody else's value and IS the colour underneath now. That is what keeps another
+	# writer's change - a flash, a fade, a hit blink - standing when the last status leaves.
 	if _tint_applied:
 		_base_modulate = _under_tint(canvas.modulate)
 	elif wanted != Color(1.0, 1.0, 1.0, 1.0):
@@ -485,29 +481,35 @@ func _retint() -> void:
 	if wanted == Color(1.0, 1.0, 1.0, 1.0):
 		if _tint_applied:
 			canvas.modulate = _base_modulate
-			_tint_factor = Color(1.0, 1.0, 1.0, 1.0)
+			_tint_written = Color(1.0, 1.0, 1.0, 1.0)
 			_tint_applied = false
 		return
-	_tint_factor = wanted
 	_tint_applied = true
-	canvas.modulate = _base_modulate * wanted
+	_tint_written = _base_modulate * wanted
+	canvas.modulate = _tint_written
 
-## The host's colour with this behaviour's own tint taken back out of it, channel by channel. A
-## channel the tint left near enough to nothing cannot be divided back out at all, so the colour
-## remembered when the tint went on answers for that one instead of an enormous number doing.
+## The host's colour with this behaviour's own tint taken back out of it, channel by channel.
+##
+## NOTHING IS DIVIDED. Dividing a channel by the tint assumes every other writer of modulate is
+## multiplying too, and almost none of them are: a flash, a fade and a hit blink all WRITE a colour.
+## A sprite another script set to white while a burn was on came back at (1.0, 1.61, 2.86, 1.0) -
+## brighter than white and ruined - because the division took a value that was never multiplied and
+## undid a multiplication anyway. So a channel is compared with what this behaviour wrote instead:
+## unchanged means the tint is the only thing on it and the remembered colour is what is underneath;
+## changed means somebody wrote that value on purpose and it is the colour underneath now.
 ## @ace_hidden
 func _under_tint(current: Color) -> Color:
 	return Color(
-		_undo_channel(current.r, _tint_factor.r, _base_modulate.r),
-		_undo_channel(current.g, _tint_factor.g, _base_modulate.g),
-		_undo_channel(current.b, _tint_factor.b, _base_modulate.b),
-		_undo_channel(current.a, _tint_factor.a, _base_modulate.a))
+		_channel_under(current.r, _tint_written.r, _base_modulate.r),
+		_channel_under(current.g, _tint_written.g, _base_modulate.g),
+		_channel_under(current.b, _tint_written.b, _base_modulate.b),
+		_channel_under(current.a, _tint_written.a, _base_modulate.a))
 
-## One channel of that: what was multiplied by the tint, or the remembered value when the tint left
-## nothing to divide.
+## One channel of that: the remembered value while the channel still reads as this behaviour left
+## it, and the value on the host the moment anything else has written one.
 ## @ace_hidden
-func _undo_channel(shown: float, factor: float, remembered: float) -> float:
-	return remembered if factor < TINT_FLOOR else shown / factor
+func _channel_under(shown: float, written: float, remembered: float) -> float:
+	return remembered if is_equal_approx(shown, written) else shown
 
 ## Ends one status: its boost stops, its particles go, the tint is re-mixed without it, and On
 ## Status Expired fires. Every way a status can end comes through here, so none of them can forget

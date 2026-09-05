@@ -472,7 +472,13 @@ static func _leaving_the_tree_ends_everything() -> bool:
 ## other one: Health's Grant Invincibility tells you to flicker with the Flash pack, which writes
 ## the alpha twice a second. A tint that captured the colour mid-flicker and wrote it back when the
 ## last status left used to leave the sprite half transparent for good. The colour underneath is
-## read fresh each time instead, with the tint divided back out, so the flash's own value stands.
+## read fresh each time instead, so the flash's own value stands.
+##
+## AND NOTHING IS DIVIDED. Reading the colour underneath by dividing the tint back out assumed every
+## other writer multiplies, when a flash, a fade and a hit blink all WRITE a colour: a sprite set to
+## white while a burn was on came back at (1.0, 1.61, 2.86, 1.0), brighter than white, because 1.0
+## was divided by a tint that had never been applied to it. A channel is compared with what this
+## behaviour wrote instead, which is pinned here by the colour that used to be ruined.
 static func _another_writer_of_the_colour_is_not_overwritten() -> bool:
 	var had_no_flashing: bool = Engine.has_meta(NO_FLASHING_META)
 	var had_strength: bool = Engine.has_meta(EFFECT_STRENGTH_META)
@@ -495,11 +501,33 @@ static func _another_writer_of_the_colour_is_not_overwritten() -> bool:
 	status.call("remove_status", "burn")
 	var after: Color = host.modulate
 
+	# THE WHOLE COLOUR, not just the alpha: a second host is set to white by another writer while a
+	# burn is on, which is the case the division ruined. Burn's own tint is (1, 0.62, 0.35, 1), so
+	# the old answer was white divided by it - (1.0, 1.61, 2.86, 1.0) - and the sprite stayed there.
+	var other: Dictionary = _host_with_health()
+	var other_status: Node = other["status"]
+	var other_host: Node2D = other["host"]
+	other_status.call("apply", "burn", 30.0, 1)
+	other_host.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	other_status.call("remove_status", "burn")
+	var written_white: Color = other_host.modulate
+
 	var passed: bool = SUPPORT.pins("status_effects_pack_test", [
 		["a tint over a flicker keeps the flicker's own alpha",
 			is_equal_approx(while_flickering, 0.35), true],
-		["and the colour the flash left is what comes back", after, Color(1.0, 1.0, 1.0, 1.0)]
+		["and the colour the flash left is what comes back", after, Color(1.0, 1.0, 1.0, 1.0)],
+		["a colour written over a tint is not divided by it",
+			written_white, Color(1.0, 1.0, 1.0, 1.0)],
+		# The two answers the channel rule is made of, asked of the seam itself. The second is what
+		# the old floor was for: a tint that multiplied a channel by nothing took the colour under
+		# it away, and nothing can be divided back out - the remembered value is the only answer,
+		# and it is now the answer because the channel is UNCHANGED rather than because of a floor.
+		["a channel somebody else wrote is taken as the colour underneath",
+			other_status.call("_channel_under", 1.0, 0.35, 0.5), 1.0],
+		["a channel a tint drove to nothing still gives the remembered colour back",
+			other_status.call("_channel_under", 0.0, 0.0, 0.5), 0.5]
 	])
+	other_host.free()
 	host.free()
 	if had_no_flashing:
 		Engine.set_meta(NO_FLASHING_META, old_no_flashing)

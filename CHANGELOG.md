@@ -1114,7 +1114,13 @@
   emit into its own codegen templates, so the installed Game Settings pack read as a project reading
   the difficulty and the note could not fire in a single project that had the pack. The packs folder
   is out of the corpus now, on both sides of the question.
-
+- **A colour written over a status tint is not divided by it.** Reading the colour underneath a tint
+  by dividing the tint back out assumed every other writer of `modulate` multiplies, and almost none
+  of them do: a flash, a fade and a hit blink all WRITE a colour. So a sprite another script set to
+  white while a burn was on came back at (1.0, 1.61, 2.86, 1.0), brighter than white and stuck there,
+  because 1.0 was divided by a tint that had never been applied to it. Each channel is compared with
+  what the behaviour actually wrote instead: still that value and the remembered colour is what is
+  underneath, anything else and somebody wrote it on purpose, so it IS the colour underneath.
 ### Making it feel like something: how pictures meet, and the beat a hit is made of
 
 - **Twenty ways one picture meets the one behind it, as one row.** Godot draws five blend modes by
