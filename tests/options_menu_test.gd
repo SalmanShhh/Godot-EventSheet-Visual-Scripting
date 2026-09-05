@@ -92,6 +92,16 @@ static func _test_difficulty_is_a_file() -> bool:
 	ok = _check("the difficulty a setting names is the one put in force",
 		[settings.call("difficulty_name"), settings.call("difficulty_factor", "damage_taken")],
 		["Easy", 0.5]) and ok
+	# A FOLDER IS WHERE PEOPLE KEEP THINGS, so the list has to be a list of difficulties rather than
+	# a list of files. The status-effect starters are real resources of somebody else's making, and
+	# before this each one was listed under the name "<null>" - and Use Difficulty pointed at one
+	# adopted it, factors and all, which is to say with no factors at all.
+	ok = _check("a folder of files that are not difficulties lists none of them",
+		settings.call("difficulty_names", "res://eventsheet_addons/status_effects"), []) and ok
+	settings.call("use_difficulty", "res://eventsheet_addons/status_effects/burn.tres")
+	ok = _check("and one of them cannot be put in force",
+		[settings.call("difficulty_name"), settings.call("difficulty_factor", "damage_taken")],
+		["Easy", 0.5]) and ok
 	# And nothing at all clears it, so every factor is 1 again rather than whatever was last chosen.
 	settings.call("use_difficulty", null)
 	ok = _check("naming nothing clears the difficulty and every factor with it",

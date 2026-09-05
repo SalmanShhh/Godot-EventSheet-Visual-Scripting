@@ -292,9 +292,12 @@ On Damaged
 
 Three things follow from the file being the truth, and each is the point:
 
-- **The folder is the list.** **Difficulty Names** reads a folder live, so adding a difficulty is
-  adding a file and deleting one is deleting a file. Hand whichever word the player picked straight
-  back to **Use Difficulty**.
+- **The folder is the list, and the list is of difficulties.** **Difficulty Names** reads a folder
+  live, so adding a difficulty is adding a file and deleting one is deleting a file. Hand whichever
+  word the player picked straight back to **Use Difficulty**. A folder is where people keep things,
+  so a resource that is not a difficulty - a palette, a settings file, anything of somebody else's
+  making - is passed over rather than listed, and **Use Difficulty** pointed at one refuses it in the
+  output rather than adopting it with no factors at all.
 - **A missing factor is 1.0.** **Difficulty Factor** answers 1 while no difficulty has been chosen,
   and 1 when the one in force has no such key. So a row can multiply by `enemy_count` before any
   difficulty file mentions it and go on behaving exactly as it did - adding a difficulty is never a

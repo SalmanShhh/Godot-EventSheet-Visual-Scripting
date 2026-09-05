@@ -131,15 +131,16 @@ var _difficulty: Resource = null
 # handed back is enough, with no path to carry around.
 func _difficulty_named(named: Variant) -> Resource:
 	if named is Resource:
-		return named as Resource
+		return named as Resource if _is_difficulty(named as Resource) else null
 	var text: String = "" if named == null else str(named).strip_edges()
 	if text.is_empty():
 		return null
 	if ResourceLoader.exists(text):
-		return load(text)
+		var pointed: Resource = load(text)
+		return pointed if _is_difficulty(pointed) else null
 	for path: String in _difficulty_paths(DIFFICULTY_FOLDER):
 		var found: Resource = load(path)
-		if found != null and _difficulty_word(found, path).to_lower() == text.to_lower():
+		if _is_difficulty(found) and _difficulty_word(found, path).to_lower() == text.to_lower():
 			return found
 	return null
 
@@ -892,7 +893,7 @@ func build_controls_page(container: Node) -> void:
 func use_difficulty(difficulty: Variant) -> void:
 	var chosen: Resource = _difficulty_named(difficulty)
 	if chosen == null and difficulty != null and not str(difficulty).strip_edges().is_empty():
-		push_warning("Settings: '%s' is not a difficulty - point Use Difficulty at a .tres, or at the word one of them goes by." % str(difficulty))
+		push_warning("Settings: '%s' is not a difficulty - point Use Difficulty at a difficulty file, or at the word one of them goes by." % str(difficulty))
 		return
 	_difficulty = chosen
 	Engine.set_meta(DIFFICULTY_FACTORS_META, _difficulty_factors_of(chosen))
@@ -948,7 +949,7 @@ func difficulty_names(folder: String = DIFFICULTY_FOLDER) -> Array:
 	var words: Array = []
 	for path: String in _difficulty_paths(folder):
 		var found: Resource = load(path)
-		if found != null:
+		if _is_difficulty(found):
 			words.append(_difficulty_word(found, path))
 	return words
 
@@ -1185,11 +1186,24 @@ func _show_bindings(container: Node) -> void:
 func _difficulty_word(difficulty: Resource, path: String) -> String:
 	# The word one difficulty file goes by: its own if it named itself, otherwise its file name
 	# capitalised, which is what "hard.tres" would have been called anyway.
-	var named: String = str(difficulty.get("difficulty_name")).strip_edges() if difficulty != null else ""
+	var written: Variant = difficulty.get("difficulty_name") if difficulty != null else null
+	var named: String = str(written).strip_edges() if written != null else ""
 	if not named.is_empty():
 		return named
 	var stem: String = path.get_file().get_basename()
 	return stem.substr(0, 1).to_upper() + stem.substr(1)
+
+func _is_difficulty(found: Resource) -> bool:
+	# Whether one file is a difficulty at all. The folder IS the list, and a folder is where people
+	# keep things - so a settings resource or a palette sitting beside the difficulties must not be
+	# listed as one, and Use Difficulty pointed at one must refuse it rather than adopt it under its
+	# file name with no factors at all. Asked by the shape of the resource rather than by class, so
+	# this pack still never has to reference another one.
+	if found == null:
+		return false
+	if found.get("factors") is Dictionary:
+		return true
+	return found.get("difficulty_name") is String
 
 func _difficulty_factors_of(difficulty: Resource) -> Dictionary:
 	# The factors one difficulty stands for, or {} for a file that is not a difficulty at all.
