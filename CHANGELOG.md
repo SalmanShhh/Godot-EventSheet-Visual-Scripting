@@ -292,6 +292,18 @@
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads "this project's tilesets go up to -1".
+- **A crafted mod manifest never gets to run, and a script a mod brought is never named past.** Two
+  halves of the same hole. A `mod.tres` was handed to `load()` so its five fields could be asked of
+  the object that came back, and BUILDING a resource file runs the script it names: a manifest
+  pointing at a `.gd` in its own folder had already run a stranger's `_init` by the time the walk
+  that refuses the mod started. The manifest is read as TEXT now - the same reading that decides
+  whether the file may be taken at all - and a data-only load calls `load()` on nothing a mod
+  brought. And the reading itself only ever asked a `[ext_resource]` WHERE it pointed, so a script
+  named from inside the mod's own folder was waved through as "the mod's own file"; a tag of a
+  script type, or one naming a file that is code by its extension whatever type it claims, is now
+  refused wherever it points. `res://` stays the one exception, because that is the game's own
+  script - which is how a mod's `sword.tres` names the Resource class of yours it is an instance of,
+  and that is the whole point of the tier.
 - **Tile Has Custom Data no longer points half of itself at another node.** The row names its layer
   twice - a null guard, and the lookup behind it - and a row whose template is one plain member call
   is given its "On node" field by prefixing the START of the line, so naming another layer retargeted

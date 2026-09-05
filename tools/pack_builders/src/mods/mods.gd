@@ -192,44 +192,70 @@ func _read_json(path: String) -> Dictionary:
 ## A manifest saved as a resource (a ModManifest .tres), read into the same plain record the JSON
 ## form gives, so nothing downstream knows which spelling a mod used.
 ##
-## THE MANIFEST IS READ BEFORE THE TIER IS EVEN KNOWN, so it is the one file in a mod that is read
-## by name alone - and `load()` on a resource file BUILDS what the file describes, script and all.
-## A manifest that does not read as data is therefore not loaded at all: the mod keeps its folder's
-## own name, and the row that goes on to take it refuses it for the same reason. A manifest saved
-## in the BINARY form cannot be read as text, so it is not loaded either; `mod.json` and a text
-## `mod.tres` are the two spellings, and they are the two the template tool writes.
+## IT IS NEVER LOADED. The manifest is read BEFORE the tier is even known - it is the file that says
+## what the mod is called - and `load()` on a resource file BUILDS what the file describes, script
+## and all. Reading it first and loading it second is not enough either: a refusal that arrives after
+## the load has run is a refusal a stranger's `_init` has already outlived. So the five fields are
+## taken out of the file's own TEXT, by the same reading that decides whether the file may be taken
+## at all, and a data-only load calls `load()` on nothing a mod brought.
 ##
-## A file that IS readable and is not a manifest at all answers about no property it was asked for.
-## `Object.get` gives null for a property an object does not have, so each field is taken as the
-## text it was written with only when it is there, and the record falls back to the folder's own
-## name rather than to the word "<null>".
+## A manifest saved in the BINARY form cannot be read as text, so it says nothing; `mod.json` and a
+## text `mod.tres` are the two spellings, and they are the two the template tool writes. A file that
+## is readable and is not a manifest at all carries none of the five names, and the record falls back
+## to the folder's own name rather than to the word "<null>" - which is what `str(null)` put there
+## while this was asking a BUILT object for properties it did not have.
 ## @ace_hidden
 func _read_resource(path: String, own_folder: String) -> Dictionary:
-	var refusal: String = _resource_reason(path.get_file(),
-		FileAccess.get_file_as_string(path), own_folder)
+	var text: String = FileAccess.get_file_as_string(path)
+	var refusal: String = _resource_reason(path.get_file(), text, own_folder)
 	if not refusal.is_empty():
 		if debug_mode:
 			push_warning("Mods: %s was not read as a manifest - %s." % [path, refusal])
 		return {}
-	var manifest: Resource = load(path)
-	if manifest == null:
-		return {}
+	var written: Dictionary = _resource_values(text)
 	return {
-		"name": _field_of(manifest, "mod_name"),
-		"version": _field_of(manifest, "version"),
-		"author": _field_of(manifest, "author"),
-		"replaces": _field_of(manifest, "replaces"),
-		"scripts": manifest.get("scripts") == true,
+		"name": str(written.get("mod_name", "")),
+		"version": str(written.get("version", "")),
+		"author": str(written.get("author", "")),
+		"replaces": str(written.get("replaces", "")),
+		"scripts": str(written.get("scripts", "")) == "true",
 	}
 
-## One text field off a manifest resource, as the empty string when the resource has no such
-## property. `str(null)` is the four letters "<null>", which is how a `mod.tres` that is not a
-## ModManifest at all became a mod CALLED "<null>" instead of one named after its folder - and
-## `bool(null)` is not a conversion at all, it is an error that took the read down with it.
+
+## The `[resource]` section's own property lines, as the text each was written with. A quoted value
+## comes back without its quotes and everything else exactly as spelled, so `true` is four letters
+## the caller compares - which is what keeps a hand-typed `scripts = 1` from quietly meaning false.
+##
+## Values the engine would BUILD - `ExtResource("1_x")`, `Resource("...")` - are read as the text
+## they are and never resolved. The script line of a manifest saved from a class is exactly one of
+## those, and it is not one of the five names asked for.
 ## @ace_hidden
-func _field_of(manifest: Resource, field: String) -> String:
-	var value: Variant = manifest.get(field)
-	return "" if value == null else str(value)
+func _resource_values(text: String) -> Dictionary:
+	var values: Dictionary = {}
+	var reading: bool = false
+	for line: String in text.split("\n"):
+		var trimmed: String = line.strip_edges()
+		if trimmed.begins_with("["):
+			# A `.tres` keeps its own properties in the `[resource]` section; every line before it
+			# belongs to the tables the reading above has already judged.
+			reading = trimmed.begins_with("[resource")
+			continue
+		if not reading or trimmed.is_empty() or trimmed.begins_with(";"):
+			continue
+		var equals_at: int = trimmed.find("=")
+		if equals_at <= 0:
+			continue
+		var field: String = trimmed.substr(0, equals_at).strip_edges()
+		var value: String = trimmed.substr(equals_at + 1).strip_edges()
+		if value.begins_with("\""):
+			var ends_at: int = value.find("\"", 1)
+			if ends_at < 0:
+				continue
+			value = value.substr(1, ends_at - 1)
+		if not field.is_empty():
+			values[field] = value
+	return values
+
 
 ## One file read out of a .zip as JSON, without loading the archive as a resource pack - which
 ## matters, because a pack that has been loaded cannot be unloaded again.
@@ -360,8 +386,13 @@ func _path_of_bytes(raw: PackedByteArray) -> String:
 ## WHAT MAKES IT REFUSE, and every one of them is a way a file called data runs code:
 ##   a script written INSIDE it    - a `[sub_resource]` whose type ends in `Script` is source code
 ##                                   carried in the file itself, in any language the engine has.
-##   a script named BESIDE it      - an `[ext_resource]` whose type ends in `Script` is a file the
-##                                   engine loads and attaches when this one is built.
+##   a script named BESIDE it      - an `[ext_resource]` whose type ends in `Script`, or which names
+##                                   a file that is code by its extension, is a file the engine loads
+##                                   and attaches when this one is built. Under `res://` it is the
+##                                   GAME's own script - which is how a mod's `sword.tres` names the
+##                                   Resource class of yours it is an instance of, and the reason the
+##                                   tier is worth having - and anywhere else, the mod's own folder
+##                                   included, it is refused.
 ##   a value that BUILDS something - `Object(GDScript,"script/source":"...")` and
 ##                                   `Resource("user://payload.gd")` are property values the
 ##                                   engine's own value parser resolves by compiling and by loading.
@@ -431,12 +462,30 @@ func _resource_reason(name: String, text: String, own_folder: String) -> String:
 		# res:// is the game's own files, which is what a game IS - and a code file a PACK mod
 		# brings to res:// was already refused by name before this reading was reached. A script
 		# named under res:// is therefore the game's own, which is how a manifest saved as a
-		# resource names the class it was saved from.
+		# resource names the class it was saved from, and how a mod's `sword.tres` names the
+		# Resource class of yours it is an instance of. That last one is the whole point of the
+		# tier, so the carve-out stays and is deliberately narrow: it is res:// or nothing.
 		if place.begins_with("res://"):
 			continue
 		if inside.is_empty() or not place.begins_with(inside):
 			return "%s names %s, which is outside the mod, and this row loads data only" % [name, place]
+		# INSIDE THE MOD IS NOT A PLACE A SCRIPT MAY BE NAMED FROM EITHER. The place check above
+		# lets a mod's scene name the mod's own textures and resources, which is what a mod is made
+		# of - but a file the mod brought is a file a stranger wrote, so an ext_resource of a script
+		# type, or one naming a file that is code by its extension whatever type it claims to be, is
+		# refused here rather than waved through as "inside the mod". A folder mod's own `.gd` is
+		# refused by name a step earlier, and this is the same refusal for the tag that would have
+		# loaded it BEFORE that walk ever ran - which is exactly what a crafted manifest did.
+		if kind.ends_with(SCRIPT_TYPE_TAIL) or _names_code(place):
+			return "%s names the script %s, and this row loads data only" % [name, place]
 	return ""
+
+
+## True when a path is CODE by its own extension, whatever a tag claims its type is. The type is a
+## word in a file a stranger wrote; the extension is what the engine will compile.
+## @ace_hidden
+func _names_code(place: String) -> bool:
+	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in CODE_EXTENSIONS
 
 ## Where a tag closes, or -1 when it does not close on the text so far. Quotes are respected, so a
 ## `]` inside a value does not end a tag early, and a tag written over more than one line is

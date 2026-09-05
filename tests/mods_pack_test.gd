@@ -46,6 +46,10 @@ const MANIFEST_RESOURCE := "res://eventsheet_addons/mod_manifest_resource/mod_ma
 ## Everything this test writes lives under here, and it is removed on the way in and on the way out.
 const ROOT := "user://mods_pack_test"
 
+## The file a crafted mod's script writes if anything ever builds it. Its ABSENCE is the assertion:
+## a data-only load that has to run a stranger's code to find out whether it may is not a tier.
+const MARKER := "user://mods_pack_test/probe/crafted_ran.txt"
+
 
 ## The Game Settings autoload as this pack talks to it: four methods, and a dictionary behind them.
 ## It is handed to the director directly rather than found in a tree, which is the reason
@@ -83,6 +87,7 @@ static func run() -> bool:
 	passed = _a_zip_is_read_without_being_loaded(script) and passed
 	passed = _a_scene_carrying_a_script_is_not_data(script) and passed
 	passed = _a_script_hidden_in_a_scene_is_still_a_script(script) and passed
+	passed = _a_crafted_manifest_never_gets_to_run(script) and passed
 	passed = _a_real_pack_file_is_read_off_its_own_bytes(script) and passed
 	passed = _a_mod_tres_that_is_not_a_manifest_keeps_its_folders_name(script) and passed
 	passed = _the_load_order_tie_is_the_same_twice(script) and passed
@@ -215,6 +220,12 @@ static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
 	var beside_it: String = director._resource_reason("world.tscn", _scene_text([
 		"[ext_resource type=\"Texture2D\" path=\"user://mods/mine/art.png\" id=\"1\"]"]),
 		mine)
+	var in_folder: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"Script\" path=\"user://mods/mine/hack.gd\" id=\"1\"]"]),
+		mine)
+	var claimed_other: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"Texture2D\" path=\"user://mods/mine/hack.gd\" id=\"1\"]"]),
+		mine)
 	var binary: String = director._resource_reason("world.scn", "RSRC binary bytes", mine)
 	var escaped: String = director._resource_reason("world.tscn", _scene_text([
 		"[sub_resource type=\"GD\\u0053cript\" id=\"1\"]"]), mine)
@@ -234,10 +245,48 @@ static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
 		["a table naming a file from outside the mod is refused", elsewhere,
 			"world.tscn names user://elsewhere/x.tscn, which is outside the mod, and this row loads data only"],
 		["and one naming the mod's own file is not", beside_it, ""],
+		["but a script the mod brought with it is refused, inside the mod or not", in_folder,
+			"world.tscn names the script user://mods/mine/hack.gd, and this row loads data only"],
+		["and a tag claiming another type over a code file is refused by the file's own name",
+			claimed_other, "world.tscn names the script user://mods/mine/hack.gd, and this row loads data only"],
 		["a file that cannot be read as text is refused rather than cleared", binary,
 			"world.scn is saved in a form this row cannot read, so it cannot be cleared of code"],
 		["and so is a type spelled with an escape the engine would decode", escaped,
 			"world.tscn holds an escape inside a resource tag, so it cannot be cleared of code"],
+	])
+
+
+## THE MANIFEST IS NEVER BUILT. A `mod.tres` naming a script in the mod's own folder used to be
+## handed to `load()` so its five fields could be asked of the object that came back - and building
+## it is what RAN the script, so the stranger's `_init` had written its file by the time the walk
+## that refuses the mod even started. The manifest is read as text now, and the tag naming the script
+## is refused as well, so this asks for both: the mod is refused, and the marker is not there.
+static func _a_crafted_manifest_never_gets_to_run(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var record: Dictionary = director._manifest_at(ROOT.path_join("probe/crafted"))
+	var refusal: String = director._code_reason(record)
+	director.load_mod(ROOT.path_join("probe/crafted"), true)
+	var reason: String = director.mod_reason()
+	var loaded: int = director.mod_count()
+	var marker_written: bool = FileAccess.file_exists(MARKER)
+	director.free()
+	# THE PROBE HAS TO BE A REAL ONE. Building that same manifest - which is what asking a loaded
+	# object for its fields costs - runs the script and writes the marker, so "the marker is not
+	# there" means the reading refused it rather than that the fixture was inert.
+	var built: Resource = load(ROOT.path_join("probe/crafted/mod.tres"))
+	var marker_after_building: bool = FileAccess.file_exists(MARKER)
+	built = null
+	DirAccess.remove_absolute(MARKER)
+	var refused_for: String = "it carries 1 code file(s), starting with hack.gd, and this row loads data only"
+	return SUPPORT.pins("mods_pack_test", [
+		["a manifest naming a script is not read as a manifest, so the mod keeps its folder's name",
+			str(record.get("name", "")), "crafted"],
+		["the mod is refused for the code it brought", refusal, refused_for],
+		["the row that loads it says the same", reason, refused_for],
+		["and nothing was loaded", loaded, 0],
+		["the script the manifest named never ran", marker_written, false],
+		["and building that same manifest by hand does run it, so this is a real probe",
+			marker_after_building, true],
 	])
 
 
@@ -603,6 +652,17 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	_write(ROOT.path_join("probe/sneaky/world.tscn"), _scene_text([
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
+
+	# A crafted mod: a mod.tres naming a script in the mod's own folder, and a script that writes a
+	# file the moment anything builds it. Hand-written rather than saved, because the whole point is
+	# a file no honest tool would write.
+	_write(ROOT.path_join("probe/crafted/hack.gd"), "extends Resource\n\n\nfunc _init() -> void:\n"
+		+ "\tvar marker: FileAccess = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % MARKER
+		+ "\tif marker != null:\n\t\tmarker.store_string(\"ran\")\n\t\tmarker.close()\n")
+	_write(ROOT.path_join("probe/crafted/mod.tres"),
+		"[gd_resource type=\"Resource\" load_steps=2 format=3]\n\n"
+		+ "[ext_resource type=\"Script\" path=\"%s\" id=\"1_h\"]\n\n" % ROOT.path_join("probe/crafted/hack.gd")
+		+ "[resource]\nscript = ExtResource(\"1_h\")\nmod_name = \"Crafted\"\nversion = \"9.9\"\n")
 
 	# A mod.tres that is not a ModManifest: every field it is asked for answers null.
 	_make_folder(ROOT.path_join("probe/odd_tres"))
