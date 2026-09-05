@@ -133,6 +133,18 @@ const PACK_FORMAT_WITH_DIRECTORY: int = 4
 ## cleared of code.
 const PACK_ENTRY_ENCRYPTED: int = 1
 
+## How deep a mod's own folders are walked, and how many of its files are listed, before the walk
+## stops. Both are stated rather than felt: a mod is somebody else's folder, so the walk that decides
+## whether it may be taken needs an end - and a walk that ENDED EARLY has cleared nothing it did not
+## reach, which is why hitting either limit refuses the mod instead of passing it.
+const MOST_FOLDER_DEPTH: int = 16
+const MOST_FOLDER_FILES: int = 20000
+
+## Whether the last folder walk stopped at one of those limits. Read by the caller immediately after
+## the walk, because "everything in the folder" and "as much of it as fits" are different answers to
+## the question the tier asks.
+var _folder_was_truncated: bool = false
+
 ## The most bytes of one scene or resource this reading will take in at once. A table big enough to
 ## matter is a table somebody built to be read instead of the mod, and a refusal is the safe answer
 ## either way.
@@ -842,17 +854,39 @@ func _code_in(paths: PackedStringArray) -> PackedStringArray:
 			carried.append(path)
 	return carried
 
-## Every file in a folder and the folders under it, up to a sane depth - what a folder mod's own
+## Every file in a folder and the folders under it, to the limits above - what a folder mod's own
 ## contents are, for the same code question a pack file answers from its table.
+##
+## It walks a LIST rather than calling itself, so the depth is a number this reading holds rather
+## than a stack it hopes about, and a folder arrangement that points back at itself stops at the
+## limit instead of taking the process down with it.
+##
+## A WALK THAT STOPPED EARLY IS SAID SO. It used to stop six folders down without a word, so a mod
+## with a `.gd` seven folders deep was cleared as data by a reading that never saw it. The limits
+## are wider now and, far more importantly, hitting one sets `_folder_was_truncated` - and the tier
+## refuses a mod it could not finish reading rather than passing what it did not reach.
 ## @ace_hidden
-func _files_under(folder: String, depth: int = 6) -> PackedStringArray:
+func _files_under(folder: String) -> PackedStringArray:
+	_folder_was_truncated = false
 	var found: PackedStringArray = PackedStringArray()
-	if depth <= 0 or not DirAccess.dir_exists_absolute(folder):
+	if not DirAccess.dir_exists_absolute(folder):
 		return found
-	for file_name: String in DirAccess.get_files_at(folder):
-		found.append(folder.path_join(file_name))
-	for sub_name: String in DirAccess.get_directories_at(folder):
-		found.append_array(_files_under(folder.path_join(sub_name), depth - 1))
+	var pending: Array = [[folder, 0]]
+	while not pending.is_empty():
+		var next: Array = pending.pop_front()
+		var at: String = str(next[0])
+		var depth: int = int(next[1])
+		for file_name: String in DirAccess.get_files_at(at):
+			if found.size() >= MOST_FOLDER_FILES:
+				_folder_was_truncated = true
+				return found
+			found.append(at.path_join(file_name))
+		var below: PackedStringArray = DirAccess.get_directories_at(at)
+		if depth >= MOST_FOLDER_DEPTH:
+			_folder_was_truncated = _folder_was_truncated or not below.is_empty()
+			continue
+		for sub_name: String in below:
+			pending.append([at.path_join(sub_name), depth + 1])
 	return found
 
 ## Why this mod may not be loaded by a data-only row, in plain words, or "" when it may. The pack
@@ -887,10 +921,13 @@ func _code_reason(record: Dictionary) -> String:
 		return _pck_resource_reason(pack_path, index.get("entries", []) as Array)
 	var folder: String = str(record.get("folder", ""))
 	var in_folder: PackedStringArray = _code_in(_files_under(folder))
+	var was_truncated: bool = _folder_was_truncated
 	in_folder.sort()
 	if not in_folder.is_empty():
 		return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 			in_folder.size(), in_folder[0].get_file()]
+	if was_truncated:
+		return "it holds more files, or deeper folders, than this row can read, so it cannot be cleared of code"
 	return _folder_resource_reason(folder)
 
 ## The first refusal among a folder mod's own scenes and resources, or "" when every one of them

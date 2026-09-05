@@ -332,6 +332,10 @@ static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> b
 		"folder": ROOT.path_join("mods/big_swords")})
 	var two_code: String = director._code_reason({"scripts": false, "kind": "folder",
 		"folder": ROOT.path_join("probe/two_code")})
+	var deep: String = director._code_reason({"scripts": false, "kind": "folder",
+		"folder": ROOT.path_join("probe/deep")})
+	var deeper: String = director._code_reason({"scripts": false, "kind": "folder",
+		"folder": ROOT.path_join("probe/deeper")})
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a folder with no code file in it can still be refused, by what its scene carries",
@@ -339,6 +343,10 @@ static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> b
 		["and a folder of plain resources is still refused nothing", honest, ""],
 		["a refusal that names one of several code files names the first in NAME order",
 			two_code, "it carries 2 code file(s), starting with alpha.gd, and this row loads data only"],
+		["a script nine folders down is still found, where the old walk stopped at six",
+			deep, "it carries 1 code file(s), starting with deep.gd, and this row loads data only"],
+		["and a folder deeper than the walk reaches is refused rather than cleared", deeper,
+			"it holds more files, or deeper folders, than this row can read, so it cannot be cleared of code"],
 	])
 
 
@@ -689,6 +697,15 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
 		"script/source = \"extends Node\""]))
 
+	# Two mods with a `.gd` at the bottom of a chain of folders: one deeper than the walk used to
+	# reach and still within it, one deeper than it reaches at all.
+	_write(ROOT.path_join("probe/deep/mod.json"), JSON.stringify({
+		"name": "Deep", "version": "1.0", "scripts": false}, "\t"))
+	_write(_nest(ROOT.path_join("probe/deep"), 9).path_join("deep.gd"), "extends Node\n")
+	_write(ROOT.path_join("probe/deeper/mod.json"), JSON.stringify({
+		"name": "Deeper", "version": "1.0", "scripts": false}, "\t"))
+	_write(_nest(ROOT.path_join("probe/deeper"), 20).path_join("deep.gd"), "extends Node\n")
+
 	# Two code files, written in the order that is NOT their sorted order, so the file the refusal
 	# names is the walk's answer rather than the disk's.
 	_write(ROOT.path_join("probe/two_code/mod.json"), JSON.stringify({
@@ -771,6 +788,15 @@ static func _pack(pack_path: String, files: Dictionary) -> void:
 	for inner: String in inner_paths:
 		packer.add_file(inner, str(files[inner]))
 	packer.flush()
+
+
+## A chain of folders that many steps down, and where it ends - so a fixture can put a file deeper
+## than a walk reaches without a line per folder.
+static func _nest(folder: String, steps: int) -> String:
+	var at: String = folder
+	for _step: int in steps:
+		at = at.path_join("down")
+	return at
 
 
 static func _write_resource(path: String) -> void:
