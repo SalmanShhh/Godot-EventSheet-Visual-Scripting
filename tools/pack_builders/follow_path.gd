@@ -73,6 +73,14 @@ static func build() -> bool:
 		"## @ace_description(\"Sends the host travelling along a drawn Path2D at a real speed - patrol routes, conveyor lanes, camera dollies, tower-defence lanes. Ping-pong walks it back and forth forever; Once fires On Path Finished at the end.\")",
 		"## @ace_param_hint(path node)",
 		"## @ace_param_options(mode once=Once, loop=Loop, pingpong=Ping-pong)",
+		# The mode is a WORD picked off the dropdown above, and a dropdown key is inserted into the
+		# call verbatim - so the quotes belong in the TEMPLATE, never in the key (a quoted key does
+		# not survive the annotation round trip). Without them a row picking Loop asked
+		# `follow_path(path, 120.0, loop)`, an undefined identifier, and the game did not parse.
+		# The signature's own `"once"` reaches the picker as a QUOTED string, which matches none of
+		# the three keys, so the dropdown opens on its first item - `once`, bare, exactly the word
+		# the signature meant. The starting value is the dropdown's, never the quoted literal.
+		"## @ace_codegen_template(\"$PathFollowBehavior.follow_path({path}, {speed}, \"{mode}\")\")",
 		"func follow_path(path: Path2D, speed: float = 120.0, mode: String = \"once\") -> void:",
 		"\tif path == null or path.curve == null or path.curve.get_baked_length() <= 0.0:",
 		"\t\treturn",

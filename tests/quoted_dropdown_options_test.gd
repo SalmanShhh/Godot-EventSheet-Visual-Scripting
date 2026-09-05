@@ -46,7 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"follow_path/path_follow_behavior.gd:mode",
 	"game_settings/game_settings_addon.gd:device",
 	"game_settings/game_settings_addon.gd:kind",
 	"nav_agent_3d/nav_agent_3d_behavior.gd:mode",
@@ -98,6 +97,9 @@ const ACTIONS := [
 		"DrunkenWalkers.scatter_marks({count}, {tag}, {value}, \"{placement}\", {min_spacing})",
 		"DrunkenWalkers.scatter_marks(12, \"ore\", 1, \"interior\", 2.0)",
 		{"count": "12", "tag": "\"ore\"", "value": "1", "placement": "interior", "min_spacing": "2.0"}],
+	[FOLLOW_PATH, "$PathFollowBehavior.follow_path({path}, {speed}, \"{mode}\")",
+		"$PathFollowBehavior.follow_path($Route, 120.0, \"loop\")",
+		{"path": "$Route", "speed": "120.0", "mode": "loop"}],
 ]
 
 const CONDITIONS := [

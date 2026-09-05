@@ -75,6 +75,8 @@ func _ready() -> void:
 	# waiting for a Follow Path row costs nothing until that row runs.
 	set_process(_following)
 
+## Puts the host where _distance says, and turns it if rotate_to_face is on. Positions come
+## out of the curve in the PATH's own space, so they are converted through the path node.
 ## @ace_hidden
 func _apply_path_position() -> void:
 	if host == null or route == null or route.curve == null:
@@ -91,7 +93,7 @@ func _apply_path_position() -> void:
 ## @ace_param_hint(path node)
 ## @ace_param_options(mode once=Once, loop=Loop, pingpong=Ping-pong)
 ## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.follow_path({path}, {speed}, {mode})")
+## @ace_codegen_template("$PathFollowBehavior.follow_path({path}, {speed}, "{mode}")")
 func follow_path(path: Path2D, speed: float = 120.0, mode: String = "once") -> void:
 	if path == null or path.curve == null or path.curve.get_baked_length() <= 0.0:
 		return
