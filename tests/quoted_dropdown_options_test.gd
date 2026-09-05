@@ -46,8 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"stat_forge/stat_forge_behavior.gd:direction",
-	"stat_forge/stat_forge_behavior.gd:mode",
 	"storylet_weaver/storylet_weaver_addon.gd:mode",
 	"storylet_weaver/storylet_weaver_addon.gd:op",
 	"tile_movement/tile_movement_behavior.gd:direction",
@@ -114,6 +112,16 @@ const ACTIONS := [
 		{"x": "4.0", "y": "9.0", "mode": "reach"}],
 	[ROTATE, "$RotateBehavior.set_rotation_type(\"{type}\")",
 		"$RotateBehavior.set_rotation_type(\"2d\")", {"type": "2d"}],
+	[STAT_FORGE,
+		"$StatForge.add_buff({buff_id}, {stat}, {value}, \"{mode}\", {tags}, {source}, {duration})",
+		"$StatForge.add_buff(\"rage\", \"attack\", 5.0, \"multiply\", \"combat\", \"potion\", 8.0)",
+		{"buff_id": "\"rage\"", "stat": "\"attack\"", "value": "5.0", "mode": "multiply",
+			"tags": "\"combat\"", "source": "\"potion\"", "duration": "8.0"}],
+	[STAT_FORGE,
+		"$StatForge.add_threshold_rule({rule_id}, {stat}, {value}, \"{direction}\", {repeating})",
+		"$StatForge.add_threshold_rule(\"low_hp\", \"health\", 25.0, \"falling\", true)",
+		{"rule_id": "\"low_hp\"", "stat": "\"health\"", "value": "25.0", "direction": "falling",
+			"repeating": "true"}],
 ]
 
 const CONDITIONS := [

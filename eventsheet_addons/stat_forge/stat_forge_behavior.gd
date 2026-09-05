@@ -77,9 +77,11 @@ func _physics_process(delta: float) -> void:
 	# timers alive: once no countdown is left, they switch themselves off.
 	set_physics_process(auto_tick and _any_buff_timer_running())
 
+## The stat computation: (base + active adds) * active multipliers - unless active
+## OVERRIDE buffs exist, where the HIGHEST override wins outright. Overflow applies
+## last (clamp / wrap / none).
 ## @ace_expression
 ## @ace_name("Stat Total")
-## @ace_description("The stat computation: (base + active adds) * active multipliers - unless active OVERRIDE buffs exist, where the HIGHEST override wins outright. Overflow applies last (clamp / wrap / none).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.stat_total({stat})")
 func stat_total(stat: String) -> float:
@@ -121,9 +123,9 @@ func stat_base(stat: String) -> float:
 func buff_value(buff_id: String) -> float:
 	return float((_buffs.get(buff_id, {}) as Dictionary).get("value", 0.0))
 
+## Seconds left on a timed buff (-1 = permanent or unknown).
 ## @ace_expression
 ## @ace_name("Buff Time Left")
-## @ace_description("Seconds left on a timed buff (-1 = permanent or unknown).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.buff_time_left({buff_id})")
 func buff_time_left(buff_id: String) -> float:
@@ -147,17 +149,17 @@ func buff_count_with_tag(tag: String) -> int:
 			count += 1
 	return count
 
+## The buff that expired most recently - read it inside On Buff Expired.
 ## @ace_expression
 ## @ace_name("Last Expired Buff")
-## @ace_description("The buff that expired most recently - read it inside On Buff Expired.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.last_expired_buff()")
 func last_expired_buff() -> String:
 	return _last_expired
 
+## The rule that fired most recently - read it inside On Threshold Crossed.
 ## @ace_expression
 ## @ace_name("Last Threshold Rule")
-## @ace_description("The rule that fired most recently - read it inside On Threshold Crossed.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.last_threshold_rule()")
 func last_threshold_rule() -> String:
@@ -194,20 +196,23 @@ func has_buffs_from_source(source: String) -> bool:
 			return true
 	return false
 
+## The beginner-friendly stat compare (Stat Total works in any expression too).
 ## @ace_condition
 ## @ace_name("Stat Is At Least")
-## @ace_description("The beginner-friendly stat compare (Stat Total works in any expression too).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.stat_is_at_least({stat}, {value})")
 func stat_is_at_least(stat: String, value: float) -> bool:
 	return stat_total(stat) >= value
 
+## The one action that runs the whole system: a named buff targeting a stat with a
+## value and a mode (add / multiply / override - highest override wins). Tags are
+## comma-separated labels for bulk ops, source names who applied it, duration in
+## seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.
 ## @ace_action
 ## @ace_name("Add Buff")
-## @ace_description("The one action that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.")
 ## @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
-## @ace_codegen_template("$StatForge.add_buff({buff_id}, {stat}, {value}, {mode}, {tags}, {source}, {duration})")
+## @ace_codegen_template("$StatForge.add_buff({buff_id}, {stat}, {value}, "{mode}", {tags}, {source}, {duration})")
 func add_buff(buff_id: String, stat: String, value: float, mode: String = "add", tags: String = "", source: String = "", duration: float = 0.0) -> void:
 	if buff_id.is_empty() or stat.is_empty() or not mode in ["add", "multiply", "override"]:
 		return
@@ -221,9 +226,9 @@ func add_buff(buff_id: String, stat: String, value: float, mode: String = "add",
 	buff_added.emit(buff_id, stat)
 	_check_thresholds()
 
+## Removes one buff by id (a no-op when absent).
 ## @ace_action
 ## @ace_name("Remove Buff")
-## @ace_description("Removes one buff by id (a no-op when absent).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.remove_buff({buff_id})")
 func remove_buff(buff_id: String) -> void:
@@ -234,9 +239,9 @@ func remove_buff(buff_id: String) -> void:
 	buff_removed.emit(buff_id, stat)
 	_check_thresholds()
 
+## Removes every buff carrying the tag - unequip all "equipment" in one action.
 ## @ace_action
 ## @ace_name("Remove Buffs By Tag")
-## @ace_description("Removes every buff carrying the tag - unequip all "equipment" in one action.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.remove_buffs_by_tag({tag})")
 func remove_buffs_by_tag(tag: String) -> void:
@@ -244,9 +249,9 @@ func remove_buffs_by_tag(tag: String) -> void:
 		if ((_buffs[buff_id] as Dictionary)["tags"] as Array).has(tag):
 			remove_buff(buff_id)
 
+## Removes every buff a source applied - clear one enemy's curses when it dies.
 ## @ace_action
 ## @ace_name("Remove Buffs By Source")
-## @ace_description("Removes every buff a source applied - clear one enemy's curses when it dies.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.remove_buffs_by_source({source})")
 func remove_buffs_by_source(source: String) -> void:
@@ -254,27 +259,28 @@ func remove_buffs_by_source(source: String) -> void:
 		if str((_buffs[buff_id] as Dictionary)["source"]) == source:
 			remove_buff(buff_id)
 
+## Empties the whole stack (bases stay).
 ## @ace_action
 ## @ace_name("Clear Buffs")
-## @ace_description("Empties the whole stack (bases stay).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.clear_buffs()")
 func clear_buffs() -> void:
 	_buffs.clear()
 	_check_thresholds()
 
+## Sets a stat's base value - the number the buff math starts from.
 ## @ace_action
 ## @ace_name("Set Stat Base")
-## @ace_description("Sets a stat's base value - the number the buff math starts from.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.set_stat_base({stat}, {value})")
 func set_stat_base(stat: String, value: float) -> void:
 	_bases[stat] = value
 	_check_thresholds()
 
+## Turns one buff on or off WITHOUT removing it - inactive buffs stay in the stack
+## but contribute nothing (a stance toggle, a disabled rune).
 ## @ace_action
 ## @ace_name("Set Buff Active")
-## @ace_description("Turns one buff on or off WITHOUT removing it - inactive buffs stay in the stack but contribute nothing (a stance toggle, a disabled rune).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.set_buff_active({buff_id}, {active})")
 func set_buff_active(buff_id: String, active: bool) -> void:
@@ -282,9 +288,9 @@ func set_buff_active(buff_id: String, active: bool) -> void:
 		(_buffs[buff_id] as Dictionary)["active"] = active
 		_check_thresholds()
 
+## Bulk activation by tag - silence every "aura" buff in an antimagic zone.
 ## @ace_action
 ## @ace_name("Set Buffs Active By Tag")
-## @ace_description("Bulk activation by tag - silence every "aura" buff in an antimagic zone.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.set_buffs_active_by_tag({tag}, {active})")
 func set_buffs_active_by_tag(tag: String, active: bool) -> void:
@@ -293,9 +299,9 @@ func set_buffs_active_by_tag(tag: String, active: bool) -> void:
 			buff["active"] = active
 	_check_thresholds()
 
+## Changes a live buff's value in place (a stacking poison that deepens).
 ## @ace_action
 ## @ace_name("Set Buff Value")
-## @ace_description("Changes a live buff's value in place (a stacking poison that deepens).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.set_buff_value({buff_id}, {value})")
 func set_buff_value(buff_id: String, value: float) -> void:
@@ -303,9 +309,9 @@ func set_buff_value(buff_id: String, value: float) -> void:
 		(_buffs[buff_id] as Dictionary)["value"] = value
 		_check_thresholds()
 
+## Restarts a timed buff's countdown (re-drinking the potion refreshes, not stacks).
 ## @ace_action
 ## @ace_name("Refresh Buff")
-## @ace_description("Restarts a timed buff's countdown (re-drinking the potion refreshes, not stacks).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.refresh_buff({buff_id}, {duration})")
 func refresh_buff(buff_id: String, duration: float) -> void:
@@ -316,9 +322,9 @@ func refresh_buff(buff_id: String, duration: float) -> void:
 		# A restarted countdown needs the frame back; the timers stop once none is running.
 		set_physics_process(auto_tick)
 
+## Freezes/unfreezes one buff's countdown (cutscenes, pause-adjacent states).
 ## @ace_action
 ## @ace_name("Set Buff Timer Paused")
-## @ace_description("Freezes/unfreezes one buff's countdown (cutscenes, pause-adjacent states).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.set_buff_timer_paused({buff_id}, {paused})")
 func set_buff_timer_paused(buff_id: String, paused: bool) -> void:
@@ -328,9 +334,10 @@ func set_buff_timer_paused(buff_id: String, paused: bool) -> void:
 			# Unfreezing a countdown needs the frame back; the timers stop once none runs.
 			set_physics_process(auto_tick)
 
+## Advances every unpaused timer by the given seconds - the manual clock for
+## turn-based games (turn ends: Advance Timers 1).
 ## @ace_action
 ## @ace_name("Advance Timers")
-## @ace_description("Advances every unpaused timer by the given seconds - the manual clock for turn-based games (turn ends: Advance Timers 1).")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.advance_timers({seconds})")
 func advance_timers(seconds: float) -> void:
@@ -350,12 +357,14 @@ func advance_timers(seconds: float) -> void:
 	if not expired.is_empty():
 		_check_thresholds()
 
+## Watches a stat and fires On Threshold Crossed when its total crosses the value.
+## Direction rising / falling / both; a repeating rule re-arms once the stat is back
+## across, a one-shot stays spent until Re-Arm Threshold Rule.
 ## @ace_action
 ## @ace_name("Add Threshold Rule")
-## @ace_description("Watches a stat and fires On Threshold Crossed when its total crosses the value. Direction rising / falling / both; a repeating rule re-arms once the stat is back across, a one-shot stays spent until Re-Arm Threshold Rule.")
 ## @ace_param_options(direction rising=Rising past the value, falling=Falling past the value, both=Either direction)
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
-## @ace_codegen_template("$StatForge.add_threshold_rule({rule_id}, {stat}, {value}, {direction}, {repeating})")
+## @ace_codegen_template("$StatForge.add_threshold_rule({rule_id}, {stat}, {value}, "{direction}", {repeating})")
 func add_threshold_rule(rule_id: String, stat: String, value: float, direction: String = "rising", repeating: bool = true) -> void:
 	if rule_id.is_empty() or stat.is_empty() or not direction in ["rising", "falling", "both"]:
 		return
@@ -369,18 +378,19 @@ func add_threshold_rule(rule_id: String, stat: String, value: float, direction: 
 func remove_threshold_rule(rule_id: String) -> void:
 	_rules.erase(rule_id)
 
+## Re-arms a spent one-shot rule so it can fire again.
 ## @ace_action
 ## @ace_name("Re-Arm Threshold Rule")
-## @ace_description("Re-arms a spent one-shot rule so it can fire again.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.rearm_threshold_rule({rule_id})")
 func rearm_threshold_rule(rule_id: String) -> void:
 	if _rules.has(rule_id):
 		(_rules[rule_id] as Dictionary)["armed"] = true
 
+## Applies a StatSheetResource (.tres): its bases set stat bases, its buff rows Add
+## Buff one by one IN ORDER - whole loadouts, classes, and difficulty presets as data.
 ## @ace_action
 ## @ace_name("Load Stat Sheet")
-## @ace_description("Applies a StatSheetResource (.tres): its bases set stat bases, its buff rows Add Buff one by one IN ORDER - whole loadouts, classes, and difficulty presets as data.")
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.load_stat_sheet({stat_sheet})")
 func load_stat_sheet(stat_sheet: Resource) -> void:
@@ -398,6 +408,9 @@ func load_stat_sheet(stat_sheet: Resource) -> void:
 				var entry: Dictionary = row
 				add_buff(str(entry.get("buff_id", "")), str(entry.get("stat", "")), float(entry.get("value", 0.0)), str(entry.get("mode", "add")), str(entry.get("tags", "")), str(entry.get("source", "")), float(entry.get("duration", 0.0)))
 
+## Crossing detection: compares each watched stat's total to its last-seen value and
+## fires armed rules whose boundary sits between them. Runs after every mutation and
+## every timer expiry, so thresholds never miss a change.
 ## @ace_hidden
 func _check_thresholds() -> void:
 	if _rules.is_empty():
@@ -422,6 +435,9 @@ func _check_thresholds() -> void:
 	for stat: String in new_totals:
 		_last_totals[stat] = new_totals[stat]
 
+## Whether any buff still has a countdown running. A stack of permanent buffs changes
+## nothing frame to frame, so it is worth no frame - Stat Total is computed when asked,
+## never accumulated by the tick.
 ## @ace_hidden
 func _any_buff_timer_running() -> bool:
 	for buff: Dictionary in _buffs.values():

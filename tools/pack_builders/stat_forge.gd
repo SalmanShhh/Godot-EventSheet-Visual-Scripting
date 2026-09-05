@@ -193,6 +193,14 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Add Buff\")",
 		"## @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)",
+		# The mode is a WORD picked off the dropdown above, and a dropdown key is inserted into the
+		# call verbatim - so the quotes belong in the TEMPLATE, never in the key (a quoted key does
+		# not survive the annotation round trip). Without them a row picking Multiply the stat asked
+		# `add_buff(id, stat, 1.0, multiply, ...)`, an undefined identifier, and the game did not
+		# parse. The signature's own `"add"` reaches the picker as a QUOTED string, which matches
+		# none of the three keys, so the dropdown opens on its first item - `add`, bare, exactly the
+		# word the signature meant.
+		"## @ace_codegen_template(\"$StatForge.add_buff({buff_id}, {stat}, {value}, \"{mode}\", {tags}, {source}, {duration})\")",
 		"func add_buff(buff_id: String, stat: String, value: float, mode: String = \"add\", tags: String = \"\", source: String = \"\", duration: float = 0.0) -> void:",
 		"\tif buff_id.is_empty() or stat.is_empty() or not mode in [\"add\", \"multiply\", \"override\"]:",
 		"\t\treturn",
@@ -321,6 +329,9 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Add Threshold Rule\")",
 		"## @ace_param_options(direction rising=Rising past the value, falling=Falling past the value, both=Either direction)",
+		# Same rule as Add Buff above: the picked word carries its quotes in the template, and the
+		# dropdown opens on `rising` because the signature's quoted `"rising"` matches no key.
+		"## @ace_codegen_template(\"$StatForge.add_threshold_rule({rule_id}, {stat}, {value}, \"{direction}\", {repeating})\")",
 		"func add_threshold_rule(rule_id: String, stat: String, value: float, direction: String = \"rising\", repeating: bool = true) -> void:",
 		"\tif rule_id.is_empty() or stat.is_empty() or not direction in [\"rising\", \"falling\", \"both\"]:",
 		"\t\treturn",
