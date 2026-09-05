@@ -88,7 +88,9 @@ static func run() -> bool:
 	v2.file_pattern = "save_{slot}.enc"
 	v2.save_value("secret", 99.0)
 	all_passed = _check("encrypted saves round-trip", float(v2.load_value("secret", 0.0)), 99.0) and all_passed
-	var raw_bytes: String = FileAccess.get_file_as_string(v2._slot_path())
+	# Read as latin-1 rather than get_file_as_string: the file is CIPHERTEXT, and decoding
+	# arbitrary bytes as UTF-8 prints a wall of "Unicode parsing error" lines into every run.
+	var raw_bytes: String = FileAccess.get_file_as_bytes(v2._slot_path()).get_string_from_ascii()
 	all_passed = _check("encrypted files don't leak plaintext", raw_bytes.contains("secret"), false) and all_passed
 	v2.encryption_key = ""
 	v2.format = "config"
