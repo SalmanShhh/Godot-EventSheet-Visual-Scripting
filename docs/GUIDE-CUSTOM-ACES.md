@@ -408,6 +408,13 @@ func hold_shield(seconds: float, quality: String, op: String) -> void:
   | `moment({moment_name}, {strength})` | not quoted | `default_code: "impact"` - GDScript, taken verbatim, quotes and all. Also `default_code: Vector2(1, 1)`, `default_code: null`. |
   | either, for a number or a bare word | - | `default: 1.0` - the shorthand, and what nearly every line is. |
 
+  **A starting value needs a `desc:` beside it to survive.** All three spellings ride on the one-line
+  `@ace_param` form, and a parameter with no help text is written the older, shorter way instead -
+  `@ace_param_options` and `@ace_param_hint`, which hold a dropdown and a widget hint and have
+  nowhere to put a starting value. So a `default_word:` on a parameter you never described is
+  dropped when the pack is emitted. Give the parameter one line of help: the picker shows it anyway,
+  and it is what keeps the starting value.
+
   **Write a word bare.** The quotes on a `default_word:` are an escape, not decoration: use them only
   when the word is empty, holds a comma, or wears quotes of its own. `default_word: "x"` for a simple
   word reads correctly and then saves back as `default_word: x`, which is a different line from the
