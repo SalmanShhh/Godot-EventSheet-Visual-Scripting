@@ -384,22 +384,24 @@ func pin_path_progress() -> float:
 	var follower: PathFollow3D = anchor as PathFollow3D
 	return follower.progress_ratio if follower != null else 0.0
 
+## Chooses what the host copies from its anchor, and how it travels there.
+## Option labels carry no commas on purpose - the picker splits the list on them, so a comma
+## inside a label would offer half a sentence as a ninth mode nothing answers to.
 ## @ace_action
 ## @ace_name("Set Pin Mode")
-## @ace_description("Chooses what the host copies from its anchor, and how it travels there. Option labels carry no commas on purpose - the picker splits the list on them, so a comma inside a label would offer half a sentence as a ninth mode nothing answers to.")
 ## @ace_param_options(mode position=Follow its place only, angle=Follow its angles only, position and angle=Follow both, rope=Hang on a rope and pull only when taut, bar=Hold at exactly the length, soft=Follow with a lag, spring=Overshoot and settle, size=Copy its scale only)
 ## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.set_pin_mode({mode})")
+## @ace_codegen_template("$Pin3DBehavior.set_pin_mode("{mode}")")
 func set_pin_mode(mode: String) -> void:
 	if mode in ["position", "angle", "position and angle", "rope", "bar", "soft", "spring", "size"]:
 		pin_mode = mode
 
+## Chooses which axes of the place follow: all of them, or one line of the world only.
 ## @ace_action
 ## @ace_name("Set Pin Axes")
-## @ace_description("Chooses which axes of the place follow: all of them, or one line of the world only.")
 ## @ace_param_options(axes all=Follow all three axes, x only=Follow X only, y only=Follow the height only, z only=Follow Z only)
 ## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.set_pin_axes({axes})")
+## @ace_codegen_template("$Pin3DBehavior.set_pin_axes("{axes}")")
 func set_pin_axes(axes: String) -> void:
 	if axes in ["all", "x only", "y only", "z only"]:
 		pin_axes = axes

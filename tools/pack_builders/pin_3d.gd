@@ -135,6 +135,11 @@ static func build() -> bool:
 		"## Option labels carry no commas on purpose - the picker splits the list on them, so a comma",
 		"## inside a label would offer half a sentence as a ninth mode nothing answers to.",
 		"## @ace_param_options(mode position=Follow its place only, angle=Follow its angles only, position and angle=Follow both, rope=Hang on a rope and pull only when taut, bar=Hold at exactly the length, soft=Follow with a lag, spring=Overshoot and settle, size=Copy its scale only)",
+		# The mode is a WORD picked off the dropdown above, and a dropdown key is inserted into the
+		# call verbatim - so the quotes belong in the TEMPLATE, never in the key (a quoted key does
+		# not survive the annotation round trip). Without them a row picking Overshoot and settle
+		# asked `set_pin_mode(spring)`, an undefined identifier, and the game did not parse.
+		"## @ace_codegen_template(\"$Pin3DBehavior.set_pin_mode(\"{mode}\")\")",
 		"func set_pin_mode(mode: String) -> void:",
 		"\tif mode in [\"position\", \"angle\", \"position and angle\", \"rope\", \"bar\", \"soft\", \"spring\", \"size\"]:",
 		"\t\tpin_mode = mode",
@@ -143,6 +148,9 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Set Pin Axes\")",
 		"## @ace_param_options(axes all=Follow all three axes, x only=Follow X only, y only=Follow the height only, z only=Follow Z only)",
+		# Same rule as Set Pin Mode above: the picked word carries its quotes in the template, or
+		# `x only` reaches the emitted file as two identifiers with a space between them.
+		"## @ace_codegen_template(\"$Pin3DBehavior.set_pin_axes(\"{axes}\")\")",
 		"func set_pin_axes(axes: String) -> void:",
 		"\tif axes in [\"all\", \"x only\", \"y only\", \"z only\"]:",
 		"\t\tpin_axes = axes",

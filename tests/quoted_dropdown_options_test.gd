@@ -46,8 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"pin_3d/pin_3d_behavior.gd:axes",
-	"pin_3d/pin_3d_behavior.gd:mode",
 	"platformer_pathfinding/platformer_pathfinding_behavior.gd:mode",
 	"rotate/rotate_behavior.gd:type",
 	"stat_forge/stat_forge_behavior.gd:direction",
@@ -109,6 +107,10 @@ const ACTIONS := [
 		"$PinBehavior.set_pin_mode(\"position and angle\")", {"mode": "position and angle"}],
 	[PIN, "$PinBehavior.set_pin_axes(\"{axes}\")",
 		"$PinBehavior.set_pin_axes(\"x only\")", {"axes": "x only"}],
+	[PIN_3D, "$Pin3DBehavior.set_pin_mode(\"{mode}\")",
+		"$Pin3DBehavior.set_pin_mode(\"spring\")", {"mode": "spring"}],
+	[PIN_3D, "$Pin3DBehavior.set_pin_axes(\"{axes}\")",
+		"$Pin3DBehavior.set_pin_axes(\"z only\")", {"axes": "z only"}],
 ]
 
 const CONDITIONS := [
