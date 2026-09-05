@@ -226,11 +226,31 @@ static func _test_a_crossed_cell_is_said_out_loud() -> bool:
 	var ok: bool = SUPPORT.pins("sequencer_test", [
 		["every crossed cell arrives on the host's own signal",
 			", ".join(listener.get("heard") as Array[String]),
-			"lights@0=pulse, lights@2=pulse, lights@4=pulse"]
+			"lights@0=pulse, lights@2=pulse, lights@4=pulse"],
+		# The other half of saying a cell is the track's GROUP, and a door nothing answers to is a
+		# track that never fires. The group itself needs a tree, so what is pinned here is that one
+		# of the names knocked on is a verb a shipped behaviour really has.
+		["and the group door names a verb a shipped pack answers to",
+			_a_pack_answers_to(EventForgeSequencer.PLAY_METHODS), true]
 	])
 	head.free()
 	listener.free()
 	return ok
+
+
+## Whether the Juice behaviour declares any of the methods the group door tries. Read off the SCRIPT
+## rather than an instance, because the behaviour wants a host and this test has no tree.
+static func _a_pack_answers_to(methods: Array[StringName]) -> bool:
+	var juice: GDScript = load("res://eventsheet_addons/juice/juice_behavior.gd") as GDScript
+	if juice == null:
+		return false
+	var declared: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in juice.get_script_method_list():
+		declared.append(str(entry.get("name", "")))
+	for method: StringName in methods:
+		if declared.has(String(method)):
+			return true
+	return false
 
 
 ## A head to step by hand: not in a tree, which is what makes it a piece of arithmetic rather than a

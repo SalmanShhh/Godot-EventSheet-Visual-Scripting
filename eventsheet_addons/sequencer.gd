@@ -41,8 +41,13 @@ const MUSIC_AUTOLOAD: String = "Music"
 const BEAT_NUMBER_METHOD: StringName = &"beat_number"
 const BEAT_PHASE_METHOD: StringName = &"beat_phase"
 
-## What a track's group members are asked to do with a cell's name.
+## What a track's group members are asked to do with a cell's name: the door a project writes for
+## itself, and then the verb the Juice behaviour already carries. Both take the name and a strength,
+## so a lights track of Juice nodes plays its cells with nothing written for it - which is what
+## "reaches every light listening on it" has to mean when no shipped pack answers to the first name.
 const PLAY_METHOD: StringName = &"play_moment"
+const MOMENT_METHOD: StringName = &"moment"
+const PLAY_METHODS: Array[StringName] = [PLAY_METHOD, MOMENT_METHOD]
 
 ## Whose sequence this is - the node the signal is raised on.
 var host: Node = null
@@ -222,6 +227,9 @@ func say(cell: Dictionary) -> void:
 	var track: String = str(cell.get("track", "")).strip_edges()
 	if track.is_empty():
 		return
+	var named: String = str(cell.get("name", ""))
 	for listener: Node in get_tree().get_nodes_in_group(track):
-		if listener.has_method(PLAY_METHOD):
-			listener.call(PLAY_METHOD, str(cell.get("name", "")), 1.0)
+		for method: StringName in PLAY_METHODS:
+			if listener.has_method(method):
+				listener.call(method, named, 1.0)
+				break
