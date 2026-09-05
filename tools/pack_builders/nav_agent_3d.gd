@@ -241,12 +241,14 @@ static func build() -> bool:
 		])))
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
+	_quoted_argument(sheet, "find_path_to({x}, {y}, {z}, \"{mode}\")")
 	Lib.append_function(sheet, "find_path_to_node", "Find Path To Node", "Nav Agent 3D",
 		"Routes to another node's position (the player, a beacon) - Find Path To with the position read for you. Re-call on a timer to chase.",
 		[["target", "Node"], ["mode", "String"]],
 		"if target is Node3D:\n\tvar spot: Vector3 = (target as Node3D).global_position\n\tfind_path_to(spot.x, spot.y, spot.z, mode)\nelse:\n\tpath_failed.emit()")
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
+	_quoted_argument(sheet, "find_path_to_node({target}, \"{mode}\")")
 	Lib.append_function(sheet, "stop_pathfinding", "Stop Pathfinding", "Nav Agent 3D",
 		"Clears the path and hands the driver sibling back to the player (ai_controlled off).",
 		[],
@@ -288,6 +290,17 @@ static func build() -> bool:
 	})
 	Lib.feature_verbs(sheet, ["find_path_to"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior")
+
+
+## Gives the last-appended ACE a call template that QUOTES its dropdown argument. A dropdown key is
+## inserted into the call verbatim, so a String argument picked from a list of words has to carry its
+## own quotes in the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter
+## wraps it again and the scanner strips one pair back off). Without this a row picking reach asked
+## `find_path_to(x, y, z, reach)`, an undefined identifier, and the game did not parse. The call
+## prefix is the pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
 
 
 ## Pre-fills the last-appended ACE's parameter default (authoring-time metadata only).

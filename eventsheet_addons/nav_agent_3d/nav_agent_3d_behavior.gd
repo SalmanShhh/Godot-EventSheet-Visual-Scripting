@@ -146,7 +146,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b], [b]{z}[/b]) mode [b]{mode}[/b]")
 ## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
-## @ace_codegen_template("$NavAgent3D.find_path_to({x}, {y}, {z}, {mode})")
+## @ace_codegen_template("$NavAgent3D.find_path_to({x}, {y}, {z}, "{mode}")")
 func find_path_to(x: float, y: float, z: float, mode: String) -> void:
 	var agent: NavigationAgent3D = _ensure_agent()
 	if agent == null:
@@ -166,7 +166,7 @@ func find_path_to(x: float, y: float, z: float, mode: String) -> void:
 ## @ace_description("Routes to another node's position (the player, a beacon) - Find Path To with the position read for you. Re-call on a timer to chase.")
 ## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
-## @ace_codegen_template("$NavAgent3D.find_path_to_node({target}, {mode})")
+## @ace_codegen_template("$NavAgent3D.find_path_to_node({target}, "{mode}")")
 func find_path_to_node(target: Node, mode: String) -> void:
 	if target is Node3D:
 		var spot: Vector3 = (target as Node3D).global_position

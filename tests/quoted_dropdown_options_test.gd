@@ -46,7 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"nav_agent_3d/nav_agent_3d_behavior.gd:mode",
 	"pin/pin_behavior.gd:axes",
 	"pin/pin_behavior.gd:mode",
 	"pin_3d/pin_3d_behavior.gd:axes",
@@ -105,6 +104,9 @@ const ACTIONS := [
 			"page": "\"audio\"", "label": "\"Music\""}],
 	[GAME_SETTINGS, "Settings.listen_for_binding({action}, \"{device}\")",
 		"Settings.listen_for_binding(\"jump\", \"pad\")", {"action": "\"jump\"", "device": "pad"}],
+	[NAV_AGENT_3D, "$NavAgent3D.find_path_to({x}, {y}, {z}, \"{mode}\")",
+		"$NavAgent3D.find_path_to(4.0, 0.0, 9.0, \"reach\")",
+		{"x": "4.0", "y": "0.0", "z": "9.0", "mode": "reach"}],
 ]
 
 const CONDITIONS := [
