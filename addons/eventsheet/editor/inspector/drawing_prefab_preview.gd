@@ -100,7 +100,7 @@ static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_
 			_fill_rect(img, Rect2(at, corner - at).abs(), tint)
 		"line":
 			var to_px: Vector2 = _to_px(at_local + Vector2(p1, p2), scale, center_local, center_px)
-			_fill_segment(img, at, to_px, maxf(p3 * scale, float(_SUPERSAMPLE)), tint)
+			_fill_stroke(img, at, to_px, maxf(p3 * scale, float(_SUPERSAMPLE)), tint, entry, scale)
 		"cone":
 			_fill_cone(img, at, maxf(p3, 0.5) * scale, p1, p2, tint)
 		"stamp":
@@ -147,16 +147,57 @@ static func _fill_rect(img: Image, r: Rect2, c: Color) -> void:
 			_blend(img, x, y, c)
 
 
-static func _fill_segment(img: Image, a: Vector2, b: Vector2, width: float, c: Color) -> void:
+## A line step's stroke, with the two things the card can now say about it: what its ends look like,
+## and whether it is dashed. A step that says neither draws exactly the capsule it always drew.
+##
+## THE PATTERN IS WALKED IN PIXELS, along the segment, so the thumbnail of a dashed line differs
+## from the thumbnail of a plain one at the pixels a reader would look at rather than by a hair.
+static func _fill_stroke(img: Image, a: Vector2, b: Vector2, width: float, c: Color, entry: Dictionary, scale: float) -> void:
+	var span: float = a.distance_to(b)
 	var half: float = maxf(width, 1.0) * 0.5
-	var box: Rect2i = _px_bounds(img, Rect2(a, b - a).abs().grow(half + 1.0))
-	var ab: Vector2 = b - a
-	var len_sq: float = maxf(ab.length_squared(), 0.0001)
+	var ends: String = str(entry.get("caps", "round"))
+	if not bool(entry.get("dashed", false)) or span <= 0.001:
+		_fill_span(img, a, b, half, c, 0.0, span, ends)
+		return
+	var dash: float = maxf(float(entry.get("dash_size", 8.0)) * scale, 1.0)
+	var gap: float = maxf(float(entry.get("dash_spacing", 6.0)) * scale, 0.0)
+	var period: float = dash + gap
+	var style: String = str(entry.get("dash_style", "plain"))
+	var dash_ends: String = "round" if style == "rounded" else ("angled" if style == "angled" else "none")
+	# Whole periods of offset land where they started, so a scrolled pattern never jumps.
+	var at: float = -fposmod(float(entry.get("dash_offset", 0.0)) * period, period)
+	while at < span:
+		_fill_span(img, a, b, half, c, maxf(at, 0.0), minf(at + dash, span), dash_ends)
+		at += period
+
+
+## One run of a stroke between two distances along it, with the end shape named: `none` (cut square
+## at the end), `square` (half a width past it), `round` (a half-disc) or `angled` (a 45 degree lean,
+## which is what an angled dash is). One pixel loop answers all four - the end shape is the test at
+## the two ends rather than a second pass over the same pixels.
+static func _fill_span(img: Image, a: Vector2, b: Vector2, half: float, c: Color, from_along: float, to_along: float, ends: String) -> void:
+	if to_along <= from_along:
+		return
+	var direction: Vector2 = (b - a).normalized() if a.distance_to(b) > 0.001 else Vector2.RIGHT
+	var normal: Vector2 = Vector2(-direction.y, direction.x)
+	var start_point: Vector2 = a + direction * from_along
+	var end_point: Vector2 = a + direction * to_along
+	var box: Rect2i = _px_bounds(img, Rect2(start_point, end_point - start_point).abs().grow(half + 1.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
 		for x: int in range(box.position.x, box.position.x + box.size.x):
-			var p: Vector2 = Vector2(x + 0.5, y + 0.5)
-			var t: float = clampf((p - a).dot(ab) / len_sq, 0.0, 1.0)
-			if p.distance_to(a + ab * t) <= half:
+			var offset: Vector2 = Vector2(x + 0.5, y + 0.5) - a
+			var along: float = offset.dot(direction)
+			var perp: float = absf(offset.dot(normal))
+			var within: bool = perp <= half and along >= from_along and along <= to_along
+			match ends:
+				"square":
+					within = perp <= half and along >= from_along - half and along <= to_along + half
+				"angled":
+					var leaned: float = along + offset.dot(normal)
+					within = perp <= half and leaned >= from_along and leaned <= to_along
+				"round":
+					within = within or offset.distance_to(direction * from_along) <= half or offset.distance_to(direction * to_along) <= half
+			if within:
 				_blend(img, x, y, c)
 
 

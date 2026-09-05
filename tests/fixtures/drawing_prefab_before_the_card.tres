@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="DrawingPrefabResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd" id="1_2jjkl"]
+
+[resource]
+script = ExtResource("1_2jjkl")
+prefab_name = "target_marker"
+steps = [{
+"color": "#ffcc00",
+"kind": "circle",
+"p1": 12.0,
+"p2": 0.0,
+"p3": 0.0,
+"texture": "",
+"x": 0.0,
+"y": 0.0
+}, {
+"color": "#ffffff",
+"kind": "ring",
+"p1": 20.0,
+"p2": 2.0,
+"p3": 0.0,
+"texture": "",
+"x": 0.0,
+"y": 0.0
+}, {
+"color": "#ff3355",
+"kind": "line",
+"p1": 48.0,
+"p2": 0.0,
+"p3": 2.0,
+"texture": "",
+"x": -24.0,
+"y": 0.0
+}]

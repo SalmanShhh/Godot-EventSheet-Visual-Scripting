@@ -541,9 +541,15 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 		body.add_child(_build_label_row(index, card, entry))
 	var fields: VBoxContainer = VBoxContainer.new()
 	fields.add_theme_constant_override("separation", 2)
+	var drawn_group: String = ""
 	for field: Variant in EventSheetCardSchemas.fields_of(entry):
 		if not (field is Dictionary) or not EventSheetCardSchemas.field_visible(field as Dictionary, card):
 			continue
+		var group: String = EventSheetCardSchemas.field_group(field as Dictionary)
+		if group != drawn_group:
+			drawn_group = group
+			if not group.is_empty():
+				fields.add_child(_section_heading(group))
 		fields.add_child(_build_field(index, card, field as Dictionary))
 	body.add_child(fields)
 	for live: Variant in EventSheetCardSchemas.live_of(entry):
@@ -566,6 +572,17 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 			strip.add_child(_small_button(str((action as Dictionary).get("label", "Run")), "", func() -> void: run.call(_cards[index])))
 		body.add_child(strip)
 	return body
+
+
+## A section heading inside an open card - the line that turns a column of twenty fields into four
+## short groups a designer reads in order. It is a LABEL, not a fold: a card is already the fold, and
+## a second one inside it would hide the field somebody opened the card to change.
+func _section_heading(title: String) -> Control:
+	var heading: Label = Label.new()
+	heading.text = title
+	heading.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	heading.modulate = Color(1.0, 1.0, 1.0, 0.5)
+	return heading
 
 
 ## The card's own enable box, the same switch the header carries - here because an open card is where

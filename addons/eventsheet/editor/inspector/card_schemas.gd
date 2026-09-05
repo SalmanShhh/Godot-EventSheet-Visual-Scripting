@@ -13,7 +13,9 @@
 #       "category": "loop",                            groups the Add dropdown, colours the stripe
 #       "label":    "Loop Back",                       the card's title
 #       "help":     "Moves the head back...",          the unfolded card's info line
-#       "fields":   [{"key", "label", "drawer", "default", "show_if", "link"}],
+#       "fields":   [{"key", "label", "drawer", "default", "show_if", "link", "group"}],
+#                                                      `group` is the section heading a field sits
+#                                                      under, drawn where the name changes
 #                                                      `link` names another NUMBER key: the "=" beside
 #                                                      the field keeps the two in the ratio they were
 #                                                      in when it was pressed, as the property link does
@@ -221,12 +223,27 @@ static func live_of(entry: Dictionary) -> Array:
 	return entry.get("live") if entry.get("live") is Array else []
 
 
+## The section heading a field sits under, or "" for a field that belongs to no section. A card long
+## enough to need reading in order (where it sits, what it is, what colour, whether it dashes) says
+## so field by field, so the sections are the FIELD ORDER rather than a second list to keep in step:
+## the heading is drawn where the group's name changes.
+static func field_group(field: Dictionary) -> String:
+	return str(field.get("group", ""))
+
+
 ## Whether a field shows for this card: a field with a `show_if` key appears only while that key's
 ## value is on. This is the show-if of the Inspector's own conditions, scoped to one card.
 static func field_visible(field: Dictionary, card: Dictionary) -> bool:
 	var gate: String = str(field.get("show_if", ""))
 	if gate.is_empty():
 		return true
+	# "key==word" asks whether a card's word IS that one - the form a mode needs (a second colour
+	# belongs to a two-colour step and to no other). Without the "==" the gate is the plain "is this
+	# key on", which is what a checkbox above a section wants.
+	if gate.contains("=="):
+		var key: String = gate.get_slice("==", 0).strip_edges()
+		var wanted: String = gate.get_slice("==", 1).strip_edges()
+		return str(card.get(key, "")).strip_edges() == wanted
 	var value: Variant = card.get(gate)
 	if value is String:
 		return not (value as String).strip_edges().is_empty() and str(value) != "false"

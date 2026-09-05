@@ -353,15 +353,15 @@ static func _prefab_pins() -> bool:
 	editor.add_default_step()
 	var added: Dictionary = editor.get_steps()[0]
 	ok = _eq("an added step is a circle with every stored slot seeded, in storage order",
-		"|".join(added.keys()), "kind|x|y|p1|p2|p3|color|texture") and ok
+		"|".join(added.keys()), "kind|x|y|p1|p2|p3|color|texture|blend|color_mode|color_b") and ok
 	ok = _eq("an added step is visible immediately", "%s|%s" % [str(added.get("kind")), str(added.get("p1"))], "circle|12.0") and ok
 	editor.free()
 
 	# The shape vocabulary is the schema's: each shape still titles its own slots, never p1/p2/p3.
 	var schema: Dictionary = PREFAB_STEPS.ShapeStepsEditor.build_schema()
-	ok = _eq("line still titles p1/p2/p3 as End X/End Y/Thickness", _field_labels(schema, "line"), "Shape|End X|End Y|Thickness|Offset X|Offset Y|Color") and ok
-	ok = _eq("circle still titles p1 as Radius", _field_labels(schema, "circle"), "Shape|Radius|Offset X|Offset Y|Color") and ok
-	ok = _eq("a stamp still names its texture", _field_labels(schema, "stamp"), "Shape|Scale|Spin|Texture|Offset X|Offset Y|Color") and ok
+	ok = _eq("line still titles p1/p2/p3 as End X/End Y/Thickness", _field_labels(schema, "line"), "Shape|Offset X|Offset Y|Blend|Scale|End X|End Y|Thickness|Read in|Colour mode|Colour|Second colour|End caps|Dashed|Dash|Gap|Offset|Style") and ok
+	ok = _eq("circle still titles p1 as Radius", _field_labels(schema, "circle"), "Shape|Offset X|Offset Y|Blend|Radius|Colour mode|Colour|Second colour") and ok
+	ok = _eq("a stamp still names its texture", _field_labels(schema, "stamp"), "Shape|Offset X|Offset Y|Blend|Scale|Spin|Texture|Colour mode|Colour|Second colour") and ok
 	ok = _eq("the prefab declares no enable key (nothing would honour it)",
 		EventSheetCardSchemas.enabled_key(schema), "") and ok
 	ok = _tres_round_trip() and ok

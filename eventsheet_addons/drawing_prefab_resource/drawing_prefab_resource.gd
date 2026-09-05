@@ -38,6 +38,11 @@ func _invalidate_compiled() -> void:
 ## Parses raw steps (Dictionaries of strings) into typed entries - colors parsed once, stamp
 ## textures loaded once (main thread). The renderers use the SAME shape for their generic-Resource
 ## fallback, so a cached draw and an uncached draw are identical.
+##
+## The eight stored keys (kind, x, y, p1, p2, p3, color, texture) mean exactly what they always
+## did. Beside them a step may carry the optional look keys the Inspector card writes - the ends
+## of a line, its dash pattern, and whether its thickness follows the stamp's scale - and a step
+## that carries none of them compiles to the values it always drew with.
 static func compile_steps(raw: Array) -> Array:
 	var out: Array = []
 	for step: Variant in raw:
@@ -59,5 +64,12 @@ static func compile_steps(raw: Array) -> Array:
 			"p3": float(entry.get("p3", 0.0)),
 			"color": Color.from_string(str(entry.get("color", "white")), Color.WHITE),
 			"tex": tex,
+			"caps": str(entry.get("caps", "none")),
+			"scale_mode": str(entry.get("scale_mode", "uniform")),
+			"dashed": bool(entry.get("dashed", false)),
+			"dash_size": float(entry.get("dash_size", 8.0)),
+			"dash_spacing": float(entry.get("dash_spacing", 6.0)),
+			"dash_offset": float(entry.get("dash_offset", 0.0)),
+			"dash_style": str(entry.get("dash_style", "plain")),
 		})
 	return out
