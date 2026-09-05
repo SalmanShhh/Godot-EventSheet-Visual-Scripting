@@ -4118,6 +4118,23 @@ against Godot 4.7 before it was repaired.
   those rows in the sheet's own words** - the block lines did not move and neither did the share.
   The pack count moves by exactly the watcher: **113 behavior packs, 94 of them with a guide**, the
   other 19 companion data assets and loaders. Assertions **20,067 across 704 test files**, counted off the runner's own total rather than from a grep.
+- **And the module reference page caught up with the six rows that had no table entry.** The Files
+  guide promises that "the full reference tables for every verb live in the Working With Files module
+  page", and six of this pass's rows were not in one: **Read Text File (or a fallback)**,
+  **Write Text File (in a folder)** and **Open The Player's Data Folder** now close the Files table
+  with the reason they sit beside the eight rather than inside them, and **Safe File Name**,
+  **Free File Path** and **Show In The File Manager** get a section of their own - the name a player
+  typed - with the two sets of brackets in the emitted line, the leading dots and what a run that
+  fills every number answers with. Measured rather than assumed: fifty-two verbs on the Files shelves,
+  zero of them now missing from a module page, and zero blank descriptions and zero blank parameter
+  descriptions across the whole built-in vocabulary. Two counts elsewhere were re-measured while the
+  page was open: the coming-from-another-editor map said 112 bundled packs and the docs-house page
+  said 95 guides of 114 packs, where the tree holds **136 packs, 106 guide files, and 30 packs
+  documented inside a partner's guide**.
+- **The Doctor's Files section is six checks wherever it is named.** The saving-and-loading page still
+  said three, which was true when the section held three and is now the wrong half of it: it says six,
+  names the three that carry a one-click fix, and points at the Files guide for the two trust checks
+  and the watch note that do not.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### The files pass, read back adversarially
