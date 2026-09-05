@@ -2933,10 +2933,19 @@ static func _skill_tree_assets() -> PackedStringArray:
 ## on a thousand-file project, so asking it once per check spent over two seconds of every audit
 ## re-listing directories that had not moved. A run drops it first (below), and so does the editor's
 ## filesystem ping, which is the same contract every other project-wide read here has.
+## ONE WALK, TWO VIEWS. This FILTERS the whole-project listing rather than walking the directories a
+## second time with the declared folders left out: the two lists differ only in which paths they
+## keep, and a project big enough for the scope setting to matter is exactly the one where a second
+## walk is worth not doing. Whichever of the two is asked for first pays for the walk; the other is
+## free. Keeping them as two independent walks cost the project share index its share of one and
+## showed up as a rebuild budget going over by a third.
 static func _project_scripts() -> PackedStringArray:
 	if _project_scripts_walked:
 		return _project_scripts_cache
-	var scripts: PackedStringArray = _walk_project_scripts()
+	var scripts: PackedStringArray = PackedStringArray()
+	for script_path: String in all_project_scripts():
+		if not is_in_skipped_folder(script_path):
+			scripts.append(script_path)
 	_project_scripts_cache = scripts
 	_project_scripts_walked = true
 	return scripts
