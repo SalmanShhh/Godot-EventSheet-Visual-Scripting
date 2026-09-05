@@ -800,6 +800,23 @@ What changed in the build you have installed (v0.17.0), in the words the release
   the run where it OPENS, through the same reader the canvas reads, so every line a run took names
   the entry that claimed it and how many statements it took.
 
+### Performance
+
+- **The first sheet tab of a session stopped compiling the editor to learn four words.** The Game
+  State vocabulary module read its two trigger ids, its signal and its parameter name off the editor
+  file that ANSWERS questions about a sheet's modes - and a module compiles everything it names, so
+  the descriptor build pulled that file's whole subtree in behind it. The four frozen strings now
+  live in a word table beside the other word tables, with the reader declaring its own constants AS
+  those, so there is still one spelling of each. Measured on this repository: about 250 ms off the
+  module half of the first tab, and about 790 ms in a process with no editor around it at all, such
+  as a headless test run or a docs build. Not one descriptor, word, field or registration position
+  moved - all four registry dumps are byte-identical.
+- **The reverse-lift index stopped copying the whole vocabulary to ask how big it is.** Its memo is
+  keyed on the descriptor count, and reading that count went through a call that duplicates a
+  two-thousand-entry array first - on every one of the several calls each lifted function makes, with
+  the copy thrown away nine times in ten. The registry answers the count directly now, and the array
+  is built only on the rare rebuild. Warming the registries before an async open asks the same way.
+
 ### What plays, prompts, speaks and moves
 
 - **Music that follows the game, as a pack: 24 rows.** The Audio rows play a sound on a player, which
