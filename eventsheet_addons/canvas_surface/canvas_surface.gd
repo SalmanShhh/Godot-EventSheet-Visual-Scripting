@@ -853,6 +853,8 @@ static func raster_shape(command: Dictionary) -> Dictionary:
 	var numbers: Vector4 = command.get("numbers", Vector4.ZERO)
 	match str(command.get("kind", "")):
 		"arc":
+			if bool(style.get("dashed", false)):
+				return {"kind": "multiline", "points": dashed_walk(arc_points(at, numbers.x, numbers.z, numbers.w), false, style), "width": width, "color": colour}
 			return {"kind": "arc", "at": at, "radius": numbers.x, "from": numbers.z, "to": numbers.w, "width": width, "color": colour}
 		"pie":
 			var wedge: PackedVector2Array = PackedVector2Array([at])
@@ -863,12 +865,16 @@ static func raster_shape(command: Dictionary) -> Dictionary:
 			var outline: PackedVector2Array = rounded_rect_points(at, Vector2(numbers.x, numbers.y), numbers.z)
 			if filled:
 				return {"kind": "polygon", "points": outline, "color": colour}
+			if bool(style.get("dashed", false)):
+				return {"kind": "multiline", "points": dashed_walk(outline, true, style), "width": width, "color": colour}
 			outline.append(outline[0])
 			return {"kind": "polyline", "points": outline, "width": width, "color": colour}
 		"regular_polygon":
 			var corners: PackedVector2Array = regular_polygon_points(at, numbers.x, int(numbers.y), numbers.z)
 			if filled:
 				return {"kind": "polygon", "points": corners, "color": colour}
+			if bool(style.get("dashed", false)):
+				return {"kind": "multiline", "points": dashed_walk(corners, true, style), "width": width, "color": colour}
 			corners.append(corners[0])
 			return {"kind": "polyline", "points": corners, "width": width, "color": colour}
 		"grid":
@@ -885,6 +891,8 @@ static func raster_shape(command: Dictionary) -> Dictionary:
 				return {}
 			if filled:
 				return {"kind": "polygon", "points": points, "color": colour}
+			if bool(style.get("dashed", false)):
+				return {"kind": "multiline", "points": dashed_walk(points, true, style), "width": width, "color": colour}
 			var ring: PackedVector2Array = points.duplicate()
 			ring.append(ring[0])
 			return {"kind": "polyline", "points": ring, "width": width, "color": colour}
@@ -892,8 +900,11 @@ static func raster_shape(command: Dictionary) -> Dictionary:
 			var path: PackedVector2Array = command.get("points", PackedVector2Array())
 			if path.size() < 2:
 				return {}
+			var loop: bool = bool(command.get("closed", false))
+			if bool(style.get("dashed", false)):
+				return {"kind": "multiline", "points": dashed_walk(path, loop, style), "width": width, "color": colour}
 			var walk: PackedVector2Array = path.duplicate()
-			if bool(command.get("closed", false)):
+			if loop:
 				walk.append(walk[0])
 			return {"kind": "polyline", "points": walk, "width": width, "color": colour}
 		"text":
@@ -901,6 +912,38 @@ static func raster_shape(command: Dictionary) -> Dictionary:
 		"texture":
 			return {"kind": "texture_rect", "texture": command.get("texture"), "rect": Rect2(at - Vector2(numbers.x, numbers.y), Vector2(numbers.x, numbers.y) * 2.0), "color": colour}
 	return {}
+
+## An arc as points. The dash primitive walks points, and an arc the shader would have solved per
+## pixel has none, so the raster half samples one.
+static func arc_points(at: Vector2, radius: float, from_angle: float, to_angle: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	for step: int in RASTER_ARC_SEGMENTS + 1:
+		out.append(at + Vector2.from_angle(lerpf(from_angle, to_angle, float(step) / float(RASTER_ARC_SEGMENTS))) * radius)
+	return out
+
+## One outline cut into dashes by the style in force - the SAME pattern the shader cuts, walked on
+## the CPU by the dash primitive the canvas already uses for its dashed line, ring and rect. In count
+## mode the period is the outline's own length divided by the count, which is what makes a dashed
+## ring of any radius carry the number of dashes it was asked for.
+static func dashed_walk(points: PackedVector2Array, closed: bool, style: Dictionary) -> PackedVector2Array:
+	var walk: PackedVector2Array = points.duplicate()
+	if closed and walk.size() > 1:
+		walk.append(walk[0])
+	var space: String = str(style.get("dash_space", "count"))
+	var thickness: float = maxf(float(style.get("thickness", 2.0)), 0.01)
+	var dash: float = maxf(float(style.get("dash_size", 12.0)), 0.5)
+	var gap: float = maxf(float(style.get("dash_spacing", 6.0)), 0.0)
+	if space == "count":
+		var total: float = 0.0
+		for index: int in maxi(walk.size() - 1, 0):
+			total += walk[index].distance_to(walk[index + 1])
+		var period: float = total / maxf(float(int(style.get("dash_count", 12))), 1.0)
+		gap = period * clampf(float(style.get("dash_spacing", 0.5)), 0.0, 0.95)
+		dash = maxf(period - gap, 0.5)
+	elif space == "relative":
+		dash *= thickness
+		gap *= thickness
+	return _dash_polyline(walk, dash, gap)
 
 ## The outline of a rounded rectangle centred on a point, as points - what the raster half draws
 ## when there is no shader to solve the corner per pixel.
