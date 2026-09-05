@@ -242,6 +242,49 @@
   verbatim ones, so the verbatim calls are now counted the same way and subtracted, and what is left
   is what the rows asked for. An emitted sheet is unchanged to the byte - its rows still ask, and it
   still carries every helper it calls.
+- **A data-only mod load reads the scenes a mod carries, not only their names.** The tier was decided
+  by file EXTENSION alone, so a `.tscn` or a `.tres` holding a script - written inside the file, named
+  by a path beside it, or spelled as a property value the engine resolves by loading or compiling -
+  was taken as data and ran a stranger's code with everything the game can reach, while the guide,
+  the pack page and the README the template tool writes all said it had been refused. Every scene and
+  resource a mod holds is now read as TEXT - a folder's files, a zip's entries, a pack file's own
+  bytes - and one carrying a script, a value that builds something, or a path leading out of the mod
+  is refused by name. A file the reading cannot read is refused rather than cleared, and the manifest
+  itself is read before it is loaded, so a crafted `mod.tres` never gets built to be asked about.
+- **And a pack mod's file list is finally readable at all.** The `.pck` reader capped the format at
+  3; Godot 4.7 writes 4, which moved the file table to a place of its own near the end of the pack
+  and writes paths without their `res://`. Every real pack a player had therefore came back as "its
+  file list could not be read" - the safe answer, and a data-only row that could never load one. Both
+  shapes are read now, the relative-places flag is honoured, an encrypted directory is refused, and
+  every entry is checked to point at bytes the file actually holds. Pinned against real `.pck` files
+  the suite packs itself rather than against a sentence in a file named `.pck`.
+- **A chunk that will not build is asked for once, not every frame.** A cell whose scene was there
+  and could not be made into a chunk - the load failed, the loader refused, the file was not a scene
+  - was written down nowhere, so the next frame wanted it again: one engine error per frame for ever,
+  a streamer that never called itself idle, and a loading screen that never went away. Both Streamer
+  packs now remember it, and Stream Chunks Around is what clears the memory. **On Chunk Unloading**
+  also fires while the cell is still in the loaded set, so Chunk Is Loaded At and Loaded Chunk Count
+  answer inside that trigger about the world the row is looking at; and a streamer whose followed
+  node has been freed stops following instead of asking an unanswerable question every frame.
+- **The camera note stops warning about something Godot does not do.** "Every chunk that streams in
+  makes its camera current" is true of neither camera class - a `Camera2D` takes the view only where
+  the viewport has none, a `Camera3D` only where it was saved current or is the first to arrive - so
+  a chunk carrying a camera turned a row amber over a scene that behaves. The finding, both pack
+  guides, the tiles guide and all nine translation files now say the two cases that are real.
+- **A deliberately sparse chunk folder is counted, not walked.** The Streaming section listed every
+  missing cell in a folder's bounding box and asked afterwards whether the gap was worth reporting,
+  so two islands 500 cells apart cost a quarter of a million cells on every Doctor run and a 3D
+  folder 300 apart cost twenty-seven million. The count is a subtraction now, and the cells are named
+  only once the answer is yes.
+- **A `get_node("Ground")` inside a tile question is not a data key.** The Tilemap section claimed the
+  first quoted string before a bracket, so a correct row asking a named layer for a tile under a node
+  was reported as asking for a layer no tileset declares. The key is read as the argument that
+  carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
+  declare no terrain set at all also no longer reads "this project's tilesets go up to -1".
+- **The split dialog's reading says the axes the split uses.** It read "one scene per 1024 x 512
+  cell" off Cell width and Cell HEIGHT while a flat grid - every 2D scene - is cut on width and
+  DEPTH, so a reader who typed a height, read the sentence back and pressed Split got chunks of a
+  size nobody asked for.
 
 ### A number that says its unit, a list that reads as cards, and a handle you can drag
 
