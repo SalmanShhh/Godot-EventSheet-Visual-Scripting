@@ -149,18 +149,33 @@ static func _is_word_start(character: String) -> bool:
 	return (character >= "A" and character <= "Z") or (character >= "a" and character <= "z")
 
 
-## THE SEVEN, in reading order. Named rather than counted: a strip that swapped Undo for something
-## else would keep any count you cared to write.
+## THE SEVEN, in reading order, and the contextual segment that rests beside them. Named rather than
+## counted: a strip that swapped Undo for something else would keep any count you cared to write.
+##
+## The Moment segment is a CONTAINER that never hides itself - the sweep below decides visibility by
+## container, and a segment that hid itself would be shown again by the next chevron press - so it
+## rests here holding nothing, drawing nothing, until a row about a beat is selected.
 static func _test_the_resting_row() -> bool:
 	var editor: EventSheetEditor = _editor()
 	var resting: PackedStringArray = PackedStringArray()
 	for child: Node in editor._toolbar.get_children():
 		if (child as Control).visible:
 			resting.append(str(child.name))
-	var ok: bool = _check("the strip rests as seven controls, in this order", resting,
+	var ok: bool = _check("the strip rests as seven controls and one empty segment, in this order",
+		resting,
 		PackedStringArray(["EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton",
 			"EventSheetRedoButton", "EventSheetPlaySlot", "EventSheetQuickAdd",
-			"EventSheetToolbarExpander"]))
+			"EventSheetMomentSegment", "EventSheetToolbarExpander"]))
+	# And it rests EMPTY: every control inside it is hidden until the selection earns it.
+	var segment_showing: PackedStringArray = PackedStringArray()
+	for child: Node in editor._toolbar.get_children():
+		if str(child.name) != "EventSheetMomentSegment":
+			continue
+		for part: Node in child.get_children():
+			if (part as Control).visible:
+				segment_showing.append(str(part.name))
+	ok = _check("the Moment segment rests showing nothing", segment_showing,
+		PackedStringArray()) and ok
 	# The play button lives in that slot: one face and one narrow dropdown, two adjacent controls in
 	# a single frame, because Godot has no split button to reach for.
 	ok = _check("the play button has its slot",
