@@ -101,6 +101,12 @@ static func parse_step(written: String) -> Dictionary:
 	# error about text nobody wrote wrongly, which is worse than the answer it would give back.
 	if not trimmed.begins_with("{") or not trimmed.ends_with("}"):
 		return {"verb": "shake", "amount": 1.0, "effect": "", "seconds": 0.0}
+	# THE ENGINE'S OWN READER FIRST, because it is the one that keeps a whole number whole: a card
+	# holds counts (loops, repeats) as well as times, and JSON hands every number back as a float,
+	# which would rewrite `"loops": 2` as `"loops": 2.0` on a card that was only ever looked at.
+	var spelled: Variant = str_to_var(trimmed)
+	if spelled is Dictionary:
+		return spelled as Dictionary
 	var parsed: Variant = JSON.parse_string(trimmed)
 	if parsed is Dictionary:
 		return parsed as Dictionary

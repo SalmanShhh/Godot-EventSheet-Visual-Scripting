@@ -298,7 +298,11 @@ static func _step_field_pins() -> bool:
 	var card: Dictionary = {"seconds": 0.2, "verb": "shake", "amount": 0.4, "label": "kick"}
 	var written: String = STEP_FIELD.step_literal(card)
 	var reopened: String = STEP_FIELD.step_literal(STEP_FIELD.parse_step(written))
+	# A card holds counts as well as times, and a count opened and closed again is still a count.
+	var counted: String = "{\"verb\": \"loop_back\", \"seconds\": 0.25, \"loops\": 2, \"to_hold\": true}"
 	return SUPPORT.pins(TEST_NAME, [
+		["a whole number opens and closes as a whole number",
+			STEP_FIELD.step_literal(STEP_FIELD.parse_step(counted)), counted],
 		["a card writes out with the file's four keys first", written,
 			"{\"verb\": \"shake\", \"amount\": 0.4, \"seconds\": 0.2, \"label\": \"kick\"}"],
 		["opening the card and closing it changes nothing", reopened, written],
