@@ -15,6 +15,22 @@ extends RefCounted
 
 const FPS_PACK: String = "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
 
+## The FPS pack's published vocabulary, in the order the shipped file declares it. Pinned by NAME
+## so a verb that arrives or leaves is named in the diff rather than showing up as a number that
+## moved by one, which is what a bare count of these could say and no more.
+const EXPOSED_VERBS: PackedStringArray = [
+	"Jump", "Air Jump", "Add Look", "Set Third Person",
+	"Toggle Camera Mode", "Apply Camera Mode", "Capture Mouse", "Release Mouse",
+	"Set Move Speed", "Set Mouse Sensitivity", "Is Sprinting", "Is First Person",
+	"Current Speed", "Look Yaw", "Look Pitch", "Crouch",
+	"Stand Up", "Set Crouching", "Stop Sliding", "Wall Jump",
+	"Can Jump", "Set Coyote Time", "Set Move Speed While Firing", "Is Firing",
+	"Bob With Movement", "Sway With Mouse", "Set Air Control", "Is Bunny Hopping",
+	"Reset Jumps", "Stop Wall Ride", "Is Crouching", "Is Sliding",
+	"Is Wall Riding", "Can Stand Up", "Wall Normal X", "Wall Normal Z",
+	"Set Gravity Direction", "Claim As Mine",
+]
+
 ## A hand-written script in nobody's house style: helpers above the handlers, a `$Node` connect,
 ## casts inside the branch tests, and a mouse-button branch beside a key-RELEASED branch.
 const HANDWRITTEN: String = """extends Node2D
@@ -50,9 +66,11 @@ static func run() -> bool:
 		_anchor_triggers(fps), PackedStringArray(["OnReady", "OnPhysicsProcess", "OnUnhandledInput"])) and ok
 	ok = _check("the anchored _unhandled_input holds one event per branch",
 		_anchor_row_count(fps, "OnUnhandledInput"), 2) and ok
-	# 31 + 2: the leftovers parcel added Set Move Speed While Firing and Is Firing; + 4 for the
-	# feel layer's Bob With Movement, Sway With Mouse, Set Air Control and Is Bunny Hopping.
-	ok = _check("the anchors did not cost the pack a verb", _exposed_verbs(fps), 31 + 2 + 4) and ok
+	# The pack's whole published vocabulary, BY NAME rather than by count. A count says only that
+	# the number moved and leaves you to work out which verb it was; the list says which one arrived
+	# and which one went, which is the only half of the answer worth having when the point of the
+	# check is that anchoring the lifecycle handlers cost the pack nothing.
+	ok = _check("the anchors did not cost the pack a verb", _exposed_verbs(fps), EXPOSED_VERBS) and ok
 	ok = _check("the opened FPS pack recompiles byte-identically",
 		str(SheetCompiler.compile(fps, FPS_PACK).get("output", "")), FileAccess.get_file_as_string(FPS_PACK)) and ok
 
@@ -140,11 +158,12 @@ static func _anchor_row_count(sheet: EventSheetResource, trigger_id: String) -> 
 	return -1
 
 
-static func _exposed_verbs(sheet: EventSheetResource) -> int:
-	var exposed: int = 0
+## Every verb the pack publishes, in the order the file declares them.
+static func _exposed_verbs(sheet: EventSheetResource) -> PackedStringArray:
+	var exposed: PackedStringArray = PackedStringArray()
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction and (entry as EventFunction).expose_as_ace:
-			exposed += 1
+			exposed.append((entry as EventFunction).ace_display_name)
 	return exposed
 
 
