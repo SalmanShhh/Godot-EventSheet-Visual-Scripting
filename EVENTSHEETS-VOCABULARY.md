@@ -188,21 +188,21 @@ Node script extending `CharacterBody2D`.
 @ace_tags(visual, shader, juice, effects, blend) @ace_category("Blend Modes") @ace_version(1.0.0)
 
 #### Conditions
-- **Blend Mode Is** (`item: CanvasItem, mode: String = "screen"`)
-- **Is Blended As One** (`item: CanvasItem`)
+- **Blend Mode Is** (`item: CanvasItem, mode: String = "screen"`) - True while this item is blending the way the row says. Reads the same record Blend Mode does, so an item nothing here has touched answers to "normal" rather than to nothing at all.
+- **Is Blended As One** (`item: CanvasItem`) - True while this node's children are drawn as one picture - either because a row asked for it, or because the node in the scene IS a CanvasGroup already.
 
 #### Actions
-- **Blend As** (`item: CanvasItem, mode: String = "screen", strength: float = 1.0`)
-- **Set Blend Strength** (`item: CanvasItem, strength: float = 1.0`)
-- **Fade Blend Strength** (`item: CanvasItem, strength: float = 0.0, seconds: float = 0.4`)
-- **Mask With** (`item: CanvasItem, shape: Texture2D = null, mode: String = "inside"`)
-- **Mask With Node** (`item: CanvasItem, shape_node: CanvasItem = null, mode: String = "inside"`)
-- **Unmask** (`item: CanvasItem`)
-- **Blend As One** (`item: CanvasItem`)
-- **Blend Separately** (`item: CanvasItem`)
+- **Blend As** (`item: CanvasItem, mode: String = "screen", strength: float = 1.0`) - Blends this item into whatever has already been drawn under it. The five native modes are the ones Godot draws by itself and cost nothing; the other fifteen read the screen back through a shader, which costs one screen read for every pixel the item covers - a look for the few things that want it rather than for every sprite in the scene.
+- **Set Blend Strength** (`item: CanvasItem, strength: float = 1.0`) - Turns the blend up or down without changing which mode it is - the same dial Blend As set when it put the look on. An item in a native mode has nothing to turn, so this does nothing to one.
+- **Fade Blend Strength** (`item: CanvasItem, strength: float = 0.0, seconds: float = 0.4`) - Walks the blend to a new strength over time instead of jumping to it - a look coming on as the boss appears, a mask opening, a glow settling. One tween, and nothing kept between frames.
+- **Mask With** (`item: CanvasItem, shape: Texture2D = null, mode: String = "inside"`) - Lets a second picture decide where this one is allowed to be. The mask's transparency is what is read, so any sprite, any drawn shape and any texture with a hole in it works as one - a torn edge, a spotlight, a wipe that moves.
+- **Mask With Node** (`item: CanvasItem, shape_node: CanvasItem = null, mode: String = "inside"`) - The same mask, taken off ANOTHER NODE's picture - the sprite in the scene that is already the shape you want. Reads that node's own texture, so moving or swapping the sprite changes the mask.
+- **Unmask** (`item: CanvasItem`) - Takes the mask off and puts back whatever the item was wearing before it - its own material, or none at all. An item that was never masked is left exactly as it is.
+- **Blend As One** (`item: CanvasItem`) - Draws this node's children into one picture first and puts THAT on the screen, so where they overlap they stop showing through each other. It is what a half-faded character made of six sprites wants, and what a blend mode on a group of things wants. Wraps the children under a CanvasGroup, which is Godot's own answer.
+- **Blend Separately** (`item: CanvasItem`) - Puts the children back the way they were, each drawn on its own. The node's own class is never changed by either of these, so a node that was already a CanvasGroup in the scene stays one.
 
 #### Expressions
-- **Blend Mode** (`item: CanvasItem`)
+- **Blend Mode** (`item: CanvasItem`) - The word this item is blending by, for any value field - "screen", "multiply", "normal". An item no row here has touched reads back "normal", which is what it is doing.
 
 ### BoostAddon (`res://eventsheet_addons/boosts/boosts_addon.gd`)
 @ace_tags(incremental, idle, boost) @ace_category("Boosts") @ace_version(1.0.0)
@@ -363,10 +363,10 @@ Node script extending `CharacterBody2D`.
 @ace_tags(collection, codex, progression, unlocks) @ace_category("Codex") @ace_version(1.0.0)
 
 #### Triggers
-- **On First Discovered** (`set_name: String, entry_id: String`)
+- **On First Discovered** (`set_name: String, entry_id: String`) - Fires the FIRST time an entry is discovered, and never again for that entry - the toast, the page-turn sound, the achievement. A second Discover of the same entry is silent, so the row that fills the codex and the row that celebrates it can be the same row.
 
 #### Conditions
-- **For Each Discovered** (`set_name: String`)
+- **For Each Discovered** (`set_name: String`) - Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture` and `text` straight off it. An entry that has been discovered but has no file behind it any more is skipped rather than arriving as null.
 - **Has Discovered** (`set_name: String, entry_id: String`) - Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.
 
 #### Actions
@@ -488,10 +488,10 @@ Node script extending `CharacterBody2D`.
 @ace_tags(lighting, time, day-night) @ace_category("Day/Night Cycle") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
-- **On Sunrise**
-- **On Sunset**
-- **On Midnight**
-- **On The Hour** (`hour: int`)
+- **On Sunrise** - Fires as the clock passes Sunrise Hour - the moment to put the torches out.
+- **On Sunset** - Fires as the clock passes Sunset Hour - the moment to light the streetlamps.
+- **On Midnight** - Fires as the clock passes 0:00 - one whole game day has gone by.
+- **On The Hour** (`hour: int`) - Fires every time the clock reaches a whole hour, carrying the hour it reached (0 to 23). Compare it to branch on one hour in particular.
 
 #### Conditions
 - **It Is Day** - True between sunrise and sunset. The comparison is made in hours SINCE sunrise so that a day running past midnight (sunrise 20:00, sunset 4:00) reads the same as an ordinary one.
@@ -665,20 +665,35 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Paste Node At** (`node: Node, x: float, y: float, scale_factor: float, rotation_deg: float`) - Bakes a node's visual at an EXPLICIT spot (read like the other draw coordinates), scaled and rotated - stamp an off-screen template sprite anywhere, any number of times.
 - **Paste Layer On Screen** (`layer: Node`) - Bakes every visible texture-bearing node under {layer} that is currently ON SCREEN onto the canvas - flatten a whole layer of decor into one texture (pair with Destroy for a performance bake). {layer} is any parent: a CanvasLayer, a container node, or the scene root.
 - **Paste Layer In Box** (`layer: Node, x: float, y: float, width: float, height: float`) - Bakes every visible texture-bearing node under {layer} whose world rect falls inside the box at ({x}, {y}) sized {width} by {height} (world coordinates) onto the canvas - flatten a region regardless of the camera.
+- **Set Draw Style** (`style: Resource`) - Hands the canvas a draw STYLE: every styled row after this one draws with that file's thickness, caps, colour and dashes until the style is replaced, popped or reset. An empty slot is the canvas's own defaults. The rows that carry their own width and colour are untouched by it - a style is for the rows below, which carry neither.
+- **Push Draw Style** (`style: Resource`) - Sets a style with the one in force kept underneath it - draw, then Pop Draw Style, and the rows carry on in the style they were in before.
+- **Pop Draw Style** - Goes back to the style that was in force before the last Push Draw Style.
+- **Reset Draw Style** - Drops the whole stack: the canvas draws in its own defaults again.
+- **Draw Arc** (`x: float, y: float, radius: float, from_degrees: float, to_degrees: float`) - Draws an arc of a circle in the current draw style - the cooldown sweep, the turn radius, the range band. Angles are degrees, measured the way the engine measures them.
+- **Draw Pie** (`x: float, y: float, radius: float, from_degrees: float, to_degrees: float`) - Draws a filled wedge of a circle in the current draw style - the same two angles as an arc, filled in: the attack telegraph, the pie slice, the vision wedge.
+- **Draw Rounded Rect** (`x: float, y: float, width: float, height: float, corner_radius: float, filled: bool`) - Draws a rectangle with rounded corners from its CENTRE, filled or as an outline - the panel, the selection box, the button plate.
+- **Draw Regular Polygon** (`x: float, y: float, radius: float, sides: int, angle_degrees: float, filled: bool`) - Draws a shape of N equal sides at a radius, from its centre - the hex cell, the warning triangle, the stop sign.
+- **Draw Polygon** (`points: Array, filled: bool`) - Draws a closed outline through a list of positions, filled or hollow. Concave outlines are allowed: the engine triangulates a filled one.
+- **Draw Polyline** (`points: Array, closed: bool`) - Draws a path through a list of positions, open or closed - the route preview, the drawn trail, the border of a claimed region.
+- **Draw Text** (`message: String, x: float, y: float, size: float`) - Draws a line of text at a spot in the style's colour - the state name over an enemy, the number over a tile, the label on a debug overlay.
+- **Draw Texture** (`texture: Texture2D, x: float, y: float, width: float, height: float`) - Draws a texture stretched into a box, from its centre, tinted by the style's colour.
+- **Draw Grid** (`x: float, y: float, width: float, height: float, cell_size: float`) - Draws a grid of rulings filling a box, from its centre - the level editor's floor, the debug overlay's ruler, the graph paper behind a plan.
+- **Draw Cross** (`x: float, y: float, arm_length: float, angle_degrees: float`) - Draws a cross - the marker on a spot, the "no" over a placement that will not do.
+- **Draw Arrow** (`from_x: float, from_y: float, to_x: float, to_y: float, head_size: float`) - Draws an arrow from one point to another, its head sized in pixels - a force, a facing, a route, a debug vector.
 
 #### Expressions
-- **Canvas Texture**
+- **Canvas Texture** - The canvas's LIVE texture - assign it to a TextureRect, a material, a particle, or a 3D Decal (the Decal Painter pack accepts it directly). Updates as the canvas draws.
 
 ### DrunkenWalkersAddon (`res://eventsheet_addons/drunken_walkers/drunken_walkers_addon.gd`)
 @ace_tags(procedural, generation, random, grid) @ace_category("Drunken Walkers") @ace_version(1.0.0)
 
 #### Triggers
-- **On Cell Carved** (`x: int, y: int, value: int, walker_id: String`)
-- **On Walker Stepped** (`walker_id: String`)
-- **On Walker Finished** (`walker_id: String`)
-- **On Mark Placed** (`tag: String`)
-- **On Walkers By Tag Complete** (`tag: String`)
-- **On Generation Complete**
+- **On Cell Carved** (`x: int, y: int, value: int, walker_id: String`) - Fires once for every cell whose value actually CHANGES - during walker runs, Dilate Cells and Outline Cells. Carved X, Carved Y and Carved Value describe the cell; Walker ID names the walker responsible, and reads empty for the two post-processing passes. A walker re-crossing ground it already carved does not fire it again, because nothing changed.
+- **On Walker Stepped** (`walker_id: String`) - Fires after each step of Step Walker, and ONLY from Step Walker - batch runs skip it on purpose so bulk generation stays fast. Walker X, Walker Y, Walker Angle and Walker Steps Left are all live inside it. Compare the walker id yourself to filter; an empty comparison matches them all.
+- **On Walker Finished** (`walker_id: String`) - Fires when a walker exhausts its step budget or runs out of legal moves. Walker X and Walker Y are its final cell, which is how one walker starts where another stopped.
+- **On Mark Placed** (`tag: String`) - Fires once per mark placed by Drop Marks Along Walk and Scatter Marks. Mark X, Mark Y and Mark Tag describe it.
+- **On Walkers By Tag Complete** (`tag: String`) - Fires after a Run Walkers By Tag batch has finished every walker carrying that tag. Walker Tag holds the batch tag inside it.
+- **On Generation Complete** - Fires after Run All Walkers has run every registered walker. The idiomatic place to scatter marks, outline the walls and paint the tilemap.
 
 #### Conditions
 - **Is Cell Value** (`x: int, y: int, value: int`) - True when the cell holds exactly that value. Stricter than the Cell Value expression: an out-of-bounds cell matches nothing, not even the Empty Value, which is what lets you test the border honestly.
@@ -805,12 +820,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Event Was Ever Broadcast** (`channel: String = "boss_defeated"`) - Whether this channel has been broadcast at least once since the game started. Useful for a gate that must stay open once something has happened, e.g. "the boss has been defeated at some point".
 
 #### Actions
-- **Wait For Event** (`channel: String = "door_opened", seconds: float = 8.0`) - Suspends this event until the named message is broadcast, or until the give-up time passes. The rows below it run when it resolves, so read what happened with the Wait For Event Succeeded / Wait For Event Timed Out conditions. A give-up time of 0 waits forever.
 - **Broadcast Event** (`channel: String = "boss_defeated", payload: Dictionary = {}`) - Sends a named message to everyone listening, with a record of details. Anyone anywhere can answer it with On Event - the listener needs no reference to you, and you need none to it. The details arrive on the listener's row as the payload record, read by key.
 - **Listen Once For Event** (`channel: String = "tutorial_done", on_node: Node = null, method_name: String = "_on_bus_event"`) - Asks for ONE delivery of a channel and then unsubscribes itself, so a tutorial gate or a one-time hint can never fire twice and can never leak. When the message arrives the named method is called on the node you picked, with the channel and the payload as its two arguments.
 - **Broadcast To Group** (`group: String = "listeners", method_name: String = "on_bus_event", payload: Dictionary = {}`) - Calls a named method on every member of a group that actually has it, handing over the payload record. The fan-out half of the bus: use it when the answer belongs to a family of nodes rather than to a sheet, and nothing breaks when a member does not implement the method.
 - **Clear Event Log** - Empties the record of what has been broadcast this session. The counters that Event Broadcast Count reads are kept, so only the report text is affected.
 - **Print Event Bus Report** - Prints every broadcast recorded this session to the output, newest last, one channel and payload per line. A diagnostic: reach for it while you are hunting a missing listener, not in shipping rows.
+- **Wait For Event** (`channel: String = "door_opened", seconds: float = 8.0`) - Suspends this event until the named message is broadcast, or until the give-up time passes. The rows below it run when it resolves, so read what happened with the Wait For Event Succeeded / Wait For Event Timed Out conditions. A give-up time of 0 waits forever.
 
 #### Expressions
 - **Event Broadcast Count** (`channel: String = "boss_defeated"`) - How many times this channel has been broadcast since the game started. 0 for a channel nobody has used.
@@ -843,17 +858,25 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Triggers
 - **On Flash Finished**
 
+#### Conditions
+- **Is Blinking** - Whether a blink pattern is playing on this host right now.
+
 #### Actions
 - **Flash** (`seconds: float`) - Blinks the host for the given number of seconds.
 - **Stop Flash** - Stops flashing and restores visibility.
+- **Blink** (`pattern: Resource, seconds: float`) - Plays a blink pattern on the host: a BlinkPatternResource file of phases, each one "on for this long, off for that long, this many times". A player who has asked for no flashing gets the same pattern held to a floor and faded instead of hidden, so a pattern can never strobe.
+- **Stop Blink** - Ends the blink now and hands the host back fully visible, wherever in the pattern it had got to.
+
+#### Expressions
+- **Blink Phase** - Which phase of the pattern is playing, counting from 1. 0 when nothing is blinking - so a row can tell the fast winks from the slow ones that follow them.
 
 ### FolderWatcher (`res://eventsheet_addons/folder_watcher/folder_watcher_behavior.gd`)
 @ace_tags(files, tools) @ace_category("Folder Watcher") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
-- **On A File Appeared** (`path: String`)
-- **On A File Changed** (`path: String`)
-- **On A File Removed** (`path: String`)
+- **On A File Appeared** (`path: String`) - Raised on the first look that finds a file the look before did not.
+- **On A File Changed** (`path: String`) - Raised when a file that was already there has a DIFFERENT modified time from the one it had at the last look. Usually that means newer; a file restored from a backup or copied back over is older and is still a change. A program that writes a file in several goes can raise this more than once per save, and two writes inside the same second read as one. THE READING IS THE MODIFIED TIME AND NOTHING ELSE, so a replacement that carries the time the old file had is invisible here: a copy made with its timestamps preserved, or a file put back by a restore tool, is different content under an unchanged stamp. Asking the size as well would mean opening every watched file on every look, which is a cost this row does not pay behind your back - so what it can and cannot see is said instead.
+- **On A File Removed** (`path: String`) - Raised on the first look that no longer finds a file the look before did. The path names what went; there is nothing left at it to read.
 
 #### Conditions
 - **Is Watching** - True while a watch is running - that is, between Watch Folder and Stop Watching.
@@ -1188,11 +1211,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Conditions
 - **Button Is** (`button_name: String`)
 - **Is Panel Visible** (`panel_name: String`)
+- **Is Bar Lagging** (`bar_name: String`)
 
 #### Actions
 - **Connect Buttons** - Wires every descendant Button's pressed signal into On Button Pressed (idempotent; re-run after spawning UI).
 - **Set Text** (`control_name: String, text: String`) - Sets the text of a named Label, RichTextLabel, Button or LineEdit.
 - **Set Bar** (`bar_name: String, value: float, max_value: float`) - Sets a named ProgressBar/TextureProgressBar's value (max_value too when > 0).
+- **Set Bar Lag** (`bar_name: String, seconds: float, lag_colour: Color`) - Gives a named bar an underlay that follows it DOWN after a delay, so a hit shows how much was just lost. The underlay waits the seconds you name and then slides to the new value, taking those same seconds to cross the whole bar; a bar going UP has nothing to trail, so the underlay lands with it. It watches the bar rather than being told, so any way the value is set - Set Bar, a sheet writing the Range, an animation - trails the same. Seconds of 0 takes the underlay away again. Nothing is added to the scene but one rectangle inside the bar, built the first time and hidden whenever the two values agree.
 - **Show Panel** (`panel_name: String`) - Makes a named panel (any CanvasItem) visible.
 - **Hide Panel** (`panel_name: String`) - Hides a named panel (any CanvasItem).
 - **Toggle Panel** (`panel_name: String`) - Flips a named panel's visibility.
@@ -1205,6 +1230,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Last Button Name**
 - **Bar Value** (`bar_name: String`)
+- **Bar Lag Value** (`bar_name: String`)
 
 ### IdleGeneratorBehavior (`res://eventsheet_addons/idle_generator/idle_generator_behavior.gd`)
 @ace_tags(incremental, idle, economy) @ace_category("Idle Generator") @ace_version(1.0.0)
@@ -1259,6 +1285,80 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Focused Node** - The node currently in focus, or nothing when none is. Feed it to the Juice pack's Start Blinking to highlight it, or read a name off it for the prompt text.
 
+### FeedbackPlayer (`res://eventsheet_addons/juice/feedback_player.gd`)
+@ace_tags(juice, feedback, game feel) @ace_category("Feedback Player") @ace_version(1.0.0)
+
+#### Triggers
+- **On Feedbacks Started** (`at_strength: float`)
+- **On Feedbacks Finished**
+- **On Feedback Signal** (`word: String`)
+- **On Feedback Started** (`label: String`)
+- **On Feedback Finished** (`label: String`)
+- **On Feedback Skipped** (`label: String, why: String`)
+- **On Hold Reached**
+- **On Loop** (`loops_left: int`)
+
+#### Conditions
+- **For Each Feedback** - Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.
+- **Is Playing** - True while a play is running - between the started and the finished trigger.
+- **Has Played** - True once this player has played at least once, and stays true. The "they have seen this already" question, with nothing to store.
+- **Feedback Is Playing** (`label: String`) - True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.
+- **Has Feedback** (`label: String`) - True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.
+- **Feedback Is Enabled** (`label: String`) - True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.
+
+#### Actions
+- **Play Feedbacks** (`at_strength: float`) - Plays this node's list of feedbacks and carries straight on with the rows under this one. The strength scales every amount in the list, so a light hit and a heavy one are one list at two numbers.
+- **Play Feedbacks And Wait** (`at_strength: float`) - Plays the list and WAITS for the last card to finish - the rows under this one are what happens afterwards. Use it when the hit has to land before the death animation starts.
+- **Play Backwards** (`at_strength: float`) - Plays the list from the far end, so the last feedback is felt first. The other half of a beat that has to undo itself - a door that opened, closing.
+- **Play On Channel** (`channel: String, at_strength: float`) - Plays every feedback player in a group at once, at one strength - the whole squad flinching, every button in a menu bouncing. Put the players in the group and name it here.
+- **Stop Feedbacks** - Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.
+- **Skip To End** - Stops waiting and does everything that is left at once - the cutscene skip of a feedback list. Every card from the head down is felt, without the pauses between them.
+- **Restore Initial Values** - Puts every value this player's Tween Property cards changed back the way they found it. The undo of a list that moved the object rather than flashing it.
+- **Revert** - Stops the play and puts back what it changed, the LAST change first - so a stack of tweens unwinds in the order it was built rather than all at once.
+- **Pause Feedbacks** - Holds the play where it is without losing its place. Resume Feedbacks carries on from the same card.
+- **Resume Feedbacks** - Carries on from where Pause Feedbacks left off.
+- **Add Feedback** (`step: Dictionary, after_label: String`) - Adds one feedback to this player's list while the game runs - the same card the Inspector adds, with the same fields. Leave the after box empty to put it at the end, or name a card to put it straight after that one.
+- **Insert Feedback Before** (`step: Dictionary, before_label: String`) - Puts a feedback into the list immediately ABOVE the card you name - the other half of Add Feedback, for a step that has to be felt before something already in the beat.
+- **Replace Feedback** (`label: String, step: Dictionary`) - Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own, so every other row that names it goes on working.
+- **Remove Feedback** (`label: String`) - Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Feedback.
+- **Move Feedback To** (`label: String, position: int`) - Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last.
+- **Enable Feedback** (`label: String`) - Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row.
+- **Disable Feedback** (`label: String`) - Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row.
+- **Set Feedback Field** (`label: String, field: String, value: Variant`) - Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.
+- **Set Feedback Timing** (`label: String, delay: float, repeat: int, interval: float, clock: String`) - Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.
+- **Set Feedback Chance** (`label: String, percent: float`) - How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is.
+- **Set Feedback Label** (`label: String, new_label: String`) - Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say.
+- **Duplicate Feedback** (`label: String, new_label: String`) - Copies one card and puts the copy straight under it, under a name of its own. Two shakes a frame apart out of one tuned card.
+- **Clear Feedbacks** - Empties the list. What a player that is about to be handed a whole beat by Copy Feedbacks From or Load Moment File wants first.
+- **Copy Feedbacks From** (`other: Node`) - Takes another player's whole list and makes it this one's - a copy, so retuning either afterwards leaves the other alone. One tuned enemy hit, given to every enemy that spawns.
+- **Load Moment File** (`path: String`) - Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.
+- **Save Moment File** (`path: String`) - Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.
+- **Set Player Strength** (`value: float`) - Turns this whole player up or down without retuning a single card - the object's own volume knob, on top of the strength the play row asks for.
+- **Set Player Cooldown** (`seconds: float`) - The shortest gap between two plays, in seconds. A play asked for sooner is refused, which is how a rapid-fire hit stops stacking its own feedback.
+- **Set Can Play While Playing** (`answer: String`) - What a second play does while the first is still running: start again from the top, be ignored, or run alongside it.
+- **Mute Feedback Category** (`category: String, muted: bool`) - Silences a whole family of cards at once - every screen effect, every camera move, every sound - and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked.
+- **Mute Feedback Category On Channel** (`channel: String, category: String, muted: bool`) - The same switch, thrown for every Feedback Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object.
+- **Scale Feedback Amounts** (`category: String, factor: float`) - Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list.
+- **Retime Feedbacks** (`factor: float`) - Stretches or squeezes the whole beat in time: every length, every wait and every gap multiplied by the same number. Half makes a snappier version of a beat nobody has to retune card by card.
+- **Shuffle Feedbacks Between** (`first_label: String, last_label: String`) - Reorders the stretch of the list between two cards, both included, at random. The cheapest variety a repeated hit can have: the same feedbacks, in a different order every time.
+- **Pick One Feedback Of** (`prefix: String`) - Ticks exactly one of the cards whose label starts with what you type and unticks the rest, so shake_a, shake_b and shake_c become one shake chosen fresh each time. Variety out of the list itself, with no branch in the sheet.
+- **Jump To Feedback** (`label: String`) - Moves the head of a RUNNING play to the card you name, so the rest of the beat starts there. What a hit that interrupts its own wind-up wants.
+- **Skip Feedback Once** (`label: String`) - Steps over one card the NEXT time the play reaches it, and then forgets about it. The one-off exception a disable would have to be undone after.
+- **Set Loop Count** (`label: String, loops: int`) - How many times a Loop Back card sends the head round. A charge that gets longer the further it is held, without a second list.
+- **Hold Here** - Stops the head where it is and leaves it there - a charge held, a beat waiting on the player. Release Hold carries on from the same card, and nothing ticks while it waits.
+- **Release Hold** - Lets a held play carry on from the card it stopped on.
+
+#### Expressions
+- **Feedbacks Progress** - How far down the list the play has got, 0 at the first card and 1 when the last one is done.
+- **Feedbacks Duration** - The longest path through the list in seconds - the same number the head of the Inspector shows, so a row can wait exactly as long as the beat lasts.
+- **Feedback Count** - How many cards this player's list holds, ticked or not - the number the head of the Inspector shows.
+- **Feedback Label At** (`position: int`) - The name of the card at a place in the list, so a settings screen can list a beat without knowing what is in it. The first card is 1; a number past the end answers with nothing.
+- **Feedback Field** (`label: String, field: String`) - What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Feedback Field, so a slider can be shown at the value the list actually holds.
+- **Feedback Progress** (`label: String`) - How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.
+- **Feedback Duration** (`label: String`) - How long ONE card lasts, its own wait included - beside Feedbacks Duration, which is how long the whole beat lasts.
+- **Current Feedback** - The label of the card the head is on right now, or nothing when no play is running.
+- **Loops Left** (`label: String`) - How many times round a Loop Back card still has to go in the play that is running.
+
 ### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.gd`)
 @ace_tags(camera, juice) @ace_category("Juice") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -1272,11 +1372,18 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Flash Finished**
 - **On Punch Finished**
 - **On Ticker Finished** (`ticker_name: String`)
+- **On Moment Started** (`moment_name: String`)
+- **On Moment Step** (`moment_name: String, step_label: String`)
+- **On Moment Skipped** (`moment_name: String`)
+- **On Moment Finished** (`moment_name: String, cut_short: bool`)
 
 #### Conditions
+- **Moment Is Playing** (`moment_name: String`) - True while a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all.
+- **Moment Is Reverting** (`moment_name: String`) - True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.
+- **Moment Was Cut Short** (`moment_name: String`) - True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.
 - **Is Shaking**
 - **Is Hitstopped**
-- **Is Chromatic Shaking**
+- **Is Chromatic Shaking** - Whether a chromatic shake is running right now - true from the row that fires it until the duration is up or Stop Chromatic Shake takes it off.
 
 #### Actions
 - **Shake** (`strength: float`) - Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.
@@ -1317,18 +1424,29 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Moment** (`moment_name: String, strength: float`) - Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.
 - **Define Moment** (`moment_name: String, moment: Resource`) - Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.
 - **Play Moment At** (`moment_name: String, strength: float, from: Node, within: float, falloff: String`) - Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.
-- **Set Moment Strength** (`value: float`) - Turns every moment this node plays up or down by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It scales what Play Moment At feels; the moments themselves are untouched.
-- **Set Host Tint** (`color: Color, strength: float`)
-- **Clear Host Tint**
-- **Set Screen Tint** (`color: Color, strength: float`)
-- **Fade Screen Tint** (`seconds: float`)
-- **Clear Screen Tint**
+- **Set Moment Strength** (`value: float`) - Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.
+- **Moment Step** (`verb: String, amount: float, effect: String, seconds: float, strength: float`) - Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.
+- **Play Moment Backwards** (`moment_name: String, strength: float`) - Plays a moment from its LAST step to its first. A hover-out is the hover-in read the other way, a door closing is the door opening backwards, and neither needs a second moment kept in step with the first by hand. Every step is played either way - a beat in reverse is still the whole beat - and the amounts are scaled and held to the no-flashing ceiling exactly as they are forwards.
+- **Revert Moment** (`moment_name: String`) - Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.
+- **Skip Moment To End** (`moment_name: String`) - Ends a moment NOW, on the values it would have finished on: a held effect lands at its full strength, a freeze lets time go, a shake settles. The way out of an intro somebody has seen twenty times, and the way a cutscene skip leaves nothing half-played. It fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true.
+- **Restore Moment Values** (`moment_name: String`) - Puts back every value a moment moved, to what it was the first time that moment touched it - the tint, the scale, the zoom, the time scale, the effects held on the screen. Leave the name empty and every moment this node has played is put back, which is what a scene wants on the way out. It plays nothing and undoes nothing that was not a moment's doing.
+- **Shake Channel** (`channel: String, magnitude: float, seconds: float`) - Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a passing truck reaches the props, a hit reaches the HUD panels, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen.
+- **Listen On Channel** (`channel: String, shakes: String`) - Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.
+- **Stop Listening On Channel** (`channel: String`) - Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.
+- **Set Host Tint** (`color: Color, strength: float`) - Tints the HOST object: blends its color toward the tint by Strength (0 = its own colors untouched, 1 = fully the tint color) - the classic object tint, with the strength as your opacity dial. Children inherit (modulate).
+- **Clear Host Tint** - Removes the host tint (back to its own colors).
+- **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red, poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.
+- **Fade Screen Tint** (`seconds: float`) - Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
+- **Clear Screen Tint** - Removes the screen tint instantly.
 
 #### Expressions
-- **Moment Strength** - The number every moment this node plays is scaled by - what Set Moment Strength last wrote, and 1 until it has been written.
+- **Moment Strength** - The number Play Moment At scales a moment by before the distance is paid for - what Set Moment Strength last wrote, and 1 until it has been written. A plain Moment row does not read it: that row plays a beat at the strength written on the row itself.
+- **Moment Progress** (`moment_name: String`) - How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.
+- **Moment Elapsed** (`moment_name: String`) - How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.
+- **Moment Step Name** (`moment_name: String`) - What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.
 - **Trauma**
-- **Ticker Value** (`ticker_name: String`)
-- **Chromatic Shake Magnitude**
+- **Ticker Value** (`ticker_name: String`) - What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.
+- **Chromatic Shake Magnitude** - How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing, not the width the row asked for. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it and the whole hit reads as one thing.
 
 ### Juice3DBehavior (`res://eventsheet_addons/juice_3d/juice_3d_behavior.gd`)
 @ace_tags(camera, juice, 3d) @ace_category("Juice 3D") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1342,7 +1460,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Shaking**
-- **Is Chromatic Shaking**
+- **Is Chromatic Shaking** - Whether a chromatic shake is running right now - true from the row that fires it until the duration is up or Stop Chromatic Shake takes it off.
 
 #### Actions
 - **Shake** (`strength: float`) - Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.
@@ -1370,14 +1488,17 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Play Sound With Intensity** (`path: String, intensity: float`) - Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.
 - **Count To** (`ticker_name: String, target: float, duration: float`) - Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.
 - **Set Ticker** (`ticker_name: String, value: float`) - Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.
-- **Set Screen Tint** (`color: Color, strength: float`)
-- **Fade Screen Tint** (`seconds: float`)
-- **Clear Screen Tint**
+- **Shake Channel** (`channel: String, magnitude: float, seconds: float`) - Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a distant collapse reaches the hanging lamps, a hit reaches the HUD, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen. A 2D listener and a 3D one answer the same broadcast, so one row can shake a level and its interface together.
+- **Listen On Channel** (`channel: String, shakes: String`) - Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.
+- **Stop Listening On Channel** (`channel: String`) - Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.
+- **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view - damage red, poison green, night blue. Call again to retune; strength 0 clears.
+- **Fade Screen Tint** (`seconds: float`) - Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
+- **Clear Screen Tint** - Removes the screen tint instantly.
 
 #### Expressions
-- **Ticker Value** (`ticker_name: String`)
+- **Ticker Value** (`ticker_name: String`) - What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.
 - **Trauma**
-- **Chromatic Shake Magnitude**
+- **Chromatic Shake Magnitude** - How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the no-flashing halving and the player's effect-strength dial - the width the screen is showing, not the width the row asked for. Zero when nothing is shaking. Drive a rumble or a HUD wobble from it and the whole hit reads as one thing.
 
 ### LightFlickerBehavior (`res://eventsheet_addons/light_flicker/light_flicker_behavior.gd`)
 @ace_tags(lighting, juice, visual) @ace_category("Light Flicker") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1407,7 +1528,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Has LOS Between** (`from_point: Vector2, to_point: Vector2`)
 
 #### Expressions
-- **Nearest Visible In Group** (`group: String`)
+- **Nearest Visible In Group** (`group: String`) - The closest group member this node can actually SEE (range + cone + raycast) - scans every candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther one. Returns null if none are visible. The targeting primitive for auto-attack AI.
 
 ### LOS3DBehavior (`res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.gd`)
 @ace_category("Line Of Sight 3D") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1417,7 +1538,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Has LOS Between** (`from_point: Vector3, to_point: Vector3`)
 
 #### Expressions
-- **Nearest Visible In Group** (`group: String`)
+- **Nearest Visible In Group** (`group: String`) - The closest group member this node can actually SEE (range + cone + raycast) - scans every candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther one. Returns null if none are visible. The targeting primitive for auto-attack AI.
 
 ### LootBoxAddon (`res://eventsheet_addons/loot_table/loot_table_addon.gd`)
 @ace_tags(loot, random) @ace_category("Loot") @ace_version(1.0.0)
@@ -1490,12 +1611,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_tags(mods, files, content, modding) @ace_category("Mods") @ace_version(1.0.0)
 
 #### Triggers
-- **On Mod Loaded** (`loaded_name: String, loaded_version: String`)
-- **On Mod Refused** (`refused_name: String, reason: String`)
-- **On Mods Changed**
+- **On Mod Loaded** (`loaded_name: String, loaded_version: String`) - Fires once per mod that loaded, in load order. Mod Name and Mod Version answer about it.
+- **On Mod Refused** (`refused_name: String, reason: String`) - Fires once per mod that did NOT load, with the reason in plain words - it carries code and the row asked for data only, its files could not be read, there is no mod at that path, or it is a pack file and something asked to unload it. Mod Name and Mod Reason answer about it.
+- **On Mods Changed** - Fires once after anything changes what is loaded or what is switched on - the moment a mod list on the options screen should be redrawn.
 
 #### Conditions
-- **For Each Mod**
+- **For Each Mod** - Runs this event's actions once per LOADED mod, in load order - the mod list on the options screen, as one row. Read the current one as `mod`, then take `mod.name`, `mod.version`, `mod.author`, `mod.kind` ("folder" or "pack") and `mod.folder` straight off it.
 - **Mod Is Loaded** (`wanted: String`) - Whether a mod of that name is loaded right now - the check in front of using what it brought.
 
 #### Actions
@@ -1544,9 +1665,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_tags(audio, music, rhythm, beat) @ace_category("Music") @ace_version(1.0.0)
 
 #### Triggers
-- **On Beat** (`number: int`)
-- **On Bar** (`number: int`)
-- **On Beat Number** (`number: int`)
+- **On Beat** (`number: int`) - Fires on every whole beat of the track that is playing, carrying the beat's own number counted from the track's offset. The beat is read from where the stream has actually got to, less the audio device's output latency, so it lands where the player HEARS it rather than where the engine wrote it.
+- **On Bar** (`number: int`) - Fires on the first beat of every bar, carrying the bar's number. How many beats a bar holds is the track's own Beats Per Bar, so a waltz bars in three without anything here changing.
+- **On Beat Number** (`number: int`) - Fires on every nth beat, where n is the Beat Number Every setting - the phrase rather than the beat, for a change that should land on the eighth or the sixteenth rather than on each one.
 
 #### Conditions
 - **Is Playing** - True while a track is playing and not paused.
@@ -1942,26 +2063,26 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_tags(camera, effects, shader, 3d, visual) @ace_category("Post Kit") @ace_version(1.0.0)
 
 #### Conditions
-- **Has Post Effect** (`called: String = "vignette"`)
-- **Is Outlined** (`node: Node3D`)
-- **Is Hidden From View** (`node: Node3D`)
+- **Has Post Effect** (`called: String = "vignette"`) - Whether an effect by that name is on the stack at all, on or off. The gate for a row that should only add one once.
+- **Is Outlined** (`node: Node3D`) - Whether a node is one of the ones being drawn through walls right now.
+- **Is Hidden From View** (`node: Node3D`) - Whether something solid is standing between the camera and a node - the question an outline row is usually the answer to, asked on its own so a sheet can decide instead of always drawing. It is one ray from the camera to the node's own origin, so a body whose middle is visible past the corner of a wall reads as seen. That is a cheap question with an honest answer, not a visibility test.
 
 #### Actions
-- **Add Post Effect** (`effect: String = "vignette", called: String = "", strength: float = 0.6`)
-- **Remove Post Effect** (`called: String = "vignette"`)
-- **Enable Post Effect** (`called: String = "vignette"`)
-- **Disable Post Effect** (`called: String = "vignette"`)
-- **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`)
-- **Set Post Dial** (`called: String = "vignette", dial: String = "tint", value: Variant = 0.5`)
-- **Fade Post Strength** (`called: String = "vignette", to: float = 1.0, seconds: float = 0.5`)
-- **Pulse Post Effect** (`effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35`)
-- **Outline Group Through Walls** (`group: String = "enemies", colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0`)
-- **Silhouette Node Through Walls** (`node: Node3D, colour: Color = Color.YELLOW, seconds: float = 0.0`)
-- **Stop Outlining**
+- **Add Post Effect** (`effect: String = "vignette", called: String = "", strength: float = 0.6`) - Adds one effect to the end of the camera's post stack and turns it on. The five words are vignette, desaturate, pixelate, tint and fade - the same words the 2D post stack uses, so a row reads alike on either. Leave the name empty and the entry is called after its effect, which is what one of each wants. FORWARD+ ONLY. Mobile and Compatibility have no compositor, so this row does nothing at all there; Screen FX does the same looks on any renderer.
+- **Remove Post Effect** (`called: String = "vignette"`) - Takes one effect off the stack, so it stops costing anything at all.
+- **Enable Post Effect** (`called: String = "vignette"`) - Turns one effect back on without forgetting how far up it was.
+- **Disable Post Effect** (`called: String = "vignette"`) - Turns one effect off and leaves it in the stack, so a later Enable Post Effect brings back the same strength rather than a fresh guess at it.
+- **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`) - Sets how far one effect goes, straight away.
+- **Set Post Dial** (`called: String = "vignette", dial: String = "tint", value: Variant = 0.5`) - Sets ONE OF AN EFFECT'S OWN DIALS - the tint's colour, the vignette's softness, the pixelate's block size. Strength is how far the effect goes; this is what the effect is, and it is the row that sits one dropdown deeper than the quick form. The same words the screen's own stack uses, so a project that moves renderer keeps its sheet. FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
+- **Fade Post Strength** (`called: String = "vignette", to: float = 1.0, seconds: float = 0.5`) - Walks one effect's strength to a value over a number of seconds - the slow drain of colour as the health goes, the vignette closing in.
+- **Pulse Post Effect** (`effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35`) - Flashes one effect up and lets it fall back - the whole sentence a hit, a pickup or a near miss wants, in one row and with nothing to tune. An effect that was not on the stack is borrowed for the moment and taken off again at the end. FORWARD+ ONLY. Nothing happens on Mobile or Compatibility; Screen FX pulses the same words on any renderer.
+- **Outline Group Through Walls** (`group: String = "enemies", colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0`) - Draws an outline around every node in a group, THROUGH whatever is standing in front of them - the enemies behind the wall, the objective across the level, the teammate in the smoke. The row switches the mask layer on for those nodes' meshes and a second camera that can see that layer and nothing else draws them into a mask, which is edge-detected over the finished frame. So the outline is one extra pass over the marked meshes, and nothing at all when nothing is marked. Ask for seconds and it takes itself off again; ask for 0 and Stop Outlining ends it. FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
+- **Silhouette Node Through Walls** (`node: Node3D, colour: Color = Color.YELLOW, seconds: float = 0.0`) - Fills one node in a flat colour, through whatever is in front of it - where the thing is, rather than what shape it is. The same mask as the outline, drawn solid.
+- **Stop Outlining** - Ends every outline and silhouette at once: the mask layer goes back off the meshes that were marked, the entry leaves the stack, and the mask rig is freed, so nothing is left running.
 
 #### Expressions
-- **Post Dial** (`called: String = "vignette", dial: String = "tint"`)
-- **Post Strength** (`called: String = "vignette"`)
+- **Post Dial** (`called: String = "vignette", dial: String = "tint"`) - What one of an effect's own dials currently holds - the other half of Set Post Dial, for a row that nudges a value rather than naming one. Nothing at all for an entry or a dial that is not there.
+- **Post Strength** (`called: String = "vignette"`) - How far one effect has been ASKED to go, 0 to 1 - the strength the rows set, before the effect-strength setting and the no-flashing ceiling are applied on the way to the CompositorEffect. That is the number a sheet's own arithmetic means: Set Post Strength to Post Strength + 0.1 walks up in tenths whatever a player's accessibility dials are doing, where reading the dialled value back would fold those dials in again on every round trip and the effect would sink towards nothing. 0 for one that is not there.
 
 ### PrestigeAddon (`res://eventsheet_addons/prestige/prestige_addon.gd`)
 @ace_tags(incremental, idle, prestige) @ace_category("Prestige") @ace_version(1.0.0)
@@ -2087,9 +2208,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_tags(input, qte, rhythm, prompt, glyph) @ace_category("Prompts") @ace_version(1.0.0)
 
 #### Triggers
-- **On Prompt Hit** (`action: String, grade: String`)
-- **On Prompt Missed** (`action: String`)
-- **On Sequence Finished** (`completed: bool`)
+- **On Prompt Hit** (`action: String, grade: String`) - Fires when the player answers a prompt in time, carrying the control it was asking for and how well it was answered - "perfect" or "good", the same two words the Timed Input module's Window Grade and Beat Grade already speak, so one hit reaction serves a window, a beat and a prompt.
+- **On Prompt Missed** (`action: String`) - Fires when a prompt runs out with nothing pressed, or when a note goes past its beat unanswered, carrying the control that was missed. The punish, the failed grab, the dropped note.
+- **On Sequence Finished** (`completed: bool`) - Fires once a sequence ends, carrying whether it was completed: true when every prompt in it was answered, false on the first miss or a cancel. One trigger for both endings, because a cutscene branches on the same question either way.
 
 #### Conditions
 - **Prompt Is Open** - True while the player is being asked for something and has not answered or run out yet.
@@ -2164,20 +2285,20 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Save Written** (`slot_index: int`)
 - **On Before Save** (`slot_index: int`)
 - **On After Load** (`slot_index: int`)
-- **On Autosave Due** (`slot_index: int`)
-- **On Save Needs Upgrade** (`save_data: Dictionary, from_version: int`)
-- **On Load Failed** (`slot_index: int, reason: String`)
-- **On Save Failed** (`slot_index: int, reason: String`)
-- **On New Run Started** (`slot_index: int, run_number: int`)
-- **On Key Saved** (`key: String, slot_index: int`)
-- **On Key Loaded** (`key: String, slot_index: int`)
-- **On Key Removed** (`key: String, slot_index: int`)
-- **On Save Key Missing** (`key: String, slot_index: int`)
+- **On Autosave Due** (`slot_index: int`) - Fires when the autosave clock comes round, INSTEAD of saving - so the conditions on this event decide whether now is a good moment (mid boss phase, mid scene change, mid death animation). With nothing connected the pack saves itself on the interval, exactly as it always did, so an existing project does not change behaviour.
+- **On Save Needs Upgrade** (`save_data: Dictionary, from_version: int`) - Fires inside Load Game when the file on disk was written by an older Save Version, BEFORE anything reads it - so migration rows (Data Is Older Than Version, Rename Field, Stamp Data Version) rewrite the record in the gap. Hand it back with Use Upgraded Save. Nothing connected? Load Game behaves exactly as it does today.
+- **On Load Failed** (`slot_index: int, reason: String`) - Fires when Load Game meets a file it cannot read - a wrong encryption key, a truncated write from an older build, a hand-edited JSON. The reason is a plain sentence, ready to drop straight into a label.
+- **On Save Failed** (`slot_index: int, reason: String`) - Fires when a write is refused or fails - the moment a player needs to hear "your progress was NOT saved" instead of nothing at all.
+- **On New Run Started** (`slot_index: int, run_number: int`) - Fires when Start New Run has written the fresh slot - where the NG+ banner, the difficulty curve and the seeded map generation hang, instead of on whichever button happened to be pressed.
+- **On Key Saved** (`key: String, slot_index: int`) - Fires when one key's value has landed on disk - Save Value, Save Number and Save Text all raise it, with the key that was written as the row's own captured value. A key held back by Never Save This Key never raises it, because it never reached the file.
+- **On Key Loaded** (`key: String, slot_index: int`) - Fires when Check Save Key finds the key in the slot - the found half of that question, answered as a row instead of a value somebody has to remember to test.
+- **On Key Removed** (`key: String, slot_index: int`) - Fires when Remove Save Key has taken the key out of the file, and once per key that Clear Slot Keys emptied out of it.
+- **On Save Key Missing** (`key: String, slot_index: int`) - Fires when a key was asked for and the slot does not hold it - Check Save Key, or a Remove Save Key with nothing to remove. This is where a first run seeds its default once, instead of quietly defaulting forever.
 
 #### Conditions
-- **For Each Saved Slot**
-- **For Each Saveable Addon**
-- **For Each Backup Of Slot** (`slot_index: int`)
+- **For Each Saved Slot** - Runs this event's actions once per slot that has a save file - the load menu, as one row. Read the current one as `slot_index`, then fill the tile with Slot Detail and Slot Playtime (both read straight off disk, nothing is loaded).
+- **For Each Saveable Addon** - Runs this event's actions once per autoload that saves itself, so a debug panel can list exactly what the save covers - and, by its absence, what quietly does not. Read the current one as `addon_name`.
+- **For Each Backup Of Slot** (`slot_index: int`) - Runs this event's actions once per kept backup of the slot, newest first. Read the current one as `backup_path` - a real file path, so File Size (bytes) and Read Save File work on it, and its position in the loop is the "how many back" number.
 - **Has Save Key** (`key: String`) - Whether the key exists in the active slot.
 - **Save File Is Format** (`path: String, expected_format: String`) - Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).
 - **Save Format Is** (`expected_format: String`) - Whether the active save format (the Inspector format property) equals the given one.
@@ -2249,13 +2370,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_category("Scenes") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
-- **On Transition Finished** (`shape: String`)
-- **On Loading Progress**
-- **On Loading Finished**
+- **On Transition Finished** (`shape: String`) - Fires when a transition started by Go To Scene With or Reload Scene With has finished: the new scene is up and the cover is off. It arrives on the Scene Flow node in the NEW scene, carrying the shape the transition was, so one handler can tell a wipe from an iris.
+- **On Loading Progress** - Fires every time the loading reading MOVES, on the Scene Flow node standing in the loading screen - which is exactly where a row that sets a bar wants to be. It carries nothing: Scene Load Progress answers with the number, so the row reads as a sentence.
+- **On Loading Finished** - Fires once when the wait is over: the scene is off the disk AND the minimum seconds have been served. With Wait For Key off the swap follows immediately; with it on, this is the moment to show "press any key", and Enter Loaded Scene is what the key does.
 
 #### Conditions
 - **Is Transitioning**
-- **Scene Is Loading**
+- **Scene Is Loading** - Whether a background load started by Go To Scene With Loading is still in flight. It stays true while the screen is up - including the beat where it is waiting for a key, and the covered change into the new scene - so a row can gate anything on "still loading".
 
 #### Actions
 - **Fade To Scene** (`path: String`) - Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).
@@ -2270,48 +2391,48 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Expressions
 - **Current Scene Path**
-- **Scene Load Progress**
-- **Loading Tip**
+- **Scene Load Progress** - How far the wait has got, from 0 to 1. Multiply by 100 for a percentage, or set a bar whose maximum is 1 straight from it. Zero when nothing is loading.
+- **Loading Tip** - The one line picked out of the tips file when this load started. It stays put for the whole wait, because a tip that changes while somebody is reading it is worse than no tip. Empty when there is no tips file, or nothing is loading.
 
 ### ScreenFx (`res://eventsheet_addons/screen_fx/screen_fx.gd`)
 @ace_tags(effects, shader, juice, camera, visual) @ace_category("Screen FX") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Conditions
-- **Screen Effect Is Running**
-- **Post Effect Is On** (`called: String = "vignette"`)
-- **Look Is** (`look: Resource`)
+- **Screen Effect Is Running** - True while any effect is running - a fade held on, a blur, a ring still travelling.
+- **Post Effect Is On** (`called: String = "vignette"`) - True while that entry is on the stack, enabled and actually drawing something.
+- **Look Is** (`look: Resource`) - True while that look is the one on the screen - compared by the look's own name, so a look reloaded from disk is still the same look.
 
 #### Actions
-- **Shockwave** (`at: Vector2 = Vector2.ZERO, strength: float = 1.0`)
-- **Fade To** (`colour: Color = Color.BLACK, seconds: float = 1.0`)
-- **Fade Back** (`colour: Color = Color.BLACK, seconds: float = 1.0`)
-- **Blur** (`amount: float = 2.0, seconds: float = 0.3`)
-- **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`)
-- **Clear Screen Effects**
-- **Add Post Effect** (`effect: String = "vignette", called: String = "", strength: float = 0.6`)
-- **Remove Post Effect** (`called: String = "vignette"`)
-- **Enable Post Effect** (`called: String = "vignette"`)
-- **Disable Post Effect** (`called: String = "vignette"`)
-- **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`)
-- **Set Post Dial** (`called: String = "vignette", dial: String = "softness", value: Variant = 0.5`)
-- **Fade Post Strength** (`called: String = "vignette", to: float = 1.0, seconds: float = 0.5, then_back_seconds: float = 0.0`)
-- **Pulse Post Effect** (`effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35`)
-- **Move Post Effect Before** (`called: String = "vignette", before: String = ""`)
-- **Draw Post Effects Below** (`other: CanvasLayer`)
-- **Draw Post Effects Above** (`other: CanvasLayer`)
-- **See As** (`vision: String = "deuteranopia"`)
-- **Correct Colours For** (`vision: String = "deuteranopia"`)
-- **Save Look** (`path: String = "res://looks/my_look.tres", called: String = "My look"`)
-- **Use Look** (`look: Resource`)
-- **Blend To Look** (`look: Resource, seconds: float = 1.0`)
-- **Clear Look**
+- **Shockwave** (`at: Vector2 = Vector2.ZERO, strength: float = 1.0`) - Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a landing. The camera transform is applied, so the ring stays on the thing that caused it however the camera is moving.
+- **Fade To** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what happens next: change the scene, show the credits, start the level. That is the scene transition, spelled as two rows in one event.
+- **Fade Back** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the screen back from a colour to the game, and waits for that too - the other half of a transition, run once the new scene is up.
+- **Blur** (`amount: float = 2.0, seconds: float = 0.3`) - Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout, a dream. 0 is sharp again.
+- **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`) - Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.
+- **Clear Screen Effects** - Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.
+- **Add Post Effect** (`effect: String = "vignette", called: String = "", strength: float = 0.6`) - Adds one effect to the top of the post stack and turns it on. The twelve words are vignette, film grain, scanlines, pixelate, colour grade, dither, fisheye, glitch, letterbox, bloom, saturate and desaturate; leave the name empty and the entry is called after its effect, which is what one of each wants. Every entry reads the screen back, so each one costs one screen read per pixel of the viewport while it is on. Two or three is a look; twelve is a bill.
+- **Remove Post Effect** (`called: String = "vignette"`) - Takes one effect off the stack and frees its rectangle, so it stops costing anything at all.
+- **Enable Post Effect** (`called: String = "vignette"`) - Turns one entry back on at the strength it already holds - the other half of Disable, for an effect a look should keep but a moment should hide.
+- **Disable Post Effect** (`called: String = "vignette"`) - Turns one entry off without forgetting it: its rectangle stops drawing, its strength is kept, and Enable brings it back exactly as it was.
+- **Set Post Strength** (`called: String = "vignette", strength: float = 1.0`) - Sets how far one entry goes, at once. The effect-strength dial scales it and the no-flashing ceiling holds it down, so the number a row asks for is a request rather than a command.
+- **Set Post Dial** (`called: String = "vignette", dial: String = "softness", value: Variant = 0.5`) - Sets ONE OF AN EFFECT'S OWN DIALS - the vignette's colour, the letterbox's depth, the glitch's band height, the colour grade's lookup image. Strength is how far the effect goes; this is what the effect is, and it is the row that sits one dropdown deeper than the quick form. A colour grade in particular DOES NOTHING until it has been given one: with no image its table is empty and the shader hands the screen straight back, because mapping every pixel through a blank image would paint the screen white. Set its `grade_table` to your lookup image and its `lut_size` to the number of levels that image holds, and the grade starts grading. The dial names are the uniforms the shader declares, which the pack guide lists per effect. A name the shader does not have is kept rather than refused: a look saved by a newer version of the pack must not lose what this one cannot draw.
+- **Fade Post Strength** (`called: String = "vignette", to: float = 1.0, seconds: float = 0.5, then_back_seconds: float = 0.0`) - Walks one entry's strength to a value over a time, and back again afterwards if a second time is given - which is the shape of a held breath: in, hold, out, all in one row.
+- **Pulse Post Effect** (`effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35`) - THE ONE-SHOT: turns an effect all the way up and lets it fall back, in one row. If the stack does not hold that effect yet the pulse borrows one and takes it away again afterwards, so a hit, a boom or a win is one row and leaves nothing behind. A pulse with no time at all is a set that stays, because that is the only thing "pulse for zero seconds" can honestly mean.
+- **Move Post Effect Before** (`called: String = "vignette", before: String = ""`) - Moves one entry so it is drawn BEFORE another - which is what decides whose look wins. A grade under a vignette grades the game; a grade over one grades the vignette too.
+- **Draw Post Effects Below** (`other: CanvasLayer`) - Draws the whole post stack UNDER this layer, so the interface on it stays sharp and unfiltered while the game behind it is graded, blurred or dimmed. This is the row a health-bar layer wants.
+- **Draw Post Effects Above** (`other: CanvasLayer`) - Draws the whole post stack OVER this layer, so the interface is graded and dimmed along with the game. That is what a cutscene letterbox or a full-screen colour change usually wants.
+- **See As** (`vision: String = "deuteranopia"`) - SHOWS YOU what a player with one of the three common kinds of colour blindness sees. This is the designer's row: turn it on, walk the level, and the health bar that vanishes into the background is the bug you came to find. Normal takes it off again.
+- **Correct Colours For** (`vision: String = "deuteranopia"`) - CORRECTS the screen so a player with one of the three common kinds of colour blindness can tell apart the colours that would otherwise land on top of each other. This is the player's row, and it belongs behind a settings choice rather than on by default. Normal takes it off again.
+- **Save Look** (`path: String = "res://looks/my_look.tres", called: String = "My look"`) - Writes the LIVE stack out as a look file: every entry, in order, with its strength and its own dials. That is how a look is authored - build it with rows until the screen is right, save it once, and every later row picks it by file.
+- **Use Look** (`look: Resource`) - Wears a look at once: the stack becomes exactly what the look says, in the look's own order.
+- **Blend To Look** (`look: Resource, seconds: float = 1.0`) - Walks from the look on the screen to another one over a time: the effects both looks hold fade from one strength to the other, the ones only the old look had fade out and go, and the ones only the new look has fade in from nothing. Nothing cuts.
+- **Clear Look** - Takes every effect off the stack at once and puts the screen back the way the game drew it. The empty stack IS the Clean look, which is why the starter look file the pack ships holds no rows.
 
 #### Expressions
-- **Post Dial** (`called: String = "vignette", dial: String = "softness"`)
-- **Post Strength** (`called: String = "vignette"`)
-- **Post Effect Count**
-- **Current Look**
-- **Post Effect Words**
+- **Post Dial** (`called: String = "vignette", dial: String = "softness"`) - What one of an effect's own dials currently holds - the other half of Set Post Dial, for a row that nudges a value rather than naming one. Nothing at all for an entry or a dial the stack has never been given.
+- **Post Strength** (`called: String = "vignette"`) - How far one entry has been ASKED to go, 0 to 1 - the strength the rows set, before the effect-strength setting and the no-flashing ceiling are applied on the way to the shader. That is the number a sheet's own arithmetic means: Set Post Strength to Post Strength + 0.1 walks up in tenths whatever a player's accessibility dials are doing, where reading the dialled value back would fold those dials in again on every round trip and the effect would sink towards nothing. Post Effect Is On is the row that asks whether it is actually drawing. 0 for one that is not there.
+- **Post Effect Count** - How many effects the stack is drawing right now - the number a reader wants when the frame rate has gone, because every one of them reads the whole screen back.
+- **Current Look** - The name of the look on the screen, or "" when the stack was built row by row rather than worn from a file.
+- **Post Effect Words** - Every effect word the stack knows, in the order the picker offers them - what a warning prints, and what a settings screen can list without keeping a second copy of the list.
 
 ### SecondViewPackAddon (`res://eventsheet_addons/second_view/second_view_addon.gd`)
 @ace_tags(camera, viewport, minimap, ui) @ace_category("Second View") @ace_version(1.0.0)
@@ -2520,6 +2641,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Spring Started** (`spring_name: String`)
 
 #### Conditions
+- **Spring Is Settled** (`property_path: String`) - True while nothing is springing that property - it has arrived, or it was never sprung at all.
 - **Is Springing** (`spring_name: String`)
 
 #### Actions
@@ -2539,8 +2661,14 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Resume Spring** (`spring_name: String`) - Resumes a paused spring toward its target.
 - **Remove Spring** (`spring_name: String`) - Deletes a named spring (numeric and/or colour).
 - **Reset All Springs** - Clears every spring on this behavior.
+- **Spring Property To** (`property_path: String, target_value: Variant`) - Springs any property of the host toward a value: a number, a Vector2, a Vector3 or a Color, addressed by the same path the Inspector shows. The property's own type is read once, on the first row that springs it, and the spring writes it back every frame until it settles.
+- **Bump Property** (`property_path: String, amount: Variant`) - Kicks a property's spring by an amount and lets it settle back on its own - the fastest juice there is: one row, no duration, nothing to clean up. Bump a field of view on a shot, a light's energy on a hit, a panel's scale on a press.
+- **Set Spring Damping And Frequency** (`property_path: String, damping: float, frequency: float`) - The two numbers a spring really has: how fast the bounce dies out (0 loose, 1 dead) and how many swings a second it wants. Set them per property, before the motion or during it.
+- **Clamp Spring Between** (`property_path: String, min_value: float, max_value: float`) - Holds a property's spring between two numbers: it stops dead at the wall instead of pushing through it. A lid that must not pass its hinge, a bar that must not go under zero. The same number on both sides takes the clamp off again.
 
 #### Expressions
+- **Spring Value Of** (`property_path: String`) - What the property's spring reads right now, as a number: the value itself for a number, x for a vector, red for a colour. 0 if nothing has sprung it.
+- **Spring Velocity Of** (`property_path: String`) - How fast the property's spring is moving right now, as a number - drive a lean, a blur or a stretch off it so the motion shows its own speed. 0 if nothing has sprung it.
 - **Color Value** (`spring_name: String`)
 - **Spring Value** (`spring_name: String`)
 - **Spring Velocity** (`spring_name: String`)
@@ -2556,7 +2684,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Threshold Crossed** (`rule_id: String, stat: String, total: float`)
 
 #### Conditions
-- **For Each Buff**
+- **For Each Buff** - Loops the event's actions once per applied buff id (a LOOPING condition: adding it creates the loop) - read details per pass with Buff Value / Buff Time Left.
 - **Has Buff** (`buff_id: String`)
 - **Buff Is Active** (`buff_id: String`)
 - **Has Buffs With Tag** (`tag: String`)
@@ -2610,10 +2738,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_tags(combat, status, buff, debuff) @ace_category("Status Effects") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
-- **On Status Applied** (`status: String, stacks: int`)
-- **On Status Ticked** (`status: String, stacks: int`)
-- **On Status Expired** (`status: String`)
-- **On Stacks Changed** (`status: String, stacks: int`)
+- **On Status Applied** (`status: String, stacks: int`) - Fires when a status lands, including the second and later times it is applied.
+- **On Status Ticked** (`status: String, stacks: int`) - Fires on every tick of an active status, after its damage and healing have been dealt.
+- **On Status Expired** (`status: String`) - Fires when a status ends, however it ended - the clock ran out, it was removed, it was cleansed, or an immunity pushed it off.
+- **On Stacks Changed** (`status: String, stacks: int`) - Fires when an active status changes how many stacks it is on, and not when it lands at the count it was already on.
 
 #### Conditions
 - **Has Status** (`status: String`) - True while that status is on. This is the row a movement pack or a state machine asks before it moves anything, which is why stun and freeze need no code of their own.
@@ -2962,6 +3090,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Tween Rotation** (`degrees: float, duration: float`) - Rotates the host to the given degrees.
 - **Tween Alpha** (`alpha: float, duration: float`) - Fades the host's modulate alpha.
 - **Stop Tweens** - Kills the running tween (host stays where it is).
+- **Tween Property Along Curve** (`property_path: String, final_value: float, seconds: float, curve: Curve, mode: String, from_value: float, to_value: float`) - Tweens a number property along a Curve file you own, in one of four readings: the curve as the value, added to where the property was, from there to a destination, or the curve's 0 to 1 remapped between two numbers. The value the property had before the first of these touched it is remembered, so Tween Property Back can return to it.
+- **Tween Property And Wait** (`property_path: String, final_value: float, seconds: float, curve: Curve, mode: String, from_value: float, to_value: float`) - The same curve tween, waited on: the rows under it run when the property has arrived. Use it to write a beat as one column of rows instead of a timer guessed to match.
+- **Tween Property Back** (`property_path: String, seconds: float`) - Returns a property to the value it held before the first curve tween touched it, over the behavior's own transition and easing. A lid that opened closes with the same number nobody had to type twice.
 
 ### UHTNPlanner (`res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior.gd`)
 @ace_tags(ai, planning, utility) @ace_category("UHTN Planning") @ace_expose_all(node) @ace_version(1.0.0)
@@ -3106,6 +3237,70 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Cooldown Action** - The action whose cooldown just started or ended (inside On Cooldown Started / On Cooldown Ended).
 - **Get Input** (`key: String`) - The current value of a world-state input (0 if unset).
 
+### VectorShape2D (`res://eventsheet_addons/vector_shapes/vector_shape_2d.gd`)
+
+#### Conditions
+- **Shape Is Tethered** - True while the shape is running between two nodes that both still exist.
+- **Ring Is Full** - True while a Disc's arc goes the whole way round - the cooldown that has finished, the wheel that is charged.
+- **Shape Is Visible** - True while the shape is drawn at all: visible in the tree, and not fully transparent.
+- **Shape Style Is** (`style_file: ShapeStyle`) - True while the shape is wearing that exact Shape Style file - the test a row makes before re-skinning, and the one an exception is written against.
+- **Point Is Inside Shape** (`point: Vector2`) - True when a point (in world coordinates) lands inside the shape - inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it.
+
+#### Actions
+- **Set Thickness** (`value: float, unit: String`) - Sets how wide the shape's stroke is. The unit is the one you typed the number in: pixels and world units are the same in Godot's 2D, and a screen unit is a whole viewport width, so a line set in screen units keeps its weight on every phone. The field itself always stores pixels.
+- **Set Shape Colour** (`colour: Color`) - Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.
+- **Set Colours** (`from_colour: Color, to_colour: Color`) - Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a line that goes red to transparent, an arc that goes danger to healthy along its sweep.
+- **Set Gradient** (`gradient_resource: Gradient`) - Hands the shape a Gradient resource and switches it to the gradient mode - the whole ramp, shaped in Godot's own gradient editor and re-used by every shape that points at it.
+- **Set Fill** (`filled: bool`) - Fills the shape, or leaves it as an outline. A filled shape draws its border rather than its stroke, so the two can never sit a pixel apart.
+- **Set Dashes** (`count: int, spacing: float, style: String`) - Sets the dash pattern in one row: how many dashes fit the shape however long it is, how much of each period is gap, and which of the three ends the dashes wear.
+- **Set Dash Offset** (`offset: float`) - Moves the dash pattern along the shape without changing it. Whole numbers land where they started, so an offset that has been scrolling for an hour is still in step.
+- **Scroll Dashes** (`patterns_per_second: float`) - Marches the dashes at so many patterns per second - the ants around a selection, the footprint that says "placing". A speed of 0 stops them and parks the tick with them, so a stopped shape costs nothing per frame.
+- **Fade Shape Over** (`to_alpha: float, seconds: float`) - Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb, since every other field is an ordinary property a Tween Property row already drives.
+- **Set Shape Points** (`new_points: Array`) - Replaces a Polygon's or a Polyline's points with a list of positions in the shape's own coordinates - a drawn route, a hull worked out at run time, an outline read from data.
+- **Set Shape Radius** (`new_radius: float`) - Sets the radius of a Disc or a Regular Polygon - the one number a ring, a pie and a hexagon are all sized by.
+- **Set Shape Sides** (`count: int`) - Sets how many sides a Regular Polygon has: three is a triangle, six a hexagon, and a high number is a circle drawn the expensive way (a Disc is the cheap one).
+- **Set Arc** (`from_degrees: float, to_degrees: float`) - Sets a Disc's sweep, in degrees: 0 to 360 is the whole disc, and anything less is the pie or the arc a cooldown, a vision cone or a health ring is drawn as.
+- **Apply Shape Style** (`style_file: ShapeStyle`) - Puts a Shape Style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back.
+- **Apply Shape Style To Group** (`group_name: String, style_file: ShapeStyle`) - Puts one Shape Style file into every shape in a group at once - the whole HUD re-skinned from one file, which is what a style is for.
+- **Tether Between** (`first: Node2D, second: Node2D`) - Runs the shape between two nodes and keeps it there: its start follows the first, its end follows the second, and it redraws only on the frames one of them actually moved. The leash, the grapple rope, the wire between a machine and its switch.
+- **Untether** - Lets go of both nodes. The shape stays exactly where the last frame left it, and its tick parks.
+- **Fill Ring To** (`fraction: float`) - Sweeps a Disc's arc to a fraction of the way round - 0 is empty, 1 is the whole ring. The cooldown, the stamina wheel, the loading circle, in one row per frame.
+- **Follow Cursor** (`snap_to: float`) - Puts the shape under the pointer every frame, snapped to a grid of that many pixels (0 for no snap) - the placement footprint, the brush outline, the target marker. Stop Following ends it and parks the tick.
+- **Stop Following** - Stops the shape following the pointer. It stays where it was left.
+- **Fit Around** (`node: Node2D, margin: float`) - Sizes the shape to what a node covers, plus a margin, and centres it on it - the selection box round a picked unit, the highlight round a card, the ring round a building.
+- **Show For** (`seconds: float`) - Shows the shape and hides it again after so many seconds - the hit marker, the ping, the flash of a footprint that says "placed".
+
+#### Expressions
+- **Point Along Shape At** (`fraction: float`) - The point a fraction of the way along the shape's outline, in the shape's own coordinates - 0 is the start, 0.5 the middle, 1 the end. Where to put a marker on a route, a spark on a wire, a label on a border.
+- **Shape Length** - How long the shape's outline is, in pixels - the length a dash pattern is fitted into, and the number a "walk along it" row divides by.
+- **Shape Area** - How much area the shape covers, in square pixels. A shape that is only a line covers none.
+
+### VectorShape3D (`res://eventsheet_addons/vector_shapes/vector_shape_3d.gd`)
+
+#### Conditions
+- **Shape Is Visible** - True while the shape is drawn at all: visible in the tree, and not fully transparent.
+- **Point Is Inside Shape** (`point: Vector3`) - True when a point (in world coordinates) lands inside the shape, read on the shape's own plane - inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it.
+
+#### Actions
+- **Set Thickness** (`value: float, unit: String`) - Sets how wide the shape's stroke is, and what the number means. In world units it is the node's own units, so a rope five centimetres thick is 0.05; in screen units it is pixels, and the shape keeps that weight however far away the camera gets - which is what a range ring or a gizmo line wants.
+- **Set Geometry** (`mode: String`) - Sets which of the three forms the shape takes: flat on its own plane, always turned to face the camera, or real geometry a light and a depth buffer treat like anything else in the scene.
+- **Set Shape Colour** (`colour: Color`) - Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.
+- **Set Colours** (`from_colour: Color, to_colour: Color`) - Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a rope that goes bright at the hand and dark at the anchor, an arc that goes danger to healthy along its sweep.
+- **Set Gradient** (`gradient_resource: Gradient`) - Hands the shape a Gradient resource and switches it to the gradient mode - the whole ramp, shaped in Godot's own gradient editor and re-used by every shape that points at it.
+- **Set Fill** (`filled: bool`) - Fills the shape, or leaves it as an outline. A filled shape draws its border rather than its stroke, so the two can never sit a unit apart.
+- **Set Dashes** (`count: int, spacing: float, style: String`) - Sets the dash pattern in one row: how many dashes fit the shape however long it is, how much of each period is gap, and which of the three ends the dashes wear.
+- **Set Dash Offset** (`offset: float`) - Moves the dash pattern along the shape without changing it. Whole numbers land where they started, so an offset that has been scrolling for an hour is still in step.
+- **Scroll Dashes** (`patterns_per_second: float`) - Marches the dashes at so many patterns per second - the ants around a placement ring, the rope that says "pulling". A speed of 0 stops them and parks the tick with them, so a stopped shape costs nothing per frame.
+- **Fade Shape Over** (`to_alpha: float, seconds: float`) - Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb, since every other field is an ordinary property a Tween Property row already drives.
+- **Set Shape Points** (`new_points: Array`) - Replaces a Polygon 3D's or a Polyline 3D's points with a list of positions in the shape's own coordinates - a route worked out at run time, a hull, an outline read from data.
+- **Set Shape Radius** (`new_radius: float`) - Sets the radius of a Disc 3D, a Regular Polygon 3D, a Sphere, a Cone or a Torus - the one number a ring, a hexagon and a ball are all sized by.
+- **Set Shape Sides** (`count: int`) - Sets how many sides a Regular Polygon 3D has: three is a triangle, six a hexagon, and a high number is a circle drawn the expensive way (a Disc 3D is the cheap one).
+- **Set Arc** (`from_degrees: float, to_degrees: float`) - Sets a Disc 3D's sweep, in degrees: 0 to 360 is the whole disc, and anything less is the pie or the arc a cooldown, a scanning cone or a range wedge is drawn as.
+
+#### Expressions
+- **Shape Length** - How long the shape's outline is, in the node's own units - the length a dash pattern is fitted into, and the number a "walk along it" row divides by.
+- **Shape Area** - How much area the shape covers on its own plane, in square units. A shape that is only a line covers none.
+
 ### VirtualCursor (`res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd`)
 @ace_category("Virtual Cursor") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -3227,8 +3422,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Custom Wrap Bounds** (`x: float, y: float, width: float, height: float`) - Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.
 - **Set Wrap Axes** (`horizontal: bool, vertical: bool`) - Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).
 - **Set Wrap Extents** (`new_half_width: float, new_half_height: float`) - Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.
-- **Set Wrap Space** (`space: String`)
-- **Set Circle Wrap Bounds** (`center_x: float, center_y: float, radius: float`)
+- **Set Wrap Space** (`space: String`) - Switches what the host wraps around: the on-screen camera view, or the custom rectangle.
+- **Set Circle Wrap Bounds** (`center_x: float, center_y: float, radius: float`) - Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it: fully outside the circle teleports to the antipode - a round arena in one action.
 
 ## Built-in vocabulary
 
@@ -3391,6 +3586,8 @@ Audio (the Audio vocabulary, the Godot way).
 Audio Server vocabulary (the mixing desk from events).
 
 #### Conditions
+- **Bus Is Sweeping** (`bus: String`) - True while a Muffle, Dive, Wash or Restore on this bus is still walking. The question a second beat asks before starting a sweep over the top of the first one.
+- **Bus Snapshot Exists** (`snapshot_name: String`) - True once a Snapshot Buses As row has filed a mix under this name in this run - the guard before a recall in a scene that may have been reached without passing the place the snapshot was taken.
 - **Bus Exists** (`bus: String`) - True when a bus with this name is in the current bus layout - guard optional buses.
 - **Is Bus Effect Enabled** (`bus: String, effect_index: int`) - True while a bus effect slot is switched on - toggle states without a tracking variable.
 
@@ -3400,6 +3597,12 @@ Audio Server vocabulary (the mixing desk from events).
 - **Set Bus Effects Bypassed** (`bus: String, bypassed: bool`) - Skips or restores ALL effects on a bus at once - dry vs processed in one flip.
 - **Set Bus Effect Enabled** (`bus: String, effect_index: int, enabled: bool`) - Flips ONE prepared effect on a bus - add a lowpass to Master in the Audio panel, then toggle it for the underwater/muffled state; same trick for cave reverb or a flashbang highpass.
 - **Set Audio Playback Speed** (`scale: float`) - Scales EVERY sound's playback speed and pitch - set it alongside Slowmo so the world's audio drops with time, then back to 1.
+- **Muffle Bus** (`bus: String, cutoff_hz: float, seconds: float`) - Walks a bus underwater: a low-pass filter's cutoff slides down to the number you name over the seconds you name, so everything brighter than it goes quiet. A tenth of a second of this under a hitstop is what makes the hit feel heavy. The filter is added to the bus the FIRST time this runs, opened so wide it does nothing, and reused every time after - so the bus layout in the Audio panel gains one slot and never gains another. Restore Bus opens it again.
+- **Dive Bus Volume** (`bus: String, volume_db: float, seconds: float`) - Walks a bus's level down (or up) over time, so the sound effects duck under a line of dialogue or the whole world drops away under a slowmo. It moves an amplify effect on the bus, NOT the bus volume the player chose in the options screen - that one is theirs, and a beat that moved it would leave their setting wherever the beat happened to end. Restore Bus brings the level back.
+- **Wash Bus** (`bus: String, wetness: float, seconds: float`) - Grows a room behind the sound: a reverb's wet amount walks up over the seconds you name, with its dry left alone, so the sound is still there and now it is somewhere. A kill, a cave mouth, a dream. The reverb is added to the bus the first time this runs, silent until the walk starts, and it is the costliest of the three sweeps on a phone.
+- **Restore Bus** (`bus: String, seconds: float`) - Walks every sweep this bus has been under back to where it was resting BEFORE the first one touched it - the cutoff open, the level as it was, the room gone. Home is where the mix was to start with, not where the last beat left it, so a moment can muffle and dive without ever saying how to come back and one row at the end of it puts the room right.
+- **Snapshot Buses As** (`snapshot_name: String`) - Writes down what every bus is doing right now - its level, whether it is muted, whether it is soloed - under a name you choose. Nothing ships with this: there is no house "underwater" and no house "paused", because a game's mix is the game's. Take the first one at startup, call it normal, and every later recall has somewhere honest to come back to.
+- **Recall Bus Snapshot** (`snapshot_name: String, seconds: float`) - Puts a mix you snapshotted back. The levels are WALKED over the seconds you name; the mutes and the solos are cut at once, because there is nothing between silent and not silent to walk through. A name nobody has taken says so and changes nothing, rather than inventing a mix.
 
 #### Expressions
 - **Bus Peak Volume (dB)** (`bus: String`) - The bus's current peak level in dB (very negative = silence) - drive a VU meter, ducking, or audio-reactive visuals.
@@ -4250,6 +4453,21 @@ Drawing (2D immediate-mode canvas, on any node).
 - **Start Ribbon** (`node: Node, follow: Node, point_count: int, width: float, color: Color`) - Starts a textured ribbon on a node's canvas trailing another node - sword swooshes, skid marks, comet tails. Its update runs automatically.
 - **Set Ribbon Texture** (`node: Node, follow: Node, texture: Texture2D`) - Skins a running ribbon with a texture, stretched along its length.
 - **Stop Ribbon** (`node: Node, follow: Node`) - Ends the ribbon trailing a node.
+- **Set Draw Style** (`node: Node, style: Resource`) - Hands a node's canvas a draw style: every styled row after this one draws with that file's thickness, caps, colour and dashes until it is replaced, popped or reset. The rows that carry their own width and colour are untouched by it.
+- **Push Draw Style** (`node: Node, style: Resource`) - Sets a style with the one in force kept underneath it - draw, then Pop Draw Style, and the rows carry on in the style they were in before.
+- **Pop Draw Style** (`node: Node`) - Goes back to the style that was in force before the last Push Draw Style.
+- **Reset Draw Style** (`node: Node`) - Drops the whole style stack: the canvas draws in its own defaults again.
+- **Draw Arc** (`node: Node, x: float, y: float, radius: float, from_degrees: float, to_degrees: float`) - Draws an arc of a circle in the canvas's current draw style - the cooldown sweep, the turn radius, the range band.
+- **Draw Pie** (`node: Node, x: float, y: float, radius: float, from_degrees: float, to_degrees: float`) - Draws a filled wedge of a circle in the current draw style - the same two angles as an arc, filled in.
+- **Draw Rounded Rect** (`node: Node, x: float, y: float, width: float, height: float, corner_radius: float, filled: String`) - Draws a rectangle with rounded corners from its CENTRE, filled or as an outline - the panel, the selection box, the button plate.
+- **Draw Regular Polygon** (`node: Node, x: float, y: float, radius: float, sides: int, angle_degrees: float, filled: String`) - Draws a shape of N equal sides at a radius, from its centre - the hex cell, the warning triangle, the stop sign.
+- **Draw Polygon** (`node: Node, points: Array, filled: String`) - Draws a closed outline through a list of positions, filled or hollow. Concave outlines are allowed: the engine triangulates a filled one.
+- **Draw Polyline** (`node: Node, points: Array, closed: String`) - Draws a path through a list of positions, open or closed - the route preview, the drawn trail, the border of a claimed region.
+- **Draw Text** (`message: String, node: Node, x: float, y: float, size: float`) - Draws a line of text at a spot in the style's colour - the state name over an enemy, the number over a tile, the label on a debug overlay.
+- **Draw Texture** (`node: Node, texture: Texture2D, x: float, y: float, width: float, height: float`) - Draws a texture stretched into a box, from its centre, tinted by the style's colour.
+- **Draw Grid** (`node: Node, x: float, y: float, width: float, height: float, cell_size: float`) - Draws a grid of rulings filling a box, from its centre - the level editor's floor, the debug overlay's ruler, the graph paper behind a plan.
+- **Draw Cross** (`node: Node, x: float, y: float, arm_length: float, angle_degrees: float`) - Draws a cross - the marker on a spot, the refusal over a placement that will not do.
+- **Draw Arrow** (`node: Node, from_x: float, from_y: float, to_x: float, to_y: float, head_size: float`) - Draws an arrow from one point to another, its head sized in pixels - a force, a facing, a route, a debug vector.
 
 #### Expressions
 - **Canvas Texture** (`node: Node`) - A node's LIVE canvas texture - assign it to a TextureRect, a material, a particle, or a 3D Decal. Updates as the canvas draws.
@@ -5547,6 +5765,24 @@ the two lighting objects that are not lights.
 - **Fade The Glow** (`target: String, value: String, seconds: String`) - Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.
 - **Make The Environment This Scene's Own** (`target: String`) - Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.
 
+### Sequencer (`res://addons/eventforge/registration/modules/sequencer_aces.gd`)
+the SEQUENCER: a grid of moments on a beat.
+
+#### Triggers
+- **On Sequence Step** - Runs every time the head crosses a cell that has something in it, and hands over the track it is on, which step it is, and the name written in the cell. The signal is one this sheet declares for itself - add a signal block saying sequence_stepped(track, step, name) and both halves are ordinary Godot - so a rhythm becomes something the game answers row by row rather than with a counter and a modulo.
+
+#### Conditions
+- **Sequence Is Playing** (`target: String`) - True while a grid is being stepped on this object - the guard before starting a second one over the top of the first.
+
+#### Actions
+- **Play Sequence** (`sequence: String, bpm: float, target: String`) - Starts stepping a grid of cells on this object: a track per thing that can fire, a step per beat subdivision, and a name in the cells that should. Every cell the head crosses is said twice - as this node's sequence_stepped signal, which On Sequence Step answers, and to the group the TRACK is named after, so a lights track reaches every light listening on it without a reference being held anywhere. With a Music autoload in the tree the grid runs on the SONG's beat and cannot drift from what the player hears; without one it counts its own from the tempo here. A tempo of 0 means the one the file was saved with.
+- **Stop Sequence** (`target: String`) - Stops the grid on this object and PARKS the head: it processes nothing at all until it is played again, which is the whole of its cost at rest. Where it stopped is kept, so Jump To Sequence Step still means something afterwards.
+- **Set Sequence Tempo** (`bpm: float, target: String`) - Changes the tempo the head counts at without restarting the grid - the row a difficulty ramp or a boss phase uses. Ignored while a song is playing, because the song is the clock then.
+- **Jump To Sequence Step** (`step: int, target: String`) - Moves the head to a step. The step named is the NEXT one to be said out loud, so jumping to 0 starts the pattern again from its beginning - the fill, the drop, the second half of the bar.
+
+#### Expressions
+- **Current Sequence Step** (`target: String`) - Which step the head last said out loud, counted from 0, and -1 before it has said any. What a grid drawn on the HUD reads to know which column to light.
+
 ### Skeleton (`res://addons/eventforge/registration/modules/skeleton_aces.gd`)
 bones: pointing one at something, asking where one is, and holding one in a
 
@@ -6125,12 +6361,22 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 ### Vibration (`res://addons/eventforge/registration/modules/vibration_aces.gd`)
 Vibration vocabulary (rumble a gamepad, buzz a phone).
 
+#### Conditions
+- **Haptic Is Playing** - True while a pattern's pulses are still arriving, or a continuous rumble is running - the guard that stops a second shape being laid over the first.
+- **Haptics Can Be Felt** - True when this machine can rumble at all: a pad plugged in, or a phone in a hand. The rows above do nothing quietly where it is false, so this is for the options screen that wants to grey the slider out rather than for guarding every hit.
+
 #### Actions
 - **Stop Gamepad Vibration** (`device: int`) - Stops a gamepad rumble that is still running.
 - **Vibrate Phone** (`duration_ms: int`) - Buzzes a handheld device (phone / tablet) for a moment. Does nothing on desktop.
+- **Haptic** (`pattern: String`) - Plays one haptic shape - a file you own saying how hard, how long, how many times, and the air between the pulses. A pad gets its motors, a phone with no pad gets a buzz as long as the shape, and a machine with neither does nothing at all, quietly. Every amplitude is scaled by the player's own haptic strength first, so a player who cannot bear the rumble turns it off once and keeps the game. Nothing ships: a new haptic pattern opens on a single short tap, and every other shape is made from there.
+- **Haptic Emphasis** (`strength: float`) - One short strong knock, with no file behind it - the punctuation mark of the vocabulary: a menu item landing, a lock clicking home, a step of a countdown. The player's haptic strength scales it like everything else.
+- **Haptic Continuous Start** (`amplitude: float`) - Starts a rumble that runs until it is stopped - the car on gravel, the drill in the wall, the engine under the seat. Run it again with a different amplitude to change it while it runs; it is ONE call each time, never a call a frame.
+- **Haptic Continuous Stop** - Stops a continuous rumble. Safe to run when nothing is running, which is what lets it sit on the row that ends a state without a condition in front of it.
+- **Set Haptic Strength** (`percent: String`) - One dial every haptic row multiplies itself by, as a player setting rather than a designer's guess. 0 is off and the rows go quiet without a branch anywhere in the sheet. No Flashing does not touch it - a rumble is not light.
 
 #### Expressions
 - **Gamepad Vibration Strength** (`device: int`) - The current rumble strength of a gamepad as a Vector2 (weak, strong motor).
+- **Haptic Strength** - The haptic dial as 0 to 1, 1 when nobody has set it - what the options screen's slider reads to know where to start.
 
 ### Video (`res://addons/eventforge/registration/modules/video_aces.gd`)
 the Video object (playing a film in the layout).
