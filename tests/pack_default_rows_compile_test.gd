@@ -1,7 +1,7 @@
 # Godot EventSheets - every shipped pack row compiles with the values it opens on.
 #
 # `builtin_ace_compile_test` asks this question of the BUILTIN vocabulary and answers it well, but
-# it walks `EventForgeBuiltinACEs` only - so the 136 packs under `eventsheet_addons/`, which are
+# it walks `EventForgeBuiltinACEs` only - so the packs under `eventsheet_addons/`, which are
 # where a dropdown of words and a hand-written call template actually live, were never asked. This
 # file asks it of them, through the same seam the live picker uses: the addon scanner's script list,
 # `EventSheetACEGenerator.generate_from_object`, the real `ActionCodegen._apply_template`, and
@@ -12,6 +12,18 @@
 # on its FIRST option, because that is what the params dialog's OptionButton shows (it selects an
 # index only when an option key matches the default, and Godot selects item 0 otherwise). Filling a
 # dropdown with anything else would test a row nobody can author.
+#
+# AND THEN EVERY OTHER WORD IN THE DROPDOWN. A dropdown is a promise that each of its items writes
+# code the game builds, and the item nobody picked while authoring is the one whose spelling was
+# never tried. `builtin_ace_compile_test` asks this of the builtin vocabulary; the walk below asks it
+# of the packs, through the same fill, so the two passes can never test a row differently.
+#
+# NOTHING LEAVES THE WALK IN SILENCE. A script the scanner hands over is walked, or named as a
+# runtime helper that publishes no row, or named as one that would not load - and the three are
+# pinned to add up to what the scanner handed over, because a pack with a parse error otherwise
+# looks exactly like a fleet that is one pack smaller. The autoload stand-ins the harness declares
+# to make a line parse are checked against the autoload the pack's own BUILDER registers, so a typo
+# in a template is caught by a file the template cannot edit.
 #
 # What this catches that nothing else did: a default that is a QUOTED STRING LITERAL on a BARE slot.
 # Both annotation readers strip one surrounding pair of quotes off a `default:` value
@@ -74,25 +86,69 @@ const NOT_STANDALONE: Dictionary = {
 ## so any member access parses, exactly as `builtin_ace_compile_test` declares its own.
 const SCAFFOLD_MEMBERS: Array[String] = ["v", "item", "loop_index", "event", "text", "data", "delta"]
 
+## The addon scripts the scanner hands over that publish no templated row at all, by file name.
+##
+## They are RUNTIME HELPERS, not vocabulary: a post-processing effect a pack instances, the shape
+## resource a drawing node holds, the moment runner the feedback player drives. Each loads and
+## instantiates cleanly and simply has nothing to say to the picker, which is a different thing from
+## a pack that failed to load - and telling the two apart is the point of pinning them. A pack with a
+## parse error drops out of the walk with no row of its own, and without this list the floors below
+## would absorb the loss silently.
+##
+## A name joins this list only when the script genuinely publishes no vocabulary. A PACK appearing
+## here is a pack that stopped compiling.
+const NO_TEMPLATED_ROWS: Array[String] = [
+	"bus_mix.gd", "free_spot.gd", "haptics.gd", "loading_screen.gd", "moment_runner.gd",
+	"pooled_nodes.gd", "post_desaturate.gd", "post_effect.gd", "post_fade.gd", "post_outline.gd",
+	"post_pixelate.gd", "post_tint.gd", "post_vignette.gd", "shape_sphere_3d.gd", "shape_style.gd",
+	"world_look.gd"
+]
+
+## The fleet as it stands, measured by the walk below and written down so a shrink is a failure
+## rather than a quieter run. Both are FLOORS at the measured figure: a pack that lands next week
+## raises them and its own commit re-measures the line, but nothing may ever lower them, which is the
+## direction a scanner regression or a pack that stopped loading would move.
+##
+## PROVIDER SCRIPTS, not packs. The scanner hands over one entry per script that publishes
+## vocabulary, and a pack ships several - the shapes pack alone publishes its 2D node, its 3D node
+## and its style resource. The fleet's pack count is a different measurement with a tool of its own
+## (`tools/measure_packs.gd`), and reading this number as that one is how the records came to claim
+## a fleet size the fleet never had.
+const PROVIDER_SCRIPTS_WALKED: int = 163
+const ROWS_COMPILED: int = 4016
+
 
 static func run() -> bool:
 	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
 	var scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
-	var packs_walked: Dictionary = {}
+	var scripts_walked: Dictionary = {}
 	var checked: int = 0
+	var options_checked: int = 0
 	var skipped: Array[String] = []
+	var skipped_unloadable: Array[String] = []
+	var quiet_scripts: Array[String] = []
 	var known_bad: Array[String] = []
-	var not_standalone_seen: Array[String] = []
+	var known_failing_seen: Dictionary = {}
+	var not_standalone_seen: Dictionary = {}
+	var declared_bases: Dictionary = {}
 	var failures: Array[String] = []
 
 	for script_path: String in scripts:
+		var pack_file: String = script_path.get_file()
+		# A script that will not load is NAMED, never skipped in silence. It is the shape a pack with
+		# a parse error takes, and absorbing it into the floors above would report the fleet as whole
+		# while a pack of it had quietly stopped existing.
 		var script: Script = load(script_path) as Script
-		if script == null or not script.can_instantiate():
+		if script == null:
+			skipped_unloadable.append("%s (load returned null)" % pack_file)
+			continue
+		if not script.can_instantiate():
+			skipped_unloadable.append("%s (cannot instantiate)" % pack_file)
 			continue
 		var instance: Object = script.new()
 		if instance == null:
+			skipped_unloadable.append("%s (new() returned null)" % pack_file)
 			continue
-		var pack_file: String = script_path.get_file()
 		for definition: ACEDefinition in generator.generate_from_object(instance):
 			if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
 				continue
@@ -101,31 +157,48 @@ static func run() -> bool:
 				template = definition.instance_backed_template().strip_edges()
 			if template.is_empty():
 				continue
-			packs_walked[pack_file] = true
+			scripts_walked[pack_file] = true
 			var key: String = "%s/%s" % [pack_file, definition.id]
 			if NOT_STANDALONE.has(key):
-				not_standalone_seen.append("%s (%s)" % [key, str(NOT_STANDALONE[key])])
+				not_standalone_seen[key] = true
 				continue
 			var fill: Dictionary = _fill_params(definition, template)
 			if fill.get("skip", false):
 				skipped.append("%s (%s)" % [key, str(fill.get("reason", ""))])
 				continue
 			checked += 1
-			var failure: String = _compile_failure(definition, template, fill["params"])
+			var params: Dictionary = fill["params"]
+			for base: String in _undeclared_singletons(
+					ActionCodegen._apply_template(template, params), HOST_CLASS):
+				declared_bases["%s\t%s" % [base, definition.provider_id]] = true
+			var failure: String = _compile_failure(definition, template, params)
 			if KNOWN_FAILING.has(key):
+				known_failing_seen[key] = true
 				known_bad.append("%s (%s)" % [key, str(KNOWN_FAILING[key])])
 				if failure.is_empty():
 					failures.append("%s is on KNOWN_FAILING but COMPILES - delete its line" % key)
 				continue
 			if not failure.is_empty():
 				failures.append(failure)
+			# EVERY WORD IN THE DROPDOWN, not only the one the row opens on. A dropdown is a promise
+			# that each of its items writes code the game builds, and the item nobody picked while
+			# authoring is exactly the one whose spelling was never tried. `builtin_ace_compile_test`
+			# asks this of the builtin vocabulary; this asks it of the packs, through the same fill.
+			for variant: Dictionary in _option_variants(definition, params):
+				options_checked += 1
+				var option_failure: String = _compile_failure(definition, template, variant["params"])
+				if not option_failure.is_empty():
+					failures.append("with %s = %s: %s" % [
+						str(variant["param"]), str(variant["value"]), option_failure])
+		if not scripts_walked.has(pack_file):
+			quiet_scripts.append(pack_file)
 		if instance is Node:
 			(instance as Node).free()
 
 	for f: String in failures:
 		print("[FAIL] pack_default_rows_compile_test: %s" % f)
-	print("[INFO] pack_default_rows_compile_test: %d packs walked, %d rows compiled with their shipped defaults, %d skipped, %d failed" % [
-		packs_walked.size(), checked, skipped.size(), failures.size()])
+	print("[INFO] pack_default_rows_compile_test: %d provider scripts walked, %d rows compiled with their shipped defaults, %d further dropdown choices compiled, %d skipped, %d failed" % [
+		scripts_walked.size(), checked, options_checked, skipped.size(), failures.size()])
 	if not known_bad.is_empty():
 		print("[INFO] pack_default_rows_compile_test: rows that do NOT compile, written down with their cause: %s" % ", ".join(known_bad))
 	if not skipped.is_empty():
@@ -133,22 +206,64 @@ static func run() -> bool:
 
 	var ok: bool = _check("every shipped pack row compiles with the values it opens on", failures.is_empty(), true)
 	# The walk itself is pinned, so a scanner change that quietly stops finding packs cannot turn
-	# this gate into a vacuous pass. Pinned as a floor rather than an exact count, because a pack
-	# lands here every week and the number is not the contract - walking the whole fleet is.
-	ok = _check("the gate walks the whole shipped fleet", packs_walked.size() >= 100, true) and ok
-	ok = _check("the gate compiles thousands of rows, not a handful", checked >= 3000, true) and ok
+	# this gate into a vacuous pass.
+	ok = _check("the gate walks the whole shipped fleet", scripts_walked.size() >= PROVIDER_SCRIPTS_WALKED, true) and ok
+	ok = _check("the gate compiles every shipped row", checked >= ROWS_COMPILED, true) and ok
+	ok = _check("the gate compiles the other words in every dropdown", options_checked > 0, true) and ok
+	# Nothing the scanner handed over went missing between the two. Derived rather than counted, so
+	# it stays true as packs land and false the moment a script leaves the walk unaccounted for.
+	ok = _check("every scanned script is either walked or named",
+		scripts_walked.size() + quiet_scripts.size() + skipped_unloadable.size(), scripts.size()) and ok
+	ok = _check("no addon script failed to load", "\n".join(skipped_unloadable), "") and ok
+	quiet_scripts.sort()
+	var expected_quiet: Array[String] = NO_TEMPLATED_ROWS.duplicate()
+	expected_quiet.sort()
+	ok = _check("the scripts that publish no templated row are the known runtime helpers",
+		"\n".join(quiet_scripts), "\n".join(expected_quiet)) and ok
+	# A line on either table that no row ever reached is a line describing a row that has moved or
+	# gone. The staleness check above only fires when a KNOWN_FAILING row COMPILES, so a key nothing
+	# visits would sit there for ever unread.
+	ok = _check("every KNOWN_FAILING line names a row the walk reached",
+		_unvisited(KNOWN_FAILING, known_failing_seen), "") and ok
+	ok = _check("every NOT_STANDALONE line names a row the walk reached",
+		_unvisited(NOT_STANDALONE, not_standalone_seen), "") and ok
+	ok = _check("every autoload the scaffold stands in for is one a pack builder declares",
+		_unknown_bases(declared_bases), "") and ok
 	# The detector self-check: a default that is a quoted string literal on a BARE slot must FAIL,
 	# so the round-trip trip-wire this file exists for can never become a vacuous pass.
 	ok = _check("a quoted-literal default on a bare slot is caught", _quoted_default_probe(), false) and ok
 	return ok
 
 
-## Compiles `Codex.discover(enemies, slime)` - what a `default: "enemies"` becomes once either
-## annotation reader has stripped its outer quotes. False is the answer this file is named for.
+## The keys of `table` that `seen` never recorded, newline-joined - "" when the table is current.
+static func _unvisited(table: Dictionary, seen: Dictionary) -> String:
+	var stale: Array[String] = []
+	for key: Variant in table.keys():
+		if not seen.has(str(key)):
+			stale.append("%s (nothing in the walk reached this row)" % str(key))
+	stale.sort()
+	return "\n".join(stale)
+
+
+## Whether the harness still catches the defect this file is named for, asked THROUGH THE HARNESS.
+##
+## A synthetic definition with one bare `{target}` slot defaulting to the word `enemies` - what
+## `default: "enemies"` becomes once either annotation reader has stripped its outer quotes - is put
+## through the same `_fill_params` and `_compile_failure` every shipped row goes through. A
+## hand-typed source string would have proved only that Godot rejects bad GDScript; this proves that
+## THIS harness's fill and wrap still carry such a row to a failure. False is the answer it is named
+## for, so a fill or wrap change that started quietly excusing the shape turns the gate red.
 static func _quoted_default_probe() -> bool:
-	var script: GDScript = GDScript.new()
-	script.source_code = "@tool\nextends Node\nvar Codex\nfunc __t() -> void:\n\tCodex.discover(enemies, slime)\n"
-	return script.reload() == OK
+	var definition: ACEDefinition = ACEDefinition.new()
+	definition.provider_id = "PackDefaultRowsProbe"
+	definition.id = "method:probe"
+	definition.ace_type = ACEDefinition.ACEType.ACTION
+	definition.parameters = [{"id": "target", "type": TYPE_STRING, "default_value": "enemies"}]
+	var template: String = "Codex.discover({target}, slime)"
+	var fill: Dictionary = _fill_params(definition, template)
+	if fill.get("skip", false):
+		return true      # the probe never reached a compile, which is a failure of the probe itself
+	return _compile_failure(definition, template, fill["params"]).is_empty()
 
 
 ## One compile of one filled template, as the message naming what went wrong - "" when it built.
@@ -217,15 +332,53 @@ static func _fill_params(definition: ACEDefinition, template: String) -> Diction
 ## the dialog hands back. Is At Bound is the live example: its `side` default is the METHOD's own
 ## `= "any"`, quotes and all, which equals none of its five bare keys, so the row really does open
 ## on `left`.
+##
+## `has_first` rather than an empty-string test, because a BLANK first option is a real thing a pack
+## ships - "no filter", "keep the current one" - and an OptionButton showing it is showing item 0
+## exactly as this function must report. Testing `first.is_empty()` would have walked straight past
+## the blank and named the SECOND option as the value the row opens on, which is a row nobody sees.
 static func _option_fill(options: Array, default_value: String) -> String:
 	var first: String = ""
+	var has_first: bool = false
 	for option: Variant in options:
 		var option_key: String = str((option as Dictionary).get("key", "")) if option is Dictionary else str(option)
-		if first.is_empty():
+		if not has_first:
 			first = option_key
+			has_first = true
 		if option_key == default_value:
 			return option_key
 	return first
+
+
+## Every OTHER word in every dropdown this row has, as {param, value, params}. The word the row opens
+## on is left out (it was just compiled), and a list of one is no choice at all.
+static func _option_variants(definition: ACEDefinition, filled: Dictionary) -> Array[Dictionary]:
+	var variants: Array[Dictionary] = []
+	for entry: Variant in definition.parameters:
+		if not (entry is Dictionary):
+			continue
+		var parameter: Dictionary = entry
+		var id: String = str(parameter.get("id", ""))
+		var options: Array = parameter.get("options", []) as Array
+		if id.is_empty() or options.size() < 2:
+			continue
+		for option: Variant in options:
+			var value: String = str((option as Dictionary).get("key", "")) if option is Dictionary else str(option)
+			if value == str(filled.get(id, "")):
+				continue
+			var params: Dictionary = filled.duplicate()
+			params[id] = value
+			variants.append({"param": id, "value": value, "params": params})
+	return variants
+
+
+## The class every pack row is compiled inside. ALWAYS `Node`, and there is no second answer to look
+## for: `node_type` is written into an ACE's metadata only by `ace_adapter.gd`, which adapts a
+## BUILTIN descriptor, and never by `generate_from_object`, which is the only door a pack comes
+## through here. A pack narrows its host with `@ace_expose_all(node)` instead, and honouring that
+## would mean compiling each row inside the node class the pack attaches to - worth doing the day a
+## row needs it, and dishonest to pretend is happening while nothing sets the key.
+const HOST_CLASS: String = "Node"
 
 
 ## Wraps the substituted template in a host class so the call parses.
@@ -237,11 +390,15 @@ static func _option_fill(options: Array, default_value: String) -> String:
 ## that makes the same line parse. Only a capitalised identifier used as the base of a `.` access is
 ## declared, and only when it is neither an engine class nor a project `class_name` - so `Input`,
 ## `Time` and a pack's own `class_name` still resolve to the real thing.
+##
+## A stand-in makes ANY capitalised base parse, so on its own it would let `Storylet.add_requirement`
+## - one letter short of the autoload the pack registers - sail through green. The base is therefore
+## not trusted: every name this function declares is checked afterwards against the autoload the
+## pack's own BUILDER declares, which is a different file from the template being tested, so a typo
+## in one is caught by the other.
 static func _wrap(definition: ACEDefinition, template: String, params: Dictionary) -> String:
 	var line: String = ActionCodegen._apply_template(template, params)
-	var host: String = str(definition.metadata.get("node_type", "")).strip_edges()
-	if host.is_empty() or not ClassDB.class_exists(host):
-		host = "Node"
+	var host: String = HOST_CLASS
 	var body_lines: Array[String] = []
 	match definition.ace_type:
 		ACEDefinition.ACEType.CONDITION:
@@ -295,6 +452,60 @@ static func _undeclared_singletons(line: String, host: String) -> Array[String]:
 			continue
 		found.append(name)
 	return found
+
+
+## Where the pack builders live. The autoload a pack registers is DECLARED here and nowhere in the
+## shipped tree: the compiler spends `autoload_name` on the call prefix of each
+## `@ace_codegen_template` and emits no marker of its own (an opened pack recovers the name from
+## `project.godot` instead). So the builder is the one independent spelling - checking a template's
+## prefix against another template's prefix would only prove the typo is consistent with itself.
+const PACK_BUILDERS_DIR: String = "res://tools/pack_builders"
+
+
+## The stand-ins the scaffold declared that nothing outside the template accounts for, newline-joined
+## - "" when every one is real. Keys arrive as "<base>\t<provider id>". Two shapes, each answered by
+## its own source:
+##   - a capitalised base is an AUTOLOAD, and must be one a pack BUILDER registers by that exact
+##     spelling. The builder is a different file from the template being tested, so `Storylet.` for
+##     `Storylets.` is named here instead of parsing green against a stand-in that would accept it.
+##   - `__eventsheet_provider_<Provider>` is the member the compiler writes into the sheet for an
+##     instance-backed row, and `<Provider>` must be the provider whose row this is. A template that
+##     names another pack's provider member addresses a member that sheet never declares.
+static func _unknown_bases(declared_bases: Dictionary) -> String:
+	var autoloads: Dictionary = _builder_autoload_names()
+	var unknown: Array[String] = []
+	for entry: String in declared_bases.keys():
+		var base: String = entry.get_slice("\t", 0)
+		var provider_id: String = entry.get_slice("\t", 1)
+		if base.begins_with(PROVIDER_MEMBER_PREFIX):
+			var named: String = base.trim_prefix(PROVIDER_MEMBER_PREFIX)
+			if named != provider_id:
+				unknown.append("%s (names provider '%s', but the row is %s's)" % [base, named, provider_id])
+			continue
+		if not autoloads.has(base):
+			unknown.append("%s (no pack builder registers an autoload by this name, in a %s row)" % [
+				base, provider_id])
+	unknown.sort()
+	return "\n".join(unknown)
+
+
+## Every autoload name the pack builders register, as a set. Two dialects are in use and both are
+## read: the manifest form `Lib.manifest().autoload("Storylets")` and the direct form
+## `sheet.autoload_name = "Storylets"`. A blank name is the library's own field default, not a pack.
+static func _builder_autoload_names() -> Dictionary:
+	var names: Dictionary = {}
+	var expression: RegEx = RegEx.create_from_string(
+		"autoload(?:_name)?\\s*(?:\\(|=)\\s*\"([A-Za-z_][A-Za-z0-9_]*)\"")
+	var builders: DirAccess = DirAccess.open(PACK_BUILDERS_DIR)
+	if builders == null:
+		return names
+	for file_name: String in builders.get_files():
+		if not file_name.ends_with(".gd"):
+			continue
+		var source: String = FileAccess.get_file_as_string("%s/%s" % [PACK_BUILDERS_DIR, file_name])
+		for match_result: RegExMatch in expression.search_all(source):
+			names[match_result.get_string(1)] = true
+	return names
 
 
 static var _builtin_type_names: Dictionary = {}
