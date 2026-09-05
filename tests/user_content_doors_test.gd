@@ -256,6 +256,29 @@ static func _run_loaders() -> bool:
 		joined_sound.contains("\".ogg\".get_extension()")
 			or joined_sound.contains("name.get_extension()"), false) and ok
 
+	# AND THE WHOLE LINE ANSWERS INSIDE SOMEBODY ELSE'S SENTENCE. This is the one expression here
+	# whose value is a conditional even with the fallback slot left blank, so it is the one that
+	# needs an OUTER pair of brackets whatever the slot holds. Without them, the row dropped into
+	# one side of a Compare Values row read as `<the stream> if the file is there else (null ==
+	# null)` and answered a STREAM where a comparison was asked for - a wrong answer rather than a
+	# parse error, which is the only kind of bug nothing ever reports. Asked of a file that IS there
+	# and that no reader decodes, because that is the branch the misbinding took.
+	var undecodable_mp3: String = PROBE_WAV.get_basename() + ".mp3"
+	var junk: FileAccess = FileAccess.open(undecodable_mp3, FileAccess.WRITE)
+	if junk != null:
+		junk.store_string("not a track this engine decodes")
+		junk.close()
+	for spec: Array in [["LoadSoundFile", undecodable_mp3, "null"],
+			["LoadSoundFile", undecodable_mp3, ""],
+			["LoadImageFile", PROBE_PNG, "null"],
+			["ReadTextFileOr", PROBE_PNG, "\"\""]]:
+		var beside: Variant = _value("%s == null" % _emitted(str(spec[0]),
+			{"path": _quote(str(spec[1])), "fallback": str(spec[2])}))
+		ok = _check("%s beside a comparison still answers the comparison%s" % [str(spec[0]),
+			"" if not str(spec[2]).is_empty() else " (fallback slot blank)"],
+			typeof(beside), TYPE_BOOL) and ok
+	DirAccess.remove_absolute(undecodable_mp3)
+
 	DirAccess.remove_absolute(PROBE_PNG)
 	DirAccess.remove_absolute(PROBE_WAV)
 	return ok

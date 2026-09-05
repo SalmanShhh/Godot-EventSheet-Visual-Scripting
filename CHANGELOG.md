@@ -4167,6 +4167,14 @@ These are the places the two disagreed.
   Compare Values row, the guarded read quietly BECAME the file's text instead of a comparison of it.
   Wrong answer, not a parse error, so nothing would ever have said so. All three are bracketed now,
   and the suite runs a guarded read inside a comparison to prove it.
+- **And Sound From File wears the OUTER pair too.** It had brackets, but only around the extension
+  chain: the closing one landed before the guard, so the line it emitted was `(one reader per format)
+  if the file is there else <fallback>` - the very bare ternary the fix beside it was about, on the
+  one row whose value is a conditional even with the fallback slot left blank. Dropped into one side
+  of a **Compare Values** row it read as `<the stream> if the file is there else (null == null)` and
+  answered a STREAM where a comparison was asked for. Both spellings are wrapped now, and the suite
+  puts all four guarded expressions beside a comparison and checks that a comparison is what comes
+  back.
 - **The Doctor's fixes read the vocabulary rather than a list of it.** The table naming each verb's
   path fields was hand-kept, and it had already drifted from the verbs shipped beside it: nine path
   fields - both loaders, both archive verbs, the engine's CSV pair and the line loop - were invisible

@@ -368,14 +368,22 @@ static func _ask_template(title: String, mode: String) -> String:
 ## So the guarded form ends at the fallback rather than at a reader, and the promise on the row is the
 ## one the line keeps. The unguarded form is unchanged - nothing to fall back TO is exactly what
 ## leaving the slot blank asks for.
+##
+## AND THE WHOLE LINE WEARS BRACKETS, not just the chain inside it. This is the only expression here
+## whose value is a conditional even with no fallback named, so it is the only one that needs an
+## OUTER pair regardless: `a if b else c` spliced between two operators binds them into its branches,
+## and `Sound From File == null` in a Compare Values row read as `<stream> if the file is there else
+## (null == null)` - which answers a STREAM where a comparison was asked for. A wrong answer, not a
+## parse error, so nothing would ever have said so. The inner pair stays where it was, around the
+## extension chain, so the guard still reads as one thing the file's presence chooses.
 static func _sound_template() -> String:
 	var extension: String = "({path}).get_extension().to_lower()"
-	return "{?fallback}({/fallback}" \
+	return "({?fallback}({/fallback}" \
 		+ "AudioStreamMP3.load_from_file({path}) if %s == \"mp3\" else " % extension \
 		+ "AudioStreamOggVorbis.load_from_file({path}) if %s == \"ogg\" else " % extension \
 		+ "AudioStreamWAV.load_from_file({path})" \
 		+ "{?fallback} if %s == \"wav\" else {fallback}) " % extension \
-		+ "if FileAccess.file_exists({path}) else {fallback}{/fallback}"
+		+ "if FileAccess.file_exists({path}) else {fallback}{/fallback})"
 
 
 ## ────────────────────────────────────────────────────────────────────────────────────────────────
