@@ -113,6 +113,14 @@
   the last hold to run out hands the music back to what was in force before the first sting, and the
   director parks its frame again.
 
+- **On Beat no longer fires beats that have not happened yet.** A song whose first beat lands more
+  than a beat into the file - the Beat Offset a track carries for exactly that, plus the output
+  latency - is standing at a NEGATIVE beat when it opens, and only beat minus one was ever swallowed.
+  A track at 120 bpm with an offset of a second and a half handed On Beat **-3, then -2, then -1**
+  before its first real beat, and On Bar a bar of -1: a lane spawning a note per beat spawned three
+  before the song had begun. The walk up to the first beat is counted, so nothing fires twice
+  afterwards, and fired for nobody.
+
 - **A song with an intro plays its intro.** Every Play started the track at its Loop From, which is
   the one thing that field is not for: the intro was never heard at all, against what the track
   resource's own tooltip and the guide both promise. The first Play of a song is from its beginning

@@ -59,6 +59,7 @@ static func run() -> bool:
 	passed = _next_beat_at_rides_the_engine_clock(script) and passed
 	passed = _a_stinger_over_a_duck_leaves_the_duck(script) and passed
 	passed = _two_stings_over_each_other_still_come_back_up(script) and passed
+	passed = _no_beat_fires_before_the_first_one(script) and passed
 	passed = _a_song_with_an_intro_plays_it_once(script) and passed
 	passed = _a_track_that_ends_stops_being_the_track(script) and passed
 	_forget_tracks()
@@ -468,6 +469,33 @@ static func _two_stings_over_each_other_still_come_back_up(script: GDScript) -> 
 			_round(still_under_the_voice), -8.0],
 		["which is not rest, because the line is still being spoken", runs_on, false],
 		["until the row that ducked it brings it up", _round(when_the_line_ends), 0.0],
+	])
+
+
+## NO BEAT BEFORE THE FIRST ONE. A song whose first beat lands a second and a half into the file is
+## standing at beat minus three when it opens, and On Beat handing a game a negative beat number is
+## a beat that never happened: a lane spawning a note per beat would spawn three of them before the
+## song had begun. The walk up to the first beat is still counted, so nothing fires twice afterwards.
+static func _no_beat_fires_before_the_first_one(script: GDScript) -> bool:
+	var director: Node = script.new()
+	director.set_tempo(120.0, 1.5)
+	var beats: Array = []
+	var bars: Array = []
+	director.beat.connect(func(number: int) -> void: beats.append(number))
+	director.bar.connect(func(number: int) -> void: bars.append(number))
+	# The play head walking from the top of the file to just before the third beat, an eighth of a
+	# second at a time: at 120 bpm the beats are half a second apart, and the first is at 1.5 s.
+	var at: float = 0.0
+	while at < 2.4:
+		director._fire_beats(at, 0.0)
+		at += 0.125
+	var counted: int = director._last_beat
+	director.free()
+	return SUPPORT.pins(TEST, [
+		["the beats a song with a beat-and-a-half offset fires from its top are the real ones",
+			beats, [0, 1]],
+		["and its bars begin at the first one", bars, [0]],
+		["while the count before the first beat is remembered rather than fired", counted, 1],
 	])
 
 

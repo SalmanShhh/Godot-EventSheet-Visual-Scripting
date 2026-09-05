@@ -469,12 +469,19 @@ func _apply_volumes() -> void:
 ## Fires the beat triggers for a moment of the music, once each per beat. Nothing fires while
 ## nothing is playing, and the first beat of a new track always arrives because the numbers are
 ## reset when one starts.
+##
+## THE COUNT BEFORE THE FIRST BEAT IS NEGATIVE, and there is no beat minus three to fire. A song
+## whose first beat lands a second and a half into the file is standing at beat -3 when it opens,
+## and On Beat handing a game a negative number is a beat that never happened - so the walk up to
+## the first beat is remembered (each moment is still counted once) and fired for nobody.
 ## @ace_hidden
 func _fire_beats(position: float, latency: float) -> void:
 	var whole: int = floori(beat_at(position, latency))
 	if whole == _last_beat:
 		return
 	_last_beat = whole
+	if whole < 0:
+		return
 	beat.emit(whole)
 	if beat_number_every > 0 and whole % beat_number_every == 0:
 		nth_beat.emit(whole)
