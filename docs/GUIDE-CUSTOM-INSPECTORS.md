@@ -868,6 +868,68 @@ Variable: spawn_gap  (Vector2)
 
 The Inspector calls `check_spawn_gap()` as the field is edited and shows its returned message above the property ("Spawn gap: the low end exceeds the high end.") until the values are sane. It is the cross-field rule a single widget cannot enforce on its own, and it stays silent on a non-`@tool` sheet rather than raising a false alarm.
 
+### Use case 20: one node wearing the whole kit (the shape nodes, read as an Inspector)
+
+**Scenario:** the drawers and decor above are each shown alone, and the question every author
+asks next is what they look like stacked on one object. The Vector Shapes pack's `ShapeDisc2D`
+is that answer as shipped code: a `@tool` Node2D whose Inspector is built entirely out of the
+pieces on this page, with nothing bespoke in it. Open
+`eventsheet_addons/vector_shapes/shape_disc_2d.gd` beside this section and read down.
+
+```gdscript
+# @inspector_action save_as_style Save As Style
+@export var style: ShapeStyle = null
+
+# @inspector_preview
+# @inspector_handle radius length
+# @inspector_handle start_angle angle
+@export_group("Disc")
+@export var radius: float = 48.0
+@export_range(-360.0, 360.0, 0.1) var start_angle: float = 0.0
+
+@export_group("Stroke")
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:unit:kinds=px|world|screen,store=px") var thickness: float = 2.0
+@export var dashed: bool = false
+
+@export_group("Colour")
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6")
+
+# @inspector_show_if dashed
+@export_group("Dashed")
+@export_enum("world", "relative", "count") var dash_space: String = "count"
+# @inspector_link dash_count dash_spacing
+@export_range(1, 128, 1) var dash_count: int = 12
+@export var dash_spacing: float = 0.5
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:toggle_row:plain,angled,rounded:icons=vector_shapes_dash") var dash_style: String = "plain"
+```
+
+Read top to bottom, that is seven pieces of this guide doing one job each:
+
+1. **A field button** (`@inspector_action`) puts **Save As Style** at the top, so the look you
+   just tuned becomes a `.tres` without leaving the Inspector.
+2. **The preview card** (`@inspector_preview`) draws the shape itself above the fields. The disc
+   is a node with no renderer registered, so it takes the fourth path in section 4c: the node
+   rendered live into a viewport of its own, which for a shape is the shape.
+3. **Two viewport handles** (`@inspector_handle`) make `radius` a hollow dot you drag and
+   `start_angle` a diamond you swing, both anchored on the node's own origin because neither
+   line names a `from`. Dragging either is one undo step.
+4. **A number that says its unit.** `thickness` stores pixels and the dropdown beside it offers
+   world and screen units. Flip it and the number in front of you converts; the stored value,
+   and therefore every byte the game runs, does not move.
+5. **A show-if on a whole group.** The `Dashed` group's seven fields appear with the `dashed`
+   tick and vanish with it, from one decor line above the group rather than one per field.
+6. **A link between two numbers.** The equals button between `dash_count` and `dash_spacing`
+   holds the ratio they had when you pressed it, so a denser dash stays as open as it looked.
+7. **Two shapes of toggle row.** `dash_style` is three ICONS, drawn by the pack's own shader
+   through a registered provider, so the picture of a rounded dash IS a rounded dash. On the
+   Line node beside it, `caps` uses the same drawer's `:segmented` form, because "none, square,
+   round" are three words that fit and an icon would be guessing.
+
+**What to take from it.** None of the seven knows about the other six, and none of them knows
+about shapes. The same seven lines on a resource of your own give a designer the same Inspector,
+and a project without the plugin loads that script unchanged: `@inspector_*` lines are comments,
+and every drawer degrades to the plain field for its type.
+
 ### Other game scenarios
 
 **Platformers.** Sliders for `jump_height`, `gravity`, and `coyote_time`; a dial for a `wall_jump_kick` vector; a curve for a variable-jump release ramp.
