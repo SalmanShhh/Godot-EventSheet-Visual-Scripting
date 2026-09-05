@@ -3872,6 +3872,80 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	return row_data
 
 
+## A Moment block: the head names the beat, and one child row per step reads in the sheet's own
+## two-lane grammar - the timing word ("At 0.05 s", "Hold, then 0.1 s", "Loop back 2 x") as the
+## condition, the step's actions as the actions. Nothing is drawn INSIDE a row: playing it, saving
+## it to a file and opening one back are toolbar and Inspector doors, not widgets in the sheet.
+func _build_moment_block_row(block: MomentBlockRow, indent: int) -> EventRowData:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = block
+	row_data.row_uid = "moment_%s_%d" % [str(block.get_instance_id()), indent]
+	row_data.disabled = not block.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+	# A moment is a DEFINITION - the beat something else plays by name - so it wears the same
+	# identity bar the enum and the class-setup rows wear rather than an event row's height.
+	row_data.height_scale = 1.5
+	row_data.custom_color = Color(event_style.behavior_accent_color.r, event_style.behavior_accent_color.g, event_style.behavior_accent_color.b, 0.22)
+	row_data.spans = [
+		_make_span("Moment", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "trigger",
+			"badge_bg": event_style.behavior_accent_color.lerp(event_style.lane_divider_color, 0.45),
+			"badge_fg": event_style.trigger_badge_foreground_color,
+			"kind": "moment_row",
+			"line_index": 0
+		}),
+		_make_span(block.moment_name, SemanticSpan.SpanType.VALUE, {
+			"kind": "moment_row", "text_color": event_style.object_label_color
+		}),
+		_make_span(_moment_head_note(block), SemanticSpan.SpanType.COMMENT, {
+			"kind": "moment_row", "text_color": _viewport._get_reading_style().muted_text_color
+		})
+	]
+	if not row_data.folded:
+		for step_row: EventRowData in _build_moment_step_rows(block, indent + 1):
+			row_data.children.append(step_row)
+	return row_data
+
+
+## What the head says after the name: the parameters every step is written against, and the range
+## when the moment has one. Short, because the numbers themselves live on the steps.
+func _moment_head_note(block: MomentBlockRow) -> String:
+	# The two names are the coroutine's own PARAMETERS, so they are spelled as the emitted code
+	# spells them rather than translated - a reader typing `strength` into a step's field is typing
+	# this word.
+	var note: String = "(strength, from)"
+	if block.within > 0.0:
+		note += " · %s %s" % [EventSheetL10n.translate("within"), String.num(block.within, 2).rstrip("0").rstrip(".")]
+	return note
+
+
+## One condition/action child row per step of a Moment block: the timing word reads as the WHEN,
+## the step's actions as the WHAT. Rows carry the step itself, so a double-click edits that step.
+func _build_moment_step_rows(block: MomentBlockRow, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	for step: MomentStepRow in block.live_steps():
+		var texts: PackedStringArray = PackedStringArray()
+		for action_item: Variant in step.actions:
+			if action_item is ACEAction:
+				texts.append(_format_action_descriptor(action_item as ACEAction))
+			elif action_item is RawCodeRow:
+				texts.append(_friendly_statement_text((action_item as RawCodeRow).code))
+			elif action_item is CommentRow:
+				texts.append("# " + (action_item as CommentRow).text)
+		if texts.is_empty():
+			texts.append(" ")
+		var step_row: EventRowData = _build_condition_action_row(step.reading(), texts, indent, step)
+		step_row.language_block = true
+		rows.append(step_row)
+	return rows
+
+
 ## A Custom Block API row: kind badge + the kind's one-line summary, both owned by the
 ## registered EventSheetBlockKind. A block whose kind is unregistered (its pack was removed)
 ## renders with a muted generic badge so the sheet stays readable; its emitted GDScript is

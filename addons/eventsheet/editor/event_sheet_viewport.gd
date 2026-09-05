@@ -2699,6 +2699,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		row_data = _build_signal_row(entry as SignalRow, indent)
 	elif entry is CustomBlockRow:
 		row_data = _row_builder._build_custom_block_row(entry as CustomBlockRow, indent)
+	elif entry is MomentBlockRow:
+		row_data = _row_builder._build_moment_block_row(entry as MomentBlockRow, indent)
 	elif entry is CollectionDeclRow:
 		row_data = _row_builder._build_collection_decl_row(entry as CollectionDeclRow, indent)
 	elif entry is FunctionAnchorRow:

@@ -1926,6 +1926,62 @@ static func timeline(steps: Array = []) -> TimelineRow:
 	return row
 
 
+## Builds a MOMENT BLOCK - a beat of feedback written as rows, compiling to one coroutine on the
+## host (`func moment_<name>(strength, from)`). `steps` is one entry per step, each
+## `[timing, seconds, code...]`: the timing word ("at", "then", "hold", "loop_back"), its number
+## (a Loop Back reads it as the count of extra passes), and then one or more statements.
+##
+## The whole schedule is worked out at compile time from the words, so this API sets the WORDS and
+## never the waits. A step that declares how long it lasts hands a fourth kind of entry -
+## `[timing, seconds, lasts, [code...]]` - which is what a Hold below it waits for.
+##
+## Returns null on a malformed entry rather than a half-built block, exactly as `timeline()` does.
+static func moment_block(moment_name: String, steps: Array = []) -> MomentBlockRow:
+	var block: MomentBlockRow = MomentBlockRow.new()
+	block.moment_name = moment_name.strip_edges()
+	if block.function_name().is_empty():
+		return null
+	for entry: Variant in steps:
+		if not (entry is Array) or (entry as Array).size() < 2:
+			return null
+		var parts: Array = entry as Array
+		var step: MomentStepRow = MomentStepRow.new()
+		step.timing = str(parts[0])
+		if step.timing != step.timing_word():
+			return null
+		var number: float = float(parts[1])
+		if step.timing == MomentStepRow.TIMING_LOOP_BACK:
+			step.loop_count = maxi(int(number), 1)
+		else:
+			step.seconds = maxf(number, 0.0)
+		var code_from: int = 2
+		# The four-part form: a duration, then the statements as one nested list.
+		if parts.size() == 4 and parts[3] is Array:
+			step.lasts = maxf(float(parts[2]), 0.0)
+			for line: Variant in (parts[3] as Array):
+				if not _append_moment_statement(step, str(line)):
+					return null
+			block.steps.append(step)
+			continue
+		for index: int in range(code_from, parts.size()):
+			if not _append_moment_statement(step, str(parts[index])):
+				return null
+		block.steps.append(step)
+	return block
+
+
+## One statement onto a moment step, refusing an empty line so a malformed call cannot build a
+## block whose emitted body has a blank in it.
+static func _append_moment_statement(step: MomentStepRow, line: String) -> bool:
+	var code_line: String = line.strip_edges()
+	if code_line.is_empty():
+		return false
+	var action: RawCodeRow = RawCodeRow.new()
+	action.code = code_line
+	step.actions.append(action)
+	return true
+
+
 static func collection_decl(variable_name: String, entries: Array, dictionary: bool = true) -> CollectionDeclRow:
 	var name: String = variable_name.strip_edges()
 	var name_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
