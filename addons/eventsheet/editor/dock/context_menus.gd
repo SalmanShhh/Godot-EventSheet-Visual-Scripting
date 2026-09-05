@@ -40,6 +40,13 @@ const ROW_MENU_EXPLAIN_READING := 9730
 ## range - and both open a form rather than acting on the click, because each one names a file.
 const ROW_MENU_MOMENT_SAVE_FILE := 9740
 const ROW_MENU_MOMENT_OPEN_FILE := 9750
+
+## And the three gestures that AUTHOR one: start a moment, add a step to it, take a step off
+## again. Each lands through the dock's undo funnel, so a moment is built and unbuilt with the
+## same Ctrl+Z as everything else in the sheet.
+const ROW_MENU_MOMENT_NEW := 9760
+const ROW_MENU_MOMENT_ADD_STEP := 9770
+const ROW_MENU_MOMENT_REMOVE_STEP := 9780
 const FIND_ALL_REFERENCES_TOOLTIP := "Every place this name is used, across the open sheets and the project - grouped by sheet, with event numbers. F3 / Shift+F3 step through them."
 
 var _dock: Control = null
@@ -301,9 +308,43 @@ func build_all() -> void:
 				moment_door().open_save(_dock._context_row.source_resource as MomentBlockRow \
 					if _dock._context_row != null else null)
 			elif id == ROW_MENU_MOMENT_OPEN_FILE:
-				moment_door().open_read())
+				moment_door().open_read()
+			elif id == ROW_MENU_MOMENT_NEW:
+				moment_door().open_new()
+			elif id == ROW_MENU_MOMENT_ADD_STEP:
+				moment_door().open_step(_context_moment_block())
+			elif id == ROW_MENU_MOMENT_REMOVE_STEP:
+				_remove_context_moment_step())
 	_dock._empty_space_context_menu.add_separator()
+	_dock._empty_space_context_menu.add_item("New Moment…", ROW_MENU_MOMENT_NEW)
 	_dock._empty_space_context_menu.add_item("Open Moment File As Block…", ROW_MENU_MOMENT_OPEN_FILE)
+
+
+## The Moment block the click is about: the block itself when its head was clicked, or the block
+## that holds the clicked step. Walked from the live sheet rather than remembered, because every
+## sheet edit replaces the resources with snapshot duplicates.
+func _context_moment_block() -> MomentBlockRow:
+	if _dock._context_row == null:
+		return null
+	var block: MomentBlockRow = _dock._context_row.source_resource as MomentBlockRow
+	if block != null:
+		return block
+	return EventSheetMomentFile.owner_of(_dock._current_sheet,
+		_dock._context_row.source_resource as MomentStepRow)
+
+
+## Takes the clicked step off the block that holds it, through the undo funnel.
+func _remove_context_moment_step() -> void:
+	var step: MomentStepRow = _dock._context_row.source_resource as MomentStepRow \
+		if _dock._context_row != null else null
+	var block: MomentBlockRow = EventSheetMomentFile.owner_of(_dock._current_sheet, step)
+	if block == null:
+		_dock._set_status("Right-click a step of a Moment block to take it off.", true)
+		return
+	var gone: bool = _dock._perform_undoable_sheet_edit("Delete Moment Step",
+		func() -> bool:
+			return EventSheetMomentFileDoor.step_removed(block, step))
+	_dock._set_status("Step deleted." if gone else "That step is no longer in the sheet.", not gone)
 
 
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
@@ -365,10 +406,19 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# row above is. The two doors between its rows and a moment FILE are the whole extra vocabulary a
 	# moment has; everything else it does (add a step, reorder, disable) is the sheet's own gestures.
 	var moment_block: MomentBlockRow = row_data.source_resource as MomentBlockRow if row_data != null else null
+	var moment_step: MomentStepRow = row_data.source_resource as MomentStepRow if row_data != null else null
 	if moment_block != null:
+		menu.add_item("Add Step…", ROW_MENU_MOMENT_ADD_STEP)
 		menu.add_item("Save Moment As File…", ROW_MENU_MOMENT_SAVE_FILE)
 		menu.add_item("Open Moment File As Block…", ROW_MENU_MOMENT_OPEN_FILE)
 		menu.add_separator()
+	elif moment_step != null:
+		# A step row: the same Add Step (it lands on the block this step belongs to) and the
+		# one verb a step has of its own. Its actions are edited with the action menu, like
+		# any other row's, so nothing is repeated here.
+		menu.add_item("Add Step…", ROW_MENU_MOMENT_ADD_STEP)
+		menu.add_item("Delete Step", ROW_MENU_MOMENT_REMOVE_STEP)
+		return
 	var verb_function: EventFunction = row_data.source_resource as EventFunction if row_data != null else null
 	var data_class_raw: RawCodeRow = _data_class_row_target(row_data)
 	if verb_function != null:

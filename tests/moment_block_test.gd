@@ -58,6 +58,13 @@ const FILE_BLOCK_TEXT: String = """func moment_Boss_Hit(strength: float = 1.0, f
 	$JuiceBehavior.moment_step("shake", 0.45, "", 0.0, strength)
 	$JuiceBehavior.moment_step("hitstop", 0.0, "", 0.06, strength)"""
 
+## What a moment built by the three authoring gestures compiles to, once its middle step has
+## been taken off again: one shake, and the whole stretch three more times. Nothing in the stretch
+## waits, so the four passes happen in the one frame - which is what those rows say.
+const AUTHORED_TEXT: String = """func moment_Boss_Hit(strength: float = 1.0, from: Node = null) -> void:
+	for _moment_loop: int in 4:
+		shake(0.4 * strength)"""
+
 ## Where the round trip through a real file happens. Taken away again at the end of the section.
 const FILE_PATH: String = "user://moment_block_test_boss_hit.tres"
 
@@ -75,6 +82,7 @@ static func run() -> bool:
 	passed = _pin_the_range() and passed
 	passed = _pin_the_file_bridge() and passed
 	passed = _pin_the_two_homes() and passed
+	passed = _pin_the_authoring() and passed
 	return passed
 
 
@@ -238,6 +246,48 @@ static func _pin_the_two_homes() -> bool:
 	rows.append(["and it plays the step at the strength it was given", String.num(juice.trauma, 4), "0.2"])
 	host.free()
 	juice.free()
+	return SUPPORT.pins(PREFIX, rows)
+
+
+## AUTHORING A MOMENT, which is three gestures and no widget: start one, add a step, take a step
+## off. Each is a value here rather than a click, because the door hands the same functions to the
+## dock's undo funnel that this pins.
+static func _pin_the_authoring() -> bool:
+	var block: MomentBlockRow = MomentBlockRow.new()
+	block.moment_name = EventSheetMomentFile.identifier_of(" Boss Hit ")
+	EventSheetMomentFileDoor.step_added(block, MomentStepRow.TIMING_AT, 0.0, "shake(0.4 * strength)")
+	EventSheetMomentFileDoor.step_added(block, MomentStepRow.TIMING_THEN, 0.2, "play_sound()")
+	EventSheetMomentFileDoor.step_added(block, MomentStepRow.TIMING_LOOP_BACK, 3.0, "")
+	var readings: Array = []
+	for step: MomentStepRow in block.live_steps():
+		readings.append(step.reading())
+	var sheet: EventSheetResource = _sheet_with(block)
+	var second: MomentStepRow = block.live_steps()[1]
+	var stray: MomentStepRow = MomentStepRow.new()
+	var rows: Array = [
+		["a name typed with spaces becomes one a function can carry", block.moment_name, "Boss_Hit"],
+		["a name that is nothing but punctuation is refused rather than mangled",
+			EventSheetMomentFile.identifier_of("!!!"), ""],
+		["a digit cannot start one, and does not have to be dropped from the middle",
+			EventSheetMomentFile.identifier_of("2nd hit"), "nd_hit"],
+		["the three steps read in the words the sheet draws", readings,
+			["At 0 s", "Then 0.2 s", "Loop back 3 x"]],
+		["a step knows which block it belongs to",
+			EventSheetMomentFile.owner_of(sheet, second) == block, true],
+		["and a step no block holds belongs to none",
+			EventSheetMomentFile.owner_of(sheet, stray) == null, true],
+		["taking a step nobody holds off changes nothing",
+			EventSheetMomentFileDoor.step_removed(block, stray), false]
+	]
+	EventSheetMomentFileDoor.step_removed(block, second)
+	var left: Array = []
+	for step: MomentStepRow in block.live_steps():
+		left.append(step.reading())
+	rows.append(["and taking a real one off leaves the rest in order", left,
+		["At 0 s", "Loop back 3 x"]])
+	rows.append(["the moment authored this way compiles like any other",
+		_function_text(SUPPORT.compile_output(sheet, "user://moment_authored_test.gd")),
+		AUTHORED_TEXT])
 	return SUPPORT.pins(PREFIX, rows)
 
 

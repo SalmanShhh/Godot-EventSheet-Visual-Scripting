@@ -210,6 +210,12 @@ the row looks for a moment written as rows on the host first and falls through t
 is none, so a game can keep some of its beats in files and write the rest down in the sheet without
 either row knowing the difference.
 
+**Starting one.** Right-click empty space in the sheet and pick **New Moment…**; the name you give
+it is the name the Moment row plays it by. **Add Step…** on the block head (or on any of its steps)
+asks for the timing word, its number, and the first thing the step does - everything after that is
+the sheet's own gestures: more actions on the row, drag to reorder, **Delete Step** to take one off.
+Every one of them is a single Ctrl+Z.
+
 Right-click the block head for the two doors between the homes:
 
 - **Save Moment As File…** writes the steps out as a `MomentResource`. A file has no timing and

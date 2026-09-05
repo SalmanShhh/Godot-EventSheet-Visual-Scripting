@@ -24,6 +24,15 @@ extends RefCounted
 ## six that ship already live. A suggestion in a field, never a rule - the path is typed.
 const SUGGESTED_DIRECTORY: String = "res://eventsheet_addons/juice/"
 
+## The four timing words a step may carry, and how the form says each one. The stored word is
+## the key: it is the shape a saved sheet holds, and it never changes.
+const TIMING_WORDS: Dictionary = {
+	MomentStepRow.TIMING_AT: "At - this long after the moment began",
+	MomentStepRow.TIMING_THEN: "Then - this long after the step above started",
+	MomentStepRow.TIMING_HOLD: "Hold - when the slowest step above has finished",
+	MomentStepRow.TIMING_LOOP_BACK: "Loop back - run the stretch again, this many more times"
+}
+
 ## The script a moment file's resource is, loaded by path so this editor file never names a class
 ## a project may not have installed.
 const RESOURCE_SCRIPT: String = "res://eventsheet_addons/moment_resource/moment_resource.gd"
@@ -34,6 +43,14 @@ var _path_edit: LineEdit = null
 var _note: Label = null
 var _saving: bool = true
 var _block: MomentBlockRow = null
+## The step form: a timing word, its number, and the one statement the step starts with.
+var _step_dialog: ConfirmationDialog = null
+var _step_timing: OptionButton = null
+var _step_number: LineEdit = null
+var _step_code: LineEdit = null
+## The name form, for a moment that has no rows yet.
+var _name_dialog: ConfirmationDialog = null
+var _name_edit: LineEdit = null
 
 
 func init(dock: Control) -> void:
@@ -70,6 +87,90 @@ func open_read() -> void:
 		+ "means. Give them a Then or a Hold afterwards and the beat is yours.")
 	_dialog.popup_centered()
 	_path_edit.grab_focus()
+
+
+## Opens the form that adds one step to a Moment block.
+func open_step(block: MomentBlockRow) -> void:
+	if block == null:
+		_dock._set_status("Right-click a Moment block to add a step to it.", true)
+		return
+	_block = block
+	if _step_dialog == null:
+		_step_dialog = ConfirmationDialog.new()
+		_step_dialog.title = "Add Moment Step"
+		_step_dialog.ok_button_text = "Add the step"
+		_step_dialog.min_size = Vector2i(420, 0)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		_step_timing = OptionButton.new()
+		for word: String in TIMING_WORDS:
+			_step_timing.add_item(TIMING_WORDS[word])
+		box.add_child(EventSheetPopupUI.form_row("When", _step_timing))
+		_step_number = LineEdit.new()
+		_step_number.placeholder_text = "0.05"
+		box.add_child(EventSheetPopupUI.form_row("Seconds (or the count)", _step_number))
+		_step_code = LineEdit.new()
+		_step_code.placeholder_text = "$JuiceBehavior.moment_step(\"shake\", 0.4, \"\", 0.0, strength)"
+		box.add_child(EventSheetPopupUI.form_row("Do", _step_code))
+		box.add_child(EventSheetPopupUI.hint_label("The step arrives as one row. Give it more "
+			+ "actions, or another step, the way you would anywhere else in the sheet."))
+		_step_dialog.add_child(EventSheetPopupUI.margined(box))
+		_step_dialog.confirmed.connect(_apply_step)
+		_dock.add_child(_step_dialog)
+	_step_dialog.popup_centered()
+	_step_number.grab_focus()
+
+
+## Opens the form that starts a new moment: a name, and nothing else. The steps come after.
+func open_new() -> void:
+	if _name_dialog == null:
+		_name_dialog = ConfirmationDialog.new()
+		_name_dialog.title = "New Moment"
+		_name_dialog.ok_button_text = "Add the block"
+		_name_dialog.min_size = Vector2i(400, 0)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		_name_edit = LineEdit.new()
+		_name_edit.placeholder_text = "impact"
+		box.add_child(EventSheetPopupUI.form_row("Called", _name_edit))
+		box.add_child(EventSheetPopupUI.hint_label("The name the Moment row plays it by, and the "
+			+ "name of the function it compiles to."))
+		_name_dialog.add_child(EventSheetPopupUI.margined(box))
+		_name_dialog.confirmed.connect(_apply_new)
+		_dock.add_child(_name_dialog)
+	_name_dialog.popup_centered()
+	_name_edit.grab_focus()
+
+
+## One step onto a block, with the timing word given. Returns whether the block changed, which is
+## what the undo funnel wants to hear.
+static func step_added(block: MomentBlockRow, timing: String, number: float,
+		code_line: String) -> bool:
+	if block == null:
+		return false
+	var step: MomentStepRow = MomentStepRow.new()
+	step.timing = timing
+	if timing == MomentStepRow.TIMING_LOOP_BACK:
+		step.loop_count = maxi(int(number), 1)
+	else:
+		step.seconds = maxf(number, 0.0)
+	var written: String = code_line.strip_edges()
+	if not written.is_empty():
+		var action: RawCodeRow = RawCodeRow.new()
+		action.code = written
+		step.actions.append(action)
+	block.steps.append(step)
+	return true
+
+
+## One step off a block. False when the block does not hold it, so a stale reference cannot look
+## like a change that happened.
+static func step_removed(block: MomentBlockRow, step: MomentStepRow) -> bool:
+	if block == null or step == null:
+		return false
+	var at: int = block.steps.find(step)
+	if at < 0:
+		return false
+	block.steps.remove_at(at)
+	return true
 
 
 ## Writes one block out as a moment file. Returns {"ok": bool, "said": String} - what the status
@@ -187,3 +288,34 @@ func _apply() -> void:
 			_dock._current_sheet.events.append(block)
 			return true)
 	_dock._set_status(str(read.get("said", "")) if added else "The block could not be added.", not added)
+
+
+## The step form's button: one step, through the undo funnel like every other sheet edit.
+func _apply_step() -> void:
+	var words: Array = TIMING_WORDS.keys()
+	var picked: int = clampi(_step_timing.selected, 0, words.size() - 1)
+	var timing: String = str(words[picked])
+	var typed: String = _step_number.text.strip_edges()
+	var number: float = typed.to_float() if typed.is_valid_float() else 0.0
+	var code_line: String = _step_code.text
+	var block: MomentBlockRow = _block
+	var added: bool = _dock._perform_undoable_sheet_edit("Add Moment Step",
+		func() -> bool:
+			return step_added(block, timing, number, code_line))
+	_dock._set_status("Step added." if added else "The step could not be added.", not added)
+
+
+## The name form's button: an empty moment, ready for its steps.
+func _apply_new() -> void:
+	var block: MomentBlockRow = MomentBlockRow.new()
+	block.moment_name = EventSheetMomentFile.identifier_of(_name_edit.text)
+	if block.function_name().is_empty():
+		_dock._set_status("\"%s\" is not a name a function can carry - letters, digits and underscores." % _name_edit.text, true)
+		return
+	var added: bool = _dock._perform_undoable_sheet_edit("New Moment",
+		func() -> bool:
+			if _dock._current_sheet == null:
+				return false
+			_dock._current_sheet.events.append(block)
+			return true)
+	_dock._set_status("Moment \"%s\" added." % block.moment_name if added else "The moment could not be added.", not added)

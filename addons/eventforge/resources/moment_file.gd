@@ -113,7 +113,7 @@ static func steps_of(block: MomentBlockRow) -> Dictionary:
 static func block_of(moment_name: String, steps: Array,
 		receiver: String = DEFAULT_RECEIVER) -> MomentBlockRow:
 	var block: MomentBlockRow = MomentBlockRow.new()
-	block.moment_name = _identifier(moment_name)
+	block.moment_name = identifier_of(moment_name)
 	for entry: Variant in steps:
 		if not (entry is Dictionary):
 			continue
@@ -123,6 +123,19 @@ static func block_of(moment_name: String, steps: Array,
 		step.actions.append(action)
 		block.steps.append(step)
 	return block
+
+
+## The Moment block in this sheet that holds `step`, or null. Walked rather than remembered,
+## because a sheet edit replaces every resource with a snapshot duplicate and a remembered owner
+## would be the block from before the edit.
+static func owner_of(sheet: EventSheetResource, step: MomentStepRow) -> MomentBlockRow:
+	if sheet == null or step == null:
+		return null
+	for entry: Variant in sheet.events:
+		var block: MomentBlockRow = entry as MomentBlockRow
+		if block != null and block.steps.has(step):
+			return block
+	return null
 
 
 ## The step a block step stands for when its ONE action is a moment step call, else empty.
@@ -138,7 +151,7 @@ static func _only_step_call(step: MomentStepRow) -> Dictionary:
 ## A name as the identifier a coroutine can be called, so a file called "Boss Hit.tres" opens as a
 ## block that compiles. An empty answer is a name the block will refuse, which is what the door
 ## reports.
-static func _identifier(word: String) -> String:
+static func identifier_of(word: String) -> String:
 	var cleaned: String = ""
 	var trimmed: String = word.strip_edges()
 	for index: int in range(trimmed.length()):
