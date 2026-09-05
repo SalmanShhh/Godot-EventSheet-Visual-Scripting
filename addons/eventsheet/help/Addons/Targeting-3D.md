@@ -47,6 +47,8 @@ The pack is small, and six ideas carry all of it.
 
 **Aim help is separate from the lock, and the options screen owns it.** Assisted Aim, Magnetism and Snap On Aim Down Sights never touch the held target. They ask a different question - what is the aim ray nearly pointing at right now - and "nearly" is the aim-assist radius the accessibility rows declare, measured ACROSS the ray. A radius of zero means nothing is ever near enough, so the two expressions hand back exactly what they were given, the snap does nothing, and the whole feature is off. That is the honest off switch, and it is already on the options screen.
 
+**The snap turns the host, it does not tip it.** Only the heading is taken: the host is turned about the world's up axis and keeps the pitch and roll it had, so a body with a target on a ledge above it turns toward the ledge without tilting nose-up. The camera goes on doing the looking up and down, which is what a third-person or first-person rig already has it for. A target straight overhead has no heading at all, so that one is declined outright.
+
 **Snapping refuses a turn that is too big.** Snap On Aim Down Sights takes the widest turn you will allow, in degrees. A target further off than that is left alone entirely, which is what keeps the settle from becoming a yank: the sights come up and the view tightens onto what the player was already nearly on, never onto something behind them.
 
 ---
@@ -96,10 +98,10 @@ All ACEs live in the **Targeting 3D** category and act on the `Targeting3DBehavi
 | Action | Parameters | Description |
 |---|---|---|
 | Lock On To Nearest | `group` (StringName), `cone_degrees` (float), `max_range` (float) | Searches a cone around the camera's forward for the closest member of a group inside a range, and holds it. Leave the group empty for the behavior's own Target Group, and write 0 for the cone or the range to use its own defaults. A search that finds nothing leaves the current lock alone. With no camera in the scene the cone falls back to the host's own forward axis. |
-| Lock On To | `node` (Node3D) | Holds one node you name, whatever the cone and the range say. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search. |
+| Lock On To | `node` (Node3D) | Holds one node you name, whatever the cone and the range say - a named lock has no reach at all, so the boss a cutscene points at is held however far off it is. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search. Losing sight of it, and its dying, still end it. |
 | Cycle Target | (none) | Steps to the next candidate the last Lock On To Nearest found, left to right by angle about the world's up axis, wrapping from the rightmost back to the leftmost. Candidates that died since the search are dropped first. With nothing held it takes the leftmost. |
 | Release Lock | (none) | Lets the held target go on purpose. On Target Lost fires with the reason `released`. |
-| Snap On Aim Down Sights | `max_degrees` (float) | Turns the host to face the nearest target the aim is already nearly on. Refuses a turn wider than `max_degrees`, and does nothing at all while the aim-assist radius is zero. |
+| Snap On Aim Down Sights | `max_degrees` (float) | Turns the host to face the nearest target the aim is already nearly on, about the world's up axis only - the pitch and roll it had are kept. Refuses a turn wider than `max_degrees`, and does nothing at all while the aim-assist radius is zero. |
 
 These next actions write to the exported knobs at runtime and are reflected from the `@export` properties.
 
