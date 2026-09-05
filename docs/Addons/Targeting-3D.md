@@ -96,7 +96,7 @@ All ACEs live in the **Targeting 3D** category and act on the `Targeting3DBehavi
 | Action | Parameters | Description |
 |---|---|---|
 | Lock On To Nearest | `group` (StringName), `cone_degrees` (float), `max_range` (float) | Searches a cone around the camera's forward for the closest member of a group inside a range, and holds it. Leave the group empty for the behavior's own Target Group, and write 0 for the cone or the range to use its own defaults. A search that finds nothing leaves the current lock alone. With no camera in the scene the cone falls back to the host's own forward axis. |
-| Lock On To | `node` (Node3D) | Holds one node you name, whatever the cone and the range say. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search. |
+| Lock On To | `node` (Node3D) | Holds one node you name, whatever the cone and the range say - a named lock has no reach at all, so the boss a cutscene points at is held however far off it is. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search. Losing sight of it, and its dying, still end it. |
 | Cycle Target | (none) | Steps to the next candidate the last Lock On To Nearest found, left to right by angle about the world's up axis, wrapping from the rightmost back to the leftmost. Candidates that died since the search are dropped first. With nothing held it takes the leftmost. |
 | Release Lock | (none) | Lets the held target go on purpose. On Target Lost fires with the reason `released`. |
 | Snap On Aim Down Sights | `max_degrees` (float) | Turns the host to face the nearest target the aim is already nearly on. Refuses a turn wider than `max_degrees`, and does nothing at all while the aim-assist radius is zero. |

@@ -30,6 +30,7 @@ static func run() -> bool:
 	all_passed = _test_locking_the_nearest() and all_passed
 	all_passed = _test_cycling_wraps() and all_passed
 	all_passed = _test_how_a_lock_ends() and all_passed
+	all_passed = _test_a_named_lock_ignores_the_range() and all_passed
 	all_passed = _test_the_assist() and all_passed
 	all_passed = _test_what_the_pack_ships() and all_passed
 	if had_radius:
@@ -222,6 +223,42 @@ static func _test_how_a_lock_ends() -> bool:
 			target.free()
 		host.free()
 		lock.free()
+	return all_passed
+
+
+## LOCK ON TO KEEPS WHAT IT IS POINTED AT. The row's promise is "whatever the cone and the range
+## say" - the boss a cutscene points at is routinely farther off than the lock range - and a reach
+## of lock_range dropped it as out_of_range one frame after On Target Locked. What still ends it is
+## everything that is not a distance: the target dying, and a wall coming between.
+static func _test_a_named_lock_ignores_the_range() -> bool:
+	var all_passed: bool = true
+	var stub: GDScript = _stub()
+	if stub == null:
+		return _check("the stubbed pack compiles", false, true)
+	var lock: Node = stub.new()
+	var host: Node2D = Node2D.new()
+	lock.set("host", host)
+	lock.set("lock_range", 400.0)
+	var far_away: Node2D = _at(Vector2(5000.0, 0.0))
+	lock.set("members", [far_away])
+	var lost: Array = []
+	lock.connect("target_lost", func(reason: StringName) -> void: lost.append(String(reason)))
+	lock.lock_on_to(far_away)
+	all_passed = _check("a named lock holds a node past the lock range",
+		lock.is_locked_on(), true) and all_passed
+	lock._process(0.016)
+	all_passed = _check("and the next frame does not take it away",
+		lock.is_locked_on(), true) and all_passed
+	all_passed = _check("nothing was lost", ",".join(PackedStringArray(lost)), "") and all_passed
+	# A wall is not a distance: sight still ends a named lock.
+	lock.set("require_line_of_sight", true)
+	lock.set("clear_view", false)
+	lock._process(0.016)
+	all_passed = _check("a wall still ends it",
+		",".join(PackedStringArray(lost)), "blocked") and all_passed
+	far_away.free()
+	host.free()
+	lock.free()
 	return all_passed
 
 

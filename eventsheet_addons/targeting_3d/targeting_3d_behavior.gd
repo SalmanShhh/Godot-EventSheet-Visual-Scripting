@@ -52,7 +52,8 @@ var _ring: Array[Node3D] = []
 # and the death would park the loss check silently instead of saying so.
 var _holding: bool = false
 # The reach the current lock was taken at, so a lock made with a row's own range is lost at that
-# range rather than at the Inspector's.
+# range rather than at the Inspector's. A lock made by NAMING a node is held at INF, because that
+# row's whole promise is that it keeps what it was pointed at whatever the range says.
 var _held_reach: float = 40.0
 ## Where a node stands, and which way it is turned. A node that has not entered the tree yet has
 ## no global transform to read - Godot answers the origin and complains - so its own transform is
@@ -187,7 +188,11 @@ func lock_on_to(node: Node3D) -> void:
 		return
 	var only: Array[Node3D] = [node]
 	_ring = only
-	_held_reach = lock_range
+	# NO REACH AT ALL. The row says it holds the node you name whatever the cone and the range say,
+	# and a boss the cutscene points at is routinely farther off than the lock range - so a reach of
+	# lock_range dropped it as out_of_range on the very next frame, one frame after On Target Locked.
+	# The target dying and a wall coming between still end it; the distance does not.
+	_held_reach = INF
 	_take(node)
 
 ## @ace_action
