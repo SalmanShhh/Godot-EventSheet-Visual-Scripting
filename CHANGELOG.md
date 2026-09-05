@@ -4712,7 +4712,7 @@ against Godot 4.7 before it was repaired.
   the answer function that opens from its header alone, and the multi-line loops that stay verbatim
   blocks with the adopt door - said out loud rather than left to be discovered.
 - **And the three pages caught up with the sweep that ran over them.** The Doctor's Files
-  section is six checks on the page, not four, and the export-trap bullet names the folder-handle
+  section is seven checks on the page, not four, and the export-trap bullet names the folder-handle
   spelling; both emitted fences are re-copied off the shipped templates, which grew brackets since
   the page was written, with the reason on the row rather than the brackets left as decoration;
   the six spellings that count as the `load()` door are named; and the watcher chapter gains what
@@ -4742,10 +4742,10 @@ against Godot 4.7 before it was repaired.
   page was open: the coming-from-another-editor map said 112 bundled packs and the docs-house page
   said 95 guides of 114 packs, where the tree holds **136 packs, 106 guide files, and 30 packs
   documented inside a partner's guide**.
-- **The Doctor's Files section is six checks wherever it is named.** The saving-and-loading page still
-  said three, which was true when the section held three and is now the wrong half of it: it says six,
-  names the three that carry a one-click fix, and points at the Files guide for the two trust checks
-  and the watch note that do not.
+- **The Doctor's Files section is seven checks wherever it is named.** The saving-and-loading page still
+  said three, which was true when the section held three and is now the wrong half of it: it says
+  seven, names the three that carry a one-click fix, and points at the Files guide for the three
+  trust checks and the watch note that do not.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### The files pass, read back adversarially
@@ -5064,6 +5064,14 @@ A boundary review read the three lift families, the guards and the pages against
   nothing said so, which is how a later guard written for `..` alone would have quietly lost them.
   Four pins now stand where one did: the stream name, the colon further in, a step out spelled with
   backslashes, and a leading backslash.
+- **The seventh Files check reached the pages it was missing from.** The section registers seven
+  checks and three places said six - the Files guide's own list, which had no bullet for the `.gd`,
+  `.tres` or `.res` from outside handed to `load()` at all, its sentence about what the boundary
+  checks can see, which counted two of the three, and the saving-and-loading page's pointer at both.
+  A reader following the page's arithmetic would have concluded the check they were looking at did
+  not exist. All of them say seven, the missing bullet is written, and it says the thing the check's
+  own finding says: it is the one boundary check with no fix button, because the door offered for a
+  scene reads a scene table and would be a fix that cannot work here.
 
 
 ### Every call on a known class is a row

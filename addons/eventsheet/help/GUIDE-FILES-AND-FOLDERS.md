@@ -59,7 +59,7 @@ expression, something built with `%` - says so rather than guessing.
 
 ### And the Doctor says it about the whole project
 
-**Tools > Project Doctor** carries a **Files** section with six checks, run over your project's own
+**Tools > Project Doctor** carries a **Files** section with seven checks, run over your project's own
 scripts as well as its sheets:
 
 - **A write aimed at `res://`** - the export trap, reported as an error with a one-click fix that
@@ -74,6 +74,14 @@ scripts as well as its sheets:
   down.
 - **A scene built from a file the game did not ship with** - the same boundary asked about `.tscn`
   files, with **Scene File Is Data-Only** as its one-click answer.
+- **A `.gd`, `.tres` or `.res` from outside the game handed to `load()`** - the same boundary again,
+  about the files that are not scenes. A `.gd` IS code; a `.tres` or a `.res` is a table that can
+  name a script; a `.gdextension` is a native library; and a `.pck` or a `.zip` mounted with
+  `ProjectSettings.load_resource_pack` replaces the game's own files with the ones inside it. This
+  is the one boundary check with no fix button, on purpose: **Scene File Is Data-Only** reads a
+  scene table and answers false for anything else, so offering it here would be offering a fix that
+  cannot work. The finding says what to do in words instead - read the file as data, or say out
+  loud that this game runs code its players wrote.
 - **A folder watch nothing ever stops** - a note, not a warning, and the one check here with no fix
   button at all. It has a section of its own in the Folder Watcher guide.
 
@@ -85,7 +93,7 @@ check.** The first three read the path literal a call was actually handed. `File
 name, FileAccess.WRITE)` is caught, because the literal is there in the line; the same write with
 `var base = "res://"` on the line above it is not, because by then the path is a name. A path held in
 a variable or built out of pieces is one they have nothing to say about, and each finding says so:
-a quiet report is not a proof that a project is clean. The two boundary checks below reach further -
+a quiet report is not a proof that a project is clean. The three boundary checks below reach further -
 they follow names within one file - and the watch note reaches less far than either, because a watch
 started in one script and stopped in another is a pair it has no way to see. Every one of them states
 its own limits in the finding rather than leaving silence to be read as an all-clear.
