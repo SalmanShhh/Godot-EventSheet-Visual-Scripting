@@ -382,7 +382,10 @@ static func _indented(ace_id: String, uid: String) -> String:
 ## node in one section, no store at all in the next - has to say so, exactly as it clears the
 ## shared remembered file between sections.
 static func _forget_cache() -> void:
-	Engine.remove_meta(&"__ef_seen_in_save")
+	# Guarded, because removing a meta that is not there is an engine error rather than a no-op,
+	# and these calls run in pairs around sections that may not have touched the cache at all.
+	if Engine.has_meta(&"__ef_seen_in_save"):
+		Engine.remove_meta(&"__ef_seen_in_save")
 
 
 ## The fallback's own answer for one key, cleared - so a run of this test never depends on what an
