@@ -166,6 +166,13 @@ all seven rather than seven identical entries.
 | **Set Arc** | from_degrees (float), to_degrees (float) | A Disc's sweep. 0 to 360 is the whole disc; less is the pie or arc a cooldown, a vision cone or a health ring is drawn as. |
 | **Apply Shape Style** | style_file (ShapeStyle) | Puts a style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back. |
 | **Apply Shape Style To Group** | group_name (String), style_file (ShapeStyle) | The same, for every shape in a group at once - the whole HUD re-skinned from one file. |
+| **Tether Between** | first (Node2D), second (Node2D) | Runs the shape between two nodes and keeps it there: its start follows the first, its end follows the second. It redraws only on the frames one of them actually moved, so a leash that is standing still costs nothing. |
+| **Untether** | none | Lets go of both. The shape stays exactly where the last frame left it, and its tick parks. |
+| **Fill Ring To** | fraction (float) | Sweeps a Disc's arc to a fraction of the way round - 0 empty, 1 whole. The cooldown, the stamina wheel, the loading circle, in one row per frame. |
+| **Follow Cursor** | snap_to (float) | Puts the shape under the pointer every frame, snapped to a grid of that many pixels (0 for no snap). The placement footprint, the brush outline, the target marker. |
+| **Stop Following** | none | Stops it following the pointer. The shape stays where it was left, and the tick parks. |
+| **Fit Around** | node (Node2D), margin (float) | Sizes the shape to what a node covers, plus a margin, and centres it on it. A node with nothing to measure is left alone rather than collapsing the shape to a point. |
+| **Show For** | seconds (float) | Shows the shape and hides it again when the seconds are up - the hit marker, the ping, the flash that says "placed". |
 
 Each shape also publishes the one or two fields that are its own sentence, as ordinary
 property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), **Closed**
@@ -179,6 +186,8 @@ property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), *
 | **Shape Is Visible** | none | The shape is drawn at all: visible in the tree, and not fully transparent. |
 | **Point Is Inside Shape** | point (Vector2) | A world point lands inside the shape: inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it. |
 | **Shape Style Is** | style_file (ShapeStyle) | The shape is wearing that exact style file. The test a row makes before re-skinning, and the one an exception is written against. |
+| **Shape Is Tethered** | none | The shape is running between two nodes that both still exist. |
+| **Ring Is Full** | none | A Disc's arc goes the whole way round - the cooldown that has finished, the wheel that is charged. |
 
 ### Expressions
 
@@ -186,6 +195,7 @@ property rows: **End Point** (Line), **Inner Radius** (Disc), **Size** (Rect), *
 |---|---|---|
 | **Shape Length** | float | How long the outline is, in pixels. The length a dash pattern is fitted into. |
 | **Shape Area** | float | How much area the shape covers, in square pixels. A shape that is only a line covers none. |
+| **Point Along Shape At** | Vector2 | The point a fraction of the way along the outline, in the shape's own coordinates - 0 the start, 0.5 the middle, 1 the end. Where to put a marker on a route, a spark on a wire, a label on a border. |
 
 ### Inspector properties
 
@@ -280,11 +290,14 @@ Create Node ▸ **Line**. Drag the handle. That is a crisp line, no rows at all.
 ### 2. An aim line that follows the cursor
 
 ```
-Is aiming -> AimLine | Set End Point: Player.aim_point - AimLine.global_position
+Is aiming     -> AimLine | Follow Cursor: 0
+Is not aiming -> AimLine | Stop Following
 ```
 
-**Tip:** the end point is in the node's own coordinates, so subtract the node's position when
-you feed it a world point.
+**Tip:** a snap of 0 follows the pointer exactly; a snap of 32 lands it on a 32-pixel grid, which
+is what a placement footprint wants. Following stops the moment Stop Following runs, and the tick
+stops with it. To move only the FAR end instead of the whole shape, write the end point yourself -
+it is in the node's own coordinates, so subtract the node's position from a world point.
 
 ### 3. A cooldown ring
 
@@ -362,8 +375,12 @@ On path found -> RoutePreview | Set Shape Points: Nav.path_points
 Line, thickness in screen units so it holds up at any zoom.
 
 ```
-Every tick -> Tether | Set End Point: Anchor.global_position - Tether.global_position
+On ready -> Leash | Tether Between: Player, Pet
 ```
+
+One row, once - not a row every tick. The shape follows both nodes from then on and skips the
+frames neither of them moved, which is most of them. **Untether** lets go and parks the tick, and
+the line stays exactly where the last frame left it.
 
 ### 11. A hex grid cell that highlights
 
@@ -434,6 +451,42 @@ On start of layout -> HealthArc  | Set Gradient: hud_ramp
 ```
 
 One Gradient resource, three shapes, one place to change the look.
+
+### 19. A stamina wheel that empties as you sprint
+
+Disc, inner radius 18, radius 24, colour mode `angular`.
+
+```
+Is sprinting -> StaminaRing | Fill Ring To: Player.stamina_fraction
+Ring Is Full -> StaminaRing | Set Shape Colour: ready_green
+```
+
+**Fill Ring To** sweeps from the disc's own start angle, so a wheel that starts at the top stays
+starting at the top however far it empties.
+
+### 20. A selection box that fits whatever you picked
+
+Rect, fill off, border on, dashed.
+
+```
+On unit picked -> Selection | Fit Around: picked_unit, 6
+               -> Selection | Show For: 0
+On unit dropped -> Selection | Show For: 0.4
+```
+
+**Fit Around** measures the node's own drawn rectangle when it has one, and otherwise the collision
+shapes under it. **Show For** with a number of seconds shows the shape and hides it again when they
+are up; a zero hides it now.
+
+### 21. A marker that walks along a route
+
+```
+Every tick -> Runner | Set Position: RoutePreview.Point Along Shape At(Runner.progress)
+```
+
+**Point Along Shape At** walks the outline by LENGTH, so a marker at 0.5 is halfway along the path
+rather than halfway through its points - which are not the same thing on a path with a long leg
+and three short ones.
 
 ### Other use cases
 

@@ -239,6 +239,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `drag_right_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
 | `drag_top_margin` | [Let The Target Drift](ace:Core/CameraDriftMargins) | Camera | Vocabulary |
 | `drag_vertical_enabled` | [Follow Tightly](ace:Core/CameraFollowTightly) | Camera | Vocabulary |
+| `draw_arc_shape` | [Draw Arc](ace:Core/DrawArcShape) | Drawing | Vocabulary |
+| `draw_arrow` | [Draw Arrow](ace:Core/DrawArrow) | Drawing | Vocabulary |
+| `draw_cross` | [Draw Cross](ace:Core/DrawCross) | Drawing | Vocabulary |
+| `draw_grid` | [Draw Grid](ace:Core/DrawGrid) | Drawing | Vocabulary |
+| `draw_pie` | [Draw Pie](ace:Core/DrawPie) | Drawing | Vocabulary |
+| `draw_polygon_shape` | [Draw Polygon](ace:Core/DrawPolygonShape) | Drawing | Vocabulary |
+| `draw_polyline_shape` | [Draw Polyline](ace:Core/DrawPolylineShape) | Drawing | Vocabulary |
+| `draw_regular_polygon` | [Draw Regular Polygon](ace:Core/DrawRegularPolygon) | Drawing | Vocabulary |
+| `draw_rounded_rect` | [Draw Rounded Rect](ace:Core/DrawRoundedRect) | Drawing | Vocabulary |
+| `draw_text` | [Draw Text](ace:Core/DrawTextShape) | Drawing | Vocabulary |
+| `draw_texture_in_rect` | [Draw Texture](ace:Core/DrawTextureInRect) | Drawing | Vocabulary |
 | `duplicate` | [Copy Array](ace:Core/ArrayDuplicate) | Variables: Array | Vocabulary |
 | `duration` | [Point Bone At](ace:Core/PointBoneAt3D) | Skeleton | Vocabulary |
 | `ease` | [Ease](ace:Core/EaseValue) | Helpers | Vocabulary |
@@ -749,6 +760,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `playing` | [Is Playing](ace:Core/AudioIsPlaying) | Audio | Vocabulary |
 | `point_count` | [Mirror Path](ace:Core/MirrorPath) | Facing | Vocabulary |
 | `pop_back` | [Pop Back](ace:Core/ArrayPopBack) | Variables: Array | Vocabulary |
+| `pop_draw_style` | [Pop Draw Style](ace:Core/DrawPopStyle) | Drawing | Vocabulary |
 | `pop_front` | [Pop Front](ace:Core/ArrayPopFront) | Variables: Array | Vocabulary |
 | `popup_centered` | [Show Dialog](ace:Core/ShowDialogCentred) | UI | Vocabulary |
 | `position` | [Get Position](ace:Core/GetPosition2D) | General Expressions | Vocabulary |
@@ -772,6 +784,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `projection` | [Switch To Perspective](ace:Core/CameraSwitchToPerspective) | Camera | Vocabulary |
 | `public_visibility` | [Show To Everyone](ace:Core/ShowToEveryone) | Multiplayer | Vocabulary |
 | `push_back` | Push back to | Array | Lists |
+| `push_draw_style` | [Push Draw Style](ace:Core/DrawPushStyle) | Drawing | Vocabulary |
 | `push_error` | [Push Error](ace:Core/PushError) | Debug | Vocabulary |
 | `push_front` | [Push Front](ace:Core/ArrayPushFront) | Variables: Array | Vocabulary |
 | `push_input` | [Send Input To Surface](ace:Core/SendInputToSurface) | World-space UI | Vocabulary |
@@ -823,6 +836,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `replace` | [Replace In Text](ace:Core/TextReplace) | Text | Vocabulary |
 | `request` | [Request](ace:Core/AjaxRequest) | AJAX | Vocabulary |
 | `res` | [For Each Resource In Folder](ace:Core/ForEachResourceInFolder) | Loops | Vocabulary |
+| `reset_draw_style` | [Reset Draw Style](ace:Core/DrawResetStyle) | Drawing | Vocabulary |
 | `reset_smoothing` | [Snap To Target Now](ace:Core/CameraSnapToTarget) | Camera | Vocabulary |
 | `resize` | [Resize Array](ace:Core/ArrayResize) | Variables: Array | Vocabulary |
 | `resource_path` | [Set Exposure](ace:Core/EnvSetExposure) | Environment | Vocabulary |
@@ -899,6 +913,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_default_clear_color` | [Set Clear Color](ace:Core/RenderingSetClearColor) | Rendering | Vocabulary |
 | `set_deferred` | [Enable Collision Shape](ace:Core/EnableCollisionShape) | Collisions | Vocabulary |
 | `set_delay` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `set_draw_style` | [Set Draw Style](ace:Core/DrawSetStyle) | Drawing | Vocabulary |
 | `set_ease` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_focus_neighbor` | [Set Focus Neighbor](ace:Core/SetFocusNeighbor) | UI | Vocabulary |
 | `set_glow_level` | [Set Glow Level](ace:Core/EnvSetGlowLevel) | Environment | Vocabulary |
