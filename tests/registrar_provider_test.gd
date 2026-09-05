@@ -53,7 +53,12 @@ static func run() -> bool:
 	# The per-param description rides the same one-line spec (quoted, so a comma in the prose
 	# cannot split it) - dropping it used to lose the only help text the params dialog shows.
 	ok = _check("comment stub emits one-line params", aim_stub.contains("## @ace_param(mode, hint: expression, desc: \"How to aim, roughly.\")"), true) and ok
-	ok = _check("comment stub emits pipe options", aim_stub.contains("## @ace_param(stance, options: crouch|stand|prone)"), true) and ok
+	# The starting value rides the same line, because a dropdown that names no default of its own
+	# still OPENS on its first word - the stub writes down the word the picker was showing when the
+	# author copied it, rather than leaving the one fact a paste cannot recover to be re-derived.
+	ok = _check("comment stub emits pipe options",
+		aim_stub.contains("## @ace_param(stance, options: crouch|stand|prone, default: crouch)"),
+		true) and ok
 
 	comment_sample.free()
 	registrar_sample.free()
