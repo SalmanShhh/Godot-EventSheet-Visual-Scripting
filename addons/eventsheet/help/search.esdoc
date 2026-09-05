@@ -8087,6 +8087,196 @@
 "slug": "use-cases",
 "text": "Use cases"
 }, {
+"slug": "1-lock-on-with-a-button-and-let-go-by-itself",
+"text": "1. Lock on with a button, and let go by itself"
+}, {
+"slug": "2-a-reticle-that-sits-on-the-held-enemy",
+"text": "2. A reticle that sits on the held enemy"
+}, {
+"slug": "3-cycle-through-the-crowd-with-a-shoulder-button",
+"text": "3. Cycle through the crowd with a shoulder button"
+}, {
+"slug": "4-fire-along-an-assisted-stick",
+"text": "4. Fire along an assisted stick"
+}, {
+"slug": "5-turn-the-assist-off-from-the-options-screen",
+"text": "5. Turn the assist off from the options screen"
+}, {
+"slug": "6-stickier-turning-across-an-enemy",
+"text": "6. Stickier turning across an enemy"
+}, {
+"slug": "7-a-homing-bullet-that-follows-the-held-node",
+"text": "7. A homing bullet that follows the held node"
+}, {
+"slug": "8-a-strafe-camera-while-a-lock-is-held",
+"text": "8. A strafe camera while a lock is held"
+}, {
+"slug": "9-break-the-lock-behind-cover",
+"text": "9. Break the lock behind cover"
+}, {
+"slug": "10-react-differently-to-each-of-the-four-endings",
+"text": "10. React differently to each of the four endings"
+}, {
+"slug": "11-a-boss-the-cutscene-forces-you-to-look-at",
+"text": "11. A boss the cutscene forces you to look at"
+}, {
+"slug": "12-a-turret-with-eyes-all-round",
+"text": "12. A turret with eyes all round"
+}, {
+"slug": "13-only-swing-when-the-enemy-is-close-enough",
+"text": "13. Only swing when the enemy is close enough"
+}, {
+"slug": "14-a-melee-lock-that-uses-a-wide-short-cone",
+"text": "14. A melee lock that uses a wide, short cone"
+}, {
+"slug": "15-an-easy-mode-that-widens-the-help-rather-than-the-code",
+"text": "15. An easy mode that widens the help rather than the code"
+}, {
+"slug": "16-a-companion-that-holds-the-nearest-thing-it-can-reach",
+"text": "16. A companion that holds the nearest thing it can reach"
+}, {
+"slug": "other-use-cases",
+"text": "Other use cases"
+}, {
+"slug": "tips-and-common-mistakes",
+"text": "Tips and common mistakes"
+}],
+"id": "Addons/Targeting",
+"title": "Targeting - Lock On, Cycle, And Aim Help In 2D",
+"words": " 0 05 1 10 100 11 110 12 120 13 14 140 15 16 2 200 25 2d 3 30 350 360 4 40 400 5 6 60 7 8 9 90 900 a able about accessibility accidentally accounts ace aces across act action actions acts actual actually add adds after against agree ahead aim aim_assist aim_stick aimer aiming_at_locked aims alive all alone along alongside already always amount an and angle animal animation announces another answers any anything anywhere apart are arena around as ask asks assist assist_strength assisted at attach attached attaching attack attention auto aware away back band base_turn_rate be beams beat because becomes before behavior behaviour behaviours behind being bend bends bent beside between big bitmask block blocked blocker blocker_mask body bool boost boss both brackets branch break breaks bullet bullets button by call calls came camera cameras can candidate candidates canvaslayer car carries carry cars case cases casting casts category centre centred chains change changed changes chasing cheap check child children circle cleans clear close closer closes closest coarse code collider colour combat comes common companion companions compare complete concepts condition conditions cone cone_degrees contents controller controls conversation conversion core corpse corridor cost costs counts cover covers crate creep crosses crossing crowd current cutscene cycle cycles cycling damage dead declare decreases default defaults degrees deliberate description dialogue dictionary died dies differ different differently difficulty direction distance distant do dock does door doors down drag dragged drags draw drives drop dropped dt ducks each easy else empty enabled endings ends enemies enemy enough entries entry escaped even eventsheets ever every everything exactly example expecting export exported expression expressions eyes face facing factor fade fades false fan far feature feeds field finally find finds fire firefight fires first five flag flash float floating focus follows for force forces found four frame framed frames free freed from front full game gate genuinely get_node_or_null ghost give given gives go godot grabs grounds group groups guard gun had half hand hands happens hard has have held help helps here hide hides hold holding holds homing homing_target honest honestly host hostile hostiles hovering how hud id ideas idle if in included increases inf input insert inserts inside inspector instance instant instead int interaction interesting into is it its itself just keep keeps kept keystroke knobs knows land lands lane last layer layers leave leaves left leftmost length let lets line lingers list lists live lives living load lock lock_cone_degrees lock_on lock_range lockable locked locking locks logic look lookups loop loss lost magnetised magnetism magnetism_slowdown makes mask masked max_range mean means meant measured measures melee melee_swing member misses missile mistakes mode modes moment move moves much multiplies must name named nameplate nameplates names narrow narrows near nearest nearly need needs never new next next_target no nobody node node2d none not nothing now null number numbers obviously of off on once one ones only open opened opens option options or order ordered other otherwise out out_of_range outright over override own owns pack parameter parameters parent parks pass passed past pay per pet photo photography physics pick pickups pixel pixels place placed placement plainly play player players pointing points poll polled polling position positions press pressed previews probably profile profiles promise prompt prompts properties property prove pulls purpose put question racing radius raise range rate rather ray reach reaches react read reading reads ready real realistic reason reasons reference reflected registered release released remember remembers require require_line_of_sight requiring res rest restores retargeting reticle reticles returns right rightmost ring rival robust rotate rotated round row rows rubber run running runtime s same saved say says scanning scene score screen scripted scroll search searched searches second seconds section sees select selected selection self separate set sets setting settings settles setup sheet shines shooter shooters shooting short shot shots should shoulder show side sight signal simply since sits sixty size slider sliding slipstream slow slowdown slowed slowing slows small so soft something spawn spend spot standard starts stays steadier steady step steps stick stickier still stops strafe straight streams strength stringname subject subjects subtract subtracts survive swaps swing switch swivel tab table take taken takes talk target target_group targeting targetingbehavior tells than that the their them then there therefore these they thing things this those thread through tick timer tips to token tolerates tools top touch touching toward tower tree trigger triggers true tscn tune tuning turn turn_rate turning turns turret turrets tutorials tween twin two type unchanged under unhelped unlocked until up upgrades use used uses value values vector2 view villagers walked walks wall walls wanders want wants was wasted ways were what whatever when where whether which whiff while whole why wide widens width will with without word words world wrapping wraps write x you young your zero zoom "
+}, {
+"headings": [{
+"slug": "table-of-contents",
+"text": "Table of Contents"
+}, {
+"slug": "where-this-pack-shines",
+"text": "Where this pack shines"
+}, {
+"slug": "core-concepts",
+"text": "Core concepts"
+}, {
+"slug": "setup",
+"text": "Setup"
+}, {
+"slug": "ace-reference",
+"text": "ACE reference"
+}, {
+"slug": "actions",
+"text": "Actions"
+}, {
+"slug": "conditions",
+"text": "Conditions"
+}, {
+"slug": "expressions",
+"text": "Expressions"
+}, {
+"slug": "triggers",
+"text": "Triggers"
+}, {
+"slug": "inspector-properties",
+"text": "Inspector properties"
+}, {
+"slug": "reading-it-from-expressions---the-self-section",
+"text": "Reading it from expressions - the Self section"
+}, {
+"slug": "use-cases",
+"text": "Use cases"
+}, {
+"slug": "1-lock-on-with-a-button-and-let-go-by-itself",
+"text": "1. Lock on with a button, and let go by itself"
+}, {
+"slug": "2-a-reticle-that-sits-on-the-held-enemy",
+"text": "2. A reticle that sits on the held enemy"
+}, {
+"slug": "3-cycle-through-the-crowd-with-a-shoulder-button",
+"text": "3. Cycle through the crowd with a shoulder button"
+}, {
+"slug": "4-settle-the-view-when-the-sights-come-up",
+"text": "4. Settle the view when the sights come up"
+}, {
+"slug": "5-fire-along-an-assisted-stick",
+"text": "5. Fire along an assisted stick"
+}, {
+"slug": "6-turn-the-assist-off-from-the-options-screen",
+"text": "6. Turn the assist off from the options screen"
+}, {
+"slug": "7-stickier-turning-across-an-enemy",
+"text": "7. Stickier turning across an enemy"
+}, {
+"slug": "8-a-homing-rocket-that-follows-the-held-node",
+"text": "8. A homing rocket that follows the held node"
+}, {
+"slug": "9-an-orbit-camera-while-a-lock-is-held",
+"text": "9. An orbit camera while a lock is held"
+}, {
+"slug": "10-break-the-lock-behind-cover",
+"text": "10. Break the lock behind cover"
+}, {
+"slug": "11-react-differently-to-each-of-the-four-endings",
+"text": "11. React differently to each of the four endings"
+}, {
+"slug": "12-a-boss-the-cutscene-forces-you-to-look-at",
+"text": "12. A boss the cutscene forces you to look at"
+}, {
+"slug": "13-a-turret-with-no-camera-to-ask",
+"text": "13. A turret with no camera to ask"
+}, {
+"slug": "14-only-swing-when-the-enemy-is-close-enough",
+"text": "14. Only swing when the enemy is close enough"
+}, {
+"slug": "15-a-melee-lock-that-uses-a-wide-short-cone",
+"text": "15. A melee lock that uses a wide, short cone"
+}, {
+"slug": "16-an-easy-mode-that-widens-the-help-rather-than-the-code",
+"text": "16. An easy mode that widens the help rather than the code"
+}, {
+"slug": "other-use-cases",
+"text": "Other use cases"
+}, {
+"slug": "tips-and-common-mistakes",
+"text": "Tips and common mistakes"
+}],
+"id": "Addons/Targeting-3D",
+"title": "Targeting 3D - Lock On, Cycle, And Aim Help In 3D",
+"words": " 0 05 1 10 100 11 12 120 13 14 15 16 160 2 25 2d 3 30 35 360 3d 4 40 5 55 6 60 7 8 9 a able about accessibility accidentally ace aces across act action actions actors acts actual actually add adds after against agree aim aim_assist aim_direction aim_down_sights aimer aims alive all allow alone along alongside already amount an anchor and angle animation announces answers any anything anywhere apart are arena around as ask asks assist assist_strength assisted at attach attached attaching attack attention auto aware away axis back barrel base_look_speed be beams beat because becomes becoming before behave behavior behaviour behaviours behind being bend bends bent beside between big bitmask block blocked blocker blocker_mask body bool boss brackets branch break breaks but button by call calls came camera camera3d can candidate candidates canvaslayer carries carry case cases casting casts category centre centres chains change changed changes character chasing cheap check child children cleans clear close closer closes closest coarse cockpit code collider combat come comes common compare complete concepts condition conditions cone cone_degrees contact contents controller controls conversion copied core cost costs counts cover covers creature crosses crossing crowd current cutscene cycle cycling dead declare decreases default defaults degrees deliberate description design dictionary died dies differ difference different differently differs difficulty direction distance distant do dock does dogfight door doors down drag drags draw drive drives drone drones drop dropped dt each easy else empty enabled end endings ends enemies enemy enough enters entirely entries entry escaped even eventsheets ever every everything exactly example expect expecting export exported expression expressions eye face facing factor fade fades failure falls false far feature field finally find finds fire fires first fixed flag flash flight float floating flying focus follow follows for force forces forward found four fov frame framed frames framing free freed from full further game games gate geometry get_node_or_null give given gives go godot grabs grounds group groups guard gun had half hand hands happens hard has have headless held help helps here hide hides hold holding holds homing homing_target honest honestly host hostile hostiles how hud id ideas idle if ignores in included increases indicator inf input insert inserts inside inspector instance instant instead int interaction interesting into is it its itself just keep keeps kept keystroke knobs knows land lands last layer layers lead leave leaves left leftmost length let lets level levers line lingers list lists live lives living load lock lock_cone_degrees lock_on lock_range lockable locked locking locks long look look_speed look_stick looking lookups loop loss lost magnetised magnetism magnetism_slowdown makes map mask masked maths max_degrees max_range mean means meant measured melee melee_swing member menu metres misses missile mistakes mode model modes moment move moves much multiplies must my name named nameplate nameplates names narrow narrows near nearest nearly need needs never new next next_target no nobody node node3d none not nothing now null number numbers obviously of off on once one ones only onto open opened opens operator option options or orbit order ordered other otherwise out out_of_range outright over override own owns pack parameter parameters parent parks parry pass passed past pay per person photo photography physics pick pickups pillar pitch pixel pixels place placed plainly play player pointing poll polled polling position positions prefab press pressed probably profile profiles projectile projectiles projection projects promise prompt prompts properties property prove purpose put question radius raising range rate rather ray reach reaches react read reading reads ready real realistic reason reasons recentre reference reflected refuses registered release released remember remembers replay require require_line_of_sight requiring res rest restores retargeting reticle reticles returns rig right rightmost ring robust rocket rockets room rotate rotation round row rows run running runtime s same saved say says scanner scanning scene score screen scripted search searched searches second seconds section sees select selected selection self separate set sets setting settings settle settles settling setup sheet shines ship shooter shooters shooting short shot should shoulder show side sight sights signal simply since sits six sixty size sized slider sliding slowdown slowed slowing slows small smaller snap snapping so something somewhere space spawn standard starts stays steadier steady step steps stick stickier still stops strafe straight streams strength stringname subject subjects subtract subtracts survey survive swing switch tab table take taken takes target target_group targeting targeting3dbehavior tells test than that the their them then there therefore these they thing things third this those thread three through tick tightens timer tips to token tolerates tone too tool tools touch toward tree trigger triggers true tscn tune tuning turn turn_rate turned turning turns turret turrets tween twin two type unchanged under unhelped unlocked until up upgrades use used uses value values vector2 vector3 very view viewport walked walks wall walls wanders want wants was ways were what whatever when where whether which whiff while whole why wide widens wider widest width will with without word words world wrapping wraps write x yank yanking yanks you your z zero "
+}, {
+"headings": [{
+"slug": "table-of-contents",
+"text": "Table of Contents"
+}, {
+"slug": "where-this-pack-shines",
+"text": "Where this pack shines"
+}, {
+"slug": "core-concepts",
+"text": "Core concepts"
+}, {
+"slug": "setup",
+"text": "Setup"
+}, {
+"slug": "ace-reference",
+"text": "ACE reference"
+}, {
+"slug": "actions",
+"text": "Actions"
+}, {
+"slug": "conditions",
+"text": "Conditions"
+}, {
+"slug": "expressions",
+"text": "Expressions"
+}, {
+"slug": "triggers",
+"text": "Triggers"
+}, {
+"slug": "inspector-properties",
+"text": "Inspector properties"
+}, {
+"slug": "reading-it-from-expressions---the-self-section",
+"text": "Reading it from expressions - the Self section"
+}, {
+"slug": "use-cases",
+"text": "Use cases"
+}, {
 "slug": "1-zero-setup-arrow-key-hero",
 "text": "1. Zero-setup arrow-key hero"
 }, {

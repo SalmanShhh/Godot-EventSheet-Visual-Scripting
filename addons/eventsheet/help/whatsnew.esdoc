@@ -296,6 +296,11 @@ What changed in the build you have installed (v0.17.0), in the words the release
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads \"this project's tilesets go up to -1\".
+- **Tile Has Custom Data no longer points half of itself at another node.** The row names its layer
+  twice - a null guard, and the lookup behind it - and a row whose template is one plain member call
+  is given its \"On node\" field by prefixing the START of the line, so naming another layer retargeted
+  the guard and read the lookup off the sheet's own host. It names its layer in an \"On node\"
+  parameter of its own now, the way every other level-query row does.
 - **The split dialog's reading says the axes the split uses.** It read \"one scene per 1024 x 512
   cell\" off Cell width and Cell HEIGHT while a flat grid - every 2D scene - is cut on width and
   DEPTH, so a reader who typed a height, read the sentence back and pressed Split got chunks of a
@@ -3207,6 +3212,14 @@ These are the places the two disagreed.
   Compare Values row, the guarded read quietly BECAME the file's text instead of a comparison of it.
   Wrong answer, not a parse error, so nothing would ever have said so. All three are bracketed now,
   and the suite runs a guarded read inside a comparison to prove it.
+- **And Sound From File wears the OUTER pair too.** It had brackets, but only around the extension
+  chain: the closing one landed before the guard, so the line it emitted was `(one reader per format)
+  if the file is there else <fallback>` - the very bare ternary the fix beside it was about, on the
+  one row whose value is a conditional even with the fallback slot left blank. Dropped into one side
+  of a **Compare Values** row it read as `<the stream> if the file is there else (null == null)` and
+  answered a STREAM where a comparison was asked for. Both spellings are wrapped now, and the suite
+  puts all four guarded expressions beside a comparison and checks that a comparison is what comes
+  back.
 - **The Doctor's fixes read the vocabulary rather than a list of it.** The table naming each verb's
   path fields was hand-kept, and it had already drifted from the verbs shipped beside it: nine path
   fields - both loaders, both archive verbs, the engine's CSV pair and the line loop - were invisible
