@@ -52,8 +52,6 @@ const SUPPORT := preload("res://tests/support.gd")
 ## carry through the round trip, which is a change to the emitter and both readers together, so it is
 ## written down here rather than smuggled into a pass about something else.
 const KNOWN_FAILING: Dictionary = {
-	"screen_fx.gd/method:add_post_effect": "the reflected `called: String = \"\"` lands inside the template's own quotes",
-	"screen_fx.gd/method:move_post_effect_before": "the reflected `before: String = \"\"` lands inside the template's own quotes",
 	"post_kit_behavior.gd/method:add_post_effect": "the reflected `called: String = \"\"` lands inside the template's own quotes"
 }
 
