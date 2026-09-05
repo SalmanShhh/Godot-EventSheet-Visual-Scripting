@@ -113,7 +113,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 | Toggle Panel | `panel_name` (String) | Flips a named panel's visibility on or off. |
 | Switch Screen | `panel_name` (String) | Shows the named panel and hides its sibling panels - one call flips a whole menu screen. |
 | Show Toast | `text` (String) | Pops a bottom-centre message that fades out after `toast_seconds`. Creates and frees the label for you. |
-| Pop Floating Text As | `text` (String), `style` (String), `at` (Vector2) | Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style `crit` draws the number `crit_text_scale` times bigger. A style the set does not name is drawn white, so a game with no set still gets its numbers. |
+| Pop Floating Text As | `text` (String), `style` (String), `at` (Vector2) | Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style `crit` draws the number `crit_text_scale` times bigger. Point Text Styles at a FloatingTextStyles file and the style also says how big, how far it rises, how hard it shakes and how long it stays. A style nothing names is drawn white and plain, so a game with neither file still gets its numbers. |
 
 ### Conditions
 
@@ -143,6 +143,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 | `toast_seconds` | float | `2.0` | 0.2 - 10 (step 0.1) |
 | `damage_types` | Resource | (none) | a DamageTypeSet, or empty |
 | `crit_text_scale` | float | `1.6` | 1 - 4 (step 0.1) |
+| `text_styles` | Resource | (none) | a FloatingTextStyles, or empty |
 
 ### Inspector properties are ACEs too
 
@@ -189,6 +190,11 @@ holding one row per manner:
 The six lists are read **in step**: the third name's size is the third size. A manner the file has
 never heard of is answered with the plain default rather than an error, so a file half-written while
 you are still deciding still works.
+
+Point the behaviour's **Text Styles** property at your file and Pop Floating Text As draws by it:
+the manner's own size, rise, shake and lifetime, and its colour - unless the manner is one of the
+ones listed in `colour_from_damage_type`, which take the colour of the hit instead. A game that
+names no file gets exactly the numbers it always had.
 
 One starter ships beside the class - `normal`, `crit` and `heal` - and it is a file to edit, rename,
 duplicate or delete. There is no list of manners inside the plugin, because a list of manners is a

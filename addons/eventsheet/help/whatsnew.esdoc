@@ -82,6 +82,81 @@ What changed in the build you have installed (v0.17.0), in the words the release
   blend-tree notes, the nearest-name offer and the words the params dialog puts under a state or a
   blend space - are filled in all **8 bundled locales**.
 
+### Fixed in the music, prompts, text and animation pass
+
+- **The strength dial means the same thing whichever effect the row picked.** Set Text With Effect
+  and Wrap Selection In Effect put one Strength field in front of seven knobs that are not one
+  scale - a wave's height is tens of pixels and a rainbow's frequency is about one - and the field
+  opened at the wave's number. Dropping the row and choosing rainbow or pulse wrote a colour cycling
+  **forty times a second**: a strobe, on every machine where Reduce Flashing is off. The field is now
+  a MULTIPLE of what each effect is normally drawn at, and the table carries that amount per effect,
+  so 1 means \"as this effect is drawn\" in all seven and a dropped row is the effect as the engine
+  draws it. The two rows' emitted lines gained the effect's own number; the accessibility reads are
+  where they were.
+
+- **A comma pause belongs to one line, and a Continue button pressed twice does not skip two.**
+  Pause Reveal At wrote its beat down on the label and the reveal that read it never took it back
+  off, so a pause written for character 12 of one line was held again at character 12 of every line
+  after it - a hesitation nobody wrote, in the middle of a word, for the rest of the conversation.
+  And Skip Reveal answered On Reveal Finished whether or not anything was being typed, so a player
+  ahead of the text advanced two lines with two presses. The reveal spends the pauses it was given,
+  and the whole of the skip is under its own question.
+
+- **A sting over a line of dialogue no longer lifts the duck it landed in.** The hold a stinger sets
+  ended in an unconditional unduck and re-aimed the duck at the sting's own decibels, so Duck 8 dB
+  followed by Stinger 3 dB brought the music UP over the voice and then all the way back to full
+  while the line was still being spoken. A sting now ducks at least as far as what it found and hands
+  the music back to it.
+
+- **A song with an intro plays its intro.** Every Play started the track at its Loop From, which is
+  the one thing that field is not for: the intro was never heard at all, against what the track
+  resource's own tooltip and the guide both promise. The first Play of a song is from its beginning
+  and every Play after it comes in at the loop. **Loop To** is read now as well, so a track that names
+  one goes round between the two rather than leaving the field as decoration.
+
+- **A track that ended stopped being the track that is playing.** Nothing watched the decks, so a
+  stream that does not loop left its name written down for ever: Is Playing said yes, the director
+  never parked its frame, and On Beat fired once more with a negative beat number counted from a
+  position of zero. The deck's own `finished` says so now. **Next Beat At** also answered a beat while
+  nothing was playing, which put a rhythm lane's notes a fraction of a beat away instead of the Lead
+  Seconds it asked for; it answers 0 when the director is idle, which is the lane's cue to use its own
+  lead. And the heard position takes the time since the last mix off the latency - the engine's own
+  recipe - because the playback position steps a mix chunk at a time and a chunk is the difference
+  between a perfect and a good.
+
+- **The press that opens a prompt is not the press that answers it.** A control stays just-pressed for
+  the whole of the frame it went down on, and \"On jump just pressed -> Prompt jump\" is how half of
+  these rows will be written - so the prompt opened, read the press that opened it and graded itself
+  perfect before anything was drawn, while a mash prompt started with one press already counted. The
+  opening frame is skipped, and only that frame. A **Sequence** started while another was running also
+  overwrote it in silence, where a plain prompt has always ended the running one as uncompleted; it
+  ends the same way now, so nothing waits for ever on a trigger that never comes.
+
+- **A frozen frame moves a body nowhere rather than infinitely far.** Apply Root Motion divided the
+  animator's step by a bare frame time, and `Engine.time_scale = 0` is how a game freezes for a hit
+  stop: the division wrote an infinity into velocity, which throws the body out of the level on the
+  next Move And Slide. Both twins now say: no time, no step. **Blend Toward** and **Blend Layer** also
+  made a tween per call and killed none, in two rows whose own description invites an every-tick
+  event; each parks its tween on the tree under the parameter it moves and takes the last one off
+  first.
+
+- **A bone pose in the world's space, and a blend space that says where it lives.** Set Bone Pose
+  Override documented its pose as being in the world's own space and handed it to an engine call that
+  wants the skeleton's - the very trap Bone Position beside it corrects for - so a world transform
+  landed the bone wherever the skeleton's origin happened to be; the row divides the skeleton back
+  out. And a blend space living inside a state machine was offered under its bare name while the row
+  writes the whole path, so the field offered a parameter the tree does not have, accepted in silence
+  by `set()`. A space is named by where it sits, and the row that drops that into its own string is
+  right without changing.
+
+- **The floating text styles file is read by the row it was made for.** FloatingTextStyles shipped,
+  was documented and was pinned, and no row anywhere consulted it: Pop Floating Text As took its
+  colour from the DamageTypeSet and its size from one number in the Inspector, so the sizes, rises,
+  shakes and lifetimes a game wrote into that file were data nothing looked at. The row asks the file
+  whether it names the manner it was given and draws by all five of its answers, with the damage
+  type's colour handed in so a manner that says it takes the colour of the hit still does. A game with
+  no styles file gets exactly the numbers it always had.
+
 ### The clock a pause holds, the first time in a save, and the screen in the gap
 
 - **Cooldowns, countdowns and stopwatches as clocks with names on them: 21 new rows.** A game asks
