@@ -389,6 +389,12 @@ static func build() -> bool:
 	# ── Flash / blink / punches / ghost trail / tickers - shared state + helpers ──────
 	var extras_block: RawCodeRow = RawCodeRow.new()
 	extras_block.code = "\n".join(PackedStringArray([
+		"## The tweens a MOMENT started, kept under the name of the value each one writes. A Restore or a",
+		"## Revert that only writes a value back is written over again by the tween that was still walking",
+		"## it, on the very next frame - so the beat's own tweens are stopped before the way home is",
+		"## taken. Only a moment's are held here: a Flash row fired straight from a sheet is nobody's beat",
+		"## to put back, and stopping it would be undoing something no moment did.",
+		"var _moment_tweens: Dictionary = {}",
 		"# Flash / blink state (modulate-based, so both compose with Set Host Tint).",
 		"var _flash_tween: Tween = null",
 		"var _flash_restore: Color = Color.WHITE",
@@ -398,6 +404,8 @@ static func build() -> bool:
 		"var _blink_min_alpha: float = 0.15",
 		"var _blink_base_alpha: float = 1.0",
 		"# Punch state (kick out, spring back; rest captured per gesture so repeats never drift).",
+		"var _punch_scale_tween: Tween = null",
+		"var _zoom_tween: Tween = null",
 		"var _punch_rot_tween: Tween = null",
 		"var _punch_rot_rest: float = 0.0",
 		"var _punch_pos_tween: Tween = null",
@@ -608,7 +616,7 @@ static func build() -> bool:
 	_default(sheet, "duration", "0.3")
 	Lib.append_function(sheet, "zoom_by_percent", "Zoom By Percent", "Juice", "Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.",
 		[["percent", "float"], ["duration", "float"]],
-		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar target_zoom: Vector2 = cam.zoom * (percent / 100.0)\ntarget_zoom = Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))\nvar tw: Tween = create_tween()\ntw.tween_property(cam, \"zoom\", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")
+		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar target_zoom: Vector2 = cam.zoom * (percent / 100.0)\ntarget_zoom = Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))\nvar tw: Tween = create_tween()\ntw.tween_property(cam, \"zoom\", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())\n_zoom_tween = tw")
 	_default(sheet, "percent", "150")
 	_default(sheet, "duration", "0.4")
 	Lib.append_function(sheet, "zoom_to_position", "Zoom To Position", "Juice", "Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.",
@@ -665,7 +673,7 @@ static func build() -> bool:
 	# ── Punch transforms (kick out, spring back) ──
 	Lib.append_function(sheet, "punch_scale", "Punch Scale", "Juice", "Kicks the host's scale up (or down, negative) and springs it back elastically - button pops, pickups, flinches, beat pulses. Composes with Flash + Hitstop for melee hits. Emits On Punch Finished.",
 		[["strength", "float"], ["duration", "float"]],
-		"if host == null:\n\treturn\n_apply_host_scale(_base_scale * (1.0 + clampf(strength, -0.9, 5.0)))\nvar tw: Tween = create_tween()\ntw.tween_property(host, \"scale\", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())")
+		"if host == null:\n\treturn\n_apply_host_scale(_base_scale * (1.0 + clampf(strength, -0.9, 5.0)))\nvar tw: Tween = create_tween()\ntw.tween_property(host, \"scale\", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())\n_punch_scale_tween = tw")
 	_default(sheet, "strength", "0.25")
 	_default(sheet, "duration", "0.35")
 	Lib.append_function(sheet, "punch_rotation", "Punch Rotation", "Juice", "Kicks the host's rotation by an angle (degrees) and springs it back elastically - wobbling signs, chest-opening jolts, portrait reactions. Emits On Punch Finished.",
@@ -823,7 +831,7 @@ moment(moment_name, here)",
 	_param_desc(sheet, "strength", "Scales every amount in the moment, exactly as playing it forwards does.")
 	Lib.append_function(sheet, "moment_revert", "Revert Moment", "Juice", "Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.",
 		[["moment_name", "String"]],
-		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: Dictionary = _moment_plays[key]\nvar from: Dictionary = {}\nfor touched: String in (play[\"start\"] as Dictionary).keys():\n\tvar now: Variant = _moment_value_of(touched)\n\tif now != null:\n\t\tfrom[touched] = now\nplay[\"from\"] = from\nplay[\"reverting\"] = true\nplay[\"revert_span\"] = maxf(float(play[\"span\"]), 0.001)\nplay[\"revert_left\"] = float(play[\"revert_span\"])\nfor at: int in MomentRunner.revert_order(play[\"steps\"]):\n\tvar step: Variant = (play[\"steps\"] as Array)[at]\n\tif step is Dictionary:\n\t\t_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))\nset_process(true)",
+		"var key: String = _moment_key(moment_name)\nif not _moment_plays.has(key):\n\treturn\nvar play: Dictionary = _moment_plays[key]\n# The beat's own tweens are stopped before the way home is walked: a value being lerped back\n# while the tween that took it out is still writing would be two hands on the same number.\n_moment_let_go((play[\"start\"] as Dictionary).keys())\nvar from: Dictionary = {}\nfor touched: String in (play[\"start\"] as Dictionary).keys():\n\tvar now: Variant = _moment_value_of(touched)\n\tif now != null:\n\t\tfrom[touched] = now\nplay[\"from\"] = from\nplay[\"reverting\"] = true\nplay[\"revert_span\"] = maxf(float(play[\"span\"]), 0.001)\nplay[\"revert_left\"] = float(play[\"revert_span\"])\nfor at: int in MomentRunner.revert_order(play[\"steps\"]):\n\tvar step: Variant = (play[\"steps\"] as Array)[at]\n\tif step is Dictionary:\n\t\t_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))\nset_process(true)",
 		"Revert moment [b]{moment_name}[/b]")
 	_default(sheet, "moment_name", "hover")
 	_param_desc(sheet, "moment_name", "Which moment to turn around. A moment that is not playing is left alone.")
@@ -1098,10 +1106,13 @@ static func _moment_lines() -> PackedStringArray:
 		"\t\t\tif host is CanvasItem:",
 		"\t\t\t\ttint = (host as CanvasItem).modulate.lerp(tint, clampf(amount, 0.0, 1.0))",
 		"\t\t\tflash(tint, maxf(seconds, 0.05))",
+		"\t\t\t_moment_tweens[MomentRunner.TOUCH_HOST_TINT] = _flash_tween",
 		"\t\t\"punch\":",
 		"\t\t\tpunch_scale(amount, maxf(seconds, 0.05))",
+		"\t\t\t_moment_tweens[MomentRunner.TOUCH_HOST_SCALE] = _punch_scale_tween",
 		"\t\t\"zoom\":",
 		"\t\t\tzoom_by_percent(amount, maxf(seconds, 0.05))",
+		"\t\t\t_moment_tweens[MomentRunner.TOUCH_CAMERA_ZOOM] = _zoom_tween",
 		"\t\t\"shockwave\":",
 		"\t\t\tif screen != null:",
 		"\t\t\t\tscreen.call(\"shockwave\", _moment_here(), amount)",
@@ -1457,9 +1468,22 @@ static func _moment_lines() -> PackedStringArray:
 		"\tif not _moment_ledger.has(key):",
 		"\t\treturn",
 		"\tvar kept: Dictionary = _moment_ledger[key]",
+		"\t_moment_let_go(kept.keys())",
 		"\tfor touched: String in kept.keys():",
 		"\t\t_moment_write_value(touched, kept[touched])",
 		"\t_moment_ledger.erase(key)",
+		"",
+		"## Stops the tweens a moment set walking on the values about to be written. A value put back",
+		"## while the tween that moved it is still running is written over on the very next frame, so a",
+		"## Restore or a Revert that did not stop them first would look like a row that does nothing.",
+		"## Only the walks a MOMENT started are held, so nothing a sheet fired on its own is touched.",
+		"## @ace_hidden",
+		"func _moment_let_go(touched_keys: Array) -> void:",
+		"\tfor touched: Variant in touched_keys:",
+		"\t\tvar walking: Tween = _moment_tweens.get(str(touched), null) as Tween",
+		"\t\tif walking != null and walking.is_valid():",
+		"\t\t\twalking.kill()",
+		"\t\t_moment_tweens.erase(str(touched))",
 		"",
 		"## One frame of every beat in the air. A forward play only has to count down; a reverting one",
 		"## walks each value it recorded from where the beat left it back to where the game had it, over",

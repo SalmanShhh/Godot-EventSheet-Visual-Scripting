@@ -140,6 +140,12 @@ func _camera() -> Camera2D:
 var _tint_overlay: CanvasLayer = null
 var _tint_rect: ColorRect = null
 
+## The tweens a MOMENT started, kept under the name of the value each one writes. A Restore or a
+## Revert that only writes a value back is written over again by the tween that was still walking
+## it, on the very next frame - so the beat's own tweens are stopped before the way home is
+## taken. Only a moment's are held here: a Flash row fired straight from a sheet is nobody's beat
+## to put back, and stopping it would be undoing something no moment did.
+var _moment_tweens: Dictionary = {}
 # Flash / blink state (modulate-based, so both compose with Set Host Tint).
 var _flash_tween: Tween = null
 var _flash_restore: Color = Color.WHITE
@@ -149,6 +155,8 @@ var _blink_rate: float = 8.0
 var _blink_min_alpha: float = 0.15
 var _blink_base_alpha: float = 1.0
 # Punch state (kick out, spring back; rest captured per gesture so repeats never drift).
+var _punch_scale_tween: Tween = null
+var _zoom_tween: Tween = null
 var _punch_rot_tween: Tween = null
 var _punch_rot_rest: float = 0.0
 var _punch_pos_tween: Tween = null
@@ -660,6 +668,7 @@ func zoom_by_percent(percent: float, duration: float) -> void:
 	var tw: Tween = create_tween()
 	tw.tween_property(cam, "zoom", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: zoom_finished.emit())
+	_zoom_tween = tw
 
 ## @ace_action
 ## @ace_name("Zoom To Position")
@@ -857,6 +866,7 @@ func punch_scale(strength: float, duration: float) -> void:
 	var tw: Tween = create_tween()
 	tw.tween_property(host, "scale", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: punch_finished.emit())
+	_punch_scale_tween = tw
 
 ## @ace_action
 ## @ace_name("Punch Rotation")
@@ -1205,6 +1215,9 @@ func moment_revert(moment_name: String) -> void:
 	if not _moment_plays.has(key):
 		return
 	var play: Dictionary = _moment_plays[key]
+	# The beat's own tweens are stopped before the way home is walked: a value being lerped back
+	# while the tween that took it out is still writing would be two hands on the same number.
+	_moment_let_go((play["start"] as Dictionary).keys())
 	var from: Dictionary = {}
 	for touched: String in (play["start"] as Dictionary).keys():
 		var now: Variant = _moment_value_of(touched)
@@ -1828,10 +1841,13 @@ func _play_moment_step(step: Dictionary, strength: float) -> void:
 			if host is CanvasItem:
 				tint = (host as CanvasItem).modulate.lerp(tint, clampf(amount, 0.0, 1.0))
 			flash(tint, maxf(seconds, 0.05))
+			_moment_tweens[MomentRunner.TOUCH_HOST_TINT] = _flash_tween
 		"punch":
 			punch_scale(amount, maxf(seconds, 0.05))
+			_moment_tweens[MomentRunner.TOUCH_HOST_SCALE] = _punch_scale_tween
 		"zoom":
 			zoom_by_percent(amount, maxf(seconds, 0.05))
+			_moment_tweens[MomentRunner.TOUCH_CAMERA_ZOOM] = _zoom_tween
 		"shockwave":
 			if screen != null:
 				screen.call("shockwave", _moment_here(), amount)
@@ -2123,9 +2139,22 @@ func _moment_put_back(key: String) -> void:
 	if not _moment_ledger.has(key):
 		return
 	var kept: Dictionary = _moment_ledger[key]
+	_moment_let_go(kept.keys())
 	for touched: String in kept.keys():
 		_moment_write_value(touched, kept[touched])
 	_moment_ledger.erase(key)
+
+## Stops the tweens a moment set walking on the values about to be written. A value put back
+## while the tween that moved it is still running is written over on the very next frame, so a
+## Restore or a Revert that did not stop them first would look like a row that does nothing.
+## Only the walks a MOMENT started are held, so nothing a sheet fired on its own is touched.
+## @ace_hidden
+func _moment_let_go(touched_keys: Array) -> void:
+	for touched: Variant in touched_keys:
+		var walking: Tween = _moment_tweens.get(str(touched), null) as Tween
+		if walking != null and walking.is_valid():
+			walking.kill()
+		_moment_tweens.erase(str(touched))
 
 ## One frame of every beat in the air. A forward play only has to count down; a reverting one
 ## walks each value it recorded from where the beat left it back to where the game had it, over
