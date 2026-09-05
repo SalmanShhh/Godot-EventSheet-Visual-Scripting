@@ -620,7 +620,8 @@
   Damage Before Mitigation**, **Last Hit Was A Crit** and **Damage Type Is** are the report, written
   before On Damaged fires so a row under that trigger reads it with no expression. **Take Damage
   From**, **Last Hit From**, **Killer Of**, **Assists Of** and **Killed By Me** answer by whom. The
-  frozen **Take Damage** keeps its body byte for byte and now means "untyped, from nobody".
+  frozen **Take Damage** keeps its body byte for byte, which is also the limit of what it can say: it
+  is a number, and the row that says of what kind or by whom is one of the other two.
 - **The kinds of damage are yours, in a file.** A **DamageTypeSet** resource - names and the colour
   each is drawn in - is a file your game owns; one starter ships with physical, fire, ice and poison
   in it to edit or replace, and there is no list of kinds anywhere in the plugin. The type field
@@ -728,6 +729,55 @@
   actor taking the hit, or that a tick's kill credit belongs to whoever claimed the status node. The
   Status Effects pack also arrived without a guide at all, and the DamageTypeSet resource without the
   icon every pack ships.
+
+### Fixed after a second reading of the wound chain
+
+- **A status ends when its node leaves the tree.** A pool does not free an enemy, it takes it out of
+  the tree and hands it back later - and `_process` merely STOPS off the tree rather than tidying
+  anything up, so a burning enemy went on the shelf with its clock, its tint, its multiplier and its
+  particle scene and came back out still burning. Every one of those endings goes through the same
+  path a clock running out does, so On Status Expired fires and the colour comes back. Moving a node
+  to a new parent is a leave and a return, so it ends the statuses too.
+- **The colour a tint comes off leaves the other writer's own change standing.** The host's colour
+  was captured the moment the first tint went on, so a burn applied while an invincibility flash was
+  blinking the alpha captured the blink - and put it back for good when the burn ended. The colour
+  underneath is worked out from what is on the sprite now, with the tint divided back out.
+- **Assists are counted from the death, and old hits are let go.** Assists Of measured its window
+  from the moment it was ASKED, so a results screen read nine seconds after the kill listed nobody
+  while the row and the Assist Seconds tooltip both say "of its death". It is measured from the
+  killing hit now. And a bullet nobody claimed is its own root owner, so a boss shot by a thousand of
+  them held a thousand keys, most of them freed objects, for the rest of its life; every landed hit
+  now lets go of the ones that are freed or older than the window.
+- **A hit that names no kind says so.** Nothing ever cleared the damage report, so one fire critical
+  left Damage Type Is fire and Last Hit Was A Crit true under every plain hit that followed. Take
+  Damage From writes the untyped report before it hands the number on. Plain Take Damage is frozen
+  and can clear nothing, which the guide now says plainly rather than leaving to be discovered.
+- **A lock on a node you name has no reach at all.** Lock On To held its target at the Inspector's
+  lock range, so the boss a cutscene points at fired On Target Locked and then On Target Lost with
+  `out_of_range` one frame later - in both twins - while both guides say "whatever the cone and the
+  range say". A wall and the target dying still end it.
+- **The snap turns the body, not its pitch.** Snap On Aim Down Sights wrote the whole aim into the
+  host's transform, and the host of a third-person game is the body - so a target on a ledge tipped a
+  CharacterBody3D nose-up at it. Only the heading is taken now; the camera goes on looking up.
+- **Two chains that end nowhere are not the same owner.** A walk that lands on something freed
+  answers nothing, and `null == null` is true - so a bullet whose player had died, hitting a stranger
+  whose spawner had been freed, read as Is Mine and had its hit refused as friendly fire. Being the
+  same is being the same somebody, and a hit whose ownership cannot be established must land.
+- **The Doctor reads a difficulty four ways, not one.** It called a difficulty unread unless a script
+  multiplied by a factor, so a project that branches on the word with Difficulty Is - or whose only
+  use of it is the Health row's Scaled By field - was told its menu changes nothing. All four
+  readings answer it now. The damage section learned two shapes of ordinary code as well: an amount
+  with a call of its own in it still names its kind, and a project's own `plate_resist("cold")` is no
+  longer read as this pack's Resist row.
+- **A file that is not a difficulty is neither listed nor put in force.** A resource with no
+  `difficulty_name` was named "<null>" rather than by its file name, so Difficulty Names over a
+  folder holding anything else listed those files, and Use Difficulty pointed at one adopted it with
+  no factors at all.
+- **The type field suggests the starter kinds until the project writes its own set.** The completion
+  shared the Doctor's rule that the shipped starter is not the project's answer, which is right for a
+  note nobody wanted and exactly wrong for a field that then suggested nothing at all.
+- **The Health pack's own translation table covers its whole vocabulary.** The sixteen wound-chain
+  rows were in English in all eight locales, and the harvest gate cannot see pack tables.
 
 ### Making it feel like something: how pictures meet, and the beat a hit is made of
 
