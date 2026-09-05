@@ -11,3 +11,19 @@ Max Health,Santé Maximale,Salud Máxima,Maximale Gesundheit,Salute Massima,최�
 Health Percent,Pourcentage de Santé,Porcentaje de Salud,Gesundheitsprozent,Percentuale di Salute,체력 백분율,体力の割合,Процент здоровья,生命值百分比
 Is Dead,Est Mort,Está Muerto,Ist Tot,È Morto,사망 상태인가,死亡している,Мёртв ли,是否死亡
 Revive,Ressusciter,Revivir,Wiederbeleben,Resuscita,부활,復活させる,Возродить,复活
+Take Damage From,Subir des Dégâts De,Recibir Daño De,Schaden Nehmen Von,Subisci Danno Da,가해자에게 피해 입기,相手からダメージを受ける,Получить урон от,受到来自某者的伤害
+Take Damage Of Type,Subir des Dégâts d'un Type,Recibir Daño de Tipo,Schaden eines Typs Nehmen,Subisci Danno di Tipo,유형 피해 입기,属性ダメージを受ける,Получить урон типа,受到指定类型伤害
+Resist,Résister,Resistir,Widerstehen,Resisti,저항,耐性を設定,Сопротивление,抗性
+Immune To,Immunisé À,Inmune A,Immun Gegen,Immune A,면역,無効化,Иммунитет к,免疫
+Weak To,Vulnérable À,Débil A,Anfällig Für,Debole A,약점,弱点,Уязвимость к,弱点
+Set Armour,Définir l'Armure,Establecer Armadura,Rüstung Setzen,Imposta Armatura,방어력 설정,防御力を設定,Задать броню,设置护甲
+Set Crit,Définir le Critique,Establecer Crítico,Kritisch Setzen,Imposta Critico,치명타 설정,クリティカルを設定,Задать крит,设置暴击
+Killer Of,Tueur De,Asesino De,Töter Von,Uccisore Di,처치한 자,とどめを刺した者,Убийца,击杀者
+Assists Of,Assistances De,Asistencias De,Assists Von,Assist Di,도움을 준 자,アシストした者,Помощники,助攻者
+Killed By Me,Tué Par Moi,Matado Por Mí,Von Mir Getötet,Ucciso Da Me,내가 처치함,自分が倒した,Убит мной,由我击杀
+Last Hit From,Dernier Coup De,Último Golpe De,Letzter Treffer Von,Ultimo Colpo Da,마지막 공격자,最後に攻撃した者,Последний удар от,最近攻击者
+Last Damage Type,Type du Dernier Dégât,Tipo del Último Daño,Letzter Schadenstyp,Tipo dell'Ultimo Danno,마지막 피해 유형,最後のダメージ属性,Тип последнего урона,最近伤害类型
+Last Damage Dealt,Derniers Dégâts Infligés,Último Daño Infligido,Zuletzt Zugefügter Schaden,Ultimo Danno Inflitto,마지막으로 입은 피해,最後に受けたダメージ,Последний нанесённый урон,最近造成的伤害
+Last Damage Before Mitigation,Derniers Dégâts Avant Réduction,Último Daño Antes de Mitigación,Letzter Schaden Vor Minderung,Ultimo Danno Prima della Mitigazione,경감 전 마지막 피해,軽減前の最後のダメージ,Последний урон до смягчения,减免前的最近伤害
+Damage Type Is,Le Type de Dégât Est,El Tipo de Daño Es,Schadenstyp Ist,Il Tipo di Danno È,피해 유형이 같은가,ダメージ属性が一致,Тип урона равен,伤害类型为
+Last Hit Was A Crit,Le Dernier Coup Était Critique,El Último Golpe Fue Crítico,Letzter Treffer War Kritisch,L'Ultimo Colpo È Stato Critico,마지막 공격이 치명타,最後の攻撃はクリティカル,Последний удар был критическим,最近一击为暴击

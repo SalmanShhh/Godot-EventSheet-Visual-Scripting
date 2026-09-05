@@ -20,6 +20,10 @@ static func run() -> bool:
 	EventSheetL10n.set_locale("fr")
 	ok = _check(ok, EventSheetL10n.translate("Take Damage") == "Subir des Dégâts", "a pack display name translates (got %s)" % EventSheetL10n.translate("Take Damage"))
 	ok = _check(ok, EventSheetL10n.translate("On Damaged") == "Sur Dégâts", "a pack trigger name translates")
+	# THE WHOLE TABLE, not the half of it that shipped first: the wound-chain rows are the pack's
+	# vocabulary too, and a table that stops before them leaves the picker half in English.
+	ok = _check(ok, EventSheetL10n.translate("Take Damage Of Type") == "Subir des Dégâts d'un Type", "a row added later translates too")
+	ok = _check(ok, EventSheetL10n.translate("Assists Of") == "Assistances De", "and so does the one that reads the assists")
 
 	# ---- packs ADD, never re-word the editor: an editor key stays the editor's translation ----
 	ok = _check(ok, EventSheetL10n.translate("Save") == "Enregistrer", "editor strings keep the editor catalog (got %s)" % EventSheetL10n.translate("Save"))
