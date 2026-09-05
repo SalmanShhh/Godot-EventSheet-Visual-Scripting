@@ -1928,8 +1928,13 @@ func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -
 ## Opens a play: what it is made of, how long it lasts, and - before a single step has run -
 ## what every value it is about to write was worth. Recording FIRST is the whole of Restore:
 ## a value read after the beat has touched it is the beat's own doing, not the game's.
+##
+## A beat fired again while the last one is still in the air CLOSES that one first, cut short,
+## because a sheet that pairs a Started with a Finished must get both: two hits in quick
+## succession are two beats, and the first of them did not run its course.
 ## @ace_hidden
 func _moment_begin(key: String, steps: Array, strength: float, backwards: bool) -> void:
+	_moment_end(key, true)
 	var play: Dictionary = {
 		"steps": steps,
 		"strength": strength,

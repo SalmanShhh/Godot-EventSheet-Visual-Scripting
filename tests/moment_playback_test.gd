@@ -239,9 +239,17 @@ static func _signal_pins() -> bool:
 	behavior.moment_backwards("cue", 1.0)
 	var backwards: Array = said.duplicate()
 	var named_step: String = behavior.moment_step_name("cue")
+	# A beat that HAS a length stays in the air, so firing it again has a play to close: the sheet
+	# must hear the first one finish, cut short, before it hears the second one start.
+	said.clear()
+	behavior.define_moment("held", _moment_file("held", [{"verb": "shake", "label": "one", "amount": 0.2, "seconds": 0.5}]))
+	behavior.moment("held", 1.0)
+	behavior.moment("held", 1.0)
+	var retriggered: Array = said.duplicate()
 	# The name book a Define Moment writes is shared by every Juice node in the process, so a test
 	# that defines one takes it away again rather than leaving it for the next test to find.
 	behavior.define_moment("cue", null)
+	behavior.define_moment("held", null)
 	behavior.free()
 	stage.free()
 	return SUPPORT.pins(TEST_NAME, [
@@ -249,7 +257,9 @@ static func _signal_pins() -> bool:
 			forwards, ["started cue", "first", "second", "third", "finished false"]],
 		["backwards is the same beat said from the bottom",
 			backwards, ["started cue", "third", "second", "first", "finished false"]],
-		["a beat that is over names no step", named_step, ""]
+		["a beat that is over names no step", named_step, ""],
+		["a beat fired again closes the one still in the air, cut short",
+			retriggered, ["started held", "one", "finished true", "started held", "one"]]
 	])
 
 
