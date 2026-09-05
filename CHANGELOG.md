@@ -268,6 +268,62 @@
   existing - it ships quoted now, and comes back.
 
 
+### Fixed after a reading of the juice composition pass
+
+- **A Hold at the head of a looped stretch waits for the steps above it again.** The schedule was
+  zeroed when the loop opened, so the fold the Hold exists for was zeroed with it: the first pass
+  fired the moment the step above it STARTED rather than when that step had finished. What is still
+  running when the stretch opens is carried into it, the way back puts that duration on the step
+  outside the loop, and a looped beat still re-emits byte for byte.
+- **A moment written as ROWS opens a play like every other home.** A Moment block's coroutine was
+  called and the runner was told nothing, so On Moment Started, On Moment Finished and Moment Is
+  Playing were silent for a beat written as rows while they answered for the same beat written as a
+  file. It opens a play now and closes it when the coroutine returns. What a block beat still cannot
+  have is a book of values - its rows are the host's own code - so Revert and Restore say so rather
+  than pretending. **Play Moment Backwards on a block's name** used to play the FILE of that name
+  instead, which is a different beat wearing the right word; it now says the beat has no way back
+  unless the host carries one.
+- **A moment you save out lands in `res://moments/`, a folder of the game's own.** The save door
+  suggested the pack's own folder, which the builders regenerate - a beat saved there is a beat a
+  rebuild walks over. A Moment row looks in the game's folder before the pack's, so a file saved
+  where the door suggests is found by name with nothing else set up.
+- **A step that asks for its own natural length is counted at it.** A card that says 0 seconds lets
+  a flash, a punch, a zoom, a chromatic kick or a pulse use the length it really has - but the book
+  counted 0, so the beat was over, On Moment Finished had fired and a Revert was impossible while
+  the flash was still on the screen.
+- **The heaviest spring damping is still a spring.** The decay is exponential, so at a damping of
+  exactly 1 - the value the row's own description invites - nothing of the velocity survived a step:
+  the spring stood still, never settled, and the per-frame tick never parked again. Damping is held
+  a thousandth under, in all three integrators.
+- **Six things a Feedback Player's list promised and did not do.** Revert and Restore put a value
+  back and the still-running tween wrote over it on the next frame (the tween is stopped first now);
+  a play started by a Play Player card was never stopped, skipped or restored with the list around
+  it; Play On Channel broadcast the bare word `play`, which an AudioStreamPlayer or an
+  AnimationPlayer in the same group answers to as well (the channel speaks a name of the pack's
+  own); a Hold waited for the full length of cards whose delays the walk had already waited out; a
+  `restart` left the play it interrupted open, so a sheet pairing On Feedbacks Started with On
+  Feedbacks Finished heard two starts and one finish; the player's own strength scaled only the felt
+  cards and not the tween that moves the object; and Save Moment File wrote switched-off cards and
+  timing words into a file that can play neither - they are named in a warning and left out.
+- **A sequencer track reaches the behaviour that can play its cells.** The group door asked every
+  listener for `play_moment`, a method no shipped pack has, so a lights track of Juice nodes never
+  fired. The Juice behaviour's own Moment verb - the same two arguments - is tried after it. The
+  frames between two steps now allocate nothing, as the file's own header says they must.
+- **The toolbar's Moment segment reaches a Moment block's head**, which the guide has always said it
+  does: the dock passed it the selected ACE alone, and a block's head carries none. And a beat the
+  editor cannot sample - a named moment, a block of rows - leaves the five doors disabled wearing the
+  reason, rather than silently driving whichever Feedback Player the open scene happened to have.
+- **Play Feedbacks And Wait is a coroutine everywhere it is read.** The one awaiting row of the pass
+  had joined neither coroutine list, so the Doctor never warned about it under On Process. It joins
+  all three, and the check now also reads a row's own template - a pack verb that awaits is flagged
+  whether or not anybody remembered to name it.
+- **A count on a step card is still a count after the card closes.** The box was read through JSON,
+  which hands every number back as a float, so opening a card and closing it rewrote `"loops": 2` as
+  `2.0` - against the field's own promise to leave the row's bytes alone.
+- **A disabled plugin leaves nothing behind in the registries.** `_exit_tree` took the card schema
+  off and left the step field and its help paragraph registered, so a callable made in the boot file
+  outlived the plugin that made it.
+
 ### Fixed on the boot path
 
 - **Enabling the plugin costs a third of a second again, not nineteen.** The Feedback Player's card
