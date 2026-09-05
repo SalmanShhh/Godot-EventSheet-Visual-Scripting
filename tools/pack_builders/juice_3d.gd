@@ -162,6 +162,9 @@ static func build() -> bool:
 		"\treturn trauma"
 	]))
 	sheet.events.append(block)
+	var channels: RawCodeRow = RawCodeRow.new()
+	channels.code = "\n".join(_channel_lines())
+	sheet.events.append(channels)
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
 	on_ready.trigger_id = "OnReady"
@@ -221,6 +224,9 @@ static func build() -> bool:
 		"\t_bob_time += delta * _bob_frequency",
 		"if _jitter_active:",
 		"\t_jitter_time += delta * shake_frequency",
+		"# A channel shake is drawn here, in a tick this behaviour was already paying for rather than",
+		"# in a timer of its own.",
+		"_channel_tick(delta)",
 		"# Additive apply: pull last frame's offsets off first, so the pose the controller wrote",
 		"# this frame is the base - the effects ride on TOP of mouse look, never against it.",
 		"_unapply()",
@@ -231,7 +237,7 @@ static func build() -> bool:
 		"var kicks_busy: bool = _recoil_pitch != 0.0 or _recoil_yaw != 0.0 or _fov_kick != 0.0 or _kick_vec != Vector3.ZERO",
 		"var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001 or _chroma_shake_active",
 		"var lean_running: bool = _lean_tween != null and is_instance_valid(_lean_tween) and _lean_tween.is_running()",
-		"if not (kicks_busy or effects_busy or lean_running):",
+		"if not (kicks_busy or effects_busy or lean_running or _channel_busy()):",
 		"\tset_process(false)",
 		"var cam: Camera3D = _camera()",
 		"if cam == null:",
@@ -457,6 +463,34 @@ static func build() -> bool:
 	_default(sheet, "ticker_name", "score")
 	_default(sheet, "value", "0")
 
+	# ── Channels: a shake said once, and heard by everything listening ──
+	Lib.append_function(sheet, "shake_channel", "Shake Channel", "Juice 3D", "Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a distant collapse reaches the hanging lamps, a hit reaches the HUD, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen. A 2D listener and a 3D one answer the same broadcast, so one row can shake a level and its interface together.",
+		[["channel", "String"], ["magnitude", "float"], ["seconds", "float"]],
+		"if not is_inside_tree():\n\treturn\nget_tree().call_group(StringName(channel), \"shake_from_channel\", magnitude, seconds)",
+		"Shake channel [b]{channel}[/b] with [b]{magnitude}[/b] for [b]{seconds}[/b] s")
+	_default(sheet, "channel", "props")
+	_param_desc(sheet, "channel", "Which channel to shake - a group name. Everything listening on it hears this; everything else does not.")
+	_default(sheet, "magnitude", "0.5")
+	_param_desc(sheet, "magnitude", "How hard: 0 to 1 for a listener shaking the camera, world units for one shaking itself, pixels for one shaking the screen.")
+	_default(sheet, "seconds", "0.6")
+	_param_desc(sheet, "seconds", "How long the shake lasts before it has faded to nothing.")
+	Lib.append_function(sheet, "listen_on_channel", "Listen On Channel", "Juice 3D", "Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.",
+		[["channel", "String"], ["shakes", "String"]],
+		"add_to_group(StringName(channel), true)\n_channel_shakes = shakes",
+		"Listen on channel [b]{channel}[/b] and shake [b]{shakes}[/b]")
+	_default(sheet, "channel", "props")
+	_param_desc(sheet, "channel", "Which channel to listen on - a group name. Say it once, at the start of the scene.")
+	_param_options(sheet, "shakes", ["the camera", "this node", "the screen"])
+	_default(sheet, "shakes", "this node")
+	_param_desc(sheet, "shakes", "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
+	_quoted_argument(sheet, "listen_on_channel({channel}, \"{shakes}\")")
+	Lib.append_function(sheet, "stop_listening_on_channel", "Stop Listening On Channel", "Juice 3D", "Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.",
+		[["channel", "String"]],
+		"if is_in_group(StringName(channel)):\n\tremove_from_group(StringName(channel))\n_channel_put_back()",
+		"Stop listening on channel [b]{channel}[/b]")
+	_default(sheet, "channel", "props")
+	_param_desc(sheet, "channel", "Which channel to stop hearing.")
+
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"chromatic_kick": "Chromatic kick at [b]{strength}[/b] for [b]{seconds}[/b] s",
@@ -467,6 +501,108 @@ static func build() -> bool:
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice_3d/juice_3d_behavior")
 
 
+## The CHANNEL half of the pack: how a broadcast arrives, what a listener moves when it does, and
+## how the node is handed back the frame the shake runs out. The twin of the 2D pack's own, which
+## is why the method name a broadcast reaches, the three words a listener answers with and the
+## fading are spelled identically: one Shake Channel row must reach a lamp in the level and a panel
+## on the interface and shake both the same way. What differs is the only thing that can - a 3D host
+## is moved in three axes, and the pose it is handed back is a Vector3.
+static func _channel_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"# --- Channels: a shake said once, and heard by everything listening ---",
+		"#",
+		"# A CHANNEL IS A GROUP. Nothing is invented here: Shake Channel is one call_group, a listener is",
+		"# a node in that group, and the Node dock already shows which groups a node is in. That is why a",
+		"# collapse can reach every hanging lamp in a level without a single reference between them.",
+		"",
+		"## What a listener moves when its channel speaks. The camera the player looks through, the node",
+		"## itself (a lamp, a sign, a prop), or the screen's own colour channels.",
+		"const CHANNEL_SHAKE_CAMERA: String = \"the camera\"",
+		"const CHANNEL_SHAKE_NODE: String = \"this node\"",
+		"const CHANNEL_SHAKE_SCREEN: String = \"the screen\"",
+		"",
+		"## This listener's answer, for every channel it is in. One answer per node rather than one per",
+		"## channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,",
+		"## and a node that wants to do two different things is two nodes.",
+		"var _channel_shakes: String = CHANNEL_SHAKE_CAMERA",
+		"",
+		"## The shake a channel last asked this node for: how much, how long it lasts, how much is left,",
+		"## and the pose the node was found in so it can be handed back exactly as it was.",
+		"var _channel_amount: float = 0.0",
+		"var _channel_span: float = 0.0",
+		"var _channel_left: float = 0.0",
+		"var _channel_rest: Vector3 = Vector3.ZERO",
+		"var _channel_driving: bool = false",
+		"",
+		"## What a broadcast arrives as. call_group reaches this by name, so the method's NAME is the",
+		"## contract between a Shake Channel row and every listener - spelled the same in both Juice",
+		"## packs, so one broadcast reaches a 3D prop and a 2D panel alike.",
+		"##",
+		"## The accessibility dial is applied HERE for the two shakes this node draws itself, and NOT for",
+		"## the camera: the camera mixer applies it once already, and applying it twice would square it.",
+		"## @ace_hidden",
+		"func shake_from_channel(magnitude: float, seconds: float) -> void:",
+		"\tif _channel_shakes == CHANNEL_SHAKE_SCREEN:",
+		"\t\tchromatic_shake(magnitude * maxf(float(Engine.get_meta(\"effect_strength\", 1.0)), 0.0), seconds, \"reducing\", -1.0)",
+		"\t\treturn",
+		"\tif _channel_shakes == CHANNEL_SHAKE_CAMERA:",
+		"\t\t_channel_amount = maxf(magnitude, 0.0)",
+		"\telse:",
+		"\t\t_channel_amount = maxf(magnitude, 0.0) * maxf(float(Engine.get_meta(\"effect_strength\", 1.0)), 0.0)",
+		"\t_channel_span = maxf(seconds, 0.0001)",
+		"\t_channel_left = _channel_span",
+		"\tset_process(true)",
+		"",
+		"## One frame of a channel shake. A camera listener holds the trauma the mixer already reads up",
+		"## to what the channel asked for, so the two never draw two shakes over each other; a node",
+		"## listener rides the same noise around the pose it was found in. Both fade to nothing over the",
+		"## time the broadcast named, and the node is put back the frame it runs out.",
+		"## @ace_hidden",
+		"func _channel_tick(delta: float) -> void:",
+		"\tif _channel_left <= 0.0:",
+		"\t\tif _channel_driving:",
+		"\t\t\t_channel_put_back()",
+		"\t\treturn",
+		"\t_channel_left = maxf(_channel_left - delta, 0.0)",
+		"\tvar fade: float = clampf(_channel_left / maxf(_channel_span, 0.0001), 0.0, 1.0)",
+		"\tif _channel_shakes == CHANNEL_SHAKE_CAMERA:",
+		"\t\ttrauma = maxf(trauma, clampf(_channel_amount * fade, 0.0, 1.0))",
+		"\t\treturn",
+		"\tif not (host is Node3D):",
+		"\t\t_channel_left = 0.0",
+		"\t\treturn",
+		"\tif _noise == null:",
+		"\t\t_noise = FastNoiseLite.new()",
+		"\t\t_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH",
+		"\t\t_noise.frequency = 1.0",
+		"\t\t_noise.seed = randi()",
+		"\tif not _channel_driving:",
+		"\t\t_channel_driving = true",
+		"\t\t_channel_rest = (host as Node3D).position",
+		"\tvar t: float = (_channel_span - _channel_left) * shake_frequency",
+		"\tvar offset: Vector3 = Vector3(_noise.get_noise_2d(t, 300.0), _noise.get_noise_2d(300.0, t), _noise.get_noise_2d(t, t))",
+		"\t(host as Node3D).position = _channel_rest + offset * _channel_amount * fade",
+		"\tif _channel_left <= 0.0:",
+		"\t\t_channel_put_back()",
+		"",
+		"## Hands the node back exactly as it was found, and forgets the shake. Called when a shake runs",
+		"## out and when a listener leaves the channel, so nothing is ever left displaced.",
+		"## @ace_hidden",
+		"func _channel_put_back() -> void:",
+		"\tif _channel_driving and host is Node3D:",
+		"\t\t(host as Node3D).position = _channel_rest",
+		"\t_channel_driving = false",
+		"\t_channel_amount = 0.0",
+		"\t_channel_span = 0.0",
+		"\t_channel_left = 0.0",
+		"",
+		"## Whether a channel shake is still costing anything - what the parking check asks.",
+		"## @ace_hidden",
+		"func _channel_busy() -> bool:",
+		"\treturn _channel_left > 0.0 or _channel_driving"
+	])
+
+
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value
 ## (authoring-time metadata only - defaults never appear in the compiled .gd).
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
@@ -474,6 +610,18 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## Sets the help text on the last-appended ACE's parameter - the line the params dialog shows under
+## the field. It is also what CARRIES the starting value into the shipped pack: the emitter writes a
+## parameter's default only on the one-line @ace_param form, and only a parameter that has something
+## to say gets that form. So a row whose default matters says what the field is for.
+static func _param_desc(sheet: EventSheetResource, param_id: String, help: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.description = help
+			parameter.desc = help
 
 
 ## Sets the dropdown options[] on the last-appended ACE's parameter (append_function only sets

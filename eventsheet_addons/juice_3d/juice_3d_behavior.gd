@@ -96,6 +96,31 @@ func _camera() -> Camera3D:
 		return null
 	return vp.get_camera_3d()
 
+# --- Channels: a shake said once, and heard by everything listening ---
+#
+# A CHANNEL IS A GROUP. Nothing is invented here: Shake Channel is one call_group, a listener is
+# a node in that group, and the Node dock already shows which groups a node is in. That is why a
+# collapse can reach every hanging lamp in a level without a single reference between them.
+
+## What a listener moves when its channel speaks. The camera the player looks through, the node
+## itself (a lamp, a sign, a prop), or the screen's own colour channels.
+const CHANNEL_SHAKE_CAMERA: String = "the camera"
+const CHANNEL_SHAKE_NODE: String = "this node"
+const CHANNEL_SHAKE_SCREEN: String = "the screen"
+
+## This listener's answer, for every channel it is in. One answer per node rather than one per
+## channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
+## and a node that wants to do two different things is two nodes.
+var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
+
+## The shake a channel last asked this node for: how much, how long it lasts, how much is left,
+## and the pose the node was found in so it can be handed back exactly as it was.
+var _channel_amount: float = 0.0
+var _channel_span: float = 0.0
+var _channel_left: float = 0.0
+var _channel_rest: Vector3 = Vector3.ZERO
+var _channel_driving: bool = false
+
 # The tint overlay: a top CanvasLayer ColorRect built on first use - the screen
 # wash for damage reds, poison greens, night blues. Strength IS the opacity.
 var _tint_overlay: CanvasLayer = null
@@ -218,6 +243,9 @@ func _process(delta: float) -> void:
 		_bob_time += delta * _bob_frequency
 	if _jitter_active:
 		_jitter_time += delta * shake_frequency
+	# A channel shake is drawn here, in a tick this behaviour was already paying for rather than
+	# in a timer of its own.
+	_channel_tick(delta)
 	# Additive apply: pull last frame's offsets off first, so the pose the controller wrote
 	# this frame is the base - the effects ride on TOP of mouse look, never against it.
 	_unapply()
@@ -228,7 +256,7 @@ func _process(delta: float) -> void:
 	var kicks_busy: bool = _recoil_pitch != 0.0 or _recoil_yaw != 0.0 or _fov_kick != 0.0 or _kick_vec != Vector3.ZERO
 	var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001 or _chroma_shake_active
 	var lean_running: bool = _lean_tween != null and is_instance_valid(_lean_tween) and _lean_tween.is_running()
-	if not (kicks_busy or effects_busy or lean_running):
+	if not (kicks_busy or effects_busy or lean_running or _channel_busy()):
 		set_process(false)
 	var cam: Camera3D = _camera()
 	if cam == null:
@@ -610,6 +638,47 @@ func set_ticker(ticker_name: String, value: float) -> void:
 	_tickers[ticker_name] = value
 	_ticker_targets[ticker_name] = value
 
+## @ace_action
+## @ace_name("Shake Channel")
+## @ace_category("Juice 3D")
+## @ace_description("Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a distant collapse reaches the hanging lamps, a hit reaches the HUD, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen. A 2D listener and a 3D one answer the same broadcast, so one row can shake a level and its interface together.")
+## @ace_display_template("Shake channel [b]{channel}[/b] with [b]{magnitude}[/b] for [b]{seconds}[/b] s")
+## @ace_param(channel, default: props, desc: "Which channel to shake - a group name. Everything listening on it hears this; everything else does not.")
+## @ace_param(magnitude, default: 0.5, desc: "How hard: 0 to 1 for a listener shaking the camera, world units for one shaking itself, pixels for one shaking the screen.")
+## @ace_param(seconds, default: 0.6, desc: "How long the shake lasts before it has faded to nothing.")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
+## @ace_codegen_template("$Juice3DBehavior.shake_channel({channel}, {magnitude}, {seconds})")
+func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
+	if not is_inside_tree():
+		return
+	get_tree().call_group(StringName(channel), "shake_from_channel", magnitude, seconds)
+
+## @ace_action
+## @ace_name("Listen On Channel")
+## @ace_category("Juice 3D")
+## @ace_description("Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.")
+## @ace_display_template("Listen on channel [b]{channel}[/b] and shake [b]{shakes}[/b]")
+## @ace_param(channel, default: props, desc: "Which channel to listen on - a group name. Say it once, at the start of the scene.")
+## @ace_param(shakes, options: the camera|this node|the screen, default: this node, desc: "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
+## @ace_codegen_template("$Juice3DBehavior.listen_on_channel({channel}, "{shakes}")")
+func listen_on_channel(channel: String, shakes: String) -> void:
+	add_to_group(StringName(channel), true)
+	_channel_shakes = shakes
+
+## @ace_action
+## @ace_name("Stop Listening On Channel")
+## @ace_category("Juice 3D")
+## @ace_description("Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.")
+## @ace_display_template("Stop listening on channel [b]{channel}[/b]")
+## @ace_param(channel, default: props, desc: "Which channel to stop hearing.")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
+## @ace_codegen_template("$Juice3DBehavior.stop_listening_on_channel({channel})")
+func stop_listening_on_channel(channel: String) -> void:
+	if is_in_group(StringName(channel)):
+		remove_from_group(StringName(channel))
+	_channel_put_back()
+
 ## What a ticker currently SHOWS - the eased value Count To is rolling toward its target.
 ## Print or draw this instead of the real variable and scores roll instead of snapping.
 ## @ace_expression
@@ -666,6 +735,73 @@ func is_shaking() -> bool:
 ## @ace_codegen_template("$Juice3DBehavior.current_trauma()")
 func current_trauma() -> float:
 	return trauma
+
+## What a broadcast arrives as. call_group reaches this by name, so the method's NAME is the
+## contract between a Shake Channel row and every listener - spelled the same in both Juice
+## packs, so one broadcast reaches a 3D prop and a 2D panel alike.
+##
+## The accessibility dial is applied HERE for the two shakes this node draws itself, and NOT for
+## the camera: the camera mixer applies it once already, and applying it twice would square it.
+## @ace_hidden
+func shake_from_channel(magnitude: float, seconds: float) -> void:
+	if _channel_shakes == CHANNEL_SHAKE_SCREEN:
+		chromatic_shake(magnitude * maxf(float(Engine.get_meta("effect_strength", 1.0)), 0.0), seconds, "reducing", -1.0)
+		return
+	if _channel_shakes == CHANNEL_SHAKE_CAMERA:
+		_channel_amount = maxf(magnitude, 0.0)
+	else:
+		_channel_amount = maxf(magnitude, 0.0) * maxf(float(Engine.get_meta("effect_strength", 1.0)), 0.0)
+	_channel_span = maxf(seconds, 0.0001)
+	_channel_left = _channel_span
+	set_process(true)
+
+## One frame of a channel shake. A camera listener holds the trauma the mixer already reads up
+## to what the channel asked for, so the two never draw two shakes over each other; a node
+## listener rides the same noise around the pose it was found in. Both fade to nothing over the
+## time the broadcast named, and the node is put back the frame it runs out.
+## @ace_hidden
+func _channel_tick(delta: float) -> void:
+	if _channel_left <= 0.0:
+		if _channel_driving:
+			_channel_put_back()
+		return
+	_channel_left = maxf(_channel_left - delta, 0.0)
+	var fade: float = clampf(_channel_left / maxf(_channel_span, 0.0001), 0.0, 1.0)
+	if _channel_shakes == CHANNEL_SHAKE_CAMERA:
+		trauma = maxf(trauma, clampf(_channel_amount * fade, 0.0, 1.0))
+		return
+	if not (host is Node3D):
+		_channel_left = 0.0
+		return
+	if _noise == null:
+		_noise = FastNoiseLite.new()
+		_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		_noise.frequency = 1.0
+		_noise.seed = randi()
+	if not _channel_driving:
+		_channel_driving = true
+		_channel_rest = (host as Node3D).position
+	var t: float = (_channel_span - _channel_left) * shake_frequency
+	var offset: Vector3 = Vector3(_noise.get_noise_2d(t, 300.0), _noise.get_noise_2d(300.0, t), _noise.get_noise_2d(t, t))
+	(host as Node3D).position = _channel_rest + offset * _channel_amount * fade
+	if _channel_left <= 0.0:
+		_channel_put_back()
+
+## Hands the node back exactly as it was found, and forgets the shake. Called when a shake runs
+## out and when a listener leaves the channel, so nothing is ever left displaced.
+## @ace_hidden
+func _channel_put_back() -> void:
+	if _channel_driving and host is Node3D:
+		(host as Node3D).position = _channel_rest
+	_channel_driving = false
+	_channel_amount = 0.0
+	_channel_span = 0.0
+	_channel_left = 0.0
+
+## Whether a channel shake is still costing anything - what the parking check asks.
+## @ace_hidden
+func _channel_busy() -> bool:
+	return _channel_left > 0.0 or _channel_driving
 
 ## @ace_hidden
 func _ensure_tint_overlay() -> void:

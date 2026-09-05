@@ -42,6 +42,18 @@ signal punch_finished
 ## @ace_trigger
 ## @ace_name("On Ticker Finished")
 signal ticker_finished(ticker_name: String)
+## @ace_trigger
+## @ace_name("On Moment Started")
+signal moment_started(moment_name: String)
+## @ace_trigger
+## @ace_name("On Moment Step")
+signal moment_stepped(moment_name: String, step_label: String)
+## @ace_trigger
+## @ace_name("On Moment Skipped")
+signal moment_skipped(moment_name: String)
+## @ace_trigger
+## @ace_name("On Moment Finished")
+signal moment_finished(moment_name: String, cut_short: bool)
 
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
@@ -348,6 +360,52 @@ func _moment_screen_fx() -> CanvasLayer:
 	if found is CanvasLayer and found.has_method("pulse_post_effect"):
 		_moment_screen = found as CanvasLayer
 	return _moment_screen
+# --- A moment that talks back: what is in the air, what it wrote down, and how it is ended ---
+#
+# A beat used to be a list of calls and nothing else: it happened, and the sheet heard nothing.
+# These four signals and the little book below are what let a sheet wait for a beat, draw a bar
+# over it, turn it around half way through, or put back everything it moved. Nothing here plays
+# a step - the steps are still the pack's own verbs, played by the one function above.
+
+## Every moment this node has IN THE AIR, by the name it was played under. A play is a small
+## dictionary: the steps it was made of, how long it has left, whether it is walking backwards,
+## the values it found and the values it will settle on. Empty for a node that has never played
+## one, which is what makes the tick free until a beat starts.
+var _moment_plays: Dictionary = {}
+
+## What every moment this node has played found its values at, the FIRST time it touched each
+## one. It outlives the play on purpose: Restore Moment Values is asked on the way out of a
+## level, long after the beat that moved something has ended.
+var _moment_ledger: Dictionary = {}
+
+## Whether the LAST play of each name ran its course or was ended early, so a row inside On
+## Moment Finished can tell the beat that landed from the beat somebody walked out of.
+var _moment_cut: Dictionary = {}
+# --- Channels: a shake said once, and heard by everything listening ---
+#
+# A CHANNEL IS A GROUP. Nothing is invented here: Shake Channel is one call_group, a listener is
+# a node in that group, and the Node dock already shows which groups a node is in. That is why a
+# quake can reach every prop in a level without a single reference between them, and why a game
+# that has never opened this pack's docs can still read what the row does.
+
+## What a listener moves when its channel speaks. The camera the player looks through, the node
+## itself (a HUD panel, a lamp, a sign), or the screen's own colour channels.
+const CHANNEL_SHAKE_CAMERA: String = "the camera"
+const CHANNEL_SHAKE_NODE: String = "this node"
+const CHANNEL_SHAKE_SCREEN: String = "the screen"
+
+## This listener's answer, for every channel it is in. One answer per node rather than one per
+## channel: a lamp that rattles for the quake channel and the truck channel rattles the same way,
+## and a node that wants to do two different things is two nodes.
+var _channel_shakes: String = CHANNEL_SHAKE_CAMERA
+
+## The shake a channel last asked this node for: how much, how long it lasts, how much is left,
+## and the pose the node was found in so it can be handed back exactly as it was.
+var _channel_amount: float = 0.0
+var _channel_span: float = 0.0
+var _channel_left: float = 0.0
+var _channel_rest: Vector2 = Vector2.ZERO
+var _channel_driving: bool = false
 
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
@@ -454,6 +512,10 @@ func _process(delta: float) -> void:
 		if _trail_timer <= 0.0:
 			_trail_timer = maxf(_trail_interval, 0.01)
 			_stamp_ghost()
+	# A beat in the air is counted down here, and a channel shake is drawn here, so both are one
+	# call in a tick this behaviour was already paying for rather than a timer of their own.
+	_moment_tick(delta)
+	_channel_tick(delta)
 	# The frame ended with nothing left to animate: stop paying for the tick until a verb starts
 	# another effect. A held camera counts as work - _cam_driving stays true until the mixer above
 	# has handed the camera back to the pose it was found in - and so does a running Tilt tween,
@@ -461,7 +523,7 @@ func _process(delta: float) -> void:
 	var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
 	var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()
 	if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active
-			or _chroma_shake_active):
+			or _chroma_shake_active or _moment_busy() or _channel_busy()):
 		set_process(false)
 
 ## @ace_action
@@ -1018,9 +1080,7 @@ func moment(moment_name: String, strength: float) -> void:
 	if played == null:
 		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
 		return
-	for step: Variant in _moment_steps(played):
-		if step is Dictionary:
-			_play_moment_step(step as Dictionary, strength)
+	_moment_walk(_moment_key(moment_name), _moment_steps(played), strength, false)
 
 ## @ace_action
 ## @ace_name("Define Moment")
@@ -1092,6 +1152,216 @@ func moment_strength() -> float:
 ## @ace_codegen_template("$JuiceBehavior.moment_step("{verb}", {amount}, "{effect}", {seconds}, {strength})")
 func moment_step(verb: String, amount: float, effect: String, seconds: float, strength: float) -> void:
 	_play_moment_step({"verb": verb, "amount": amount, "effect": effect, "seconds": seconds}, strength)
+
+## @ace_action
+## @ace_name("Play Moment Backwards")
+## @ace_category("Juice")
+## @ace_description("Plays a moment from its LAST step to its first. A hover-out is the hover-in read the other way, a door closing is the door opening backwards, and neither needs a second moment kept in step with the first by hand. Every step is played either way - a beat in reverse is still the whole beat - and the amounts are scaled and held to the no-flashing ceiling exactly as they are forwards.")
+## @ace_display_template("Play moment [b]{moment_name}[/b] backwards at [b]{strength}[/b]")
+## @ace_param(moment_name, default: hover, desc: "Which moment to play in reverse - the same name Moment takes.")
+## @ace_param(strength, default: 1, desc: "Scales every amount in the moment, exactly as playing it forwards does.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_backwards({moment_name}, {strength})")
+func moment_backwards(moment_name: String, strength: float) -> void:
+	var written: String = _moment_block_method(moment_name, "_backwards")
+	if not written.is_empty():
+		host.call(written, strength, null)
+		return
+	var played: Resource = _moment_named(moment_name)
+	if played == null:
+		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
+		return
+	_moment_walk(_moment_key(moment_name), _moment_steps(played), strength, true)
+
+## @ace_action
+## @ace_name("Revert Moment")
+## @ace_category("Juice")
+## @ace_description("Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.")
+## @ace_display_template("Revert moment [b]{moment_name}[/b]")
+## @ace_param(moment_name, default: hover, desc: "Which moment to turn around. A moment that is not playing is left alone.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_revert({moment_name})")
+func moment_revert(moment_name: String) -> void:
+	var key: String = _moment_key(moment_name)
+	if not _moment_plays.has(key):
+		return
+	var play: Dictionary = _moment_plays[key]
+	var from: Dictionary = {}
+	for touched: String in (play["start"] as Dictionary).keys():
+		var now: Variant = _moment_value_of(touched)
+		if now != null:
+			from[touched] = now
+	play["from"] = from
+	play["reverting"] = true
+	play["revert_span"] = maxf(float(play["span"]), 0.001)
+	play["revert_left"] = float(play["revert_span"])
+	for at: int in MomentRunner.revert_order(play["steps"]):
+		var step: Variant = (play["steps"] as Array)[at]
+		if step is Dictionary:
+			_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))
+	set_process(true)
+
+## @ace_action
+## @ace_name("Skip Moment To End")
+## @ace_category("Juice")
+## @ace_description("Ends a moment NOW, on the values it would have finished on: a held effect lands at its full strength, a freeze lets time go, a shake settles. The way out of an intro somebody has seen twenty times, and the way a cutscene skip leaves nothing half-played. It fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true.")
+## @ace_display_template("Skip moment [b]{moment_name}[/b] to the end")
+## @ace_param(moment_name, default: intro, desc: "Which moment to jump to the end of. A moment that is not playing is left alone.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_skip_to_end({moment_name})")
+func moment_skip_to_end(moment_name: String) -> void:
+	var key: String = _moment_key(moment_name)
+	if not _moment_plays.has(key):
+		return
+	var play: Dictionary = _moment_plays[key]
+	var ends: Dictionary = play["end"]
+	for touched: String in ends.keys():
+		_moment_write_value(touched, ends[touched])
+	for step: Variant in (play["steps"] as Array):
+		if step is Dictionary and str((step as Dictionary).get("verb", "")).strip_edges().to_lower() == "shake":
+			stop_shake()
+			break
+	moment_skipped.emit(key)
+	_moment_end(key, true)
+
+## @ace_action
+## @ace_name("Restore Moment Values")
+## @ace_category("Juice")
+## @ace_description("Puts back every value a moment moved, to what it was the first time that moment touched it - the tint, the scale, the zoom, the time scale, the effects held on the screen. Leave the name empty and every moment this node has played is put back, which is what a scene wants on the way out. It plays nothing and undoes nothing that was not a moment's doing.")
+## @ace_display_template("Restore what moment [b]{moment_name}[/b] changed")
+## @ace_param(moment_name, desc: "Which moment's values to put back. Leave it empty for every moment this node has played.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_restore_values({moment_name})")
+func moment_restore_values(moment_name: String) -> void:
+	var key: String = _moment_key(moment_name)
+	if key.is_empty():
+		for named: Variant in _moment_ledger.keys():
+			_moment_put_back(str(named))
+		return
+	_moment_put_back(key)
+
+## @ace_condition
+## @ace_name("Moment Is Playing")
+## @ace_category("Juice")
+## @ace_description("True while a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all.")
+## @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is playing.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_is_playing({moment_name})")
+func moment_is_playing(moment_name: String) -> bool:
+	var key: String = _moment_key(moment_name)
+	if key.is_empty():
+		return not _moment_plays.is_empty()
+	return _moment_plays.has(key)
+
+## @ace_condition
+## @ace_name("Moment Is Reverting")
+## @ace_category("Juice")
+## @ace_description("True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.")
+## @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is reverting.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_is_reverting({moment_name})")
+func moment_is_reverting(moment_name: String) -> bool:
+	var key: String = _moment_key(moment_name)
+	if key.is_empty():
+		for play: Variant in _moment_plays.values():
+			if play is Dictionary and bool((play as Dictionary)["reverting"]):
+				return true
+		return false
+	if not _moment_plays.has(key):
+		return false
+	return bool((_moment_plays[key] as Dictionary)["reverting"])
+
+## @ace_condition
+## @ace_name("Moment Was Cut Short")
+## @ace_category("Juice")
+## @ace_description("True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.")
+## @ace_param(moment_name, default: intro, desc: "Which moment's last play to ask about.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_was_cut_short({moment_name})")
+func moment_was_cut_short(moment_name: String) -> bool:
+	return bool(_moment_cut.get(_moment_key(moment_name), false))
+
+## @ace_expression
+## @ace_name("Moment Progress")
+## @ace_category("Juice")
+## @ace_description("How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.")
+## @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_progress({moment_name})")
+func moment_progress(moment_name: String) -> float:
+	var key: String = _moment_key(moment_name)
+	if not _moment_plays.has(key):
+		return 0.0
+	var play: Dictionary = _moment_plays[key]
+	return MomentRunner.progress_of(float(play["span"]) - float(play["left"]), float(play["span"]))
+
+## @ace_expression
+## @ace_name("Moment Elapsed")
+## @ace_category("Juice")
+## @ace_description("How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.")
+## @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_elapsed({moment_name})")
+func moment_elapsed(moment_name: String) -> float:
+	var key: String = _moment_key(moment_name)
+	if not _moment_plays.has(key):
+		return 0.0
+	var play: Dictionary = _moment_plays[key]
+	return maxf(float(play["span"]) - float(play["left"]), 0.0)
+
+## @ace_expression
+## @ace_name("Moment Step Name")
+## @ace_category("Juice")
+## @ace_description("What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.")
+## @ace_param(moment_name, default: intro, desc: "Which moment to ask about.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.moment_step_name({moment_name})")
+func moment_step_name(moment_name: String) -> String:
+	var key: String = _moment_key(moment_name)
+	if not _moment_plays.has(key):
+		return ""
+	return str((_moment_plays[key] as Dictionary)["step"])
+
+## @ace_action
+## @ace_name("Shake Channel")
+## @ace_category("Juice")
+## @ace_description("Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a passing truck reaches the props, a hit reaches the HUD panels, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen.")
+## @ace_display_template("Shake channel [b]{channel}[/b] with [b]{magnitude}[/b] for [b]{seconds}[/b] s")
+## @ace_param(channel, default: props, desc: "Which channel to shake - a group name. Everything listening on it hears this; everything else does not.")
+## @ace_param(magnitude, default: 0.5, desc: "How hard: 0 to 1 for a listener shaking the camera, pixels for one shaking itself or the screen.")
+## @ace_param(seconds, default: 0.6, desc: "How long the shake lasts before it has faded to nothing.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.shake_channel({channel}, {magnitude}, {seconds})")
+func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
+	if not is_inside_tree():
+		return
+	get_tree().call_group(StringName(channel), "shake_from_channel", magnitude, seconds)
+
+## @ace_action
+## @ace_name("Listen On Channel")
+## @ace_category("Juice")
+## @ace_description("Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.")
+## @ace_display_template("Listen on channel [b]{channel}[/b] and shake [b]{shakes}[/b]")
+## @ace_param(channel, default: props, desc: "Which channel to listen on - a group name. Say it once, at the start of the scene.")
+## @ace_param(shakes, options: the camera|this node|the screen, default: this node, desc: "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.listen_on_channel({channel}, "{shakes}")")
+func listen_on_channel(channel: String, shakes: String) -> void:
+	add_to_group(StringName(channel), true)
+	_channel_shakes = shakes
+
+## @ace_action
+## @ace_name("Stop Listening On Channel")
+## @ace_category("Juice")
+## @ace_description("Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.")
+## @ace_display_template("Stop listening on channel [b]{channel}[/b]")
+## @ace_param(channel, default: props, desc: "Which channel to stop hearing.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.stop_listening_on_channel({channel})")
+func stop_listening_on_channel(channel: String) -> void:
+	if is_in_group(StringName(channel)):
+		remove_from_group(StringName(channel))
+	_channel_put_back()
 
 ## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
 ## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
@@ -1624,5 +1894,310 @@ func _moment_allowed(amount: float) -> float:
 ## @ace_hidden
 func _moment_slowed(seconds: float) -> float:
 	return MomentRunner.seconds_of(seconds)
+
+## The name a play is filed under: the moment's own name, tidied the same way the lookup tidies
+## it, so "Impact" and "impact " are one beat rather than two.
+## @ace_hidden
+func _moment_key(moment_name: String) -> String:
+	return moment_name.strip_edges().to_lower()
+
+## The method on the host a moment written as ROWS compiled to, or an empty string when this
+## game wrote that beat as a file instead. The suffix is how a variant is asked for - a block
+## that compiled a backwards walk of itself answers to its own name with "_backwards" on it.
+## @ace_hidden
+func _moment_block_method(moment_name: String, suffix: String) -> String:
+	var word: String = moment_name.strip_edges().replace(" ", "_")
+	if host == null or not word.is_valid_identifier():
+		return ""
+	var written: String = "moment_" + word + suffix
+	return written if host.has_method(written) else ""
+
+## One whole play, forwards or backwards: open the book, take each step in the order the runner
+## gives, and then either finish at once or hold the beat open for as long as its longest step.
+## ONE function, so Moment and Play Moment Backwards can only differ in the order they walk.
+## @ace_hidden
+func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -> void:
+	_moment_begin(key, steps, strength, backwards)
+	for at: int in MomentRunner.walk_order(steps, backwards):
+		var step: Variant = steps[at]
+		if step is Dictionary:
+			_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))
+			_play_moment_step(step as Dictionary, strength)
+	_moment_launched(key)
+
+## Opens a play: what it is made of, how long it lasts, and - before a single step has run -
+## what every value it is about to write was worth. Recording FIRST is the whole of Restore:
+## a value read after the beat has touched it is the beat's own doing, not the game's.
+## @ace_hidden
+func _moment_begin(key: String, steps: Array, strength: float, backwards: bool) -> void:
+	var play: Dictionary = {
+		"steps": steps,
+		"strength": strength,
+		"backwards": backwards,
+		"span": MomentRunner.length_of(steps),
+		"left": MomentRunner.length_of(steps),
+		"step": "",
+		"reverting": false,
+		"revert_span": 0.0,
+		"revert_left": 0.0,
+		"start": {},
+		"end": {},
+		"from": {}
+	}
+	_moment_remember(key, play, steps)
+	_moment_plays[key] = play
+	_moment_cut[key] = false
+	moment_started.emit(key)
+
+## The book a Restore reads from: for every value this beat will write, what it is worth now.
+## The play keeps its own copy (that is what a Revert walks home to) and the node keeps the
+## FIRST one it ever saw under that name, because a beat played twice must still put back what
+## the game had before the first play, not what the first play left behind.
+## @ace_hidden
+func _moment_remember(key: String, play: Dictionary, steps: Array) -> void:
+	var start: Dictionary = play["start"]
+	var ends: Dictionary = play["end"]
+	var kept: Dictionary = _moment_ledger.get(key, {})
+	for touched: String in MomentRunner.touched_by_steps(steps):
+		var was: Variant = _moment_value_of(touched)
+		if was == null:
+			continue
+		start[touched] = was
+		ends[touched] = _moment_settled(touched, was, steps)
+		if not kept.has(touched):
+			kept[touched] = was
+	_moment_ledger[key] = kept
+
+## What one recorded value is worth right now. Every reach a moment has is here and nowhere
+## else, so the layer that records a value, the one that walks it home and the one that puts it
+## back are reading the same five answers. A value this game has no way to reach - a camera zoom
+## with no camera, a post effect with no stack - answers null and is simply not recorded.
+## @ace_hidden
+func _moment_value_of(key: String) -> Variant:
+	if key == MomentRunner.TOUCH_HOST_TINT:
+		return (host as CanvasItem).modulate if host is CanvasItem else null
+	if key == MomentRunner.TOUCH_HOST_SCALE:
+		if host is Node2D:
+			return (host as Node2D).scale
+		if host is Control:
+			return (host as Control).scale
+		return null
+	if key == MomentRunner.TOUCH_TIME_SCALE:
+		return Engine.time_scale
+	if key == MomentRunner.TOUCH_CAMERA_ZOOM:
+		var cam: Camera2D = _camera()
+		return cam.zoom if cam != null else null
+	if key.begins_with(MomentRunner.TOUCH_POST_PREFIX):
+		var screen: CanvasLayer = _moment_screen_fx()
+		if screen == null:
+			return null
+		return float(screen.call("post_strength", key.substr(MomentRunner.TOUCH_POST_PREFIX.length())))
+	return null
+
+## And the way back: one recorded value, written where it came from. The mirror of the reader
+## above, arm for arm, and it goes through the pack's own writers where there is one so a
+## restored scale lands on the host the same way a squash does.
+## @ace_hidden
+func _moment_write_value(key: String, value: Variant) -> void:
+	if value == null:
+		return
+	if key == MomentRunner.TOUCH_HOST_TINT:
+		if host is CanvasItem:
+			(host as CanvasItem).modulate = value
+		return
+	if key == MomentRunner.TOUCH_HOST_SCALE:
+		_apply_host_scale(value)
+		return
+	if key == MomentRunner.TOUCH_TIME_SCALE:
+		_set_time_scale(float(value))
+		return
+	if key == MomentRunner.TOUCH_CAMERA_ZOOM:
+		var cam: Camera2D = _camera()
+		if cam != null:
+			cam.zoom = value
+		return
+	if key.begins_with(MomentRunner.TOUCH_POST_PREFIX):
+		var screen: CanvasLayer = _moment_screen_fx()
+		if screen != null:
+			screen.call("fade_post_strength", key.substr(MomentRunner.TOUCH_POST_PREFIX.length()), float(value), 0.0, 0.0)
+
+## What one recorded value will be worth once the beat has run its course - which is where a
+## Skip To End lands. Time always ends unfrozen; a held effect ends at the strength the step
+## asked for; a zoom ends where the percentage took it; everything else comes back by itself,
+## so it ends where it started.
+## @ace_hidden
+func _moment_settled(key: String, was: Variant, steps: Array) -> Variant:
+	if key == MomentRunner.TOUCH_TIME_SCALE:
+		return 1.0
+	for step: Variant in steps:
+		if not (step is Dictionary):
+			continue
+		var card: Dictionary = step as Dictionary
+		var word: String = str(card.get("verb", "")).strip_edges().to_lower()
+		if MomentRunner.touched_by(word, str(card.get("effect", ""))) != key:
+			continue
+		if word == "hold":
+			return _moment_amount(word, float(card.get("amount", 1.0)), 1.0)
+		if word == "zoom" and was is Vector2:
+			var wanted: Vector2 = (was as Vector2) * (float(card.get("amount", 100.0)) / 100.0)
+			return Vector2(clampf(wanted.x, min_zoom, max_zoom), clampf(wanted.y, min_zoom, max_zoom))
+	return was
+
+## Says that one step of a play has just been taken, and remembers which - the name Moment Step
+## Name answers with and On Moment Step carries.
+## @ace_hidden
+func _moment_stepping(key: String, label: String) -> void:
+	if not _moment_plays.has(key):
+		return
+	(_moment_plays[key] as Dictionary)["step"] = label
+	moment_stepped.emit(key, label)
+
+## The end of the opening frame: a beat whose steps are all instant is already over and says so,
+## and one with a length holds the tick open until it has run out.
+## @ace_hidden
+func _moment_launched(key: String) -> void:
+	if not _moment_plays.has(key):
+		return
+	if float((_moment_plays[key] as Dictionary)["span"]) <= 0.0:
+		_moment_end(key, false)
+		return
+	set_process(true)
+
+## Closes a play and says so, with the one fact a sheet cannot work out for itself: whether the
+## beat ran its course or was ended early.
+## @ace_hidden
+func _moment_end(key: String, cut_short: bool) -> void:
+	if not _moment_plays.has(key):
+		return
+	_moment_plays.erase(key)
+	_moment_cut[key] = cut_short
+	moment_finished.emit(key, cut_short)
+
+## Puts back everything one moment moved, and forgets it - so a second Restore of the same name
+## does nothing rather than writing a stale value over whatever the game has since done.
+## @ace_hidden
+func _moment_put_back(key: String) -> void:
+	if not _moment_ledger.has(key):
+		return
+	var kept: Dictionary = _moment_ledger[key]
+	for touched: String in kept.keys():
+		_moment_write_value(touched, kept[touched])
+	_moment_ledger.erase(key)
+
+## One frame of every beat in the air. A forward play only has to count down; a reverting one
+## walks each value it recorded from where the beat left it back to where the game had it, over
+## the beat's own length, which is what makes a revert read as the same path travelled home.
+## Keys are copied before the walk because ending a play erases it from the book.
+## @ace_hidden
+func _moment_tick(delta: float) -> void:
+	if _moment_plays.is_empty():
+		return
+	for key: Variant in _moment_plays.keys():
+		var named: String = str(key)
+		if not _moment_plays.has(named):
+			continue
+		var play: Dictionary = _moment_plays[named]
+		if bool(play["reverting"]):
+			play["revert_left"] = maxf(float(play["revert_left"]) - delta, 0.0)
+			var span: float = maxf(float(play["revert_span"]), 0.0001)
+			var walked: float = clampf(1.0 - float(play["revert_left"]) / span, 0.0, 1.0)
+			var from: Dictionary = play["from"]
+			var start: Dictionary = play["start"]
+			for touched: String in from.keys():
+				if start.has(touched):
+					_moment_write_value(touched, lerp(from[touched], start[touched], walked))
+			if float(play["revert_left"]) <= 0.0:
+				_moment_end(named, true)
+			continue
+		play["left"] = maxf(float(play["left"]) - delta, 0.0)
+		if float(play["left"]) <= 0.0:
+			_moment_end(named, false)
+
+## Whether any beat is still in the air - the one thing the tick's parking check has to ask.
+## @ace_hidden
+func _moment_busy() -> bool:
+	return not _moment_plays.is_empty()
+
+## What a broadcast arrives as. call_group reaches this by name, so the method's NAME is the
+## contract between a Shake Channel row and every listener - which is why it is spelled out here
+## rather than hidden behind a signal nobody could connect to without a reference.
+##
+## The accessibility dial is applied HERE for the two shakes this node draws itself, and NOT for
+## the camera: the camera mixer applies it once already, and applying it twice would square it.
+## @ace_hidden
+func shake_from_channel(magnitude: float, seconds: float) -> void:
+	if _channel_shakes == CHANNEL_SHAKE_SCREEN:
+		chromatic_shake(magnitude * maxf(float(Engine.get_meta("effect_strength", 1.0)), 0.0), seconds, "reducing", -1.0)
+		return
+	if _channel_shakes == CHANNEL_SHAKE_CAMERA:
+		_channel_amount = maxf(magnitude, 0.0)
+	else:
+		_channel_amount = maxf(magnitude, 0.0) * maxf(float(Engine.get_meta("effect_strength", 1.0)), 0.0)
+	_channel_span = maxf(seconds, 0.0001)
+	_channel_left = _channel_span
+	set_process(true)
+
+## One frame of a channel shake. A camera listener holds the trauma the mixer already reads up
+## to what the channel asked for, so the two never draw two shakes over each other; a node
+## listener rides the same noise around the pose it was found in. Both fade to nothing over the
+## time the broadcast named, and the node is put back the frame it runs out.
+## @ace_hidden
+func _channel_tick(delta: float) -> void:
+	if _channel_left <= 0.0:
+		if _channel_driving:
+			_channel_put_back()
+		return
+	_channel_left = maxf(_channel_left - delta, 0.0)
+	var fade: float = clampf(_channel_left / maxf(_channel_span, 0.0001), 0.0, 1.0)
+	if _channel_shakes == CHANNEL_SHAKE_CAMERA:
+		trauma = maxf(trauma, clampf(_channel_amount * fade, 0.0, 1.0))
+		return
+	if host == null:
+		_channel_left = 0.0
+		return
+	if _noise == null:
+		_noise = FastNoiseLite.new()
+		_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		_noise.frequency = 1.0
+		_noise.seed = randi()
+	if not _channel_driving:
+		_channel_driving = true
+		_channel_rest = _channel_place()
+	var t: float = (_channel_span - _channel_left) * shake_frequency
+	_channel_move(_channel_rest + Vector2(_noise.get_noise_2d(t, 300.0), _noise.get_noise_2d(300.0, t)) * _channel_amount * fade)
+	if _channel_left <= 0.0:
+		_channel_put_back()
+
+## Where the node is resting, and where a shaken frame writes it.
+## @ace_hidden
+func _channel_place() -> Vector2:
+	if host is Node2D:
+		return (host as Node2D).position
+	if host is Control:
+		return (host as Control).position
+	return Vector2.ZERO
+
+## @ace_hidden
+func _channel_move(to: Vector2) -> void:
+	if host is Node2D:
+		(host as Node2D).position = to
+	elif host is Control:
+		(host as Control).position = to
+
+## Hands the node back exactly as it was found, and forgets the shake. Called when a shake runs
+## out and when a listener leaves the channel, so nothing is ever left displaced.
+## @ace_hidden
+func _channel_put_back() -> void:
+	if _channel_driving:
+		_channel_move(_channel_rest)
+	_channel_driving = false
+	_channel_amount = 0.0
+	_channel_span = 0.0
+	_channel_left = 0.0
+
+## Whether a channel shake is still costing anything - the second thing the parking check asks.
+## @ace_hidden
+func _channel_busy() -> bool:
+	return _channel_left > 0.0 or _channel_driving
 
 # Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.) A whole beat of feedback is one row: Moment plays a file of steps - impact, kill, triumph, danger, calm and cut ship beside this pack as starters to edit.

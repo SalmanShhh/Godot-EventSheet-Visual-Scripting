@@ -44,6 +44,21 @@ const NO_FLASHING_META: StringName = &"no_flashing"
 ## the hit still hits, it just cannot strobe.
 const FLASH_CEILING: float = 0.3
 const FLASH_FLOOR_SECONDS: float = 0.4
+
+## The step words that leave NOTHING to walk back through. A shake has already been felt, a
+## hitstop has already let the frame go, a shockwave has already crossed the screen: there is no
+## half of one of those to undo, so the way back steps over them rather than playing them again.
+## Every other word writes a value, and a value can be walked home.
+const ONE_WAY_VERBS: PackedStringArray = ["shake", "hitstop", "punch", "shockwave", "chromatic"]
+
+## The names the values a moment writes are kept under, so the beat that recorded one and the row
+## that puts it back are spelling the same thing. A post effect's key carries the effect's own
+## name after the prefix, because a moment may hold several of them at once.
+const TOUCH_HOST_TINT: String = "host tint"
+const TOUCH_HOST_SCALE: String = "host scale"
+const TOUCH_CAMERA_ZOOM: String = "camera zoom"
+const TOUCH_TIME_SCALE: String = "time scale"
+const TOUCH_POST_PREFIX: String = "post "
 ## Wait until `seconds` after the step above started - the At word. The number is the GAP the
 ## compiler worked out, never the absolute time, so nothing here has to remember when a moment began.
 static func at(host: Node, seconds: float, clock: String = CLOCK_GAME) -> Signal:
@@ -158,3 +173,88 @@ static func _distance(place: Variant, listener: Variant) -> float:
 	if place is Vector3 and listener is Vector3:
 		return (place as Vector3).distance_to(listener as Vector3)
 	return -1.0
+
+## The order a moment's steps are taken in: top to bottom, or bottom to top when the play was
+## asked for backwards. EVERY step is in it either way - playing a beat in reverse is still
+## playing the whole beat, which is what makes a hover-out the hover-in read the other way.
+static func walk_order(steps: Array, backwards: bool = false) -> PackedInt32Array:
+	var order: PackedInt32Array = PackedInt32Array()
+	for index: int in steps.size():
+		order.append(steps.size() - 1 - index if backwards else index)
+	return order
+
+## The order the way BACK is walked: bottom to top, with the one-way words left out. A revert is
+## not a second play - it is the beat undoing itself - so a step that only ever happened once is
+## stepped over rather than fired again on the way home.
+static func revert_order(steps: Array) -> PackedInt32Array:
+	var order: PackedInt32Array = PackedInt32Array()
+	for index: int in steps.size():
+		var at: int = steps.size() - 1 - index
+		var step: Variant = steps[at]
+		if step is Dictionary and not is_one_way(str((step as Dictionary).get("verb", ""))):
+			order.append(at)
+	return order
+
+## Whether one step word leaves nothing behind to walk home.
+static func is_one_way(verb: String) -> bool:
+	return ONE_WAY_VERBS.has(verb.strip_edges().to_lower())
+
+## What one step is CALLED - the name a trigger carries and a debug view prints. Its own label
+## when it was given one, else the word it is made of, else where it sits in the list, so a step
+## always has something to be called and no sheet has to count rows to find out which fired.
+static func step_label(step: Dictionary, index: int) -> String:
+	var named: String = str(step.get("label", "")).strip_edges()
+	if not named.is_empty():
+		return named
+	var verb: String = str(step.get("verb", "")).strip_edges()
+	if not verb.is_empty():
+		return verb
+	return "step %d" % (index + 1)
+
+## How long a beat LASTS: the longest of its steps, because a moment's steps all begin together
+## and the beat is over when the slowest one is. A moment of instant steps has no length at all,
+## which is the honest answer rather than a made-up tail.
+static func length_of(steps: Array) -> float:
+	var longest: float = 0.0
+	for step: Variant in steps:
+		if step is Dictionary:
+			longest = maxf(longest, maxf(float((step as Dictionary).get("seconds", 0.0)), 0.0))
+	return longest
+
+## How far through a play is, from 0 at its first frame to 1 at its last. A beat with no length
+## is finished the instant it begins, so it answers 1 rather than dividing by nothing.
+static func progress_of(elapsed: float, length: float) -> float:
+	if length <= 0.0:
+		return 1.0
+	return clampf(elapsed / length, 0.0, 1.0)
+
+## What ONE step writes: the key naming the value a Restore has to put back, or an empty string
+## for a step that leaves nothing behind. This is the whole of the first-touch rule in one place,
+## so the layer that records a value and the row that returns it can never drift apart.
+static func touched_by(verb: String, effect: String = "") -> String:
+	match verb.strip_edges().to_lower():
+		"flash":
+			return TOUCH_HOST_TINT
+		"punch":
+			return TOUCH_HOST_SCALE
+		"zoom":
+			return TOUCH_CAMERA_ZOOM
+		"slowmo", "hitstop":
+			return TOUCH_TIME_SCALE
+		"pulse", "hold":
+			var named: String = effect.strip_edges().to_lower()
+			return "" if named.is_empty() else TOUCH_POST_PREFIX + named
+	return ""
+
+## Every value a whole moment will write, once each and in the order a reader meets them. The
+## order is the steps' own, so a Restore puts a beat back the way it was taken apart.
+static func touched_by_steps(steps: Array) -> PackedStringArray:
+	var keys: PackedStringArray = PackedStringArray()
+	for step: Variant in steps:
+		if not (step is Dictionary):
+			continue
+		var card: Dictionary = step as Dictionary
+		var key: String = touched_by(str(card.get("verb", "")), str(card.get("effect", "")))
+		if not key.is_empty() and not keys.has(key):
+			keys.append(key)
+	return keys
