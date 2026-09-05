@@ -123,8 +123,8 @@ retune it in the Inspector, duplicate it, share it.
 | `bpm` | `120` | The tempo. On Beat, On Bar, Beat Number and the rest are all counted from it. |
 | `beat_offset` | `0` | Seconds from the start of the file to the first beat, for a song that does not begin exactly on one. |
 | `beats_per_bar` | `4` | How many beats a bar holds. 3 for a waltz. |
-| `loop_from` | `0` | Seconds into the file where the loop starts. The director starts a track here, so a song with an intro can be brought back in at the loop instead of at the intro. |
-| `loop_to` | `0` | Seconds into the file where the loop ends, for your own rows to read. 0 means the end. |
+| `loop_from` | `0` | Seconds into the file where the loop starts. A song is played from its beginning the first time it is asked for and from here every time after, so an intro is heard when the level opens and skipped when the song comes back. |
+| `loop_to` | `0` | Seconds into the file where the loop ends. Set it past Loop From and the director sends the song back to Loop From when it gets there; leave it at 0 and the file plays to its end, looping only if the stream itself is set to. |
 
 ### Inspector properties
 
@@ -278,8 +278,8 @@ On Dash Pressed -> Wait  Music.Seconds To Next Beat() seconds
 
 ### 16. A track with an intro that loops past it
 
-Loop From is where the director starts a track, so bringing the same song back later comes in
-at the loop rather than replaying the intro.
+The first Play of a song is from its beginning, intro and all; every Play after it comes in at
+Loop From. Set Loop To as well and the song goes round between the two on its own.
 
 ```
 On Ready       -> Music: Play  "town", 0
@@ -298,7 +298,9 @@ On Transition Finished -> Music: Crossfade To  "cavern", 3.0
 ### 18. An interactive track that changes on its own terms
 
 A track whose stream is an AudioStreamInteractive carries its own transition rules, so the
-change lands where the composer said it should.
+change lands where the composer said it should. Such a stream does not report a playback
+position, so the beat readings and the beat moments are silent on it: a song answers either the
+clips or the beat, not both.
 
 ```
 On Health Below  0.3 -> Music: Switch To Clip  "desperate"
