@@ -96,7 +96,30 @@ const SUPPORT := preload("res://tests/support.gd")
 ## project rather than all of it (a gate that decays to a bare word opens hundreds). Between them
 ## they catch every regression class the four notes above describe. The wall clock stays as the
 ## backstop for a cost that is nobody's duplicate read - a section that is simply slow.
-const DOCTOR_BUDGET_MS: int = 95000
+##
+## AND THE BUDGET MOVES AGAIN, 2026-09-05, because the lever the note above named as the real
+## remaining one was pulled: a project can now say which folders its audit is about
+## (eventsheets/doctor/skipped_folders), and this repository declares tests/ and tools/ - the 86
+## percent of its scripts that are the suite's own fixtures and this repository's build tools rather
+## than anybody's game. The audit walks 216 scripts instead of 1,569 and opens 50 as sheets instead
+## of 150, and the report went from 339 findings to 212 with 0 errors both ways.
+##
+## MEASURED ON THE GITHUB RUNNER, headless-safe gate step (tests/run_perf.gd), which is the number
+## this constant is about and the one CI reaches first:
+##
+##   before  51,280 ms   (one run; that day's 21 runs ranged 45,300 to 68,100)
+##   after   21,643 / 21,042 / 21,096 / 16,851 ms   (four consecutive runs)
+##
+## The full-suite step on the same four commits measured 17,954 / 17,959 / 17,878 / 13,437, keeping
+## the gate's usual few seconds of margin over it. The bimodality the note above complains about is
+## gone with the corpus that caused it: the four gate samples sit inside 5 seconds of each other
+## where the old ones straddled 23.
+##
+## 45 seconds is a little over DOUBLE the worst of those four, which is the more conservative of the
+## two rules this comment's history has used, and it is the right one to use while there are only
+## four samples. It is not tuned to bite - the two pins below are still the strong half, and the
+## SHEETS-OPENED pin is the one that would catch a corpus quietly widening again.
+const DOCTOR_BUDGET_MS: int = 45000
 
 ## What the audit measured on 2026-09-05 once this project declared its own scope: 50 distinct
 ## scripts opened as sheets out of the 216 the walk now hands back (it was 149 of 1,566 before, and
