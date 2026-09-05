@@ -47,6 +47,15 @@
 #                               question is one row, so unlike the check above this one has a door:
 #                               the question, asked first.
 #
+#   A SCRIPT OR A RESOURCE      The same line about the other extensions the same loaders build code
+#   FILE FROM OUTSIDE           from: a literal `.gd`, `.tres` or `.res` under the player's folder or
+#                               on one computer. A `.gd` IS code and a `.tres` is a table that can
+#                               name one, so the danger is the scene one word for word - and a
+#                               literal with no door on it used to fall between the two checks
+#                               around it, being neither a scene nor a path the trace could follow.
+#                               No door on this one: the data-only question reads a SCENE table, so
+#                               offering it over a `.gd` would be offering a fix that cannot work.
+#
 # And one about a cost rather than a path:
 #
 #   A WATCH NOBODY STOPS       A file starts a folder watch and never stops one. A watch is not a
@@ -81,6 +90,7 @@ const CHECK_ABSOLUTE_PATH := "files-absolute-path"
 const CHECK_UNGUARDED_READ := "files-unguarded-read"
 const CHECK_LOADS_OUTSIDE := "files-loads-outside-content"
 const CHECK_UNTRUSTED_SCENE := "files-untrusted-scene-load"
+const CHECK_UNTRUSTED_CODE_FILE := "files-untrusted-code-file-load"
 const CHECK_WATCH_NEVER_STOPS := "files-watch-never-stops"
 
 ## The verb that ENDS a watch, as the shipped Folder Watcher pack spells it. Its twin that starts one
@@ -122,6 +132,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(unguarded_read_findings(sources))
 	out.append_array(loads_outside_findings(sources))
 	out.append_array(untrusted_scene_findings(sources))
+	out.append_array(untrusted_code_file_findings(sources))
 	out.append_array(watch_never_stops_findings(sources))
 	return out
 
@@ -547,6 +558,56 @@ static func untrusted_scene_lines(source: String) -> PackedStringArray:
 				found.append(line)
 				break
 	return found
+
+
+## One finding per script that loads a SCRIPT or a RESOURCE file from a place this project cannot
+## vouch for. The same danger as the check above said about the other extensions the same loaders
+## build code from: a `.gd` handed to `load()` IS code, and a `.tres` or a `.res` names one the way a
+## scene file's table does.
+##
+## THIS IS THE LINE THE TWO CHECKS AROUND IT EACH LEFT TO THE OTHER. The scene check reads scene
+## files only; the outside-content trace needs a path that came through one of the game's own doors,
+## or a folder this file watches or unpacks into. A literal `load("user://mods/hack.gd")` with no
+## door anywhere in the file is neither, and it used to earn nothing at all.
+##
+## THERE IS NO ONE-CLICK DOOR, and there should not be. Scene File Is Data-Only reads a SCENE table
+## and answers false for anything that is not one, so offering it here would be offering a fix that
+## cannot work. What to do instead is in the words: read the file as data, or accept out loud that
+## this game runs code its players supply.
+static func untrusted_code_file_findings(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		var lines: PackedStringArray = untrusted_code_file_lines(str(sources[script_path]))
+		if lines.is_empty():
+			continue
+		var message: String = EventSheetL10n.translate("%s loads a script or a resource file the game did not ship with. First: %s.") % [
+			script_path.get_file(), lines[0]]
+		message += _and_more(lines)
+		message += " " + EventSheetL10n.translate("A .gd file IS code, and a .tres or a .res is a table that can name one, so loading either runs its author's code with everything this game can reach: the player's files, their network, their machine.")
+		message += " " + EventSheetL10n.translate("There is no question to ask first about these the way there is about a scene file, because the file being read is not a scene. Read it as DATA instead - Read Text File (or a fallback) for text, Table From File for rows and columns, JSON for a structure - or, if this game means to run code its players wrote, say so where they can read it.")
+		message += " " + EventSheetL10n.translate("This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about.")
+		findings.append(_finding("warning", CHECK_UNTRUSTED_CODE_FILE, script_path, message,
+			untrusted_code_file_subject(lines[0])))
+	return findings
+
+
+## The lines of this source that load a script or a resource file from a place that is not `res://`.
+## Trimmed, in the order they appear.
+static func untrusted_code_file_lines(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if not EventForgeSceneTrust.says_enough(source):
+		return found
+	for line: String in _statements_of(source):
+		if not EventForgeSceneTrust.untrusted_code_file_paths(line).is_empty():
+			found.append(line)
+	return found
+
+
+## The first path one reported line loads, which is what the finding is filed under. "" when the line
+## holds none, which cannot happen for a line this check reported and is answered anyway.
+static func untrusted_code_file_subject(line: String) -> String:
+	var loaded: PackedStringArray = EventForgeSceneTrust.untrusted_code_file_paths(line)
+	return "" if loaded.is_empty() else loaded[0]
 
 
 ## The first path this source builds unasked, which is what the finding is filed under and what the

@@ -22,10 +22,17 @@
 # file has nothing to say about. Every answer below is therefore raised on a quoted LITERAL only.
 # A quiet reading is not a proof, and the finding that uses it says so out loud.
 #
-# WHAT IT DELIBERATELY DOES NOT CLAIM. A `.tres` from outside can name a script too, and a path that
-# came in through one of the game's own doors is followed by EventForgeOutsidePaths for the Files
-# section's own outside-content finding. This file is about SCENE files with a place that can be read
-# off the line, which is the half a sheet row can be asked about and repaired in one gesture.
+# WHAT IT DELIBERATELY DOES NOT CLAIM. A path that came in through one of the game's own doors is
+# followed by EventForgeOutsidePaths for the Files section's own outside-content finding, and this
+# file says nothing about a path whose place cannot be read off the line it is written on.
+#
+# AND THE OTHER CODE-CARRYING FILES ARE HERE TOO, in a reading of their own. A literal
+# `load("user://mods/weapon.tres")` or `load("user://mods/hack.gd")` fell between the two checks: it
+# is not a scene, so the scene reading passed it by, and it has no door on it, so the trace above had
+# nothing to follow. Each of those is exactly as code-carrying as a scene - a `.gd` IS code, and a
+# `.tres` names one the same way a scene file's table does - so the same literal in the same call
+# earns a finding here. It carries no ONE-CLICK DOOR, because the question this file's helper answers
+# reads a scene table and has nothing true to say about the others.
 @tool
 class_name EventForgeSceneTrust
 extends RefCounted
@@ -49,6 +56,19 @@ const SAVE_PATH_PARAM := "path"
 ## What a scene file is called. Godot writes `.tscn` from the editor and `.scn` when a scene is saved
 ## in the binary form; both name a resource table that may hold a script.
 const SCENE_EXTENSIONS: PackedStringArray = [".tscn", ".scn"]
+
+## The other files the same loaders build that can carry code, and the reason they are read here
+## rather than left between two checks. A `.gd` handed to `load()` IS code - the loader compiles it
+## and the caller attaches it. A `.tres` or a `.res` is a resource table, and a table may name a
+## script exactly as a scene file's may, which is precisely what the scene reading above refuses a
+## scene for. So the same literal, in the same call, from the same place outside the project, is the
+## same danger said about a different extension.
+##
+## THEY GET THEIR OWN READING RATHER THAN JOINING THE LIST ABOVE, because the answer offered for a
+## scene is Scene File Is Data-Only - a question that reads a SCENE TABLE and answers false for
+## anything else. A door that put it over a `.gd` would be a fix that cannot work, so the finding
+## these raise carries no door and says what to do in words instead.
+const CODE_FILE_EXTENSIONS: PackedStringArray = [".gd", ".tres", ".res"]
 
 ## The calls that BUILD what a file describes. `preload(` is deliberately not one: it takes a
 ## constant path, so a preloaded scene is a file the game shipped with by construction.
@@ -130,6 +150,39 @@ static func untrusted_scene_paths(line: String) -> PackedStringArray:
 				or place == EventForgeFilePlaces.PLACE_ABSOLUTE:
 			found.append(path_expression)
 	return found
+
+
+## The script and resource paths one line builds that this project cannot vouch for: the same reading
+## as the two above, over the other extensions the same loaders build code from. A scene path is NOT
+## among them - that is the reading above, which has a question to offer and a door to offer it with.
+static func untrusted_code_file_paths(line: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for call_text: String in LOAD_CALLS:
+		var at: int = _call_at(line, call_text)
+		while at >= 0:
+			var argument: String = _first_argument(
+				_arguments_after(line, at + call_text.length()))
+			if names_a_code_file(argument) and not found.has(argument):
+				var place: String = EventForgeFilePlaces.place_of(argument)
+				if place == EventForgeFilePlaces.PLACE_USER \
+						or place == EventForgeFilePlaces.PLACE_ABSOLUTE:
+					found.append(argument)
+			at = _call_at(line, call_text, at + call_text.length())
+	return found
+
+
+## True when a path expression is a quoted literal naming a script or a resource file. Read off the
+## literal for the same reason the scene reading is: an extension worked out at runtime is one
+## nothing here can prove.
+static func names_a_code_file(path_expression: String) -> bool:
+	var literal: String = EventForgeFilePlaces.literal_of(path_expression)
+	if literal.is_empty():
+		return false
+	var lowered: String = literal.to_lower()
+	for extension: String in CODE_FILE_EXTENSIONS:
+		if lowered.ends_with(extension):
+			return true
+	return false
 
 
 ## The path expressions a blob of code asks the data-only question about AND ACTS ON, exactly as they

@@ -452,6 +452,50 @@ static func _test_the_doctors_reading() -> bool:
 	# have started saying this one's sentence.
 	ok = _check("the outside-content check beside it stays quiet about a literal nobody dropped",
 		EventForgeOutsidePaths.loading_outside_lines(UNASKED).size(), 0) and ok
+	ok = ok and _test_the_other_code_files()
+	return ok
+
+
+## THE LINE THE TWO CHECKS EACH LEFT TO THE OTHER. A literal `.gd`, `.tres` or `.res` under the
+## player's folder, handed to a loader, with no door anywhere in the file: not a scene, so the
+## reading above passes it by, and not a path the outside-content trace can follow, because nothing
+## in the file dropped it, chose it, watched it or unpacked it. It used to earn nothing at all.
+static func _test_the_other_code_files() -> bool:
+	const SCRIPT_LOADED: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar mod = load(\"user://mods/hack.gd\")\n"
+	const RESOURCE_LOADED: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar weapon = load(\"user://mods/weapon.tres\")\n"
+	const BINARY_LOADED: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar pack = ResourceLoader.load(\"/opt/mods/pack.res\")\n"
+	const SHIPPED_RESOURCE: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar weapon = load(\"res://data/weapon.tres\")\n"
+	const READ_AS_DATA: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar text = FileAccess.get_file_as_string(\"user://mods/weapon.tres\")\n"
+	var ok: bool = _check("a script loaded out of the player's folder is reported",
+		EventSheetFilesDoctor.untrusted_code_file_lines(SCRIPT_LOADED),
+		PackedStringArray(["var mod = load(\"user://mods/hack.gd\")"]))
+	ok = _check("so is a resource file, which is a table that can name a script",
+		EventSheetFilesDoctor.untrusted_code_file_lines(RESOURCE_LOADED).size(), 1) and ok
+	ok = _check("and the binary form of one, named on a path from one computer",
+		EventSheetFilesDoctor.untrusted_code_file_lines(BINARY_LOADED).size(), 1) and ok
+	ok = _check("a resource the game shipped with is nobody's business",
+		EventSheetFilesDoctor.untrusted_code_file_lines(SHIPPED_RESOURCE).size(), 0) and ok
+	ok = _check("and reading the same file as TEXT brings no behaviour with it",
+		EventSheetFilesDoctor.untrusted_code_file_lines(READ_AS_DATA).size(), 0) and ok
+	# The two readings share a corpus and must not say each other's sentence about one line.
+	ok = _check("the scene reading says nothing about a .tres",
+		EventSheetFilesDoctor.untrusted_scene_lines(RESOURCE_LOADED).size(), 0) and ok
+	ok = _check("and this one says nothing about a .tscn",
+		EventSheetFilesDoctor.untrusted_code_file_lines(UNASKED).size(), 0) and ok
+
+	var filed: Array[Dictionary] = EventSheetFilesDoctor.untrusted_code_file_findings(
+		{"res://mods.gd": SCRIPT_LOADED})
+	ok = _check("it is filed under its own id", filed.size() == 1
+		and str(filed[0].get("check", "")) == EventSheetFilesDoctor.CHECK_UNTRUSTED_CODE_FILE,
+		true) and ok
+	ok = _check("as a warning rather than an error, exactly as its sibling is",
+		str(filed[0].get("severity", "")), "warning") and ok
+	ok = _check("naming the file that is loaded", str(filed[0].get("subject", "")),
+		"\"user://mods/hack.gd\"") and ok
+	ok = _check("and saying there is no question to ask about this one",
+		str(filed[0].get("message", "")).contains(EventSheetL10n.translate(
+			"There is no question to ask first about these the way there is about a scene file, because the file being read is not a scene. Read it as DATA instead - Read Text File (or a fallback) for text, Table From File for rows and columns, JSON for a structure - or, if this game means to run code its players wrote, say so where they can read it.")),
+		true) and ok
 	return ok
 
 
