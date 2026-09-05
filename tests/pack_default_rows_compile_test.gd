@@ -23,6 +23,11 @@
 # (`SheetCompiler._param_annotation_lines` returns early on an empty description). The day one of
 # those parameters gains its help sentence the default starts shipping, and this gate is what turns
 # red instead of the game.
+#
+# THE PARSE ERRORS THIS PRINTS MID-SUITE ARE DELIBERATE. Every row on `KNOWN_FAILING` below is still
+# compiled rather than skipped, so a row that starts compiling is reported as a stale line to delete
+# instead of sitting on the list for ever - and Godot writes each of those failures to stderr on its
+# way past. A run of this file that prints no engine parse errors at all is the surprising one.
 @tool
 class_name PackDefaultRowsCompileTest
 extends RefCounted
