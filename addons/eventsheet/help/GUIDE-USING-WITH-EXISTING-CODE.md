@@ -1773,7 +1773,7 @@ reader of its own. Four have one:
 | the `get_csv_line` lambda, called on the spot and assigned | the **Set** it was authored as, with `table of <path>` whole in the value slot |
 | the five-local `store_csv_line` write chain | **Write Table To File**, its First line answer still a live choice |
 | a guarded `store_string` / `store_line` onto an opened file | **Append To File**, however the handle was named |
-| the `DisplayServer.file_dialog_show` / `FileDialog` if-else | the **Ask** row it was written from, under its own two local names |
+| the `DisplayServer.file_dialog_show` / `FileDialog` branch | the **Ask** row it was written from, under its own two local names |
 
 **Each of those is matched against the shipped template of the row it means**, filled with sentinels
 instead of values, so what the reader recognises cannot drift from what the compiler writes. And the

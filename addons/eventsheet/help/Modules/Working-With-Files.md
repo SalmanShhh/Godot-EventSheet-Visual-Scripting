@@ -146,7 +146,7 @@ chosen** event writes a call to a function that is not there. Add both events wh
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | On Files Dropped | Runs when the player drags files onto the game window and lets go (desktop only) | `get_window().files_dropped.connect(_on_files_dropped)` in `_ready`, handler `_on_files_dropped(files: PackedStringArray)` |
-| Ask For A File To Open | Opens the player's own file chooser so they can pick a file to read | `if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):` then `DisplayServer.file_dialog_show(…, DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, {filters}, …)`, `else:` a `FileDialog` with `ACCESS_FILESYSTEM` |
+| Ask For A File To Open | Opens the player's own file chooser so they can pick a file to read | the callback, then `if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE) or DisplayServer.file_dialog_show(…, DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, {filters}, …) != OK:` a `FileDialog` with `ACCESS_FILESYSTEM` |
 | Ask Where To Save | Opens the player's own save chooser so they can name a file and a folder | The same branch, with `FILE_DIALOG_MODE_SAVE_FILE` / `FILE_MODE_SAVE_FILE` |
 | On A File Chosen | Runs when the player answered an Ask row by picking a file | `func _on_file_chosen(path: String) -> void:` |
 | On The Ask Cancelled | Runs when the player closed an Ask row's chooser without picking anything | `func _on_ask_cancelled() -> void:` |
@@ -190,11 +190,11 @@ an event for each of them or the script does not compile.
 |------|--------------|----------|
 | Pack Folder Into Zip | Writes the files directly in one folder into a `.zip` | `var __packer := ZIPPacker.new()`, `if __packer.open({archive}) == OK:`, then `start_file` / `write_file(FileAccess.get_file_as_bytes(…))` / `close_file` per file |
 | Unpack Zip Into Folder | Reads a `.zip` and writes its entries into a folder, guarded | `var __reader := ZIPReader.new()`, the folder made first, then per entry the guard `if not ProjectSettings.globalize_path(__into).simplify_path().begins_with(__root):` before `FileAccess.open(…, FileAccess.WRITE)` |
-| On Unpack Progress | Runs once per entry as an unpack writes it | `func _on_unpack_progress(entries: int, bytes: int) -> void:` |
+| On Unpack Progress | Runs once per entry as an unpack writes it | `func _on_unpack_progress(entries: int, bytes: int, total: int) -> void:` |
 | On Unpack Refused | Runs when the guard stopped an unpack, with the entry and the reason | `func _on_unpack_refused(entry: String, reason: String) -> void:` |
-| On Unpack Finished | Runs when an unpack reached the last entry with nothing refused | `func _on_unpack_finished(entries: int, bytes: int) -> void:` |
+| On Unpack Finished | Runs when an unpack reached the last entry with nothing refused | `func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:` |
 
-![Four events in a sheet called ModInstaller, under a head whose files bands read user://pack.zip - read and written and user://mods - read and written with the ZIPReader line echoed beside each: On Created with System Unpack "user://pack.zip" into folder "user://mods", then On Unpack Progress setting Bar value to entries, On Unpack Refused setting Label text to "Refused: " and reason, and On Unpack Finished setting Label text to "Installed " and entries](../images/archive-unpack.png)
+![A sheet called ModInstaller under a head whose files bands read user://pack.zip - read and user://mods - written, the ZIPReader line echoed beside each: On Created unpacks "user://pack.zip" into folder "user://mods", and On Unpack Progress sets a bar value to entries divided by total, with the refused and finished events below](../images/archive-unpack.png)
 
 ### Files: the name a player typed
 
@@ -219,10 +219,13 @@ is the slot's, and it is the one that matters most here: a name written as `type
 bare `.validate_filename()` after it would validate the `".json"` and hand `..` through untouched,
 through the one row that exists to stop it.
 
-**Free File Path reads the path once and only counts when it has to.** The numbers are tried only
-when the path you asked for is taken, and a run that fills every one of them answers the path you
-asked for - so the write after it overwrites, which is why the row asks you for a number you are
-comfortable with rather than choosing one.
+**Free File Path reads the path once and only counts when it has to - but then it counts all the
+way.** The numbers are tried only when the path you asked for is taken, and once they are, every one
+of them is asked about: the line builds all the candidates and keeps the free ones rather than
+stopping at the first, because stopping wants a loop and a loop is not an expression. So a taken path
+costs `at_most` file_exists questions whichever number turns out to be free. A run that fills every
+one of them answers the path you asked for - so the write after it overwrites, which is why the row
+asks you for a number you are comfortable with rather than choosing one.
 
 ### Files: scene files
 
@@ -543,8 +546,9 @@ On a file chosen path
   -> Write Text File  path, To JSON Text (pretty)(level)
 ```
 
-**25. Installing a mod the player downloaded.** The unpack reports itself, so the progress bar moves
-and a hostile archive is refused out loud rather than quietly writing somewhere it should not.
+**25. Installing a mod the player downloaded.** The unpack reports itself entry by entry, says how
+many entries it skipped, and refuses a hostile archive out loud rather than quietly writing somewhere
+it should not.
 
 ```
 On install pressed
@@ -665,9 +669,14 @@ On load pressed
   List Subdirectories if you need a tree.
 - **On Files Dropped is desktop only.** Windows, macOS and Linux raise it; a web or mobile build never
   does. Keep an Ask For A File To Open button beside it so the feature has a way in everywhere.
-- **Both Ask rows want a Node host.** When a platform has no chooser of its own the emitted else
-  branch builds a `FileDialog`, adds it as a child and pops it up, so the row is filed on `Node` and
+- **Both Ask rows want a Node host.** When a platform has no chooser of its own the emitted fallback
+  builds a `FileDialog`, adds it as a child and pops it up, so the row is filed on `Node` and
   offered in sheets whose script is one. Nothing about the emitted line changes.
+- **A native ask that fails to open falls through to the engine's own window.**
+  `DisplayServer.file_dialog_show` answers with an Error, and a platform can report the feature and
+  still fail - a Linux build with no portal running. The emitted question is `no native chooser, OR
+  asking for one did not open it`, so the row cannot end with no window at all and neither answer
+  event.
 - **An Ask row needs both answer events.** The emitted line calls `_on_file_chosen` and
   `_on_ask_cancelled` by name, and those two functions are what On A File Chosen and On The Ask
   Cancelled compile to. Without them the script does not compile.
@@ -704,18 +713,31 @@ On load pressed
 - **A refused unpack stops where it stopped.** The entries written before the bad one stay written.
   That is deliberate - the sheet is told which entry stopped it, and clearing up is a decision, not
   something a row should make on your behalf.
-- **The unpack counts what LANDED, not what it tried.** An entry the machine would not write - a name
-  the file system refuses, a folder it could not make, a full disk - moves neither the progress bar
-  nor the totals On Unpack Finished carries. A finish saying nine entries after a ten-entry archive
-  is a finish saying one did not land.
+- **The unpack counts what LANDED, what it SKIPPED, and how many there were.** An entry the machine
+  would not write - a name the file system refuses, a folder it could not make, a full disk - moves
+  neither the progress bar nor the first two totals On Unpack Finished carries. It moves the THIRD,
+  which counts the entries that did not land, so a finish saying nine entries and one skipped after a
+  ten-entry archive says the install is not complete. On Unpack Progress carries the archive's own
+  entry count beside its two, which is the number a bar divides by.
+- **An entry the reader could get no bytes out of is skipped, not written.** `ZIPReader.read_file`
+  answers with an empty byte array for an entry it could not decode - a truncated archive, a header
+  that lies about its length, a CRC that does not match - and prints an engine message while doing
+  it. Writing that answer out would land a 0-byte file the game then reads as content, so it is
+  skipped and counted instead. An entry that really IS empty reads exactly the same way and is
+  skipped with it: the reader offers no size to tell them apart, and this is the safer way to be
+  wrong.
+- **The unpack loop does not yield.** It runs to the end inside the one row, so the window does not
+  repaint while it works. An archive big enough for that to matter wants its own reading with a
+  waiting loop, hand-written; nothing here pretends otherwise.
 - **The unpack guard is LEXICAL, and three things it cannot see are worth knowing.** It compares the
   real path each entry would land at against the real path of the target folder, which is what turns
   every spelling of `..` into a refusal. But (1) a **symlink or junction already sitting inside the
   target folder** redirects a write out of it, because the path is inside and the file system is not -
   the guard sees the path, not the link; (2) on Windows, an entry named `x:y.txt` lands as an
   **alternate data stream** on a file called `x` rather than as a file of its own, which is a payload
-  that does not show in a directory listing; and (3) an entry the reader cannot decode gives back
-  nothing, so it lands as a **0-byte file** and is counted as one that landed.
+  that does not show in a directory listing; and (3) an entry the OS refuses outright - a reserved
+  device name such as `CON`, an empty name - is dropped where the write guard sits, counted as
+  skipped, and not otherwise reported.
 - **An entry is read whole before it is written.** `read_file` materialises the entire entry in
   memory, so an archive from outside the game can be a memory bill as well as a disk one. Check the
   archive's size before unpacking one somebody sent.

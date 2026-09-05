@@ -323,6 +323,12 @@ On A File Removed path -> SlotMenu | Rebuild
   interval of two seconds means "within two seconds", never "immediately".
 - **A modified time is stamped to the nearest second.** A file written twice inside one second looks
   unchanged. That is a limit of the filesystem, not of this pack.
+- **The time is the whole reading, so a replacement carrying the old time is invisible.** A copy made
+  with its timestamps preserved (`cp -p`, most restore and sync tools) puts different content under
+  an unchanged stamp, and the look sees nothing to raise. Comparing sizes as well would mean opening
+  every watched file on every look, which is a cost the row does not pay behind your back - so if
+  timestamp-preserving copies are how files reach your watched folder, raise the change yourself with
+  Look Now after the copy rather than waiting for one.
 - **Changed means the time moved, not that it moved forward.** Restoring a file from a backup or
   copying an older copy over it puts an OLDER time on it, and that really is a change, so it raises
   On A File Changed like any other.

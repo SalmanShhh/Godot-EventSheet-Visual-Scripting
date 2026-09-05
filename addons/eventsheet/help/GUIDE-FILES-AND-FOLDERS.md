@@ -204,11 +204,14 @@ once per line with the current one readable as `line`.
 ### The band at the top says what this sheet touches
 
 A sheet that reads or writes files grows a **files** band in its head, one entry per path, saying
-what happens to it: `user://save.json - read and written`. A row that starts a watch reads
+what happens to it: `user://scores.csv - written`, `res://data/items.csv - read`. Each path field is
+read on its own rather than the row as a whole, so an unpack shows `user://pack.zip - read` beside
+`user://mods - written` rather than calling both by the same word; a path one row reads and another
+writes is the one that says `read and written`. A row that starts a watch reads
 `watching user://mods every 2.0 s`, because a folder read once and a folder read every two seconds
 for the rest of the session are not the same thing to say about a sheet.
 
-![A sheet head with a files band listing user://pack.zip - read and written and user://mods - read and written, each with the engine call echoed beside it](images/files-band.png)
+![A sheet head with a files band listing res://data/items.csv - read, user://scores.csv - written and user://run.log - read, each with the engine call echoed beside it, then the line saying this sheet asks the player for a file](images/files-band.png)
 
 ## The drop and the ask
 
@@ -236,15 +239,21 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 
 **Ask For A File To Open** and **Ask Where To Save** open the platform's own file chooser where the
 platform has one, through `DisplayServer.file_dialog_show`, and where it has none the `FileDialog`
-fallback is emitted as a **visible `else`**. Both spellings are in the code a reader can see, because
-a row that quietly picked one of two very different windows would be a row nobody could debug.
+fallback is built instead. Both spellings are in the code a reader can see, because a row that
+quietly picked one of two very different windows would be a row nobody could debug.
 
-**One row, fourteen statements, and one row again when the file is opened.** That visible `else` is
-the honest shape and it used to be the expensive one: reopened, the branch came back as an `if` event
-holding a lambda and an `else` event holding eleven lines about a `FileDialog`. It comes back as the
-Ask row now, under whatever the two locals in it were named, and a branch that has had a line added
-to either half - or whose halves name different locals - is refused and stays the statements it is,
-because the run is written again from the row and compared byte for byte first.
+**And the ask's own answer is read.** `file_dialog_show` returns an Error, and a platform can report
+that it has a native chooser and then fail to open one - a Linux build with no portal running is the
+everyday case. So the question the fallback hangs on is `no native chooser, OR asking for one did not
+open it`, and both of those roads end at the engine's own window. Whichever chooser opened, the row
+still ends at On A File Chosen or On The Ask Cancelled, which is what its help promises.
+
+**One row, fourteen statements, and one row again when the file is opened.** That visible branch is
+the honest shape and it used to be the expensive one: reopened, it came back as a lambda event and an
+event holding eleven lines about a `FileDialog`. It comes back as the Ask row now, under whatever the
+two locals in it were named, and a branch that has had a line added to either half - or whose halves
+name different locals - is refused and stays the statements it is, because the run is written again
+from the row and compared byte for byte first.
 
 **The answer is an event, never a return value.** A chooser is a separate window and the player
 answers it long after the row ran, so both Ask rows end in **On A File Chosen** or
@@ -336,19 +345,25 @@ simplified, the folder keeping its trailing slash so `user://mods` cannot accept
 so the rows after the unpack still run and the row still fits inside a sheet function that answers
 with a value.
 
-A huge archive meets a progress bar rather than a frozen game: **On Unpack Progress** reports the
-entries and bytes that have landed, once per entry, and **On Unpack Finished** ends a run that
-reached the last entry. Both numbers count writes that SUCCEEDED: an entry the machine would not
-write - a name the file system refuses, a folder it could not make, a disk that is full - moves
-neither the bar nor the totals, so a finish saying nine of ten entries is a finish saying one did not
-land. Like the Ask rows, the emitted loop calls all three answers **by name**, so a sheet that
+**On Unpack Progress** reports the entries and bytes that have landed, once per entry, and how many
+entries the archive holds in all - the number a bar divides by. The whole unpack happens inside the
+one row: there is no waiting in the loop, so the reports arrive in a burst and the window repaints
+once the row is done. What a bar reads off them is how far the run got, not the run happening.
+
+**On Unpack Finished** ends a run that reached the last entry, and its three numbers say what became
+of the archive. The first two count writes that SUCCEEDED. The third counts the entries that did NOT
+land: one the reader could get no bytes out of - a truncated or corrupted archive, and an entry that
+really is empty, which reads exactly the same way - and one the machine would not write, such as a
+name the file system refuses, a folder it could not make or a disk that is full. Nothing of theirs is
+on disk, so a finish saying nine entries and one skipped is a finish saying the install is not
+complete. Like the Ask rows, the emitted loop calls all three answers **by name**, so a sheet that
 unpacks needs an event for each:
 
 ```gdscript
 extends Node
 
 
-func _on_unpack_progress(entries: int, bytes: int) -> void:
+func _on_unpack_progress(entries: int, bytes: int, total: int) -> void:
 	print(entries)
 
 
@@ -356,11 +371,11 @@ func _on_unpack_refused(entry: String, reason: String) -> void:
 	print(reason)
 
 
-func _on_unpack_finished(entries: int, bytes: int) -> void:
+func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:
 	print(bytes)
 ```
 
-![Four events in a sheet called ModInstaller, under a head whose files bands read user://pack.zip - read and written and user://mods - read and written with the ZIPReader line echoed beside each: On Created with System Unpack "user://pack.zip" into folder "user://mods", then On Unpack Progress setting Bar value to entries, On Unpack Refused setting Label text to "Refused: " and reason, and On Unpack Finished setting Label text to "Installed " and entries](images/archive-unpack.png)
+![A sheet called ModInstaller under a head whose files bands read user://pack.zip - read and user://mods - written, the ZIPReader line echoed beside each: On Created unpacks "user://pack.zip" into folder "user://mods", and On Unpack Progress sets a bar value to entries divided by total, with the refused and finished events below](images/archive-unpack.png)
 
 ## The name the player typed
 
@@ -378,9 +393,10 @@ player who typed nothing gets a file instead of an error.
 **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
 does not erase the first. The rule is the one every desktop uses and it is spelled out in the emitted
 line: `shot.png`, then `shot_1.png`, then `shot_2.png`, up to the number in the slot. The path is
-read once, the numbers are only tried when the path you wanted is taken, and a run that fills every
-number answers the path you asked for - which the row's own help says out loud, because that next
-write overwrites.
+read once, and the numbers are only tried when the path you wanted is taken - though once they are,
+all of them are asked about rather than only up to the first free one, which the slot's own help says
+out loud. A run that fills every number answers the path you asked for, so that next write
+overwrites, and the row says that too.
 
 ```gdscript
 extends Node
