@@ -386,7 +386,7 @@ func regenerate_nav_graph() -> void:
 ## @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]")
 ## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")
+## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, "{mode}")")
 func find_path_to(x: float, y: float, mode: String) -> void:
 	# A route to walk is work every frame again. Coming back from parked the floor
 	# bookkeeping was not being kept, so the coyote window starts closed rather than
@@ -453,7 +453,7 @@ func find_path_to(x: float, y: float, mode: String) -> void:
 ## @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
 ## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, {mode})")
+## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, "{mode}")")
 func find_path_to_node(target: Node, mode: String) -> void:
 	if target is Node2D:
 		find_path_to((target as Node2D).global_position.x, (target as Node2D).global_position.y, mode)
@@ -522,7 +522,7 @@ func set_ledge_leniency(pixels: float) -> void:
 ## @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
 ## @ace_param_options(mode relaxed, strict)
 ## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning({mode})")
+## @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning("{mode}")")
 func set_jump_positioning(mode: String) -> void:
 	jump_positioning = mode
 
@@ -653,6 +653,7 @@ func is_path_pending() -> bool:
 func is_in_hazard() -> bool:
 	return host != null and _point_in_hazard(host.global_position, false)
 
+## Whether a world point sits in any hazard (deadly_only narrows to deadly ones).
 ## @ace_hidden
 func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
 	for hazard in _hazards:
@@ -660,6 +661,7 @@ func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
 			return true
 	return false
 
+## Hazard verdict for one edge (endpoints + midpoint): 0 = clear, 1 = danger, 2 = deadly.
 ## @ace_hidden
 func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 	if _hazards.is_empty():
@@ -737,6 +739,7 @@ func current_waypoint_y() -> float:
 func current_path_action() -> String:
 	return str(_path[_path_index]["action"]) if not _path.is_empty() else ""
 
+## The gravity the drive should reason with (the sibling's when present).
 ## @ace_hidden
 func _drive_gravity() -> float:
 	var movement: Node = _find_movement()
@@ -744,11 +747,16 @@ func _drive_gravity() -> float:
 		return maxf(float(movement.get("gravity")), 1.0)
 	return maxf(fallback_gravity, 1.0)
 
+## The upward speed still needed to climb to `target` from here (plus a half-tile margin) -
+## variable jump releases the button once remaining velocity drops to this, so each hop
+## rises just as far as its arc requires.
 ## @ace_hidden
 func _release_velocity_for(target: Vector2) -> float:
 	var rise: float = maxf(host.global_position.y - target.y, 0.0) + 20.0
 	return sqrt(2.0 * _drive_gravity() * rise)
 
+## Injects one portal into the built graph as a cheap "portal" edge between the standable
+## nodes nearest its endpoints.
 ## @ace_hidden
 func _apply_portal(portal: Dictionary) -> void:
 	var from_node: Vector2i = _nearest_node(portal["from"], 2)
@@ -759,6 +767,8 @@ func _apply_portal(portal: Dictionary) -> void:
 	if bool(portal["both"]):
 		_add_edge(to_node, from_node, "portal", 2.0)
 
+## Injects one moving platform as a slow bidirectional "platform" edge between the
+## standable nodes nearest its two travel endpoints.
 ## @ace_hidden
 func _apply_moving_platform(ride: Dictionary) -> void:
 	var from_node: Vector2i = _nearest_node(ride["a"], 3)
@@ -769,6 +779,7 @@ func _apply_moving_platform(ride: Dictionary) -> void:
 	_add_edge(from_node, to_node, "platform", span * 1.3)
 	_add_edge(to_node, from_node, "platform", span * 1.3)
 
+## The registered platform serving this waypoint (one of its endpoints is near it).
 ## @ace_hidden
 func _platform_for_waypoint(target: Vector2) -> Dictionary:
 	for ride in _moving_platforms:
@@ -778,6 +789,10 @@ func _platform_for_waypoint(target: Vector2) -> Dictionary:
 			return ride
 	return {}
 
+## Steering for a platform leg: wait BESIDE the track (a descending platform must land on
+## empty space), board when it arrives at the near side, stand centered while it travels,
+## and walk off once it reaches the far side. Waiting and riding legitimately stall
+## progress, so the stuck watchdog is held off for the leg.
 ## @ace_hidden
 func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 	var ride: Dictionary = _platform_for_waypoint(target)
@@ -805,6 +820,10 @@ func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 	var wait_dx: float = wait_x - host.global_position.x
 	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
 
+## Steering while a platform leg is still AHEAD in the path: the walk nodes feeding a
+## boarding point sit inside the track's crush zone, so the agent holds STILL at the wait
+## spot beside the track and only walks in once the platform is parked at the boarding
+## side (never strolls under a platform that is about to land on it).
 ## @ace_hidden
 func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
 	var ride: Dictionary = _platform_for_waypoint(leg_target)
@@ -821,6 +840,9 @@ func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
 	var wait_dx: float = wait_x - host.global_position.x
 	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
 
+## True while standing on a registered platform that is BETWEEN its endpoints - the
+## window where a fresh route would mis-start from a ground node and steer the rider
+## off the shaft in mid-air.
 ## @ace_hidden
 func _riding_moving_platform() -> bool:
 	if host == null or not host.is_on_floor():
@@ -847,6 +869,8 @@ func _advance_waypoint() -> void:
 		stop_pathfinding()
 		path_complete.emit()
 
+## Coarse clearance for a jump/fall arc: the cells along the chord, lifted one cell for
+## the rise, must be free. Coarse on purpose - it favours routing in open layouts.
 ## @ace_hidden
 func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:
 	if solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):
@@ -868,6 +892,8 @@ func _cell_world(cell: Vector2i) -> Vector2:
 	var local: Vector2 = _tilemap.map_to_local(cell)
 	return _tilemap.to_global(local) if _tilemap.is_inside_tree() else local + _tilemap.position
 
+## A* over the walk/jump/fall edges (jump edges already carry their cost premium, so the
+## router prefers walking a ramp over jumping it). Returns the cell path or [].
 ## @ace_hidden
 func _astar(start: Vector2i, goal: Vector2i) -> Array:
 	var open: Array = [start]
@@ -900,6 +926,8 @@ func _astar(start: Vector2i, goal: Vector2i) -> Array:
 					open.append(next_cell)
 	return []
 
+## The router's edge filter: deadly hazards block outright; with ledge restriction on,
+## walking is always fine, drops only within the leniency, jumps and portals never.
 ## @ace_hidden
 func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
 	if _segment_hazard(from_cell, edge["to"]) == 2:
@@ -914,6 +942,7 @@ func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
 		return float(((edge["to"] as Vector2i).y - from_cell.y)) * tile <= ledge_leniency
 	return false
 
+## The edge kind walking cell A -> B on the found path (for the waypoint's action).
 ## @ace_hidden
 func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:
 	for edge in (_edges.get(from_cell, []) as Array):

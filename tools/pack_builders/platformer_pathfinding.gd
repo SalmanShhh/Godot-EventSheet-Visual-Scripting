@@ -779,12 +779,14 @@ static func build() -> bool:
 		])))
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
+	_quoted_argument(sheet, "find_path_to({x}, {y}, \"{mode}\")")
 	Lib.append_function(sheet, "find_path_to_node", "Find Path To Node", "Platformer Pathfinding",
 		"Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.",
 		[["target", "Node"], ["mode", "String"]],
 		"if target is Node2D:\n\tfind_path_to((target as Node2D).global_position.x, (target as Node2D).global_position.y, mode)\n\t_follow_target = target\n\t_goal_mode = mode\n\t_repath_clock = 0.0\nelse:\n\tpath_failed.emit()")
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
+	_quoted_argument(sheet, "find_path_to_node({target}, \"{mode}\")")
 	Lib.append_function(sheet, "stop_pathfinding", "Stop Pathfinding", "Platformer Pathfinding",
 		"Clears the path and releases the movement pack back to the keyboard (ai_controlled off).",
 		[],
@@ -822,6 +824,7 @@ static func build() -> bool:
 		"jump_positioning = mode")
 	_default(sheet, "mode", "relaxed")
 	_param_options(sheet, "mode", ["relaxed", "strict"])
+	_quoted_argument(sheet, "set_jump_positioning(\"{mode}\")")
 	Lib.append_function(sheet, "set_coyote_time", "Set Coyote Time", "Platformer Pathfinding",
 		"Grace window (s) for AI jumps just after running off the takeoff ledge.",
 		[["seconds", "float"]],
@@ -891,6 +894,17 @@ static func build() -> bool:
 	})
 	Lib.feature_verbs(sheet, ["build_nav_graph", "find_path_to"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior")
+
+
+## Gives the last-appended ACE a call template that QUOTES its dropdown argument. A dropdown key is
+## inserted into the call verbatim, so a String argument picked from a list of words has to carry its
+## own quotes in the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter
+## wraps it again and the scanner strips one pair back off). Without this a row picking reach asked
+## `find_path_to(x, y, reach)`, an undefined identifier, and the game did not parse. The call prefix
+## is the pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
 
 
 ## Pre-fills the last-appended ACE's parameter default (authoring-time metadata only).
