@@ -24,6 +24,7 @@
 class_name FilesBandAndEngineTableTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const MODULE_PATH := "res://addons/eventforge/registration/modules/table_aces.gd"
 const PROBE_CSV := "user://files_band_probe.csv"
 const PROBE_OUT := "user://files_band_probe_out.csv"
@@ -417,8 +418,9 @@ static func _run_write(records: Array) -> void:
 		lines.append("\t" + line)
 	var script: GDScript = GDScript.new()
 	script.source_code = "\n".join(lines) + "\n"
-	if script.reload() != OK:
-		print("  [FAIL] files_band_and_engine_table_test: the emitted write did not compile")
+	var reloaded: int = script.reload()
+	if reloaded != OK:
+		_check("the emitted write did not compile", error_string(reloaded), "(compiles)")
 		return
 	script.call("probe", records)
 
@@ -432,8 +434,9 @@ static func _call(expression: String) -> Array:
 	lines.append("\treturn null")
 	var script: GDScript = GDScript.new()
 	script.source_code = "\n".join(lines) + "\n"
-	if script.reload() != OK:
-		print("  [FAIL] files_band_and_engine_table_test: an emitted expression did not compile")
+	var reloaded: int = script.reload()
+	if reloaded != OK:
+		_check("an emitted expression did not compile", error_string(reloaded), "(compiles)")
 		return []
 	var value: Variant = script.call("probe")
 	if value is Array:
@@ -522,7 +525,4 @@ static func _quote(text: String) -> String:
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		return true
-	print("  [FAIL] files_band_and_engine_table_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
-	return false
+	return SUPPORT.check("files_band_and_engine_table_test", label, actual, expected)
