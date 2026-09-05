@@ -272,6 +272,62 @@ What changed in the build you have installed (v0.17.0), in the words the release
   existing - it ships quoted now, and comes back.
 
 
+### Fixed after a reading of the juice composition pass
+
+- **A Hold at the head of a looped stretch waits for the steps above it again.** The schedule was
+  zeroed when the loop opened, so the fold the Hold exists for was zeroed with it: the first pass
+  fired the moment the step above it STARTED rather than when that step had finished. What is still
+  running when the stretch opens is carried into it, the way back puts that duration on the step
+  outside the loop, and a looped beat still re-emits byte for byte.
+- **A moment written as ROWS opens a play like every other home.** A Moment block's coroutine was
+  called and the runner was told nothing, so On Moment Started, On Moment Finished and Moment Is
+  Playing were silent for a beat written as rows while they answered for the same beat written as a
+  file. It opens a play now and closes it when the coroutine returns. What a block beat still cannot
+  have is a book of values - its rows are the host's own code - so Revert and Restore say so rather
+  than pretending. **Play Moment Backwards on a block's name** used to play the FILE of that name
+  instead, which is a different beat wearing the right word; it now says the beat has no way back
+  unless the host carries one.
+- **A moment you save out lands in `res://moments/`, a folder of the game's own.** The save door
+  suggested the pack's own folder, which the builders regenerate - a beat saved there is a beat a
+  rebuild walks over. A Moment row looks in the game's folder before the pack's, so a file saved
+  where the door suggests is found by name with nothing else set up.
+- **A step that asks for its own natural length is counted at it.** A card that says 0 seconds lets
+  a flash, a punch, a zoom, a chromatic kick or a pulse use the length it really has - but the book
+  counted 0, so the beat was over, On Moment Finished had fired and a Revert was impossible while
+  the flash was still on the screen.
+- **The heaviest spring damping is still a spring.** The decay is exponential, so at a damping of
+  exactly 1 - the value the row's own description invites - nothing of the velocity survived a step:
+  the spring stood still, never settled, and the per-frame tick never parked again. Damping is held
+  a thousandth under, in all three integrators.
+- **Six things a Feedback Player's list promised and did not do.** Revert and Restore put a value
+  back and the still-running tween wrote over it on the next frame (the tween is stopped first now);
+  a play started by a Play Player card was never stopped, skipped or restored with the list around
+  it; Play On Channel broadcast the bare word `play`, which an AudioStreamPlayer or an
+  AnimationPlayer in the same group answers to as well (the channel speaks a name of the pack's
+  own); a Hold waited for the full length of cards whose delays the walk had already waited out; a
+  `restart` left the play it interrupted open, so a sheet pairing On Feedbacks Started with On
+  Feedbacks Finished heard two starts and one finish; the player's own strength scaled only the felt
+  cards and not the tween that moves the object; and Save Moment File wrote switched-off cards and
+  timing words into a file that can play neither - they are named in a warning and left out.
+- **A sequencer track reaches the behaviour that can play its cells.** The group door asked every
+  listener for `play_moment`, a method no shipped pack has, so a lights track of Juice nodes never
+  fired. The Juice behaviour's own Moment verb - the same two arguments - is tried after it. The
+  frames between two steps now allocate nothing, as the file's own header says they must.
+- **The toolbar's Moment segment reaches a Moment block's head**, which the guide has always said it
+  does: the dock passed it the selected ACE alone, and a block's head carries none. And a beat the
+  editor cannot sample - a named moment, a block of rows - leaves the five doors disabled wearing the
+  reason, rather than silently driving whichever Feedback Player the open scene happened to have.
+- **Play Feedbacks And Wait is a coroutine everywhere it is read.** The one awaiting row of the pass
+  had joined neither coroutine list, so the Doctor never warned about it under On Process. It joins
+  all three, and the check now also reads a row's own template - a pack verb that awaits is flagged
+  whether or not anybody remembered to name it.
+- **A count on a step card is still a count after the card closes.** The box was read through JSON,
+  which hands every number back as a float, so opening a card and closing it rewrote `\"loops\": 2` as
+  `2.0` - against the field's own promise to leave the row's bytes alone.
+- **A disabled plugin leaves nothing behind in the registries.** `_exit_tree` took the card schema
+  off and left the step field and its help paragraph registered, so a callable made in the boot file
+  outlived the plugin that made it.
+
 ### Fixed on the boot path
 
 - **Enabling the plugin costs a third of a second again, not nineteen.** The Feedback Player's card
@@ -1118,6 +1174,18 @@ What changed in the build you have installed (v0.17.0), in the words the release
   emit into its own codegen templates, so the installed Game Settings pack read as a project reading
   the difficulty and the note could not fire in a single project that had the pack. The packs folder
   is out of the corpus now, on both sides of the question.
+- **A colour written over a status tint is not divided by it.** Reading the colour underneath a tint
+  by dividing the tint back out assumed every other writer of `modulate` multiplies, and almost none
+  of them do: a flash, a fade and a hit blink all WRITE a colour. So a sprite another script set to
+  white while a burn was on came back at (1.0, 1.61, 2.86, 1.0), brighter than white and stuck there,
+  because 1.0 was divided by a tint that had never been applied to it. Each channel is compared with
+  what the behaviour actually wrote instead: still that value and the remembered colour is what is
+  underneath, anything else and somebody wrote it on purpose, so it IS the colour underneath.
+- **A snap turns the body without rebuilding it.** Snap On Aim Down Sights takes only the heading, and
+  it took it by building a fresh basis out of it - which is level and orthonormal by construction, so
+  it also threw away the pitch an animation had put on the host, any roll it was leaning at, and its
+  scale: a model scaled to 2 came out of a snap at 1. The basis it has is rotated about the world's up
+  axis by the difference between the two headings now, which moves the heading and nothing else.
 
 ### Making it feel like something: how pictures meet, and the beat a hit is made of
 
@@ -1864,6 +1932,39 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **Fifty-three keys this pass owed are filled in all eight locales.** The guarded reads, the
   rename, the picture fields and the glow levels had landed keyed and unharvested, and the
   coverage gate had been red on their blank cells.
+- **The glow's seven levels land on the levels the row named.** `set_glow_level` takes an index
+  counting from 0, while the property names Godot prints count from 1: `glow_levels/1` is index 0
+  and index 7 is out of bounds. Set Glow Levels looped 1 to 7, so every one of the seven numbers
+  landed a level too wide and the last turn errored, and Set Glow Level passed the reader's number
+  straight through. The loop counts the engine's way now and the single-level row says the
+  Inspector's number and subtracts. The pins RUN both templates against a real `Environment` and
+  read the seven levels back, because an off-by-one is invisible to a string comparison.
+- **The blend untangle finishes, and gains a gate.** German and Simplified Chinese still gave Set
+  Blend and Set Blending the same sentence, and seven locales gave their two parameter labels one
+  word, so a translated picker still offered one name for two different rows. The 2D family now
+  carries the blend MODE noun in each locale - the noun German, Russian and Chinese had already
+  reached for on the verb row and nowhere else. The same collapse in the see-through AMOUNT against
+  the transparency MODE is fixed in Spanish, French, Italian and Russian. A new gate reads the
+  catalog rather than any one language: a pair of English keys that name two different things has
+  to be two words in every bundled file.
+- **The Korean rows say scene, and bind the object marker to its noun.** The word for scene was
+  truncated to a non-word in nine places across five rows, and twenty-two surface rows spelled the
+  marker as a separate word with a fixed 을 where a vowel-final noun needs 를.
+- **This vocabulary's Spanish and French rows settle on one verb.** Three Spanish rows and five
+  French ones had drifted to the other of the two verbs these rows otherwise use eighteen times out
+  of twenty-one, and one Spanish row had dropped its article. French also wrote `le horizon` six
+  times, and two Russian dropdown values were adverbs where their siblings are mode words.
+- **Three code blocks in the look guide are what the rows really emit.** The Fade Glow block dropped
+  the preamble the row carries, the sprite blending block dropped the `if material is
+  CanvasItemMaterial:` line that is the very guard the paragraph under it promises, and the
+  graphics-menu example used a row called Setting Is On that no pack ships, a condition standing in
+  a value field, and a bare number where the quality is a dropdown of words. Four claims in the same
+  guide were false as well, and fifty-nine shipped rows appeared in it under no name at all - so the
+  guide now carries a reference table naming every row of all five families.
+- **A sheet holding the older panorama line saves back byte for byte.** The panorama row used to
+  emit `load({path})` and now emits the texture its picture field holds. A line no reading claims
+  comes back as the verbatim block it went in as, so both spellings survive opening and saving
+  untouched; nothing released can hold the older one, and it is pinned rather than migrated.
 
 ### The wave, the aim, the free spot and the way back out
 
@@ -3745,7 +3846,7 @@ against Godot 4.7 before it was repaired.
   the answer function that opens from its header alone, and the multi-line loops that stay verbatim
   blocks with the adopt door - said out loud rather than left to be discovered.
 - **And the three pages caught up with the sweep that ran over them.** The Doctor's Files
-  section is six checks on the page, not four, and the export-trap bullet names the folder-handle
+  section is seven checks on the page, not four, and the export-trap bullet names the folder-handle
   spelling; both emitted fences are re-copied off the shipped templates, which grew brackets since
   the page was written, with the reason on the row rather than the brackets left as decoration;
   the six spellings that count as the `load()` door are named; and the watcher chapter gains what
@@ -3775,10 +3876,10 @@ against Godot 4.7 before it was repaired.
   page was open: the coming-from-another-editor map said 112 bundled packs and the docs-house page
   said 95 guides of 114 packs, where the tree holds **136 packs, 106 guide files, and 30 packs
   documented inside a partner's guide**.
-- **The Doctor's Files section is six checks wherever it is named.** The saving-and-loading page still
-  said three, which was true when the section held three and is now the wrong half of it: it says six,
-  names the three that carry a one-click fix, and points at the Files guide for the two trust checks
-  and the watch note that do not.
+- **The Doctor's Files section is seven checks wherever it is named.** The saving-and-loading page still
+  said three, which was true when the section held three and is now the wrong half of it: it says
+  seven, names the three that carry a one-click fix, and points at the Files guide for the three
+  trust checks and the watch note that do not.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### The files pass, read back adversarially
@@ -4070,6 +4171,52 @@ A boundary review read the three lift families, the guards and the pages against
   which is why the byte gate above could never have caught it. A trailing comment is refused the way
   the `PackedScene.new()` and `ResourceSaver.save` lines beside it already refuse one; a hash inside
   a string (`get_node(\"Level#1\")`) is not a comment and the run is still the row.
+- **The write sweep's method names are the engine's now, and the suite asks the engine.** The
+  picture-writer list held `Image.save_jpeg`, which is not a method Godot has - the spelling is
+  `save_jpg` - so the check promised to catch a call nobody can write, while `save_dds`, which is
+  real, went unseen. `ConfigFile.save_encrypted` and `save_encrypted_pass` were missing for a
+  sharper reason: a settings file is followed by its NAME and then matched on `.save(`, which
+  `save_encrypted_pass` does not contain, so the one write a game that encrypts its settings makes
+  every time raised nothing at all when it was aimed at `res://`. Both lists are pinned by value and
+  then held against `ClassDB` in both directions - nothing in them the engine does not have, and
+  nothing the engine has that they do not - so the next `save` method Godot grows fails the suite
+  rather than going quiet.
+- **A `res://` prefix is not a promise, and two containers are not tables.** `load(\"res://../payload.gd\")`
+  begins with the scheme that means the game's own files and names a file BESIDE the project, and
+  both trust readings cleared it for exactly that reason - while the question the rows emit already
+  refuses a climb inside a scene table, so the two halves of one boundary disagreed. One reading
+  decides now, for scenes and for the rest alike, and it refuses a climb. Beside it, three
+  extensions joined the list: a `.gdextension` is a NATIVE library, machine code loaded into the
+  engine's own process, and a `.pck` or a `.zip` handed to `ProjectSettings.load_resource_pack` is
+  wider still in a different direction - it MOUNTS its contents into `res://`, so a stranger's pack
+  does not merely add code, it can replace the game's. That call is one of the loaders now, and the
+  finding's words name what each of them really is. A pack the game ships with stays nobody's
+  business.
+- **The archive guard's colon refusal is written down.** An entry name carrying a colon opens an
+  alternate data stream on Windows - content that lands on disk and that no folder listing shows -
+  and a colon further in is a drive-relative name. The import guard refused both by construction and
+  nothing said so, which is how a later guard written for `..` alone would have quietly lost them.
+  Four pins now stand where one did: the stream name, the colon further in, a step out spelled with
+  backslashes, and a leading backslash.
+- **The seventh Files check reached the pages it was missing from.** The section registers seven
+  checks and three places said six - the Files guide's own list, which had no bullet for the `.gd`,
+  `.tres` or `.res` from outside handed to `load()` at all, its sentence about what the boundary
+  checks can see, which counted two of the three, and the saving-and-loading page's pointer at both.
+  A reader following the page's arithmetic would have concluded the check they were looking at did
+  not exist. All of them say seven, the missing bullet is written, and it says the thing the check's
+  own finding says: it is the one boundary check with no fix button, because the door offered for a
+  scene reads a scene table and would be a fix that cannot work here.
+- **Two unpack answers changed shape, and the pages that read them back say so.** **On Unpack
+  Progress** grew the archive total and **On Unpack Finished** grew the count of entries that did
+  not land, so the headers the compiler writes are not the ones an earlier build wrote. The answers
+  are read off the WHOLE header - nothing connects them, the emitted loop calls them by name, so the
+  header is the only thing that says what the function is - which means a file holding an older
+  spelling opens with those handlers as ordinary functions. That is deliberate rather than
+  overlooked: an old header kept as a second key would lift to the trigger and then be re-emitted
+  with the CURRENT one, which the byte gate throws away, and which would otherwise be a silent
+  rewrite of somebody's own signature. Nothing shipped can hold the old header. Three negative pins
+  stand where none did - the old spelling, an untyped one, and a nearby name - and each file comes
+  back byte for byte.
 
 
 ### Every call on a known class is a row
