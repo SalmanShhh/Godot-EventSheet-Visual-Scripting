@@ -127,6 +127,8 @@ static func _the_holes_are_the_cells_the_box_is_missing() -> bool:
 			[Vector3i(1, 0, 1), Vector3i(2, 0, 2)]],
 		["a full box has none", EventForgeChunkFolderFacts.missing_cells([
 			Vector3i(0, 0, 0), Vector3i(0, 0, 1), Vector3i(1, 0, 0), Vector3i(1, 0, 1)]), []],
+		["and the count agrees with the list without walking the box",
+			EventForgeChunkFolderFacts.missing_count(cells), 2],
 		["and the words a finding uses leave the always-zero height out",
 			EventForgeChunkFolderFacts.cells_as_words(
 				[Vector3i(1, 0, 1), Vector3i(2, 0, 2)], true, 6), "(1, 1), (2, 2)"],
@@ -149,6 +151,13 @@ static func _a_sparse_world_is_not_a_grid_with_holes() -> bool:
 			EventForgeChunkFolderFacts.gap_is_worth_reporting(3, 1), false],
 		["and a full grid has nothing to say either",
 			EventForgeChunkFolderFacts.gap_is_worth_reporting(9, 0), false],
+		["two islands are counted, never enumerated: a quarter of a million cells, answered flat",
+			EventForgeChunkFolderFacts.missing_count(
+				[Vector3i(0, 0, 0), Vector3i(500, 0, 500)]), 250999],
+		["and the count is what decides the question, so the box is never walked",
+			EventForgeChunkFolderFacts.gap_is_worth_reporting(2,
+				EventForgeChunkFolderFacts.missing_count(
+					[Vector3i(0, 0, 0), Vector3i(500, 0, 500)])), false],
 	])
 
 

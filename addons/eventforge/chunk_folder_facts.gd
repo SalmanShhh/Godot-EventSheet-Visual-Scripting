@@ -90,10 +90,33 @@ static func folders(scene_paths: PackedStringArray) -> Dictionary:
 	return kept
 
 
+## HOW MANY cells are missing from the box the given cells span, counted rather than listed: the
+## volume of the box, less the cells that are in it. This is the number `gap_is_worth_reporting`
+## wants, and it is a subtraction rather than a walk - which matters, because the box is only known
+## to be small AFTER that question has been answered. A world of two islands at (0, 0) and
+## (500, 500) spans a quarter of a million cells and a 3D one at the same distance spans
+## twenty-seven million, and listing them to decide they were not worth listing is a Doctor run
+## nobody gets back.
+static func missing_count(cells: Array) -> int:
+	var present: Dictionary = {}
+	for cell: Vector3i in cells:
+		present[cell] = true
+	if present.is_empty():
+		return 0
+	var low: Vector3i = present.keys()[0] as Vector3i
+	var high: Vector3i = low
+	for cell: Vector3i in present.keys():
+		low = Vector3i(mini(low.x, cell.x), mini(low.y, cell.y), mini(low.z, cell.z))
+		high = Vector3i(maxi(high.x, cell.x), maxi(high.y, cell.y), maxi(high.z, cell.z))
+	var box: int = (high.x - low.x + 1) * (high.y - low.y + 1) * (high.z - low.z + 1)
+	return box - present.size()
+
+
 ## The cells missing from the box the given cells span, sorted, so two machines reading one folder
 ## report the same holes in the same order. A world with nothing but two distant islands in it
 ## spans a box that is mostly empty and is NOT a grid with holes - `gap_is_worth_reporting` is the
-## question that tells the two apart, and this function only lists.
+## question that tells the two apart, asked over `missing_count` FIRST, and this function only
+## lists the holes of a box already known to be worth naming.
 static func missing_cells(cells: Array) -> Array[Vector3i]:
 	var present: Dictionary = {}
 	for cell: Vector3i in cells:

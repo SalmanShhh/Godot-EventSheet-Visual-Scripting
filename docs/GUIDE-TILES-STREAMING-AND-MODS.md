@@ -360,10 +360,12 @@ with a row, which is why neither of them is something a sheet could tell you:
   who walks into one of those cells finds nothing there, and finds it on somebody else's machine
   rather than yours. A deliberately sparse world of distant islands is not a grid with holes and
   earns no finding.
-- **A chunk carrying a camera.** Every `Camera2D` or `Camera3D` makes itself current as it enters the
-  tree, so a chunk with one in it snaps the view to whichever piece of scenery arrived last. It is
-  correct while that chunk is the scene being edited and wrong the moment it is one tile of a world,
-  which is exactly why it survives being looked at.
+- **A chunk carrying a camera.** A `Camera2D` or `Camera3D` saved as the **current** one takes the
+  view the moment its chunk enters the tree, and where a viewport has no current camera at all the
+  first chunk to arrive keeps it. Neither is what the chunk was authored to do, and a camera that is
+  neither changes nothing - the note is about a habit that is correct while that chunk is the scene
+  being edited and wrong the moment it is one tile of a world, which is exactly why it survives
+  being looked at.
 
 Both are read from the scenes' **text**, never by loading them - auditing a streamed world by loading
 all of it would be the one thing the pack exists to avoid.
@@ -470,8 +472,9 @@ appearing to work; switching the mod off and restarting is the way. Folder mods 
   intend players to write to. `res://` is read-only in an exported game and fails silently.
 - **Do not end a chunk prefix with a digit.** The numbers at the end of the file name are the
   address, and `level_2_3_4.tscn` cannot be told apart from a stacked cell.
-- **Do not put a camera in a chunk.** It will make itself current the moment it streams in. The
-  Doctor names them, but the habit is the fix.
+- **Do not put a camera in a chunk.** One saved as the current camera takes the view the moment it
+  streams in, and where nothing else is current the first chunk to arrive keeps it. The Doctor names
+  them, but the habit is the fix.
 - **A tilemap is not split by the split tool.** Convert a hand-built level to chunks by moving nodes;
   a tilemap that must be chunked is redrawn per chunk, or left as one layer the world sits on.
 - **Ship data-only mods unless you have decided otherwise, and say what you decided.** The refusal

@@ -6995,7 +6995,7 @@ tile data,瓦片数据
 terrain set,地形集
 "Streaming: %d chunk folder(s), %d with something to look at.",流式加载：%d 个区块文件夹，其中 %d 个有需要查看的问题。
 %s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s 中有 %d 个区块场景，但网格中间缺少 %d 个格子：%s。玩家走进这些格子时，那里什么都没有。
-"%s is a chunk scene carrying a camera. Every chunk that streams in makes its camera current, so the view jumps to whichever piece of the world arrived last - keep the camera in the scene that owns the player.",%s 是一个带有摄像机的区块场景。每个流入的区块都会把自己的摄像机设为当前摄像机，因此视角会跳到最后到达的那块世界 - 请把摄像机放在拥有玩家的那个场景里。
+"%s is a chunk scene carrying a camera. A camera saved as the current one takes the view the moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps it - keep the camera in the scene that owns the player.",%s 是一个带有摄像机的区块场景。被保存为当前摄像机的那一台，会在它的区块流入的那一刻夺走视角；而在没有当前摄像机时，视角归最先到达的区块所有 - 请把摄像机放在拥有玩家的那个场景里。
 Put On Cooldown,设为冷却
 "Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.",开始（或重新开始）一个具名冷却。在它守护的动作之前用「冷却已结束」来询问，同一个名字在该节点的任何事件里都通用。使用游戏时间时，游戏暂停冷却也随之停住，游戏变慢它也变慢 - 冲刺或法术要的正是这一种；若时钟必须穿过暂停菜单继续走，就选实时。若事件表声明了 cooldown_ready(cooldown_name) 信号，冷却就绪时触发器会在它结束的那一刻触发。
 put [b]{name}[/b] on cooldown for [b]{seconds}[/b]s,让 [b]{name}[/b] 冷却 [b]{seconds}[/b] 秒

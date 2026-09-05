@@ -6,10 +6,14 @@
 #   A HOLE IN THE GRID    a folder that is a filled rectangle except for two cells nobody made.
 #                       Nothing errors: the player simply walks into a void where the ground
 #                       should be, at run time, on the machine the game was sent to.
-#   A CAMERA IN A CHUNK   a chunk scene carrying a Camera2D or Camera3D. Every chunk that loads
-#                       makes itself current, so the view snaps to whichever piece of scenery
-#                       arrived last. It works perfectly while the chunk is the scene you are
-#                       editing, and only misbehaves once it is one tile of a world.
+#   A CAMERA IN A CHUNK   a chunk scene carrying a Camera2D or Camera3D. A camera SAVED AS THE
+#                       CURRENT one takes the view the moment its chunk enters the tree, and where
+#                       a viewport has no current camera at all the first chunk to arrive keeps it.
+#                       Neither is a thing the chunk was authored to do. It works perfectly while
+#                       the chunk is the scene you are editing - it is the only camera there - and
+#                       only misbehaves once it is one tile of a world. The engine does NOT hand
+#                       the view to every camera that streams in; saying it did named a jump that
+#                       would not happen, over scenes that behave.
 #
 # Neither is a line anybody wrote, so no amount of reading the sheet would find them. Both are
 # visible in the file names and the `.tscn` before the game is run once.
@@ -108,8 +112,12 @@ static func folder_findings(folder: String, entry: Dictionary, texts: Dictionary
 	var findings: Array[Dictionary] = []
 	var cells: Array = entry["cells"] as Array
 	var flat: bool = bool(entry["flat"])
-	var missing: Array[Vector3i] = EventForgeChunkFolderFacts.missing_cells(cells)
-	if EventForgeChunkFolderFacts.gap_is_worth_reporting(cells.size(), missing.size()):
+	# COUNTED BEFORE IT IS LISTED. The box a deliberately sparse world spans is enormous and almost
+	# all hole, and naming its cells to decide they are not worth naming is the whole box walked on
+	# every Doctor run - in the panel, the headless run, CI and the server alike.
+	var holes: int = EventForgeChunkFolderFacts.missing_count(cells)
+	if EventForgeChunkFolderFacts.gap_is_worth_reporting(cells.size(), holes):
+		var missing: Array[Vector3i] = EventForgeChunkFolderFacts.missing_cells(cells)
 		findings.append(_finding("warning", CHECK_GAP, folder,
 			EventSheetL10n.translate("%s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.") % [
 				folder, cells.size(), missing.size(),
@@ -119,7 +127,7 @@ static func folder_findings(folder: String, entry: Dictionary, texts: Dictionary
 		if not carries_a_camera(str(texts.get(scene_path, ""))):
 			continue
 		findings.append(_finding("warning", CHECK_CAMERA, scene_path,
-			EventSheetL10n.translate("%s is a chunk scene carrying a camera. Every chunk that streams in makes its camera current, so the view jumps to whichever piece of the world arrived last - keep the camera in the scene that owns the player.") % scene_path.get_file(),
+			EventSheetL10n.translate("%s is a chunk scene carrying a camera. A camera saved as the current one takes the view the moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps it - keep the camera in the scene that owns the player.") % scene_path.get_file(),
 			scene_path.get_file()))
 	return findings
 

@@ -260,8 +260,9 @@ round trip is what makes a folder of chunks editable rather than a build artifac
   rewrite a GridMap's cell data. Build your world in GridMap pieces, one per chunk scene, or split
   by hand.
 - **Author every chunk around its own origin.** The grid does the placing.
-- **Keep the camera out of the chunks.** A camera in a chunk makes itself current when the chunk
-  streams in, so the view jumps to whichever piece arrived last. The Doctor's Streaming section
+- **Keep the camera out of the chunks.** A camera saved as the **current** one takes the view the
+  moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps
+  it. A camera that is neither changes nothing, so this is a habit rather than a crash. The Doctor's Streaming section
   reports that, and a hole in an otherwise complete grid.
 
 ## Already written it by hand? It reads as this pack
