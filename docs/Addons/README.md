@@ -158,7 +158,8 @@ Attach to a node to move it.
 - [Anchor](Anchor.md) - where a panel sits when the window resizes: anchor a Control to a corner, an edge or the full rect as one row, nudge it with pixel margins, and let it place itself again on every resize.
 - [Touch Gestures](Touch-Gestures.md) - fingers as sentences: On Swipe with a named direction (four-way or eight), On Shape Drawn for shapes you taught by drawing them once, and a Touch Shape Library .tres so the taught shapes ship with the project.
 - [Drag And Drop](Drag-And-Drop.md) - make a node draggable, with drop targets.
-- [Drawing Canvas](Drawing-Canvas.md) - draw shapes, ribbons, raycast line-of-sight fans, and reusable DRAWING PREFABS (ordered .tres formations) onto a live texture (persistent paint or per-frame telegraphs). See the Draw Lab showcase.
+- [Vector Shapes](Vector-Shapes.md) - shapes you PLACE rather than paint: seven Node2D nodes (Line, Disc, Rect, Polygon, Polyline, Triangle, Regular Polygon) and ten 3D twins, each one quad wearing one distance-field shader, so a ring is round at 4x zoom and a hairline stays one pixel. Thickness carries its unit, dashes have a count and an offset that scrolls, and the look half of a shape saves out as a Shape Style file twenty shapes can wear.
+- [Drawing Canvas](Drawing-Canvas.md) - draw shapes, ribbons, raycast line-of-sight fans, and reusable DRAWING PREFABS (ordered .tres formations) onto a live texture (persistent paint or per-frame telegraphs). The canvas keeps a DRAW STYLE - Set, Push, Pop and Reset - so a debug overlay says its width and colour once and the rows after it carry neither. See the Draw Lab showcase.
 - [Decal Painter](Decal-Painter.md) - 3D blob shadows, splats with lifetimes, and 2D-canvas textures projected onto the world.
 
 ## Timing and performance
