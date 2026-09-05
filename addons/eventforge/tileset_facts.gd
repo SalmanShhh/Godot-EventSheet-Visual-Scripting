@@ -21,9 +21,18 @@
 # for exactly that reason: a project this file cannot read anything from is a project it has no
 # business reporting on.
 #
-# NOTHING IS WRITTEN and nothing is stored. The walk is bounded and SORTED - CI runs the suite on a
-# filesystem whose own walk order is its business - so two runs over an unchanged project answer
-# with the same list in the same order.
+# NOTHING IS WRITTEN. The walk is bounded and SORTED - CI runs the suite on a filesystem whose own
+# walk order is its business - so two runs over an unchanged project answer with the same list in
+# the same order.
+#
+# NOTHING IS REMEMBERED BETWEEN QUESTIONS EITHER, unless a caller says so. One Doctor run asks three
+# questions of this file - is there a tileset, what data keys, how many terrain sets - and each one
+# walked the project and read the full text of every `.tscn` and `.tres` in it, so a project's files
+# were read three times over to answer three questions about the same bytes. A caller that is about
+# to ask a run of them opens with `remember()` and closes with `forget()`, and in between each file
+# is read once. Outside that pair nothing is held at all, which is what keeps the answer to "what
+# does this project declare" the answer for the project as it is NOW rather than as it was when
+# some earlier caller looked.
 @tool
 class_name EventForgeTileSetFacts
 extends RefCounted
@@ -40,6 +49,30 @@ const TEXT_RESOURCE_EXTENSIONS: PackedStringArray = ["tres", "tscn"]
 ## property names, because that is what the saved file holds.
 const DATA_LAYER_PATTERN := "custom_data_layer_([0-9]+)/name = \"([^\"]*)\""
 const TERRAIN_PATTERN := "terrain_set_([0-9]+)/terrain_([0-9]+)/name = \"([^\"]*)\""
+
+## The key the walk itself is held under while a caller is remembering. A path can never collide
+## with it: every path this file holds begins with `res://`.
+const WALK_KEY := "the walk"
+
+## What one caller is holding for the length of its own run: path -> that file's text, plus the walk
+## under WALK_KEY. Empty and unused unless `remember()` has been called.
+static var _held: Dictionary = {}
+static var _holding: bool = false
+
+
+## Read every file once until `forget()`. For a caller about to ask several of these questions in a
+## row - the Doctor's Tilemap section asks three - which otherwise walks the project and reads every
+## text resource in it once per question.
+static func remember() -> void:
+	_holding = true
+	_held = {}
+
+
+## Stop holding, and let go of what was held. Always called by whoever called `remember()`, so the
+## next caller sees the project as it is rather than as it was.
+static func forget() -> void:
+	_holding = false
+	_held = {}
 
 
 ## Every custom data layer name any tileset in this project declares, sorted and without repeats.
@@ -92,11 +125,15 @@ static func has_any_tileset() -> bool:
 ## Every project file whose text declares a tileset, in sorted path order. The substring test comes
 ## first and is deliberately looser than the reads behind it: it only decides what is worth a regex.
 static func project_files_with_tilesets() -> PackedStringArray:
+	if _holding and _held.has(WALK_KEY):
+		return _held[WALK_KEY]
 	var found: PackedStringArray = PackedStringArray()
 	for path: String in _text_resource_files():
 		var source: String = source_of(path)
 		if source.contains("custom_data_layer_") or source.contains("terrain_set_"):
 			found.append(path)
+	if _holding:
+		_held[WALK_KEY] = found
 	return found
 
 
@@ -128,8 +165,13 @@ static func terrains(source: String) -> Array[Dictionary]:
 ## One file's text, or "" when it cannot be opened. Never throws and never warns: a file that has
 ## gone since the walk listed it is simply one this reader says nothing about.
 static func source_of(path: String) -> String:
+	if _holding and _held.has(path):
+		return str(_held[path])
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return "" if file == null else file.get_as_text()
+	var text: String = "" if file == null else file.get_as_text()
+	if _holding:
+		_held[path] = text
+	return text
 
 
 ## Every text-format resource and scene in the project, sorted, bounded, and skipping this plugin's

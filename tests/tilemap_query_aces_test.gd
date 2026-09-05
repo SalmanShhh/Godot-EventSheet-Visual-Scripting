@@ -382,14 +382,49 @@ static func _tileset_facts() -> bool:
 		terrains[2], {"set": 1, "index": 0, "name": "Water"}) and ok
 	ok = SUPPORT.pin_value(NAME, "a text with no tileset in it declares nothing",
 		EventForgeTileSetFacts.data_keys("extends Node\n").size(), 0) and ok
-	return ok
+	return _reading_a_file_once_is_a_thing_a_caller_asks_for() and ok
+
+
+## One Doctor run asks this file three questions about the same bytes, and each one walked the
+## project and read every text resource in it. A caller may now say it is asking a run of them, and
+## in between each file is read once - but only in between: outside that pair nothing is held, so
+## the answer is about the project as it is now rather than as it was when somebody last looked.
+static func _reading_a_file_once_is_a_thing_a_caller_asks_for() -> bool:
+	var path: String = "user://tilemap_query_aces_test_facts.tres"
+	_write_text(path, "first")
+	var without: String = EventForgeTileSetFacts.source_of(path)
+	_write_text(path, "second")
+	var still_fresh: String = EventForgeTileSetFacts.source_of(path)
+	EventForgeTileSetFacts.remember()
+	var held: String = EventForgeTileSetFacts.source_of(path)
+	_write_text(path, "third")
+	var still_held: String = EventForgeTileSetFacts.source_of(path)
+	EventForgeTileSetFacts.forget()
+	var let_go: String = EventForgeTileSetFacts.source_of(path)
+	DirAccess.remove_absolute(path)
+	return SUPPORT.pins(NAME, [
+		["nothing is held by default", [without, still_fresh], ["first", "second"]],
+		["a caller that is remembering reads each file once", [held, still_held],
+			["second", "second"]],
+		["and forgetting is really forgetting", let_go, "third"],
+	])
+
+
+## One file written, for the reading above. The fixtures further down write scripts; this writes a
+## few letters, and the point is only that the bytes on disk changed.
+static func _write_text(path: String, text: String) -> void:
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file != null:
+		file.store_string(text)
+		file.close()
 
 
 # ── 8. the quiet notes ──────────────────────────────────────────────────────────────────
 ## The two findings, pure over one script's text and the two facts a project's tilesets answer: a
-## data key nothing declares, and a terrain set the tilesets do not reach. And the two silences that
-## matter as much - a key that IS declared says nothing, and a deliberate -1 erase is not a missing
-## terrain set.
+## data key nothing declares, and a terrain set the tilesets do not reach. And the silences that
+## matter as much - a key that IS declared says nothing, a deliberate -1 erase is not a missing
+## terrain set, a NODE named with a quoted string inside the call is not a data key, and a key held
+## in a variable is one nothing here can name.
 static func _doctor() -> bool:
 	var source: String = """extends TileMapLayer
 
@@ -397,11 +432,17 @@ func _process(_delta: float) -> void:
 	var a = __eventsheets_tile_data_at(self, Vector2i(0, 0), "surface")
 	var b = __eventsheets_tile_data_at(self, player.global_position, "slipperiness")
 	var c = __eventsheets_cells_with_data(self, "cost", 3)
+	var d = __eventsheets_tile_data_at(get_node("Ground"), marker.global_position, "surface")
+	var e = __eventsheets_tile_data_at(self, Vector2i(0, 0), whichever_key)
 	set_cells_terrain_connect([Vector2i(0, 0)], 0, 1)
 	set_cells_terrain_connect(__eventsheets_cells_around(self, Vector2i(0, 0), 3), 4, -1)
 	set_cells_terrain_connect(__eventsheets_cells_around(self, Vector2i(0, 0), 3), -1, -1)
 """
-	var ok: bool = SUPPORT.pin_value(NAME, "the keys a script asks for",
+	# The `get_node("Ground")` line is the trap: a reading that claimed the first quoted string it
+	# found before a bracket reported "Ground" as a data layer, which is a warning about a row that
+	# is entirely correct. The `whichever_key` line is the other side of it - a key nothing can read
+	# off the text is a key this section says nothing about.
+	var ok: bool = SUPPORT.pin_value(NAME, "the keys a script asks for, and only the keys",
 		EventSheetTilemapDoctor.data_keys_asked(source),
 		PackedStringArray(["surface", "slipperiness", "cost"]))
 	ok = SUPPORT.pin_value(NAME, "the terrain sets it paints into, the -1 erase left out",
@@ -422,6 +463,13 @@ func _process(_delta: float) -> void:
 	ok = SUPPORT.pin_value(NAME, "a project that declares them all is quiet",
 		EventSheetTilemapDoctor.script_findings("res://ground.gd", source,
 			PackedStringArray(["surface", "slipperiness", "cost"]), 5).size(), 0) and ok
+	# A project whose readable tilesets declare no terrain set at all has no highest one, and the
+	# arithmetic that names it said "go up to -1".
+	var no_terrains: Array[Dictionary] = EventSheetTilemapDoctor.script_findings("res://ground.gd",
+		source, PackedStringArray(["surface", "slipperiness", "cost"]), 0)
+	ok = SUPPORT.pin_value(NAME, "with no terrain set anywhere, the note says so in words",
+		str(no_terrains[0].get("message", "")),
+		"ground.gd paints terrain set 0, and no tileset in this project declares a terrain set at all - the paint call does nothing.") and ok
 	# And the summary line leads the section, so a reader sees the shape before the notes.
 	var report: Array[Dictionary] = EventSheetTilemapDoctor.report(
 		[{"path": "res://ground.gd", "source": source}], PackedStringArray(["surface", "cost"]), 2)
