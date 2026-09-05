@@ -96,6 +96,9 @@ static func run() -> bool:
 ## change to either rule fails in one place.
 static func _vocabulary() -> bool:
 	var pins: Dictionary = {
+		# It names its layer twice, so it names it ITSELF: the automatic prefix would have gone on
+		# the guard and left the lookup reading off the host.
+		"TileMapTileHasCustomData": "{target}.get_cell_tile_data({coords}) != null and {target}.get_cell_tile_data({coords}).get_custom_data({name})",
 		"TileMapDataAt": "__eventsheets_tile_data_at({target}, {where}, {key})",
 		"TileMapDataAtIs": "__eventsheets_tile_data_at({target}, {where}, {key}) == {value}",
 		"TileMapCellIsSolid": "__eventsheets_cell_is_solid({target}, {cell}, {layer})",

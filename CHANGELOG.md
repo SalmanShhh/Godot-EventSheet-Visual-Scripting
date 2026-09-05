@@ -292,6 +292,11 @@
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads "this project's tilesets go up to -1".
+- **Tile Has Custom Data no longer points half of itself at another node.** The row names its layer
+  twice - a null guard, and the lookup behind it - and a row whose template is one plain member call
+  is given its "On node" field by prefixing the START of the line, so naming another layer retargeted
+  the guard and read the lookup off the sheet's own host. It names its layer in an "On node"
+  parameter of its own now, the way every other level-query row does.
 - **The split dialog's reading says the axes the split uses.** It read "one scene per 1024 x 512
   cell" off Cell width and Cell HEIGHT while a flat grid - every 2D scene - is cut on width and
   DEPTH, so a reader who typed a height, read the sentence back and pressed Split got chunks of a
