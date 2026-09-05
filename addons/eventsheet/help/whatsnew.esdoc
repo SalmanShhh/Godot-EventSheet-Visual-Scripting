@@ -6,6 +6,35 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The audit knows which folders are yours
+
+- **`eventsheets/doctor/skipped_folders`: name the folders the Project Doctor is not about.** The
+  Doctor has never walked `addons/`, on the grounds that a plugin's code is not your game and a
+  finding you cannot fix is noise. Most projects hold a second kind of that code - a test tree, a
+  folder of build scripts, a folder of imported samples - and until now the audit read all of it,
+  opened it as sheets and reported on it at length. The setting is a list of folder **names**,
+  matched at any depth exactly the way `addons` always has been, and it is **empty by default**, so
+  a project that declares nothing is audited exactly as before. It is registered beside every other
+  `eventsheets/*` setting, so it has a row in Project Settings with its own description.
+- **One walk, one corpus.** The names are applied inside the audit's single directory walk rather
+  than at its four call sites, so scripts, scenes, resources and CSVs narrow together. Narrowing one
+  and not another would not shrink the report, it would manufacture findings: the method-track sweep
+  builds its index of defined functions from the scripts and its list of calls from the scenes, and
+  would have accused a scene of calling a function whose script the walk had just been told to look
+  away from. The four sections that take their scenes from the shared scene index ask one shared
+  predicate instead, because that index is the editor's own cached parse and a Doctor setting must
+  not narrow what the editor can see.
+- **What stays in, deliberately: an event sheet saved as a `.tres`, wherever it lives.** Those
+  arrive through the project-wide sheet listing that Find in Project shares rather than through the
+  audit's own walk, they are authored rather than generated, and what they carry is error-tier - a
+  committed generated script that no longer matches the sheet it came from.
+- **This repository declares `tests` and `tools`,** which was 86 percent of the scripts it audited.
+  The audit now walks 216 scripts instead of 1,569 and opens 50 as sheets instead of 150; the report
+  went from 339 findings to 212, with 0 errors both ways. Every one of the 163 findings that went
+  was about this repository's own test fixtures or build tools. Of the 36 that arrived, most are the
+  capped sections finally spending their budget on the project's own code instead of on fixtures,
+  and three are `unused-pack` notes that are correct rather than false.
+
 ### Stroke, cap and dash: a shape you place, crisp at any zoom, and the look twenty of them share
 
 - **Seven shape nodes in 2D: Line, Disc, Rect, Polygon, Polyline, Triangle and Regular Polygon.**

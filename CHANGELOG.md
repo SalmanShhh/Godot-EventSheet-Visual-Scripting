@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### The audit knows which folders are yours
+
+- **`eventsheets/doctor/skipped_folders`: name the folders the Project Doctor is not about.** The
+  Doctor has never walked `addons/`, on the grounds that a plugin's code is not your game and a
+  finding you cannot fix is noise. Most projects hold a second kind of that code - a test tree, a
+  folder of build scripts, a folder of imported samples - and until now the audit read all of it,
+  opened it as sheets and reported on it at length. The setting is a list of folder **names**,
+  matched at any depth exactly the way `addons` always has been, and it is **empty by default**, so
+  a project that declares nothing is audited exactly as before. It is registered beside every other
+  `eventsheets/*` setting, so it has a row in Project Settings with its own description.
+- **One walk, one corpus.** The names are applied inside the audit's single directory walk rather
+  than at its four call sites, so scripts, scenes, resources and CSVs narrow together. Narrowing one
+  and not another would not shrink the report, it would manufacture findings: the method-track sweep
+  builds its index of defined functions from the scripts and its list of calls from the scenes, and
+  would have accused a scene of calling a function whose script the walk had just been told to look
+  away from. The four sections that take their scenes from the shared scene index ask one shared
+  predicate instead, because that index is the editor's own cached parse and a Doctor setting must
+  not narrow what the editor can see.
+- **What stays in, deliberately: an event sheet saved as a `.tres`, wherever it lives.** Those
+  arrive through the project-wide sheet listing that Find in Project shares rather than through the
+  audit's own walk, they are authored rather than generated, and what they carry is error-tier - a
+  committed generated script that no longer matches the sheet it came from.
+- **This repository declares `tests` and `tools`,** which was 86 percent of the scripts it audited.
+  The audit now walks 216 scripts instead of 1,569 and opens 50 as sheets instead of 150; the report
+  went from 339 findings to 212, with 0 errors both ways. Every one of the 163 findings that went
+  was about this repository's own test fixtures or build tools. Of the 36 that arrived, most are the
+  capped sections finally spending their budget on the project's own code instead of on fixtures,
+  and three are `unused-pack` notes that are correct rather than false.
+
 ### Stroke, cap and dash: a shape you place, crisp at any zoom, and the look twenty of them share
 
 - **Seven shape nodes in 2D: Line, Disc, Rect, Polygon, Polyline, Triangle and Regular Polygon.**
@@ -598,6 +627,23 @@
   sentence in it. The scanner now falls back to the prose exactly as the two readers of a pack
   already do - skip the annotation lines, join what is left with a space - so the reference says
   what the picker says. Regenerate with `tools/vocabulary_doc.gd` to pick the sentences up.
+- **A wrapped doc comment reads as its whole sentence, not its first line.** The caption a verb
+  wears in its right lane, and the Description panel of an opened pack, both took the FIRST prose
+  line of a doc comment. That was survivable while a description arrived as one long
+  `@ace_description` line, because one line is what it was. Prose wraps at the width its author was
+  writing to, so the first line is a fragment far more often than a sentence: Anchor To read "Puts
+  the host on a corner, an edge or the whole rectangle of its" and stopped, and twenty-seven of the
+  forty verbs that moved to prose wrap to two lines or more. Both fold the whole comment into one
+  line now, the same way the analyzer and the importer do, so the row, the picker and the opened
+  file say the same words. The Feedback Player's card help, which read descriptions the same
+  one-place way the reference did, gained the same fallback.
+- **The pack gate sees a pack that keeps its scripts a folder deeper.** It indexed the shipped
+  scripts two folder levels down, and the post-processing kit ships seven effects below that, under
+  `post_kit/effects/` - so all seven would have been reported as scripts no pack ships, on the day
+  the rotation happened to reach that builder and with no diff to explain it. The walk is recursive
+  now. The rotation itself counts real days rather than composing a number out of the calendar,
+  which was skipping a slice at the end of every short month and stretching the promised week to
+  thirteen days for four of the seven slices.
 
 ### Fixed in the general-purpose reading pass
 
