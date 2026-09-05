@@ -32,6 +32,11 @@ const SHADER_FILES: PackedStringArray = [
 ## Every uniform the drawing needs, sorted - the whole surface the eight scripts write to.
 const SHADER_UNIFORMS := "aa_width,angle_from,angle_to,border_colour,border_on,border_px,box_half,caps,colour_a,colour_b,colour_c,colour_d,colour_mode,corner_radius,dash_count,dash_gap_px,dash_gap_share,dash_length_px,dash_offset,dash_snap,dash_style,dashed,filled,gradient_texture,inner_radius,path_closed,point_a,point_b,point_count,points,quad_origin,quad_size,radius,shape_kind,thickness_px"
 
+## The instanced variant the drawing rows fill a MultiMesh with, and the one uniform it adds to the
+## list above: which shape kind the whole batch is drawing.
+const BATCH_SHADER_FILE := "vector_shape_batch.gdshader"
+const BATCH_ONLY_UNIFORM := "batch_kind"
+
 ## The eight scripts the pack ships: the base, and the seven shapes.
 const PACK_SCRIPTS: PackedStringArray = [
 	"vector_shape_2d.gd",
@@ -72,6 +77,7 @@ const PUBLISHED_FIELDS := {
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _pin_the_shaders() and all_passed
+	all_passed = _pin_the_dash_across_its_stroke() and all_passed
 	all_passed = _pin_the_arithmetic() and all_passed
 	all_passed = _pin_the_shapes() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
@@ -146,7 +152,46 @@ static func _pin_the_shaders() -> bool:
 			names.append(str(uniform.get("name", "")))
 		names.sort()
 		rows.append(["%s uniforms" % file_name, ",".join(names), SHADER_UNIFORMS])
+	# The instanced half is the same body with one uniform more - the kind the whole MultiMesh is -
+	# so its list is DERIVED from the one above rather than written out a second time.
+	var batched_names: PackedStringArray = SHADER_UNIFORMS.split(",")
+	batched_names.append(BATCH_ONLY_UNIFORM)
+	batched_names.sort()
+	var batch_shader: Shader = load(PACK_DIR + BATCH_SHADER_FILE) as Shader
+	rows.append(["%s loads" % BATCH_SHADER_FILE, batch_shader != null, true])
+	if batch_shader != null:
+		var batch_uniforms: PackedStringArray = PackedStringArray()
+		for uniform: Dictionary in batch_shader.get_shader_uniform_list():
+			batch_uniforms.append(str(uniform.get("name", "")))
+		batch_uniforms.sort()
+		rows.append(["%s uniforms" % BATCH_SHADER_FILE, ",".join(batch_uniforms), ",".join(batched_names)])
 	return SUPPORT.pins(PREFIX, rows)
+
+
+## A DASH IS CUT ACROSS THE STROKE IT RIDES, and a ring's stroke is the ring. Handed the stroke's
+## thickness instead, a dashed ring 18 pixels wide wears dashes 2 pixels wide down the middle of it,
+## and an arc drawn from a row with an inner radius does the same - so both halves are pinned.
+##
+## It is pinned as TEXT because a shader cannot be run in a headless suite: what a fragment computes
+## is only visible once something has drawn, and nothing here draws. The pin is therefore the two
+## lines that decide it, which is the thing a refactor would move.
+static func _pin_the_dash_across_its_stroke() -> bool:
+	var body: String = FileAccess.get_file_as_string(PACK_DIR + "vector_shapes.gdshaderinc")
+	var batch: String = FileAccess.get_file_as_string(PACK_DIR + BATCH_SHADER_FILE)
+	return SUPPORT.pins(PREFIX, [
+		["the shared body cuts a stroke's dashes to the stroke's own half width",
+			body.contains("dash_coverage(along, span, perp, stroke_half, aa)"), true],
+		["and a ring's own half width is the gap between its two radii",
+			body.contains("stroke_half = inner_radius > 0.0 ? (r - inner_radius) * 0.5 : half_thickness;"), true],
+		["a dashed border is cut across the outline it sits on, not across the stroke",
+			body.contains("dash_coverage(along, span, edge_perp, half_border, aa)"), true],
+		["the instanced half cuts its dashes the same way",
+			batch.contains("dash_coverage(along, span, perp, stroke_half, aa)"), true],
+		["and reads an arc's inner radius the same way",
+			batch.contains("stroke_half = inner > 0.0 ? (r - inner) * 0.5 : half_thickness;"), true],
+		["the fade at a canvas edge is one SCREEN pixel, read from the derivatives the spatial half reads",
+			body.contains("float units_per_pixel = max(sqrt(abs(along_x.x * along_y.y - along_x.y * along_y.x)), 0.000001);"), true],
+	])
 
 
 ## The three conversions a row and the Inspector share, by value. A screen unit is a whole viewport

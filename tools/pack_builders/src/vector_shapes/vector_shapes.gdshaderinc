@@ -18,8 +18,12 @@
 //
 // PRECISION: every distance here is in local pixels around a shape whose own numbers a designer
 // typed, so the arithmetic stays in the hundreds. Nothing accumulates over frames and nothing is
-// divided by a value that approaches zero (every divisor is guarded), which is what keeps this
-// mediump-safe on the phones and browsers that only offer mediump.
+// divided by a value that approaches zero - every divisor is guarded - which is what keeps the
+// arithmetic inside the reach of the mediump floats a phone or a browser may offer. The one number
+// that is NOT small is the "nothing here yet" sentinel (1e20). It overflows a true 16-bit mediump
+// float to infinity, and that is the answer it wants: it is only ever compared against, minimised
+// against, or overwritten. Every renderer Godot ships gives a fragment highp floats in practice, so
+// the sentinel is an ordinary number there and the claim above is about the arithmetic, not it.
 
 // The most points a Polygon or Polyline carries. A uniform array is a fixed size, and 32 is what a
 // hand-drawn outline actually uses; a longer outline is Godot's own Polygon2D's job and the guide
@@ -201,6 +205,13 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 	float along = 0.0;       // how far along the outline this pixel is
 	float span = 1.0;        // the length the dash pattern fits into
 	float perp = 0.0;        // across the stroke, for the dash's own shape
+	// HALF THE WIDTH OF THE STROKE THE DASHES ARE CUT INTO, which is half the thickness for every
+	// shape whose stroke is drawn ON its outline - and is NOT that for a ring, whose stroke is the
+	// ring itself and is as wide as the gap between its two radii.
+	float stroke_half = half_thickness;
+	// Across the OUTLINE rather than across the stroke. The two are the same reading everywhere but
+	// a ring, where the stroke is centred between the radii and the border sits on the edges.
+	float edge_perp = 0.0;
 	float t = 0.0;           // the shape's 0-to-1 reading, for the colour modes
 
 	if (shape_kind == 1) {
@@ -214,6 +225,8 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 		float mid = (r + inner_radius) * 0.5;
 		outline = inner_radius > 0.0 ? max(dist - r, inner_radius - dist) : dist - r;
 		stroke = inner_radius > 0.0 ? abs(dist - mid) - (r - inner_radius) * 0.5 : abs(dist - r) - half_thickness;
+		stroke_half = inner_radius > 0.0 ? (r - inner_radius) * 0.5 : half_thickness;
+		edge_perp = outline;
 		if (!in_sweep) {
 			outline = 1e20;
 			stroke = 1e20;
@@ -228,6 +241,7 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 		outline = rounded_box_distance(p, box_half, corner_radius);
 		stroke = abs(outline) - half_thickness;
 		perp = outline;
+		edge_perp = outline;
 		vec2 h = max(box_half, vec2(0.01));
 		span = 2.0 * (h.x + h.y);
 		// Which side the pixel belongs to, walking clockwise from the top-left corner.
@@ -293,6 +307,7 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 			}
 		}
 		stroke = best;
+		edge_perp = perp;
 		if (dash_snap != 2) {
 			span = max(total, 0.01);
 		}
@@ -316,14 +331,14 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 		if (border_on) {
 			float edge_alpha = 1.0 - smoothstep(-aa, aa, abs(outline) - half_border);
 			if (dashed) {
-				edge_alpha = min(edge_alpha, dash_coverage(along, span, perp, half_border, aa));
+				edge_alpha = min(edge_alpha, dash_coverage(along, span, edge_perp, half_border, aa));
 			}
 			result = mix(result, vec4(border_colour.rgb, border_colour.a), edge_alpha);
 		}
 	} else {
 		float stroke_alpha = 1.0 - smoothstep(-aa, aa, stroke);
 		if (dashed) {
-			stroke_alpha = min(stroke_alpha, dash_coverage(along, span, perp, half_thickness, aa));
+			stroke_alpha = min(stroke_alpha, dash_coverage(along, span, perp, stroke_half, aa));
 		}
 		result = vec4(body.rgb, body.a * stroke_alpha);
 	}
@@ -338,8 +353,18 @@ vec4 vector_shape_at(vec2 p, vec2 uv, float half_thickness, float half_border, f
 #ifndef VECTOR_SHAPES_SPATIAL
 #ifndef VECTOR_SHAPES_BATCH
 void fragment() {
-	vec4 drawn = vector_shape_at(quad_origin + UV * quad_size, UV, max(thickness_px, 0.01) * 0.5,
-		max(border_px, 0.01) * 0.5, max(aa_width, 0.0001));
+	// HOW BIG A PIXEL IS, HERE, in the shape's own coordinates. A fade measured in the node's own
+	// pixels is a fade that fattens when the node is scaled up and aliases when a Camera2D zooms
+	// out, because neither moves the numbers the shape was typed in. The screen-space derivatives
+	// of the point being drawn say how far one pixel of screen reaches in those coordinates, which
+	// is exact for both - and it is the same reading the spatial half takes, so a shape and its 3D
+	// twin fade over one pixel each.
+	vec2 shape_point = quad_origin + UV * quad_size;
+	vec2 along_x = dFdx(shape_point);
+	vec2 along_y = dFdy(shape_point);
+	float units_per_pixel = max(sqrt(abs(along_x.x * along_y.y - along_x.y * along_y.x)), 0.000001);
+	vec4 drawn = vector_shape_at(shape_point, UV, max(thickness_px, 0.01) * 0.5,
+		max(border_px, 0.01) * 0.5, max(aa_width, 0.0001) * units_per_pixel);
 	COLOR = vec4(drawn.rgb, drawn.a * COLOR.a);
 }
 #endif

@@ -22,7 +22,8 @@
 // quad it is drawn on.
 //
 // PRECISION: every distance is in pixels around numbers a designer typed, nothing accumulates over
-// frames, and every divisor is guarded - the same mediump-safe arithmetic as the shared body.
+// frames, and every divisor is guarded - the same arithmetic, inside the same mediump reach, as the
+// shared body (whose header says what the one large sentinel in it is for).
 shader_type canvas_item;
 render_mode blend_mix;
 
@@ -72,6 +73,9 @@ void fragment() {
 	float along = 0.0;      // how far along that outline this pixel is
 	float span = 1.0;       // the length a dash pattern is fitted into
 	float perp = 0.0;       // across the stroke, for the dash's own shape
+	// Half the width of the stroke the dashes are cut into - the thickness for a shape whose stroke
+	// is drawn ON its outline, and the ring's own half width for an arc that has an inner radius.
+	float stroke_half = half_thickness;
 	float t = 0.0;          // the shape's 0-to-1 reading, for the colour modes
 	bool fill_it = filled;
 	bool can_dash = false;
@@ -87,6 +91,7 @@ void fragment() {
 		float mid = (r + inner) * 0.5;
 		outline = inner > 0.0 ? max(dist - r, inner - dist) : dist - r;
 		stroke = inner > 0.0 ? abs(dist - mid) - (r - inner) * 0.5 : abs(dist - r) - half_thickness;
+		stroke_half = inner > 0.0 ? (r - inner) * 0.5 : half_thickness;
 		if (!in_sweep) {
 			outline = 1e20;
 			stroke = 1e20;
@@ -177,7 +182,7 @@ void fragment() {
 	} else {
 		coverage = 1.0 - smoothstep(-aa, aa, stroke);
 		if (dashed && can_dash) {
-			coverage = min(coverage, dash_coverage(along, span, perp, half_thickness, aa));
+			coverage = min(coverage, dash_coverage(along, span, perp, stroke_half, aa));
 		}
 	}
 	COLOR = vec4(body.rgb, body.a * coverage);
