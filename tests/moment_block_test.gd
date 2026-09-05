@@ -99,6 +99,7 @@ static func run() -> bool:
 	passed = _pin_the_range() and passed
 	passed = _pin_the_file_bridge() and passed
 	passed = _pin_the_two_homes() and passed
+	passed = _pin_the_block_beats_book() and passed
 	passed = _pin_the_authoring() and passed
 	_cleanup()
 	return passed
@@ -286,6 +287,47 @@ static func _pin_the_two_homes() -> bool:
 	]
 	juice.moment_step("shake", 0.4, "", 0.0, 0.5)
 	rows.append(["and it plays the step at the strength it was given", String.num(juice.trauma, 4), "0.2"])
+	host.free()
+	juice.free()
+	return SUPPORT.pins(PREFIX, rows)
+
+
+## THE BOOK A BLOCK BEAT OPENS. A moment written as rows is a coroutine on the host, and it used to
+## be played without the runner being told - so On Moment Started, On Moment Finished and Moment Is
+## Playing were silent for it while they answered for the same beat written as a file. And a Play
+## Moment Backwards on a block's name quietly played the FILE of that name instead, which is a
+## different beat wearing the right word.
+static func _pin_the_block_beats_book() -> bool:
+	var juice: Node = (load(JUICE_SCRIPT) as GDScript).new()
+	var written := GDScript.new()
+	written.source_code = ("extends Node2D
+
+
+var played: Array = []
+
+
+"
+		+ "func moment_impact(strength: float = 1.0, from: Node = null) -> void:
+"
+		+ "	played.append([strength, from])
+")
+	written.reload()
+	var host: Node2D = Node2D.new()
+	host.set_script(written)
+	juice.host = host
+	var said: Array = []
+	juice.moment_started.connect(func(named: String) -> void: said.append("started " + named))
+	juice.moment_finished.connect(func(named: String, cut: bool) -> void: said.append("finished " + named + (" cut" if cut else "")))
+	juice.moment("impact", 1.0)
+	var backwards: Array = []
+	juice.moment_started.connect(func(named: String) -> void: backwards.append(named))
+	juice.moment_backwards("impact", 1.0)
+	var rows: Array = [
+		["a beat written as rows says it started and finished", said, ["started impact", "finished impact"]],
+		["and the host played it once", host.played.size(), 1],
+		["a backwards play of a block plays no other beat of that name", backwards, []],
+		["and the host is not asked to play it forwards instead", host.played.size(), 1],
+	]
 	host.free()
 	juice.free()
 	return SUPPORT.pins(PREFIX, rows)

@@ -268,6 +268,11 @@ var _chroma_shake_active: bool = false
 ## duplicate them, delete them, or leave them where they are and point Define Moment at your own.
 const MOMENT_DIRECTORY: String = "res://eventsheet_addons/juice/"
 
+## And where a game keeps the beats it wrote ITSELF. Looked in FIRST, so a project moment called
+## impact is the one that plays, and the folder above stays what it is - a pack folder the
+## builders regenerate. A game with no such folder never notices it.
+const PROJECT_MOMENT_DIRECTORY: String = "res://moments/"
+
 ## THE ACCESSIBILITY CEILING, the same one the post stack holds itself to. A player who has asked for
 ## no flashing gets the SAME moments - the hit still hits, the win still lands - with every amount
 ## they see held under this and every time held over the floor, so nothing a moment plays can strobe.
@@ -334,11 +339,13 @@ func _moment_named(called: String) -> Resource:
 		return null
 	if _moments.has(word):
 		return _moments[word] as Resource
-	var path: String = MOMENT_DIRECTORY + word.replace(" ", "_") + ".tres"
-	if ResourceLoader.exists(path):
-		var found: Resource = load(path)
-		_moments[word] = found
-		return found
+	var word_file: String = word.replace(" ", "_") + ".tres"
+	for directory: String in [PROJECT_MOMENT_DIRECTORY, MOMENT_DIRECTORY]:
+		var path: String = directory + word_file
+		if ResourceLoader.exists(path):
+			var found: Resource = load(path)
+			_moments[word] = found
+			return found
 	return null
 ## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a
 ## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as
@@ -381,6 +388,11 @@ var _moment_ledger: Dictionary = {}
 ## Whether the LAST play of each name ran its course or was ended early, so a row inside On
 ## Moment Finished can tell the beat that landed from the beat somebody walked out of.
 var _moment_cut: Dictionary = {}
+
+## The names of the plays the frame just walked has ended. Kept between frames and cleared
+## rather than made again, so a tick allocates nothing, and filled during the walk rather than
+## acted on, because closing a play erases it from the book the walk is reading.
+var _moment_ended: Array[String] = []
 # --- Channels: a shake said once, and heard by everything listening ---
 #
 # A CHANNEL IS A GROUP. Nothing is invented here: Shake Channel is one call_group, a listener is
@@ -1078,7 +1090,7 @@ func moment(moment_name: String, strength: float) -> void:
 		return
 	var played: Resource = _moment_named(moment_name)
 	if played == null:
-		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
+		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, PROJECT_MOMENT_DIRECTORY])
 		return
 	_moment_walk(_moment_key(moment_name), _moment_steps(played), strength, false)
 
@@ -1167,9 +1179,12 @@ func moment_backwards(moment_name: String, strength: float) -> void:
 	if not written.is_empty():
 		host.call(written, strength, null)
 		return
+	if not _moment_block_method(moment_name, "").is_empty():
+		push_warning("Moment: the beat \"%s\" is written as rows, and rows have no way back of their own - write a moment_%s_backwards on the host, or keep that beat as a file." % [moment_name, moment_name.strip_edges().replace(" ", "_")])
+		return
 	var played: Resource = _moment_named(moment_name)
 	if played == null:
-		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, MOMENT_DIRECTORY])
+		push_warning("Moment: nothing is called \"%s\" - define it with Define Moment, or put a moment file of that name in %s." % [moment_name, PROJECT_MOMENT_DIRECTORY])
 		return
 	_moment_walk(_moment_key(moment_name), _moment_steps(played), strength, true)
 
@@ -1741,6 +1756,12 @@ func chromatic_shake_magnitude() -> float:
 ## own clock while the event that fired it carries on. Nothing is handed to the block as a place,
 ## because a row that has a place of its own has already paid for the distance and paying twice would
 ## quieten a near hit for being near.
+##
+## IT STILL OPENS A PLAY, so On Moment Started, On Moment Finished and Moment Is Playing answer for
+## a beat written as rows exactly as they do for one written as a file. What that play cannot have is
+## a book of values: a block's rows are the host's own code, and nothing here can know what they
+## wrote, so Revert and Restore have nothing of a block beat to put back. The play closes when the
+## coroutine says it is done - a block with no waits in it is over the moment it is called.
 ## @ace_hidden
 func _play_moment_block(moment_name: String, strength: float) -> bool:
 	var word: String = moment_name.strip_edges().replace(" ", "_")
@@ -1749,8 +1770,21 @@ func _play_moment_block(moment_name: String, strength: float) -> bool:
 	var written: String = "moment_" + word
 	if not host.has_method(written):
 		return false
-	host.call(written, strength, null)
+	var key: String = _moment_key(moment_name)
+	_moment_begin(key, [], strength, false)
+	var running: Variant = host.call(written, strength, null)
+	if running is Signal:
+		# A coroutine called and not awaited hands back the signal it finishes on.
+		(running as Signal).connect(_moment_block_done.bind(key), CONNECT_ONE_SHOT)
+		return true
+	_moment_end(key, false)
 	return true
+
+## The end of a block beat, reached when its coroutine returns. A named method rather than a closure,
+## so the connection does not keep the play it closes alive.
+## @ace_hidden
+func _moment_block_done(key: String) -> void:
+	_moment_end(key, false)
 
 ## A moment's steps, whatever it was made of - the moment resource class, or anything else carrying a
 ## `steps` array of the same shape. Read through `get` so this pack never has to name that class, and
@@ -2097,26 +2131,30 @@ func _moment_put_back(key: String) -> void:
 func _moment_tick(delta: float) -> void:
 	if _moment_plays.is_empty():
 		return
-	for key: Variant in _moment_plays.keys():
-		var named: String = str(key)
-		if not _moment_plays.has(named):
-			continue
-		var play: Dictionary = _moment_plays[named]
+	# The book is walked WITHOUT copying its keys - a frame of a beat in the air must allocate
+	# nothing - and the plays that ran out are closed afterwards, because closing one erases it
+	# from the book and raises a signal a game may start another beat from.
+	_moment_ended.clear()
+	for key: Variant in _moment_plays:
+		var play: Dictionary = _moment_plays[key]
 		if bool(play["reverting"]):
 			play["revert_left"] = maxf(float(play["revert_left"]) - delta, 0.0)
 			var span: float = maxf(float(play["revert_span"]), 0.0001)
 			var walked: float = clampf(1.0 - float(play["revert_left"]) / span, 0.0, 1.0)
 			var from: Dictionary = play["from"]
 			var start: Dictionary = play["start"]
-			for touched: String in from.keys():
+			for touched: Variant in from:
 				if start.has(touched):
-					_moment_write_value(touched, lerp(from[touched], start[touched], walked))
+					_moment_write_value(str(touched), lerp(from[touched], start[touched], walked))
 			if float(play["revert_left"]) <= 0.0:
-				_moment_end(named, true)
+				_moment_ended.append(str(key))
 			continue
 		play["left"] = maxf(float(play["left"]) - delta, 0.0)
 		if float(play["left"]) <= 0.0:
-			_moment_end(named, false)
+			_moment_ended.append(str(key))
+	for ended: String in _moment_ended:
+		var cut: bool = bool((_moment_plays.get(ended, {}) as Dictionary).get("reverting", false))
+		_moment_end(ended, cut)
 
 ## Whether any beat is still in the air - the one thing the tick's parking check has to ask.
 ## @ace_hidden
