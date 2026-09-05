@@ -132,6 +132,25 @@
   as an `@ace_param` line wrote its empty option bare, which reads back as a stray `|` - so a
   verb authored through the stub lost the choice a verb authored through the compiler kept. Both
   writers ship it quoted now.
+- **Twenty-one more word dropdowns emit a quoted word, never an identifier.** A dropdown key is
+  inserted into the call verbatim, so a String argument picked off a list of words has to carry its
+  quotes in the TEMPLATE. Twenty-one parameters did not, across twenty-eight verbs in fourteen
+  packs: **Anchor To**; Drunken Walkers' **Set Random Source**, **Add Walker From Preset** and
+  **Scatter Marks**; **Follow Path**; Settings' **Declare Setting** and **Listen For A New
+  Binding**; Nav Agent 3D's **Find Path To** and **Find Path To Node**; **Set Pin Mode** and **Set
+  Pin Axes** in both Pin and Pin 3D; Platformer Pathfinding's **Find Path To**, **Find Path To
+  Node** and **Set Jump Positioning**; **Set Rotation Type**; StatForge's **Add Buff** and **Add
+  Threshold Rule**; Storylets' **Add Requirement**, **Add Choice Requirement**, **Add Choice
+  Effect**, **Add Effect**, **Add Requirement (Key vs Key)** and **Add Recency Requirement**;
+  **Simulate Step**; **Add Consideration**; and **Set Wrap Space**. A row picking Overshoot and
+  settle asked `set_pin_mode(spring)`, and a row picking at most asked `add_requirement(id, key,
+  >=, 3)` - an undefined identifier and an expression that is not one, so the game did not parse.
+  The quotes live in the template the way the Camera Rail and Scene Flow packs already carry them;
+  the option keys stay bare, because a quoted key does not survive the annotation round trip. All
+  twenty-eight identity-dump lines for these verbs therefore change - the templates gain quotes -
+  and every one of them is unreleased. The gate that found them
+  (`quoted_dropdown_options_test`) walked the whole fleet against a written-down debt list; that
+  list is empty now, and each parameter is pinned through the compiler's own emitters instead.
 
 ### Beat, bump and broadcast: a whole beat of feedback, written down and played by name
 
