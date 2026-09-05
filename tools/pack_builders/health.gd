@@ -231,7 +231,22 @@ static func build() -> bool:
 		"\tif source == null:",
 		"\t\treturn",
 		"\tlast_hit_from = source",
-		"\tassist_hits[source] = Time.get_ticks_msec()"
+		"\tassist_hits[source] = Time.get_ticks_msec()",
+		"\t_forget_stale_assists()",
+		"",
+		"# Hits nobody can be asked about any more, let go. Every hit that lands writes a stamp here,",
+		"# and a bullet nobody claimed is its own root owner - so a boss shot by a thousand unclaimed",
+		"# projectiles held a thousand keys, most of them freed objects, for the rest of its life. A key",
+		"# is kept while it is a living node AND still inside the assist window, which is exactly the set",
+		"# Assists Of can still answer about; the killer's own key is kept whatever its age, because",
+		"# Assists Of measures its window from that stamp.",
+		"func _forget_stale_assists() -> void:",
+		"\tvar cutoff: int = Time.get_ticks_msec() - int(maxf(assist_seconds, 0.0) * 1000.0)",
+		"\tfor who: Variant in assist_hits.keys():",
+		"\t\tif who == last_hit_from:",
+		"\t\t\tcontinue",
+		"\t\tif not is_instance_valid(who) or int(assist_hits[who]) < cutoff:",
+		"\t\t\tassist_hits.erase(who)"
 	]))
 	sheet.events.append(block)
 
@@ -512,7 +527,15 @@ static func build() -> bool:
 	_expr(sheet, "assists_of", "Assists Of", "Health",
 		"Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.",
 		[], "\n".join(PackedStringArray([
-		"var cutoff: int = Time.get_ticks_msec() - int(maxf(assist_seconds, 0.0) * 1000.0)",
+		"# THE WINDOW IS MEASURED FROM THE DEATH, not from the moment somebody asks. A results screen",
+		"# read nine seconds after the kill would otherwise list nobody at all. The killing hit's own",
+		"# stamp IS the death: credit is written just before the damage that lands, so the last hit from",
+		"# the killer is the moment this node died. A node still alive, and one whose killing blow",
+		"# credited nobody, measure from now instead - which is what a live assist list means.",
+		"var moment: int = Time.get_ticks_msec()",
+		"if is_dead_flag and is_instance_valid(last_hit_from) and assist_hits.has(last_hit_from):",
+		"\tmoment = int(assist_hits[last_hit_from])",
+		"var cutoff: int = moment - int(maxf(assist_seconds, 0.0) * 1000.0)",
 		"var helpers: Array = []",
 		"for who: Variant in assist_hits.keys():",
 		"\tif who == last_hit_from or not is_instance_valid(who):",

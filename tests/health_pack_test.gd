@@ -82,6 +82,7 @@ static func run() -> bool:
 	all_passed = _the_shipped_starter_is_not_the_projects_own_set() and all_passed
 	all_passed = _a_handwritten_typed_hit_comes_back_byte_for_byte() and all_passed
 	all_passed = _the_difficulty_factor_scales_the_hit() and all_passed
+	all_passed = _assists_are_counted_from_the_death() and all_passed
 	return all_passed
 
 
@@ -239,6 +240,62 @@ static func _credit_is_only_taken_for_a_hit_that_landed() -> bool:
 		["so does the hit before it", orphaned.call("last_hit_from_value") == null, true]
 	])
 	for node: Node in [immune, refused, orphaned, ally]:
+		node.free()
+	return passed
+
+
+## THE ASSIST WINDOW IS MEASURED FROM THE DEATH. A results screen is read seconds after the kill,
+## and a window counted from the moment somebody asks would list nobody by then - so the killing
+## hit's own stamp is the moment used. Time cannot be moved in a test, so the stamps are moved
+## instead: backdating every hit by nine seconds is the same arithmetic as nine seconds passing.
+##
+## And the second half: the stamps are not kept for ever. A bullet nobody claimed is its own root
+## owner, so every unclaimed projectile that hits leaves a key behind - and once it is freed that
+## key is a freed object nothing can be asked about. The next hit lets those go.
+static func _assists_are_counted_from_the_death() -> bool:
+	var script: GDScript = load(PACK)
+	var helper: Node = Node.new()
+	helper.name = "Helper"
+	var killer: Node = Node.new()
+	killer.name = "Killer"
+	var victim: Node = _fresh(script)
+	victim.set("assist_seconds", 8.0)
+	victim.call("take_damage_from", 10.0, helper)
+	victim.call("take_damage_from", 500.0, killer)
+	var listed_at_the_death: Array = victim.call("assists_of")
+	# Nine seconds after the kill, read off a results screen.
+	var stamps: Dictionary = victim.get("assist_hits")
+	for who: Variant in stamps.keys():
+		stamps[who] = int(stamps[who]) - 9000
+	var listed_later: Array = victim.call("assists_of")
+
+	# A hit from something that is then freed leaves a key nothing can answer about; the next hit
+	# lets it go, and so does a hit older than the window.
+	var doomed: Node = Node.new()
+	doomed.name = "Doomed"
+	var boss: Node = _fresh(script)
+	boss.set("max_health", 10000.0)
+	boss.set("current_health", 10000.0)
+	boss.set("assist_seconds", 8.0)
+	boss.call("take_damage_from", 5.0, doomed)
+	doomed.free()
+	boss.call("take_damage_from", 5.0, helper)
+	var boss_stamps: Dictionary = boss.get("assist_hits")
+	var freed_keys: bool = false
+	for who: Variant in boss_stamps.keys():
+		if not is_instance_valid(who):
+			freed_keys = true
+
+	var passed: bool = SUPPORT.pins("health_pack_test", [
+		["the helper is an assist at the moment of the kill",
+			listed_at_the_death == [helper], true],
+		["and is still one when the results screen asks nine seconds later",
+			listed_later == [helper], true],
+		["the killer is never their own assist", listed_later.has(killer), false],
+		["a hit from something since freed is not still remembered", freed_keys, false],
+		["and the one that is still there is", boss_stamps.has(helper), true]
+	])
+	for node: Node in [victim, boss, helper, killer]:
 		node.free()
 	return passed
 
