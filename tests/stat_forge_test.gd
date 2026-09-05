@@ -115,8 +115,13 @@ static func run() -> bool:
 	var emitted: String = FileAccess.get_file_as_string("res://eventsheet_addons/stat_forge/stat_forge_behavior.gd")
 	all_passed = _check("doc-comment-first functions keep @ace_action",
 		emitted.contains("## @ace_name(\"Add Buff\")"), true) and all_passed
-	all_passed = _check("doc comments fold into @ace_description",
-		emitted.contains("## @ace_description(\"The one action that runs the whole system"), true) and all_passed
+	# The prose ABOVE `## @ace_action` is the description: plain `##` lines over a member are read
+	# as one, which is how the builder writes Add Buff and how the pack ships it. The fact under
+	# test is that the doc block SURVIVES the lift, not which of the two spellings carries it - a
+	# pin on `@ace_description(` alone went red the day the pack was rebuilt from its own builder,
+	# for a pack whose description had not changed a word.
+	all_passed = _check("the doc block above the annotations survives as the description",
+		emitted.contains("## The one action that runs the whole system"), true) and all_passed
 	# The dropdowns are labeled now: the token still drives the math, but the author reads English
 	# instead of guessing what "override" does to a stat before picking it.
 	all_passed = _check("param options survive emission (mode dropdown)",
