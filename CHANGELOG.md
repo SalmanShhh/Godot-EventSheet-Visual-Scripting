@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed: five dropdowns that opened on the wrong word
+
+- **A dropdown opens on the word its method names.** When a pack's starting value comes from the
+  method signature rather than from an `@ace_param(default: …)`, it arrives as SOURCE TEXT:
+  `func is_at_bound(side: String = "any")` hands the picker the six characters `"any"`, quotes
+  included, while an annotation default arrives already unquoted. An option key is a bare word, so
+  the quoted form matched no key and the dropdown stayed on its first item. **Is At Bound** opened
+  reading **left** while its own method said **any** - the one of the five where the wrong word was
+  on screen. **Follow Path**'s mode, **Declare Setting**'s kind and **Stat Forge**'s buff mode and
+  threshold direction each carried the same quoted value; their word happened to also be the first
+  item, so they showed the right thing over a value that was not it. One pair of quotes now comes
+  off a String starting value the moment its parameter has options, which is the only shape where a
+  quoted default can never have been meant literally.
+- **The pack gate compiles every word in a dropdown, not only the one the row opens on.** A
+  dropdown is a promise that each of its items writes code the game builds, and the item nobody
+  picked while authoring is the one whose spelling was never tried. The built-in vocabulary has had
+  that pass for a while; the packs now get it too, through the same fill, for 255 further calls.
+
 ### Fixed: eighteen shipped rows that did not compile with the values they open on
 
 - **Every row in Juice, Juice 3D, Screen FX and Post Kit now parses the moment it is dropped.** A

@@ -504,6 +504,8 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 			default_text = SheetCompiler._to_code_literal(gdscript_default)
 		if default_text == null:
 			default_text = _default_value_for_type(param_type)
+		var normalized_options: Array = _normalize_options_to_key_label(parameter_override.get("options", []))
+		default_text = _default_against_options(default_text, normalized_options)
 		output.append({
 			"id": argument_name,
 			"display_name": str(parameter_override.get("display_name", _analyzer.build_property_display_name(argument_name))),
@@ -514,10 +516,34 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 			"hint": hint_value,
 			"hint_string": str(parameter_override.get("hint_string", "")),
 			"widget_hint": str(parameter_override.get("widget_hint", "")),
-			"options": _normalize_options_to_key_label(parameter_override.get("options", [])),
+			"options": normalized_options,
 			"autocomplete": _normalize_autocomplete(parameter_override.get("autocomplete", []))
 		})
 	return output
+
+
+## A dropdown's starting value, read the way its own keys are spelled.
+##
+## The two ways a default reaches this function disagree about quotes. An `@ace_param(default: …)`
+## arrives already unquoted (the analyzer trims one surrounding pair off it), but a default REFLECTED
+## from the method signature arrives as SOURCE TEXT - `func is_at_bound(side: String = "any")` gives
+## `"any"`, quote characters and all. An option key is a bare word, so the quoted form equals none of
+## them, and `ACEParamsDialog._create_options_field` selects an index only on an exact key match: a
+## default that matches nothing leaves the OptionButton on item 0, and the row opens on the FIRST
+## word rather than on the one the method names. Is At Bound shipped reading "left" when its
+## signature said "any".
+##
+## So one surrounding pair of quotes comes off a String default the moment the parameter has options.
+## It is safe in both directions: an annotation default has already been trimmed and carries none,
+## and an option key cannot itself be quoted (the annotation round trip strips such a pair back off,
+## which is why word dropdowns carry their quotes in the TEMPLATE instead).
+func _default_against_options(default_text: Variant, normalized_options: Array) -> Variant:
+	if normalized_options.is_empty() or not (default_text is String):
+		return default_text
+	var text: String = default_text
+	if text.length() >= 2 and text.begins_with("\"") and text.ends_with("\""):
+		return text.substr(1, text.length() - 2)
+	return text
 
 
 ## Derives a widget hint from a parameter's NAME when no annotation set one, so common

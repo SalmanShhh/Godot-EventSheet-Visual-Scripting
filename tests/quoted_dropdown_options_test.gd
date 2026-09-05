@@ -150,12 +150,94 @@ const PICKED := {"path": "\"res://levels/forest.tscn\"", "transition": "wipe", "
 	"hold_duration": "0.25", "duration_clock": "realtime", "side": "left", "grade": "perfect"}
 
 
+## The dropdowns whose starting word is REFLECTED from the method signature rather than written as an
+## `@ace_param(default: …)`, as [pack script, ace id suffix, param id, the word the method names].
+##
+## A reflected default arrives as SOURCE TEXT - `func is_at_bound(side: String = "any")` gives the
+## six characters `"any"`, quotes included - while an annotation default arrives already unquoted.
+## An option key is a bare word, and `ACEParamsDialog._create_options_field` selects an index only on
+## an exact key match, so the quoted form matched nothing and the OptionButton stayed on item 0: Is
+## At Bound opened on "left" while its own signature said "any". The generator now takes one pair of
+## quotes off a String default the moment the parameter has options, and these five are the shipped
+## rows that were reading the wrong word.
+const REFLECTED_DEFAULTS := [
+	[BOUND_TO, "is_at_bound", "side", "any"],
+	[FOLLOW_PATH, "follow_path", "mode", "once"],
+	[GAME_SETTINGS, "declare_setting", "kind", "percent"],
+	[STAT_FORGE, "add_buff", "mode", "add"],
+	[STAT_FORGE, "add_threshold_rule", "direction", "rising"],
+]
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_the_shipped_annotations() and all_passed
 	all_passed = _test_the_emitted_calls() and all_passed
 	all_passed = _test_no_bare_word_dropdown_is_left() and all_passed
+	all_passed = _test_a_dropdown_opens_on_the_word_its_method_names() and all_passed
 	return all_passed
+
+
+## The word a freshly dropped row shows, pinned twice: as the descriptor's own `default_value`, and
+## as the INDEX the params dialog's OptionButton would land on, which is the number the designer
+## actually sees. The index is the dialog's own rule spelled out - select the option whose key equals
+## the default, and otherwise leave item 0 - so a default matching no key pins as 0 and names the
+## defect rather than hiding it behind a value that merely looks reasonable.
+static func _test_a_dropdown_opens_on_the_word_its_method_names() -> bool:
+	var all_passed: bool = true
+	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
+	for pinned: Array in REFLECTED_DEFAULTS:
+		var pack: String = str(pinned[0])
+		var method_name: String = str(pinned[1])
+		var param_id: String = str(pinned[2])
+		var expected_word: String = str(pinned[3])
+		var parameter: Dictionary = _parameter_of(generator, pack, method_name, param_id)
+		var keys: Array = _option_keys(parameter.get("options", []) as Array)
+		all_passed = _check("%s %s opens on the word its method names" % [method_name, param_id],
+			str(parameter.get("default_value", "")), expected_word) and all_passed
+		all_passed = _check("%s %s selects the item that word is" % [method_name, param_id],
+			_selected_index(keys, str(parameter.get("default_value", ""))),
+			keys.find(expected_word)) and all_passed
+	return all_passed
+
+
+## The item the params dialog's OptionButton lands on, spelled as `_create_options_field` spells it:
+## it calls `select(index)` only for the option whose key equals the default, and an OptionButton
+## with items and no `select` call shows item 0. So a default matching no key answers 0 - which is
+## what made this a bug the designer could see rather than a value only a test would notice.
+static func _selected_index(keys: Array, default_value: String) -> int:
+	var index: int = keys.find(default_value)
+	return index if index >= 0 else 0
+
+
+## One parameter of one reflected method ACE, read through the same generator the live picker uses.
+## An empty dictionary when the pack, the method or the parameter is not there, which fails the pins
+## above by value rather than by crashing on a missing key.
+static func _parameter_of(generator: EventSheetACEGenerator, pack: String, method_name: String,
+		param_id: String) -> Dictionary:
+	var script: Script = load(pack) as Script
+	if script == null or not script.can_instantiate():
+		return {}
+	var instance: Object = script.new()
+	var found: Dictionary = {}
+	for definition: ACEDefinition in generator.generate_from_object(instance):
+		if definition.id != "method:%s" % method_name:
+			continue
+		for entry: Variant in definition.parameters:
+			if entry is Dictionary and str((entry as Dictionary).get("id", "")) == param_id:
+				found = entry
+				break
+	if instance is Node:
+		(instance as Node).free()
+	return found
+
+
+## An options array as the bare keys it offers, in the order the OptionButton adds them.
+static func _option_keys(options: Array) -> Array:
+	var keys: Array = []
+	for option: Variant in options:
+		keys.append(str((option as Dictionary).get("key", "")) if option is Dictionary else str(option))
+	return keys
 
 
 ## The pack ships the quoted template as its annotation, so a sheet that opens the pack reads it.
