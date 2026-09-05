@@ -628,6 +628,10 @@ has nothing to be checked against and is passed over in silence rather than repo
 - **Turn BBCode on for a label you tag by hand.** The rows do it for you in the line above. A tag on
   a label without it is drawn as characters, which is the first thing to check when an effect
   "does not work".
+- **A tag you typed into a string yourself does not read back as the row.** Set Text With Effect
+  writes the engine's tag with the effect's own number computed into it, so a `[wave]` sitting in a
+  plain string is not that line: the script opens as the text-set it is rather than as a Set Text
+  With Effect row. Drop the row over it when you want the row.
 - **Pause Reveal At goes before Reveal Text.** It writes the pause down on the label, and the reveal
   that follows reads it. After the reveal row it applies to the next line, which is a bug that looks
   like a timing problem.
