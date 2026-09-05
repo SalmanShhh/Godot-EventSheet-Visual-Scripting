@@ -2501,10 +2501,9 @@ func _build_verb_note_row(event_function: EventFunction, role: String, indent: i
 	var editable: bool = _verb_metadata_editable()
 	var note: String = description
 	if note.is_empty():
-		for line: String in event_function.doc_comment.split("\n"):
-			if not line.strip_edges().is_empty():
-				note = line.strip_edges()
-				break
+		# The WHOLE prose, folded to one line - a doc comment wraps where the author was writing to,
+		# so its first line is usually half a sentence.
+		note = join_doc_prose(event_function.doc_comment)
 	var placeholder: bool = note.is_empty()
 	# Nothing to show and nowhere to add it (a read-only preview) - no caption at all.
 	if placeholder and not editable:
@@ -2658,16 +2657,29 @@ static func is_ace_annotation_line(line: String) -> bool:
 	return strip_comment_prefix(line).strip_edges().begins_with("@ace_")
 
 
-## The first real sentence of a function's doc comment - the caption a helper wears in its RIGHT lane,
-## because a doc comment is exactly how a reader takes in a function they did not write. Empty
-## when the function is undocumented or documented only with `@ace_*` annotation lines.
+## A function's doc comment as ONE sentence - the caption a helper wears in its RIGHT lane, because a
+## doc comment is exactly how a reader takes in a function they did not write. Empty when the
+## function is undocumented or documented only with `@ace_*` annotation lines.
+##
+## Every prose line is joined with a space rather than only the first being taken. A doc comment wraps
+## at the width the author was writing to, so the first line is a fragment far more often than it is a
+## sentence: taking it alone showed "Puts the host on a corner, an edge or the whole rectangle of its"
+## and stopped. This is the same fold the two readers of a pack perform when they take plain prose as
+## the description, so the row, the picker and the opened file all say the same words.
 static func helper_doc_line(event_function: EventFunction) -> String:
-	for line: String in event_function.doc_comment.split("\n"):
+	return join_doc_prose(event_function.doc_comment)
+
+
+## The prose lines of a doc comment, joined with a space, with the `@ace_*` annotation lines left out.
+## Shared by every surface that shows a doc comment as a single line.
+static func join_doc_prose(doc_comment: String) -> String:
+	var prose: PackedStringArray = PackedStringArray()
+	for line: String in doc_comment.split("\n"):
 		var trimmed: String = line.strip_edges()
 		if trimmed.is_empty() or is_ace_annotation_line(trimmed):
 			continue
-		return strip_comment_prefix(trimmed).strip_edges()
-	return ""
+		prose.append(strip_comment_prefix(trimmed).strip_edges())
+	return " ".join(prose)
 
 
 ## The [background, foreground] pair the ACTION-lane chips paint with, from the theme.

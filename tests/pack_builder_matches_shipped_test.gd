@@ -99,10 +99,13 @@ static func _builders_to_check() -> PackedStringArray:
 ## rather than from a random number so two machines running on the same day check the same packs and
 ## a failure is reproducible by anyone who reruns it that day (and by anyone, any day, with
 ## EVENTFORGE_PACK_GATE naming the pack).
+##
+## Counted in real days since the epoch, so consecutive days always take consecutive slices. Composing
+## the number out of the calendar instead (year * 372 + month * 31 + day) skips a slice at the end of
+## every short month and three at the end of February, which stretched the promised week to thirteen
+## days for half the fleet.
 static func _rotation_slice() -> int:
-	var today: Dictionary = Time.get_date_dict_from_system()
-	var days: int = int(today.get("year", 1970)) * 372 + int(today.get("month", 1)) * 31 + int(today.get("day", 1))
-	return days % ROTATION_DAYS
+	return int(Time.get_unix_time_from_system() / 86400.0) % ROTATION_DAYS
 
 
 ## Every pack builder's basename, sorted. Leading-underscore files are shared helpers, not packs, and
@@ -123,25 +126,29 @@ static func _all_builders() -> PackedStringArray:
 ## one directory, so the file name is all a rebuilt file carries - which is sound here because the
 ## shipped names are unique across the whole tree, and a name that ever stopped being unique is
 ## reported as an ambiguity rather than silently compared against whichever came first.
+##
+## The walk is RECURSIVE, at any depth. A pack whose scripts sit in a folder of its own inside the
+## pack folder (the post-processing kit ships seven effects under `post_kit/effects/`) is invisible
+## to a two-level walk, and every one of its scripts would then be reported as a file no pack ships.
 static func _shipped_by_file_name() -> Dictionary:
 	var index: Dictionary = {}
-	var root: DirAccess = DirAccess.open(PACKS_DIR)
-	if root == null:
-		return index
-	for file_name: String in root.get_files():
-		if file_name.ends_with(".gd"):
-			index[file_name] = "%s/%s" % [PACKS_DIR, file_name]
-	for folder: String in root.get_directories():
-		if folder.begins_with("."):
-			continue
-		var inner: DirAccess = DirAccess.open("%s/%s" % [PACKS_DIR, folder])
-		if inner == null:
-			continue
-		for file_name: String in inner.get_files():
-			if not file_name.ends_with(".gd"):
-				continue
-			index[file_name] = "AMBIGUOUS" if index.has(file_name) else "%s/%s/%s" % [PACKS_DIR, folder, file_name]
+	_index_scripts(PACKS_DIR, index)
 	return index
+
+
+## Adds every `.gd` under `dir_path` to `index`, descending into subfolders. Dot-folders are Godot's
+## own bookkeeping and hold no pack.
+static func _index_scripts(dir_path: String, index: Dictionary) -> void:
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return
+	for file_name: String in dir.get_files():
+		if not file_name.ends_with(".gd"):
+			continue
+		index[file_name] = "AMBIGUOUS" if index.has(file_name) else "%s/%s" % [dir_path, file_name]
+	for folder: String in dir.get_directories():
+		if not folder.begins_with("."):
+			_index_scripts("%s/%s" % [dir_path, folder], index)
 
 
 ## Rebuilds one pack through its real builder and compares every script it writes, byte for byte,

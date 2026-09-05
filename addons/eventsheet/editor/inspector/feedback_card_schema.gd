@@ -156,6 +156,10 @@ static func read_pack(script_path: String) -> Dictionary:
 		return reading
 	var title: String = ""
 	var help: String = ""
+	# The plain `##` prose above a verb, which IS its help when it carries no `@ace_description` -
+	# the shape a pack ships whenever its author wrote an ordinary Godot doc comment. Read the same
+	# way the rest of the plugin reads it: skip the annotation lines, join the rest with a space.
+	var prose: PackedStringArray = PackedStringArray()
 	var params: Dictionary = {}
 	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
 		var trimmed: String = line.strip_edges()
@@ -163,6 +167,10 @@ static func read_pack(script_path: String) -> Dictionary:
 			title = _quoted_value(trimmed)
 		elif trimmed.begins_with("## @ace_description("):
 			help = _quoted_value(trimmed)
+		elif trimmed.begins_with("##") and not trimmed.begins_with("## @"):
+			var text: String = trimmed.trim_prefix("##").strip_edges()
+			if not text.is_empty():
+				prose.append(text)
 		elif trimmed.begins_with("## @ace_param("):
 			var parsed: Dictionary = _param_line(trimmed)
 			if not parsed.is_empty():
@@ -170,13 +178,21 @@ static func read_pack(script_path: String) -> Dictionary:
 		elif trimmed.begins_with("func ") or trimmed.begins_with("static func "):
 			var member: String = trimmed.trim_prefix("static ").substr(5).get_slice("(", 0).strip_edges()
 			if not title.is_empty():
-				(reading["verbs"] as Dictionary)[member] = {"label": title, "help": help}
+				(reading["verbs"] as Dictionary)[member] = {
+					"label": title,
+					"help": help if not help.is_empty() else " ".join(prose)
+				}
 			if member == STEP_VERB:
 				reading["words"] = (params.get(WORD_KEY, {}) as Dictionary).get("options", PackedStringArray())
 				reading["params"] = params
 			title = ""
 			help = ""
+			prose = PackedStringArray()
 			params = {}
+		elif not trimmed.is_empty():
+			# A real line of code that is not a function header ends the run of doc comments above it,
+			# so prose written over a variable cannot drift down onto the next verb.
+			prose = PackedStringArray()
 	return reading
 
 

@@ -162,6 +162,25 @@ static func run() -> bool:
 	ok = _check("that caption is still editable as the description (only place to author @ace_description)",
 		_span_edit_kind(doc_caption, "Builds up charge before releasing it."), "verb_description") and ok
 	documented_dock.free()
+
+	# A doc comment WRAPS at the width its author was writing to, so its first line is usually half a
+	# sentence. Packs ship that shape wherever the description is prose rather than an
+	# @ace_description line, and taking only the first line showed the reader a fragment that stopped
+	# mid-clause. The caption folds the whole prose into one line instead.
+	var wrapped_sheet: EventSheetResource = EventSheetResource.new()
+	wrapped_sheet.host_class = "Node2D"
+	var wrapped_fn: EventFunction = _make_function("anchor_to", TYPE_NIL, true, "Anchor To", "")
+	wrapped_fn.doc_comment = "Puts the host on a corner, an edge or the whole rectangle of its\nparent - the one action this behavior exists for."
+	wrapped_sheet.functions.append(wrapped_fn)
+	var wrapped_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	wrapped_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	wrapped_dock.setup(wrapped_sheet)
+	var wrapped_caption: EventRowData = _find_row_by_uid_prefix(wrapped_dock._active_view(), "verb_note_anchor_to")
+	ok = _check("a wrapped doc comment reads as one whole sentence, not its first line",
+		_span_text(wrapped_caption, 0),
+		"Puts the host on a corner, an edge or the whole rectangle of its parent - the one action this behavior exists for.") and ok
+	wrapped_dock.free()
+
 	ok = _check("captions never collide with the define_fn_ prefix (still one Define row per verb)",
 		_find_rows_by_uid_prefix(described_view, "define_fn_").size(), 2) and ok
 	ok = _check("the caption sits directly ABOVE its verb",
