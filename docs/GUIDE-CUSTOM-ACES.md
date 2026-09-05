@@ -426,9 +426,13 @@ func hold_shield(seconds: float, quality: String, op: String) -> void:
   back whole - trying the plain form first and the quoted one second. A value that survives neither
   (a word ending in one unbalanced quote, say) ships with NO starting value and a warning naming the
   parameter, because a line that reads back wrong takes the help text after it down too, and a block
-  the compiler cannot reproduce opens as raw code. And on a parameter that also has `options:`, a
-  `default_code:` string literal has its quotes taken off to match against the option keys, which are
-  bare words - so on a dropdown, use `default_word:`.
+  the compiler cannot reproduce opens as raw code. And on a parameter that also has `options:`, use
+  `default_word:`. A starting value written in an annotation reaches the dropdown exactly as it
+  reads, and option keys are bare words - so `default_code: "impact"` arrives with its quotes,
+  matches no key, and the dropdown opens on its first word instead. (Nothing takes those quotes off
+  for you. The one place a quoted value IS unwrapped is a default read off the method signature -
+  `func is_at_bound(side: String = "any")` - because that is source text rather than a word, and only
+  when the parameter has options.)
 - **`options:`** entries may be `value=Label`: the dropdown READS the label and INSERTS the value.
   Entries split on `|` here (so commas stay free for prose); `@ace_param_options` splits on `,`
   instead. A key that itself contains `=` ships quoted - `"<="=at most` - because the split is on the
