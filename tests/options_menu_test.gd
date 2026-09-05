@@ -32,6 +32,11 @@
 class_name OptionsMenuTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
+## The name every line of this file reports under.
+const TEST := "options_menu_test"
+
 const PACK_PATH := "res://eventsheet_addons/game_settings/game_settings_addon.gd"
 
 ## Two staged input actions, named so they cannot collide with a real project's own. Both are put
@@ -187,6 +192,23 @@ static func _test_the_doctor_notices_a_difficulty_nothing_reads() -> bool:
 			[chooser, unscaled])),
 		PackedStringArray([
 			"menu.gd chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt."])) and ok
+	# THE PACK IS NOT THE PROJECT. The installed Game Settings pack writes the very call the reading
+	# looks for into its own codegen templates, so a corpus that included the packs folder found a
+	# reading in every project that had the pack installed - which is every project this finding is
+	# about - and the note could never fire. The pack's own source is handed in here verbatim.
+	var pack: Dictionary = {"path": PACK_PATH,
+		"source": EventSheetProjectDoctor.source_of(PACK_PATH)}
+	ok = _check("the pack's own templates quote the reading this looks for",
+		[pack["source"].contains("Settings.difficulty_factor("),
+			pack["source"].contains("Settings.use_difficulty(")], [true, true]) and ok
+	ok = _check("but a project carrying the pack and reading nothing is still told so",
+		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(),
+			[chooser, pack])),
+		PackedStringArray([
+			"menu.gd chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt."])) and ok
+	ok = _check("and one reading in the project's own scripts silences it with the pack there too",
+		_messages(EventSheetOptionsDoctor.report(PackedStringArray(), PackedStringArray(),
+			[chooser, pack, reader])), PackedStringArray()) and ok
 	return ok
 
 
@@ -455,9 +477,7 @@ static func _messages(findings: Array[Dictionary]) -> PackedStringArray:
 	return said
 
 
+## One assertion, through the suite's one assertion file - so a red line here prints the
+## `expected:` / `actual:` pair the report tool reads back.
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] options_menu_test: %s" % label)
-		return true
-	print("[FAIL] options_menu_test: %s - expected %s, got %s" % [label, expected, actual])
-	return false
+	return SUPPORT.check(TEST, label, actual, expected)

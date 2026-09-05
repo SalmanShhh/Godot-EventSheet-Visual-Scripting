@@ -40,7 +40,7 @@
   than hiding them, nothing is copied in, and emptying the slot hands the shape straight back to
   itself. **Apply Shape Style**, **Apply Shape Style To Group** for a whole HUD at once, and
   **Shape Style Is** for the exception.
-- **The rest of the vocabulary: 15 more rows.** **Set Thickness** (in `px`, `world` or `screen`
+- **The rest of the vocabulary: 14 more rows.** **Set Thickness** (in `px`, `world` or `screen`
   units, where a screen unit keeps a HUD line's weight on every phone), **Set Arc**, **Fill Ring
   To** (the cooldown, the stamina wheel, the loading circle in one row), **Set Shape Radius**,
   **Set Shape Sides**, **Set Shape Points**, **Set Geometry**, **Tether Between** two nodes and
@@ -1095,6 +1095,15 @@
   note nobody wanted and exactly wrong for a field that then suggested nothing at all.
 - **The Health pack's own translation table covers its whole vocabulary.** The sixteen wound-chain
   rows were in English in all eight locales, and the harvest gate cannot see pack tables.
+
+### Fixed after a third reading of the wound chain
+
+- **A difficulty nothing reads is a question about the game, not about the packs it installed.** The
+  reading is spelled with the autoload's name in front so the pack that DEFINES the verbs is not
+  mistaken for a project that uses them, and that was not enough: a pack writes the call it will
+  emit into its own codegen templates, so the installed Game Settings pack read as a project reading
+  the difficulty and the note could not fire in a single project that had the pack. The packs folder
+  is out of the corpus now, on both sides of the question.
 
 ### Making it feel like something: how pictures meet, and the beat a hit is made of
 

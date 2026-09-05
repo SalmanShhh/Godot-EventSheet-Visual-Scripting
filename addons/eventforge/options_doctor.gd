@@ -25,7 +25,13 @@
 # THE DIFFICULTY QUESTION IS ASKED OF CALLS, never of definitions: the words it looks for carry the
 # autoload's own name (`Settings.difficulty_factor(`), because the pack that DEFINES those verbs is a
 # project script too, and a check that counted `func difficulty_factor` as a reading would be answered
-# by the pack itself and never fire for anybody. There are FOUR readings, not one, and counting only
+# by the pack itself and never fire for anybody. Spelling them with the autoload in front is not
+# enough on its own, though: a pack writes the CALL it will emit into its own codegen templates
+# (`## @ace_codegen_template("Settings.difficulty_factor({key})")`), so the installed pack read itself
+# as a project reading the difficulty and the finding could never fire in any project that had the
+# pack - which is every project the finding is about. So the packs folder is left out of the corpus
+# entirely: only a project's own sheets and scripts answer this question, on either side of it.
+# There are FOUR readings, not one, and counting only
 # the factor called a menu useless in every project that branches on the word instead of multiplying
 # by a number: Difficulty Is and Difficulty Name are readings, and so is the Health row's Scaled By
 # field, which names a factor without naming any verb and is found by the shape of the call. The
@@ -68,6 +74,12 @@ const DIFFICULTY_READ_WORDS: PackedStringArray = ["Settings.difficulty_factor(",
 ## ordinary file pays one substring test and never builds the pattern at all.
 const SCALED_PRE_READ := "take_typed_damage("
 const DIFFICULTY_SCALED_PATTERN := "take_typed_damage\\((?:[^\"()]|\\([^()]*\\)|\"[^\"]*\")*, ?\"[^\"]+\"\\)"
+
+## The installed packs, which are not the project's own answer to anything here. A pack script quotes
+## the very calls it emits - in its codegen templates, in its own helpers - so it reads as a project
+## that both chooses a difficulty and reads one, and it says that in every project that installs it.
+## Left out of the corpus on both sides, so the question is asked of the game and answered by it.
+const PACK_DIR: String = "res://eventsheet_addons/"
 
 ## Where Project Settings keeps one input action, and the key its bindings live under.
 const INPUT_PREFIX := "input/"
@@ -152,11 +164,14 @@ static func report(actions: PackedStringArray, preset_paths: PackedStringArray,
 ## The difficulty question, asked of the project as a whole: something PUTS a difficulty in force and
 ## nothing READS a factor out of one. It is asked only once a project chooses a difficulty at all, so
 ## a game that has never heard of the idea says nothing - and the first script that chooses one is
-## what the finding points at, because that is the file worth opening.
+## what the finding points at, because that is the file worth opening. An installed pack is not part
+## of the corpus: it quotes the calls it emits, so it would answer the question for the project.
 static func _difficulty_findings(sources: Array[Dictionary]) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var chooses: String = ""
 	for entry: Dictionary in sources:
+		if str(entry["path"]).begins_with(PACK_DIR):
+			continue
 		var source: String = str(entry["source"])
 		if _reads_difficulty(source):
 			return findings
