@@ -40,6 +40,18 @@ static func run() -> bool:
 	all_passed = _check("a red circle paints red at the center", center.r > 0.5 and center.g < 0.4 and center.b < 0.4, true) and all_passed
 	all_passed = _check("the corner stays background", _is_bg(red_img.get_pixel(1, 1), bg), true) and all_passed
 
+	# A line step that never named its ends draws the ends the CANVAS gives it - cut square - not the
+	# rounder ones the picture used to invent. Pinned as a pixel comparison rather than as a reading
+	# of the default, because a default is only worth anything once it reaches the image.
+	var plain_line: Array = [{"kind": "line", "x": -12.0, "y": 0.0, "p1": 24.0, "p2": 0.0, "p3": 6.0, "color": "white"}]
+	var cut_line: Array = [{"kind": "line", "x": -12.0, "y": 0.0, "p1": 24.0, "p2": 0.0, "p3": 6.0, "color": "white", "caps": "none"}]
+	var round_line: Array = [{"kind": "line", "x": -12.0, "y": 0.0, "p1": 24.0, "p2": 0.0, "p3": 6.0, "color": "white", "caps": "round"}]
+	var plain_pixels: PackedByteArray = EventSheetDrawingPrefabPreview.rasterize(plain_line, Vector2i(64, 64), bg).get_data()
+	all_passed = _check("a line step with no ends is drawn with the ends the canvas draws",
+		plain_pixels == EventSheetDrawingPrefabPreview.rasterize(cut_line, Vector2i(64, 64), bg).get_data(), true) and all_passed
+	all_passed = _check("and those are not the round ones",
+		plain_pixels == EventSheetDrawingPrefabPreview.rasterize(round_line, Vector2i(64, 64), bg).get_data(), false) and all_passed
+
 	# The DrawingPrefabStamp @tool node (the placeable viewport gizmo) instantiates, exposes the shared
 	# vector draw routine, and holds a prefab. Its actual drawing is verified live by a render harness.
 	var stamp: Node2D = DrawingPrefabStamp.new()

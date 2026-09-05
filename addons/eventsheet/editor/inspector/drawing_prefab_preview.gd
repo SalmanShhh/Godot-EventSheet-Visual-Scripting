@@ -155,7 +155,10 @@ static func _fill_rect(img: Image, r: Rect2, c: Color) -> void:
 static func _fill_stroke(img: Image, a: Vector2, b: Vector2, width: float, c: Color, entry: Dictionary, scale: float) -> void:
 	var span: float = a.distance_to(b)
 	var half: float = maxf(width, 1.0) * 0.5
-	var ends: String = str(entry.get("caps", "round"))
+	# A step that never named its ends is a step from before the card could ask, and the canvas draws
+	# it with square-cut ends. The picture has to answer the same way, or a prefab saved last year
+	# looks rounder in the thumbnail than it does in the game.
+	var ends: String = str(entry.get("caps", "none"))
 	if not bool(entry.get("dashed", false)) or span <= 0.001:
 		_fill_span(img, a, b, half, c, 0.0, span, ends)
 		return
