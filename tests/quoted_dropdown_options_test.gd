@@ -46,7 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"rotate/rotate_behavior.gd:type",
 	"stat_forge/stat_forge_behavior.gd:direction",
 	"stat_forge/stat_forge_behavior.gd:mode",
 	"storylet_weaver/storylet_weaver_addon.gd:mode",
@@ -113,6 +112,8 @@ const ACTIONS := [
 	[PLATFORMER, "$PlatformerPathfinding.find_path_to({x}, {y}, \"{mode}\")",
 		"$PlatformerPathfinding.find_path_to(4.0, 9.0, \"reach\")",
 		{"x": "4.0", "y": "9.0", "mode": "reach"}],
+	[ROTATE, "$RotateBehavior.set_rotation_type(\"{type}\")",
+		"$RotateBehavior.set_rotation_type(\"2d\")", {"type": "2d"}],
 ]
 
 const CONDITIONS := [

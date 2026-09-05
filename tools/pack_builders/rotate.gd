@@ -78,6 +78,12 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Set Rotation Type\")",
 		"## @ace_param_options(type 2d=2D rotation, x=3D X axis, y=3D Y axis, z=3D Z axis)",
+		# The type is a WORD picked off the dropdown above, and a dropdown key is inserted into the
+		# call verbatim - so the quotes belong in the TEMPLATE, never in the key (a quoted key does
+		# not survive the annotation round trip). Without them a row picking 3D Y axis asked
+		# `set_rotation_type(y)`, an undefined identifier, and the game did not parse - and picking
+		# 2D rotation asked it with `2d`, which is not even a name GDScript could resolve.
+		"## @ace_codegen_template(\"$RotateBehavior.set_rotation_type(\"{type}\")\")",
 		"func set_rotation_type(type: String) -> void:",
 		"\tif type in [\"2d\", \"x\", \"y\", \"z\"]:",
 		"\t\trotation_type = type",
