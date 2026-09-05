@@ -424,14 +424,63 @@ static func diff_for_page(page_id: String, blocks: Array[Dictionary]) -> Diction
 ## the sheet reads it, "On Anchored", "On Hit Bound". Comparing those literally reported the same
 ## trigger twice on every page that has one: once as a verb the guide never lists and once as a name
 ## no verb answers to. So the leading "on" is optional on either side of the comparison.
+##
+## AND SO IS THE ARTICLE AFTER IT. A trigger reads out as a sentence, and a sentence takes an
+## article: the vocabulary derives `file_appeared` and every guide writes the row the way the sheet
+## says it, "On A File Appeared". Dropping only the "on" left "afileappeared" against
+## "fileappeared", so the two never met - and because a trigger's own name is what the reader looks
+## it up by, one unread article was enough to report a verb as missing from the very page that
+## documents it.
 static func names_match(names: PackedStringArray, wanted: String) -> bool:
-	var normalized: String = _normalize(wanted)
-	var without_on: String = _without_leading_on(normalized)
+	var wanted_forms: PackedStringArray = _forms_of(wanted)
 	for name: String in names:
-		var other: String = _normalize(name)
-		if other == normalized or _without_leading_on(other) == without_on:
-			return true
+		for form: String in _forms_of(name):
+			if wanted_forms.has(form):
+				return true
 	return false
+
+
+## The articles a trigger sentence may put between its "on" and the thing that happened.
+const LEADING_ARTICLES: PackedStringArray = ["a", "an", "the"]
+
+
+## Every spelling one name is allowed to be met by: the name itself, the name without a leading
+## "on", and that without the article behind it. Each form is normalized LAST, and the words are
+## dropped as WORDS, which is the whole reason this is not three string slices: reduced letter by
+## letter, "On Anchored" would lose the "an" of "anchored" and match a verb that does not exist.
+## A name that is nothing BUT those words keeps them - "On" compares as itself, never as nothing.
+static func _forms_of(name: String) -> PackedStringArray:
+	var words: PackedStringArray = _words_of(name)
+	var forms: PackedStringArray = PackedStringArray([_normalize(name)])
+	if words.size() > 1 and words[0].to_lower() == "on":
+		words.remove_at(0)
+		forms.append(_normalize(" ".join(words)))
+		if words.size() > 1 and LEADING_ARTICLES.has(words[0].to_lower()):
+			words.remove_at(0)
+			forms.append(_normalize(" ".join(words)))
+	return forms
+
+
+## A name as the words it is made of. Anything that is not a letter or a digit separates two words,
+## so `file_appeared` and "On A File Appeared" come apart the same way. Only punctuation separates:
+## a run of letters is one word however it is capitalised, because the two spellings this reader
+## compares are a method name and a display name, and neither ever relies on a capital to say where
+## one word ends.
+static func _words_of(name: String) -> PackedStringArray:
+	var words: PackedStringArray = PackedStringArray()
+	var current: String = ""
+	for index: int in range(name.length()):
+		var character: String = name[index]
+		var lowered: String = character.to_lower()
+		if (lowered >= "a" and lowered <= "z") or (lowered >= "0" and lowered <= "9"):
+			current += character
+			continue
+		if not current.is_empty():
+			words.append(current)
+			current = ""
+	if not current.is_empty():
+		words.append(current)
+	return words
 
 
 static func _normalize(name: String) -> String:
@@ -441,17 +490,6 @@ static func _normalize(name: String) -> String:
 		if (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
 			out += character
 	return out
-
-
-## A normalized name with a leading "on" taken off, when taking it off leaves a name behind - "on"
-## itself compares as nothing, so it keeps its letters. Both sides of a comparison are reduced this
-## way, so "On Anchored" and `anchored` meet in the middle. It is a LOOSE match by
-## design: this reader's whole job is to stop reporting two spellings of one verb as two problems,
-## and everything it produces is advisory.
-static func _without_leading_on(normalized: String) -> String:
-	if normalized.length() > 2 and normalized.begins_with("on"):
-		return normalized.substr(2)
-	return normalized
 
 
 ## A table cell back to a bare verb name: the code span the guides write it in, stripped, and the

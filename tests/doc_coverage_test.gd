@@ -156,6 +156,27 @@ static func _one_verb_in_two_spellings_is_one_verb() -> bool:
 	passed = _check("\"on\" alone keeps its letters rather than comparing as nothing",
 		EventSheetDocAceReference.names_match(PackedStringArray(["On"]), "Fire Hook"),
 		false) and passed
+	# THE ARTICLE A TRIGGER SENTENCE TAKES. A trigger reads out as a sentence and a sentence takes an
+	# article, so the guide writes "On A File Appeared" where the vocabulary derives `file_appeared`.
+	# Dropping the "on" alone left "afileappeared" against "fileappeared" and the two never met, which
+	# reported a verb as missing from the very page documenting it.
+	passed = _check("a trigger sentence's article is not part of the verb's name",
+		EventSheetDocAceReference.names_match(PackedStringArray(["On A File Appeared"]),
+			"file_appeared"), true) and passed
+	passed = _check("and the other two articles read the same way",
+		EventSheetDocAceReference.names_match(PackedStringArray(["On The Watch Stopped",
+			"On An Entry Refused"]), "entry_refused"), true) and passed
+	passed = _check("asked the other way round as well",
+		EventSheetDocAceReference.names_match(PackedStringArray(["file_appeared"]),
+			"On A File Appeared"), true) and passed
+	# THE WORDS ARE DROPPED AS WORDS. Reduced letter by letter, "On Anchored" would lose the "an" of
+	# "anchored" and match a verb nobody has - which is the failure this pin exists to catch.
+	passed = _check("an article is never taken out of the middle of a word",
+		EventSheetDocAceReference.names_match(PackedStringArray(["On Anchored"]), "chored"),
+		false) and passed
+	passed = _check("and a name that is only \"on\" and an article keeps both",
+		EventSheetDocAceReference.names_match(PackedStringArray(["On A"]), "Fire Hook"),
+		false) and passed
 	return passed
 
 
