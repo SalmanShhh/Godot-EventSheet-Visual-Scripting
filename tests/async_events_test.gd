@@ -11,6 +11,10 @@ class_name AsyncEventsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
+const PREFIX := "async_events_test"
+
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -40,6 +44,24 @@ static func run() -> bool:
 	var plain_sheet: EventSheetResource = _loop_sheet(false)
 	var plain_output: String = str(SheetCompiler.compile(plain_sheet, "user://async_plain_probe.gd").get("output", ""))
 	all_passed = _check("a non-awaiting loop stays guard-free", plain_output.contains("is_instance_valid"), false) and all_passed
+
+	# ---- a `while` has no loop variable, so an awaiting one is NEVER guarded ----
+	# The guard names the pick's ITERATOR, and only a `for X in ...` header declares one. Emitted
+	# over a `while` it spelled the fallback name `item` into a file where nothing declared it, and
+	# the output stopped parsing - which is how a coroutine that watches a counter and awaits a
+	# frame (the Event Bus pack's Wait For Event) compiled to a script Godot rejects.
+	var while_output: String = SUPPORT.compile_output(_while_sheet(), "user://async_while_probe.gd")
+	var while_parsed: GDScript = GDScript.new()
+	while_parsed.source_code = while_output
+	all_passed = SUPPORT.pins(PREFIX, [
+		["an awaiting while loop emits no validity guard", while_output.contains("is_instance_valid"), false],
+		["and never names the fallback iterator", while_output.contains("item is Object"), false],
+		["the while-loop coroutine parses", while_parsed.reload(true) == OK, true],
+		["the while-loop coroutine round-trips byte-exact",
+			SUPPORT.reemit(while_output, "user://async_while_verify.gd"), while_output],
+		["a for-each over a pick still gets the guard, under its own iterator name",
+			awaiting_output.contains("if child is Object and not is_instance_valid(child): continue"), true],
+	]) and all_passed
 
 	# ---- the async chip: awaiting actions are detected by VALUE ----
 	var wait_action: ACEAction = ACEAction.new()
@@ -184,6 +206,30 @@ static func _loop_sheet(with_wait: bool) -> EventSheetResource:
 	poke.codegen_template = "print({value})"
 	poke.params = {"value": "child"}
 	row.actions.append(poke)
+	sheet.events.append(row)
+	return sheet
+
+
+## A sheet whose one event is a `while` loop that awaits inside - the shape a coroutine takes when
+## it watches a counter instead of a signal. It has no loop variable anywhere in it, which is the
+## whole point: nothing here declares a name the unpick-on-free guard could be written in terms of.
+static func _while_sheet() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.variables = {"ticks": {"type": "int", "default": 0, "exported": false}}
+	var row: EventRow = EventRow.new()
+	row.trigger_provider_id = "Core"
+	row.trigger_id = "OnReady"
+	var pick: PickFilter = PickFilter.new()
+	pick.collection_kind = PickFilter.CollectionKind.WHILE
+	pick.collection_value = "ticks < 3"
+	row.pick_filters.append(pick)
+	var wait: ACEAction = ACEAction.new()
+	wait.provider_id = "Core"
+	wait.ace_id = "Wait"
+	wait.codegen_template = "await get_tree().create_timer({seconds}).timeout"
+	wait.params = {"seconds": "0.5"}
+	row.actions.append(wait)
 	sheet.events.append(row)
 	return sheet
 

@@ -2695,7 +2695,14 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			# can be freed while the handler is suspended - guard every iteration so freed
 			# objects are skipped, exactly like the budgeted loop's validity check. One flat
 			# line on purpose: it lifts as a plain leading statement and regenerates on emit.
-			if event_awaits and pick.collection_kind != PickFilter.CollectionKind.REPEAT:
+			# ONLY a `for <iterator> in <collection>` loop gets it, and only when the iterator
+			# is a name the header actually declares. A `while` loop has no loop variable at
+			# all, so the guard there would name the default `item` that nothing declared and
+			# the emitted file would not parse; a `range()` repeat yields ints, never Objects.
+			var guards_iterator: bool = pick.collection_kind != PickFilter.CollectionKind.WHILE \
+				and pick.collection_kind != PickFilter.CollectionKind.REPEAT \
+				and iterator.is_valid_identifier()
+			if event_awaits and guards_iterator:
 				lines.append("%sif %s is Object and not is_instance_valid(%s): continue" % [indent, iterator, iterator])
 		var predicate: String = pick.predicate_expression.strip_edges()
 		if not predicate.is_empty():

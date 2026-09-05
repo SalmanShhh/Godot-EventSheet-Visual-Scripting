@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed in the compiler and the pack gate
+
+- **A `while` loop that awaits no longer emits a guard naming a variable nothing declared.** The
+  unpick-on-free rule guards each iteration of an awaiting loop so an object freed during the wait
+  is skipped, and it writes that guard in terms of the loop's ITERATOR. Only a
+  `for <name> in <collection>` header declares one: a `while` has no loop variable at all, so the
+  guard was written over the fallback name `item` and the emitted file stopped parsing
+  (`Identifier "item" not declared`). Any coroutine that watches a counter and awaits a frame hit
+  it. The guard is emitted for a for-each over a pick and nothing else now; a `while` and a
+  `range()` repeat get none, and the for-each keeps its own iterator's name.
+
 ### Fixed in the general-purpose reading pass
 
 - **A loop's own name and a match arm's own name are no longer read as the member they shadow.** The
