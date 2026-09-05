@@ -81,16 +81,60 @@ static func build() -> bool:
 	spoken.ace_category = "Feedback Player"
 	sheet.events.append(spoken)
 
+	# The five that speak about ONE card rather than about the play: each carries the label the row
+	# addresses that card by, so a trigger and an edit row name the same thing the same way.
+	_trigger(sheet, "on_feedback_started", ["label: String"], "On Feedback Started")
+	_trigger(sheet, "on_feedback_finished", ["label: String"], "On Feedback Finished")
+	_trigger(sheet, "on_feedback_skipped", ["label: String", "why: String"], "On Feedback Skipped")
+	_trigger(sheet, "on_hold_reached", [], "On Hold Reached")
+	_trigger(sheet, "on_loop", ["loops_left: int"], "On Loop")
+
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(_player_lines())
 	sheet.events.append(block)
 
+	var addressing: RawCodeRow = RawCodeRow.new()
+	addressing.code = "\n".join(_addressing_lines())
+	sheet.events.append(addressing)
+
 	_verbs(sheet)
+	_list_verbs(sheet)
+	_asking_verbs(sheet)
 	Lib.verb_sentences(sheet, {
 		"play": "Play feedbacks at [b]{at_strength}[/b]",
 		"play_and_wait": "Play feedbacks at [b]{at_strength}[/b] and wait",
 		"play_on_channel": "Play feedbacks on channel [b]{channel}[/b] at [b]{at_strength}[/b]",
-		"play_backwards": "Play feedbacks backwards at [b]{at_strength}[/b]"
+		"play_backwards": "Play feedbacks backwards at [b]{at_strength}[/b]",
+		"add_feedback": "Add feedback [b]{step}[/b] after [b]{after_label}[/b]",
+		"insert_feedback_before": "Insert feedback [b]{step}[/b] before [b]{before_label}[/b]",
+		"replace_feedback": "Replace feedback [b]{label}[/b] with [b]{step}[/b]",
+		"remove_feedback": "Remove feedback [b]{label}[/b]",
+		"move_feedback_to": "Move feedback [b]{label}[/b] to [b]{position}[/b]",
+		"enable_feedback": "Enable feedback [b]{label}[/b]",
+		"disable_feedback": "Disable feedback [b]{label}[/b]",
+		"set_feedback_field": "Set feedback [b]{label}[/b] [b]{field}[/b] to [b]{value}[/b]",
+		"set_feedback_timing": "Set feedback [b]{label}[/b] timing: delay [b]{delay}[/b] s, [b]{repeat}[/b] times",
+		"set_feedback_chance": "Set feedback [b]{label}[/b] chance [b]{percent}[/b]%",
+		"set_feedback_label": "Rename feedback [b]{label}[/b] to [b]{new_label}[/b]",
+		"duplicate_feedback": "Duplicate feedback [b]{label}[/b] as [b]{new_label}[/b]",
+		"copy_feedbacks_from": "Copy feedbacks from [i]{other}[/i]",
+		"load_moment_file": "Load moment file [b]{path}[/b]",
+		"save_moment_file": "Save moment file to [b]{path}[/b]",
+		"set_player_strength": "Set player strength [b]{value}[/b]",
+		"set_player_cooldown": "Set player cooldown [b]{seconds}[/b] s",
+		"set_can_play_while_playing": "While playing, [b]{answer}[/b]",
+		"mute_feedback_category": "Mute feedback category [b]{category}[/b]: [b]{muted}[/b]",
+		"mute_category_on_channel": "Mute feedback category [b]{category}[/b] on channel [b]{channel}[/b]: [b]{muted}[/b]",
+		"scale_feedback_amounts": "Scale feedback amounts [b]{category}[/b] by [b]{factor}[/b]",
+		"retime_feedbacks": "Retime feedbacks by [b]{factor}[/b]",
+		"shuffle_feedbacks_between": "Shuffle feedbacks [b]{first_label}[/b] to [b]{last_label}[/b]",
+		"pick_one_feedback_of": "Pick one feedback of [b]{prefix}[/b]",
+		"jump_to_feedback": "Jump to feedback [b]{label}[/b]",
+		"skip_feedback_once": "Skip feedback [b]{label}[/b] once",
+		"set_loop_count": "Set loop count [b]{label}[/b] to [b]{loops}[/b]",
+		"feedback_is_playing": "Feedback [b]{label}[/b] is playing",
+		"has_feedback": "Has feedback [b]{label}[/b]",
+		"feedback_is_enabled": "Feedback [b]{label}[/b] is enabled"
 	})
 	Lib.feature_verbs(sheet, ["play", "play_and_wait", "stop"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/feedback_player")
@@ -119,7 +163,7 @@ static func _verbs(sheet: EventSheetResource) -> void:
 		[["channel", "String", "The group every player that should feel this is in."],
 			["at_strength", "float", "Scales every amount in every list it reaches."]],
 		"if channel.strip_edges().is_empty() or not is_inside_tree():\n\treturn\nget_tree().call_group(channel, \"play\", at_strength)")
-	_default(sheet, "channel", "feedback")
+	_default(sheet, "channel", "\"feedback\"")
 	_default(sheet, "at_strength", "1.0")
 	Lib.append_function(sheet, "stop", "Stop Feedbacks", "Feedback Player",
 		"Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.",
@@ -153,6 +197,275 @@ static func _verbs(sheet: EventSheetResource) -> void:
 		[], "return duration_of(_steps_now())", TYPE_FLOAT)
 
 
+## One trigger the sheet hears, in the shape all of this pack's triggers share.
+static func _trigger(sheet: EventSheetResource, signal_name: String, params: Array,
+		display_name: String) -> void:
+	var row: SignalRow = SignalRow.new()
+	row.signal_name = signal_name
+	row.params = PackedStringArray(params)
+	row.trigger = true
+	row.ace_name = display_name
+	row.ace_category = "Feedback Player"
+	sheet.events.append(row)
+
+
+## Everything the Inspector's list does, as rows: add a card, put one somewhere, take one out, tune
+## one, switch one off, and the handful of things only a running game can want (mute a family,
+## scale the lot, shuffle for variety, jump the head). Every one of them names a card by its LABEL.
+static func _list_verbs(sheet: EventSheetResource) -> void:
+	Lib.append_function(sheet, "add_feedback", "Add Feedback", "Feedback Player",
+		"Adds one feedback to this player's list while the game runs - the same card the Inspector adds, with the same fields. Leave the after box empty to put it at the end, or name a card to put it straight after that one.",
+		[["step", "Dictionary", "The feedback itself: pick its kind and fill the card, exactly as in the Inspector's list."],
+			["after_label", "String", "The label of the card this one goes after. Empty puts it at the end of the list."]],
+		"var list: Array = _own_list()\nvar at: int = list.size()\nif not after_label.strip_edges().is_empty():\n\tat = _index_in(list, after_label)\n\tif at < 0:\n\t\t_no_such(after_label, \"Add Feedback\")\n\t\treturn\n\tat += 1\nlist.insert(at, _carded(step))")
+	_param_hint(sheet, "step", "feedback_step")
+	_default(sheet, "step", "{\"verb\": \"shake\", \"amount\": 0.4, \"seconds\": 0.2}")
+	_default(sheet, "after_label", "\"\"")
+	Lib.append_function(sheet, "insert_feedback_before", "Insert Feedback Before", "Feedback Player",
+		"Puts a feedback into the list immediately ABOVE the card you name - the other half of Add Feedback, for a step that has to be felt before something already in the beat.",
+		[["step", "Dictionary", "The feedback itself: pick its kind and fill the card, exactly as in the Inspector's list."],
+			["before_label", "String", "The label of the card this one goes above."]],
+		"var list: Array = _own_list()\nvar at: int = _index_in(list, before_label)\nif at < 0:\n\t_no_such(before_label, \"Insert Feedback Before\")\n\treturn\nlist.insert(at, _carded(step))")
+	_param_hint(sheet, "step", "feedback_step")
+	_default(sheet, "step", "{\"verb\": \"flash\", \"amount\": 1.0, \"seconds\": 0.1}")
+	_default(sheet, "before_label", "\"shake\"")
+	Lib.append_function(sheet, "replace_feedback", "Replace Feedback", "Feedback Player",
+		"Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own, so every other row that names it goes on working.",
+		[["label", "String", "The label of the card being swapped out."],
+			["step", "Dictionary", "What takes its place: a kind and its fields, as in the Inspector's list."]],
+		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Replace Feedback\")\n\treturn\nvar fresh: Dictionary = _carded(step)\nif str(fresh.get(\"label\", \"\")).strip_edges().is_empty():\n\tfresh[\"label\"] = _label_of(list[at] as Dictionary)\nlist[at] = fresh")
+	_default(sheet, "label", "\"kick\"")
+	_param_hint(sheet, "step", "feedback_step")
+	_default(sheet, "step", "{\"verb\": \"recoil\", \"amount\": 1.0, \"seconds\": 0.1}")
+	Lib.append_function(sheet, "remove_feedback", "Remove Feedback", "Feedback Player",
+		"Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Feedback.",
+		[["label", "String", "The label of the card to take out."]],
+		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Remove Feedback\")\n\treturn\nlist.remove_at(at)")
+	_default(sheet, "label", "\"shake\"")
+	Lib.append_function(sheet, "move_feedback_to", "Move Feedback To", "Feedback Player",
+		"Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last.",
+		[["label", "String", "The label of the card to move."],
+			["position", "int", "Where it lands. The first card in the list is 1."]],
+		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Move Feedback To\")\n\treturn\nvar card: Dictionary = list[at] as Dictionary\nlist.remove_at(at)\nlist.insert(clampi(position - 1, 0, list.size()), card)")
+	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "position", "1")
+	Lib.append_function(sheet, "enable_feedback", "Enable Feedback", "Feedback Player",
+		"Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row.",
+		[["label", "String", "The label of the card to switch on."]],
+		"var card: Dictionary = _edited(label, \"Enable Feedback\")\nif not card.is_empty():\n\tcard[\"active\"] = true")
+	_default(sheet, "label", "\"shake\"")
+	Lib.append_function(sheet, "disable_feedback", "Disable Feedback", "Feedback Player",
+		"Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row.",
+		[["label", "String", "The label of the card to switch off."]],
+		"var card: Dictionary = _edited(label, \"Disable Feedback\")\nif not card.is_empty():\n\tcard[\"active\"] = false")
+	_default(sheet, "label", "\"shake\"")
+	Lib.append_function(sheet, "set_feedback_field", "Set Feedback Field", "Feedback Player",
+		"Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.",
+		[["label", "String", "The label of the card being tuned."],
+			["field", "String", "Which value on the card to write."],
+			["value", "Variant", "What to write. A number for an amount or a length, a word for the extra one."]],
+		"var card: Dictionary = _edited(label, \"Set Feedback Field\")\nif card.is_empty():\n\treturn\nif not FIELD_KEYS.has(field):\n\tpush_warning(\"Feedback Player: a card has no field called \\\"%s\\\", so Set Feedback Field did nothing.\" % field)\n\treturn\ncard[field] = value")
+	_default(sheet, "label", "\"shake\"")
+	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_default(sheet, "field", "amount")
+	_default(sheet, "value", "1.0")
+	_quoted_call(sheet, "set_feedback_field({label}, \"{field}\", {value})")
+	Lib.append_function(sheet, "set_feedback_timing", "Set Feedback Timing", "Feedback Player",
+		"Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.",
+		[["label", "String", "The label of the card being retimed."],
+			["delay", "float", "How long the card waits after the head reaches it, in seconds."],
+			["repeat", "int", "How many times it is felt. 1 is once."],
+			["interval", "float", "The gap between repeats, in seconds."],
+			["clock", "String", "Which clock it counts on: game time slows with a slowmo, real time never does."]],
+		"var card: Dictionary = _edited(label, \"Set Feedback Timing\")\nif card.is_empty():\n\treturn\ncard[\"delay\"] = maxf(delay, 0.0)\ncard[\"repeat\"] = maxi(repeat, 1)\ncard[\"interval\"] = maxf(interval, 0.0)\ncard[\"clock\"] = clock")
+	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "delay", "0.0")
+	_default(sheet, "repeat", "1")
+	_default(sheet, "interval", "0.0")
+	_param_options(sheet, "clock", ["game", "real"])
+	_default(sheet, "clock", "game")
+	_quoted_call(sheet, "set_feedback_timing({label}, {delay}, {repeat}, {interval}, \"{clock}\")")
+	Lib.append_function(sheet, "set_feedback_chance", "Set Feedback Chance", "Feedback Player",
+		"How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is.",
+		[["label", "String", "The label of the card being rolled for."],
+			["percent", "float", "The chance it is felt, 0 to 100."]],
+		"var card: Dictionary = _edited(label, \"Set Feedback Chance\")\nif not card.is_empty():\n\tcard[\"chance\"] = clampf(percent, 0.0, 100.0)")
+	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "percent", "100.0")
+	Lib.append_function(sheet, "set_feedback_label", "Set Feedback Label", "Feedback Player",
+		"Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say.",
+		[["label", "String", "The card's name now."],
+			["new_label", "String", "What it is called from here on."]],
+		"var card: Dictionary = _edited(label, \"Set Feedback Label\")\nif not card.is_empty():\n\tcard[\"label\"] = new_label")
+	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "new_label", "\"big shake\"")
+	Lib.append_function(sheet, "duplicate_feedback", "Duplicate Feedback", "Feedback Player",
+		"Copies one card and puts the copy straight under it, under a name of its own. Two shakes a frame apart out of one tuned card.",
+		[["label", "String", "The label of the card to copy."],
+			["new_label", "String", "What the copy is called. Empty names it after the original."]],
+		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Duplicate Feedback\")\n\treturn\nvar copy: Dictionary = (list[at] as Dictionary).duplicate(true)\ncopy[\"label\"] = new_label if not new_label.strip_edges().is_empty() else _label_of(copy) + \" copy\"\nlist.insert(at + 1, copy)")
+	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "new_label", "\"\"")
+	Lib.append_function(sheet, "clear_feedbacks", "Clear Feedbacks", "Feedback Player",
+		"Empties the list. What a player that is about to be handed a whole beat by Copy Feedbacks From or Load Moment File wants first.",
+		[], "steps.clear()\nmoment_file = null")
+	Lib.append_function(sheet, "copy_feedbacks_from", "Copy Feedbacks From", "Feedback Player",
+		"Takes another player's whole list and makes it this one's - a copy, so retuning either afterwards leaves the other alone. One tuned enemy hit, given to every enemy that spawns.",
+		[["other", "Node", "The Feedback Player to copy the list off."]],
+		"if other == null:\n\treturn\nvar carried: Variant = other.get(\"steps\")\nif not (carried is Array):\n\tpush_warning(\"Feedback Player: %s is not a Feedback Player, so Copy Feedbacks From did nothing.\" % other.name)\n\treturn\nvar list: Array = _own_list()\nlist.clear()\nfor entry: Variant in carried as Array:\n\tif entry is Dictionary:\n\t\tlist.append((entry as Dictionary).duplicate(true))")
+	Lib.append_function(sheet, "load_moment_file", "Load Moment File", "Feedback Player",
+		"Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.",
+		[["path", "String", "The moment file to read, as its res:// path."]],
+		"if not ResourceLoader.exists(path):\n\tpush_warning(\"Feedback Player: there is no moment file at \\\"%s\\\", so Load Moment File did nothing.\" % path)\n\treturn\nvar file: Resource = load(path)\nif file == null or not (file.get(\"steps\") is Array):\n\tpush_warning(\"Feedback Player: \\\"%s\\\" is not a moment file, so Load Moment File did nothing.\" % path)\n\treturn\nmoment_file = file\n_own_list()")
+	_default(sheet, "path", "\"res://eventsheet_addons/juice/impact.tres\"")
+	Lib.append_function(sheet, "save_moment_file", "Save Moment File", "Feedback Player",
+		"Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written; the timing a list adds is this node's own.",
+		[["path", "String", "Where to write it. At run time that is a user:// path, which is the only place a game may write."]],
+		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Feedback Player: this project has no moment file script, so Save Moment File did nothing.\")\n\treturn\nvar written: Array[Dictionary] = []\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Feedback Player: \\\"%s\\\" could not be written, so Save Moment File saved nothing.\" % path)")
+	_default(sheet, "path", "\"user://my_moment.tres\"")
+	Lib.append_function(sheet, "set_player_strength", "Set Player Strength", "Feedback Player",
+		"Turns this whole player up or down without retuning a single card - the object's own volume knob, on top of the strength the play row asks for.",
+		[["value", "float", "What every amount in the list is scaled by. 1 is the list as tuned."]],
+		"strength = maxf(value, 0.0)")
+	_default(sheet, "value", "1.0")
+	Lib.append_function(sheet, "set_player_cooldown", "Set Player Cooldown", "Feedback Player",
+		"The shortest gap between two plays, in seconds. A play asked for sooner is refused, which is how a rapid-fire hit stops stacking its own feedback.",
+		[["seconds", "float", "The gap. 0 lets every play through."]],
+		"cooldown = maxf(seconds, 0.0)")
+	_default(sheet, "seconds", "0.1")
+	Lib.append_function(sheet, "set_can_play_while_playing", "Set Can Play While Playing", "Feedback Player",
+		"What a second play does while the first is still running: start again from the top, be ignored, or run alongside it.",
+		[["answer", "String", "Restart, ignore, or overlap."]],
+		"while_playing = answer")
+	_param_options(sheet, "answer", ["restart", "ignore", "overlap"])
+	_default(sheet, "answer", "restart")
+	_quoted_call(sheet, "set_can_play_while_playing(\"{answer}\")")
+	Lib.append_function(sheet, "mute_feedback_category", "Mute Feedback Category", "Feedback Player",
+		"Silences a whole family of cards at once - every screen effect, every camera move, every sound - and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked.",
+		[["category", "String", "The family to silence."],
+			["muted", "bool", "On silences it; off lets it be felt again."]],
+		"var family: String = category.strip_edges().to_lower()\nif family.is_empty():\n\treturn\nif muted:\n\t_muted[family] = true\nelse:\n\t_muted.erase(family)")
+	_param_options(sheet, "category", ["audio", "transform", "camera", "screen", "pause", "loop", "signal"])
+	_default(sheet, "category", "screen")
+	_default(sheet, "muted", "true")
+	_quoted_call(sheet, "mute_feedback_category(\"{category}\", {muted})")
+	Lib.append_function(sheet, "mute_category_on_channel", "Mute Feedback Category On Channel", "Feedback Player",
+		"The same switch, thrown for every Feedback Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object.",
+		[["channel", "String", "The group every player the switch reaches is in."],
+			["category", "String", "The family to silence."],
+			["muted", "bool", "On silences it; off lets it be felt again."]],
+		"if channel.strip_edges().is_empty() or not is_inside_tree():\n\treturn\nget_tree().call_group(channel, \"mute_feedback_category\", category, muted)")
+	_default(sheet, "channel", "\"feedback\"")
+	_param_options(sheet, "category", ["audio", "transform", "camera", "screen", "pause", "loop", "signal"])
+	_default(sheet, "category", "screen")
+	_default(sheet, "muted", "true")
+	_quoted_call(sheet, "mute_category_on_channel({channel}, \"{category}\", {muted})")
+	Lib.append_function(sheet, "scale_feedback_amounts", "Scale Feedback Amounts", "Feedback Player",
+		"Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list.",
+		[["category", "String", "The family to scale, or empty for every card."],
+			["factor", "float", "What each amount is multiplied by. 0.5 is half as much."]],
+		"var family: String = category.strip_edges().to_lower()\nfor entry: Variant in _own_list():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tif family.is_empty() or _category_of(card) == family:\n\t\tcard[\"amount\"] = float(card.get(\"amount\", 1.0)) * factor")
+	_param_options(sheet, "category", ["", "audio", "transform", "camera", "screen", "pause", "loop", "signal"])
+	_default(sheet, "category", "")
+	_default(sheet, "factor", "0.5")
+	_quoted_call(sheet, "scale_feedback_amounts(\"{category}\", {factor})")
+	Lib.append_function(sheet, "retime_feedbacks", "Retime Feedbacks", "Feedback Player",
+		"Stretches or squeezes the whole beat in time: every length, every wait and every gap multiplied by the same number. Half makes a snappier version of a beat nobody has to retune card by card.",
+		[["factor", "float", "What every length is multiplied by. 0.5 is twice as fast."]],
+		"var scale: float = maxf(factor, 0.0)\nfor entry: Variant in _own_list():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tfor key: String in [\"seconds\", \"delay\", \"interval\"]:\n\t\tif card.has(key):\n\t\t\tcard[key] = float(card[key]) * scale")
+	_default(sheet, "factor", "0.5")
+	Lib.append_function(sheet, "shuffle_feedbacks_between", "Shuffle Feedbacks Between", "Feedback Player",
+		"Reorders the stretch of the list between two cards, both included, at random. The cheapest variety a repeated hit can have: the same feedbacks, in a different order every time.",
+		[["first_label", "String", "One end of the stretch."],
+			["last_label", "String", "The other end."]],
+		"var list: Array = _own_list()\nvar from: int = _index_in(list, first_label)\nvar to: int = _index_in(list, last_label)\nif from < 0 or to < 0:\n\t_no_such(first_label if from < 0 else last_label, \"Shuffle Feedbacks Between\")\n\treturn\nif to < from:\n\tvar swapped: int = from\n\tfrom = to\n\tto = swapped\nvar stretch: Array = list.slice(from, to + 1)\nstretch.shuffle()\nfor offset: int in range(stretch.size()):\n\tlist[from + offset] = stretch[offset]")
+	_default(sheet, "first_label", "\"shake_a\"")
+	_default(sheet, "last_label", "\"shake_c\"")
+	Lib.append_function(sheet, "pick_one_feedback_of", "Pick One Feedback Of", "Feedback Player",
+		"Ticks exactly one of the cards whose label starts with what you type and unticks the rest, so shake_a, shake_b and shake_c become one shake chosen fresh each time. Variety out of the list itself, with no branch in the sheet.",
+		[["prefix", "String", "The start of the labels to choose between."]],
+		"var wanted: String = prefix.strip_edges()\nif wanted.is_empty():\n\treturn\nvar matches: Array = []\nfor entry: Variant in _own_list():\n\tif entry is Dictionary and _label_of(entry as Dictionary).begins_with(wanted):\n\t\tmatches.append(entry)\nif matches.is_empty():\n\t_no_such(wanted, \"Pick One Feedback Of\")\n\treturn\nvar chosen: int = randi() % matches.size()\nfor index: int in range(matches.size()):\n\t(matches[index] as Dictionary)[\"active\"] = index == chosen")
+	_default(sheet, "prefix", "\"shake_\"")
+	Lib.append_function(sheet, "jump_to_feedback", "Jump To Feedback", "Feedback Player",
+		"Moves the head of a RUNNING play to the card you name, so the rest of the beat starts there. What a hit that interrupts its own wind-up wants.",
+		[["label", "String", "The label of the card to carry on from."]],
+		"_jump_to = label.strip_edges()")
+	_default(sheet, "label", "\"impact\"")
+	Lib.append_function(sheet, "skip_feedback_once", "Skip Feedback Once", "Feedback Player",
+		"Steps over one card the NEXT time the play reaches it, and then forgets about it. The one-off exception a disable would have to be undone after.",
+		[["label", "String", "The label of the card to step over once."]],
+		"if _index_of(label) < 0:\n\t_no_such(label, \"Skip Feedback Once\")\n\treturn\n_skip_once[label.strip_edges()] = true")
+	_default(sheet, "label", "\"shake\"")
+	Lib.append_function(sheet, "set_loop_count", "Set Loop Count", "Feedback Player",
+		"How many times a Loop Back card sends the head round. A charge that gets longer the further it is held, without a second list.",
+		[["label", "String", "The label of the Loop Back card."],
+			["loops", "int", "How many times round. 0 walks straight past it."]],
+		"var card: Dictionary = _edited(label, \"Set Loop Count\")\nif card.is_empty():\n\treturn\ncard[\"loops\"] = maxi(loops, 0)\ncard[\"loops_left\"] = maxi(loops, 0)")
+	_default(sheet, "label", "\"loop_back\"")
+	_default(sheet, "loops", "2")
+	Lib.append_function(sheet, "hold_here", "Hold Here", "Feedback Player",
+		"Stops the head where it is and leaves it there - a charge held, a beat waiting on the player. Release Hold carries on from the same card, and nothing ticks while it waits.",
+		[], "_held = playing")
+	Lib.append_function(sheet, "release_hold", "Release Hold", "Feedback Player",
+		"Lets a held play carry on from the card it stopped on.",
+		[], "_held = false\n_resumed.emit()")
+
+
+## The rows that ASK rather than do: whether a card is playing, how many there are, what one of them
+## says. Every one of them addresses a card by the same label the edit rows use.
+static func _asking_verbs(sheet: EventSheetResource) -> void:
+	Lib.condition(sheet, "feedback_is_playing", "Feedback Is Playing", "Feedback Player",
+		"True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.",
+		[["label", "String", "The label of the card being asked about."]],
+		"return playing and now_playing == label.strip_edges()")
+	_default(sheet, "label", "\"shake\"")
+	Lib.condition(sheet, "has_feedback", "Has Feedback", "Feedback Player",
+		"True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.",
+		[["label", "String", "The label to look for."]],
+		"return _index_of(label) >= 0")
+	_default(sheet, "label", "\"shake\"")
+	Lib.condition(sheet, "feedback_is_enabled", "Feedback Is Enabled", "Feedback Player",
+		"True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.",
+		[["label", "String", "The label of the card being asked about."]],
+		"var at: int = _index_of(label)\nreturn at >= 0 and bool((_steps_now()[at] as Dictionary).get(\"active\", true))")
+	_default(sheet, "label", "\"shake\"")
+	Lib.number(sheet, "feedback_count", "Feedback Count", "Feedback Player",
+		"How many cards this player's list holds, ticked or not - the number the head of the Inspector shows.",
+		[], "return _steps_now().size()", TYPE_INT)
+	Lib.number(sheet, "feedback_label_at", "Feedback Label At", "Feedback Player",
+		"The name of the card at a place in the list, so a settings screen can list a beat without knowing what is in it. The first card is 1; a number past the end answers with nothing.",
+		[["position", "int", "Which card. The first in the list is 1."]],
+		"var list: Array = _steps_now()\nvar at: int = position - 1\nif at < 0 or at >= list.size() or not (list[at] is Dictionary):\n\treturn \"\"\nreturn _label_of(list[at] as Dictionary)", TYPE_STRING)
+	_default(sheet, "position", "1")
+	Lib.number(sheet, "feedback_field", "Feedback Field", "Feedback Player",
+		"What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Feedback Field, so a slider can be shown at the value the list actually holds.",
+		[["label", "String", "The label of the card being read."],
+			["field", "String", "Which value to read."]],
+		"return _card_named(label).get(field, null)", TYPE_MAX)
+	_default(sheet, "label", "\"shake\"")
+	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_default(sheet, "field", "amount")
+	_quoted_call(sheet, "feedback_field({label}, \"{field}\")")
+	Lib.number(sheet, "feedback_progress", "Feedback Progress", "Feedback Player",
+		"How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.",
+		[["label", "String", "The label of the card being watched."]],
+		"return _progress_of(label)", TYPE_FLOAT)
+	_default(sheet, "label", "\"shake\"")
+	Lib.number(sheet, "feedback_duration", "Feedback Duration", "Feedback Player",
+		"How long ONE card lasts, its own wait included - beside Feedbacks Duration, which is how long the whole beat lasts.",
+		[["label", "String", "The label of the card being measured."]],
+		"var card: Dictionary = _card_named(label)\nreturn maxf(float(card.get(\"seconds\", 0.0)), 0.0) + maxf(float(card.get(\"delay\", 0.0)), 0.0)", TYPE_FLOAT)
+	_default(sheet, "label", "\"shake\"")
+	Lib.number(sheet, "current_feedback", "Current Feedback", "Feedback Player",
+		"The label of the card the head is on right now, or nothing when no play is running.",
+		[], "return now_playing", TYPE_STRING)
+	Lib.number(sheet, "loops_left", "Loops Left", "Feedback Player",
+		"How many times round a Loop Back card still has to go in the play that is running.",
+		[["label", "String", "The label of the Loop Back card."]],
+		"var card: Dictionary = _card_named(label)\nreturn int(card.get(\"loops_left\", card.get(\"loops\", 0)))", TYPE_INT)
+	_default(sheet, "label", "\"loop_back\"")
+
+
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value
 ## (authoring-time metadata only - defaults never appear in the compiled .gd).
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
@@ -160,6 +473,36 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
+
+## Offers the last-appended ACE's parameter a fixed list of words - a dropdown in the dialog rather
+## than a box to spell one into. The keys stay BARE: a word's quotes belong in the call template, so
+## the value the sheet stores is the word itself.
+static func _param_options(sheet: EventSheetResource, param_id: String, choices: Array) -> void:
+	var typed: Array[String] = []
+	for choice: Variant in choices:
+		typed.append(str(choice))
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.options = typed
+
+
+## Names the EDITOR a parameter opens. The Feedback Player uses one: a step, which opens the very
+## card the Inspector unfolds, so a feedback authored by a row and one authored in the list are the
+## same dictionary spelled the same way.
+static func _param_hint(sheet: EventSheetResource, param_id: String, hint: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.hint = hint
+
+
+## Writes the last-appended verb's call out by hand, which is the only way a WORD parameter can
+## carry its quotes: the dropdown stores `screen`, and the call has to say "screen".
+static func _quoted_call(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
 
 
 ## Marks the last-appended verb an AWAITING row: its call is written with `await` in front, which is
@@ -299,24 +642,32 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t_head = index",
 		"\t\tprogress = float(index) / float(maxi(order.size(), 1))",
 		"\t\tindex = await _take(order, index, order[index] as Dictionary, at_strength, token)",
+		"\t\tindex = _landing(order, index)",
 		"\tif _alive(token) and index < order.size():",
 		"\t\tpush_warning(\"Feedback Player: a loop on %s never came back, so the play was given up after %d steps.\" % [name, MAX_PLAY_STEPS])",
 		"\tif _alive(token):",
 		"\t\t_live.erase(token)",
 		"\t\t_close()",
 		"",
-		"## Holds a walk while the player is paused. It waits on the resume signal rather than polling, so a",
-		"## pause costs nothing while it lasts, ends the frame it is lifted, and wakes for a stop as well -",
-		"## every door that ends a pause raises the same signal.",
+		"## Holds a walk while the player is paused OR held where it is. It waits on the resume signal",
+		"## rather than polling, so a pause costs nothing while it lasts, ends the frame it is lifted, and",
+		"## wakes for a stop as well - every door that ends a wait raises the same signal. The loop is",
+		"## bounded rather than open because two doors can hold the head at once, and a resume that lifts",
+		"## only one of them must go back to waiting rather than walking on.",
 		"func _wait_out_pause(token: int) -> void:",
-		"\tif _paused and _alive(token):",
+		"\tfor waited: int in range(MAX_PLAY_STEPS):",
+		"\t\tif not ((_paused or _held) and _alive(token)):",
+		"\t\t\treturn",
 		"\t\tawait _resumed",
 		"",
 		"## What one card does, and where the head goes next. The timing words move the head; every other",
 		"## word is a feedback, which is felt and stepped over.",
 		"func _take(order: Array, index: int, card: Dictionary, at_strength: float, token: int) -> int:",
 		"\tvar word: String = str(card.get(\"verb\", \"\")).strip_edges().to_lower()",
-		"\tif not _card_runs(card, at_strength):",
+		"\tvar refused: String = _why_not(card, at_strength)",
+		"\tif not refused.is_empty():",
+		"\t\tif not _is_timing(word):",
+		"\t\t\ton_feedback_skipped.emit(_label_of(card), refused)",
 		"\t\treturn index + 1",
 		"\tvar clock: String = MomentRunner.CLOCK_REAL if str(card.get(\"clock\", \"\")) == \"real\" else MomentRunner.CLOCK_GAME",
 		"\tvar delay: float = maxf(float(card.get(\"delay\", 0.0)), 0.0)",
@@ -328,6 +679,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\tPAUSE:",
 		"\t\t\tawait MomentRunner.then(self, MomentRunner.seconds_of(float(card.get(\"seconds\", 0.0))), clock)",
 		"\t\tHOLD_UNTIL:",
+		"\t\t\ton_hold_reached.emit()",
 		"\t\t\tawait MomentRunner.hold(self, _longest_above(order, index), float(card.get(\"seconds\", 0.0)), clock)",
 		"\t\tLOOP_START:",
 		"\t\t\tpass",
@@ -336,13 +688,16 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t\tvar left: int = int(card.get(\"loops_left\", card.get(\"loops\", 1)))",
 		"\t\t\tif left > 0 and back >= 0:",
 		"\t\t\t\tcard[\"loops_left\"] = left - 1",
+		"\t\t\t\ton_loop.emit(left - 1)",
 		"\t\t\t\tawait MomentRunner.then(self, MomentRunner.seconds_of(float(card.get(\"seconds\", 0.0))), clock)",
 		"\t\t\t\treturn back",
 		"\t\t\tcard[\"loops_left\"] = int(card.get(\"loops\", 1))",
 		"\t\t_:",
 		"\t\t\tnow_playing = str(card.get(\"label\", word))",
+		"\t\t\ton_feedback_started.emit(_label_of(card))",
 		"\t\t\t_do_step(card, at_strength)",
 		"\t\t\tawait _repeat_rest(card, at_strength, clock, token)",
+		"\t\t\ton_feedback_finished.emit(_label_of(card))",
 		"\treturn index + 1",
 		"",
 		"## The repeats a card asks for after its first play, each one an interval apart.",
@@ -359,15 +714,29 @@ static func _player_lines() -> PackedStringArray:
 		"",
 		"## Whether a card is felt at all: its enable box, its chance, and the strength window it asked for.",
 		"func _card_runs(card: Dictionary, at_strength: float) -> bool:",
+		"\treturn _why_not(card, at_strength).is_empty()",
+		"",
+		"## WHY a card was not felt, in one word, or \"\" when it was. The reason is what On Feedback Skipped",
+		"## carries, so a row can tell a card the player muted from one the dice went against - and it is",
+		"## asked once per card per play, because rolling the chance twice would be a different beat.",
+		"func _why_not(card: Dictionary, at_strength: float) -> String:",
 		"\tif not bool(card.get(\"active\", true)):",
-		"\t\treturn false",
+		"\t\treturn \"off\"",
+		"\tvar named: String = _label_of(card)",
+		"\tif _skip_once.has(named):",
+		"\t\t_skip_once.erase(named)",
+		"\t\treturn \"skipped once\"",
+		"\tif _muted.has(_category_of(card)):",
+		"\t\treturn \"muted\"",
 		"\tvar chance: float = float(card.get(\"chance\", 100.0))",
 		"\tif chance < 100.0 and randf() * 100.0 >= chance:",
-		"\t\treturn false",
+		"\t\treturn \"chance\"",
 		"\tif at_strength < float(card.get(\"min_strength\", 0.0)):",
-		"\t\treturn false",
+		"\t\treturn \"strength\"",
 		"\tvar ceiling: float = float(card.get(\"max_strength\", 0.0))",
-		"\treturn ceiling <= 0.0 or at_strength <= ceiling",
+		"\tif ceiling > 0.0 and at_strength > ceiling:",
+		"\t\treturn \"strength\"",
+		"\treturn \"\"",
 		"",
 		"## One feedback, felt. The ten moment words go to the Juice behaviour beside this node - the same",
 		"## call a moment file makes - and this node's own words are done here.",
@@ -463,7 +832,10 @@ static func _player_lines() -> PackedStringArray:
 		"\tplaying = true",
 		"\t_played_once = true",
 		"\t_paused = false",
+		"\t_held = false",
+		"\t_jump_to = \"\"",
 		"\tprogress = 0.0",
+		"\t_started_at = float(Time.get_ticks_msec()) / 1000.0",
 		"\t_order = order",
 		"\t_head = 0",
 		"\t_head_strength = at_strength",
@@ -479,6 +851,7 @@ static func _player_lines() -> PackedStringArray:
 		"\t\treturn",
 		"\tplaying = false",
 		"\t_paused = false",
+		"\t_held = false",
 		"\tprogress = 1.0",
 		"\tnow_playing = \"\"",
 		"\ton_feedbacks_finished.emit()",
@@ -553,4 +926,180 @@ static func _player_lines() -> PackedStringArray:
 		"\tif base.get(\"scale\") is Vector2 and not is_zero_approx(swell):",
 		"\t\twritten[\"scale\"] = (base[\"scale\"] as Vector2) * (1.0 + swell)",
 		"\treturn written"
+	])
+
+
+## The second half of the runtime: everything the rows that EDIT a list are built on. A list is
+## edited in the Inspector by dragging cards and in the game by naming them, and the two have to
+## mean the same thing - so a card's LABEL is the address, the address is resolved in exactly one
+## place, and a row that names a card nobody has says so rather than doing nothing.
+static func _addressing_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"# --- Addressed by label: the rows that edit the list while the game runs ---",
+		"# Every row that names one feedback names it by its LABEL - the name typed on the card in the",
+		"# Inspector, or, for a card nobody named, its own word. That is the whole addressing scheme: a",
+		"# list tuned in the Inspector and a list retuned by rows can never disagree about which step is",
+		"# meant, and a label that is not in the list is said out loud rather than quietly ignored.",
+		"",
+		"## Which family a card belongs to when it does not say so itself. An OVERRIDE list: a word that is",
+		"## not in it belongs to no family, so Mute Feedback Category leaves it alone, and a card carrying",
+		"## its own `category` key answers with that instead of with this. It is the RUNTIME copy of the",
+		"## question, and the editor's card list takes its stripe colours from here rather than keeping a",
+		"## second one, so a word can only ever have one family.",
+		"const CATEGORY_OF: Dictionary = {",
+		"\t\"shake\": \"camera\",",
+		"\t\"zoom\": \"camera\",",
+		"\t\"punch\": \"transform\",",
+		"\t\"flash\": \"transform\",",
+		"\t\"hitstop\": \"pause\",",
+		"\t\"slowmo\": \"pause\",",
+		"\t\"shockwave\": \"screen\",",
+		"\t\"chromatic\": \"screen\",",
+		"\t\"pulse\": \"screen\",",
+		"\t\"hold\": \"screen\",",
+		"\t\"pause\": \"pause\",",
+		"\t\"hold_until\": \"pause\",",
+		"\t\"loop_start\": \"loop\",",
+		"\t\"loop_back\": \"loop\",",
+		"\t\"emit_signal\": \"signal\",",
+		"\t\"play_player\": \"signal\"",
+		"}",
+		"",
+		"## The keys Set Feedback Field writes and Feedback Field reads. Named rather than open, so a typo",
+		"## cannot quietly add a key nothing ever looks at - the one failure a dictionary with no schema",
+		"## behind it is prone to.",
+		"const FIELD_KEYS: PackedStringArray = [\"amount\", \"effect\", \"seconds\", \"delay\", \"interval\", \"repeat\", \"chance\", \"loops\"]",
+		"",
+		"## The families muted right now, as a set. Empty in every project that never mutes one, which is",
+		"## why it costs a lookup in an empty dictionary rather than a branch per card.",
+		"var _muted: Dictionary = {}",
+		"",
+		"## The labels Skip Feedback Once has been asked about and the play has not reached yet. Each is",
+		"## taken out the moment it is used, so the row means once rather than from now on.",
+		"var _skip_once: Dictionary = {}",
+		"",
+		"## Hold Here, and the label Jump To Feedback wants the head moved to at the next step.",
+		"var _held: bool = false",
+		"var _jump_to: String = \"\"",
+		"",
+		"## When this play began, on the wall clock, so one card's own progress can be answered without a",
+		"## tick running to count it.",
+		"var _started_at: float = 0.0",
+		"",
+		"## The name one card answers to: what it was called in the list, or its own word when it was never",
+		"## named. THE ONE PLACE a label is derived, so every row addresses cards identically.",
+		"func _label_of(card: Dictionary) -> String:",
+		"\tvar named: String = str(card.get(\"label\", \"\")).strip_edges()",
+		"\treturn named if not named.is_empty() else str(card.get(\"verb\", \"\")).strip_edges()",
+		"",
+		"## Which family a card belongs to: its own word for it when it carries one, else the family its",
+		"## word belongs to, else none at all.",
+		"func _category_of(card: Dictionary) -> String:",
+		"\tvar said: String = str(card.get(\"category\", \"\")).strip_edges().to_lower()",
+		"\tif not said.is_empty():",
+		"\t\treturn said",
+		"\treturn str(CATEGORY_OF.get(str(card.get(\"verb\", \"\")).strip_edges().to_lower(), \"\"))",
+		"",
+		"## Where a label sits in a list, or -1 when nothing in it answers to that name.",
+		"func _index_in(list: Array, label: String) -> int:",
+		"\tvar wanted: String = label.strip_edges()",
+		"\tif wanted.is_empty():",
+		"\t\treturn -1",
+		"\tfor index: int in range(list.size()):",
+		"\t\tif list[index] is Dictionary and _label_of(list[index] as Dictionary) == wanted:",
+		"\t\t\treturn index",
+		"\treturn -1",
+		"",
+		"## Where a label sits in the list this player is playing.",
+		"func _index_of(label: String) -> int:",
+		"\treturn _index_in(_steps_now(), label)",
+		"",
+		"## The card a label names, or an empty one. Empty rather than null so every reader can ask it a",
+		"## question without checking first, and a card that is not there answers with the defaults.",
+		"func _card_named(label: String) -> Dictionary:",
+		"\tvar list: Array = _steps_now()",
+		"\tvar at: int = _index_in(list, label)",
+		"\treturn list[at] as Dictionary if at >= 0 else {}",
+		"",
+		"## Said when a row names a feedback this player has not got. A warning rather than an error,",
+		"## because the rest of the beat is still worth playing; in the editor the same mistake is a quiet",
+		"## finding on the row itself, which is where it can actually be fixed.",
+		"func _no_such(label: String, row: String) -> void:",
+		"\tpush_warning(\"Feedback Player: %s has no feedback labelled \\\"%s\\\", so %s did nothing.\" % [name, label, row])",
+		"",
+		"## The list the EDIT rows work on: this player's own. A player whose moment-file slot is filled is",
+		"## playing a beat two other objects may be playing too, and an edit row must never write into that",
+		"## file - so the first edit takes a copy of it into this list and lets the slot go. The beat is",
+		"## unchanged; it is simply this object's own now.",
+		"func _own_list() -> Array:",
+		"\tif moment_file != null:",
+		"\t\tvar carried: Variant = moment_file.get(\"steps\")",
+		"\t\tsteps.clear()",
+		"\t\tif carried is Array:",
+		"\t\t\tfor entry: Variant in carried as Array:",
+		"\t\t\t\tif entry is Dictionary:",
+		"\t\t\t\t\tsteps.append((entry as Dictionary).duplicate(true))",
+		"\t\tmoment_file = null",
+		"\treturn steps",
+		"",
+		"## The card a row is about to write to, taken from this player's OWN list, or an empty dictionary",
+		"## when the label names nothing - with the warning already said, so no row has to say it twice.",
+		"func _edited(label: String, row: String) -> Dictionary:",
+		"\tvar list: Array = _own_list()",
+		"\tvar at: int = _index_in(list, label)",
+		"\tif at < 0:",
+		"\t\t_no_such(label, row)",
+		"\t\treturn {}",
+		"\treturn list[at] as Dictionary",
+		"",
+		"## One dictionary made into a card: its own keys over the four every moment file's step holds, so",
+		"## a step written by a row and one added in the Inspector are the same shape and neither has to be",
+		"## converted into the other. The enable key is left ABSENT, which is what on means.",
+		"func _carded(step: Dictionary) -> Dictionary:",
+		"\tvar card: Dictionary = {\"verb\": \"\", \"amount\": 1.0, \"effect\": \"\", \"seconds\": 0.0}",
+		"\tfor key: Variant in step:",
+		"\t\tcard[key] = step[key]",
+		"\treturn card",
+		"",
+		"## Where the head goes when Jump To Feedback has been asked for: the label's place in the order",
+		"## being walked, or where the head was going anyway. Asked once per step, and it reads an empty",
+		"## string in every play nobody jumped in.",
+		"func _landing(order: Array, index: int) -> int:",
+		"\tif _jump_to.is_empty():",
+		"\t\treturn index",
+		"\tvar landed: int = _index_in(order, _jump_to)",
+		"\tif landed < 0:",
+		"\t\t_no_such(_jump_to, \"Jump To Feedback\")",
+		"\t_jump_to = \"\"",
+		"\treturn landed if landed >= 0 else index",
+		"",
+		"## How far through ONE card the play is, 0 before it starts and 1 once it is done. Read off the",
+		"## plan rather than off a tick: the schedule says when each card starts and how long it lasts and",
+		"## the clock says how long this play has been going, so nothing has to run to answer it.",
+		"func _progress_of(label: String) -> float:",
+		"\tif not playing:",
+		"\t\treturn 0.0",
+		"\tvar elapsed: float = float(Time.get_ticks_msec()) / 1000.0 - _started_at",
+		"\tfor entry: Variant in schedule_of(_steps_now()):",
+		"\t\tvar plan: Dictionary = entry as Dictionary",
+		"\t\tif _label_of(plan.get(\"card\") as Dictionary) != label.strip_edges():",
+		"\t\t\tcontinue",
+		"\t\tvar span: float = maxf(float(plan.get(\"seconds\", 0.0)), 0.0)",
+		"\t\tif span <= 0.0:",
+		"\t\t\treturn 1.0 if elapsed >= float(plan.get(\"at\", 0.0)) else 0.0",
+		"\t\treturn clampf((elapsed - float(plan.get(\"at\", 0.0))) / span, 0.0, 1.0)",
+		"\treturn 0.0",
+		"",
+		"## Every label in the list, in order - what For Each Feedback loops over, and what a settings",
+		"## screen that lists a beat's parts is built out of.",
+		"## @ace_looping(feedback_label)",
+		"## @ace_name(\"For Each Feedback\")",
+		"## @ace_category(\"Feedback Player\")",
+		"## @ace_description(\"Runs the actions under it once per feedback in this player's list, top to bottom, with the label of each one in hand.\")",
+		"func for_each_feedback() -> Array:",
+		"\tvar labels: Array = []",
+		"\tfor entry: Variant in _steps_now():",
+		"\t\tif entry is Dictionary:",
+		"\t\t\tlabels.append(_label_of(entry as Dictionary))",
+		"\treturn labels"
 	])
