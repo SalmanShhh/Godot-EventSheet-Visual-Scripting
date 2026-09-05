@@ -74,6 +74,14 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 ## at all, which leaves the method's own GDScript default in charge - `""` in a signature then
 ## reaches a quoted slot as its source text and writes four quote characters where a name belonged.
 ## Those were the two faces of one defect across eighteen shipped rows; spelling the kind is the fix.
+##
+## THERE IS NO SLOT FOR IT ON A `params` ROW - a row is `[id, type, help]` and nothing more. Set it
+## on the ACEParam once the function exists, which is the walk every builder's own `_default` helper
+## already does over `sheet.functions[sheet.functions.size() - 1].params`:
+##     parameter.default_value = ""
+##     parameter.default_spelling = "word"
+## A pack authored from real source files under `src/` writes it into the annotation line instead -
+## `## @ace_param(called, default_word: "", desc: "...")` - and never reaches this maker at all.
 static func append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, display_template: String = "") -> void:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
@@ -120,6 +128,7 @@ static func require_resource(sheet: EventSheetResource, var_name: String, displa
 ## starting value that IS set says its kind on `parameter.default_spelling`: "word" for text your
 ## template's own quotes receive (and the only spelling that can say EMPTY), "code" for GDScript an
 ## unquoted slot receives verbatim, empty for the plain shorthand a number or a bare word wants.
+## Neither has a slot on a `params` row: set both on the ACEParam of the function this hands back.
 static func exposed_function(function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
@@ -979,6 +988,7 @@ class PackSource extends RefCounted:
 	# starting value that IS set says its kind on `parameter.default_spelling`: "word" for text your
 	# template's own quotes receive (and the only spelling that can say EMPTY), "code" for GDScript
 	# an unquoted slot receives verbatim, empty for the shorthand a number or a bare word wants.
+	# Neither has a slot on a `params` row: set both on the ACEParam of the function this hands back.
 	func _exposed(function_name: String, display_name: String, description: String, params: Array, category: String) -> EventFunction:
 		var event_function: EventFunction = EventFunction.new()
 		event_function.function_name = function_name
