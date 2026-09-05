@@ -305,7 +305,7 @@ write it as a `##` line on the thing it describes, and both readers get it.
 | Set | Where | What it is | Discovered how |
 |---|---|---|---|
 | Guides | `docs/GUIDE-*.md`, `docs/*.md` | Topic guides, references, patterns, migration | listed in `docs/README.md` |
-| Addon guides | `docs/Addons/<Title-Case-Words>.md` | One per behavior pack (95 of the 114 packs; the other 19 are companion data assets and loaders, documented inside their partner's guide) | by directory |
+| Addon guides | `docs/Addons/<Title-Case-Words>.md` | One per behavior pack (106 of the 136 packs; the other 30 are companion data assets and loaders, documented inside their partner's guide) | by directory |
 | Module guides | `docs/Modules/<Title-Case-Words>.md` | One per family of builtin vocabulary (44 guides over 84 module files) | by directory |
 
 The addon and module sets are discovered as **directories** - nothing lists a guide by name, so a
