@@ -268,6 +268,20 @@ round trip is what makes a folder of chunks editable rather than a build artifac
   moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps
   it. A camera that is neither changes nothing, so this is a habit rather than a crash. The Doctor's Streaming section
   reports that, and a hole in an otherwise complete grid.
+- **A chunk scene that is THERE and will not load is refused for good.** A file that is not a scene,
+  or one the loader turns down, is written off after a single attempt - remembered like a hole, so
+  the world settles instead of erroring once a frame for ever. Fixing the file is not enough on its
+  own: **Stream Chunks Around** is what clears that memory, so run it again (or restart) after the
+  fix.
+- **Ask for chunks before naming the folder and they wait.** **Keep Chunk** and **Preload Chunks
+  Around** can be used before **Stream Chunks Around** has said where the chunk scenes live. Those
+  cells sit in the queue and are loaded the moment a folder is named, rather than being looked for
+  at a path with no folder in it and written off as holes; the streamer says so once and parks its
+  tick until it has somewhere to look.
+- **A streamer whose followed node is freed puts down what it was carrying.** The wanted set is an
+  answer about a node that no longer exists, so it is dropped along with the follow - the radius of
+  chunks around a place the game has left is never loaded in behind you. **Stream Chunks Around**
+  starts it again.
 
 ## Already written it by hand? It reads as this pack
 

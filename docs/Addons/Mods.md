@@ -4,7 +4,8 @@
 read it. It loads every mod it finds in a folder, in a load order you set, and it does that in one of
 two tiers you choose per row. A **data-only** load takes resources, scenes, textures and sounds, and
 before it takes anything it reads the mod's own contents - the files' names, and the text of every
-scene and resource among them - and refuses one that carries a script. A
+scene and resource among them - and refuses one that carries a script, a shader, or a file it cannot
+read. A
 **script** load takes a mod that carries code, and you should know exactly what that means before you
 ship a row that does it: code in a mod runs with everything your game itself can reach, which is the
 player's files, their network and their machine. Godot has no sandbox to put it in, this pack does
@@ -41,6 +42,32 @@ ship unless you have a reason.
 - **Two tiers, and the row picks one.** Every loading row takes `data only`. On, the mod's actual
   contents are read - a pack file's own file table, a folder's own files - and a mod carrying any
   script, library or native binary is refused with that reason. Off, code loads and runs.
+- **And a file is not cleared by its name.** A `.tscn`, a `.tres`, a `.material`, a `.theme` - every
+  extension the engine itself recognises as a resource - is a table of values, and one of the values
+  it may carry is a script. Godot builds all of that the moment the file is loaded, so a data-only
+  load reads every one of them as TEXT first and refuses the mod when it finds any of these:
+  - **a script written inside the file** - a `sub_resource` whose type ends in `Script`, which is
+    source code in whatever language the engine has;
+  - **a script named beside it** - an `ext_resource` of a script type, or one naming a file that is
+    code by its own extension whatever type it claims to be. Under `res://` it is your game's own
+    script, which is how a mod's `sword.tres` names the Resource class of yours it is an instance of
+    and is the whole point of the tier; anywhere else, the mod's own folder included, it is refused;
+  - **a shader** - a `.gdshader` or `.gdshaderinc` in the mod, a `Shader` or `VisualShader` written
+    inside a file, or one named beside it. A shader is compiled and run too; it simply runs on the
+    graphics card, so it is refused in its own words rather than reported as a script;
+  - **a value that builds something** - `Object(GDScript,"script/source":"...")` compiles the source
+    written into the line, and `Resource("user://payload.gd")` loads the path in it;
+  - **a path that leaves the mod** - a table naming a scene or resource that is neither one of the
+    mod's own files nor one of your game's;
+  - **a file it cannot read** - a resource saved in the BINARY form, an encrypted entry inside a pack
+    file, a pack whose file table could not be read, a tag spelled with an escape the engine would
+    decode, or a folder deeper than 16 levels or holding more than 20,000 files. Unfamiliar is not
+    the same as safe, so each of those is refused rather than cleared.
+
+  **The manifest is read the same way, and is never loaded.** Building a `mod.tres` to ask it its
+  five fields would run a script it names before the mod had been refused for naming it, so its
+  fields are read out of the file's own text by the same reading that decides whether the file may
+  be taken at all.
 - **The manifest is the mod's own file**, not a list your game keeps. `mod.json` for a modder in a
   text editor, `mod.tres` for one working in Godot.
 - **Load order is a sentence, not a database.** Name the mods you care about, in order; the rest

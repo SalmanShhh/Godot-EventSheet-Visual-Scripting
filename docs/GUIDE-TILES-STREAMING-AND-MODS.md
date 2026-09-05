@@ -439,13 +439,21 @@ file table, a folder's own files - and a mod carrying any script, library or nat
 refused, with the reason in words a player can read. The manifest's own `scripts` flag is treated as
 a **declaration, not a guarantee**: the loader checks the real files as well.
 
-**And a file is not cleared by its name.** A `.tscn` or a `.tres` is a table of values, and one of
-the values it may carry is a script - written inside the file, named by a path beside it, or spelled
-as a property value the engine resolves by loading or by compiling. Godot builds all of that the
-moment the file is loaded. So every scene and every resource a mod holds is read as TEXT as well,
-and one carrying a script, a value that builds something, or a path leading out of the mod is
-refused by name. A file this reading cannot read - a scene saved in the binary form, an encrypted
-entry inside a pack - is refused rather than cleared, because unfamiliar is not the same as safe.
+**And a file is not cleared by its name.** A `.tscn`, a `.tres`, a `.material`, a `.theme` - every
+extension the engine itself recognises as a resource, asked of the engine rather than written down
+in the pack - is a table of values, and one of the values it may carry is a script: written inside
+the file, named by a path beside it, or spelled as a property value the engine resolves by loading
+or by compiling. Godot builds all of that the moment the file is loaded. So every scene and every
+resource a mod holds is read as TEXT as well, and one carrying a script, a shader, a value that
+builds something, or a path leading out of the mod is refused by name. A shader counts because a
+shader is compiled and run too; it simply runs on the graphics card. A script or shader named under
+`res://` does NOT count - that is your game's own, which is how a mod's `sword.tres` names the
+Resource class of yours it is an instance of - and one named anywhere else, the mod's own folder
+included, does. **The manifest is read the same way and is never loaded**, because building a
+`mod.tres` to ask it its name would run a script it names before the mod could be refused for naming
+it. A file this reading cannot read - a resource saved in the binary form, an encrypted entry inside
+a pack, a folder deeper or larger than the walk goes - is refused rather than cleared, because
+unfamiliar is not the same as safe.
 
 **What data-only is not.** It is a promise that no stranger's CODE comes in with the mod. It is not
 a promise that the mod is inert: a cleared scene can still hold a connection naming one of your own
