@@ -47,9 +47,14 @@ var _active: Dictionary = {}
 ## What cannot land right now: the status word -> the seconds of immunity left.
 var _immune: Dictionary = {}
 
-## The host's own colour, remembered the moment the first tint goes on and put back when the last
-## one comes off - so a status can never leave a permanently coloured sprite behind.
+## The host's own colour under the tint, and the tint last written over it. Both are kept because
+## THIS IS NOT THE ONLY SCRIPT THAT WRITES modulate: an invincibility flash blinking the alpha while
+## a burn is on used to be captured as the host's "own" colour and then written back for good, which
+## left the sprite half transparent for the rest of the level. So the colour underneath is worked
+## out from what is on the sprite NOW, with the tint divided back out, and the remembered one only
+## answers for a channel a tint drove too near zero to divide.
 var _base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
+var _tint_factor: Color = Color(1.0, 1.0, 1.0, 1.0)
 var _tint_applied: bool = false
 
 ## The two Engine meta this project keeps its accessibility answers in - the same two the built-in
@@ -65,6 +70,11 @@ const TINT_CEILING: float = 0.3
 ## The tick this pack falls back to when an effect file asks for one of zero seconds, which would
 ## otherwise be a tick every frame - or, worse, a loop that never advances.
 const MINIMUM_TICK_SECONDS: float = 0.05
+
+## The least a tint channel may be and still be divided back out of the host's colour. A tint that
+## multiplied a channel by nothing has taken the colour underneath it away with it, so the one
+## remembered when the tint went on is the only honest answer for that channel.
+const TINT_FLOOR: float = 0.01
 
 ## The ownership key this whole project credits kills through, written by the Claim row.
 const OWNER_META: StringName = &"owner"
@@ -226,15 +236,42 @@ func _retint() -> void:
 		var written: Variant = _knob((_active[status] as Dictionary)["effect"], &"tint", Color(1.0, 1.0, 1.0, 1.0))
 		if written is Color:
 			mixed *= written
-	if mixed == Color(1.0, 1.0, 1.0, 1.0):
+	# What the tint comes to once the strength dial has had its say - white when nothing is on, and
+	# white when the dial is at zero, which is the same thing to everything below.
+	var wanted: Color = Color(1.0, 1.0, 1.0, 1.0).lerp(mixed, _tint_strength())
+	# The colour underneath, read fresh: whatever is on the sprite now with the tint this behaviour
+	# last wrote divided back out. That is what keeps another writer's change - a flash, a fade, a
+	# hit blink - standing when the last status leaves.
+	if _tint_applied:
+		_base_modulate = _under_tint(canvas.modulate)
+	elif wanted != Color(1.0, 1.0, 1.0, 1.0):
+		_base_modulate = canvas.modulate
+	if wanted == Color(1.0, 1.0, 1.0, 1.0):
 		if _tint_applied:
 			canvas.modulate = _base_modulate
+			_tint_factor = Color(1.0, 1.0, 1.0, 1.0)
 			_tint_applied = false
 		return
-	if not _tint_applied:
-		_base_modulate = canvas.modulate
-		_tint_applied = true
-	canvas.modulate = _base_modulate.lerp(_base_modulate * mixed, _tint_strength())
+	_tint_factor = wanted
+	_tint_applied = true
+	canvas.modulate = _base_modulate * wanted
+
+## The host's colour with this behaviour's own tint taken back out of it, channel by channel. A
+## channel the tint left near enough to nothing cannot be divided back out at all, so the colour
+## remembered when the tint went on answers for that one instead of an enormous number doing.
+## @ace_hidden
+func _under_tint(current: Color) -> Color:
+	return Color(
+		_undo_channel(current.r, _tint_factor.r, _base_modulate.r),
+		_undo_channel(current.g, _tint_factor.g, _base_modulate.g),
+		_undo_channel(current.b, _tint_factor.b, _base_modulate.b),
+		_undo_channel(current.a, _tint_factor.a, _base_modulate.a))
+
+## One channel of that: what was multiplied by the tint, or the remembered value when the tint left
+## nothing to divide.
+## @ace_hidden
+func _undo_channel(shown: float, factor: float, remembered: float) -> float:
+	return remembered if factor < TINT_FLOOR else shown / factor
 
 ## Ends one status: its boost stops, its particles go, the tint is re-mixed without it, and On
 ## Status Expired fires. Every way a status can end comes through here, so none of them can forget
