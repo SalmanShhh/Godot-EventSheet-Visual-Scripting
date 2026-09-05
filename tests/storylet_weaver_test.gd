@@ -313,7 +313,80 @@ static func run() -> bool:
 		sw.storylet_meta("g", "cost"), "10") and all_passed
 
 	sw.free()
+	all_passed = _pin_comparison_dropdown() and all_passed
 	return all_passed
+
+
+## The six comparison operators, from the dropdown a designer sees to the answer the engine gives.
+##
+## `add_requirement`, `add_choice_requirement` and `add_requirement_key` all offer the shared
+## operator list with `=` as its equality spelling, because that is the token `_req_ok` matches. The
+## list ships as one `## @ace_param_options(op ...)` line whose keys are quoted exactly when they
+## contain the `=` that divides a key from its label, which is `SheetCompiler._param_option_text`'s
+## own rule, so the line is what a rebuild writes and re-quoting it by hand would drift the pack.
+##
+## THE TWO READERS DO NOT AGREE ABOUT THAT LINE, and both readings are pinned here because the
+## disagreement is invisible from either side alone. `EventSheetSemanticAnalyzer` splits each entry
+## into a key and a label, and it is the reading the PICKER consumes, so those six keys are what a
+## row actually emits. `EventSheetACELifter` reads the same older-form line with a plain comma split
+## and keeps each entry whole, which is the reading an OPENED pack sheet shows; it survives the
+## byte-exact round trip because an option that is not a Dictionary is re-emitted verbatim. Teaching
+## the lifter to split would be a silent behaviour change, because a quoted option like `"world"`
+## would then come back as the bare word `world` and re-emit without its quotes.
+static func _pin_comparison_dropdown() -> bool:
+	var passed: bool = true
+	var instance: Object = (load(PACK) as Script).new()
+	var offered: Array = []
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_object(instance):
+		if definition.id != "method:add_requirement":
+			continue
+		for parameter: Variant in definition.parameters:
+			if str((parameter as Dictionary).get("id", "")) != "op":
+				continue
+			for option: Variant in ((parameter as Dictionary).get("options", []) as Array):
+				offered.append(str((option as Dictionary).get("key", "")))
+	if instance is Node:
+		(instance as Node).free()
+	passed = _check("the picker offers the six operators the engine matches",
+		offered, ["=", "!=", "<", "<=", ">", ">="]) and passed
+
+	var lifted: Array = []
+	var lifted_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+		FileAccess.get_file_as_string(PACK))
+	for event_function: EventFunction in lifted_sheet.functions:
+		if event_function.function_name != "add_requirement":
+			continue
+		for parameter: ACEParam in event_function.params:
+			if parameter.id == "op":
+				for option: Variant in parameter.options:
+					lifted.append(str(option))
+	passed = _check("an opened pack sheet reads the same line as six whole entries, not six pairs",
+		lifted, ["\"=\"==  equal to", "\"!=\"=≠  not equal to", "<=<  less than",
+			"\"<=\"=≤  at most", ">=>  greater than", "\">=\"=≥  at least"]) and passed
+
+	# Every operator, twice over: the line the row writes has to PARSE, and the engine has to answer
+	# the question the dropdown's label asked. Both against a quality of 3 compared with 3, which is
+	# the one value that separates all six.
+	var expected_answers: Dictionary = {
+		"=": true, "!=": false, "<": false, "<=": true, ">": false, ">=": true
+	}
+	for operator: String in expected_answers.keys():
+		var line: String = ActionCodegen._apply_template(
+			"Storylets.add_requirement({id}, {quality_key}, \"{op}\", {value})",
+			{"id": "\"rescue\"", "quality_key": "\"courage\"", "op": operator, "value": "3", "uid": "0"})
+		var script: GDScript = GDScript.new()
+		script.source_code = "@tool\nextends Node\nvar Storylets\nfunc __t() -> void:\n\t%s\n" % line
+		passed = _check("a row picking '%s' writes a line that parses" % operator,
+			script.reload() == OK, true) and passed
+		var engine: Node = (load(PACK) as Script).new()
+		engine.define_storylet("rescue", "Rescue!", "A cat is stuck in a tree.")
+		engine.add_requirement("rescue", "courage", operator, 3)
+		engine.set_quality("courage", 3)
+		engine.evaluate()
+		passed = _check("the engine answers '%s' the way the dropdown's label reads" % operator,
+			engine.is_available("rescue"), expected_answers[operator]) and passed
+		engine.free()
+	return passed
 
 
 ## Clears live state between test phases so each starts from a clean library.
