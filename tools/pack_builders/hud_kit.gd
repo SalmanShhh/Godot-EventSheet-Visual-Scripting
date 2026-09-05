@@ -23,6 +23,7 @@ static func build() -> bool:
 		"needle_warning_colour": {"type": "Color", "default": Color(1.0, 0.45, 0.38, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle turns once the value has drifted past its warning mark."}},
 		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
 		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false},
+		"bar_lags": {"type": "Dictionary", "default": {}, "exported": false},
 		"damage_types": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white."}},
 		"crit_text_scale": {"type": "float", "default": 1.6, "exported": true, "attributes": {"tooltip": "How much bigger a number popped with the style \"crit\" is drawn, when no styles file names that style. The whole language of a critical hit in one number.", "range": {"min": "1", "max": "4", "step": "0.1"}}},
 		"text_styles": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The FloatingTextStyles file this game uses, if it has one. Pop Floating Text As takes a number's size, colour, rise, shake and lifetime from it, so the manners a number is drawn in are one file you edit rather than five numbers repeated through the sheets. Leave it empty and the numbers are drawn the way they always were."}}
@@ -77,7 +78,77 @@ static func build() -> bool:
 		"",
 		"func _on_hud_button_pressed(button_name: String) -> void:",
 		"\tlast_button_name = button_name",
-		"\ton_button_pressed.emit()"
+		"\ton_button_pressed.emit()",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Bar Lag Value\")",
+		"func bar_lag_value(bar_name: String) -> float:",
+		"\tvar record: Variant = bar_lags.get(bar_name)",
+		"\treturn float((record as Dictionary)[\"ghost\"]) if record is Dictionary else bar_value(bar_name)",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Bar Lagging\")",
+		"func is_bar_lagging(bar_name: String) -> bool:",
+		"\tvar record: Variant = bar_lags.get(bar_name)",
+		"\tif not record is Dictionary:",
+		"\t\treturn false",
+		"\treturn not is_equal_approx(float((record as Dictionary)[\"ghost\"]), bar_value(bar_name))",
+		"",
+		"# The underlay's own tick, and the whole of its cost. It PARKS itself the first frame it finds",
+		"# nothing to follow, so a HUD with no lagging bar on it runs no code at all - and a Set Bar Lag",
+		"# row turns it back on. Nothing is allocated here per frame: the record is the one made when the",
+		"# lag was armed, and the underlay is one ColorRect made once and moved.",
+		"func _process(delta: float) -> void:",
+		"\tif bar_lags.is_empty():",
+		"\t\tset_process(false)",
+		"\t\treturn",
+		"\tfor bar_name: String in bar_lags.keys():",
+		"\t\t_follow_bar(bar_name, delta)",
+		"",
+		"# One bar's underlay, moved one frame. A LOSS is what an underlay is for, so a drop restarts the",
+		"# wait and the underlay is left where it was until the wait is spent; after that it slides down to",
+		"# the value, taking the lag seconds to cross the whole bar. A GAIN has nothing to show, so the",
+		"# underlay lands with the bar rather than trailing a good thing.",
+		"func _follow_bar(bar_name: String, delta: float) -> void:",
+		"\tvar record: Dictionary = bar_lags[bar_name]",
+		"\tvar target: Node = _ui(bar_name)",
+		"\tif not target is Range:",
+		"\t\tbar_lags.erase(bar_name)",
+		"\t\treturn",
+		"\tvar bar: Range = target as Range",
+		"\tvar span: float = maxf(bar.max_value - bar.min_value, 0.001)",
+		"\tvar seconds: float = maxf(float(record[\"seconds\"]), 0.001)",
+		"\tvar ghost: float = float(record[\"ghost\"])",
+		"\tif bar.value < float(record[\"last\"]):",
+		"\t\trecord[\"wait\"] = seconds",
+		"\trecord[\"last\"] = bar.value",
+		"\tif bar.value >= ghost:",
+		"\t\tghost = bar.value",
+		"\telif float(record[\"wait\"]) > 0.0:",
+		"\t\trecord[\"wait\"] = maxf(float(record[\"wait\"]) - delta, 0.0)",
+		"\telse:",
+		"\t\tghost = move_toward(ghost, bar.value, span * delta / seconds)",
+		"\trecord[\"ghost\"] = ghost",
+		"\t_draw_bar_lag(bar, bar.value, ghost, record[\"colour\"])",
+		"",
+		"# The underlay itself: one ColorRect inside the bar, covering the stretch between where the bar",
+		"# is now and where it was - which is the empty part of the bar, so nothing the bar draws is",
+		"# covered up. Built the first time and moved every frame after, and hidden the moment the two",
+		"# values agree, which is what makes a bar that has not been hit look untouched.",
+		"func _draw_bar_lag(bar: Range, value: float, ghost: float, colour: Color) -> void:",
+		"\tvar underlay: ColorRect = bar.get_node_or_null(\"__bar_lag\") as ColorRect",
+		"\tif underlay == null:",
+		"\t\tunderlay = ColorRect.new()",
+		"\t\tunderlay.name = \"__bar_lag\"",
+		"\t\tunderlay.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"\t\tbar.add_child(underlay)",
+		"\tunderlay.color = colour",
+		"\tvar span: float = maxf(bar.max_value - bar.min_value, 0.001)",
+		"\tvar left: float = clampf((value - bar.min_value) / span, 0.0, 1.0) * bar.size.x",
+		"\tvar right: float = clampf((ghost - bar.min_value) / span, 0.0, 1.0) * bar.size.x",
+		"\tunderlay.position = Vector2(left, 0.0)",
+		"\tunderlay.size = Vector2(maxf(right - left, 0.0), bar.size.y)",
+		"\tunderlay.visible = right - left > 0.5"
 	]))
 	sheet.events.append(block)
 
@@ -123,6 +194,34 @@ static func build() -> bool:
 		"\t\t(target as Range).max_value = max_value",
 		"\t(target as Range).value = value"
 	])))
+
+	# THE ONE HUD ELEMENT EVERY GAME HAS: the bar whose underlay trails the real value down after a
+	# hit, so a player can see how much they just lost rather than only how much they have left.
+	#
+	# It sits BESIDE Set Bar rather than growing it. Set Bar's three arguments are a shipped promise,
+	# and the underlay does not need to be told anything when a value changes: it WATCHES the bar. So
+	# a bar filled by Set Bar, by a sheet writing the Range directly, or by an animation all trail the
+	# same way - and arming the lag is a row somebody runs once at startup rather than a fourth
+	# argument on every hit.
+	Lib.append_function(sheet, "set_bar_lag", "Set Bar Lag", "UI",
+		"Gives a named bar an underlay that follows it DOWN after a delay, so a hit shows how much was just lost. The underlay waits the seconds you name and then slides to the new value, taking those same seconds to cross the whole bar; a bar going UP has nothing to trail, so the underlay lands with it. It watches the bar rather than being told, so any way the value is set - Set Bar, a sheet writing the Range, an animation - trails the same. Seconds of 0 takes the underlay away again. Nothing is added to the scene but one rectangle inside the bar, built the first time and hidden whenever the two values agree.",
+		[["bar_name", "String"], ["seconds", "float"], ["lag_colour", "Color"]],
+		"\n".join(PackedStringArray([
+		"var target: Node = _ui(bar_name)",
+		"if not target is Range:",
+		"\treturn",
+		"var bar: Range = target as Range",
+		"if seconds <= 0.0:",
+		"\tbar_lags.erase(bar_name)",
+		"\tvar gone: Node = bar.get_node_or_null(\"__bar_lag\")",
+		"\tif gone != null:",
+		"\t\tgone.queue_free()",
+		"\treturn",
+		"bar_lags[bar_name] = {\"seconds\": seconds, \"colour\": lag_colour, \"ghost\": bar.value, \"last\": bar.value, \"wait\": 0.0}",
+		"set_process(true)"
+	])))
+	_default(sheet, "seconds", "0.6")
+	_default(sheet, "lag_colour", "Color(0.85, 0.25, 0.25, 0.8)")
 
 	Lib.append_function(sheet, "show_panel", "Show Panel", "UI",
 		"Makes a named panel (any CanvasItem) visible.",
@@ -298,6 +397,7 @@ static func build() -> bool:
 	Lib.verb_sentences(sheet, {
 		"set_needle": "Set needle [b]{needle_name}[/b] to [b]{value}[/b], warning past [b]{warn_at}[/b]",
 		"set_bar": "Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]",
+		"set_bar_lag": "Set bar [b]{bar_name}[/b] lag to [b]{seconds}[/b] s in [b]{lag_colour}[/b]",
 		"set_text": "Set text of [b]{control_name}[/b] to [b]{text}[/b]",
 		"show_toast": "Show toast [b]{text}[/b]",
 		"pop_floating_text": "Pop floating text [b]{text}[/b] at [b]{at}[/b]",

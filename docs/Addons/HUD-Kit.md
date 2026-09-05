@@ -50,6 +50,18 @@ The pack has a small, consistent mental model. Learn these ideas and every ACE r
 
 **Bars are any Range.** Set Bar and Bar Value work on `ProgressBar`, `TextureProgressBar`, or any other `Range` node. Set Bar writes the current value, and if you pass a `max_value` greater than zero it sets the maximum too - pass `0` for the max when you only want to move the fill and leave the range alone. Bar Value reads the current value back out (it returns `0` if the name is not a Range).
 
+**A bar with a lag is the one HUD element every game has.** Run **Set Bar Lag** once at startup -
+`"HealthBar"`, `0.6`, a dark red - and the bar grows an underlay that stays where the value used to
+be, waits those 0.6 seconds, then slides down to the new value, taking the same 0.6 seconds to cross
+the whole bar. A player sees how much they just lost rather than only how much they have left. A bar
+going UP has nothing to trail, so the underlay lands with it. The underlay is one `ColorRect` built
+inside the bar the first time it is needed, covering only the empty stretch between the two values,
+and hidden whenever they agree; the tick that moves it parks itself the moment no bar is lagging, so
+a HUD that never calls Set Bar Lag runs none of it. **Bar Lag Value** reads where the underlay has
+got to and **Is Bar Lagging** is true while it is still catching up - the pair a "you are about to
+die" flash reads. The lag watches the bar, so it does not matter whether the value came from Set Bar,
+from a sheet writing the Range, or from an animation.
+
 **Text targets are any node with a text property.** Set Text writes to a named `Label`, `RichTextLabel`, `Button`, or `LineEdit` - anything with a `text` property. One action covers captions, buttons, and input fields.
 
 **One trigger for the whole button set.** At startup the behavior walks its host subtree, finds every `Button` (technically any `BaseButton`), and connects each one's pressed signal into a single `On Button Pressed` trigger. When any button is clicked, that one trigger fires and the button's name lands in Last Button Name. You react by branching with the Button Is condition (or reading Last Button Name), so a menu with many buttons needs exactly one trigger event and zero manual signal connections. The auto-wiring is controlled by the `auto_connect_buttons` Inspector toggle; if you spawn buttons after startup, re-run the wiring with the Connect Buttons action (it is idempotent - a button already connected is skipped).
@@ -107,6 +119,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 | Connect Buttons | (none) | Wires every descendant Button's pressed signal into On Button Pressed. Idempotent (already-connected buttons are skipped) - re-run it after spawning new buttons. Runs automatically at startup when `auto_connect_buttons` is on. |
 | Set Text | `control_name` (String), `text` (String) | Sets the text of a named Label, RichTextLabel, Button, or LineEdit. |
 | Set Bar | `bar_name` (String), `value` (float), `max_value` (float) | Sets a named ProgressBar / TextureProgressBar (any Range) value. Also sets its max when `max_value` is greater than 0; pass 0 to leave the range untouched. |
+| Set Bar Lag | `bar_name` (String), `seconds` (float), `lag_colour` (Color) | Gives a named bar an underlay that follows it DOWN after a delay, so a hit shows how much was just lost. It WATCHES the bar rather than being told, so any way the value is set trails the same. Seconds of 0 takes the underlay away again. |
 | Set Needle | `needle_name` (String), `value` (float), `warn_at` (float) | Shows a value from -1 to 1 as a needle inside a named Control, with a mark at dead centre. The needle is built the first time this runs, so the scene only needs an empty box of the right size. Past the warning mark the needle turns `needle_warning_colour`. |
 | Show Panel | `panel_name` (String) | Makes a named panel (any CanvasItem) visible. |
 | Hide Panel | `panel_name` (String) | Hides a named panel (any CanvasItem). |
@@ -121,6 +134,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 |---|---|---|
 | Button Is | `button_name` (String) | Whether the button that most recently fired On Button Pressed has this name. |
 | Is Panel Visible | `panel_name` (String) | Whether a named panel (any CanvasItem) is currently visible. |
+| Is Bar Lagging | `bar_name` (String) | Whether a named bar's underlay is still catching up with the value - true while the trail is showing. |
 
 ### Expressions
 
@@ -128,6 +142,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 |---|---|---|---|
 | Last Button Name | (none) | String | The name of the button that most recently fired On Button Pressed ("" before any press). |
 | Bar Value | `bar_name` (String) | float | The current value of a named Range (0 if the name is not a Range). |
+| Bar Lag Value | `bar_name` (String) | float | Where the underlay has got to. The bar's own value when no lag is armed, so it is safe to read either way. |
 
 ### Triggers
 

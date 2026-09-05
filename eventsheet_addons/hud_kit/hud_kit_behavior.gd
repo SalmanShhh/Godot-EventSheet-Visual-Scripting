@@ -28,6 +28,7 @@ var last_button_name: String = ""
 ## How long a toast stays before fading (seconds).
 @export_range(0.2, 10, 0.1) var toast_seconds: float = 2.0
 var ui_cache: Dictionary = {}
+var bar_lags: Dictionary = {}
 ## The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white.
 @export var damage_types: Resource = null
 ## How much bigger a number popped with the style "crit" is drawn, when no styles file names that style. The whole language of a critical hit in one number.
@@ -92,6 +93,27 @@ func set_bar(bar_name: String, value: float, max_value: float) -> void:
 		if max_value > 0.0:
 			(target as Range).max_value = max_value
 		(target as Range).value = value
+
+## @ace_action
+## @ace_name("Set Bar Lag")
+## @ace_category("UI")
+## @ace_description("Gives a named bar an underlay that follows it DOWN after a delay, so a hit shows how much was just lost. The underlay waits the seconds you name and then slides to the new value, taking those same seconds to cross the whole bar; a bar going UP has nothing to trail, so the underlay lands with it. It watches the bar rather than being told, so any way the value is set - Set Bar, a sheet writing the Range, an animation - trails the same. Seconds of 0 takes the underlay away again. Nothing is added to the scene but one rectangle inside the bar, built the first time and hidden whenever the two values agree.")
+## @ace_display_template("Set bar [b]{bar_name}[/b] lag to [b]{seconds}[/b] s in [b]{lag_colour}[/b]")
+## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
+## @ace_codegen_template("$HudKitBehavior.set_bar_lag({bar_name}, {seconds}, {lag_colour})")
+func set_bar_lag(bar_name: String, seconds: float, lag_colour: Color) -> void:
+	var target: Node = _ui(bar_name)
+	if not target is Range:
+		return
+	var bar: Range = target as Range
+	if seconds <= 0.0:
+		bar_lags.erase(bar_name)
+		var gone: Node = bar.get_node_or_null("__bar_lag")
+		if gone != null:
+			gone.queue_free()
+		return
+	bar_lags[bar_name] = {"seconds": seconds, "colour": lag_colour, "ghost": bar.value, "last": bar.value, "wait": 0.0}
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Show Panel")
@@ -311,5 +333,79 @@ func _collect_buttons(node: Node, out: Array) -> void:
 func _on_hud_button_pressed(button_name: String) -> void:
 	last_button_name = button_name
 	on_button_pressed.emit()
+
+## @ace_expression
+## @ace_name("Bar Lag Value")
+## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
+## @ace_codegen_template("$HudKitBehavior.bar_lag_value({bar_name})")
+func bar_lag_value(bar_name: String) -> float:
+	var record: Variant = bar_lags.get(bar_name)
+	return float((record as Dictionary)["ghost"]) if record is Dictionary else bar_value(bar_name)
+
+## @ace_condition
+## @ace_name("Is Bar Lagging")
+## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
+## @ace_codegen_template("$HudKitBehavior.is_bar_lagging({bar_name})")
+func is_bar_lagging(bar_name: String) -> bool:
+	var record: Variant = bar_lags.get(bar_name)
+	if not record is Dictionary:
+		return false
+	return not is_equal_approx(float((record as Dictionary)["ghost"]), bar_value(bar_name))
+
+func _process(delta: float) -> void:
+	# The underlay's own tick, and the whole of its cost. It PARKS itself the first frame it finds
+	# nothing to follow, so a HUD with no lagging bar on it runs no code at all - and a Set Bar Lag
+	# row turns it back on. Nothing is allocated here per frame: the record is the one made when the
+	# lag was armed, and the underlay is one ColorRect made once and moved.
+	if bar_lags.is_empty():
+		set_process(false)
+		return
+	for bar_name: String in bar_lags.keys():
+		_follow_bar(bar_name, delta)
+
+func _follow_bar(bar_name: String, delta: float) -> void:
+	# One bar's underlay, moved one frame. A LOSS is what an underlay is for, so a drop restarts the
+	# wait and the underlay is left where it was until the wait is spent; after that it slides down to
+	# the value, taking the lag seconds to cross the whole bar. A GAIN has nothing to show, so the
+	# underlay lands with the bar rather than trailing a good thing.
+	var record: Dictionary = bar_lags[bar_name]
+	var target: Node = _ui(bar_name)
+	if not target is Range:
+		bar_lags.erase(bar_name)
+		return
+	var bar: Range = target as Range
+	var span: float = maxf(bar.max_value - bar.min_value, 0.001)
+	var seconds: float = maxf(float(record["seconds"]), 0.001)
+	var ghost: float = float(record["ghost"])
+	if bar.value < float(record["last"]):
+		record["wait"] = seconds
+	record["last"] = bar.value
+	if bar.value >= ghost:
+		ghost = bar.value
+	elif float(record["wait"]) > 0.0:
+		record["wait"] = maxf(float(record["wait"]) - delta, 0.0)
+	else:
+		ghost = move_toward(ghost, bar.value, span * delta / seconds)
+	record["ghost"] = ghost
+	_draw_bar_lag(bar, bar.value, ghost, record["colour"])
+
+func _draw_bar_lag(bar: Range, value: float, ghost: float, colour: Color) -> void:
+	# The underlay itself: one ColorRect inside the bar, covering the stretch between where the bar
+	# is now and where it was - which is the empty part of the bar, so nothing the bar draws is
+	# covered up. Built the first time and moved every frame after, and hidden the moment the two
+	# values agree, which is what makes a bar that has not been hit look untouched.
+	var underlay: ColorRect = bar.get_node_or_null("__bar_lag") as ColorRect
+	if underlay == null:
+		underlay = ColorRect.new()
+		underlay.name = "__bar_lag"
+		underlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar.add_child(underlay)
+	underlay.color = colour
+	var span: float = maxf(bar.max_value - bar.min_value, 0.001)
+	var left: float = clampf((value - bar.min_value) / span, 0.0, 1.0) * bar.size.x
+	var right: float = clampf((ghost - bar.min_value) / span, 0.0, 1.0) * bar.size.x
+	underlay.position = Vector2(left, 0.0)
+	underlay.size = Vector2(maxf(right - left, 0.0), bar.size.y)
+	underlay.visible = right - left > 0.5
 
 # HUD Kit behavior: drive a menu or HUD by NODE NAME - set label text, fill bars, switch menu screens (show one panel, hide its siblings), pop auto-fading toasts - and every descendant Button reports through one On Button Pressed trigger, so a whole menu needs zero connected signals. Drop it under your UI root (CanvasLayer or Control).
