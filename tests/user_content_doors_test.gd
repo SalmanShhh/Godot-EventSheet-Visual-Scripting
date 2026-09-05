@@ -160,12 +160,24 @@ static func _run_drop() -> bool:
 static func _run_ask() -> bool:
 	var ok: bool = true
 	var open_line: String = _emitted("AskForAFileToOpen", {"filters": "PackedStringArray([\"*.png;Images\"])", "uid": "3"})
+	# THE CALLBACK IS BUILT FIRST, because the native ask is handed it inside the very question that
+	# decides whether the native ask happens at all.
+	ok = _check("the answer the chooser calls back is written before either window",
+		open_line.begins_with("var __answer_3 := func(accepted: bool, paths: PackedStringArray,"
+			+ " _filter_index: int) -> void:"), true) and ok
+	# THE ASK'S OWN ERROR IS PART OF THE QUESTION. A platform that reports the feature and then fails
+	# to open the window - a Linux build with no portal running - used to leave the row with no
+	# window, no On A File Chosen and no On The Ask Cancelled: nothing whatever happened.
 	ok = _check("the branch is in the code, not behind it",
-		open_line.begins_with("if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):"), true) and ok
-	ok = _check("the platform's own chooser is opened when there is one",
-		open_line.contains("\tDisplayServer.file_dialog_show(\"Open a file\", \"\", \"\", false, DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, PackedStringArray([\"*.png;Images\"]), __answer_3)"), true) and ok
-	ok = _check("and the fallback is a WRITTEN else, not an assumption",
-		open_line.contains("\nelse:\n\tvar __chooser_3 := FileDialog.new()"), true) and ok
+		open_line.contains("\nif not DisplayServer.has_feature("
+			+ "DisplayServer.FEATURE_NATIVE_DIALOG_FILE) or "), true) and ok
+	ok = _check("the platform's own chooser is opened when there is one, and its answer is read",
+		open_line.contains("DisplayServer.file_dialog_show(\"Open a file\", \"\", \"\", false,"
+			+ " DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, PackedStringArray([\"*.png;Images\"]),"
+			+ " __answer_3) != OK:"), true) and ok
+	ok = _check("and the fallback is reached by a written question, not by an else the failure"
+		+ " could never get to",
+		open_line.contains(" != OK:\n\tvar __chooser_3 := FileDialog.new()"), true) and ok
 	ok = _check("the fallback reaches the whole filesystem, which is the point of an ask",
 		open_line.contains("__chooser_3.access = FileDialog.ACCESS_FILESYSTEM"), true) and ok
 	ok = _check("both halves end in the chosen answer",
@@ -408,8 +420,8 @@ static func _run_band() -> bool:
 	ok = _check("a sheet that opens the platform's chooser says so once", bands.size(), 1) and ok
 	ok = _check("in the band's own words", str(bands[0].get("value", "")),
 		EventSheetL10n.translate("asks the player to pick a file")) and ok
-	ok = _check("and the echo shows the call, not the branch above it",
-		str(bands[0].get("echo", "")).begins_with("DisplayServer.file_dialog_show("), true) and ok
+	ok = _check("and the echo shows the line that asks, not the callback above it",
+		str(bands[0].get("echo", "")).contains("DisplayServer.file_dialog_show("), true) and ok
 	return ok
 
 

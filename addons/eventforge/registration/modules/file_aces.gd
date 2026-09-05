@@ -332,20 +332,29 @@ static func _content_from_outside() -> Array[ACEDescriptor]:
 	#
 	# THE BRANCH IS IN THE CODE, NOT BEHIND IT. Most desktops have a chooser of their own and it is
 	# the one the player knows; a platform without one still has to ask somehow. Both spellings are
-	# emitted, in an if/else a reader can see, because a row that quietly picked one of two very
+	# emitted, where a reader can see them, because a row that quietly picked one of two very
 	# different windows would be a row nobody could debug.
 	#
-	# THE ANSWER IS A TRIGGER. `DisplayServer.file_dialog_show` returns an Error, not a path: the
-	# chooser is another window, and the player answers it long after this line has run. So the two
-	# ways it can end are the two events below, and the emitted code calls them by name.
+	# AND THE ASK'S OWN ANSWER IS READ. `DisplayServer.file_dialog_show` returns an Error, and it was
+	# emitted as a bare statement - so a platform that SAYS it has a native chooser and then fails to
+	# open one (a Linux build with no portal running is the everyday case) left the row with no window
+	# on screen, no On A File Chosen and no On The Ask Cancelled: the player pressed the button and
+	# nothing whatever happened. The question is now `no native chooser, OR asking for one did not
+	# open it`, so both of those roads end at the engine's own FileDialog and the row keeps the
+	# promise its help makes.
+	#
+	# THE ANSWER IS A TRIGGER, whichever chooser opened. The chooser is another window and the player
+	# answers it long after this line has run, so the two ways it can end are the two events below,
+	# and the emitted code calls them by name. The callback is built first for that reason: the
+	# native call is handed it inside the very question that decides whether the native call happens.
 	#
 	# BOTH ARE FILED ON `Node`, exactly as On Files Dropped beside them is, because the fallback half
-	# of the branch calls `add_child` and `popup_centered` on the host: a sheet whose script is not a
-	# Node cannot run these rows, and a row offered where it cannot compile is a row that lies. The
-	# template is untouched by the filing - the cross-node "On node" target is only added to a
-	# template whose every line is a member operation, and this one leads with `if`.
-	descriptors.append(F.act("AskForAFileToOpen", "Ask For A File To Open", _ask_template("Open a file", "OPEN_FILE"), "Files", "Ask for a file to open ({filters})", "Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.", "Node").param_built(_filters_param("Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - \"*.png,*.jpg;Images\".")).featured())
-	descriptors.append(F.act("AskWhereToSave", "Ask Where To Save", _ask_template("Save a file", "SAVE_FILE"), "Files", "Ask where to save ({filters})", "Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.", "Node").param_built(_filters_param("Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - \"*.png;PNG image\".")))
+	# calls `add_child` and `popup_centered` on the host: a sheet whose script is not a Node cannot
+	# run these rows, and a row offered where it cannot compile is a row that lies. The template is
+	# untouched by the filing - the cross-node "On node" target is only added to a template whose
+	# every line is a member operation, and this one leads with `var`.
+	descriptors.append(F.act("AskForAFileToOpen", "Ask For A File To Open", _ask_template("Open a file", "OPEN_FILE"), "Files", "Ask for a file to open ({filters})", "Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name. A platform with no chooser of its own, and one that has one but could not open it, both fall through to the engine's own window, so the row always ends at one of those two events.", "Node").param_built(_filters_param("Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - \"*.png,*.jpg;Images\".")).featured())
+	descriptors.append(F.act("AskWhereToSave", "Ask Where To Save", _ask_template("Save a file", "SAVE_FILE"), "Files", "Ask where to save ({filters})", "Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing. A platform with no chooser of its own, and one that has one but could not open it, both fall through to the engine's own window.", "Node").param_built(_filters_param("Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - \"*.png;PNG image\".")))
 	descriptors.append(F.trig("OnFileChosen", "On A File Chosen", "", "Files", "On a file chosen {path}", "Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.").param("path", "", "Path", "The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.").featured())
 	descriptors.append(F.trig("OnAskCancelled", "On The Ask Cancelled", "", "Files", "On the ask cancelled", "Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here."))
 
@@ -366,18 +375,23 @@ static func _filters_param(description: String) -> ACEParam:
 ## the two sides of the branch (DisplayServer.FILE_DIALOG_MODE_<mode> and FileDialog.FILE_MODE_<mode>),
 ## which is why one word fills both and the two halves cannot drift apart.
 ##
+## THE NATIVE ASK'S ERROR IS PART OF THE QUESTION. `file_dialog_show` answers with an Error, and a
+## platform can report the feature and still fail to open the window - so the fallback is reached by
+## `not has_feature(...) or file_dialog_show(...) != OK` rather than by an `else` the failure could
+## never get to. `or` stops at the first true half, so a platform with no native chooser never makes
+## the call at all.
+##
 ## The fallback half builds a FileDialog with ACCESS_FILESYSTEM, because the whole point of an ask is
 ## a file OUTSIDE the project - the default access would show the player res:// and nothing else. It
 ## frees itself once it is answered, so the row can be run again without stacking windows.
 static func _ask_template(title: String, mode: String) -> String:
-	return "if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):\n" \
-		+ "\tvar __answer_{uid} := func(accepted: bool, paths: PackedStringArray, _filter_index: int) -> void:\n" \
-		+ "\t\tif accepted and not paths.is_empty():\n" \
-		+ "\t\t\t_on_file_chosen(paths[0])\n" \
-		+ "\t\telse:\n" \
-		+ "\t\t\t_on_ask_cancelled()\n" \
-		+ "\tDisplayServer.file_dialog_show(\"%s\", \"\", \"\", false, DisplayServer.FILE_DIALOG_MODE_%s, {filters}, __answer_{uid})\n" % [title, mode] \
-		+ "else:\n" \
+	return "var __answer_{uid} := func(accepted: bool, paths: PackedStringArray, _filter_index: int) -> void:\n" \
+		+ "\tif accepted and not paths.is_empty():\n" \
+		+ "\t\t_on_file_chosen(paths[0])\n" \
+		+ "\telse:\n" \
+		+ "\t\t_on_ask_cancelled()\n" \
+		+ "if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE)" \
+		+ " or DisplayServer.file_dialog_show(\"%s\", \"\", \"\", false, DisplayServer.FILE_DIALOG_MODE_%s, {filters}, __answer_{uid}) != OK:\n" % [title, mode] \
 		+ "\tvar __chooser_{uid} := FileDialog.new()\n" \
 		+ "\t__chooser_{uid}.title = \"%s\"\n" % title \
 		+ "\t__chooser_{uid}.access = FileDialog.ACCESS_FILESYSTEM\n" \

@@ -146,7 +146,7 @@ chosen** event writes a call to a function that is not there. Add both events wh
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | On Files Dropped | Runs when the player drags files onto the game window and lets go (desktop only) | `get_window().files_dropped.connect(_on_files_dropped)` in `_ready`, handler `_on_files_dropped(files: PackedStringArray)` |
-| Ask For A File To Open | Opens the player's own file chooser so they can pick a file to read | `if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):` then `DisplayServer.file_dialog_show(…, DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, {filters}, …)`, `else:` a `FileDialog` with `ACCESS_FILESYSTEM` |
+| Ask For A File To Open | Opens the player's own file chooser so they can pick a file to read | the callback, then `if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE) or DisplayServer.file_dialog_show(…, DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, {filters}, …) != OK:` a `FileDialog` with `ACCESS_FILESYSTEM` |
 | Ask Where To Save | Opens the player's own save chooser so they can name a file and a folder | The same branch, with `FILE_DIALOG_MODE_SAVE_FILE` / `FILE_MODE_SAVE_FILE` |
 | On A File Chosen | Runs when the player answered an Ask row by picking a file | `func _on_file_chosen(path: String) -> void:` |
 | On The Ask Cancelled | Runs when the player closed an Ask row's chooser without picking anything | `func _on_ask_cancelled() -> void:` |
@@ -666,9 +666,14 @@ On load pressed
   List Subdirectories if you need a tree.
 - **On Files Dropped is desktop only.** Windows, macOS and Linux raise it; a web or mobile build never
   does. Keep an Ask For A File To Open button beside it so the feature has a way in everywhere.
-- **Both Ask rows want a Node host.** When a platform has no chooser of its own the emitted else
-  branch builds a `FileDialog`, adds it as a child and pops it up, so the row is filed on `Node` and
+- **Both Ask rows want a Node host.** When a platform has no chooser of its own the emitted fallback
+  builds a `FileDialog`, adds it as a child and pops it up, so the row is filed on `Node` and
   offered in sheets whose script is one. Nothing about the emitted line changes.
+- **A native ask that fails to open falls through to the engine's own window.**
+  `DisplayServer.file_dialog_show` answers with an Error, and a platform can report the feature and
+  still fail - a Linux build with no portal running. The emitted question is `no native chooser, OR
+  asking for one did not open it`, so the row cannot end with no window at all and neither answer
+  event.
 - **An Ask row needs both answer events.** The emitted line calls `_on_file_chosen` and
   `_on_ask_cancelled` by name, and those two functions are what On A File Chosen and On The Ask
   Cancelled compile to. Without them the script does not compile.

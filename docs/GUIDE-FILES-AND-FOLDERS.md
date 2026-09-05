@@ -239,15 +239,21 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 
 **Ask For A File To Open** and **Ask Where To Save** open the platform's own file chooser where the
 platform has one, through `DisplayServer.file_dialog_show`, and where it has none the `FileDialog`
-fallback is emitted as a **visible `else`**. Both spellings are in the code a reader can see, because
-a row that quietly picked one of two very different windows would be a row nobody could debug.
+fallback is built instead. Both spellings are in the code a reader can see, because a row that
+quietly picked one of two very different windows would be a row nobody could debug.
 
-**One row, fourteen statements, and one row again when the file is opened.** That visible `else` is
-the honest shape and it used to be the expensive one: reopened, the branch came back as an `if` event
-holding a lambda and an `else` event holding eleven lines about a `FileDialog`. It comes back as the
-Ask row now, under whatever the two locals in it were named, and a branch that has had a line added
-to either half - or whose halves name different locals - is refused and stays the statements it is,
-because the run is written again from the row and compared byte for byte first.
+**And the ask's own answer is read.** `file_dialog_show` returns an Error, and a platform can report
+that it has a native chooser and then fail to open one - a Linux build with no portal running is the
+everyday case. So the question the fallback hangs on is `no native chooser, OR asking for one did not
+open it`, and both of those roads end at the engine's own window. Whichever chooser opened, the row
+still ends at On A File Chosen or On The Ask Cancelled, which is what its help promises.
+
+**One row, fourteen statements, and one row again when the file is opened.** That visible branch is
+the honest shape and it used to be the expensive one: reopened, it came back as a lambda event and an
+event holding eleven lines about a `FileDialog`. It comes back as the Ask row now, under whatever the
+two locals in it were named, and a branch that has had a line added to either half - or whose halves
+name different locals - is refused and stays the statements it is, because the run is written again
+from the row and compared byte for byte first.
 
 **The answer is an event, never a return value.** A chooser is a separate window and the player
 answers it long after the row ran, so both Ask rows end in **On A File Chosen** or

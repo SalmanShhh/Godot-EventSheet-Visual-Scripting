@@ -55,8 +55,10 @@ const ASK_ACE_IDS: Array[String] = ["AskForAFileToOpen", "AskWhereToSave"]
 
 ## The cheap first refusal. Every statement of every opened file reaches this family, so a run is
 ## ruled out on a substring before a shape is built: both Ask rows open on the one question that asks
-## whether this platform has a chooser of its own.
-const OPENING_MARK: String = "DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE)"
+## whether the player answered. The run opens on the callback rather than on the platform question,
+## because the native ask's own Error is read INSIDE that question and the callback has to exist by
+## then - so the callback's head is the first line of both rows and the cheapest thing to refuse on.
+const OPENING_MARK: String = ":= func(accepted: bool, paths: PackedStringArray, _filter_index: int) -> void:"
 
 ## The two slots a shape holds: the bake the dock made, and the row's own field.
 const UID_SLOT: String = "{uid}"
