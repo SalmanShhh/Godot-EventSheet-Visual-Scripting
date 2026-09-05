@@ -27,8 +27,14 @@
 # guarantee, exactly as it is for the file runs beside this: a run this family hands back is one the
 # compiler re-emits precisely as it found it, so anything the two readings above guessed wrong about
 # is refused rather than saved back as something else. It also means a hand-written branch is claimed
-# on the same terms as an emitted one - the locals may be called anything, as long as both halves
-# call them the same thing and every other byte is the row's own.
+# on the same terms as an emitted one, as long as every byte but the uid is the row's own.
+#
+# AND THE UID IS A SUFFIX, WHICH IS THE ONE LIMIT WORTH KNOWING. The reading above finds it by
+# holding the shape's `var __answer_{uid} := ` against the line written there, so what a hand-written
+# branch may choose is the part AFTER those stems: `__answer_mine` and `__chooser_mine` are claimed,
+# `pick_answer` and `pick_chooser` are not. That is a narrower promise than "call them anything", and
+# it is the honest one - a branch this family will not claim opens as the statements it is, byte for
+# byte, which is the contract either way.
 #
 # THE RUN OPENS ON AN `if`, WHICH IS WHY THE LIFTER ASKS THIS FAMILY BEFORE ITS IF GRAMMAR. Every
 # other run here opens on a statement; this one opens on a branch whose two halves are one row's
