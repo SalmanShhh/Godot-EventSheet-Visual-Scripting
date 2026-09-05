@@ -131,6 +131,42 @@ code. Two actions really are called **Play Sound** and two conditions really are
 | Audio Playback Speed | The current global playback speed scale. | `AudioServer.playback_speed_scale` |
 | Audio Output Latency | Output latency in seconds. | `AudioServer.get_output_latency()` |
 
+### Sweeps and snapshots (picker section: Audio Server)
+
+The rows above SWITCH a bus: it is dry, then it is underwater. These ones MOVE it, which is what a
+hit actually sounds like - the room going under for a tenth of a second and coming back.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Muffle Bus | Walks a low-pass filter's cutoff down over time, so everything brighter goes quiet. | `EventForgeBusMix.muffle(self, {bus}, {cutoff_hz}, {seconds})` |
+| Dive Bus Volume | Walks a bus's level down through an amplify effect, never through the player's own volume. | `EventForgeBusMix.dive(self, {bus}, {volume_db}, {seconds})` |
+| Wash Bus | Grows a reverb's wet amount behind the sound, its dry left alone. | `EventForgeBusMix.wash(self, {bus}, {wetness}, {seconds})` |
+| Restore Bus | Walks every kind this bus was swept by back to where it rested before the first sweep. | `EventForgeBusMix.restore(self, {bus}, {seconds})` |
+| Snapshot Buses As | Writes down every bus's level, mute and solo under a name you choose. | `EventForgeBusMix.snapshot({snapshot_name})` |
+| Recall Bus Snapshot | Puts a snapshotted mix back: levels walked, mutes and solos cut. | `EventForgeBusMix.recall(self, {snapshot_name}, {seconds})` |
+| Bus Is Sweeping | True while a sweep on this bus is still walking. | `EventForgeBusMix.is_sweeping({bus})` |
+| Bus Snapshot Exists | True once a snapshot of that name has been taken this run. | `EventForgeBusMix.has_snapshot({snapshot_name})` |
+
+Four things worth knowing before you use them:
+
+- **The effect is added once and kept.** The first Muffle on a bus adds an `AudioEffectLowPassFilter`
+  to it, opened so wide it does nothing; every later Muffle reuses that one. Same for the amplify a
+  Dive moves and the reverb a Wash moves. Your bus layout in the Audio panel therefore gains one
+  slot per kind the first time a game runs one of these rows, and never gains another.
+- **The player's volume is never touched.** A Dive moves an amplify effect, not the bus volume the
+  options screen set, because that number is the player's and a beat that moved it would leave their
+  setting wherever the beat happened to end.
+- **Home is where the mix was.** The value an effect rested at before the FIRST sweep touched it is
+  what Restore Bus walks back to - not where the last beat left it. So a moment can muffle and dive
+  without ever saying how to come back, and one Restore Bus at the end of it puts the room right.
+- **No snapshot ships.** There is no house "underwater" and no house "paused", because a game's mix
+  is the game's. Take the first one from the live desk at startup - `Snapshot Buses As "normal"` -
+  and every later recall has somewhere honest to come back to.
+
+The work itself is `eventsheet_addons/bus_mix.gd`, a real file in your project that a debugger steps
+into: a sweep is one `Tween` walking one float, which the engine parks and frees the moment it lands,
+so a swept bus costs nothing at rest.
+
 ### The options-menu forms (picker section: Game Options)
 
 | Name | What it does | Ships as |
