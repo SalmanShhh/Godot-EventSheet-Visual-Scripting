@@ -14,7 +14,9 @@
 # WHAT A HOLD WAITS FOR. Each step may declare how long what it starts `lasts`. A Hold waits until
 # the latest of those has finished and then its own delay, and both halves ride the one emitted
 # line, so re-opening the file recovers the same wait without needing the durations written down
-# anywhere. A step that declares no duration counts as instant, which is the common case.
+# anywhere. A step that declares no duration counts as instant, which is the common case. A Hold
+# that opens a looped stretch waits for what was running ABOVE the loop, because the stretch it
+# heads has nothing above it yet.
 #
 # STRENGTH, PLACE AND RANGE. The coroutine's own parameters are `strength` (what every amount in
 # the block is written against) and `from` (where the moment happened). A block that names a range
@@ -100,6 +102,10 @@ func skeleton() -> Array[Dictionary]:
 	var plan: Array[Dictionary] = []
 	var cursor: float = 0.0
 	var finish: float = 0.0
+	# What was still running when a looped stretch opened. A stretch restarts its own clock, but
+	# the steps ABOVE the loop are still playing on the way in, so a Hold that opens one has
+	# something to wait for even though its stretch has only just begun.
+	var carried: float = 0.0
 	var depth: int = 0
 	for index: int in range(playing.size()):
 		var step: MomentStepRow = playing[index]
@@ -113,6 +119,7 @@ func skeleton() -> Array[Dictionary]:
 			entry["loop_count"] = int(loop_starts[index])
 			depth = 1
 			entry["depth"] = depth
+			carried = maxf(finish - cursor, 0.0)
 			cursor = 0.0
 			finish = 0.0
 		var word: String = step.timing_word()
@@ -131,8 +138,11 @@ func skeleton() -> Array[Dictionary]:
 					cursor += maxf(step.seconds, 0.0)
 			MomentStepRow.TIMING_HOLD:
 				# Both halves ride the line: how much of the longest step above is still to run,
-				# and the delay the Hold itself asks for after that.
-				var longest: float = maxf(finish - cursor, 0.0)
+				# and the delay the Hold itself asks for after that. A Hold that OPENS a looped
+				# stretch waits for what was running above the loop instead: its own stretch has
+				# nothing above it yet, and the fold rides every pass, so the beat repeats at the
+				# pace it first landed at.
+				var longest: float = carried if bool(entry["opens_loop"]) else maxf(finish - cursor, 0.0)
 				entry["wait"] = "await %s.hold(self, %s, %s, \"%s\")" % [
 					RUNNER, _seconds_text(longest), _seconds_text(maxf(step.seconds, 0.0)),
 					step.clock_word()]

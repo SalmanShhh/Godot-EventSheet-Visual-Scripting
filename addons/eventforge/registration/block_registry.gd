@@ -663,6 +663,12 @@ class MomentBlockKind extends EventSheetBlockKind:
 		var depth: int = 1
 		var loop_count: int = 1
 		var pending_loop: bool = false
+		# The step the loop head sat under, and where the schedule stood there: a Hold that
+		# opens a looped stretch folded in what was still running ABOVE the loop, so the way
+		# back puts that duration on the step outside it rather than losing it.
+		var outside: MomentStepRow = null
+		var outside_cursor: float = 0.0
+		var outside_start: float = 0.0
 		for raw_line: String in body:
 			if not raw_line.begins_with("\t".repeat(depth)):
 				if depth == 1:
@@ -691,13 +697,19 @@ class MomentBlockKind extends EventSheetBlockKind:
 				loop_count = maxi(line.substr(LOOP_HEAD.length()).trim_suffix(":").to_int() - 1, 1)
 				pending_loop = true
 				depth = 2
+				outside = current
+				outside_cursor = cursor
+				outside_start = last_start
 				cursor = 0.0
 				last_start = 0.0
 				current = null
 				continue
 			var started: MomentStepRow = _step_from_wait(line, cursor)
 			if started != null:
-				_carry_hold_duration(started, current, cursor, last_start)
+				if pending_loop:
+					_carry_hold_duration(started, outside, outside_cursor, outside_start)
+				else:
+					_carry_hold_duration(started, current, cursor, last_start)
 				cursor = float(started.get_meta("__cursor", cursor))
 				started.remove_meta("__cursor")
 				last_start = cursor

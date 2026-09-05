@@ -46,6 +46,14 @@ const LOOPED_TEXT: String = """func moment_pulse(strength: float = 1.0, from: No
 		await MomentRunner.then(self, 0.1, "game")
 		c()"""
 
+## A loop whose head is a Hold, over a step above that lasts. The fold the Hold exists for is the
+## steps ABOVE the loop, so the first pass waits for them and every pass keeps that pace.
+const LOOPED_HOLD_TEXT: String = """func moment_throb(strength: float = 1.0, from: Node = null) -> void:
+	a()
+	for _moment_loop: int in 2:
+		await MomentRunner.hold(self, 0.3, 0.1, "game")
+		b()"""
+
 ## The two steps a moment FILE holds, in the order and the spelling a file writes them.
 const FILE_STEPS: Array = [
 	{"amount": 0.45, "effect": "", "seconds": 0.0, "verb": "shake"},
@@ -72,11 +80,12 @@ const FILE_PATH: String = "user://moment_block_test_boss_hit.tres"
 ## class cache has not caught up with fails for the wrong reason.
 const JUICE_SCRIPT: String = "res://eventsheet_addons/juice/juice_behavior.gd"
 
-## The five scripts the compiles and round trips below write. Named once and used at both the
+## The scripts the compiles and round trips below write. Named once and used at both the
 ## compile and the clean-up, so the two cannot drift apart.
 const COMPILED: Array[String] = [
 	"user://moment_block_test.gd", "user://moment_range_test.gd", "user://moment_loop_test.gd",
 	"user://moment_bridge_test.gd", "user://moment_authored_test.gd",
+	"user://moment_loop_hold_test.gd",
 ]
 
 
@@ -85,6 +94,7 @@ static func run() -> bool:
 	passed = _pin_the_emission() and passed
 	passed = _pin_the_round_trip() and passed
 	passed = _pin_the_loop() and passed
+	passed = _pin_the_hold_that_opens_a_loop() and passed
 	passed = _pin_the_strength() and passed
 	passed = _pin_the_range() and passed
 	passed = _pin_the_file_bridge() and passed
@@ -157,6 +167,21 @@ static func _pin_the_loop() -> bool:
 		["a Loop Back is a for around the stretch", _function_text(source), LOOPED_TEXT],
 		["the loop reads back with its count", readings, ["At 0 s", "Hold", "Then 0.1 s", "Loop back 2 x"]],
 		["a looped moment re-emits byte for byte", SUPPORT.reemit(source, "user://moment_loop_test.gd"), source],
+	])
+
+
+## A Hold at the head of a looped stretch: the step above the loop declares a duration, and the
+## Hold waits for it. The number rides the emitted line, so the way back puts it on the step
+## OUTSIDE the loop and the file re-emits letter for letter.
+static func _pin_the_hold_that_opens_a_loop() -> bool:
+	var source: String = SUPPORT.compile_output(_sheet_with(_looped_hold_block()), "user://moment_loop_hold_test.gd")
+	var reopened: EventSheetResource = SUPPORT.reopen(source, true, "user://moment_loop_hold_test.gd")
+	var block: MomentBlockRow = _first_block(reopened)
+	var lasts: String = String.num(block.live_steps()[0].lasts, 4) if block != null else ""
+	return SUPPORT.pins(PREFIX, [
+		["a Hold opening a loop keeps the wait for the steps above", _function_text(source), LOOPED_HOLD_TEXT],
+		["that duration comes back on the step outside the loop", lasts, "0.3"],
+		["and the file re-emits byte for byte", SUPPORT.reemit(source, "user://moment_loop_hold_test.gd"), source],
 	])
 
 
@@ -339,6 +364,19 @@ static func _looped_block() -> MomentBlockRow:
 	var closer: MomentStepRow = MomentStepRow.new()
 	closer.timing = MomentStepRow.TIMING_LOOP_BACK
 	closer.loop_count = 2
+	block.steps.append(closer)
+	return block
+
+
+## A stretch headed by a Hold, over a step that lasts a third of a second.
+static func _looped_hold_block() -> MomentBlockRow:
+	var block: MomentBlockRow = MomentBlockRow.new()
+	block.moment_name = "throb"
+	block.steps.append(_step(MomentStepRow.TIMING_AT, 0.0, 0.3, ["a()"]))
+	block.steps.append(_step(MomentStepRow.TIMING_HOLD, 0.1, 0.0, ["b()"]))
+	var closer: MomentStepRow = MomentStepRow.new()
+	closer.timing = MomentStepRow.TIMING_LOOP_BACK
+	closer.loop_count = 1
 	block.steps.append(closer)
 	return block
 
