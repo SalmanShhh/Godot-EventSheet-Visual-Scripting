@@ -94,6 +94,13 @@ static func require_resource(sheet: EventSheetResource, var_name: String, displa
 
 
 ## _append_function, but returning the function for return-type tweaks.
+##
+## A parameter may say what it is for here too: a THIRD entry on a `params` row is that
+## parameter's own help, exactly as `append_function` above takes it. It is load-bearing twice
+## over, because this is the maker behind every CONDITION and EXPRESSION in the fleet: the
+## sentence is the help the picker shows under the box, AND it is what the compiler needs before
+## it writes an `## @ace_param(...)` line at all - so a parameter that says nothing also ships no
+## starting value, and a default set on one would be metadata that never left the builder.
 static func exposed_function(function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
@@ -105,6 +112,8 @@ static func exposed_function(function_name: String, display_name: String, catego
 		var parameter: ACEParam = ACEParam.new()
 		parameter.id = str(param_pair[0])
 		parameter.type_name = str(param_pair[1])
+		if param_pair.size() > 2:
+			parameter.description = str(param_pair[2])
 		event_function.params.append(parameter)
 	var body_row: RawCodeRow = RawCodeRow.new()
 	body_row.code = body
@@ -944,6 +953,10 @@ class PackSource extends RefCounted:
 		sheet.events.append(row)
 
 	# The shared exposed-function shape; the body is always the piece named after the function.
+	#
+	# A `params` row's optional THIRD entry is that parameter's own help, the same third entry every
+	# other maker in this library takes. It is what the compiler reads before it writes an
+	# `## @ace_param(...)` line, so without it the parameter ships no help AND no starting value.
 	func _exposed(function_name: String, display_name: String, description: String, params: Array, category: String) -> EventFunction:
 		var event_function: EventFunction = EventFunction.new()
 		event_function.function_name = function_name
@@ -955,6 +968,8 @@ class PackSource extends RefCounted:
 			var parameter: ACEParam = ACEParam.new()
 			parameter.id = str(param_pair[0])
 			parameter.type_name = str(param_pair[1])
+			if param_pair.size() > 2:
+				parameter.description = str(param_pair[2])
 			event_function.params.append(parameter)
 		var body_row: RawCodeRow = RawCodeRow.new()
 		body_row.code = code(function_name)

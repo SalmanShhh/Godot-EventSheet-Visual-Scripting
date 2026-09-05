@@ -41,6 +41,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _reader_pins() and all_passed
 	all_passed = _manifest_pins() and all_passed
+	all_passed = _param_help_survives_every_maker() and all_passed
 	all_passed = _a_hole_fails_the_build() and all_passed
 	all_passed = _folders_are_not_packs() and all_passed
 	all_passed = _every_folder_is_claimed() and all_passed
@@ -148,6 +149,72 @@ static func _manifest_pins() -> bool:
 		Lib.pack_from_source("wrap", "Node2D", "Fallback", "", Lib.manifest().category("Wrap")).verb_category,
 		"Wrap") and all_passed
 	return all_passed
+
+
+## A PARAMETER MAY SAY WHAT IT IS FOR, through every maker in the library and not just one of them.
+##
+## Each row of a `params` list is `[id, type]`, and an optional THIRD entry is that parameter's own
+## help - the sentence the picker shows under its box. `append_function` always kept it. Its two
+## siblings dropped it on the floor: `exposed_function`, which backs `Lib.condition` and
+## `Lib.number`, and the Builder's `_exposed`, which backs `src.verb` / `src.condition` /
+## `src.expression` / `src.object_expression`. Between them that is EVERY condition and expression
+## in the fleet, so those parameters shipped with a name, a type and nothing else.
+##
+## The lost sentence was not the whole cost. The compiler writes a parameter's `## @ace_param(...)`
+## line only for a parameter that HAS help, and a builder's STARTING VALUE for that parameter rides
+## on the same line - so a parameter that said nothing also shipped no default, and a wrong default
+## could sit in a pack unseen. Both branches are pinned by VALUE on both makers, because the drop
+## was silent on both and a count would not have caught it.
+static func _param_help_survives_every_maker() -> bool:
+	var all_passed: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	Lib.append_function(sheet, "kept", "Kept", "Pins", "The maker that always kept it.",
+		[["amount", "float", "How much of it."]], "pass")
+	all_passed = _pins("append_function keeps a third entry",
+		_param_help(sheet, "kept", "amount"), "How much of it.") and all_passed
+	Lib.condition(sheet, "asked", "Asked", "Pins", "A condition with a spoken-for parameter.",
+		[["label", "String", "The label being asked about."]], "return true")
+	all_passed = _pins("Lib.condition keeps a third entry",
+		_param_help(sheet, "asked", "label"), "The label being asked about.") and all_passed
+	Lib.condition(sheet, "silent", "Silent", "Pins", "A condition whose parameter says nothing.",
+		[["label", "String"]], "return true")
+	all_passed = _pins("a two-entry row carries no help",
+		_param_help(sheet, "silent", "label"), "") and all_passed
+	Lib.number(sheet, "counted", "Counted", "Pins", "An expression with a spoken-for parameter.",
+		[["position", "int", "Which one. The first is 1."]], "return position", TYPE_INT)
+	all_passed = _pins("Lib.number keeps a third entry",
+		_param_help(sheet, "counted", "position"), "Which one. The first is 1.") and all_passed
+	# The Builder path, whose bodies are pieces named after the function - so the two names here are
+	# real pieces of the wrap folder, and asking for them records no problem against the source.
+	var opened: Lib.PackSource = Lib.pack_from_source(
+		"wrap", "Node2D", "Params", "The Builder half of the same question.")
+	opened.condition("set_wrap_enabled", "Wrap Enabled", "A condition through the Builder.",
+		[["enabled", "bool", "Whether the wrap is on."]])
+	all_passed = _pins("src.condition keeps a third entry",
+		_param_help(opened.sheet, "set_wrap_enabled", "enabled"), "Whether the wrap is on.") and all_passed
+	opened.expression("set_wrap_axes", "Wrap Axes", "An expression through the Builder.",
+		[["horizontal", "bool"]], TYPE_BOOL)
+	all_passed = _pins("a two-entry row carries no help through the Builder either",
+		_param_help(opened.sheet, "set_wrap_axes", "horizontal"), "") and all_passed
+	all_passed = _pins("and asking for those two pieces left the source without a problem",
+		opened.problems().size(), 0) and all_passed
+	return all_passed
+
+
+## One parameter's help, addressed by the function that holds it and its own id. "" when the
+## function or the parameter is not there, so a typo in this test reads as an empty sentence
+## rather than as a crash the suite would print nothing for.
+static func _param_help(sheet: EventSheetResource, function_name: String, param_id: String) -> String:
+	for function_resource: Resource in sheet.functions:
+		if not (function_resource is EventFunction):
+			continue
+		var event_function: EventFunction = function_resource as EventFunction
+		if event_function.function_name != function_name:
+			continue
+		for parameter: ACEParam in event_function.params:
+			if parameter.id == param_id:
+				return parameter.description
+	return ""
 
 
 ## A pack with a hole in it does not get published. Asking for a piece the folder does not hold

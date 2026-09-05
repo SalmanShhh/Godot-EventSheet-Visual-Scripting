@@ -436,33 +436,33 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 ## the box has to reach the game as `has_feedback("shake")`, exactly as Remove Feedback and every
 ## other editing row already spells the same address.
 static func _asking_verbs(sheet: EventSheetResource) -> void:
-	_asked_condition(sheet, "feedback_is_playing", "Feedback Is Playing", "Feedback Player",
+	Lib.condition(sheet, "feedback_is_playing", "Feedback Is Playing", "Feedback Player",
 		"True while the head is on that card - the moment the hit is being felt rather than the whole beat around it.",
 		[["label", "String", "The label of the card being asked about."]],
 		"return playing and now_playing == label.strip_edges()")
 	_default(sheet, "label", "shake")
 	_quoted_call(sheet, "feedback_is_playing(\"{label}\")")
-	_asked_condition(sheet, "has_feedback", "Has Feedback", "Feedback Player",
+	Lib.condition(sheet, "has_feedback", "Has Feedback", "Feedback Player",
 		"True when this player's list holds a card by that name. The question a row asks before it retunes one, and the one a Doctor finding is about.",
 		[["label", "String", "The label to look for."]],
 		"return _index_of(label) >= 0")
 	_default(sheet, "label", "shake")
 	_quoted_call(sheet, "has_feedback(\"{label}\")")
-	_asked_condition(sheet, "feedback_is_enabled", "Feedback Is Enabled", "Feedback Player",
+	Lib.condition(sheet, "feedback_is_enabled", "Feedback Is Enabled", "Feedback Player",
 		"True when that card's box is ticked - so a settings screen can show the switch the way the list actually has it.",
 		[["label", "String", "The label of the card being asked about."]],
 		"var at: int = _index_of(label)\nreturn at >= 0 and bool((_steps_now()[at] as Dictionary).get(\"active\", true))")
 	_default(sheet, "label", "shake")
 	_quoted_call(sheet, "feedback_is_enabled(\"{label}\")")
-	_asked_value(sheet, "feedback_count", "Feedback Count", "Feedback Player",
+	Lib.number(sheet, "feedback_count", "Feedback Count", "Feedback Player",
 		"How many cards this player's list holds, ticked or not - the number the head of the Inspector shows.",
 		[], "return _steps_now().size()", TYPE_INT)
-	_asked_value(sheet, "feedback_label_at", "Feedback Label At", "Feedback Player",
+	Lib.number(sheet, "feedback_label_at", "Feedback Label At", "Feedback Player",
 		"The name of the card at a place in the list, so a settings screen can list a beat without knowing what is in it. The first card is 1; a number past the end answers with nothing.",
 		[["position", "int", "Which card. The first in the list is 1."]],
 		"var list: Array = _steps_now()\nvar at: int = position - 1\nif at < 0 or at >= list.size() or not (list[at] is Dictionary):\n\treturn \"\"\nreturn _label_of(list[at] as Dictionary)", TYPE_STRING)
 	_default(sheet, "position", "1")
-	_asked_value(sheet, "feedback_field", "Feedback Field", "Feedback Player",
+	Lib.number(sheet, "feedback_field", "Feedback Field", "Feedback Player",
 		"What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Feedback Field, so a slider can be shown at the value the list actually holds.",
 		[["label", "String", "The label of the card being read."],
 			["field", "String", "Which value to read."]],
@@ -471,59 +471,27 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_default(sheet, "field", "amount")
 	_quoted_call(sheet, "feedback_field(\"{label}\", \"{field}\")")
-	_asked_value(sheet, "feedback_progress", "Feedback Progress", "Feedback Player",
+	Lib.number(sheet, "feedback_progress", "Feedback Progress", "Feedback Player",
 		"How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.",
 		[["label", "String", "The label of the card being watched."]],
 		"return _progress_of(label)", TYPE_FLOAT)
 	_default(sheet, "label", "shake")
 	_quoted_call(sheet, "feedback_progress(\"{label}\")")
-	_asked_value(sheet, "feedback_duration", "Feedback Duration", "Feedback Player",
+	Lib.number(sheet, "feedback_duration", "Feedback Duration", "Feedback Player",
 		"How long ONE card lasts, its own wait included - beside Feedbacks Duration, which is how long the whole beat lasts.",
 		[["label", "String", "The label of the card being measured."]],
 		"var card: Dictionary = _card_named(label)\nreturn maxf(float(card.get(\"seconds\", 0.0)), 0.0) + maxf(float(card.get(\"delay\", 0.0)), 0.0)", TYPE_FLOAT)
 	_default(sheet, "label", "shake")
 	_quoted_call(sheet, "feedback_duration(\"{label}\")")
-	_asked_value(sheet, "current_feedback", "Current Feedback", "Feedback Player",
+	Lib.number(sheet, "current_feedback", "Current Feedback", "Feedback Player",
 		"The label of the card the head is on right now, or nothing when no play is running.",
 		[], "return now_playing", TYPE_STRING)
-	_asked_value(sheet, "loops_left", "Loops Left", "Feedback Player",
+	Lib.number(sheet, "loops_left", "Loops Left", "Feedback Player",
 		"How many times round a Loop Back card still has to go in the play that is running.",
 		[["label", "String", "The label of the Loop Back card."]],
 		"var card: Dictionary = _card_named(label)\nreturn int(card.get(\"loops_left\", card.get(\"loops\", 0)))", TYPE_INT)
 	_default(sheet, "label", "loop_back")
 	_quoted_call(sheet, "loops_left(\"{label}\")")
-
-
-## `Lib.condition` and `Lib.number`, with each parameter's own help carried across afterwards.
-##
-## Both build through `Lib.exposed_function`, which - unlike `Lib.append_function` beside it - keeps
-## only a parameter's id and type and DROPS the third entry of its row, the sentence saying what the
-## parameter is for. That sentence is load-bearing twice over: it is the help a picker shows under
-## the box, and it is the thing the compiler needs before it writes a `## @ace_param(...)` line at
-## all - so a verb whose parameters say nothing also ships no starting value, and a `_default` set on
-## one would be metadata that never left this file. Carried here rather than fixed in the shared
-## helper because every pack in the fleet is built through that helper, and teaching it to keep the
-## sentence would re-emit all of them at once.
-static func _asked_condition(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
-	Lib.condition(sheet, function_name, display_name, category, description, params, body)
-	_carry_param_help(sheet, params)
-
-
-## The same, for a verb that answers with a value rather than with yes or no.
-static func _asked_value(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, ret: int) -> void:
-	Lib.number(sheet, function_name, display_name, category, description, params, body, ret)
-	_carry_param_help(sheet, params)
-
-
-## Puts the third entry of each params row - the parameter's own help - onto the verb just appended.
-static func _carry_param_help(sheet: EventSheetResource, params: Array) -> void:
-	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
-	for param_pair: Array in params:
-		if param_pair.size() < 3:
-			continue
-		for parameter: ACEParam in fn.params:
-			if parameter.id == str(param_pair[0]):
-				parameter.description = str(param_pair[2])
 
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value.

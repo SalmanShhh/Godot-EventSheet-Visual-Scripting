@@ -570,6 +570,7 @@ func clamp_property_spring(property_path: String, min_value: float, max_value: f
 ## @ace_name("Spring Is Settled")
 ## @ace_category("Spring")
 ## @ace_description("True while nothing is springing that property - it has arrived, or it was never sprung at all.")
+## @ace_param(property_path, desc: "The property to ask about.")
 ## @ace_icon("res://eventsheet_addons/spring/icon.svg")
 ## @ace_codegen_template("$SpringBehavior.property_spring_is_settled({property_path})")
 func property_spring_is_settled(property_path: String) -> bool:
@@ -581,6 +582,7 @@ func property_spring_is_settled(property_path: String) -> bool:
 ## @ace_name("Spring Value Of")
 ## @ace_category("Spring")
 ## @ace_description("What the property's spring reads right now, as a number: the value itself for a number, x for a vector, red for a colour. 0 if nothing has sprung it.")
+## @ace_param(property_path, desc: "The property to read.")
 ## @ace_icon("res://eventsheet_addons/spring/icon.svg")
 ## @ace_codegen_template("$SpringBehavior.property_spring_value({property_path})")
 func property_spring_value(property_path: String) -> float:
@@ -592,6 +594,7 @@ func property_spring_value(property_path: String) -> float:
 ## @ace_name("Spring Velocity Of")
 ## @ace_category("Spring")
 ## @ace_description("How fast the property's spring is moving right now, as a number - drive a lean, a blur or a stretch off it so the motion shows its own speed. 0 if nothing has sprung it.")
+## @ace_param(property_path, desc: "The property to read.")
 ## @ace_icon("res://eventsheet_addons/spring/icon.svg")
 ## @ace_codegen_template("$SpringBehavior.property_spring_velocity({property_path})")
 func property_spring_velocity(property_path: String) -> float:
