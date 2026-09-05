@@ -12,6 +12,13 @@
   (`Identifier "item" not declared`). Any coroutine that watches a counter and awaits a frame hit
   it. The guard is emitted for a for-each over a pick and nothing else now; a `while` and a
   `range()` repeat get none, and the for-each keeps its own iterator's name.
+- **The pack gate can see a pack that does not compile.** `tools/audit_addons.gd` asked whether the
+  shipped script `load()`s, and in Godot 4 a script with a parse error still loads - as a non-null,
+  invalid GDScript. So the parse half of the gate could never fail: a pack that did not compile was
+  counted healthy, printed `drifted=0`, and exited 0. The gate asks the loaded script whether it
+  actually compiled now, prints `PARSE FAIL <path>` with the parse error under it, and exits 1. It
+  also prints `builders=<n>` beside `audited=` and `drifted=`, so a tree whose pack builders and
+  shipped folders have drifted apart says so here rather than at the next full regeneration.
 
 ### Fixed in the general-purpose reading pass
 

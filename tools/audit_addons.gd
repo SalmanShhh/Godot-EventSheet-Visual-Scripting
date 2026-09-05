@@ -5,6 +5,15 @@
 extends SceneTree
 
 
+## The pack-count measurement, reused rather than re-derived, for the `builders=` figure printed
+## beside `audited=`. The two count different populations on purpose: `audited` is the pack scripts
+## found ON DISK (folder packs plus the root single-file ones), `builders` is how many files in
+## `tools/pack_builders/` publish a pack folder at all. They are not expected to be equal, and
+## neither is a gate - the number is here so a tree whose builders and shipped folders have drifted
+## apart says so in the audit's own output instead of only at the next full regeneration.
+const MEASURE := preload("res://tools/measure_packs.gd")
+
+
 func _init() -> void:
 	var packs_dir: DirAccess = DirAccess.open("res://eventsheet_addons")
 	packs_dir.list_dir_begin()
@@ -35,7 +44,8 @@ func _init() -> void:
 		entry = packs_dir.get_next()
 	if FileAccess.file_exists(verify_path):
 		DirAccess.remove_absolute(verify_path)
-	print("audited=%d drifted=%d" % [audited, drifted])
+	print("audited=%d drifted=%d builders=%d" % [audited, drifted,
+		MEASURE.publishing_builders(MEASURE.BUILDERS_DIR)])
 	# The spellings the packs TEACH the reader (`## @ace_lift_example`) are held to the same promise
 	# their verbs are: every entry generates its own fixture line, is claimed by itself, and re-emits
 	# byte for byte - and no pack may shadow a built-in spelling. An entry that cannot do that never
@@ -77,18 +87,32 @@ func _successor_count(catalog: Dictionary) -> int:
 ## One pack script's round-trip + parse verdict. The .gd is both the sheet and the runtime
 ## script: import it as a sheet, recompile, and confirm the output matches the file on disk.
 ## Compiles to a throwaway user:// path so the real pack is never rewritten by the audit.
-## load() of the real script is the honest parse check (re-parsing the source text directly
-## would false-positive on "hides a global class" - its class_name is already registered).
 func _audit_script(label: String, script_path: String, verify_path: String) -> Dictionary:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
 	var output: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
 	var shipped: String = FileAccess.get_file_as_string(script_path)
-	var verdict: Dictionary = {"drift": output != shipped, "parse_fail": load(script_path) == null}
+	var verdict: Dictionary = {"drift": output != shipped, "parse_fail": not script_compiles(script_path)}
 	if bool(verdict["drift"]):
 		print("DRIFT: %s (recompile differs from shipped .gd)" % label)
 	if bool(verdict["parse_fail"]):
-		print("PARSE FAIL: %s" % label)
+		print("PARSE FAIL %s" % script_path)
 	return verdict
+
+
+## Whether the script at `script_path` actually COMPILES - the question this gate means by "parses".
+##
+## `load()` cannot answer it: in Godot 4 a script whose source has a parse error still comes back as
+## a non-null GDScript (an empty, invalid one), so a `load(path) == null` check reported a pack that
+## does not compile as healthy and the red exit never fired. The script's own `reload()` verdict is
+## the honest answer, and it is the spelling the rest of the plugin already lints with. It runs on
+## the LOADED resource rather than on a fresh GDScript built from the source text, because a fresh
+## one would false-positive on "hides a global class" - the pack's class_name is registered to this
+## very path already. A parse error prints itself here, which is the diagnostic a red gate wants.
+static func script_compiles(script_path: String) -> bool:
+	var loaded: Variant = load(script_path)
+	if not (loaded is GDScript):
+		return false
+	return (loaded as GDScript).reload(true) == OK
 
 
 ## The single sheet script a pack folder ships (e.g. spring_behavior.gd, save_system_addon.gd). Skips
