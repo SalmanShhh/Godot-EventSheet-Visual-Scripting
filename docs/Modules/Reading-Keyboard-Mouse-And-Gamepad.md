@@ -129,6 +129,41 @@ are scoped to `Node3D` and need an active Camera3D at runtime.
 | Gamepad Vibration Strength | The current rumble as a Vector2 (weak motor, strong motor). | `Input.get_joy_vibration_strength({device})` |
 | Vibrate Phone | Buzzes a handheld device for a moment. Does nothing on desktop. | `Input.vibrate_handheld({duration_ms})` |
 
+### Haptics: shapes rather than motor strengths (picker section: Vibration)
+
+The rows above are the device's own two calls said out loud. A game does not think in motor
+strengths, though - it thinks in shapes: this is a tap, this is an alarm, the car is on gravel. A
+shape is a **HapticPatternResource** you own (how hard, how long, how many times, and the air
+between the pulses), and one row plays it on whatever the player is holding.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Haptic | Plays one haptic pattern file: a pad gets its motors, a phone gets a buzz as long as the shape. | `EventForgeHaptics.play(self, {pattern})` |
+| Haptic Emphasis | One short strong knock, with no file behind it. | `EventForgeHaptics.emphasis({strength})` |
+| Haptic Continuous Start | Starts a rumble that runs until it is stopped, at an amplitude you can rewrite. | `EventForgeHaptics.continuous_start({amplitude})` |
+| Haptic Continuous Stop | Stops it. Safe to run when nothing is running. | `EventForgeHaptics.continuous_stop()` |
+| Set Haptic Strength | The player's own dial, 0 to 100. Every haptic row multiplies itself by it. | `Engine.set_meta("haptic_strength", clampf({percent} / 100.0, 0.0, 1.0))` |
+| Haptic Strength | The dial as 0 to 1, for the options slider's starting value. | `float(Engine.get_meta("haptic_strength", 1.0))` |
+| Haptic Is Playing | True while a pattern's pulses are still arriving, or a continuous rumble is running. | `EventForgeHaptics.is_playing()` |
+| Haptics Can Be Felt | True when there is a pad plugged in or a phone in a hand. | `EventForgeHaptics.can_be_felt()` |
+
+Four things worth knowing:
+
+- **Nothing ships.** There is no house "success" and no house "failure": how a game feels in the
+  hand is the game's. A new HapticPatternResource opens on the one shape that is not a taste - a
+  single short tap at full strength - and every other shape is made from there.
+- **The gap is what makes a repeat a repeat.** Four pulses with no air between them are one long
+  buzz, so `gap_seconds` sits beside `repeats` in the file.
+- **The silence is deliberate.** On the web there is nothing to rumble, and on a desktop with no pad
+  there is nothing either - so the rows do nothing at all, quietly, with no warning per hit. The
+  Doctor's ship-it section says it ONCE for the whole project, because it is one decision: carry the
+  same beat in sound or picture too.
+- **One dial, read by every row.** `Set Haptic Strength` at 0 turns the whole vocabulary off with no
+  branch anywhere in a sheet. No Flashing does not touch it - a rumble is not light.
+
+The work itself is `eventsheet_addons/haptics.gd`, a real file in your project: a pattern is one call
+per pulse, never a call a frame, and a continuous rumble is one call at the start and one at the stop.
+
 The button dropdowns offer `JOY_BUTTON_A`, `B`, `X`, `Y`, the two shoulders, `START`, `BACK` and the four
 D-pad directions. The axis dropdown offers `JOY_AXIS_LEFT_X`, `LEFT_Y`, `RIGHT_X`, `RIGHT_Y`,
 `TRIGGER_LEFT` and `TRIGGER_RIGHT`.

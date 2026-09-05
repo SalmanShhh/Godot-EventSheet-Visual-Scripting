@@ -48,6 +48,7 @@ const CHECK_PIXEL_SCALE := "ship-pixel-scale"
 const CHECK_RENDERER := "ship-renderer-only"
 const CHECK_SKY_BACKDROP := "ship-sky-backdrop"
 const CHECK_LOADING_SCREEN := "ship-loading-screen"
+const CHECK_HAPTICS := "ship-haptics"
 
 ## Where Godot keeps the export presets, and the header a preset is one of.
 const EXPORT_PRESETS_PATH := "res://export_presets.cfg"
@@ -120,6 +121,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 		EventForgeEnvironmentWords.FORWARD_PLUS))))
 	out.append_array(sky_backdrop_findings(sources, flat_backdrop_scripts(sources)))
 	out.append_array(loading_screen_findings(sources, plainly_opened_scene_sizes(sources)))
+	out.append_array(haptics_findings(sources))
 	return out
 
 
@@ -825,6 +827,30 @@ static func _sorted_keys(source: Dictionary) -> PackedStringArray:
 		keys.append(str(key))
 	keys.sort()
 	return keys
+
+
+## The one spelling every haptic row emits. A file holding any of them holds this, because all of
+## them go through the same runtime helper.
+const HAPTIC_SPELLING := "EventForgeHaptics."
+
+
+## A project that rumbles, said ONCE. Every haptic row does nothing at all on a page in a browser and
+## on a desktop with no pad plugged in - by design, and quietly, because a machine that cannot rumble
+## is not a fault to report every time somebody is hit. That silence is worth knowing about exactly
+## once, on the way to shipping, and never per row: a note per row would be a hundred lines saying
+## the same sentence about the same decision.
+##
+## An info note rather than a warning. Nothing is broken; the game simply reaches a player who feels
+## none of it, and the answer is a decision (say so in the options screen, or carry the same beat in
+## sound and picture) rather than a fix.
+static func haptics_findings(sources: Dictionary) -> Array[Dictionary]:
+	for script_path: String in _sorted_keys(sources):
+		if not str(sources[script_path]).contains(HAPTIC_SPELLING):
+			continue
+		return [_finding("info", CHECK_HAPTICS, script_path,
+			EventSheetL10n.translate("This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.") % script_path.get_file(),
+			HAPTIC_SPELLING)]
+	return []
 
 
 static func _is_someone_elses(script_path: String) -> bool:
