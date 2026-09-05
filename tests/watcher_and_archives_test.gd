@@ -38,6 +38,7 @@ const OUT_DIR := WORK_DIR + "/unpacked"
 const ARCHIVE := WORK_DIR + "/bundle.zip"
 const HOSTILE := WORK_DIR + "/hostile.zip"
 const BLOCKED := WORK_DIR + "/blocked.zip"
+const LYING := WORK_DIR + "/lying.zip"
 const BLOCKED_DIR := OUT_DIR + "/taken"
 const PROBE_SCRIPT := "user://watcher_archives_probe.gd"
 
@@ -145,10 +146,24 @@ static func _run_emission() -> bool:
 	# so an entry the machine refused to write moves neither the bar nor the totals.
 	ok = _check("the entry count is raised only by a write that succeeded",
 		unpack.contains("\t\t\t__file_4.close()\n\t\t\t__written_4 += 1\n\t\t\t__bytes_4"
-			+ " += __data_4.size()\n\t\t\t_on_unpack_progress(__written_4, __bytes_4)\n"), true) and ok
+			+ " += __data_4.size()\n\t\t\t_on_unpack_progress(__written_4, __bytes_4,"
+			+ " __total_4)\n"), true) and ok
+	# AND WHAT DID NOT LAND IS COUNTED. A write the machine refused used to leave no trace at all.
+	ok = _check("a write the machine refused is counted rather than passed over",
+		unpack.contains("\t\telse:\n\t\t\t__skipped_4 += 1\n"), true) and ok
+	# THE READER'S EMPTY ANSWER IS NOT A FILE. `read_file` answers with no bytes for an entry it
+	# could not decode, and writing that out lands a 0-byte file the game then reads as content.
+	ok = _check("an entry the reader could get no bytes out of is skipped, not written",
+		unpack.contains("\t\tvar __data_4 := __reader_4.read_file(__entry_4)\n"
+			+ "\t\tif __data_4.is_empty():\n\t\t\t__skipped_4 += 1\n\t\t\tcontinue\n"), true) and ok
 	ok = _check("and the run ends at one of the two events, chosen after the loop",
 		unpack.contains("\tif __refused_4.is_empty():\n\t\t_on_unpack_finished(__written_4,"
-			+ " __bytes_4)\n\telse:\n"), true) and ok
+			+ " __bytes_4, __skipped_4)\n\telse:\n"), true) and ok
+	# THE DENOMINATOR IS COUNTED FIRST, and it counts the entries the loop will TRY: a folder entry
+	# is stepped over below, so counting it would hand a bar a number it can never reach.
+	ok = _check("the total a bar divides by is counted before the loop",
+		unpack.contains("\tvar __total_4 := 0\n\tfor __listed_4: String in __reader_4.get_files():\n"
+			+ "\t\tif not __listed_4.ends_with(\"/\"):\n\t\t\t__total_4 += 1\n"), true) and ok
 	ok = _check("an entry that is a folder carries no bytes and is skipped",
 		unpack.contains("if __entry_4.ends_with(\"/\"):"), true) and ok
 	ok = _check("no unsubstituted placeholder survives", unpack.contains("{"), false) and ok
@@ -175,7 +190,9 @@ static func _run_archive_runtime() -> bool:
 		_kinds(report), ["progress", "progress", "finished"] as Array) and ok
 	ok = _check("the finish counts every entry", report[2][1], 2) and ok
 	ok = _check("and every byte", report[2][2], 11) and ok
+	ok = _check("and nothing was skipped", report[2][3], 0) and ok
 	ok = _check("the first progress report counts one entry", report[0][1], 1) and ok
+	ok = _check("each progress report says how many entries there are in all", report[0][3], 2) and ok
 	ok = _check("nothing was refused", _kinds(report).has("refused"), false) and ok
 
 	# A WRITE THAT CANNOT SUCCEED. An entry whose name is already a FOLDER in the target cannot be
@@ -202,8 +219,90 @@ static func _run_archive_runtime() -> bool:
 	ok = _check("and the finish counts the entry that landed and no other",
 		blocked[1][1], 1) and ok
 	ok = _check("its bytes too, and only its bytes", blocked[1][2], 4) and ok
+	# AND THE ONE THAT DID NOT LAND IS COUNTED. It used to vanish: the finish said one entry of a
+	# two-entry archive and nothing anywhere said the other was missing.
+	ok = _check("the write the machine refused is counted as skipped", blocked[1][3], 1) and ok
 	DirAccess.remove_absolute(BLOCKED_DIR)
+
+	# AN ARCHIVE THAT LIES ABOUT ITS OWN BYTES. A stored entry whose header claims more bytes than
+	# the archive holds is one `ZIPReader.read_file` answers EMPTY for, after printing an engine
+	# message about it. Writing that answer out lands a 0-byte file the game then reads as content,
+	# so the entry is skipped and counted instead. Godot's own printed error is expected here.
+	_fresh_dir(OUT_DIR)
+	_write_lying_archive(LYING)
+	var lying: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(LYING),
+		"folder": _quote(OUT_DIR), "uid": "1"})
+	ok = _check("an entry the reader could not decode is not written at all",
+		FileAccess.file_exists(OUT_DIR + "/truncated.txt"), false) and ok
+	ok = _check("the bar never moved for it", _kinds(lying), ["finished"] as Array) and ok
+	ok = _check("the finish counts no entry", lying[0][1], 0) and ok
+	ok = _check("no bytes", lying[0][2], 0) and ok
+	ok = _check("and says one entry was skipped", lying[0][3], 1) and ok
 	return ok
+
+
+## An archive holding one STORED entry whose header claims more bytes than the file carries, written
+## by hand because no packer will make one. `ZIPReader` answers that entry with no bytes at all.
+static func _write_lying_archive(path: String) -> void:
+	var name_bytes: PackedByteArray = "truncated.txt".to_utf8_buffer()
+	var payload: PackedByteArray = "seven!!".to_utf8_buffer()
+	var local: PackedByteArray = PackedByteArray()
+	_put_int(local, 0x04034B50, 4)
+	_put_int(local, 20, 2)
+	_put_int(local, 0, 2)
+	_put_int(local, 0, 2)
+	_put_int(local, 0, 2)
+	_put_int(local, 0, 2)
+	_put_int(local, 0, 4)
+	# The two sizes are the lie: the header claims 64 bytes where seven were stored.
+	_put_int(local, 64, 4)
+	_put_int(local, 64, 4)
+	_put_int(local, name_bytes.size(), 2)
+	_put_int(local, 0, 2)
+	local.append_array(name_bytes)
+	local.append_array(payload)
+
+	var central: PackedByteArray = PackedByteArray()
+	_put_int(central, 0x02014B50, 4)
+	_put_int(central, 20, 2)
+	_put_int(central, 20, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 4)
+	_put_int(central, 64, 4)
+	_put_int(central, 64, 4)
+	_put_int(central, name_bytes.size(), 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 2)
+	_put_int(central, 0, 4)
+	_put_int(central, 0, 4)
+	central.append_array(name_bytes)
+
+	var end: PackedByteArray = PackedByteArray()
+	_put_int(end, 0x06054B50, 4)
+	_put_int(end, 0, 2)
+	_put_int(end, 0, 2)
+	_put_int(end, 1, 2)
+	_put_int(end, 1, 2)
+	_put_int(end, central.size(), 4)
+	_put_int(end, local.size(), 4)
+	_put_int(end, 0, 2)
+
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	file.store_buffer(local)
+	file.store_buffer(central)
+	file.store_buffer(end)
+	file.close()
+
+
+## One little-endian number of `width` bytes, appended. Zip is a little-endian format throughout.
+static func _put_int(into: PackedByteArray, value: int, width: int) -> void:
+	for index: int in range(width):
+		into.append((value >> (index * 8)) & 0xFF)
 
 
 ## The guard, against an archive whose entry climbs out of the folder it is unpacked into.
@@ -255,11 +354,11 @@ static func _run_handlers() -> bool:
 		sheet.events.append(row)
 	var compiled: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
 	ok = _check("progress is answered by the function the loop calls",
-		compiled.contains("func _on_unpack_progress(entries: int, bytes: int) -> void:"), true) and ok
+		compiled.contains("func _on_unpack_progress(entries: int, bytes: int, total: int) -> void:"), true) and ok
 	ok = _check("refusal too",
 		compiled.contains("func _on_unpack_refused(entry: String, reason: String) -> void:"), true) and ok
 	ok = _check("and the finish",
-		compiled.contains("func _on_unpack_finished(entries: int, bytes: int) -> void:"), true) and ok
+		compiled.contains("func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:"), true) and ok
 	if FileAccess.file_exists(PROBE_SCRIPT):
 		DirAccess.remove_absolute(PROBE_SCRIPT)
 
@@ -313,9 +412,9 @@ static func _run_lift() -> bool:
 	for line: String in body.split("\n"):
 		indented.append("\t" + line)
 	var source: String = "extends Node\n\n\nfunc _ready() -> void:\n" + "\n".join(indented) \
-		+ "\n\n\nfunc _on_unpack_progress(entries: int, bytes: int) -> void:\n\tprint(entries, bytes)" \
+		+ "\n\n\nfunc _on_unpack_progress(entries: int, bytes: int, total: int) -> void:\n\tprint(entries, bytes)" \
 		+ "\n\n\nfunc _on_unpack_refused(entry: String, reason: String) -> void:\n\tprint(entry, reason)" \
-		+ "\n\n\nfunc _on_unpack_finished(entries: int, bytes: int) -> void:\n\tprint(entries, bytes)\n"
+		+ "\n\n\nfunc _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:\n\tprint(entries, bytes)\n"
 	var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
 	file.store_string(source)
 	file.close()
@@ -551,12 +650,12 @@ static func _run_band() -> bool:
 static func _run_emitted(ace_id: String, params: Dictionary) -> Array:
 	var lines: PackedStringArray = PackedStringArray(["@tool", "extends RefCounted", "",
 		"var report: Array = []", "", "",
-		"func _on_unpack_progress(entries: int, bytes: int) -> void:",
-		"\treport.append([\"progress\", entries, bytes])", "", "",
+		"func _on_unpack_progress(entries: int, bytes: int, total: int) -> void:",
+		"\treport.append([\"progress\", entries, bytes, total])", "", "",
 		"func _on_unpack_refused(entry: String, reason: String) -> void:",
 		"\treport.append([\"refused\", entry, reason])", "", "",
-		"func _on_unpack_finished(entries: int, bytes: int) -> void:",
-		"\treport.append([\"finished\", entries, bytes])", "", "",
+		"func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:",
+		"\treport.append([\"finished\", entries, bytes, skipped])", "", "",
 		"func probe() -> void:"])
 	for line: String in _emitted(ace_id, params).split("\n"):
 		lines.append("\t" + line)

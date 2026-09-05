@@ -432,11 +432,11 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# reason: the emitted ZIPReader loop calls them BY NAME as it goes, so there is nothing
 			# to connect and nothing to await. A sheet with an unpack row and none of these does not
 			# parse, which is the plainest way a missing answer can announce itself.
-			return _lifecycle("_on_unpack_progress", "entries: int, bytes: int")
+			return _lifecycle("_on_unpack_progress", "entries: int, bytes: int, total: int")
 		"OnUnpackRefused":
 			return _lifecycle("_on_unpack_refused", "entry: String, reason: String")
 		"OnUnpackFinished":
-			return _lifecycle("_on_unpack_finished", "entries: int, bytes: int")
+			return _lifecycle("_on_unpack_finished", "entries: int, bytes: int, skipped: int")
 		"OnRevealFinished":
 			# The end of a typed line, on the same seam as the three above and for the same reason:
 			# a rich text label's own `finished` signal is about the document being LOADED, not about

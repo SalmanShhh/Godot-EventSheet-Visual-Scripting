@@ -176,20 +176,26 @@ static func _free_path_template() -> String:
 ## can trust.
 ##
 ## THE THREE EVENTS. An archive can hold ten thousand entries, so the loop reports as it goes -
-## On Unpack Progress once per entry, with what has landed so far, which is what a progress bar is
-## made of. On Unpack Finished ends a run that reached the last entry; On Unpack Refused ends one
-## the guard stopped. Like the Ask rows above, the emitted loop calls all three BY NAME, so a sheet
-## that unpacks needs an event for each - a sheet missing one does not compile, and says which.
+## On Unpack Progress once per entry, with what has landed so far and how many entries there are in
+## all. On Unpack Finished ends a run that reached the last entry; On Unpack Refused ends one the
+## guard stopped. Like the Ask rows above, the emitted loop calls all three BY NAME, so a sheet that
+## unpacks needs an event for each - a sheet missing one does not compile, and says which.
+##
+## AND THE LOOP RUNS TO THE END INSIDE THE ONE ROW. There is no `await` in it, so the reports arrive
+## in a burst and the window repaints once the row returns: a bar fed by them shows how far the run
+## got, not the run happening. That is said on the trigger rather than left for somebody to find out
+## on a big archive, and an unpack that yields between entries would be a different row with a
+## different line - a coroutine - rather than this one quietly becoming one.
 ##
 ## USER CONTENT IS DATA, NEVER CODE. An entry is read as bytes and stored as bytes. Nothing here
 ## loads, parses or runs what came out of the archive.
 static func _archives() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.act("PackFolderIntoZip", "Pack Folder Into Zip", _pack_template(), "Files: Archives", "pack folder {folder} into {archive}", "Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.").param("folder", "\"user://runs\"", "Folder", "The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.", "file_path").param("archive", "\"user://runs.zip\"", "Into archive", "The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.", "file_path").featured())
-	descriptors.append(F.act("UnpackZipIntoFolder", "Unpack Zip Into Folder", _unpack_template(), "Files: Archives", "unpack {archive} into folder {folder}", "Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.").param("archive", "\"user://runs.zip\"", "Archive", "The .zip file to read. Nothing is written when it cannot be opened.", "file_path").param("folder", "\"user://unpacked\"", "Into folder", "The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.", "file_path").featured())
-	descriptors.append(F.trig("OnUnpackProgress", "On Unpack Progress", "", "Files: Archives", "On unpack progress {entries} {bytes}", "Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.").param_typed("int", "entries", "", "Entries", "How many entries have been written so far, counting the one that just landed.").param_typed("int", "bytes", "", "Bytes", "How many bytes have been written so far."))
+	descriptors.append(F.act("UnpackZipIntoFolder", "Unpack Zip Into Folder", _unpack_template(), "Files: Archives", "unpack {archive} into folder {folder}", "Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name. An entry the reader answers with no bytes for - a truncated or corrupted archive, and an entry that really is empty, which reads exactly the same way - is SKIPPED rather than written as a 0-byte file, and so is one the machine refuses to write; On Unpack Finished counts them, so a run that reached the end without unpacking all of it says so.").param("archive", "\"user://runs.zip\"", "Archive", "The .zip file to read. Nothing is written when it cannot be opened.", "file_path").param("folder", "\"user://unpacked\"", "Into folder", "The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries. Prefer a variable here: the line reads this to make the folder, again to work out where it really is, and once more for every entry in the archive.", "file_path").featured())
+	descriptors.append(F.trig("OnUnpackProgress", "On Unpack Progress", "", "Files: Archives", "On unpack progress {entries} {bytes} {total}", "Runs once per entry an unpack writes, with what has landed so far and how many entries the archive holds - the two numbers a progress bar is made of. THE WHOLE UNPACK HAPPENS INSIDE THE ONE ROW: there is no waiting in the loop, so these arrive in a burst and the window repaints once the row is done. What a bar reads off them is how far the run got, not the run happening.").param_typed("int", "entries", "", "Entries", "How many entries have been written so far, counting the one that just landed.").param_typed("int", "bytes", "", "Bytes", "How many bytes have been written so far.").param_typed("int", "total", "", "Of", "How many entries the archive holds in all - the number to divide by. It counts the entries the loop will try, so the folder entries it steps over are not among them. An entry that is skipped never reports, so the last count can stop short of this."))
 	descriptors.append(F.trig("OnUnpackRefused", "On Unpack Refused", "", "Files: Archives", "On unpack refused {entry} {reason}", "Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.").param("entry", "", "Entry", "The entry the guard stopped on, spelled exactly as the archive spells it.").param("reason", "", "Reason", "Why it was refused, in words worth showing the player."))
-	descriptors.append(F.trig("OnUnpackFinished", "On Unpack Finished", "", "Files: Archives", "On unpack finished {entries} {bytes}", "Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.").param_typed("int", "entries", "", "Entries", "How many entries were written in total.").param_typed("int", "bytes", "", "Bytes", "How many bytes were written in total."))
+	descriptors.append(F.trig("OnUnpackFinished", "On Unpack Finished", "", "Files: Archives", "On unpack finished {entries} {bytes} {skipped}", "Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts - and the third number says whether they are all there.").param_typed("int", "entries", "", "Entries", "How many entries were written in total.").param_typed("int", "bytes", "", "Bytes", "How many bytes were written in total.").param_typed("int", "skipped", "", "Skipped", "How many entries did not land: one the reader answered with no bytes for - a truncated or corrupted archive, or an entry that really is empty, which reads exactly the same way - and one the machine refused to write, such as a name the file system will not take or a full disk. Nothing of theirs is on disk. A finish with a number here reached the end of the archive but did not unpack all of it, which is worth saying on screen rather than treating as a clean install."))
 	return descriptors
 
 
@@ -222,6 +228,24 @@ static func _pack_template() -> String:
 ## totals On Unpack Finished is handed. A count of entries that were attempted is a count of nothing
 ## anybody can act on.
 ##
+## AND WHAT DID NOT LAND IS COUNTED TOO, which is the other half of the same idea. An entry that
+## moved nothing used to leave no trace at all: the finish said "9 entries" of a ten-entry archive
+## and nothing anywhere said which one was missing or why. So the entries the loop could not write
+## are counted into a third number and handed to On Unpack Finished beside the two.
+##
+## THE READER'S EMPTY ANSWER IS NOT A FILE. `ZIPReader.read_file` answers with an EMPTY byte array
+## for an entry it could not decode - a truncated archive, a header that lies about its length, a CRC
+## that does not match - and prints an engine message while doing it. There is no size to compare it
+## against: the reader offers none. Writing that answer out lands a 0-byte file the game then reads
+## as content, which is the one failure worse than no file at all. So an empty read is SKIPPED rather
+## than written, and counted. An entry that really is empty reads exactly the same way and is skipped
+## with it - the row says so, because a rule that cannot tell those two apart must say which way it
+## errs.
+##
+## THE TOTAL IS COUNTED FIRST, and it counts the entries the loop will TRY: the folder entries are
+## stepped over below, so counting them would hand a progress bar a denominator it can never reach.
+## `ZIPReader` has no method that answers this, so the walk is written out where it can be read.
+##
 ## THE REFUSAL LEAVES BY THE SAME DOOR AS THE FINISH. The guard records the entry and BREAKS rather
 ## than returning: a `return` inside a sheet function that answers with a value is a script that does
 ## not parse, and inside an ordinary handler it silently abandons every later row of the same event
@@ -232,8 +256,13 @@ static func _unpack_template() -> String:
 		+ "if __reader_{uid}.open({archive}) == OK:\n" \
 		+ "\tDirAccess.make_dir_recursive_absolute({folder})\n" \
 		+ "\tvar __root_{uid} := ProjectSettings.globalize_path({folder}).simplify_path().trim_suffix(\"/\") + \"/\"\n" \
+		+ "\tvar __total_{uid} := 0\n" \
+		+ "\tfor __listed_{uid}: String in __reader_{uid}.get_files():\n" \
+		+ "\t\tif not __listed_{uid}.ends_with(\"/\"):\n" \
+		+ "\t\t\t__total_{uid} += 1\n" \
 		+ "\tvar __written_{uid} := 0\n" \
 		+ "\tvar __bytes_{uid} := 0\n" \
+		+ "\tvar __skipped_{uid} := 0\n" \
 		+ "\tvar __refused_{uid} := \"\"\n" \
 		+ "\tfor __entry_{uid}: String in __reader_{uid}.get_files():\n" \
 		+ "\t\tif __entry_{uid}.ends_with(\"/\"):\n" \
@@ -243,6 +272,9 @@ static func _unpack_template() -> String:
 		+ "\t\t\t__refused_{uid} = __entry_{uid}\n" \
 		+ "\t\t\tbreak\n" \
 		+ "\t\tvar __data_{uid} := __reader_{uid}.read_file(__entry_{uid})\n" \
+		+ "\t\tif __data_{uid}.is_empty():\n" \
+		+ "\t\t\t__skipped_{uid} += 1\n" \
+		+ "\t\t\tcontinue\n" \
 		+ "\t\tDirAccess.make_dir_recursive_absolute(__into_{uid}.get_base_dir())\n" \
 		+ "\t\tvar __file_{uid} := FileAccess.open(__into_{uid}, FileAccess.WRITE)\n" \
 		+ "\t\tif __file_{uid}:\n" \
@@ -250,10 +282,12 @@ static func _unpack_template() -> String:
 		+ "\t\t\t__file_{uid}.close()\n" \
 		+ "\t\t\t__written_{uid} += 1\n" \
 		+ "\t\t\t__bytes_{uid} += __data_{uid}.size()\n" \
-		+ "\t\t\t_on_unpack_progress(__written_{uid}, __bytes_{uid})\n" \
+		+ "\t\t\t_on_unpack_progress(__written_{uid}, __bytes_{uid}, __total_{uid})\n" \
+		+ "\t\telse:\n" \
+		+ "\t\t\t__skipped_{uid} += 1\n" \
 		+ "\t__reader_{uid}.close()\n" \
 		+ "\tif __refused_{uid}.is_empty():\n" \
-		+ "\t\t_on_unpack_finished(__written_{uid}, __bytes_{uid})\n" \
+		+ "\t\t_on_unpack_finished(__written_{uid}, __bytes_{uid}, __skipped_{uid})\n" \
 		+ "\telse:\n" \
 		+ "\t\t_on_unpack_refused(__refused_{uid}, \"it points outside the folder it is being unpacked into\")"
 
