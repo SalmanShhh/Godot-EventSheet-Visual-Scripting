@@ -238,6 +238,11 @@ func snap_on_aim_down_sights(max_degrees: float) -> void:
 	var toward: Vector3 = (_place_of(best).origin - _place_of(host).origin).normalized()
 	if toward.is_zero_approx() or facing.angle_to(toward) > deg_to_rad(maxf(max_degrees, 0.0)):
 		return
+	# Straight up and straight down have no "which way is up" left to build a turn from: the world's
+	# up axis is the reference every other turn here leans on, and it stops being one exactly there.
+	# The snap is left undone rather than made from a reference that has collapsed.
+	if absf(toward.dot(Vector3.UP)) > 0.999:
+		return
 	host.global_transform = Transform3D(Basis.looking_at(toward, Vector3.UP), _place_of(host).origin)
 
 ## @ace_condition

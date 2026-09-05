@@ -405,6 +405,19 @@ static func _test_snapping_on_aim_down_sights() -> bool:
 	all_passed = _check("with nothing near the aim the host stands still",
 		host.transform.basis.is_equal_approx(Basis.IDENTITY), true) and all_passed
 
+	# Straight overhead is the one direction the world's up axis cannot describe a turn toward, so
+	# the snap declines rather than building one out of a reference that has collapsed.
+	var straight_up: Camera3D = Camera3D.new()
+	straight_up.rotate_x(PI * 0.5)
+	lock.set("eye", straight_up)
+	target.position = Vector3(0.0, 10.0, 0.0)
+	lock.snap_on_aim_down_sights(20.0)
+	all_passed = _check("a target straight overhead is declined, not turned onto badly",
+		host.transform.basis.is_equal_approx(Basis.IDENTITY), true) and all_passed
+	straight_up.free()
+	lock.set("eye", eye)
+	target.position = Vector3(2.0, 0.0, -10.0)
+
 	# THE OFF SWITCH again: a zero radius means no target is ever near enough, so the snap that a
 	# controller player relies on is the same one an options screen can turn off.
 	lock.set("members", [target])
