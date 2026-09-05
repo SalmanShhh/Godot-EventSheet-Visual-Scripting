@@ -81,7 +81,7 @@ Each fix shows what it would change before it changes it, as before-and-after pa
 value, and lands as one undo.
 
 **What those checks can and cannot see, because a check that overstates its reach is worse than no
-check.** All three read the path literal a call was actually handed. `FileAccess.open("res://" +
+check.** The first three read the path literal a call was actually handed. `FileAccess.open("res://" +
 name, FileAccess.WRITE)` is caught, because the literal is there in the line; the same write with
 `var base = "res://"` on the line above it is not, because by then the path is a name. A path held in
 a variable or built out of pieces is one they have nothing to say about, and each finding says so:

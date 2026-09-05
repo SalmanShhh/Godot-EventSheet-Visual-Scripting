@@ -160,11 +160,13 @@ Once you are typing a path, there are exactly two places to type it, and the dif
 
 ![A parameters dialog with two path fields, each carrying a muted line under it naming the place that path is in, and a help strip explaining both places](images/file-place-field.png)
 
-Three things the Doctor's **Files** section watches for, each with a one-click fix that shows you the before and the after and lands as a single undo step:
+The Doctor's **Files** section runs six checks over your project. Three of them are about a path that will not work, and each carries a one-click fix that shows you the before and the after and lands as a single undo step:
 
 - **A write aimed at `res://`** - the export trap above. The fix rewrites the path under `user://`.
 - **An absolute path** (`D:/games/...`, `/home/...`) - a folder that exists on one computer and on no other. The fix rewrites it under `user://`.
 - **An unguarded read of `user://`** - the first run of a game has no save, no settings and no log, and Godot answers a missing file with empty text rather than an error. This one is a note, not a warning, and its fix is a respelling: **Read Text File (or a fallback)** takes what to use when the file is missing as its second parameter, and compiles to the `file_exists` check written into the line where you can see it. Leave that second parameter blank and it compiles to the plain read, unchanged.
+
+The other three are about content that came from outside the game rather than about the save system, so they live where that story does: two trust checks about a path handed to `load()` or built into a scene, and a note about a folder watch nothing ever stops. [Files and Folders](GUIDE-FILES-AND-FOLDERS.md) has all six with what each one can and cannot see.
 
 The guard is never behind your back. Opened as a sheet, a guarded read reads as the question and its two answers, with the exact line of code echoed beside each row:
 

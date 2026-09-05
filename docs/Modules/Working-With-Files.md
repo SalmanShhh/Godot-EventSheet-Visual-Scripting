@@ -94,6 +94,22 @@ never collide.
 | Copy File | Copies a file to another path, leaving the original in place | `DirAccess.copy_absolute({from}, {to})` |
 | Move / Rename File | Moves or renames a file or folder to a new path | `DirAccess.rename_absolute({from}, {to})` |
 
+Three more rows sit beside those eight rather than inside them, because an `ace_id` and a template are
+a compatibility promise: a sentence that needs a different LINE needs a different word. Each of them
+says out loud the thing the eight leave you to remember - what a missing file should read as, that
+Godot makes no folder on the way to a file, and where `user://` really is on the player's machine.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Read Text File (or a fallback) | The whole file as text, using the fallback you name when the file is not there | `(FileAccess.get_file_as_string({path}) if FileAccess.file_exists({path}) else {fallback})`, and the plain `FileAccess.get_file_as_string({path})` when the fallback slot is left blank |
+| Write Text File (in a folder) | Saves text to a file inside a folder, making the folders on the way when you ask it to | `DirAccess.make_dir_recursive_absolute(({path}).get_base_dir())` above the same guarded `FileAccess.open({path}, FileAccess.WRITE)` / `store_string({text})` / `close()`, with the prelude left out when the row says the folder is already there |
+| Open The Player's Data Folder | Opens the player's own data folder in their desktop file browser | `OS.shell_open(ProjectSettings.globalize_path({path}))` |
+
+The guard and the prelude are both **shown**, never performed behind the row: the conditional is the
+expression the row compiles to, and the make-folder line is emitted above the write where a reader
+meets it. Leave the fallback slot blank, or say the folder is already there, and what is emitted is
+the plain call the eight rows above write.
+
 ### Files: Directories
 
 | Name | What it does | Ships as |
@@ -179,6 +195,34 @@ an event for each of them or the script does not compile.
 | On Unpack Finished | Runs when an unpack reached the last entry with nothing refused | `func _on_unpack_finished(entries: int, bytes: int) -> void:` |
 
 ![Four events in a sheet called ModInstaller, under a head whose files bands read user://pack.zip - read and written and user://mods - read and written with the ZIPReader line echoed beside each: On Created with System Unpack "user://pack.zip" into folder "user://mods", then On Unpack Progress setting Bar value to entries, On Unpack Refused setting Label text to "Refused: " and reason, and On Unpack Finished setting Label text to "Installed " and entries](../images/archive-unpack.png)
+
+### Files: the name a player typed
+
+A player names a screenshot, a save slot, a level. What they type is not a file name yet, and these
+three rows are the distance between the two. The first two are **expressions**, so each goes into the
+path slot of a write that was already there rather than becoming a second way to save a file.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Safe File Name | A name a file system will actually take, with a fallback for a name that comes out empty | `({name}).validate_filename().lstrip(".")`, wrapped as `(… if not ….is_empty() else {fallback})` when the fallback slot is filled |
+| Free File Path | The nearest path with no file at it yet, so a second screenshot does not erase the first | a lambda called on the spot: the wanted path when nothing is there, otherwise the first free `<name>_1<ext>`, `<name>_2<ext>` … up to `{at_most}`, and the wanted path itself when every number is taken |
+| Show In The File Manager | Opens the player's own file browser with that file selected (desktop only) | `OS.shell_show_in_file_manager(ProjectSettings.globalize_path({path}))` |
+
+**Leading dots come off in Safe File Name, and that is the point of it.** `String.validate_filename`
+leaves `..` exactly as it is, because two dots break no rule about characters - and joined onto
+`user://saves` it names the folder above the one the row meant. That is the one thing a player can
+type that a file system accepts and that is not a name at all.
+
+**Both sets of brackets in the emitted line are load-bearing.** The outer pair is the guard's: a bare
+`a if b else c` spliced between two `+` signs binds the whole join into its branches. The inner pair
+is the slot's, and it is the one that matters most here: a name written as `typed + ".json"` with a
+bare `.validate_filename()` after it would validate the `".json"` and hand `..` through untouched,
+through the one row that exists to stop it.
+
+**Free File Path reads the path once and only counts when it has to.** The numbers are tried only
+when the path you asked for is taken, and a run that fills every one of them answers the path you
+asked for - so the write after it overwrites, which is why the row asks you for a number you are
+comfortable with rather than choosing one.
 
 ### Files: scene files
 
