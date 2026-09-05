@@ -20,7 +20,7 @@ extends Resource
 ## How many beats a bar holds - 4 for most music, 3 for a waltz. On Bar and Position In Bars read it.
 @export_range(1, 32, 1) var beats_per_bar: int = 4
 # @inspector_header Loop #5fb37a
-## Seconds into the file where the loop starts. The director starts a track here, so a song with an intro can be brought back in at the loop instead of at the intro.
+## Seconds into the file where the loop starts. A song is played from its beginning the first time it is asked for and from here every time after, so an intro is heard whole when the level opens and skipped when the song comes back.
 @export var loop_from: float = 0.0
-## Seconds into the file where the loop ends, for your own rows to read. 0 means the end of the file. Godot's own looping is set on the audio file in the Import panel; this is the pair of numbers a game reads when it wants to know them.
+## Seconds into the file where the loop ends. Set it past Loop From and the director sends the song back to Loop From when it gets there; leave it at 0 and the file plays to its end, looping only if the stream itself is set to in the Import panel.
 @export var loop_to: float = 0.0

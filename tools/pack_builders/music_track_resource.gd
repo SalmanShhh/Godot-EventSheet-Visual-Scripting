@@ -47,9 +47,9 @@ static func build() -> bool:
 		"beats_per_bar": {"type": "int", "default": 4, "exported": true,
 			"attributes": {"tooltip": "How many beats a bar holds - 4 for most music, 3 for a waltz. On Bar and Position In Bars read it.", "range": {"min": "1", "max": "32", "step": "1"}}},
 		"loop_from": {"type": "float", "default": 0.0, "exported": true,
-			"attributes": {"tooltip": "Seconds into the file where the loop starts. The director starts a track here, so a song with an intro can be brought back in at the loop instead of at the intro.",
+			"attributes": {"tooltip": "Seconds into the file where the loop starts. A song is played from its beginning the first time it is asked for and from here every time after, so an intro is heard whole when the level opens and skipped when the song comes back.",
 				"header": "Loop", "header_color": "#5fb37a"}},
 		"loop_to": {"type": "float", "default": 0.0, "exported": true,
-			"attributes": {"tooltip": "Seconds into the file where the loop ends, for your own rows to read. 0 means the end of the file. Godot's own looping is set on the audio file in the Import panel; this is the pair of numbers a game reads when it wants to know them."}}
+			"attributes": {"tooltip": "Seconds into the file where the loop ends. Set it past Loop From and the director sends the song back to Loop From when it gets there; leave it at 0 and the file plays to its end, looping only if the stream itself is set to in the Import panel."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/music_track_resource/music_track_resource")
