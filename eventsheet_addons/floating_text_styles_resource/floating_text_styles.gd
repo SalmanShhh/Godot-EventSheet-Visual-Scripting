@@ -1,7 +1,7 @@
 ## @ace_tags(text, damage, hud, resource)
 ## @ace_category("UI")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/floating_text_styles_resource/icon.svg")
 class_name FloatingTextStyles
 extends Resource
 ## The ways a number pops out of a thing you hit, as a file you own: the name of each manner and the size, colour, rise, shake and lifetime it is drawn with. A style may take its colour from the damage instead, so a fire number is orange without a colour being typed into the row.
