@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Fixed: forty-two dropdowns that held a word they never showed
+
+- **A dropdown with no starting value of its own opens on its first word, and now holds that word
+  too.** The five rows fixed above showed the wrong word because their starting value arrived
+  quoted. The same defect had a bigger and quieter half: forty-two pack parameters named no
+  starting value at all - **Pin** and **Pin 3D**'s mode and axes, both **Camera Rail**s' ease,
+  **Storylet Weaver**'s five comparison and effect operators, **Prompts**' grade and device,
+  **Anchor**'s corner, **Vector Shapes**' unit, dash style and geometry, and thirty more. The
+  params dialog fills an OptionButton from the list and lands on item 0, so a designer saw a word;
+  the row underneath fell through to the empty string, and a row dropped without opening the dialog
+  emitted `$PinBehavior.set_pin_mode("")` - a word the pack does not understand, under a dialog
+  reading one it does. The picker now reads the dropdown's first key as the value such a parameter
+  opens on, which is the dialog's own rule spelled once rather than twice, and no pack file
+  changed: the words were always there to be read.
+- **A blank first word is still the blank.** Some verbs are built around one - "no filter", "leave
+  it where it is" - and that choice is the parameter's first key exactly as any other word is, so
+  it goes on answering the empty string. A parameter that wants a blank its own list does not offer
+  still says so with `default_word:`, the one spelling that can name the empty value.
+- **The sweep now asks the whole fleet, packs and built-ins alike.** Every option-bearing parameter
+  the project publishes is held to its own words: the value a row starts on must be one the
+  dropdown offers, pinned as a list that has to come back empty. The one exception names itself -
+  the input-action picker reads the project's live Input Map, so its words differ per project.
+
 ### Fixed: five dropdowns that opened on the wrong word
 
 - **A dropdown opens on the word its method names.** When a pack's starting value comes from the

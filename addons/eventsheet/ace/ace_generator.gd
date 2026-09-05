@@ -517,6 +517,19 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {},
 				default_text = str(gdscript_default)
 			else:
 				default_text = SheetCompiler._to_code_literal(gdscript_default)
+		# A DROPDOWN WITH NO DEFAULT OPENS ON ITS FIRST WORD, and now HOLDS that word too. The params
+		# dialog adds one item per option and calls `select` only on an exact key match, so an
+		# OptionButton whose default matched nothing showed item 0 - while the row it wrote stored
+		# the type-zero fallback, the empty string. Forty-two shipped pack parameters were in that
+		# state, and a row dropped without opening the dialog emitted `set_pin_mode("")`: a word the
+		# pack does not understand, shown as a word it does. Reading the first key here makes the
+		# stored value agree with the shown one, which is one rule where there were two.
+		# A first option that is deliberately BLANK (a `{"key": ""}` entry - "no filter", "keep the
+		# current one") answers "" through this same line, because the blank IS its first word. And
+		# a parameter that names its own default still wins: `default_word:` is the spelling that
+		# can say the value is empty on a parameter whose dropdown does not offer a blank.
+		if default_text == null and not normalized_options.is_empty():
+			default_text = str((normalized_options[0] as Dictionary).get("key", ""))
 		if default_text == null:
 			default_text = _default_value_for_type(param_type)
 		output.append({

@@ -30,6 +30,7 @@ const GAME_SETTINGS := "res://eventsheet_addons/game_settings/game_settings_addo
 const NAV_AGENT_3D := "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd"
 const PIN := "res://eventsheet_addons/pin/pin_behavior.gd"
 const PIN_3D := "res://eventsheet_addons/pin_3d/pin_3d_behavior.gd"
+const HOME_LEASH := "res://eventsheet_addons/home_leash/home_leash_behavior.gd"
 const PLATFORMER := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
 const ROTATE := "res://eventsheet_addons/rotate/rotate_behavior.gd"
 const STAT_FORGE := "res://eventsheet_addons/stat_forge/stat_forge_behavior.gd"
@@ -38,6 +39,14 @@ const TILE_MOVEMENT := "res://eventsheet_addons/tile_movement/tile_movement_beha
 const UTILITY_AI := "res://eventsheet_addons/utility_ai/utility_ai_addon.gd"
 const WRAP := "res://eventsheet_addons/wrap/wrap_behavior.gd"
 const PACKS_DIR := "res://eventsheet_addons"
+
+## The one hint whose dropdown is a LIVE list rather than a fixed vocabulary: the input-action
+## picker reads the project's own Input Map, so its words differ per project and its starting value
+## names the action a game is expected to have ("jump"). A project that has that action selects it;
+## this one, having only Godot's ui_* defaults, does not - which is a reading of THIS repo's Input
+## Map and not a row anybody ships broken. Every other dropdown is a fixed list the pack or the
+## module wrote down, and the sweep below holds all of them to their own words.
+const LIVE_LIST_HINT := "input_action"
 
 ## The dropdown parameters still inserted BARE, as "<pack script>:<param id>" - an OVERRIDE list, not
 ## a permission. Every line here is the same defect this file is named for: a row that picks one of
@@ -175,7 +184,82 @@ static func run() -> bool:
 	all_passed = _test_the_emitted_calls() and all_passed
 	all_passed = _test_no_bare_word_dropdown_is_left() and all_passed
 	all_passed = _test_a_dropdown_opens_on_the_word_its_method_names() and all_passed
+	all_passed = _test_no_dropdown_holds_a_word_it_does_not_offer() and all_passed
+	all_passed = _test_a_blank_first_option_is_still_the_blank() and all_passed
+	all_passed = _test_a_numbered_dropdown_answers_with_the_number() and all_passed
 	return all_passed
+
+
+## NO DROPDOWN HOLDS A WORD ITS OWN LIST DOES NOT OFFER - asked of every option-bearing parameter
+## the project publishes, the packs through the generator and the builtins through their descriptors.
+##
+## The five rows pinned above had a reflected default that arrived QUOTED. The same defect had a
+## bigger and quieter half: forty-two pack parameters named no default at all, so the picker fell
+## through to the type-zero fallback and the row stored the empty string while the OptionButton
+## showed item 0. A row dropped without opening the dialog emitted `$PinBehavior.set_pin_mode("")` -
+## a word the pack does not understand, under a dialog reading a word it does. The generator now
+## reads a dropdown's FIRST key as the value a parameter with no default opens on, which is the
+## dialog's own rule spelled once instead of twice, and this sweep is what keeps the shown word and
+## the stored word agreeing across the whole fleet rather than across a list somebody remembered to
+## extend.
+##
+## Pinned as the JOINED LIST rather than a count, so a red run names the parameter, the word it
+## holds and the words it offers.
+static func _test_no_dropdown_holds_a_word_it_does_not_offer() -> bool:
+	var found: PackedStringArray = PackedStringArray()
+	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
+	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
+		var script: Script = load(script_path) as Script
+		if script == null or not script.can_instantiate():
+			continue
+		var instance: Object = script.new()
+		if instance == null:
+			continue
+		for definition: ACEDefinition in generator.generate_from_object(instance):
+			for entry: Variant in definition.parameters:
+				if not (entry is Dictionary):
+					continue
+				var parameter: Dictionary = entry as Dictionary
+				var options: Array = parameter.get("options", []) as Array
+				if options.is_empty() or str(parameter.get("hint", "")) == LIVE_LIST_HINT:
+					continue
+				var keys: Array = _option_keys(options)
+				var held: String = str(parameter.get("default_value", ""))
+				if not keys.has(held):
+					found.append("%s %s %s holds \"%s\", offers %s" % [
+						script_path.trim_prefix(PACKS_DIR + "/"), definition.id,
+						str(parameter.get("id", "")), held, ", ".join(PackedStringArray(keys))])
+		if instance is Node:
+			(instance as Node).free()
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		for parameter: ACEParam in descriptor.params:
+			if parameter.options.is_empty() or parameter.hint == LIVE_LIST_HINT:
+				continue
+			var builtin_keys: Array = _option_keys(parameter.options)
+			var builtin_held: String = str(parameter.get_initial_value())
+			if not builtin_keys.has(builtin_held):
+				found.append("%s:%s %s holds \"%s\", offers %s" % [
+					descriptor.provider_id, descriptor.ace_id, parameter.id, builtin_held,
+					", ".join(PackedStringArray(builtin_keys))])
+	found.sort()
+	return _check("the dropdowns holding a word their own list does not offer",
+		"\n".join(found), "")
+
+
+## A BLANK IS STILL A BLANK. The rule above reads the first option key, and some verbs are built
+## around a first option that is deliberately empty ("no filter", "leave it where it is"). Reading
+## the first key answers "" for those, which is the blank the author wrote and not a fallback that
+## happens to look like one - so the rule cannot quietly promote such a row onto the second word.
+## Pinned on a parameter built here, because the shipped fleet's blank-first dropdowns would make
+## the pin depend on which packs happen to ship one.
+static func _test_a_blank_first_option_is_still_the_blank() -> bool:
+	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
+	var built: Array = generator._build_parameter_definitions(
+		[{"name": "family", "type": TYPE_STRING}],
+		{"param_options": {"family": [{"key": "", "label": "every card"}, {"key": "heroes"}]}})
+	var parameter: Dictionary = built[0] if not built.is_empty() else {}
+	return _check("a dropdown whose first word is blank opens on the blank",
+		str(parameter.get("default_value", "unset")), "")
 
 
 ## The word a freshly dropped row shows, pinned twice: as the descriptor's own `default_value`, and
@@ -199,6 +283,24 @@ static func _test_a_dropdown_opens_on_the_word_its_method_names() -> bool:
 			_selected_index(keys, str(parameter.get("default_value", ""))),
 			keys.find(expected_word)) and all_passed
 	return all_passed
+
+
+## A NUMBERED DROPDOWN ANSWERS WITH THE NUMBER. Home & Leash's distance metric is an `int`
+## parameter whose five words are keyed `0` to `4`, and its slot is not quoted - so the value its
+## row opens on has to be the first key read as the number it is, and the call it writes has to be
+## `distance_from_home(0)`: not the empty string a type-zero fallback would leave inside a bare
+## slot, and not a quoted `"0"` no int argument accepts. Pinned as BOTH the stored value and the
+## emitted line, because only the second one is what the game has to build.
+static func _test_a_numbered_dropdown_answers_with_the_number() -> bool:
+	var all_passed: bool = true
+	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
+	var parameter: Dictionary = _parameter_of(generator, HOME_LEASH, "distance_from_home", "metric")
+	var value: String = str(parameter.get("default_value", ""))
+	all_passed = _check("distance_from_home metric opens on its first number", value, "0") and all_passed
+	return _check("the number reaches the call bare",
+		ActionCodegen._apply_template("$HomeLeashBehavior.distance_from_home({metric})",
+			{"metric": value}),
+		"$HomeLeashBehavior.distance_from_home(0)") and all_passed
 
 
 ## The item the params dialog's OptionButton lands on, spelled as `_create_options_field` spells it:
@@ -233,10 +335,24 @@ static func _parameter_of(generator: EventSheetACEGenerator, pack: String, metho
 
 
 ## An options array as the bare keys it offers, in the order the OptionButton adds them.
+##
+## WHICH FIELD NAMES THE KEY is decided by which one is PRESENT, exactly as the generator and the
+## descriptor adapter decide it - `key`, else `value`, else `label`. A generated parameter always
+## spells `key`, but a descriptor may carry either of the other two, and reading past a present
+## `key` of "" would turn a deliberate blank into the words beside it.
 static func _option_keys(options: Array) -> Array:
 	var keys: Array = []
 	for option: Variant in options:
-		keys.append(str((option as Dictionary).get("key", "")) if option is Dictionary else str(option))
+		if not (option is Dictionary):
+			keys.append(str(option))
+			continue
+		var option_dict: Dictionary = option as Dictionary
+		if option_dict.has("key"):
+			keys.append(str(option_dict["key"]))
+		elif option_dict.has("value"):
+			keys.append(str(option_dict["value"]))
+		elif option_dict.has("label"):
+			keys.append(str(option_dict["label"]))
 	return keys
 
 
