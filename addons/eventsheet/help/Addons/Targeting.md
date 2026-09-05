@@ -45,6 +45,8 @@ The pack is small, and five ideas carry all of it.
 
 **A lock ends in exactly four ways, and says which.** On Target Lost carries one word: `died` when the target was freed, `out_of_range` when it walked past the reach the lock was taken at, `blocked` when a wall came between the two (only with the line-of-sight option on), and `released` when a row let go on purpose. One trigger row therefore cleans the reticle up after all four, and the word tells them apart when you want them to differ. A dead target is released the frame it dies, before anything reads a position off it.
 
+**The assist radius is measured in this pack's own units.** One options slider feeds both twins, and the radius it carries is read here in pixels - the 3D twin reads the same number in metres. A radius that feels right in a 2D game is therefore not the radius a 3D game wants, so a project with both gives them each their own setting rather than one slider for the pair.
+
 **Aim help is separate from the lock, and the options screen owns it.** Assisted Aim and Magnetism never touch the held target. They ask a different question - what is the aim ray nearly pointing at right now - and "nearly" is the aim-assist radius the accessibility rows declare, measured ACROSS the ray. A radius of zero means nothing is ever near enough, so both rows hand back exactly what they were given and the whole feature is off. That is the honest off switch, and it is already on the options screen.
 
 ---
