@@ -48,6 +48,7 @@ static func run() -> bool:
 	ok = _test_generated_fixtures() and ok
 	ok = _test_the_engine() and ok
 	ok = _test_a_broken_table_is_named() and ok
+	ok = _test_the_reading_asks_the_tables_in_one_order() and ok
 	return ok
 
 
@@ -147,6 +148,42 @@ static func _test_one_entry(entries: Array, entry: Dictionary) -> bool:
 	if re_emitted != line:
 		print("  %s" % Repro.dump("lift_table_test", id, line, re_emitted))
 	ok = _check("%s: re-emits byte for byte" % id, re_emitted, line) and ok
+	return ok
+
+
+## TWO ORDERS FOR ONE SET OF TABLES, walked so they cannot quietly disagree. The lifter asks its
+## families in a hand-ordered list; the reading behind the workbench, the Doctor's Reading page and
+## the corpus gate asks the same tables in SORTED PATH order. Every fixture gate above asks each
+## entry of its OWN family only, so a spelling one family claims and another would claim first is
+## invisible to all of them - it would be attributed to the wrong family on the bench, in the ledger
+## and in the coverage report, with nothing red anywhere.
+##
+## So every entry's own generated fixture is put to the reading, and the family it names must be the
+## family that wrote it. The mismatches are named rather than counted: a count says a walk went wrong
+## and a name says which spelling to go and look at.
+static func _test_the_reading_asks_the_tables_in_one_order() -> bool:
+	var mismatched: PackedStringArray = PackedStringArray()
+	var asked: int = 0
+	for path: String in _all_tables().keys():
+		var script: GDScript = EventForgeLiftTable.family_script(path)
+		if script != null and script.has_method(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD):
+			script.call(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD)
+		var family: String = path.get_file().trim_suffix(".gd")
+		for entry: Dictionary in _all_tables()[path] as Array:
+			var line: String = _emit(str(entry.get("shape", "")), entry.get("slots", {}))
+			var claimed: Dictionary = EventSheetLiftReading.table_run_claim(line.split("
+"), 0) 				if entry.has(EventForgeLiftTable.STATEMENTS_KEY) 				else EventSheetLiftReading.table_claim(line)
+			asked += 1
+			var named: String = str(claimed.get("family", ""))
+			if named != family:
+				mismatched.append("%s (%s) is attributed to %s by the reading" % [
+					str(entry.get("id", "")), family, named if not named.is_empty() else "nothing"])
+	var ok: bool = _check("every family's own spellings are attributed to it by the reading",
+		mismatched, PackedStringArray())
+	ok = _check("and the walk asked about every entry there is", asked > 0, true) and ok
+	# The reading warms the family tables for the life of the process, and CI runs the suite serially
+	# in one process - so they go back down on the way out.
+	EventSheetLiftReading.clear_cache()
 	return ok
 
 

@@ -42,6 +42,8 @@ static func run() -> bool:
 	all_passed = _claim_pins() and all_passed
 	all_passed = _draft_pins() and all_passed
 	all_passed = _one_reader() and all_passed
+	all_passed = _the_two_layers_are_named_apart() and all_passed
+	all_passed = _a_shared_helper_is_not_a_function() and all_passed
 	return all_passed
 
 
@@ -164,6 +166,76 @@ static func _one_reader() -> bool:
 		reading.get("sheet", null) as EventSheetResource)
 	return _check("the reading's percentage is the coverage walk's own",
 		EventSheetLiftReading.percent(reading), int(direct.get("percent", -1)))
+
+
+## A DERIVED ROW AND A GENERIC ONE MUST NOT READ ALIKE ON THE BENCH. Both are Call Method rows and
+## both wear that descriptor, so a claim column showing only the descriptor tells a developer nothing
+## about which layer answered - the exact confusion the two layers' visual mark exists to prevent on
+## the canvas. A derived row says the class it was read off and where that class came from; the row
+## a curated recogniser claims still says its own words, unchanged.
+static func _the_two_layers_are_named_apart() -> bool:
+	var all_passed: bool = true
+	var buffer: String = """extends Node2D
+
+@onready var beam: Node2D = $Beam
+
+
+func _ready() -> void:
+	beam.rotate(0.5)
+	beam.set_process(false)
+"""
+	var reading: Dictionary = EventSheetLiftReading.read(buffer)
+	var by_text: Dictionary = {}
+	for line: Variant in reading.get("lines", []) as Array:
+		by_text[str((line as Dictionary).get("text", "")).strip_edges()] = line
+	all_passed = _check("a derived row names its class and where the class came from",
+		str((by_text.get("beam.rotate(0.5)", {}) as Dictionary).get("claim", "")),
+		"derived · Node2D.rotate (node)") and all_passed
+	all_passed = _check("...at the general reading layer, not the entry one",
+		str((by_text.get("beam.rotate(0.5)", {}) as Dictionary).get("layer", "")),
+		EventSheetLiftReading.LAYER_READING) and all_passed
+	all_passed = _check("while a curated row still reads as its own words",
+		str((by_text.get("beam.set_process(false)", {}) as Dictionary).get("claim", "")),
+		"Set Node Per-Frame Processing") and all_passed
+	all_passed = _check("and the buffer saves back byte-identically either way",
+		bool(reading.get("identical", false)), true) and all_passed
+	return all_passed
+
+
+## A COMPILER-EMITTED SHARED HELPER IS NOT THE AUTHOR'S OWN FUNCTION. The compiler writes those into
+## a file itself - one definition per file, appended last - so an opened file that carries one must
+## not offer it back as something somebody wrote: "function __eventsheets_tile_under" hands a reader
+## an internal name to go and look for, and "Call function __eventsheets_tile_under" says it in the
+## sheet's own Functions vocabulary, which is the layer reserved for the file's own functions.
+static func _a_shared_helper_is_not_a_function() -> bool:
+	var all_passed: bool = true
+	var buffer: String = """extends Node2D
+
+
+func _ready() -> void:
+	var cell: Vector2i = __eventsheets_tile_under($Ground)
+	print(cell)
+
+
+func __eventsheets_tile_under(map) -> Vector2i:
+	return Vector2i.ZERO
+"""
+	var reading: Dictionary = EventSheetLiftReading.read(buffer)
+	var by_text: Dictionary = {}
+	for line: Variant in reading.get("lines", []) as Array:
+		by_text[str((line as Dictionary).get("text", "")).strip_edges()] = line
+	all_passed = _check("the helper's own declaration says what it is",
+		str((by_text.get("func __eventsheets_tile_under(map) -> Vector2i:", {})
+			as Dictionary).get("claim", "")), "shared helper") and all_passed
+	all_passed = _check("and the reading refuses to name a helper as a function of this sheet",
+		EventSheetViewportReadingRows.called_function_name("__eventsheets_tile_under($Ground)"),
+		"") and all_passed
+	all_passed = _check("...while an ordinary call is still named",
+		EventSheetViewportReadingRows.called_function_name("add_look(a, b)"),
+		"add_look") and all_passed
+	all_passed = _check("with the file saving back byte-identically",
+		bool(reading.get("identical", false)), true) and all_passed
+	return all_passed
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

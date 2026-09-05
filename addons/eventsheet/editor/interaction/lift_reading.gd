@@ -227,8 +227,12 @@ static func asked_term(text: String) -> String:
 static func _claim_lines(source: String, sheet: EventSheetResource, source_map: Array,
 		draft_entries: Array) -> Array:
 	var lines: Array = []
+	# The maps the DERIVED layer reads a receiver's class off, built at most once per reading and only
+	# if a row actually asks for them: they are the same maps the canvas hoists per rebuild, and a
+	# buffer whose rows are all curated should not pay for them at all.
+	var derived_facts: Dictionary = {"sheet": sheet}
 	var block_lines: Dictionary = _block_lines(sheet, source_map)
-	var row_lines: Dictionary = _row_lines(sheet)
+	var row_lines: Dictionary = _row_lines(sheet, derived_facts)
 	var source_lines: PackedStringArray = source.split("
 ")
 	var run_claims: Dictionary = _run_claims(source_lines)
@@ -273,7 +277,7 @@ static func _claim_lines(source: String, sheet: EventSheetResource, source_map: 
 			continue
 		var own: Resource = _own_first_line(source_map, number, text)
 		var read: Dictionary = _row_claim(own if own != null else
-			EventSheetLineRowMapper.resource_for_line(source_map, number), sheet)
+			EventSheetLineRowMapper.resource_for_line(source_map, number), sheet, derived_facts)
 		entry["layer"] = str(read.get("layer", LAYER_READING))
 		entry["claim"] = str(read.get("claim", "reads as a row"))
 		lines.append(entry)
@@ -341,21 +345,28 @@ static func _own_first_line(source_map: Array, number: int, text: String) -> Res
 ##
 ## A condition is registered under the three spellings the emitter can write it in - the bare
 ## expression and the two branch heads - because a condition IS the `if` line of its event.
-static func _row_lines(sheet: EventSheetResource) -> Dictionary:
+static func _row_lines(sheet: EventSheetResource, derived_facts: Dictionary = {}) -> Dictionary:
 	var found: Dictionary = {}
 	if sheet != null:
-		_collect_row_lines(sheet.events, found)
+		if not derived_facts.has("sheet"):
+			derived_facts["sheet"] = sheet
+		_collect_row_lines(sheet.events, found, derived_facts)
 		for function_entry: Variant in sheet.functions:
 			if function_entry is EventFunction:
-				_collect_row_lines((function_entry as EventFunction).events, found)
+				_collect_row_lines((function_entry as EventFunction).events, found, derived_facts)
 	return found
 
 
-static func _collect_row_lines(items: Array, found: Dictionary) -> void:
+static func _collect_row_lines(items: Array, found: Dictionary, derived_facts: Dictionary) -> void:
 	for item: Variant in items:
 		if item is ACEAction:
 			var action: ACEAction = item as ACEAction
-			var name: String = _descriptor_name(action.provider_id, action.ace_id, "action")
+			# THE TWO LAYERS ARE NAMED APART HERE TOO. A generic Call Method row and a row the
+			# DERIVED reading claims wear the same descriptor, so a claim column showing only that
+			# descriptor says "Call Method" for both and a developer cannot tell the canvas's
+			# plainest reading from the layer that read the API back.
+			var derived: String = _derived_claim(action, derived_facts)
+			var name: String = derived if not derived.is_empty() 				else _descriptor_name(action.provider_id, action.ace_id, "action")
 			for line: String in ActionCodegen.generate_action(action).split("
 "):
 				_register_row_line(found, line, name)
@@ -373,12 +384,12 @@ static func _collect_row_lines(items: Array, found: Dictionary) -> void:
 				# A loop's guard is the same condition said as a loop head - the While row's own
 				# spelling - so the line reads as the row it is rather than as the event around it.
 				_register_row_line(found, "while %s:" % expression, name)
-			_collect_row_lines(event.actions, found)
-			_collect_row_lines(event.sub_events, found)
+			_collect_row_lines(event.actions, found, derived_facts)
+			_collect_row_lines(event.sub_events, found, derived_facts)
 		elif item is EventGroup:
-			_collect_row_lines((item as EventGroup).events, found)
+			_collect_row_lines((item as EventGroup).events, found, derived_facts)
 		elif item is EventFunction:
-			_collect_row_lines((item as EventFunction).events, found)
+			_collect_row_lines((item as EventFunction).events, found, derived_facts)
 
 
 static func _register_row_line(found: Dictionary, line: String, name: String) -> void:
@@ -403,7 +414,8 @@ static func _take_row_name(row_lines: Dictionary, text: String) -> String:
 
 ## What a ROW is, said plainly. Deliberately plainer words than an entry's family·id: the reader has
 ## to be able to tell a named entry from the general reading at a glance.
-static func _row_claim(row: Resource, sheet: EventSheetResource) -> Dictionary:
+static func _row_claim(row: Resource, sheet: EventSheetResource,
+		derived_facts: Dictionary = {}) -> Dictionary:
 	if row == null:
 		return {"claim": "reads as a row", "layer": LAYER_READING}
 	if row is RawCodeRow:
@@ -419,6 +431,14 @@ static func _row_claim(row: Resource, sheet: EventSheetResource) -> Dictionary:
 			return {"claim": "class setup", "layer": LAYER_READING}
 		return {"claim": STAYS_CODE, "layer": LAYER_CODE}
 	if row is ACEAction:
+		# THE TWO LAYERS ARE NAMED APART HERE TOO. A generic Call Method row and a row the DERIVED
+		# reading claims wear the same descriptor, so a claim column showing only that descriptor
+		# says "Call Method" for both and a developer cannot tell the canvas's plainest reading from
+		# the layer that read the API back. The derived one says so, with the class it was read off
+		# and where that class came from.
+		var derived: String = _derived_claim(row as ACEAction, derived_facts)
+		if not derived.is_empty():
+			return {"claim": derived, "layer": LAYER_READING}
 		return {"claim": _descriptor_name((row as ACEAction).provider_id, (row as ACEAction).ace_id,
 			"action"), "layer": LAYER_READING}
 	if row is ACECondition:
@@ -441,12 +461,55 @@ static func _row_claim(row: Resource, sheet: EventSheetResource) -> Dictionary:
 		return {"claim": _descriptor_name(event.trigger_provider_id, event.trigger_id, "trigger"),
 			"layer": LAYER_READING}
 	if row is EventFunction:
-		return {"claim": "function %s" % (row as EventFunction).function_name, "layer": LAYER_READING}
+		var written: String = (row as EventFunction).function_name
+		# A COMPILER-EMITTED SHARED HELPER IS NOT THE AUTHOR'S OWN FUNCTION. Those are this
+		# compiler's plumbing - one definition per file, appended last - and naming one as
+		# "function __eventsheets_tile_under" hands a developer an internal name to go and look for.
+		if written.begins_with(SheetCompiler.SHARED_HELPER_PREFIX):
+			return {"claim": "shared helper", "layer": LAYER_READING}
+		return {"claim": "function %s" % written, "layer": LAYER_READING}
 	if row is LocalVariable:
 		return {"claim": "declaration", "layer": LAYER_READING}
 	if row is CommentRow:
 		return {"claim": "note", "layer": LAYER_READING}
 	return {"claim": "reads as a row", "layer": LAYER_READING}
+
+
+## What the DERIVED layer says about a generic Call Method row - `derived · CharacterBody2D.rotate
+## (node)` - or "" when that layer does not claim it, which is every curated row and every receiver
+## the sheet cannot name.
+##
+## Only the generic call ace, because that is the one the importer files an ordinary statement as -
+## the lowest-specificity claim there is, and therefore exactly the derived layer's territory. The
+## row's code is spelled the way the row builder spells it, so the bench and the canvas cannot
+## disagree about what the layer was asked.
+static func _derived_claim(action: ACEAction, derived_facts: Dictionary) -> String:
+	var sheet: EventSheetResource = derived_facts.get("sheet", null) as EventSheetResource
+	if sheet == null or action.ace_id != EventSheetGenericRows.CALL_ACE_ID:
+		return ""
+	_fill_derived_facts(derived_facts, sheet)
+	var params: Dictionary = action.params
+	var code: String = "%s.%s(%s)" % [str(params.get("target", "")), str(params.get("method", "")),
+		str(params.get("args", ""))]
+	var reading: Dictionary = EventSheetDerivedCalls.derived_pieces(code,
+		derived_facts["context"] as Dictionary, derived_facts["class_map"] as Dictionary,
+		derived_facts["autoloads"] as Dictionary)
+	if reading.is_empty():
+		return ""
+	var read_class: String = str(reading.get("class", ""))
+	var named: String = "%s.%s" % [read_class, str(reading.get("method", ""))] 		if not read_class.is_empty() else str(reading.get("method", ""))
+	return "derived · %s (%s)" % [named, str(reading.get("source", ""))]
+
+
+## Fills the derived layer's maps into `facts` the first time one is asked for. Kept as a caller-owned
+## dictionary rather than a static cache: a reading is asked of a BUFFER, and a cache keyed on nothing
+## would hand the next buffer the last one's declarations.
+static func _fill_derived_facts(facts: Dictionary, sheet: EventSheetResource) -> void:
+	if facts.has("context"):
+		return
+	facts["context"] = EventSheetViewportReadingRows.sentence_context_extras(sheet)
+	facts["class_map"] = EventSheetViewportReadingRows.object_class_map(sheet)
+	facts["autoloads"] = EventSheetViewportReadingRows.autoload_singletons()
 
 
 ## A descriptor's own words when the registry has it, and the id plus what kind of thing it is when

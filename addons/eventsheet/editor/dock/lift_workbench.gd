@@ -23,17 +23,23 @@ extends RefCounted
 # DRAFTS LAST AS LONG AS THE PANEL DOES. A draft is asked before every shipped spelling, so one
 # over-wide draft claims lines all over the window - which is why the drafts are listed where they
 # are made, with a plain button that clears them. They are held in this object and nowhere else:
-# nothing is written to disk, so closing the panel is itself the way out of a draft that claims too
+# no file is written for them, so closing the panel is itself the way out of a draft that claims too
 # much, and a line can never read as somebody's draft from three sessions ago.
 #
 # THE BUFFER IS THE WHOLE SCOPE. The refresh is debounced rather than per keystroke, and it imports
 # and compiles exactly what is in the box - never the project. That is what keeps a developer tool
 # free to be open all day.
 #
+# NOTHING UNDER res:// IS TOUCHED, and that is the promise worth stating exactly. Every reading does
+# compile: the compiler writes what it emits, and a reading that let it default would save each
+# measured buffer back over the file it came from. So a reading always compiles to one throwaway path
+# under user:// (EventSheetLiftReading.THROWAWAY_PATH), which is rewritten on every debounced refresh
+# and belongs to nobody. The project's own files are opened for reading and never for writing.
+#
 # DRAFT AN EXAMPLE takes an unclaimed line to the by-example form (EventForgeLiftExample): mark the
 # value spans, get the derived entry back, and add it to the drafts this window is holding. Drafts
 # are asked first on every refresh, so a draft claims lines in this window immediately and is marked
-# "draft" while it does - it is never mistaken for a shipped spelling, and nothing on disk is
+# "draft" while it does - it is never mistaken for a shipped spelling, and nothing under res:// is
 # touched. Moving a draft into a real family is a copy and paste of the entry the form shows, which
 # is the point: the form does the mechanical half, a person still decides the spelling is worth
 # shipping.
