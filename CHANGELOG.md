@@ -161,6 +161,14 @@
   which is what the cut-short flag on **On Moment Finished** is for. And the toolbar's Moment
   segment spells its whole prefix in the strength box, so the number in it says what it is a
   strength of.
+- **And three the verification of it found.** The Inspector strip's head reads its font size
+  through the palette rather than as a literal, so it grows with the editor on a HiDPI screen
+  instead of reading at half height. The ship-it note about a silent rumble and the four Moment
+  context-menu commands (**New Moment…**, **Open Moment File As Block…**, **Save Moment As
+  File…**, **Delete Step**) are filled in all eight languages rather than shipping as empty
+  cells or as no key at all. And the six scripts the Moment-block and
+  sequencer tests write into the user folder are taken away with them, because on CI the whole
+  suite runs serially in one process and what one test leaves behind is state the next one sees.
 - **What all of it costs, said out loud.** Every tick in this pass parks itself when it has nothing
   to do (`set_process(false)`), so a Feedback Player with no play running, a settled spring bank, a
   stopped sequencer head, a HUD with no bar lagging and a level full of channel listeners with
