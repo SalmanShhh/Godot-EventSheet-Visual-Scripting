@@ -41,7 +41,7 @@ func _on_body_entered(body: Node) -> void:
 		health += -10
 ```
 
-Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 1,045 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
+Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 1,089 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
 
 **View > Generated GDScript** puts the compiled output beside the sheet, refreshed live as you edit:
 
@@ -81,7 +81,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 - **The editor** - two-lane rows, groups, regions, comments, drag/drop, batch edit, full undo/redo; Find & Replace, project-wide Find all references, Outline, Command Palette, type-a-sentence Ghost Row, Properties bar, Simple and Reading modes, themes, split views, session restore. The strip across the top rests as **seven controls** (one Menu over 137 commands, the Save / Undo / Redo icons, one play button holding all six ways to run, Quick add, and a chevron that brings every button back); adding lives in the sheet's own corners. ([guide](docs/GUIDE-THE-TOOLBAR.md))
 - **The language** - events, sub-events, Else / Else-if, the full loop and picking set, typed functions, enums, signals, match rows, setters/getters, Script blocks, `await`, autoload sheets, and the Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - lifecycle handlers as triggers, input branches as Keyboard/Mouse events, signal wiring as triggers, whole `.tscn` files as composite sheets; a coverage chip says how much reads as events, and every lift is byte-gated.
-- **2,171 native ACEs** (107 triggers) across scenes, spawning, nodes, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps, input rebinding and more - plus a Helpers escape hatch so unmapped code stays an editable row.
+- **2,209 native ACEs** (108 triggers) across scenes, spawning, nodes, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps, input rebinding and more - plus a Helpers escape hatch so unmapped code stays an editable row.
 - **138 behavior packs**, all authored as event sheets - movement and feel, AI, combat and stats, narrative, drawing and UI, lighting, shader effects, and system packs. See [docs/Addons/](docs/Addons/README.md).
 - **Your own code is vocabulary with zero setup** - the picker lists your classes and autoloads as Actions / Conditions / Expressions; curate with a project catalog or `## @ace_*` comments; the ACE Studio, Extract to Function and Teach a Verb publish your own; `EventSheets.publish_pack` ships it.
 - **The Manual, inside the editor** - Tools > Manual, F1 on anything, a reference page per object and behavior, tutorials you follow in your open sheet, and What's new.
@@ -110,7 +110,7 @@ The latest tagged release is **`v0.17.0` - "Adopt Anything, Read Anything & Ask 
 
 **Performance, measured** - on a fabricated project ten times this one (1,000 scripts, 300 scenes, 100 shaders, every pack installed): enabling the plugin costs **270 ms**, the first sheet tab **2,310 ms**, one keystroke in a completing field **2.2 ms**, and a 4,000-line script opens in **7.4 s**; eleven such budgets are tests.
 
-**The editor reads itself** - the plugin's own source opens as event sheets: **1,045 files, 1,043 of them at zero script blocks, and 89.9% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
+**The editor reads itself** - the plugin's own source opens as event sheets: **1,089 files, 1,087 of them at zero script blocks, and 89.9% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
 
 **Quality** - 20,791 assertions across 725 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
 
