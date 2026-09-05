@@ -174,8 +174,8 @@ static func _run_emission() -> bool:
 static func _run_archive_runtime() -> bool:
 	var ok: bool = true
 	_fresh_dir(SOURCE_DIR)
-	_write(SOURCE_DIR + "/one.txt", "first")
-	_write(SOURCE_DIR + "/two.txt", "second")
+	ok = _write(SOURCE_DIR + "/one.txt", "first") and ok
+	ok = _write(SOURCE_DIR + "/two.txt", "second") and ok
 	_run_emitted("PackFolderIntoZip", {"folder": _quote(SOURCE_DIR), "archive": _quote(ARCHIVE),
 		"uid": "1"})
 	ok = _check("the archive is written", FileAccess.file_exists(ARCHIVE), true) and ok
@@ -188,11 +188,16 @@ static func _run_archive_runtime() -> bool:
 		FileAccess.get_file_as_string(OUT_DIR + "/two.txt"), "second") and ok
 	ok = _check("progress was reported once per entry, then the finish",
 		_kinds(report), ["progress", "progress", "finished"] as Array) and ok
-	ok = _check("the finish counts every entry", report[2][1], 2) and ok
-	ok = _check("and every byte", report[2][2], 11) and ok
-	ok = _check("and nothing was skipped", report[2][3], 0) and ok
-	ok = _check("the first progress report counts one entry", report[0][1], 1) and ok
-	ok = _check("each progress report says how many entries there are in all", report[0][3], 2) and ok
+	# The numbers below are read out of those three reports by position, so they are only asked for
+	# when the three are really there. An index past the end takes the whole process down, and a test
+	# that crashes prints no [FAIL] line at all - the mismatch above is the one worth reading.
+	if report.size() == 3:
+		ok = _check("the finish counts every entry", report[2][1], 2) and ok
+		ok = _check("and every byte", report[2][2], 11) and ok
+		ok = _check("and nothing was skipped", report[2][3], 0) and ok
+		ok = _check("the first progress report counts one entry", report[0][1], 1) and ok
+		ok = _check("each progress report says how many entries there are in all",
+			report[0][3], 2) and ok
 	ok = _check("nothing was refused", _kinds(report).has("refused"), false) and ok
 
 	# A WRITE THAT CANNOT SUCCEED. An entry whose name is already a FOLDER in the target cannot be
@@ -216,12 +221,14 @@ static func _run_archive_runtime() -> bool:
 		FileAccess.get_file_as_string(OUT_DIR + "/landed.txt"), "here") and ok
 	ok = _check("the bar moved once, for the one write that happened",
 		_kinds(blocked), ["progress", "finished"] as Array) and ok
-	ok = _check("and the finish counts the entry that landed and no other",
-		blocked[1][1], 1) and ok
-	ok = _check("its bytes too, and only its bytes", blocked[1][2], 4) and ok
-	# AND THE ONE THAT DID NOT LAND IS COUNTED. It used to vanish: the finish said one entry of a
-	# two-entry archive and nothing anywhere said the other was missing.
-	ok = _check("the write the machine refused is counted as skipped", blocked[1][3], 1) and ok
+	# Read by position again, and asked only of a run that really reported the two.
+	if blocked.size() == 2:
+		ok = _check("and the finish counts the entry that landed and no other",
+			blocked[1][1], 1) and ok
+		ok = _check("its bytes too, and only its bytes", blocked[1][2], 4) and ok
+		# AND THE ONE THAT DID NOT LAND IS COUNTED. It used to vanish: the finish said one
+		# entry of a two-entry archive and nothing anywhere said the other was missing.
+		ok = _check("the write the machine refused is counted as skipped", blocked[1][3], 1) and ok
 	DirAccess.remove_absolute(BLOCKED_DIR)
 
 	# AN ARCHIVE THAT LIES ABOUT ITS OWN BYTES. A stored entry whose header claims more bytes than
@@ -229,21 +236,26 @@ static func _run_archive_runtime() -> bool:
 	# message about it. Writing that answer out lands a 0-byte file the game then reads as content,
 	# so the entry is skipped and counted instead. Godot's own printed error is expected here.
 	_fresh_dir(OUT_DIR)
-	_write_lying_archive(LYING)
+	if not _write_lying_archive(LYING):
+		return false
 	var lying: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(LYING),
 		"folder": _quote(OUT_DIR), "uid": "1"})
 	ok = _check("an entry the reader could not decode is not written at all",
 		FileAccess.file_exists(OUT_DIR + "/truncated.txt"), false) and ok
 	ok = _check("the bar never moved for it", _kinds(lying), ["finished"] as Array) and ok
-	ok = _check("the finish counts no entry", lying[0][1], 0) and ok
-	ok = _check("no bytes", lying[0][2], 0) and ok
-	ok = _check("and says one entry was skipped", lying[0][3], 1) and ok
+	# The one report's three numbers, asked only of a run that made one report to read them out of.
+	if lying.size() == 1:
+		ok = _check("the finish counts no entry", lying[0][1], 0) and ok
+		ok = _check("no bytes", lying[0][2], 0) and ok
+		ok = _check("and says one entry was skipped", lying[0][3], 1) and ok
 	return ok
 
 
 ## An archive holding one STORED entry whose header claims more bytes than the file carries, written
 ## by hand because no packer will make one. `ZIPReader` answers that entry with no bytes at all.
-static func _write_lying_archive(path: String) -> void:
+## Answers false when the archive could not be written, so the half that reads it back is never run
+## against a file that is not there.
+static func _write_lying_archive(path: String) -> bool:
 	var name_bytes: PackedByteArray = "truncated.txt".to_utf8_buffer()
 	var payload: PackedByteArray = "seven!!".to_utf8_buffer()
 	var local: PackedByteArray = PackedByteArray()
@@ -292,11 +304,16 @@ static func _write_lying_archive(path: String) -> void:
 	_put_int(end, local.size(), 4)
 	_put_int(end, 0, 2)
 
+	# A handle that did not open is a null the next line would call store_buffer on, which ends the
+	# process rather than the test - so it is named as a failure here instead.
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return _check("the archive that lies about its bytes could be written", path, "(unwritable)")
 	file.store_buffer(local)
 	file.store_buffer(central)
 	file.store_buffer(end)
 	file.close()
+	return true
 
 
 ## One little-endian number of `width` bytes, appended. Zip is a little-endian format throughout.
@@ -326,10 +343,14 @@ static func _run_guard() -> bool:
 	ok = _check("the climbing entry is refused", _kinds(report).has("refused"), true) and ok
 	ok = _check("and nothing is written outside the folder",
 		FileAccess.file_exists(escapes_to), false) and ok
-	ok = _check("the refusal names the entry, spelled as the archive spells it",
-		report[report.size() - 1][1], "../../escaped.txt") and ok
-	ok = _check("and says why", report[report.size() - 1][2],
-		"it points outside the folder it is being unpacked into") and ok
+	# The refusal is read off the LAST thing reported, so a run that reported nothing at all has no
+	# last thing to read: asking anyway would end the process instead of naming a failure, and the
+	# check above has already said the refusal never came.
+	if not report.is_empty():
+		ok = _check("the refusal names the entry, spelled as the archive spells it",
+			report[report.size() - 1][1], "../../escaped.txt") and ok
+		ok = _check("and says why", report[report.size() - 1][2],
+			"it points outside the folder it is being unpacked into") and ok
 	ok = _check("the run stops there, so no finish is reported",
 		_kinds(report).has("finished"), false) and ok
 	# The entry BEFORE the bad one landed, which is the honest reading of a stopped unpack: what was
@@ -415,7 +436,11 @@ static func _run_lift() -> bool:
 		+ "\n\n\nfunc _on_unpack_progress(entries: int, bytes: int, total: int) -> void:\n\tprint(entries, bytes)" \
 		+ "\n\n\nfunc _on_unpack_refused(entry: String, reason: String) -> void:\n\tprint(entry, reason)" \
 		+ "\n\n\nfunc _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:\n\tprint(entries, bytes)\n"
+	# The whole half below opens this file again, so a handle that did not open is a null the next
+	# line calls store_string on - the process ends and no [FAIL] line is ever printed.
 	var file: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
+	if file == null:
+		return _check("the probe script could be written", PROBE_SCRIPT, "(unwritable)")
 	file.store_string(source)
 	file.close()
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
@@ -569,8 +594,8 @@ signal file_appeared"),
 static func _run_watcher_runtime() -> bool:
 	var ok: bool = true
 	_fresh_dir(SOURCE_DIR)
-	_write(SOURCE_DIR + "/kept.txt", "one")
-	_write(SOURCE_DIR + "/ignored.dat", "not a txt")
+	ok = _write(SOURCE_DIR + "/kept.txt", "one") and ok
+	ok = _write(SOURCE_DIR + "/ignored.dat", "not a txt") and ok
 	var watcher: Node = load(PACK_PATH).new()
 	watcher.only_names_like = "*.txt"
 	var raised: Array = []
@@ -587,7 +612,7 @@ static func _run_watcher_runtime() -> bool:
 		[str(watcher.watched_folder), float(watcher.look_every_seconds)],
 		[SOURCE_DIR, 2.0] as Array) and ok
 
-	_write(SOURCE_DIR + "/new.txt", "two")
+	ok = _write(SOURCE_DIR + "/new.txt", "two") and ok
 	watcher.look_now()
 	ok = _check("a file that appeared is raised, whole path and all", raised,
 		[["appeared", SOURCE_DIR + "/new.txt"]] as Array) and ok
@@ -646,9 +671,11 @@ static func _run_band() -> bool:
 	sheet.events.append(row)
 	var watches: Array[Dictionary] = EventSheetFileFacts.watched_folders(sheet)
 	ok = _check("the watch is one reading", watches.size(), 1) and ok
-	ok = _check("naming the folder", str(watches[0].get("folder", "")), "user://mods") and ok
-	ok = _check("and the interval, which the path alone cannot say",
-		str(watches[0].get("seconds", "")), "2.0") and ok
+	# Both readings below are of that one entry, and are asked only when there is one to ask them of.
+	if watches.size() == 1:
+		ok = _check("naming the folder", str(watches[0].get("folder", "")), "user://mods") and ok
+		ok = _check("and the interval, which the path alone cannot say",
+			str(watches[0].get("seconds", "")), "2.0") and ok
 	# A ROW MAY ASK FOR LESS THAN THE WATCHER WILL GIVE. The shipped watcher floors the gap at a tenth
 	# of a second, so a band printing the row's `0` would be saying the sheet reads the folder never
 	# while it really reads it ten times a second.
@@ -661,8 +688,11 @@ static func _run_band() -> bool:
 	rush_body.code = "$FolderWatcher.watch_folder(\"user://mods\", 0)"
 	rush.actions.append(rush_body)
 	hurried.events.append(rush)
+	# Read off the first reading if there is one: an empty answer is a failure with a name on it here,
+	# where an index into nothing would be a process that stops and says nothing about why.
+	var hurried_looks: Array[Dictionary] = EventSheetFileFacts.watched_folders(hurried)
 	ok = _check("a gap shorter than the floor is shown as the gap the watcher will really keep",
-		str(EventSheetFileFacts.watched_folders(hurried)[0].get("seconds", "")), "0.1") and ok
+		"" if hurried_looks.is_empty() else str(hurried_looks[0].get("seconds", "")), "0.1") and ok
 	# An interval held in an expression is one nothing here can work out, and it rides through as it
 	# was written rather than being guessed at.
 	var named: EventSheetResource = EventSheetResource.new()
@@ -674,10 +704,12 @@ static func _run_band() -> bool:
 	name_body.code = "$FolderWatcher.watch_folder(\"user://mods\", poll_gap)"
 	by_name.actions.append(name_body)
 	named.events.append(by_name)
+	var named_looks: Array[Dictionary] = EventSheetFileFacts.watched_folders(named)
 	ok = _check("while an interval held in a name is left as the name it is",
-		str(EventSheetFileFacts.watched_folders(named)[0].get("seconds", "")), "poll_gap") and ok
+		"" if named_looks.is_empty() else str(named_looks[0].get("seconds", "")), "poll_gap") and ok
 	var readings: Array[Dictionary] = EventSheetFileFacts.bands(sheet)
-	ok = _check("and the band says it in words", str(readings[readings.size() - 1].get("value", "")),
+	ok = _check("and the band says it in words",
+		"" if readings.is_empty() else str(readings[readings.size() - 1].get("value", "")),
 		EventSheetL10n.translate("watching %s every %s s") % ["user://mods", "2.0"]) and ok
 
 	# The same folder watched twice at the same interval is one fact; at two intervals it is two.
@@ -708,11 +740,12 @@ static func _run_band() -> bool:
 	ok = _check("packing puts both paths on the band", archive_bands.size(), 2) and ok
 	# EACH PATH IS CLASSIFIED ON ITS OWN. A pack READS a folder and WRITES an archive, and the band
 	# used to answer one word for the whole row - so both halves read "read and written", which is
-	# untrue of each of them.
-	ok = _check("the folder it read", str(archive_bands[0].get("value", "")),
-		"user://runs - read") and ok
-	ok = _check("and the archive it wrote", str(archive_bands[1].get("value", "")),
-		"user://runs.zip - written") and ok
+	# untrue of each of them. Both are read by position, so both wait on the count above being right.
+	if archive_bands.size() == 2:
+		ok = _check("the folder it read", str(archive_bands[0].get("value", "")),
+			"user://runs - read") and ok
+		ok = _check("and the archive it wrote", str(archive_bands[1].get("value", "")),
+			"user://runs.zip - written") and ok
 
 	# The other way round: an unpack READS its archive and WRITES the folder it lands in.
 	var unpacking: EventSheetResource = EventSheetResource.new()
@@ -724,10 +757,14 @@ static func _run_band() -> bool:
 		"folder": "\"user://mods\""}))
 	unpacking.events.append(unpack_row)
 	var unpack_bands: Array[Dictionary] = EventSheetFileFacts.bands(unpacking)
-	ok = _check("the archive it read", str(unpack_bands[0].get("value", "")),
-		"user://mods.zip - read") and ok
-	ok = _check("and the folder it wrote into", str(unpack_bands[1].get("value", "")),
-		"user://mods - written") and ok
+	# The count is asked out loud before the two readings that are taken by position, so a row that
+	# stopped putting its paths on the band fails by name instead of ending the process on an index.
+	ok = _check("an unpack puts both paths on the band", unpack_bands.size(), 2) and ok
+	if unpack_bands.size() == 2:
+		ok = _check("the archive it read", str(unpack_bands[0].get("value", "")),
+			"user://mods.zip - read") and ok
+		ok = _check("and the folder it wrote into", str(unpack_bands[1].get("value", "")),
+			"user://mods - written") and ok
 	return ok
 
 
@@ -772,10 +809,16 @@ static func _fresh_dir(path: String) -> void:
 		DirAccess.remove_absolute(path.path_join(entry))
 
 
-static func _write(path: String, text: String) -> void:
+## One file written into a probe folder. It answers whether the handle really opened, because a null
+## handle is a null the next line calls store_string on: that ends the process rather than the test,
+## and a test that crashes prints no [FAIL] line for anybody to read.
+static func _write(path: String, text: String) -> bool:
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return _check("the probe file could be written", path, "(unwritable)")
 	file.store_string(text)
 	file.close()
+	return true
 
 
 static func _clean() -> void:
@@ -839,33 +882,39 @@ static func _run_never_stops() -> bool:
 	var findings: Array[Dictionary] = EventSheetFilesDoctor.watch_never_stops_findings(
 		{"res://menu.gd": OPENED, "res://quiet.gd": CLOSED})
 	ok = _check("one note, about the one file that owes it", findings.size(), 1) and ok
-	ok = _check("filed as a note rather than a warning, because a session-long watch is a real thing to want",
-		str(findings[0].get("severity", "")), "info") and ok
-	ok = _check("under the check id the inbox addresses it by",
-		str(findings[0].get("check", "")), "files-watch-never-stops") and ok
-	ok = _check("about the file that opened the watch", str(findings[0].get("path", "")),
-		"res://menu.gd") and ok
-	ok = _check("naming the line as its subject", str(findings[0].get("subject", "")),
-		"$FolderWatcher.watch_folder(\"user://mods\", 2.0)") and ok
-	var message: String = str(findings[0].get("message", ""))
-	ok = _check("the note leads with the file and the cost", message.begins_with(
-		EventSheetL10n.translate("%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.") % [
-			"menu.gd", "$FolderWatcher.watch_folder(\"user://mods\", 2.0)"]), true) and ok
-	ok = _check("says what ends it, and what a stopped watcher then costs", message.contains(
-		EventSheetL10n.translate("Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.")), true) and ok
-	# A CHECK THAT OVERSTATES ITS REACH READS AS A CLEAN PROJECT when it is quiet, so what it cannot
-	# see is in the note itself rather than only in this file's comments.
-	ok = _check("and says out loud what it cannot see", message.contains(
-		EventSheetL10n.translate("This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.")), true) and ok
+	# Everything below is read out of that one note, so it is only read when the note is there. A
+	# check that stopped filing anything must fail on the count above and not on an index into an
+	# empty array, which would end the process with no [FAIL] line printed at all.
+	if findings.size() == 1:
+		ok = _check("filed as a note rather than a warning, because a session-long watch is a real thing to want",
+			str(findings[0].get("severity", "")), "info") and ok
+		ok = _check("under the check id the inbox addresses it by",
+			str(findings[0].get("check", "")), "files-watch-never-stops") and ok
+		ok = _check("about the file that opened the watch", str(findings[0].get("path", "")),
+			"res://menu.gd") and ok
+		ok = _check("naming the line as its subject", str(findings[0].get("subject", "")),
+			"$FolderWatcher.watch_folder(\"user://mods\", 2.0)") and ok
+		var message: String = str(findings[0].get("message", ""))
+		ok = _check("the note leads with the file and the cost", message.begins_with(
+			EventSheetL10n.translate("%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.") % [
+				"menu.gd", "$FolderWatcher.watch_folder(\"user://mods\", 2.0)"]), true) and ok
+		ok = _check("says what ends it, and what a stopped watcher then costs", message.contains(
+			EventSheetL10n.translate("Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.")), true) and ok
+		# A CHECK THAT OVERSTATES ITS REACH READS AS A CLEAN PROJECT when it is quiet, so what it
+		# cannot see is in the note itself rather than only in this file's comments.
+		ok = _check("and says out loud what it cannot see", message.contains(
+			EventSheetL10n.translate("This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.")), true) and ok
 
 	# TWO STARTS ARE ONE NOTE. A finding that lists every line is a wall; one line and a number is a
 	# sentence, and it is the same tail every other check in this section grows.
 	var twice: Array[Dictionary] = EventSheetFilesDoctor.watch_never_stops_findings(
 		{"res://two.gd": OPENED + "\n\nfunc _later() -> void:\n\t$Other.watch_folder(\"user://skins\", 5.0)\n"})
 	ok = _check("two starts in one file are one note", twice.size(), 1) and ok
-	ok = _check("with the rest counted rather than listed",
-		str(twice[0].get("message", "")).contains(
-			EventSheetL10n.translate("%d more like it in this file.") % 1), true) and ok
+	# The tail is read out of that note, so it is read only when the count above says there is one.
+	if twice.size() == 1:
+		ok = _check("with the rest counted rather than listed",
+			str(twice[0].get("message", "")).contains(
+				EventSheetL10n.translate("%d more like it in this file.") % 1), true) and ok
 	return ok
 
 

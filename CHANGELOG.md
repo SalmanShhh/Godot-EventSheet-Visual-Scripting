@@ -5196,6 +5196,17 @@ A boundary review read the three lift families, the guards and the pages against
   109 pack guides carry a vocabulary, and the number of them the audit still finds a difference in
   is nought. **Watched File Count** and **Watched File Names**, absent from the watcher's own entry
   above, are written into it.
+- **Six files-pass tests could crash rather than fail, and two more left files behind.** A test that
+  asserts a collection holds one entry and then reads entry zero without checking turns a regression
+  into a crash, and a crashed test prints NO failure line at all - it is the silent red the suite's
+  own rules warn about, and there were fourteen of them across the archive, band and trust tests.
+  Each reads the count first now, and where an early return would have skipped independent
+  assertions the indexing alone is guarded so the rest still runs. Six `FileAccess.open` handles
+  were used without checking for null, which is the same crash by another road: each fails by name
+  now, naming the path it could not write. One fold was spelled `ok = ok and _f()`, which stopped
+  twelve assertions running the moment anything earlier failed, and it is spelled the way the rest
+  of the file spells it. And two tests left `_scene_save_roundtrip.gd` and a `__fileplaces_test`
+  folder in the player's data folder after every run.
 
 
 ### Every call on a known class is a row

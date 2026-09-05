@@ -48,6 +48,9 @@ static func run() -> bool:
 	passed = _test_fixes() and passed
 	passed = _test_lifts() and passed
 	passed = _test_reads_back() and passed
+	# LAST, and after the verdict is already computed: the halves above write real files under
+	# user://, and the sweep must not be able to change what this run decided.
+	_clean_up()
 	return passed
 
 
@@ -813,6 +816,18 @@ static func _sorted(source: Dictionary) -> PackedStringArray:
 		keys.append(str(key))
 	keys.sort()
 	return keys
+
+
+## Everything this test wrote, taken away with it. The completion half and the round trips both write
+## real files into the folder above, and the folder itself was made by the first of them - so a run
+## that swept nothing left a folder on the machine that ran the suite, which is exactly the habit this
+## file is about.
+static func _clean_up() -> void:
+	if not DirAccess.dir_exists_absolute(TEST_DIR):
+		return
+	for file_name: String in DirAccess.get_files_at(TEST_DIR):
+		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, file_name])
+	DirAccess.remove_absolute(TEST_DIR)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

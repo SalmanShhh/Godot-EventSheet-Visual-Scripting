@@ -40,10 +40,12 @@ const NEW_ACE_IDS: Array[String] = ["SaveBranchAsSceneFile", "SceneFileIsDataOnl
 ## write, and cleaned up at the end of the run that made them.
 const TEST_DIR: String = "user://_scene_trust_test"
 
-## The two paths this test compiles TO, cleaned up beside the folder above for the same reason.
+## The paths this test compiles TO, cleaned up beside the folder above for the same reason. A compile
+## writes its output where it is told, and a path spelled at the compile site instead of listed here
+## is one the sweep below cannot see - a file left on the machine that ran the suite.
 const COMPILE_OUTPUTS: Array[String] = [
 	"user://_scene_trust_authored.gd", "user://_scene_trust_quiet.gd",
-	"user://_scene_save_refusals.gd",
+	"user://_scene_save_refusals.gd", "user://_scene_save_roundtrip.gd",
 ]
 
 
@@ -391,7 +393,7 @@ static func _test_the_lift() -> bool:
 	ok = _check("a bare pack-and-save is not claimed",
 		_function_row_ids(sheet, "pack_it_only").has("SaveBranchAsSceneFile"), false) and ok
 
-	sheet.external_source_path = "user://_scene_save_roundtrip.gd"
+	sheet.external_source_path = COMPILE_OUTPUTS[3]
 	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	ok = _check("%s comes back byte for byte" % FIXTURE, output, _source(FIXTURE)) and ok
 	ok = _test_the_lift_refuses() and ok
@@ -509,17 +511,21 @@ static func _test_the_doctors_reading() -> bool:
 		{"res://mods.gd": UNASKED})
 	ok = _check("it is filed under its own id", filed.size() == 1
 		and str(filed[0].get("check", "")) == EventSheetFilesDoctor.CHECK_UNTRUSTED_SCENE, true) and ok
-	ok = _check("as a warning rather than an error - a game whose mods are code is a decision",
-		str(filed[0].get("severity", "")), "warning") and ok
-	ok = _check("naming the file the door will ask about",
-		str(filed[0].get("subject", "")), "\"user://mods/level.tscn\"") and ok
-	ok = _check("and saying what it cannot see, so silence is never read as an all-clear",
-		str(filed[0].get("message", "")).contains("built out of pieces"), true) and ok
+	# The three readings below are readings of that ONE finding, so they are only asked when there is
+	# one to ask them of. Indexing an empty array here takes the whole process down, and a test that
+	# crashes prints no [FAIL] line at all - the failure above is the one a reader can act on.
+	if filed.size() == 1:
+		ok = _check("as a warning rather than an error - a game whose mods are code is a decision",
+			str(filed[0].get("severity", "")), "warning") and ok
+		ok = _check("naming the file the door will ask about",
+			str(filed[0].get("subject", "")), "\"user://mods/level.tscn\"") and ok
+		ok = _check("and saying what it cannot see, so silence is never read as an all-clear",
+			str(filed[0].get("message", "")).contains("built out of pieces"), true) and ok
 	# The sibling check in the same section is about a different half of the same story and must not
 	# have started saying this one's sentence.
 	ok = _check("the outside-content check beside it stays quiet about a literal nobody dropped",
 		EventForgeOutsidePaths.loading_outside_lines(UNASKED).size(), 0) and ok
-	ok = ok and _test_the_other_code_files()
+	ok = _test_the_other_code_files() and ok
 	return ok
 
 
@@ -602,6 +608,11 @@ func _ready() -> void:
 	ok = _check("it is filed under its own id", filed.size() == 1
 		and str(filed[0].get("check", "")) == EventSheetFilesDoctor.CHECK_UNTRUSTED_CODE_FILE,
 		true) and ok
+	# Nothing after this block asks anything of its own, so a count that is not one leaves here with
+	# the failure already named above rather than indexing an array that has no entry to index - a
+	# crash would take every other test in the process with it and print no [FAIL] line for any of it.
+	if filed.size() != 1:
+		return ok
 	ok = _check("as a warning rather than an error, exactly as its sibling is",
 		str(filed[0].get("severity", "")), "warning") and ok
 	ok = _check("naming the file that is loaded", str(filed[0].get("subject", "")),

@@ -145,7 +145,11 @@ static func _run_emission() -> bool:
 ## The values a game would see, and the bytes it would write.
 static func _run_runtime() -> bool:
 	var ok: bool = true
+	# Every value below is read back out of this fixture, so a handle that did not open is a null the
+	# next line calls store_string on: the process ends and prints no [FAIL] line for any test in it.
 	var file: FileAccess = FileAccess.open(PROBE_CSV, FileAccess.WRITE)
+	if file == null:
+		return _check("the fixture table could be written", PROBE_CSV, "(unwritable)")
 	file.store_string(ITEMS_CSV)
 	file.close()
 
@@ -187,7 +191,11 @@ static func _run_loop() -> bool:
 	ok = _check("the collection is one expression, so it can ride in the loop lane",
 		collection.split("\n").size(), 1) and ok
 
+	# The line endings under test are the ones written here, so a handle that did not open is a null
+	# the next line calls store_string on - a crash rather than a failure anybody could read.
 	var file: FileAccess = FileAccess.open(PROBE_CSV, FileAccess.WRITE)
+	if file == null:
+		return _check("the fixture of line endings could be written", PROBE_CSV, "(unwritable)")
 	file.store_string("first\r\n\r\nsecond\rthird")
 	file.close()
 	var lines: Array = _call(collection)

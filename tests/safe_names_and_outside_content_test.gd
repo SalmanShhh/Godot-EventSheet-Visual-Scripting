@@ -98,7 +98,13 @@ static func _runs_on_disk() -> bool:
 		by_id[descriptor.ace_id] = descriptor
 	_cleanup()
 	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	# The whole half below is about the free path stepping PAST this file, so a handle that did not
+	# open is a null the next line calls store_string on - the process ends there and no [FAIL] line
+	# is printed for any test in it. It is named as a failure instead.
 	var taken: FileAccess = FileAccess.open("%s/my_run.txt" % TEST_DIR, FileAccess.WRITE)
+	if taken == null:
+		return _check("the file that is already there could be written",
+			"%s/my_run.txt" % TEST_DIR, "(unwritable)")
 	taken.store_string("the first one")
 	taken.close()
 
