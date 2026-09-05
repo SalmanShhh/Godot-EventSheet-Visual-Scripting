@@ -11,6 +11,10 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_DIR := "user://__fileace_test"
 
+## The path this test compiles TO. A compile writes its output where it is told, so the file is one
+## more thing this test made and one more thing it takes away.
+const COMPILE_OUTPUT: String = "user://__fileace_compiled.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -44,7 +48,7 @@ static func run() -> bool:
 	event.actions.append(_action("WriteTextFile", by_id, {"path": "\"%s/a.txt\"" % TEST_DIR, "text": "\"hello\""}, "w1"))
 	event.actions.append(_action("AppendTextFile", by_id, {"path": "\"%s/a.txt\"" % TEST_DIR, "text": "\" world\""}, "w2"))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://__fileace_compiled.gd").get("output", ""))
+	var output: String = str(SheetCompiler.compile(sheet, COMPILE_OUTPUT).get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	var reload_ok: bool = script.reload() == OK
@@ -70,10 +74,14 @@ static func _action(ace_id: String, by_id: Dictionary, params: Dictionary, uid: 
 	return action
 
 
+## Everything this test wrote, the compile's own output included: it lands where the compile was
+## told to write it, which is beside the folder rather than inside it.
 static func _cleanup() -> void:
 	DirAccess.remove_absolute(TEST_DIR + "/a.txt")
 	DirAccess.remove_absolute(TEST_DIR + "/b.json")
 	DirAccess.remove_absolute(TEST_DIR)
+	if FileAccess.file_exists(COMPILE_OUTPUT):
+		DirAccess.remove_absolute(COMPILE_OUTPUT)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

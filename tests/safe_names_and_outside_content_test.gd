@@ -17,6 +17,12 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_DIR := "user://__safe_name_test"
 
+## The two paths this test compiles TO. A compile writes its output where it is told, so these are
+## files on the machine that ran the suite and belong in the clean-up like anything else it wrote.
+const COMPILE_OUTPUTS: Array[String] = [
+	"user://__safe_name_gen.gd", "user://__safe_name_round_trip.gd",
+]
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -26,6 +32,9 @@ static func run() -> bool:
 	ok = _doctor_finds_the_bug() and ok
 	ok = _doctor_leaves_clean_code_alone() and ok
 	ok = _doctor_says_the_risk_and_the_doors() and ok
+	# LAST, not half way through. The round trip above compiles after the on-disk half has tidied
+	# up after itself, so a clean-up that only ran there left the round trip's own output behind.
+	_cleanup()
 	return ok
 
 
@@ -108,7 +117,7 @@ static func _runs_on_disk() -> bool:
 	event.actions.append(_action("WriteTextFile", by_id, {
 		"path": free_path, "text": "\"the second one\""}, "w1"))
 	sheet.events.append(event)
-	var output: String = str(SheetCompiler.compile(sheet, "user://__safe_name_gen.gd").get("output", ""))
+	var output: String = str(SheetCompiler.compile(sheet, COMPILE_OUTPUTS[0]).get("output", ""))
 	var script: GDScript = GDScript.new()
 	script.source_code = output
 	var reloaded: bool = script.reload() == OK
@@ -417,18 +426,24 @@ static func _action(ace_id: String, by_id: Dictionary, params: Dictionary, uid: 
 ## Open a source as a sheet and emit it again untouched.
 static func _recompile(source: String) -> String:
 	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
-	imported.external_source_path = "user://__safe_name_round_trip.gd"
-	return str(SheetCompiler.compile(imported, "user://__safe_name_round_trip.gd").get("output", ""))
+	imported.external_source_path = COMPILE_OUTPUTS[1]
+	return str(SheetCompiler.compile(imported, COMPILE_OUTPUTS[1]).get("output", ""))
 
 
 static func _joined(lines: PackedStringArray) -> String:
 	return " | ".join(lines)
 
 
+## Everything this test wrote, taken away with it. The two scripts are the OUTPUT of a compile,
+## which the compiler writes where it is told to write it: they sit beside the folder rather than
+## inside it, so a sweep of the folder alone leaves them behind on the machine that ran the suite.
 static func _cleanup() -> void:
 	for name_text: String in DirAccess.get_files_at(TEST_DIR):
 		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, name_text])
 	DirAccess.remove_absolute(TEST_DIR)
+	for compiled: String in COMPILE_OUTPUTS:
+		if FileAccess.file_exists(compiled):
+			DirAccess.remove_absolute(compiled)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

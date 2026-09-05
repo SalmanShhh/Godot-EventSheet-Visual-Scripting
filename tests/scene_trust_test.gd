@@ -40,6 +40,11 @@ const NEW_ACE_IDS: Array[String] = ["SaveBranchAsSceneFile", "SceneFileIsDataOnl
 ## write, and cleaned up at the end of the run that made them.
 const TEST_DIR: String = "user://_scene_trust_test"
 
+## The two paths this test compiles TO, cleaned up beside the folder above for the same reason.
+const COMPILE_OUTPUTS: Array[String] = [
+	"user://_scene_trust_authored.gd", "user://_scene_trust_quiet.gd",
+]
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -313,7 +318,7 @@ static func _test_the_helper_lands_once() -> bool:
 	again.conditions.append(_authored_condition("SceneFileIsDataOnly",
 		{"path": "\"user://built_ship.tscn\""}))
 	sheet.events.append(again)
-	sheet.external_source_path = "user://_scene_trust_authored.gd"
+	sheet.external_source_path = COMPILE_OUTPUTS[0]
 	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	var ok: bool = _check("the question compiles to the call it names",
 		output.contains("if %s(\"user://built_level.tscn\"):" % EventForgeSceneTrust.HELPER_NAME),
@@ -331,8 +336,8 @@ static func _test_the_helper_lands_once() -> bool:
 	# Reopening an emitted file and saving it again must not add a second definition: the one that is
 	# already there reads back as an ordinary function and is re-emitted where it sits.
 	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(
-		output, true, "user://_scene_trust_authored.gd")
-	reopened.external_source_path = "user://_scene_trust_authored.gd"
+		output, true, COMPILE_OUTPUTS[0])
+	reopened.external_source_path = COMPILE_OUTPUTS[0]
 	var again_out: String = str(SheetCompiler.compile(
 		reopened, reopened.external_source_path).get("output", ""))
 	ok = _check("a file that already defines it gains no second copy",
@@ -614,7 +619,13 @@ static func _written(file_name: String, text: String) -> String:
 	return path
 
 
+## Everything this test wrote, taken away with it. The two scripts are the OUTPUT of a compile,
+## which lands where the compile was told to write it - beside the folder rather than inside it - so
+## sweeping the folder alone left them on the machine that ran the suite.
 static func _clean_up() -> void:
+	for compiled: String in COMPILE_OUTPUTS:
+		if FileAccess.file_exists(compiled):
+			DirAccess.remove_absolute(compiled)
 	if not DirAccess.dir_exists_absolute(TEST_DIR):
 		return
 	for file_name: String in DirAccess.get_files_at(TEST_DIR):
@@ -633,7 +644,7 @@ static func _compiled_without_the_question() -> String:
 	event.actions.append(_authored_action("SaveBranchAsSceneFile",
 		{"branch": "self", "path": "\"user://built_level.tscn\""}, "c3"))
 	sheet.events.append(event)
-	sheet.external_source_path = "user://_scene_trust_quiet.gd"
+	sheet.external_source_path = COMPILE_OUTPUTS[1]
 	return str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 
 
