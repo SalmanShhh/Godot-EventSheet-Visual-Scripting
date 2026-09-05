@@ -2748,6 +2748,53 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Loaded Chunk Count** - How many chunk scenes are in the world right now - the number a debug overlay shows and a memory budget is measured against.
 - **Chunk Of** (`point: Vector3`) - The cell a world point falls in, as a Vector3i. Feed it to Keep Chunk or Release Chunk, or compare two of them to notice a border being crossed.
 
+### TargetingBehavior (`res://eventsheet_addons/targeting/targeting_behavior.gd`)
+@ace_tags(combat, aim, targeting) @ace_category("Targeting") @ace_version(1.0.0)
+
+#### Triggers
+- **On Target Locked** (`target: Node2D`)
+- **On Target Lost** (`why: StringName`)
+
+#### Conditions
+- **Is Locked On** - True while this behaviour is holding a target that is still alive - the gate for a reticle, a homing shot or a strafe camera.
+
+#### Actions
+- **Lock On To Nearest** (`group: StringName, cone_degrees: float, max_range: float`) - Searches a cone around the host's facing for the closest member of a group inside a range, and holds it. On Target Locked fires when the held target changes; a search that finds nothing leaves the current lock alone, so a row polled every frame does not drop the target on the first frame it goes behind cover. Leave the group empty for the behaviour's own Target Group, and write 0 for the cone or the range to use its own defaults.
+- **Lock On To** (`node: Node2D`) - Holds one node you name, whatever the cone and the range say - the boss the cutscene points at, the enemy the player clicked. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search.
+- **Cycle Target** - Steps to the next candidate the last Lock On To Nearest found, left to right by angle, and wraps round to the leftmost after the rightmost. Candidates that died since the search are dropped first, so cycling never lands on a corpse. With nothing held it takes the leftmost.
+- **Release Lock** - Lets the held target go on purpose. On Target Lost fires with the reason 'released', so one trigger row cleans the reticle up whether the target died, walked away, ducked behind a wall or was let go.
+
+#### Expressions
+- **Locked Target** - The node being held, or null when nothing is. Hand it to any row that takes a node: a homing bullet, a Look At, a damage number's parent.
+- **Locked Target On Screen** - Where the held target sits on screen right now, camera zoom and scroll included - the position for a reticle living on a CanvasLayer. Vector2.ZERO when nothing is held.
+- **Distance To Target** - How far the held target is, in pixels. INF when nothing is held, so a row asking whether the target is closer than something is simply false rather than accidentally true.
+- **Assisted Aim** (`direction: Vector2, strength: float`) - The aim direction you hand it, bent toward the nearest target the ray is nearly pointing at, by a strength from 0 (no help) to 1 (dead on). 'Nearly' is the accessibility Aim Assist Radius, measured across the ray, so a zero radius hands the direction straight back and the options screen turns the help off. The length you passed in is kept.
+- **Magnetism** (`turn_rate: float`) - The turn rate you hand it, slowed by the behaviour's Magnetism Slowdown while the aim is crossing a target - the drag that makes a stick settle on an enemy instead of sliding past. Unchanged when nothing is under the aim, and unchanged when the Aim Assist Radius is zero.
+
+### Targeting3DBehavior (`res://eventsheet_addons/targeting_3d/targeting_3d_behavior.gd`)
+@ace_tags(combat, aim, targeting) @ace_category("Targeting 3D") @ace_version(1.0.0)
+
+#### Triggers
+- **On Target Locked** (`target: Node3D`)
+- **On Target Lost** (`why: StringName`)
+
+#### Conditions
+- **Is Locked On** - True while this behaviour is holding a target that is still alive - the gate for a reticle, a homing shot or a strafe camera.
+
+#### Actions
+- **Lock On To Nearest** (`group: StringName, cone_degrees: float, max_range: float`) - Searches a cone around the camera's forward for the closest member of a group inside a range, and holds it. On Target Locked fires when the held target changes; a search that finds nothing leaves the current lock alone, so a row polled every frame does not drop the target on the first frame it goes behind cover. Leave the group empty for the behaviour's own Target Group, and write 0 for the cone or the range to use its own defaults. With no camera in the scene the cone falls back to the host's own forward axis, which is what a turret has.
+- **Lock On To** (`node: Node3D`) - Holds one node you name, whatever the cone and the range say - the boss the cutscene points at, the enemy the player clicked. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search.
+- **Cycle Target** - Steps to the next candidate the last Lock On To Nearest found, left to right by angle around the world's up axis, and wraps round to the leftmost after the rightmost. Candidates that died since the search are dropped first, so cycling never lands on a corpse. With nothing held it takes the leftmost.
+- **Release Lock** - Lets the held target go on purpose. On Target Lost fires with the reason 'released', so one trigger row cleans the reticle up whether the target died, walked away, ducked behind a wall or was let go.
+- **Snap On Aim Down Sights** (`max_degrees: float`) - Turns the host to face the nearest target the aim is already nearly on - the settle a controller player gets the instant the sights come up. It refuses a turn wider than the degrees you allow, so it never yanks the view somewhere the player was not looking, and it does nothing at all while the Aim Assist Radius is zero.
+
+#### Expressions
+- **Locked Target** - The node being held, or null when nothing is. Hand it to any row that takes a node: a homing rocket, a Look At, a nameplate's anchor.
+- **Locked Target On Screen** - Where the held target lands on screen right now, through the camera's own projection - the position for a reticle living on a CanvasLayer. Vector2.ZERO when nothing is held or there is no camera to ask.
+- **Distance To Target** - How far the held target is, in metres. INF when nothing is held, so a row asking whether the target is closer than something is simply false rather than accidentally true.
+- **Assisted Aim** (`direction: Vector3, strength: float`) - The aim direction you hand it, bent toward the nearest target the ray is nearly pointing at, by a strength from 0 (no help) to 1 (dead on). 'Nearly' is the accessibility Aim Assist Radius, measured across the ray, so a zero radius hands the direction straight back and the options screen turns the help off. The length you passed in is kept.
+- **Magnetism** (`turn_rate: float`) - The turn rate you hand it, slowed by the behaviour's Magnetism Slowdown while the aim is crossing a target - the drag that makes a stick settle on an enemy instead of sliding past. Unchanged when nothing is under the aim, and unchanged when the Aim Assist Radius is zero.
+
 ### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.gd`)
 @ace_category("Tile Movement") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -5802,7 +5849,7 @@ Testing vocabulary (a sheet that makes claims and reports pass/fail).
 text that MOVES: the six effects a rich text label already knows, and the
 
 #### Triggers
-- **On Reveal Finished** - Runs when a reveal reaches its last character, and when Skip Reveal ends one early - the same moment either way, which is what lets the Continue prompt be written once. Every reveal in the sheet ends here, so a sheet typing out more than one line asks which line it was.
+- **On Reveal Finished** - Runs when a reveal reaches its last character, and when Skip Reveal ends one early - the same moment either way, which is what lets the Continue prompt be written once. It runs ONCE per line: a skip after the line has already landed finds nothing left to end. Nothing is handed to it, so a sheet typing out more than one line keeps the line it is on in a variable of its own.
 
 #### Conditions
 - **Effect Is Active** (`effect: String, target: String`) - True while the label's text carries that effect's tag. Ask it before writing another one, or to tell a shaking warning from a calm one without a variable beside it. Type the name of your own effect here to ask about that instead.
@@ -5876,7 +5923,7 @@ DISPLAY text: making a value readable before it reaches a Label.
 Tilemaps (TileMapLayer, Godot 4.3+)
 
 #### Conditions
-- **Tile Has Custom Data** (`coords: String, name: String, target: String`) - True when the tile at a cell carries the named custom data - how a tileset marks walls, water or ladders.
+- **Tile Has Custom Data** (`target: String, coords: String, name: String`) - True when the tile at a cell carries the named custom data - how a tileset marks walls, water or ladders.
 - **Cell Is Empty** (`coords: String, target: String`) - True when the chosen tilemap cell has no tile in it.
 - **Cell Has Tile** (`coords: String, target: String`) - True when the chosen tilemap cell actually has a tile placed.
 - **Tile Data At Is** (`target: String, where: String, key: String, value: String`) - True when the tile at a place carries this value under the named custom data layer. "Is the player standing on ice" as one row, rather than a cell lookup, a null guard and a data read written out by hand.
