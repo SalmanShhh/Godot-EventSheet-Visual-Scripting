@@ -159,13 +159,30 @@ static func _test_the_guard_refuses_its_own_shooter() -> bool:
 	sibling.set_meta(&"owner", player)
 	var bullet: Node = _probe("HitIsNotMyOwner", "hit", "\treturn %s")
 	bullet.set_meta(&"owner", player)
+	# TWO CHAINS THAT END NOWHERE ARE NOT ONE OWNER. The player dies while their bullet is in the
+	# air, so the bullet's walk answers nothing; the stranger it hits was spawned by something since
+	# freed, so that walk answers nothing too - and `null == null` used to make the two the same
+	# person and refuse the hit. A hit whose ownership cannot be established is a hit on a stranger.
+	var ghost: Node = _named("Ghost")
+	var orphan: Node = _named("Orphan")
+	orphan.set_meta(&"owner", ghost)
+	var widow: Node = _probe("HitIsNotMyOwner", "hit", "	return %s")
+	widow.set_meta(&"owner", ghost)
+	ghost.free()
+	var stranger_after_both_owners_gone: bool = widow.call("probe", orphan)
+	var mine: Node = _probe("IsMine", "node", "	return %s")
+	mine.set_meta(&"owner", ghost)
+	var claims_a_stranger: bool = mine.call("probe", orphan)
 	var passed: bool = SUPPORT.pins("ownership", [
 		["a bullet does not hurt the player who fired it", bullet.call("probe", player), false],
 		["a bullet does not hurt its shooter's other shot", bullet.call("probe", sibling), false],
 		["a bullet does hurt somebody else", bullet.call("probe", enemy), true],
-		["a bullet does not hurt itself", bullet.call("probe", bullet), false]
+		["a bullet does not hurt itself", bullet.call("probe", bullet), false],
+		["a bullet whose owner has gone still hurts a stranger whose owner has gone",
+			stranger_after_both_owners_gone, true],
+		["and does not call that stranger its own", claims_a_stranger, false]
 	])
-	for node: Node in [player, enemy, sibling, bullet]:
+	for node: Node in [player, enemy, sibling, bullet, orphan, widow, mine]:
 		node.free()
 	return passed
 
