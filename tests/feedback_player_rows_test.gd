@@ -129,10 +129,10 @@ static func _sweep_pins() -> bool:
 		{"verb": "pulse", "label": "screeny", "amount": 1.0, "seconds": 0.4}
 	])
 	player.mute_feedback_category("screen", true)
-	var muted: String = player._why_not(player._card_named("screeny"), 1.0)
-	var camera_still_runs: String = player._why_not(player._card_named("shake_a"), 1.0)
+	var muted: String = player._why_not(player._card_named("screeny"), 1.0, 0)
+	var camera_still_runs: String = player._why_not(player._card_named("shake_a"), 1.0, 1)
 	player.mute_feedback_category("screen", false)
-	var unmuted: String = player._why_not(player._card_named("screeny"), 1.0)
+	var unmuted: String = player._why_not(player._card_named("screeny"), 1.0, 0)
 	player.scale_feedback_amounts("camera", 0.5)
 	var scaled: Array = [
 		float((player._card_named("shake_a") as Dictionary).get("amount", -1.0)),
@@ -146,8 +146,8 @@ static func _sweep_pins() -> bool:
 			picked += 1
 	var untouched: bool = bool((player._card_named("screeny") as Dictionary).get("active", true))
 	player.skip_feedback_once("screeny")
-	var skipped: String = player._why_not(player._card_named("screeny"), 1.0)
-	var only_once: String = player._why_not(player._card_named("screeny"), 1.0)
+	var skipped: String = player._why_not(player._card_named("screeny"), 1.0, 0)
+	var only_once: String = player._why_not(player._card_named("screeny"), 1.0, 0)
 
 	var other: Node = _player([])
 	other.copy_feedbacks_from(player)

@@ -109,6 +109,20 @@ var _last_played_at: float = -1000.0
 var _order: Array = []
 var _head: int = 0
 var _head_strength: float = 1.0
+
+## Whether the card the head is on has already been answered by the walk. A Skip To End does the
+## cards the walk has not reached, and the head is the one card that could be in both: without
+## this it would be decided twice, which would consume a Skip Next Time twice over and feel a
+## card the walk is still in the middle of a second time.
+var _head_taken: bool = false
+
+## How many times round each Loop Back card still has to go, and the roll each card's chance will
+## be answered with - both kept per PLAY and keyed by where the card sits, never written into the
+## card itself. A moment file dropped on two players is ONE resource shared by both, so a counter
+## written into its steps would have each play counting the other's loops down, and the file on
+## disk would come back from a play changed.
+var _loops_left: Dictionary = {}
+var _rolls: Dictionary = {}
 var _restore_to: Array = []
 ## The tweens this player started, so a Revert or a Restore can stop them before it puts a value
 ## back. Without the handle the tween goes on writing over the restored value the very next frame,
@@ -284,7 +298,7 @@ func skip_to_end() -> void:
 	_paused = false
 	_resumed.emit()
 	var left: Array = _order
-	var from: int = _head
+	var from: int = _head + 1 if _head_taken else _head
 	var at_strength: float = _head_strength
 	_close()
 	_told_nested("skip_to_end")
@@ -292,8 +306,8 @@ func skip_to_end() -> void:
 		if not (left[index] is Dictionary):
 			continue
 		var card: Dictionary = left[index]
-		if _card_runs(card, at_strength) and not _is_timing(str(card.get("verb", ""))):
-			_do_step(card, at_strength)
+		if _card_runs(card, at_strength, index) and not _is_timing(str(card.get("verb", ""))):
+			_do_step(card, at_strength, true)
 
 ## @ace_action
 ## @ace_name("Restore Initial Values")
@@ -635,7 +649,7 @@ func load_moment_file(path: String) -> void:
 ## @ace_action
 ## @ace_name("Save Moment File")
 ## @ace_category("Feedback Player")
-## @ace_description("Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written: a card that is switched off, and the timing words a list adds, are named in a warning and left out.")
+## @ace_description("Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.")
 ## @ace_display_template("Save moment file to [b]{path}[/b]")
 ## @ace_param(path, default: user://my_moment.tres, desc: "Where to write it. At run time that is a user:// path, which is the only place a game may write.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
@@ -651,7 +665,8 @@ func save_moment_file(path: String) -> void:
 		if not (entry is Dictionary):
 			continue
 		var card: Dictionary = entry as Dictionary
-		if not bool(card.get("active", true)) or _is_timing(str(card.get("verb", ""))):
+		var word: String = str(card.get("verb", "")).strip_edges().to_lower()
+		if not bool(card.get("active", true)) or _is_timing(word) or _is_own_word(word):
 			left_behind.append(_label_of(card))
 			continue
 		written.append({"verb": str(card.get("verb", "")), "amount": float(card.get("amount", 1.0)), "effect": str(card.get("effect", "")), "seconds": float(card.get("seconds", 0.0))})
@@ -659,7 +674,7 @@ func save_moment_file(path: String) -> void:
 	file.set("moment_name", name)
 	file.set("steps", written)
 	if not left_behind.is_empty():
-		push_warning("Feedback Player: a moment file holds no timing and no card that is switched off, so these were left out of the file: %s." % ", ".join(left_behind))
+		push_warning("Feedback Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so these were left out of the file: %s." % ", ".join(left_behind))
 	if ResourceSaver.save(file, path) != OK:
 		push_warning("Feedback Player: \"%s\" could not be written, so Save Moment File saved nothing." % path)
 
@@ -852,7 +867,9 @@ func set_loop_count(label: String, loops: int) -> void:
 	if card.is_empty():
 		return
 	card["loops"] = maxi(loops, 0)
-	card["loops_left"] = maxi(loops, 0)
+	var at: int = _index_in(_order, label)
+	if at >= 0:
+		_loops_left[at] = maxi(loops, 0)
 
 ## @ace_action
 ## @ace_name("Hold Here")
@@ -979,8 +996,11 @@ func current_feedback() -> String:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$FeedbackPlayer.loops_left("{label}")")
 func loops_left(label: String) -> int:
-	var card: Dictionary = _card_named(label)
-	return int(card.get("loops_left", card.get("loops", 0)))
+	if playing:
+		var at: int = _index_in(_order, label)
+		if at >= 0:
+			return int(_loops_left.get(at, 0))
+	return int(_card_named(label).get("loops", 0))
 
 ## The steps this play walks: the moment file's when one is dropped on the slot, else the list.
 func _steps_now() -> Array:
@@ -1007,7 +1027,12 @@ func _may_start() -> bool:
 		# The interrupted walk stops where it is, and its play is CLOSED here rather than left
 		# open: a sheet pairing On Feedbacks Started with On Feedbacks Finished must get both,
 		# and the walk that was cut short will never reach the end that would have said so.
+		# It ends the way Stop Feedbacks ends, waking a held head and telling the players this
+		# play started through a Play Player card: half a beat carrying on under the restart is
+		# exactly what the restart was asked to replace.
 		_live.clear()
+		_resumed.emit()
+		_told_nested("stop")
 		_close()
 	_last_played_at = now
 	return true
@@ -1040,6 +1065,25 @@ static func duration_of(list: Array) -> float:
 static func _is_timing(word: String) -> bool:
 	return word == PAUSE or word == HOLD_UNTIL or word == LOOP_START or word == LOOP_BACK
 
+## And whether a word is this NODE'S own rather than a moment's: a property walked to a value, a
+## signal, and a nested player. The ten moment words are played by the Juice node beside this one;
+## these three are done here, and a moment FILE has nowhere to keep them.
+static func _is_own_word(word: String) -> bool:
+	return word == TWEEN_PROPERTY or word == EMIT_SIGNAL or word == PLAY_PLAYER
+
+## The number a card's chance is answered with. One roll per card is thrown before the beat
+## begins, so a Skip To End reads the decision the walk would have read rather than throwing the
+## dice a second time for the same card.
+func _rolled_at(index: int) -> float:
+	if not _rolls.has(index):
+		_rolls[index] = randf() * 100.0
+	return float(_rolls[index])
+
+## And the roll that card will be answered with NEXT time, thrown the moment the walk has used
+## this one - which is what keeps a card inside a loop a fresh chance every time round.
+func _roll_again(index: int) -> void:
+	_rolls[index] = randf() * 100.0
+
 ## The one walk down a list. Every door into the runner comes through here, so the direction, the
 ## chance, the timing words and the loops are decided once.
 func _walk(list: Array, at_strength: float, backwards: bool) -> void:
@@ -1058,6 +1102,7 @@ func _walk(list: Array, at_strength: float, backwards: bool) -> void:
 		if not _alive(token):
 			break
 		_head = index
+		_head_taken = false
 		progress = float(index) / float(maxi(order.size(), 1))
 		index = await _take(order, index, order[index] as Dictionary, at_strength, token)
 		index = _landing(order, index)
@@ -1082,7 +1127,9 @@ func _wait_out_pause(token: int) -> void:
 ## word is a feedback, which is felt and stepped over.
 func _take(order: Array, index: int, card: Dictionary, at_strength: float, token: int) -> int:
 	var word: String = str(card.get("verb", "")).strip_edges().to_lower()
-	var refused: String = _why_not(card, at_strength)
+	var refused: String = _why_not(card, at_strength, index)
+	_head_taken = true
+	_roll_again(index)
 	if not refused.is_empty():
 		if not _is_timing(word):
 			on_feedback_skipped.emit(_label_of(card), refused)
@@ -1103,13 +1150,13 @@ func _take(order: Array, index: int, card: Dictionary, at_strength: float, token
 			pass
 		LOOP_BACK:
 			var back: int = _loop_target(order, index, card)
-			var left: int = int(card.get("loops_left", card.get("loops", 1)))
+			var left: int = int(_loops_left.get(index, int(card.get("loops", 1))))
 			if left > 0 and back >= 0:
-				card["loops_left"] = left - 1
+				_loops_left[index] = left - 1
 				on_loop.emit(left - 1)
 				await MomentRunner.then(self, MomentRunner.seconds_of(float(card.get("seconds", 0.0))), clock)
 				return back
-			card["loops_left"] = int(card.get("loops", 1))
+			_loops_left[index] = int(card.get("loops", 1))
 		_:
 			now_playing = str(card.get("label", word))
 			on_feedback_started.emit(_label_of(card))
@@ -1131,13 +1178,14 @@ func _repeat_rest(card: Dictionary, at_strength: float, clock: String, token: in
 		_do_step(card, at_strength)
 
 ## Whether a card is felt at all: its enable box, its chance, and the strength window it asked for.
-func _card_runs(card: Dictionary, at_strength: float) -> bool:
-	return _why_not(card, at_strength).is_empty()
+func _card_runs(card: Dictionary, at_strength: float, index: int) -> bool:
+	return _why_not(card, at_strength, index).is_empty()
 
 ## WHY a card was not felt, in one word, or "" when it was. The reason is what On Feedback Skipped
 ## carries, so a row can tell a card the player muted from one the dice went against - and it is
-## asked once per card per play, because rolling the chance twice would be a different beat.
-func _why_not(card: Dictionary, at_strength: float) -> String:
+## asked ONCE for each card the head reaches, because answering the same card twice would consume
+## a Skip Next Time twice over and throw the dice again for a decision already made.
+func _why_not(card: Dictionary, at_strength: float, index: int) -> String:
 	if not bool(card.get("active", true)):
 		return "off"
 	var named: String = _label_of(card)
@@ -1147,7 +1195,7 @@ func _why_not(card: Dictionary, at_strength: float) -> String:
 	if _muted.has(_category_of(card)):
 		return "muted"
 	var chance: float = float(card.get("chance", 100.0))
-	if chance < 100.0 and randf() * 100.0 >= chance:
+	if chance < 100.0 and _rolled_at(index) >= chance:
 		return "chance"
 	if at_strength < float(card.get("min_strength", 0.0)):
 		return "strength"
@@ -1158,7 +1206,7 @@ func _why_not(card: Dictionary, at_strength: float) -> String:
 
 ## One feedback, felt. The ten moment words go to the Juice behaviour beside this node - the same
 ## call a moment file makes - and this node's own words are done here.
-func _do_step(card: Dictionary, at_strength: float) -> void:
+func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> void:
 	var word: String = str(card.get("verb", "")).strip_edges().to_lower()
 	var amount: float = float(card.get("amount", 1.0))
 	var effect: String = str(card.get("effect", ""))
@@ -1166,6 +1214,13 @@ func _do_step(card: Dictionary, at_strength: float) -> void:
 	# The player's own strength scales EVERY kind of card, not only the felt ones: a whole
 	# object's feedback turned down has to turn down the tween that moves it too.
 	var at: float = at_strength * maxf(strength, 0.0)
+	# The no-flashing ceiling and floor belong to the words a player SEES, and the runner beside
+	# this file holds that list for every home a moment has. None of this node's own three words
+	# is one of them: a property tween's target is a position, a width or an angle, a signal
+	# carries no amount at all, and a nested player is handed a strength rather than an amplitude.
+	# Holding a tween to 200 pixels down to 0.3 would not be less flashing, it would be the wrong
+	# number. The ten moment words below ARE in the list, and the Juice node holds them to it as
+	# they arrive.
 	match word:
 		TWEEN_PROPERTY:
 			_tween_property(effect, amount * at, maxf(seconds, 0.0))
@@ -1177,6 +1232,11 @@ func _do_step(card: Dictionary, at_strength: float) -> void:
 				if not _nested.has(other):
 					_nested.append(other)
 				other.call("play", at * maxf(amount, 0.0))
+				# A play started BY a skip is skipped too. The list that started it has already been
+				# closed, so there is nothing left to tell it later - and a cutscene skip that leaves a
+				# nested beat running at its full length has not skipped the cutscene.
+				if skipping and other.has_method("skip_to_end"):
+					other.call("skip_to_end")
 		_:
 			var juice: Node = _juice()
 			if juice != null:
@@ -1214,13 +1274,6 @@ func _tween_property(property: String, value: float, seconds: float) -> void:
 	var before: Variant = host.get(property)
 	if before == null:
 		push_warning("Feedback Player: %s has no property called \"%s\", so that step did nothing." % [host.name, property])
-	# The no-flashing ceiling and floor belong to the words a player SEES, and the runner beside
-	# this file holds that list for every home a moment has. None of this node's own three words
-	# is one of them: a property tween's target is a position, a width or an angle, a signal
-	# carries no amount at all, and a nested player is handed a strength rather than an amplitude.
-	# Holding a tween to 200 pixels down to 0.3 would not be less flashing, it would be the wrong
-	# number. The ten moment words below ARE in the list, and the Juice node holds them to it as
-	# they arrive.
 		return
 	_restore_to.append({"object": host, "property": property, "value": before})
 	if seconds <= 0.0:
@@ -1292,10 +1345,14 @@ func _begin(order: Array, at_strength: float) -> int:
 	_order = order
 	_head = 0
 	_head_strength = at_strength
+	_head_taken = false
 	_nested.clear()
-	for entry: Variant in order:
-		if entry is Dictionary:
-			(entry as Dictionary)["loops_left"] = int((entry as Dictionary).get("loops", 1))
+	_loops_left.clear()
+	_rolls.clear()
+	for index: int in order.size():
+		if order[index] is Dictionary:
+			_loops_left[index] = int((order[index] as Dictionary).get("loops", 1))
+			_rolls[index] = randf() * 100.0
 	on_feedbacks_started.emit(at_strength)
 	return _next_token
 

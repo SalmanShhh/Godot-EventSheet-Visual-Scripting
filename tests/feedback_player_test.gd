@@ -30,6 +30,139 @@ static func run() -> bool:
 	ok = _preview_pins() and ok
 	ok = _outer_and_inner_pins() and ok
 	ok = _file_pins() and ok
+	ok = _boundary_pins() and ok
+	return ok
+
+
+## A player that answers a list rather than a real one, so what the outer play TELLS its children
+## can be pinned as words instead of guessed at from their state.
+class TellTale extends Node:
+
+	var told: PackedStringArray = PackedStringArray()
+
+	func play(at_strength: float) -> void:
+		told.append("play %s" % snappedf(at_strength, 0.001))
+
+	func skip_to_end() -> void:
+		told.append("skip_to_end")
+
+	func stop() -> void:
+		told.append("stop")
+
+
+## THE EDGES OF A PLAY: the ceiling that is not this node's to apply, the cards a skip has already
+## passed, the children a restart interrupts, and the counters a shared file must not carry.
+static func _boundary_pins() -> bool:
+	# The no-flashing ceiling belongs to the words a player SEES. A property tween's target is a
+	# position, not an amplitude, so 200 stays 200 and the walk keeps the length it was given -
+	# under the ceiling it used to arrive as 0.3, taken over four tenths of a second.
+	var was_dimmed: bool = bool(Engine.get_meta(&"no_flashing", false))
+	Engine.set_meta(&"no_flashing", true)
+	var dimmed: Node = PLAYER.new()
+	var dimmed_host: Node2D = Node2D.new()
+	dimmed.host = dimmed_host
+	dimmed_host.rotation = 0.0
+	dimmed.steps = [{"verb": "tween_property", "effect": "rotation", "amount": 200.0, "seconds": 0.0}] as Array[Dictionary]
+	dimmed.play(1.0)
+	var tweened: float = snappedf(dimmed_host.rotation, 0.001)
+	var clamped: float = snappedf(MomentRunner.scaled(1.0, 1.0), 0.001)
+	var is_seen: bool = MomentRunner.is_amplitude("shake")
+	var is_not_seen: bool = MomentRunner.is_amplitude("tween_property")
+	if was_dimmed:
+		Engine.set_meta(&"no_flashing", true)
+	else:
+		Engine.remove_meta(&"no_flashing")
+
+	# A Skip To End does the cards the walk has NOT reached. The head is the one card that could be
+	# in both, so a walk that has taken it says so and the skip starts under it.
+	var skipper: Node = PLAYER.new()
+	var skipper_host: Node2D = Node2D.new()
+	skipper.host = skipper_host
+	var listener: TellTale = TellTale.new()
+	listener.name = "Listener"
+	skipper.add_child(listener)
+	skipper._order = [
+		{"verb": "tween_property", "effect": "rotation", "amount": 5.0, "seconds": 0.0},
+		{"verb": "play_player", "effect": "Listener", "amount": 1.0, "seconds": 0.0}
+	]
+	skipper._head = 0
+	skipper._head_taken = true
+	skipper._head_strength = 1.0
+	skipper.playing = true
+	skipper._live = [1] as Array[int]
+	skipper_host.rotation = 0.0
+	skipper.skip_to_end()
+	var passed_over: float = snappedf(skipper_host.rotation, 0.001)
+	var nested_told: PackedStringArray = listener.told.duplicate()
+
+	# And the head the walk has NOT taken is done by the skip.
+	skipper._order = [{"verb": "tween_property", "effect": "rotation", "amount": 5.0, "seconds": 0.0}]
+	skipper._head = 0
+	skipper._head_taken = false
+	skipper.playing = true
+	skipper._live = [1] as Array[int]
+	skipper.skip_to_end()
+	var head_felt: float = snappedf(skipper_host.rotation, 0.001)
+
+	# One roll per card per play: asking twice is the same answer, not a second throw of the dice.
+	var chancer: Node = PLAYER.new()
+	var chance_card: Dictionary = {"verb": "shake", "chance": 50.0}
+	chancer._rolls[0] = 90.0
+	var first: String = chancer._why_not(chance_card, 1.0, 0)
+	var second: String = chancer._why_not(chance_card, 1.0, 0)
+
+	# A restart ends the play it interrupts the way Stop Feedbacks ends one, children included.
+	var restarter: Node = PLAYER.new()
+	var interrupted: TellTale = TellTale.new()
+	restarter.while_playing = "restart"
+	restarter.playing = true
+	restarter._live = [1] as Array[int]
+	restarter._nested = [interrupted] as Array[Node]
+	var may: bool = restarter._may_start()
+
+	# A moment file is ONE resource two players may both be playing, so a loop counter belongs to
+	# the play and never to the file: the file comes back from a play exactly as it went in.
+	var kind: Script = load("res://eventsheet_addons/moment_resource/moment_resource.gd") as Script
+	var shared: Resource = kind.new()
+	shared.set("steps", [{"verb": "shake", "amount": 0.4, "seconds": 0.0, "loops": 3}] as Array[Dictionary])
+	var one: Node = PLAYER.new()
+	var two: Node = PLAYER.new()
+	one.moment_file = shared
+	two.moment_file = shared
+	one.play(1.0)
+	var carried: PackedStringArray = PackedStringArray()
+	for named: Variant in ((shared.get("steps") as Array)[0] as Dictionary).keys():
+		carried.append(str(named))
+	carried.sort()
+
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["a property tween is no amplitude, so no flashing does not hold it down", tweened, 200.0],
+		["and an amount a player sees still is", clamped, 0.3],
+		["the words the ceiling is about are the runner's one list", [is_seen, is_not_seen],
+			[true, false]],
+		["a skip steps over the card the walk already took", passed_over, 0.0],
+		["and does the one it had not", head_felt, 5.0],
+		["a player a skip starts is skipped too", nested_told,
+			PackedStringArray(["play 1.0", "skip_to_end"])],
+		["a card's chance is one decision, not one throw per asking", [first, second],
+			["chance", "chance"]],
+		["a restart tells the players its play started", interrupted.told,
+			PackedStringArray(["stop"])],
+		["and still lets the new play begin", may, true],
+		["a shared moment file carries no play's loop counter", carried,
+			PackedStringArray(["amount", "loops", "seconds", "verb"])],
+		["the play keeps its own count instead", int(one._loops_left.get(0, -1)), 3],
+		["and a player that has not played has none", two._loops_left.is_empty(), true]
+	])
+	dimmed.free()
+	dimmed_host.free()
+	skipper.free()
+	skipper_host.free()
+	chancer.free()
+	interrupted.free()
+	restarter.free()
+	one.free()
+	two.free()
 	return ok
 
 
@@ -84,7 +217,10 @@ static func _file_pins() -> bool:
 	player.steps = [
 		{"verb": "shake", "amount": 0.4, "seconds": 0.1},
 		{"verb": "flash", "amount": 1.0, "seconds": 0.1, "active": false},
-		{"verb": "pause", "seconds": 0.2}
+		{"verb": "pause", "seconds": 0.2},
+		{"verb": "tween_property", "effect": "rotation", "amount": 2.0, "seconds": 0.1},
+		{"verb": "emit_signal", "effect": "hit", "seconds": 0.0},
+		{"verb": "play_player", "effect": "Inner", "seconds": 0.0}
 	] as Array[Dictionary]
 	var path: String = "user://feedback_player_test_moment.tres"
 	player.save_moment_file(path)
@@ -231,10 +367,10 @@ static func _gate_pins() -> bool:
 	player.cooldown = 60.0
 	var first: bool = player._may_start()
 	var second: bool = player._may_start()
-	var certain: bool = player._card_runs({"verb": "shake", "chance": 100.0}, 1.0)
-	var never: bool = player._card_runs({"verb": "shake", "chance": 0.0}, 1.0)
-	var unticked: bool = player._card_runs({"verb": "shake", "active": false}, 1.0)
-	var window: bool = player._card_runs({"verb": "shake", "min_strength": 0.5}, 0.2)
+	var certain: bool = player._card_runs({"verb": "shake", "chance": 100.0}, 1.0, 0)
+	var never: bool = player._card_runs({"verb": "shake", "chance": 0.0}, 1.0, 1)
+	var unticked: bool = player._card_runs({"verb": "shake", "active": false}, 1.0, 2)
+	var window: bool = player._card_runs({"verb": "shake", "min_strength": 0.5}, 0.2, 3)
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["a cooldown refuses the second play", [first, second], [true, false]],
 		["a card at full chance always runs", certain, true],
