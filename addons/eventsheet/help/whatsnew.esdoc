@@ -296,6 +296,44 @@ What changed in the build you have installed (v0.17.0), in the words the release
   was reported as asking for a layer no tileset declares. The key is read as the argument that
   carries it, off the call's own brackets, and only where it is a literal. A project whose tilesets
   declare no terrain set at all also no longer reads \"this project's tilesets go up to -1\".
+- **A streamer that stops following puts down what it was carrying.** Both Streamer packs already
+  stopped following a node that had been freed - but the wanted set was left exactly as the last
+  refill had built it, and nothing empties that list except the requests it feeds. So a streamer
+  whose player had died went on loading a whole radius of chunks, one a frame, around a place the
+  game had left. The lists are cleared with the follow now, which is what Stop Streaming has always
+  done. **And a chunk asked for before there is a folder waits for one**: Keep Chunk and Preload
+  Chunks Around used before Stream Chunks Around had named the folder looked for each cell at a path
+  with no folder in it, found nothing, and wrote every one of them down as a HOLE - which is
+  remembered for ever, so the preload silently cancelled itself. Those cells wait in the queue, the
+  streamer says so once and parks its tick, and naming a folder is what wakes it.
+- **A shader is code, and a data-only load now says so.** A `.gdshader` in a mod folder, and a
+  `Shader` or `VisualShader` written inside a scene or named beside one, were neither refused nor
+  mentioned: the tier said \"no script comes in with this mod\" while a stranger's shader came in with
+  it. A shader is compiled and run like anything else - on the graphics card, where what it can do
+  is spend the frame, wedge the driver and paint over the screen - so it is refused, in its own
+  words rather than reported as a script, and the game's own `res://` shader stays as welcome as the
+  game's own script. The rule is written in the pack, the pack page and the tiles guide, where the
+  rest of the tier is written.
+- **The files a data-only load reads are the ones the ENGINE calls resources, not four written
+  down.** Godot recognises a couple of dozen resource extensions - `.material`, `.mesh`, `.theme`,
+  `.shape`, `.stylebox`, `.translation` beside `.tscn`, `.scn`, `.tres` and `.res` - and the reading
+  knew the last four, so every other one was never opened at all: a StandardMaterial3D saved as
+  `evil.material` with a script set on it, named by a scene the mod also shipped, cleared as data
+  and ran on load. The list is asked of the resource loader at run time now, which makes it the list
+  of the engine the game actually ships with, and a resource saved in the binary form is refused by
+  name rather than cleared, exactly as a binary scene already was.
+- **A crafted mod manifest never gets to run, and a script a mod brought is never named past.** Two
+  halves of the same hole. A `mod.tres` was handed to `load()` so its five fields could be asked of
+  the object that came back, and BUILDING a resource file runs the script it names: a manifest
+  pointing at a `.gd` in its own folder had already run a stranger's `_init` by the time the walk
+  that refuses the mod started. The manifest is read as TEXT now - the same reading that decides
+  whether the file may be taken at all - and a data-only load calls `load()` on nothing a mod
+  brought. And the reading itself only ever asked a `[ext_resource]` WHERE it pointed, so a script
+  named from inside the mod's own folder was waved through as \"the mod's own file\"; a tag of a
+  script type, or one naming a file that is code by its extension whatever type it claims, is now
+  refused wherever it points. `res://` stays the one exception, because that is the game's own
+  script - which is how a mod's `sword.tres` names the Resource class of yours it is an instance of,
+  and that is the whole point of the tier.
 - **Tile Has Custom Data no longer points half of itself at another node.** The row names its layer
   twice - a null guard, and the lookup behind it - and a row whose template is one plain member call
   is given its \"On node\" field by prefixing the START of the line, so naming another layer retargeted
@@ -465,8 +503,11 @@ What changed in the build you have installed (v0.17.0), in the words the release
   The walk is a bounded fold because an expression has no loop to write, a chain that points at
   itself still answers, and a chain whose far end has been freed answers with NOTHING rather than
   with a freed object. Everything compiles to plain `set_meta` / `get_meta` calls with zero plugin
-  references, so a hand-written project reads back as these rows. Spawn and pool rows gained an
-  **owned by** field, Bullet and Bullet 3D a **Fired By**, and the Weapon Kit a **Claim Shot**.
+  references, so a hand-written project reads back as these rows. Bullet and Bullet 3D gained a
+  **Fired By** and the Weapon Kit a **Claim Shot**, both of which claim through this same key. The
+  spawn and pool rows do NOT yet carry an **owned by** field of their own: claiming a fresh copy is
+  a Claim row under the spawn row today, and folding it into the spawn sentence is deferred to a
+  later pass rather than half-added here.
 - **Damage that knows what kind it is: 16 new Health rows.** **Take Damage Of Type** (amount, kind,
   who dealt it) runs the arithmetic every game writes in front of every damage row, once, inside the
   behaviour: resistance as a percentage, then armour as flat points, then the critical as a
@@ -490,6 +531,51 @@ What changed in the build you have installed (v0.17.0), in the words the release
   are words the movement packs and the state machine ask about with **Has Status**, which keeps the
   pack out of every controller's business. Every clock is game time, and the tint obeys the same
   accessibility ceiling the screen effects do.
+- **How hard this game is being played, as a number a row multiplies by: 10 new Settings rows.** A
+  **DifficultyResource** is one difficulty as a file - the word a player picks, the line a menu shows
+  under it, and the named factors your rows multiply by - and three starters ship to edit or replace.
+  Nothing in the file changes the game on its own: a factor changes something because some row
+  multiplied by it, so `damage_taken` goes where damage is dealt and `enemy_count` where a wave is
+  sized. **Use Difficulty**, **Use The Difficulty A Setting Names**, **Difficulty Is**, **Difficulty
+  Factor**, **Difficulty Name**, **Difficulty Names** and **On Difficulty Changed** are the seven
+  rows around it, and the factors in force are kept as `Engine` metadata the way the accessibility
+  dials already are, so any script reads one in a line and no pack has to name another. **A factor
+  no difficulty writes reads as 1.0**, and so does a game that has chosen none, which is what lets a
+  row multiply by a factor before any file mentions it. Take Damage Of Type gained an optional
+  **Scaled By** field for exactly that reason: the common case is a field on the row rather than a
+  multiplication written in front of it, and the trailing defaulted parameter leaves every call
+  written before it compiling. **Declare Assist**, **Assist Is On** and **On Assist Changed** are
+  the assist half - one row declares a yes-or-no setting on the Accessibility page that Menu Rows
+  From Declarations already builds, and it stays an ordinary setting underneath, saved and reset and
+  re-applied with the rest. The Doctor's Options section gained a third question, asked of CALL
+  sites: a project that chooses a difficulty while nothing reads a factor out of one is a menu that
+  changes nothing.
+- **One held enemy, and a steadier aim: the Targeting pack, 32 rows, and its 3D twin, 33.** **Lock On
+  To Nearest** searches a cone around the host's facing for the closest member of a group and holds
+  it; **Cycle Target** walks the ring that search built, left to right by angle, wrapping; **Lock On
+  To** names one node outright and **Release Lock** lets go on purpose. A lock ends in exactly four
+  ways and **On Target Lost** carries the word for which - `died`, `out_of_range`, `blocked`,
+  `released` - so one trigger row cleans a reticle up however it ended. **Locked Target**, **Locked
+  Target On Screen** (camera zoom and scroll included), **Distance To Target** (INF with nothing
+  held, so \"closer than 200\" is plainly false) and **Is Locked On** are the readings, over 6 Inspector
+  properties with a setter and a reading each. **Assisted Aim** and **Magnetism** need no lock at
+  all: both read the aim-assist radius the accessibility rows already declare, measured across the
+  aim ray, so the options screen that has the slider governs the help and a radius of zero is its off
+  switch. **Targeting 3D** is the twin verb for verb with the two things only 3D has: the cone is
+  centred on the CAMERA's forward rather than the host's rotation, because a third-person game locks
+  on to what is on screen, falling back to the host's forward axis where there is no camera to ask,
+  which is what a turret has; and **Snap On Aim Down Sights** turns the host onto the nearest target
+  the aim is already nearly on and refuses a turn wider than the row allows, so the settle is never a
+  yank.
+- **Written down where a reader looks, and said in eight languages.** A new guide, **Damage, Status
+  and Targeting**, in **17 sections**, each with a whole two-lane event, the GDScript it compiles to
+  and the trap it removes, walking the chain in the order each link is built on the one before it:
+  owner, damage, status, difficulty, lock-on. Targeting and Targeting 3D joined the addon index, the
+  two lock-on packs joined the generated vocabulary reference, and the pack count in README.md and
+  CLAUDE.md was re-measured from a clean checkout at **138**. The ownership module joined the l10n
+  obligation whole, and the Doctor's Damage section - which had been speaking English into eight
+  translated inboxes - now goes through the same translation seam every other section does: **35
+  owed keys** filled in all **8 bundled locales**.
 
 ### Fixed in the wound-chain pass
 
@@ -521,6 +607,17 @@ What changed in the build you have installed (v0.17.0), in the words the release
   as a status expires is paid; a tick handler that ends OTHER statuses no longer leaves the frame it
   interrupted reading a word that has gone; and an effect answers to what it calls itself through
   both doors, so a renamed file cannot answer to one word in the folder and another on the node.
+- **A status asked the tree two questions it could not answer.** A status ends when its node leaves
+  the tree as often as when its clock runs out - a pooled enemy despawning is exactly that - and
+  ending one asks for the Boosts autoload, which is a question about the tree. `get_tree()` on a node
+  with no tree is an engine error rather than a null, so the despawn path printed a backtrace per
+  status ended and the null guard below it never got a word in. The other was the owner a tick
+  credits its damage to: a poison outlives the player who applied it often enough that the freed
+  claimer is the ordinary case, and the key was cast to a Node before anything asked whether it was
+  still there, which is itself the error. Read as stored, tested, then cast.
+- **A target straight overhead is declined rather than turned onto badly.** `Basis.looking_at`
+  collapses when the direction is collinear with the up vector, so Snap On Aim Down Sights could put
+  a 3D host into a garbage rotation for the one target it should most obviously refuse.
 - **Two guides said things that were not so.** The Health guide's fire example did its own arithmetic
   wrong (12 of fire against 50 per cent and 3 armour lands for 3, not 6), and neither guide said out
   loud that there is one opinion per kind with the last row winning, that the critical belongs to the

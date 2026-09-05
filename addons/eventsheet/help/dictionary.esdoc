@@ -194,7 +194,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
 | `create_server` | [Host A Game](ace:Core/HostGame) | Multiplayer | Vocabulary |
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
-| `create_tween` | [Blend Toward](ace:Core/BlendToward) | Animation | Vocabulary |
+| `create_tween` | [Fade Brightness](ace:Core/LightFadeBrightness) | Lighting | Vocabulary |
 | `cross` | [Fire Hitscan](ace:Core/FireHitscan) | Weapons 3D | Vocabulary |
 | `cull_mode` | [Sides](ace:Core/MaterialSides) | Material | Vocabulary |
 | `current_animation` | [Set Current Animation](ace:Core/SetAnimationTime) | Animation | Vocabulary |
@@ -274,7 +274,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `filter` | [Filter](ace:Core/ArrayFilter) | Variables: Array | Vocabulary |
 | `filters` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `find` | [Index Of](ace:Core/ArrayFind) | Variables: Array | Vocabulary |
-| `find_bone` | [Set Bone Pose Override](ace:Core/SetBonePoseOverride) | Skeleton | Vocabulary |
+| `find_bone` | [Bone Position](ace:Core/BonePosition3D) | Skeleton | Vocabulary |
 | `find_child` | [Find Child (by name)](ace:Core/FindChild) | Nodes | Vocabulary |
 | `find_children` | [Find Children (by name)](ace:Core/FindChildrenByPattern) | Nodes: Picking | Vocabulary |
 | `find_keycode_from_string` | [Keycode From Name](ace:Core/KeycodeFromName) | Keyboard | Vocabulary |
@@ -610,7 +610,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
 | `join` | [Join To Text](ace:Core/ArrayJoin) | Variables: Array | Vocabulary |
 | `keys` | [Dictionary Keys](ace:Core/DictKeys) | Variables: Dictionary | Vocabulary |
-| `kill` | [Skip Reveal](ace:Core/SkipReveal) | Text | Vocabulary |
+| `kill` | [Blend Toward](ace:Core/BlendToward) | Animation | Vocabulary |
 | `layer` | [Set Layer Order](ace:Core/SetLayerOrder) | Layers | Vocabulary |
 | `layout_direction` | [Mirror Layout For Language](ace:Core/MirrorLayoutForLanguage) | Translation | Vocabulary |
 | `left` | [Left](ace:Core/TextLeft) | Text | Vocabulary |
