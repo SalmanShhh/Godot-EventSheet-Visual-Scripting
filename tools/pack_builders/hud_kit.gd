@@ -24,7 +24,8 @@ static func build() -> bool:
 		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
 		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false},
 		"damage_types": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white."}},
-		"crit_text_scale": {"type": "float", "default": 1.6, "exported": true, "attributes": {"tooltip": "How much bigger a number popped with the style \"crit\" is drawn. The whole language of a critical hit in one number.", "range": {"min": "1", "max": "4", "step": "0.1"}}}
+		"crit_text_scale": {"type": "float", "default": 1.6, "exported": true, "attributes": {"tooltip": "How much bigger a number popped with the style \"crit\" is drawn, when no styles file names that style. The whole language of a critical hit in one number.", "range": {"min": "1", "max": "4", "step": "0.1"}}},
+		"text_styles": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "The FloatingTextStyles file this game uses, if it has one. Pop Floating Text As takes a number's size, colour, rise, shake and lifetime from it, so the manners a number is drawn in are one file you edit rather than five numbers repeated through the sheets. Leave it empty and the numbers are drawn the way they always were."}}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "HUD Kit behavior: drive a menu or HUD by NODE NAME - set label text, fill bars, switch menu screens (show one panel, hide its siblings), pop auto-fading toasts - and every descendant Button reports through one On Button Pressed trigger, so a whole menu needs zero connected signals. Drop it under your UI root (CanvasLayer or Control)."
@@ -213,7 +214,7 @@ static func build() -> bool:
 	# it is the same damage, louder. It reads from the set if the set names it, and is drawn bigger
 	# either way.
 	Lib.append_function(sheet, "pop_floating_text_as", "Pop Floating Text As", "UI",
-		"Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style \"crit\" draws the number bigger, which is the whole language of a critical hit. A style the set does not name is drawn white, so a game with no set still gets its numbers.",
+		"Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style \"crit\" draws the number bigger, which is the whole language of a critical hit. Point Text Styles at a FloatingTextStyles file and the style also says how big, how far it rises, how hard it shakes and how long it stays. A style nothing names is drawn white and plain, so a game with neither file still gets its numbers.",
 		[["text", "String"], ["style", "String"], ["at", "Vector2"]], "\n".join(PackedStringArray([
 		"var tint: Color = Color.WHITE",
 		"# Duck-typed rather than cast: the DamageTypeSet class ships in a pack a game need not have",
@@ -221,20 +222,38 @@ static func build() -> bool:
 		"# drawing it white.",
 		"if damage_types != null and damage_types.has_method(\"colour_of\"):",
 		"\ttint = damage_types.call(\"colour_of\", style)",
+		"# The manners, out of the styles file when this game has one. A style the file does not name keeps",
+		"# the numbers this row was always drawn with, so a half-filled file is not a broken HUD - and the",
+		"# colour is handed IN, because a style may say it takes the colour of the damage that caused it.",
+		"var size: float = crit_text_scale if style == \"crit\" else 1.0",
+		"var rise: float = 24.0",
+		"var shake: float = 0.0",
+		"var life: float = 0.7",
+		"if text_styles != null and text_styles.has_method(\"has_style\") and text_styles.call(\"has_style\", style):",
+		"\ttint = text_styles.call(\"colour_of\", style, tint)",
+		"\tsize = text_styles.call(\"size_of\", style)",
+		"\trise = text_styles.call(\"rise_of\", style)",
+		"\tshake = text_styles.call(\"shake_of\", style)",
+		"\tlife = text_styles.call(\"lifetime_of\", style)",
 		"var label: Label = Label.new()",
 		"label.text = text",
 		"label.modulate = tint",
 		"label.position = at",
-		"if style == \"crit\":",
-		"\tlabel.scale = Vector2(crit_text_scale, crit_text_scale)",
+		"label.scale = Vector2(size, size)",
 		"if host != null:",
 		"\thost.add_child(label)",
 		"else:",
 		"\tadd_child(label)",
 		"var pop: Tween = label.create_tween()",
 		"pop.set_parallel(true)",
-		"pop.tween_property(label, \"position:y\", at.y - 24.0, 0.7)",
-		"pop.tween_property(label, \"modulate:a\", 0.0, 0.7)",
+		"pop.tween_property(label, \"position:y\", at.y - rise, life)",
+		"pop.tween_property(label, \"modulate:a\", 0.0, life)",
+		"# The shake is a wander in x that dies away as the number fades rather than a lean, because a",
+		"# critical that rattles on its way up reads as a critical from across the screen.",
+		"if shake > 0.0:",
+		"\tvar wander: Callable = func(phase: float) -> void:",
+		"\t\tlabel.position.x = at.x + sin(phase * TAU * 5.0) * shake * (1.0 - phase)",
+		"\tpop.tween_method(wander, 0.0, 1.0, life)",
 		"pop.set_parallel(false)",
 		"pop.tween_callback(label.queue_free)"
 	])))

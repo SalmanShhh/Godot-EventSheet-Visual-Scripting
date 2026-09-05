@@ -30,8 +30,10 @@ var last_button_name: String = ""
 var ui_cache: Dictionary = {}
 ## The DamageTypeSet this game uses, if it has one. Pop Floating Text As takes a number's colour from it, so a fire number is orange without a colour being typed into the row. Leave it empty and those numbers are drawn white.
 @export var damage_types: Resource = null
-## How much bigger a number popped with the style "crit" is drawn. The whole language of a critical hit in one number.
+## How much bigger a number popped with the style "crit" is drawn, when no styles file names that style. The whole language of a critical hit in one number.
 @export_range(1, 4, 0.1) var crit_text_scale: float = 1.6
+## The FloatingTextStyles file this game uses, if it has one. Pop Floating Text As takes a number's size, colour, rise, shake and lifetime from it, so the manners a number is drawn in are one file you edit rather than five numbers repeated through the sheets. Leave it empty and the numbers are drawn the way they always were.
+@export var text_styles: Resource = null
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).
 func _ui(control_name: String) -> Node:
@@ -190,7 +192,7 @@ func pop_floating_text(text: String, at: Vector2, color: Color) -> void:
 ## @ace_action
 ## @ace_name("Pop Floating Text As")
 ## @ace_category("UI")
-## @ace_description("Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style "crit" draws the number bigger, which is the whole language of a critical hit. A style the set does not name is drawn white, so a game with no set still gets its numbers.")
+## @ace_description("Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style "crit" draws the number bigger, which is the whole language of a critical hit. Point Text Styles at a FloatingTextStyles file and the style also says how big, how far it rises, how hard it shakes and how long it stays. A style nothing names is drawn white and plain, so a game with neither file still gets its numbers.")
 ## @ace_display_template("Pop floating text [b]{text}[/b] as [b]{style}[/b] at [b]{at}[/b]")
 ## @ace_param_hint(style damage_type)
 ## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
@@ -202,20 +204,38 @@ func pop_floating_text_as(text: String, style: String, at: Vector2) -> void:
 	# drawing it white.
 	if damage_types != null and damage_types.has_method("colour_of"):
 		tint = damage_types.call("colour_of", style)
+	# The manners, out of the styles file when this game has one. A style the file does not name keeps
+	# the numbers this row was always drawn with, so a half-filled file is not a broken HUD - and the
+	# colour is handed IN, because a style may say it takes the colour of the damage that caused it.
+	var size: float = crit_text_scale if style == "crit" else 1.0
+	var rise: float = 24.0
+	var shake: float = 0.0
+	var life: float = 0.7
+	if text_styles != null and text_styles.has_method("has_style") and text_styles.call("has_style", style):
+		tint = text_styles.call("colour_of", style, tint)
+		size = text_styles.call("size_of", style)
+		rise = text_styles.call("rise_of", style)
+		shake = text_styles.call("shake_of", style)
+		life = text_styles.call("lifetime_of", style)
 	var label: Label = Label.new()
 	label.text = text
 	label.modulate = tint
 	label.position = at
-	if style == "crit":
-		label.scale = Vector2(crit_text_scale, crit_text_scale)
+	label.scale = Vector2(size, size)
 	if host != null:
 		host.add_child(label)
 	else:
 		add_child(label)
 	var pop: Tween = label.create_tween()
 	pop.set_parallel(true)
-	pop.tween_property(label, "position:y", at.y - 24.0, 0.7)
-	pop.tween_property(label, "modulate:a", 0.0, 0.7)
+	pop.tween_property(label, "position:y", at.y - rise, life)
+	pop.tween_property(label, "modulate:a", 0.0, life)
+	# The shake is a wander in x that dies away as the number fades rather than a lean, because a
+	# critical that rattles on its way up reads as a critical from across the screen.
+	if shake > 0.0:
+		var wander: Callable = func(phase: float) -> void:
+			label.position.x = at.x + sin(phase * TAU * 5.0) * shake * (1.0 - phase)
+		pop.tween_method(wander, 0.0, 1.0, life)
 	pop.set_parallel(false)
 	pop.tween_callback(label.queue_free)
 

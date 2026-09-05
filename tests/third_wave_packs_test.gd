@@ -64,7 +64,10 @@ static func _the_coloured_popup() -> bool:
 	all_passed = _check("the colour comes from the set, not from the row", hud_source.contains("tint = damage_types.call(\"colour_of\", style)"), true) and all_passed
 	all_passed = _check("and is asked for rather than cast for", hud_source.contains("if damage_types != null and damage_types.has_method(\"colour_of\"):"), true) and all_passed
 	all_passed = _check("a game with no set still gets its numbers", hud_source.contains("var tint: Color = Color.WHITE"), true) and all_passed
-	all_passed = _check("a crit is marked by its size", hud_source.contains("label.scale = Vector2(crit_text_scale, crit_text_scale)"), true) and all_passed
+	# A crit is still marked by its size; which size is now the styles file's answer when the game
+	# has one, and the behaviour's own crit scale when it has not.
+	all_passed = _check("a crit is marked by its size", hud_source.contains("var size: float = crit_text_scale if style == \"crit\" else 1.0"), true) and all_passed
+	all_passed = _check("and the number is drawn at whatever size was decided", hud_source.contains("label.scale = Vector2(size, size)"), true) and all_passed
 	var starter: Resource = load(TYPE_SET_STARTER)
 	if starter == null:
 		return _check("the starter damage type set loads", false, true) and all_passed

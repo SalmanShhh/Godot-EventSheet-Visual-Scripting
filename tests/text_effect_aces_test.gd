@@ -35,6 +35,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const MODULE_PATH := "res://addons/eventforge/registration/modules/text_effect_aces.gd"
 const LIFT_PATH := "res://addons/eventforge/importer/text_effect_lift.gd"
 const STYLES_PATH := "res://eventsheet_addons/floating_text_styles_resource/floating_text_styles.tres"
+const HUD_PACK := "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"
 const PROBE_SCRIPT := "user://text_effect_probe.gd"
 const COMPILE_PROBE := "user://text_effect_compile_probe.gd"
 
@@ -395,6 +396,20 @@ static func _run_styles() -> bool:
 	# Every answer is total: a name this set has never heard of reads as the plain default.
 	rows.append(["a manner nobody wrote down is still answered", styles.call("size_of", "nonesuch"), 1.0])
 	rows.append(["and is not claimed", styles.call("has_style", "nonesuch"), false])
+	# A FILE NOTHING READS IS DEAD DATA, however well it loads - so the last pins are not about the
+	# resource at all. The HUD pack's Pop Floating Text As is the row these manners are drawn by,
+	# and the shipped bytes are asked whether it consults the file and uses every answer it gives.
+	var hud: String = FileAccess.get_file_as_string(HUD_PACK)
+	var reads: Array = []
+	for answer: String in ["colour_of", "size_of", "rise_of", "shake_of", "lifetime_of"]:
+		if hud.contains("text_styles.call(\"%s\"" % answer):
+			reads.append(answer)
+	rows.append(["the pop row asks the styles file whether it names the manner",
+		hud.contains("text_styles.call(\"has_style\", style)"), true])
+	rows.append(["and draws the number by every answer it gives", reads,
+		["colour_of", "size_of", "rise_of", "shake_of", "lifetime_of"]])
+	rows.append(["a game with no styles file keeps the numbers it always had",
+		hud.contains("var size: float = crit_text_scale if style == \"crit\" else 1.0"), true])
 	return SUPPORT.pins("text_effect_aces_test", rows)
 
 
