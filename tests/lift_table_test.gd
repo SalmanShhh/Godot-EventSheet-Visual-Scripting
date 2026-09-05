@@ -171,8 +171,9 @@ static func _test_the_reading_asks_the_tables_in_one_order() -> bool:
 		var family: String = path.get_file().trim_suffix(".gd")
 		for entry: Dictionary in _all_tables()[path] as Array:
 			var line: String = _emit(str(entry.get("shape", "")), entry.get("slots", {}))
-			var claimed: Dictionary = EventSheetLiftReading.table_run_claim(line.split("
-"), 0) 				if entry.has(EventForgeLiftTable.STATEMENTS_KEY) 				else EventSheetLiftReading.table_claim(line)
+			var claimed: Dictionary = EventSheetLiftReading.table_run_claim(line.split("\n"), 0) \
+				if entry.has(EventForgeLiftTable.STATEMENTS_KEY) \
+				else EventSheetLiftReading.table_claim(line)
 			asked += 1
 			var named: String = str(claimed.get("family", ""))
 			if named != family:

@@ -366,7 +366,8 @@ static func _collect_row_lines(items: Array, found: Dictionary, derived_facts: D
 			# descriptor says "Call Method" for both and a developer cannot tell the canvas's
 			# plainest reading from the layer that read the API back.
 			var derived: String = _derived_claim(action, derived_facts)
-			var name: String = derived if not derived.is_empty() 				else _descriptor_name(action.provider_id, action.ace_id, "action")
+			var name: String = derived if not derived.is_empty() \
+				else _descriptor_name(action.provider_id, action.ace_id, "action")
 			for line: String in ActionCodegen.generate_action(action).split("
 "):
 				_register_row_line(found, line, name)
@@ -497,7 +498,8 @@ static func _derived_claim(action: ACEAction, derived_facts: Dictionary) -> Stri
 	if reading.is_empty():
 		return ""
 	var read_class: String = str(reading.get("class", ""))
-	var named: String = "%s.%s" % [read_class, str(reading.get("method", ""))] 		if not read_class.is_empty() else str(reading.get("method", ""))
+	var named: String = "%s.%s" % [read_class, str(reading.get("method", ""))] \
+		if not read_class.is_empty() else str(reading.get("method", ""))
 	return "derived · %s (%s)" % [named, str(reading.get("source", ""))]
 
 

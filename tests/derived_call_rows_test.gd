@@ -108,8 +108,7 @@ static func run() -> bool:
 ## inside a function, beside an `@onready var sprite: Sprite2D`, is a warning in GDScript rather than
 ## an error - it compiles, and the rows under it are about the local.
 static func _test_a_shadowed_member_is_nobodys() -> bool:
-	var source: String = "
-".join(PackedStringArray([
+	var source: String = "\n".join(PackedStringArray([
 		"extends Node2D",
 		"",
 		"@onready var body: CharacterBody2D = $Body",
@@ -118,12 +117,12 @@ static func _test_a_shadowed_member_is_nobodys() -> bool:
 		"",
 		"",
 		"func _on_area_entered(body: Node2D) -> void:",
-		"	body.rotate(0.5)",
+		"\tbody.rotate(0.5)",
 		"",
 		"",
 		"func flash() -> void:",
-		"	var sprite := $Other as AnimatedSprite2D",
-		"	sprite.play(\"hit\")",
+		"\tvar sprite := $Other as AnimatedSprite2D",
+		"\tsprite.play(\"hit\")",
 		""
 	]))
 	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
@@ -168,8 +167,7 @@ static func _test_a_shadowed_member_is_nobodys() -> bool:
 ## disagree about it, and a receiver written as a path with a parent in it only ever resolves on its
 ## whole spelling.
 static func _test_two_paths_ending_in_one_name() -> bool:
-	var source: String = "
-".join(PackedStringArray([
+	var source: String = "\n".join(PackedStringArray([
 		"extends Node2D",
 		"",
 		"@onready var enemy_sprite: AnimatedSprite2D = $Enemy/Sprite",
@@ -177,7 +175,7 @@ static func _test_two_paths_ending_in_one_name() -> bool:
 		"",
 		"",
 		"func hide_player() -> void:",
-		"	$Player/Sprite.hide()",
+		"\t$Player/Sprite.hide()",
 		""
 	]))
 	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
@@ -197,8 +195,7 @@ static func _test_two_paths_ending_in_one_name() -> bool:
 		EventSheetDerivedCalls.derived_pieces("$Player/Sprite.hide()", context, class_map, {}),
 		{}) and ok
 	# The map half: two declarations that disagree about a leaf hand it to nobody.
-	var two: String = "
-".join(PackedStringArray([
+	var two: String = "\n".join(PackedStringArray([
 		"extends Node2D",
 		"",
 		"@onready var enemy_sprite: AnimatedSprite2D = $Enemy/Sprite",
