@@ -42,17 +42,21 @@ const ARGUMENTS: Dictionary = {
 const DAY: float = 86400.0
 
 
-## A SceneTree that is only ever a factory. It is never run, never given a scene and never stepped -
+## The stand-in tree the emitted rows call. It is never run, never given a scene and never stepped:
 ## it exists because SceneTreeTimer cannot be constructed any other way, and every timer it hands
 ## out is stepped by this test writing time_left rather than by any clock.
+##
+## The SceneTree behind it is made ONCE for the whole file and freed at the end - a second
+## SceneTree is a second root Window inside the one this process is already running, so making one
+## per section was five of them rather than the one this test cannot avoid.
 class TreeSpy:
 	extends RefCounted
 
 	var inner: SceneTree = null
 	var calls: Array = []
 
-	func _init() -> void:
-		inner = SceneTree.new()
+	func _init(shared: SceneTree) -> void:
+		inner = shared
 
 	## The call the emitted rows make. Both booleans are recorded because they ARE the clock choice:
 	## game time is false and false, realtime is true and true.
@@ -61,14 +65,14 @@ class TreeSpy:
 		calls.append([snappedf(seconds, 0.0001), process_always, process_in_physics, ignore_time_scale])
 		return inner.create_timer(seconds, process_always, process_in_physics, ignore_time_scale)
 
+	## The end of one section: the recorded calls go, the shared tree stays for the next one.
 	func release() -> void:
 		calls.clear()
-		if inner != null:
-			inner.free()
-			inner = null
+		inner = null
 
 
 static func run() -> bool:
+	_timer_factory = SceneTree.new()
 	var all_passed: bool = true
 	all_passed = _the_words() and all_passed
 	all_passed = _the_frozen_rows_beside_them() and all_passed
@@ -79,7 +83,13 @@ static func run() -> bool:
 	all_passed = _the_ready_signal() and all_passed
 	all_passed = _the_clock_a_row_replaces() and all_passed
 	all_passed = _what_comes_back() and all_passed
+	_timer_factory.free()
+	_timer_factory = null
 	return all_passed
+
+
+## The one SceneTree this file makes, alive for the length of the run and freed at the end of it.
+static var _timer_factory: SceneTree = null
 
 
 ## THE ROWS THEMSELVES. One text for the whole module, so a row that is renamed, retyped, refiled or
@@ -142,7 +152,7 @@ static func _the_frozen_rows_beside_them() -> bool:
 ## COOLDOWNS, stepped by hand. A cooldown nobody started is ready; a fresh one is not; half way
 ## through it reads half; at exactly zero it is ready again.
 static func _cooldowns_run() -> bool:
-	var spy: TreeSpy = TreeSpy.new()
+	var spy: TreeSpy = TreeSpy.new(_timer_factory)
 	var host: Object = _host(spy)
 	var rows: Array = []
 
@@ -196,7 +206,7 @@ static func _cooldowns_run() -> bool:
 ## Game time is `process_always` off and `ignore_time_scale` off, which is what makes a pause menu
 ## and a slow-motion moment hold the cooldown. Realtime is both on.
 static func _the_clock_choice() -> bool:
-	var spy: TreeSpy = TreeSpy.new()
+	var spy: TreeSpy = TreeSpy.new(_timer_factory)
 	var host: Object = _host(spy)
 	var rows: Array = []
 
@@ -230,7 +240,7 @@ static func _the_clock_choice() -> bool:
 
 ## COUNTDOWNS: the number, the text, the pause, and the clock a resume remembers.
 static func _countdowns_run() -> bool:
-	var spy: TreeSpy = TreeSpy.new()
+	var spy: TreeSpy = TreeSpy.new(_timer_factory)
 	var host: Object = _host(spy)
 	var rows: Array = []
 
@@ -279,7 +289,7 @@ static func _countdowns_run() -> bool:
 
 ## STOPWATCHES: counting up by counting a day down, and the split a lap is.
 static func _stopwatches_run() -> bool:
-	var spy: TreeSpy = TreeSpy.new()
+	var spy: TreeSpy = TreeSpy.new(_timer_factory)
 	var host: Object = _host(spy)
 	var rows: Array = []
 
@@ -320,7 +330,7 @@ static func _stopwatches_run() -> bool:
 ## the test asks the two halves it can ask - that exactly one connection was made, and that calling
 ## what was connected emits the sheet's signal carrying the cooldown's name.
 static func _the_ready_signal() -> bool:
-	var spy: TreeSpy = TreeSpy.new()
+	var spy: TreeSpy = TreeSpy.new(_timer_factory)
 	var host: Object = _host(spy)
 	var heard: Array = []
 	host.connect("cooldown_ready", func(cooldown_name: String) -> void: heard.append(cooldown_name))
@@ -351,7 +361,7 @@ static func _the_ready_signal() -> bool:
 ## asked where the answer lives: the replaced timer's own connection list, and the seconds it has
 ## left. Nothing is stepped by hand in this section - every number is what the ROW did.
 static func _the_clock_a_row_replaces() -> bool:
-	var spy: TreeSpy = TreeSpy.new()
+	var spy: TreeSpy = TreeSpy.new(_timer_factory)
 	var host: Object = _host(spy)
 	var rows: Array = []
 

@@ -236,12 +236,29 @@ static func _test_the_starters() -> bool:
 			_starter_sheet().contains("$SceneFlow.loading_finished.connect(_on_loading_finished)")
 				and _starter_sheet().contains("$PressAnyKey.visible = true"), true],
 		["a tips file ships beside it", FileAccess.file_exists(STARTER_TIPS), true],
-		["with tips in it and its own note left out", starter_tips.size(), 8],
+		# The tips themselves rather than how many there are: a starter file is meant to be
+		# rewritten, so a count would fail for the one change it is asking for, while the rule
+		# under test - the file's own notes are left out and its first tip is the first line
+		# shown - holds however many lines a project ends up keeping.
+		["its own note about itself is not a tip",
+			_starts_with_a_note(starter_tips), false],
+		["and the first tip is the first line that is not one",
+			starter_tips[0] if not starter_tips.is_empty() else "",
+			"Hold the run button while you jump to clear the widest gaps."],
 		["the screen knob opens empty, so nothing is pointed at either of them",
 			shipped.contains("var loading_scene: String = \"\""), true],
 		["and so does the tips knob",
 			shipped.contains("var loading_tips_file: String = \"\""), true],
 	])
+
+
+## Whether any line the tips reader handed back is one of the file's own notes - the rule the
+## starter file is shipped to demonstrate, asked of the shipped file itself.
+static func _starts_with_a_note(tips: PackedStringArray) -> bool:
+	for tip: String in tips:
+		if tip.begins_with("#"):
+			return true
+	return false
 
 
 ## The starter screen's own sheet, read off disk - the three rows the scene is shipped wired to.

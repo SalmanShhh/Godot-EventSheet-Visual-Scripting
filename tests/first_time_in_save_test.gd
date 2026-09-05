@@ -49,13 +49,31 @@ const ACTION_LOOKUP := "var __seentree_t: SceneTree = Engine.get_main_loop() as 
 
 
 static func run() -> bool:
+	# The fallback store is a REAL file this machine shares with Only Once Ever and Remember Between
+	# Runs, so the whole run happens between a snapshot of it and its restoration. A test that left
+	# a section of its own behind would be writing into another test's store on a serial run.
+	var remembered_before: String = FileAccess.get_file_as_string(REMEMBERED) if FileAccess.file_exists(REMEMBERED) else ""
 	var passed: bool = _the_rows_emit_what_they_promise()
 	passed = _the_emitted_sheet_reads_back() and passed
 	passed = _the_slot_is_the_memory() and passed
 	passed = _without_the_save_pack_it_is_the_remembered_file() and passed
 	passed = _marking_and_forgetting_write_the_same_memory() and passed
 	passed = _the_doctor_says_which_store_it_landed_in() and passed
+	_put_the_remembered_file_back(remembered_before)
+	_forget_cache()
 	return passed
+
+
+## The shared remembered file as it was before this test ran: its own bytes back, or gone again
+## when there was no such file on this machine to begin with.
+static func _put_the_remembered_file_back(was: String) -> void:
+	if was.is_empty():
+		if FileAccess.file_exists(REMEMBERED):
+			DirAccess.remove_absolute(REMEMBERED)
+		return
+	var handle: FileAccess = FileAccess.open(REMEMBERED, FileAccess.WRITE)
+	if handle != null:
+		handle.store_string(was)
 
 
 # ── The note ──────────────────────────────────────────────────────────────────────────────────
