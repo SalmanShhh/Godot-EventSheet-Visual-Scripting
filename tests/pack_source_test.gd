@@ -215,16 +215,15 @@ static func _every_folder_is_claimed() -> bool:
 			if file_name.get_extension() != "gd":
 				continue
 			var text: String = FileAccess.get_file_as_string("res://tools/pack_builders/".path_join(file_name))
-			var opened: int = text.find("pack_from_source(\"")
-			if opened >= 0:
-				var rest: String = text.substr(opened + 18)
-				asked_for.append(rest.substr(0, rest.find("\"")))
+			# EVERY call of each kind, not the first one: a builder may author more than one family
+			# in folders of its own - a 2D half and a 3D half of one pack, say - and a reader that
+			# stopped at the first call would report the second folder as an orphan for ever.
+			for claimed: String in _first_arguments(text, "pack_from_source(\""):
+				if not asked_for.has(claimed):
+					asked_for.append(claimed)
 			# A folder may also be claimed by a builder that ships COMPANION FILES out of it - a
 			# pack whose shaders or starter resources are authored there while its code is not.
-			var shipped: int = text.find("ship_files(\"")
-			if shipped >= 0:
-				var tail: String = text.substr(shipped + 12)
-				var claimed: String = tail.substr(0, tail.find("\""))
+			for claimed: String in _first_arguments(text, "ship_files(\""):
 				if not asked_for.has(claimed):
 					asked_for.append(claimed)
 	asked_for.sort()
@@ -234,6 +233,21 @@ static func _every_folder_is_claimed() -> bool:
 		present = root.get_directories()
 		present.sort()
 	return _pins("every source folder is claimed by a builder", ",".join(present), ",".join(asked_for))
+
+
+## The first string argument of every call of one kind in a builder's text - `opening` is the call
+## up to and including the quote that starts that argument, so the folder name is what runs from
+## there to the closing quote. Returned in the order the calls are written.
+static func _first_arguments(text: String, opening: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var at: int = text.find(opening)
+	while at >= 0:
+		var tail: String = text.substr(at + opening.length())
+		var ends: int = tail.find("\"")
+		if ends > 0:
+			found.append(tail.substr(0, ends))
+		at = text.find(opening, at + opening.length())
+	return found
 
 
 static func _source_files() -> PackedStringArray:
