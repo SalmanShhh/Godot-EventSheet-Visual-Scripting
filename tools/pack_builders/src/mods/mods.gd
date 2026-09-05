@@ -280,10 +280,20 @@ func _resource_values(text: String) -> Dictionary:
 		var field: String = trimmed.substr(0, equals_at).strip_edges()
 		var value: String = trimmed.substr(equals_at + 1).strip_edges()
 		if value.begins_with("\""):
-			var ends_at: int = value.find("\"", 1)
-			if ends_at < 0:
+			# A quoted value may hold a quote of its own, written `\"`, so the string ends at the
+			# first quote that is NOT escaped and each escape comes back out as the character it
+			# stands for. Reading to the first quote of any kind is how a mod called
+			# `Bob's "Big" Swords` would have arrived under half its own name.
+			var unescaped: String = ""
+			var at: int = 1
+			while at < value.length() and value[at] != "\"":
+				if value[at] == ESCAPE_GLYPH and at + 1 < value.length():
+					at += 1
+				unescaped += value[at]
+				at += 1
+			if at >= value.length():
 				continue
-			value = value.substr(1, ends_at - 1)
+			value = unescaped
 		if not field.is_empty():
 			values[field] = value
 	return values

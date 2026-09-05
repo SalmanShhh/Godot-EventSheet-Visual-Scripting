@@ -119,6 +119,7 @@ static func _both_manifest_spellings_arrive_as_one_record(script: GDScript) -> b
 	var saved: Dictionary = director._manifest_at(ROOT.path_join("mods/winter_skins"))
 	var nameless: Dictionary = director._manifest_at(ROOT.path_join("mods/nameless"))
 	var nothing: Dictionary = director._manifest_at(ROOT.path_join("mods/not_a_mod"))
+	var quoted: Dictionary = director._manifest_at(ROOT.path_join("probe/quoted"))
 	director.free()
 	return SUPPORT.pins("mods_pack_test", [
 		["a mod.json gives its five fields", [written.get("name"), written.get("version"),
@@ -130,7 +131,10 @@ static func _both_manifest_spellings_arrive_as_one_record(script: GDScript) -> b
 			["Winter Skins", "0.4", "Bo", "the winter tiles", false]],
 		["a manifest with no name in it is named after its folder",
 			str(nameless.get("name")), "nameless"],
-		["and a folder with no manifest at all is not a mod", nothing.is_empty(), true]
+		["and a folder with no manifest at all is not a mod", nothing.is_empty(), true],
+		["a name with a quote in it arrives whole, escapes and all",
+			[str(quoted.get("name")), str(quoted.get("author"))],
+			["Bob's \"Big\" Swords", "a\\b"]]
 	])
 
 
@@ -789,6 +793,12 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 		"material_override = ExtResource(\"1\")"]))
 	# Building the fixture ran it once, which is the whole point of it. The marker starts absent.
 	DirAccess.remove_absolute(BINARY_MARKER)
+
+	# A manifest whose name carries a quote of its own, and an author with a backslash. Godot writes
+	# both escaped, and a reading that stops at the first quote of any kind gets half a name.
+	_write(ROOT.path_join("probe/quoted/mod.tres"),
+		"[gd_resource type=\"Resource\" format=3]\n\n[resource]\n"
+		+ "mod_name = \"Bob's \\\"Big\\\" Swords\"\nauthor = \"a\\\\b\"\nscripts = false\n")
 
 	# A crafted mod: a mod.tres naming a script in the mod's own folder, and a script that writes a
 	# file the moment anything builds it. Hand-written rather than saved, because the whole point is
