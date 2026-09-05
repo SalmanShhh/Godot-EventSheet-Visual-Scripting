@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Fixed: eighteen shipped rows that did not compile with the values they open on
+
+- **Every row in Juice, Juice 3D, Screen FX and Post Kit now parses the moment it is dropped.** A
+  new gate walks all 163 bundled packs, fills each of their 4,016 actions and conditions with its
+  SHIPPED starting values and compiles the call. Eighteen rows did not build: `Moment`,
+  `Define Moment`, `Play Moment At`, `Play Moment Backwards`, `Revert Moment`, `Skip Moment To End`,
+  `Restore Moment Values`, `Moment Is Playing`, `Moment Is Reverting`, `Moment Was Cut Short`,
+  `Moment Progress`, `Moment Elapsed`, `Moment Step Name`, `Shake Channel`, `Listen On Channel` and
+  `Stop Listening On Channel` in Juice, the last three again in Juice 3D, and `Add Post Effect` and
+  `Move Post Effect Before` in Screen FX and Post Kit. A dropped row that does not compile is the
+  worst kind of defect for a beginner: the sheet looks right and the game does not parse.
+- **Juice and Juice 3D: the moment name and the channel name are quoted by the TEMPLATE.** Both
+  took a word - `impact`, `hover`, `intro`, `props` - through an unquoted slot, so the starting word
+  reached the call as an undefined identifier. Every one of those rows now carries the quotes in its
+  own call template, which is the rule every other pack offering a word already follows, and the
+  starting value stays the bare word an author types into the box. A sheet that already spells the
+  name with quotes of its own emits exactly the same line as before.
+- **Screen FX and Post Kit: three parameters name the word their row opens on.** `Add Post Effect`
+  and `Move Post Effect Before` quote their slots correctly, but `called` and `before` carried no
+  starting value, so the method's own `= ""` fell through as the SOURCE TEXT of an empty literal and
+  landed inside the template's quotes as four quote characters. Leaving the box empty still works
+  and still names an entry after its effect; the rows just no longer open on something unparseable.
+
 ### The audit knows which folders are yours
 
 - **`eventsheets/doctor/skipped_folders`: name the folders the Project Doctor is not about.** The
