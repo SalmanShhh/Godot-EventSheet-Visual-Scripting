@@ -51,7 +51,19 @@ const HAND_WRITTEN := """extends Node
 
 func _ready() -> void:
 	$Title.bbcode_enabled = true
-	$Title.text = "[wave amp=%s freq=5]" % (40 * float(Engine.get_meta("text_size_scale", 1.0))) + "Starfall" + "[/wave]"
+	$Title.text = "[wave amp=%s freq=5]" % (1.0 * 40.0 * float(Engine.get_meta("text_size_scale", 1.0))) + "Starfall" + "[/wave]"
+"""
+
+## A tag typed WITHOUT the row's read of the text-size setting - the bare spelling. It is here to
+## prove the other half of what is not claimed: opening this as the row would save it back with the
+## accessibility read written into it, which is four words of somebody's replaced by a line they did
+## not write, so the family leaves it alone.
+const BARE_TAG := """extends Node
+
+
+func _ready() -> void:
+	$Title.bbcode_enabled = true
+	$Title.text = "[wave amp=40]Starfall[/wave]"
 """
 
 ## The line a person writes when they type a line out BY HAND: a smooth tween of the ratio. It is
@@ -72,6 +84,7 @@ static func run() -> bool:
 	all_passed = _run_registration() and all_passed
 	all_passed = _run_tags() and all_passed
 	all_passed = _run_accessibility() and all_passed
+	all_passed = _run_default_strength() and all_passed
 	all_passed = _run_reveal() and all_passed
 	all_passed = _run_fraction() and all_passed
 	all_passed = _run_lift() and all_passed
@@ -134,15 +147,15 @@ static func _run_registration() -> bool:
 ## into a shake would be accepted by the parser and do nothing on screen.
 static func _run_tags() -> bool:
 	var rows: Array = []
-	var set_wave: String = _emitted("SetTextWithEffect", {"effect": "wave", "strength": "40", "text": "\"Starfall\"", "target": ""})
+	var set_wave: String = _emitted("SetTextWithEffect", {"effect": "wave", "strength": "1.0", "text": "\"Starfall\"", "target": ""})
 	rows.append(["the wave row turns bbcode on first", set_wave.split("\n")[0], "bbcode_enabled = true"])
 	rows.append(["and writes the engine's own wave tag", set_wave.split("\n")[1],
-		"text = \"[wave amp=%s freq=5]\" % (40 * float(Engine.get_meta(\"text_size_scale\", 1.0))) + \"Starfall\" + \"[/wave]\""])
+		"text = \"[wave amp=%s freq=5]\" % (1.0 * 40.0 * float(Engine.get_meta(\"text_size_scale\", 1.0))) + \"Starfall\" + \"[/wave]\""])
 	rows.append(["a set row is two statements and no more", set_wave.split("\n").size(), 2])
 	rows.append(["no segment mark survives into the code", set_wave.contains("{?"), false])
 	var set_shake: String = _emitted("SetTextWithEffect", {"effect": "shake", "strength": "5", "text": "\"Ouch\"", "target": "$Hud/Damage"})
 	rows.append(["a shake names level, which is the knob shake has", set_shake.split("\n")[1],
-		"$Hud/Damage.text = \"[shake rate=20 level=%s]\" % (5 * (0.3 if bool(Engine.get_meta(\"no_flashing\", false)) else 1.0)) + \"Ouch\" + \"[/shake]\""])
+		"$Hud/Damage.text = \"[shake rate=20 level=%s]\" % (5 * 10.0 * (0.3 if bool(Engine.get_meta(\"no_flashing\", false)) else 1.0)) + \"Ouch\" + \"[/shake]\""])
 	var set_rainbow: String = _emitted("SetTextWithEffect", {"effect": "rainbow", "strength": "1", "text": "\"Legendary\"", "target": ""})
 	rows.append(["a rainbow names freq, and answers the flashing setting rather than the size one",
 		set_rainbow.split("\n")[1],
@@ -152,9 +165,9 @@ static func _run_tags() -> bool:
 		"text = (\"[\" + \"glitch\" + \" strength=%s]\") % (2 * float(Engine.get_meta(\"text_size_scale\", 1.0))) + \"Glitched\" + (\"[/\" + \"glitch\" + \"]\")"])
 	# The wrap puts the CLOSING tag in first, at the higher index, so the opening insert cannot shift
 	# the position the closing one was measured at.
-	var wrap: String = _emitted("WrapSelectionInEffect", {"effect": "wave", "strength": "40", "from": "0", "to": "5", "target": ""})
+	var wrap: String = _emitted("WrapSelectionInEffect", {"effect": "wave", "strength": "1.0", "from": "0", "to": "5", "target": ""})
 	rows.append(["the wrap inserts the closing tag before the opening one", wrap.split("\n")[1],
-		"text = text.insert(int(5), \"[/wave]\").insert(int(0), \"[wave amp=%s freq=5]\" % (40 * float(Engine.get_meta(\"text_size_scale\", 1.0))))"])
+		"text = text.insert(int(5), \"[/wave]\").insert(int(0), \"[wave amp=%s freq=5]\" % (1.0 * 40.0 * float(Engine.get_meta(\"text_size_scale\", 1.0))))"])
 	# Clearing asks the label for its own parsed text, so there is no tag list to keep up to date.
 	rows.append(["clearing asks the label rather than a list of tag names",
 		_emitted("ClearEffects", {"target": ""}), "text = get_parsed_text()"])
@@ -179,9 +192,9 @@ static func _run_tags() -> bool:
 ## The two settings, RUN rather than described: what number does the label actually get.
 static func _run_accessibility() -> bool:
 	var rows: Array = []
-	var shake_knob: String = "5 * (0.3 if bool(Engine.get_meta(\"no_flashing\", false)) else 1.0)"
+	var shake_knob: String = "0.5 * 10.0 * (0.3 if bool(Engine.get_meta(\"no_flashing\", false)) else 1.0)"
 	var rainbow_knob: String = "1 * (0.0 if bool(Engine.get_meta(\"no_flashing\", false)) else 1.0)"
-	var wave_knob: String = "40 * float(Engine.get_meta(\"text_size_scale\", 1.0))"
+	var wave_knob: String = "1.0 * 40.0 * float(Engine.get_meta(\"text_size_scale\", 1.0))"
 	_clear_metas()
 	rows.append(["with nothing set, a shake is the strength you asked for", _value(shake_knob), 5.0])
 	rows.append(["a rainbow cycles at the speed you asked for", _value(rainbow_knob), 1.0])
@@ -195,6 +208,28 @@ static func _run_accessibility() -> bool:
 	rows.append(["a bigger text size draws a bigger wave", _value(wave_knob), 80.0])
 	_clear_metas()
 	rows.append(["and the metas are put back", Engine.has_meta(TEXT_SCALE) or Engine.has_meta(NO_FLASHING), false])
+	return SUPPORT.pins("text_effect_aces_test", rows)
+
+
+## THE NUMBER A DROPPED ROW WRITES. One Strength field over seven effects is one number meaning seven
+## things, and the number that suits a wave is a strobe in a rainbow: at 40 the colour cycles forty
+## times a second. So the field is a MULTIPLE and each effect carries its own amount, and what is
+## pinned here is the number the label really gets from a row nobody has edited - RUN, not read.
+static func _run_default_strength() -> bool:
+	var rows: Array = []
+	var module: Variant = load(MODULE_PATH)
+	var dial: String = _default_of("SetTextWithEffect", "strength")
+	rows.append(["the dial a dropped row opens at", dial, "1.0"])
+	var expected: Dictionary = {"wave": 40.0, "shake": 10.0, "tornado": 10.0, "rainbow": 1.0,
+		"fade": 4.0, "pulse": 1.0, "custom": 1.0}
+	_clear_metas()
+	for effect: Dictionary in module.EFFECTS:
+		var word: String = str(effect["word"])
+		var knob: String = str(module.knob_of(effect)).replace("{strength}", dial)
+		rows.append(["a dropped %s is drawn at the amount that effect is drawn at" % word,
+			_value(knob), expected[word]])
+	# The wrap opens at the same dial, so one number does not mean two things between two rows.
+	rows.append(["and the wrap opens at the same dial", _default_of("WrapSelectionInEffect", "strength"), "1.0"])
 	return SUPPORT.pins("text_effect_aces_test", rows)
 
 
@@ -214,11 +249,25 @@ static func _run_reveal() -> bool:
 		reveal.contains("if __voice_a1 != null:\n\t\t__reveal_a1.tween_callback(__voice_a1.play)"), true])
 	rows.append(["a pause written down earlier is held on the way",
 		reveal.contains("__reveal_a1.tween_interval(float(__pauses_a1[__at_a1]))"), true])
+	# THE PAUSES BELONG TO ONE LINE. Read and then taken back off, so a comma pause written for
+	# character 12 of this line is not held again at character 12 of the next one.
+	rows.append(["the pauses it was given are spent, not left for the next line",
+		reveal.contains("if $Sign.has_meta(&\"reveal_pauses\"):\n\t$Sign.remove_meta(&\"reveal_pauses\")"), true])
+	rows.append(["and a line that lands leaves nothing parked to skip",
+		reveal.contains("__reveal_a1.tween_callback($Sign.remove_meta.bind(&\"reveal\"))"), true])
 	rows.append(["and the last callback is the answer", reveal.ends_with("__reveal_a1.tween_callback(_on_reveal_finished)"), true])
 	var skip: String = _emitted("SkipReveal", {"target": "$Sign"})
 	rows.append(["a skip shows the whole line", skip.contains("$Sign.visible_ratio = 1.0"), true])
 	rows.append(["and answers in the same place a reveal that ran out answers",
 		skip.ends_with("_on_reveal_finished()"), true])
+	# A SECOND PRESS IS NOT A SECOND ANSWER. Every line of the skip sits under the `if`, so a Continue
+	# button mashed by a player who is ahead of the text does not take the conversation two lines on.
+	rows.append(["and every line of the skip is under the question", skip, "\n".join(PackedStringArray([
+		"if $Sign.has_meta(&\"reveal\"):",
+		"\t($Sign.get_meta(&\"reveal\") as Tween).kill()",
+		"\t$Sign.remove_meta(&\"reveal\")",
+		"\t$Sign.visible_ratio = 1.0",
+		"\t_on_reveal_finished()"]))])
 	var pause: String = _emitted("PauseRevealAt", {"at": "12", "seconds": "0.4", "target": "$Sign", "uid": "b2"})
 	rows.append(["a pause is written down on the label the reveal reads it from",
 		pause, "var __pauses_b2: Dictionary = $Sign.get_meta(&\"reveal_pauses\", {})\n__pauses_b2[int(12)] = float(0.4)\n$Sign.set_meta(&\"reveal_pauses\", __pauses_b2)"])
@@ -283,7 +332,7 @@ static func _run_lift() -> bool:
 	rows.append(["the tag opens as the row that writes it", found != null, true])
 	if found != null:
 		rows.append(["with the effect it was written in", str(found.params.get("effect", "")), "wave"])
-		rows.append(["the strength it was written at", str(found.params.get("strength", "")), "40"])
+		rows.append(["the strength it was written at", str(found.params.get("strength", "")), "1.0"])
 		rows.append(["the words it was written around", str(found.params.get("text", "")), "\"Starfall\""])
 		rows.append(["and the label it was written on", str(found.params.get("target", "")), "$Title"])
 	var output: String = str(SheetCompiler.compile(sheet, PROBE_SCRIPT).get("output", ""))
@@ -291,6 +340,19 @@ static func _run_lift() -> bool:
 	# THE REVEAL IS DELIBERATELY NOT CLAIMED, and this is where that is held. A hand-written smooth
 	# tween of the ratio is a different line from the row's tween of one callback per character, so a
 	# family that read it as Reveal Text would save back code the author never wrote.
+	# A BARE TAG IS NOT CLAIMED EITHER. The row's line reads the text-size setting where the number
+	# goes, so opening a tag typed without that read would save it back with a line the author never
+	# wrote - the corruption the round trip refuses.
+	rows.append(["a tag typed without the accessibility read is claimed by no entry",
+		load(LIFT_PATH).match_line("$Title.text = \"[wave amp=40]Starfall[/wave]\""), {}])
+	file = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
+	file.store_string(BARE_TAG)
+	file.close()
+	var bare: EventSheetResource = GDScriptImporter.new().import_external(PROBE_SCRIPT, false)
+	EventSheetACELifter.reset_progress()
+	EventSheetACELifter.attempt_lift(bare, BARE_TAG)
+	rows.append(["and the bare tag is saved back byte for byte",
+		str(SheetCompiler.compile(bare, PROBE_SCRIPT).get("output", "")), BARE_TAG])
 	rows.append(["a hand-written ratio tween is claimed by no tag entry",
 		load(LIFT_PATH).match_line("create_tween().tween_property($Sign, \"visible_ratio\", 1.0, 0.5)"), {}])
 	file = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
@@ -418,6 +480,14 @@ static func _by_id() -> Dictionary:
 	for descriptor: ACEDescriptor in load(MODULE_PATH).get_descriptors():
 		by_id[descriptor.ace_id] = descriptor
 	return by_id
+
+
+## One parameter's default, as a dropped row opens with it.
+static func _default_of(ace_id: String, param_id: String) -> String:
+	for param: ACEParam in (_by_id()[ace_id] as ACEDescriptor).params:
+		if str(param.id) == param_id:
+			return str(param.default_value)
+	return ""
 
 
 ## The keys a dropdown inserts, in the order it offers them.

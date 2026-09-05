@@ -91,27 +91,43 @@ const STILL := "(0.0 if bool(Engine.get_meta(\"no_flashing\", false)) else 1.0)"
 ## naming YOUR RichTextEffect instead of a fixed word, which is what makes the custom door the same
 ## row rather than a different one.
 ##
-## Each `knob` says which accessibility factor that effect answers to, and the choice is the effect's
+## Each entry says which accessibility factor that effect answers to, and the choice is the effect's
 ## own nature rather than a preference: the ones that move letters scale with the text, the shake
 ## calms, and the two that cycle colour stop.
+##
+## `amount` IS THE EFFECT'S OWN NATURAL NUMBER, and it is here because one Strength field cannot mean
+## six different things. The knobs are not one scale: a wave's height is tens of pixels, a rainbow's
+## frequency is about one, and a rainbow written at a wave's number cycles colour forty times a
+## second - a strobe nobody asked for. So the field is a MULTIPLE of what the effect is drawn at by
+## default, and each effect carries what that default is. 1 in the row means "as this effect is
+## normally drawn", whichever effect the row picked.
 const EFFECTS: Array[Dictionary] = [
-	{"word": "wave", "open": "\"[wave amp=%s freq=5]\"", "close": "\"[/wave]\"", "knob": "{strength} * " + TEXT_SCALE},
-	{"word": "shake", "open": "\"[shake rate=20 level=%s]\"", "close": "\"[/shake]\"", "knob": "{strength} * " + CALM},
-	{"word": "tornado", "open": "\"[tornado radius=%s freq=2]\"", "close": "\"[/tornado]\"", "knob": "{strength} * " + TEXT_SCALE},
-	{"word": "rainbow", "open": "\"[rainbow freq=%s sat=0.8 val=0.8]\"", "close": "\"[/rainbow]\"", "knob": "{strength} * " + STILL},
-	{"word": "fade", "open": "\"[fade start=0 length=%s]\"", "close": "\"[/fade]\"", "knob": "{strength} * " + TEXT_SCALE},
-	{"word": "pulse", "open": "\"[pulse freq=%s color=#ffffff40 ease=-2.0]\"", "close": "\"[/pulse]\"", "knob": "{strength} * " + STILL},
-	{"word": "custom", "open": "(\"[\" + {custom} + \" strength=%s]\")", "close": "(\"[/\" + {custom} + \"]\")", "knob": "{strength} * " + TEXT_SCALE},
+	{"word": "wave", "open": "\"[wave amp=%s freq=5]\"", "close": "\"[/wave]\"", "amount": "40.0", "factor": TEXT_SCALE},
+	{"word": "shake", "open": "\"[shake rate=20 level=%s]\"", "close": "\"[/shake]\"", "amount": "10.0", "factor": CALM},
+	{"word": "tornado", "open": "\"[tornado radius=%s freq=2]\"", "close": "\"[/tornado]\"", "amount": "10.0", "factor": TEXT_SCALE},
+	{"word": "rainbow", "open": "\"[rainbow freq=%s sat=0.8 val=0.8]\"", "close": "\"[/rainbow]\"", "amount": "1.0", "factor": STILL},
+	{"word": "fade", "open": "\"[fade start=0 length=%s]\"", "close": "\"[/fade]\"", "amount": "4.0", "factor": TEXT_SCALE},
+	{"word": "pulse", "open": "\"[pulse freq=%s color=#ffffff40 ease=-2.0]\"", "close": "\"[/pulse]\"", "amount": "1.0", "factor": STILL},
+	{"word": "custom", "open": "(\"[\" + {custom} + \" strength=%s]\")", "close": "(\"[/\" + {custom} + \"]\")", "amount": "1.0", "factor": TEXT_SCALE},
 ]
+
+
+## The expression that fills one effect's knob: the row's own dial, the effect's natural amount when
+## that is not simply 1, and the accessibility factor the effect answers to. Written once here so the
+## two templates and the lift family that reads their lines back can never spell it three ways.
+static func knob_of(effect: Dictionary) -> String:
+	var amount: String = str(effect.get("amount", "1.0"))
+	var scaled: String = "{strength}" if amount == "1.0" else "{strength} * " + amount
+	return scaled + " * " + str(effect.get("factor", TEXT_SCALE))
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var d: Array[ACEDescriptor] = []
 
 	# ── The effects the label already knows ──
-	d.append(F.act("SetTextWithEffect", "Set Text With Effect", _set_template(), CAT_TEXT, "set text to {text} with [b]{effect}[/b]", "Puts words on a rich text label already wearing an effect: a title that waves, a warning that shakes, a legendary drop in a rainbow. It writes the engine's own tag around the text, so the label needs nothing installed and the emitted line is the line you would have typed. The strength is the one knob - bigger waves higher, shakes harder, fades longer - and it answers the player's text-size and no-flashing settings without a row of its own.", HOST).param("text", "\"Starfall\"", "Text", "The words to show. An expression, so a score, a name or a translated key all work.", "expression").param_built(_effect_param()).param("strength", "40", "Strength", "How much of the effect: the wave's height, the shake's level, the rainbow's speed. Bigger is more.", "expression").param_built(_custom_param()).param_built(_on_node_param()).featured())
+	d.append(F.act("SetTextWithEffect", "Set Text With Effect", _set_template(), CAT_TEXT, "set text to {text} with [b]{effect}[/b]", "Puts words on a rich text label already wearing an effect: a title that waves, a warning that shakes, a legendary drop in a rainbow. It writes the engine's own tag around the text, so the label needs nothing installed and the emitted line is the line you would have typed. The strength is the one knob - bigger waves higher, shakes harder, fades longer - and it answers the player's text-size and no-flashing settings without a row of its own.", HOST).param("text", "\"Starfall\"", "Text", "The words to show. An expression, so a score, a name or a translated key all work.", "expression").param_built(_effect_param()).param("strength", "1.0", "Strength", "How much of the effect, as a multiple of the amount it is normally drawn at: 1 is that amount, 2 is twice as much, 0.5 is half. Each effect has its own natural number - a wave's height and a rainbow's speed are not the same kind of number - so this dial means the same thing whichever effect the row picks.", "expression").param_built(_custom_param()).param_built(_on_node_param()).featured())
 
-	d.append(F.act("WrapSelectionInEffect", "Wrap Selection In Effect", _wrap_template(), CAT_TEXT, "wrap characters {from} to {to} in [b]{effect}[/b]", "Puts an effect around a STRETCH of the text already on the label, counted in characters, leaving the rest of the line alone. This is the row for one shaking word inside a calm sentence, or a name that glows where the sentence does not. It counts characters of the string the label holds, so wrap before you add more tags, not after.", HOST).param("from", "0", "From", "The character the effect starts at, counting from 0.", "expression").param("to", "5", "To", "The character it stops before. From 0 to 5 wraps the first five characters.", "expression").param_built(_effect_param()).param("strength", "40", "Strength", "How much of the effect, the same knob Set Text With Effect uses.", "expression").param_built(_custom_param()).param_built(_on_node_param()))
+	d.append(F.act("WrapSelectionInEffect", "Wrap Selection In Effect", _wrap_template(), CAT_TEXT, "wrap characters {from} to {to} in [b]{effect}[/b]", "Puts an effect around a STRETCH of the text already on the label, counted in characters, leaving the rest of the line alone. This is the row for one shaking word inside a calm sentence, or a name that glows where the sentence does not. It counts characters of the string the label holds, so wrap before you add more tags, not after.", HOST).param("from", "0", "From", "The character the effect starts at, counting from 0.", "expression").param("to", "5", "To", "The character it stops before. From 0 to 5 wraps the first five characters.", "expression").param_built(_effect_param()).param("strength", "1.0", "Strength", "How much of the effect, as a multiple of the amount it is normally drawn at - the same dial Set Text With Effect uses.", "expression").param_built(_custom_param()).param_built(_on_node_param()))
 
 	d.append(F.act("ClearEffects", "Clear Effects", "{target.}text = {target.}get_parsed_text()", CAT_TEXT, "clear text effects", "Takes every effect back off and leaves the words. It asks the label for its own parsed text - the string with the tags stripped - so it clears effects nobody here wrote as well, and there is no list of tag names to keep up to date.", HOST).param_built(_on_node_param()))
 
@@ -130,7 +146,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	d.append(F.act("PauseRevealAt", "Pause Reveal At", _pause_template(), CAT_TEXT, "pause the reveal at character {at} for {seconds} s", "Holds the reveal for a beat when it reaches one character - the comma pause that makes a typed line sound like speech rather than a printer. Drop it BEFORE the Reveal Text row: it writes the pause down on the label, and the reveal that follows reads it. Several pauses on one line are several rows.", HOST).param("at", "12", "At character", "Which character to hold on, counting from 1.", "expression").param("seconds", "0.4", "For", "How long to hold, in seconds.", "expression").param_built(_on_node_param()))
 
-	d.append(F.trig("OnRevealFinished", "On Reveal Finished", "", CAT_TEXT, "On reveal finished", "Runs when a reveal reaches its last character, and when Skip Reveal ends one early - the same moment either way, which is what lets the Continue prompt be written once. Every reveal in the sheet ends here, so a sheet typing out more than one line asks which line it was."))
+	d.append(F.trig("OnRevealFinished", "On Reveal Finished", "", CAT_TEXT, "On reveal finished", "Runs when a reveal reaches its last character, and when Skip Reveal ends one early - the same moment either way, which is what lets the Continue prompt be written once. It runs ONCE per line: a skip after the line has already landed finds nothing left to end. Nothing is handed to it, so a sheet typing out more than one line keeps the line it is on in a variable of its own."))
 
 	return d
 
@@ -146,7 +162,7 @@ static func _set_template() -> String:
 	var lines: PackedStringArray = PackedStringArray(["{target.}bbcode_enabled = true"])
 	for effect: Dictionary in EFFECTS:
 		lines.append("{?effect=%s}\n{target.}text = %s %% (%s) + {text} + %s{/effect}" % [
-			effect["word"], effect["open"], effect["knob"], effect["close"]])
+			effect["word"], effect["open"], knob_of(effect), effect["close"]])
 	return "".join(lines)
 
 
@@ -157,7 +173,7 @@ static func _wrap_template() -> String:
 	var lines: PackedStringArray = PackedStringArray(["{target.}bbcode_enabled = true"])
 	for effect: Dictionary in EFFECTS:
 		lines.append("{?effect=%s}\n{target.}text = {target.}text.insert(int({to}), %s).insert(int({from}), %s %% (%s)){/effect}" % [
-			effect["word"], effect["close"], effect["open"], effect["knob"]])
+			effect["word"], effect["close"], effect["open"], knob_of(effect)])
 	return "".join(lines)
 
 
@@ -179,6 +195,8 @@ static func _reveal_template() -> String:
 		"\t({target.}get_meta(%s) as Tween).kill()" % REVEAL_META,
 		"var __voice_{uid}: Node = {sound}",
 		"var __pauses_{uid}: Dictionary = {target.}get_meta(%s, {})" % PAUSES_META,
+		"if {target.}has_meta(%s):" % PAUSES_META,
+		"\t{target.}remove_meta(%s)" % PAUSES_META,
 		"var __step_{uid}: float = 1.0 / maxf(1.0, float({chars_per_second}))",
 		"var __reveal_{uid}: Tween = {target.}create_tween()",
 		"{target.}set_meta(%s, __reveal_{uid})" % REVEAL_META,
@@ -188,6 +206,7 @@ static func _reveal_template() -> String:
 		"\t\t__reveal_{uid}.tween_callback(__voice_{uid}.play)",
 		"\tif __pauses_{uid}.has(__at_{uid}):",
 		"\t\t__reveal_{uid}.tween_interval(float(__pauses_{uid}[__at_{uid}]))",
+		"__reveal_{uid}.tween_callback({target.}remove_meta.bind(%s))" % REVEAL_META,
 		"__reveal_{uid}.tween_callback(%s)" % FINISHED_CALL,
 	])
 	return "\n".join(lines)
@@ -196,18 +215,29 @@ static func _reveal_template() -> String:
 ## Skip Reveal: end the tween that is typing, show the whole line, and answer in the same place a
 ## reveal that ran out answers. Killing the tween first is what stops its remaining callbacks from
 ## walking the ratio back down after the skip.
+##
+## THE WHOLE ROW IS INSIDE THE `if`, so a skip is only a skip while something is being typed. Pressed
+## twice - which is what a Continue button gets from a player who is ahead of the text - the second
+## press finds no reveal parked on the label and does nothing, rather than answering again and taking
+## the conversation two lines on. The reveal drops its own meta as it ends for the same reason: a line
+## that finished by itself has nothing left to skip either.
 static func _skip_template() -> String:
 	return "\n".join(PackedStringArray([
 		"if {target.}has_meta(%s):" % REVEAL_META,
 		"\t({target.}get_meta(%s) as Tween).kill()" % REVEAL_META,
-		"{target.}visible_ratio = 1.0",
-		"%s()" % FINISHED_CALL,
+		"\t{target.}remove_meta(%s)" % REVEAL_META,
+		"\t{target.}visible_ratio = 1.0",
+		"\t%s()" % FINISHED_CALL,
 	]))
 
 
 ## Pause Reveal At: write one beat down on the label, where the next reveal reads it. A Dictionary of
 ## character to seconds, so several pauses on one line are several rows and the last row to name a
 ## character wins.
+##
+## THE PAUSES BELONG TO ONE LINE. The reveal reads them and takes them back off the label, so a comma
+## pause written for character 12 of this line is not held again at character 12 of the next one -
+## which would be a hesitation nobody wrote, in the middle of a word, for the rest of the conversation.
 static func _pause_template() -> String:
 	return "\n".join(PackedStringArray([
 		"var __pauses_{uid}: Dictionary = {target.}get_meta(%s, {})" % PAUSES_META,

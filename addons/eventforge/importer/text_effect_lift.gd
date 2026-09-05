@@ -3,7 +3,7 @@
 # Wobbling a title in Godot has always been one line: turn BBCode on and put the engine's own tag
 # around the words. Every project that has ever had a shaking damage number holds a line like
 #
-#     $Title.text = "[wave amp=%s freq=5]" % (40 * float(Engine.get_meta("text_size_scale", 1.0))) + "Starfall" + "[/wave]"
+#     $Title.text = "[wave amp=%s freq=5]" % (1.0 * 40.0 * float(Engine.get_meta("text_size_scale", 1.0))) + "Starfall" + "[/wave]"
 #
 # and that is exactly what Set Text With Effect writes. So the row and the hand-written line are the
 # same line, and this family is what says so: open the file and the tag reads back as the row that
@@ -15,6 +15,14 @@
 # never be written by a row and refused by this file, or the other way round.
 #
 # WHAT IS DELIBERATELY NOT CLAIMED:
+#   * A TAG TYPED WITHOUT THE ACCESSIBILITY FACTOR - `title.text = "[wave amp=40]Starfall[/wave]"`
+#     and every other bare spelling of the same idea. The row's line reads the player's text-size
+#     setting where the number goes, and a file opened as the row would be SAVED with that read in it:
+#     a person's four words replaced by a line they did not write, which is the corruption the round
+#     trip exists to refuse. So what reads back is the row's own line - the shape the row wrote, or the
+#     shape a person copied out of an opened sheet - and a bare tag stays the line it is. The picker is
+#     where a bare tag becomes a row: drop Set Text With Effect on it and the setting is answered from
+#     then on.
 #   * the "custom" effect, whose tag names YOUR effect in two places on one line. Two mentions of one
 #     value cannot each be a capture of the same name, and a lift that guessed which one was the row's
 #     value would be guessing. A custom tag written by hand stays the line it is.
@@ -52,9 +60,10 @@ const CUSTOM_WORD: String = "custom"
 const MARK: String = ".text = \"["
 
 ## The example values the harness generates its fixture line from. Written here rather than inline so
-## the six examples differ in nothing but the tag they carry.
+## the six examples differ in nothing but the tag they carry. The strength is the row's own dial - a
+## MULTIPLE of what each effect is drawn at by default - so 1.0 is the example every effect shares.
 const SAMPLE_NODE: String = "$Title"
-const SAMPLE_STRENGTH: String = "40"
+const SAMPLE_STRENGTH: String = "1.0"
 const SAMPLE_TEXT: String = "\"Starfall\""
 
 ## Built once for the life of the session: these run on every statement of every opened file.
@@ -87,7 +96,7 @@ static func lift_entries() -> Array[Dictionary]:
 ## marked spans are the row's three fields; the tag's own attributes, the accessibility factor and the
 ## author's spacing are outside them, so they ride back out into the saved file untouched.
 static func _effect_entry(word: String, effect: Dictionary) -> Dictionary:
-	var knob: String = str(effect["knob"]).replace("{strength}", "[[strength|argument: %s]]" % SAMPLE_STRENGTH)
+	var knob: String = TextEffects.knob_of(effect).replace("{strength}", "[[strength|argument: %s]]" % SAMPLE_STRENGTH)
 	var example: String = "[[target|node: %s]].text = %s %% (%s) + [[text: %s]] + %s" % [
 		SAMPLE_NODE, str(effect["open"]), knob, SAMPLE_TEXT, str(effect["close"])]
 	return EventForgeLiftExample.entry("text_effect_%s" % word, ACE_ID, example,
