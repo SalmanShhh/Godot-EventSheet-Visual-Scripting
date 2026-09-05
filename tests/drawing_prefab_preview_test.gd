@@ -68,7 +68,7 @@ static func run() -> bool:
 	# feature makes to a beginner, so pin it per shape.
 	all_passed = _check("circle titles p1 as Radius", _shape_labels("circle"), "Radius") and all_passed
 	all_passed = _check("rect titles p1/p2 as Width/Height", _shape_labels("rect"), "Width|Height") and all_passed
-	all_passed = _check("line titles p1/p2/p3 as End X/End Y/Thickness", _shape_labels("line"), "End X|End Y|Thickness|Read in") and all_passed
+	all_passed = _check("line titles p1/p2/p3 as End X/End Y/Thickness", _shape_labels("line"), "End X|End Y|Thickness|Unit") and all_passed
 	all_passed = _check("cone titles p1/p2/p3 as Facing/FOV/Radius", _shape_labels("cone"), "Facing|FOV|Radius") and all_passed
 	# A freshly added step is a visible filled circle with every storage slot seeded (valid immediately).
 	steps_editor.set_steps([])

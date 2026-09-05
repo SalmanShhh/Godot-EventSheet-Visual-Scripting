@@ -89,9 +89,9 @@ class ShapeStepsEditor:
 	## The placement, colour and dash sections are common and are appended around these.
 	const SHAPE_FIELDS: Dictionary = {
 		"circle": [{"key": "p1", "label": "Radius"}],
-		"ring": [{"key": "p1", "label": "Radius"}, {"key": "p2", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}, {"key": "unit", "label": "Read in", "drawer": "options:px,world,screen"}],
+		"ring": [{"key": "p1", "label": "Radius"}, {"key": "p2", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}, {"key": "unit", "label": "Unit", "drawer": "options:px,world,screen"}],
 		"rect": [{"key": "p1", "label": "Width"}, {"key": "p2", "label": "Height"}],
-		"line": [{"key": "p1", "label": "End X"}, {"key": "p2", "label": "End Y"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}, {"key": "unit", "label": "Read in", "drawer": "options:px,world,screen"}],
+		"line": [{"key": "p1", "label": "End X"}, {"key": "p2", "label": "End Y"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}, {"key": "unit", "label": "Unit", "drawer": "options:px,world,screen"}],
 		"cone": [{"key": "p1", "label": "Facing"}, {"key": "p2", "label": "FOV"}, {"key": "p3", "label": "Radius"}],
 		"stamp": [{"key": "p1", "label": "Scale"}, {"key": "p2", "label": "Spin"}, {"key": "texture", "label": "Texture", "drawer": "texture_preview"}],
 	}
