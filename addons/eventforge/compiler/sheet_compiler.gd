@@ -3192,7 +3192,10 @@ static func _spec_segments_align(param_id: String, leading_parts: PackedStringAr
 	parts.append_array(leading_parts)
 	if not default_part.is_empty():
 		parts.append(default_part)
-	parts.append(desc_part)
+	# The stub writer reaches this with no desc part at all - it writes a line for a parameter whose
+	# help cannot ride one - and an empty segment is not a part of the line being proved.
+	if not desc_part.is_empty():
+		parts.append(desc_part)
 	var segments: PackedStringArray = SpecText.split_outside_quotes(
 		"%s, %s" % [param_id, ", ".join(parts)], ",")
 	if segments.size() != parts.size() + 1 or segments[0].strip_edges() != param_id:

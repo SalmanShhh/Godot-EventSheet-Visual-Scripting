@@ -298,6 +298,18 @@ static func run() -> bool:
 		ok = _check("the stub spells it the pipeline's way: %s" % row[0],
 			EventSheetACEAnnotationStub._comment_default(str(row[1])), str(row[2])) and ok
 
+	# The stub is the copy an author starts from, so a spelling it cannot write is a defect that comes
+	# BACK - in their file rather than ours. It wrote a starting value only when there was one to
+	# write, and an empty word is exactly the value that looks like nothing: right-clicking Add Post
+	# Effect handed back a stub with no starting value for `called`, whose slot the template quotes,
+	# so the method's own `= ""` fell through as the source text of an empty literal and put four
+	# quote characters where a name belonged. The kind now comes from the TEMPLATE, which is where
+	# the answer lives, and the empty word is written out.
+	ok = _check("the stub of the reported verb writes the empty word its template asks for",
+		_stub_param_line("res://eventsheet_addons/screen_fx/screen_fx.gd",
+			"method:add_post_effect", "called"),
+		"## @ace_param(called, default_word: \"\", desc: \"What later rows address it by. Empty names it after its effect, which is what one of each wants.\")") and ok
+
 	# And the receipt that the spelling reached a PERSON: the row the whole defect was reported
 	# against opens on a cleared box again, which is what its own description offers.
 	ok = _check("the shipped row opens on the empty name its description names",
@@ -337,6 +349,26 @@ static func _lift_note(source: String) -> String:
 		if row is RawCodeRow and not (row as RawCodeRow).lift_note.strip_edges().is_empty():
 			return (row as RawCodeRow).lift_note
 	return "<nothing stayed code>"
+
+
+## The `@ace_param` line a right-click stub of one SHIPPED verb offers for one parameter - the copy
+## an author pastes into a provider script of their own, which is where a spelling the stub cannot
+## write becomes their defect rather than ours.
+static func _stub_param_line(script_path: String, ace_id: String, param_id: String) -> String:
+	var script: Script = load(script_path) as Script
+	if script == null or not script.can_instantiate():
+		return "<no such script>"
+	var instance: Object = script.new()
+	var answer: String = "<no such line>"
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_object(instance):
+		if definition.id != ace_id:
+			continue
+		for line: String in EventSheetACEAnnotationStub.comment_stub(definition).split("\n"):
+			if line.begins_with("## @ace_param(%s," % param_id):
+				answer = line
+	if instance is Node:
+		(instance as Node).free()
+	return answer
 
 
 ## The starting value a SHIPPED provider script publishes for one parameter - the vocabulary as the

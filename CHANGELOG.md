@@ -23,6 +23,13 @@
   from - the plain form first, the quoted one second. A value neither form survives ships with **no**
   starting value and a warning naming the parameter, because the alternative is a line the byte gate
   refuses, which opens the whole verb as a block of raw code.
+- **The right-click stub writes the starting value its template asks for.** A stub is the copy an
+  author starts their own provider script from, so a spelling it cannot write is a defect that comes
+  back in their file. It wrote a starting value only when there was one to write, and an empty word
+  is exactly the value that looks like nothing - so the stub of **Add Post Effect** shipped no
+  starting value for the name slot, and the four-quote defect fixed above returned the moment
+  somebody pasted it. Which KIND a value is now comes from the codegen template, which is where the
+  answer actually lives: a slot the template quotes receives a word, empty or not.
 
 ### Fixed: forty-two dropdowns that held a word they never showed
 

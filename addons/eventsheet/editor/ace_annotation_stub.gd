@@ -51,7 +51,7 @@ static func comment_stub(definition: ACEDefinition) -> String:
 		notes.append("# GDScript string) or with a descriptor, and indent its nested lines with tabs.")
 	var parameter_lines: Array[String] = []
 	for parameter in _dialog_parameters(definition):
-		var parameter_line: String = _comment_param_line(parameter, notes)
+		var parameter_line: String = _comment_param_line(parameter, notes, codegen_template)
 		if not parameter_line.is_empty():
 			parameter_lines.append(parameter_line)
 
@@ -180,7 +180,8 @@ static func _append_node_scope_note(definition: ACEDefinition, notes: Array[Stri
 ## Keys ride in the same fixed order the curate-script writer uses, so the same parameter always
 ## renders the same line. Anything the one-line grammar cannot carry adds a note instead of
 ## shipping a spec that would silently truncate.
-static func _comment_param_line(parameter: Dictionary, notes: Array[String]) -> String:
+static func _comment_param_line(parameter: Dictionary, notes: Array[String],
+		codegen_template: String = "") -> String:
 	var parameter_id: String = str(parameter.get("id", ""))
 	var spec_parts: Array[String] = []
 	var hint_value: String = str(parameter.get("hint", ""))
@@ -200,17 +201,24 @@ static func _comment_param_line(parameter: Dictionary, notes: Array[String]) -> 
 			notes.append("#   .param(\"%s\", {\"options\": [{\"key\": \"...\", \"label\": \"...\"}]})" % parameter_id)
 		else:
 			spec_parts.append("options: %s" % _comment_options(option_pairs))
-	var default_value: String = str(parameter.get("default_value", ""))
-	if not default_value.is_empty():
-		spec_parts.append(_comment_default(default_value))
+	# The desc is worked out BEFORE the default is written, though it is written after it: the
+	# starting value is proved against the whole line it will sit in, and the help beside it is the
+	# part of that line a mis-written value swallows.
+	var desc_part: String = ""
 	var description: String = _one_line(str(parameter.get("description", "")))
 	if not description.is_empty():
 		if _description_survives_one_line(description):
-			spec_parts.append("desc: \"%s\"" % description)
+			desc_part = "desc: \"%s\"" % description
 		else:
 			notes.append("# PARAM HELP (%s): this description's double quotes cannot ride @ace_param - the spec trims" % parameter_id)
 			notes.append("# one surrounding pair and splits on commas outside quotes, so it would come back truncated.")
 			notes.append("#   .param(\"%s\", {\"desc\": \"%s\"})   <- set it from the registrar instead." % [parameter_id, _escape_gdscript(description)])
+	var default_part: String = _comment_default(str(parameter.get("default_value", "")),
+		parameter_id, codegen_template, spec_parts, desc_part)
+	if not default_part.is_empty():
+		spec_parts.append(default_part)
+	if not desc_part.is_empty():
+		spec_parts.append(desc_part)
 	if spec_parts.is_empty():
 		return ""
 	return "## @ace_param(%s, %s)" % [parameter_id, ", ".join(spec_parts)]
@@ -435,23 +443,47 @@ static func _comment_options(option_pairs: Array) -> String:
 ## of value it is - the same three keys the compiler writes and both annotation readers read, so a
 ## stub an author pastes is a line the pipeline already agrees about.
 ##
-## A value that is itself a quoted literal is GDScript for a slot the template leaves unquoted, so
-## it ships under `default_code:` and is read verbatim. A value carrying the comma the spec splits
-## on is a word that has to be protected, so it ships under `default_word:` and one pair comes back
-## off. Everything else - a number, a bare word, a call whose brackets balance - ships under the
-## plain `default:` shorthand, exactly as it always has.
+## WHICH KIND IT IS COMES FROM THE TEMPLATE FIRST, because that is where the answer actually lives.
+## A slot the template quotes itself - `add_post_effect("{called}", ...)` - receives a WORD, whatever
+## the value happens to look like, and that is the only reading under which an EMPTY starting value
+## means anything: `default_word: ""` is a row that opens on a cleared box, which is exactly what a
+## verb whose help says "empty names it after its effect" is offering. Writing nothing there instead
+## was how the four-quote defect came back in the author's own copy: the stub of such a verb shipped
+## no starting value, so the method's `= ""` fell through as the source text of an empty literal and
+## landed inside the template's quotes.
+##
+## With no template to read (an unquoted slot, or a definition that carries none) the value is all
+## there is to go on: a quoted literal is GDScript for an unquoted slot and ships under
+## `default_code:`, a value carrying the comma the spec splits on is a word that needs protecting and
+## ships under `default_word:`, and everything else - a number, a bare word, a call whose brackets
+## balance - ships under the plain `default:` shorthand, exactly as it always has. An EMPTY value on
+## an unquoted slot is not a starting value at all: written out it is a slot that inserts nothing.
+##
+## The line is then proved the way the compiler proves its own, through the same function, against
+## the parts it will sit beside - so a stub is never a line the readers would give back as something
+## else, and never one that swallows the help text after it.
 ##
 ## The doubled pair this used to write (`""idle""`) said the same thing in a spelling that broke
 ## the moment the value also held a comma: the extra pair closes before the comma, so the segment
 ## split there and the stub had to REFUSE such a value and send the author to a GDScript default
 ## instead. There is nothing left to refuse.
-static func _comment_default(default_value: String) -> String:
+static func _comment_default(default_value: String, param_id: String = "", codegen_template: String = "",
+		leading_parts: Array[String] = [], desc_part: String = "") -> String:
+	var quoted_slot: bool = not param_id.is_empty() and codegen_template.contains("\"{%s}\"" % param_id)
 	var spelling: String = ""
-	if default_value.begins_with("\""):
+	if quoted_slot:
+		spelling = "word"
+	elif default_value.is_empty():
+		return ""
+	elif default_value.begins_with("\""):
 		spelling = "code"
 	elif default_value.contains(","):
 		spelling = "word"
-	return SheetCompiler._param_default_text(default_value, spelling)
+	var leading: PackedStringArray = PackedStringArray()
+	for part: String in leading_parts:
+		leading.append(part)
+	return SheetCompiler.param_default_part(param_id if not param_id.is_empty() else "value",
+		leading, desc_part, default_value, spelling)
 
 
 ## An annotation value is read VERBATIM, so quotes and backslashes must survive untouched.
