@@ -11,12 +11,17 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## notices one appearing, and the data-asset rows validate what is in it. Mod support is those two
 ## joined by a manifest, a load order, and a list the options screen can show.
 ##
-## TWO TIERS, SAID PLAINLY. A DATA-ONLY load takes resources, scenes, textures and sounds: before it
-## loads a pack file it reads that file's own list of contents and refuses it if any of them is a
-## script or a library, and before it takes a mod folder it reads the folder's files and does the
-## same. A SCRIPT load takes a mod that carries code, and only when the row says so, because code in
-## a mod runs with everything the game itself can reach - the player's files, their network, their
-## machine. There is no sandbox here, and none is claimed: Godot has none to offer.
+## TWO TIERS, SAID PLAINLY. A DATA-ONLY load takes resources, scenes, textures and sounds, and it
+## asks TWO questions of the mod's own contents before it takes anything. Is any file code by its
+## NAME - a `.gd`, a `.dll` - read off a pack file's own table or off a folder's own files. And does
+## any scene or resource CARRY code: a `.tscn` is not code by its name and may hold a script written
+## inside it, a property the engine resolves by loading a path, or a table naming a file from
+## somewhere else, so every one of them is read as text and refused if it does. A file this reading
+## cannot read - a binary scene, an encrypted pack entry - is refused rather than cleared. A SCRIPT
+## load takes a mod that carries code, and only when the row says so, because code in a mod runs
+## with everything the game itself can reach - the player's files, their network, their machine.
+## There is no sandbox here, and none is claimed: Godot has none to offer, and a mod that IS cleared
+## is still somebody else's data, which can still reach the methods your own game exposes to it.
 ##
 ## THE MANIFEST IS THE MOD'S OWN FILE. `mod.json` for a modder working in a text editor, `mod.tres`
 ## saved from ModManifest for one working in Godot; five fields either way. The pack ships no list of

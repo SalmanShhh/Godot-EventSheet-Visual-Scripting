@@ -427,9 +427,23 @@ Every loading row takes a **data only** parameter, and it is the most consequent
 guide.
 
 **Data only, on.** Before the mod is taken at all, its actual contents are read - a pack file's own
-file table off the front of the file, a folder's own files - and a mod carrying any script, library
-or native binary is refused, with the reason in words a player can read. The manifest's own `scripts`
-flag is treated as a **declaration, not a guarantee**: the loader checks the real files as well.
+file table, a folder's own files - and a mod carrying any script, library or native binary is
+refused, with the reason in words a player can read. The manifest's own `scripts` flag is treated as
+a **declaration, not a guarantee**: the loader checks the real files as well.
+
+**And a file is not cleared by its name.** A `.tscn` or a `.tres` is a table of values, and one of
+the values it may carry is a script - written inside the file, named by a path beside it, or spelled
+as a property value the engine resolves by loading or by compiling. Godot builds all of that the
+moment the file is loaded. So every scene and every resource a mod holds is read as TEXT as well,
+and one carrying a script, a value that builds something, or a path leading out of the mod is
+refused by name. A file this reading cannot read - a scene saved in the binary form, an encrypted
+entry inside a pack - is refused rather than cleared, because unfamiliar is not the same as safe.
+
+**What data-only is not.** It is a promise that no stranger's CODE comes in with the mod. It is not
+a promise that the mod is inert: a cleared scene can still hold a connection naming one of your own
+methods, or an animation track that calls one at a keyframe. None of that brings somebody else's
+code into your game; all of it can reach yours. A mod is somebody else's data, and what it can reach
+deserves the same thought as any other input.
 
 **Data only, off.** Code in the mod loads and runs. **It runs with everything your game itself can
 reach** - the player's files, their network, their machine. Godot has no sandbox to put it in, this

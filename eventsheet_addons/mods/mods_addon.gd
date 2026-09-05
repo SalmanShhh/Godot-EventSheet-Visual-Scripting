@@ -62,12 +62,72 @@ var _about: Dictionary = {"name": "", "version": "", "author": "", "reason": ""}
 const CODE_EXTENSIONS: Array[String] = [
 	"gd", "gdc", "gde", "cs", "gdextension", "gdnlib", "gdns", "dll", "so", "dylib", "wasm"]
 
+## The file extensions that are a RESOURCE TABLE: a scene or a resource, saved as text or in the
+## binary form. A file with one of these names is not code by its name, and it may carry code all
+## the same - a scene holding a script written inside it, a node property whose value the engine
+## resolves by loading a path or by compiling source carried in the file, a resource naming a
+## script beside it. Godot builds all of that the moment the file is loaded, so a mod carrying one
+## runs a stranger's code while every file in it is called data. These are therefore READ rather
+## than merely named, which is the difference between the tier's promise and its name.
+const RESOURCE_EXTENSIONS: Array[String] = ["tscn", "scn", "tres", "res"]
+
+## The two heads a resource table written as TEXT begins with. A file that begins with neither is
+## the binary form, or something else entirely, and its table cannot be read as text at all - an
+## unreadable file is not a file that has been cleared.
+const RESOURCE_HEADS: Array[String] = ["[gd_scene", "[gd_resource"]
+
+## The two tags a resource table names other resources with, and the tail every script type's name
+## ends in - `Script`, `GDScript`, `CSharpScript`. Read as a tail rather than as a list, because a
+## script type this reading has never heard of is exactly the one a crafted file would name.
+const RESOURCE_TAGS: Array[String] = ["ext_resource", "sub_resource"]
+const SCRIPT_TYPE_TAIL: String = "Script"
+
+## The two constructors a resource file's own VALUES may be written with that BUILD something. A
+## body line carries no tag at all: `script = Resource("user://payload.gd")` is a property the
+## engine resolves by loading that path, and `script = Object(GDScript,"script/source":"...")` is
+## one it resolves by compiling the source carried in the line. `ExtResource(` and `SubResource(`
+## are the honest pair and are deliberately not here - each names an entry in the file's own table,
+## which the tag reading has already answered for. Both are matched on a WORD BOUNDARY, which is
+## exactly what keeps those two out: `ExtResource(` holds `Resource(` with a letter in front of it.
+const BUILDING_MAKERS: Array[String] = ["Object(", "Resource("]
+
+## The one glyph a resource tag may not carry, and the one spelling a path may climb out of a
+## folder with. Godot's saver writes no escape into a tag while its parser decodes every escape it
+## finds in one, so a type spelled with an escape in the middle of it is `GDScript` to the engine
+## and something else to a reading that compares the letters as written. And `res://../payload.gd`
+## begins with `res://` and names a file beside the project. Neither is second-guessed.
+const ESCAPE_GLYPH: String = "\\"
+const CLIMB_OUT: String = ".."
+
 ## The four bytes a Godot pack file opens with, as one little-endian number - "GDPC".
 const PACK_MAGIC: int = 0x43504447
 
 ## The newest pack format this reader understands. A file that says a higher number is not read at
 ## all, and a data-only row refuses it rather than guessing at its contents.
-const PACK_FORMAT_MAX: int = 3
+const PACK_FORMAT_MAX: int = 4
+
+## The two bits a pack's own flags word may set. An encrypted DIRECTORY cannot be read without the
+## game's key, so its file list is not a list this row has. `relative` says every file's place is
+## measured from the base the header gives rather than from the front of the file - which is how
+## the engine writes a pack today, and taking the places as written finds the wrong bytes.
+const PACK_DIRECTORY_ENCRYPTED: int = 1
+const PACK_PLACES_ARE_RELATIVE: int = 2
+
+## The format from which the file list is written at a place of its own near the END of the pack
+## rather than straight after the header, and file paths inside it are written without their
+## `res://`. Both are read here, because a pack a player downloads was written by whichever engine
+## the game that made it shipped with.
+const PACK_FORMAT_WITH_DIRECTORY: int = 4
+
+## The bit a pack entry's flags word sets when the exporter encrypted that file. Its bytes cannot
+## be read without the game's own key, and a file that cannot be read is not one that has been
+## cleared of code.
+const PACK_ENTRY_ENCRYPTED: int = 1
+
+## The most bytes of one scene or resource this reading will take in at once. A table big enough to
+## matter is a table somebody built to be read instead of the mod, and a refusal is the safe answer
+## either way.
+const MOST_RESOURCE_BYTES: int = 32 * 1024 * 1024
 ## Every mod a folder holds, in load order: a subfolder with a manifest is a folder mod, a .pck or
 ## .zip in it is a pack mod. Named mods come first in the order Set Load Order named them, and the
 ## rest follow in name order - ignoring case and reading digits as numbers, so the order is the one
@@ -187,7 +247,10 @@ func set_load_order(names: String) -> void:
 		if not trimmed.is_empty():
 			_order.append(trimmed)
 	# The mods already loaded are re-listed the same way, so For Each Mod and the next Load Mods
-	# From agree about the order rather than showing two of them.
+	# From agree about the order rather than showing two of them - down to the tie, which falls
+	# back to the same name order a folder is read in. Array.sort_custom is not stable, so a
+	# comparator answering false on every tie is free to swap two unnamed mods on each call, and
+	# "everything not named follows in name order" would be true of the folder and not of this.
 	var order: Array = Array(_order)
 	var behind: int = order.size() + 1
 	_mods.sort_custom(func(first: Dictionary, second: Dictionary) -> bool:
@@ -195,7 +258,7 @@ func set_load_order(names: String) -> void:
 		var second_at: int = order.find(str(second.get("name", "")))
 		if first_at != second_at:
 			return (first_at if first_at >= 0 else behind) < (second_at if second_at >= 0 else behind)
-		return false)
+		return str(first.get("name", "")).naturalnocasecmp_to(str(second.get("name", ""))) < 0)
 	mods_changed.emit()
 
 ## @ace_action
@@ -378,7 +441,7 @@ func _manifest_at(path: String) -> Dictionary:
 		for extension: String in [".tres", ".res"]:
 			var resource_path: String = path.path_join("mod" + extension)
 			if ResourceLoader.exists(resource_path):
-				return _record(_read_resource(resource_path), path, "folder", path)
+				return _record(_read_resource(resource_path, path), path, "folder", path)
 		if debug_mode:
 			push_warning("Mods: %s holds no mod.json and no mod.tres, so it is not read as a mod." % path)
 		return {}
@@ -409,18 +472,45 @@ func _read_json(path: String) -> Dictionary:
 
 ## A manifest saved as a resource (a ModManifest .tres), read into the same plain record the JSON
 ## form gives, so nothing downstream knows which spelling a mod used.
+##
+## THE MANIFEST IS READ BEFORE THE TIER IS EVEN KNOWN, so it is the one file in a mod that is read
+## by name alone - and `load()` on a resource file BUILDS what the file describes, script and all.
+## A manifest that does not read as data is therefore not loaded at all: the mod keeps its folder's
+## own name, and the row that goes on to take it refuses it for the same reason. A manifest saved
+## in the BINARY form cannot be read as text, so it is not loaded either; `mod.json` and a text
+## `mod.tres` are the two spellings, and they are the two the template tool writes.
+##
+## A file that IS readable and is not a manifest at all answers about no property it was asked for.
+## `Object.get` gives null for a property an object does not have, so each field is taken as the
+## text it was written with only when it is there, and the record falls back to the folder's own
+## name rather than to the word "<null>".
 ## @ace_hidden
-func _read_resource(path: String) -> Dictionary:
+func _read_resource(path: String, own_folder: String) -> Dictionary:
+	var refusal: String = _resource_reason(path.get_file(),
+		FileAccess.get_file_as_string(path), own_folder)
+	if not refusal.is_empty():
+		if debug_mode:
+			push_warning("Mods: %s was not read as a manifest - %s." % [path, refusal])
+		return {}
 	var manifest: Resource = load(path)
 	if manifest == null:
 		return {}
 	return {
-		"name": str(manifest.get("mod_name")),
-		"version": str(manifest.get("version")),
-		"author": str(manifest.get("author")),
-		"replaces": str(manifest.get("replaces")),
-		"scripts": bool(manifest.get("scripts")),
+		"name": _field_of(manifest, "mod_name"),
+		"version": _field_of(manifest, "version"),
+		"author": _field_of(manifest, "author"),
+		"replaces": _field_of(manifest, "replaces"),
+		"scripts": manifest.get("scripts") == true,
 	}
+
+## One text field off a manifest resource, as the empty string when the resource has no such
+## property. `str(null)` is the four letters "<null>", which is how a `mod.tres` that is not a
+## ModManifest at all became a mod CALLED "<null>" instead of one named after its folder - and
+## `bool(null)` is not a conversion at all, it is an error that took the read down with it.
+## @ace_hidden
+func _field_of(manifest: Resource, field: String) -> String:
+	var value: Variant = manifest.get(field)
+	return "" if value == null else str(value)
 
 ## One file read out of a .zip as JSON, without loading the archive as a resource pack - which
 ## matters, because a pack that has been loaded cannot be unloaded again.
@@ -437,9 +527,11 @@ func _read_json_in_zip(path: String, inner: String) -> Dictionary:
 	reader.close()
 	return found
 
-## Every file path a pack file holds, WITHOUT loading it: `read` says whether the list could be
-## trusted at all, and `paths` is what was in it. A .zip is read with Godot's own archive reader; a
-## .pck is read out of the file table the exporter wrote at the front of it.
+## Every file a pack file holds, WITHOUT loading it: `read` says whether the list could be trusted
+## at all, `paths` is what was in it, and `entries` is the same list with the place and size of each
+## file's bytes - which is what lets a scene or a resource inside a pack be READ rather than merely
+## named. A .zip is read with Godot's own archive reader; a .pck is read out of the file table the
+## exporter wrote at the front of it.
 ## @ace_hidden
 func _pack_index(path: String) -> Dictionary:
 	if path.get_extension().to_lower() == "zip":
@@ -453,20 +545,33 @@ func _pack_index(path: String) -> Dictionary:
 			if not inner.ends_with("/"):
 				files.append(inner)
 		reader.close()
-		return {"read": true, "paths": files}
+		return {"read": true, "paths": files, "entries": []}
 	return _pck_index(path)
 
-## The file table of a .pck, read straight off the front of the file. Anything this reader is not
-## sure of - a file that does not open, a magic number that is not a pack's, a format newer than it
-## knows, a count that cannot be right, or a table whose paths do not look like paths - comes back
-## as `read: false`, which a data-only row treats as a refusal. The safe failure is refusing a mod
-## that was fine; the unsafe one is passing a mod full of code, so this never guesses.
+## The file table of a .pck, read off the file's own bytes. Anything this reader is not sure of - a
+## file that does not open, a magic number that is not a pack's, a format newer than it knows, an
+## encrypted directory, a count that cannot be right, or an entry pointing at bytes the file does
+## not have - comes back as `read: false`, which a data-only row treats as a refusal. The safe
+## failure is refusing a mod that was fine; the unsafe one is passing a mod full of code, so this
+## never guesses.
+##
+## THE TABLE HAS MOVED, TWICE, AND THE SHAPE OF A PATH WITH IT. Format 2 added a flags word and a
+## base every file's place may be measured from. Format 4 moved the file list itself to a place of
+## its own near the end of the pack, and writes each path without its `res://`. A reader that knows
+## only the old shape does not read a modern pack WRONGLY - it refuses it, which for a data-only
+## row reads as "its file list could not be read" for every pack file a player ever has. So both
+## shapes are read, and a path that arrives without a scheme is given the one it had.
+##
+## THE LAST CHECK IS ARITHMETIC RATHER THAN SPELLING: every entry must point at bytes this file
+## actually holds. A table read the wrong way produces places that run off the end of the file,
+## which is how a mis-read is noticed instead of being reported as a pack full of nothing.
 ## @ace_hidden
 func _pck_index(path: String) -> Dictionary:
-	var refused: Dictionary = {"read": false, "paths": PackedStringArray()}
+	var refused: Dictionary = {"read": false, "paths": PackedStringArray(), "entries": []}
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return refused
+	var pack_bytes: int = file.get_length()
 	if file.get_32() != PACK_MAGIC:
 		return refused
 	var format_version: int = file.get_32()
@@ -475,35 +580,194 @@ func _pck_index(path: String) -> Dictionary:
 	file.get_32()
 	file.get_32()
 	file.get_32()
+	var pack_flags: int = 0
+	var file_base: int = 0
 	if format_version >= 2:
-		file.get_32()
-		file.get_64()
-	for _reserved: int in 16:
-		file.get_32()
+		pack_flags = file.get_32()
+		file_base = file.get_64()
+	if pack_flags & PACK_DIRECTORY_ENCRYPTED != 0:
+		return refused
+	if format_version >= PACK_FORMAT_WITH_DIRECTORY:
+		var directory_at: int = file.get_64()
+		if directory_at <= 0 or directory_at >= pack_bytes:
+			return refused
+		file.seek(directory_at)
+	else:
+		for _reserved: int in 16:
+			file.get_32()
 	var count: int = file.get_32()
 	if count < 0 or count > 1000000:
 		return refused
+	var relative: bool = pack_flags & PACK_PLACES_ARE_RELATIVE != 0
 	var paths: PackedStringArray = PackedStringArray()
-	var addressed: int = 0
+	var entries: Array[Dictionary] = []
 	for _entry: int in count:
 		var length: int = file.get_32()
-		if length < 0 or length > 4096 or file.eof_reached():
+		if length <= 0 or length > 4096 or file.eof_reached():
 			return refused
-		var entry_path: String = file.get_buffer(length).get_string_from_utf8().strip_edges()
-		file.get_64()
-		file.get_64()
+		var entry_path: String = _path_of_bytes(file.get_buffer(length))
+		var offset: int = file.get_64() + (file_base if relative else 0)
+		var size: int = file.get_64()
 		file.get_buffer(16)
-		if format_version >= 2:
-			file.get_32()
-		if entry_path.begins_with("res://"):
-			addressed += 1
+		var flags: int = file.get_32() if format_version >= 2 else 0
+		if entry_path.is_empty() or offset < 0 or size < 0 or offset + size > pack_bytes:
+			return refused
+		if not entry_path.contains("://"):
+			entry_path = "res://" + entry_path
 		paths.append(entry_path)
+		entries.append({"path": entry_path, "offset": offset, "size": size, "flags": flags})
 	file.close()
-	# A table read the wrong way still produces strings; strings that are not resource paths are how
-	# this notices, instead of reporting a pack full of code as empty.
-	if not paths.is_empty() and addressed * 2 < paths.size():
-		return refused
-	return {"read": true, "paths": paths}
+	return {"read": true, "paths": paths, "entries": entries}
+
+## One path out of a pack's table. Paths are written padded out to a round number of bytes with
+## zeros, and a zero is not a character a path is spelled with - so the padding comes off before
+## the letters are read rather than travelling on inside the name.
+## @ace_hidden
+func _path_of_bytes(raw: PackedByteArray) -> String:
+	var written: PackedByteArray = raw
+	while written.size() > 0 and written[written.size() - 1] == 0:
+		written.remove_at(written.size() - 1)
+	return written.get_string_from_utf8().strip_edges()
+
+## Why one resource file inside a mod may not be taken by a data-only row, in plain words, or ""
+## when it may. THE OTHER HALF OF THE DATA-ONLY DECISION: the list of names above answers about the
+## files that are code by their extension, and this answers about the files that are not.
+##
+## It only ever reads the TEXT, and it refuses everything it cannot read as text - a binary `.scn`
+## or `.res`, a tag that never closes, a tag with no type, a tag spelled with an escape. Something
+## unfamiliar is not something that has been cleared, and the safe failure is refusing a mod that
+## was fine.
+##
+## WHAT MAKES IT REFUSE, and every one of them is a way a file called data runs code:
+##   a script written INSIDE it    - a `[sub_resource]` whose type ends in `Script` is source code
+##                                   carried in the file itself, in any language the engine has.
+##   a script named BESIDE it      - an `[ext_resource]` whose type ends in `Script` is a file the
+##                                   engine loads and attaches when this one is built.
+##   a value that BUILDS something - `Object(GDScript,"script/source":"...")` and
+##                                   `Resource("user://payload.gd")` are property values the
+##                                   engine's own value parser resolves by compiling and by loading.
+##   a path that leaves the mod    - an `[ext_resource]` may name another scene or resource, whose
+##                                   own table this reading has not opened. `res://` is the game's
+##                                   own files, which is what a game IS, and the mod's own folder
+##                                   is the mod; anything else is refused. That is what lets a
+##                                   cleared mod mean "nothing from elsewhere comes in with it"
+##                                   rather than "no script is written on this page".
+##
+## AND IT IS ABOUT CODE THE FILE CARRIES, NOT ABOUT WHAT IT ASKS YOUR OWN CODE TO DO. A cleared
+## scene may still hold a connection naming one of your own methods, or an animation track that
+## calls one at a keyframe. None of that brings a stranger's code in; each of them can reach yours.
+## A mod is somebody else's DATA, so what it can reach is worth the same thought as any other input.
+## @ace_hidden
+func _resource_reason(name: String, text: String, own_folder: String) -> String:
+	var inside: String = own_folder
+	if not inside.is_empty() and not inside.ends_with("/"):
+		inside += "/"
+	var readable: bool = false
+	for head: String in RESOURCE_HEADS:
+		readable = readable or text.begins_with(head)
+	if not readable:
+		return "%s is saved in a form this row cannot read, so it cannot be cleared of code" % name
+	for maker: String in BUILDING_MAKERS:
+		var maker_at: int = text.find(maker)
+		while maker_at >= 0:
+			var lead: String = text.substr(maker_at - 1, 1) if maker_at > 0 else ""
+			if lead.to_lower() == lead.to_upper() and not lead.is_valid_int() and lead != "_":
+				return "%s carries a value that builds something, and this row loads data only" % name
+			maker_at = text.find(maker, maker_at + maker.length())
+	var lines: PackedStringArray = text.split("\n")
+	var at: int = 0
+	while at < lines.size():
+		var tag: String = lines[at].strip_edges()
+		at += 1
+		if not tag.begins_with("["):
+			continue
+		var closed_at: int = _tag_closes_at(tag)
+		while closed_at < 0:
+			if at >= lines.size():
+				return "%s holds a tag that never closes, so it cannot be cleared of code" % name
+			tag += " " + lines[at].strip_edges()
+			at += 1
+			closed_at = _tag_closes_at(tag)
+		var head: String = tag.substr(1, closed_at - 1).strip_edges()
+		var named_at: int = head.find(" ")
+		var tag_name: String = head if named_at < 0 else head.substr(0, named_at)
+		if not RESOURCE_TAGS.has(tag_name):
+			continue
+		if head.contains(ESCAPE_GLYPH):
+			return "%s holds an escape inside a resource tag, so it cannot be cleared of code" % name
+		var fields: Dictionary = _tag_fields("" if named_at < 0 else head.substr(named_at + 1))
+		if fields.is_empty():
+			return "%s holds a tag this row cannot read, so it cannot be cleared of code" % name
+		var kind: String = str(fields.get("type", ""))
+		if kind.is_empty():
+			return "%s holds a tag with no type, so it cannot be cleared of code" % name
+		if tag_name == "sub_resource":
+			# Source code written INSIDE the file, in whatever language the engine has.
+			if kind.ends_with(SCRIPT_TYPE_TAIL):
+				return "%s carries a script, and this row loads data only" % name
+			continue
+		var place: String = str(fields.get("path", ""))
+		if place.is_empty() or place.contains(CLIMB_OUT):
+			return "%s names a file this row cannot place, so it cannot be cleared of code" % name
+		# res:// is the game's own files, which is what a game IS - and a code file a PACK mod
+		# brings to res:// was already refused by name before this reading was reached. A script
+		# named under res:// is therefore the game's own, which is how a manifest saved as a
+		# resource names the class it was saved from.
+		if place.begins_with("res://"):
+			continue
+		if inside.is_empty() or not place.begins_with(inside):
+			return "%s names %s, which is outside the mod, and this row loads data only" % [name, place]
+	return ""
+
+## Where a tag closes, or -1 when it does not close on the text so far. Quotes are respected, so a
+## `]` inside a value does not end a tag early, and a tag written over more than one line is
+## gathered rather than cut in half.
+## @ace_hidden
+func _tag_closes_at(tag: String) -> int:
+	var quoted: bool = false
+	var scan: int = 0
+	while scan < tag.length():
+		if tag[scan] == "\"":
+			quoted = not quoted
+		elif tag[scan] == "]" and not quoted:
+			return scan
+		scan += 1
+	return -1
+
+## A tag's attributes as the pairs they are, or an empty dictionary when one of them cannot be
+## read. `type = "Script"` with spaces around the `=` is the same tag as `type="Script"`, which is
+## exactly why this is parsed rather than searched for as a substring.
+## @ace_hidden
+func _tag_fields(rest: String) -> Dictionary:
+	var fields: Dictionary = {}
+	var cursor: int = 0
+	while cursor < rest.length():
+		while cursor < rest.length() and rest[cursor] == " ":
+			cursor += 1
+		if cursor >= rest.length():
+			break
+		var key_at: int = cursor
+		while cursor < rest.length() and rest[cursor] != "=" and rest[cursor] != " ":
+			cursor += 1
+		var field: String = rest.substr(key_at, cursor - key_at)
+		while cursor < rest.length() and (rest[cursor] == " " or rest[cursor] == "="):
+			cursor += 1
+		var value: String = ""
+		if cursor < rest.length() and rest[cursor] == "\"":
+			var ends_at: int = rest.find("\"", cursor + 1)
+			if ends_at < 0:
+				return {}
+			value = rest.substr(cursor + 1, ends_at - cursor - 1)
+			cursor = ends_at + 1
+		else:
+			var value_at: int = cursor
+			while cursor < rest.length() and rest[cursor] != " ":
+				cursor += 1
+			value = rest.substr(value_at, cursor - value_at)
+		if field.is_empty():
+			return {}
+		fields[field] = value
+	return fields
 
 ## The code files in a list of paths - the whole data-only decision, over a list, with no disk in
 ## it. Everything that reads a mod's contents ends here.
@@ -532,24 +796,101 @@ func _files_under(folder: String, depth: int = 6) -> PackedStringArray:
 ## file's own table and the folder's own files are the answer - not the manifest's `scripts` flag,
 ## which is what the mod SAYS about itself and is checked first only so a mod that admits it gets
 ## the plainer sentence.
+##
+## TWO QUESTIONS, NOT ONE. A file that is code BY ITS NAME - a `.gd`, a `.dll` - is found in the
+## list of names. A file that is a resource table by its name may carry code all the same, so every
+## scene and every resource the mod holds is READ as well. Deciding by extension alone was a
+## data-only tier a `.tscn` with a script written inside it walked straight through.
 ## @ace_hidden
 func _code_reason(record: Dictionary) -> String:
 	if bool(record.get("scripts", false)):
 		return "its manifest says it carries code, and this row loads data only"
 	if str(record.get("kind", "")) == "pack":
-		var index: Dictionary = _pack_index(str(record.get("path", "")))
+		var pack_path: String = str(record.get("path", ""))
+		var index: Dictionary = _pack_index(pack_path)
 		if not bool(index.get("read", false)):
 			return "its file list could not be read, so a data-only row cannot tell whether it carries code"
 		var carried: PackedStringArray = _code_in(index.get("paths", PackedStringArray()))
 		if not carried.is_empty():
 			return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 				carried.size(), carried[0]]
-		return ""
-	var in_folder: PackedStringArray = _code_in(_files_under(str(record.get("folder", ""))))
+		if pack_path.get_extension().to_lower() == "zip":
+			return _zip_resource_reason(pack_path)
+		return _pck_resource_reason(pack_path, index.get("entries", []) as Array)
+	var folder: String = str(record.get("folder", ""))
+	var in_folder: PackedStringArray = _code_in(_files_under(folder))
 	if not in_folder.is_empty():
 		return "it carries %d code file(s), starting with %s, and this row loads data only" % [
 			in_folder.size(), in_folder[0].get_file()]
+	return _folder_resource_reason(folder)
+
+## The first refusal among a folder mod's own scenes and resources, or "" when every one of them
+## reads as data. Sorted, so two machines refusing the same mod name the same file.
+## @ace_hidden
+func _folder_resource_reason(folder: String) -> String:
+	var paths: PackedStringArray = _files_under(folder)
+	paths.sort()
+	for path: String in paths:
+		if not path.get_extension().to_lower() in RESOURCE_EXTENSIONS:
+			continue
+		var reason: String = _resource_reason(path.get_file(),
+			FileAccess.get_file_as_string(path), folder)
+		if not reason.is_empty():
+			return reason
 	return ""
+
+## The same question of a .zip, whose entries Godot's own archive reader hands over without the
+## archive ever being mounted - which matters, because a pack that has been loaded cannot be
+## unloaded again.
+## @ace_hidden
+func _zip_resource_reason(path: String) -> String:
+	var reader: ZIPReader = ZIPReader.new()
+	if reader.open(path) != OK:
+		return "its archive could not be opened, so a data-only row cannot tell whether it carries code"
+	var inner_paths: PackedStringArray = PackedStringArray()
+	for inner: String in reader.get_files():
+		if not inner.ends_with("/") and inner.get_extension().to_lower() in RESOURCE_EXTENSIONS:
+			inner_paths.append(inner)
+	inner_paths.sort()
+	var reason: String = ""
+	for inner: String in inner_paths:
+		reason = _resource_reason(inner.get_file(),
+			reader.read_file(inner).get_string_from_utf8(), "")
+		if not reason.is_empty():
+			break
+	reader.close()
+	return reason
+
+## The same question of a .pck, read straight off the file's own bytes at the places its table
+## gives. An entry the exporter encrypted cannot be read without the game's key, and an entry that
+## cannot be read is not one that has been cleared.
+## @ace_hidden
+func _pck_resource_reason(path: String, entries: Array) -> String:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return "its file could not be opened, so a data-only row cannot tell whether it carries code"
+	var wanted: Array[Dictionary] = []
+	for entry: Dictionary in entries:
+		if str(entry.get("path", "")).get_extension().to_lower() in RESOURCE_EXTENSIONS:
+			wanted.append(entry)
+	wanted.sort_custom(func(first: Dictionary, second: Dictionary) -> bool:
+		return str(first.get("path", "")) < str(second.get("path", "")))
+	var reason: String = ""
+	for entry: Dictionary in wanted:
+		var name: String = str(entry.get("path", "")).get_file()
+		if int(entry.get("flags", 0)) & PACK_ENTRY_ENCRYPTED != 0:
+			reason = "%s is encrypted, so it cannot be cleared of code" % name
+			break
+		var size: int = int(entry.get("size", 0))
+		if size < 0 or size > MOST_RESOURCE_BYTES:
+			reason = "%s is too big for this row to read, so it cannot be cleared of code" % name
+			break
+		file.seek(int(entry.get("offset", 0)))
+		reason = _resource_reason(name, file.get_buffer(size).get_string_from_utf8(), "")
+		if not reason.is_empty():
+			break
+	file.close()
+	return reason
 
 ## Where a loaded mod sits in the list, or -1.
 ## @ace_hidden

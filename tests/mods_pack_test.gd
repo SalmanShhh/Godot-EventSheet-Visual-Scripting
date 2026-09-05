@@ -8,10 +8,13 @@
 #      modder saved from ModManifest must arrive as the SAME record, because everything downstream
 #      is written against one shape and would otherwise quietly know which was used.
 #   2. THE DATA-ONLY REFUSAL. The whole difference between the two tiers is one question - does this
-#      mod carry code - asked of the mod's OWN CONTENTS. It is asked here three ways: of a file list
+#      mod carry code - asked of the mod's OWN CONTENTS. It is asked here five ways: of a file list
 #      with no disk in it (the index a pack file hands back), of a real .zip written by the test and
-#      read without loading it, and of a folder mod whose manifest claims innocence while a .gd sits
-#      in it.
+#      read without loading it, of a folder mod whose manifest claims innocence while a .gd sits in
+#      it, of the TEXT of every scene and resource a mod holds (a `.tscn` is not code by its name
+#      and may carry a script all the same), and of a real .pck this test packs itself - the byte
+#      reader is the whole decision for a pack mod, and a fixture that is only ever a sentence
+#      proves nothing about it.
 #   3. LOAD ORDER. Named mods first in the order they were named, everything else behind them in
 #      name order - the same on two machines, which is the only reason a load order is worth having.
 #   4. THE ENABLE STATE THROUGH SETTINGS. A stub settings object stands in for the Game Settings
@@ -78,6 +81,11 @@ static func run() -> bool:
 	passed = _both_manifest_spellings_arrive_as_one_record(script) and passed
 	passed = _code_is_decided_by_the_files_not_the_claim(script) and passed
 	passed = _a_zip_is_read_without_being_loaded(script) and passed
+	passed = _a_scene_carrying_a_script_is_not_data(script) and passed
+	passed = _a_script_hidden_in_a_scene_is_still_a_script(script) and passed
+	passed = _a_real_pack_file_is_read_off_its_own_bytes(script) and passed
+	passed = _a_mod_tres_that_is_not_a_manifest_keeps_its_folders_name(script) and passed
+	passed = _the_load_order_tie_is_the_same_twice(script) and passed
 	passed = _data_only_takes_the_data_mods_and_names_the_rest(script) and passed
 	passed = _the_script_tier_takes_the_one_it_refused(script) and passed
 	passed = _load_order_puts_the_named_ones_first(script) and passed
@@ -173,6 +181,149 @@ static func _a_zip_is_read_without_being_loaded(script: GDScript) -> bool:
 	])
 
 
+## A `.tscn` and a `.tres` are not code by their name, and either may carry code all the same: a
+## script written inside the file, a property whose value the engine resolves by loading a path or
+## by compiling source carried in the line, a table naming a file from somewhere else. Deciding the
+## tier by extension alone let every one of those through while calling it data, so the reading is
+## pinned here sentence by sentence - including the two spellings that must NOT be refused, because
+## a check that refuses everything is not a check.
+static func _a_scene_carrying_a_script_is_not_data(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var mine: String = "user://mods/mine"
+	var clean: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"Texture2D\" path=\"res://art/tree.png\" id=\"1\"]",
+		"[node name=\"Tree\" type=\"Sprite2D\"]",
+		"texture = ExtResource(\"1\")"]), mine)
+	var written_inside: String = director._resource_reason("world.tscn", _scene_text([
+		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
+		"script/source = \"extends Node\""]), mine)
+	var spaced: String = director._resource_reason("world.tscn", _scene_text([
+		"[sub_resource type = \"CSharpScript\" id = \"S_1\"]"]), mine)
+	var made: String = director._resource_reason("world.tscn", _scene_text([
+		"[node name=\"Tree\" type=\"Node2D\"]",
+		"script = Object(GDScript,\"script/source\":\"extends Node\")"]), mine)
+	var loaded: String = director._resource_reason("world.tscn", _scene_text([
+		"[node name=\"Tree\" type=\"Node2D\"]",
+		"script = Resource(\"user://payload.gd\")"]), mine)
+	var own_script: String = director._resource_reason("mod.tres",
+		"[gd_resource type=\"Resource\" format=3]\n"
+		+ "[ext_resource type=\"Script\" path=\"res://game/manifest.gd\" id=\"1\"]\n",
+		mine)
+	var elsewhere: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"PackedScene\" path=\"user://elsewhere/x.tscn\" id=\"1\"]"]),
+		mine)
+	var beside_it: String = director._resource_reason("world.tscn", _scene_text([
+		"[ext_resource type=\"Texture2D\" path=\"user://mods/mine/art.png\" id=\"1\"]"]),
+		mine)
+	var binary: String = director._resource_reason("world.scn", "RSRC binary bytes", mine)
+	var escaped: String = director._resource_reason("world.tscn", _scene_text([
+		"[sub_resource type=\"GD\\u0053cript\" id=\"1\"]"]), mine)
+	director.free()
+	return SUPPORT.pins("mods_pack_test", [
+		["a scene of nodes and pictures is data", clean, ""],
+		["a script written inside the file is not", written_inside,
+			"world.tscn carries a script, and this row loads data only"],
+		["nor is one whose tag is spelled with spaces around the =", spaced,
+			"world.tscn carries a script, and this row loads data only"],
+		["a property value that compiles source is refused", made,
+			"world.tscn carries a value that builds something, and this row loads data only"],
+		["so is one that loads a path", loaded,
+			"world.tscn carries a value that builds something, and this row loads data only"],
+		["a manifest naming the game's own class is data, which is how a mod.tres is saved",
+			own_script, ""],
+		["a table naming a file from outside the mod is refused", elsewhere,
+			"world.tscn names user://elsewhere/x.tscn, which is outside the mod, and this row loads data only"],
+		["and one naming the mod's own file is not", beside_it, ""],
+		["a file that cannot be read as text is refused rather than cleared", binary,
+			"world.scn is saved in a form this row cannot read, so it cannot be cleared of code"],
+		["and so is a type spelled with an escape the engine would decode", escaped,
+			"world.tscn holds an escape inside a resource tag, so it cannot be cleared of code"],
+	])
+
+
+## The same question asked of a real folder on disk: a mod whose manifest says it carries no code,
+## which carries no `.gd` at all, and whose one scene has a script written inside it.
+static func _a_script_hidden_in_a_scene_is_still_a_script(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var hidden: String = director._code_reason({"scripts": false, "kind": "folder",
+		"folder": ROOT.path_join("probe/sneaky")})
+	var honest: String = director._code_reason({"scripts": false, "kind": "folder",
+		"folder": ROOT.path_join("mods/big_swords")})
+	director.free()
+	return SUPPORT.pins("mods_pack_test", [
+		["a folder with no code file in it can still be refused, by what its scene carries",
+			hidden, "world.tscn carries a script, and this row loads data only"],
+		["and a folder of plain resources is still refused nothing", honest, ""],
+	])
+
+
+## THE BYTE READER, over a pack file this test packs itself. The whole data-only decision for a
+## pack mod rests on reading the table Godot's exporter writes at the front of a `.pck` and then
+## reading the bytes it points at - and a fixture that is only ever a sentence proves that a
+## non-pack is refused, never that a real one is read. A wrong offset here would refuse every pack
+## in the world while the suite stayed green.
+static func _a_real_pack_file_is_read_off_its_own_bytes(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var data_index: Dictionary = director._pack_index(ROOT.path_join("probe/tidy.pck"))
+	var paths: Array = Array(data_index.get("paths", PackedStringArray()))
+	paths.sort()
+	var data_reason: String = director._code_reason({"scripts": false, "kind": "pack",
+		"path": ROOT.path_join("probe/tidy.pck")})
+	var sneaky_reason: String = director._code_reason({"scripts": false, "kind": "pack",
+		"path": ROOT.path_join("probe/sneaky.pck")})
+	var codey_reason: String = director._code_reason({"scripts": false, "kind": "pack",
+		"path": ROOT.path_join("probe/codey.pck")})
+	director.free()
+	return SUPPORT.pins("mods_pack_test", [
+		["a real pack file's own table is read", bool(data_index.get("read")), true],
+		["and it is the files that were put in it", paths,
+			["res://tidy/items/blade.tres", "res://tidy/world.tscn"]],
+		["a pack of data is refused nothing", data_reason, ""],
+		["a pack whose scene carries a script is refused by that scene", sneaky_reason,
+			"world.tscn carries a script, and this row loads data only"],
+		["and a pack carrying a code file is still refused by its name", codey_reason,
+			"it carries 1 code file(s), starting with res://codey/cheat.gd, and this row loads data only"],
+	])
+
+
+## A `mod.tres` that is not a ModManifest at all answers about none of the five fields. `str(null)`
+## is the four letters "<null>", so a plain resource saved under that name became a mod CALLED
+## "<null>" - and the rule that a blank name falls back to the folder's own never fired.
+static func _a_mod_tres_that_is_not_a_manifest_keeps_its_folders_name(script: GDScript) -> bool:
+	var director: Node = script.new()
+	var record: Dictionary = director._manifest_at(ROOT.path_join("probe/odd_tres"))
+	director.free()
+	return SUPPORT.pins("mods_pack_test", [
+		["a resource that is not a manifest is named after its folder",
+			str(record.get("name")), "odd_tres"],
+		["and says nothing rather than the word null", [str(record.get("version")),
+			str(record.get("author")), str(record.get("replaces"))], ["", "", ""]],
+	])
+
+
+## Set Load Order re-lists what is already loaded, and the row says everything not named follows in
+## name order. Array.sort_custom is not stable, so a comparator answering false on every tie was
+## free to swap two unnamed mods on each call - the same list, sorted twice, in two orders.
+static func _the_load_order_tie_is_the_same_twice(script: GDScript) -> bool:
+	var director: Node = script.new()
+	director._mods = [{"name": "Zebra"}, {"name": "apple"}, {"name": "Mint"},
+		{"name": "cherry"}, {"name": "Dawn"}] as Array[Dictionary]
+	director.set_load_order("Mint, cherry")
+	var once: Array = []
+	for record: Dictionary in director.each_mod():
+		once.append(record.get("name"))
+	director.set_load_order("Mint, cherry")
+	var twice: Array = []
+	for record: Dictionary in director.each_mod():
+		twice.append(record.get("name"))
+	director.free()
+	return SUPPORT.pins("mods_pack_test", [
+		["the named ones lead, and the rest follow in name order", once,
+			["Mint", "cherry", "apple", "Dawn", "Zebra"]],
+		["and the same list sorted again is the same list", twice, once],
+	])
+
+
 # ── 3. Loading ────────────────────────────────────────────────────────────────────────────────
 
 
@@ -239,7 +390,9 @@ static func _the_script_tier_takes_the_one_it_refused(script: GDScript) -> bool:
 
 
 ## Named mods first, in the order they were named; everything else behind them in name order. Set
-## after the fact, it re-lists what is already loaded, so the options screen and the next load agree.
+## after the fact, it re-lists what is already loaded, so the options screen and the next load
+## agree - down to the tie, which is name order there too rather than whatever order the list
+## happened to be in.
 static func _load_order_puts_the_named_ones_first(script: GDScript) -> bool:
 	var director: Node = script.new()
 	director.set_load_order("Winter Skins, Big Swords")
@@ -255,8 +408,8 @@ static func _load_order_puts_the_named_ones_first(script: GDScript) -> bool:
 	return SUPPORT.pins("mods_pack_test", [
 		["the named mods load first, in the order they were named", ordered,
 			["Winter Skins", "Big Swords", "nameless"]],
-		["and setting the order again re-lists what is already loaded", relisted,
-			["nameless", "Winter Skins", "Big Swords"]]
+		["and setting the order again re-lists what is already loaded, ties and all", relisted,
+			["nameless", "Big Swords", "Winter Skins"]]
 	])
 
 
@@ -442,6 +595,57 @@ static func _write_fixtures(manifest_script: GDScript) -> void:
 	# A file that opens and is not a pack: the case a data-only row must refuse rather than read as
 	# empty, because "I could not tell" and "there is nothing in it" are different answers.
 	_write(ROOT.path_join("mods/rubbish.pck"), "this is not a pack file, it is a sentence\n")
+
+	# A mod with no code file in it at all, whose one scene has a script written inside it. This is
+	# the folder a tier decided by file extension took as data.
+	_write(ROOT.path_join("probe/sneaky/mod.json"), JSON.stringify({
+		"name": "Sneaky", "version": "1.0", "scripts": false}, "\t"))
+	_write(ROOT.path_join("probe/sneaky/world.tscn"), _scene_text([
+		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
+		"script/source = \"extends Node\""]))
+
+	# A mod.tres that is not a ModManifest: every field it is asked for answers null.
+	_make_folder(ROOT.path_join("probe/odd_tres"))
+	ResourceSaver.save(Resource.new(), ROOT.path_join("probe/odd_tres/mod.tres"))
+
+	# Three REAL pack files, packed here rather than described: one of data, one whose scene hides a
+	# script, one carrying a code file by name.
+	_write(ROOT.path_join("packed/blade.tres"), "[gd_resource type=\"Resource\" format=3]\n")
+	_write(ROOT.path_join("packed/tidy.tscn"), _scene_text([
+		"[node name=\"Tree\" type=\"Node2D\"]"]))
+	_write(ROOT.path_join("packed/sneaky.tscn"), _scene_text([
+		"[sub_resource type=\"GDScript\" id=\"GDScript_1\"]",
+		"script/source = \"extends Node\""]))
+	_write(ROOT.path_join("packed/cheat.gd"), "extends Node\n")
+	_pack(ROOT.path_join("probe/tidy.pck"), {
+		"res://tidy/items/blade.tres": ROOT.path_join("packed/blade.tres"),
+		"res://tidy/world.tscn": ROOT.path_join("packed/tidy.tscn")})
+	_pack(ROOT.path_join("probe/sneaky.pck"), {
+		"res://sneaky/items/blade.tres": ROOT.path_join("packed/blade.tres"),
+		"res://sneaky/world.tscn": ROOT.path_join("packed/sneaky.tscn")})
+	_pack(ROOT.path_join("probe/codey.pck"), {
+		"res://codey/cheat.gd": ROOT.path_join("packed/cheat.gd")})
+
+
+## One resource file's text, head and all. Written through one helper so a fixture and an
+## expectation cannot drift apart over a header line.
+static func _scene_text(lines: PackedStringArray) -> String:
+	return "[gd_scene format=3]\n\n" + "\n".join(lines) + "\n"
+
+
+## A real `.pck`, written by the engine's own packer from files already on disk. Nothing loads it -
+## a resource pack cannot be taken back out of a running process, so a test that mounted one could
+## not be run twice.
+static func _pack(pack_path: String, files: Dictionary) -> void:
+	_make_folder(pack_path.get_base_dir())
+	var packer: PCKPacker = PCKPacker.new()
+	if packer.pck_start(pack_path) != OK:
+		return
+	var inner_paths: Array = files.keys()
+	inner_paths.sort()
+	for inner: String in inner_paths:
+		packer.add_file(inner, str(files[inner]))
+	packer.flush()
 
 
 static func _write_resource(path: String) -> void:

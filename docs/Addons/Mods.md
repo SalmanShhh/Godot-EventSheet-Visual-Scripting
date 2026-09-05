@@ -3,7 +3,8 @@
 **Mods** ships as the `Mods` autoload: the folder players put their own content in, and the rows that
 read it. It loads every mod it finds in a folder, in a load order you set, and it does that in one of
 two tiers you choose per row. A **data-only** load takes resources, scenes, textures and sounds, and
-before it takes anything it reads the mod's own contents and refuses one that carries a script. A
+before it takes anything it reads the mod's own contents - the files' names, and the text of every
+scene and resource among them - and refuses one that carries a script. A
 **script** load takes a mod that carries code, and you should know exactly what that means before you
 ship a row that does it: code in a mod runs with everything your game itself can reach, which is the
 player's files, their network and their machine. Godot has no sandbox to put it in, this pack does
