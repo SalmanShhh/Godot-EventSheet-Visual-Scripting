@@ -101,22 +101,24 @@
   again. **First Time In This Save** is true the first time this save reaches a name and never again
   for that save; **Has Seen** asks the same question without using it up; **Mark Seen** and **Forget
   Seen** write it by hand. The Name is an expression, so `"kill:" + kind` is one memory per kind from
-  one row, and the store is asked once per key per row rather than once per frame. The memory is a
+  one row, and the four rows share ONE cache of what the save has answered, so a menu asking every
+  frame is not a file read every frame. The memory is a
   `seen:` key in the SLOT when the Save System pack is registered, so each save answers for itself and
   Start New Run clears it; without that pack it falls back to `user://remembered.cfg`, which a new
   **Doctor section says once per script as a NOTE** - never a warning, because a single-save game may
   have chosen it. The sheet stays quiet: amber on the row, the words in the triage inbox and in the
   selected row's help strip.
-- **The set of things the player has found, as a pack: Codex, 6 rows.** A bestiary, a recipe book, an
+- **The set of things the player has found, as a pack: Codex, 8 rows.** A bestiary, a recipe book, an
   item compendium, a gallery of unlocked art and a list of visited rooms are one mechanic wearing five
-  hats. **Discover**, **Has Discovered**, **Discovered Count**, **Total Entries**, **For Each
-  Discovered** and the **On First Discovered** trigger are the whole of it, over **2 pack settings**.
+  hats. **Discover**, **Forget Entry**, **Forget Set**, **Has Discovered**, **Discovered Count**,
+  **Total Entries**, **For Each Discovered** and the **On First Discovered** trigger are the whole of
+  it, over **2 pack settings**.
   The set is a FOLDER and an entry is a FILE in it, so adding a page means dropping a file in a folder:
   a `CodexEntryResource` you own with **3 fields** - the name, the picture and the words - whose file
   name is the entry's name and whose folder is the set. There is no list in this pack, no dropdown in
   the editor, and one empty starter to duplicate.
-- **Go To Scene With Loading, Enter Loaded Scene, Is Loading, Loading Progress, Loading Tip, On
-  Loading Progress and On Loading Finished** - Scene Flow's loading screens: a screen of your own while
+- **Go To Scene With Loading, Enter Loaded Scene, Scene Is Loading, Scene Load Progress, Loading
+  Tip, On Loading Progress and On Loading Finished** - Scene Flow's loading screens: a screen of your own while
   the next scene comes off the disk on a thread, entered when both the load and a shortest time are
   done, wrapped in the same seven transition shapes, with `loading_screen.tscn` and `tips.txt` shipped
   beside the pack as starters neither knob points at. The reading a bar is set to is the SLOWER of the
@@ -130,6 +132,46 @@
   guide is new, at the house standard. **99 owed keys** - the whole clock module, the four save-slot
   rows and the Doctor's heavy-scene note - are filled in all **8 bundled locales**, and the keyed-verb
   ratchet gained **25 ids** with none dropping out.
+
+### Fixed in the clock and loading pass
+
+- **A clock a row replaces is retired, so a trigger fires once and at its own moment.** Put On
+  Cooldown, Start Countdown, Schedule At, Start Stopwatch and Pause Countdown wrote a new
+  `SceneTreeTimer` over the metadata holding the old one - but a `SceneTreeTimer` is held by the
+  TREE, so the abandoned clock went on running with its timeout still wired to the sheet's signal:
+  **On Countdown Finished fired while the countdown was paused**, and again after it was resumed,
+  and On Cooldown Ready fired at a restarted cooldown's old moment. Every row that replaces or
+  parks a clock now takes the listeners off it and runs it out first.
+- **Schedule At waits on the clock its moment was measured on.** The second it is given is a
+  reading of Game Time, which is realtime, and the timer it made was game time - so under a pause it
+  finished late by however long the game was held.
+- **The last ten seconds of a countdown are counted in tenths.** Countdown Text read whole seconds
+  all the way down, so a round timer sat on `00:03` for a whole second and read as a stopped clock.
+  Under ten it is `00:09.4`; at ten and above it is the minutes and seconds it always was.
+- **The four save-slot memories share one cache, and the save empties it.** First Time In This Save
+  kept its answers for the life of the node, so a node that outlives a scene - an autoload sheet, a
+  HUD - went on answering for the run before: **Start New Run and switching slots did not bring the
+  first time back**, though the row's own words promise the first does. Has Seen had no cache at
+  all, so every evaluation was a file read - a read per frame under an Every Tick event. Both are
+  now one cache all four rows share, written by Mark Seen and Forget Seen as they write the store
+  and emptied by the save pack's own `new_run_started` and `after_load`.
+- **The loading screen is entered once, after the cover that brought it up.** Entering while a
+  transition was still running did a plain scene change, and the cover into the loading screen then
+  swapped back to it at its own halfway mark - leaving the game on a loading screen with nothing
+  loading. It happened whenever the wait ended before half the fade: a minimum of zero seconds, a
+  scene already in the cache, or a fade longer than twice the minimum. The shortest time is also
+  counted from the moment the screen is up rather than from the row.
+- **The starter loading screen is wired**, so its bar moves, its tip reads and its press-any-key
+  line waits for the end of the wait - three rows in a sheet of its own, copied with the scene.
+- **The Codex can be closed again**: **Forget Entry** and **Forget Set** are the other half of
+  Discover, so a New Game in the same session, a cheat menu that locks a page again and a set of
+  run-only discoveries have a row. Loading a save that carries no codex still leaves the book alone,
+  which is the empty-state rule every autoload pack here follows.
+- **Two loading rows stop sharing a name with rows that already shipped.** Save System has an Is
+  Loading and the engine rows have a Loading Progress, so Scene Flow's pair are now **Scene Is
+  Loading** and **Scene Load Progress**. The verbs behind them are untouched.
+- **The save-memory Doctor note is translated** like every other note in the inbox, in all eight
+  bundled languages.
 
 ### The ground under the game, the world past the edge of it, and the folder players add to
 
