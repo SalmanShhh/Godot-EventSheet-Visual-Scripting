@@ -104,6 +104,15 @@
   while the line was still being spoken. A sting now ducks at least as far as what it found and hands
   the music back to it.
 
+- **Two stings over each other no longer leave the music down for the rest of the game.** A sting
+  hands the music back to the duck it found, and while a hold is running the duck it finds is the
+  PREVIOUS sting's - so a second sting a second after the first wrote that temporary level down as
+  the one to return to, and returned the music to it with no hold left to lift it. Two two-second
+  stings a second apart left the mix **6 dB down for ever**, with the director's own frame running to
+  hold it there. An overlapping sting now inherits the STANDING level the hold was already carrying:
+  the last hold to run out hands the music back to what was in force before the first sting, and the
+  director parks its frame again.
+
 - **A song with an intro plays its intro.** Every Play started the track at its Loop From, which is
   the one thing that field is not for: the intro was never heard at all, against what the track
   resource's own tooltip and the guide both promise. The first Play of a song is from its beginning

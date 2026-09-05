@@ -288,12 +288,10 @@ func stinger(path: String, duck_db: float) -> void:
 	add_child(shot)
 	shot.finished.connect(shot.queue_free)
 	shot.play()
-	# A STINGER NEVER LIFTS A DUCK. The music may already be under a line of dialogue, and that line
-	# is still being spoken when the sting ends - so the sting ducks at least as far as whatever it
-	# found, and hands the music back to THAT rather than to full volume.
-	var standing: float = _duck_target_db
-	duck(maxf(absf(duck_db), absf(standing)), 0.15)
-	_hold_duck(maxf(stream.get_length() - 0.15, 0.0), 0.4, standing)
+	# A sting ducks at least as far as whatever it found and hands the music back to the STANDING
+	# duck rather than to full volume, which is the whole of what a sting over a line of dialogue -
+	# or over another sting - has to get right.
+	_begin_sting(duck_db, stream.get_length())
 
 ## @ace_action
 ## @ace_featured
@@ -684,13 +682,32 @@ func _take_the_loop() -> void:
 
 ## Holds the duck down for a while, names how long it takes to come back up, and says WHERE it comes
 ## back up to - what a stinger does for its own length, without a timer node anywhere. `back_to` is
-## the duck that was already in force when the hold started: 0 for a stinger over nothing, and the
+## the STANDING duck the hold hands the music back to: 0 for a stinger over nothing, and the
 ## dialogue duck for a stinger that landed over a line.
 ## @ace_hidden
 func _hold_duck(seconds: float, release: float, back_to: float) -> void:
 	_duck_hold = maxf(seconds, 0.0)
 	_duck_release = maxf(release, 0.0)
 	_duck_return_db = minf(back_to, 0.0)
+
+## What a sting does to the duck, in one place so it can be driven with no sound file in the picture.
+##
+## A STINGER NEVER LIFTS A DUCK. The music may already be under a line of dialogue, and that line is
+## still being spoken when the sting ends - so the sting ducks at least as far as whatever it found,
+## and hands the music back to THAT rather than to full volume.
+##
+## What it hands back to is the STANDING duck - the one a row asked for and no row has lifted - never
+## another sting's temporary one. While a hold is running, the level IN FORCE is that sting's own
+## duck: a second sting handing back to the level it found would return the music to the first
+## sting's decibels with no hold left to lift them, and the music would stay down for the rest of the
+## game. So an overlapping sting inherits the standing level the hold was already carrying, and the
+## last hold to run out is the one that lifts the music.
+## @ace_hidden
+func _begin_sting(depth_db: float, length: float) -> void:
+	var in_force: float = _duck_target_db
+	var standing: float = _duck_return_db if _duck_hold > 0.0 else in_force
+	duck(maxf(absf(depth_db), absf(in_force)), 0.15)
+	_hold_duck(maxf(length - 0.15, 0.0), 0.4, standing)
 
 ## One frame of every walk the director has running: the crossfade, the duck and each layer. It is
 ## a plain function of delta and the state above rather than a tween, which is what lets a test

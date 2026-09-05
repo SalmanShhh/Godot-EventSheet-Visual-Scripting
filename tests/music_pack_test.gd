@@ -58,6 +58,7 @@ static func run() -> bool:
 	passed = _a_track_file_round_trips() and passed
 	passed = _next_beat_at_rides_the_engine_clock(script) and passed
 	passed = _a_stinger_over_a_duck_leaves_the_duck(script) and passed
+	passed = _two_stings_over_each_other_still_come_back_up(script) and passed
 	passed = _a_song_with_an_intro_plays_it_once(script) and passed
 	passed = _a_track_that_ends_stops_being_the_track(script) and passed
 	_forget_tracks()
@@ -422,6 +423,50 @@ static func _a_stinger_over_a_duck_leaves_the_duck(script: GDScript) -> bool:
 		["and when the sting ends the music comes back to the duck, not to full",
 			_round(after_the_sting), -8.0],
 		["and stays there for as long as the line lasts", _round(still_under_the_voice), -8.0],
+		["until the row that ducked it brings it up", _round(when_the_line_ends), 0.0],
+	])
+
+
+## TWO STINGS THAT OVERLAP HAND THE MUSIC BACK TO WHAT WAS THERE BEFORE THE FIRST OF THEM. A sting
+## returns the music to the duck it found, and while a hold is running the duck it finds is the
+## PREVIOUS STING'S. A second sting returning to the level in force would therefore hand the music
+## back to the first sting's decibels with no hold left to lift them: the mix would stay down for the
+## rest of the game, and the director's own frame would go on running for ever to hold it there.
+static func _two_stings_over_each_other_still_come_back_up(script: GDScript) -> bool:
+	var director: Node = script.new()
+	# Two two-second stings, a second apart, over nothing at all.
+	director._begin_sting(6.0, 2.0)
+	director.advance(1.0)
+	director._begin_sting(6.0, 2.0)
+	var wrote_down: float = director._duck_return_db
+	director.advance(1.85)
+	director.advance(0.4)
+	var back_up: float = director._duck_db
+	var aimed_at: float = director._duck_target_db
+	var parks: bool = director._at_rest()
+	# The same pair over a line of dialogue: both hand the music back to the LINE's duck.
+	var under: Node = script.new()
+	under.duck(8.0, 0.0)
+	under._begin_sting(6.0, 2.0)
+	under.advance(1.0)
+	under._begin_sting(6.0, 2.0)
+	under.advance(1.85)
+	under.advance(0.4)
+	var still_under_the_voice: float = under._duck_db
+	var runs_on: bool = under._at_rest()
+	under.unduck(0.0)
+	var when_the_line_ends: float = under._duck_db
+	director.free()
+	under.free()
+	return SUPPORT.pins(TEST, [
+		["the second sting keeps the standing level the first one wrote down",
+			_round(wrote_down), 0.0],
+		["when both holds have run out the music is back at full", _round(back_up), 0.0],
+		["aimed at full, not at the sting it was under", _round(aimed_at), 0.0],
+		["and the director parks its own frame again", parks, true],
+		["over a line, both stings hand the music back to the line's duck",
+			_round(still_under_the_voice), -8.0],
+		["which is not rest, because the line is still being spoken", runs_on, false],
 		["until the row that ducked it brings it up", _round(when_the_line_ends), 0.0],
 	])
 
