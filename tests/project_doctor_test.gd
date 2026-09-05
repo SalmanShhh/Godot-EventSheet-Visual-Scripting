@@ -98,12 +98,20 @@ const SUPPORT := preload("res://tests/support.gd")
 ## backstop for a cost that is nobody's duplicate read - a section that is simply slow.
 const DOCTOR_BUDGET_MS: int = 95000
 
-## What the audit measured on 2026-09-05: 149 distinct scripts opened as sheets out of 1,566 walked.
-## The ceiling is generous because the corpus grows and this pin is not about the exact number - it
-## is about the difference between opening a curated handful and opening the project, which is what
-## a gate decaying to a bare word does (the Lighting section did exactly that before bd1a26ed, and
-## it cost seventeen needless sheet builds in one section alone).
-const DOCTOR_MAX_SHEETS_OPENED: int = 400
+## What the audit measured on 2026-09-05 once this project declared its own scope: 50 distinct
+## scripts opened as sheets out of the 216 the walk now hands back (it was 149 of 1,566 before, and
+## the ceiling here was 400).
+##
+## THE CEILING HAD DECAYED PAST THE POINT OF MEANING and lowering it is the correction. This pin is
+## not about the exact number - it is about the difference between opening a curated handful and
+## opening the project, which is what a gate decaying to a bare word does (the Lighting section did
+## exactly that before bd1a26ed, and it cost seventeen needless sheet builds in one section alone).
+## A ceiling of 400 could no longer tell those apart, because 400 is nearly twice the whole corpus:
+## a section that opened EVERY script the audit walks would have sailed under it. So the rule the
+## number has to keep is that it sits below the size of the audited corpus and comfortably above
+## what the audit really opens - 150 is three times the 50 measured and well under the 216 walked,
+## so "opened the project" fails it again.
+const DOCTOR_MAX_SHEETS_OPENED: int = 150
 
 
 static func run() -> bool:
@@ -292,6 +300,27 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://doctor_fan.tres")
 	DirAccess.remove_absolute("user://doctor_small.tres")
 
+	# Which folders the audit is about: the reading of eventsheets/doctor/skipped_folders, pinned as
+	# a pure function so it means the same thing on a project that declared nothing.
+	#
+	# RESTORED, NOT NULLED. Setting a ProjectSettings key to null ERASES it, and this repository
+	# declares two folders in project.godot - so the fan-out check's set-then-null pattern would
+	# quietly delete that declaration for the rest of the process, and every test after this one
+	# (including the audit below) would run against a project that had forgotten its own scope.
+	var declared_before: Variant = ProjectSettings.get_setting(
+		EventSheetProjectDoctor.SKIPPED_FOLDERS_SETTING, null)
+	ProjectSettings.set_setting(EventSheetProjectDoctor.SKIPPED_FOLDERS_SETTING,
+		PackedStringArray(["res://sample/", "  ", "build", "build", "vendor"]))
+	all_passed = _check("declared folders are read as names - res:// and trailing slash trimmed, blanks and repeats dropped",
+		EventSheetProjectDoctor.declared_skipped_folders(),
+		PackedStringArray(["sample", "build", "vendor"])) and all_passed
+	ProjectSettings.set_setting(EventSheetProjectDoctor.SKIPPED_FOLDERS_SETTING, declared_before)
+	# The walk holds its listing between asks, so a scope changed under it has to be forgotten by
+	# hand - a run does this for itself, but the probe above was not a run.
+	EventSheetProjectDoctor.clear_project_scripts()
+	all_passed = _check("nothing the audit walks sits in a folder this project declared out of it",
+		_walked_under_declared_folder(), "") and all_passed
+
 	# The repo gate: this repository must be doctor-clean at the error level - the
 	# byte-identity contract pack goldens pin, generalized to every committed sheet.
 	var audit_start_usec: int = Time.get_ticks_usec()
@@ -313,6 +342,26 @@ static func run() -> bool:
 		if str(finding.get("severity")) == "error":
 			print("  doctor error: %s - %s" % [str(finding.get("path")), str(finding.get("message"))])
 	all_passed = _check("repo is doctor-clean (0 errors)", int(report.get("errors", 0)), 0) and all_passed
+	# And the scope, over the report this run actually produced: a project that declared folders out
+	# of its audit is not told anything about the SCRIPTS in them.
+	#
+	# Scripts rather than every path, because the `.tres` sheets in such a folder are the one
+	# deliberate exception: they arrive through the project's sheet listing - which Find in Project
+	# shares and a Doctor setting must not narrow - rather than through the audit's own file walk,
+	# and the pairing contract they carry is error-tier. This repository's only `.tres` sheet is a
+	# fixture under tests/, so that exception is not hypothetical here: it is the whole of what
+	# check_generated_outputs has left to audit.
+	var audited_declared_script: String = ""
+	for finding: Dictionary in (report.get("findings", []) as Array):
+		var finding_path: String = str(finding.get("path"))
+		if not finding_path.ends_with(".gd"):
+			continue
+		for folder: String in EventSheetProjectDoctor.declared_skipped_folders():
+			if finding_path.begins_with("res://%s/" % folder):
+				audited_declared_script = finding_path
+				break
+	all_passed = _check("no finding is about a script in a folder this project declared out of the audit",
+		audited_declared_script, "") and all_passed
 	var unused_packs: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in (report.get("findings", []) as Array):
 		if str(finding.get("check")) == "unused-pack":
@@ -326,6 +375,18 @@ static func run() -> bool:
 	DirAccess.remove_absolute(sheet_path)
 	DirAccess.remove_absolute(bus_path)
 	return all_passed
+
+
+## The first script the audit's own walk hands back from inside a folder this project declared out
+## of the audit, or "" when it hands back none - which is the answer on a project that declared
+## nothing, and the answer this repository owes for tests/ and tools/.
+static func _walked_under_declared_folder() -> String:
+	var declared: PackedStringArray = EventSheetProjectDoctor.declared_skipped_folders()
+	for script_path: String in EventSheets.project_scripts():
+		for folder: String in declared:
+			if script_path.begins_with("res://%s/" % folder):
+				return script_path
+	return ""
 
 
 static func _has(findings: Array[Dictionary], severity: String, check: String) -> bool:

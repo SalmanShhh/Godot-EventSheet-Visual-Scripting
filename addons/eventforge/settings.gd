@@ -10,6 +10,12 @@
 class_name EventSheetSettings
 extends RefCounted
 
+## Named rather than written inline below, because a constant Dictionary's values must themselves be
+## constant expressions - and because the default being EMPTY is the load-bearing half of the
+## skipped-folders setting: it is what makes registering it change nothing for a project that has
+## never heard of it.
+const DEFAULT_SKIPPED_FOLDERS: PackedStringArray = []
+
 const DEFINITIONS: Array[Dictionary] = [
 	{"name": "eventsheets/editor/compile_on_save", "default": true, "type": TYPE_BOOL,
 		"doc": "Saving a sheet also writes its generated script (F5 can never play-test stale code)."},
@@ -53,6 +59,10 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "The model name that endpoint expects."},
 	{"name": "eventsheets/ask/api_key", "default": "", "type": TYPE_STRING,
 		"doc": "Your own key for that endpoint, when it wants one. A local endpoint usually does not."},
+	# Which folders the Project Doctor's audit is about. Empty means "all of them", which is what the
+	# audit did before this setting existed - a project that declares nothing sees no change at all.
+	{"name": "eventsheets/doctor/skipped_folders", "default": DEFAULT_SKIPPED_FOLDERS, "type": TYPE_PACKED_STRING_ARRAY,
+		"doc": "Folders the Project Doctor does not audit, by name - matched at any depth, the way addons/ always has been. A test tree, a build-tool tree or a folder of imported samples is code nobody is going to fix a finding in, and walking it is most of what a large audit costs. Empty by default: every folder outside addons/ is audited."},
 	{"name": "eventsheets/addons/composition_mode", "default": "allowed", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_ENUM, "hint_string": "allowed,off",
 		"doc": "Whether sheets may include other sheets (policy gates, never bytes)."},

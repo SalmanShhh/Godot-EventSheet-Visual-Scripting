@@ -462,6 +462,8 @@ static func check_declaration_reach(findings: Array[Dictionary]) -> void:
 	var corpus: String = "\n".join(corpus_parts)
 	var scene_parts: PackedStringArray = PackedStringArray()
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
+		if EventSheetProjectDoctor.is_in_skipped_folder(scene_path):
+			continue
 		scene_parts.append(EventSheetProjectDoctor.source_of(scene_path))
 	var scenes_text: String = "\n".join(scene_parts)
 	for script_path: String in script_paths:

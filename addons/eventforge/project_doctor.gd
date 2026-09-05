@@ -88,6 +88,17 @@ static func run() -> Dictionary:
 	var importer_calls_before: int = GDScriptImporter.external_imports
 	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
+	#
+	# THIS LIST IS NOT NARROWED BY THE PROJECT'S SKIPPED FOLDERS, and that is deliberate. The skip
+	# list governs the audit's OWN file walk (`_walk_files`); this is a different walk and a shared
+	# one - it is what Find in Project and Replace in Project read, and a Doctor setting must not
+	# quietly narrow a search window. It is also `.tres`-only, so it is neither where the audit's
+	# time goes (that is the scripts opened as sheets) nor a corpus that grows: a `.tres` sheet is
+	# something a person sat down and authored, never build output. And what it carries is an
+	# ERROR-tier contract - a committed generated script that no longer matches what its sheet
+	# compiles to - so of the two ways to be wrong here, auditing a folder the reader called
+	# uninteresting is the better one. Losing the one check that catches a stale committed output,
+	# silently, because the sheet happened to live in a declared folder, is the worse one.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
 	check_generated_outputs(sheet_paths, findings)
 	check_debug_residue(sheet_paths, findings)
@@ -237,6 +248,11 @@ static func run() -> Dictionary:
 	# the shape of mistake that never surfaces on its own. Quiet on a sheet no scene runs and on a
 	# scene with no player in it - without a list to hold the row up against there is no evidence.
 	EventSheetFeedbackDoctor.ensure_registered()
+	# The Shapes section: a row that marches a shape's dashes on a shape whose Dashed box is off.
+	# Scroll Dashes moves a pattern along and does not make one, so the offset climbs and the line
+	# sits still with nothing anywhere reporting it. Whether a shape is dashed is an Inspector fact,
+	# so the check stays quiet unless it can find the node in a scene and read the box for itself.
+	EventSheetShapesDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
@@ -2989,6 +3005,64 @@ static func _walk_project_scripts() -> PackedStringArray:
 ## `.godot` and every other dot-directory are skipped by the walk itself.
 const _PLUGIN_DIRECTORIES: PackedStringArray = ["addons"]
 
+## The same sentence, handed to the project to finish: the folders THIS project says its audit is
+## not about.
+##
+## `addons/` is skipped above because the plugin's own code is not a user's game, and most
+## repositories hold a second kind of that code - a test tree, a build-tool tree, a folder of
+## imported third-party samples. The audit walked all of it, opened it as sheets and reported on it
+## at length, and opening scripts as sheets is where an audit's time goes, so a project whose own
+## code is the minority paid for the majority twice: once in seconds and once in findings nobody was
+## ever going to fix.
+##
+## A SKIP LIST, and EMPTY BY DEFAULT, so a project that declares nothing is audited exactly as it
+## was before this setting existed. An include list was the other option and is worse in the one way
+## that matters: its failure mode is silence. A `levels/` folder added next month would simply never
+## be looked at, and nothing would say so. A skip list fails the other way - a new folder is audited,
+## and the worst case is a finding somebody can see and then decide to declare away.
+##
+## Entries are folder NAMES, matched at any depth, which is exactly how `addons` has always been
+## matched by the walk below - so "tests" covers `res://tests/` and `res://demo/tests/` alike. A
+## leading `res://` and a trailing slash are accepted and trimmed, because that is how a person
+## spells a folder when asked for one.
+const SKIPPED_FOLDERS_SETTING := "eventsheets/doctor/skipped_folders"
+
+
+## The folder names this project declared out of its audit, cleaned up - `res://` and trailing
+## slashes trimmed, blanks and repeats dropped. Empty on a project that declared nothing.
+##
+## Read fresh rather than held: it is one small settings read, and the walk that consumes it already
+## caches its answer, so caching this too would only add a second thing to forget to drop.
+static func declared_skipped_folders() -> PackedStringArray:
+	var folders: PackedStringArray = PackedStringArray()
+	var declared: Variant = ProjectSettings.get_setting(SKIPPED_FOLDERS_SETTING, PackedStringArray())
+	if not (declared is PackedStringArray or declared is Array):
+		return folders
+	for entry: Variant in declared:
+		var folder: String = str(entry).strip_edges().trim_prefix("res://").trim_suffix("/")
+		if folder.is_empty() or folders.has(folder):
+			continue
+		folders.append(folder)
+	return folders
+
+
+## Whether one path sits inside a folder this project declared out of its audit.
+##
+## The walk below never hands such a path back, so nothing that reads the walk needs this. It is for
+## the four sections that take their corpus from the SHARED SCENE INDEX instead - the one cached
+## `.tscn` parse every scene-adjacent reader in the editor shares. That index is deliberately not
+## narrowed: a Doctor setting has no business deciding what the editor can see. The scoping belongs
+## to the readers that ARE the audit, and this is the one answer they share, so no section can hold
+## a different opinion about which scenes this project has.
+##
+## Matched as a path SEGMENT, which is what makes "tests" cover `res://tests/` and
+## `res://demo/tests/` alike - the same any-depth rule the walk applies to `addons`.
+static func is_in_skipped_folder(path: String) -> bool:
+	for folder: String in declared_skipped_folders():
+		if path.contains("/%s/" % folder):
+			return true
+	return false
+
 
 ## Every file under res:// that `keeps` says yes to, in path order.
 ##
@@ -3001,8 +3075,19 @@ const _PLUGIN_DIRECTORIES: PackedStringArray = ["addons"]
 ## NTFS, hash order on ext4), and forty-odd checks derive their finding order and their "first user"
 ## picks from these lists - so a report that took the walk's own order would reorder itself between
 ## two machines and be reporting the filesystem rather than the project.
+##
+## THE PROJECT'S OWN DECLARED FOLDERS ARE ADDED HERE, once, rather than at the four call sites, so
+## every corpus this audit reads is the same corpus. That is not tidiness: `.gd` and `.tscn` are read
+## by the same checks against each other - the method-track sweep builds its index of defined
+## functions from the scripts and its list of calls from the scenes - so filtering one and not the
+## other would not narrow the report, it would MANUFACTURE findings, accusing a scene of calling a
+## function whose script the walk had just been told to look away from.
 static func _walk_files(skipped_directories: PackedStringArray,
 		keeps: Callable) -> PackedStringArray:
+	var skipped: PackedStringArray = skipped_directories.duplicate()
+	for folder: String in declared_skipped_folders():
+		if not skipped.has(folder):
+			skipped.append(folder)
 	var found: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
 	while not pending.is_empty():
@@ -3016,7 +3101,7 @@ static func _walk_files(skipped_directories: PackedStringArray,
 		while not entry.is_empty():
 			var full_path: String = directory_path.path_join(entry)
 			if directory.current_is_dir():
-				if not entry.begins_with(".") and not skipped_directories.has(entry):
+				if not entry.begins_with(".") and not skipped.has(entry):
 					pending.append(full_path)
 			elif keeps.call(full_path):
 				found.append(full_path)

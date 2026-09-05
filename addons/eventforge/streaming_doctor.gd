@@ -63,7 +63,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func chunk_folders() -> Dictionary:
 	var paths: PackedStringArray = PackedStringArray()
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
-		if scene_path.begins_with(PLUGIN_DIRECTORY):
+		if scene_path.begins_with(PLUGIN_DIRECTORY) or EventSheetProjectDoctor.is_in_skipped_folder(scene_path):
 			continue
 		paths.append(scene_path)
 	return EventForgeChunkFolderFacts.folders(paths)

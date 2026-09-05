@@ -70,7 +70,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func lit_scenes() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
-		if scene_path.begins_with(PLUGIN_DIRECTORY):
+		if scene_path.begins_with(PLUGIN_DIRECTORY) or EventSheetProjectDoctor.is_in_skipped_folder(scene_path):
 			continue
 		var text: String = EventSheetProjectDoctor.source_of(scene_path)
 		if not (text.contains(LIGHT_WORD) or text.contains(EventSheetSceneLightingFacts.DARKNESS_CLASS)

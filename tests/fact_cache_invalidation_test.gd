@@ -150,7 +150,12 @@ static func run() -> bool:
 	# processes that do), so two walks of the real tree are allowed to disagree by a file. A
 	# temp script appearing after a clear, and disappearing after the next one, pins the same
 	# promise - the clear really forces a fresh walk - without racing anybody.
-	var probe_script_path: String = "res://tests/fixtures/cache_walk_probe_tmp.gd"
+	#
+	# AT THE PROJECT ROOT, not under tests/, because the walk is scoped by
+	# eventsheets/doctor/skipped_folders and this repository declares tests/ and tools/ - a probe
+	# written into a declared folder would be correctly invisible and would pin nothing. The root is
+	# where this repository's other filesystem probes live for the same reason.
+	var probe_script_path: String = "res://cache_walk_probe_tmp.gd"
 	var probe_file: FileAccess = FileAccess.open(probe_script_path, FileAccess.WRITE)
 	probe_file.store_line("extends RefCounted")
 	probe_file.close()

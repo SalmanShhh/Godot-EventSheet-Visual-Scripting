@@ -301,8 +301,23 @@ static func _run_api_surface() -> bool:
 	all_passed = _check("save_keys_used reports the read key", (api_usage["loaded"] as PackedStringArray).has("gems"), true) and all_passed
 
 	# project_scripts: the corpus a Doctor extension check actually wants (sheet_paths is .tres only).
+	# It is narrowed by eventsheets/doctor/skipped_folders, and THIS repository declares tests/ and
+	# tools/ - so the file you are reading is deliberately not in that corpus any more. The pin is
+	# therefore a script in a folder nothing declared away, plus the rule itself: nothing the walk
+	# returns may sit inside a folder the project declared. Both are true of a project that declares
+	# nothing, which is the point of stating the rule rather than this repository's own answer to it.
 	var scripts: PackedStringArray = EventSheets.project_scripts()
-	all_passed = _check("project_scripts finds this test", scripts.has("res://tests/save_key_symmetry_test.gd"), true) and all_passed
+	all_passed = _check("project_scripts finds the project's own scripts",
+		scripts.has("res://demo/showcase/carousel/showcase_carousel.gd"), true) and all_passed
+	var declared_folders: PackedStringArray = EventSheetProjectDoctor.declared_skipped_folders()
+	var leaked_declared_script: String = ""
+	for script_path: String in scripts:
+		for folder: String in declared_folders:
+			if script_path.begins_with("res://%s/" % folder):
+				leaked_declared_script = script_path
+				break
+	all_passed = _check("project_scripts honours the folders this project declared out of the audit",
+		leaked_declared_script, "") and all_passed
 	var leaked_plugin_script: String = ""
 	for script_path: String in scripts:
 		if script_path.begins_with("res://addons/"):
