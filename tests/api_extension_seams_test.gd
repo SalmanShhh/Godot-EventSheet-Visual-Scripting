@@ -70,6 +70,16 @@ static func run() -> bool:
 	EventSheets.register_param_editor("zz_tag", func(_p: Dictionary, _v: String) -> LineEdit: return LineEdit.new())
 	all_passed = _check("param editor registered", EventSheets.param_editor_for("zz_tag").is_valid(), true) and all_passed
 	all_passed = _check("unknown param tag is invalid", EventSheets.param_editor_for("nope").is_valid(), false) and all_passed
+	# And taken off again: a registration is a callable held in a shared static, so a plugin that is
+	# disabled has to be able to put every one of them back. This also leaves the registry as this
+	# test found it, which is what the serial run needs.
+	var registries: Script = load("res://addons/eventsheet/api/extension_registries.gd")
+	registries.call("register_param_help", "zz_tag", "The Zz probe's own field.")
+	all_passed = _check("param help registered", EventSheets.param_help_for("zz_tag"), "The Zz probe's own field.") and all_passed
+	registries.call("unregister_param_editor", "zz_tag")
+	registries.call("unregister_param_help", "zz_tag")
+	all_passed = _check("an unregistered param editor is gone", EventSheets.param_editor_for("zz_tag").is_valid(), false) and all_passed
+	all_passed = _check("and so is its help", EventSheets.param_help_for("zz_tag"), "") and all_passed
 
 	# Lifecycle: listeners fire with the payload.
 	var seen: Array = []

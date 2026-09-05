@@ -34,12 +34,23 @@ static func register_param_editor(tag: String, factory: Callable) -> void:
 	_param_editors[tag] = factory
 
 
+## Taken off again when the plugin is disabled. A registration is a CALLABLE, and a callable made in
+## a boot file keeps that file alive, so a registry left holding one after the plugin is gone is a
+## leak the next enable would register a second copy beside.
+static func unregister_param_editor(tag: String) -> void:
+	_param_editors.erase(tag)
+
+
 static func param_editor_for(tag: String) -> Callable:
 	return _param_editors.get(tag, Callable())
 
 
 static func register_param_help(hint: String, paragraph: String) -> void:
 	_param_help[hint] = paragraph
+
+
+static func unregister_param_help(hint: String) -> void:
+	_param_help.erase(hint)
 
 
 static func param_help_for(hint: String) -> String:

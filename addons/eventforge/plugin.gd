@@ -556,7 +556,13 @@ func _exit_tree() -> void:
 	if _feedback_player_inspector != null:
 		remove_inspector_plugin(_feedback_player_inspector)
 		_feedback_player_inspector = null
-		load(EXTENSION_REGISTRIES_PATH).call("unregister_card_schema", FEEDBACK_CARD_SCHEMA_NAME)
+		# All THREE registrations this pair of files made, taken off together: the schema, the
+		# parameter field and the sentence the help strip says about it. Each is a callable or a
+		# string held in a shared static, so one left behind outlives the disabled plugin.
+		var registries: Script = load(EXTENSION_REGISTRIES_PATH)
+		registries.call("unregister_card_schema", FEEDBACK_CARD_SCHEMA_NAME)
+		registries.call("unregister_param_editor", FEEDBACK_STEP_HINT)
+		registries.call("unregister_param_help", FEEDBACK_STEP_HINT)
 	if _attribute_drawers_plugin != null:
 		remove_inspector_plugin(_attribute_drawers_plugin)
 		_attribute_drawers_plugin = null
