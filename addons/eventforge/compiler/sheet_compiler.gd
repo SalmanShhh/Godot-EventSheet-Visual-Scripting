@@ -3044,7 +3044,7 @@ static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
 		parts.append("autocomplete: %s" % "|".join(ace_param.autocomplete))
 	var starting_value: String = str(ace_param.default_value).strip_edges()
 	var desc_part: String = "desc: \"%s\"" % help
-	var default_part: String = param_default_part(ace_param.id, parts, desc_part,
+	var default_part: String = _param_default_part(ace_param.id, parts, desc_part,
 		starting_value, ace_param.default_spelling)
 	if not default_part.is_empty():
 		parts.append(default_part)
@@ -3080,7 +3080,7 @@ static func _param_annotation_lines(ace_param: ACEParam) -> PackedStringArray:
 ## them wrong: a word ending in one unbalanced quote (`abc"`) and a word hiding a comma between a
 ## balanced inner pair (`say "hi, there"`) each wrote a line that came back as something else and took
 ## the help text beside it with them. So the emitter reads its OWN line back before shipping it - see
-## `param_default_part`, which tries the preferred form, then the other form of the same key, and
+## `_param_default_part`, which tries the preferred form, then the other form of the same key, and
 ## drops the default with a warning if neither reads back. A word that both begins with a quote AND
 ## holds a comma is usually the one that lands there.
 static func _param_default_text(starting_value: String, spelling: String) -> String:
@@ -3096,7 +3096,7 @@ static func _param_default_text(starting_value: String, spelling: String) -> Str
 ## One word in the form both annotation readers USUALLY give straight back: quoted when bare would be
 ## misread - empty, holding a comma, or wearing its own quotes - and bare otherwise, which is what
 ## every word a pack ships today already is. It is the first thing tried, never the last word on it:
-## `param_default_part` proves the line this produces and falls back to the other form when it fails.
+## `_param_default_part` proves the line this produces and falls back to the other form when it fails.
 static func _param_word_text(word: String) -> String:
 	if word.is_empty() or word.contains(",") or word.begins_with("\""):
 		return "\"%s\"" % word
@@ -3124,7 +3124,7 @@ static func _param_word_text(word: String) -> String:
 ## A line that does not read back even with NO default is left exactly as it was: the fault is
 ## somewhere else on it (an odd quote in the help text, say), dropping the default would not fix it,
 ## and quietly changing an unrelated line is not this function's business.
-static func param_default_part(param_id: String, leading_parts: PackedStringArray, desc_part: String,
+static func _param_default_part(param_id: String, leading_parts: PackedStringArray, desc_part: String,
 		starting_value: String, spelling: String) -> String:
 	var candidates: PackedStringArray = _param_default_candidates(starting_value, spelling)
 	if candidates.is_empty():

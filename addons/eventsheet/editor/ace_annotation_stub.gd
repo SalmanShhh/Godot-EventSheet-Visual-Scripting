@@ -482,7 +482,7 @@ static func _comment_default(default_value: String, param_id: String = "", codeg
 	var leading: PackedStringArray = PackedStringArray()
 	for part: String in leading_parts:
 		leading.append(part)
-	return SheetCompiler.param_default_part(param_id if not param_id.is_empty() else "value",
+	return SheetCompiler._param_default_part(param_id if not param_id.is_empty() else "value",
 		leading, desc_part, default_value, spelling)
 
 
