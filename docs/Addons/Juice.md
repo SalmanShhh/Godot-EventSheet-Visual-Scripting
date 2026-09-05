@@ -10,10 +10,11 @@ Juice is a Godot EventSheets behavior pack that adds game feel to a scene withou
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [Moments - a whole beat in one row](#moments---a-whole-beat-in-one-row)
-5. [ACE reference](#ace-reference)
-6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-7. [Use cases](#use-cases)
-8. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [The Feedback Player - the list an object carries](#the-feedback-player---the-list-an-object-carries)
+6. [ACE reference](#ace-reference)
+7. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -254,6 +255,139 @@ under a ceiling and every time is held over a floor, so nothing a moment does ca
 time scale, a hitstop's freeze and a zoom's percentage are left alone, because they are not
 amplitudes: half a zoom is not half of anything. You do not have to author a second set of moments
 for it.
+
+---
+
+## The Feedback Player - the list an object carries
+
+A moment file is shared between objects. Sometimes the beat belongs to ONE object - this enemy's
+hit, that button's hover - and lives better on the object itself. That is the **Feedback Player**:
+a node you add under any object, holding the list of feedbacks that object plays. Its Inspector is
+the list; the sheet's side of it is one row that never changes as the list is tuned.
+
+```
+Add a Node under the enemy, attach FeedbackPlayer, add a Juice node beside it.
+Fill the list. Then, once, in the sheet:
+
+  Enemy: On damaged
+      -> HitFeedback: Play feedbacks at 0.6
+```
+
+The list holds the SAME steps a moment file holds - the ten words, each with how much, which extra
+word and how long - so a beat is one shape in three homes: the node for this object, the file for
+sharing, the Moment block for the sheet. All three time themselves through the same runner, so a
+beat behaves identically wherever it was written.
+
+### The card list
+
+Each feedback is a **card**: a stripe coloured by its family, a drag handle to reorder it, a fold
+arrow, a tick box, its label, a badge saying how long it takes, and a menu. Under the list sits
+**Add a feedback**, a searchable dropdown grouped by family, and a strip of buttons.
+
+```
+Feedbacks 7 - 0.95 s total
+  | Sound              hit_crunch      0.00 s
+  | Punch Scale        1.3             0.30 s
+  | Hold               until the above finish
+  | Shake              0.4             0.20 s
+  | Loop Start
+  | Pulse Post Effect  chromatic 0.6   0.15 s     (unticked - skipped)
+  | Loop Back          2 times         0.25 s
+  Add a feedback  |  Play  Stop  Skip  Restore  Debug view  Save as file  Load from file
+```
+
+![The Feedback Player's Inspector: four cards, one of them unfolded](../images/feedback-player-inspector.png)
+
+The head counts the cards and adds up the **longest path** through the list: cards between two
+holds run at once, so a stretch is as long as its slowest card, and the holds and pauses add up.
+That is the same number the **Feedbacks Duration** expression answers, so a row can wait exactly as
+long as the beat lasts.
+
+### What a card can be
+
+The ten moment words - shake, hitstop, slowmo, flash, punch, zoom, shockwave, chromatic, pulse and
+the screen-effect hold - are played by the Juice behaviour beside the player, which is why one goes
+under the same object. Those cards are derived from the pack's own verbs: their titles, their help
+lines and their fields are the words the picker already reads out, so a pack that grows a word
+grows a card with it.
+
+Four more words move the head instead of being felt:
+
+| Card | What it does |
+| --- | --- |
+| **Pause** | Waits this long before the next card, whatever the cards above are still doing |
+| **Hold** | Waits for the slowest card above to finish, then this long |
+| **Loop Start** | Marks where a Loop Back below sends the head |
+| **Loop Back** | Moves the head back to the last Hold or Loop Start, a number of times, pausing each time it lands |
+
+And three are neither a feeling nor a wait:
+
+| Card | What it does |
+| --- | --- |
+| **Tween Property** | Walks one property of the object to a value, over a time. Restore Initial Values puts it back |
+| **Emit Signal** | Says one word out of the player's **On Feedback Signal** trigger, so a sheet can hang anything off a point in the list |
+| **Play Player** | Plays another Feedback Player from inside this one, at a share of this play's strength |
+
+### The unfolded card
+
+Click a card's arrow and it opens: a line saying what that feedback does, **Active**, **Label**,
+**Chance**, a **Timing** foldout, then the card's own fields drawn with the real drawers - seconds
+get a unit dropdown, a fixed choice gets its toggles - and then, while the game runs, the values
+the play is writing back, greyed. A Loop Back shows its **Loops left** counting down in the
+Inspector of the running node, through Godot's own remote Inspector, with no plugin machinery in
+the middle.
+
+The Timing foldout is the same on every card: initial delay, cooldown, repeat count and interval,
+the clock (game time or real time), a strength window the card only plays inside, and skip on stop.
+Every one of them is a key that is ABSENT by default, which is what keeps a plain card identical to
+a moment file's step.
+
+### The player's own settings
+
+| Setting | What it does |
+| --- | --- |
+| **Steps** | The list itself |
+| **Strength** | What every amount in the list is scaled by, before the strength on the row |
+| **Direction** | Which end of the list a play starts from |
+| **While playing** | What a second play does while the first runs: restart, ignore, or overlap |
+| **Cooldown** | The shortest gap between two plays, so a rapid hit stops stacking its own feedback |
+| **Moment file** | Optional: a moment file to play INSTEAD of the list |
+
+**Save as file** writes the list out as a moment file, naming any card whose timing a file cannot
+carry rather than writing it down half. **Load from file** fills the moment-file slot, and the list
+underneath is left exactly as it was.
+
+### Playing it without running the game
+
+**Play** on the strip samples the list in the editor and applies it to the object, and **Stop** and
+**Restore** put the object back the way they found it - the scene's saved bytes are never touched.
+Only the three things an editor can honestly show are drawn: a shake as a wobble, a punch as a
+swell, and a tweened property walking to its value. A hitstop and a flash are things a running game
+does to time and to the screen, so they are left out rather than guessed at. **Debug view** draws
+the timeline of the plan - a bar per card at the time it starts, holds as the gaps - which is how
+you see why the flash came late.
+
+### The rows on the node
+
+The player publishes its own vocabulary in the **Feedback Player** category, read on the node:
+
+| Row | Kind | What it does |
+| --- | --- | --- |
+| Play Feedbacks | action | Plays the list and carries on with the rows under it |
+| Play Feedbacks And Wait | action | Plays the list and waits for the last card |
+| Play Backwards | action | Plays it from the far end |
+| Play On Channel | action | Plays every feedback player in a group at once |
+| Stop Feedbacks | action | Stops the play where it is |
+| Skip To End | action | Does everything that is left at once |
+| Restore Initial Values | action | Puts back what the tween cards changed |
+| Revert | action | Stops and puts it back, the last change first |
+| Pause Feedbacks / Resume Feedbacks | actions | Hold the play, then carry on from the same card |
+| Is Playing | condition | True while a play is running |
+| Has Played | condition | True once it has played at least once |
+| On Feedbacks Started / On Feedbacks Finished | triggers | The two ends of a play |
+| On Feedback Signal | trigger | The word an Emit Signal card said |
+| Feedbacks Progress | expression | How far down the list the play has got, 0 to 1 |
+| Feedbacks Duration | expression | The longest path through the list, in seconds |
 
 ---
 
