@@ -163,8 +163,9 @@ static func _verbs(sheet: EventSheetResource) -> void:
 		[["channel", "String", "The group every player that should feel this is in."],
 			["at_strength", "float", "Scales every amount in every list it reaches."]],
 		"if channel.strip_edges().is_empty() or not is_inside_tree():\n\treturn\nget_tree().call_group(channel, \"play\", at_strength)")
-	_default(sheet, "channel", "\"feedback\"")
+	_default(sheet, "channel", "feedback")
 	_default(sheet, "at_strength", "1.0")
+	_quoted_call(sheet, "play_on_channel(\"{channel}\", {at_strength})")
 	Lib.append_function(sheet, "stop", "Stop Feedbacks", "Feedback Player",
 		"Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.",
 		[], "if not playing:\n\treturn\n_live.clear()\n_resumed.emit()\n_close()")
@@ -220,7 +221,8 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		"var list: Array = _own_list()\nvar at: int = list.size()\nif not after_label.strip_edges().is_empty():\n\tat = _index_in(list, after_label)\n\tif at < 0:\n\t\t_no_such(after_label, \"Add Feedback\")\n\t\treturn\n\tat += 1\nlist.insert(at, _carded(step))")
 	_param_hint(sheet, "step", "feedback_step")
 	_default(sheet, "step", "{\"verb\": \"shake\", \"amount\": 0.4, \"seconds\": 0.2}")
-	_default(sheet, "after_label", "\"\"")
+	_default(sheet, "after_label", "")
+	_quoted_call(sheet, "add_feedback({step}, \"{after_label}\")")
 	Lib.append_function(sheet, "insert_feedback_before", "Insert Feedback Before", "Feedback Player",
 		"Puts a feedback into the list immediately ABOVE the card you name - the other half of Add Feedback, for a step that has to be felt before something already in the beat.",
 		[["step", "Dictionary", "The feedback itself: pick its kind and fill the card, exactly as in the Inspector's list."],
@@ -228,48 +230,54 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		"var list: Array = _own_list()\nvar at: int = _index_in(list, before_label)\nif at < 0:\n\t_no_such(before_label, \"Insert Feedback Before\")\n\treturn\nlist.insert(at, _carded(step))")
 	_param_hint(sheet, "step", "feedback_step")
 	_default(sheet, "step", "{\"verb\": \"flash\", \"amount\": 1.0, \"seconds\": 0.1}")
-	_default(sheet, "before_label", "\"shake\"")
+	_default(sheet, "before_label", "shake")
+	_quoted_call(sheet, "insert_feedback_before({step}, \"{before_label}\")")
 	Lib.append_function(sheet, "replace_feedback", "Replace Feedback", "Feedback Player",
 		"Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own, so every other row that names it goes on working.",
 		[["label", "String", "The label of the card being swapped out."],
 			["step", "Dictionary", "What takes its place: a kind and its fields, as in the Inspector's list."]],
 		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Replace Feedback\")\n\treturn\nvar fresh: Dictionary = _carded(step)\nif str(fresh.get(\"label\", \"\")).strip_edges().is_empty():\n\tfresh[\"label\"] = _label_of(list[at] as Dictionary)\nlist[at] = fresh")
-	_default(sheet, "label", "\"kick\"")
+	_default(sheet, "label", "kick")
 	_param_hint(sheet, "step", "feedback_step")
 	_default(sheet, "step", "{\"verb\": \"recoil\", \"amount\": 1.0, \"seconds\": 0.1}")
+	_quoted_call(sheet, "replace_feedback(\"{label}\", {step})")
 	Lib.append_function(sheet, "remove_feedback", "Remove Feedback", "Feedback Player",
 		"Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Feedback.",
 		[["label", "String", "The label of the card to take out."]],
 		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Remove Feedback\")\n\treturn\nlist.remove_at(at)")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
+	_quoted_call(sheet, "remove_feedback(\"{label}\")")
 	Lib.append_function(sheet, "move_feedback_to", "Move Feedback To", "Feedback Player",
 		"Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last.",
 		[["label", "String", "The label of the card to move."],
 			["position", "int", "Where it lands. The first card in the list is 1."]],
 		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Move Feedback To\")\n\treturn\nvar card: Dictionary = list[at] as Dictionary\nlist.remove_at(at)\nlist.insert(clampi(position - 1, 0, list.size()), card)")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
 	_default(sheet, "position", "1")
+	_quoted_call(sheet, "move_feedback_to(\"{label}\", {position})")
 	Lib.append_function(sheet, "enable_feedback", "Enable Feedback", "Feedback Player",
 		"Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row.",
 		[["label", "String", "The label of the card to switch on."]],
 		"var card: Dictionary = _edited(label, \"Enable Feedback\")\nif not card.is_empty():\n\tcard[\"active\"] = true")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
+	_quoted_call(sheet, "enable_feedback(\"{label}\")")
 	Lib.append_function(sheet, "disable_feedback", "Disable Feedback", "Feedback Player",
 		"Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row.",
 		[["label", "String", "The label of the card to switch off."]],
 		"var card: Dictionary = _edited(label, \"Disable Feedback\")\nif not card.is_empty():\n\tcard[\"active\"] = false")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
+	_quoted_call(sheet, "disable_feedback(\"{label}\")")
 	Lib.append_function(sheet, "set_feedback_field", "Set Feedback Field", "Feedback Player",
 		"Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.",
 		[["label", "String", "The label of the card being tuned."],
 			["field", "String", "Which value on the card to write."],
 			["value", "Variant", "What to write. A number for an amount or a length, a word for the extra one."]],
 		"var card: Dictionary = _edited(label, \"Set Feedback Field\")\nif card.is_empty():\n\treturn\nif not FIELD_KEYS.has(field):\n\tpush_warning(\"Feedback Player: a card has no field called \\\"%s\\\", so Set Feedback Field did nothing.\" % field)\n\treturn\ncard[field] = value")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
 	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
 	_default(sheet, "field", "amount")
 	_default(sheet, "value", "1.0")
-	_quoted_call(sheet, "set_feedback_field({label}, \"{field}\", {value})")
+	_quoted_call(sheet, "set_feedback_field(\"{label}\", \"{field}\", {value})")
 	Lib.append_function(sheet, "set_feedback_timing", "Set Feedback Timing", "Feedback Player",
 		"Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.",
 		[["label", "String", "The label of the card being retimed."],
@@ -278,34 +286,37 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 			["interval", "float", "The gap between repeats, in seconds."],
 			["clock", "String", "Which clock it counts on: game time slows with a slowmo, real time never does."]],
 		"var card: Dictionary = _edited(label, \"Set Feedback Timing\")\nif card.is_empty():\n\treturn\ncard[\"delay\"] = maxf(delay, 0.0)\ncard[\"repeat\"] = maxi(repeat, 1)\ncard[\"interval\"] = maxf(interval, 0.0)\ncard[\"clock\"] = clock")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
 	_default(sheet, "delay", "0.0")
 	_default(sheet, "repeat", "1")
 	_default(sheet, "interval", "0.0")
 	_param_options(sheet, "clock", ["game", "real"])
 	_default(sheet, "clock", "game")
-	_quoted_call(sheet, "set_feedback_timing({label}, {delay}, {repeat}, {interval}, \"{clock}\")")
+	_quoted_call(sheet, "set_feedback_timing(\"{label}\", {delay}, {repeat}, {interval}, \"{clock}\")")
 	Lib.append_function(sheet, "set_feedback_chance", "Set Feedback Chance", "Feedback Player",
 		"How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is.",
 		[["label", "String", "The label of the card being rolled for."],
 			["percent", "float", "The chance it is felt, 0 to 100."]],
 		"var card: Dictionary = _edited(label, \"Set Feedback Chance\")\nif not card.is_empty():\n\tcard[\"chance\"] = clampf(percent, 0.0, 100.0)")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
 	_default(sheet, "percent", "100.0")
+	_quoted_call(sheet, "set_feedback_chance(\"{label}\", {percent})")
 	Lib.append_function(sheet, "set_feedback_label", "Set Feedback Label", "Feedback Player",
 		"Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say.",
 		[["label", "String", "The card's name now."],
 			["new_label", "String", "What it is called from here on."]],
 		"var card: Dictionary = _edited(label, \"Set Feedback Label\")\nif not card.is_empty():\n\tcard[\"label\"] = new_label")
-	_default(sheet, "label", "\"shake\"")
-	_default(sheet, "new_label", "\"big shake\"")
+	_default(sheet, "label", "shake")
+	_default(sheet, "new_label", "big shake")
+	_quoted_call(sheet, "set_feedback_label(\"{label}\", \"{new_label}\")")
 	Lib.append_function(sheet, "duplicate_feedback", "Duplicate Feedback", "Feedback Player",
 		"Copies one card and puts the copy straight under it, under a name of its own. Two shakes a frame apart out of one tuned card.",
 		[["label", "String", "The label of the card to copy."],
 			["new_label", "String", "What the copy is called. Empty names it after the original."]],
 		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Duplicate Feedback\")\n\treturn\nvar copy: Dictionary = (list[at] as Dictionary).duplicate(true)\ncopy[\"label\"] = new_label if not new_label.strip_edges().is_empty() else _label_of(copy) + \" copy\"\nlist.insert(at + 1, copy)")
-	_default(sheet, "label", "\"shake\"")
-	_default(sheet, "new_label", "\"\"")
+	_default(sheet, "label", "shake")
+	_default(sheet, "new_label", "")
+	_quoted_call(sheet, "duplicate_feedback(\"{label}\", \"{new_label}\")")
 	Lib.append_function(sheet, "clear_feedbacks", "Clear Feedbacks", "Feedback Player",
 		"Empties the list. What a player that is about to be handed a whole beat by Copy Feedbacks From or Load Moment File wants first.",
 		[], "steps.clear()\nmoment_file = null")
@@ -317,12 +328,14 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		"Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.",
 		[["path", "String", "The moment file to read, as its res:// path."]],
 		"if not ResourceLoader.exists(path):\n\tpush_warning(\"Feedback Player: there is no moment file at \\\"%s\\\", so Load Moment File did nothing.\" % path)\n\treturn\nvar file: Resource = load(path)\nif file == null or not (file.get(\"steps\") is Array):\n\tpush_warning(\"Feedback Player: \\\"%s\\\" is not a moment file, so Load Moment File did nothing.\" % path)\n\treturn\nmoment_file = file\n_own_list()")
-	_default(sheet, "path", "\"res://eventsheet_addons/juice/impact.tres\"")
+	_default(sheet, "path", "res://eventsheet_addons/juice/impact.tres")
+	_quoted_call(sheet, "load_moment_file(\"{path}\")")
 	Lib.append_function(sheet, "save_moment_file", "Save Moment File", "Feedback Player",
 		"Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written; the timing a list adds is this node's own.",
 		[["path", "String", "Where to write it. At run time that is a user:// path, which is the only place a game may write."]],
 		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Feedback Player: this project has no moment file script, so Save Moment File did nothing.\")\n\treturn\nvar written: Array[Dictionary] = []\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Feedback Player: \\\"%s\\\" could not be written, so Save Moment File saved nothing.\" % path)")
-	_default(sheet, "path", "\"user://my_moment.tres\"")
+	_default(sheet, "path", "user://my_moment.tres")
+	_quoted_call(sheet, "save_moment_file(\"{path}\")")
 	Lib.append_function(sheet, "set_player_strength", "Set Player Strength", "Feedback Player",
 		"Turns this whole player up or down without retuning a single card - the object's own volume knob, on top of the strength the play row asks for.",
 		[["value", "float", "What every amount in the list is scaled by. 1 is the list as tuned."]],
@@ -355,11 +368,11 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 			["category", "String", "The family to silence."],
 			["muted", "bool", "On silences it; off lets it be felt again."]],
 		"if channel.strip_edges().is_empty() or not is_inside_tree():\n\treturn\nget_tree().call_group(channel, \"mute_feedback_category\", category, muted)")
-	_default(sheet, "channel", "\"feedback\"")
+	_default(sheet, "channel", "feedback")
 	_param_options(sheet, "category", ["audio", "transform", "camera", "screen", "pause", "loop", "signal"])
 	_default(sheet, "category", "screen")
 	_default(sheet, "muted", "true")
-	_quoted_call(sheet, "mute_category_on_channel({channel}, \"{category}\", {muted})")
+	_quoted_call(sheet, "mute_category_on_channel(\"{channel}\", \"{category}\", {muted})")
 	Lib.append_function(sheet, "scale_feedback_amounts", "Scale Feedback Amounts", "Feedback Player",
 		"Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list.",
 		[["category", "String", "The family to scale, or empty for every card."],
@@ -379,30 +392,35 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		[["first_label", "String", "One end of the stretch."],
 			["last_label", "String", "The other end."]],
 		"var list: Array = _own_list()\nvar from: int = _index_in(list, first_label)\nvar to: int = _index_in(list, last_label)\nif from < 0 or to < 0:\n\t_no_such(first_label if from < 0 else last_label, \"Shuffle Feedbacks Between\")\n\treturn\nif to < from:\n\tvar swapped: int = from\n\tfrom = to\n\tto = swapped\nvar stretch: Array = list.slice(from, to + 1)\nstretch.shuffle()\nfor offset: int in range(stretch.size()):\n\tlist[from + offset] = stretch[offset]")
-	_default(sheet, "first_label", "\"shake_a\"")
-	_default(sheet, "last_label", "\"shake_c\"")
+	_default(sheet, "first_label", "shake_a")
+	_default(sheet, "last_label", "shake_c")
+	_quoted_call(sheet, "shuffle_feedbacks_between(\"{first_label}\", \"{last_label}\")")
 	Lib.append_function(sheet, "pick_one_feedback_of", "Pick One Feedback Of", "Feedback Player",
 		"Ticks exactly one of the cards whose label starts with what you type and unticks the rest, so shake_a, shake_b and shake_c become one shake chosen fresh each time. Variety out of the list itself, with no branch in the sheet.",
 		[["prefix", "String", "The start of the labels to choose between."]],
 		"var wanted: String = prefix.strip_edges()\nif wanted.is_empty():\n\treturn\nvar matches: Array = []\nfor entry: Variant in _own_list():\n\tif entry is Dictionary and _label_of(entry as Dictionary).begins_with(wanted):\n\t\tmatches.append(entry)\nif matches.is_empty():\n\t_no_such(wanted, \"Pick One Feedback Of\")\n\treturn\nvar chosen: int = randi() % matches.size()\nfor index: int in range(matches.size()):\n\t(matches[index] as Dictionary)[\"active\"] = index == chosen")
-	_default(sheet, "prefix", "\"shake_\"")
+	_default(sheet, "prefix", "shake_")
+	_quoted_call(sheet, "pick_one_feedback_of(\"{prefix}\")")
 	Lib.append_function(sheet, "jump_to_feedback", "Jump To Feedback", "Feedback Player",
 		"Moves the head of a RUNNING play to the card you name, so the rest of the beat starts there. What a hit that interrupts its own wind-up wants.",
 		[["label", "String", "The label of the card to carry on from."]],
 		"_jump_to = label.strip_edges()")
-	_default(sheet, "label", "\"impact\"")
+	_default(sheet, "label", "impact")
+	_quoted_call(sheet, "jump_to_feedback(\"{label}\")")
 	Lib.append_function(sheet, "skip_feedback_once", "Skip Feedback Once", "Feedback Player",
 		"Steps over one card the NEXT time the play reaches it, and then forgets about it. The one-off exception a disable would have to be undone after.",
 		[["label", "String", "The label of the card to step over once."]],
 		"if _index_of(label) < 0:\n\t_no_such(label, \"Skip Feedback Once\")\n\treturn\n_skip_once[label.strip_edges()] = true")
-	_default(sheet, "label", "\"shake\"")
+	_default(sheet, "label", "shake")
+	_quoted_call(sheet, "skip_feedback_once(\"{label}\")")
 	Lib.append_function(sheet, "set_loop_count", "Set Loop Count", "Feedback Player",
 		"How many times a Loop Back card sends the head round. A charge that gets longer the further it is held, without a second list.",
 		[["label", "String", "The label of the Loop Back card."],
 			["loops", "int", "How many times round. 0 walks straight past it."]],
 		"var card: Dictionary = _edited(label, \"Set Loop Count\")\nif card.is_empty():\n\treturn\ncard[\"loops\"] = maxi(loops, 0)\ncard[\"loops_left\"] = maxi(loops, 0)")
-	_default(sheet, "label", "\"loop_back\"")
+	_default(sheet, "label", "loop_back")
 	_default(sheet, "loops", "2")
+	_quoted_call(sheet, "set_loop_count(\"{label}\", {loops})")
 	Lib.append_function(sheet, "hold_here", "Hold Here", "Feedback Player",
 		"Stops the head where it is and leaves it there - a charge held, a beat waiting on the player. Release Hold carries on from the same card, and nothing ticks while it waits.",
 		[], "_held = playing")

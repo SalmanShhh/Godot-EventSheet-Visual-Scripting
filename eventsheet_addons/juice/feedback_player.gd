@@ -238,10 +238,10 @@ func play_backwards(at_strength: float) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Plays every feedback player in a group at once, at one strength - the whole squad flinching, every button in a menu bouncing. Put the players in the group and name it here.")
 ## @ace_display_template("Play feedbacks on channel [b]{channel}[/b] at [b]{at_strength}[/b]")
-## @ace_param(channel, default: "feedback", desc: "The group every player that should feel this is in.")
+## @ace_param(channel, default: feedback, desc: "The group every player that should feel this is in.")
 ## @ace_param(at_strength, default: 1.0, desc: "Scales every amount in every list it reaches.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.play_on_channel({channel}, {at_strength})")
+## @ace_codegen_template("$FeedbackPlayer.play_on_channel("{channel}", {at_strength})")
 func play_on_channel(channel: String, at_strength: float) -> void:
 	if channel.strip_edges().is_empty() or not is_inside_tree():
 		return
@@ -370,9 +370,9 @@ func feedbacks_duration() -> float:
 ## @ace_description("Adds one feedback to this player's list while the game runs - the same card the Inspector adds, with the same fields. Leave the after box empty to put it at the end, or name a card to put it straight after that one.")
 ## @ace_display_template("Add feedback [b]{step}[/b] after [b]{after_label}[/b]")
 ## @ace_param(step, hint: feedback_step, default: {"verb": "shake", "amount": 0.4, "seconds": 0.2}, desc: "The feedback itself: pick its kind and fill the card, exactly as in the Inspector's list.")
-## @ace_param(after_label, default: "", desc: "The label of the card this one goes after. Empty puts it at the end of the list.")
+## @ace_param(after_label, desc: "The label of the card this one goes after. Empty puts it at the end of the list.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.add_feedback({step}, {after_label})")
+## @ace_codegen_template("$FeedbackPlayer.add_feedback({step}, "{after_label}")")
 func add_feedback(step: Dictionary, after_label: String) -> void:
 	var list: Array = _own_list()
 	var at: int = list.size()
@@ -390,9 +390,9 @@ func add_feedback(step: Dictionary, after_label: String) -> void:
 ## @ace_description("Puts a feedback into the list immediately ABOVE the card you name - the other half of Add Feedback, for a step that has to be felt before something already in the beat.")
 ## @ace_display_template("Insert feedback [b]{step}[/b] before [b]{before_label}[/b]")
 ## @ace_param(step, hint: feedback_step, default: {"verb": "flash", "amount": 1.0, "seconds": 0.1}, desc: "The feedback itself: pick its kind and fill the card, exactly as in the Inspector's list.")
-## @ace_param(before_label, default: "shake", desc: "The label of the card this one goes above.")
+## @ace_param(before_label, default: shake, desc: "The label of the card this one goes above.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.insert_feedback_before({step}, {before_label})")
+## @ace_codegen_template("$FeedbackPlayer.insert_feedback_before({step}, "{before_label}")")
 func insert_feedback_before(step: Dictionary, before_label: String) -> void:
 	var list: Array = _own_list()
 	var at: int = _index_in(list, before_label)
@@ -406,10 +406,10 @@ func insert_feedback_before(step: Dictionary, before_label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Swaps one card in the list for another, in place. THE weapon-change row: the beat the designer tuned stays the beat, and only the kick inside it changes. The new card keeps the old one's label unless it brings its own, so every other row that names it goes on working.")
 ## @ace_display_template("Replace feedback [b]{label}[/b] with [b]{step}[/b]")
-## @ace_param(label, default: "kick", desc: "The label of the card being swapped out.")
+## @ace_param(label, default: kick, desc: "The label of the card being swapped out.")
 ## @ace_param(step, hint: feedback_step, default: {"verb": "recoil", "amount": 1.0, "seconds": 0.1}, desc: "What takes its place: a kind and its fields, as in the Inspector's list.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.replace_feedback({label}, {step})")
+## @ace_codegen_template("$FeedbackPlayer.replace_feedback("{label}", {step})")
 func replace_feedback(label: String, step: Dictionary) -> void:
 	var list: Array = _own_list()
 	var at: int = _index_in(list, label)
@@ -426,9 +426,9 @@ func replace_feedback(label: String, step: Dictionary) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Feedback.")
 ## @ace_display_template("Remove feedback [b]{label}[/b]")
-## @ace_param(label, default: "shake", desc: "The label of the card to take out.")
+## @ace_param(label, default: shake, desc: "The label of the card to take out.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.remove_feedback({label})")
+## @ace_codegen_template("$FeedbackPlayer.remove_feedback("{label}")")
 func remove_feedback(label: String) -> void:
 	var list: Array = _own_list()
 	var at: int = _index_in(list, label)
@@ -442,10 +442,10 @@ func remove_feedback(label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Moves one card to a place in the list - the drag handle, as a row. The first card is 1; a number past the end puts it last.")
 ## @ace_display_template("Move feedback [b]{label}[/b] to [b]{position}[/b]")
-## @ace_param(label, default: "shake", desc: "The label of the card to move.")
+## @ace_param(label, default: shake, desc: "The label of the card to move.")
 ## @ace_param(position, default: 1, desc: "Where it lands. The first card in the list is 1.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.move_feedback_to({label}, {position})")
+## @ace_codegen_template("$FeedbackPlayer.move_feedback_to("{label}", {position})")
 func move_feedback_to(label: String, position: int) -> void:
 	var list: Array = _own_list()
 	var at: int = _index_in(list, label)
@@ -461,9 +461,9 @@ func move_feedback_to(label: String, position: int) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Ticks one card's box, so it is felt again from the next play on. The enable box in the Inspector, as a row.")
 ## @ace_display_template("Enable feedback [b]{label}[/b]")
-## @ace_param(label, default: "shake", desc: "The label of the card to switch on.")
+## @ace_param(label, default: shake, desc: "The label of the card to switch on.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.enable_feedback({label})")
+## @ace_codegen_template("$FeedbackPlayer.enable_feedback("{label}")")
 func enable_feedback(label: String) -> void:
 	var card: Dictionary = _edited(label, "Enable Feedback")
 	if not card.is_empty():
@@ -474,9 +474,9 @@ func enable_feedback(label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Unticks one card's box, so the play steps over it. What an accessibility option that drops the screen shake and keeps the sound does with one row.")
 ## @ace_display_template("Disable feedback [b]{label}[/b]")
-## @ace_param(label, default: "shake", desc: "The label of the card to switch off.")
+## @ace_param(label, default: shake, desc: "The label of the card to switch off.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.disable_feedback({label})")
+## @ace_codegen_template("$FeedbackPlayer.disable_feedback("{label}")")
 func disable_feedback(label: String) -> void:
 	var card: Dictionary = _edited(label, "Disable Feedback")
 	if not card.is_empty():
@@ -487,11 +487,11 @@ func disable_feedback(label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.")
 ## @ace_display_template("Set feedback [b]{label}[/b] [b]{field}[/b] to [b]{value}[/b]")
-## @ace_param(label, default: "shake", desc: "The label of the card being tuned.")
+## @ace_param(label, default: shake, desc: "The label of the card being tuned.")
 ## @ace_param(field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value on the card to write.")
 ## @ace_param(value, default: 1.0, desc: "What to write. A number for an amount or a length, a word for the extra one.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.set_feedback_field({label}, "{field}", {value})")
+## @ace_codegen_template("$FeedbackPlayer.set_feedback_field("{label}", "{field}", {value})")
 func set_feedback_field(label: String, field: String, value: Variant) -> void:
 	var card: Dictionary = _edited(label, "Set Feedback Field")
 	if card.is_empty():
@@ -506,13 +506,13 @@ func set_feedback_field(label: String, field: String, value: Variant) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.")
 ## @ace_display_template("Set feedback [b]{label}[/b] timing: delay [b]{delay}[/b] s, [b]{repeat}[/b] times")
-## @ace_param(label, default: "shake", desc: "The label of the card being retimed.")
+## @ace_param(label, default: shake, desc: "The label of the card being retimed.")
 ## @ace_param(delay, default: 0.0, desc: "How long the card waits after the head reaches it, in seconds.")
 ## @ace_param(repeat, default: 1, desc: "How many times it is felt. 1 is once.")
 ## @ace_param(interval, default: 0.0, desc: "The gap between repeats, in seconds.")
 ## @ace_param(clock, options: game|real, default: game, desc: "Which clock it counts on: game time slows with a slowmo, real time never does.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.set_feedback_timing({label}, {delay}, {repeat}, {interval}, "{clock}")")
+## @ace_codegen_template("$FeedbackPlayer.set_feedback_timing("{label}", {delay}, {repeat}, {interval}, "{clock}")")
 func set_feedback_timing(label: String, delay: float, repeat: int, interval: float, clock: String) -> void:
 	var card: Dictionary = _edited(label, "Set Feedback Timing")
 	if card.is_empty():
@@ -527,10 +527,10 @@ func set_feedback_timing(label: String, delay: float, repeat: int, interval: flo
 ## @ace_category("Feedback Player")
 ## @ace_description("How often one card is felt at all, as a percentage. 100 is every time, 25 is a quarter of the hits - the cheapest variety there is.")
 ## @ace_display_template("Set feedback [b]{label}[/b] chance [b]{percent}[/b]%")
-## @ace_param(label, default: "shake", desc: "The label of the card being rolled for.")
+## @ace_param(label, default: shake, desc: "The label of the card being rolled for.")
 ## @ace_param(percent, default: 100.0, desc: "The chance it is felt, 0 to 100.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.set_feedback_chance({label}, {percent})")
+## @ace_codegen_template("$FeedbackPlayer.set_feedback_chance("{label}", {percent})")
 func set_feedback_chance(label: String, percent: float) -> void:
 	var card: Dictionary = _edited(label, "Set Feedback Chance")
 	if not card.is_empty():
@@ -541,10 +541,10 @@ func set_feedback_chance(label: String, percent: float) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Renames one card. Every other row addresses cards by this name, so renaming one is renaming what the rest of the sheet has to say.")
 ## @ace_display_template("Rename feedback [b]{label}[/b] to [b]{new_label}[/b]")
-## @ace_param(label, default: "shake", desc: "The card's name now.")
-## @ace_param(new_label, default: "big shake", desc: "What it is called from here on.")
+## @ace_param(label, default: shake, desc: "The card's name now.")
+## @ace_param(new_label, default: big shake, desc: "What it is called from here on.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.set_feedback_label({label}, {new_label})")
+## @ace_codegen_template("$FeedbackPlayer.set_feedback_label("{label}", "{new_label}")")
 func set_feedback_label(label: String, new_label: String) -> void:
 	var card: Dictionary = _edited(label, "Set Feedback Label")
 	if not card.is_empty():
@@ -555,10 +555,10 @@ func set_feedback_label(label: String, new_label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Copies one card and puts the copy straight under it, under a name of its own. Two shakes a frame apart out of one tuned card.")
 ## @ace_display_template("Duplicate feedback [b]{label}[/b] as [b]{new_label}[/b]")
-## @ace_param(label, default: "shake", desc: "The label of the card to copy.")
-## @ace_param(new_label, default: "", desc: "What the copy is called. Empty names it after the original.")
+## @ace_param(label, default: shake, desc: "The label of the card to copy.")
+## @ace_param(new_label, desc: "What the copy is called. Empty names it after the original.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.duplicate_feedback({label}, {new_label})")
+## @ace_codegen_template("$FeedbackPlayer.duplicate_feedback("{label}", "{new_label}")")
 func duplicate_feedback(label: String, new_label: String) -> void:
 	var list: Array = _own_list()
 	var at: int = _index_in(list, label)
@@ -605,9 +605,9 @@ func copy_feedbacks_from(other: Node) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Brings a moment file's beat INTO this player's list, as a copy - so it can be retuned by rows afterwards without ever writing to the file two other objects may be playing.")
 ## @ace_display_template("Load moment file [b]{path}[/b]")
-## @ace_param(path, default: "res://eventsheet_addons/juice/impact.tres", desc: "The moment file to read, as its res:// path.")
+## @ace_param(path, default: res://eventsheet_addons/juice/impact.tres, desc: "The moment file to read, as its res:// path.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.load_moment_file({path})")
+## @ace_codegen_template("$FeedbackPlayer.load_moment_file("{path}")")
 func load_moment_file(path: String) -> void:
 	if not ResourceLoader.exists(path):
 		push_warning("Feedback Player: there is no moment file at \"%s\", so Load Moment File did nothing." % path)
@@ -624,9 +624,9 @@ func load_moment_file(path: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written; the timing a list adds is this node's own.")
 ## @ace_display_template("Save moment file to [b]{path}[/b]")
-## @ace_param(path, default: "user://my_moment.tres", desc: "Where to write it. At run time that is a user:// path, which is the only place a game may write.")
+## @ace_param(path, default: user://my_moment.tres, desc: "Where to write it. At run time that is a user:// path, which is the only place a game may write.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.save_moment_file({path})")
+## @ace_codegen_template("$FeedbackPlayer.save_moment_file("{path}")")
 func save_moment_file(path: String) -> void:
 	var kind: Script = load("res://eventsheet_addons/moment_resource/moment_resource.gd") as Script
 	if kind == null:
@@ -700,11 +700,11 @@ func mute_feedback_category(category: String, muted: bool) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("The same switch, thrown for every Feedback Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object.")
 ## @ace_display_template("Mute feedback category [b]{category}[/b] on channel [b]{channel}[/b]: [b]{muted}[/b]")
-## @ace_param(channel, default: "feedback", desc: "The group every player the switch reaches is in.")
+## @ace_param(channel, default: feedback, desc: "The group every player the switch reaches is in.")
 ## @ace_param(category, options: audio|transform|camera|screen|pause|loop|signal, default: screen, desc: "The family to silence.")
 ## @ace_param(muted, default: true, desc: "On silences it; off lets it be felt again.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.mute_category_on_channel({channel}, "{category}", {muted})")
+## @ace_codegen_template("$FeedbackPlayer.mute_category_on_channel("{channel}", "{category}", {muted})")
 func mute_category_on_channel(channel: String, category: String, muted: bool) -> void:
 	if channel.strip_edges().is_empty() or not is_inside_tree():
 		return
@@ -715,7 +715,7 @@ func mute_category_on_channel(channel: String, category: String, muted: bool) ->
 ## @ace_category("Feedback Player")
 ## @ace_description("Multiplies how much every card in a family does - the effect-strength slider on a settings screen, where half is still the same beat and not a shorter one. Leave the family empty to move the whole list.")
 ## @ace_display_template("Scale feedback amounts [b]{category}[/b] by [b]{factor}[/b]")
-## @ace_param(category, options: |audio|transform|camera|screen|pause|loop|signal, desc: "The family to scale, or empty for every card.")
+## @ace_param(category, options: ""|audio|transform|camera|screen|pause|loop|signal, desc: "The family to scale, or empty for every card.")
 ## @ace_param(factor, default: 0.5, desc: "What each amount is multiplied by. 0.5 is half as much.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$FeedbackPlayer.scale_feedback_amounts("{category}", {factor})")
@@ -751,10 +751,10 @@ func retime_feedbacks(factor: float) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Reorders the stretch of the list between two cards, both included, at random. The cheapest variety a repeated hit can have: the same feedbacks, in a different order every time.")
 ## @ace_display_template("Shuffle feedbacks [b]{first_label}[/b] to [b]{last_label}[/b]")
-## @ace_param(first_label, default: "shake_a", desc: "One end of the stretch.")
-## @ace_param(last_label, default: "shake_c", desc: "The other end.")
+## @ace_param(first_label, default: shake_a, desc: "One end of the stretch.")
+## @ace_param(last_label, default: shake_c, desc: "The other end.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.shuffle_feedbacks_between({first_label}, {last_label})")
+## @ace_codegen_template("$FeedbackPlayer.shuffle_feedbacks_between("{first_label}", "{last_label}")")
 func shuffle_feedbacks_between(first_label: String, last_label: String) -> void:
 	var list: Array = _own_list()
 	var from: int = _index_in(list, first_label)
@@ -776,9 +776,9 @@ func shuffle_feedbacks_between(first_label: String, last_label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Ticks exactly one of the cards whose label starts with what you type and unticks the rest, so shake_a, shake_b and shake_c become one shake chosen fresh each time. Variety out of the list itself, with no branch in the sheet.")
 ## @ace_display_template("Pick one feedback of [b]{prefix}[/b]")
-## @ace_param(prefix, default: "shake_", desc: "The start of the labels to choose between.")
+## @ace_param(prefix, default: shake_, desc: "The start of the labels to choose between.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.pick_one_feedback_of({prefix})")
+## @ace_codegen_template("$FeedbackPlayer.pick_one_feedback_of("{prefix}")")
 func pick_one_feedback_of(prefix: String) -> void:
 	var wanted: String = prefix.strip_edges()
 	if wanted.is_empty():
@@ -799,9 +799,9 @@ func pick_one_feedback_of(prefix: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Moves the head of a RUNNING play to the card you name, so the rest of the beat starts there. What a hit that interrupts its own wind-up wants.")
 ## @ace_display_template("Jump to feedback [b]{label}[/b]")
-## @ace_param(label, default: "impact", desc: "The label of the card to carry on from.")
+## @ace_param(label, default: impact, desc: "The label of the card to carry on from.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.jump_to_feedback({label})")
+## @ace_codegen_template("$FeedbackPlayer.jump_to_feedback("{label}")")
 func jump_to_feedback(label: String) -> void:
 	_jump_to = label.strip_edges()
 
@@ -810,9 +810,9 @@ func jump_to_feedback(label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("Steps over one card the NEXT time the play reaches it, and then forgets about it. The one-off exception a disable would have to be undone after.")
 ## @ace_display_template("Skip feedback [b]{label}[/b] once")
-## @ace_param(label, default: "shake", desc: "The label of the card to step over once.")
+## @ace_param(label, default: shake, desc: "The label of the card to step over once.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.skip_feedback_once({label})")
+## @ace_codegen_template("$FeedbackPlayer.skip_feedback_once("{label}")")
 func skip_feedback_once(label: String) -> void:
 	if _index_of(label) < 0:
 		_no_such(label, "Skip Feedback Once")
@@ -824,10 +824,10 @@ func skip_feedback_once(label: String) -> void:
 ## @ace_category("Feedback Player")
 ## @ace_description("How many times a Loop Back card sends the head round. A charge that gets longer the further it is held, without a second list.")
 ## @ace_display_template("Set loop count [b]{label}[/b] to [b]{loops}[/b]")
-## @ace_param(label, default: "loop_back", desc: "The label of the Loop Back card.")
+## @ace_param(label, default: loop_back, desc: "The label of the Loop Back card.")
 ## @ace_param(loops, default: 2, desc: "How many times round. 0 walks straight past it.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$FeedbackPlayer.set_loop_count({label}, {loops})")
+## @ace_codegen_template("$FeedbackPlayer.set_loop_count("{label}", {loops})")
 func set_loop_count(label: String, loops: int) -> void:
 	var card: Dictionary = _edited(label, "Set Loop Count")
 	if card.is_empty():
