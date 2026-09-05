@@ -28,7 +28,8 @@ static func build() -> bool:
 		"default_precision": {"type": "float", "default": 0.01, "exported": true,
 			"attributes": {"tooltip": "Distance + speed below which a spring counts as settled."}},
 		"springs": {"type": "Dictionary", "default": {}, "exported": false},
-		"color_springs": {"type": "Dictionary", "default": {}, "exported": false}
+		"color_springs": {"type": "Dictionary", "default": {}, "exported": false},
+		"property_springs": {"type": "Dictionary", "default": {}, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value - or use the host helpers (x/y/angle/scale) for instant juice."
@@ -164,6 +165,16 @@ static func build() -> bool:
 		"\tset_process(false)"
 	]))
 	ready_row.actions.append(ready_body)
+	# Appended rather than folded into the guard above, so the pack's shipped bytes only ever grow:
+	# a spring under a property is a bank of its own, and one started before this node was readied
+	# keeps the frames the line above just gave away.
+	var ready_properties: RawCodeRow = RawCodeRow.new()
+	ready_properties.code = "
+".join(PackedStringArray([
+		"if not property_springs.is_empty():",
+		"	set_process(true)"
+	]))
+	ready_row.actions.append(ready_properties)
 	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -201,7 +212,33 @@ static func build() -> bool:
 		"set_process(still_settling)"
 	]))
 	tick.actions.append(simulate)
+	var simulate_properties: RawCodeRow = RawCodeRow.new()
+	simulate_properties.code = "
+".join(PackedStringArray([
+		"# Springs under a PROPERTY of the host: each writes its own value back where it came from.",
+		"# This runs after the named bank above and only ever turns processing back ON, so a property",
+		"# spring keeps the frames the named springs just parked.",
+		"var property_settling: bool = false",
+		"for property_path: Variant in property_springs.keys():",
+		"	var property_entry: PropertySpring = property_springs[property_path]",
+		"	if not property_entry.active:",
+		"		continue",
+		"	var landed: bool = property_entry.integrate(delta)",
+		"	if host != null:",
+		"		host.set_indexed(property_entry.path, property_entry.unpack())",
+		"	if landed:",
+		"		spring_reached.emit(str(property_path))",
+		"	else:",
+		"		property_settling = true",
+		"if property_settling:",
+		"	set_process(true)"
+	]))
+	tick.actions.append(simulate_properties)
 	sheet.events.append(tick)
+	var property_block: RawCodeRow = RawCodeRow.new()
+	property_block.code = "
+".join(_property_spring_lines())
+	sheet.events.append(property_block)
 	Lib.append_function(sheet, "spring_to", "Spring To", "Spring", "Springs the named value toward a target.",
 		[["spring_name", "String"], ["target", "float"]],
 		"var entry: SpringEntry = _spring_entry(spring_name)\nvar was_active := entry.active\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)\nif not was_active:\n\tspring_started.emit(spring_name)")
@@ -250,6 +287,38 @@ static func build() -> bool:
 	Lib.append_function(sheet, "reset_springs", "Reset All Springs", "Spring", "Clears every spring on this behavior.",
 		[],
 		"springs.clear()\ncolor_springs.clear()")
+	# --- Springs under a property of the host (any number, vector or colour, by path) ---
+	Lib.append_function(sheet, "spring_property_to", "Spring Property To", "Spring", "Springs any property of the host toward a value: a number, a Vector2, a Vector3 or a Color, addressed by the same path the Inspector shows. The property's own type is read once, on the first row that springs it, and the spring writes it back every frame until it settles.",
+		[["property_path", "String", "The property to spring, as the Inspector spells it: modulate, position, rotation_degrees, scale:x."],
+			["target_value", "Variant", "Where it should end up. Give it the same kind of value the property holds."]],
+		"var entry: PropertySpring = _property_spring(property_path)\nif not entry.supported:\n\treturn\nentry.target = entry.pack(target_value)\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)",
+		"Spring [b]{property_path}[/b] to [b]{target_value}[/b]")
+	Lib.append_function(sheet, "bump_property", "Bump Property", "Spring", "Kicks a property's spring by an amount and lets it settle back on its own - the fastest juice there is: one row, no duration, nothing to clean up. Bump a field of view on a shot, a light's energy on a hit, a panel's scale on a press.",
+		[["property_path", "String", "The property to push, as the Inspector spells it."],
+			["amount", "Variant", "How hard the push is, in the property's own units. Negative pushes the other way."]],
+		"var entry: PropertySpring = _property_spring(property_path)\nif not entry.supported:\n\treturn\nentry.velocity += entry.pack(amount)\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)",
+		"Bump [b]{property_path}[/b] by [b]{amount}[/b]")
+	Lib.append_function(sheet, "set_property_spring", "Set Spring Damping And Frequency", "Spring", "The two numbers a spring really has: how fast the bounce dies out (0 loose, 1 dead) and how many swings a second it wants. Set them per property, before the motion or during it.",
+		[["property_path", "String", "The property whose spring is being tuned."],
+			["damping", "float", "0 oscillates for ever, 1 never overshoots."],
+			["frequency", "float", "Swings per second - how eager the spring is to get there."]],
+		"var entry: PropertySpring = _property_spring(property_path)\nentry.damping = clampf(damping, 0.0, 1.0)\n# Frequency is the swings a second a designer asks for; stiffness is what the integrator wants.\nvar swings: float = maxf(frequency, 0.01) * TAU\nentry.stiffness = swings * swings",
+		"Spring [b]{property_path}[/b]: damping [b]{damping}[/b], [b]{frequency}[/b] per second")
+	Lib.append_function(sheet, "clamp_property_spring", "Clamp Spring Between", "Spring", "Holds a property's spring between two numbers: it stops dead at the wall instead of pushing through it. A lid that must not pass its hinge, a bar that must not go under zero. The same number on both sides takes the clamp off again.",
+		[["property_path", "String", "The property whose spring is being fenced in."],
+			["min_value", "float", "The lowest the value may go."],
+			["max_value", "float", "The highest the value may go."]],
+		"var entry: PropertySpring = _property_spring(property_path)\nentry.min_value = minf(min_value, max_value)\nentry.max_value = maxf(min_value, max_value)\n# One number on both sides is how a row says there is no fence: a spring pinned to a point is not a clamp.\nentry.clamped = not is_equal_approx(min_value, max_value)",
+		"Clamp [b]{property_path}[/b] between [b]{min_value}[/b] and [b]{max_value}[/b]")
+	Lib.condition(sheet, "property_spring_is_settled", "Spring Is Settled", "Spring", "True while nothing is springing that property - it has arrived, or it was never sprung at all.",
+		[["property_path", "String", "The property to ask about."]],
+		"if not property_springs.has(property_path):\n\treturn true\nreturn not (property_springs[property_path] as PropertySpring).active")
+	Lib.number(sheet, "property_spring_value", "Spring Value Of", "Spring", "What the property's spring reads right now, as a number: the value itself for a number, x for a vector, red for a colour. 0 if nothing has sprung it.",
+		[["property_path", "String", "The property to read."]],
+		"if not property_springs.has(property_path):\n\treturn 0.0\nreturn (property_springs[property_path] as PropertySpring).value.x", TYPE_FLOAT)
+	Lib.number(sheet, "property_spring_velocity", "Spring Velocity Of", "Spring", "How fast the property's spring is moving right now, as a number - drive a lean, a blur or a stretch off it so the motion shows its own speed. 0 if nothing has sprung it.",
+		[["property_path", "String", "The property to read."]],
+		"if not property_springs.has(property_path):\n\treturn 0.0\nreturn (property_springs[property_path] as PropertySpring).velocity.x", TYPE_FLOAT)
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"add_impulse": "Kick spring [b]{spring_name}[/b] by [b]{amount}[/b]",
@@ -257,3 +326,129 @@ static func build() -> bool:
 	})
 	Lib.feature_verbs(sheet, ["spring_to", "add_impulse"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/spring/spring_behavior")
+
+
+## Springs under a PROPERTY of the host, the breadth half of the pack: one entry per property, made
+## on the first row that names it and reused for the life of the node, so a property bumped every
+## frame allocates nothing at all.
+##
+## The four kinds a property can be - a number, a Vector2, a Vector3 and a Color - are one shape
+## here: four floats in a Vector4, of which the entry remembers how many count and what to hand
+## back. A Vector4 is a value rather than an object, so the hot loop touches no heap.
+static func _property_spring_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"## One property of the host, springing. `path` is resolved once, when the first row names the",
+		"## property, and the type it holds then is the type it is written back as.",
+		"class PropertySpring:",
+		"\tvar path: NodePath = NodePath(\"\")",
+		"\t## How many of the four floats below this property actually uses.",
+		"\tvar components: int = 1",
+		"\t## The Variant type the property held when it was first sprung.",
+		"\tvar kind: int = TYPE_FLOAT",
+		"\t## False when the property is missing, or holds something no spring can move.",
+		"\tvar supported: bool = false",
+		"\tvar value: Vector4 = Vector4.ZERO",
+		"\tvar target: Vector4 = Vector4.ZERO",
+		"\tvar velocity: Vector4 = Vector4.ZERO",
+		"\tvar stiffness: float = 0.0",
+		"\tvar damping: float = 0.0",
+		"\tvar precision: float = 0.0",
+		"\tvar min_value: float = 0.0",
+		"\tvar max_value: float = 0.0",
+		"\tvar clamped: bool = false",
+		"\tvar active: bool = false",
+		"\t## Reads the property's own type once, and starts the spring at rest on what it holds.",
+		"\tfunc adopt(current: Variant) -> void:",
+		"\t\tkind = typeof(current)",
+		"\t\tmatch kind:",
+		"\t\t\tTYPE_VECTOR2:",
+		"\t\t\t\tcomponents = 2",
+		"\t\t\tTYPE_VECTOR3:",
+		"\t\t\t\tcomponents = 3",
+		"\t\t\tTYPE_COLOR:",
+		"\t\t\t\tcomponents = 4",
+		"\t\t\tTYPE_FLOAT, TYPE_INT:",
+		"\t\t\t\tcomponents = 1",
+		"\t\t\t_:",
+		"\t\t\t\tsupported = false",
+		"\t\t\t\treturn",
+		"\t\tsupported = true",
+		"\t\tvalue = pack(current)",
+		"\t\ttarget = value",
+		"\t## Any of the four kinds as four floats. What a kind does not use stays 0.",
+		"\tfunc pack(from_value: Variant) -> Vector4:",
+		"\t\tmatch typeof(from_value):",
+		"\t\t\tTYPE_VECTOR2:",
+		"\t\t\t\tvar as_vector2: Vector2 = from_value",
+		"\t\t\t\treturn Vector4(as_vector2.x, as_vector2.y, 0.0, 0.0)",
+		"\t\t\tTYPE_VECTOR3:",
+		"\t\t\t\tvar as_vector3: Vector3 = from_value",
+		"\t\t\t\treturn Vector4(as_vector3.x, as_vector3.y, as_vector3.z, 0.0)",
+		"\t\t\tTYPE_COLOR:",
+		"\t\t\t\tvar as_color: Color = from_value",
+		"\t\t\t\treturn Vector4(as_color.r, as_color.g, as_color.b, as_color.a)",
+		"\t\t\tTYPE_INT, TYPE_FLOAT:",
+		"\t\t\t\treturn Vector4(float(from_value), 0.0, 0.0, 0.0)",
+		"\t\treturn Vector4.ZERO",
+		"\t## The current value, in the type the property is written back as.",
+		"\tfunc unpack() -> Variant:",
+		"\t\tmatch kind:",
+		"\t\t\tTYPE_VECTOR2:",
+		"\t\t\t\treturn Vector2(value.x, value.y)",
+		"\t\t\tTYPE_VECTOR3:",
+		"\t\t\t\treturn Vector3(value.x, value.y, value.z)",
+		"\t\t\tTYPE_COLOR:",
+		"\t\t\t\treturn Color(value.x, value.y, value.z, value.w)",
+		"\t\t\tTYPE_INT:",
+		"\t\t\t\treturn int(roundf(value.x))",
+		"\t\treturn value.x",
+		"\t## Where a component is really allowed to end up: inside the fence, when there is one.",
+		"\tfunc goal(index: int) -> float:",
+		"\t\tif clamped:",
+		"\t\t\treturn clampf(target[index], min_value, max_value)",
+		"\t\treturn target[index]",
+		"\t## One framerate-independent step per live component; true on the frame it settles.",
+		"\tfunc integrate(delta: float) -> bool:",
+		"\t\tvar settled: bool = true",
+		"\t\t# Damping is the fraction of velocity LOST PER SECOND, as it is for the named springs.",
+		"\t\tvar decay: float = pow(1.0 - damping, delta)",
+		"\t\tfor index: int in components:",
+		"\t\t\tvar rest: float = goal(index)",
+		"\t\t\tvar speed: float = velocity[index]",
+		"\t\t\tspeed += (rest - value[index]) * stiffness * delta",
+		"\t\t\tspeed *= decay",
+		"\t\t\tvar moved: float = value[index] + speed * delta",
+		"\t\t\tif clamped:",
+		"\t\t\t\tvar held: float = clampf(moved, min_value, max_value)",
+		"\t\t\t\tif not is_equal_approx(held, moved):",
+		"\t\t\t\t\t# A clamped spring stops at the wall rather than pushing through it.",
+		"\t\t\t\t\tspeed = 0.0",
+		"\t\t\t\tmoved = held",
+		"\t\t\tif absf(rest - moved) < precision and absf(speed) < precision:",
+		"\t\t\t\tmoved = rest",
+		"\t\t\t\tspeed = 0.0",
+		"\t\t\telse:",
+		"\t\t\t\tsettled = false",
+		"\t\t\tvalue[index] = moved",
+		"\t\t\tvelocity[index] = speed",
+		"\t\tif settled:",
+		"\t\t\tactive = false",
+		"\t\treturn settled",
+		"",
+		"## The spring under one property, made on the first row that names it and kept afterwards.",
+		"## The property's type is read here, once, so the per-frame step never has to ask again.",
+		"func _property_spring(property_path: String) -> PropertySpring:",
+		"\tif property_springs.has(property_path):",
+		"\t\treturn property_springs[property_path]",
+		"\tvar entry := PropertySpring.new()",
+		"\tentry.path = NodePath(property_path)",
+		"\tentry.stiffness = default_stiffness",
+		"\tentry.damping = default_damping",
+		"\tentry.precision = default_precision",
+		"\tif host != null:",
+		"\t\tentry.adopt(host.get_indexed(entry.path))",
+		"\tif not entry.supported:",
+		"\t\tpush_warning(\"SpringBehavior cannot spring %s: the host has no such property, or it holds something that is not a number, a vector or a colour.\" % property_path)",
+		"\tproperty_springs[property_path] = entry",
+		"\treturn entry"
+	])
