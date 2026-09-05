@@ -647,7 +647,7 @@ func set_ticker(ticker_name: String, value: float) -> void:
 ## @ace_param(magnitude, default: 0.5, desc: "How hard: 0 to 1 for a listener shaking the camera, world units for one shaking itself, pixels for one shaking the screen.")
 ## @ace_param(seconds, default: 0.6, desc: "How long the shake lasts before it has faded to nothing.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
-## @ace_codegen_template("$Juice3DBehavior.shake_channel({channel}, {magnitude}, {seconds})")
+## @ace_codegen_template("$Juice3DBehavior.shake_channel("{channel}", {magnitude}, {seconds})")
 func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
 	if not is_inside_tree():
 		return
@@ -661,7 +661,7 @@ func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
 ## @ace_param(channel, default: props, desc: "Which channel to listen on - a group name. Say it once, at the start of the scene.")
 ## @ace_param(shakes, options: the camera|this node|the screen, default: this node, desc: "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
-## @ace_codegen_template("$Juice3DBehavior.listen_on_channel({channel}, "{shakes}")")
+## @ace_codegen_template("$Juice3DBehavior.listen_on_channel("{channel}", "{shakes}")")
 func listen_on_channel(channel: String, shakes: String) -> void:
 	add_to_group(StringName(channel), true)
 	_channel_shakes = shakes
@@ -673,7 +673,7 @@ func listen_on_channel(channel: String, shakes: String) -> void:
 ## @ace_display_template("Stop listening on channel [b]{channel}[/b]")
 ## @ace_param(channel, default: props, desc: "Which channel to stop hearing.")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
-## @ace_codegen_template("$Juice3DBehavior.stop_listening_on_channel({channel})")
+## @ace_codegen_template("$Juice3DBehavior.stop_listening_on_channel("{channel}")")
 func stop_listening_on_channel(channel: String) -> void:
 	if is_in_group(StringName(channel)):
 		remove_from_group(StringName(channel))

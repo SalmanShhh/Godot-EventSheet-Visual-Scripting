@@ -474,6 +474,7 @@ static func build() -> bool:
 	_param_desc(sheet, "magnitude", "How hard: 0 to 1 for a listener shaking the camera, world units for one shaking itself, pixels for one shaking the screen.")
 	_default(sheet, "seconds", "0.6")
 	_param_desc(sheet, "seconds", "How long the shake lasts before it has faded to nothing.")
+	_quoted_argument(sheet, "shake_channel(\"{channel}\", {magnitude}, {seconds})")
 	Lib.append_function(sheet, "listen_on_channel", "Listen On Channel", "Juice 3D", "Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.",
 		[["channel", "String"], ["shakes", "String"]],
 		"add_to_group(StringName(channel), true)\n_channel_shakes = shakes",
@@ -483,13 +484,14 @@ static func build() -> bool:
 	_param_options(sheet, "shakes", ["the camera", "this node", "the screen"])
 	_default(sheet, "shakes", "this node")
 	_param_desc(sheet, "shakes", "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
-	_quoted_argument(sheet, "listen_on_channel({channel}, \"{shakes}\")")
+	_quoted_argument(sheet, "listen_on_channel(\"{channel}\", \"{shakes}\")")
 	Lib.append_function(sheet, "stop_listening_on_channel", "Stop Listening On Channel", "Juice 3D", "Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.",
 		[["channel", "String"]],
 		"if is_in_group(StringName(channel)):\n\tremove_from_group(StringName(channel))\n_channel_put_back()",
 		"Stop listening on channel [b]{channel}[/b]")
 	_default(sheet, "channel", "props")
 	_param_desc(sheet, "channel", "Which channel to stop hearing.")
+	_quoted_argument(sheet, "stop_listening_on_channel(\"{channel}\")")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
