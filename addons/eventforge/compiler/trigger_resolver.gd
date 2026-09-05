@@ -283,6 +283,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# nothing invents a name and both halves are ordinary Godot.
 			return _signal_backed("_on%s_world_look_blended" % source_token, "look: String",
 				"world_look_blended", source_path)
+		"OnSequenceStep":
+			# A cell the sequencer's play head crossed. The same plain-signal shape as the two above:
+			# the sheet declares `signal sequence_stepped(track, step, name)`, the head raises it and
+			# this connects the handler, so a rhythm is answered with ordinary Godot.
+			return _signal_backed("_on%s_sequence_stepped" % source_token,
+				"track: String, step: int, name: String", "sequence_stepped", source_path)
 		"OnEditorRun":
 			return _lifecycle("_run", "")
 		"OnCommandToolRun":

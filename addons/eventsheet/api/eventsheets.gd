@@ -2105,6 +2105,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	# reader's question - "how do I build a level of this shape" - asked one room later.
 	"keys_doors": "Working-In-3D",
 	"audio_server": "Sound-And-Music",
+	# A grid of moments on a beat is the same reader's question as the song it runs against - "how
+	# does this land on the beat" - so the sequencer reads beside the music rather than opening a
+	# page of its own for seven rows.
+	"sequencer": "Sound-And-Music",
 	"camera_fov": "Cameras-Graphics-And-Screenshots",
 	# What the LENS lets in and what it keeps sharp is the same page's subject one step closer in: a
 	# reader who wants the background to go soft behind the speaker is asking what the player is

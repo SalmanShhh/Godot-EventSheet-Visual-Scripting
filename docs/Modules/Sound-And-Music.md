@@ -167,6 +167,42 @@ The work itself is `eventsheet_addons/bus_mix.gd`, a real file in your project t
 into: a sweep is one `Tween` walking one float, which the engine parks and frees the moment it lands,
 so a swept bus costs nothing at rest.
 
+### The sequencer: a grid of moments on a beat (picker section: Sequencer)
+
+Lights that pulse on the beat are, in most games, a counter and a modulo in a per-frame row, and
+changing the pattern means rewriting the arithmetic. What the pattern actually is is a grid: a track
+per thing that can fire, a step per beat subdivision, and a name in the cells that should fire. A
+**SequenceResource** is that grid - its tempo, how many steps a bar holds, and its tracks - and these
+rows play it.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Play Sequence | Starts stepping a grid on this object, at a tempo (0 means the file's own). | `EventForgeSequencer.play(self, {sequence}, {bpm})` |
+| Stop Sequence | Stops it and parks the head, keeping where it stopped. | `EventForgeSequencer.stop(self)` |
+| Set Sequence Tempo | Changes the tempo without restarting the grid. | `EventForgeSequencer.set_tempo(self, {bpm})` |
+| Jump To Sequence Step | Moves the head; the step named is the next one said out loud. | `EventForgeSequencer.jump_to(self, {step})` |
+| Sequence Is Playing | True while a grid is being stepped on this object. | `EventForgeSequencer.is_playing(self)` |
+| Current Sequence Step | Which step the head last said, and -1 before it has said any. | `EventForgeSequencer.current_step(self)` |
+| On Sequence Step | Runs on every crossed cell, with the track, the step and the name in it. | `signal sequence_stepped(track, step, name)` |
+
+Four things worth knowing:
+
+- **A crossed cell is said twice**, both times in the engine's own plumbing. Once as this node's
+  `sequence_stepped` signal, which On Sequence Step connects to - a plain signal your sheet declares
+  for itself. And once to the GROUP the track is named after: every node in it that can play a moment
+  by name is asked to, so a `lights` track reaches every light listening on it and no reference is
+  held anywhere.
+- **The song is the clock.** With a Music autoload in the tree the grid reads the song's own beat
+  position and cannot drift from what the player hears. With no song it counts its own beats from the
+  tempo it was given, which is also what keeps a browser tab that throttles frames landing on time.
+- **Tracks are their own length.** A four-cell track and a three-cell track run against each other,
+  each wrapping at its own end - which is where a cross-rhythm comes from and costs nothing.
+- **Nothing ships.** There is no house pattern and no house track name. A new SequenceResource is
+  empty, and the first track is the first thing you add.
+
+A dropped frame never eats a beat: a frame long enough to cross three steps says all three, in order.
+The work is `eventsheet_addons/sequencer.gd`, and a stopped head processes nothing at all.
+
 ### The options-menu forms (picker section: Game Options)
 
 | Name | What it does | Ships as |
