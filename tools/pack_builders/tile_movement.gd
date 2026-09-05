@@ -113,6 +113,7 @@ static func build() -> bool:
 	simulate_step_fn.events.append(simulate_step_fn_body)
 	sheet.functions.append(simulate_step_fn)
 	_param_options(sheet, "direction", ["left", "right", "up", "down"])
+	_quoted_argument(sheet, "simulate_step(\"{direction}\")")
 
 	var teleport_to_tile_fn: EventFunction = EventFunction.new()
 	teleport_to_tile_fn.function_name = "teleport_to_tile"
@@ -138,6 +139,17 @@ static func build() -> bool:
 	sheet.functions.append(teleport_to_tile_fn)
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/tile_movement/tile_movement_behavior")
+
+
+## Gives the last-appended ACE a call template that QUOTES its dropdown argument. A dropdown key is
+## inserted into the call verbatim, so a String argument picked from a list of words has to carry its
+## own quotes in the TEMPLATE - a quoted key does not survive the annotation round trip (the emitter
+## wraps it again and the scanner strips one pair back off). Without this a row picking Left asked
+## `simulate_step(left)`, an undefined identifier, and the game did not parse. The call prefix is the
+## pack's own class name, the same one the automatic template uses.
+static func _quoted_argument(sheet: EventSheetResource, call: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	fn.codegen_template_override = "$%s.%s" % [sheet.custom_class_name, call]
 
 
 ## Sets the dropdown options[] on the last-appended ACE's parameter (append_function only sets id+type),

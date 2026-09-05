@@ -46,7 +46,6 @@ const PACKS_DIR := "res://eventsheet_addons"
 ## Bound and Grade Is shipped broken - and each is asserted to be STILL bare, so quoting one turns
 ## this gate red until its line is deleted. Delete lines from here; never add one.
 const KNOWN_BARE := [
-	"tile_movement/tile_movement_behavior.gd:direction",
 	"utility_ai/utility_ai_addon.gd:curve",
 	"wrap/wrap_behavior.gd:space",
 ]
@@ -126,6 +125,8 @@ const ACTIONS := [
 	[STORYLETS, "Storylets.add_recency_requirement({id}, \"{mode}\", {within})",
 		"Storylets.add_recency_requirement(\"tavern\", \"not_recent\", 5)",
 		{"id": "\"tavern\"", "mode": "not_recent", "within": "5"}],
+	[TILE_MOVEMENT, "$TileMovementBehavior.simulate_step(\"{direction}\")",
+		"$TileMovementBehavior.simulate_step(\"up\")", {"direction": "up"}],
 ]
 
 const CONDITIONS := [
