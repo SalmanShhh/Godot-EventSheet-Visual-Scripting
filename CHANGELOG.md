@@ -256,6 +256,16 @@
 - **Written down: [Composing Juice: The Beat A Hit Is Made Of](docs/GUIDE-COMPOSING-JUICE.md)**, one
   whole two-lane event per section, and the Inspector guide gains the Feedback Player as the worked
   example of a card schema derived from a pack's own verbs.
+- **All 54 of the Feedback Player's verbs open as verbs.** Twenty-two of them came back as verbatim
+  code blocks when the pack was reopened as a sheet, because the annotation the compiler wrote and
+  the annotation it read back were not the same line. Three causes, all of them now closed: a
+  parameter's starting value carried its own quotes, which the reader takes off and the writer never
+  puts back (a word's quotes belong in the CALL, so twenty verbs now spell theirs there, and the
+  value the sheet stores is the bare word); a Dictionary starting value was cut at the first comma
+  INSIDE its braces, so an annotation reader now understands brackets as well as quotes, and a value
+  written as a Dictionary, an Array or a constructor call survives whole; and a dropdown entry that
+  is the empty word was written as nothing at all, so an "or leave it empty" entry silently stopped
+  existing - it ships quoted now, and comes back.
 
 
 ### Fixed on the boot path
@@ -4994,6 +5004,27 @@ A second adversarial pass read the fixes above against the code that carries the
   `_scene_trust_quiet.gd` and `__fileace_compiled.gd` were all still in `app_userdata` after a run.
   CI runs the whole suite serially in one process, so what one test leaves behind is state the next
   one sees.
+
+
+#### Fixed, read back a third time
+
+A boundary review read the three lift families, the guards and the pages against each other.
+
+- **Save Branch As Scene File writes the run again before it claims it.** The two Ask runs and the
+  file runs each end by re-emitting what they matched and comparing it byte for byte; the scene-save
+  matcher had no such gate of its own, and it TRIMMED THE EDGES off the two things it reads rather
+  than matches - the branch expression and the path. So one trailing space anywhere in the seven-line
+  run was claimed and then written back without it. The damage was never local: the re-emission gate
+  above this one is per function and per file, so a single run claimed a byte too loosely threw away
+  every row of the file, and an untouched `modulate = Color.RED` in some other function opened as
+  verbatim code. The run is written again and compared now, exactly as its two neighbours are, and a
+  run somebody added a statement to inside the row's own branch is refused with it.
+- **A note after the branch is not a value of the row.** The branch was captured with a pattern that
+  ran to the end of the line, so `var branch := $Level  # the branch we write out` put the comment
+  in the row's branch FIELD - offering a reader their own note to edit, and re-emitting perfectly,
+  which is why the byte gate above could never have caught it. A trailing comment is refused the way
+  the `PackedScene.new()` and `ResourceSaver.save` lines beside it already refuse one; a hash inside
+  a string (`get_node("Level#1")`) is not a comment and the run is still the row.
 
 
 ### Every call on a known class is a row

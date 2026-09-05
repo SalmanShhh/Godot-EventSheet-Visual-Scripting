@@ -43,6 +43,7 @@ const TEST_DIR: String = "user://_scene_trust_test"
 ## The two paths this test compiles TO, cleaned up beside the folder above for the same reason.
 const COMPILE_OUTPUTS: Array[String] = [
 	"user://_scene_trust_authored.gd", "user://_scene_trust_quiet.gd",
+	"user://_scene_save_refusals.gd",
 ]
 
 
@@ -393,6 +394,67 @@ static func _test_the_lift() -> bool:
 	sheet.external_source_path = "user://_scene_save_roundtrip.gd"
 	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 	ok = _check("%s comes back byte for byte" % FIXTURE, output, _source(FIXTURE)) and ok
+	ok = _test_the_lift_refuses() and ok
+	return ok
+
+
+## THE RUN THE FAMILY MUST NOT CLAIM, and the reason it is a section rather than a line. Two things
+## about this run are READ rather than matched - the branch and the path - so a stray space or a note
+## inside either used to ride in, be trimmed off, and be written back as something the author did not
+## type. That is not a local wrong: the re-emission gate above this one is per FUNCTION and per FILE,
+## so a single run claimed a byte too loosely threw away every row of the file, which is what the
+## second half of each pin below measures - an untouched line in ANOTHER function, still opening as
+## the row it is.
+static func _test_the_lift_refuses() -> bool:
+	const CLEAN: String = "extends Sprite2D\n\n\nfunc save_it() -> void:\n\tvar branch := $Level\n\tfor part: Node in branch.find_children(\"*\", \"\", true, false):\n\t\tif part.owner == null:\n\t\t\tpart.owner = branch\n\tvar scene := PackedScene.new()\n\tscene.pack(branch)\n\tResourceSaver.save(scene, \"user://built.tscn\")\n\n\nfunc flash() -> void:\n\tmodulate = Color.RED\n"
+	# One space, at the end of the branch the run opens on. Everything else is byte for byte the run
+	# above it.
+	const A_SPACE: String = "extends Sprite2D\n\n\nfunc save_it() -> void:\n\tvar branch := $Level \n\tfor part: Node in branch.find_children(\"*\", \"\", true, false):\n\t\tif part.owner == null:\n\t\t\tpart.owner = branch\n\tvar scene := PackedScene.new()\n\tscene.pack(branch)\n\tResourceSaver.save(scene, \"user://built.tscn\")\n\n\nfunc flash() -> void:\n\tmodulate = Color.RED\n"
+	# A note after the branch, which the row has nowhere to put: it is not part of the expression, and
+	# a row carrying it in its branch field would offer somebody their own comment to edit.
+	const A_NOTE: String = "extends Sprite2D\n\n\nfunc save_it() -> void:\n\tvar branch := $Level  # the branch we write out\n\tfor part: Node in branch.find_children(\"*\", \"\", true, false):\n\t\tif part.owner == null:\n\t\t\tpart.owner = branch\n\tvar scene := PackedScene.new()\n\tscene.pack(branch)\n\tResourceSaver.save(scene, \"user://built.tscn\")\n\n\nfunc flash() -> void:\n\tmodulate = Color.RED\n"
+	# THE SPELLING NEGATIVE. The row's own tail, with the two failures answered in the author's own
+	# words rather than in the row's. Re-emitting it through the row would change what their game
+	# prints, so it is somebody's code and stays that way.
+	const OWN_WORDS: String = "extends Sprite2D\n\n\nfunc save_it() -> void:\n\tvar __branch_z9: Node = $Level\n\tfor __part_z9: Node in __branch_z9.find_children(\"*\", \"\", true, false):\n\t\tif __part_z9.owner == null:\n\t\t\t__part_z9.owner = __branch_z9\n\tvar __scene_z9 := PackedScene.new()\n\tvar __packed_z9 := __scene_z9.pack(__branch_z9)\n\tif __packed_z9 != OK:\n\t\tpush_error(\"could not pack it\")\n\telif ResourceSaver.save(__scene_z9, \"user://built.tscn\") != OK:\n\t\tpush_error(\"nothing written\")\n\n\nfunc flash() -> void:\n\tmodulate = Color.RED\n"
+	# A hash inside a STRING is not a note, and the run that holds one is the row it always was.
+	const A_HASH_IN_A_NAME: String = "extends Sprite2D\n\n\nfunc save_it() -> void:\n\tvar branch := get_node(\"Level#1\")\n\tfor part: Node in branch.find_children(\"*\", \"\", true, false):\n\t\tif part.owner == null:\n\t\t\tpart.owner = branch\n\tvar scene := PackedScene.new()\n\tscene.pack(branch)\n\tResourceSaver.save(scene, \"user://built.tscn\")\n"
+
+	var clean: EventSheetResource = _opened(CLEAN)
+	var ok: bool = _check("the run written exactly as the row writes it is the row",
+		_function_row_ids(clean, "save_it"), PackedStringArray(["SaveBranchAsSceneFile"]))
+	ok = _check("with the branch the file names", _params_of(_function_action(clean, "save_it", 0)),
+		{"branch": "$Level", "path": "\"user://built.tscn\""}) and ok
+	ok = _check("and the line in the function beside it reads as its own row",
+		_function_row_ids(clean, "flash"), PackedStringArray(["SetModulate"])) and ok
+
+	var spaced: EventSheetResource = _opened(A_SPACE)
+	ok = _check("one trailing space in the branch and the run is not claimed at all",
+		_function_row_ids(spaced, "save_it").has("SaveBranchAsSceneFile"), false) and ok
+	ok = _check("and the refusal costs the function beside it nothing",
+		_function_row_ids(spaced, "flash"), PackedStringArray(["SetModulate"])) and ok
+	ok = _check("the file with the space in it still comes back byte for byte",
+		_reemitted(spaced), A_SPACE) and ok
+
+	var noted: EventSheetResource = _opened(A_NOTE)
+	ok = _check("a note after the branch is not a value of the row",
+		_function_row_ids(noted, "save_it").has("SaveBranchAsSceneFile"), false) and ok
+	ok = _check("and the noted file comes back byte for byte",
+		_reemitted(noted), A_NOTE) and ok
+
+	var own: EventSheetResource = _opened(OWN_WORDS)
+	ok = _check("a tail that reports failure in the author's own words is their code",
+		_function_row_ids(own, "save_it").has("SaveBranchAsSceneFile"), false) and ok
+	ok = _check("and that file comes back byte for byte too",
+		_reemitted(own), OWN_WORDS) and ok
+
+	var hashed: EventSheetResource = _opened(A_HASH_IN_A_NAME)
+	ok = _check("a hash inside a node name is not a note, and the run is still the row",
+		_function_row_ids(hashed, "save_it"),
+		PackedStringArray(["SaveBranchAsSceneFile"])) and ok
+	ok = _check("with the whole call as its branch",
+		_params_of(_function_action(hashed, "save_it", 0)),
+		{"branch": "get_node(\"Level#1\")", "path": "\"user://built.tscn\""}) and ok
 	return ok
 
 
@@ -670,6 +732,20 @@ static func _source(file_name: String) -> String:
 static func _open(file_name: String) -> EventSheetResource:
 	var path: String = FIXTURE_DIR + file_name
 	return GDScriptImporter.new().import_external_source(_source(file_name), true, path)
+
+
+## A source string opened as a sheet. Used where the thing under test is a SPELLING rather than a
+## file - a stray space survives a string literal and does not survive every editor a fixture passes
+## through, so the runs that must not be claimed are written here rather than committed as files.
+static func _opened(source: String) -> EventSheetResource:
+	return GDScriptImporter.new().import_external_source(source, true, COMPILE_OUTPUTS[2])
+
+
+## The same sheet written back out. The byte comparison is the point: a run this family refuses is
+## still every byte the author typed, because a refusal leaves the statements exactly as they are.
+static func _reemitted(sheet: EventSheetResource) -> String:
+	sheet.external_source_path = COMPILE_OUTPUTS[2]
+	return str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
 
 
 ## A row the SHEET authored. `uid` bakes the per-row id of a template that declares locals, which is

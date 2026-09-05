@@ -42,6 +42,16 @@ extends RefCounted
 # TWO TAILS, because the row emits one and people write the other. The row's own tail keeps both
 # error answers (a pack can refuse, a write can fail); the tail a person writes by hand is usually
 # the plain pack and the plain save. Both are claimed, and each rides back out in its own spelling.
+#
+# AND THEN THE RUN IS WRITTEN AGAIN AND COMPARED BYTE FOR BYTE, exactly as the ask runs and the file
+# runs beside this one do. Every line above is matched, but two things about a run are READ rather
+# than matched - the branch expression and the path - and both used to arrive here with their edges
+# trimmed, so a single trailing space anywhere in them was claimed and then re-emitted without it.
+# That is not a small wrong: the re-emission gate one layer up is per FUNCTION and per FILE, so one
+# run claimed a byte too loosely threw away every row of the file, and an untouched
+# `modulate = Color.RED` in some other function opened as verbatim code. The comparison below is the
+# whole guarantee - a run this family hands back is one the compiler writes precisely as it was
+# found, and a run it cannot is left as the statements it is, alone, harming nothing around it.
 
 ## The fragment the SECOND statement of the run must contain before any pattern here is compiled.
 ## One substring test that rules out every line in a project but the walk itself - and it is the walk
@@ -86,7 +96,7 @@ static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dicti
 	# canonical one the byte gate would then refuse.
 	var made: RegExMatch = _regex("^(var[ \\t]+([A-Za-z_][A-Za-z0-9_]*)(?:[ \\t]*:[ \\t]*Node)?[ \\t]*:?=[ \\t]*)(.+)$").search(
 		_at(lines, index, depth, 0))
-	if made == null:
+	if made == null or _names_a_comment(made.get_string(3)):
 		return {}
 	var branch_local: String = made.get_string(2)
 	# The list the borrowed ownership is remembered in, when the run keeps one. Its absence is the
@@ -130,8 +140,74 @@ static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dicti
 	head.append_array(claimed["lines"] as PackedStringArray)
 	var values: Dictionary = {"branch": made.get_string(3).strip_edges(),
 		"path": str(claimed["path"])}
-	return {"ace_id": ACE_ID, "params": values, "template": "\n".join(head),
-		"consumed": int(claimed["consumed"]) + lent + lent}
+	return _verified("\n".join(head), values, int(claimed["consumed"]) + lent + lent,
+		_run_at(lines, index, depth, int(claimed["consumed"]) + lent + lent))
+
+
+## The row a claimed run becomes, once the row has WRITTEN THE RUN AGAIN and got the same bytes back.
+## `run` is the statements as they stand on disk with the run's own indentation taken off, and an
+## empty one is a run that could not be read back at all. A row that fails the comparison is not
+## handed back, and the statements keep the reading they had.
+static func _verified(template: String, params: Dictionary, consumed: int,
+		run: PackedStringArray) -> Dictionary:
+	if run.is_empty():
+		return {}
+	if EventForgeLiftTable.emit_row(template, params, EventForgeLiftTable.DEFAULT_PROVIDER,
+			ACE_ID) != "\n".join(run):
+		return {}
+	return {"ace_id": ACE_ID, "params": params, "template": template, "consumed": consumed}
+
+
+## The `count` lines at `index` with `depth` tabs taken off each, or an empty list when the body ends
+## first, when one of them is written shallower than the run, or when a line still deeper than the
+## run's last one follows it. That last refusal keeps a run somebody added a statement to out of this
+## reading: the row's own tail ends on an answer inside a branch, and a second statement in that
+## branch is code the row would not write back.
+static func _run_at(lines: PackedStringArray, index: int, depth: int,
+		count: int) -> PackedStringArray:
+	var indent: String = "\t".repeat(depth)
+	var written: PackedStringArray = PackedStringArray()
+	for step: int in count:
+		var at: int = index + step
+		if at >= lines.size() or not lines[at].begins_with(indent):
+			return PackedStringArray()
+		written.append(lines[at].substr(depth))
+	var after: int = index + count
+	if after < lines.size() and lines[after].begins_with(indent + "\t"):
+		return PackedStringArray()
+	return written
+
+
+## Whether an expression carries a trailing comment. Asked of the branch the run opens on, because
+## that is the one place here a `(.+)` runs to the end of the line: every other read value ends on a
+## literal the pattern anchors to, so a comment after it is already refused. It has to know about
+## strings - `get_node("Level#1")` keeps its whole argument.
+static func _names_a_comment(expression: String) -> bool:
+	var index: int = 0
+	while index < expression.length():
+		var character: String = expression[index]
+		if character == "\"" or character == "'":
+			index = _string_end(expression, index)
+			continue
+		if character == "#":
+			return true
+		index += 1
+	return false
+
+
+## One past the end of the string literal starting at `start`, or the end of the text when the
+## literal is never closed - which is the honest answer for a fragment of one line.
+static func _string_end(text: String, start: int) -> int:
+	var quote: String = text[start]
+	var index: int = start + 1
+	while index < text.length():
+		if text[index] == "\\":
+			index += 2
+			continue
+		if text[index] == quote:
+			return index + 1
+		index += 1
+	return text.length()
 
 
 ## The loop that hands the borrowed ownership back, as the lines it is written on, or {} when the run
