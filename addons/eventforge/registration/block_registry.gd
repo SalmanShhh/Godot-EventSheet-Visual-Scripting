@@ -717,6 +717,15 @@ class MomentBlockKind extends EventSheetBlockKind:
 				current = started
 				pending_loop = false
 				continue
+			# A line SPELLED like this grammar's own but claimed by none of the readers above is
+			# refused outright rather than kept as ordinary code inside a step. A wait nothing read
+			# is a step whose timing is a lie: the reading says "At 0 s" while the file waits, and
+			# the schedule the block would rewrite on the next edit is worked out as though those
+			# waits were not there. Byte-exact re-emission does not catch it, because a statement
+			# nobody read is written straight back out - so the refusal has to happen here. The
+			# function then stays a plain function, which is honest and loses nothing.
+			if _looks_like_this_grammar(line):
+				return null
 			if current == null:
 				current = MomentStepRow.new()
 				current.seconds = cursor
@@ -731,6 +740,19 @@ class MomentBlockKind extends EventSheetBlockKind:
 		if depth == 2:
 			block.steps.append(_loop_back_step(loop_count))
 		return block
+
+	## Whether a body line is spelled like something this grammar itself writes: one of the three
+	## waits, the range line, or a loop head. Asked only once every reader has refused the line, so a
+	## true answer means it is this grammar's own sentence in a spelling this reader cannot claim - a
+	## comma with no space after it, a number written another way, a hand-edited wait. The tests that
+	## matter are cheap and literal on purpose: the grammar accepts exactly what it writes, and
+	## anything close to it that it cannot read is a refusal rather than a guess.
+	func _looks_like_this_grammar(line: String) -> bool:
+		if line.begins_with("await %s" % MomentBlockRow.RUNNER):
+			return true
+		if line.contains("%s.strength_at(" % MomentBlockRow.RUNNER):
+			return true
+		return line.begins_with(LOOP_HEAD.strip_edges())
 
 	## The row a closing looped stretch reads as.
 	func _loop_back_step(loop_count: int) -> MomentStepRow:
