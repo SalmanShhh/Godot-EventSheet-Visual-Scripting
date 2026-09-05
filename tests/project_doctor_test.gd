@@ -54,8 +54,8 @@ const SUPPORT := preload("res://tests/support.gd")
 ## answer is that no section is the culprit. The audit is 80 sections (57 built-in checks and 23
 ## registered through the public seam) over 1,566 scripts, and its cost is ONE thing: 149 scripts
 ## opened as sheets, costing 112 to 118 seconds of a 174 to 192 second run. That is 58 to 68 percent
-## of the audit, and it is the only figure worth quoting from that machine, which had other Godot
-## processes on it - the totals moved by 75 percent between runs while the RATIOS did not.
+## of the audit, and the RATIO is the only figure worth quoting from that machine, which had other
+## Godot processes on it - the totals moved by 75 percent between runs while the ratios did not.
 ##
 ## Of that import cost, 96 to 100 percent is the ACE lift itself, measured against the importer's
 ## own `lift: false` path on three files of different sizes. It is already shared one-per-file by
@@ -67,27 +67,42 @@ const SUPPORT := preload("res://tests/support.gd")
 ## Lighting (11) and Multiplayer (22) - and every section the wave added since the last measurement
 ## comes to 3.4 percent of the run between them: Streaming 0.3 ms, Animation 77 ms, Tilemap 147 ms,
 ## Save Memory 165 ms, Damage 457 ms, Feedbacks 1.9 s. The Files section, which looked like the
-## candidate because its text sweep grew, is 47 ms. What grew is the CORPUS, not any check: about
-## 150 packs and 1,566 scripts, and a gate that correctly matches more files opens more files.
+## candidate because its text sweep grew, is 47 ms. What grew is the CORPUS, not any check, and in
+## THIS repository the corpus is mostly not a game: of the non-addons scripts the audit walks, 932
+## are under tests/ and 420 under tools/, and those two trees are 106 of the 149 opened files and
+## about 72 percent of the import cost. Scoping the corpus is therefore the real remaining lever,
+## and it is a bigger one than the lifter (which already rejects an impossible entry by length and
+## by a required literal before it runs a regex). It is not free: findings on those files would go,
+## so it needs a report diff, which is why it is not in this commit.
 ##
-## SO THE BUDGET MOVES, which the two notes above were right to refuse and which is right now. 65
-## seconds had stopped being a budget: it failed 4 of the last 8 runs on the GitHub runner and
-## passed twice more within 400 ms of the cliff, on commits that touched nothing near the doctor,
-## so a real regression could not have been told apart from the noise.
+## SO THE BUDGET MOVES, which the 2026-08-25 note above was right to refuse and which is right now.
+## 65 seconds had stopped being a budget: over 21 runs on the GitHub runner that day the gate
+## measured 45.3 to 68.1 seconds, straddling the line, so a real regression could not have been told
+## apart from the runner it landed on.
 ##
-## The number is the RUNNER's, not a local one. The assertion runs twice in CI and the binding one
-## is the headless-safe gate (tools/run_perf.gd), which measures 5 to 6 seconds slower than the same
-## assertion in the full suite on the same commit. Eight consecutive gate runs on ubuntu-latest
-## measured 51.7, 61.3, 64.6, 64.9, 65.2, 65.3, 65.6 and 66.2 seconds. 95 seconds is 43 percent
-## clear of the worst of those.
+## The number is the RUNNER's, not a local one. The assertion runs in both CI suite steps; the one
+## that bites is the headless-safe gate (tests/run_perf.gd), which CI reaches first and which
+## measures 3 to 7 seconds slower than the same assertion in the full suite on the same commit.
+## 95 seconds is about 40 percent clear of the worst of that day's 21 runs.
 ##
-## AND IT IS DELIBERATELY NOT HIGHER, for the same reason 65 was once deliberately low. What this
-## gate protects is the one-import-per-script sharing: lose it and the same files go through the
-## importer a dozen times over, which roughly doubles the audit and lands past 95 from a 66-second
-## start. The usual "roughly double the measurement" rule would put this at 130 and pass with that
-## sharing gone. If it ever needs raising again the answer is not a bigger number, it is an indexed
-## reverse lifter, so a line costs one lookup instead of a walk over a vocabulary that keeps growing.
+## BUT A MILLISECOND BUDGET IS THE WEAKER HALF OF THIS GATE, and saying otherwise is how the number
+## above starts lying. The runner is bimodal: a fast run finishes the audit in 45 to 52 seconds, so
+## a regression that DOUBLES the audit still lands under 95 there. The two pins below are the strong
+## half, and they are the ones that actually protect the saving this file's history is about. They
+## count rather than time, so they mean the same thing on any machine: every script the audit opens
+## is opened exactly once (lose the sharing and the same files go through the importer a dozen times
+## over, and the count says so however fast the box is), and the audit opens a fraction of the
+## project rather than all of it (a gate that decays to a bare word opens hundreds). Between them
+## they catch every regression class the four notes above describe. The wall clock stays as the
+## backstop for a cost that is nobody's duplicate read - a section that is simply slow.
 const DOCTOR_BUDGET_MS: int = 95000
+
+## What the audit measured on 2026-09-05: 149 distinct scripts opened as sheets out of 1,566 walked.
+## The ceiling is generous because the corpus grows and this pin is not about the exact number - it
+## is about the difference between opening a curated handful and opening the project, which is what
+## a gate decaying to a bare word does (the Lighting section did exactly that before bd1a26ed, and
+## it cost seventeen needless sheet builds in one section alone).
+const DOCTOR_MAX_SHEETS_OPENED: int = 400
 
 
 static func run() -> bool:
@@ -283,6 +298,16 @@ static func run() -> bool:
 	var audit_ms: float = float(Time.get_ticks_usec() - audit_start_usec) / 1000.0
 	all_passed = _check("the whole audit runs under %d ms (took %.0f ms)" % [
 		DOCTOR_BUDGET_MS, audit_ms], audit_ms <= float(DOCTOR_BUDGET_MS), true) and all_passed
+	# The two cost pins the wall clock above cannot make: they count instead of timing, so they say
+	# the same thing on a fast runner and a loaded one. Opening a script as a sheet is by far the most
+	# expensive thing this audit does, so the whole performance story is "once per file, and only the
+	# files a gate really wants".
+	var sheets_opened: int = int(report.get("sheets_opened", -1))
+	var importer_calls: int = int(report.get("importer_calls", -1))
+	all_passed = _check("every script the audit opens is opened once (%d opened, %d importer calls)" % [
+		sheets_opened, importer_calls], importer_calls, sheets_opened) and all_passed
+	all_passed = _check("the audit opens a fraction of the project, not all of it (%d of the scripts walked)" % [
+		sheets_opened], sheets_opened > 0 and sheets_opened <= DOCTOR_MAX_SHEETS_OPENED, true) and all_passed
 	for finding: Dictionary in (report.get("findings", []) as Array):
 		if str(finding.get("severity")) == "error":
 			print("  doctor error: %s - %s" % [str(finding.get("path")), str(finding.get("message"))])

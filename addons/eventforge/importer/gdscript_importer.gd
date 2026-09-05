@@ -26,10 +26,22 @@ func import_script(script_path: String) -> EventSheetResource:
 ## exactly (guarded by golden round-trip tests).
 
 
+## How many times a file has been put through the external importer this process, counted for one
+## reason: opening a script as a sheet is the most expensive thing the Project Doctor does, and the
+## audit's whole performance story is that it does it ONCE PER FILE. A wall-clock budget cannot tell
+## a lost share from a slow machine, so the audit reports this count beside the number of distinct
+## files it opened and the suite pins the two as equal. DIAGNOSTIC ONLY - nothing reads it to decide
+## anything, and no emitted byte depends on it.
+static var external_imports: int = 0
+
+
 ## lift=false stops after the raw line pass: rows and verbatim code blocks, no ACE-level lifting.
 ## That pass is effectively instant on any real file, so the editor can paint a readable sheet the
 ## moment a .gd is opened and run the (much slower) lift behind it - see EventSheetOpenJob.
 func import_external(script_path: String, lift: bool = true) -> EventSheetResource:
+	# Counted before the guard, so the number is CALLS rather than successes - a caller that asks
+	# twice for a file that is not there has still asked twice, which is the thing being measured.
+	external_imports += 1
 	if not FileAccess.file_exists(script_path):
 		return null
 	# The path is handed DOWN rather than stamped on the way out: the lifter needs it while it runs, to

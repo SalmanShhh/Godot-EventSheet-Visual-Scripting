@@ -82,6 +82,10 @@ static func run() -> Dictionary:
 	# thing that runs there.
 	EventSheetSceneCollisionFacts.clear_cache()
 	_run_in_progress = true
+	# Where this audit's time goes is one number: how many scripts it opens as sheets. Read here and
+	# again at the end so the report can say whether every one of them was opened ONCE - see the
+	# `sheets_opened` / `importer_calls` pair below.
+	var importer_calls_before: int = GDScriptImporter.external_imports
 	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
@@ -242,6 +246,13 @@ static func run() -> Dictionary:
 	# The report is complete, so the texts the checks shared are dead weight - a dock that ran the
 	# audit once should not carry the project's source for the rest of the session.
 	_run_in_progress = false
+	# Counted BEFORE the caches are dropped, because the cache IS the count: one entry per distinct
+	# script this audit opened as a sheet, null results included. Against it, how many times the
+	# importer was actually asked. Equal means every script was opened once, which is the whole of
+	# this audit's performance story; a difference is a section that went round the sharing. The
+	# suite pins them as equal, and that pin costs no wall clock and so cannot flap on a slow runner.
+	var sheets_opened: int = _sheet_cache.size()
+	var importer_calls: int = GDScriptImporter.external_imports - importer_calls_before
 	_source_cache.clear()
 	_sheet_cache.clear()
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
@@ -253,6 +264,10 @@ static func run() -> Dictionary:
 		"errors": int(counts["error"]),
 		"warnings": int(counts["warning"]),
 		"infos": int(counts["info"]),
+		# Additive and diagnostic: the four keys above are what every runner reads, and these two are
+		# for the suite's cost pins. Nothing decides anything by them.
+		"sheets_opened": sheets_opened,
+		"importer_calls": importer_calls,
 	}
 
 
@@ -1230,6 +1245,11 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 ## decides whether the emitted handler is a coroutine at all, and the row builder's `action_awaits`
 ## draws the hourglass on the canvas. Adding a row to two of them and not the third is the failure
 ## this comment exists to stop.
+##
+## THE LIST IS FOR ONE CASE ONLY: a LIFTED builtin action, which carries its ace_id and no baked
+## template (the template re-resolves at emit). Every other awaiting row is already answered by the
+## template beside the id, because all three readers ask the template first - so a pack verb, a
+## custom ACE and a row a picker applied never belong here, and adding one buys nothing.
 const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget", "ViewSaveStill", "tween_along_and_wait", "play_and_wait"]
 
 
