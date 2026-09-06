@@ -90,32 +90,15 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 
 ## Current status
 
-The latest tagged release, **`v0.18.0` - "Refactor Anything, Render Anything & Feel Everything"**, is about changing a project without fear, saying what the whole world looks like in words, and making a hit feel like something ([CHANGELOG](CHANGELOG.md) has the full story):
+The latest tagged release is **`v0.18.0` - "Refactor Anything, Render Anything & Feel Everything"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.18.0), [CHANGELOG](CHANGELOG.md) for the full ledger). In one screen:
 
-- **The resting toolbar** - the top strip went from 21 interactive controls over 137 commands to seven that never wrap: one Menu, three icons, one play button holding every way to run, Quick add, a chevron. Nothing was removed, every key is unchanged, and adding moved to the sheet's own corners. ([guide](docs/GUIDE-THE-TOOLBAR.md))
-- **The readability program** - every pack, script and scene opens in the sheet's own words, down to the long tail: patterns, match rows, the Hierarchy, and the 3D words.
-- **The sheet's own chrome** - variable rows with their compiled echo, one Compare dialog, the Properties bar, Saved Views, Workspaces, Sheet ▸ Export.
-- **Working with the running game** - one debugger with four tabs, runtime errors landed on their row, the Scene dock and sheet sharing one selection.
-- **The editor-tool family** - all fifteen shapes Godot can be extended in, each a starter sheet - and the editor reading its own source.
-- **Adopting a project you did not start** - the foreign-sheet importer, the tidiness sweep, one-click fixes.
-- **Genre kits and accessibility** - pity, stealth noise, boss phases, mission clocks; reduced motion, dyslexia-friendly text, a no-flashing dial.
-- **Playing together** - Godot's high-level multiplayer in sentences, byte-exact both ways, with the four silent networking mistakes caught by the Doctor.
-- **Lighting, effects and collisions** - the light and the shader dial are the OBJECT; layers speak the project's own names; the Doctor knows the silent ways each does nothing.
-- **The API is the vocabulary** - ordinary calls and property writes on known classes read as rows with zero authoring; curated tables upgrade them in place.
-- **Files, and what a game may trust** - `user://` vs `res://` taught at the path field, guards written into the emitted line, user content arriving as data, never code.
-- **An object's own state is a variable** - Declare states…, Is in / Go to / On entering, the live band and the Trail; the hand-written `match state:` machine opens as rows byte-exact. ([guide](docs/GUIDE-STATES.md))
-- **Scenes, in the engine's own words** - layouts on top of the running game, `%name` as a word, 3D spawning, the tree's join/leave announcements, saving what a player built behind a data-only trust check, and undoable editor-tool edits. ([guide](docs/GUIDE-SCENES.md))
-- **The refactor contract** - a moved verb carries a forwarding address, the head counts the rows that have one, and Migrate… shows every rewrite in both languages before proving each one twice. Renames list what they touch first; a pack update is a proposal with a tri-list; a merge's doubled local and half-finished file are named rather than met at runtime. ([guide](docs/GUIDE-UPDATING-AND-REFACTORING.md))
-- **Autocomplete everywhere** - one seam, one popup, every name field; Quick add reads a whole typed sentence.
-- **Render anything** - twenty-one words for the world's look on any `WorldEnvironment`, the sky, the surface and the lens; the Camera shelf finished in 2D and 3D; twenty blend modes as one row; a post stack with looks saved from the live game; a chromatic shake beside the kick that stays.
-- **Stroke, cap and dash** - seven shape nodes drawn through one distance-field shader, crisp at any zoom, and the Inspector that goes with them: a unit drawer where the number never moves, lists as cards, show-if groups, a handle you can drag.
-- **Beat, bump and broadcast** - the **Feedback Player**, a node whose Inspector is a list of cards and every gesture in it a row by label; a **Moment** block plays a whole beat by name; shakers on groups, springs on any property, zero frame time when nothing plays.
-- **Clock, wound and chorus** - named cooldowns, countdowns and stopwatches; the clock a pause holds; music that follows the game, prompts and speech; ownership and what a wound leaves behind; **Targeting** in 2D and 3D; tilemaps you can ask what they are made of; a whole wave in one row; a seeded grid that walks itself into a level.
-- **A starting value says which kind it is** - `default_word:` and `default_code:` beside `default:`, every pack's default rows compiled in their host as a gate, and the Doctor told which folders are yours.
+- **Refactor anything** - a moved verb carries a forwarding address and Migrate… proves every rewrite twice; renames list what they touch first; a pack update is a proposal; an object's states are a variable (Declare states…, Is in / Go to / On entering, a live band, the Trail), and a hand-written `match state:` machine opens as those rows byte-exact. ([refactoring](docs/GUIDE-UPDATING-AND-REFACTORING.md), [states](docs/GUIDE-STATES.md))
+- **Render anything** - the environment, sky, surface and lens in words; the Camera shelf finished in 2D and 3D; the light and the shader dial as the object; twenty blend modes as one row; a post stack with looks saved from the live game; seven distance-field shape nodes crisp at any zoom, with an Inspector of unit drawers, card lists, show-if groups and draggable handles.
+- **Feel everything** - the **Feedback Player**, a node whose Inspector is a list of cards and every gesture a row by label, and the **Moment** block that plays a whole beat by name; named cooldowns and countdowns, music that follows the game, ownership and wounds, **Targeting** in 2D and 3D, tilemap questions, a whole wave in one row, a seeded grid that walks itself into a level.
+- **Scenes, files and playing together** - layouts on top of the running game, `%name` as a word, 3D spawning, saving what a player built behind a data-only trust check; `user://` vs `res://` taught at the path field and user content arriving as data, never code; Godot's high-level multiplayer in sentences, byte-exact both ways, with the silent networking, lighting and collision mistakes caught by the Doctor. ([scenes](docs/GUIDE-SCENES.md))
+- **The editor** - the resting toolbar (seven controls that never wrap, nothing removed), autocomplete in every name field, one debugger with four tabs, the Manual docked beside the sheet, all fifteen editor-tool shapes as starter sheets, and the API as vocabulary: ordinary calls and property writes on known classes read as rows with zero authoring. ([toolbar](docs/GUIDE-THE-TOOLBAR.md))
 
-**Performance, measured** - on a fabricated project ten times this one (1,000 scripts, 300 scenes, 100 shaders, every pack installed): enabling the plugin costs **270 ms**, the first sheet tab **2,310 ms**, one keystroke in a completing field **2.2 ms**, and a 4,000-line script opens in **7.4 s**; eleven such budgets are tests.
-
-**The editor reads itself** - the plugin's own source opens as event sheets: **1,089 files, 1,087 of them at zero script blocks, and 89.9% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
+**Measured** - on a fabricated project ten times this one (1,000 scripts, 300 scenes, 100 shaders, every pack installed): enabling the plugin costs **270 ms**, the first sheet tab **2,310 ms**, one keystroke in a completing field **2.2 ms**, a 4,000-line script opens in **7.4 s**, and eleven such budgets are tests. The plugin's own source opens as event sheets: **1,089 files, 1,087 of them at zero script blocks, and 89.9% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
 
 **Quality** - 27,176 assertions across 806 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
 
@@ -136,7 +119,7 @@ Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line theme
 | `v0.15.0` | Save anything: the save-state seam on 18 packs, six formats, the Save Studio, the player-or-AI input seam, BBCode comments |
 | `v0.16.0` | Open anything, publish anything: nine editor languages, the Custom Resource wizard, `publish_pack`, the reads-like-code pass, 88 raycasting verbs + two labs, the curation pass |
 | `v0.17.0` | Adopt anything, read anything: real `.gd` files open as rows byte-exact, your classes as vocabulary, Construct-style reading, the pattern / dev-experience / i18n waves, docs inside the editor |
-| `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, files and multiplayer, the resting toolbar, the Manual, the render vocabulary, shapes and the Inspector, the Feedback Player, the gameplay systems |
+| `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, the render vocabulary and shape nodes, the Feedback Player, the gameplay systems, the resting toolbar and the Manual |
 | _Next_ | Whatever you ask for |
 
 ## Project layout
