@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.18.0] - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
 ### Maintenance: what a commit from this wave carries
 

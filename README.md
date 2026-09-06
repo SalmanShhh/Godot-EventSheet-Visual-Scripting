@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (20,791 CI-gated assertions across 725 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (27,176 CI-gated assertions across 806 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -90,7 +90,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 
 ## Current status
 
-The latest tagged release is **`v0.17.0` - "Adopt Anything, Read Anything & Ask Why"**. Since then, on `main` and heading for the next tag ([CHANGELOG](CHANGELOG.md) has the full story):
+The latest tagged release, **`v0.18.0` - "Refactor Anything, Render Anything & Feel Everything"**, is about changing a project without fear, saying what the whole world looks like in words, and making a hit feel like something ([CHANGELOG](CHANGELOG.md) has the full story):
 
 - **The resting toolbar** - the top strip went from 21 interactive controls over 137 commands to seven that never wrap: one Menu, three icons, one play button holding every way to run, Quick add, a chevron. Nothing was removed, every key is unchanged, and adding moved to the sheet's own corners. ([guide](docs/GUIDE-THE-TOOLBAR.md))
 - **The readability program** - every pack, script and scene opens in the sheet's own words, down to the long tail: patterns, match rows, the Hierarchy, and the 3D words.
@@ -107,12 +107,17 @@ The latest tagged release is **`v0.17.0` - "Adopt Anything, Read Anything & Ask 
 - **Scenes, in the engine's own words** - layouts on top of the running game, `%name` as a word, 3D spawning, the tree's join/leave announcements, saving what a player built behind a data-only trust check, and undoable editor-tool edits. ([guide](docs/GUIDE-SCENES.md))
 - **The refactor contract** - a moved verb carries a forwarding address, the head counts the rows that have one, and Migrate… shows every rewrite in both languages before proving each one twice. Renames list what they touch first; a pack update is a proposal with a tri-list; a merge's doubled local and half-finished file are named rather than met at runtime. ([guide](docs/GUIDE-UPDATING-AND-REFACTORING.md))
 - **Autocomplete everywhere** - one seam, one popup, every name field; Quick add reads a whole typed sentence.
+- **Render anything** - twenty-one words for the world's look on any `WorldEnvironment`, the sky, the surface and the lens; the Camera shelf finished in 2D and 3D; twenty blend modes as one row; a post stack with looks saved from the live game; a chromatic shake beside the kick that stays.
+- **Stroke, cap and dash** - seven shape nodes drawn through one distance-field shader, crisp at any zoom, and the Inspector that goes with them: a unit drawer where the number never moves, lists as cards, show-if groups, a handle you can drag.
+- **Beat, bump and broadcast** - the **Feedback Player**, a node whose Inspector is a list of cards and every gesture in it a row by label; a **Moment** block plays a whole beat by name; shakers on groups, springs on any property, zero frame time when nothing plays.
+- **Clock, wound and chorus** - named cooldowns, countdowns and stopwatches; the clock a pause holds; music that follows the game, prompts and speech; ownership and what a wound leaves behind; **Targeting** in 2D and 3D; tilemaps you can ask what they are made of; a whole wave in one row; a seeded grid that walks itself into a level.
+- **A starting value says which kind it is** - `default_word:` and `default_code:` beside `default:`, every pack's default rows compiled in their host as a gate, and the Doctor told which folders are yours.
 
 **Performance, measured** - on a fabricated project ten times this one (1,000 scripts, 300 scenes, 100 shaders, every pack installed): enabling the plugin costs **270 ms**, the first sheet tab **2,310 ms**, one keystroke in a completing field **2.2 ms**, and a 4,000-line script opens in **7.4 s**; eleven such budgets are tests.
 
 **The editor reads itself** - the plugin's own source opens as event sheets: **1,089 files, 1,087 of them at zero script blocks, and 89.9% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
 
-**Quality** - 20,791 assertions across 725 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
+**Quality** - 27,176 assertions across 806 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
 
 ## Milestones
 
@@ -131,7 +136,8 @@ Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line theme
 | `v0.15.0` | Save anything: the save-state seam on 18 packs, six formats, the Save Studio, the player-or-AI input seam, BBCode comments |
 | `v0.16.0` | Open anything, publish anything: nine editor languages, the Custom Resource wizard, `publish_pack`, the reads-like-code pass, 88 raycasting verbs + two labs, the curation pass |
 | `v0.17.0` | Adopt anything, read anything: real `.gd` files open as rows byte-exact, your classes as vocabulary, Construct-style reading, the pattern / dev-experience / i18n waves, docs inside the editor |
-| _Next_ | Everything under **Current status** above - all on `main` now; then whatever you ask for |
+| `v0.18.0` | Refactor anything, render anything, feel everything: the refactor contract, states and scenes as rows, files and multiplayer, the resting toolbar, the Manual, the render vocabulary, shapes and the Inspector, the Feedback Player, the gameplay systems |
+| _Next_ | Whatever you ask for |
 
 ## Project layout
 

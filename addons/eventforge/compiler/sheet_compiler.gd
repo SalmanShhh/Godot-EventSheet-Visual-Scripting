@@ -34,7 +34,7 @@ const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
 ## same reason the two above are.
 const SpecText := preload("res://addons/eventforge/registration/annotation_spec_text.gd")
 
-const VERSION: String = "0.17.0"
+const VERSION: String = "0.18.0"
 
 ## The prefix EVERY shared helper this compiler writes carries. They are the compiler's own plumbing -
 ## one definition per file, appended last, never something anybody sat down and wrote - so a reader

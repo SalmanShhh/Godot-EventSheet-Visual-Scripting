@@ -2,9 +2,9 @@
 {
 "markdown": "# What's new
 
-What changed in the build you have installed (v0.17.0), in the words the release notes use. Older releases live in the project's own CHANGELOG.
+What changed in the build you have installed (v0.18.0), in the words the release notes use. Older releases live in the project's own CHANGELOG.
 
-## Unreleased
+## 0.18.0 - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
 ### Fixed: a starting value that read back as something else
 
