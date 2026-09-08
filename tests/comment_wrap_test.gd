@@ -4,7 +4,8 @@
 # comment line word-wraps to the available width and the row reserves enough height for the
 # wrapped text, so the whole note is readable at any zoom (the wrap is computed in logical
 # pixels, which zoom scales uniformly). This pins: the pure wrap-count math, and that a long
-# comment row ends up taller than a short one (it actually wrapped through the layout).
+# comment row ends up taller than a short one (it actually wrapped through the layout), and that
+# the note stops where the echo of the line it writes begins.
 @tool
 class_name CommentWrapTest
 extends RefCounted
@@ -59,9 +60,37 @@ static func run() -> bool:
 			break
 	all_passed = _check("the comment span is flagged for wrapped drawing", wrapped_flagged, true) and all_passed
 	all_passed = _check("layout reports the wrapped row height", float(layout.get("row_height", 0.0)) > short_height, true) and all_passed
+
+	# ...and it wraps BESIDE the echo of the line it writes, never through it. The echo is the
+	# note's own words with a marker in front, so a note long enough to reach it used to be
+	# drawn straight over the top: two long texts on one line, neither of them readable.
+	var note_span: SemanticSpan = _span_of_kind(long_row, false)
+	var echo_span: SemanticSpan = _span_of_kind(long_row, true)
+	all_passed = _check("the long note has both its words and its echo",
+		[note_span != null, echo_span != null], [true, true]) and all_passed
+	if note_span != null and echo_span != null:
+		all_passed = _check("the note stops where the echo starts",
+			note_span.rect.intersects(echo_span.rect), false) and all_passed
+		all_passed = _check("and the echo stays inside the row",
+			echo_span.rect.end.x <= viewport._get_logical_canvas_width(), true) and all_passed
 	editor.free()
 
 	return all_passed
+
+
+## The row's own words, or the echo of the line it writes - told apart by the flag the layout
+## lays each of them out under rather than by their position, which is the thing being pinned.
+static func _span_of_kind(row_data: EventRowData, wanted_echo: bool) -> SemanticSpan:
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var is_echo: bool = bool(metadata.get("code_echo", false))
+		if wanted_echo and is_echo:
+			return span
+		if not wanted_echo and not is_echo and str(metadata.get("edit_kind", "")) == "comment_text":
+			return span
+	return null
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -151,7 +151,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var flow_right_anchor: float = _flow_right_anchor(row_data, row_right_limit, width, font, font_size) \
 		if lane_divider_x <= 0.0 else row_right_limit
 	var flow_right_x: float = flow_right_anchor
-	var comment_wrap_width: float = _viewport._row_metrics_helper._comment_wrap_width(row_data.indent, width) if is_comment_row else 0.0
+	var comment_wrap_width: float = _viewport._row_metrics_helper._comment_wrap_width(
+			row_data.indent, width, flow_right_anchor) if is_comment_row else 0.0
 	var comment_line_tops: Array[int] = []
 	var comment_line_counts: Array[int] = []
 	if is_comment_row:
@@ -282,17 +283,25 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				else:
 					span_width = max(min(span_width, max_action_width), 1.0)
 		elif is_comment_row and _is_comment_text_span(span):
-			# A comment fills to the row's right padding (event-sheet banner), not just its text
-			# width, so the whole row reads as one solid note band. Its chrome - the paragraph mark
-			# and the echo - keeps its measured size and falls through to the branches below, or the
-			# mark alone would take the whole band and the words would have nowhere to draw.
-			span_width = max(row_right_limit - span_x - 2.0, 1.0)
+			# A comment fills the row (event-sheet banner), not just its text width, so the whole
+			# row reads as one solid note band. Its chrome - the paragraph mark and the echo -
+			# keeps its measured size and falls through to the branches below, or the mark alone
+			# would take the whole band and the words would have nowhere to draw.
+			#
+			# It fills to where the right-anchored run STARTS, not to the row's right padding: the
+			# echo beside a comment is that comment's own words with a marker in front, so a note
+			# long enough to reach the echo used to be drawn straight through it - two long texts
+			# on one line, neither readable. The wrapping is measured against the same edge.
+			span_width = max(flow_right_anchor - span_x - 2.0, 1.0)
 		elif bool(metadata.get("align_right", false)):
 			# A right-aligned span on a flow row (the variable row's code echo, a group head's counts
 			# and switch) rides the row's right padding at its measured size instead of following the
 			# sentence's cursor, taking its place in the right-anchored run.
-			span_width = max(min(span_width, row_right_limit - non_event_origin_x - 2.0), 1.0)
 			span_x = max(non_event_origin_x, flow_right_x)
+			# Clamped against its own start rather than the row's: with one right-aligned span the
+			# anchor already puts it flush with the edge and this changes nothing, but a run the
+			# anchor had to floor at half the row would otherwise be measured off the right edge.
+			span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
 			flow_right_x = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
 		else:
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,

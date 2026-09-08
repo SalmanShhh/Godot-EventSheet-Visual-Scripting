@@ -374,9 +374,15 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 	var line_height: float = _viewport._get_event_line_height(_viewport._get_font_size())
 	if row_data.spans.is_empty():
 		return float(maxi(row_data.line_count, 1)) * line_height
-	var wrap_width: float = _comment_wrap_width(row_data.indent, _viewport._get_logical_canvas_width())
 	var font: Font = _viewport._get_font()
 	var font_size: int = _viewport._get_font_size()
+	var canvas_width: float = _viewport._get_logical_canvas_width()
+	# The same right edge the layout lays the note out to - the start of the right-anchored run,
+	# which on a comment row is the echo of the line the row writes. Counted here too, or the
+	# height reserved would be for wrapping the drawing never does.
+	var wrap_width: float = _comment_wrap_width(row_data.indent, canvas_width,
+		_viewport._layout_builder._flow_right_anchor(row_data,
+			canvas_width - EventSheetPalette.ROW_HORIZONTAL_PADDING, canvas_width, font, font_size))
 	var total_lines: int = 0
 	for span in row_data.spans:
 		# The note's own LINES decide its height. The paragraph mark a documentation row leads with
@@ -403,8 +409,9 @@ func _comment_text_origin_x(indent: int) -> float:
 
 ## The pixel width comment text wraps inside: from the comment text origin to the row's right
 ## padding (the same right limit the layout clamps spans to). Floored at MIN_COMMENT_WRAP_WIDTH.
-func _comment_wrap_width(indent: int, width: float) -> float:
-	var right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
+func _comment_wrap_width(indent: int, width: float, right_edge: float = -1.0) -> float:
+	var right_limit: float = right_edge if right_edge >= 0.0 \
+		else width - EventSheetPalette.ROW_HORIZONTAL_PADDING
 	return max(right_limit - _comment_text_origin_x(indent) - 2.0, _viewport.MIN_COMMENT_WRAP_WIDTH)
 
 
