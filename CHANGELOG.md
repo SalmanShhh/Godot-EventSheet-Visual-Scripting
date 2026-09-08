@@ -100,6 +100,39 @@
   is picked. The sentence is said once, in the status bar. Dragging the bar into the right edge
   tucks it away behind a chevron, like the rail.
 
+### Added: the words grew from nouns to sentences
+
+- **The Words page has a preset row.** Menu > Tools > Words now opens on one dropdown that sets the
+  whole vocabulary at once: **Godot words** (the engine's own nouns and verbs), **Familiar words**
+  (the nouns table below it - the same thing View > Familiar Words has always switched), and
+  **Event-sheet-editor words** (those nouns *and* a handful of verbs). A fourth reading, *custom*,
+  is what the row says when the switches and the words you typed do not add up to one of the three;
+  it is a reading rather than a thing to pick. The row follows the switches rather than remembering
+  a choice of its own, so flipping Familiar Words from the View menu shows up here as the
+  vocabulary it actually produced, and the live preview under the table now renders a trigger and
+  an action as well as the nouns.
+- **A handful of verbs read in the other editor's sentence.** With the third preset on, a row says
+  *Create object* where Godot says *Spawn a copy of*, *is overlapping in family* where it says *is
+  touching*, *Set disabled* where a hand-written `set_process(false)` reads *Set Every tick (draw)
+  deactivated*, and a loop over a group reads *For each item in family "enemies"*. The picker's rows
+  carry both names at once - *Create object - Spawn A Copy* - so the Godot verb never disappears
+  from the place you pick it.
+- **Nothing is hidden and nothing moves.** An alias is display text: the ace_id, the codegen
+  template, the emitted GDScript and every stored byte are untouched, the shipped wording is always
+  the "off" side, and the generated-code panel and the tooltips keep Godot's spelling whichever
+  vocabulary is on. Off is the default, and with it off the words seam hands a row back exactly the
+  text it was given - the reading gate is byte-identical either side of the change.
+- **The search answers to either name, whichever vocabulary is on.** Type *create object* and the
+  picker offers Spawn A Copy; type *overlapping* and it offers Is Touching Group. You never have to
+  know which words the editor is currently in to find the row you mean.
+- **The alias table is a drop-in CSV, not code.** `addons/eventsheet/words/verb_words.csv` ships the
+  words the plugin knows, in the same shape the nine translation files use - one row per alias, with
+  the key, the word, what it names, the shipped name and the shipped row's opening words. Any CSV
+  under `res://eventsheet_words/` is merged over it, so a team can re-word one alias, or add their
+  own, without touching a script and without losing it to a plugin update. A suite gate holds every
+  key to a shipped verb in the registry or a reading the editor composes, and every "off" side to
+  the shipped wording character for character.
+
 ## [0.18.0] - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
 ### Maintenance: what a commit from this wave carries
