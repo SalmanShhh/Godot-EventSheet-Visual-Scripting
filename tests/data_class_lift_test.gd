@@ -62,11 +62,13 @@ static func run() -> bool:
 	dock.setup(EventSheetResource.new())
 	dock._load_sheet_from_path(pack_path)
 	var view: EventSheetViewport = dock._active_view()
+	# Walked whole, not only on screen: an opened pack folds its script blocks away under Internal
+	# state, so the header is a row inside a closed band rather than a row of the sheet.
 	var class_row: EventRowData = null
 	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.source_resource is RawCodeRow and str(row_data.row_uid).begins_with("data_class_"):
-			class_row = row_data
+		var found: EventRowData = _data_class_row_in(entry.get("row"))
+		if found != null:
+			class_row = found
 	ok = _check("the pack shows a data class row", class_row != null, true) and ok
 	ok = _check("it collapses to one header line", class_row.line_count if class_row != null else -1, 1) and ok
 	# The header reads like a regular event row (no dimmed "Data class" pill): what the class IS in the
@@ -94,16 +96,36 @@ static func run() -> bool:
 	return ok
 
 
+static func _data_class_row_in(row_data: EventRowData) -> EventRowData:
+	if row_data == null:
+		return null
+	if row_data.source_resource is RawCodeRow and str(row_data.row_uid).begins_with("data_class_"):
+		return row_data
+	for child: EventRowData in row_data.children:
+		var found: EventRowData = _data_class_row_in(child)
+		if found != null:
+			return found
+	return null
+
+
 static func _has_class_span(view: EventSheetViewport) -> bool:
 	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data == null:
-			continue
-		for span: SemanticSpan in row_data.spans:
-			# The RAW form is `class AbilityData:` (with the colon); the lifted header reads `class
-			# AbilityData` (no colon) in the condition cell, so it is not a raw block.
-			if str(span.text).begins_with("class AbilityData:"):
-				return true
+		if _has_class_span_in(entry.get("row")):
+			return true
+	return false
+
+
+static func _has_class_span_in(row_data: EventRowData) -> bool:
+	if row_data == null:
+		return false
+	for span: SemanticSpan in row_data.spans:
+		# The RAW form is `class AbilityData:` (with the colon); the lifted header reads `class
+		# AbilityData` (no colon) in the condition cell, so it is not a raw block.
+		if str(span.text).begins_with("class AbilityData:"):
+			return true
+	for child: EventRowData in row_data.children:
+		if _has_class_span_in(child):
+			return true
 	return false
 
 

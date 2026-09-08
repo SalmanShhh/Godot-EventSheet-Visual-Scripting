@@ -7241,3 +7241,4 @@ Start ticking,ティック開始
 Stop ticking,ティック停止
 Start physics ticking,物理ティック開始
 Stop physics ticking,物理ティック停止
+fired by %s,%s から発火

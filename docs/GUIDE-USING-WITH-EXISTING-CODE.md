@@ -592,7 +592,7 @@ That is the order this section is in.
   | Band | What is in it |
   | --- | --- |
   | **Settings** | The `@export` knobs, the ones the Inspector shows. Open. |
-  | **Verbs** | Every published function as its own block - `ƒ Flash  seconds  action` - then the triggers the pack fires. Open. |
+  | **Verbs** | Every published function as its own block - `ƒ Flash  seconds  action` - then the triggers the pack fires, each naming what fires it (`emits jumped  fired by Jump`). Open. |
   | **How it works** | The lifecycle and tick events, and the pack's own Helpers folder. Folded. |
   | **Internal state** | The private variables, the constants and the script blocks. Folded. |
 

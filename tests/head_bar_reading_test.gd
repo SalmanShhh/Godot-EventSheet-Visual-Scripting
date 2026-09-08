@@ -56,13 +56,18 @@ static func _one_bar_for_a_showcase() -> bool:
 
 ## A shipped pack's head: the same bar, with the pack's own Include bar, its `@icon` and its host
 ## binding among the lines it folds.
+##
+## A PACK is the one file whose variable folders leave that fold: they read on the sheet as the
+## pack's Settings and its Internal state. The bar's variable count leaves with them, because every
+## fact on that line is COUNTED FROM the bar it folds and a bar that folds them no longer would be
+## claiming somebody else's rows.
 static func _one_bar_for_a_pack() -> bool:
 	var head: Array = _head_rows(PACK)
 	return SUPPORT.pins(P, [
 		["flash head bar", _words_of(head[0]),
-			"▣ FlashBehavior extends Node · reads as events · 11 variables"],
+			"▣ FlashBehavior extends Node · reads as events"],
 		["flash head bar folds the bars it stands for", _child_uids(head[0]),
-			"sheet_head_name, sheet_head_extends, sheet_head_icon, sheet_head_host, pack_include_bar, pack_internal_state"],
+			"sheet_head_name, sheet_head_extends, sheet_head_icon, sheet_head_host, pack_include_bar"],
 	])
 
 

@@ -1,11 +1,13 @@
 # EventForge - a pack opened as a sheet READS like an event sheet.
 #
 # Three things are pinned here, all of them pure view state over an unchanged .gd:
-#   A published verb reads as a TRIGGER: its name and input chips sit in the CONDITION lane -
-#       `ƒ Functions ▸ On <name>  chips` - because "when does this run?" is answered by "when it is
-#       called". The kind stays a muted word for a condition/expression verb; no category chip, no ★,
-#       no "gives back", no description caption. A BBCode display name draws styled, never as raw tags.
-#       Its picker metadata answers in the ACE properties panel instead (EventSheetVerbProperties).
+#   A published verb reads as THE VERB THE PICKER OFFERS: its name and input chips sit in the
+#       CONDITION lane - `ƒ <name>  chips  <kind>` - with no "On" in front of it, because a verb is
+#       not a trigger and the picker offers it by name. The kind is a muted word beside it; no
+#       category chip, no ★, no "gives back", no description caption. A BBCode display name draws
+#       styled, never as raw tags. Its picker metadata answers in the ACE properties panel instead
+#       (EventSheetVerbProperties). An unpublished helper is a function this file calls, so it keeps
+#       the arrival word: `ƒ On <name>`.
 #   Unpublished helpers are the SAME Function block (no "internal" badge) with their doc comment
 #       as the right-lane caption, gathered under one closed "Helpers" bar - only in a read-only
 #       preview, and only as a re-parenting of already-built rows.
@@ -37,13 +39,13 @@ static func run() -> bool:
 	# ── the header IS [ƒ, name, input chips] ──────
 	var action_row: EventRowData = _row_by_uid(view, "define_fn_take_damage")
 	ok = _check("a published verb's header reads as a Function block",
-		_span_texts(action_row), PackedStringArray(["ƒ", "On Take damage", "amount"])) and ok
+		_span_texts(action_row), PackedStringArray(["ƒ", "Take damage", "amount", "action"])) and ok
 	var condition_row: EventRowData = _row_by_uid(view, "define_fn_is_dead")
 	ok = _check("a condition verb says its kind as a muted word",
-		_span_texts(condition_row), PackedStringArray(["ƒ", "On Is Dead", "condition"])) and ok
+		_span_texts(condition_row), PackedStringArray(["ƒ", "Is Dead", "condition"])) and ok
 	var expression_row: EventRowData = _row_by_uid(view, "define_fn_health_percent")
 	ok = _check("an expression verb says its kind the same way",
-		_span_texts(expression_row), PackedStringArray(["ƒ", "On Health %", "expression"])) and ok
+		_span_texts(expression_row), PackedStringArray(["ƒ", "Health %", "expression"])) and ok
 	ok = _check("no verb row prints a BBCode tag", _any_span_contains(view, "[b]"), false) and ok
 	ok = _check("no row anywhere prints an @ace_ annotation line", _any_span_contains(view, "@ace_"), false) and ok
 	ok = _check("the styled name keeps its emphasis as parsed segments (not as tags)",
@@ -202,11 +204,25 @@ static func _find_function(sheet: EventSheetResource, fn_name: String) -> EventF
 	return null
 
 
+## Walks the WHOLE tree, not only what is on screen: a pack's reading folds its machinery away, so a
+## bar this test asks about may well be inside a closed band.
 static func _row_by_uid(view: EventSheetViewport, prefix: String) -> EventRowData:
 	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.row_uid.begins_with(prefix):
-			return row_data
+		var found: EventRowData = _find_by_uid(entry.get("row"), prefix)
+		if found != null:
+			return found
+	return null
+
+
+static func _find_by_uid(row_data: EventRowData, prefix: String) -> EventRowData:
+	if row_data == null:
+		return null
+	if row_data.row_uid.begins_with(prefix):
+		return row_data
+	for child: EventRowData in row_data.children:
+		var found: EventRowData = _find_by_uid(child, prefix)
+		if found != null:
+			return found
 	return null
 
 

@@ -175,11 +175,25 @@ static func _diff_is(before: String, after: String, old_line: String, new_line: 
 
 static func _find_data_class_row(view: EventSheetViewport) -> EventRowData:
 	# The data-class header row keeps its RawCodeRow as source and a class-name-keyed row_uid; its field
-	# children are inert (null source). This finds the header without depending on its span text.
+	# children are inert (null source). This finds the header without depending on its span text, and
+	# walks the whole tree: an opened pack folds its script blocks away under Internal state, so the
+	# header is a row inside a closed band rather than a row of the sheet.
 	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.source_resource is RawCodeRow and str(row_data.row_uid).begins_with("data_class_"):
-			return row_data
+		var found: EventRowData = _data_class_row_in(entry.get("row"))
+		if found != null:
+			return found
+	return null
+
+
+static func _data_class_row_in(row_data: EventRowData) -> EventRowData:
+	if row_data == null:
+		return null
+	if row_data.source_resource is RawCodeRow and str(row_data.row_uid).begins_with("data_class_"):
+		return row_data
+	for child: EventRowData in row_data.children:
+		var found: EventRowData = _data_class_row_in(child)
+		if found != null:
+			return found
 	return null
 
 

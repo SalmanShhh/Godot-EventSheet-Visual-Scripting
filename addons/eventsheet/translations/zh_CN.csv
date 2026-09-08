@@ -7241,3 +7241,4 @@ Start ticking,开始每帧运行
 Stop ticking,停止每帧运行
 Start physics ticking,开始物理每帧运行
 Stop physics ticking,停止物理每帧运行
+fired by %s,由 %s 触发

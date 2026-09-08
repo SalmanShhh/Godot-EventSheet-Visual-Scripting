@@ -71,6 +71,7 @@ const PACK_HEAD_BAR_UID_PREFIX := "sheet_head_bar_"
 const PACK_TRIGGERS_UID_PREFIX := "pack_triggers_"
 const PACK_HELPERS_UID_PREFIX := "helpers_group_"
 const PACK_SETTINGS_UID_PREFIX := "pack_settings"
+const PACK_SETTINGS_BAR_UID_PREFIX := "pack_settings_bar"
 const PACK_STATE_UID_PREFIX := "pack_internal_state"
 const PACK_VERBS_UID_PREFIX := "pack_verbs"
 
@@ -1129,8 +1130,27 @@ func _pack_host_guard_index(event_row: EventRow, trigger_lines: int) -> int:
 ## whose file draws its own structure with `#region` fences - an author who grouped the file has
 ## said where things go, and a second grouping over the top would be arguing with them.
 ## Returns the root list to use (the caller assigns it back).
+## Whether the four bands may be gathered over this list at all, asked before a single row moves.
+## Two shapes are refused: a pack with no published verb, which has no face to open on, and a file
+## that draws its own structure with `#region` fences, whose author has already said where things go.
+func _pack_reading_applies(rows: Array[EventRowData]) -> bool:
+	var publishes: bool = false
+	for row_data: EventRowData in rows:
+		if _is_region_row(row_data):
+			return false
+		var verb: EventFunction = row_data.source_resource as EventFunction
+		if verb != null and verb.expose_as_ace:
+			publishes = true
+	return publishes
+
+
 func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null or rows.is_empty() or not _is_read_only_pack():
+		return rows
+	# Both refusals are decided BEFORE anything moves. The walk below re-parents rows and rewrites
+	# the head bar's own line as it goes, so a refusal discovered half way through would leave the
+	# sheet in neither shape.
+	if not _pack_reading_applies(rows):
 		return rows
 	var lead: Array[EventRowData] = []
 	var settings: Array[EventRowData] = []
@@ -1145,8 +1165,6 @@ func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) 
 	# with the rest of the internal state instead of jumping over the verbs to the top.
 	var body_seen: bool = false
 	for row_data: EventRowData in rows:
-		if _is_region_row(row_data):
-			return rows
 		var uid: String = row_data.row_uid
 		if uid.begins_with(PACK_HEAD_BAR_UID_PREFIX):
 			lead.append(row_data)
@@ -1179,13 +1197,15 @@ func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) 
 			internal.append(row_data)
 			continue
 		lead.append(row_data)
-	if verbs.is_empty():
-		return rows
 	var output: Array[EventRowData] = []
 	output.append_array(lead)
 	for bar: EventRowData in settings:
-		# The settings are what a reader opens a pack to change, so their folder opens with it.
-		bar.folded = bool(_viewport._fold_state.get(bar.row_uid, false))
+		# The pack's own settings folder opens with the pack: it is what a reader came to change.
+		# A folder the AUTHOR made with `@export_group` keeps its closed default, because a pack
+		# that sorted sixty knobs into eight groups has said they are to be browsed by group, and
+		# throwing all eight open would rebuild the wall this reading exists to take down.
+		if bar.row_uid.begins_with(PACK_SETTINGS_BAR_UID_PREFIX):
+			bar.folded = bool(_viewport._fold_state.get(bar.row_uid, false))
 		output.append(bar)
 	verbs.append_array(triggers)
 	for verb_row: EventRowData in verbs:
@@ -4656,11 +4676,118 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	# already says that. The lane stays empty rather than carrying a word with no other word to be.
 	if signal_row.trigger:
 		spans.append(_define_chip(EventSheetL10n.translate("emits %s") % signal_row.signal_name, chip_bg, chip_fg, 0, "signal_row"))
+		# Inside an opened pack the trigger stands beside the verbs, and the question a reader has
+		# there is not what it is called in code but WHEN it happens. Nothing in a signal
+		# declaration says that, so the answer is read off the file: the verbs and the events whose
+		# own rows emit it, named the way the sheet names them.
+		var fired_by: String = _pack_signal_sources(signal_row.signal_name)
+		if not fired_by.is_empty():
+			spans.append(_make_span(fired_by, SemanticSpan.SpanType.COMMENT, {
+				"editable": false,
+				"kind": "signal_row",
+				"lane": "action",
+				"line_index": 0,
+				"text_color": _viewport._get_reading_style().muted_text_color
+			}))
 	elif not script_trigger:
 		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, chip_fg.lerp(chip_bg, 0.45), 0, "signal_row"))
 	row_data.spans = spans
 	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
+
+
+## The ACE a row emits a signal with. Frozen: the id is the compatibility promise, the words are not.
+const EMIT_SIGNAL_ACE_ID := "EmitSignal"
+
+## How many sources a trigger row names before it starts counting them instead.
+const SIGNAL_SOURCES_NAMED: int = 3
+
+
+## "fired by Stop Flash · Every tick (draw)" - which of THIS FILE's verbs and events emit the named
+## signal, in file order, read straight off the rows. "" inside anything that is not a pack being
+## read, and "" when nothing in the file emits it, because a band says a fact or says nothing.
+##
+## A verb is named by the words the picker offers it under; an event by its trigger, which is the
+## only name an event has. Nothing outside this file is consulted: a signal another script emits on
+## this object is that script's fact, and claiming it here would be a guess.
+func _pack_signal_sources(signal_name: String) -> String:
+	var wanted: String = signal_name.strip_edges()
+	if wanted.is_empty() or not _is_read_only_pack():
+		return ""
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return ""
+	var sources: PackedStringArray = PackedStringArray()
+	for entry: Variant in sheet.events:
+		_collect_signal_sources(entry, wanted, "", sources)
+	for entry: Variant in sheet.functions:
+		var verb: EventFunction = entry as EventFunction
+		if verb == null:
+			continue
+		var verb_name: String = verb.ace_display_name.strip_edges()
+		if verb_name.is_empty():
+			verb_name = verb.function_name.capitalize()
+		for row: Variant in verb.events:
+			_collect_signal_sources(row, wanted, verb_name, sources)
+	if sources.is_empty():
+		return ""
+	var named: PackedStringArray = PackedStringArray()
+	for index in range(mini(sources.size(), SIGNAL_SOURCES_NAMED)):
+		named.append(sources[index])
+	var words: String = EventSheetL10n.translate("fired by %s") % " · ".join(named)
+	if sources.size() > SIGNAL_SOURCES_NAMED:
+		words += " · " + EventSheetL10n.translate("%d more") % (sources.size() - SIGNAL_SOURCES_NAMED)
+	return words
+
+
+## Which tick a trigger is, as the METHOD the sheet already has words for - so the trigger and the
+## switch that turns it on and off can never be named two different things.
+const TICK_TRIGGER_METHODS: Dictionary = {
+	"OnProcess": "set_process",
+	"OnPhysicsProcess": "set_physics_process"
+}
+
+
+## The words this sheet already uses for an event's trigger. Asked WITHOUT the row formatter, which
+## carries per-row styling state with it and would answer this question by spoiling the row being
+## built - so the two ticks read from the one table that holds the tick words, the lifecycle
+## triggers from the one that holds theirs, and anything neither names falls back to the trigger's
+## own friendly name. "" for an event with no trigger at all.
+func _event_trigger_words(event_row: EventRow) -> String:
+	var trigger_id: String = event_row.trigger_id.strip_edges()
+	if trigger_id.is_empty():
+		return ""
+	if TICK_TRIGGER_METHODS.has(trigger_id):
+		return EventSheetL10n.translate(str(EventSheetSentence.PROCESS_SWITCH_WORDS[
+			str(TICK_TRIGGER_METHODS[trigger_id])]))
+	var lifecycle: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
+		trigger_id, "", false, "")
+	if not lifecycle.is_empty():
+		return str(lifecycle.get("text", ""))
+	return _trigger_display_text(event_row.trigger_provider_id, trigger_id)
+
+
+## Walks one row and everything under it for an Emit Signal action naming `wanted`, appending the
+## name of whatever encloses it - the verb passed in, or this event's own trigger. Each source is
+## named once however many times it emits: a reader wants the list of places, not the count.
+func _collect_signal_sources(entry: Variant, wanted: String, verb_name: String,
+		sources: PackedStringArray) -> void:
+	var event_row: EventRow = entry as EventRow
+	if event_row == null:
+		return
+	var owner_name: String = verb_name
+	if owner_name.is_empty():
+		owner_name = _event_trigger_words(event_row)
+	for action: Variant in event_row.actions:
+		var ace: ACEAction = action as ACEAction
+		if ace == null or ace.ace_id != EMIT_SIGNAL_ACE_ID:
+			continue
+		if str(ace.params.get("signal_name", "")).strip_edges() != wanted:
+			continue
+		if not owner_name.is_empty() and not sources.has(owner_name):
+			sources.append(owner_name)
+	for sub_event: Variant in event_row.sub_events:
+		_collect_signal_sources(sub_event, wanted, owner_name, sources)
 
 
 ## True when this view is showing an ORDINARY script somebody opened - not a behavior pack, and not a

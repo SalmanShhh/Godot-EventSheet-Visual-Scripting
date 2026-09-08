@@ -52,7 +52,7 @@ static func run() -> bool:
 	var rows: Array = _all_rows(view)
 	ok = _check("the sheet opens on ONE head bar",
 		_texts(_row_at(rows, 0)),
-		"▣ | FPSController | extends | Node | · reads as events | · 5 input actions | · 62 variables") and ok
+		"▣ | FPSController | extends | Node | · reads as events | · 5 input actions") and ok
 	ok = _check("the bands are the bar's fold - one band per line of the file",
 		_band_kinds(rows), "name | extends | icon | host") and ok
 	ok = _check("a band states its line and echoes it",
@@ -83,21 +83,24 @@ static func run() -> bool:
 	# ── 3. The group bars, in file order, closed ──
 	ok = _check("the head bars read in file order, the folded ones first",
 		_head_bar_titles(rows),
-		"AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Weapon Feel | Instance variables | Triggers") and ok
-	var triggers_bar: EventRowData = _bar_titled(rows, "Triggers")
-	ok = _check("the Triggers bar says what it holds", _texts(triggers_bar), "Triggers | this pack fires - 11") and ok
-	ok = _check("its children are the pack's trigger rows", triggers_bar.children.size() if triggers_bar != null else -1, 11) and ok
-	ok = _check("the first trigger reads by its published name",
-		_texts(triggers_bar.children[0]) if triggers_bar != null and not triggers_bar.children.is_empty() else "",
-		"➜ | On Jumped | emits jumped") and ok
+		"AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Weapon Feel | Internal state") and ok
+	# A pack's triggers ARE part of the vocabulary it publishes - the picker lists them beside its
+	# actions - so they close the Verbs band rather than standing in a folder of their own.
+	var verbs_bar: EventRowData = _bar_titled(rows, "Verbs")
+	ok = _check("the pack's vocabulary reads under one Verbs bar", _texts(verbs_bar), "Verbs | 49 verbs") and ok
+	var trigger_rows: Array = _trigger_children(verbs_bar)
+	ok = _check("the triggers it fires close that band", trigger_rows.size(), 11) and ok
+	ok = _check("the first trigger reads by its published name, and says what fires it",
+		_texts(trigger_rows[0]) if not trigger_rows.is_empty() else "",
+		"➜ | On Jumped | emits jumped | fired by Jump") and ok
 	var jump_bar: EventRowData = _bar_titled(rows, "Jump")
 	ok = _check("a settings bar counts its knobs", _texts(jump_bar), "Jump | 3 settings") and ok
 	ok = _check("a settings bar is CLOSED on a preview", jump_bar != null and jump_bar.folded, true) and ok
 	ok = _check("its knobs are hidden while it is closed",
 		_has_variable_row(view.get_flat_rows(), "jump_velocity"), false) and ok
-	var internal_bar: EventRowData = _bar_titled(rows, "Instance variables")
-	ok = _check("the one variable folder gathers what the groups did not",
-		_texts(internal_bar), "Instance variables | of FPSController") and ok
+	var internal_bar: EventRowData = _bar_titled(rows, "Internal state")
+	ok = _check("what the settings groups did not claim is the pack's internal state",
+		_texts(internal_bar), "Internal state | 72") and ok
 	# The grouping rule Godot itself uses: an @export_group runs until the next one, so the knobs
 	# declared after it belong to it even though only the first one carries the attribute.
 	var camera_bar: EventRowData = _bar_titled(rows, "Camera")
@@ -123,7 +126,7 @@ static func run() -> bool:
 	# ── A verb reads as a trigger: its name in the condition lane, its first step beside it ──
 	var verb_header: EventRowData = _verb_row(rows, "define_fn_add_look")
 	ok = _check("a verb reads as the trigger it is, with its first step beside it",
-		_texts(verb_header), "ƒ | On Add Look | x | y | Set yaw to wrapf(yaw - x * Mouse Sensitivity, -180, 180) | Set pitch to pitch - y * Mouse Sensitivity kept between Pitch Min and Pitch Max | Sway reads the RAW look delta: a weapon lags behind how far the hands moved. | Set sway x to x | Set sway y to y") and ok
+		_texts(verb_header), "ƒ | Add Look | x | y | action | Set yaw to wrapf(yaw - x * Mouse Sensitivity, -180, 180) | Set pitch to pitch - y * Mouse Sensitivity kept between Pitch Min and Pitch Max | Sway reads the RAW look delta: a weapon lags behind how far the hands moved. | Set sway x to x | Set sway y to y") and ok
 	ok = _check("a verb with a step in its right lane is an ordinary two-lane event",
 		verb_header != null and not verb_header.full_width_lanes, true) and ok
 	# A verb whose first step asks a question of its own keeps that step as a row - only a step that
@@ -131,7 +134,7 @@ static func run() -> bool:
 	# still get the whole row rather than being squeezed into the condition track.
 	var guarded_verb: EventRowData = _verb_row(rows, "define_fn_do_jump")
 	ok = _check("a verb whose first step has a condition keeps that step as its own row",
-		_texts(guarded_verb), "ƒ | On Jump") and ok
+		_texts(guarded_verb), "ƒ | Jump | action") and ok
 	ok = _check("a verb with an empty right lane still spans both lanes",
 		guarded_verb != null and guarded_verb.full_width_lanes, true) and ok
 	var canvas_width: float = 1152.0
@@ -141,7 +144,7 @@ static func run() -> bool:
 			guarded_verb, canvas_width, view.get_lane_divider_x(canvas_width), float(style_tokens.condition_lane_padding)
 		) > view.get_lane_divider_x(canvas_width), true) and ok
 	# A row that DOES use its right lane keeps the split - the trigger rows say "emits <signal>" there.
-	var trigger_row: EventRowData = triggers_bar.children[0] if triggers_bar != null and not triggers_bar.children.is_empty() else null
+	var trigger_row: EventRowData = trigger_rows[0] if not trigger_rows.is_empty() else null
 	ok = _check("a row with something in its right lane keeps the two lanes",
 		trigger_row != null and not trigger_row.full_width_lanes, true) and ok
 
@@ -320,6 +323,17 @@ static func _head_bar_titles(rows: Array) -> String:
 				or row_data.row_uid.begins_with("pack_internal_state"):
 			titles.append(str(row_data.spans[0].text))
 	return " | ".join(titles)
+
+
+## The trigger rows a Verbs bar closes on - the signal rows among its members, in band order.
+static func _trigger_children(bar: EventRowData) -> Array:
+	var found: Array = []
+	if bar == null:
+		return found
+	for child: EventRowData in bar.children:
+		if child.row_uid.begins_with("signal_"):
+			found.append(child)
+	return found
 
 
 static func _bar_titled(rows: Array, title: String) -> EventRowData:

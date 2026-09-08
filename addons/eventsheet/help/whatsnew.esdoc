@@ -19,6 +19,9 @@ What changed in the build you have installed (v0.18.0), in the words the release
   answers a question or hands a value back. An authored
   display sentence is read whole (`ƒ Blink  pattern  for  seconds  s`) rather than repeated as
   input chips.
+- **A trigger says when it happens.** A pack's own signals close the Verbs band, and each one now
+  names the verbs and events of the same file that emit it - `emits jumped  fired by Jump` - read
+  off the rows rather than off the declaration, which says nothing about when anything fires.
 - **The plumbing reads in sheet words.** `set_process(true)` / `set_process(false)` are
   **Start ticking** and **Stop ticking**, with the physics tick named, and the host guard folds onto
   the tick's own line - `⟳ Every tick (draw)  host is valid`. Inside a pack the System object and

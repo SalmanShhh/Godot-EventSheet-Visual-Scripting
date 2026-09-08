@@ -7241,3 +7241,4 @@ Start ticking,Запустить тик
 Stop ticking,Остановить тик
 Start physics ticking,Запустить физический тик
 Stop physics ticking,Остановить физический тик
+fired by %s,вызывается %s
