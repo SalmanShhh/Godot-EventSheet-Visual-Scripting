@@ -6237,11 +6237,27 @@ func _retarget_variable_row(note_meta: Dictionary, to_ace_id: String) -> void:
 	})
 
 
-## The Inspector's "Instance variables · N" lands here: the open sheet's own object popup,
-## which is where the instance-variable table lives. Named on the dock (not reached through the
-## popup helper) because the plugin calls it by name from outside the editor.
+## The open sheet's own object popup, which is where the instance-variable table lives. Named on
+## the dock (not reached through the popup helper) because the plugin calls it by name from outside
+## the editor - it is where the Inspector's "+ Add instance variable" falls back to on a workspace
+## that predates the dialog door below.
 func open_instance_variables() -> void:
 	open_object_properties(EventSheetVariableOwners.owner_of_sheet(_current_sheet))
+
+
+## The Inspector's "+ Add instance variable": the sheet's own Add variable dialog, so a variable
+## born in the Inspector carries every field one born on the sheet does.
+func add_instance_variable() -> void:
+	if _ensure_sheet_for_editing():
+		_instance_variables.add_variable()
+
+
+## An initial value written from an Inspector instance-variable row. It goes through the table's one
+## write path, so the `var` / `const` line it produces is the line the sheet's own table produces,
+## every other byte of the file is untouched, and one undo step takes it back.
+func set_instance_variable_value(variable_name: String, value_text: String) -> void:
+	if _ensure_sheet_for_editing():
+		_instance_variables.set_value(variable_name, value_text)
 
 
 ## The four Hierarchy-pane gestures. Thin delegates so the pane, the canvas drop and any test

@@ -385,8 +385,12 @@ globals, then the locals in view:
   what picking it inserts ("Inserts Game.Score").
 - **The Anatomy rail** reads "Instance, of Player", "Globals used here, from Game" and "Locals in
   view", each line composed by the same call the rows make.
-- **The Inspector** carries **Instance variables · N** beside *Edit Event Sheet*, opening the same
-  table the sheet has, with a muted line under it naming the variables that are NOT in the Inspector.
+- **The Inspector** carries the variables themselves, under *Edit Event Sheet*: a band saying
+  **Instance variables · N** and one row per declared variable - name, type in plain words, initial
+  value, and a pencil that opens the sheet on the line that declares it. Typing a new initial value
+  writes that `var` / `const` line through the sheet's own undo funnel, so one Ctrl+Z takes it back
+  and every other byte of the file is untouched; **+ Add instance variable** opens the same Add
+  variable dialog the sheet uses.
 
 The two boolean verbs complete the family: **Set boolean** writes `{var_name} = {value}` with true
 and false already in the list, and **Is boolean set** asks `{var_name}` plainly instead of comparing

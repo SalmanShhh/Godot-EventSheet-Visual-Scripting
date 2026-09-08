@@ -125,7 +125,7 @@ func build_for(sheet: EventSheetResource) -> Control:
 			EventSheetL10n.translate("This object has no instance variables yet.")))
 	var add_button: Button = Button.new()
 	add_button.text = EventSheetL10n.translate("+ Add instance variable")
-	add_button.pressed.connect(func() -> void: _add_variable())
+	add_button.pressed.connect(func() -> void: add_variable())
 	column.add_child(add_button)
 	column.add_child(EventSheetPopupUI.hint_label(
 		EventSheetL10n.translate("Renaming here renames every use of the variable.")))
@@ -165,7 +165,7 @@ func _add_variable_line(grid: GridContainer, row: Dictionary) -> void:
 	value_edit.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(110.0), 0.0)
 	value_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_edit.tooltip_text = EventSheetL10n.translate("Enter applies. One undo step.")
-	value_edit.text_submitted.connect(func(text: String) -> void: _revalue(variable_name, text))
+	value_edit.text_submitted.connect(func(text: String) -> void: set_value(variable_name, text))
 	grid.add_child(value_edit)
 	var inspector_check: CheckBox = CheckBox.new()
 	inspector_check.button_pressed = bool(row.get("inspector", false))
@@ -209,7 +209,8 @@ func _toggle_description(variable_name: String) -> void:
 
 ## "+ Add instance variable" opens the Add variable dialog on the Instance scope, so one dialog
 ## still owns every field a new variable can carry (type, description, Inspector, the drawers).
-func _add_variable() -> void:
+## Public: the Inspector's own band offers the same link, and it must open the same dialog.
+func add_variable() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_dock._variable_dlg.open_for_edit(
@@ -231,11 +232,21 @@ func _retype(variable_name: String, type_name: String) -> void:
 	_dock._variables.retype_variable(variable_name, type_name)
 
 
-func _revalue(variable_name: String, text: String) -> void:
+## A new initial value, in the spelling the Add variable dialog writes back. Public for the same
+## reason add_variable is: the Inspector's rows write through this one path, never a second one.
+func set_value(variable_name: String, text: String) -> void:
 	var type_name: String = _type_name_of(variable_name)
 	var parsed: Variant = VariableDialog._parse_default(type_name, text)
 	_write(variable_name, "Set %s" % variable_name,
-		func(variable: LocalVariable) -> void: variable.default_value = parsed,
+		func(variable: LocalVariable) -> void:
+			# A variable whose default is SOURCE TEXT - the inferred spelling (`var mode := "idle"`),
+			# a bare expression (`Vector2.ZERO`), an @onready node path - emits its default exactly
+			# as it was written. Parsing that into a value would rewrite the line into a literal the
+			# author never typed, so the typed text is kept verbatim for those three.
+			if variable.expression_default or variable.inferred_type or variable.onready:
+				variable.default_value = text
+			else:
+				variable.default_value = parsed,
 		func(descriptor: Dictionary) -> void: descriptor["default"] = parsed)
 
 

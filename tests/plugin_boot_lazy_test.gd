@@ -60,6 +60,14 @@ const FORBIDDEN := {
 	"res://addons/eventforge/editor/sheet_edit_inspector_plugin.gd": [
 		"EventSheetProjectDoctor",
 	],
+	# The Inspector's "Instance variables" band. add_inspector_plugin takes an INSTANCE, so this
+	# file loads at every editor start too - and it draws a variable's TYPE in the sheet's own plain
+	# words, which is exactly the reading the row builder does. Naming the row builder for it would
+	# carry the whole reading layer into every session, so the words are spelled here and held to
+	# the row builder's by inspector_instance_variables_test.
+	"res://addons/eventforge/editor/instance_variables_inspector_plugin.gd": [
+		"EventSheetProjectDoctor", "VariableDialog", "EventSheetPopupUI", "EventSheetL10n",
+	],
 	"res://addons/eventforge/editor/export_integrity_plugin.gd": [
 		"SheetCompiler", "EventSheetTemplates",
 	],
@@ -141,6 +149,10 @@ const LAZY_PATHS := [
 	"res://addons/eventsheet/editor/docs/doc_ace_reference.gd",
 	"res://addons/eventsheet/editor/docs/doc_figures.gd",
 	"res://addons/eventforge/editor/workflow_entry_points.gd",
+	# The Inspector's instance-variable band: registered at boot by a load() of this literal, so a
+	# rename would leave the Inspector with no variables under the Edit Event Sheet button and the
+	# whole suite green.
+	"res://addons/eventforge/editor/instance_variables_inspector_plugin.gd",
 	"res://addons/eventforge/project_doctor.gd",
 	"res://addons/eventsheet/editor/dock/starter_templates.gd",
 	"res://addons/eventsheet/editor/new_sheet_dialog.gd",

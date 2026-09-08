@@ -5,9 +5,9 @@
 # column with that owner instead of System; the two new boolean verbs (Core/SetBool, Core/IsBoolSet)
 # and their exclusion from the reverse index; the picker's familiar Variables order plus the
 # variables each verb can take; the Anatomy rail's scope sections; the expression picker's per-owner
-# leaves and its type-fit greying; the Inspector plugin's variable census and its "not in the
-# Inspector" note; and the two notes an event grows when a row names a variable that is not there or
-# is the wrong kind.
+# leaves and its type-fit greying; the Inspector plugin's declared table, which its own band draws a
+# row from; and the two notes an event grows when a row names a variable that is not there or is the
+# wrong kind.
 @tool
 class_name VariableOwnersTest
 extends RefCounted
@@ -342,7 +342,7 @@ static func _test_expression_picker_leaves() -> bool:
 	return ok
 
 
-# ── the Inspector's census ───────
+# ── the Inspector's declared table ───────
 
 
 static func _test_inspector_census() -> bool:
@@ -362,12 +362,6 @@ static func _test_inspector_census() -> bool:
 		bool(variables[0].get("exported", false)), true) and ok
 	ok = _check("and the plain ones are not",
 		bool(variables[1].get("exported", true)), false) and ok
-	ok = _check("the note names the ones that are missing and the way to add them",
-		INSPECTOR_PLUGIN.hidden_variables_note(variables),
-		"Not in the Inspector: hp, alive - open the table to expose one.") and ok
-	var all_exported: Array[Dictionary] = [{"name": "speed", "exported": true}]
-	ok = _check("nothing hidden, nothing said",
-		INSPECTOR_PLUGIN.hidden_variables_note(all_exported), "") and ok
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	# A hinted export carries SPACES inside its arguments - `@export_range(0, 100)` is the exact
 	# spelling the compiler emits - so the annotation has to be taken off by its brackets, not cut
@@ -397,9 +391,6 @@ var hp: int = 100
 		hinted_names, PackedStringArray(["speed", "facing", "art", "hp"])) and ok
 	ok = _check("and every hinted spelling is read as exported",
 		hinted_flags, [true, true, true, false]) and ok
-	ok = _check("so the note only names the one that really is not down there",
-		INSPECTOR_PLUGIN.hidden_variables_note(hinted_census),
-		"Not in the Inspector: hp - open the table to expose one.") and ok
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(hinted_path))
 	return ok
 

@@ -1,25 +1,22 @@
-# Godot EventSheets - the Inspector's "Edit Event Sheet" / "Instance variables" buttons
+# Godot EventSheets - the Inspector's "Edit Event Sheet" button, and the declared table under it
 #
 # Godot devs live in the Inspector: when the selected node's script is generated
 # from a sheet (the pairing rule knows), one button jumps straight to the sheet -
 # and quietly says "edit the sheet, not the script".
 #
-# Beside it, "Instance variables · N", because that is where an event-sheet author looks for
-# an object's variables: on the object. It opens the same table the sheet already has. Under both
-# buttons, the one question the Inspector cannot answer on its own - which of this object's
-# variables are NOT down there, and what makes one appear.
+# The object's own variables are not a button any more: they are Inspector ROWS, drawn by the
+# plugin beside this one from the very table this file reads. So the reading lives here, where the
+# pairing rule already is, and the drawing lives there.
 #
-# The variable census is a LIGHT SCAN of the script's own text, not a sheet open: this plugin is
+# That table is a LIGHT SCAN of the script's own text, not a sheet open: this plugin is
 # registered at editor boot and a selection must not cost a compile. It reads member declarations
-# the same way the autoload scan does, and being wrong about an exotic one costs a count, never a
+# the same way the autoload scan does, and being wrong about an exotic one costs a row, never a
 # written line.
 @tool
 class_name EventSheetEditButtonPlugin
 extends EditorInspectorPlugin
 
 var open_sheet: Callable = Callable()  # Callable(sheet_path: String)
-## Callable(sheet_path: String) - opens the sheet AND its instance-variable table.
-var open_variables: Callable = Callable()
 
 
 func _can_handle(object: Object) -> bool:
@@ -40,40 +37,30 @@ func _parse_begin(object: Object) -> void:
 		if open_sheet.is_valid():
 			open_sheet.call(sheet_path))
 	row.add_child(button)
-	var script_path: String = (object.get_script() as Script).resource_path if object.get_script() != null else ""
-	var variables: Array[Dictionary] = member_variables(script_path)
-	var variables_button: Button = Button.new()
-	variables_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	variables_button.text = "Instance variables · %d" % variables.size()
-	variables_button.tooltip_text = "This object's own variables - name, type, initial value, and whether each is editable here."
-	variables_button.pressed.connect(func() -> void:
-		if open_variables.is_valid():
-			open_variables.call(sheet_path)
-		elif open_sheet.is_valid():
-			open_sheet.call(sheet_path))
-	row.add_child(variables_button)
 	add_custom_control(row)
-	var note: String = hidden_variables_note(variables)
-	if not note.is_empty():
-		var note_label: Label = Label.new()
-		note_label.text = note
-		note_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		note_label.modulate = Color(1.0, 1.0, 1.0, 0.7)
-		add_custom_control(note_label)
 
 
-## The object's own member variables, read off its script: [{"name", "exported"}] in file order.
-## `@export` (in any of its hinted spellings) on the line above is what puts a variable in the
-## Inspector, which is exactly the fact the note below reports. Static + pure, so both are testable
-## without an editor.
+## The object's own member declarations, read off its script, in file order:
+## [{"name", "exported", "constant", "type_name", "value", "line", "complete"}].
+##
+## `exported` says whether `@export` (in any of its hinted spellings) puts the variable in the
+## Inspector's own property list; `line` is the 1-based line the declaration sits on, which is what
+## the pencil beside a row opens the sheet on; `complete` is false when the value runs on past the
+## end of its line (a table or a list written across several), which is a value no one-line field
+## may offer to rewrite. Static + pure, so every one of those is testable without an editor.
 static func member_variables(script_path: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	if script_path.is_empty() or not FileAccess.file_exists(script_path):
 		return found
-	var pattern: RegEx = RegEx.new()
-	pattern.compile("^(?:static )?var +([A-Za-z_][A-Za-z0-9_]*)")
+	if _declaration_pattern == null:
+		_declaration_pattern = RegEx.new()
+		# `const` is a declaration like `var`: a pack's tuning constant is one of the values a
+		# reader comes to the object looking for, and the row says which of the two it is.
+		_declaration_pattern.compile("^(?:static +)?(var|const) +([A-Za-z_][A-Za-z0-9_]*)")
 	var exported_next: bool = false
+	var line_number: int = 0
 	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+		line_number += 1
 		# Members only: anything indented is inside a function and is nobody's property.
 		if line.begins_with("\t") or line.begins_with(" "):
 			continue
@@ -89,14 +76,134 @@ static func member_variables(script_path: String) -> Array[Dictionary]:
 			bare = _without_export_annotation(bare)
 			if bare.is_empty():
 				continue
-		var found_match: RegExMatch = pattern.search(bare)
+		# `@onready var sprite := $Sprite` declares a member like any other line here - the
+		# annotation only says WHEN it is filled in.
+		if bare.begins_with("@onready "):
+			bare = bare.substr("@onready ".length()).strip_edges()
+		var found_match: RegExMatch = _declaration_pattern.search(bare)
 		if found_match == null:
 			if not bare.is_empty() and not bare.begins_with("#"):
 				exported_next = false
 			continue
-		found.append({"name": found_match.get_string(1), "exported": exported_next})
+		var parts: Dictionary = _declaration_parts(bare.substr(found_match.get_end()))
+		found.append({
+			"name": found_match.get_string(2),
+			"exported": exported_next,
+			"constant": found_match.get_string(1) == "const",
+			"type_name": str(parts.get("type_name", "")),
+			"value": str(parts.get("value", "")),
+			"complete": bool(parts.get("complete", true)),
+			"line": line_number,
+		})
 		exported_next = false
 	return found
+
+
+## Compiled once and kept: `_can_handle` fires on every Inspector refresh, so the scan behind it
+## must not rebuild a regular expression per selection.
+static var _declaration_pattern: RegEx = null
+
+
+## The `: Type` and `= value` halves of whatever follows `var name`, as {"type_name", "value"}.
+## Both are "" when the line declares neither (`var hp`), and the type is "" for the inferred
+## spellings (`var hp := 100`), where the value is the only thing that says what the variable is.
+static func _declaration_parts(rest: String) -> Dictionary:
+	var tail: String = _without_trailing_comment(rest)
+	var assignment: int = _assignment_index(tail)
+	var type_part: String = (tail if assignment < 0 else tail.left(assignment)).strip_edges()
+	var value_part: String = "" if assignment < 0 else tail.substr(assignment + 1).strip_edges()
+	# `var hp := 100` writes the colon as part of the ASSIGNMENT, not as a declared type, so what
+	# is left of the operator is a bare ":" and says nothing.
+	if type_part.begins_with(":"):
+		type_part = type_part.substr(1).strip_edges()
+	# `var hp: int:` and `var hp := 3:` open a property block on the lines below; the trailing colon
+	# belongs to the block, and is on whichever side of the declaration ends the line.
+	type_part = type_part.trim_suffix(":").strip_edges()
+	value_part = value_part.trim_suffix(":").strip_edges()
+	return {
+		"type_name": type_part,
+		"value": _display_value(value_part, not type_part.is_empty()),
+		"complete": _is_complete(value_part),
+	}
+
+
+## Whether the value ends on the line it started on: a table or a list written across several lines
+## leaves a bracket open here, and what this line holds is the first fragment of it, not the value.
+static func _is_complete(value_text: String) -> bool:
+	var quote: String = ""
+	var depth: int = 0
+	for index: int in range(value_text.length()):
+		var glyph: String = value_text[index]
+		if not quote.is_empty():
+			if glyph == "\\":
+				continue
+			if glyph == quote:
+				quote = ""
+			continue
+		if glyph == "\"" or glyph == "'":
+			quote = glyph
+		elif glyph == "(" or glyph == "[" or glyph == "{":
+			depth += 1
+		elif glyph == ")" or glyph == "]" or glyph == "}":
+			depth -= 1
+	return quote.is_empty() and depth == 0
+
+
+## Where the declaration's `=` is, or -1. Quoted text is skipped so a default carrying an equals
+## sign inside a string cannot be mistaken for the operator.
+static func _assignment_index(text: String) -> int:
+	var quote: String = ""
+	for index: int in range(text.length()):
+		var glyph: String = text[index]
+		if not quote.is_empty():
+			if glyph == "\\":
+				continue
+			if glyph == quote:
+				quote = ""
+			continue
+		if glyph == "\"" or glyph == "'":
+			quote = glyph
+		elif glyph == "=":
+			return index
+	return -1
+
+
+## The line without the comment a reader wrote after it. Same quote-aware walk as above: a `#`
+## inside a string literal is part of the value (`var tint := "#ff0000"`).
+static func _without_trailing_comment(text: String) -> String:
+	var quote: String = ""
+	for index: int in range(text.length()):
+		var glyph: String = text[index]
+		if not quote.is_empty():
+			if glyph == "\\":
+				continue
+			if glyph == quote:
+				quote = ""
+			continue
+		if glyph == "\"" or glyph == "'":
+			quote = glyph
+		elif glyph == "#":
+			return text.left(index)
+	return text
+
+
+## The initial value as a ROW shows it, and as the write-back reads it again.
+##
+## A declaration that names its type (`var mode: String = "idle"`) holds a real VALUE, and the sheet
+## shows a text value without its quotes - so this does too, and a value typed back in is quoted
+## again on the way out. A declaration that infers its type (`var mode := "idle"`) holds SOURCE
+## TEXT, which is emitted exactly as it was written, so its quotes are part of the value and stay.
+## Anything else - a number, a constructor, a list, a node path - is already what a reader reads.
+static func _display_value(value_text: String, has_declared_type: bool) -> String:
+	if not has_declared_type or value_text.length() < 2:
+		return value_text
+	var quote: String = value_text[0]
+	if quote != "\"" and quote != "'":
+		return value_text
+	if not value_text.ends_with(quote):
+		return value_text
+	var inner: String = value_text.substr(1, value_text.length() - 2)
+	return value_text if inner.contains(quote) else inner
 
 
 ## What is left of a line once its leading `@export…` annotation is taken off: "" for an annotation
@@ -131,18 +238,6 @@ static func _without_export_annotation(bare: String) -> String:
 		index += 1
 	return bare.substr(index).strip_edges()
 
-
-## The muted line under the buttons: the variables that exist but are not down here, and the one
-## gesture that changes that. "" when every variable is already in the Inspector, and when there are
-## none at all - a note about an empty list answers nothing.
-static func hidden_variables_note(variables: Array[Dictionary]) -> String:
-	var hidden: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in variables:
-		if not bool(entry.get("exported", false)):
-			hidden.append(str(entry.get("name", "")))
-	if hidden.is_empty():
-		return ""
-	return "Not in the Inspector: %s - open the table to expose one." % ", ".join(hidden)
 
 # _can_handle fires on every Inspector refresh; sheet_for_script reads files, so
 # results are memoized by script path + mtime (review catch).
