@@ -56,7 +56,13 @@ from `tools/build_help_bundle.gd`).
   (`interaction/derived_calls.gd` / `derived_properties.gd` / `reading_shapes.gd`) turn any known
   class's calls and property writes into rows with zero authoring; curated tables outrank derived
   rows visibly and upgrade them in place. The scene index (`importer/scene_connections.gd`) is
-  the ONE cached `.tscn` parse every scene-adjacent reader shares.
+  the ONE cached `.tscn` parse every scene-adjacent reader shares. A BEHAVIOR PACK being read is a
+  reading of its own, gathered by `arrange_pack_reading` over the finished row list: Settings and
+  Verbs open, How it works and Internal state folded, a published verb read as the verb the picker
+  offers rather than as a trigger. The whole of it is keyed off ONE fact, the pack name the sheet's
+  own class is published under (`viewport_reading_rows.pack_object_name`, carried through the
+  sentence context as `pack_object`), so nothing outside a read-only pack can be moved by it - which
+  is what the reading gate over `res://demo` proves after any change to it.
 - Non-ACE row kinds (enums, signals, preloads, regions, pack kinds) dispatch through
   `EventSheetBlockRegistry` - see `docs/GUIDE-CUSTOM-BLOCKS.md`.
 - The Doctor: `res://addons/eventforge/project_doctor.gd` plus per-domain `*_doctor.gd` section
