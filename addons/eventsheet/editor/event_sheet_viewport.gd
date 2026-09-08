@@ -233,6 +233,9 @@ var _hover_match_spans: Dictionary = {}
 ## Bumped by every row rebuild. The hover answer is a function of (row, span, these rows), so this is
 ## what lets a repeat of the same hover be recognised as already answered - see _set_hover_state.
 var _rows_revision: int = 0
+## How many row builds this view has ever done. Unlike _rows_revision it is never restored from a
+## kept reading, so it answers "was anything built?" across a tab switch - see row_builds().
+var _row_builds: int = 0
 ## The (row, span, revision) the current _hover_match_spans was computed for.
 var _hover_match_key: Vector3i = Vector3i(-1, -1, -1)
 var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
@@ -489,6 +492,105 @@ func set_sheet(sheet: EventSheetResource) -> void:
 		_folding.apply_collapse_level(persisted_collapse_level)
 
 
+## How many times this view has BUILT its rows, over its whole life. Monotonic and never reset -
+## it is the receipt that a switch back to an unchanged sheet built nothing, which no other
+## counter can give: _rows_revision is a cache key that travels with a kept reading, so it moves
+## backwards when one is handed back.
+func row_builds() -> int:
+	return _row_builds
+
+
+## Everything this view holds ABOUT the sheet on screen, as one dictionary its host can put away
+## and hand back later: the built rows, their layout and metrics, the selection, the folds, the
+## scroll and the style the lanes are split by. A host that keeps one per open tab pays for a
+## reading once instead of once per glance.
+##
+## The ROWS in it are the live ones, not copies - they were built from the sheet named in the
+## state, and adopt_view_state refuses every other sheet, so a kept reading can never be seated
+## over rows it was not built from. The LISTS that hold them are copies, and the layout cache is
+## handed over outright (the view takes a fresh one), because a row build empties both in place -
+## share either and the next sheet to be read would empty the reading this one just put away.
+func capture_view_state() -> Dictionary:
+	var handed_over: RowLayoutCache = _layout_cache
+	_layout_cache = RowLayoutCache.new()
+	return {
+		"sheet": _sheet,
+		"root_rows": _root_rows.duplicate(),
+		"flat_rows": _flat_rows.duplicate(),
+		"layout_cache": handed_over,
+		"metrics": _row_metrics_helper.capture(),
+		"rows_revision": _rows_revision,
+		"layout_style_signature": _layout_style_signature,
+		"editor_style": _editor_style,
+		"applied_collapse_sheet": _applied_collapse_sheet,
+		"selected_row_index": _selected_row_index,
+		"selected_span_index": _selected_span_index,
+		"selected_row_uids": _selected_row_uids.duplicate(),
+		"selected_span_indices": _selected_span_indices.duplicate(),
+		"span_only_row_uids": _span_only_row_uids.duplicate(),
+		"selection_anchor_index": _selection_anchor_index,
+		"focused_lane": _focused_lane,
+		"fold_state": _fold_state.duplicate(),
+		"editable_function_names": _editable_function_names.duplicate(),
+		"tunable_uids": _tunable_uids.duplicate(),
+		"scroll_vertical": get_scroll_offset(),
+		"scroll_horizontal": get_horizontal_scroll()
+	}
+
+
+## Seats a sheet back into this view from a state capture_view_state() made, building nothing.
+## False (and nothing touched) when the state is empty or was captured from another sheet - the
+## caller then falls back to set_sheet, which is the reading path.
+##
+## The pointer is deliberately NOT restored: the hover under a kept reading belongs to wherever
+## the mouse is now, not to where it was when the tab was left.
+func adopt_view_state(sheet: EventSheetResource, state: Dictionary) -> bool:
+	if sheet == null or state.is_empty() or state.get("sheet") != sheet:
+		return false
+	var kept_rows: Variant = state.get("root_rows")
+	var kept_flat: Variant = state.get("flat_rows")
+	var kept_cache: RowLayoutCache = state.get("layout_cache") as RowLayoutCache
+	if not (kept_rows is Array) or not (kept_flat is Array) or kept_cache == null:
+		return false
+	_sheet = sheet
+	_root_rows = kept_rows
+	_flat_rows = kept_flat
+	_layout_cache = kept_cache
+	_row_metrics_helper.adopt(state.get("metrics", {}))
+	var kept_style: EventSheetEditorStyle = state.get("editor_style") as EventSheetEditorStyle
+	if kept_style != null:
+		_editor_style = kept_style
+	_applied_collapse_sheet = state.get("applied_collapse_sheet") as EventSheetResource
+	_rows_revision = int(state.get("rows_revision", _rows_revision))
+	_layout_style_signature = str(state.get("layout_style_signature", _layout_style_signature))
+	_selected_row_index = int(state.get("selected_row_index", -1))
+	_selected_span_index = int(state.get("selected_span_index", -1))
+	_selected_row_uids = (state.get("selected_row_uids", {}) as Dictionary).duplicate()
+	_selected_span_indices = (state.get("selected_span_indices", {}) as Dictionary).duplicate()
+	_span_only_row_uids = (state.get("span_only_row_uids", {}) as Dictionary).duplicate()
+	_selection_anchor_index = int(state.get("selection_anchor_index", -1))
+	_focused_lane = str(state.get("focused_lane", _focused_lane))
+	_fold_state = (state.get("fold_state", {}) as Dictionary).duplicate()
+	_editable_function_names = (state.get("editable_function_names", {}) as Dictionary).duplicate()
+	_tunable_uids = (state.get("tunable_uids", {}) as Dictionary).duplicate()
+	# Answers keyed to the rows that were on screen a moment ago, which these are not.
+	_param_cursor = {}
+	_hover_match_spans = {}
+	_hover_match_key = Vector3i(-1, -1, -1)
+	_hovered_row_index = -1
+	_hovered_span_index = -1
+	_hover_is_drag_zone = false
+	_update_canvas_min_size()
+	# The canvas is the size of these rows again first, so the scroll container has somewhere to
+	# scroll TO - set before it, the offset is clamped against the previous sheet's height.
+	var scroll: ScrollContainer = _get_scroll_container()
+	if scroll != null:
+		scroll.scroll_vertical = int(state.get("scroll_vertical", 0))
+		scroll.scroll_horizontal = int(state.get("scroll_horizontal", 0))
+	queue_redraw()
+	return true
+
+
 ## True when the user has opted a specific verb (by function name) into body editing on an opened pack.
 func is_function_body_editable_opt_in(function_name: String) -> bool:
 	return _editable_function_names.has(function_name.strip_edges())
@@ -588,6 +690,10 @@ func get_ace_registry() -> EventSheetACERegistry:
 
 
 func set_debug_overlay_states(states: Dictionary) -> void:
+	# Clearing an overlay that is already clear changes no row, and rebuilding for it would throw
+	# away a kept reading for nothing - which is what every tab switch used to do on its way in.
+	if _debug_rows.is_empty() and states.is_empty():
+		return
 	_debug_rows = states.duplicate(true)
 	_refresh_rows()
 
@@ -2374,6 +2480,7 @@ func _refresh_rows() -> void:
 	_param_cursor = {}
 	# New rows, so every answer keyed to the old ones (the hover highlight) is stale by definition.
 	_rows_revision += 1
+	_row_builds += 1
 	# A figure's measured width is a property of its rows, so it dies with them - and the settle
 	# restarts from the narrow probe, or new rows would only ever be measured against the width
 	# the OLD rows happened to need.

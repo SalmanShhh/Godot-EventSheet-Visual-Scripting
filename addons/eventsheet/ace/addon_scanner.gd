@@ -40,6 +40,15 @@ static func list_addon_scripts() -> Array[String]:
 	return scripts.duplicate()
 
 
+## What the addon fleet looks like right now, as one string: every root and pack folder with its
+## modification time, plus the packs that are switched off. Two calls that answer the same string
+## are looking at the same fleet, so a caller holding a vocabulary built from it (the editor keeps
+## one per open tab) knows whether it may keep it - and it costs a stat per pack folder, not a walk.
+## Empty when a root is missing, which is "cannot say" and must be read as a change.
+static func scan_revision() -> String:
+	return _listing_key()
+
+
 static var _listing_cache: Array[String] = []
 static var _listing_cache_key: String = ""
 

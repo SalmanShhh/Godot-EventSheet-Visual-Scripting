@@ -75,6 +75,22 @@ func clear() -> void:
 	refresh()
 
 
+## The log as it stands, for a host that keeps one per open tab. The panel is the dock's, but the
+## edits in it are one sheet's, so a tab that is switched away from takes its own list with it and
+## the tab switched to shows the steps IT was edited by - never a merged list of both.
+func capture_log() -> Dictionary:
+	return {"entries": entries.duplicate(), "cursor": cursor}
+
+
+## Seats a log capture_log() made back into the panel. An empty state is an empty log, which is
+## what a tab that has never been edited has.
+func adopt_log(state: Dictionary) -> void:
+	var kept: Variant = state.get("entries", [])
+	entries.assign(kept if kept is Array else [])
+	cursor = clampi(int(state.get("cursor", 0)), 0, entries.size())
+	refresh()
+
+
 ## The rows an edit changed: every row uid that one side of the edit has and the other does not.
 ## An edit that only rewrote a row's contents keeps its uid, so it answers nothing here - the panel
 ## falls back to the event the edit was made on. Pure and static, so tests pin it.

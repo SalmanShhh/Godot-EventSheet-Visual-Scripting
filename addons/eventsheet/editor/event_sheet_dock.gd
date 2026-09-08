@@ -328,6 +328,7 @@ var _start_page: RefCounted = null
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
+var _tab_state: EventSheetTabState = EventSheetTabState.new()  # what an open tab keeps while another is on screen: its reading, undo log, vocabulary and compiled output, and the stamp each is held against (dock/tab_state.gd)
 var _live_edit_bar: EventSheetLiveEditBar = EventSheetLiveEditBar.new()  # ⟳ Apply to running game on the status strip (dock/live_edit_bar.gd)
 var _shared_sheets: EventSheetSharedSheetDialogs = EventSheetSharedSheetDialogs.new()  # New shared sheet… + Include sheet… (dock/shared_sheet_dialogs.gd)
 var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()
@@ -434,6 +435,10 @@ func _init() -> void:
 	# fresh .new() editor BEFORE _ready/setup run the rest of the lazy init cluster. The helper's
 	# _dock.setup() then triggers _ensure_editor_dialogs_initialized() exactly as the inline body did.
 	_sheet_io.init(self)
+	# What each open tab keeps while another is on screen (its reading, its scroll and selection,
+	# its edit log, its compiled output) and the stamp that says whether any of it is still true.
+	# Init-only like the helpers around it, so a test can switch tabs on a fresh .new() editor.
+	_tab_state.init(self)
 	# Same reason as _sheet_io: a test may apply an ACE (or exercise drag-drop) on a fresh .new()
 	# editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
 	_ui_builder.init(self)
@@ -727,6 +732,9 @@ func _open_sheet_in_tab(sheet: EventSheetResource, path: String) -> void:
 	EventSheetRunProfile.load_stored()
 	for i in range(_open_tabs.size()):
 		if _open_tabs[i].get("sheet") == sheet:
+			# The same sheet handed in again is a caller asking for it to be READ again - it may
+			# have been changed since, and nothing about that change came through the edit funnel.
+			_tab_state.invalidate(i)
 			_activate_tab(i)
 			return
 	_sync_active_tab_state()
@@ -740,15 +748,31 @@ func _activate_tab(index: int) -> void:
 		return
 	if index != _active_tab_index:
 		_sync_active_tab_state()
+		# The tab being left keeps its reading - its rows, their layout, the scroll, the selection
+		# and its log of edits - so coming back to it costs nothing. Here rather than in the sync
+		# above, because that also runs when the session is written to disk, and a tab still on
+		# screen must not be packed away underneath the reader.
+		_tab_state.capture_active()
+	else:
+		# Re-activating the tab already on screen is somebody asking for it to be READ again (a
+		# finished lift, a Save As, a sheet handed in a second time), so what it was holding before
+		# is not what is live and nothing is handed back.
+		_tab_state.invalidate(index)
 	_active_tab_index = index
 	var tab: Dictionary = _open_tabs[index]
 	_current_sheet = tab.get("sheet")
 	_current_sheet_path = str(tab.get("path", ""))
 	_dirty = bool(tab.get("dirty", false))
 	_viewport.set_debug_overlay_states({})
-	_clear_undo_history()
-	_refresh_ace_registry()
-	_viewport.set_sheet(_current_sheet)
+	# The vocabulary is kept unless the sheet lists other providers or the addon fleet moved: ACE
+	# definitions are immutable and shared across tabs, so keeping one is keeping a list of sources.
+	# The exposed node still re-points at the sheet either way - that IS per sheet.
+	if _tab_state.registry_needs_rebuild():
+		_refresh_ace_registry()
+	# The rows, the selection and the scroll this tab was left at - built again only when the
+	# sheet changed in memory or on disk since they were put away.
+	var seating: String = _tab_state.seat(index)
+	_menu_bar.refresh_history_buttons()
 	_apply_minimap_pref()
 	_sync_split_sheet()
 	_refresh_anatomy_panel()
@@ -765,8 +789,14 @@ func _activate_tab(index: int) -> void:
 	# If the GDScript panel is already open, recompile it for the sheet we just switched to so it
 	# never shows the previous sheet's output. Self-guards on visibility, so it's a no-op when hidden.
 	_refresh_code_panel()
+	# A switch is not a load, so it says nothing: the tab was already open and its reading was
+	# waiting for it. The two things worth saying are a first reading of the tab, and a file that
+	# changed on disk behind it while the reader was somewhere else.
 	var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
-	_set_status("Loaded: %s" % label)
+	if seating == "loaded":
+		_set_status("Loaded: %s" % label)
+	elif seating == "reloaded":
+		_set_status("Reloaded: changed on disk")
 	# THE ONE-TIME NOTE, said over that status line the first time a project that already has sheets
 	# in it opens on the resting strip: where the buttons went, and that no key changed. A project
 	# whose first sheet is the blank one the workspace seeds never saw the old strip, so it is never
@@ -824,11 +854,16 @@ func _toolbar_control_label(button: Button) -> String:
 func _sync_active_tab_state() -> void:
 	if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
 		return
-	# The workspace this tab was opened as part of is the tab's own, not the live state's, so
-	# it is carried across rather than dropped on every sync.
-	var group: String = str((_open_tabs[_active_tab_index] as Dictionary).get("group", ""))
-	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path,
-		"dirty": _dirty, "group": group}
+	# Everything else the entry carries is the TAB's own, not the live state's - the workspace it
+	# was opened as part of, its id, its edit revision, the reading it is holding - so the entry is
+	# updated in place rather than replaced, and only the three fields the live state owns move.
+	var tab: Dictionary = _open_tabs[_active_tab_index]
+	tab["sheet"] = _current_sheet
+	tab["path"] = _current_sheet_path
+	tab["dirty"] = _dirty
+	if not tab.has("group"):
+		tab["group"] = ""
+	_open_tabs[_active_tab_index] = tab
 
 
 ## Closes the tab at index, activating a neighbour (or a fresh demo sheet when none remain).
@@ -7268,6 +7303,10 @@ func _surround_selection_with_region() -> void:
 func _refresh_after_edit() -> void:
 	if _viewport == null:
 		return
+	# The sheet changed, so the reading this tab is holding is one edit out of date: the stamp
+	# moves here, at the one refresh every mutation ends with, and the rows rebuilt below are what
+	# the next capture of this tab keeps.
+	_tab_state.bump_active_revision()
 	# A variable added, a function renamed, a group declared: the edit that changed the sheet is the
 	# only thing that can change what its fields complete with, so the built lists go here. A
 	# keystroke in a field must never pay for this. The undo funnel drops them a moment EARLIER,
@@ -7620,6 +7659,8 @@ func _refresh_ace_registry() -> void:
 	combined_sources.append_array(addon_sources)
 	_ace_sources = owned_sources
 	_ace_registry.refresh_from_sources(combined_sources, true)
+	# What this vocabulary was built from, so a switch to a tab with the same sources keeps it.
+	_tab_state.note_registry_built()
 	if _viewport != null:
 		_viewport.set_ace_registry(_ace_registry)
 	_ace_picker.set_registry(_ace_registry)
@@ -7778,6 +7819,16 @@ func _capture_sheet_snapshot() -> EventSheetResource:
 func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	if snapshot == null:
 		return
+	# An undo stack that outlives a tab switch has to know whose edit it is undoing, or a Ctrl+Z on
+	# one sheet would restore another sheet's snapshot over it. Every edit is tagged with the tab it
+	# was made on: the tab comes back to the screen first, and the restore lands where the edit did.
+	# An edit whose tab has since been closed restores nothing - there is nowhere for it to go.
+	var owner_tab: String = _tab_state.snapshot_owner(snapshot)
+	if not owner_tab.is_empty() and owner_tab != _tab_state.active_tab_id():
+		var owner_index: int = _tab_state.index_of_tab_id(owner_tab)
+		if owner_index < 0:
+			return
+		_activate_tab(owner_index)
 	# The History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
 	_ensure_history_panel().note_restored(snapshot)
 	# What a field completes with is held against the sheet OBJECT, and the line below replaces that
@@ -7817,6 +7868,11 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	if not _undo_redo_adapter.has_manager():
 		_refresh_after_edit()
 		return true
+	# Both sides of the step are tagged with the tab they were made on, before the commit runs the
+	# do method: the undo stack is the host editor's and outlives a tab switch, so a restore has to
+	# be able to say which sheet it belongs to.
+	_tab_state.remember_snapshot_owner(before)
+	_tab_state.remember_snapshot_owner(after)
 	_undo_redo_adapter.create_action(action_name)
 	_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
 	_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])

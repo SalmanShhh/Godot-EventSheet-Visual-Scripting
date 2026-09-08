@@ -28,6 +28,27 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
+## The layout as it stands, for a host that keeps one reading per open tab: the per-row tops and
+## heights and the width they were computed at. Handed back through adopt() with the rows they
+## belong to, so a switch back to an unchanged sheet re-measures nothing.
+func capture() -> Dictionary:
+	# A copy of the list, not the list: rebuild() empties it in place, so a kept layout that shared
+	# it would be emptied by the next sheet the view reads.
+	return {"rows": _row_metrics.duplicate(), "width": _metrics_canvas_width}
+
+
+## Seats a layout capture() made back into this helper. An empty state leaves the helper as it is,
+## and the caller's own rebuild is what fills it.
+func adopt(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	var kept: Variant = state.get("rows")
+	if not (kept is Array):
+		return
+	_row_metrics = kept
+	_metrics_canvas_width = float(state.get("width", -1.0))
+
+
 func rebuild() -> void:
 	_metrics_canvas_width = _viewport._get_logical_canvas_width()
 	_row_metrics.clear()

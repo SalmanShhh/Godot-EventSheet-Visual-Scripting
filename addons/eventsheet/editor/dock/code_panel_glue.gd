@@ -140,9 +140,20 @@ func refresh_code_panel() -> void:
 		_dock._code_source_map = []
 		_dock._code_panel_highlight = Vector2i(-1, -1)
 		return
+	# The output of a sheet that has not changed is the output it had: a compile is paid for by an
+	# edit, never by looking at another tab and coming back. The cache is the tab's own and is held
+	# against the same revision its rows are, so it can never show the previous sheet's code.
+	var cached: Dictionary = _dock._tab_state.cached_code()
+	if not cached.is_empty():
+		_dock._code_edit.text = str(cached.get("text", ""))
+		_dock._code_source_map = cached.get("map", [])
+		_dock._code_panel_highlight = Vector2i(-1, -1)
+		_dock._update_code_panel_highlight()
+		return
 	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, "user://eventforge_code_panel_preview.gd")
 	_dock._code_edit.text = str(compile_result.get("output", ""))
 	_dock._code_source_map = compile_result.get("source_map", [])
+	_dock._tab_state.store_code(_dock._code_edit.text, _dock._code_source_map)
 	_dock._code_panel_highlight = Vector2i(-1, -1)
 	_dock._update_code_panel_highlight()
 
