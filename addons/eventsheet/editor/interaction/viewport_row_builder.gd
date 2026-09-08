@@ -1130,20 +1130,6 @@ func _pack_host_guard_index(event_row: EventRow, trigger_lines: int) -> int:
 ## whose file draws its own structure with `#region` fences - an author who grouped the file has
 ## said where things go, and a second grouping over the top would be arguing with them.
 ## Returns the root list to use (the caller assigns it back).
-## Whether the four bands may be gathered over this list at all, asked before a single row moves.
-## Two shapes are refused: a pack with no published verb, which has no face to open on, and a file
-## that draws its own structure with `#region` fences, whose author has already said where things go.
-func _pack_reading_applies(rows: Array[EventRowData]) -> bool:
-	var publishes: bool = false
-	for row_data: EventRowData in rows:
-		if _is_region_row(row_data):
-			return false
-		var verb: EventFunction = row_data.source_resource as EventFunction
-		if verb != null and verb.expose_as_ace:
-			publishes = true
-	return publishes
-
-
 func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null or rows.is_empty() or not _is_read_only_pack():
 		return rows
@@ -1253,6 +1239,20 @@ func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) 
 	if state_bar != null:
 		output.append(state_bar)
 	return output
+
+
+## Whether the four bands may be gathered over this list at all, asked before a single row moves.
+## Two shapes are refused: a pack with no published verb, which has no face to open on, and a file
+## that draws its own structure with `#region` fences, whose author has already said where things go.
+func _pack_reading_applies(rows: Array[EventRowData]) -> bool:
+	var publishes: bool = false
+	for row_data: EventRowData in rows:
+		if _is_region_row(row_data):
+			return false
+		var verb: EventFunction = row_data.source_resource as EventFunction
+		if verb != null and verb.expose_as_ace:
+			publishes = true
+	return publishes
 
 
 ## Moves a read pack's variable folders out of the one head bar's fold and onto the sheet, and drops
