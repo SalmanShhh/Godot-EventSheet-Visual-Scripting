@@ -8,6 +8,11 @@
 class_name ProjectLevelUXTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+
+## The about comment Pin Modes opens with, quoted here so the cut is pinned on a real one.
+const PIN_MODES_ABOUT: String = "[b]Pin Modes[/b] - six ways one object can ride another, running at once. The sheet moves only the ANCHORS (the post, the engine, the walker); everything else is a Pin behavior in a different mode."
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -19,6 +24,7 @@ static func run() -> bool:
 	all_passed = _toolbar_and_preview_buttons() and all_passed
 	all_passed = _shortcut_preset() and all_passed
 	all_passed = _start_page_columns() and all_passed
+	all_passed = _start_page_lists_every_showcase() and all_passed
 	return all_passed
 
 
@@ -304,6 +310,64 @@ static func _start_page_columns() -> bool:
 	all_passed = _check("and ends with What's new",
 		str((learn[learn.size() - 1] as Dictionary).get("label", "")), "What's new") and all_passed
 	return all_passed
+
+
+## The Start page walks demo/showcase, so a showcase added by the example builder appears on it
+## with no list to edit. The one thing the page still writes down is the shelf a showcase sits on -
+## nothing in a showcase says which genre a reader looks for it under - so that is the one thing a
+## new showcase can leave behind, and these two pins are what name it: the folders with no shelf,
+## and the shelves whose folder is gone. Both are pinned as the NAMES, joined, so a red run says
+## which showcase rather than how many.
+##
+## The line on the card comes from the showcase itself: the about comment its sheet opens with, cut
+## down to its first clause. The cut is pinned on the three shapes those comments take - a sentence,
+## a colon introducing a list, and an "and" opening a second clause - and then end to end through
+## `columns`, where a pitch still written on the page beats the showcase's own line.
+static func _start_page_lists_every_showcase() -> bool:
+	var starters: Array = [{"id": 0, "label": "Blank Sheet"}]
+	var derived: Array = EventSheetStartPage.columns(starters, PackedStringArray(["pin_modes"]), [],
+		false, {"pin_modes": PIN_MODES_ABOUT})
+	var written: Array = EventSheetStartPage.columns(starters, PackedStringArray(["starfall"]), [],
+		false, {"starfall": "[b]Starfall[/b] - a complete restartable arcade game authored as events: move the ship."})
+	var silent: Array = EventSheetStartPage.columns(starters, PackedStringArray(["a_new_showcase"]),
+		[], false, {})
+	return SUPPORT.pins("start_page_showcases", [
+		["every showcase folder has a shelf on the page",
+			" | ".join(EventSheetStartPage.showcases_without_a_shelf()), ""],
+		["and every shelf on the page names a folder that is there",
+			" | ".join(EventSheetStartPage.shelves_without_a_showcase()), ""],
+		["a sentence in an about comment is the card's line",
+			EventSheetStartPage.pitch_from_about(PIN_MODES_ABOUT),
+			"six ways one object can ride another, running at once."],
+		["a colon introducing a list ends it instead",
+			EventSheetStartPage.pitch_from_about("[b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a required portrait slot."),
+			"a Custom Resource whose Inspector was designed from this sheet."],
+		["and so does the \"and\" that opens a second clause",
+			EventSheetStartPage.pitch_from_about("[b]Mirror Hero[/b] - one row faces the way it moves, and because it mirrors the WHOLE object every child comes along."),
+			"one row faces the way it moves."],
+		["a showcase with no about comment says nothing rather than something wrong",
+			EventSheetStartPage.pitch_from_about(""), ""],
+		["the new Platformer Pathfinding showcase reads its line off its own sheet",
+			EventSheetStartPage.pitch_from_about(
+				EventSheetStartPage.showcase_about("platformer_pathfinding")),
+			"the smallest chaser the pack can make."],
+		["a card carries the shelf and the showcase's own line",
+			_showcase_note(derived), "Toy · six ways one object can ride another, running at once."],
+		["a pitch still written on the page beats the showcase's own line",
+			_showcase_note(written),
+			"Arcade · Falling objects, a score and a fail state - the whole loop in one small scene."],
+		["and a folder the page knows nothing about is still a card",
+			_showcase_note(silent),
+			"Showcase · A playable example you can open and take apart."],
+	])
+
+
+## The note on the one showcase card in a New from template column.
+static func _showcase_note(built: Array) -> String:
+	for entry: Variant in (built[0] as Dictionary).get("entries", []):
+		if str((entry as Dictionary).get("kind", "")) == "showcase":
+			return str((entry as Dictionary).get("note", ""))
+	return "no showcase card was built"
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -29,26 +29,78 @@ const TEMPLATE_PITCHES: Array = [
 	[0, "Empty", "An empty sheet. Start with a blank event and go."],
 ]
 
-## The playable showcases, by genre. Discovered on disk (the folder is the id), so a showcase added
-## by the example builder appears here without a list to maintain; the pitch is looked up and falls
-## back to the folder's own name.
-const SHOWCASE_PITCHES: Dictionary = {
-	"platformer_shooter": ["Platformer", "A platformer with a weapon, enemies and pickups, playable right now."],
-	"starfall": ["Arcade", "Falling objects, a score and a fail state - the whole loop in one small scene."],
-	"menu_starter": ["Menus", "A title screen, options and a pause menu that already talk to each other."],
-	"quest_fsm": ["Adventure", "A quest that remembers where you are, as a state machine you can read."],
-	"family_arena": ["Arcade", "One rule that drives every enemy at once, through a family."],
-	"path_chase": ["Top-down", "A chaser that finds its way around walls."],
-	"fps_arena": ["First person", "A first-person controller with a weapon and targets."],
-	"boomer_level": ["First person", "A keycard, a locked door, grunts that fight each other, and an exit tally."],
-	"swarm": ["Arcade", "Hundreds of things moving at once, and still readable."],
-	"draw_lab": ["Toy", "Draw shapes from events - a sandbox for the Drawing pack."],
-	"input_rebind": ["Systems", "A rebinding screen that saves what the player chose."],
-	"skate_park": ["Sports", "A board that keeps its speed, a rail to grind and a chain to bank."],
-	"skate_park_3d": ["Sports", "The same run in three dimensions, with a bank you launch off."],
-	"traversal_course": ["Platformer", "Ledges, a wall shaft, a ladder, a vault and a pool - one station per traversal move."],
-	"traversal_course_3d": ["First person", "The same five traversal moves in metres, with no controller pack anywhere."],
+## The shelf each showcase folder sits on. A showcase says what it DOES in the about comment its
+## sheet opens with, and `pitch_from_about` turns that into the line a card shows - but nothing in
+## the file says which shelf a reader looks on for it, so the genre stays written down here. It is
+## the one fact this page can fall behind a new showcase on, which is why the suite pins it: a
+## folder under demo/showcase with no entry fails.
+const SHOWCASE_KINDS: Dictionary = {
+	"boomer_level": "First person",
+	"carousel": "Feel",
+	"combo_fighter": "Fighting",
+	"draw_lab": "Toy",
+	"enemy_stats": "Data",
+	"family_arena": "Arcade",
+	"fps_arena": "First person",
+	"hierarchy_playground": "Toy",
+	"htn_agent": "AI",
+	"input_rebind": "Systems",
+	"inspector_playground": "Toy",
+	"menu_starter": "Menus",
+	"mirror_and_flip": "Toy",
+	"path_chase": "Platformer",
+	"pin_modes": "Toy",
+	"platformer_pathfinding": "Platformer",
+	"platformer_shooter": "Platformer",
+	"quest_fsm": "Adventure",
+	"raycast_lab": "Toy",
+	"raycast_lab_3d": "Toy",
+	"skate_park": "Sports",
+	"skate_park_3d": "Sports",
+	"skill_tree": "Systems",
+	"starfall": "Arcade",
+	"swarm": "Arcade",
+	"traversal_course": "Platformer",
+	"traversal_course_3d": "First person",
+	"uhtn_planning": "AI",
+	"utility_ai": "AI",
 }
+
+## The pitches still WRITTEN here rather than read off the showcase. Two of them carry no about
+## comment at all; the rest were written for this page back when it listed a handful of showcases by
+## hand, and they still read better on a card than the showcase's own opening clause does. Every
+## other folder gets its line from the showcase itself, and an entry here retires the day its
+## showcase says it as well - nothing else has to change when it does.
+const SHOWCASE_PITCHES: Dictionary = {
+	"platformer_shooter": "A platformer with a weapon, enemies and pickups, playable right now.",
+	"starfall": "Falling objects, a score and a fail state - the whole loop in one small scene.",
+	"menu_starter": "A title screen, options and a pause menu that already talk to each other.",
+	"quest_fsm": "A quest that remembers where you are, as a state machine you can read.",
+	"family_arena": "One rule that drives every enemy at once, through a family.",
+	"fps_arena": "A first-person controller with a weapon and targets.",
+	"boomer_level": "A keycard, a locked door, grunts that fight each other, and an exit tally.",
+	"swarm": "Hundreds of things moving at once, and still readable.",
+	"draw_lab": "Draw shapes from events - a sandbox for the Drawing pack.",
+	"input_rebind": "A rebinding screen that saves what the player chose.",
+	"skate_park": "A board that keeps its speed, a rail to grind and a chain to bank.",
+	"skate_park_3d": "The same run in three dimensions, with a bank you launch off.",
+	"traversal_course": "Ledges, a wall shaft, a ladder, a vault and a pool - one station per traversal move.",
+	"traversal_course_3d": "The same five traversal moves in metres, with no controller pack anywhere.",
+}
+
+## What a card falls back to when a showcase neither names a pitch here nor describes itself.
+const SHOWCASE_UNDESCRIBED: String = "A playable example you can open and take apart."
+
+## What a card falls back to when a folder has no shelf yet. It is a visible word rather than an
+## empty one, so a missing entry reads as missing on the page as well as in the suite.
+const SHOWCASE_UNSHELVED: String = "Showcase"
+
+## How a showcase sheet opens its description: a comment row whose first mark is the bold title.
+const ABOUT_PREFIX: String = "# [b]"
+
+## How far into an about comment the "Title - " lead may reach. Past that the dash is punctuation in
+## a sentence rather than the separator after a name, and cutting there would eat the pitch.
+const ABOUT_LEAD_LIMIT: int = 48
 
 const SHOWCASE_DIR: String = "res://demo/showcase"
 
@@ -80,12 +132,12 @@ static func _set_opens_on_startup(on: bool) -> void:
 ## The three columns, as [{id, title, entries}] where each entry is
 ## {kind, label, note, target}. Pure, so a test pins the page's contents without building it.
 ##   kind "template"  target = the starter id, as text
-##   kind "showcase"  target = the scene path
+##   kind "showcase"  target = the scene path (its line comes from `abouts`, {folder: about text})
 ##   kind "recent"    target = the file path
 ##   kind "learn"     target = the Manual doc id
 ##   kind "this_editor"  target = "" (only in the plugin's own repo)
 static func columns(starters: Array, showcases: PackedStringArray, recents: Array,
-		is_editor_project: bool = false) -> Array:
+		is_editor_project: bool = false, abouts: Dictionary = {}) -> Array:
 	var templates: Array = []
 	var label_by_id: Dictionary = {}
 	for starter: Variant in starters:
@@ -98,10 +150,12 @@ static func columns(starters: Array, showcases: PackedStringArray, recents: Arra
 		templates.append({"kind": "template", "label": str(label_by_id[starter_id]),
 			"note": "%s · %s" % [str(record[1]), str(record[2])], "target": str(starter_id)})
 	for showcase: String in showcases:
-		var pitch: Variant = SHOWCASE_PITCHES.get(showcase)
-		var genre: String = str((pitch as Array)[0]) if pitch is Array else "Showcase"
-		var line: String = str((pitch as Array)[1]) if pitch is Array \
-			else "A playable example you can open and take apart."
+		var genre: String = str(SHOWCASE_KINDS.get(showcase, SHOWCASE_UNSHELVED))
+		var line: String = str(SHOWCASE_PITCHES.get(showcase, ""))
+		if line.is_empty():
+			line = pitch_from_about(str(abouts.get(showcase, "")))
+		if line.is_empty():
+			line = SHOWCASE_UNDESCRIBED
 		templates.append({"kind": "showcase", "label": showcase.capitalize(),
 			"note": "%s · %s" % [genre, line], "target": "%s/%s" % [SHOWCASE_DIR, showcase]})
 	var recent_entries: Array = []
@@ -147,6 +201,94 @@ static func showcase_folders() -> PackedStringArray:
 		found.append(folder)
 	found.sort()
 	return found
+
+
+## The about comment a showcase opens with, or "" when it carries none. A showcase sheet's first
+## comment row IS its description, so the page reads that instead of keeping a second copy of it
+## that can disagree. The folder-named script is asked first: a folder with several sheets (an
+## enemy, a door, a pickup) has exactly one that is the showcase, and it is named after the folder.
+static func showcase_about(folder: String) -> String:
+	var folder_path: String = "%s/%s" % [SHOWCASE_DIR, folder]
+	var scripts: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at(folder_path):
+		if file_name.get_extension() == "gd":
+			scripts.append(file_name)
+	scripts.sort()
+	var ordered: PackedStringArray = PackedStringArray()
+	if scripts.has("%s.gd" % folder):
+		ordered.append("%s.gd" % folder)
+	for file_name: String in scripts:
+		if not ordered.has(file_name):
+			ordered.append(file_name)
+	for file_name: String in ordered:
+		for line: String in FileAccess.get_file_as_string("%s/%s" % [folder_path, file_name]).split("\n"):
+			if line.begins_with(ABOUT_PREFIX):
+				return line.substr(2).strip_edges()
+	return ""
+
+
+## Every showcase folder and the about comment it opens with, {folder: about text}, ready for
+## `columns`. Reading the folders is a disk walk and `columns` is pure, so the walk happens here.
+static func showcase_abouts(folders: PackedStringArray) -> Dictionary:
+	var found: Dictionary = {}
+	for folder: String in folders:
+		found[folder] = showcase_about(folder)
+	return found
+
+
+## The ONE line a card shows, cut out of a showcase's about comment. The about text is a paragraph
+## written for somebody already reading the sheet, so the card takes the first thing it says and
+## stops: at the end of the first sentence, at the colon that introduces a list, or at the "and"
+## that opens a second clause, whichever comes first. The bold title in front is dropped with the
+## rest of the marks, because the card already carries the name.
+static func pitch_from_about(about: String) -> String:
+	var text: String = _without_marks(about)
+	var lead: int = text.find(" - ")
+	if lead > 0 and lead <= ABOUT_LEAD_LIMIT:
+		text = text.substr(lead + 3)
+	var cut: int = text.length()
+	for ending: String in [". ", ": ", ", and "]:
+		var at: int = text.find(ending)
+		if at < 0:
+			continue
+		# The sentence keeps its full stop; the other two are joins, and the pitch ends before them.
+		cut = mini(cut, at + 1 if ending == ". " else at)
+	text = text.substr(0, cut).strip_edges()
+	if text.is_empty():
+		return ""
+	return text if text.ends_with(".") else "%s." % text
+
+
+## The same text without its display marks. A card is a Button - it shows the characters it is
+## given, so a `[b]` left in reads as three of them.
+static func _without_marks(text: String) -> String:
+	var marks: RegEx = RegEx.create_from_string("\\[/?[a-zA-Z][^\\]]*\\]")
+	return marks.sub(text, "", true) if marks != null else text
+
+
+## The showcase folders this page has no shelf for. The genre is the one fact the page still writes
+## down itself, so it is the one a new showcase can leave behind; the suite pins this empty.
+static func showcases_without_a_shelf() -> PackedStringArray:
+	var missing: PackedStringArray = PackedStringArray()
+	for folder: String in showcase_folders():
+		if not SHOWCASE_KINDS.has(folder):
+			missing.append(folder)
+	return missing
+
+
+## Shelves and pitches naming a folder that is not there - a showcase renamed or retired with its
+## entry left behind. Sorted, so the suite names them in one order on every filesystem.
+static func shelves_without_a_showcase() -> PackedStringArray:
+	var folders: PackedStringArray = showcase_folders()
+	var stale: PackedStringArray = PackedStringArray()
+	for folder: Variant in SHOWCASE_KINDS.keys():
+		if not folders.has(str(folder)):
+			stale.append(str(folder))
+	for folder: Variant in SHOWCASE_PITCHES.keys():
+		if not folders.has(str(folder)) and not stale.has(str(folder)):
+			stale.append(str(folder))
+	stale.sort()
+	return stale
 
 
 ## Sheet ▸ Start page, and the no-sheet startup.
@@ -198,8 +340,9 @@ func _fill() -> void:
 		_columns_row.remove_child(child)
 		child.queue_free()
 	var recents: Array = _dock.get_open_sheets_state().get("recent", [])
+	var folders: PackedStringArray = showcase_folders()
 	for column: Variant in columns(EventSheetStarterTemplates.create_new_starters(),
-			showcase_folders(), recents, EventSheetThisEditor.is_editor_project()):
+			folders, recents, EventSheetThisEditor.is_editor_project(), showcase_abouts(folders)):
 		var section: Dictionary = column
 		var box: VBoxContainer = VBoxContainer.new()
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
