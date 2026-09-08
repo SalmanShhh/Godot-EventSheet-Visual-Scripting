@@ -361,7 +361,7 @@ static func _test_theme_home() -> bool:
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
 		if str(preset.get("path", "")).begins_with("res://addons/eventsheet/themes/"):
 			addon_presets += 1
-	all_passed = _check("a plugin-only install now has a theme preset", addon_presets, 1) and all_passed
+	all_passed = _check("a plugin-only install now has theme presets", addon_presets, 2) and all_passed
 	viewport.free()
 	return all_passed
 

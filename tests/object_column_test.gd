@@ -16,8 +16,8 @@ static func run() -> bool:
 	# The column is ALIGNED by default (the event-sheet look): every row's text starts at the same x, so
 	# the sheet scans as a table instead of each row starting wherever its own object name happens to
 	# end. Flow mode is still reachable by setting the token to 0.
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 130.0, "condition lane is aligned by default")
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "action") == 130.0, "action lane is aligned by default")
+	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 96.0, "condition lane is aligned by default")
+	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "action") == 96.0, "action lane is aligned by default")
 	event_style.condition_object_column_width = 0
 	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 0.0, "0 still means flow mode")
 	event_style.condition_object_column_width = 120

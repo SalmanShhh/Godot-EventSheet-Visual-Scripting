@@ -60,7 +60,11 @@ static func stated_tokens(preset_path: String) -> Array[Dictionary]:
 		var line: String = raw_line.strip_edges(true, false)
 		if line.begins_with("[ext_resource"):
 			var path_value: String = _quoted_value(line, "path=\"")
-			var id_value: String = _quoted_value(line, "id=\"")
+			# " id=" with the leading space, deliberately: an `[ext_resource]` line re-saved by the
+			# editor carries a `uid="uid://..."` too, and an unanchored `id="` finds THAT first - which
+			# silently mapped every block to no script at all and reported a fully-stated preset as
+			# holding no blocks.
+			var id_value: String = _quoted_value(line, " id=\"")
 			if not id_value.is_empty():
 				script_by_id[id_value] = path_value.get_file()
 			continue

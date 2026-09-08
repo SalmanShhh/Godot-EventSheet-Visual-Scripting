@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EventSheetDensityStyle" format=3]
+
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_density_style.gd" id="1_density"]
+
+[resource]
+script = ExtResource("1_density")
+row_height = 32
+cell_padding_horizontal = 8
+cell_padding_vertical = 3
+event_block_gap = 10
+sub_event_indent = 28
+sub_event_rail_line = true
+object_column_width = 96
+event_card_border_width = 1
+event_card_gutter_gap = 0

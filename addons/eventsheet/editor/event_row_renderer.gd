@@ -505,6 +505,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		if editor_style != null
 		else null
 	)
+	# The theme's indent step. Handed to every painter that measures from a nesting level, so a
+	# themed indent moves the guides, the rail and the text together or not at all.
+	var row_indent_width: int = event_style.sub_event_indent if event_style != null else INDENT_WIDTH
 	var selection_fill: Color = (
 		event_style.selection_fill_color
 		if event_style != null
@@ -608,7 +611,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			event_style.lane_divider_color if event_style != null else EventSheetPalette.COLOR_LANE_DIVIDER,
 			true
 		)
-	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
+	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null 			and event_style.event_card_border_width <= 0:
+		# The per-ROW hairlines, drawn only when the theme asks for NO card. With a card border in
+		# force the event is framed once, round every row it is drawn on, by draw_event_card below -
+		# and a row hairline under that frame would rule a line through the middle of an OR stack.
 		# Border lines inset past the rounded corners so they never cut across the curve -
 		# measured from the INSET fill (the block starts after the gutter cell), so the
 		# hairlines never overhang into the gutter the fill deliberately avoids.
@@ -617,11 +623,13 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var border_width: float = maxf(row_fill_rect.size.x - float(block_radius + block_radius_right), 0.0)
 		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
-	_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color)
-	# The tree connector from a parent event down to this sub-event, on top of the indent
-	# stops above. Draw-only: it reserves no width and is never measured, so it cannot move a
-	# glyph; the guide geometry itself lives in its own helper.
-	EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, reading_style.tree_guide_color)
+	_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color, row_indent_width)
+	# The RAIL: the tree connector from a parent event down to this sub-event, on top of the indent
+	# stops above. Draw-only - it reserves no width and is never measured, so it cannot move a
+	# glyph - and one of the density tokens, because a tight sheet that wants the pixels back is
+	# entitled to read its nesting off the indent alone. The geometry lives in its own helper.
+	if event_style == null or event_style.sub_event_rail_line:
+		EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, reading_style.tree_guide_color, row_indent_width)
 	if row_data.language_block:
 		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
 		# reads as an event row but is not a regular ACE event: a quiet indigo left stripe + faint wash mark
@@ -907,9 +915,10 @@ func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabl
 		]), reading.bookmark_color)
 
 
-func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE) -> void:
+func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE,
+		indent_width: int = INDENT_WIDTH) -> void:
 	for level: int in range(depth):
-		var guide_x: float = row_rect.position.x + EventSheetPalette.GUTTER_WIDTH + float(level * INDENT_WIDTH) + 2.0
+		var guide_x: float = row_rect.position.x + EventSheetPalette.GUTTER_WIDTH + float(level * indent_width) + 2.0
 		control.draw_line(
 			Vector2(guide_x, row_rect.position.y + 4.0),
 			Vector2(guide_x, row_rect.end.y - 4.0),
@@ -952,6 +961,36 @@ func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lig
 	var outline: Color = base_color.lightened(lighten)
 	outline.a = alpha
 	control.draw_rect(row_rect.grow(-0.5), outline, false, 1.0)
+
+
+## THE EVENT CARD. One 1 px border round a whole event - both lanes, every row of an OR stack, the
+## band under the shorter lane - so the question "which event does this condition belong to" is
+## answered by shape instead of by counting indents. The number stays OUTSIDE the border, in the
+## gutter, where a margin mark belongs.
+##
+## Drawn from the canvas AFTER every row of the event, for the same reason the selection frame is:
+## a border taller than one row would be cut by the lane fill of the row below it. It is paint and
+## nothing else - it reserves no width, is never measured and is never hit-tested, so turning the
+## card on or off cannot move a single glyph. Border thickness 0 (the Compact starter) draws
+## nothing here and leaves the older per-row hairlines to say where a row ended.
+func draw_event_card(control: Control, rect: Rect2, event_style: EventSheetEventStyle) -> void:
+	if control == null or event_style == null or rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+	var width: int = event_style.event_card_border_width
+	if width <= 0:
+		return
+	var radius: int = event_style.event_corner_radius
+	var border: Color = event_style.row_border_color
+	var key: String = "card:%d:%d:%s" % [radius, width, border.to_html()]
+	var box: StyleBoxFlat = _rounded_box_cache.get(key)
+	if box == null:
+		box = StyleBoxFlat.new()
+		box.draw_center = false
+		box.border_color = border
+		box.set_border_width_all(width)
+		box.set_corner_radius_all(radius)
+		_rounded_box_cache[key] = box
+	box.draw(control.get_canvas_item(), rect)
 
 
 ## ONE EVENT, ONE OUTLINE. The selection mark of a WHOLE event: a single frame around the union of

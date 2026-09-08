@@ -2,14 +2,47 @@
 class_name EventSheetPalette
 extends RefCounted
 
-const ROW_HEIGHT := 28
+# ── Density starters ──────────────────────────────────────────────────────────────────────────
+# The distances a sheet is spaced with are TOKENS on the theme resource, not constants: a project
+# owns its own breathing room. The constants below are the three shipped starters' numbers, and the
+# token defaults name the Comfortable ones, so a fresh theme is Comfortable and the other two are a
+# menu click away. COMPACT_* is what the editor shipped before the tokens existed, kept whole so
+# "Compact" is exactly the old look rather than an approximation of it.
+#
+# Comfortable is the default because the sheet's job is to be read: a row you can put your eye on
+# beats one more row on screen, and the people who want the density back have a starter that gives
+# it to them in one click.
+const COMPACT_ROW_HEIGHT := 28
+const ROW_HEIGHT := 32
+const SPACIOUS_ROW_HEIGHT := 36
+# The vertical padding inside a condition/action cell, per starter (the horizontal half is the
+# element style's own 8 at every density - a cell's text needs air above and below it long before it
+# needs more air beside it).
+const COMPACT_CELL_PADDING_V := 2
+const CELL_PADDING_V := 3
+const SPACIOUS_CELL_PADDING_V := 5
+# Vertical gap inserted before an event/group that starts a new sibling block.
+const COMPACT_EVENT_BLOCK_GAP := 7
+const EVENT_BLOCK_GAP := 10
+const SPACIOUS_EVENT_BLOCK_GAP := 14
 # Group headers double the event row height by default: groups are the sheet's chapter bars
 # and taller bars carry the folder icon + title + fingerprint comfortably (themable per style).
 const GROUP_ROW_HEIGHT := 56
-const INDENT_WIDTH := 18
+const COMPACT_INDENT_WIDTH := 18
+const INDENT_WIDTH := 28
+const SPACIOUS_INDENT_WIDTH := 32
 # Width of the event-sheet object-name column when it is ALIGNED (the default). One source for the two
 # style tokens' defaults AND the View menu's align/flow toggle, so the two can never drift apart.
-const OBJECT_COLUMN_WIDTH := 130
+const COMPACT_OBJECT_COLUMN_WIDTH := 130
+const OBJECT_COLUMN_WIDTH := 96
+const SPACIOUS_OBJECT_COLUMN_WIDTH := 120
+# The 1 px border drawn round a whole event, and the gap kept between it and the number gutter.
+const COMPACT_EVENT_CARD_BORDER_WIDTH := 0
+const EVENT_CARD_BORDER_WIDTH := 1
+const SPACIOUS_EVENT_CARD_BORDER_WIDTH := 1
+const COMPACT_EVENT_CARD_GUTTER_GAP := 0
+const EVENT_CARD_GUTTER_GAP := 0
+const SPACIOUS_EVENT_CARD_GUTTER_GAP := 2
 const FONT_SIZE := 13
 const MIN_FONT_SIZE := 8
 const GUTTER_WIDTH := 20

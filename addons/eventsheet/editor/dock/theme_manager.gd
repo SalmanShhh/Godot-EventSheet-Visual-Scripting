@@ -169,6 +169,15 @@ func _on_reload_theme_requested() -> void:
 var _theme_menu: PopupMenu = null
 
 
+## The Density submenu that hangs off Sheet theme, and the sentinel its item carries so the two
+## loops over the theme menu (the tick sweep and the pick handler) can tell a submenu row from a
+## theme row. A submenu row has no theme behind it; ticking one would put a check mark on a door.
+const DENSITY_SUBMENU_NAME := "EventSheetSheetDensityMenu"
+const DENSITY_SUBMENU_METADATA := "submenu:density"
+
+var _density_menu: PopupMenu = null
+
+
 ## Takes ownership of the View menu’s Sheet theme submenu: fills it now and wires the pick.
 func bind_sheet_theme_menu(menu: PopupMenu) -> void:
 	if menu == null:
@@ -176,6 +185,11 @@ func bind_sheet_theme_menu(menu: PopupMenu) -> void:
 	_theme_menu = menu
 	if not _theme_menu.id_pressed.is_connected(_on_theme_preset_selected):
 		_theme_menu.id_pressed.connect(_on_theme_preset_selected)
+	if _density_menu == null:
+		_density_menu = PopupMenu.new()
+		_density_menu.name = DENSITY_SUBMENU_NAME
+		_density_menu.id_pressed.connect(_on_density_preset_selected)
+		_theme_menu.add_child(_density_menu)
 	_populate_theme_menu()
 
 
@@ -194,7 +208,71 @@ func _populate_theme_menu() -> void:
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
 		_theme_menu.add_radio_check_item(str(preset.get("name", "Theme")), _theme_menu.item_count)
 		_theme_menu.set_item_metadata(_theme_menu.item_count - 1, str(preset.get("path", "")))
+	# Density ▸ - how much room the sheet gives its rows, which is a separate question from what
+	# colour it is. Refilled with the theme list for the same reason: a starter dropped into the
+	# density folder mid-session is pickable the next time View opens.
+	if _density_menu != null:
+		_theme_menu.add_separator()
+		_theme_menu.add_submenu_item(EventSheetL10n.translate("Density"), DENSITY_SUBMENU_NAME,
+			_theme_menu.item_count)
+		_theme_menu.set_item_metadata(_theme_menu.item_count - 1, DENSITY_SUBMENU_METADATA)
+		_populate_density_menu()
 	_refresh_theme_menu_selection()
+
+
+## Fills the Density submenu with every shipped starter, tightest first, the one this sheet's
+## spacing matches ticked. A sheet whose theme states its own numbers matches none of them and ticks
+## nothing, which is the honest answer - it is wearing its own density, not a starter.
+func _populate_density_menu() -> void:
+	if _density_menu == null:
+		return
+	_density_menu.clear()
+	var current: EventSheetDensityStyle = EventSheetDensityStyle.read_from(_active_style_or_default())
+	for preset: Dictionary in EventSheetDensityPresets.list_presets():
+		var density: EventSheetDensityStyle = preset["density"] as EventSheetDensityStyle
+		_density_menu.add_radio_check_item(str(preset.get("name", "Density")), _density_menu.item_count)
+		_density_menu.set_item_metadata(_density_menu.item_count - 1, str(preset.get("path", "")))
+		_density_menu.set_item_checked(_density_menu.item_count - 1, density.matches(current))
+
+
+## The style the sheet is actually painted with - its own, or the bundled default a theme-less sheet
+## falls back to. The Density tick has to read the second one too, or a fresh sheet would show no
+## density ticked while plainly wearing one.
+func _active_style_or_default() -> EventSheetEditorStyle:
+	if _dock._current_sheet != null and _dock._current_sheet.editor_style != null:
+		return _dock._current_sheet.editor_style
+	return EventSheetActiveTheme.active()
+
+
+## Applies a density starter to the current sheet: its six numbers are copied onto a DUPLICATE of
+## the sheet's own style, so a starter shared by two sheets is never edited in place and every
+## colour the theme states survives untouched. Out of the undo history, like every theme switch.
+func _on_density_preset_selected(index: int) -> void:
+	if _density_menu == null or index < 0 or index >= _density_menu.item_count:
+		return
+	var path: String = str(_density_menu.get_item_metadata(index))
+	if path.is_empty() or _dock._current_sheet == null:
+		return
+	var loaded: Resource = ResourceLoader.load(path)
+	if not (loaded is EventSheetDensityStyle):
+		_dock._set_status("Density load failed: %s is not an EventSheetDensityStyle." % path.get_file(), true)
+		return
+	var style: EventSheetEditorStyle = _dock._current_sheet.editor_style
+	# A theme-less sheet is painted with the editor-derived default. Freezing THAT into a resource
+	# is what lets a density be stored at all, and the sheet looks identical the moment it happens -
+	# it simply stops re-deriving its colours from the editor theme later on.
+	style = (
+		style.duplicate(true) as EventSheetEditorStyle
+		if style != null
+		else EventSheetGodotTheme.adapt_to_editor(EventSheetEditorStyle.new())
+	)
+	(loaded as EventSheetDensityStyle).apply_to(style)
+	_dock._current_sheet.editor_style = style
+	_active_theme_style = style
+	_publish_active_style()
+	_dock._refresh_after_edit()
+	_dock._mark_dirty("Row density: %s." % EventSheetDensityPresets._humanize(path.get_file()))
+	_populate_density_menu()
 
 
 ## Ticks the entry matching the current sheet’s active theme (Match Editor if none).
@@ -210,6 +288,8 @@ func _refresh_theme_menu_selection() -> void:
 			target_index = i
 			break
 	for i in range(_theme_menu.item_count):
+		if str(_theme_menu.get_item_metadata(i)) == DENSITY_SUBMENU_METADATA:
+			continue
 		_theme_menu.set_item_checked(i, i == target_index)
 
 
@@ -219,6 +299,8 @@ func _on_theme_preset_selected(index: int) -> void:
 	if _theme_menu == null or index < 0 or index >= _theme_menu.item_count:
 		return
 	var path: String = str(_theme_menu.get_item_metadata(index))
+	if path == DENSITY_SUBMENU_METADATA:
+		return
 	if path.is_empty():
 		_on_set_default_theme_requested()
 	else:

@@ -79,7 +79,7 @@ func rebuild() -> void:
 				or row_data.attached_below
 			)
 		):
-			top += _viewport.EVENT_BLOCK_GAP * EventSheetPalette.row_density()
+			top += _viewport.event_block_gap() * EventSheetPalette.row_density()
 		var height: float = _resolve_row_height(row_data)
 		_row_metrics.append({"top": top, "height": height})
 		top += height
@@ -98,7 +98,7 @@ func _resolve_row_height(row_data: EventRowData) -> float:
 
 func _resolve_row_height_natural(row_data: EventRowData) -> float:
 	if row_data == null:
-		return float(_viewport.ROW_HEIGHT)
+		return _viewport.row_height_floor()
 	if row_data.row_type == EventRowData.RowType.COMMENT:
 		# Comments wrap to the row width; the row is as tall as the wrapped text needs.
 		return _measure_comment_height(row_data)
@@ -113,18 +113,18 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 		# into the row below and painted over, the same bleed single-line rows had on a Retina Mac.
 		var text_height: float = float(maxi(row_data.line_count, 1)) \
 			* _viewport._get_event_line_height(_viewport._get_font_size())
-		return max(max(float(group_height), text_height), float(_viewport.ROW_HEIGHT))
+		return max(max(float(group_height), text_height), _viewport.row_height_floor())
 	if row_data.row_type == EventRowData.RowType.REGION:
 		# A region OPENER is an ordinary single-line row: a fold mark, never a chapter bar. Its
 		# closing fence is a TICK - as tall as the small echo it carries and no taller - so the mark
 		# that says "the region ends here" costs a sliver of canvas instead of another row.
 		if not EventSheetRegionFacts.is_closing_fence(row_data.source_resource):
-			return maxf(float(_viewport.ROW_HEIGHT), _viewport._get_event_line_height(_viewport._get_font_size()))
+			return maxf(_viewport.row_height_floor(), _viewport._get_event_line_height(_viewport._get_font_size()))
 		var tick_font: int = EventSheetPalette.resolve_font_size(
 			_viewport._get_font_size(), ViewportRowBuilder.REGION_CLOSER_FONT_DELTA
 		)
 		return maxf(
-			float(_viewport.ROW_HEIGHT) * ViewportRowBuilder.REGION_CLOSER_HEIGHT_RATIO,
+			_viewport.row_height_floor() * ViewportRowBuilder.REGION_CLOSER_HEIGHT_RATIO,
 			_viewport._get_font().get_height(tick_font) + 2.0
 		)
 	if row_data.row_type != EventRowData.RowType.EVENT:
@@ -138,7 +138,7 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 		# 200% editor scale does: every such row bled ~10px into the row below and the neighbouring
 		# opaque band painted over it. At the default font this is still exactly 28, so 100%-scale
 		# editors are unchanged.
-		return maxf(float(_viewport.ROW_HEIGHT), _viewport._get_event_line_height(_viewport._get_font_size()))
+		return maxf(_viewport.row_height_floor(), _viewport._get_event_line_height(_viewport._get_font_size()))
 	var line_height: float = _viewport._get_event_line_height(_viewport._get_font_size())
 	# When spans are still lazy (not yet built), use the precomputed line count so
 	# metrics never trigger span building. Once built, the spans are authoritative.
@@ -160,7 +160,7 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 ## shared greedy break points (wrap_break_points), which the layout stamps for the renderer.
 func event_line_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH) + 18.0
+	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width()) + 18.0
 	var lane_divider_x: float = _viewport.get_lane_divider_x(width)
 	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
 	var action_lane_rect := Rect2(lane_divider_x + float(event_style.lane_divider_width), 0.0, maxf(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), 1.0)
@@ -396,7 +396,7 @@ func _comment_text_origin_x(indent: int) -> float:
 	return (
 		EventSheetPalette.ROW_HORIZONTAL_PADDING
 		+ EventSheetPalette.GUTTER_WIDTH
-		+ float(indent * _viewport.INDENT_WIDTH)
+		+ float(indent * _viewport.indent_width())
 		+ 18.0
 	)
 
@@ -457,8 +457,8 @@ func row_top(index: int) -> float:
 
 func row_height(index: int) -> float:
 	if index < 0 or index >= _row_metrics.size():
-		return float(_viewport.ROW_HEIGHT)
-	return float(_row_metrics[index].get("height", _viewport.ROW_HEIGHT))
+		return _viewport.row_height_floor()
+	return float(_row_metrics[index].get("height", _viewport.row_height_floor()))
 
 
 func row_index_at_y(y: float) -> int:
@@ -495,7 +495,7 @@ func total_height() -> float:
 	if _row_metrics.is_empty():
 		return 0.0
 	var last_metric: Dictionary = _row_metrics[_row_metrics.size() - 1]
-	return float(last_metric.get("top", 0.0)) + float(last_metric.get("height", _viewport.ROW_HEIGHT))
+	return float(last_metric.get("top", 0.0)) + float(last_metric.get("height", _viewport.row_height_floor()))
 
 
 func is_empty() -> bool:
@@ -568,7 +568,7 @@ func natural_content_width() -> float:
 func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
-		+ float(row_data.indent * _viewport.INDENT_WIDTH) + 18.0
+		+ float(row_data.indent * _viewport.indent_width()) + 18.0
 	var lane_divider_x: float = _viewport.get_lane_divider_x(width)
 	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
 	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)

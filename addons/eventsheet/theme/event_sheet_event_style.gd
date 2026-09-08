@@ -15,7 +15,14 @@ extends Resource
 @export_range(0, 64, 1) var condition_badge_column_width: int = int(EventSheetPalette.CONDITION_BADGE_COLUMN_WIDTH)
 @export_range(0, 32, 1) var action_lane_padding: int = int(EventSheetPalette.ACTION_LANE_PADDING)
 @export_range(1, 8, 1) var lane_divider_width: int = int(EventSheetPalette.LANE_DIVIDER_WIDTH)
-@export_range(28, 200, 1) var minimum_row_height: int = EventSheetPalette.ROW_HEIGHT
+## THE DENSITY TOKENS. Six numbers decide how much room a sheet gives its rows, and all six live
+## here on the theme resource the project owns rather than in the plugin: a team that wants the
+## rows tight and a team that wants them airy are both right, and neither has to patch the addon.
+## The shipped starters (View > Sheet theme > Density) are ordinary `.tres` files stating exactly
+## these tokens, so "Compact" is a file a user can copy and edit, never a hard-coded look.
+##
+## Height an event row reserves before its text asks for more.
+@export_range(20, 200, 1) var minimum_row_height: int = EventSheetPalette.ROW_HEIGHT
 ## Height of GROUP header rows. Defaults to double the event row height so groups read as
 ## strong section bars (an event-sheet reflex); themes can pull it back down to the classic slim bar.
 @export_range(28, 200, 1) var group_row_height: int = EventSheetPalette.GROUP_ROW_HEIGHT
@@ -30,6 +37,21 @@ extends Resource
 @export_range(0, 480, 1) var condition_object_column_width: int = EventSheetPalette.OBJECT_COLUMN_WIDTH
 ## Fixed width of the object-name column inside the ACTIONS lane, in pixels. 0 = flow.
 @export_range(0, 480, 1) var action_object_column_width: int = EventSheetPalette.OBJECT_COLUMN_WIDTH
+## Vertical gap inserted before an event or group that starts a new sibling block, so a run of
+## sub-events reads as one block hanging off its parent instead of a ladder of equal rows.
+@export_range(0, 48, 1) var event_block_gap: int = EventSheetPalette.EVENT_BLOCK_GAP
+## How far one nesting level indents a sub-event, in logical pixels.
+@export_range(4, 96, 1) var sub_event_indent: int = EventSheetPalette.INDENT_WIDTH
+## Draw the nesting RAIL - the vertical line a sub-event hangs from, run down the parent's indent
+## step for the full height of the child's card. Off leaves the older faint indent guides alone.
+@export var sub_event_rail_line: bool = true
+## Thickness of the border drawn round a WHOLE event - both lanes, every row of an OR stack, the
+## band under the shorter lane - so an event reads as one card. 0 keeps the older look, where each
+## row carried its own top and bottom hairline and nothing said where an event ended.
+@export_range(0, 4, 1) var event_card_border_width: int = EventSheetPalette.EVENT_CARD_BORDER_WIDTH
+## Gap kept between the number gutter and the left edge of the card, so the number reads as a
+## margin mark outside the event rather than as the first thing inside it.
+@export_range(0, 16, 1) var event_card_gutter_gap: int = EventSheetPalette.EVENT_CARD_GUTTER_GAP
 @export var trigger_badge_background_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_BG
 @export var trigger_badge_foreground_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_FG
 @export var group_background_color: Color = EventSheetPalette.COLOR_GROUP_BG

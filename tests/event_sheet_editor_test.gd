@@ -91,8 +91,11 @@ static func run() -> bool:
     all_passed = _check("editor viewport exists", viewport is EventSheetViewport, true) and all_passed
     all_passed = _check("editor keeps required direct hierarchy", scroll != null and scroll.get_child_count() == 1, true) and all_passed
     all_passed = _check("viewport is custom control without row widgets", viewport != null and viewport.get_child_count() == 0, true) and all_passed
-    all_passed = _check("viewport baseline row height", EventSheetViewport.ROW_HEIGHT, 28) and all_passed
-    all_passed = _check("viewport baseline indent width", EventSheetViewport.INDENT_WIDTH, 18) and all_passed
+    # The DEFAULT density's two distances (the Comfortable starter's numbers). The live ones are the
+    # sheet theme's, read through row_height_floor() / indent_width(); these constants are what a
+    # caller with no theme in hand gets, and what the Comfortable starter states.
+    all_passed = _check("viewport baseline row height", EventSheetViewport.ROW_HEIGHT, 32) and all_passed
+    all_passed = _check("viewport baseline indent width", EventSheetViewport.INDENT_WIDTH, 28) and all_passed
     all_passed = _check("viewport baseline font size", EventSheetViewport.FONT_SIZE, 13) and all_passed
 
     var dock: EventSheetDock = editor as EventSheetDock

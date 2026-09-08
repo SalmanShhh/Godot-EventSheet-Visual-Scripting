@@ -517,13 +517,26 @@ static func _test_the_sheet_theme_menu() -> bool:
 	if theme_menu == null:
 		editor.free()
 		return false
+	# Match Editor, every discovered preset, then a separator and the Density submenu - how much room
+	# a sheet gives its rows is a second question about the same theme, so it hangs off the same door.
 	var expected: PackedStringArray = PackedStringArray(["Match Editor (default)"])
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
 		expected.append(str(preset.get("name", "Theme")))
+	expected.append("")
+	expected.append("Density")
 	var listed: PackedStringArray = PackedStringArray()
 	for item: int in theme_menu.item_count:
 		listed.append(theme_menu.get_item_text(item))
-	ok = _check("it lists Match Editor plus every discovered preset", listed, expected) and ok
+	ok = _check("it lists Match Editor plus every discovered preset, then Density", listed, expected) and ok
+	var density_menu: PopupMenu = theme_menu.find_child("EventSheetSheetDensityMenu", true, false) as PopupMenu
+	var densities: PackedStringArray = PackedStringArray()
+	if density_menu != null:
+		for item: int in density_menu.item_count:
+			densities.append(density_menu.get_item_text(item))
+	ok = _check("Density offers the three starters, tightest first", densities,
+		PackedStringArray(["Compact", "Comfortable", "Spacious"])) and ok
+	ok = _check("and ticks the one a fresh sheet already wears",
+		density_menu != null and density_menu.is_item_checked(1), true) and ok
 	# The tick: a sheet with no style of its own wears the editor-derived default, which is entry 0.
 	ok = _check("a sheet with no theme of its own ticks Match Editor",
 		theme_menu.is_item_checked(0), true) and ok

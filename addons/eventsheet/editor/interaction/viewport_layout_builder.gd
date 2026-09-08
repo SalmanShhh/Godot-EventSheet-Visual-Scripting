@@ -77,7 +77,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# splits above and below), so the bar presence never reads as misaligned text.
 	var scale_pad: float = row_height * (1.0 - 1.0 / row_data.height_scale) * 0.5 if row_data.height_scale > 1.0 else 0.0
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
-	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH)
+	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.indent_width())
 	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,
 	# below, the title spans in the bar instead of pinning them to its top edge. Centre the WHOLE text
 	# block, not one line - a group with a description is two lines, and centring as though it were one
@@ -369,7 +369,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			"inside":
 				# Indent the drop line to the child level so it clearly reads as "nest this
 				# as a sub-event of the target", not just "drop after".
-				var child_indent_x: float = EventSheetPalette.GUTTER_WIDTH + float((row_data.indent + 1) * _viewport.INDENT_WIDTH) + EventSheetPalette.ROW_HORIZONTAL_PADDING
+				var child_indent_x: float = EventSheetPalette.GUTTER_WIDTH + float((row_data.indent + 1) * _viewport.indent_width()) + EventSheetPalette.ROW_HORIZONTAL_PADDING
 				drag_rect = Rect2(child_indent_x, row_rect.end.y - 2.0, max(width - child_indent_x, 1.0), 3.0)
 			_:
 				drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)

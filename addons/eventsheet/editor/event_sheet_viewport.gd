@@ -153,6 +153,10 @@ signal raw_code_edit_requested(raw_row: Resource, in_flow: bool)
 ## field's index in the parsed model's body array; part is "name", "type" or "default".
 signal data_class_field_edit_requested(raw_row: Resource, field_index: int, part: String, current_text: String)
 
+# The DEFAULT density's numbers. Every layout read goes through row_height_floor() /
+# indent_width() / event_block_gap() below, which ask the sheet's own theme; these two are the
+# fallback that answer names, and what a caller with no theme in hand (a measurement harness, a
+# figure) gets.
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
@@ -366,8 +370,9 @@ var patterns_lens: bool = true
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
 ## Vertical gap inserted before an event/group that starts a new sibling block (indent <=
-## previous), so sub-events read as tightly grouped under their parent.
-const EVENT_BLOCK_GAP := 7.0
+## previous), so sub-events read as tightly grouped under their parent. The DEFAULT density's
+## number - the live one is the theme's, read through event_block_gap().
+const EVENT_BLOCK_GAP := float(EventSheetPalette.EVENT_BLOCK_GAP)
 var _box_select_active: bool = false
 var _box_select_additive: bool = false
 var _box_select_start: Vector2 = Vector2.ZERO
@@ -968,6 +973,30 @@ func _get_event_style() -> EventSheetEventStyle:
 	if _editor_style == null:
 		_editor_style = EventSheetEditorStyle.new()
 	return _editor_style.get_event_style()
+
+
+## ── The density seams ─────────────────────────────────────────────────────────────────────────
+## The three distances the LAYOUT is built from, each asked of the sheet's own theme rather than
+## of a plugin constant. Every measure, hit-test and painter comes through these, so a project that
+## states its own density cannot end up with the rows one size and the gaps another.
+
+
+## How tall an event row is before its text asks for more.
+func row_height_floor() -> float:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	return float(event_style.minimum_row_height) if event_style != null else float(ROW_HEIGHT)
+
+
+## How far one nesting level indents a sub-event.
+func indent_width() -> int:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	return event_style.sub_event_indent if event_style != null else INDENT_WIDTH
+
+
+## The gap opened before an event or group that starts a new sibling block.
+func event_block_gap() -> float:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	return float(event_style.event_block_gap) if event_style != null else EVENT_BLOCK_GAP
 
 
 ## The marks that say what a row IS - chips, badges, tempo, guides, stripes, the refusal bubble.
@@ -2243,6 +2272,7 @@ func _draw() -> void:
 			var grip_color: Color = chrome_style.object_bar_grip_active_color if _hover_is_drag_zone else chrome_style.object_bar_grip_color
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
+	_draw_event_cards(visible_range)
 	_draw_event_selection_outlines(visible_range)
 	_draw_variable_group_bubbles(width)
 	_draw_group_brackets(width)
@@ -2256,6 +2286,32 @@ func _draw() -> void:
 	_corner_links.draw(font, font_size,
 		ViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
 	_draw_drag_ghost(font, font_size)
+
+
+## THE EVENT CARD: one border per event, drawn AFTER the row loop and once per EVENT rather than
+## once per row, for the same two reasons the selection frame is - a shape taller than one row would
+## be cut by the next row's lane fill, and an event drawn as several rows is still one card. Pure
+## paint: nothing here is measured or hit-tested, so a theme that draws no card lays out identically
+## to one that does. The nesting RAIL is the other half of the shape and lives with the row, in the
+## renderer, because a rail belongs to the row it hangs beside rather than to the whole card.
+func _draw_event_cards(visible_range: Vector2i) -> void:
+	if visible_range.x < 0:
+		return
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if event_style == null:
+		return
+	if event_style.event_card_border_width <= 0:
+		return
+	var carded: Dictionary = {}
+	for index: int in range(visible_range.x, visible_range.y + 1):
+		var row_data: EventRowData = _row_at(index)
+		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+			continue
+		var lead: int = statement_lead_index(index)
+		if carded.has(lead):
+			continue
+		carded[lead] = true
+		_renderer.draw_event_card(self, event_card_border_rect(lead), event_style)
 
 
 ## ONE EVENT, ONE OUTLINE: the frame around every selected event, drawn once per event over the
@@ -2451,7 +2507,7 @@ func _draw_region_drop_glow(width: float) -> void:
 		glow.border_color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_RULE_ALPHA)
 		glow.set_border_width_all(_get_event_style().region_line_width)
 		glow.set_corner_radius_all(_get_event_style().region_corner_radius)
-		var left: float = 3.0 + float(row_data.indent * INDENT_WIDTH)
+		var left: float = 3.0 + float(row_data.indent * indent_width())
 		var top: float = _get_row_top(index)
 		var bottom: float = _get_row_top(last_index) + _get_row_height(last_index)
 		glow.draw(get_canvas_item(), Rect2(left, top + 1.0, width - left - 3.0, bottom - top - 2.0))
@@ -4278,6 +4334,20 @@ func event_card_rect(row_index: int) -> Rect2:
 	var top: float = _get_row_top(lead)
 	var bottom: float = _get_row_top(last) + _get_row_height(last)
 	return Rect2(0.0, top, _get_logical_canvas_width(), maxf(bottom - top, 0.0))
+
+
+## THE CARD'S PAINTED RECTANGLE: the event's own rectangle with the number gutter taken off the
+## front, because the number is a MARGIN mark and a card that swallowed it would say the number was
+## part of the event's content. The theme's gutter gap widens that margin; the right edge sits one
+## pixel inside the canvas so the stroke is drawn rather than clipped.
+func event_card_border_rect(row_index: int) -> Rect2:
+	var card: Rect2 = event_card_rect(row_index)
+	if card.size.y <= 0.0:
+		return card
+	var event_style: EventSheetEventStyle = _get_event_style()
+	var gap: float = float(event_style.event_card_gutter_gap) if event_style != null else 0.0
+	var left: float = float(EventSheetPalette.GUTTER_WIDTH) + gap
+	return Rect2(left, card.position.y, maxf(card.size.x - left - 1.0, 0.0), card.size.y)
 
 
 func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:

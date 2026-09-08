@@ -15,7 +15,10 @@ const MIN_LINE_HEIGHT_EXTRA := 10
 # still enforces a readable floor.
 @export_range(-2, 12, 1) var font_size_delta: int = 0 # Negative values intentionally support denser chip styles.
 @export_range(0, 24, 1) var horizontal_padding: int = 8
-@export_range(0, 16, 1) var vertical_padding: int = 2
+## The cell's own breathing room. One of the six DENSITY tokens the Density starters state (the
+## other five live on EventSheetEventStyle); the horizontal half is the same at every density,
+## because a cell's text needs air above and below it long before it needs more air beside it.
+@export_range(0, 16, 1) var vertical_padding: int = EventSheetPalette.CELL_PADDING_V
 @export_range(0, 24, 1) var gap_after: int = 8
 @export_range(0, 12, 1) var corner_radius: int = 5
 @export_range(0, 32, 1) var badge_extra_width: int = 12
