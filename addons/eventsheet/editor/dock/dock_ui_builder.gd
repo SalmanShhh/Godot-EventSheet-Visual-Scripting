@@ -141,7 +141,6 @@ func build_ui() -> void:
 	_dock._open_sheets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._open_sheets_panel.activate_requested.connect(_dock.activate_open_tab)
 	_dock._open_sheets_panel.reopen_requested.connect(_dock.reopen_sheet_path)
-	_dock._open_sheets_panel.collapse_toggled.connect(_dock._on_open_sheets_panel_collapsed)
 	_dock.open_tabs_changed.connect(_dock._refresh_open_sheets_panel)
 	# The Functions overview is its own dockable rail panel (fold-expandable on demand) - it used
 	# to live inside the Generated-GDScript side panel, so seeing your functions meant opening the

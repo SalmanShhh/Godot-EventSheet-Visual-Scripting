@@ -44,7 +44,10 @@ func _init() -> void:
 	add_child(header)
 	list = ItemList.new()
 	list.name = "EventSheetFunctionsList"
-	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(110.0))
+	# The rail decides the column heights, so the body carries no minimum of its own: a panel
+	# that kept one could not be dragged shut past its own header, which is how a panel is
+	# tucked away.
+	list.custom_minimum_size = Vector2.ZERO
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	list.allow_reselect = true

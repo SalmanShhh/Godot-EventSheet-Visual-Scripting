@@ -69,37 +69,14 @@ func refresh_rail_census() -> void:
 		_dock._ace_picker != null and _dock._ace_picker.is_open())
 
 
-## Open Sheets collapsed to its header, or opened again. The rail owns the column now, so this is
-## the panel's own fold and nothing else moves; the rail records the fold with the rest of the
-## column's state.
-func on_open_sheets_panel_collapsed(_collapsed: bool) -> void:
-	_dock._save_open_sheets_panel_prefs()
-
-
-## Per-project editor metadata for the panel's shown/collapsed state (survives editor restarts).
-func read_open_sheets_panel_prefs() -> Dictionary:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var meta: Variant = EditorInterface.get_editor_settings().get_project_metadata("eventsheets", _dock._OPEN_SHEETS_PANEL_META, {})
-		if meta is Dictionary:
-			return meta
-	return {}
-
-
-func save_open_sheets_panel_prefs() -> void:
-	if not (Engine.is_editor_hint() and Engine.has_singleton("EditorInterface")):
-		return
-	EditorInterface.get_editor_settings().set_project_metadata("eventsheets", _dock._OPEN_SHEETS_PANEL_META, {
-		"shown": _dock._rail_panels == null or not _dock._rail_panels.is_panel_tucked("open_sheets"),
-		"collapsed": _dock._open_sheets_panel != null and _dock._open_sheets_panel.is_collapsed(),
-	})
-
-
-## Apply the remembered shown/collapsed state when the workspace is built.
+## Apply the remembered state when the workspace is built. The panel used to keep a second,
+## private record of its own - shown and collapsed - which only this file and the View menu ever
+## wrote, so a panel tucked away by its header button came back ticked. The rail is the one
+## record now: it holds the fold, the height and whether the panel is off the column at all, and
+## it has already applied them by the time this runs.
 func apply_open_sheets_panel_prefs() -> void:
 	if _dock._open_sheets_panel == null:
 		return
-	# The fold, the height and whether the panel was slid off the rail all belong to the rail's own
-	# per-project record, applied when it is built - there is nothing left for this to place.
 	_dock._refresh_open_sheets_panel()
 
 

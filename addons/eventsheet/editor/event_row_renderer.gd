@@ -611,7 +611,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			event_style.lane_divider_color if event_style != null else EventSheetPalette.COLOR_LANE_DIVIDER,
 			true
 		)
-	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null 			and event_style.event_card_border_width <= 0:
+	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
+			and event_style.event_card_border_width <= 0:
 		# The per-ROW hairlines, drawn only when the theme asks for NO card. With a card border in
 		# force the event is framed once, round every row it is drawn on, by draw_event_card below -
 		# and a row hairline under that frame would rule a line through the middle of an OR stack.

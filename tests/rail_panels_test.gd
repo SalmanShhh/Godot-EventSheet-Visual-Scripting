@@ -164,6 +164,16 @@ static func _built_rail() -> bool:
 	ok = _check("no panel brings a minimum size of its own to the rail", minimums,
 		[Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]) and ok
 
+	# ...and neither does anything INSIDE a panel. A VSplitContainer stops a drag at its children
+	# combined minimum, so a list 110 px tall inside an open panel put the tuck threshold
+	# out of a dragger's reach: the panel could be slid off by its button and not by its divider.
+	var clamping: Array = []
+	for panel: Control in [dock._open_sheets_panel, dock._objects_panel, dock._functions_panel,
+			dock._anatomy_panel, dock._picker_preview_panel]:
+		_collect_height_minimums(panel, clamping)
+	clamping.sort()
+	ok = _check("and nothing inside one holds the column open either", clamping, []) and ok
+
 	var autohidden: Array = []
 	for split: SplitContainer in _chain_splits(chain):
 		autohidden.append([split.dragger_visibility, split.get_theme_constant("autohide")])
@@ -196,6 +206,18 @@ static func _built_rail() -> bool:
 		dock._rail_panels.is_panel_tucked("functions"), true) and ok
 	dock._rail_panels.set_panel_tucked("functions", false)
 
+	# The View menu tick beside Open Sheets reads the RAIL, not the older private record only
+	# the menu path ever wrote - so a panel tucked by its header button comes back unticked.
+	var view_popup: PopupMenu = dock._view_popup
+	dock._rail_panels.set_panel_tucked("open_sheets", true)
+	view_popup.about_to_popup.emit()
+	ok = _check("a header-button tuck unticks View > Open Sheets Panel",
+		view_popup.is_item_checked(view_popup.get_item_index(13)), false) and ok
+	dock._rail_panels.set_panel_tucked("open_sheets", false)
+	view_popup.about_to_popup.emit()
+	ok = _check("and bringing it back ticks it again",
+		view_popup.is_item_checked(view_popup.get_item_index(13)), true) and ok
+
 	# The rail itself: an edge strip with a chevron, and the sheet takes the width.
 	dock._rail_panels.set_rail_tucked(true)
 	var edge: Control = rail.get_child(1) as Control
@@ -224,6 +246,16 @@ static func _built_rail() -> bool:
 
 	dock.free()
 	return ok
+
+
+## Every control at or under `node` that asks for height, by name. A panel on the rail must ask
+## for none: the rail decides the column, and a child that holds it open cannot be dragged shut.
+static func _collect_height_minimums(node: Node, found: Array) -> void:
+	var control: Control = node as Control
+	if control != null and control.custom_minimum_size.y > 0.0:
+		found.append(control.name)
+	for child: Node in node.get_children():
+		_collect_height_minimums(child, found)
 
 
 ## The panel names down the VSplit chain, in the order a reader meets them.

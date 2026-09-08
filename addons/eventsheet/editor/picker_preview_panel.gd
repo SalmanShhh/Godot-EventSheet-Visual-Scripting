@@ -45,7 +45,10 @@ func _init() -> void:
 	add_child(_header_row)
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_scroll.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(110.0))
+	# The rail decides the column heights, so the body carries no minimum of its own: a panel
+	# that kept one could not be dragged shut past its own header, which is how a panel is
+	# tucked away.
+	_scroll.custom_minimum_size = Vector2.ZERO
 	_scroll.visible = false
 	add_child(_scroll)
 	_canvas = Control.new()

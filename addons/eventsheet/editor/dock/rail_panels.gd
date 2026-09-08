@@ -535,7 +535,7 @@ func _add_header_button(panel: Control, panel_id: String) -> void:
 			(child as Button).clip_text = true
 		elif child is Label:
 			(child as Label).clip_text = true
-	var button: Button = _chevron_button("–",
+	var button: Button = _chevron_button("-",
 		"Slide %s off the rail - its name waits in the tab strip at the foot." % panel_title(panel_id),
 		func() -> void: set_panel_tucked(panel_id, true))
 	button.name = "EventSheetRailMinimise_%s" % panel_id

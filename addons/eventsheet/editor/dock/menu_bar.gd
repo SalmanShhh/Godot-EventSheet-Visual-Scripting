@@ -480,9 +480,11 @@ func build(root: Node) -> void:
 			return
 		_dock._rail_panels.set_panel_tucked(ids[panel_index],
 			not _dock._rail_panels.is_panel_tucked(ids[panel_index])))
-	view_popup.about_to_popup.connect(func() -> void: _fill_panels_menu(panels_menu))
+	view_popup.about_to_popup.connect(func() -> void:
+		_fill_panels_menu(panels_menu)
+		_refresh_open_sheets_tick(view_popup))
 	view_popup.add_check_item("Open Sheets Panel", 13)
-	view_popup.set_item_checked(view_popup.get_item_index(13), bool(_dock._read_open_sheets_panel_prefs().get("shown", true)))
+	_refresh_open_sheets_tick(view_popup)
 	view_popup.add_check_item("Add-Event Rows", 9)
 	view_popup.set_item_checked(view_popup.get_item_index(9), true)
 	view_popup.add_check_item("Object Icons", 15)
@@ -1130,6 +1132,19 @@ static func mark_unread(popup: PopupMenu, item_id: int, label: String) -> void:
 ## has anything to put in, unticked once that panel has been slid off the rail. A panel the census
 ## does not offer at all (Anatomy outside a behaviour pack, the Picker preview with the picker
 ## closed) is not listed - there is nothing behind it to bring back.
+## The View menu tick beside Open Sheets. THE RAIL IS THE RECORD: a panel is off the rail or on
+## it, and the header button, a divider dragged past the header and this menu are three ways of
+## saying the same thing - so the tick is read back from the rail rather than from the older
+## shown/collapsed note, which only the menu path and the collapse signal ever wrote. Refreshed
+## every time the menu opens, because a header button tucked between two openings moved it.
+func _refresh_open_sheets_tick(view_popup: PopupMenu) -> void:
+	var item_index: int = view_popup.get_item_index(13)
+	if item_index < 0:
+		return
+	view_popup.set_item_checked(item_index,
+		_dock._rail_panels == null or not _dock._rail_panels.is_panel_tucked("open_sheets"))
+
+
 func _fill_panels_menu(panels_menu: PopupMenu) -> void:
 	panels_menu.clear()
 	if _dock._rail_panels == null:

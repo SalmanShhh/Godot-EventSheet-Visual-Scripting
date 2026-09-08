@@ -240,7 +240,6 @@ var _functions_panel: EventSheetFunctionsPanel = null  # left rail, dockable fol
 # foot tabs and tucks the whole column into an edge strip, all remembered per project
 # (dock/rail_panels.gd).
 var _rail_panels: EventSheetRailPanels = EventSheetRailPanels.new()
-const _OPEN_SHEETS_PANEL_META: String = "eventsheets_open_sheets_panel"  # editor metadata: {shown, collapsed}
 var _minimap: EventSheetMinimap = null  # the thin picture-of-the-sheet column at the canvas's right edge (dock/minimap.gd)
 var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
@@ -2228,21 +2227,6 @@ func _refresh_anatomy_panel() -> void:
 ## Which rail panels the open sheet (and the picker) have anything to put in.
 func _refresh_rail_census() -> void:
 	_code_panel_glue.refresh_rail_census()
-
-
-func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
-	_code_panel_glue.on_open_sheets_panel_collapsed(collapsed)
-
-
-
-func _read_open_sheets_panel_prefs() -> Dictionary:
-	return _code_panel_glue.read_open_sheets_panel_prefs()
-
-
-
-func _save_open_sheets_panel_prefs() -> void:
-	_code_panel_glue.save_open_sheets_panel_prefs()
-
 
 
 func _apply_open_sheets_panel_prefs() -> void:
