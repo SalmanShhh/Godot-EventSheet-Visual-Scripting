@@ -565,22 +565,24 @@ That is the order this section is in.
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
 - **The head is ONE bar, and the lines it stands for are its fold.** An opened file rests under a
-  single line - `▣ FPSController extends Node · reads as events · 5 input actions · 62 variables` -
+  single line - `▣ FPSController extends Node · reads as events · 5 input actions` -
   and the ▸ on it opens every bar a reader used to scroll past: the band per line of the file
   (`class_name FPSController`, `extends Node`, `@icon(...)`, the host binding), the Include bar for
   what no line says (`⇥ Addon Pack  v1.0.0  behaves on a  CharacterBody3D  reads as events ▸`),
-  the **Input** bar, and the variable folders. Each fact on the line keeps its door: the class it
+  and the **Input** bar. Each fact on the line keeps its door: the class it
   extends opens the base script when that base is another script of your project, and the coverage
-  words walk the script blocks.
+  words walk the script blocks. On a file that is not a behavior pack the variable folders are in
+  the fold as well and the line counts them; an opened pack stands its settings on the sheet
+  instead, so the line never counts what it no longer folds.
 
-  Outside the fold, in reading order: the file's `##` description as the comment row it is, a
-  `Triggers this pack fires - 11` folder, the object's Behaviors, and the globals it uses. Inside a
-  variable folder a variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on
+  Outside the fold, in reading order: the file's `##` description as the comment row it is, then the
+  pack's own settings, one folder per setting group. Inside one of those folders a knob reads
+  `Instance number  jump_velocity = 4.5  Upward velocity applied on
   a jump` - the one sentence below, plus the knob's own description. Nothing is stated twice: the
   description is a comment row rather than a band drawn over its own echo, and a pack that closes on
   a paragraph repeating it has that paragraph left where its author wrote it.
 
-  ![A behaviour pack's head: one bar reading "FPSController extends Node - reads as events - 5 input actions - 62 variables", the pack's own description as a comment row under it, and a folded Triggers folder](images/opened-pack-head.png)
+  ![A behaviour pack's head: one bar reading "FPSController extends Node - reads as events - 5 input actions", the pack's own description as a comment row under it, and one folded folder per setting group below](images/opened-pack-head.png)
 
   ![The same head with the fold open: the bands for class_name, extends, @icon and the host binding, the Include bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", the Input bar, and one folder per setting group](images/opened-pack-head-open.png)
 - **A behavior pack opens on its verbs.** A pack has a public face - the settings you turn in the
