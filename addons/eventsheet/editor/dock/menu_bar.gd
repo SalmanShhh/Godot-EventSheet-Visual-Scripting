@@ -30,6 +30,9 @@ const FULL_TOOLBAR_VIEW_ID: int = 9814
 ## the strip. The next number the View menu has never used.
 const SHEET_THEME_VIEW_ID: int = 9815
 
+## View ▸ Panels, the rail's own column said in words. The next number the View menu has never used.
+const PANELS_VIEW_ID: int = 9816
+
 ## Where "this project has already been told the strip rests" is remembered, in the same editor
 ## settings project metadata section every other per-project editor choice uses. Read with a NON-null
 ## sentinel default, because a missing key with a null default prints an editor ERROR.
@@ -456,6 +459,24 @@ func build(root: Node) -> void:
 			_dock._toggle_project_bar()
 		elif id == _dock.ADD_TOOLBAR_VIEW_ID:
 			_dock._toggle_add_toolbar())
+	# Panels: the rail's own column, said in words. Every panel is ticked while it is on the rail
+	# and unticked once it has been slid off into a tab, so the menu is the third way of saying
+	# what the header button and a divider dragged past a header already say. Refilled each time
+	# View opens, because which panels are on offer follows the open sheet. Explicit child-popup
+	# wiring with its own id, never an id-less add_submenu_item.
+	var panels_menu: PopupMenu = PopupMenu.new()
+	panels_menu.name = "EventSheetPanelsMenu"
+	view_popup.add_child(panels_menu)
+	view_popup.add_submenu_item("Panels", "EventSheetPanelsMenu", PANELS_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(PANELS_VIEW_ID),
+		"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.")
+	panels_menu.id_pressed.connect(func(panel_index: int) -> void:
+		var ids: PackedStringArray = EventSheetRailPanels.panel_ids()
+		if panel_index < 0 or panel_index >= ids.size() or _dock._rail_panels == null:
+			return
+		_dock._rail_panels.set_panel_tucked(ids[panel_index],
+			not _dock._rail_panels.is_panel_tucked(ids[panel_index])))
+	view_popup.about_to_popup.connect(func() -> void: _fill_panels_menu(panels_menu))
 	view_popup.add_check_item("Open Sheets Panel", 13)
 	view_popup.set_item_checked(view_popup.get_item_index(13), bool(_dock._read_open_sheets_panel_prefs().get("shown", true)))
 	view_popup.add_check_item("Add-Event Rows", 9)
@@ -1097,6 +1118,27 @@ static func mark_unread(popup: PopupMenu, item_id: int, label: String) -> void:
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes
 ## each keep their own collapse state). `level` 0 collapses everything, -1 expands
 ## everything, and anything above 0 reads the sheet down to that depth.
+## The Panels submenu, refilled each time View opens: one ticked entry per panel the open sheet
+## has anything to put in, unticked once that panel has been slid off the rail. A panel the census
+## does not offer at all (Anatomy outside a behaviour pack, the Picker preview with the picker
+## closed) is not listed - there is nothing behind it to bring back.
+func _fill_panels_menu(panels_menu: PopupMenu) -> void:
+	panels_menu.clear()
+	if _dock._rail_panels == null:
+		return
+	var ids: PackedStringArray = EventSheetRailPanels.panel_ids()
+	var offered: PackedStringArray = EventSheetRailPanels.shown_panel_ids({
+		"behaviour_pack": _dock._current_sheet != null and _dock._current_sheet.behavior_mode,
+		"picker_open": _dock._ace_picker != null and _dock._ace_picker.is_open(),
+	})
+	for panel_index: int in ids.size():
+		if not offered.has(ids[panel_index]):
+			continue
+		panels_menu.add_check_item(EventSheetRailPanels.panel_title(ids[panel_index]), panel_index)
+		panels_menu.set_item_checked(panels_menu.get_item_index(panel_index),
+			not _dock._rail_panels.is_panel_tucked(ids[panel_index]))
+
+
 func _collapse_sweep(level: int) -> void:
 	var view: EventSheetViewport = _dock._active_view()
 	if view == null:

@@ -251,10 +251,12 @@ static func _test_the_cascade() -> bool:
 		counts[name] = -1 if submenu == null else submenu.item_count
 	ok = _check("Sheet keeps its items", counts["EventSheetSheetMenu"], 27) and ok
 	ok = _check("Edit keeps its items", counts["EventSheetEditMenu"], 10) and ok
-	# 57, not 56: View ▸ Sheet theme joined it when the theme OptionButton left the strip. The item
-	# is a submenu, so this counts the hanger - its entries are pinned in _test_the_sheet_theme_menu.
-	ok = _check("View keeps its items, plus Full toolbar and Sheet theme",
-		counts["EventSheetViewMenu"], 57) and ok
+	# 58, not 56: View ▸ Sheet theme joined it when the theme OptionButton left the strip, and
+	# View ▸ Panels when the left rail learned to slide its panels off. Both are submenus, so this
+	# counts the hangers - the theme menu's entries are pinned in _test_the_sheet_theme_menu, and
+	# the Panels menu is filled from the open sheet's own census each time View opens.
+	ok = _check("View keeps its items, plus Full toolbar, Sheet theme and Panels",
+		counts["EventSheetViewMenu"], 58) and ok
 	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	ok = _check("Words… is on Tools, at its own id",

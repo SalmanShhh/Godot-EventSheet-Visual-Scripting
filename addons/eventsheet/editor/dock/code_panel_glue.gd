@@ -33,14 +33,16 @@ func refresh_open_sheets_panel() -> void:
 	_dock._open_sheets_panel.set_state(state.get("open", []), int(state.get("active", -1)), state.get("recent", []))
 
 
-## View ▸ Open Sheets Panel: show/hide the whole left pane (remembered per project).
+## View ▸ Open Sheets Panel: slide the panel off the rail, or bring it back at the height it had.
+## The rail is the one place a panel's off-screen state lives, so the menu and the header button and
+## a divider dragged past the header are three ways of saying the same thing.
 func toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
-	if _dock._open_sheets_panel == null:
+	if _dock._open_sheets_panel == null or _dock._rail_panels == null:
 		return
-	_dock._open_sheets_panel.visible = not _dock._open_sheets_panel.visible
+	var tucked: bool = not _dock._rail_panels.is_panel_tucked("open_sheets")
+	_dock._rail_panels.set_panel_tucked("open_sheets", tucked)
 	if view_popup != null:
-		view_popup.set_item_checked(view_popup.get_item_index(13), _dock._open_sheets_panel.visible)
-	_dock._save_open_sheets_panel_prefs()
+		view_popup.set_item_checked(view_popup.get_item_index(13), not tucked)
 
 
 ## The panel collapsed to / expanded from a strip: snap the split divider to match, and remember it.
@@ -53,16 +55,24 @@ func refresh_anatomy_panel() -> void:
 	# of the rail rather than keeping any state of its own between sheets.
 	if _dock._objects_panel != null:
 		_dock._objects_panel.set_sheet(_dock._current_sheet)
+	refresh_rail_census()
 
 
-func on_open_sheets_panel_collapsed(collapsed: bool) -> void:
-	if _dock._workspace_body != null:
-		_dock._workspace_body.split_offset = 26 if collapsed else 200
-	# The whole left rail narrows to the strip - the Functions/Anatomy panels can't fit, so they follow.
-	if _dock._anatomy_panel != null:
-		_dock._anatomy_panel.visible = not collapsed
-	if _dock._functions_panel != null:
-		_dock._functions_panel.visible = not collapsed
+## Which rail panels the open sheet has anything to put in: Anatomy is a behaviour pack's organs,
+## and the Picker preview is how this sheet's verbs will read in the picker, so it is on offer only
+## while the picker is on screen. Everything else is every sheet's.
+func refresh_rail_census() -> void:
+	if _dock._rail_panels == null:
+		return
+	_dock._rail_panels.set_census(
+		_dock._current_sheet != null and _dock._current_sheet.behavior_mode,
+		_dock._ace_picker != null and _dock._ace_picker.is_open())
+
+
+## Open Sheets collapsed to its header, or opened again. The rail owns the column now, so this is
+## the panel's own fold and nothing else moves; the rail records the fold with the rest of the
+## column's state.
+func on_open_sheets_panel_collapsed(_collapsed: bool) -> void:
 	_dock._save_open_sheets_panel_prefs()
 
 
@@ -79,7 +89,7 @@ func save_open_sheets_panel_prefs() -> void:
 	if not (Engine.is_editor_hint() and Engine.has_singleton("EditorInterface")):
 		return
 	EditorInterface.get_editor_settings().set_project_metadata("eventsheets", _dock._OPEN_SHEETS_PANEL_META, {
-		"shown": _dock._open_sheets_panel != null and _dock._open_sheets_panel.visible,
+		"shown": _dock._rail_panels == null or not _dock._rail_panels.is_panel_tucked("open_sheets"),
 		"collapsed": _dock._open_sheets_panel != null and _dock._open_sheets_panel.is_collapsed(),
 	})
 
@@ -88,13 +98,8 @@ func save_open_sheets_panel_prefs() -> void:
 func apply_open_sheets_panel_prefs() -> void:
 	if _dock._open_sheets_panel == null:
 		return
-	var prefs: Dictionary = _dock._read_open_sheets_panel_prefs()
-	_dock._open_sheets_panel.visible = bool(prefs.get("shown", true))
-	_dock._open_sheets_panel.set_collapsed(bool(prefs.get("collapsed", false)))
-	if _dock._anatomy_panel != null:
-		_dock._anatomy_panel.visible = not bool(prefs.get("collapsed", false))
-	if _dock._functions_panel != null:
-		_dock._functions_panel.visible = not bool(prefs.get("collapsed", false))
+	# The fold, the height and whether the panel was slid off the rail all belong to the rail's own
+	# per-project record, applied when it is built - there is nothing left for this to place.
 	_dock._refresh_open_sheets_panel()
 
 

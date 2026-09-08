@@ -10,12 +10,15 @@ extends VBoxContainer
 
 ## The header's ＋ - the dock opens the function dialog (the ACE Studio).
 signal add_requested
+## The fold opened or closed - the rail records it with the rest of the column's state.
+signal fold_toggled(expanded: bool)
 
 const _META_KEY: String = "eventsheets_functions_panel"
 
 var list: ItemList = null
 
 var _header_button: Button = null
+var _header_row: HBoxContainer = null
 var _count: int = 0
 var _expanded: bool = false
 
@@ -24,6 +27,7 @@ func _init() -> void:
 	name = "Functions"
 	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), 0.0)
 	var header: HBoxContainer = HBoxContainer.new()
+	_header_row = header
 	_header_button = Button.new()
 	_header_button.flat = true
 	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -56,6 +60,12 @@ func set_expanded(expanded: bool) -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL if expanded else Control.SIZE_SHRINK_BEGIN
 	_refresh_header()
 	_save_prefs()
+	fold_toggled.emit(expanded)
+
+
+## The header line the rail hangs its minimise button on, at the right edge.
+func rail_header_row() -> HBoxContainer:
+	return _header_row
 
 
 func is_expanded() -> bool:

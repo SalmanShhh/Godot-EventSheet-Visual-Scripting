@@ -46,6 +46,9 @@ signal object_starter_events_requested(object_label: String)
 ## Right-click > Duplicate events for… - this object's events, copied for other objects.
 signal object_duplicate_events_requested(object_label: String)
 
+## The fold opened or closed - the rail records it with the rest of the column's state.
+signal fold_toggled(expanded: bool)
+
 const _META_KEY: String = "eventsheets_objects_panel"
 
 ## The drag payload a bar entry hands the canvas. Named so the viewport can recognise it without
@@ -65,6 +68,7 @@ var tree: Tree = null
 var filter_edit: LineEdit = null
 
 var _header_button: Button = null
+var _header_row: HBoxContainer = null
 var _sort_button: Button = null
 var _entries: Array = []
 var _scene_only: Array = []
@@ -109,6 +113,7 @@ func _init() -> void:
 		"Every object this file uses. Click one to highlight its rows, click it again to clear.")
 	_header_button.pressed.connect(func() -> void: set_expanded(not _expanded))
 	var header_row := HBoxContainer.new()
+	_header_row = header_row
 	header_row.add_child(_header_button)
 	_sort_button = Button.new()
 	_sort_button.flat = true
@@ -163,6 +168,14 @@ func set_expanded(expanded: bool) -> void:
 	_apply_active_tab()
 	_refresh_header()
 	_save_prefs()
+	fold_toggled.emit(expanded)
+
+
+## The header line the rail hangs its minimise button on, at the right edge. The row stays on
+## screen while the Project tab is showing (only the Objects controls inside it stand down), so
+## the gesture that slides this panel off the rail is always where it was.
+func rail_header_row() -> HBoxContainer:
+	return _header_row
 
 
 func is_expanded() -> bool:
@@ -208,7 +221,7 @@ func _apply_active_tab() -> void:
 	var on_objects: bool = _active_tab != "project"
 	_objects_tab.set_pressed_no_signal(on_objects)
 	_project_tab.set_pressed_no_signal(not on_objects)
-	_header_button.get_parent().visible = on_objects
+	_header_button.visible = on_objects
 	tree.visible = on_objects and _expanded
 	filter_edit.visible = on_objects and _expanded
 	_sort_button.visible = on_objects and _expanded

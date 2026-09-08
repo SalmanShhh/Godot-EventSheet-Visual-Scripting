@@ -3623,6 +3623,12 @@ func is_open() -> bool:
 	return _window != null and _window.visible
 
 
+## The picker's own dialog, for the surfaces that must follow it opening and closing - the rail's
+## Picker preview panel is only on offer while this is on screen.
+func window() -> Window:
+	return _window
+
+
 func get_popup_rect() -> Rect2:
 	if _window == null:
 		return Rect2()

@@ -11,6 +11,9 @@
 class_name EventSheetPickerPreviewPanel
 extends VBoxContainer
 
+## The fold opened or closed - the rail records it with the rest of the column's state.
+signal fold_toggled(expanded: bool)
+
 const _KIND_PILLS: Dictionary = {
 	"action": ["A", EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG],
 	"condition": ["?", EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
@@ -24,6 +27,7 @@ var _canvas: Control = null
 var _scroll: ScrollContainer = null
 var _entries: Array = []
 var _header_button: Button = null
+var _header_row: HBoxContainer = null
 var _expanded: bool = false
 
 
@@ -35,7 +39,10 @@ func _init() -> void:
 	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_header_button.tooltip_text = "How this sheet's published functions will read in the picker - live, before you save. Kind badge, display name, featured star, category, parameters."
 	_header_button.pressed.connect(func() -> void: set_expanded(not _expanded))
-	add_child(_header_button)
+	_header_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_header_row = HBoxContainer.new()
+	_header_row.add_child(_header_button)
+	add_child(_header_row)
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(110.0))
@@ -52,6 +59,16 @@ func set_expanded(expanded: bool) -> void:
 	_expanded = expanded
 	_scroll.visible = expanded
 	_refresh_header()
+	fold_toggled.emit(expanded)
+
+
+func is_expanded() -> bool:
+	return _expanded
+
+
+## The header line the rail hangs its minimise button on, at the right edge.
+func rail_header_row() -> HBoxContainer:
+	return _header_row
 
 
 func refresh(sheet: EventSheetResource) -> void:

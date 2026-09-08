@@ -23,6 +23,9 @@ signal reveal_requested(resource: Resource)
 ## AS A SHEET (the same jump as Ctrl+Click on one of its verbs).
 signal open_provider_requested(provider_id: String)
 
+## The fold opened or closed - the rail records it with the rest of the column's state.
+signal fold_toggled(expanded: bool)
+
 const _ORGAN_ACCENTS: Dictionary = {
 	# The variables, in the sheet's own scopes rather than in the code split
 	# (exported / not exported) a reader never asked about.
@@ -91,17 +94,26 @@ var _scroll: ScrollContainer = null
 var _rows: Array = []            # [{header: bool, organ, title, count, accent} | {header: false, organ, label, resource}]
 var _folded: Dictionary = {}     # organ id -> true (session view state)
 var _hover_index: int = -1
+var _header_row: HBoxContainer = null
+var _header_button: Button = null
+var _expanded: bool = true
 
 
 func _init() -> void:
 	name = "Anatomy"
 	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), EventSheetPalette.scaled_f(120.0))
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var title: Label = Label.new()
-	title.text = "Anatomy"
-	title.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
-	title.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
-	add_child(title)
+	_header_button = Button.new()
+	_header_button.flat = true
+	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_header_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_header_button.text = "▾ Anatomy"
+	_header_button.tooltip_text = "The behaviour's organs at a glance - what it publishes and what it keeps. Click to expand or collapse."
+	_header_button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
+	_header_button.pressed.connect(func() -> void: set_expanded(not _expanded))
+	_header_row = HBoxContainer.new()
+	_header_row.add_child(_header_button)
+	add_child(_header_row)
 	_scroll = ScrollContainer.new()
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -116,6 +128,26 @@ func _init() -> void:
 	_scroll.add_child(_canvas)
 
 
+## Folds the organ list down to its header line, or opens it again.
+func set_expanded(expanded: bool) -> void:
+	_expanded = expanded
+	if _scroll != null:
+		_scroll.visible = expanded
+	if _header_button != null:
+		_header_button.text = "%s Anatomy" % ["▾" if expanded else "▸"]
+	size_flags_vertical = Control.SIZE_EXPAND_FILL if expanded else Control.SIZE_SHRINK_BEGIN
+	fold_toggled.emit(expanded)
+
+
+func is_expanded() -> bool:
+	return _expanded
+
+
+## The header line the rail hangs its minimise button on, at the right edge.
+func rail_header_row() -> HBoxContainer:
+	return _header_row
+
+
 ## Rebuilds the organ list from the sheet (called by the workspace on tab switch + after edits).
 func refresh(sheet: EventSheetResource) -> void:
 	_last_sheet = sheet  # fold toggles re-run the census against the same sheet
@@ -123,6 +155,10 @@ func refresh(sheet: EventSheetResource) -> void:
 	for organ: Dictionary in collect_anatomy(sheet):
 		var organ_id: String = str(organ.get("id"))
 		var entries: Array = organ.get("entries", [])
+		# An organ this sheet has nothing in says nothing: a line reading "Triggers · 0" is a
+		# counter, not a fact about the behaviour, and five of them are what made the rail a wall.
+		if entries.is_empty():
+			continue
 		_rows.append({
 			"header": true,
 			"organ": organ_id,

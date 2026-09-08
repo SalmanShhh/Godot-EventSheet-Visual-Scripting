@@ -22,6 +22,18 @@ var _dock: Control = null
 var panel: VBoxContainer = null
 var _heading: Label = null
 var _form: GridContainer = null
+# The bar's own splitter, so an empty selection can hand its width back to the canvas without the
+# handle going with it, and a drag into the right edge can slide the bar off entirely.
+var _split: HSplitContainer = null
+# What the bar shows: _body is the heading + the form, _edge the narrow strip a tucked bar leaves
+# behind with a chevron to bring it back.
+var _body: VBoxContainer = null
+var _edge: VBoxContainer = null
+# True while nothing on the sheet is selected: the bar is its handle and nothing else.
+var _empty: bool = true
+# The empty bar's sentence is worth saying once per session, in the status bar, rather than for
+# ever in a column of its own.
+var _said_empty_hint: bool = false
 # The ACE this form was built for, so a selection that did not change does not rebuild the fields
 # under the user's cursor. Never used to WRITE - the write re-fetches, because the undo funnel
 # replaces every resource on commit.
@@ -38,16 +50,81 @@ func init(dock: Control) -> void:
 
 
 func is_open() -> bool:
-	return panel != null and panel.visible
+	return panel != null and panel.visible and not is_tucked()
 
 
-## View ▸ Properties Bar. Simple mode starts it hidden, so this is how it comes back.
+## The bar slid off the right edge - off screen, not closed. The chevron on the strip it leaves
+## brings it back, and so does View / Properties Bar.
+func is_tucked() -> bool:
+	return bool(EventSheetRailPanels.read_state().get("properties_tucked", false))
+
+
+func set_tucked(tucked: bool) -> void:
+	var state: Dictionary = EventSheetRailPanels.read_state()
+	state["properties_tucked"] = tucked
+	EventSheetRailPanels.save_state(state)
+	_apply_width()
+
+
+## The canvas-and-bar splitter, handed over by the UI builder. A drag that leaves the bar narrower
+## than a handle has dragged it off the edge - the same gesture the rail's own grabber has.
+func attach_split(split: HSplitContainer) -> void:
+	_split = split
+	_split.dragger_visibility = SplitContainer.DRAGGER_VISIBLE
+	_split.add_theme_constant_override("autohide", 0)
+	_split.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	var bar: StyleBoxFlat = StyleBoxFlat.new()
+	bar.bg_color = EventSheetPalette.TEXT_SECONDARY
+	bar.bg_color.a = 0.22
+	_split.add_theme_stylebox_override("split_bar_background", bar)
+	_split.dragged.connect(func(offset: int) -> void:
+		var width: float = maxf(0.0, _split.size.x - float(offset))
+		if width <= EventSheetPalette.scaled_f(EventSheetRailPanels.EDGE_STRIP_WIDTH):
+			set_tucked(true)
+			return
+		var state: Dictionary = EventSheetRailPanels.read_state()
+		state["properties_tucked"] = false
+		state["properties_width"] = width / maxf(0.001, EventSheetPalette.ui_scale())
+		EventSheetRailPanels.save_state(state)
+		_empty = false
+		_apply_width())
+
+
+## The bar's width, from what it has to say. Nothing selected and the bar is its splitter handle,
+## so the canvas has the room until there is something to edit; a selection gives it back the width
+## it was last dragged to. Tucked, it is the narrow strip with the chevron on it.
+func _apply_width() -> void:
+	if panel == null:
+		return
+	var tucked: bool = is_tucked()
+	if _body != null:
+		_body.visible = not tucked and not _empty
+	if _edge != null:
+		_edge.visible = tucked
+	var width: float = 0.0
+	if tucked:
+		width = EventSheetPalette.scaled_f(EventSheetRailPanels.EDGE_STRIP_WIDTH)
+	elif not _empty:
+		width = EventSheetPalette.scaled_f(float(EventSheetRailPanels.read_state().get(
+			"properties_width", EventSheetRailPanels.DEFAULT_PROPERTIES_WIDTH)))
+	panel.custom_minimum_size = Vector2(width, 0.0)
+	if _split != null:
+		# Zero puts the split at its default position, which is the bar at its own minimum - so the
+		# width above is the whole story, and the handle stays where it is in every state.
+		_split.split_offset = 0
+
+
+## View ▸ Properties Bar. Simple mode starts it hidden, so this is how it comes back - and it is
+## also how a bar dragged off the right edge is brought back, since the menu entry and the strip's
+## chevron mean the same thing.
 func set_open(open: bool) -> void:
 	if panel == null:
 		return
 	panel.visible = open
 	if open:
+		set_tucked(false)
 		refresh()
+	_apply_width()
 
 
 ## Rebuilds the form for whatever is selected now. Cheap and idempotent - called from the
@@ -81,17 +158,24 @@ static func heading_for(display_name: String, kind: String) -> String:
 	return "PROPERTIES · %s · %s" % [display_name.strip_edges(), kind]
 
 
+## Nothing selected: the bar hands its width back to the canvas and waits as its handle. The
+## sentence that used to fill a 280 px column is said once, in the status bar, the first time.
 func _show_nothing() -> void:
 	_shown_resource = null
 	_clear_form()
 	_heading.text = "PROPERTIES"
-	_form.add_child(EventSheetPopupUI.hint_label("Select a condition, an action, an object or a group.", 240.0))
-	_form.add_child(Control.new())
+	if not _empty:
+		_empty = true
+		if not _said_empty_hint and _dock != null and _dock.has_method("_set_status"):
+			_said_empty_hint = true
+			_dock._set_status("Select a condition, an action, an object or a group to edit it here.", false)
+	_apply_width()
 
 
 func _show_ace(ace: Resource, view: EventSheetViewport) -> void:
 	_shown_resource = ace
 	_clear_form()
+	_open_for_selection()
 	var kind: String = "condition" if ace is ACECondition else "action"
 	var definition: ACEDefinition = _dock._find_definition(str(ace.get("provider_id")), str(ace.get("ace_id")))
 	var display_name: String = definition.display_name if definition != null else str(ace.get("ace_id"))
@@ -165,6 +249,7 @@ func _apply(ace: Resource, param_id: String, text: String) -> void:
 func _show_group(group: EventGroup) -> void:
 	_shown_resource = group
 	_clear_form()
+	_open_for_selection()
 	_heading.text = heading_for(group.group_name, "group")
 	var name_label: Label = Label.new()
 	name_label.text = "Name"
@@ -213,6 +298,7 @@ func _apply_group_enabled(enabled: bool) -> void:
 func _show_object(object_label: String) -> void:
 	_shown_resource = null
 	_clear_form()
+	_open_for_selection()
 	_heading.text = heading_for(object_label, "object")
 	var entry: Dictionary = EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label)
 	for row: Variant in EventSheetObjectProperties.property_rows(entry, "", ""):
@@ -236,6 +322,15 @@ func _show_object(object_label: String) -> void:
 	_form.add_child(open_button)
 
 
+## The first selection opens the bar at the width it was left at - the way the Godot Inspector
+## fills when a node is picked.
+func _open_for_selection() -> void:
+	if not _empty:
+		return
+	_empty = false
+	_apply_width()
+
+
 func _clear_form() -> void:
 	for child: Node in Array(_form.get_children()):
 		_form.remove_child(child)
@@ -247,9 +342,13 @@ func _clear_form() -> void:
 func build() -> VBoxContainer:
 	panel = VBoxContainer.new()
 	panel.name = "EventSheetPropertiesBar"
-	panel.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(270.0), 0.0)
+	_body = VBoxContainer.new()
+	_body.name = "EventSheetPropertiesBarBody"
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(_body)
 	_heading = EventSheetPopupUI.small_caps_label("PROPERTIES")
-	panel.add_child(_heading)
+	_body.add_child(_heading)
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -257,7 +356,19 @@ func build() -> VBoxContainer:
 	_form.columns = 2
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_form)
-	panel.add_child(scroll)
+	_body.add_child(scroll)
+	# The strip a bar dragged off the right edge leaves behind: a chevron that brings it back.
+	_edge = VBoxContainer.new()
+	_edge.name = "EventSheetPropertiesBarEdge"
+	_edge.visible = false
+	var restore: Button = Button.new()
+	restore.flat = true
+	restore.text = "‹"
+	restore.focus_mode = Control.FOCUS_NONE
+	restore.tooltip_text = "Bring the Properties bar back at the width it had."
+	restore.pressed.connect(func() -> void: set_tucked(false))
+	_edge.add_child(restore)
+	panel.add_child(_edge)
 	panel.visible = not _dock.is_simple_mode()
 	_show_nothing()
 	return panel

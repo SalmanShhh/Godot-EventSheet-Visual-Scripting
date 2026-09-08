@@ -236,6 +236,10 @@ var _open_sheets_panel: EventSheetOpenSheetsDock = null
 var _anatomy_panel: BehaviourAnatomyPanel = null
 var _picker_preview_panel: EventSheetPickerPreviewPanel = null  # left rail, under Open Sheets (behaviour_anatomy_panel.gd)
 var _functions_panel: EventSheetFunctionsPanel = null  # left rail, dockable fold-expand Functions overview (functions_panel.gd)
+# The left rail itself: the five panels as a draggable VSplit chain that folds, tucks panels into
+# foot tabs and tucks the whole column into an edge strip, all remembered per project
+# (dock/rail_panels.gd).
+var _rail_panels: EventSheetRailPanels = EventSheetRailPanels.new()
 const _OPEN_SHEETS_PANEL_META: String = "eventsheets_open_sheets_panel"  # editor metadata: {shown, collapsed}
 var _minimap: EventSheetMinimap = null  # the thin picture-of-the-sheet column at the canvas's right edge (dock/minimap.gd)
 var _column_header: SheetColumnHeader = null
@@ -2180,6 +2184,10 @@ func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
 func _refresh_anatomy_panel() -> void:
 	_code_panel_glue.refresh_anatomy_panel()
 
+
+## Which rail panels the open sheet (and the picker) have anything to put in.
+func _refresh_rail_census() -> void:
+	_code_panel_glue.refresh_rail_census()
 
 
 func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:

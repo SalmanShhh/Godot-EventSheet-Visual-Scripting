@@ -1,4 +1,4 @@
-# EventForge - the Behaviour Anatomy panel: a left-rail read model showing the active sheet as nine
+# EventForge - the Behaviour Anatomy panel: a left-rail read model showing the active sheet as its
 # organs (the variables by scope - Instance · Globals used here · Locals in view - then Triggers ·
 # Actions · Conditions · Expressions · Editor Tools · Uses), fed by a pure
 # static census. Pins: variables grouped by scope and spelled as their rows' sentences,
@@ -92,16 +92,25 @@ static func run() -> bool:
 
 	# ── The panel + dock wiring (v2: custom-drawn rows, not a Tree) ──
 	ok = _check("the dock built the panel", dock._anatomy_panel != null, true) and ok
-	var header_count: int = 0
+	var empty_headers: Array = []
+	var drawn_organs: Array = []
 	var entry_with_resource: int = 0
 	for row: Variant in dock._anatomy_panel._rows:
 		if bool((row as Dictionary).get("header")):
-			header_count += 1
+			drawn_organs.append(str((row as Dictionary).get("organ")))
+			if int((row as Dictionary).get("count", 0)) == 0:
+				empty_headers.append(str((row as Dictionary).get("organ")))
 		elif (row as Dictionary).get("resource") is Resource:
 			entry_with_resource += 1
-	# Added EDITOR TOOLS: what the sheet adds to the editor, beside what it adds to the game.
-	# Split the one variables organ into the three scopes a reader knows them by.
-	ok = _check("nine organ headers always visible", header_count, 9) and ok
+	# The census still offers all nine organs (EDITOR TOOLS beside the game-facing ones, and the one
+	# variables organ split into the three scopes a reader knows them by), but the panel only DRAWS
+	# the organs this sheet filled: a line reading "Triggers · 0" is a counter, not a fact about the
+	# behaviour, and a column of them is what made the rail a wall.
+	ok = _check("the census offers nine organs",
+		BehaviourAnatomyPanel.collect_anatomy(dock.get_current_sheet()).size(), 9) and ok
+	ok = _check("no organ header counts to zero", empty_headers, []) and ok
+	ok = _check("the pack's filled organs are the ones drawn", drawn_organs,
+		["instance", "triggers", "actions", "conditions", "expressions"]) and ok
 	ok = _check("entries carry jumpable resources", entry_with_resource > 0, true) and ok
 	# Folding an organ hides its entries but keeps the header (view state only).
 	var before_rows: int = dock._anatomy_panel._rows.size()

@@ -95,6 +95,11 @@ func is_collapsed() -> bool:
 	return _collapsed
 
 
+## The header line the rail hangs its minimise button on, at the right edge.
+func rail_header_row() -> HBoxContainer:
+	return _header
+
+
 ## Replace the view with a fresh snapshot from EventSheetDock.get_open_sheets_state().
 ## `open` is [{title, path, dirty}], `active` the active index, `recent` a list of paths.
 func set_state(open: Array, active: int, recent: Array) -> void:
@@ -121,16 +126,20 @@ func _render() -> void:
 		_list.set_item_custom_fg_color(empty, _MUTED)
 		return
 
-	for i: int in range(_open.size()):
-		var entry: Dictionary = _open[i]
+	for entry: Dictionary in group_entries(_open):
 		var title: String = str(entry.get("title", ""))
 		var path: String = str(entry.get("path", ""))
 		if not _matches(needle, title, path):
 			continue
-		var idx: int = _list.add_item(title)
+		var indices: Array = entry.get("indices", [])
+		var idx: int = _list.add_item(list_label(entry))
 		_list.set_item_tooltip(idx, hover_text(entry))
-		_list.set_item_metadata(idx, {"kind": "open", "index": i})
-		if i == _active:
+		_list.set_item_metadata(idx, {
+			"kind": "open",
+			"index": next_index(indices, _active),
+			"indices": indices,
+		})
+		if indices.has(_active):
 			_list.select(idx)  # highlight the current sheet (no signal)
 
 	# Recently-closed sheets the plugin filtered down to those NOT currently open.
@@ -151,6 +160,53 @@ func _render() -> void:
 			_list.set_item_custom_fg_color(ridx, _MUTED)
 
 
+## One line per FILE, not per tab: the same sheet opened eight times (a pack whose verbs each
+## opened it, a split view, a jump back and forth) used to be eight identical lines with nothing
+## to tell them apart. Entries are grouped by path, in first-appearance order, and the group
+## carries every tab index that shares it so a click can walk them. An UNSAVED sheet has no path
+## to be the same as, so it never groups. Static + pure, so the grouping is pinnable.
+static func group_entries(open: Array) -> Array:
+	var grouped: Array = []
+	var by_path: Dictionary = {}
+	for i: int in range(open.size()):
+		if not (open[i] is Dictionary):
+			continue
+		var entry: Dictionary = open[i]
+		var path: String = str(entry.get("path", "")).strip_edges()
+		if not path.is_empty() and by_path.has(path):
+			var seen: Dictionary = grouped[int(by_path[path])]
+			(seen["indices"] as Array).append(i)
+			seen["count"] = (seen["indices"] as Array).size()
+			seen["dirty"] = bool(seen.get("dirty", false)) or bool(entry.get("dirty", false))
+			continue
+		var row: Dictionary = entry.duplicate()
+		row["indices"] = [i]
+		row["count"] = 1
+		if not path.is_empty():
+			by_path[path] = grouped.size()
+		grouped.append(row)
+	return grouped
+
+
+## What a grouped row reads as: the sheet's title, and how many tabs are on that one file when
+## more than one is. Static so the wording is pinnable.
+static func list_label(entry: Dictionary) -> String:
+	var title: String = str(entry.get("title", ""))
+	var count: int = int(entry.get("count", 1))
+	return title if count <= 1 else "%s ×%d" % [title, count]
+
+
+## Which tab a click on a grouped row goes to: the NEXT tab of that file after the active one, so
+## clicking a group of eight walks them one at a time; the first, when the active tab is elsewhere.
+static func next_index(indices: Array, active: int) -> int:
+	if indices.is_empty():
+		return -1
+	var at: int = indices.find(active)
+	if at < 0:
+		return int(indices[0])
+	return int(indices[(at + 1) % indices.size()])
+
+
 ## What an open sheet says on hover, where a sheet is picked: where it is stored, how much of
 ## it reads as events, and the workspace it was opened as part of. Pure, so tests pin it.
 static func hover_text(entry: Dictionary) -> String:
@@ -163,6 +219,9 @@ static func hover_text(entry: Dictionary) -> String:
 	var group: String = str(entry.get("group", "")).strip_edges()
 	if not group.is_empty():
 		parts.append(group)
+	var count: int = int(entry.get("count", 1))
+	if count > 1:
+		parts.append("%d tabs are open on this file - clicking walks them." % count)
 	return "\n".join(parts)
 
 

@@ -202,16 +202,20 @@ func build_ui() -> void:
 		_dock.add_common_events_for(object_label))
 	_dock._objects_panel.object_duplicate_events_requested.connect(func(object_label: String) -> void:
 		_dock.open_duplicate_events_dialog(object_label))
-	var left_rail: VBoxContainer = VBoxContainer.new()
-	left_rail.name = "EventSheetLeftRail"
-	left_rail.add_theme_constant_override("separation", 8)
-	left_rail.add_child(_dock._open_sheets_panel)
-	left_rail.add_child(_dock._objects_panel)
-	left_rail.add_child(_dock._functions_panel)
-	left_rail.add_child(_dock._anatomy_panel)
 	# Picker preview: how the sheet's published verbs will read in the picker, live (rail-folded).
 	_dock._picker_preview_panel = EventSheetPickerPreviewPanel.new()
-	left_rail.add_child(_dock._picker_preview_panel)
+	# The rail is a chain of VSplitContainers rather than a stack of fixed panels: every boundary
+	# drags, every grabber is drawn, and a panel (or the whole rail) can be slid off into a tab.
+	# It also decides which panels are on offer at all, so a first sheet is not five headers
+	# counting to zero.
+	_dock._rail_panels.init(_dock)
+	var left_rail: Control = _dock._rail_panels.build({
+		"open_sheets": _dock._open_sheets_panel,
+		"objects": _dock._objects_panel,
+		"functions": _dock._functions_panel,
+		"anatomy": _dock._anatomy_panel,
+		"picker_preview": _dock._picker_preview_panel,
+	})
 	_dock._workspace_body = HSplitContainer.new()
 	_dock._workspace_body.name = "EventSheetWorkspaceBody"
 	_dock._workspace_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -219,6 +223,9 @@ func build_ui() -> void:
 	_dock._workspace_body.add_child(left_rail)
 	_dock._workspace_body.add_child(_dock._content_host)
 	root.add_child(_dock._workspace_body)
+	_dock._rail_panels.attach_split(_dock._workspace_body)
+	_dock._rail_panels.apply_state(EventSheetRailPanels.read_state())
+	_dock._properties_bar.attach_split(properties_split)
 	_dock._apply_open_sheets_panel_prefs()
 
 	_dock._viewport = EventSheetViewport.new()
@@ -647,6 +654,12 @@ func ensure_editor_dialogs_initialized() -> void:
 		func() -> Array: return EventSheetVariableOwners.catalog(_dock._current_sheet))
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
+	# The rail's Picker preview answers "how will these verbs read in the picker", so it is on
+	# offer while the picker is open and gone the rest of the time. The dialog's own visibility is
+	# the only honest source for that.
+	var picker_window: Window = _dock._ace_picker.window()
+	if picker_window != null and not picker_window.visibility_changed.is_connected(_dock._refresh_rail_census):
+		picker_window.visibility_changed.connect(_dock._refresh_rail_census)
 	# A greyed entry's one-line reason IS the fix: pressing Add on it lands here instead, the dock
 	# performs the fix, and the ordinary selected path runs after it.
 	_dock._ace_picker.gate_fix_requested.connect(_dock._on_picker_gate_fix_requested)
