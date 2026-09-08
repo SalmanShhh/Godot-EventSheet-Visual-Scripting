@@ -6,6 +6,51 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: breathing room is a theme setting - Compact, Comfortable, Spacious
+
+- **Six numbers decide how much room a row gets, and all six are tokens now.** Row height, the air
+  inside a cell, the gap between two events, how far a sub-event steps in (and whether a rail line
+  is drawn down that step), the object-name column, and the border round a whole event. They live
+  on the theme resource the project owns, so a density travels with the sheet instead of being a
+  constant inside the plugin.
+- **Three starters ship, and Comfortable is the new default.** *Menu ▸ View ▸ Sheet theme ▸
+  Density* offers Compact (32 rows become 28 - exactly the numbers the editor shipped with, for
+  anyone who liked it that way), Comfortable and Spacious, tightest first, with the one this
+  sheet's spacing already matches ticked. Picking one copies its six numbers onto a duplicate of
+  the sheet's own style, so every colour that style states survives untouched.
+- **A starter is a file, not a look we chose for you.** Duplicate one of the three
+  `EventSheetDensityStyle` resources in `addons/eventsheet/themes/density/`, change the numbers,
+  save it beside them, and it is in the menu the next time View opens - no code, no registration
+  list, no restart. The Theme Editor edits every one of the tokens alongside the colours.
+
+### Added: the event card, the gutter and the rail
+
+- **An event is one bordered card.** Both lanes, every row of an OR stack, the padding, the gaps
+  between cells and the band under the shorter lane sit inside a single 1 px border on a slightly
+  lighter ground, so \"which event does this condition belong to\" is answered by shape rather than
+  by counting indents. The event's number stays outside that border, in the gutter, where a margin
+  mark belongs.
+- **The rail is a token.** A sub-event hangs off a line drawn down its parent's indent step, and a
+  sheet that wants those pixels back turns it off with the rest of its density.
+- **All of it is paint.** The card, the gutter margin and the rail reserve no width, are never
+  measured and are never hit-tested - a theme that draws no card lays out identically to one that
+  does, and the event's click target is the whole card either way.
+
+### Added: the Classic Sheet theme starter
+
+- **For a reader coming from another event-sheet editor**, `Classic Sheet` in *Menu ▸ View ▸ Sheet
+  theme*: bordered event cards on a lighter ground, numbers in a margin outside them, bold group
+  bars, green pinned local-variable rows, a blue plate before every object name, values in bold,
+  disabled actions struck through, and a 40 / 60 lane split. It is an ordinary theme resource like
+  every other one - duplicate it and change anything you disagree with.
+
+### Fixed
+
+- **A re-saved theme preset stopped being readable by the coverage gate.** Godot writes a
+  `uid=\"uid://...\"` onto every `[ext_resource]` line it re-saves, and the preset reader looked for
+  `id=\"` without anchoring it - so it read the uid as the resource id, mapped every block to no
+  script at all, and reported a fully-stated preset as holding none.
+
 ### Changed: one head bar, and the description is a comment
 
 - **The six bars a file opened with are one line.** `class_name`, `extends`, the Include bar with

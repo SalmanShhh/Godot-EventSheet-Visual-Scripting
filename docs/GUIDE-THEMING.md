@@ -131,6 +131,78 @@ These themes are bundled in `res://demo/themes/`:
 - `designer_template_theme_manifest.cfg` - token/package template for designer installs
 - plus popular presets: `catppuccin_mocha`, `dracula`, `gruvbox_dark`, `monokai`, `nord`, `solarized_light`
 
+Two more ship inside the addon, in `res://addons/eventsheet/themes/`:
+
+- `mockup_slate_theme.tres` - the slate look the design mockups are drawn in
+- `classic_sheet_theme.tres` - **Classic Sheet**, for a reader coming from another event-sheet
+  editor: bordered event cards on a slightly lighter ground, numbers in a margin outside them,
+  bold group bars, green pinned local-variable rows, a blue plate before every object name, values
+  in bold and disabled actions struck through, and a 40 / 60 lane split. It is an ordinary theme
+  resource like every other - duplicate it and change anything you disagree with.
+
+## Density: the six numbers that decide how much room a row gets
+
+Colours are one question, spacing is another, and the two are chosen separately. Six tokens on the
+theme resource hold the whole of a sheet's breathing room:
+
+| Token | Where it lives | What it decides |
+| --- | --- | --- |
+| `minimum_row_height` | event style | how tall an event row is before its text asks for more |
+| `horizontal_padding` / `vertical_padding` | condition + action cell styles | the air inside a cell, beside and above its text |
+| `event_block_gap` | event style | the gap opened before an event or group that starts a new block |
+| `sub_event_indent` + `sub_event_rail_line` | event style | how far a sub-event steps in, and whether a rail line is drawn down its parent's step |
+| `condition_object_column_width` / `action_object_column_width` | event style | the fixed object-name column (0 = the text flows after each name) |
+| `event_card_border_width` + `event_card_gutter_gap` | event style | the border round a whole event, and the margin kept for its number |
+
+**Menu ▸ View ▸ Sheet theme ▸ Density** picks one of three starters, and ticks the one this sheet's
+spacing already matches:
+
+| | Compact | Comfortable (default) | Spacious |
+| --- | --- | --- | --- |
+| Row height | 28 | 32 | 36 |
+| Cell padding (h · v) | 8 · 2 | 8 · 3 | 10 · 5 |
+| Between events | 7 | 10 | 14 |
+| Sub-event indent | 18, no rail | 28 + rail | 32 + rail |
+| Object column | 130 | 96 | 120 |
+| Event card border | none | 1 px | 1 px, held 2 px off the gutter |
+
+Comfortable is what a fresh theme already wears. Compact is exactly what the editor shipped with
+before the tokens existed, one click away for anyone who liked it that way.
+
+Picking a density copies its six numbers onto a **duplicate** of the sheet's own style, so every
+colour that style states survives untouched and a starter shared by two sheets is never edited in
+place. A sheet still on **Match Editor** gains a style of its own at that moment: it looks identical
+the instant it happens, and simply stops re-deriving its colours from the editor theme afterwards.
+
+### Writing your own density starter
+
+A starter is an `EventSheetDensityStyle` `.tres` in `res://addons/eventsheet/themes/density/` or
+`res://demo/themes/density/`. Duplicate one of the three, change the numbers, save it beside them,
+and it is in the menu the next time **View** opens - no code, no registration list, no restart. The
+menu orders starters by row height, tightest first, so yours lands where its spacing puts it.
+
+Nothing here is a fixed house style. The three that ship are a starting point; the tokens are
+yours, and the Theme Editor edits every one of them alongside the colours.
+
+### The event card, the gutter and the rail
+
+With `event_card_border_width` above zero, an event is drawn as one bordered card spanning both
+lanes - every row of an OR stack, the padding, the gaps between cells and the band under the shorter
+lane are inside the one border, so "which event does this condition belong to" is answered by shape.
+The event number stays **outside** the card, in the gutter, where a margin mark belongs, and
+`event_card_gutter_gap` widens that margin. A sub-event hangs off a rail line drawn down its
+parent's indent step.
+
+All of it is paint: the card, the gutter margin and the rail reserve no width, are never measured
+and are never hit-tested, so a theme that draws no card lays out identically to one that does. The
+event's click target is unchanged either way - the whole card, gutter included.
+
+### Density and Compact Rows
+
+**View ▸ Compact Rows** stays what it always was and composes with the tokens: it is a per-user,
+per-project multiplier on vertical whitespace, applied on top of whatever density the theme states.
+Density is the project's choice and travels with the sheet; Compact Rows is yours and does not.
+
 ## Custom theme import/install
 
 - Copy a custom `EventSheetEditorStyle` `.tres` into the project.
