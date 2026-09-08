@@ -114,8 +114,16 @@ static func run() -> bool:
 			str(viewport.press_target_at(cell_point).get("target", "")), "cell") and all_passed
 		viewport._handle_mouse_button(_press(cell_point, true))
 		viewport._handle_mouse_button(_press(cell_point, false))
-		all_passed = SUPPORT.check(PREFIX, "pressing a cell keeps per-cell selection",
-			int(viewport.get_editor_state_snapshot().get("selected_span_count", 0)), 1) and all_passed
+		all_passed = SUPPORT.pins(PREFIX, [
+			["pressing a cell keeps per-cell selection",
+				int(viewport.get_editor_state_snapshot().get("selected_span_count", 0)), 1],
+			# The frame is the EVENT's mark, so a cell's selection must not wear it.
+			["a cell selection draws no card frame", viewport._statement_has_selected_span(0), true],
+		]) and all_passed
+		viewport._handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._get_row_top(0) + viewport._get_row_height(0) * 0.5), true))
+		viewport._handle_mouse_button(_press(Vector2(EventSheetPalette.GUTTER_WIDTH * 0.5, viewport._get_row_top(0) + viewport._get_row_height(0) * 0.5), false))
+		all_passed = SUPPORT.check(PREFIX, "selecting the event back draws the frame again",
+			viewport._statement_has_selected_span(0), false) and all_passed
 
 	# ── box selection starts only outside every card ──
 	var below_last: float = viewport._get_row_top(1) + viewport._get_row_height(1) + 40.0

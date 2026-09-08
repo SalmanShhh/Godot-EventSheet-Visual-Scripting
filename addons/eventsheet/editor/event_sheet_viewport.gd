@@ -2272,13 +2272,26 @@ func _draw_event_selection_outlines(visible_range: Vector2i) -> void:
 		var row_data: EventRowData = _row_at(index)
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or not row_data.selected:
 			continue
-		if not (_selected_span_indices.get(row_data.row_uid, []) as Array).is_empty():
-			continue
 		var lead: int = statement_lead_index(index)
 		if framed.has(lead):
 			continue
 		framed[lead] = true
+		if _statement_has_selected_span(lead):
+			continue
 		_renderer.draw_event_selection_outline(self, event_card_rect(lead), event_style)
+
+
+## True when any row of one statement carries a selected cell. Asked of the whole statement rather
+## than of one row, because a statement that reads as several rows keeps its span selection on the
+## row the cell was clicked on - and a cell selected on either row is still a cell's selection.
+func _statement_has_selected_span(lead_index: int) -> bool:
+	for index in range(lead_index, statement_last_index(lead_index) + 1):
+		var row_data: EventRowData = _row_at(index)
+		if row_data == null:
+			continue
+		if not (_selected_span_indices.get(row_data.row_uid, []) as Array).is_empty():
+			return true
+	return false
 
 
 ## The full-sheet DIVIDER GUIDE: one continuous vertical line at the column boundary under the pointer,
