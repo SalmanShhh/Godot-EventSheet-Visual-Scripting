@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: one head bar, and the description is a comment
+
+- **The six bars a file opened with are one line.** `class_name`, `extends`, the Include bar with
+  its coverage chip, the `##` description, the Input bar and the variables bar used to stack up
+  before event 1. An opened file now rests under a single line - `InputRebindDemo extends Control
+  · reads as events · 4 input actions · 1 variable · 2 script blocks` - and its ▸ opens every one
+  of those bars again, unchanged, as the line's own fold. Each count is read off the bar it folds,
+  so the line and the fold cannot disagree.
+- **Each fact keeps its door.** The class it extends opens the base script when that base is
+  another script of the project; the coverage words still walk the script blocks one per click;
+  the ▸ brings back the Input bar with every control and its bindings, and the variables bar with
+  every variable and its own sentence.
+- **The file's prose is a comment row, drawn once.** The `##` block was a band that drew its value
+  and its echo of the same line one over the other, and a pack that closes on a paragraph saying the
+  same thing had that paragraph hoisted on top of it - the sentence twice, once of it doubled. It is
+  a comment row at the top of the sheet now, the whole block as one sentence, and the paragraph a
+  pack closes on is left where its author wrote it.
+- **A control the Input Map has not got went quiet.** The Input bar used to mark it
+  `⚠ demo_jump` and say `not in the Input Map` inside the sheet. It is a finding, so the sheet's
+  only signal is the amber state on the head bar; the sentence is read in the help strip under the
+  selected bar and in the Doctor's inbox, which already carried it.
+
+### Changed: the Behaviors band counts by kind
+
+- **Twenty-four children stop being twenty-four rows.** An object that composes many small
+  behaviors opened as a page of repeated names before its first event, and a reader could not tell
+  seven Springs from one. The band says the count and the kinds on one folded line -
+  `▸ Behaviors · 34  on this object - Spring ×10 · Tween ×10 · Sine ×8 · Flash ×2 · Juice · Scenes` -
+  with the counts as text chips, never widgets.
+- **It opens by KIND, with the settings and the nodes.** One line per kind:
+  `Sine ×8  movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7`. A behavior
+  tuned differently from its siblings keeps a line of its own, which is the whole reason to open the
+  fold. Folded by default, and the fold is remembered like every other.
+
 ### Performance: a tab keeps its reading
 
 - **Switching between two open sheets builds nothing.** A switch used to be a full load - every row

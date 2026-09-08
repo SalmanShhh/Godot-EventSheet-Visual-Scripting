@@ -564,21 +564,25 @@ That is the order this section is in.
   just says `reads as events`. The number is measured by the same code the corpus gate measures with,
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
-- **The head is the file's own first lines, then one Include bar for what they do not say.** An
-  opened pack wears the same band stack an authored sheet does - `class_name FPSController`,
-  `extends Node`, `@icon(...)`, the `##` description, the host binding - one band per line, each
-  echoing the line it stands for. Under them the Include bar carries only what no line of the file
-  says: `⇥ Addon Pack  v1.0.0  behaves on a  CharacterBody3D  reads as events ▸`. Then a
-  `Triggers this pack fires - 11` folder, one folder per `@export_group` (`Jump - 3 settings`,
-  `Movement - 3 settings`, ...), and `Instance variables  of FPSController` for everything the groups
-  did not claim. Inside a folder a variable reads `Instance number  jump_velocity = 4.5  Upward
-  velocity applied on a jump` - the one sentence below, plus the knob's own description. Nothing on
-  the head is stated twice: the name is on its band, not on the bar, and the description is the `##`
-  band rather than a second comment row.
+- **The head is ONE bar, and the lines it stands for are its fold.** An opened file rests under a
+  single line - `▣ FPSController extends Node · reads as events · 5 input actions · 62 variables` -
+  and the ▸ on it opens every bar a reader used to scroll past: the band per line of the file
+  (`class_name FPSController`, `extends Node`, `@icon(...)`, the host binding), the Include bar for
+  what no line says (`⇥ Addon Pack  v1.0.0  behaves on a  CharacterBody3D  reads as events ▸`),
+  the **Input** bar, and the variable folders. Each fact on the line keeps its door: the class it
+  extends opens the base script when that base is another script of your project, and the coverage
+  words walk the script blocks.
 
-  ![A behaviour pack's head: the band stack naming the class, what it extends, its icon, its description and its host, then the Include bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", then folded Triggers, Input and one folder per setting group](images/opened-pack-head.png)
+  Outside the fold, in reading order: the file's `##` description as the comment row it is, a
+  `Triggers this pack fires - 11` folder, the object's Behaviors, and the globals it uses. Inside a
+  variable folder a variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on
+  a jump` - the one sentence below, plus the knob's own description. Nothing is stated twice: the
+  description is a comment row rather than a band drawn over its own echo, and a pack that closes on
+  a paragraph repeating it has that paragraph left where its author wrote it.
 
-  ![The same head with its folders opened: every setting under Movement, Wall Tech and Instance variables of FPSController, each reading scope word, type word, name, value and its own description](images/opened-pack-head-open.png)
+  ![A behaviour pack's head: one bar reading "FPSController extends Node - reads as events - 5 input actions - 62 variables", the pack's own description as a comment row under it, and a folded Triggers folder](images/opened-pack-head.png)
+
+  ![The same head with the fold open: the bands for class_name, extends, @icon and the host binding, the Include bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", the Input bar, and one folder per setting group](images/opened-pack-head-open.png)
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, its
   head grows an `autoload  Game` band echoing the `project.godot` entry that grants the name, its
   knobs read as one `Global variables` folder rather than the Instance variables one, and its
@@ -2052,9 +2056,14 @@ script, and the scene it is placed in, both read as text - so there is no list t
 is instantiated to answer a question.
 
 - **The head carries the object's Behaviors and Families.** Two folded folders before the settings:
-  `▸ Behaviors  on this object - Health · FPS Controller` (the pack nodes mounted on the object in its
-  scene, each opening to what the scene set on it, `Health  max health = 50`) and
-  `▸ Families  this object belongs to - player, damageable (groups)`. A Godot group is the sheet's
+  `▸ Behaviors · 34  on this object - Spring ×10 · Tween ×10 · Sine ×8 · Flash ×2 · Juice · Scenes`
+  (the pack nodes mounted on the object in its scene, counted by KIND rather than listed one per
+  node - a carousel of eight tiles is eight Sines, and a page of repeated names before the first
+  event told you nothing) and `▸ Families  this object belongs to - player, damageable (groups)`.
+  Opening the Behaviors folder gives one line per kind, with the settings the scene wrote and the
+  nodes wearing them: `Sine ×8  movement = "vertical" · period = 1.6 · magnitude = 18.0 · on Tile0 …
+  Tile7`. A behavior tuned differently from its siblings keeps a line of its own, which is the whole
+  reason to open the fold. A Godot group is the sheet's
   family; the Godot word stays in the muted note and nowhere else.
 - **Object properties say what the object IS.** Click an object label (or double-click its entry in the
   Object bar) and the popup adds, above what this sheet does with it: **Instance variables**,
@@ -2213,7 +2222,10 @@ is instantiated to answer a question.
 <img src="images/object-popup.png" alt="Object properties for Player: type CharacterBody2D, its instance variables, its functions with their inputs, its triggers, the Health behavior with the value the scene set on it, and its families, above Add condition, Add action and the three navigation buttons." width="560">
 
 The Object bar's **INPUT** section and the **Input** head bar, on a script that reads four controls -
-three the project has, and one it does not:
+three the project has, and one it does not. The Input bar itself says nothing about the missing one:
+a control the Input Map has not got is a FINDING, so the sheet's only signal is the quiet amber state
+on the head bar, and the sentence - *"dash" is not in the Input Map - the control never fires and
+nothing says so* - is read in the help strip under the selected bar and in the Doctor's inbox.
 
 <img src="images/input-object-bar.png" alt="The Object bar's INPUT section listing ui_left with the bindings Left and A, ui_right with Right and D, ui_accept with Enter and Kp Enter, and a warning-marked dash reading 'not in the Input Map'; beside it the sheet's Input head bar saying 'this script uses 4 actions - ui_left, ui_right, ui_accept, dash - Project, Input Map' followed by each control's bindings, and the rows below reading Keyboard On ui_accept pressed, Keyboard dash is down and Gamepad On button A pressed." width="900">
 
