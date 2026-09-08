@@ -44,6 +44,10 @@ What changed in the build you have installed (v0.18.0), in the words the release
   anyone who liked it that way), Comfortable and Spacious, tightest first, with the one this
   sheet's spacing already matches ticked. Picking one copies its six numbers onto a duplicate of
   the sheet's own style, so every colour that style states survives untouched.
+- **An existing theme reads Comfortable unless it says otherwise.** The six numbers are tokens on
+  the theme resource, and a `.tres` written before they existed states none of them - so it takes the
+  new defaults and every sheet it dresses gets the extra room. Nothing about the sheet's BYTES
+  changes, and Compact is one click away with the numbers the editor shipped with.
 - **A starter is a file, not a look we chose for you.** Duplicate one of the three
   `EventSheetDensityStyle` resources in `addons/eventsheet/themes/density/`, change the numbers,
   save it beside them, and it is in the menu the next time View opens - no code, no registration
@@ -72,6 +76,29 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ### Fixed
 
+- **A long comment was drawn through the echo of the line it writes.** The echo is the note's
+  own words with a marker in front, so a note long enough to reach it ended up as two long texts
+  on one line, neither readable - and a file whose closing paragraph is hoisted to the top showed
+  it every time. The note now fills to where the right-anchored run starts, and wraps to the same
+  edge its height is counted against.
+- **A right press beside the cells outlined one thing and offered another.** The press selects
+  the whole event, as a left press there does, but the menu was still built around the cell whose
+  LINE the pointer happened to be on - so the outline said \"event\" and the menu said \"this
+  condition\" for one and the same press. The menu now answers with whatever was selected.
+- **A panel slid off the rail by its own button came back ticked in the View menu.** The tick
+  read a second, private record that only the menu path and the fold signal ever wrote. The rail
+  is the one record now - the header button, a divider dragged past the header and the View
+  entry are three ways of saying the same thing - and the tick is re-read every time the menu
+  opens. The private record is gone rather than kept in step.
+- **Three rail panels could not be dragged shut.** A split container stops a drag at its
+  children's combined minimum, and the Functions list, the Objects tree and the Picker preview
+  each held 110 px open from the inside - so the divider never reached the threshold that slides
+  a panel off the rail, and only the header button could. The rail decides the column heights;
+  its panels bring no minimum of their own, inside or out.
+- **The panel minimise button wore an en dash.** A plain ASCII glyph now, which is what the
+  house rule asks of every other line of text in the repository.
+- **A lost line continuation in the row renderer** left three raw tabs mid-condition. It parsed,
+  and it read as a mistake because it was one.
 - **A re-saved theme preset stopped being readable by the coverage gate.** Godot writes a
   `uid=\"uid://...\"` onto every `[ext_resource]` line it re-saves, and the preset reader looked for
   `id=\"` without anchoring it - so it read the uid as the resource id, mapped every block to no
@@ -106,6 +133,10 @@ What changed in the build you have installed (v0.18.0), in the words the release
   seven Springs from one. The band says the count and the kinds on one folded line -
   `▸ Behaviors · 34  on this object - Spring ×10 · Tween ×10 · Sine ×8 · Flash ×2 · Juice · Scenes` -
   with the counts as text chips, never widgets.
+- **A kind is a door.** Each chip on the folded line carries that pack's own script, read off the
+  scene line the behavior was recognised on, so clicking the word opens that behavior as a sheet -
+  the same jump the Include bar makes, through the same field on the span. A chip whose scene line
+  named no script stays a word.
 - **It opens by KIND, with the settings and the nodes.** One line per kind:
   `Sine ×8  movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7`. A behavior
   tuned differently from its siblings keeps a line of its own, which is the whole reason to open the
@@ -127,13 +158,20 @@ What changed in the build you have installed (v0.18.0), in the words the release
   lists different provider scripts, or when the addon fleet, the bridge's registrations, the taught
   verbs or an annotated autoload changed; definitions are immutable and shared across tabs already,
   so keeping one is keeping a list of sources, never a second copy of a descriptor.
-- **Undo survives a switch.** The log is no longer cleared when you look at another sheet. Every
-  edit is tagged with the tab it was made on, so an undo of an edit made elsewhere brings that tab
-  back and lands there instead of over the sheet in front of you, and the History panel shows the
-  steps the tab on screen was edited by rather than a merged list of every tab's.
+- **Undo survives a switch, and an open.** The log is no longer cleared when you look at another
+  sheet, and opening a sheet from disk no longer clears it either - opening a third file used to
+  take the first two tabs' history with it, because the host editor keeps one stack for the whole
+  dock. Every edit is tagged with the tab it was made on instead, so an undo of an edit made
+  elsewhere brings that tab back and lands there instead of over the sheet in front of you, and
+  the History panel shows the steps the tab on screen was edited by rather than a merged list of
+  every tab's.
+- **An undo says where it went.** Landing on another tab now names the sheet it landed on
+  (\"Applied undo/redo on player.gd\"), and a step whose tab has since been closed says that rather
+  than letting Ctrl+Z do nothing without a word.
 - **The status line stopped saying \"Loaded:\" on a switch**, because a switch is not a load. It says
-  nothing at all; a file that changed on disk behind a tab rebuilds it once and says
-  \"Reloaded: changed on disk\".
+  nothing at all; a file that changed on disk behind a tab rebuilds it once and says so honestly -
+  \"Changed on disk: player.gd - these rows are the editor's copy\", because the rows were built
+  from the sheet the editor is holding and the re-import is still the file watcher's to offer.
 
 ### Added: the object's variables are Inspector rows
 
