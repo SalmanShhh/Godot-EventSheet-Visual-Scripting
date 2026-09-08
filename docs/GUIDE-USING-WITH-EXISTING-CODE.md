@@ -2151,6 +2151,30 @@ is instantiated to answer a question.
   to imagine the result, and **Reset to defaults**. The choices are yours alone - they are stored
   with the editor settings rather than in the project - so a Godot user and someone arriving from
   another event-sheet editor can read the same sheet in different words.
+- **A preset sets the whole vocabulary at once.** Above the table, one dropdown: **Godot words**
+  (the engine's own nouns and verbs), **Familiar words** (the nouns table below it, which is the
+  same thing **View ▸ Familiar Words** has always switched), and **Event-sheet-editor words** (those
+  nouns *and* a handful of verbs). The row shows *custom* when the switches and the words you typed
+  do not add up to one of the three - that is a reading rather than a thing to pick, and picking it
+  changes nothing. Because the row follows the switches rather than remembering a choice of its own,
+  flipping Familiar Words from the View menu shows up here as the vocabulary it actually produced.
+- **The third preset renames a handful of VERBS.** With it on a row says *Create object* where Godot
+  says *Spawn a copy of*, *is overlapping in family* where it says *is touching*, *Set disabled*
+  where a hand-written `set_process(false)` reads *Set Every tick (draw) deactivated*, and a loop
+  over a group reads `For each item in family "enemies"`. The picker carries both names at once -
+  *Create object · Spawn A Copy* - so the Godot verb never disappears from the place you pick it,
+  and its search answers to either name whichever vocabulary is switched on. An alias is display
+  text and nothing else: the verb's id, its template, the generated GDScript and every stored byte
+  are untouched, the shipped wording is always the "off" side, and the generated-code panel and the
+  tooltips keep Godot's spelling either way. That is what makes the second vocabulary a way to learn
+  the first rather than a way to avoid it.
+- **The alias table is a file you can edit.** `addons/eventsheet/words/verb_words.csv` is the table
+  the plugin ships, in the same drop-in shape the nine translation files use: one row per alias, its
+  columns the key (a verb's `Provider::AceId`, or a reading the editor composes), the word, what it
+  names, the verb's shipped name and the shipped row's opening words. Drop a CSV of the same shape
+  into `res://eventsheet_words/` and it is merged over the shipped one - the same key re-words that
+  alias, a new key adds one - so a team's own vocabulary lives in the project and survives a plugin
+  update.
 - **A finding with a one-step fix shows it.** In the Project Doctor, selecting a finding that has
   a one-step answer draws a chip per answer: an unknown control offers *Add "dash" to the Input
   Map* and *Pick an existing action…*, a variable read but never set offers *Declare it*, a pack

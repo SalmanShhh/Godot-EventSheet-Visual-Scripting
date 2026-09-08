@@ -19,6 +19,52 @@ extends RefCounted
 const METADATA_SECTION := "eventsheets"
 const METADATA_KEY := "words"
 const FAMILIAR_KEY := "familiar_words"
+const VERB_WORDS_KEY := "verb_words"
+
+## The verb aliases: the NOUNS above renamed a handful of things, and this renames a handful of
+## VERBS the same reversible way, so a reader arriving from another event-sheet editor meets their
+## own sentences on the first row instead of only in the picker's search.
+##
+## An alias is DISPLAY TEXT and nothing else. The ace_id, the codegen template, the emitted
+## GDScript and every stored byte are untouched, the shipped wording is always on the "off" side
+## (which is the default), and the code panel and the tooltips keep Godot's spelling either way -
+## so the second vocabulary is learnable rather than hidden.
+##
+## The table is DATA, in the same drop-in CSV shape the editor's translations use, so a team can
+## edit a word or add one without touching code: `verb_words.csv` beside this file ships the words
+## the plugin knows, and any CSV under `res://eventsheet_words/` is merged over it (same key wins,
+## a new key is added). Columns, in order:
+##
+##   keys        the alias key - a shipped "<provider>::<ace_id>", or "reading:<call>:<state>"
+##               for a reading the grammar composes rather than a verb the picker offers
+##   word        what the row and the picker say with the aliases on
+##   names       what the thing IS, in plain words, for the Words page's left column
+##   shipped     the verb's shipped picker name (the "off" side); empty for a reading key
+##   shipped_row the opening words of the shipped ROW text; empty leaves the row's wording alone
+##   row         the opening words that replace them; empty means use `word`
+const VERB_WORDS_DIRS: Array[String] = [
+	"res://addons/eventsheet/words",
+	"res://eventsheet_words",
+]
+const VERB_WORDS_COLUMNS: PackedStringArray = ["keys", "word", "names", "shipped", "shipped_row", "row"]
+
+## The four ways the vocabulary can stand, as the Words page offers them. Three are named
+## positions; "custom" is what the page says when the switches and the typed words do not add up
+## to one of them. Frozen: the ids are written to the user's editor settings by `apply_preset`.
+const PRESET_GODOT := "godot"
+const PRESET_FAMILIAR := "familiar"
+const PRESET_SHEET := "sheet"
+const PRESET_CUSTOM := "custom"
+const PRESETS: Array[String] = [PRESET_GODOT, PRESET_FAMILIAR, PRESET_SHEET, PRESET_CUSTOM]
+
+## The alias table, parsed once per session from the CSVs. Empty until `verb_aliases()` fills it.
+static var _verb_aliases: Dictionary = {}
+static var _verb_aliases_loaded: bool = false
+
+## The verb-alias switch, remembered for the session: rows ask for it per cell, and the editor
+## settings are far too slow a thing to read that often. -1 is "not read yet"; every writer here
+## refreshes it, and `forget_verb_words_state()` is for a writer somewhere else.
+static var _verb_words_state: int = -1
 
 ## key -> [what it names, the word with Familiar Words on, the word with it off, extra choices].
 ## Frozen keys: a key is read by callers all over the editor, so add, never rename.
@@ -298,6 +344,243 @@ static func set_word(key: String, familiar: bool, chosen: String) -> void:
 ## Reset to defaults: drops every override, leaving the Familiar Words toggle alone.
 static func reset() -> void:
 	_store_metadata(METADATA_KEY, {})
+
+
+# --- the verb aliases (the second vocabulary, off by default) ----------------------------------
+
+
+## The whole alias table, key -> {word, names, shipped, shipped_row, row}. Parsed once per session
+## from the shipped CSV and then from any CSV a project dropped in - a repeated key REPLACES, so a
+## team can re-word one alias without copying the rest of the table.
+static func verb_aliases() -> Dictionary:
+	if _verb_aliases_loaded:
+		return _verb_aliases
+	_verb_aliases_loaded = true
+	_verb_aliases = {}
+	for dir_path: String in VERB_WORDS_DIRS:
+		if not DirAccess.dir_exists_absolute(dir_path):
+			continue
+		var file_names: PackedStringArray = DirAccess.get_files_at(dir_path)
+		file_names.sort()
+		for file_name: String in file_names:
+			if file_name.get_extension().to_lower() != "csv":
+				continue
+			_merge_verb_words_file("%s/%s" % [dir_path, file_name])
+	return _verb_aliases
+
+
+## Drops the parsed table so the next reader re-reads the files. What a dropped-in CSV needs.
+static func forget_verb_aliases() -> void:
+	_verb_aliases_loaded = false
+	_verb_aliases = {}
+
+
+## One CSV, merged over whatever is already loaded. A short row is skipped rather than half-read,
+## and the header line is skipped by its first cell's name, so a file without one still loads.
+static func _merge_verb_words_file(path: String) -> void:
+	var handle: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if handle == null:
+		return
+	while not handle.eof_reached():
+		var cells: PackedStringArray = handle.get_csv_line()
+		if cells.size() < VERB_WORDS_COLUMNS.size():
+			continue
+		var key: String = cells[0].strip_edges()
+		if key.is_empty() or key == VERB_WORDS_COLUMNS[0]:
+			continue
+		_verb_aliases[key] = {
+			"word": cells[1].strip_edges(),
+			"names": cells[2].strip_edges(),
+			"shipped": cells[3].strip_edges(),
+			"shipped_row": cells[4].strip_edges(),
+			"row": cells[5].strip_edges(),
+		}
+	handle.close()
+
+
+## Every alias key, sorted - the order the Words page lists them in and a test walks them in.
+static func verb_alias_keys() -> Array[String]:
+	var out: Array[String] = []
+	for key: String in verb_aliases().keys():
+		out.append(key)
+	out.sort()
+	return out
+
+
+## One alias's fields, or {} when the key names no alias of ours.
+static func verb_alias(key: String) -> Dictionary:
+	var entry: Variant = verb_aliases().get(key, null)
+	return (entry as Dictionary) if entry is Dictionary else {}
+
+
+## What the row and the picker say for this key with the second vocabulary on.
+static func verb_alias_word(key: String) -> String:
+	return str(verb_alias(key).get("word", ""))
+
+
+## What the key names, in plain words - the Words page's left column.
+static func verb_names_what(key: String) -> String:
+	return str(verb_alias(key).get("names", ""))
+
+
+## The verb's shipped picker name: the "off" side, and the value a test holds the registry to.
+## Empty for a reading key, which names a sentence the grammar composes rather than a picked verb.
+static func verb_shipped_name(key: String) -> String:
+	return str(verb_alias(key).get("shipped", ""))
+
+
+## The opening words of the verb's shipped ROW text. Empty when the row keeps its shipped wording:
+## a template that opens with a parameter has no verb at its head to swap.
+static func verb_shipped_row(key: String) -> String:
+	return str(verb_alias(key).get("shipped_row", ""))
+
+
+## The alias key for a shipped verb - the frozen provider and ace_id, spelled the way the registry
+## spells an identifier, so a key can never drift from the verb it names.
+static func verb_key(provider_id: String, ace_id: String) -> String:
+	return "%s::%s" % [provider_id, ace_id]
+
+
+## The three swaps by provider and ace_id rather than by key. Each asks the switch FIRST, so the row
+## builder - which comes through here once per cell - builds no key string and opens no file while
+## the second vocabulary is off, which is the default.
+static func verb_row_words_of(provider_id: String, ace_id: String, shipped_text: String) -> String:
+	if not verb_words_enabled():
+		return shipped_text
+	return verb_row_words_for(verb_key(provider_id, ace_id), shipped_text, true)
+
+
+## A verb NAME by provider and ace_id - the trigger cell, a menu entry, a heading.
+static func verb_name_words_of(provider_id: String, ace_id: String, shipped_name: String) -> String:
+	if not verb_words_enabled():
+		return shipped_name
+	return verb_name_words_for(verb_key(provider_id, ace_id), shipped_name, true)
+
+
+## The picker's BOTH-names row by provider and ace_id.
+static func picker_name_of(provider_id: String, ace_id: String, shipped_name: String) -> String:
+	if not verb_words_enabled():
+		return shipped_name
+	return picker_name_for(verb_key(provider_id, ace_id), shipped_name, true)
+
+
+## A row's text in the chosen vocabulary. IDENTITY with the aliases off, which is the default -
+## which is why turning them off puts every row back exactly as it was, character for character.
+static func verb_row_words(key: String, shipped_text: String) -> String:
+	return verb_row_words_for(key, shipped_text, verb_words_enabled())
+
+
+## The pure form, for tests and for a caller that already holds the state.
+static func verb_row_words_for(key: String, shipped_text: String, enabled: bool) -> String:
+	if not enabled:
+		return shipped_text
+	var head: String = verb_shipped_row(key)
+	if head.is_empty() or not shipped_text.begins_with(head):
+		return shipped_text
+	var replacement: String = str(verb_alias(key).get("row", ""))
+	if replacement.is_empty():
+		replacement = verb_alias_word(key)
+	if replacement.is_empty():
+		return shipped_text
+	return replacement + shipped_text.substr(head.length())
+
+
+## A verb NAME in the chosen vocabulary - the picker's row, a menu entry, a heading.
+static func verb_name_words(key: String, shipped_name: String) -> String:
+	return verb_name_words_for(key, shipped_name, verb_words_enabled())
+
+
+## The pure form, for tests and for a caller that already holds the state.
+static func verb_name_words_for(key: String, shipped_name: String, enabled: bool) -> String:
+	# The switch is asked FIRST, before the table is touched: with the second vocabulary off - the
+	# default - the CSVs are never even opened, and the answer is the text that came in.
+	if not enabled:
+		return shipped_name
+	var shipped: String = verb_shipped_name(key)
+	var alias: String = verb_alias_word(key)
+	if shipped.is_empty() or alias.is_empty() or shipped_name != shipped:
+		return shipped_name
+	return alias
+
+
+## The picker's row for a verb that has an alias: BOTH names, the chosen vocabulary leading, so the
+## reader who searched for one word sees the other beside it and learns it by reading.
+static func picker_name(key: String, shipped_name: String) -> String:
+	return picker_name_for(key, shipped_name, verb_words_enabled())
+
+
+## The pure form, for tests and for a caller that already holds the state.
+static func picker_name_for(key: String, shipped_name: String, enabled: bool) -> String:
+	if not enabled:
+		return shipped_name
+	var alias: String = verb_alias_word(key)
+	if alias.is_empty() or verb_shipped_name(key) != shipped_name:
+		return shipped_name
+	return "%s  ·  %s" % [alias, shipped_name]
+
+
+## Whether the sheet reads the VERBS in the second vocabulary. Off by default, and off headless.
+static func verb_words_enabled() -> bool:
+	if _verb_words_state < 0:
+		_verb_words_state = 1 if bool(_project_metadata(VERB_WORDS_KEY, false)) else 0
+	return _verb_words_state == 1
+
+
+## Turns the second vocabulary on or off - in the editor settings, and in this session's answer.
+static func set_verb_words_enabled(on: bool) -> void:
+	_verb_words_state = 1 if on else 0
+	_store_metadata(VERB_WORDS_KEY, on)
+
+
+## Drops the remembered switch so the next reader asks the settings again. For a writer that went
+## round this file - an editor-settings import, a second editor window.
+static func forget_verb_words_state() -> void:
+	_verb_words_state = -1
+
+
+## The Familiar Words toggle as a WRITE. View > Familiar Words writes the same key; this exists so
+## the Words page can set both halves of a vocabulary in one gesture.
+static func set_familiar_words_enabled(on: bool) -> void:
+	_store_metadata(FAMILIAR_KEY, on)
+
+
+## Which named vocabulary the two switches currently spell, or "custom" when they spell none of
+## them - a word the reader typed, or Godot's nouns wearing the other editor's verbs.
+static func preset() -> String:
+	if not overrides().is_empty():
+		return PRESET_CUSTOM
+	var familiar: bool = familiar_words_enabled()
+	if verb_words_enabled():
+		return PRESET_SHEET if familiar else PRESET_CUSTOM
+	return PRESET_FAMILIAR if familiar else PRESET_GODOT
+
+
+## Sets both switches to one named vocabulary. "custom" is a READING rather than a thing to apply,
+## so it does nothing: the typed words that make a vocabulary custom are edited a row at a time.
+static func apply_preset(name: String) -> void:
+	match name:
+		PRESET_GODOT:
+			set_familiar_words_enabled(false)
+			set_verb_words_enabled(false)
+		PRESET_FAMILIAR:
+			set_familiar_words_enabled(true)
+			set_verb_words_enabled(false)
+		PRESET_SHEET:
+			set_familiar_words_enabled(true)
+			set_verb_words_enabled(true)
+
+
+## What the page calls each preset: Godot's own words, the sheet's nouns, and the sheet's nouns AND
+## verbs - each named for what it IS, never for the product whose habits the third one follows.
+static func preset_label(name: String) -> String:
+	match name:
+		PRESET_GODOT:
+			return "Godot words"
+		PRESET_FAMILIAR:
+			return "Familiar words"
+		PRESET_SHEET:
+			return "Event-sheet-editor words"
+	return "custom"
 
 
 static func _project_metadata(key: String, fallback: Variant) -> Variant:

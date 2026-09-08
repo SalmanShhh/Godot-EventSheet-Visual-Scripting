@@ -10520,15 +10520,19 @@ func _unquoted(text: String) -> String:
 
 
 func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
+	# A trigger row shows the verb's NAME rather than a template, so the vocabulary hook here is the
+	# name swap. Identity with the second vocabulary off, which is the default.
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, trigger_id)
 	if definition != null and not definition.display_name.strip_edges().is_empty():
-		return EventSheetL10n.translate(definition.display_name)
+		return EventSheetWords.verb_name_words_of(provider_id, trigger_id,
+			EventSheetL10n.translate(definition.display_name))
 	# Same fallback the condition path uses: when no built definition exists yet, the static
 	# descriptor registry still knows the friendly name ("Every Physics Tick", not
 	# "OnPhysicsProcess") - without it a lifted trigger prints its raw id.
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, trigger_id)
 	if descriptor != null and not descriptor.display_name.strip_edges().is_empty():
-		return EventSheetL10n.translate(descriptor.display_name)
+		return EventSheetWords.verb_name_words_of(provider_id, trigger_id,
+			EventSheetL10n.translate(descriptor.display_name))
 	if trigger_id.begins_with("signal:"):
 		var signal_name: String = trigger_id.trim_prefix("signal:")
 		# A form's own signals have object words in the sheet, exactly as its actions do: a text
@@ -14489,7 +14493,11 @@ func _format_pick_filter(pick: PickFilter) -> String:
 	var source_text: String = collection
 	match pick.collection_kind:
 		PickFilter.CollectionKind.GROUP:
-			source_text = "group \"%s\"" % collection
+			# ── lens hook ──────────────────────────────────────────────────────────────────
+			# A loop over a group is the sheet's For each over a FAMILY in the second
+			# vocabulary. Display only, and identity with that vocabulary off (the default).
+			source_text = "%s \"%s\"" % [
+				EventSheetWords.verb_row_words("reading:pick_filter:GROUP", "group"), collection]
 		PickFilter.CollectionKind.CHILDREN:
 			source_text = "children"
 		PickFilter.CollectionKind.REPEAT:
@@ -17792,9 +17800,15 @@ func _read_colour_words(shown: String) -> String:
 
 func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescriptor, params_dict: Dictionary) -> String:
 	if definition != null:
-		var template: String = _resolve_template(str(definition.metadata.get("display_template", definition.display_name)))
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
+		# The verb in the vocabulary the reader chose. Display only, and OFF by default: with the
+		# second vocabulary off the words seam hands back exactly the text it was given, so a row's
+		# spans are the bytes they always were. The key is the frozen provider and ace_id.
+		var template: String = EventSheetWords.verb_row_words_of(definition.provider_id, definition.id,
+			_resolve_template(str(definition.metadata.get("display_template", definition.display_name))))
 		if template.is_empty():
-			return EventSheetL10n.translate(definition.display_name)
+			return EventSheetWords.verb_name_words_of(definition.provider_id, definition.id,
+				EventSheetL10n.translate(definition.display_name))
 		var replacements: Array = []
 		for index: int in range(definition.parameters.size()):
 			var parameter: Variant = definition.parameters[index]
@@ -17832,7 +17846,10 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		return str(substituted.get("text", ""))
 	if descriptor == null:
 		return ""
-	var descriptor_template: String = _resolve_template(descriptor.get_display_text())
+	# The same vocabulary hook the registry branch above carries, so a builtin descriptor and the
+	# registry's copy of it read in the same words.
+	var descriptor_template: String = EventSheetWords.verb_row_words_of(
+		descriptor.provider_id, descriptor.ace_id, _resolve_template(descriptor.get_display_text()))
 	if descriptor_template.is_empty():
 		return descriptor.ace_id
 	var descriptor_replacements: Array = []

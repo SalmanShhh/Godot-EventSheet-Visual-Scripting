@@ -19,6 +19,9 @@ const _CUSTOM_ID := 9000
 var _rows: Dictionary = {}
 var _preview_condition: Label = null
 var _preview_action: Label = null
+var _preset_option: OptionButton = null
+var _preset_note: Label = null
+var _preview_verbs: Label = null
 
 
 func _init() -> void:
@@ -31,6 +34,7 @@ func _build_body() -> Control:
 	var page: VBoxContainer = EventSheetPopupUI.form_box()
 	page.add_child(EventSheetPopupUI.hint_label(
 		"A few things have two honest names: the Godot one and the one every other event-sheet editor uses. Choose either, or type your own - the sheet reads the same word everywhere at once.", 620.0))
+	page.add_child(EventSheetPopupUI.titled_card("the whole vocabulary at once", _build_presets()))
 	page.add_child(EventSheetPopupUI.titled_card("how the sheet talks", _build_table()))
 	page.add_child(EventSheetPopupUI.titled_card("live preview", _build_preview()))
 	var buttons: HBoxContainer = HBoxContainer.new()
@@ -44,6 +48,25 @@ func _build_body() -> Control:
 	page.add_child(EventSheetPopupUI.hint_label(
 		"The choices are yours alone - they are stored with the editor settings, not in the project, so two people on one project can read the same sheet in different words.", 620.0))
 	return page
+
+
+## The preset row: three named vocabularies and the reading the page falls back on when the
+## switches say none of them. Godot words is the plain editor; Familiar words is the nouns table
+## below (the View menu's own toggle); the third adds the VERB aliases, so a row reads the sentence
+## a reader arriving from another event-sheet editor already types. Every one of them is reversible
+## and none of them moves a byte of a sheet.
+func _build_presets() -> Control:
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	_preset_option = OptionButton.new()
+	_preset_option.custom_minimum_size = Vector2(230.0, 0.0)
+	for index: int in EventSheetWords.PRESETS.size():
+		_preset_option.add_item(EventSheetWords.preset_label(EventSheetWords.PRESETS[index]), index)
+	_preset_option.item_selected.connect(_on_preset_selected)
+	box.add_child(EventSheetPopupUI.form_row("Words", _preset_option, 150.0,
+		"Sets both halves at once: whether the nouns read in the sheet's words, and whether the verbs do."))
+	_preset_note = EventSheetPopupUI.hint_label("", 620.0)
+	box.add_child(_preset_note)
+	return box
 
 
 func _build_table() -> Control:
@@ -101,6 +124,10 @@ func _build_preview() -> Control:
 	band.add_child(EventSheetPopupUI.panel_section(_preview_condition))
 	band.add_child(EventSheetPopupUI.panel_section(_preview_action))
 	box.add_child(band)
+	# The VERBS, on their own line: the nouns above change with the toggle, and these two change
+	# with the preset - a trigger read by its name and an action read by its row.
+	_preview_verbs = Label.new()
+	box.add_child(EventSheetPopupUI.panel_section(_preview_verbs))
 	box.add_child(EventSheetPopupUI.hint_label(
 		"One event, in the words you have chosen for the state the toggle is in right now.", 620.0))
 	return box
@@ -131,7 +158,44 @@ func refresh() -> void:
 				option.select(option.get_item_index(_CUSTOM_ID))
 				edit.visible = true
 				edit.text = current
+	_refresh_preset()
 	_refresh_preview(familiar_now)
+
+
+## The preset row follows the switches rather than remembering a choice of its own, so a Familiar
+## Words flip made from the View menu shows up here as the vocabulary it actually produced.
+func _refresh_preset() -> void:
+	if _preset_option == null:
+		return
+	var current: String = EventSheetWords.preset()
+	var index: int = EventSheetWords.PRESETS.find(current)
+	if index >= 0:
+		_preset_option.select(_preset_option.get_item_index(index))
+	if _preset_note != null:
+		_preset_note.text = _preset_description(current)
+
+
+func _preset_description(preset: String) -> String:
+	match preset:
+		EventSheetWords.PRESET_GODOT:
+			return "Godot's own words throughout - the nouns and the verbs the engine uses."
+		EventSheetWords.PRESET_FAMILIAR:
+			return "The nouns in the sheet's words (Family, Layout); the verbs stay Godot's."
+		EventSheetWords.PRESET_SHEET:
+			return "The nouns AND the verbs in the sheet's words - a row reads Create object where Godot says Spawn A Copy. The Godot spelling stays beside it in the picker, and the code panel and the tooltips never change."
+	return "Your own mixture - a word you typed, or one half of a preset. Pick one above to go back to a named vocabulary."
+
+
+func _on_preset_selected(index: int) -> void:
+	if index < 0 or index >= EventSheetWords.PRESETS.size():
+		return
+	var chosen: String = EventSheetWords.PRESETS[index]
+	# "custom" is what the switches ADD UP TO, never a thing to apply: picking it changes nothing
+	# and the row snaps back to whatever the vocabulary actually is.
+	if chosen != EventSheetWords.PRESET_CUSTOM:
+		EventSheetWords.apply_preset(chosen)
+	refresh()
+	words_changed.emit()
 
 
 func _refresh_preview(familiar: bool) -> void:
@@ -142,6 +206,11 @@ func _refresh_preview(familiar: bool) -> void:
 	var destroy_word: String = EventSheetWords.word_for("destroy", familiar, override_map)
 	_preview_condition.text = "⟳  System ▸ For each  Enemy  %s" % set_word.to_lower()
 	_preview_action.text = "Enemy ▸ %s" % destroy_word
+	if _preview_verbs != null:
+		_preview_verbs.text = "System ▸ %s      Player ▸ %s Bullet" % [
+			EventSheetWords.verb_name_words("Core::OnProcess", "Every Frame"),
+			EventSheetWords.verb_row_words("Core::SpawnNewCopy", "Spawn a copy of"),
+		]
 
 
 func _on_choice(key: String, familiar: bool) -> void:

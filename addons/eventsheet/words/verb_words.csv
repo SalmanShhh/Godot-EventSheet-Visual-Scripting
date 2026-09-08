@@ -1,0 +1,10 @@
+keys,word,names,shipped,shipped_row,row
+Core::IsInGroup,Is in family,belonging to a family,Is In Group,,
+Core::IsTouchingGroup,Is overlapping in family,touching anything in a family,Is Touching Group,is touching,is overlapping in family
+Core::OnProcess,Every tick,every drawn frame,Every Frame,Run every tick,Every tick
+Core::QueueFree,Destroy,removing this object,Queue Free,Queue free,Destroy
+Core::SetRotationDeg,Set angle,the way an object faces,Set Rotation (Degrees),,
+Core::SpawnNewCopy,Create object,a new copy of a scene,Spawn A Copy,Spawn a copy of,Create object
+reading:pick_filter:GROUP,family,a loop over a family,,group,family
+reading:set_process:off,Set disabled,the every-tick switch turned off,,Set Every tick (draw) deactivated,Set disabled
+reading:set_process:on,Set enabled,the every-tick switch turned on,,Set Every tick (draw) activated,Set enabled

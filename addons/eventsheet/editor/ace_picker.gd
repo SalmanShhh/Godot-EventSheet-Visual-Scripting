@@ -1421,6 +1421,28 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 	return extra
 
 
+## The verbs a typed query names by their ALIAS - the second name the words seam holds for a handful
+## of verbs, sorted, as "<provider>::<ace_id>" keys the registry can resolve.
+##
+## Always consulted, whichever vocabulary is switched on: the alias is a name this editor knows for
+## that row, and a search that only answered to the name currently on screen would make the reader
+## guess the setting before they could guess the word. Three letters, exactly like the phrase table
+## above - two is somebody still typing. A reading key (a sentence the grammar composes rather than a
+## verb the picker offers) has no row to find, so it is skipped.
+static func alias_query_keys(query: String) -> Array[String]:
+	var found: Array[String] = []
+	var typed: String = query.to_lower().strip_edges()
+	if typed.length() < 3:
+		return found
+	for alias_key: String in EventSheetWords.verb_alias_keys():
+		if alias_key.split("::").size() != 2:
+			continue
+		var alias_word: String = EventSheetWords.verb_alias_word(alias_key).to_lower()
+		if not alias_word.is_empty() and alias_word.contains(typed):
+			found.append(alias_key)
+	return found
+
+
 ## True when a longer phrase holds the typed words WHOLE - "volume" inside "set master volume", but
 ## not "process" inside "post processing".
 ##
@@ -2004,6 +2026,13 @@ func _refresh_tree() -> void:
 		for extra_definition: ACEDefinition in _registry.search(synonym_query):
 			if not definitions.has(extra_definition):
 				definitions.append(extra_definition)
+	# The verb aliases as SEARCH: a reader should never have to know which words the editor is
+	# currently in to find the row they mean, so either name answers whichever vocabulary is on.
+	for alias_key: String in alias_query_keys(query):
+		var alias_parts: PackedStringArray = alias_key.split("::")
+		var aliased: ACEDefinition = _registry.find_definition(alias_parts[0], alias_parts[1])
+		if aliased != null and not definitions.has(aliased):
+			definitions.append(aliased)
 	# The other direction: a Godot user types the CALL they know. Every row whose template
 	# writes that call answers, and so does the row the reading's idiom tables name for it, so
 	# `queue_free` lands on Destroy and `is_on_floor` on Is on floor. The GDScript is written beside
@@ -2647,6 +2676,10 @@ func _item_label(definition: ACEDefinition) -> String:
 	# Display names route through the plugin l10n layer (a pass-through in English), so a pack
 	# that ships a translation CSV gets localised picker rows for free. Ids never translate.
 	var display_name: String = EventSheetL10n.translate(definition.display_name)
+	# BOTH names on a verb the words seam renamed, with the chosen vocabulary leading ("Create
+	# object · Spawn A Copy"). The shipped name never disappears from the picker, so the reader who
+	# turned the second vocabulary on still learns which Godot verb they are placing.
+	display_name = EventSheetWords.picker_name_of(definition.provider_id, definition.id, display_name)
 	# The GDScript beside the name, on the rows a code search found: the proof that the sheet's
 	# word and the call the reader typed are the same row. Never translated - it is code.
 	if not _code_query.is_empty():

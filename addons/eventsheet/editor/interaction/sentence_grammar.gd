@@ -3486,9 +3486,21 @@ static func _process_switch_call(object_name: String, method: String,
 	var state: String = arguments[0].strip_edges()
 	if state != "true" and state != "false":
 		return {}
+	var what: String = translate(str(PROCESS_SWITCH_WORDS[method]))
+	var state_word: String = translate("activated") if state == "true" else translate("deactivated")
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
+	# The same switch in the vocabulary the reader chose: another event-sheet editor says the two
+	# words "Set enabled" / "Set disabled" for exactly this. Display only, and the swap fires only
+	# when the sentence in front of it is the one the alias names, so with the second vocabulary off
+	# (the default) - or in a locale that words the sentence differently - the row is unchanged.
+	var composed: String = "Set %s %s" % [what, state_word]
+	var aliased: String = EventSheetWords.verb_row_words(
+		"reading:%s:%s" % [method, "on" if state == "true" else "off"], composed)
+	if aliased != composed:
+		return {"object": object_name, "segments": [{"text": aliased, "tone": "name"}]}
 	return _sentence(object_name, "Set {what} {state}", {
-		"what": [translate(str(PROCESS_SWITCH_WORDS[method])), "name"],
-		"state": [translate("activated") if state == "true" else translate("deactivated"), "plain"]
+		"what": [what, "name"],
+		"state": [state_word, "plain"]
 	})
 
 

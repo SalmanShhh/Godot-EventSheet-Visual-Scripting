@@ -7876,6 +7876,10 @@ func open_words_settings() -> void:
 
 
 func _on_words_changed() -> void:
+	# The Words page's preset row can set the Familiar Words half as well as the verbs, and every
+	# view carries that state as a flag it builds rows from - so the stored preference is pushed
+	# back out before the rebuild rather than after the next tab switch.
+	_apply_familiar_words_pref()
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.set_sheet(_current_sheet)
