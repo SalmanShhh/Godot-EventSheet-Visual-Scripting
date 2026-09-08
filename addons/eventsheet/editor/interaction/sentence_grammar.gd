@@ -122,6 +122,17 @@ const PROCESS_SWITCH_WORDS: Dictionary = {
 	"set_process_unhandled_key_input": "unhandled key input"
 }
 
+## The same two switches inside an opened BEHAVIOR PACK, where they are not one activation among
+## five but the pack's own plumbing: a verb that starts working turns its tick on and the moment the
+## work is done turns it off again, and every pack in the folder repeats the pair. So there they
+## read as what they DO - "Start ticking", "Stop ticking", with the physics tick named - instead of
+## as a callback being switched. The three input switches keep their activation words: an input
+## callback is not a tick, and no pack repeats them the way it repeats these two.
+const PACK_TICK_WORDS: Dictionary = {
+	"set_process": ["Start ticking", "Stop ticking"],
+	"set_physics_process": ["Start physics ticking", "Stop physics ticking"]
+}
+
 ## `process_mode` in the sheet's words. An event sheet says whether a thing runs, always runs, or
 ## only runs while paused; these are Godot's five spellings of exactly that.
 const PROCESS_MODE_WORDS: Dictionary = {
@@ -3316,7 +3327,7 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 		return _patterned(drawn, "custom_draw")
 	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# Switching a callback on or off is the sheet's own group activation, said about a tick.
-	var switched: Dictionary = _process_switch_call(object_name, method, arguments)
+	var switched: Dictionary = _process_switch_call(object_name, method, arguments, context)
 	if not switched.is_empty():
 		return switched
 	return {}
@@ -3480,12 +3491,19 @@ static func theme_lookup_words(text: String) -> String:
 ## are claimed: `set_process(enabled)` switches to whatever that variable holds, and no sentence can
 ## say which of the two states a row is in without reading the value.
 static func _process_switch_call(object_name: String, method: String,
-		arguments: PackedStringArray) -> Dictionary:
+		arguments: PackedStringArray, context: Dictionary = {}) -> Dictionary:
 	if not PROCESS_SWITCH_WORDS.has(method) or arguments.size() != 1:
 		return {}
 	var state: String = arguments[0].strip_edges()
 	if state != "true" and state != "false":
 		return {}
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
+	# Inside an opened pack the tick switch reads as the plumbing it is. Keyed off the pack name the
+	# reading context carries, so it fires nowhere else: on every other sheet the sentence below is
+	# the one that runs, word for word.
+	if not str(context.get("pack_object", "")).is_empty() and PACK_TICK_WORDS.has(method):
+		var tick_words: Array = PACK_TICK_WORDS[method] as Array
+		return _sentence(object_name, str(tick_words[0] if state == "true" else tick_words[1]), {})
 	var what: String = translate(str(PROCESS_SWITCH_WORDS[method]))
 	var state_word: String = translate("activated") if state == "true" else translate("deactivated")
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────

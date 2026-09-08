@@ -2846,6 +2846,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# A read-only preview gathers the pack's unpublished helpers under one closed "Helpers" bar, after
 	# the last published verb - the vocabulary reads first, the plumbing folds away. Pure view.
 	root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
+	# A read-only PACK then opens on its face rather than on its machinery: Settings and Verbs first,
+	# How it works and Internal state folded under them. Pure view over the finished list, and after
+	# the helpers bar because the helpers fold in with the rest of the machinery.
+	root_rows = _row_builder.arrange_pack_reading(root_rows, sheet)
 	# The same events, re-grouped under headers by object / trigger / group. Display only - the
 	# events array keeps its order, the file is never rewritten, and every event keeps its number.
 	root_rows = _row_builder.arrange_rows(root_rows, sheet, arrangement_mode)

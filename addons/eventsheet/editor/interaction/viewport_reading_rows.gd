@@ -72,6 +72,14 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"percent_members": declared.get("percent_members", {}),
 		"object_classes": object_class_map(sheet),
 		"self_class": sheet.host_class.strip_edges(),
+		# ──────────────────────────────────────────────────────────────────────────────────────
+		# The pack this file IS, when it is one being read: its short picker name, and the class it
+		# is spelled with. Inside a pack those two are the same object said two ways - the System a
+		# member write reads under and the class a self call reads under - and both read as the name
+		# the picker offers. Empty for every sheet that is not an opened pack, which is what leaves
+		# every other reading exactly as it was.
+		"pack_object": pack_object_name(sheet),
+		"pack_class": sheet.custom_class_name.strip_edges(),
 		# The file this sheet IS, so a call on `self` can be answered from the file's own
 		# declarations - the methods somebody wrote here, with the `##` lines above them - rather
 		# than only from the engine class underneath it. "" for a sheet with no file behind it,
@@ -1812,6 +1820,23 @@ static func script_object_name(sheet: EventSheetResource) -> String:
 	return host_class if not host_class.is_empty() and host_class != "Node" else ""
 
 
+## The short name an opened BEHAVIOR PACK's own rows read under: the word the picker offers the
+## pack by ("Flash"), never the class it is spelled with ("FlashBehavior"). "" for anything that is
+## not a pack being read, so a non-empty answer doubles as "this sheet is a pack" for every reader
+## that has to ask - one fact, one place, so two layers can never disagree about it.
+##
+## Read-only only. A pack you are AUTHORING is a script like any other: its rows are things you
+## reach for by the names the file gives them, and renaming them under a picker word would be
+## reading a file back to its author in somebody else's vocabulary.
+static func pack_object_name(sheet: EventSheetResource) -> String:
+	if sheet == null or not sheet.read_only:
+		return ""
+	var declared: String = sheet.custom_class_name.strip_edges()
+	if declared.is_empty():
+		return ""
+	return str(behaviour_pack_index().get(declared, ""))
+
+
 ## True when the sheet keeps its own `host` reference - the mark of a behaviour, whose host class is
 ## the node it rides rather than the class the script itself is.
 static func _declares_host(sheet: EventSheetResource) -> bool:
@@ -2986,11 +3011,19 @@ static func behaviour_pack_of(object_label: String, class_map: Dictionary) -> St
 ## the row reads "Player > [Health] Take damage 3". When the sheet has no object of its own (a plain
 ## `extends Node`), a behaviour keeps its own label rather than being handed to nobody.
 static func object_attribution(object_label: String, pieces: Array, script_object: String,
-		class_map: Dictionary, autoloads: Dictionary) -> Dictionary:
+		class_map: Dictionary, autoloads: Dictionary,
+		pack_object: String = "", pack_class: String = "") -> Dictionary:
 	var label: String = object_label.strip_edges()
 	var unchanged: Dictionary = {"object": object_label, "pieces": pieces, "icon": null}
 	if label.is_empty():
 		return unchanged
+	# A third shape, and only inside an opened pack: the sheet IS the pack, so the two labels that
+	# mean "this file" - the System a bare member write reads under, and the class a self call reads
+	# under - read as the one name the picker offers the pack by. The pack's `host` is a different
+	# object and keeps its own name, which is the whole point of telling the two apart.
+	if not pack_object.is_empty() and (label == EventSheetSentence.OBJECT_SYSTEM
+			or (not pack_class.is_empty() and label == pack_class)):
+		return {"object": pack_object, "pieces": pieces, "icon": null}
 	if is_autoload_object(label, autoloads):
 		return {"object": global_object_label(label, autoloads), "pieces": pieces, "icon": autoload_icon()}
 	var pack: String = behaviour_pack_of(label, class_map)

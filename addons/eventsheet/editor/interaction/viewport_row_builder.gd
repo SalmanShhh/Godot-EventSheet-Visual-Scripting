@@ -63,6 +63,17 @@ const SYNC_BADGE_GLYPHS: Dictionary = {
 ## opened-pack reading, the fold guard, a test - asks one question instead of listing band kinds.
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
 
+## The bars an opened pack's head builds, each named once here so the reading that gathers them into
+## Settings / Verbs / How it works / Internal state asks for them by name rather than by a literal
+## spelled twice. The row uids these open are `<prefix><sheet id>`, or `<prefix><group><sheet id>`
+## for the one settings bar per `@export_group`.
+const PACK_HEAD_BAR_UID_PREFIX := "sheet_head_bar_"
+const PACK_TRIGGERS_UID_PREFIX := "pack_triggers_"
+const PACK_HELPERS_UID_PREFIX := "helpers_group_"
+const PACK_SETTINGS_UID_PREFIX := "pack_settings"
+const PACK_STATE_UID_PREFIX := "pack_internal_state"
+const PACK_VERBS_UID_PREFIX := "pack_verbs"
+
 ## The `@tool` band's switch, drawn as a mark in the badge column at the variable badge's width.
 ## A group head wears the same pair, because it is the same fact: this line is on, or it is not.
 const HEAD_SWITCH_ON_GLYPH := "◍"
@@ -1073,6 +1084,195 @@ func _shift_row_indent(row_data: EventRowData, delta: int) -> void:
 		_shift_row_indent(child, delta)
 
 
+## The one condition every behavior pack repeats: "is the node I ride still there?". Frozen by
+## ace_id, because the words are the thing being replaced.
+const HOST_GUARD_ACE_ID := "BehaviorHostValid"
+
+
+## Which condition of this event is the host guard that folds into its trigger line, or -1 when
+## none does. Deliberately narrow: only inside a pack being read, only under a real trigger (a guard
+## on a plain sub-event IS the reason that sub-event exists), and only as the LAST condition, so the
+## conditions above it keep the line numbers they were built with and nothing has to be renumbered.
+func _pack_host_guard_index(event_row: EventRow, trigger_lines: int) -> int:
+	if trigger_lines <= 0 or not _is_read_only_pack():
+		return -1
+	var last: int = event_row.conditions.size() - 1
+	if last < 0:
+		return -1
+	var guard: ACECondition = event_row.conditions[last]
+	if guard == null or not guard.enabled or guard.ace_id != HOST_GUARD_ACE_ID:
+		return -1
+	return last
+
+
+## A PACK OPENS ON ITS VERBS.
+##
+## A behavior pack has a public face - the settings a designer turns, the verbs the picker offers -
+## and an implementation nobody opens on purpose. Read in file order it opens on the implementation:
+## eleven variables, a script block and a tick loop counting a timer down, with the two verbs the
+## reader came for last of all, under a head that reads them as triggers. Its own guide reads the
+## other way round, and so does the picker.
+##
+## So a pack being READ opens in four bands, and this is the lens that gathers them:
+##   Settings       - the knobs the Inspector shows, open.
+##   Verbs          - every published function as its ƒ block, then the triggers the pack fires. Open.
+##   How it works   - the lifecycle and tick events, and the helpers bar, folded.
+##   Internal state - the private variables, the constants and the script blocks, folded.
+##
+## PURE VIEW, exactly like the head bar and the Helpers bar: every row here is one that was already
+## built, moved within the list. `sheet.events`, `sheet.functions`, the resources and the emitted
+## bytes are untouched, the file keeps its own order for the code view and for emission, and a fold
+## the reader sets by hand still wins over the defaults above.
+##
+## Declines, leaving the list exactly as it was, on three shapes it must not fight: a sheet that is
+## not a pack being read, a pack with no published verb (there is no face to open on), and a pack
+## whose file draws its own structure with `#region` fences - an author who grouped the file has
+## said where things go, and a second grouping over the top would be arguing with them.
+## Returns the root list to use (the caller assigns it back).
+func arrange_pack_reading(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+	if sheet == null or rows.is_empty() or not _is_read_only_pack():
+		return rows
+	var lead: Array[EventRowData] = []
+	var settings: Array[EventRowData] = []
+	var verbs: Array[EventRowData] = []
+	var triggers: Array[EventRowData] = []
+	var machinery: Array[EventRowData] = []
+	var internal: Array[EventRowData] = []
+	var state_bar: EventRowData = null
+	# The lead is what a reader meets before the first band: the head bar and the file's own prose.
+	# Once a body row has gone by, anything the four bands do not claim is something the file keeps
+	# rather than something it opens with - a closing note, a stray declaration - and it folds away
+	# with the rest of the internal state instead of jumping over the verbs to the top.
+	var body_seen: bool = false
+	for row_data: EventRowData in rows:
+		if _is_region_row(row_data):
+			return rows
+		var uid: String = row_data.row_uid
+		if uid.begins_with(PACK_HEAD_BAR_UID_PREFIX):
+			lead.append(row_data)
+			state_bar = _lift_pack_knob_bars(row_data, settings)
+			continue
+		if uid.begins_with(PACK_TRIGGERS_UID_PREFIX):
+			# A trigger IS one of the verbs a pack publishes - the picker lists it beside the
+			# actions - so its rows join them rather than standing in a folder of their own.
+			for child: EventRowData in row_data.children:
+				_shift_row_indent(child, -1)
+				triggers.append(child)
+			continue
+		if uid.begins_with(PACK_HELPERS_UID_PREFIX):
+			machinery.append(row_data)
+			continue
+		var source: Resource = row_data.source_resource
+		if source is EventFunction:
+			verbs.append(row_data)
+			body_seen = true
+			continue
+		if row_data.row_type == EventRowData.RowType.EVENT:
+			machinery.append(row_data)
+			body_seen = true
+			continue
+		if source is RawCodeRow or source is LocalVariable:
+			internal.append(row_data)
+			body_seen = true
+			continue
+		if body_seen:
+			internal.append(row_data)
+			continue
+		lead.append(row_data)
+	if verbs.is_empty():
+		return rows
+	var output: Array[EventRowData] = []
+	output.append_array(lead)
+	for bar: EventRowData in settings:
+		# The settings are what a reader opens a pack to change, so their folder opens with it.
+		bar.folded = bool(_viewport._fold_state.get(bar.row_uid, false))
+		output.append(bar)
+	verbs.append_array(triggers)
+	for verb_row: EventRowData in verbs:
+		_shift_row_indent(verb_row, 1)
+	var verbs_bar: EventRowData = _build_head_group_row(
+		sheet,
+		"pack_verbs",
+		EventSheetL10n.translate("Verbs"),
+		(EventSheetL10n.translate("1 verb") if verbs.size() == 1 \
+			else EventSheetL10n.translate("%d verbs") % verbs.size()),
+		verbs
+	)
+	verbs_bar.folded = bool(_viewport._fold_state.get(verbs_bar.row_uid, false))
+	output.append(verbs_bar)
+	if not machinery.is_empty():
+		var events: int = 0
+		for machine_row: EventRowData in machinery:
+			if machine_row.row_type == EventRowData.RowType.EVENT:
+				events += 1
+			_shift_row_indent(machine_row, 1)
+		output.append(_build_head_group_row(
+			sheet,
+			"pack_how_it_works",
+			EventSheetL10n.translate("How it works"),
+			(EventSheetL10n.translate("1 event") if events == 1 \
+				else EventSheetL10n.translate("%d events") % events),
+			machinery
+		))
+	if not internal.is_empty():
+		for internal_row: EventRowData in internal:
+			_shift_row_indent(internal_row, 1)
+		if state_bar == null:
+			state_bar = _build_head_group_row(
+				sheet, "pack_internal_state", EventSheetL10n.translate("Internal state"),
+				"%d" % internal.size(), internal
+			)
+		else:
+			# The knob folder the head already built is the same folder: the constants and the
+			# script blocks the file declares further down are internal state too, so they join it
+			# rather than opening a second folder that means the same thing.
+			var members: Array[EventRowData] = state_bar.children.duplicate()
+			members.append_array(internal)
+			state_bar.children = members
+			_retitle_group_count(state_bar, "%d" % members.size())
+	if state_bar != null:
+		output.append(state_bar)
+	return output
+
+
+## Moves a read pack's variable folders out of the one head bar's fold and onto the sheet, and drops
+## the bar's own "N variables" fact with them - that count is COUNTED FROM the bars it folds, so a
+## bar that no longer folds them must not go on claiming them. Returns the Internal state folder, or
+## null when the pack declares nothing it keeps to itself.
+func _lift_pack_knob_bars(head_row: EventRowData, settings: Array[EventRowData]) -> EventRowData:
+	var kept_children: Array[EventRowData] = []
+	var state_bar: EventRowData = null
+	for child: EventRowData in head_row.children:
+		if child.row_uid.begins_with(PACK_SETTINGS_UID_PREFIX):
+			_bump_indent(child, -1)
+			settings.append(child)
+			continue
+		if child.row_uid.begins_with(PACK_STATE_UID_PREFIX):
+			_bump_indent(child, -1)
+			state_bar = child
+			continue
+		kept_children.append(child)
+	head_row.children = kept_children
+	if state_bar == null and settings.is_empty():
+		return null
+	var kept_spans: Array[SemanticSpan] = []
+	for span: SemanticSpan in head_row.spans:
+		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if str(meta.get("kind", "")) != "head_bar_variables":
+			kept_spans.append(span)
+	head_row.spans = kept_spans
+	return state_bar
+
+
+## Rewrites the muted count on a group bar the arrange pass just grew. The title span is untouched -
+## only the one span that states a number the bar no longer tells the truth about.
+func _retitle_group_count(bar: EventRowData, subtitle: String) -> void:
+	for span: SemanticSpan in bar.spans:
+		if span.type == SemanticSpan.SpanType.COMMENT:
+			span.text = subtitle
+			return
+
+
 ## Re-collapses the verbs that turn out to live INSIDE something - a group, or a #region range paired
 ## after the rows were built. A verb at root stays open (its steps are the point); a nested one belongs
 ## to the block that encloses it, so it folds with that block instead of forcing it open. Run once over
@@ -1082,7 +1282,11 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 		if nested and row_data.source_resource is EventFunction and not row_data.children.is_empty():
 			row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 		if not row_data.children.is_empty():
-			fold_nested_verb_rows(row_data.children, true)
+			# The pack's own Verbs bar is the LIST of its verbs, not a block that encloses them, so a
+			# verb inside it is still at the top of its own reading: folding them there would close
+			# the one thing the bar exists to open on.
+			fold_nested_verb_rows(row_data.children,
+				not row_data.row_uid.begins_with(PACK_VERBS_UID_PREFIX))
 
 
 ## THE HEAD OF AN OPENED PACK, in the event-sheet grammar. A read-only preview used to open on two and a
@@ -2525,6 +2729,12 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 	var order: PackedStringArray = PackedStringArray()
 	var buckets: Dictionary = {}
 	var internal: Array[EventRowData] = []
+	# Inside an opened PACK the two DO get their own folders. A pack's exported knobs are its
+	# published settings - the face a designer turns, listed in its guide - and everything else is
+	# machinery it keeps to itself. That is the one file where the line is worth drawing, and drawing
+	# it is what lets the pack open on its settings and its verbs with the rest folded away.
+	var settings_rows: Array[EventRowData] = []
+	var pack_name: String = pack_object_name()
 	# How many Inspector-editable rows already lead the one folder - the insert point that keeps them
 	# first without re-sorting a list whose order is otherwise the file's.
 	var exported_count: int = 0
@@ -2544,6 +2754,9 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 			# telling a reader twice what the chip already tells them once. The Inspector ones lead,
 			# because those are the ones a designer came to look at.
 			if variable.exported:
+				if not pack_name.is_empty():
+					settings_rows.append(row_data)
+					continue
 				internal.insert(exported_count, row_data)
 				exported_count += 1
 			else:
@@ -2563,14 +2776,28 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 			(EventSheetL10n.translate("%d setting") if members.size() == 1 else EventSheetL10n.translate("%d settings")) % members.size(),
 			members
 		))
+	if not settings_rows.is_empty():
+		bars.append(_build_head_group_row(
+			sheet,
+			"pack_settings_bar",
+			EventSheetL10n.translate("Settings"),
+			(EventSheetL10n.translate("%d setting") if settings_rows.size() == 1 else EventSheetL10n.translate("%d settings")) % settings_rows.size(),
+			settings_rows
+		))
 	if not internal.is_empty():
 		var object_name: String = EventSheetViewportReadingRows.script_object_name(sheet)
 		var subtitle: String = "%d" % internal.size() if object_name.is_empty() \
 			else EventSheetL10n.translate("of %s") % object_name
+		var title: String = EventSheetL10n.translate("Instance variables")
+		if not pack_name.is_empty():
+			# With the settings in a folder of their own, what is left is exactly what the pack keeps
+			# to itself - so the folder says that rather than naming a language construct.
+			title = EventSheetL10n.translate("Internal state")
+			subtitle = "%d" % internal.size()
 		bars.append(_build_head_group_row(
 			sheet,
 			"pack_internal_state",
-			EventSheetL10n.translate("Instance variables"),
+			title,
 			subtitle,
 			internal
 		))
@@ -2885,6 +3112,26 @@ func _verb_reading_mode() -> bool:
 	return bool(_viewport.is_reading_mode())
 
 
+## True when the open sheet is a BEHAVIOR PACK being read rather than authored - the one state the
+## pack reading applies in. Answered from the one fact that decides it, the pack name the sheet's own
+## class is published under, so this and the sentence layer can never disagree about whether a file
+## is a pack: an empty name is every sheet that is not one.
+func _is_read_only_pack() -> bool:
+	return not pack_object_name().is_empty()
+
+
+## The short name an opened pack's own rows read under - "Flash", the word the picker offers the
+## pack by, never the class it is spelled with. "" for every sheet that is not a pack being read.
+func pack_object_name() -> String:
+	return str(sentence_context().get("pack_object", ""))
+
+
+## The class an opened pack is spelled with ("FlashBehavior"), which is the OTHER label its own rows
+## arrive under. Paired with the pack name above so the attribution can hand both to the one word.
+func _pack_class_name() -> String:
+	return str(sentence_context().get("pack_class", ""))
+
+
 ## True when this view must draw NO add-a-row scaffolding: a documentation figure (an illustration, so
 ## a "+ Add condition" is a click target that does nothing) or a READ-ONLY preview - a pack opened just
 ## to read, where every add affordance is an offer the view cannot honour. _count_event_lines mirrors
@@ -3190,6 +3437,22 @@ func _define_chip(text: String, background: Color, foreground: Color, line_index
 ## An authored @ace_display_template with its {param_id} slots filled with the FRIENDLY LABELS (a
 ## Define row shows the verb's shape, not call-site values): "Draw line from ({from_x}, {from_y})" ->
 ## "Draw line from (from x, from y)". Empty when the verb has no display_template.
+## The one sentence a published verb reads as inside an opened pack, or "" when it has none to read.
+##
+## An authored `@ace_display_template` IS the picker's line, so the row says it. It only replaces the
+## input chips when it names every input the verb takes: a template that mentions none of them (the
+## bare name a verb without one is filed under) would otherwise swallow the chips and drop the
+## reader's only sight of what the verb wants passing in.
+static func verb_picker_sentence(event_function: EventFunction) -> String:
+	var template: String = event_function.display_template.strip_edges()
+	if template.is_empty():
+		return ""
+	for param: Variant in event_function.params:
+		if param is ACEParam and not template.contains("{%s}" % (param as ACEParam).id):
+			return ""
+	return friendly_template_line(event_function)
+
+
 static func friendly_template_line(event_function: EventFunction) -> String:
 	var template: String = event_function.display_template.strip_edges()
 	if template.is_empty():
@@ -3567,9 +3830,24 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		"text_color": name_color
 	}
 	var plain_name: String = _verb_trigger_name(event_function, display_name)
-	if EventSheetBBCodeLite.has_markup(display_name):
-		plain_name = EventSheetBBCodeLite.strip(display_name)
-		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
+	# ── lens hook ─────────────────────────────────────────────────────────────────────────────
+	# A PACK'S PUBLISHED VERB IS NOT A TRIGGER. "On" answers "when does this run?", and a verb's
+	# answer is "when a row uses it" - which is what the picker's own words already say. So an
+	# opened pack reads its vocabulary the way the picker offers it: the authored sentence where the
+	# author wrote one, the display name otherwise, and no arrival word in front of either. Only
+	# inside a pack being READ - on every other sheet a function block still reads as the call it is.
+	var pack_verb: bool = event_function.expose_as_ace and _is_read_only_pack()
+	var styled_source: String = display_name
+	var sentence_carries_inputs: bool = false
+	if pack_verb:
+		var picker_line: String = verb_picker_sentence(event_function)
+		if not picker_line.is_empty():
+			plain_name = picker_line
+			styled_source = picker_line
+			sentence_carries_inputs = true
+	if EventSheetBBCodeLite.has_markup(styled_source):
+		plain_name = EventSheetBBCodeLite.strip(styled_source)
+		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(styled_source, name_color)
 	# A function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer,
 	# and a visibility filter is ASKED, once per player, by a synchronizer. So the word between "On"
 	# and the name says which kind of arrival this head stands for.
@@ -3578,17 +3856,20 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		arrival = EventSheetL10n.translate("On message")
 	elif not _visibility_filter_entry(event_function).is_empty():
 		arrival = EventSheetL10n.translate("On asked")
-	spans.append(_make_span("%s %s" % [arrival, plain_name],
+	spans.append(_make_span(plain_name if pack_verb else "%s %s" % [arrival, plain_name],
 		SemanticSpan.SpanType.OBJECT, name_meta))
 	# The inputs, as an event sheet's own trigger payload chips - the names the call passes in, beside
 	# the trigger that receives them. Their TYPES live in the properties popup, one click away.
 	var chip_texts: PackedStringArray = PackedStringArray()
-	for param: Variant in event_function.params:
-		if param is ACEParam:
-			chip_texts.append(verb_param_chip_text(param as ACEParam))
-	if chip_texts.is_empty():
-		for legacy: String in event_function.parameters:
-			chip_texts.append(str(legacy).replace("_", " ").strip_edges())
+	# A picker sentence already names every input inside itself, so repeating them as chips would
+	# say the same words twice on one line.
+	if not sentence_carries_inputs:
+		for param: Variant in event_function.params:
+			if param is ACEParam:
+				chip_texts.append(verb_param_chip_text(param as ACEParam))
+		if chip_texts.is_empty():
+			for legacy: String in event_function.parameters:
+				chip_texts.append(str(legacy).replace("_", " ").strip_edges())
 	# A plain chip, not a field cell: an input chip belongs beside its verb, not in the row's shared
 	# object column (which is sized for object names and would elide "enabled" to an ellipsis).
 	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
@@ -3604,7 +3885,11 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	# The KIND stays a word, quietly, beside the name: a published condition or expression answers a
 	# question rather than doing something, and the tint alone never said which. An action verb says
 	# nothing extra - "do these" is what every other event already means.
-	if event_function.expose_as_ace and role != "action":
+	#
+	# Inside an opened PACK it does say it. There the verbs are the file's whole point and they are
+	# read side by side under one bar, so the word that tells an action from a condition is the one a
+	# reader is scanning the list for - the same word the picker files them under.
+	if event_function.expose_as_ace and (role != "action" or pack_verb):
 		spans.append(_make_span(EventSheetL10n.translate(role), SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "define_function",
@@ -12107,10 +12392,32 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# conditions because the file joins them with `and`, so the pair is put back together here.
 	var joined_conditions: Dictionary = _joined_condition_groups(event_row.conditions,
 		" or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and ")
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
+	# THE HOST GUARD, folded into the trigger it guards. Every behavior pack opens its tick with the
+	# same line - only while the node it rides still exists - and read as a condition of its own it
+	# spends a whole cell saying something no reader decides anything by. So inside an opened pack it
+	# reads as a quiet word after the trigger: "Every tick (draw)  host is valid". The condition is
+	# still there, still emitted, still the second half of the same `if`; one span moved.
+	var folded_guard: int = _pack_host_guard_index(event_row, condition_line_index)
+	if folded_guard >= 0:
+		spans.append(_make_span(
+			_format_condition_descriptor(event_row.conditions[folded_guard]),
+			SemanticSpan.SpanType.COMMENT,
+			{
+				"editable": false,
+				"lane": "condition",
+				"kind": "condition_guard",
+				"line_index": condition_line_index - 1,
+				"natural_width": true,
+				"text_color": _viewport._get_reading_style().muted_text_color
+			}
+		))
 	if not event_row.conditions.is_empty():
 		var displayed_condition_indices: Array[int] = []
 		for condition_index in range(event_row.conditions.size()):
 			if condition_index == inline_trigger_condition_index or input_consumed.has(condition_index):
+				continue
+			if condition_index == folded_guard:
 				continue
 			if (joined_conditions.get("consumed", {}) as Dictionary).has(condition_index):
 				continue
@@ -12880,8 +13187,14 @@ func _count_event_lines(event_row: EventRow) -> int:
 		# the badge on the CONDITION's line rather than a tick line of its own, so it is one line
 		# shorter. Any lazy measure reads this count, not the spans, so the two must agree exactly.
 		condition_lines += 1
+	# Mirrors the span pass: inside an opened pack the host guard reads as a word on the trigger's
+	# own line, so it costs the lane no line of its own. Any lazy measure reads this count rather
+	# than the spans, so the two have to answer the same.
+	var folded_guard: int = _pack_host_guard_index(event_row, condition_lines)
 	for condition_index in range(event_row.conditions.size()):
 		if condition_index == inline_trigger_index or input_consumed.has(condition_index):
+			continue
+		if condition_index == folded_guard:
 			continue
 		if event_row.conditions[condition_index] == null:
 			continue
@@ -15984,7 +16297,8 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# its rows to that object with the pack's name as the leading chip. Applied before the spelling
 	# lens below so the lookup keys are still the names the file actually uses.
 	var attribution: Dictionary = EventSheetViewportReadingRows.object_attribution(
-		object_label, pieces, _script_object_name(), _reading_class_map(), _reading_autoloads())
+		object_label, pieces, _script_object_name(), _reading_class_map(), _reading_autoloads(),
+		pack_object_name(), _pack_class_name())
 	object_label = str(attribution.get("object", object_label))
 	pieces = attribution.get("pieces", pieces) as Array
 	var attributed_icon: Variant = attribution.get("icon")
@@ -17722,7 +18036,7 @@ func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionar
 		pieces.append([str(segment.get("text", "")), str(segment.get("tone", "plain"))])
 	var attribution: Dictionary = EventSheetViewportReadingRows.object_attribution(
 		str(grammar.get("object", "")), pieces, _script_object_name(),
-		_reading_class_map(), _reading_autoloads())
+		_reading_class_map(), _reading_autoloads(), pack_object_name(), _pack_class_name())
 	var attributed_pieces: Array = attribution.get("pieces", pieces) as Array
 	if attributed_pieces.size() == pieces.size():
 		var same: Dictionary = grammar.duplicate()
