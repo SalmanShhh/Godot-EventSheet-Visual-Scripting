@@ -137,6 +137,30 @@ What changed in the build you have installed (v0.18.0), in the words the release
   key to a shipped verb in the registry or a reading the editor composes, and every \"off\" side to
   the shipped wording character for character.
 
+### Changed: one event, one outline, and the whole card is the click target
+
+- **A selected event is one shape.** Selecting an event whose conditions are OR'd used to draw a
+  filled row and an outline per cell, so a block of three questions read as three selected
+  conditions. The selection of an EVENT is now a single frame around the union of everything that
+  event is drawn as - both lanes, the number in its gutter, and every row a statement reads as when
+  it takes more than one - with the cells left flat inside it. Clicking one cell still selects that
+  cell alone, and it still wears its own outline, which is what tells the two selections apart.
+- **The whole card takes the press.** The gutter, the padding, the space between two cells, the
+  band under the shorter lane and the gap beside an OR'd condition all select the event they belong
+  to. The gap between two events belongs to the nearer of them - its top half to the event above,
+  its bottom half to the one below - so there is no longer a strip of sheet where a press clears the
+  selection instead of moving it. Ctrl still toggles the event in a multi-selection, and a box
+  selection begins only where there is no card: above the first event and below the last.
+- **The lane divider and the object columns are dragged from the header band.** The
+  \"Conditions | Actions\" band above the sheet grows a grabber on each boundary and the ↔ cursor to
+  say so. Down the sheet those boundaries are lines: a press within five pixels of one used to start
+  a resize on whichever row it landed in, anywhere in the file. View ▸ Reset Lane Split puts the
+  split back at the theme's own share.
+- **The band's columns line up with the sheet's.** The header spans the whole workspace while the
+  canvas starts after the left rail, so \"Conditions\" and \"Actions\" stood a rail's width to the left
+  of the lanes they name. Both labels, the divider and the new grabbers are measured from where the
+  canvas actually starts.
+
 ## 0.18.0 - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
 ### Fixed: a starting value that read back as something else
