@@ -46,6 +46,36 @@
   is why it accelerates, jumps the gap and climbs both ledges under the rules the Player plays by.
   The drift gate reads `showcases=29 drifted=0`.
 
+### Changed: the rail rests, slides and gets out of the way
+
+- **The left rail is a chain of splitters, not a stack of panels.** Open Sheets, Objects, Functions,
+  Anatomy and the Picker preview sat in one VBoxContainer, each carrying a fixed minimum size, and
+  the only draggable edge in the workspace was the rail-to-canvas grabber - which the editor theme
+  only draws while the pointer is over it. Every boundary drags now, every grabber is drawn rather
+  than revealed on hover, and no panel brings a minimum width of its own: the rail can be dragged
+  to a sliver or out to half the workspace, and the width is remembered per project.
+- **The rail rests at two panels.** Open Sheets and Objects are open; Functions, Anatomy and the
+  Picker preview are folds, closed until you want them. A panel with nothing to put in it is not
+  there at all: Anatomy appears for a behaviour pack, the Picker preview while the picker is open.
+  The Anatomy list stopped drawing organs that count to zero - "Triggers · 0" is a counter, not a
+  fact about the behaviour, and a column of them is what made the rail a wall.
+- **Every panel minimises, and so does the rail.** A button at the right edge of each header slides
+  that panel off: it takes no room, not even a header, and its name waits in a tab at the foot of
+  the rail. Dragging a panel's divider up past its own header does the same. The chevron above the
+  column tucks the WHOLE rail into a narrow edge strip with the panel names reading down it, and the
+  sheet takes the width; dragging the rail's grabber into the canvas edge does the same. Nothing is
+  ever closed - it is off screen, the tab says what is there, and View ▸ Panels lists them. Every
+  fold, size and tucked panel is remembered per project.
+- **Open Sheets groups duplicates.** Eight tabs on one behaviour pack used to be eight identical
+  lines; they are one line with a count now ("Flash ×8"), and clicking it walks the tabs it stands
+  for. An unsaved sheet has no path to be the same as, so it never groups.
+- **The Properties bar arrives with the selection.** With nothing selected it was a 280 px column
+  carrying one sentence telling you to select something. It is its splitter handle now, so the
+  canvas has the width until there is something to edit, and it opens at the width you left it at on
+  the first click of a condition, action, object or group - the way the Inspector fills when a node
+  is picked. The sentence is said once, in the status bar. Dragging the bar into the right edge
+  tucks it away behind a chevron, like the rail.
+
 ## [0.18.0] - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
 ### Maintenance: what a commit from this wave carries
