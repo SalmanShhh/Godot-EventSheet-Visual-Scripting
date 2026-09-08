@@ -33,7 +33,12 @@ static func run() -> bool:
 	var header: SheetColumnHeader = SheetColumnHeader.new()
 	header.setup(viewport)
 	all_passed = _check("header reserves its band height", header.custom_minimum_size.y, SheetColumnHeader.HEADER_HEIGHT) and all_passed
-	all_passed = _check("header ignores mouse so rows stay clickable", header.mouse_filter, Control.MOUSE_FILTER_IGNORE) and all_passed
+	# The band IS the handle for both column boundaries, so it takes the mouse. The rows are not
+	# under it, so nothing below loses a click by this.
+	all_passed = _check("header takes the mouse - it is where the boundaries are grabbed", header.mouse_filter, Control.MOUSE_FILTER_STOP) and all_passed
+	# Header x ↔ logical canvas x round-trips, which is what keeps a grabber on the line it moves.
+	all_passed = _check("a header x maps back to the logical x it stands for",
+		is_equal_approx(header.logical_x_at(header.header_x_at(240.0)), 240.0), true) and all_passed
 	header.free()
 	viewport.free()
 	return all_passed

@@ -212,6 +212,9 @@ const BADGE_FONT_SIZE_DELTA := 1
 const BADGE_MIN_HORIZONTAL_PADDING := 1.0
 const SELECTION_OUTLINE_LIGHTEN := 0.28
 const SELECTION_OUTLINE_ALPHA := 0.92
+## How thick the frame around a selected EVENT is. Two pixels rather than the single-cell rows'
+## one, because it has to read as the shape holding both lanes rather than as another cell edge.
+const SELECTION_OUTLINE_WIDTH := 2
 const SPAN_SELECT_OUTLINE_LIGHTEN := 0.3
 const SPAN_SELECT_OUTLINE_ALPHA := 0.95
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
@@ -949,6 +952,36 @@ func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lig
 	var outline: Color = base_color.lightened(lighten)
 	outline.a = alpha
 	control.draw_rect(row_rect.grow(-0.5), outline, false, 1.0)
+
+
+## ONE EVENT, ONE OUTLINE. The selection mark of a WHOLE event: a single frame around the union of
+## every row that event is drawn on - the second line of a ternary pair, a wrapped cell, the OR'd
+## conditions stacked in its lane - with the number gutter inside it and the cells left flat. An
+## event that reads as one thing has to select as one thing; three outlined cells and an "or"
+## between them read as three selected conditions, which is not what the next keypress acts on.
+##
+## Drawn from the canvas AFTER every row of the event, never from inside one: a row painted later
+## would cover an edge of a frame taller than itself. A single cell click never reaches here - that
+## selection keeps its own per-cell outline, which is the difference the reader is being shown.
+## The corner radius is the event block's own, so containment is the one rounded outline the sheet
+## draws; a square-cornered theme (radius 0) gets a square frame.
+func draw_event_selection_outline(control: Control, rect: Rect2, event_style: EventSheetEventStyle) -> void:
+	if control == null or rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+	var fill: Color = event_style.selection_fill_color if event_style != null else EventSheetPalette.COLOR_SELECTION
+	var outline: Color = fill.lightened(SELECTION_OUTLINE_LIGHTEN)
+	outline.a = SELECTION_OUTLINE_ALPHA
+	var radius: int = event_style.event_corner_radius if event_style != null else 8
+	var key: String = "selection:%d:%s" % [radius, outline.to_html()]
+	var box: StyleBoxFlat = _rounded_box_cache.get(key)
+	if box == null:
+		box = StyleBoxFlat.new()
+		box.draw_center = false
+		box.border_color = outline
+		box.set_border_width_all(SELECTION_OUTLINE_WIDTH)
+		box.set_corner_radius_all(radius)
+		_rounded_box_cache[key] = box
+	box.draw(control.get_canvas_item(), rect.grow(-1.0))
 
 
 func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:

@@ -1033,11 +1033,13 @@ func lane_width_for(lane: String) -> float:
 	return maxf(divider_x - lead_in, 1.0)
 
 
-## True when a logical-space point sits over the draggable conditions/actions lane divider.
-func _is_near_lane_divider(local_position: Vector2) -> bool:
+## True when a logical x sits over the draggable conditions/actions lane divider. Asked by the
+## COLUMN HEADER only: down the sheet the divider is a line, not a handle, so a press five pixels
+## from it selects the event it landed in instead of starting a resize the reader never asked for.
+func _is_near_lane_divider(local_x: float) -> bool:
 	if not _has_event_rows():
 		return false
-	return absf(local_position.x - get_lane_divider_x(_get_logical_canvas_width())) <= LANE_DIVIDER_GRAB_TOLERANCE
+	return absf(local_x - get_lane_divider_x(_get_logical_canvas_width())) <= LANE_DIVIDER_GRAB_TOLERANCE
 
 
 ## Live-resizes the conditions/actions split from a logical X (during a divider drag).
@@ -1052,7 +1054,20 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 	var span_index: int = int(hit.get("span_index", -1))
 	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
 		return {}
-	var span: SemanticSpan = row_data.spans[span_index]
+	var boundary: Dictionary = _object_column_boundary_of(row_data.spans[span_index])
+	if boundary.is_empty():
+		return {}
+	if absf(local_position.x - float(boundary.get("boundary_x", -1.0))) > LANE_DIVIDER_GRAB_TOLERANCE:
+		return {}
+	return boundary
+
+
+## WHERE ONE SPAN'S OBJECT COLUMN ENDS: its anchor (where the column starts being drawn) and its
+## boundary (where it ends), or {} for a span that has no object label to column at all. The one
+## computation behind both readings of that edge - the point the column header's grabber sits on,
+## and the point a drag is measured from - so the grabber can never sit somewhere the drag would
+## not have started.
+func _object_column_boundary_of(span: SemanticSpan) -> Dictionary:
 	if span == null or not (span.metadata is Dictionary):
 		return {}
 	var metadata: Dictionary = span.metadata as Dictionary
@@ -1081,10 +1096,114 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 		boundary_x += column_width
 	else:
 		boundary_x += font.get_string_size(str(metadata.get("object_label", "")) + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
-	if absf(local_position.x - boundary_x) > LANE_DIVIDER_GRAB_TOLERANCE:
-		return {}
 	# boundary_x rides along so the hover guide can draw ON the boundary rather than under the cursor.
-	return {"lane": lane, "anchor_x": anchor_x, "boundary_x": boundary_x}
+	return {"kind": "object_column", "lane": lane, "anchor_x": anchor_x, "boundary_x": boundary_x}
+
+
+## The object-column boundary of a LANE, read off the first event row that carries an object label
+## in it. The header's grabber needs one x for the whole sheet, and the first labelled row is the
+## honest one to take it from: it is the row the column's alignment is measured against, and a drag
+## sets a WIDTH from the anchor, so deeper-indented rows follow it exactly. {} on a sheet with no
+## such row - and the header then draws no grabber, because there is no column to drag.
+func object_column_boundary_for_lane(lane: String) -> Dictionary:
+	if lane != "condition" and lane != "action":
+		return {}
+	var width: float = _get_logical_canvas_width()
+	var font: Font = _get_font()
+	var font_size: int = _get_font_size()
+	for index in range(_flat_rows.size()):
+		var row_data: EventRowData = _row_at(index)
+		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+			continue
+		_get_or_build_row_layout(index, width, font, font_size)
+		for span: SemanticSpan in row_data.spans:
+			var boundary: Dictionary = _object_column_boundary_of(span)
+			if not boundary.is_empty() and str(boundary.get("lane", "")) == lane:
+				return boundary
+	return {}
+
+
+## WHAT THE COLUMN HEADER'S GRABBERS ARE OVER, at a logical x. The band at the top of the sheet
+## that already names the two lanes ("Conditions | Actions") is where both boundaries are dragged
+## from. {} when the x is over neither of them.
+##   {"kind": "lane_divider", "boundary_x": float}
+##   {"kind": "object_column", "lane": ..., "anchor_x": float, "boundary_x": float}
+func column_header_grab_at(local_x: float) -> Dictionary:
+	if _is_near_lane_divider(local_x):
+		return {"kind": "lane_divider", "boundary_x": get_lane_divider_x(_get_logical_canvas_width())}
+	for lane: String in ["condition", "action"]:
+		var boundary: Dictionary = object_column_boundary_for_lane(lane)
+		if boundary.is_empty():
+			continue
+		if absf(local_x - float(boundary.get("boundary_x", -1.0))) <= LANE_DIVIDER_GRAB_TOLERANCE:
+			return boundary
+	return {}
+
+
+## Starts the drag the header's grabber was pressed on. The drag STATE stays here, on the canvas
+## that has to relayout under it, so the band above only has to say where the press landed.
+func begin_column_header_drag(grab: Dictionary) -> bool:
+	var kind: String = str(grab.get("kind", ""))
+	if kind == "lane_divider":
+		_dragging_lane_divider = true
+		set_divider_guide(float(grab.get("boundary_x", -1.0)), true)
+		return true
+	if kind == "object_column":
+		_dragging_object_column_lane = str(grab.get("lane", ""))
+		_object_column_drag_anchor_x = float(grab.get("anchor_x", 0.0))
+		set_divider_guide(float(grab.get("boundary_x", -1.0)), true)
+		return true
+	return false
+
+
+## The live half of that drag: whichever boundary is in hand follows the logical x.
+func drag_column_header_to(local_x: float) -> bool:
+	if _dragging_lane_divider:
+		_set_lane_ratio_from_x(local_x)
+		return true
+	if not _dragging_object_column_lane.is_empty():
+		_set_object_column_width_from_x(local_x)
+		return true
+	return false
+
+
+## Finishes whichever boundary drag is in hand and announces it, so the dock persists the new split
+## onto the sheet's own style exactly as it always did. False when nothing was being dragged.
+func end_column_header_drag() -> bool:
+	if _dragging_lane_divider:
+		_dragging_lane_divider = false
+		# The guide is a DRAG cue - drop it on release, so letting go never leaves a stray line.
+		clear_divider_guide()
+		lane_ratio_changed.emit(_get_event_style().condition_lane_ratio)
+		return true
+	if not _dragging_object_column_lane.is_empty():
+		var resized_lane: String = _dragging_object_column_lane
+		_dragging_object_column_lane = ""
+		clear_divider_guide()
+		var event_style: EventSheetEventStyle = _get_event_style()
+		var resized_width: int = (
+			event_style.condition_object_column_width
+			if resized_lane == "condition"
+			else event_style.action_object_column_width
+		)
+		object_column_width_changed.emit(resized_lane, resized_width)
+		return true
+	return false
+
+
+## Back to the split the theme was authored with. The drag lives in the column header now, so the
+## way back to the default cannot live only in a gesture down the sheet: this is what the View menu
+## calls, and it announces the new ratio the way a finished drag does.
+func reset_lane_split() -> void:
+	var default_ratio: float = EventSheetEventStyle.new().condition_lane_ratio
+	_get_event_style().condition_lane_ratio = default_ratio
+	_update_layout_style_signature(_get_font_size())
+	# Cells wrap to their lane, so moving the split changes row heights, not just span rects.
+	_rebuild_row_metrics()
+	_layout_cache.clear()
+	_update_canvas_min_size()
+	queue_redraw()
+	lane_ratio_changed.emit(default_ratio)
 
 
 ## Live object-column resize during the drag: width follows the cursor (clamped so the label
@@ -2124,6 +2243,7 @@ func _draw() -> void:
 			var grip_color: Color = chrome_style.object_bar_grip_active_color if _hover_is_drag_zone else chrome_style.object_bar_grip_color
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
+	_draw_event_selection_outlines(visible_range)
 	_draw_variable_group_bubbles(width)
 	_draw_group_brackets(width)
 	_draw_region_drop_glow(width)
@@ -2136,6 +2256,29 @@ func _draw() -> void:
 	_corner_links.draw(font, font_size,
 		ViewportGroupBreadcrumb.STRIP_HEIGHT if _group_breadcrumb.is_showing() else 0.0)
 	_draw_drag_ghost(font, font_size)
+
+
+## ONE EVENT, ONE OUTLINE: the frame around every selected event, drawn once per event over the
+## union of its rows. It runs AFTER the row loop because a frame taller than one row would be cut
+## by the lane fill of the row below it, and once per event because an event drawn as several rows
+## must not be framed several times. An event with a cell selected inside it is skipped: that
+## selection is the cell's, and the per-cell outline is what says so.
+func _draw_event_selection_outlines(visible_range: Vector2i) -> void:
+	if _selected_row_uids.is_empty() or visible_range.x < 0:
+		return
+	var event_style: EventSheetEventStyle = _get_event_style()
+	var framed: Dictionary = {}
+	for index in range(visible_range.x, visible_range.y + 1):
+		var row_data: EventRowData = _row_at(index)
+		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or not row_data.selected:
+			continue
+		if not (_selected_span_indices.get(row_data.row_uid, []) as Array).is_empty():
+			continue
+		var lead: int = statement_lead_index(index)
+		if framed.has(lead):
+			continue
+		framed[lead] = true
+		_renderer.draw_event_selection_outline(self, event_card_rect(lead), event_style)
 
 
 ## The full-sheet DIVIDER GUIDE: one continuous vertical line at the column boundary under the pointer,
@@ -4077,6 +4220,47 @@ func _hit_test(position: Vector2) -> Dictionary:
 		_resolve_span_lane,
 		_find_condition_span_index
 	)
+
+
+## THE WHOLE CARD IS THE TARGET. What a left press at a logical point aims at, in one answer the
+## input handler and the tests both read: the event it landed in, the cell it landed ON, or the
+## canvas outside every card. An event's card is everything the event is drawn as - its number in
+## the gutter, both lanes, the padding, the gaps between its cells, the band under the shorter lane
+## and every row of a statement that reads as several - so the only places left to the canvas are
+## above the first event and below the last, which is exactly where a box selection should start.
+##
+## A press that resolved to a cell only because it was somewhere on that cell's LINE (to the right
+## of the words, in the gap under them) is an event press: the cell keeps its own body, and the
+## empty band beside an OR'd condition stops selecting that one condition alone.
+##   {"target": "event"/"cell"/"canvas", "row_index": int, "event_index": int, "span_index": int}
+func press_target_at(local_position: Vector2) -> Dictionary:
+	var hit: Dictionary = _hit_test(local_position)
+	var row_index: int = int(hit.get("row_index", -1))
+	if row_index < 0:
+		return {"target": "canvas", "row_index": -1, "event_index": -1, "span_index": -1}
+	var span_index: int = int(hit.get("span_index", -1))
+	if bool(hit.get("line_fallback", false)):
+		span_index = -1
+	return {
+		"target": "cell" if span_index >= 0 else "event",
+		"row_index": row_index,
+		"event_index": statement_lead_index(row_index),
+		"span_index": span_index
+	}
+
+
+## THE EVENT'S OWN RECTANGLE: the union of every row one event is drawn on, from the left edge of
+## the number gutter to the end of the action lane. One event is one shape whether it reads as one
+## row or several, so the frame the selection draws and the card a press lands in are this same
+## rectangle, measured once.
+func event_card_rect(row_index: int) -> Rect2:
+	if row_index < 0 or row_index >= _flat_rows.size():
+		return Rect2()
+	var lead: int = statement_lead_index(row_index)
+	var last: int = statement_last_index(row_index)
+	var top: float = _get_row_top(lead)
+	var bottom: float = _get_row_top(last) + _get_row_height(last)
+	return Rect2(0.0, top, _get_logical_canvas_width(), maxf(bottom - top, 0.0))
 
 
 func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:

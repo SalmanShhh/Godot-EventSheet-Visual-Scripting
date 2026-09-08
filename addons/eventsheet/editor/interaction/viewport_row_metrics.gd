@@ -465,20 +465,27 @@ func row_index_at_y(y: float) -> int:
 	return _row_index_at_y(_row_metrics, y)
 
 
-## Resolves a vertical position to a row index. A click in the small inter-block GAP before a row
-## (dead space not covered by any row band, EVENT_BLOCK_GAP) resolves to the PRECEDING event, so
-## clicking just outside / below an event block still selects it instead of clearing the selection
-## - the dead zone that let Delete fall through to the editor's scene tree. Static + pure = testable.
+## Resolves a vertical position to a row index. The small inter-block GAP between two events
+## (dead space not covered by any row band, EVENT_BLOCK_GAP) belongs to the NEARER of them - its
+## top half to the event above, its bottom half to the event below - so every pixel between two
+## cards is part of one card and a press there can never clear the selection instead of moving it
+## (the dead zone that let Delete fall through to the editor's scene tree). Above the first row and
+## below the last there is no card, which is what leaves the canvas somewhere to start a box
+## selection. Static + pure = testable.
 static func _row_index_at_y(metrics: Array, y: float) -> int:
 	if metrics.is_empty() or y < 0.0:
 		return -1
+	var previous_bottom: float = -1.0
 	for index in range(metrics.size()):
 		var top: float = float(metrics[index].get("top", 0.0))
 		var height: float = float(metrics[index].get("height", EventSheetPalette.ROW_HEIGHT))
 		if y < top:
-			return index - 1
+			if previous_bottom < 0.0:
+				return -1
+			return index - 1 if y < (previous_bottom + top) * 0.5 else index
 		if y < top + height:
 			return index
+		previous_bottom = top + height
 	return -1
 
 

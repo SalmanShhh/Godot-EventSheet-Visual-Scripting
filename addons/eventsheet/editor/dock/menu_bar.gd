@@ -33,6 +33,10 @@ const SHEET_THEME_VIEW_ID: int = 9815
 ## View ▸ Panels, the rail's own column said in words. The next number the View menu has never used.
 const PANELS_VIEW_ID: int = 9816
 
+## View ▸ Reset Lane Split - the conditions/actions boundary back at the theme's own share. The
+## next number the View menu has never used.
+const RESET_LANE_SPLIT_VIEW_ID: int = 9817
+
 ## Where "this project has already been told the strip rests" is remembered, in the same editor
 ## settings project metadata section every other per-project editor choice uses. Read with a NON-null
 ## sentinel default, because a missing key with a null default prints an editor ERROR.
@@ -487,6 +491,9 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(16), true)
 	view_popup.add_check_item("Aligned Object Columns", 18)
 	view_popup.set_item_checked(view_popup.get_item_index(18), _dock._object_columns_aligned())
+	view_popup.add_item("Reset Lane Split", RESET_LANE_SPLIT_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(RESET_LANE_SPLIT_VIEW_ID),
+		"Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.")
 	view_popup.add_check_item("Compact Rows", 19)
 	view_popup.set_item_checked(view_popup.get_item_index(19), _dock._compact_rows_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(19), "Tighter rows - more events on screen with the same text size. Off = the comfortable default.")
@@ -625,6 +632,7 @@ func build(root: Node) -> void:
 			15: _dock._toggle_object_icons(view_popup)
 			16: _dock._toggle_event_numbers(view_popup)
 			18: _dock._toggle_object_column_alignment(view_popup)
+			RESET_LANE_SPLIT_VIEW_ID: _dock._reset_lane_split()
 			19: _dock._toggle_compact_rows(view_popup)
 			20: _dock._toggle_humanized_names(view_popup)
 			21: _dock._toggle_familiar_words(view_popup)

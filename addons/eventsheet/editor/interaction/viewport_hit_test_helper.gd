@@ -67,9 +67,12 @@ static func hit_test_row(
 	var lane_content_left: float = float(layout.get("gutter_rect", Rect2()).end.x)
 	if divider_x > 0.0:
 		result["lane"] = "action" if position.x >= divider_x else "condition"
-		# Full-line fallback: a click on a condition/action line, to the right of the text or in
-		# the small gaps between cells, still selects that ACE - but only inside a lane. Clicking
-		# the gutter / indent margin (left of the lanes) falls through to whole-event selection.
+		# Full-line fallback: a point on a condition/action line but not on its cell - to the right
+		# of the words, in the small gaps between cells - still ANSWERS that ACE, so hovering a line
+		# lights its cell and the row's own menus and editors know which one is meant. It is flagged
+		# as a fallback, because a plain press there selects the whole event instead: the empty band
+		# beside one OR'd condition must not select that condition on its own. Clicking the gutter /
+		# indent margin (left of the lanes) reaches no span at all and is a whole-event press too.
 		if position.x >= lane_content_left:
 			var wanted_lane: String = str(result.get("lane", "condition"))
 			for line_span_index in range(row_data.spans.size()):
@@ -84,6 +87,7 @@ static func hit_test_row(
 				if position.y >= line_span.rect.position.y - 4.0 and position.y <= line_span.rect.end.y + 4.0:
 					result["span_index"] = line_span_index
 					result["span_metadata"] = line_meta
+					result["line_fallback"] = true
 					return result
 	var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
 	if gutter_rect.size != Vector2.ZERO and gutter_rect.has_point(position):

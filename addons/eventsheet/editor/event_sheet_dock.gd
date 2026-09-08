@@ -2891,6 +2891,20 @@ func _toggle_object_column_alignment(view_popup: PopupMenu) -> void:
 	)
 
 
+## View ▾ "Reset Lane Split": the conditions/actions boundary back where the theme put it. The
+## divider is dragged from the column header band, so the way back to the default cannot be another
+## gesture on that same band - it is a menu item, and it writes through the very handler a finished
+## drag writes through, so a default-themed sheet is promoted and marked dirty exactly the same way.
+func _reset_lane_split() -> void:
+	if _viewport == null:
+		return
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.reset_lane_split()
+	_set_status("Lane split reset - conditions and actions are back at the theme's own share.")
+
+
 func _toggle_object_icons(view_popup: PopupMenu) -> void:
 	var show_icons: bool = true
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:

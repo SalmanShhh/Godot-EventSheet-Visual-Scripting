@@ -137,11 +137,9 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	elif _viewport.mouse_default_cursor_shape == Control.CURSOR_POINTING_HAND:
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_ARROW
 	var local_position: Vector2 = _viewport._to_logical_position(event.position)
-	if _viewport._dragging_lane_divider:
-		_viewport._set_lane_ratio_from_x(local_position.x)
-		return
-	if not _viewport._dragging_object_column_lane.is_empty():
-		_viewport._set_object_column_width_from_x(local_position.x)
+	# A boundary drag started in the column header keeps its own pointer, but if one is somehow in
+	# hand here it still follows the cursor through the one call that owns it.
+	if _viewport.drag_column_header_to(local_position.x):
 		return
 	if _viewport._box_select_active:
 		_viewport._box_select_current = local_position
@@ -149,26 +147,18 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		return
 	var hit: Dictionary = _viewport._hit_test(local_position)
 	_viewport._set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
-	# Cursor affordance, in priority order: the lane divider resizes (↔); the empty non-cell area of
-	# an event row is the whole-event DRAG handle (✥ move cursor) - dragging there reorders the event
-	# or nests it as a sub-event, so the previously-dead space now reads as grabbable; everything else
-	# is the arrow. (Ctrl-hover's hand cursor is set above and left alone here.)
+	# Cursor affordance, in priority order: the empty non-cell area of an event row is the
+	# whole-event DRAG handle (✥ move cursor) - dragging there reorders the event or nests it as a
+	# sub-event, so the previously-dead space reads as grabbable; everything else is the arrow.
+	# (Ctrl-hover's hand cursor is set above and left alone here.)
 	var over_drag_zone: bool = _viewport.is_event_drag_zone(_viewport._row_at(int(hit.get("row_index", -1))), int(hit.get("span_index", -1)))
 	if _viewport._hover_is_drag_zone != over_drag_zone:
 		_viewport._hover_is_drag_zone = over_drag_zone
 		_viewport.queue_redraw()  # brighten the grip handle on the hovered row
-	# The ↔ cursor alone does not say WHERE the boundary is, and a per-row divider is a broken dashed
-	# hint at best (the object-column boundary draws nothing at rest). Hovering either one lights the
-	# full-sheet guide, so the line you are about to drag is visible before you press the button.
-	var object_column_hover: Dictionary = _viewport.object_column_boundary_hit(local_position)
-	if _viewport._is_near_lane_divider(local_position):
-		_viewport.mouse_default_cursor_shape = Control.CURSOR_HSIZE
-		_viewport.set_divider_guide(_viewport.get_lane_divider_x(_viewport._get_logical_canvas_width()), false)
-	elif not object_column_hover.is_empty():
-		# The object-name / display-text gap is an event-sheet sub-lane divider: same ↔ affordance.
-		_viewport.mouse_default_cursor_shape = Control.CURSOR_HSIZE
-		_viewport.set_divider_guide(float(object_column_hover.get("boundary_x", -1.0)), false)
-	elif over_drag_zone:
+	# DOWN THE SHEET, A BOUNDARY IS A LINE, NOT A HANDLE. Both column boundaries are grabbed in the
+	# band at the top that names the two lanes, where a grabber is drawn and says so; here they get
+	# no cursor and no guide, so dragging a selection across one resizes nothing.
+	if over_drag_zone:
 		_viewport.clear_divider_guide()
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_MOVE
 	elif _over_color_swatch(hit, local_position):
@@ -229,8 +219,12 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.accept_event()
 			return
 		if row_index >= 0:
-			if not _viewport._is_selection_hit(row_index, span_index):
-				_viewport._select_from_click(row_index, span_index, false)
+			# The card answers a right press the same way it answers a left one: on a cell it is
+			# that cell's menu, anywhere else on the card it is the event's. The hit itself still
+			# rides along, so a menu built around the cell under the pointer is unchanged.
+			var menu_span_index: int = int(_viewport.press_target_at(local_position).get("span_index", -1))
+			if not _viewport._is_selection_hit(row_index, menu_span_index):
+				_viewport._select_from_click(row_index, menu_span_index, false)
 			var row_data: EventRowData = _viewport._row_at(row_index)
 			if row_data != null:
 				_viewport.context_menu_requested.emit(
@@ -247,16 +241,6 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		return
 	if event.pressed:
 		_viewport.grab_focus()
-		if _viewport._is_near_lane_divider(local_position):
-			_viewport._dragging_lane_divider = true
-			_viewport.accept_event()
-			return
-		var object_column_hit: Dictionary = _viewport.object_column_boundary_hit(local_position)
-		if not object_column_hit.is_empty():
-			_viewport._dragging_object_column_lane = str(object_column_hit.get("lane", ""))
-			_viewport._object_column_drag_anchor_x = float(object_column_hit.get("anchor_x", 0.0))
-			_viewport.accept_event()
-			return
 		if row_index < 0:
 			# The centered getting-started CTAs are real buttons: a single click activates them.
 			# "add_event" routes through the same signal as the double-click gesture, so the dock's
@@ -453,7 +437,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport._select_range(row_index)
 			_viewport.accept_event()
 			return
-		_viewport._select_from_click(row_index, span_index, event.ctrl_pressed or event.meta_pressed)
+		# WHAT THE PRESS SELECTS is the card's own answer: a cell when the press landed on one, the
+		# whole event when it landed anywhere else on the card - the gutter, the padding, the band
+		# under the shorter lane, the gap beside an OR'd condition. Ctrl still toggles whichever of
+		# the two it is, and a double click below still opens the cell the point is on.
+		var press_target: Dictionary = _viewport.press_target_at(local_position)
+		_viewport._select_from_click(row_index, int(press_target.get("span_index", -1)),
+			event.ctrl_pressed or event.meta_pressed)
 		if event.double_click:
 			# In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
 			var double_click_meta: Dictionary = hit.get("span_metadata", {})
@@ -622,21 +612,9 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		_viewport._begin_row_drag(row_index)
 		_viewport.accept_event()
 		return
-	if _viewport._dragging_lane_divider:
-		_viewport._dragging_lane_divider = false
-		# The guide is a DRAG cue - drop it on release. The next motion re-lights it as a hover cue if
-		# the pointer is still on the boundary, so letting go never leaves a stray line on the canvas.
-		_viewport.clear_divider_guide()
-		_viewport.lane_ratio_changed.emit(_viewport._get_event_style().condition_lane_ratio)
-		_viewport.accept_event()
-		return
-	if not _viewport._dragging_object_column_lane.is_empty():
-		var resized_lane: String = _viewport._dragging_object_column_lane
-		_viewport._dragging_object_column_lane = ""
-		_viewport.clear_divider_guide()
-		var event_style: EventSheetEventStyle = _viewport._get_event_style()
-		var resized_width: int = event_style.condition_object_column_width if resized_lane == "condition" else event_style.action_object_column_width
-		_viewport.object_column_width_changed.emit(resized_lane, resized_width)
+	# A boundary drag let go over the canvas finishes through the one call that owns it, so the
+	# split is persisted the same way wherever the button came up.
+	if _viewport.end_column_header_drag():
 		_viewport.accept_event()
 		return
 	if not _viewport._drag_ace_entries.is_empty():
