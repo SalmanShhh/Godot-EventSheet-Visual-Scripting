@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Performance: a tab keeps its reading
+
+- **Switching between two open sheets builds nothing.** A switch used to be a full load - every row
+  rebuilt through the reading layers, the vocabulary rebuilt from the sheet's providers and the
+  addon folder, the undo log cleared, the generated-code panel recompiled - so two sheets open side
+  by side cost a reading on every glance between them. Each tab now keeps its own: the rows and
+  their layout, the scroll, the selection, the folds, the lane split, its log of edits and the code
+  the panel showed. On a behaviour pack of 1,149 rows a switch measured 5.86 and 5.90 seconds before,
+  and 87 and 64 ms after.
+- **Rows are built again only when the sheet changed.** Every tab carries a stamp: an edit revision
+  bumped by the one refresh every sheet mutation ends with, and the modification time of the file it
+  is stored in, read from disk at switch time. Either moving rebuilds the tab once - and only once.
+- **The vocabulary is kept unless its sources moved.** The ACE registry is rebuilt when the sheet
+  lists different provider scripts, or when the addon fleet, the bridge's registrations, the taught
+  verbs or an annotated autoload changed; definitions are immutable and shared across tabs already,
+  so keeping one is keeping a list of sources, never a second copy of a descriptor.
+- **Undo survives a switch.** The log is no longer cleared when you look at another sheet. Every
+  edit is tagged with the tab it was made on, so an undo of an edit made elsewhere brings that tab
+  back and lands there instead of over the sheet in front of you, and the History panel shows the
+  steps the tab on screen was edited by rather than a merged list of every tab's.
+- **The status line stopped saying "Loaded:" on a switch**, because a switch is not a load. It says
+  nothing at all; a file that changed on disk behind a tab rebuilds it once and says
+  "Reloaded: changed on disk".
+
 ### Added: the object's variables are Inspector rows
 
 - **"Instance variables · N" is a band with rows under it, not a button.** Selecting a node whose
