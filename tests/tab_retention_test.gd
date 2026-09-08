@@ -12,7 +12,9 @@
 #  3. A file that changed on disk behind a tab rebuilds it once and says so; an unchanged one says
 #     nothing at all, because a switch is not a load.
 #  4. The undo stack outlives a switch, and an undo of an edit made on another tab brings that tab
-#     back and lands there rather than on the sheet in front of the reader.
+#     back and lands there rather than on the sheet in front of the reader. Opening a sheet from
+#     disk keeps every open tab's history, and a step whose tab has been closed says why it
+#     restored nothing.
 #  5. The vocabulary is kept when the sources match: the registry is not rebuilt and the definition
 #     objects on the other side of the switch are the same objects.
 #  6. The code panel's output is kept against the same revision - a switch back shows it without
@@ -30,6 +32,8 @@ static func run() -> bool:
 	all_passed = _run_switch_costs_nothing() and all_passed
 	all_passed = _run_stamp_rebuilds() and all_passed
 	all_passed = _run_undo_survives() and all_passed
+	all_passed = _run_open_keeps_other_tabs() and all_passed
+	all_passed = _run_undo_of_a_closed_tab_says_so() and all_passed
 	all_passed = _run_registry_kept() and all_passed
 	all_passed = _run_code_panel_cached() and all_passed
 	all_passed = _run_selection_and_scroll() and all_passed
@@ -118,8 +122,11 @@ static func _run_stamp_rebuilds() -> bool:
 	dock._activate_tab(0)
 	all_passed = _check("a file changed on disk rebuilds the tab once",
 		viewport.row_builds(), before_disk + 1) and all_passed
+	# The rows were rebuilt from the sheet the EDITOR is holding, not read back off the disk,
+	# so the line says that rather than claiming a reload nobody did.
 	all_passed = _check("and the status line says which it was",
-		dock._status_label.text, "Reloaded: changed on disk") and all_passed
+		dock._status_label.text,
+		"Changed on disk: (unsaved EventSheet) - these rows are the editor's copy.") and all_passed
 	dock.free()
 	return all_passed
 
@@ -161,6 +168,59 @@ static func _run_undo_survives() -> bool:
 		dock._current_sheet.variables.has("mana"), false) and all_passed
 	all_passed = _check("the tab it was pressed on is untouched",
 		(dock._open_tabs[1].get("sheet") as EventSheetResource).variables.has("mana"), false) and all_passed
+	dock.free()
+	return all_passed
+
+
+# ── 4b. An open from disk keeps the tabs already open ───────────────────────
+
+
+## The stack is the host editor's, one for the whole dock, and every open from disk used to
+## clear it - so opening a third sheet took the first two tabs' history with it. Nothing clears
+## it now: the owner tag on each step is what keeps one tab's undo off another tab's sheet.
+static func _run_open_keeps_other_tabs() -> bool:
+	var all_passed: bool = true
+	var dock: EventSheetDock = _dock()
+	dock.setup(_sheet("first"))
+	dock._perform_undoable_sheet_edit("Add hp", func() -> bool:
+		dock._current_sheet.variables["hp"] = {"type": "int", "default": "3"}
+		return true)
+	var opened_path: String = _write_sheet_file()
+	dock._load_sheet_from_path(opened_path)
+	all_passed = _check("the file opened in a tab of its own",
+		dock._open_tabs.size(), 2) and all_passed
+	all_passed = _check("and the first tab's edit is still on the stack",
+		dock._undo_redo_adapter.has_undo(), true) and all_passed
+	dock._undo_redo_adapter.undo()
+	all_passed = _check("undoing it brings its own tab back",
+		dock._active_tab_index, 0) and all_passed
+	all_passed = _check("and takes the edit back there",
+		dock._current_sheet.variables.has("hp"), false) and all_passed
+	# ...and it says so, because the tab under the reader has just changed for them.
+	all_passed = _check("and says which sheet it landed on",
+		dock._status_label.text.begins_with("Applied undo/redo on "), true) and all_passed
+	dock.free()
+	return all_passed
+
+
+## A step whose tab has been closed restores nothing - there is nowhere for it to go - and the
+## reader is told that rather than watching Ctrl+Z do nothing at all.
+static func _run_undo_of_a_closed_tab_says_so() -> bool:
+	var all_passed: bool = true
+	var dock: EventSheetDock = _dock()
+	dock.setup(_sheet("first"))
+	dock._open_sheet_in_tab(_sheet("second"), "")
+	dock._perform_undoable_sheet_edit("Add hp", func() -> bool:
+		dock._current_sheet.variables["hp"] = {"type": "int", "default": "3"}
+		return true)
+	dock._close_tab(1)
+	dock._set_status("")
+	dock._undo_redo_adapter.undo()
+	all_passed = _check("an undo whose tab is gone says why nothing moved",
+		dock._status_label.text,
+		"⚠  That step belongs to a tab that has been closed - there is nothing to put it back into.") and all_passed
+	all_passed = _check("and the tab still open is untouched",
+		dock._current_sheet.variables.has("hp"), false) and all_passed
 	dock.free()
 	return all_passed
 
@@ -272,6 +332,16 @@ static func _sheet(name_hint: String) -> EventSheetResource:
 		comment.text = "%s row %d" % [name_hint, index]
 		sheet.events.append(comment)
 	return sheet
+
+
+## A real file on disk for the pins that must go through the OPEN path rather than round a tab
+## in memory - the open is where the undo log used to be cleared.
+static func _write_sheet_file() -> String:
+	var path: String = "user://tab_retention_opened.gd"
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("extends Node" + "\n")
+	file.close()
+	return path
 
 
 ## The definition the identity pin uses: the first the registry lists once they are sorted, so the

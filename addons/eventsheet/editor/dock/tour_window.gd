@@ -122,7 +122,6 @@ func start(custom_steps: Array[Dictionary] = []) -> void:
 		_dock._current_sheet_path = ""
 		_dock._dirty = true
 		_dock._refresh_title_strip()
-		_dock._clear_undo_history()
 		_dock._set_status("The tour opened a practice sheet - Save As… if you want to keep it.")
 	if _window == null:
 		_build()

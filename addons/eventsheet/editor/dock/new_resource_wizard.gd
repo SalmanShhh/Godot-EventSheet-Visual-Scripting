@@ -147,7 +147,6 @@ func _on_create() -> void:
 	_dock._current_sheet_path = ""
 	_dock._dirty = true
 	_dock._refresh_title_strip()
-	_dock._clear_undo_history()
 	_dock._set_status("New %s resource - fill the %s grid via the Inspector Designer, then Save As… to keep it." % [sheet.custom_class_name, grid_name_for(entry_name)])
 
 

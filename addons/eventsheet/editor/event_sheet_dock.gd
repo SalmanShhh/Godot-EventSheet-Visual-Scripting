@@ -796,7 +796,12 @@ func _activate_tab(index: int) -> void:
 	if seating == "loaded":
 		_set_status("Loaded: %s" % label)
 	elif seating == "reloaded":
-		_set_status("Reloaded: changed on disk")
+		# The FILE moved while the reader was on another tab, so the rows were built again -
+		# from the sheet the editor is holding, which is not the same thing as reading the file
+		# back. Saying "reloaded" here told a reader their outside edits were on screen when
+		# they were not. The re-import stays where it belongs, with the watcher that offers it.
+		_set_status(EventSheetL10n.translate(
+			"Changed on disk: %s - these rows are the editor's copy.") % label)
 	# THE ONE-TIME NOTE, said over that status line the first time a project that already has sheets
 	# in it opens on the resting strip: where the buttons went, and that no key changed. A project
 	# whose first sheet is the blank one the workspace seeds never saw the old strip, so it is never
@@ -7838,11 +7843,18 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	# was made on: the tab comes back to the screen first, and the restore lands where the edit did.
 	# An edit whose tab has since been closed restores nothing - there is nowhere for it to go.
 	var owner_tab: String = _tab_state.snapshot_owner(snapshot)
+	var landed_elsewhere: bool = false
 	if not owner_tab.is_empty() and owner_tab != _tab_state.active_tab_id():
 		var owner_index: int = _tab_state.index_of_tab_id(owner_tab)
 		if owner_index < 0:
+			# The tab that made this edit has been closed, so there is nowhere to put the sheet
+			# back. The step is spent either way - the host stack has already handed it over - and
+			# a reader who presses Ctrl+Z and sees nothing move is owed the reason, not silence.
+			_set_status(EventSheetL10n.translate(
+				"That step belongs to a tab that has been closed - there is nothing to put it back into."), true)
 			return
 		_activate_tab(owner_index)
+		landed_elsewhere = true
 	# The History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
 	_ensure_history_panel().note_restored(snapshot)
 	# What a field completes with is held against the sheet OBJECT, and the line below replaces that
@@ -7854,6 +7866,15 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	if not _current_sheet_path.is_empty():
 		_current_sheet.take_over_path(_current_sheet_path)
 	_refresh_after_edit()
+	# An undo pressed on one tab can land on another: the stack is the host editor's, and every
+	# step on it is tagged with the tab it was made on. The tab under the reader has just changed
+	# for them, so the line says which sheet the step went back into rather than leaving them to
+	# work it out from the canvas.
+	if landed_elsewhere:
+		var owner_label: String = _current_sheet_path.get_file() \
+			if not _current_sheet_path.is_empty() else EventSheetL10n.translate("(unsaved EventSheet)")
+		_mark_dirty(EventSheetL10n.translate("Applied undo/redo on %s.") % owner_label)
+		return
 	_mark_dirty("Applied undo/redo.")
 
 
@@ -7908,6 +7929,12 @@ func _selected_event_number() -> int:
 	return row_data.event_number if row_data != null else 0
 
 
+## Drops the WHOLE undo log. The host editor owns one stack for the dock, so there is no way to
+## clear one tab's share of it - which is why opening a sheet no longer calls this. An open makes
+## a new tab, and the tags every edit carries already keep that tab's undo apart from the tabs
+## around it; clearing here would have taken their history with it. What is left is the one gesture
+## that replaces a sheet's whole contents under the reader, where every step on the stack is about
+## a sheet that is no longer there.
 func _clear_undo_history() -> void:
 	_undo_redo_adapter.clear_history()
 	_menu_bar.refresh_history_buttons()

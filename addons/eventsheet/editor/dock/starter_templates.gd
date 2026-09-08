@@ -1442,7 +1442,6 @@ func _new_sheet_from_template(template_id: int) -> void:
 		_dock._current_sheet_path = ""
 		_dock._dirty = true
 		_dock._refresh_title_strip()
-		_dock._clear_undo_history()
 		_dock._set_status("New sheet from project template - Save As… to keep it.")
 		return
 	# Every starter the dock-free builder knows resolves THROUGH it, so the New-Sheet menu, the
@@ -1574,5 +1573,4 @@ func _new_sheet_from_template(template_id: int) -> void:
 	_dock._current_sheet_path = ""
 	_dock._dirty = true
 	_dock._refresh_title_strip()
-	_dock._clear_undo_history()
 	_dock._set_status("New sheet from template - Save As… to keep it.")

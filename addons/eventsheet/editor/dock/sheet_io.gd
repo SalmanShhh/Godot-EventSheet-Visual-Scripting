@@ -56,7 +56,6 @@ func _load_sheet_from_path(path: String) -> void:
 		_dock._current_sheet_path = resolved_path
 		_dock._dirty = false
 		_dock._refresh_title_strip()
-		_dock._clear_undo_history()
 		EventSheets._notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
 		return
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
@@ -98,7 +97,6 @@ func _open_blocked_by_conflict(path: String) -> bool:
 	_dock._current_sheet_path = path
 	_dock._dirty = false
 	_dock._refresh_title_strip()
-	_dock._clear_undo_history()
 	_dock._external_mtime = FileAccess.get_modified_time(path)
 	_dock._refresh_preview_banner()
 	_dock._set_status(EventSheetConflictGuard.banner_text(path.get_file(), markers), true)
@@ -147,7 +145,6 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 	_dock._current_sheet_path = resolved_path
 	_dock._dirty = false
 	_dock._refresh_title_strip()
-	_dock._clear_undo_history()
 	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
 	_dock._refresh_preview_banner()
 	# A script its owner marked to stay code is shown and never worked on: no lift, no offers, and
@@ -195,7 +192,6 @@ func _open_scene_as_sheet(resolved_path: String) -> void:
 	_dock._current_sheet_path = resolved_path
 	_dock._dirty = false
 	_dock._refresh_title_strip()
-	_dock._clear_undo_history()
 	_dock._refresh_preview_banner()
 	_dock._set_status("Opening %s - reading every script the scene uses…" % resolved_path.get_file())
 	if not _dock.is_inside_tree():
@@ -397,7 +393,6 @@ func _open_new_sheet(path: String) -> void:
 	_dock._current_sheet_path = resolved_path
 	_dock._dirty = false
 	_dock._refresh_title_strip()
-	_dock._clear_undo_history()
 	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
 	_dock._refresh_preview_banner()
 	_dock._set_status("Created %s - start adding events, then Save." % resolved_path.get_file())
