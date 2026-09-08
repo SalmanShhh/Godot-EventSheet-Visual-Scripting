@@ -125,6 +125,31 @@ static func run() -> bool:
 		all_passed = SUPPORT.check(PREFIX, "selecting the event back draws the frame again",
 			viewport._statement_has_selected_span(0), false) and all_passed
 
+	# ── the RIGHT press answers with the same thing it selected ──
+	# A press beside the cells selects the whole event, so the menu has to be the event's too.
+	# The raw hit resolves to the cell whose LINE the point was on, and handing that on made the
+	# outline say "event" while the menu said "this condition" for one and the same press.
+	var menu_hits: Array = []
+	# The dock listens too, and a real popup has no window to open in a headless run - so the
+	# question is put to the viewport alone, which is where the answer is decided.
+	for connection: Dictionary in viewport.context_menu_requested.get_connections():
+		viewport.context_menu_requested.disconnect(connection["callable"])
+	viewport.context_menu_requested.connect(
+		func(_row: EventRowData, menu_hit: Dictionary, _at: Vector2) -> void: menu_hits.append(menu_hit))
+	viewport._handle_mouse_button(_right_press(Vector2(or_band_x, middle_y)))
+	all_passed = SUPPORT.pins(PREFIX, [
+		["a right press beside the cells opens one menu", menu_hits.size(), 1],
+		["and it is the event's menu, not the cell's under the pointer",
+			int((menu_hits[0] as Dictionary).get("span_index", 0)), -1],
+		["with no cell metadata riding along",
+			(menu_hits[0] as Dictionary).get("span_metadata", null), {}],
+	]) and all_passed
+	if cell != null:
+		menu_hits.clear()
+		viewport._handle_mouse_button(_right_press(cell.rect.get_center()))
+		all_passed = SUPPORT.check(PREFIX, "a right press ON a cell still opens that cell's menu",
+			int((menu_hits[0] as Dictionary).get("span_index", -1)) >= 0, true) and all_passed
+
 	# ── box selection starts only outside every card ──
 	var below_last: float = viewport._get_row_top(1) + viewport._get_row_height(1) + 40.0
 	viewport._handle_mouse_button(_press(Vector2(width * 0.5, below_last), true))
@@ -181,6 +206,16 @@ static func _condition(expression: String) -> ACECondition:
 	condition.ace_id = "ExpressionIsTrue"
 	condition.params = {"expr": expression}
 	return condition
+
+
+## A right press, which opens a menu rather than selecting by drag: pressed only, because the
+## menu is raised on the press and the release does nothing.
+static func _right_press(point: Vector2) -> InputEventMouseButton:
+	var event: InputEventMouseButton = InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_RIGHT
+	event.pressed = true
+	event.position = point
+	return event
 
 
 static func _press(point: Vector2, pressed: bool) -> InputEventMouseButton:

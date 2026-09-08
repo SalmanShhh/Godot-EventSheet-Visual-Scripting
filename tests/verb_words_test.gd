@@ -19,7 +19,8 @@ extends RefCounted
 #   5. the preset row reads the switches rather than remembering a choice of its own;
 #   6. the sheet's own bytes are identical either way - an alias is display text and nothing else.
 #
-# The switch is a session-wide static, so the last thing this file does is put it back.
+# The switch is a session-wide static, so it is put back after every block below - not once at
+# the end, where a block that died half way through would have stepped over it.
 
 const SUPPORT := preload("res://tests/support.gd")
 
@@ -41,16 +42,22 @@ func _process(_delta: float) -> void:
 
 static func run() -> bool:
 	var all_passed: bool = true
-	all_passed = _keys_name_shipped_things() and all_passed
-	all_passed = _off_side_is_the_shipped_wording() and all_passed
-	all_passed = _a_row_reads_both_ways() and all_passed
-	all_passed = _a_lifted_row_reads_both_ways() and all_passed
-	all_passed = _the_picker_answers_to_either_name() and all_passed
-	all_passed = _the_preset_reads_the_switches() and all_passed
-	all_passed = _the_bytes_are_the_same_either_way() and all_passed
-	# The switch lives in a static for the session, so leaving it on would re-word every row every
-	# later test reads. Off is the default and the default is what the rest of the suite expects.
-	EventSheetWords.set_verb_words_enabled(false)
+	for block: Callable in [
+			_keys_name_shipped_things,
+			_off_side_is_the_shipped_wording,
+			_a_row_reads_both_ways,
+			_a_lifted_row_reads_both_ways,
+			_the_picker_answers_to_either_name,
+			_the_preset_reads_the_switches,
+			_the_bytes_are_the_same_either_way,
+	]:
+		all_passed = bool(block.call()) and all_passed
+		# The switch lives in a static for the SESSION, so it is put back after every block
+		# rather than once at the end. A block that dies half way through - the silent shape a
+		# runtime error takes here - used to leave the second vocabulary on, and every reading
+		# every later test in the process took was re-worded by it. Off is the default and the
+		# default is what the rest of the suite expects.
+		EventSheetWords.set_verb_words_enabled(false)
 	return all_passed
 
 
