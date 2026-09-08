@@ -7242,3 +7242,17 @@ Stop ticking,ティック停止
 Start physics ticking,物理ティック開始
 Stop physics ticking,物理ティック停止
 fired by %s,%s から発火
+Changed on disk: %s - these rows are the editor's copy.,ディスク上で変更されました: %s - これらの行はエディタ側のコピーです。
+That step belongs to a tab that has been closed - there is nothing to put it back into.,その操作は閉じられたタブのものです - 戻す先がありません。
+(unsaved EventSheet),(未保存の EventSheet)
+Applied undo/redo on %s.,%s で元に戻す/やり直しを適用しました。
+Panels,パネル
+"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.",左レールのパネルです。レールから外したパネルは閉じたわけではありません - 名前はレール下部のタブに残り、この一覧から元の大きさで戻せます。
+Reset Lane Split,レーンの区切りをリセット
+Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.,条件とアクションの境界をテーマの位置に戻します。境界はシート上部の「条件 | アクション」帯のつまみからドラッグします。
+"Select a condition, an action, an object or a group to edit it here.",ここで編集する条件、アクション、オブジェクト、グループを選んでください。
+Tuck the rail into the edge - the sheet takes the width.,レールを端にしまう - シートが幅を受け取ります。
+Bring the rail back at the width it had.,レールを元の幅で戻します。
+Bring %s back at the height it had.,%s を元の高さで戻します。
+Slide %s off the rail - its name waits in the tab strip at the foot.,%s をレールから外す - 名前は下部のタブ帯に残ります。
+Opens this behavior as a sheet.,このビヘイビアをシートとして開きます。

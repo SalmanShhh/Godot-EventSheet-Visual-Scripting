@@ -7242,3 +7242,17 @@ Stop ticking,Остановить тик
 Start physics ticking,Запустить физический тик
 Stop physics ticking,Остановить физический тик
 fired by %s,вызывается %s
+Changed on disk: %s - these rows are the editor's copy.,Изменён на диске: %s - эти строки являются копией редактора.
+That step belongs to a tab that has been closed - there is nothing to put it back into.,"Этот шаг принадлежит вкладке, которая была закрыта - вернуть его некуда."
+(unsaved EventSheet),(несохранённый EventSheet)
+Applied undo/redo on %s.,Отмена/повтор применены в %s.
+Panels,Панели
+"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.","Панели левой рейки. Убранная с рейки панель не закрыта - её имя ждёт во вкладке внизу рейки, и этот список вернёт её в прежнем размере."
+Reset Lane Split,Сбросить разделитель полос
+Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.,"Возвращает границу между условиями и действиями туда, где её держит тема. Границу тянут за рукоятку в полосе «Условия | Действия» над листом."
+"Select a condition, an action, an object or a group to edit it here.","Выберите условие, действие, объект или группу, чтобы изменить их здесь."
+Tuck the rail into the edge - the sheet takes the width.,Убрать рейку к краю - лист заберёт ширину.
+Bring the rail back at the width it had.,Вернуть рейку в прежней ширине.
+Bring %s back at the height it had.,Вернуть %s в прежней высоте.
+Slide %s off the rail - its name waits in the tab strip at the foot.,Убрать %s с рейки - имя останется во вкладке внизу.
+Opens this behavior as a sheet.,Открывает это поведение как лист.

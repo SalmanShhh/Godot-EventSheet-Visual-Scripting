@@ -168,7 +168,8 @@ func _show_nothing() -> void:
 		_empty = true
 		if not _said_empty_hint and _dock != null and _dock.has_method("_set_status"):
 			_said_empty_hint = true
-			_dock._set_status("Select a condition, an action, an object or a group to edit it here.", false)
+			_dock._set_status(EventSheetL10n.translate(
+				"Select a condition, an action, an object or a group to edit it here."), false)
 	_apply_width()
 
 

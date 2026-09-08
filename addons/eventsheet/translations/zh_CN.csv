@@ -7242,3 +7242,17 @@ Stop ticking,停止每帧运行
 Start physics ticking,开始物理每帧运行
 Stop physics ticking,停止物理每帧运行
 fired by %s,由 %s 触发
+Changed on disk: %s - these rows are the editor's copy.,磁盘上已更改：%s - 这些行是编辑器中的副本。
+That step belongs to a tab that has been closed - there is nothing to put it back into.,该步骤属于一个已经关闭的标签页 - 没有地方可以还原它。
+(unsaved EventSheet),(未保存的事件表)
+Applied undo/redo on %s.,已在 %s 上应用撤销/重做。
+Panels,面板
+"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.",左侧栏的面板。移出栏外的面板并未关闭 - 名字会留在栏底的标签里，这个列表能把它按原来的大小带回来。
+Reset Lane Split,重置分栏位置
+Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.,把条件与动作之间的分界线放回主题设定的位置。该分界线可从事件表上方“条件 | 动作”带上的手柄拖动。
+"Select a condition, an action, an object or a group to edit it here.",选择一个条件、动作、对象或分组，在这里编辑它。
+Tuck the rail into the edge - the sheet takes the width.,把左侧栏收进边缘 - 事件表获得这部分宽度。
+Bring the rail back at the width it had.,按原来的宽度把左侧栏带回来。
+Bring %s back at the height it had.,按原来的高度把 %s 带回来。
+Slide %s off the rail - its name waits in the tab strip at the foot.,把 %s 移出左侧栏 - 名字会留在栏底的标签带里。
+Opens this behavior as a sheet.,把这个行为作为事件表打开。

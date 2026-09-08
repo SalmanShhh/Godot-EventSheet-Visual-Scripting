@@ -7242,3 +7242,17 @@ Stop ticking,Ticken stoppen
 Start physics ticking,Physik-Ticken starten
 Stop physics ticking,Physik-Ticken stoppen
 fired by %s,ausgelöst von %s
+Changed on disk: %s - these rows are the editor's copy.,Auf der Festplatte geändert: %s - diese Zeilen sind die Kopie des Editors.
+That step belongs to a tab that has been closed - there is nothing to put it back into.,"Dieser Schritt gehört zu einem Tab, der geschlossen wurde - es gibt nichts mehr, wohin er zurückgelegt werden könnte."
+(unsaved EventSheet),(ungespeichertes EventSheet)
+Applied undo/redo on %s.,Rückgängig/Wiederholen auf %s angewendet.
+Panels,Bereiche
+"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.","Die Bereiche der linken Leiste. Ein weggeschobener Bereich ist nicht geschlossen - sein Name wartet in einem Reiter am Fuß der Leiste, und diese Liste holt ihn in seiner alten Größe zurück."
+Reset Lane Split,Spaltentrenner zurücksetzen
+Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.,"Setzt die Grenze zwischen Bedingungen und Aktionen dorthin zurück, wo das Thema sie hat. Die Grenze wird am Griff im Band „Bedingungen | Aktionen“ über dem Blatt gezogen."
+"Select a condition, an action, an object or a group to edit it here.","Wähle eine Bedingung, eine Aktion, ein Objekt oder eine Gruppe, um sie hier zu bearbeiten."
+Tuck the rail into the edge - the sheet takes the width.,Die Leiste an den Rand schieben - das Blatt bekommt die Breite.
+Bring the rail back at the width it had.,Die Leiste in ihrer alten Breite zurückholen.
+Bring %s back at the height it had.,%s in der alten Höhe zurückholen.
+Slide %s off the rail - its name waits in the tab strip at the foot.,%s von der Leiste schieben - der Name wartet im Reiterband am Fuß.
+Opens this behavior as a sheet.,Öffnet dieses Verhalten als Blatt.

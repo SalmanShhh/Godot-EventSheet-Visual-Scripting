@@ -471,9 +471,9 @@ func build(root: Node) -> void:
 	var panels_menu: PopupMenu = PopupMenu.new()
 	panels_menu.name = "EventSheetPanelsMenu"
 	view_popup.add_child(panels_menu)
-	view_popup.add_submenu_item("Panels", "EventSheetPanelsMenu", PANELS_VIEW_ID)
-	view_popup.set_item_tooltip(view_popup.get_item_index(PANELS_VIEW_ID),
-		"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.")
+	view_popup.add_submenu_item(EventSheetL10n.translate("Panels"), "EventSheetPanelsMenu", PANELS_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(PANELS_VIEW_ID), EventSheetL10n.translate(
+		"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had."))
 	panels_menu.id_pressed.connect(func(panel_index: int) -> void:
 		var ids: PackedStringArray = EventSheetRailPanels.panel_ids()
 		if panel_index < 0 or panel_index >= ids.size() or _dock._rail_panels == null:
@@ -493,9 +493,9 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(16), true)
 	view_popup.add_check_item("Aligned Object Columns", 18)
 	view_popup.set_item_checked(view_popup.get_item_index(18), _dock._object_columns_aligned())
-	view_popup.add_item("Reset Lane Split", RESET_LANE_SPLIT_VIEW_ID)
-	view_popup.set_item_tooltip(view_popup.get_item_index(RESET_LANE_SPLIT_VIEW_ID),
-		"Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.")
+	view_popup.add_item(EventSheetL10n.translate("Reset Lane Split"), RESET_LANE_SPLIT_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(RESET_LANE_SPLIT_VIEW_ID), EventSheetL10n.translate(
+		"Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet."))
 	view_popup.add_check_item("Compact Rows", 19)
 	view_popup.set_item_checked(view_popup.get_item_index(19), _dock._compact_rows_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(19), "Tighter rows - more events on screen with the same text size. Off = the comfortable default.")

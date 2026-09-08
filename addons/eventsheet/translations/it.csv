@@ -7242,3 +7242,17 @@ Stop ticking,Ferma il tick
 Start physics ticking,Avvia il tick fisico
 Stop physics ticking,Ferma il tick fisico
 fired by %s,attivato da %s
+Changed on disk: %s - these rows are the editor's copy.,Cambiato su disco: %s - queste righe sono la copia dell'editor.
+That step belongs to a tab that has been closed - there is nothing to put it back into.,Quel passo appartiene a una scheda che è stata chiusa - non c'è più dove rimetterlo.
+(unsaved EventSheet),(EventSheet non salvato)
+Applied undo/redo on %s.,Annulla/ripeti applicato su %s.
+Panels,Pannelli
+"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.","I pannelli della barra di sinistra. Un pannello spostato via dalla barra non è chiuso - il suo nome aspetta in una scheda ai piedi della barra, e questo elenco lo riporta alla dimensione che aveva."
+Reset Lane Split,Reimposta la divisione delle corsie
+Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.,Riporta il confine fra condizioni e azioni dove lo mette il tema. Il confine si trascina dalla maniglia nella banda “Condizioni | Azioni” sopra il foglio.
+"Select a condition, an action, an object or a group to edit it here.","Seleziona una condizione, un'azione, un oggetto o un gruppo per modificarlo qui."
+Tuck the rail into the edge - the sheet takes the width.,Ritira la barra nel bordo - il foglio prende la larghezza.
+Bring the rail back at the width it had.,Riporta la barra alla larghezza che aveva.
+Bring %s back at the height it had.,Riporta %s all'altezza che aveva.
+Slide %s off the rail - its name waits in the tab strip at the foot.,Sposta %s via dalla barra - il suo nome aspetta nella striscia di schede ai piedi.
+Opens this behavior as a sheet.,Apre questo comportamento come un foglio.

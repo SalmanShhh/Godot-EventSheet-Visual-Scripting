@@ -70,9 +70,13 @@ static func panel_ids() -> PackedStringArray:
 	return PANEL_IDS.duplicate()
 
 
-## What the tab strip and the View menu call a panel.
+## What the tab strip and the View menu call a panel, in the reader's language. The table above
+## holds the source strings; this is the one place they are read out, so it is the one place they
+## are translated. The key is a VALUE rather than a literal, so the translation harvester cannot
+## derive these five from here: four of them are owed a row by other screens that name them
+## literally, and "Picker preview" falls back to its source string until one does.
 static func panel_title(panel_id: String) -> String:
-	return str(PANEL_TITLES.get(panel_id, panel_id))
+	return EventSheetL10n.translate(str(PANEL_TITLES.get(panel_id, panel_id)))
 
 
 ## Whether a panel starts open (its body showing) or folded to its header line.
@@ -225,7 +229,8 @@ func build(panels: Dictionary) -> Control:
 	var top_spacer: Control = Control.new()
 	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_strip.add_child(top_spacer)
-	top_strip.add_child(_chevron_button("‹", "Tuck the rail into the edge - the sheet takes the width.",
+	top_strip.add_child(_chevron_button("‹",
+		EventSheetL10n.translate("Tuck the rail into the edge - the sheet takes the width."),
 		func() -> void: set_rail_tucked(true)))
 	_body.add_child(top_strip)
 
@@ -250,7 +255,8 @@ func build(panels: Dictionary) -> Control:
 	_edge.name = "EventSheetLeftRailEdge"
 	_edge.visible = false
 	_edge.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(EDGE_STRIP_WIDTH), 0.0)
-	_edge.add_child(_chevron_button("›", "Bring the rail back at the width it had.",
+	_edge.add_child(_chevron_button("›",
+		EventSheetL10n.translate("Bring the rail back at the width it had."),
 		func() -> void: set_rail_tucked(false)))
 	_edge_label = Label.new()
 	_edge_label.name = "EventSheetLeftRailEdgeLabel"
@@ -509,7 +515,8 @@ func _rebuild_tabs(shown: PackedStringArray) -> void:
 		tab.name = "EventSheetRailTab_%s" % panel_id
 		tab.flat = true
 		tab.text = "› %s" % panel_title(panel_id)
-		tab.tooltip_text = "Bring %s back at the height it had." % panel_title(panel_id)
+		tab.tooltip_text = EventSheetL10n.translate(
+			"Bring %s back at the height it had.") % panel_title(panel_id)
 		tab.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		var restored_id: String = panel_id
 		tab.pressed.connect(func() -> void: set_panel_tucked(restored_id, false))
@@ -536,7 +543,8 @@ func _add_header_button(panel: Control, panel_id: String) -> void:
 		elif child is Label:
 			(child as Label).clip_text = true
 	var button: Button = _chevron_button("-",
-		"Slide %s off the rail - its name waits in the tab strip at the foot." % panel_title(panel_id),
+		EventSheetL10n.translate(
+			"Slide %s off the rail - its name waits in the tab strip at the foot.") % panel_title(panel_id),
 		func() -> void: set_panel_tucked(panel_id, true))
 	button.name = "EventSheetRailMinimise_%s" % panel_id
 	(header as Control).add_child(button)

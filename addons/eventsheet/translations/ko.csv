@@ -7242,3 +7242,17 @@ Stop ticking,틱 중지
 Start physics ticking,물리 틱 시작
 Stop physics ticking,물리 틱 중지
 fired by %s,%s에서 발생
+Changed on disk: %s - these rows are the editor's copy.,디스크에서 변경됨: %s - 이 행들은 에디터의 사본입니다.
+That step belongs to a tab that has been closed - there is nothing to put it back into.,그 단계는 이미 닫힌 탭의 것입니다 - 되돌릴 곳이 없습니다.
+(unsaved EventSheet),(저장되지 않은 EventSheet)
+Applied undo/redo on %s.,%s 에서 실행 취소/다시 실행을 적용했습니다.
+Panels,패널
+"The left rail's panels. A panel slid off the rail is not closed - it waits in a tab at the foot of the rail, and this list brings it back at the size it had.","왼쪽 레일의 패널입니다. 레일에서 밀어낸 패널은 닫힌 것이 아닙니다 - 이름이 레일 아래 탭에 남아 있고, 이 목록에서 원래 크기로 되돌릴 수 있습니다."
+Reset Lane Split,레인 분할 초기화
+Put the conditions/actions boundary back where the theme has it. The boundary is dragged from the grabber in the Conditions | Actions band above the sheet.,조건과 액션의 경계를 테마가 정한 자리로 되돌립니다. 경계는 시트 위 “조건 | 액션” 띠의 손잡이에서 끌어 옮깁니다.
+"Select a condition, an action, an object or a group to edit it here.","여기서 편집할 조건, 액션, 오브젝트 또는 그룹을 선택하세요."
+Tuck the rail into the edge - the sheet takes the width.,레일을 가장자리로 접기 - 시트가 그 너비를 가져갑니다.
+Bring the rail back at the width it had.,레일을 원래 너비로 되돌립니다.
+Bring %s back at the height it had.,%s 을(를) 원래 높이로 되돌립니다.
+Slide %s off the rail - its name waits in the tab strip at the foot.,%s 을(를) 레일에서 밀어냅니다 - 이름은 아래 탭 띠에 남습니다.
+Opens this behavior as a sheet.,이 비헤이비어를 시트로 엽니다.
