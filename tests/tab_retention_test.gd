@@ -15,7 +15,9 @@
 #     back and lands there rather than on the sheet in front of the reader.
 #  5. The vocabulary is kept when the sources match: the registry is not rebuilt and the definition
 #     objects on the other side of the switch are the same objects.
-#  6. Selection and scroll come back exactly as they were left.
+#  6. The code panel's output is kept against the same revision - a switch back shows it without
+#     compiling, and an edit makes it stale.
+#  7. Selection and scroll come back exactly as they were left.
 @tool
 class_name TabRetentionTest
 extends RefCounted
@@ -29,6 +31,7 @@ static func run() -> bool:
 	all_passed = _run_stamp_rebuilds() and all_passed
 	all_passed = _run_undo_survives() and all_passed
 	all_passed = _run_registry_kept() and all_passed
+	all_passed = _run_code_panel_cached() and all_passed
 	all_passed = _run_selection_and_scroll() and all_passed
 	return all_passed
 
@@ -192,7 +195,38 @@ static func _run_registry_kept() -> bool:
 	return all_passed
 
 
-# ── 6. Selection and scroll come back as they were ───────────────────────────
+# ── 6. The code panel's output is kept against the same revision ─────────────
+
+
+static func _run_code_panel_cached() -> bool:
+	var all_passed: bool = true
+	var dock: EventSheetDock = _dock()
+	dock.setup(_sheet("first"))
+	dock._open_sheet_in_tab(_sheet("second"), "")
+	dock._activate_tab(0)
+	dock._toggle_code_panel()
+	dock._refresh_code_panel()
+	var shown: String = dock._code_edit.text
+	all_passed = _check("the panel compiled something", shown.is_empty(), false) and all_passed
+	all_passed = _check("and the tab kept that compile",
+		str(dock._tab_state.cached_code().get("text", "")), shown) and all_passed
+	dock._activate_tab(1)
+	dock._activate_tab(0)
+	all_passed = _check("the switch back shows the same output without compiling again",
+		dock._code_edit.text, shown) and all_passed
+	all_passed = _check("which is the kept one",
+		str(dock._tab_state.cached_code().get("text", "")), shown) and all_passed
+	var edited: bool = dock._perform_undoable_sheet_edit("Add hp", func() -> bool:
+		dock._current_sheet.variables["hp"] = {"type": "int", "default": "3"}
+		return true)
+	all_passed = _check("the edit went through the funnel", edited, true) and all_passed
+	all_passed = _check("an edit makes the kept output stale, so the panel compiles again",
+		dock._code_edit.text.contains("hp"), true) and all_passed
+	dock.free()
+	return all_passed
+
+
+# ── 7. Selection and scroll come back as they were ───────────────────────────
 
 
 static func _run_selection_and_scroll() -> bool:
