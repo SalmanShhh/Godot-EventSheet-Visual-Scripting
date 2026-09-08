@@ -117,6 +117,27 @@ static func _band_leads(view: EventSheetViewport, title: String) -> PackedString
 	return leads
 
 
+## The ACTION lane of the trigger row whose name leads with these words - what the band says about
+## when that trigger happens.
+static func _trigger_answer(view: EventSheetViewport, name_words: String) -> String:
+	var bar: EventRowData = _band(view, "Verbs")
+	if bar == null:
+		return ""
+	for child: EventRowData in bar.children:
+		view._row_builder._ensure_event_spans(child)
+		var names: PackedStringArray = PackedStringArray()
+		var answer: PackedStringArray = PackedStringArray()
+		for span: SemanticSpan in child.spans:
+			var meta: Variant = span.metadata
+			if meta is Dictionary and str((meta as Dictionary).get("lane", "")) == "action":
+				answer.append(span.text)
+			else:
+				names.append(span.text)
+		if " ".join(names).contains(name_words):
+			return " ".join(answer).strip_edges()
+	return ""
+
+
 static func _count_containing(texts: PackedStringArray, needle: String) -> int:
 	var seen: int = 0
 	for text: String in texts:
@@ -236,7 +257,12 @@ static func _spring_opens_the_same_way() -> bool:
 			verbs[0] if not verbs.is_empty() else "", "ƒ Spring spring name to target action"],
 		["and its triggers close it",
 			verbs[verbs.size() - 1] if not verbs.is_empty() else "",
-			"➜ On Spring Started text"]
+			"➜ On Spring Started text"],
+		# A signal declaration says what a trigger is CALLED and nothing at all about when it
+		# happens, so the band reads that off this file's own rows instead.
+		["a trigger says which of the pack's verbs fire it",
+			_trigger_answer(view, "On Spring Started"),
+			"emits spring_started fired by Spring To · Spring Color"]
 	])
 	view.free()
 	return passed
