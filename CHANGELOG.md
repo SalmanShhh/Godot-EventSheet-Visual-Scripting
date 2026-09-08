@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added: the object's variables are Inspector rows
+
+- **"Instance variables · N" is a band with rows under it, not a button.** Selecting a node whose
+  script is a sheet used to show a button and a sentence listing the variables that were NOT in the
+  Inspector; the Inspector now carries the variables themselves - one row per declared `var` /
+  `const`, with the name, the type in the sheet's own plain words ("number", "table", "list of
+  text"), the initial value, and a pencil that opens the sheet on the line that declares it.
+  `const` declarations and `@onready` ones are rows too, because they are values a reader comes to
+  the object looking for.
+- **The rows open instantly.** They are the same light scan of the script's own text that printed
+  the count before, so a selection still costs no compile and no sheet open - the object popup's
+  census is not needed to list variables, and it keeps its job for the canvas click.
+- **Typing an initial value writes the declaration.** The value goes through the sheet's own undo
+  funnel, the one its variables table writes through, so the line that lands is the line the table
+  would have written, one Ctrl+Z takes it back, and every other byte of the file is untouched. A
+  declaration written in the inferred spelling (`var mode := "idle"`) is rewritten in that same
+  spelling, source text and all.
+- **"+ Add instance variable" opens the sheet's Add variable dialog**, so a variable born in the
+  Inspector carries every field one born on the sheet does.
+
 ### Added: every showcase describes itself on the Start page, and a platformer that pathfinds
 
 - **A showcase card's line comes from the showcase.** The Start page has always walked

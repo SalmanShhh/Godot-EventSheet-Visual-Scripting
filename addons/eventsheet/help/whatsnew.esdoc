@@ -6,6 +6,50 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Performance: a tab keeps its reading
+
+- **Switching between two open sheets builds nothing.** A switch used to be a full load - every row
+  rebuilt through the reading layers, the vocabulary rebuilt from the sheet's providers and the
+  addon folder, the undo log cleared, the generated-code panel recompiled - so two sheets open side
+  by side cost a reading on every glance between them. Each tab now keeps its own: the rows and
+  their layout, the scroll, the selection, the folds, the lane split, its log of edits and the code
+  the panel showed. On a behaviour pack of 1,149 rows a switch measured 5.86 and 5.90 seconds before,
+  and 87 and 64 ms after.
+- **Rows are built again only when the sheet changed.** Every tab carries a stamp: an edit revision
+  bumped by the one refresh every sheet mutation ends with, and the modification time of the file it
+  is stored in, read from disk at switch time. Either moving rebuilds the tab once - and only once.
+- **The vocabulary is kept unless its sources moved.** The ACE registry is rebuilt when the sheet
+  lists different provider scripts, or when the addon fleet, the bridge's registrations, the taught
+  verbs or an annotated autoload changed; definitions are immutable and shared across tabs already,
+  so keeping one is keeping a list of sources, never a second copy of a descriptor.
+- **Undo survives a switch.** The log is no longer cleared when you look at another sheet. Every
+  edit is tagged with the tab it was made on, so an undo of an edit made elsewhere brings that tab
+  back and lands there instead of over the sheet in front of you, and the History panel shows the
+  steps the tab on screen was edited by rather than a merged list of every tab's.
+- **The status line stopped saying \"Loaded:\" on a switch**, because a switch is not a load. It says
+  nothing at all; a file that changed on disk behind a tab rebuilds it once and says
+  \"Reloaded: changed on disk\".
+
+### Added: the object's variables are Inspector rows
+
+- **\"Instance variables · N\" is a band with rows under it, not a button.** Selecting a node whose
+  script is a sheet used to show a button and a sentence listing the variables that were NOT in the
+  Inspector; the Inspector now carries the variables themselves - one row per declared `var` /
+  `const`, with the name, the type in the sheet's own plain words (\"number\", \"table\", \"list of
+  text\"), the initial value, and a pencil that opens the sheet on the line that declares it.
+  `const` declarations and `@onready` ones are rows too, because they are values a reader comes to
+  the object looking for.
+- **The rows open instantly.** They are the same light scan of the script's own text that printed
+  the count before, so a selection still costs no compile and no sheet open - the object popup's
+  census is not needed to list variables, and it keeps its job for the canvas click.
+- **Typing an initial value writes the declaration.** The value goes through the sheet's own undo
+  funnel, the one its variables table writes through, so the line that lands is the line the table
+  would have written, one Ctrl+Z takes it back, and every other byte of the file is untouched. A
+  declaration written in the inferred spelling (`var mode := \"idle\"`) is rewritten in that same
+  spelling, source text and all.
+- **\"+ Add instance variable\" opens the sheet's Add variable dialog**, so a variable born in the
+  Inspector carries every field one born on the sheet does.
+
 ### Added: every showcase describes itself on the Start page, and a platformer that pathfinds
 
 - **A showcase card's line comes from the showcase.** The Start page has always walked
@@ -29,6 +73,68 @@ What changed in the build you have installed (v0.18.0), in the words the release
   own; the pathfinder steers the sibling Platformer Movement through its `ai_move_axis` seam, which
   is why it accelerates, jumps the gap and climbs both ledges under the rules the Player plays by.
   The drift gate reads `showcases=29 drifted=0`.
+
+### Added: the words grew from nouns to sentences
+
+- **The Words page has a preset row.** Menu > Tools > Words now opens on one dropdown that sets the
+  whole vocabulary at once: **Godot words** (the engine's own nouns and verbs), **Familiar words**
+  (the nouns table below it - the same thing View > Familiar Words has always switched), and
+  **Event-sheet-editor words** (those nouns *and* a handful of verbs). A fourth reading, *custom*,
+  is what the row says when the switches and the words you typed do not add up to one of the three;
+  it is a reading rather than a thing to pick. The row follows the switches rather than remembering
+  a choice of its own, so flipping Familiar Words from the View menu shows up here as the
+  vocabulary it actually produced.
+- **A handful of verbs read in the other editor's sentence.** With the third preset on, a row says
+  *Create object* where Godot says *Spawn a copy of*, *is overlapping in family* where it says *is
+  touching*, *Set disabled* where a hand-written `set_process(false)` reads *Set Every tick (draw)
+  deactivated*, and a loop over a group reads *For each item in family \"enemies\"*. The picker's rows
+  carry both names at once - *Create object · Spawn A Copy* - so the Godot verb never disappears
+  from the place you pick it.
+- **Nothing is hidden and nothing moves.** An alias is display text: the ace_id, the codegen
+  template, the emitted GDScript and every stored byte are untouched, the shipped wording is always
+  the \"off\" side, and the generated-code panel and the tooltips keep Godot's spelling whichever
+  vocabulary is on. Off is the default, and with it off the words seam hands a row back exactly the
+  text it was given - the reading gate is byte-identical either side of the change.
+- **The search answers to either name, whichever vocabulary is on.** Type *create object* and the
+  picker offers Spawn A Copy; type *overlapping* and it offers Is Touching Group. You never have to
+  know which words the editor is currently in to find the row you mean.
+- **The alias table is a drop-in CSV, not code.** `addons/eventsheet/words/verb_words.csv` ships the
+  words the plugin knows, in the same shape the nine translation files use - one row per alias, with
+  the key, the word, what it names, the shipped name and the shipped row's opening words. Any CSV
+  under `res://eventsheet_words/` is merged over it, so a team can re-word one alias, or add their
+  own, without touching a script and without losing it to a plugin update. A suite gate holds every
+  key to a shipped verb in the registry or a reading the editor composes, and every \"off\" side to
+  the shipped wording character for character.
+
+### Changed: the rail rests, slides and gets out of the way
+
+- **The left rail is a chain of splitters, not a stack of panels.** Open Sheets, Objects, Functions,
+  Anatomy and the Picker preview sat in one VBoxContainer, each carrying a fixed minimum size, and
+  the only draggable edge in the workspace was the rail-to-canvas grabber - which the editor theme
+  only draws while the pointer is over it. Every boundary drags now, every grabber is drawn rather
+  than revealed on hover, and no panel brings a minimum width of its own: the rail can be dragged
+  to a sliver or out to half the workspace, and the width is remembered per project.
+- **The rail rests at two panels.** Open Sheets and Objects are open; Functions, Anatomy and the
+  Picker preview are folds, closed until you want them. A panel with nothing to put in it is not
+  there at all: Anatomy appears for a behaviour pack, the Picker preview while the picker is open.
+  The Anatomy list stopped drawing organs that count to zero - \"Triggers · 0\" is a counter, not a
+  fact about the behaviour, and a column of them is what made the rail a wall.
+- **Every panel minimises, and so does the rail.** A button at the right edge of each header slides
+  that panel off: it takes no room, not even a header, and its name waits in a tab at the foot of
+  the rail. Dragging a panel's divider up past its own header does the same. The chevron above the
+  column tucks the WHOLE rail into a narrow edge strip with the panel names reading down it, and the
+  sheet takes the width; dragging the rail's grabber into the canvas edge does the same. Nothing is
+  ever closed - it is off screen, the tab says what is there, and View ▸ Panels lists them. Every
+  fold, size and tucked panel is remembered per project.
+- **Open Sheets groups duplicates.** Eight tabs on one behaviour pack used to be eight identical
+  lines; they are one line with a count now (\"Flash ×8\"), and clicking it walks the tabs it stands
+  for. An unsaved sheet has no path to be the same as, so it never groups.
+- **The Properties bar arrives with the selection.** With nothing selected it was a 280 px column
+  carrying one sentence telling you to select something. It is its splitter handle now, so the
+  canvas has the width until there is something to edit, and it opens at the width you left it at on
+  the first click of a condition, action, object or group - the way the Inspector fills when a node
+  is picked. The sentence is said once, in the status bar. Dragging the bar into the right edge
+  tucks it away behind a chevron, like the rail.
 
 ## 0.18.0 - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
