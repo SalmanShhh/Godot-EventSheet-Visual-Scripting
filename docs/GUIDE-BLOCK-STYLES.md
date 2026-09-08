@@ -35,6 +35,11 @@ readable line:
   clicking that chip walks the blocks that stayed code, one per click.
 - **Folders** hang under it: `Instance variables`, one per `@export_group`, `Triggers this pack
   fires`, and `Global variables used here` on a sheet that touches a project global.
+- **A behavior pack opened to READ swaps those for four bands** on the sheet itself: `Settings`
+  (its `@export` knobs) and `Verbs` (every published function as its own block, then the triggers
+  it fires) open, `How it works` (the lifecycle and tick events, and the Helpers folder) and
+  `Internal state` (the private variables, constants and script blocks) folded. The file is not
+  reordered - only the reading is.
 - **The Input head bar** appears on a file that names any control - `this script uses 4 actions -
   jump, move left, move right, fire · Project ▸ Input Map` - with each control's real bindings
   under it, and a ⚠ on one the Input Map does not have.

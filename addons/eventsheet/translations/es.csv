@@ -7233,3 +7233,11 @@ Open the base script as a sheet.,Abrir el script base como hoja.
 1 variable,1 variable
 %d variables,%d variables
 on %s,en %s
+Verbs,Verbos
+1 verb,1 verbo
+%d verbs,%d verbos
+How it works,Cómo funciona
+Start ticking,Iniciar el tick
+Stop ticking,Detener el tick
+Start physics ticking,Iniciar el tick de física
+Stop physics ticking,Detener el tick de física

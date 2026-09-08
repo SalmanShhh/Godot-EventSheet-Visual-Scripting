@@ -7233,3 +7233,11 @@ Open the base script as a sheet.,ベーススクリプトをシートとして�
 1 variable,変数 1 個
 %d variables,変数 %d 個
 on %s,%s に
+Verbs,動詞
+1 verb,動詞 1 件
+%d verbs,動詞 %d 件
+How it works,仕組み
+Start ticking,ティック開始
+Stop ticking,ティック停止
+Start physics ticking,物理ティック開始
+Stop physics ticking,物理ティック停止

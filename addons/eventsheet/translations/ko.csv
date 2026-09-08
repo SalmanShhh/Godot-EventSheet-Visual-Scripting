@@ -7233,3 +7233,11 @@ Open the base script as a sheet.,기본 스크립트를 시트로 열기.
 1 variable,변수 1개
 %d variables,변수 %d개
 on %s,%s 에
+Verbs,동사
+1 verb,동사 1개
+%d verbs,동사 %d개
+How it works,작동 방식
+Start ticking,틱 시작
+Stop ticking,틱 중지
+Start physics ticking,물리 틱 시작
+Stop physics ticking,물리 틱 중지

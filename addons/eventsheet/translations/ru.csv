@@ -7233,3 +7233,11 @@ Open the base script as a sheet.,Открыть базовый скрипт ка
 1 variable,1 переменная
 %d variables,переменных: %d
 on %s,на %s
+Verbs,Глаголы
+1 verb,1 глагол
+%d verbs,%d глаголов
+How it works,Как это работает
+Start ticking,Запустить тик
+Stop ticking,Остановить тик
+Start physics ticking,Запустить физический тик
+Stop physics ticking,Остановить физический тик

@@ -3742,6 +3742,12 @@ func _verb_trigger_object(event_function: EventFunction) -> String:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_TEST)
 		EventSheetToolFiles.KIND_COMMAND_TOOL:
 			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_COMMAND_TOOL)
+	# A pack's PUBLISHED verb is not a function this file calls itself: it is the pack's own
+	# vocabulary, listed under the pack's own Verbs bar, so the object column has nobody left to
+	# name - the bar above it already said whose verbs these are, and the ƒ says what they are. Its
+	# unpublished helpers stay under Functions, because that is exactly what they are.
+	if event_function.expose_as_ace and _is_read_only_pack():
+		return ""
 	return EventSheetL10n.translate("Functions")
 
 

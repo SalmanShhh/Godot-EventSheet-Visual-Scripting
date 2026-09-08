@@ -7233,3 +7233,11 @@ Open the base script as a sheet.,将基类脚本作为事件表打开。
 1 variable,1 个变量
 %d variables,%d 个变量
 on %s,在 %s
+Verbs,动词
+1 verb,1 个动词
+%d verbs,%d 个动词
+How it works,工作原理
+Start ticking,开始每帧运行
+Stop ticking,停止每帧运行
+Start physics ticking,开始物理每帧运行
+Stop physics ticking,停止物理每帧运行

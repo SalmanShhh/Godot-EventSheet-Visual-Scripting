@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Changed: a behavior pack opens on its verbs
+
+- **Four bands instead of a wall.** A pack opened to read used to open on its implementation -
+  eleven variables, a script block and the loop that counts a timer down, with the two verbs you
+  clicked the pack for last of all. It now rests in `Settings` (its `@export` knobs) and `Verbs`
+  (every published function as its own block, then the triggers it fires), both open, over
+  `How it works` (the lifecycle and tick events, and the Helpers folder) and `Internal state` (the
+  private variables, the constants and the script blocks), both folded.
+- **A verb reads as the verb the picker offers.** `ƒ Flash  seconds  action`, not `ƒ On Flash` - a
+  published verb is not a trigger, and the kind word beside it says whether it acts,
+  answers a question or hands a value back. An authored
+  display sentence is read whole (`ƒ Blink  pattern  for  seconds  s`) rather than repeated as
+  input chips.
+- **The plumbing reads in sheet words.** `set_process(true)` / `set_process(false)` are
+  **Start ticking** and **Stop ticking**, with the physics tick named, and the host guard folds onto
+  the tick's own line - `⟳ Every tick (draw)  host is valid`. Inside a pack the System object and
+  the class the file is spelled with both read as the name the picker offers the pack by, while the
+  node the pack rides keeps its own name, `host`.
+- **All of it is a reading.** The file keeps its own order for the code view and for what the
+  compiler emits, both packs re-emit byte for byte, a file that draws its own structure with
+  `#region` fences turns the reading off, and a pack you are authoring rather than reading is
+  untouched.
+
 ### Added: breathing room is a theme setting - Compact, Comfortable, Spacious
 
 - **Six numbers decide how much room a row gets, and all six are tokens now.** Row height, the air
