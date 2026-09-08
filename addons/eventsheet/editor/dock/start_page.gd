@@ -256,7 +256,11 @@ static func pitch_from_about(about: String) -> String:
 	text = text.substr(0, cut).strip_edges()
 	if text.is_empty():
 		return ""
-	return text if text.ends_with(".") else "%s." % text
+	if not text.ends_with("."):
+		text = "%s." % text
+	# The clause was the middle of a sentence and the card is a line of its own, so it gets a
+	# sentence's capital to sit beside the pitches written here, which have always had one.
+	return text.substr(0, 1).to_upper() + text.substr(1)
 
 
 ## The same text without its display marks. A card is a Button - it shows the characters it is
