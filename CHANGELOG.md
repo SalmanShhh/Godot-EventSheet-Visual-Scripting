@@ -1,5 +1,31 @@
 # Changelog
 
+## [Unreleased]
+
+### Added: every showcase describes itself on the Start page, and a platformer that pathfinds
+
+- **A showcase card's line comes from the showcase.** The Start page has always walked
+  `demo/showcase/` for its folders, but only fifteen of them had a genre and a pitch written on the
+  page; the rest read "Showcase - A playable example you can open and take apart." Every folder now
+  gets its line from the about comment its own sheet opens with, cut down to the first thing it
+  says - the first sentence, the colon that introduces a list, or the "and" that opens a second
+  clause, whichever comes first. Fourteen pitches written for the page are still there and still
+  win, because they read better on a card than the sheet's own opening clause; each retires the day
+  its showcase says it as well.
+- **The genre is the one fact the page still writes down**, because nothing in a showcase says
+  which shelf a reader looks on for it - and the suite now pins that table against the folders on
+  disk in both directions: a showcase with no shelf fails by name, and a shelf whose folder is gone
+  fails by name. Path Chase's shelf is corrected from "Top-down" to "Platformer", which is what it
+  has always been.
+- **New showcase: Platformer Pathfinding** (`demo/showcase/platformer_pathfinding/`), the
+  pathfinding pack's plain case beside Path Chase's feature tour. A side-view level with one gap
+  and two ledges, a keyboard Player on the top ledge, and a Chaser wired in three actions: build
+  the nav graph from the TileMapLayer, draw it, and Find Path To Node the Player once - that action
+  keeps following, so there is no repath timer to write. The Chaser carries no movement code of its
+  own; the pathfinder steers the sibling Platformer Movement through its `ai_move_axis` seam, which
+  is why it accelerates, jumps the gap and climbs both ledges under the rules the Player plays by.
+  The drift gate reads `showcases=29 drifted=0`.
+
 ## [0.18.0] - 2026-09-06 - Refactor Anything, Render Anything & Feel Everything
 
 ### Maintenance: what a commit from this wave carries
