@@ -268,8 +268,10 @@ func _on_density_preset_selected(index: int) -> void:
 	)
 	(loaded as EventSheetDensityStyle).apply_to(style)
 	_dock._current_sheet.editor_style = style
-	_active_theme_style = style
-	_publish_active_style()
+	# Through the same binding swap a tab switch uses, so the style that just stopped being active
+	# lets go of its `changed` signal and the new one takes it up. Setting the field by hand here
+	# left the old style connected and the new one deaf to an edit on disk.
+	_sync_active_theme_binding()
 	_dock._refresh_after_edit()
 	_dock._mark_dirty("Row density: %s." % EventSheetDensityPresets._humanize(path.get_file()))
 	_populate_density_menu()

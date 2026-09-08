@@ -28,6 +28,7 @@ static func run() -> bool:
 	all_passed = _pin_starters() and all_passed
 	all_passed = _pin_tokens_reach_the_layout() and all_passed
 	all_passed = _pin_card_geometry() and all_passed
+	all_passed = _pin_the_menu_applies_one() and all_passed
 	return all_passed
 
 
@@ -139,6 +140,50 @@ static func _pin_card_geometry() -> bool:
 	]) and passed
 	editor.free()
 	return passed
+
+
+## Picking a density in View > Sheet theme > Density lands on THIS sheet, keeps the theme's colours,
+## and moves the tick. The sheet starts on a bundled preset with colours of its own, because the
+## whole point of copying the numbers onto a duplicate is that those colours survive.
+static func _pin_the_menu_applies_one() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sheet := EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.editor_style = load("res://addons/eventsheet/themes/mockup_slate_theme.tres")
+	dock.setup(sheet)
+	var manager: EventSheetThemeManager = dock._theme_manager
+	# The dock's own submenu, the one View opens - not a second menu built for the test, because the
+	# Density submenu is a CHILD of that one and there is only ever the one of it.
+	manager._populate_theme_menu()
+	var density_menu: PopupMenu = dock.find_child("EventSheetSheetDensityMenu", true, false) as PopupMenu
+	var slate_selection: Color = (load("res://addons/eventsheet/themes/mockup_slate_theme.tres") as EventSheetEditorStyle).get_event_style().selection_fill_color
+	var spacious: int = _menu_index(density_menu, "Spacious")
+	manager._on_density_preset_selected(spacious)
+	var applied: EventSheetEventStyle = sheet.editor_style.get_event_style()
+	var passed: bool = SUPPORT.pins(PREFIX, [
+		["the menu found Spacious", spacious >= 0, true],
+		["picking it puts the row height on this sheet", applied.minimum_row_height, 36],
+		["and the indent, the gap and the card with it",
+			[applied.sub_event_indent, applied.event_block_gap, applied.event_card_border_width], [32, 14, 1]],
+		["the theme's own colours are untouched", applied.selection_fill_color, slate_selection],
+		["the starter on disk was not edited in place",
+			(load("res://addons/eventsheet/themes/mockup_slate_theme.tres") as EventSheetEditorStyle).get_event_style().minimum_row_height,
+			EventSheetPalette.ROW_HEIGHT],
+		["and the tick moved to it", density_menu.is_item_checked(spacious), true],
+	])
+	dock.free()
+	return passed
+
+
+## The index of a menu entry by its text, or -1.
+static func _menu_index(menu: PopupMenu, text: String) -> int:
+	if menu == null:
+		return -1
+	for index: int in menu.item_count:
+		if menu.get_item_text(index) == text:
+			return index
+	return -1
 
 
 ## An event whose conditions are OR'd, so it is drawn on several rows and framed once.
