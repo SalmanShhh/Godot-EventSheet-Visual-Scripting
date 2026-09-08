@@ -9,8 +9,12 @@ build the graph from your `TileMapLayer` once, and call **Find Path To** - the p
 derives jump reach from the movement pack's real physics and drives it through its
 `ai_move_axis` seam, so the agent moves under exactly the same rules the player does.
 
-The bundled **Path Chase** showcase (`demo/showcase/path_chase/`) is the reference setup: a
-keyboard Player, a chasing agent, and the debug path line visible.
+Two bundled showcases. **Platformer Pathfinding**
+(`demo/showcase/platformer_pathfinding/`) is the plain case and the one to copy: a level with one
+gap and two ledges, a keyboard Player, and a Chaser wired in three actions - build the graph, draw
+it, Find Path To Node the Player once. **Path Chase** (`demo/showcase/path_chase/`) is the same
+setup with everything else the pack can do turned on: portals, a deadly hazard, a moving platform
+and a bridge that appears and vanishes.
 
 ---
 

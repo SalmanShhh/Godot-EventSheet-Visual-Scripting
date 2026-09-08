@@ -1,0 +1,87 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://demo/showcase/platformer_pathfinding/platformer_pathfinding.gd" id="1_ob8wl"]
+[ext_resource type="Script" path="res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd" id="2_0atud"]
+[ext_resource type="Script" path="res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd" id="3_ygytl"]
+
+[sub_resource type="Image" id="Image_tus51"]
+data = {
+"data": PackedByteArray("jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP+Mk6j/jJOo/4yTqP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9rcoT/a3KE/2tyhP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/0xRYP9MUWD/TFFg/w=="),
+"format": "RGBA8",
+"height": 32,
+"mipmaps": false,
+"width": 32
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_ltr30"]
+image = SubResource("Image_tus51")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_n0ja2"]
+texture = SubResource("ImageTexture_ltr30")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSet" id="TileSet_83luo"]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_n0ja2")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yhhuo"]
+size = Vector2(22, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ai5d4"]
+size = Vector2(22, 28)
+
+[node name="PlatformerPathfindingDemo" type="Node2D"]
+script = ExtResource("1_ob8wl")
+
+[node name="Level" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAABAA8AAAAAAAAAAAACAA8AAAAAAAAAAAADAA8AAAAAAAAAAAAEAA8AAAAAAAAAAAAFAA8AAAAAAAAAAAAGAA8AAAAAAAAAAAAHAA8AAAAAAAAAAAAIAA8AAAAAAAAAAAAJAA8AAAAAAAAAAAAKAA8AAAAAAAAAAAALABEAAAAAAAAAAAAMABEAAAAAAAAAAAANABEAAAAAAAAAAAAOAA8AAAAAAAAAAAAPAA8AAAAAAAAAAAAQAA8AAAAAAAAAAAARAA8AAAAAAAAAAAASAA8AAAAAAAAAAAATAA8AAAAAAAAAAAAUAA8AAAAAAAAAAAAVAA8AAAAAAAAAAAAXAA0AAAAAAAAAAAAYAA0AAAAAAAAAAAAZAA0AAAAAAAAAAAAaAA0AAAAAAAAAAAAcAAsAAAAAAAAAAAAdAAsAAAAAAAAAAAAeAAsAAAAAAAAAAAAfAAsAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA8AAAAAAAAAAAAgAAYAAAAAAAAAAAAgAAcAAAAAAAAAAAAgAAgAAAAAAAAAAAAgAAkAAAAAAAAAAAAgAAoAAAAAAAAAAAAgAAsAAAAAAAAAAAAgAAwAAAAAAAAAAAAgAA0AAAAAAAAAAAAgAA4AAAAAAAAAAAAgAA8AAAAAAAAAAAA=")
+tile_set = SubResource("TileSet_83luo")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(976, 338)
+
+[node name="Collider" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_yhhuo")
+
+[node name="Visual" type="ColorRect" parent="Player"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.35, 0.65, 1, 1)
+
+[node name="Movement" type="Node" parent="Player"]
+script = ExtResource("2_0atud")
+
+[node name="Chaser" type="CharacterBody2D" parent="."]
+position = Vector2(80, 466)
+
+[node name="Collider" type="CollisionShape2D" parent="Chaser"]
+shape = SubResource("RectangleShape2D_ai5d4")
+
+[node name="Visual" type="ColorRect" parent="Chaser"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(1, 0.35, 0.35, 1)
+
+[node name="Movement" type="Node" parent="Chaser"]
+script = ExtResource("2_0atud")
+
+[node name="Pathfinding" type="Node" parent="Chaser"]
+script = ExtResource("3_ygytl")
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 24.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 18
+text = "Arrows move · Space jumps · the red Chaser jumps the gap and climbs both ledges to reach you
+Green line = the route it is following. Stand somewhere else and watch it re-route by itself."

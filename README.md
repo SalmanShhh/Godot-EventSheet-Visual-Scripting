@@ -129,7 +129,7 @@ Every release has full notes in [CHANGELOG.md](CHANGELOG.md); the one-line theme
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, the Manual, MCP server |
 | `eventsheet_addons/` | Zero-config ACE addons + the 138 behavior packs |
-| `demo/` | 28 showcases (each a `.gd` that is BOTH the sheet and the compiled script, with a scene where it is playable) and the bundled themes |
+| `demo/` | 29 showcases (each a `.gd` that is BOTH the sheet and the compiled script, with a scene where it is playable) and the bundled themes |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (migration, recipes, MCP, glossary, uninstall) |
 

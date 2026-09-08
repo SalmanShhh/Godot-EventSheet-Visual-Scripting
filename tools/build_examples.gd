@@ -69,6 +69,7 @@ func _init() -> void:
 	all_ok = _build_fps_arena() and all_ok
 	all_ok = _build_input_rebind() and all_ok
 	all_ok = _build_path_chase() and all_ok
+	all_ok = _build_platformer_pathfinding() and all_ok
 	all_ok = _build_draw_lab() and all_ok
 	all_ok = _build_raycast_lab() and all_ok
 	all_ok = _build_raycast_lab_3d() and all_ok
@@ -2372,6 +2373,122 @@ func _binding_row(label_name: String, label_text: String, button_name: String) -
 	button.text = "Rebind"
 	row.add_child(button)
 	return row
+
+
+# ── Platformer Pathfinding (the plain chaser) ──────────────────────
+
+
+## The pathfinding pack's PLAIN case, beside Path Chase's feature tour: no portals, no hazards, no
+## elevator and no toggling bridge, just a side-view level with one gap and two ledges, a keyboard
+## Player on the top ledge, and a Chaser that jumps the gap and climbs to reach it. Three actions do
+## all of it - build the graph from the TileMapLayer, draw it, and Find Path To Node the Player ONCE,
+## because that action keeps following. The Chaser owns no movement code: the pathfinder steers the
+## sibling Platformer Movement through its ai_move_axis seam, so the chase runs under exactly the
+## rules the Player plays by.
+func _build_platformer_pathfinding() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "PlatformerPathfindingDemo"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Platformer Pathfinding[/b] - the smallest chaser the pack can make. On ready the graph is built from the TileMapLayer and Find Path To Node is called ONCE: the follow re-routes itself from then on, so there is no repath timer to write. The Chaser carries no movement code of its own - Platformer Pathfinding steers the sibling Platformer Movement through its ai_move_axis seam, which is why it accelerates, jumps the 3-tile gap and climbs both ledges under exactly the rules you play by. Green line = the route it is walking."
+	sheet.events.append(about)
+
+	# The whole pack, in one event: the graph, the debug line, and the follow that never stops.
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"
+	setup.trigger_id = "OnReady"
+	setup.actions.append(_action("PlatformerPathfinding", "method:build_nav_graph",
+		"{target}.build_nav_graph({tilemap})",
+		{"target": "$Chaser/Pathfinding", "tilemap": "$Level"}))
+	setup.actions.append(_action("PlatformerPathfinding", "method:set_nav_debug_draw",
+		"{target}.set_nav_debug_draw({enabled})",
+		{"target": "$Chaser/Pathfinding", "enabled": "true"}))
+	setup.actions.append(_action("PlatformerPathfinding", "method:find_path_to_node",
+		"{on_node}.find_path_to_node({target}, \"{mode}\")",
+		{"on_node": "$Chaser/Pathfinding", "target": "$Player", "mode": "nearest"}))
+	sheet.events.append(setup)
+
+	# The Player's jump, one event per edge - the movement pack reads ui_left / ui_right itself, and
+	# the release is what makes the jump variable.
+	var jump_press: EventRow = EventRow.new()
+	jump_press.trigger_provider_id = "Core"
+	jump_press.trigger_id = "OnPhysicsProcess"
+	jump_press.conditions.append(_condition("Core", "IsActionJustPressed",
+		"Input.is_action_just_pressed(&{action})", {"action": "\"ui_accept\""}))
+	jump_press.actions.append(_action("PlatformerMovement", "method:jump", "{target}.jump()",
+		{"target": "$Player/Movement"}))
+	sheet.events.append(jump_press)
+
+	var jump_release: EventRow = EventRow.new()
+	jump_release.trigger_provider_id = "Core"
+	jump_release.trigger_id = "OnPhysicsProcess"
+	jump_release.conditions.append(_condition("Core", "IsActionJustReleased",
+		"Input.is_action_just_released(&{action})", {"action": "\"ui_accept\""}))
+	jump_release.actions.append(_action("PlatformerMovement", "method:jump_released",
+		"{target}.jump_released()", {"target": "$Player/Movement"}))
+	sheet.events.append(jump_release)
+
+	if not _compile(sheet, "res://demo/showcase/platformer_pathfinding/platformer_pathfinding.tres",
+			"res://demo/showcase/platformer_pathfinding/platformer_pathfinding.gd"):
+		return false
+
+	# ── The scene ──
+	var root: Node2D = Node2D.new()
+	root.name = "PlatformerPathfindingDemo"
+	root.set_script(load("res://demo/showcase/platformer_pathfinding/platformer_pathfinding.gd"))
+
+	# 32px tiles. Left ground, a 3-cell gap with a shallow pit under it (fall in and you can climb
+	# out), right ground, then two ledges stepping up to the Player. Nothing overhangs anything, so
+	# every route the pathfinder can find is one a body can actually walk.
+	var level: TileMapLayer = TileMapLayer.new()
+	level.name = "Level"
+	level.tile_set = _chase_tileset()
+	for x in range(1, 11):
+		level.set_cell(Vector2i(x, 15), 0, Vector2i.ZERO)
+	for x in range(11, 14):
+		level.set_cell(Vector2i(x, 17), 0, Vector2i.ZERO)
+	for x in range(14, 22):
+		level.set_cell(Vector2i(x, 15), 0, Vector2i.ZERO)
+	for x in range(23, 27):
+		level.set_cell(Vector2i(x, 13), 0, Vector2i.ZERO)
+	for x in range(28, 32):
+		level.set_cell(Vector2i(x, 11), 0, Vector2i.ZERO)
+	for wall_y in range(10, 16):
+		level.set_cell(Vector2i(0, wall_y), 0, Vector2i.ZERO)
+	for wall_y in range(6, 16):
+		level.set_cell(Vector2i(32, wall_y), 0, Vector2i.ZERO)
+	root.add_child(level)
+	level.owner = root
+
+	# The Player: arrows and Space, on the top ledge.
+	var player: CharacterBody2D = _chase_actor("Player", Vector2(976.0, 338.0), Color(0.35, 0.65, 1.0))
+	root.add_child(player)
+	_own_deep(player, root)
+	_attach_behavior(player, "Movement", PLATFORMER_MOVEMENT, root)
+
+	# The Chaser: the same movement pack, plus the pathfinder that drives it.
+	var chaser: CharacterBody2D = _chase_actor("Chaser", Vector2(80.0, 466.0), Color(1.0, 0.35, 0.35))
+	root.add_child(chaser)
+	_own_deep(chaser, root)
+	_attach_behavior(chaser, "Movement", PLATFORMER_MOVEMENT, root)
+	_attach_behavior(chaser, "Pathfinding", PLATFORMER_PATHFINDING, root)
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 16.0)
+	hud.add_theme_font_size_override("font_size", 18)
+	hud.text = "Arrows move · Space jumps · the red Chaser jumps the gap and climbs both ledges to reach you
+Green line = the route it is following. Stand somewhere else and watch it re-route by itself."
+	hud_layer.add_child(hud)
+	hud.owner = root
+
+	return _save_scene(root, "res://demo/showcase/platformer_pathfinding/platformer_pathfinding.tscn")
 
 
 # ── Draw Lab (Drawing Canvas feature tour) ──────────────────────────────────
