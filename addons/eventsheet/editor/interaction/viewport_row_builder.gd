@@ -2414,7 +2414,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			sheet, "object_behaviors",
 			"%s · %d" % [EventSheetL10n.translate("Behaviors"), behaviors.size()],
 			"%s -" % EventSheetL10n.translate("on this object"),
-			band["members"], band["chips"], true))
+			band["members"], band["chips"], true, band["chip_paths"]))
 	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# A RemoteTransform on this object drives a node that is NOT its child, which is the answer to
 	# "why does that thing follow me" and lives nowhere a reader of the script would find it. So it
@@ -2666,10 +2666,12 @@ func _behavior_kind_reading(sheet: EventSheetResource, behaviors: Array) -> Dict
 		var behavior: Dictionary = entry
 		var kind: String = str(behavior.get("name", ""))
 		if not by_kind.has(kind):
-			by_kind[kind] = {"order": [], "runs": {}, "count": 0}
+			by_kind[kind] = {"order": [], "runs": {}, "count": 0, "script": ""}
 			kind_order.append(kind)
 		var bucket: Dictionary = by_kind[kind]
 		bucket["count"] = int(bucket["count"]) + 1
+		if str(bucket["script"]).is_empty():
+			bucket["script"] = str(behavior.get("script", ""))
 		var settings: String = _behavior_settings_text(behavior)
 		var runs: Dictionary = bucket["runs"]
 		if not runs.has(settings):
@@ -2677,11 +2679,15 @@ func _behavior_kind_reading(sheet: EventSheetResource, behaviors: Array) -> Dict
 			(bucket["order"] as Array).append(settings)
 		(runs[settings] as Array).append(str(behavior.get("host", "")))
 	var chips: PackedStringArray = PackedStringArray()
+	# The sheet each chip opens, in the same order as the chips - "" for a kind whose scene line
+	# named no script, which is a chip that stays a word.
+	var chip_paths: PackedStringArray = PackedStringArray()
 	var members: Array[EventRowData] = []
 	for kind: Variant in kind_order:
 		var bucket: Dictionary = by_kind[kind]
 		var total: int = int(bucket["count"])
 		chips.append(str(kind) if total == 1 else "%s ×%d" % [str(kind), total])
+		chip_paths.append(str(bucket["script"]))
 		for settings: Variant in (bucket["order"] as Array):
 			var hosts: Array = (bucket["runs"] as Dictionary)[settings]
 			var detail: PackedStringArray = PackedStringArray()
@@ -2694,7 +2700,7 @@ func _behavior_kind_reading(sheet: EventSheetResource, behaviors: Array) -> Dict
 				sheet, "object_behavior_%s_%d" % [str(kind), members.size()],
 				str(kind) if hosts.size() == 1 else "%s ×%d" % [str(kind), hosts.size()],
 				" · ".join(detail)))
-	return {"chips": chips, "members": members}
+	return {"chips": chips, "chip_paths": chip_paths, "members": members}
 
 
 ## The nodes one line of the Behaviors band is about, as words: every one of them while they fit on
@@ -2853,7 +2859,8 @@ func _build_global_variables_folder(sheet: EventSheetResource, knobs: Array) -> 
 ## an editable sheet would open them, because there the knobs are what you came to edit.
 func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title: String, subtitle: String,
 		members: Array[EventRowData], chips: PackedStringArray = PackedStringArray(),
-		default_folded: bool = false) -> EventRowData:
+		default_folded: bool = false,
+		chip_paths: PackedStringArray = PackedStringArray()) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var row_data := EventRowData.new()
 	row_data.indent = 0
@@ -2879,9 +2886,18 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 		})
 	]
 	# The counts, as TEXT SPANS of the bar - the same chip a "reads as events" mark is, never a
-	# widget: a sheet row draws no controls.
-	for chip: String in chips:
-		row_data.spans.append(_pack_include_chip(chip, "head_group_chip"))
+	# widget: a sheet row draws no controls. A chip that names a kind of behavior carries that
+	# kind's own script, so clicking the word opens that behavior as a sheet - the same jump the
+	# Include bar makes, through the same span field.
+	for chip_index: int in chips.size():
+		var chip_span: SemanticSpan = _pack_include_chip(chips[chip_index], "head_group_chip")
+		var chip_path: String = str(chip_paths[chip_index]).strip_edges() \
+			if chip_index < chip_paths.size() else ""
+		if not chip_path.is_empty() and ResourceLoader.exists(chip_path):
+			(chip_span.metadata as Dictionary)["include_path"] = chip_path
+			(chip_span.metadata as Dictionary)["hover_note"] = EventSheetL10n.translate(
+				"Opens this behavior as a sheet.")
+		row_data.spans.append(chip_span)
 	return row_data
 
 

@@ -18,7 +18,8 @@ extends RefCounted
 #      each other is gone, and the comment row is the only copy;
 #   3. the quiet sheet at the head: a control the Input Map has not got leaves the Input bar's words
 #      entirely and becomes the amber state on the bar, with the sentence in the help strip;
-#   4. the Behaviors band, which says the KINDS and their counts on one folded line and opens into
+#   4. the Behaviors band, whose chips are doors into the packs they name, which says the KINDS
+#      and their counts on one folded line and opens into
 #      one line per kind with its settings and the nodes wearing it.
 #
 # Read off the shipped tree rather than a fixture, because the point of every one of these readings
@@ -121,7 +122,24 @@ static func _behaviors_count_by_kind() -> bool:
 			"Screen FX layer = 100",
 			"Sine ×8 movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7",
 		]))],
+		# A kind is a DOOR: the chip carries the pack's own script, so clicking the word opens
+		# that behavior as a sheet - the same jump the Include bar makes, through the same field.
+		["carousel Behaviors chips open their packs", _chip_doors(band),
+			"Spring ×10 -> spring_behavior.gd"],
 	])
+
+
+## The first chip of a band that names a file, as "<chip> -> <file>". One line rather than all of
+## them, because the pin is that a chip IS a door and which file it opens - not the pack list,
+## which the band words above already carry.
+static func _chip_doors(band: EventRowData) -> String:
+	for span: SemanticSpan in band.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var opens: String = str((span.metadata as Dictionary).get("include_path", ""))
+		if not opens.is_empty():
+			return "%s -> %s" % [span.text, opens.get_file()]
+	return ""
 
 
 # ── reading the shipped files ───────────────────────────────────────────────────────────────────

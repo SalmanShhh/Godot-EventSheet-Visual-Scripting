@@ -316,6 +316,9 @@ static func _read_scene_facts(path: String) -> Dictionary:
 			facts["behaviors"].append({
 				"name": behavior,
 				"node": str(node.get("name", "")),
+				# The pack's own script, so the band that names the kind can open that kind's sheet.
+				# Read from the scene line the behavior was recognised on, never guessed from the name.
+				"script": str(node.get("script", "")),
 				# The node the behavior is mounted ON, which is the thing a reader means by "which one
 				# has it". A `.tscn` writes the parent as a path from the root, and a behavior directly
 				# under the root writes `.` - so the leaf of that path is the name, and `.` is the root's.
