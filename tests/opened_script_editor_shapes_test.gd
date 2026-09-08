@@ -51,7 +51,7 @@ static func _test_helper_of() -> bool:
 	# The class name is the name band's and `@tool` is the tool band's, so the bar is left with
 	# the shape this file plays in the editor it belongs to.
 	ok = _check("the Include bar says whose helper this is",
-		_texts(_row_with_uid(view.get_flat_rows(), "pack_include_bar_")),
+		_texts(_row_with_uid(_all_rows(view), "pack_include_bar_")),
 		"⇥ | helper of | Dock | (event_sheet_dock.gd) · made with the dock | · opened_script_batch12_helper.gd | reads as events · 1 pattern ▸") and ok
 	ok = _check("the constructor that only stores the reference is folded into the bar",
 		_has_reading(readings, "On Init"), false) and ok
@@ -108,7 +108,7 @@ static func _test_shared_store() -> bool:
 	var view: EventSheetViewport = _open(SHARED_PATH)
 	var readings: PackedStringArray = _readings(view)
 	ok = _check("the Include bar says nothing of this class is ever made",
-		_texts(_row_with_uid(view.get_flat_rows(), "pack_include_bar_")),
+		_texts(_row_with_uid(_all_rows(view), "pack_include_bar_")),
 		"⇥ | shared store | · nothing of its own is ever made | · opened_script_batch12_shared.gd | reads as events · 1 pattern ▸") and ok
 	ok = _check("a shared value says it is one for the whole editor",
 		_first_containing(readings, "_claims"),
@@ -294,6 +294,22 @@ static func _open(path: String) -> EventSheetViewport:
 
 
 ## The first row whose uid opens with `prefix`, or null.
+## Every row of an opened file, parents before children, in the shape `get_flat_rows()` answers in.
+## The head is one folded bar now, so the Include bar it stands for is a real row that is simply not
+## on screen until the head is opened.
+static func _all_rows(view: EventSheetViewport) -> Array:
+	var found: Array = []
+	_sweep_all(view, view._root_rows, found)
+	return found
+
+
+static func _sweep_all(view: EventSheetViewport, rows: Array, into: Array) -> void:
+	for row_data: EventRowData in rows:
+		view._ensure_event_spans(row_data)
+		into.append({"row": row_data})
+		_sweep_all(view, row_data.children, into)
+
+
 static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
 	for entry: Variant in rows:
 		var row_data: EventRowData = (entry as Dictionary).get("row")

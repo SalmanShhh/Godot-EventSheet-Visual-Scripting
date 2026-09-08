@@ -7225,3 +7225,11 @@ Delete Step,단계 삭제
 (none),(없음)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","도형: %d개의 시트가 도형의 파선을 흘러가게 하며, 그중 %d개는 파선이 꺼진 도형입니다."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s이(가) %s의 파선을 흘러가게 하지만 그 도형에는 흘러가게 할 파선이 없습니다. %s에서 파선 체크가 꺼져 있고 이 시트의 어떤 행도 켜지 않습니다. 인스펙터에서 파선을 켜거나, 파선 흘리기 행 앞에 파선 설정 행을 두세요."
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" 은(는) 입력 맵에 없습니다 - 이 조작은 절대 발동하지 않고 아무것도 알려주지 않습니다. 프로젝트 ▸ 입력 맵에서 추가하거나 철자를 고치세요."
+What this file is. ▸ opens the lines behind it.,이 파일이 무엇인지. ▸ 로 그 뒤의 줄을 엽니다.
+Open the base script as a sheet.,기본 스크립트를 시트로 열기.
+1 input action,입력 액션 1개
+%d input actions,입력 액션 %d개
+1 variable,변수 1개
+%d variables,변수 %d개
+on %s,%s 에

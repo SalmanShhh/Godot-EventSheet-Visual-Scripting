@@ -7225,3 +7225,11 @@ Delete Step,Eliminar paso
 (none),(ninguno)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","Formas: %d hoja(s) hacen correr los trazos de una forma, %d de ellas sobre una forma cuyos trazos están desactivados."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s hace correr los trazos de %s, y esa forma no tiene ninguno que correr: su casilla Discontinuo está desactivada en %s, y ninguna fila de aquí la activa. Activa Discontinuo en el Inspector, o pon una fila Definir trazos antes de la fila Correr trazos."
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" no está en el mapa de entrada - el control nunca se dispara y nada lo dice. Añádelo en Proyecto ▸ Mapa de entrada, o corrige la ortografía."
+What this file is. ▸ opens the lines behind it.,Qué es este archivo. ▸ abre las líneas que hay detrás.
+Open the base script as a sheet.,Abrir el script base como hoja.
+1 input action,1 acción de entrada
+%d input actions,%d acciones de entrada
+1 variable,1 variable
+%d variables,%d variables
+on %s,en %s

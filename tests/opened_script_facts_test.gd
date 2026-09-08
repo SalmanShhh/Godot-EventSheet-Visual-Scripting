@@ -57,7 +57,7 @@ static func _test_coverage_chip() -> bool:
 	ok = _check("the chip says both halves in the sheet's words",
 		EventSheetReadingCoverage.chip_text(sheet), "73% reads as events · 2 script blocks ▸") and ok
 	ok = _check("and the chip is on the Include bar, under the bands that name the file",
-		_texts(_row_with_uid(_open(COVERAGE_PATH).get_flat_rows(), "pack_include_bar_")),
+		_texts(_row_with_uid(_all_rows(_open(COVERAGE_PATH)), "pack_include_bar_")),
 		"⇥ | · opened_script_coverage.gd | 73% reads as events · 2 script blocks ▸") and ok
 
 	# The walk the click follows: the same blocks, in file order, so a click always lands on
@@ -114,7 +114,7 @@ static func _test_parse_errors() -> bool:
 static func _test_setting_facts() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH)
-	var rows: Array = view.get_flat_rows()
+	var rows: Array = _all_rows(view)
 	var movement: EventRowData = _bar_titled(rows, "Movement")
 	var look: EventRowData = _bar_titled(rows, "Look")
 	ok = _check("the two settings folders were found", movement != null and look != null, true) and ok
@@ -160,7 +160,7 @@ static func _test_setting_facts() -> bool:
 static func _test_autoload_head() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH, true)
-	var rows: Array = view.get_flat_rows()
+	var rows: Array = _all_rows(view)
 	# The singleton's NAME is the autoload band's, with the project.godot entry that grants it
 	# echoed beside it; the bar under the stack is left with the file it is and its coverage.
 	ok = _check("an autoload's own band names the singleton and echoes the entry that grants it",
@@ -178,7 +178,7 @@ static func _test_autoload_head() -> bool:
 
 	var firing: EventSheetViewport = _open(PLAYER_PATH, true)
 	ok = _check("a global's triggers say a GLOBAL fires them",
-		_texts(_bar_titled(firing.get_flat_rows(), "Triggers")), "Triggers | this global fires - 3") and ok
+		_texts(_bar_titled(_all_rows(firing), "Triggers")), "Triggers | this global fires - 3") and ok
 	firing.free()
 	return ok
 
@@ -250,6 +250,22 @@ static func _row_at(rows: Array, index: int) -> EventRowData:
 
 
 ## The first row whose uid opens with `prefix`, or null.
+## Every row of an opened file, parents before children, in the shape `get_flat_rows()` answers in.
+## The head is one folded bar now, so the bands and bars it stands for are real rows that are simply
+## not on screen until it is opened.
+static func _all_rows(view: EventSheetViewport) -> Array:
+	var found: Array = []
+	_sweep_all(view, view._root_rows, found)
+	return found
+
+
+static func _sweep_all(view: EventSheetViewport, rows: Array, into: Array) -> void:
+	for row_data: EventRowData in rows:
+		view._ensure_event_spans(row_data)
+		into.append({"row": row_data})
+		_sweep_all(view, row_data.children, into)
+
+
 static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
 	for entry: Variant in rows:
 		var row_data: EventRowData = (entry as Dictionary).get("row")

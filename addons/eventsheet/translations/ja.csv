@@ -7225,3 +7225,11 @@ Delete Step,ステップを削除
 (none),(なし)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","シェイプ: %d 枚のシートがシェイプの破線を流していますが、そのうち %d 枚は破線がオフのシェイプに対してです。"
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s は %s の破線を流していますが、そのシェイプには流す破線がありません。%s では破線のチェックがオフで、このシート内のどの行もオンにしていません。インスペクターで破線をオンにするか、破線を流す行の前に破線を設定する行を置いてください。"
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" は入力マップにありません - この操作は決して発火せず、何も告げません。プロジェクト ▸ 入力マップで追加するか、綴りを修正してください。"
+What this file is. ▸ opens the lines behind it.,このファイルが何か。▸ で背後の行を開きます。
+Open the base script as a sheet.,ベーススクリプトをシートとして開く。
+1 input action,入力アクション 1 個
+%d input actions,入力アクション %d 個
+1 variable,変数 1 個
+%d variables,変数 %d 個
+on %s,%s に

@@ -101,6 +101,10 @@ const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 ## The COLOUR is what separates a line that cannot work from one that only misbehaves.
 const NOTE_MARK := "⚠"
 
+## How many nodes one line of the Behaviors band names before it says the first, an ellipsis and the
+## last instead. Four fits beside the settings on an ordinary line; eight does not.
+const BEHAVIOR_HOSTS_LISTED: int = 4
+
 ## The families of finding the canvas reads about a row (the networking mistakes, the lighting ones,
 ## the dial a shader no longer declares). Names for the per-sweep cache below and the tag each
 ## stamped finding carries, never shown to anybody. EVERY family lives under the quiet sheet law: a
@@ -119,6 +123,7 @@ const FINDINGS_TOOL_EDITS := "tool_edits"
 const FINDINGS_MIGRATION := "migration"
 const FINDINGS_RENAME := "rename"
 const FINDINGS_FEEDBACK := "feedback"
+const FINDINGS_INPUT := "input"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -1231,31 +1236,62 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	var publishes_vocabulary: bool = bool(EventSheetEditorSourceFacts.facts(sheet).get("vocabulary_module", false))
 	if not identity_seen or (triggers.is_empty() and knobs.is_empty() and not editor_addon and not publishes_vocabulary):
 		return rows
-	# The bands first: an opened pack's head is the head of its FILE, one band per line, exactly
-	# as an authored sheet's is. A file whose prelude was too slight to fold still gets them, built
-	# from what the sheet knows, so identity is never the thing that goes missing.
-	var head: Array[EventRowData] = band_rows.duplicate()
-	if head.is_empty():
-		head.append_array(build_head_band_rows(sheet, []))
+	# ONE bar, and the bars it stands for are its fold. The class, what it extends, the receipts and
+	# the coverage, the controls and the variables used to be six stacked lines a reader scrolled
+	# past to reach event 1; they are one sentence now - `Player extends CharacterBody2D · reads as
+	# events · 4 input actions · 1 variable · 2 script blocks` - and the ▸ opens every one of them
+	# again, unchanged, as the bar's children. Nothing is lost and nothing is inferred: each fact on
+	# the line is counted from the bar it folds.
+	var detail: Array[EventRowData] = band_rows.duplicate()
+	if detail.is_empty():
+		detail.append_array(build_head_band_rows(sheet, []))
+	# The file's own prose leaves the stack here: a `##` block is a COMMENT, and a comment reads as a
+	# comment row, first in the list and drawn exactly once. Left as a band it was drawn twice - the
+	# band's value and the band's echo of the same line, one over the other.
+	var described: String = ""
+	var kept_bands: Array[EventRowData] = []
+	for band_row: EventRowData in detail:
+		if band_row.row_uid.begins_with("%s%s" % [HEAD_BAND_UID_PREFIX, EventSheetHeadBands.BAND_DESCRIPTION]):
+			described = _head_band_value(band_row)
+			continue
+		kept_bands.append(band_row)
+	detail = kept_bands
 	# …and then the bar, carrying only what no band states: what the file is as a PACKAGE (an addon,
 	# its version, the class it behaves on), how much of it reads as events, and its receipts. A bar
 	# left with nothing but its mark is not drawn at all.
 	var include_bar: EventRowData = _build_pack_include_bar_row(sheet, host_class)
 	if include_bar.spans.size() > 1:
-		head.append(include_bar)
+		detail.append(include_bar)
 	# A script that extends ANOTHER SCRIPT of this project is including that sheet: everything
 	# the base declares runs here too. That is a second bar under the identity one, naming the file
 	# and offering to open it, rather than an inheritance keyword nobody outside the language knows.
 	var base_include_row: EventRowData = _build_base_script_include_bar_row(sheet)
 	if base_include_row != null:
-		head.append(base_include_row)
-	# The pack's own trailing about-comment, hoisted: at the END of a file it is a grey wall nobody
-	# scrolls to, and at the top it is the sentence a reader came for. The `##` class description is
-	# NOT repeated here - the description band above says it, once.
-	var about_index: int = _pack_about_row_index(rows, consumed)
-	if about_index >= 0:
-		rows[about_index].indent = 0
-		head.append(rows[about_index])
+		detail.append(base_include_row)
+	var input_bars: Array[EventRowData] = _build_input_actions_bar_rows(sheet)
+	detail.append_array(input_bars)
+	var knob_bars: Array[EventRowData] = _build_knob_group_rows(sheet, knobs)
+	detail.append_array(knob_bars)
+	for detail_row: EventRowData in detail:
+		_bump_indent(detail_row, 1)
+	var head: Array[EventRowData] = [_build_one_head_bar_row(sheet, detail, input_bars, knob_bars)]
+	# THE FILE'S PROSE, ONCE. A `##` block is the file's own documentation, so it leads the sheet as
+	# the comment row it is. Only a file that has NO `##` prose gets the other sentence hoisted - the
+	# `#` paragraph some packs close on, which at the END is a grey wall nobody scrolls to and at the
+	# top is the sentence a reader came for. A file with both used to draw both, which is the second
+	# half of the description being said twice.
+	#
+	# An annotation is markup rather than prose - the same rule the band model applies to `## @` - so
+	# a file whose only `##` line is one is a file with no description at all.
+	var prose: String = _head_description_text(sheet, described)
+	var about_index: int = -1
+	if prose.is_empty():
+		about_index = _pack_about_row_index(rows, consumed)
+		if about_index >= 0:
+			rows[about_index].indent = 0
+			head.append(rows[about_index])
+	else:
+		head.append(_build_head_description_row(sheet, prose))
 	if not triggers.is_empty():
 		var fires_subtitle: String = EventSheetL10n.translate("this script fires - %d")
 		if is_addon_pack(sheet):
@@ -1270,9 +1306,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			triggers
 		))
 	head.append_array(_build_object_folder_rows(sheet))
-	head.append_array(_build_input_actions_bar_rows(sheet))
 	head.append_array(_build_global_variables_bar_rows(sheet))
-	head.append_array(_build_knob_group_rows(sheet, knobs))
 	head.append_array(leftovers)
 	var output: Array[EventRowData] = []
 	output.append_array(head)
@@ -1281,6 +1315,153 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			continue  # the about text reads at the TOP now; a second copy at the end is the grey wall
 		output.append(rows[tail_index])
 	return output
+
+
+## THE ONE HEAD BAR: `▣ Player extends CharacterBody2D · reads as events · 4 input actions ·
+## 1 variable · 2 script blocks`, with every bar it stands for hanging under its ▸.
+##
+## Six bars said what one line can. Each fact here is COUNTED FROM the bar it folds - the input
+## count is that bar's own members, the variable count is the variables bar's - so the line and the
+## fold can never disagree, and the doors survive: the base class opens the base script, the
+## coverage walks the script blocks, and the ▸ brings back the Input bar and the variables bar with
+## everything they always said.
+##
+## A GROUP row, so the fold, the arrow and the remembered state are the sheet's own machinery rather
+## than a second one written here. Inert (null source): nothing about it is stored, and an opened
+## file still re-emits byte for byte.
+func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowData],
+		input_bars: Array[EventRowData], knob_bars: Array[EventRowData]) -> EventRowData:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.GROUP
+	row_data.source_resource = null
+	row_data.row_uid = "sheet_head_bar_%d" % sheet.get_instance_id()
+	row_data.children = detail
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	row_data.height_scale = 1.5
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
+	var bar_meta: Dictionary = {"editable": false, "kind": "head_bar", "line_index": 0}
+	var extends_word: String = _head_band_value(_head_band_row(detail, EventSheetHeadBands.BAND_EXTENDS))
+	var spans: Array[SemanticSpan] = [_head_band_icon_span(bar_meta, EventSheetHeadBands.BAND_NAME,
+		ACEPickerDialog.editor_icon(extends_word) if not extends_word.is_empty() else null,
+		EventSheetL10n.translate("What this file is. ▸ opens the lines behind it."))]
+	var class_word: String = _head_band_value(_head_band_row(detail, EventSheetHeadBands.BAND_NAME))
+	if not class_word.is_empty():
+		spans.append(_make_span(class_word, SemanticSpan.SpanType.OBJECT, bar_meta.merged({
+			"text_color": _viewport._get_event_style().object_label_color
+		}, true)))
+	if not extends_word.is_empty():
+		spans.append(_make_span(str(EventSheetHeadBands.LEADERS[EventSheetHeadBands.BAND_EXTENDS]),
+			SemanticSpan.SpanType.KEYWORD, bar_meta.merged({
+				"text_color": reading_style.muted_text_color
+			}, true)))
+		# The base class keeps its door: a base that is another SCRIPT of this project opens as its
+		# own sheet, which is the one gesture the second Include bar existed for.
+		var base_path: String = base_script_path(sheet)
+		var base_meta: Dictionary = bar_meta.merged({
+			"text_color": reading_style.primary_text_color
+		}, true)
+		if not base_path.is_empty():
+			base_meta["kind"] = "include_open"
+			base_meta["include_path"] = base_path
+			base_meta["hover_note"] = EventSheetL10n.translate("Open the base script as a sheet.")
+		spans.append(_make_span(extends_word, SemanticSpan.SpanType.VALUE, base_meta))
+	var muted_meta: Dictionary = bar_meta.merged({"text_color": reading_style.muted_text_color}, true)
+	# How much of the file arrived as events, and how many blocks did not - the coverage chip's two
+	# halves, said in words on the line and still walking the blocks one per click.
+	var coverage_meta: Dictionary = muted_meta.merged({"kind": "reading_coverage"}, true)
+	spans.append(_make_span("· %s" % EventSheetL10n.translate("reads as events"),
+		SemanticSpan.SpanType.COMMENT, coverage_meta))
+	var actions: int = 0
+	for bar: EventRowData in input_bars:
+		actions += bar.children.size()
+	if actions > 0:
+		spans.append(_make_span("· %s" % (EventSheetL10n.translate("1 input action") if actions == 1 \
+			else EventSheetL10n.translate("%d input actions") % actions),
+			SemanticSpan.SpanType.COMMENT, muted_meta.merged({"kind": "head_bar_input"}, true)))
+	var variables: int = 0
+	for bar: EventRowData in knob_bars:
+		variables += bar.children.size()
+	if variables > 0:
+		spans.append(_make_span("· %s" % (EventSheetL10n.translate("1 variable") if variables == 1 \
+			else EventSheetL10n.translate("%d variables") % variables),
+			SemanticSpan.SpanType.COMMENT, muted_meta.merged({"kind": "head_bar_variables"}, true)))
+	var blocks: int = int(EventSheetReadingCoverage.measure(sheet).get("block_rows", 0))
+	if blocks > 0:
+		spans.append(_make_span("· %s" % (EventSheetL10n.translate("1 script block") if blocks == 1 \
+			else EventSheetL10n.translate("%d script blocks") % blocks),
+			SemanticSpan.SpanType.COMMENT, coverage_meta))
+	row_data.spans = spans
+	# THE QUIET SHEET, at the head: a control this file asks for that the project has not got used to
+	# put a warning mark and a sentence inside the Input bar. It is a finding, so the bar says nothing
+	# at all now - the head bar wears the amber state, the sentence is read in the help strip once the
+	# bar is selected, and the Doctor's inbox carries the same line with the fix beside it.
+	_stamp_attention(row_data, _tagged(FINDINGS_INPUT, _sheet_findings(FINDINGS_INPUT)))
+	return row_data
+
+
+## The head band row of one kind among the rows about to be folded under the bar, or null when the
+## file has no such line - which is how the bar quotes the bands rather than re-deriving what they
+## already read out of the file.
+func _head_band_row(rows: Array[EventRowData], band_kind: String) -> EventRowData:
+	var prefix: String = "%s%s" % [HEAD_BAND_UID_PREFIX, band_kind]
+	for row_data: EventRowData in rows:
+		if row_data.row_uid.begins_with(prefix):
+			return row_data
+	return null
+
+
+## One band's own words - its VALUE span, which is the fact rather than the leader word, the badge or
+## the echo. "" for a band that is not there.
+func _head_band_value(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	for span: SemanticSpan in row_data.spans:
+		if span.type == SemanticSpan.SpanType.VALUE:
+			return span.text
+	return ""
+
+
+## The file's `##` prose as the COMMENT row it is, at the top of the sheet and drawn once. Inert
+## (null source, nothing to edit through it on a read-only preview) and wrapping, because a class
+## description is a sentence rather than a label.
+## The whole `##` block as one sentence, "" for a file whose only `##` line is an annotation and for
+## a file with no prose at all. The BAND's value is one line by design (a band stands for one line of
+## the file); a comment row stands for the block, so the block is what it says - joined with spaces,
+## because a paragraph broken across `## ` lines is one sentence to everybody but the parser.
+func _head_description_text(sheet: EventSheetResource, band_value: String) -> String:
+	if band_value.is_empty() or band_value.begins_with("@"):
+		return ""
+	var block: String = sheet.class_description.strip_edges()
+	if block.is_empty() or EventSheetHeadBands.description_line(block) != band_value:
+		return band_value
+	var lines: PackedStringArray = PackedStringArray()
+	for line: String in block.split("\n"):
+		var said: String = line.strip_edges()
+		if not said.is_empty() and not said.begins_with("@"):
+			lines.append(said)
+	return " ".join(lines)
+
+
+func _build_head_description_row(sheet: EventSheetResource, described: String) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.COMMENT
+	row_data.source_resource = null
+	# Deliberately NOT `sheet_head_description_…`: that is the description BAND's own uid, and two
+	# rows sharing one key would let a fold state written for one be read back for the other.
+	row_data.row_uid = "head_description_row_%d" % sheet.get_instance_id()
+	row_data.spans = [
+		_make_span(described, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "head_description",
+			"line_index": 0,
+			"text_color": _viewport._get_event_style().comment_text_color
+		})
+	]
+	return row_data
 
 
 ## The same row list without the rows that only restate a head fact, and with the file's
@@ -1931,14 +2112,14 @@ func _include_muted_span(text: String) -> SemanticSpan:
 	})
 
 
-func _pack_include_chip(text: String) -> SemanticSpan:
+func _pack_include_chip(text: String, chip_kind: String = "pack_include") -> SemanticSpan:
 	return _make_span(text, SemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
 		"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
 		"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
-		"kind": "pack_include",
+		"kind": chip_kind,
 		"line_index": 0
 	})
 
@@ -2000,18 +2181,16 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 	if behaviors.is_empty() and facts.is_empty() and pins.is_empty():
 		return bars
 	if not behaviors.is_empty():
-		var names: PackedStringArray = PackedStringArray()
-		var members: Array[EventRowData] = []
-		for index in range(behaviors.size()):
-			var behavior: Dictionary = behaviors[index]
-			names.append(str(behavior.get("name", "")))
-			members.append(_build_object_fact_row(
-				sheet, "object_behavior_%d" % index,
-				str(behavior.get("name", "")), _behavior_settings_text(behavior)))
+		# KINDS, with their counts - not one line per node. An object that composes many small
+		# behaviors used to open as a page of repeated names before its first event, and a reader
+		# could not tell seven Springs from one. The band says the kinds and how many of each in one
+		# folded line, and the fold opens one line per kind with its settings and the nodes wearing it.
+		var band: Dictionary = _behavior_kind_reading(sheet, behaviors)
 		bars.append(_build_head_group_row(
-			sheet, "object_behaviors", EventSheetL10n.translate("Behaviors"),
-			"%s - %s" % [EventSheetL10n.translate("on this object"), " · ".join(names)],
-			members))
+			sheet, "object_behaviors",
+			"%s · %d" % [EventSheetL10n.translate("Behaviors"), behaviors.size()],
+			"%s -" % EventSheetL10n.translate("on this object"),
+			band["members"], band["chips"], true))
 	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# A RemoteTransform on this object drives a node that is NOT its child, which is the answer to
 	# "why does that thing follow me" and lives nowhere a reader of the script would find it. So it
@@ -2190,9 +2369,7 @@ func _build_input_actions_bar_rows(sheet: EventSheetResource) -> Array[EventRowD
 		var action_name: String = str(facts.get("name", ""))
 		names.append(action_name)
 		members.append(_build_object_fact_row(
-			sheet, "input_action_%d" % index,
-			action_name if bool(facts.get("known", false)) else "⚠ %s" % action_name,
-			_input_action_detail(facts)))
+			sheet, "input_action_%d" % index, action_name, _input_action_detail(facts)))
 	var uses: String = EventSheetL10n.translate("this script uses 1 action") if actions.size() == 1 \
 		else EventSheetL10n.translate("this script uses %d actions") % actions.size()
 	bars.append(_build_head_group_row(
@@ -2202,12 +2379,13 @@ func _build_input_actions_bar_rows(sheet: EventSheetResource) -> Array[EventRowD
 	return bars
 
 
-## One control's muted line in the Input bar: what it is bound to, or what is wrong with it. An
-## action the project does not have is the typo every beginner makes, and saying so here is cheaper
-## than finding out at runtime that nothing happens.
+## One control's muted line in the Input bar: what it is bound to. An action the project does not
+## have says NOTHING here - it is a finding, and under the quiet sheet law a finding never renders in
+## the sheet: the head bar wears the amber state, the sentence is in the help strip and the Doctor's
+## inbox carries it with the fix beside it.
 func _input_action_detail(facts: Dictionary) -> String:
 	if not bool(facts.get("known", false)):
-		return EventSheetL10n.translate("not in the Input Map")
+		return ""
 	var bindings: PackedStringArray = facts.get("bindings", PackedStringArray())
 	if bindings.is_empty():
 		return EventSheetL10n.translate("unbound")
@@ -2246,6 +2424,69 @@ func _behavior_settings_text(behavior: Dictionary) -> String:
 		var property: Dictionary = entry
 		parts.append("%s = %s" % [str(property.get("name", "")), str(property.get("value", ""))])
 	return " · ".join(parts)
+
+
+## The Behaviors band's two halves: the CHIPS on the folded line (`Spring ×7`, `Juice`) and the
+## MEMBER rows under it, one per kind - or more than one, when a member of a kind was tuned
+## differently from its siblings, because that difference is the whole reason to open the fold.
+##
+## Grouped by name in first-mention order, then by the settings the scene wrote, so a kind mounted
+## eight times on eight identical tiles is one line and the ninth with a knob turned is its own.
+## Returns {"chips": PackedStringArray, "members": Array[EventRowData]}.
+func _behavior_kind_reading(sheet: EventSheetResource, behaviors: Array) -> Dictionary:
+	# Arrays, not PackedStringArrays: a packed array is a VALUE, so a list read back out of the
+	# dictionary and appended to would be appended to a copy and every run would end up empty.
+	var kind_order: Array = []
+	var by_kind: Dictionary = {}
+	for entry: Variant in behaviors:
+		var behavior: Dictionary = entry
+		var kind: String = str(behavior.get("name", ""))
+		if not by_kind.has(kind):
+			by_kind[kind] = {"order": [], "runs": {}, "count": 0}
+			kind_order.append(kind)
+		var bucket: Dictionary = by_kind[kind]
+		bucket["count"] = int(bucket["count"]) + 1
+		var settings: String = _behavior_settings_text(behavior)
+		var runs: Dictionary = bucket["runs"]
+		if not runs.has(settings):
+			runs[settings] = []
+			(bucket["order"] as Array).append(settings)
+		(runs[settings] as Array).append(str(behavior.get("host", "")))
+	var chips: PackedStringArray = PackedStringArray()
+	var members: Array[EventRowData] = []
+	for kind: Variant in kind_order:
+		var bucket: Dictionary = by_kind[kind]
+		var total: int = int(bucket["count"])
+		chips.append(str(kind) if total == 1 else "%s ×%d" % [str(kind), total])
+		for settings: Variant in (bucket["order"] as Array):
+			var hosts: Array = (bucket["runs"] as Dictionary)[settings]
+			var detail: PackedStringArray = PackedStringArray()
+			if not str(settings).is_empty():
+				detail.append(str(settings))
+			var worn: String = _behavior_host_words(hosts)
+			if not worn.is_empty():
+				detail.append(worn)
+			members.append(_build_object_fact_row(
+				sheet, "object_behavior_%s_%d" % [str(kind), members.size()],
+				str(kind) if hosts.size() == 1 else "%s ×%d" % [str(kind), hosts.size()],
+				" · ".join(detail)))
+	return {"chips": chips, "members": members}
+
+
+## The nodes one line of the Behaviors band is about, as words: every one of them while they fit on
+## the line, and the first and the last with an ellipsis between once they do not. "" for a single
+## node, whose name the fold's own line above already carries.
+func _behavior_host_words(hosts: Array) -> String:
+	var named: PackedStringArray = PackedStringArray()
+	for host: Variant in hosts:
+		if not str(host).strip_edges().is_empty():
+			named.append(str(host))
+	if named.size() < 2:
+		return ""
+	if named.size() <= BEHAVIOR_HOSTS_LISTED:
+		return EventSheetL10n.translate("on %s") % " · ".join(named)
+	var ends: String = "%s … %s" % [named[0], named[named.size() - 1]]
+	return EventSheetL10n.translate("on %s") % ends
 
 
 ## A leaf row inside one of the object folders: the thing's name, then what is set on it, muted.
@@ -2364,7 +2605,8 @@ func _build_global_variables_folder(sheet: EventSheetResource, knobs: Array) -> 
 ## resource. Folded by default on a read-only preview (the reading order is identity, then logic);
 ## an editable sheet would open them, because there the knobs are what you came to edit.
 func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title: String, subtitle: String,
-		members: Array[EventRowData]) -> EventRowData:
+		members: Array[EventRowData], chips: PackedStringArray = PackedStringArray(),
+		default_folded: bool = false) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var row_data := EventRowData.new()
 	row_data.indent = 0
@@ -2372,7 +2614,8 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 	row_data.source_resource = null
 	row_data.row_uid = "%s_%d" % [uid_suffix, sheet.get_instance_id()]
 	row_data.children = members
-	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, sheet.read_only))
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid,
+		sheet.read_only or default_folded))
 	row_data.spans = [
 		_make_span(title, SemanticSpan.SpanType.OBJECT, {
 			"editable": false,
@@ -2388,6 +2631,10 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 			"text_color": _viewport._get_reading_style().muted_text_color
 		})
 	]
+	# The counts, as TEXT SPANS of the bar - the same chip a "reads as events" mark is, never a
+	# widget: a sheet row draws no controls.
+	for chip: String in chips:
+		row_data.spans.append(_pack_include_chip(chip, "head_group_chip"))
 	return row_data
 
 
@@ -9731,6 +9978,11 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# with no player in it both earn nothing at all.
 				_sheet_findings_cache[family] = EventSheetFeedbackFindings.findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
+			FINDINGS_INPUT:
+				# A control this file asks for that the project's Input Map has not got. The head
+				# bar wears the amber for it; the sentence and the door live in the strip and in the
+				# Doctor's inbox, exactly as every other family's do.
+				_sheet_findings_cache[family] = EventSheetInputMapFacts.findings(sheet)
 			FINDINGS_RENAME:
 				# The rows a rename made somewhere else left pointing at nothing. The witness is
 				# built from the sheet's own file and the scene that runs it, and it answers with

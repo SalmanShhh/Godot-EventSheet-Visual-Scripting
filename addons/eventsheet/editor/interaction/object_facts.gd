@@ -200,9 +200,18 @@ static func _group_argument(line: String) -> String:
 # ── The scene the object is placed in ─────────────────────────────────────────────────────────
 
 
+## The node one behavior is mounted on, from the parent path a `.tscn` writes: `.` is the root
+## itself, and `Tiles/Tile3` is `Tile3` - the name the reader is looking at in the scene tree.
+static func _behavior_host_name(parent_path: String, root_name: String) -> String:
+	var path: String = parent_path.strip_edges()
+	if path.is_empty() or path == ".":
+		return root_name
+	return path.get_slice("/", path.get_slice_count("/") - 1)
+
+
 ## One .tscn read back as the facts a sheet needs from it:
 ##   {"root": String, "root_type": String,
-##    "behaviors": Array[{name, node, properties: Array[{name, value}]}],
+##    "behaviors": Array[{name, node, host, properties: Array[{name, value}]}],
 ##    "families": PackedStringArray,
 ##    "children": Array[{name, type, script}],
 ##    "picture": String}
@@ -307,6 +316,10 @@ static func _read_scene_facts(path: String) -> Dictionary:
 			facts["behaviors"].append({
 				"name": behavior,
 				"node": str(node.get("name", "")),
+				# The node the behavior is mounted ON, which is the thing a reader means by "which one
+				# has it". A `.tscn` writes the parent as a path from the root, and a behavior directly
+				# under the root writes `.` - so the leaf of that path is the name, and `.` is the root's.
+				"host": _behavior_host_name(str(node.get("parent", "")), str(facts["root"])),
 				"properties": _behavior_properties(node)
 			})
 		if str(facts["picture"]).is_empty() and Array(PICTURE_TYPES).has(str(node.get("type", ""))):

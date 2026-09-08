@@ -282,6 +282,36 @@ static func actions_named_by(sheet: EventSheetResource) -> Array[Dictionary]:
 	return named
 
 
+## The finding id for a control this file asks for that the project's Input Map has not got - the
+## same id the Doctor files it under, so the amber state on the head bar, the sentence in the help
+## strip and the inbox line are one finding under three roofs.
+const KIND_UNKNOWN_ACTION := "unknown-input-action"
+
+
+## Every unknown-control note one sheet earns, one per control it names that the Input Map has not
+## got, in the order the file names them.
+##
+## THE QUIET SHEET LAW. Nothing here renders in the sheet: the canvas puts the head bar into the
+## quiet amber state and stops, and the words live in the Doctor's triage inbox and in the head
+## bar's help strip once it is selected. NO DOOR - adding a control writes project.godot, which is
+## a decision somebody makes in Project Settings or in the Doctor's own fix, never a button that
+## edits the project from under a reader who only selected a row.
+static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if sheet == null:
+		return found
+	for facts: Dictionary in actions_named_by(sheet):
+		if bool(facts.get("known", false)):
+			continue
+		var action_name: String = str(facts.get("name", ""))
+		found.append({
+			"kind": KIND_UNKNOWN_ACTION,
+			"subject": action_name,
+			"message": EventSheetL10n.translate("\"%s\" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.") % action_name,
+		})
+	return found
+
+
 ## The action names a block of GDScript asks for, in the order they appear. A name is only taken from
 ## a line that is ALREADY about input - `Input.`, `InputMap.` or an `is_action…` call - so an ordinary
 ## string a script happens to carry can never be mistaken for a control.

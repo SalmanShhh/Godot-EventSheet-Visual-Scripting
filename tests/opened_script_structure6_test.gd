@@ -140,18 +140,23 @@ static func _open(path: String) -> EventSheetViewport:
 
 
 ## Every row's text, one string per row, spans joined - the same reading the render harness prints.
+## Every row of the view, parents before children. Walked from the TREE rather than the flat list:
+## a script's own head is one folded bar now, so the Include bar under it is a real row that is
+## simply not on screen.
 static func _row_texts(view: EventSheetViewport) -> PackedStringArray:
 	var texts: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data == null:
-			continue
+	_sweep_texts(view, view._root_rows, texts)
+	return texts
+
+
+static func _sweep_texts(view: EventSheetViewport, rows: Array, texts: PackedStringArray) -> void:
+	for row_data: EventRowData in rows:
 		view._row_builder._ensure_event_spans(row_data)
 		var parts: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			parts.append(span.text)
 		texts.append(" | ".join(parts))
-	return texts
+		_sweep_texts(view, row_data.children, texts)
 
 
 static func _first_containing(texts: PackedStringArray, needle: String) -> String:

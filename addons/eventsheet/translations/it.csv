@@ -7225,3 +7225,11 @@ Delete Step,Elimina passo
 (none),(nessuno)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","Forme: %d foglio/i fanno scorrere i trattini di una forma, %d di essi su una forma i cui trattini sono disattivati."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s fa scorrere i trattini di %s, e quella forma non ne ha da far scorrere: la sua casella Tratteggiato è disattivata in %s, e nessuna riga qui la attiva. Attiva Tratteggiato nell'Ispettore, oppure metti una riga Imposta trattini prima della riga Scorri trattini."
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" non è nella mappa input - il comando non scatta mai e nulla lo dice. Aggiungilo in Progetto ▸ Mappa input, oppure correggi la grafia."
+What this file is. ▸ opens the lines behind it.,Che cos'è questo file. ▸ apre le righe che ci stanno dietro.
+Open the base script as a sheet.,Apri lo script base come foglio.
+1 input action,1 azione di input
+%d input actions,%d azioni di input
+1 variable,1 variabile
+%d variables,%d variabili
+on %s,su %s

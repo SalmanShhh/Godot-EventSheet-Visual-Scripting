@@ -7225,3 +7225,11 @@ Delete Step,Удалить шаг
 (none),(нет)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","Фигуры: %d лист(ов) прокручивают штрихи фигуры, из них %d на фигуре, у которой штрихи выключены."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s прокручивает штрихи на %s, а у этой фигуры нечего прокручивать: флажок Штрихи выключен в %s, и ни одна строка здесь его не включает. Включите Штрихи в инспекторе или поставьте строку Задать штрихи перед строкой Прокручивать штрихи."
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" нет в карте ввода - это управление никогда не сработает, и ничто об этом не скажет. Добавьте его в Проект ▸ Карта ввода или исправьте написание."
+What this file is. ▸ opens the lines behind it.,Что это за файл. ▸ открывает строки за ним.
+Open the base script as a sheet.,Открыть базовый скрипт как лист.
+1 input action,1 действие ввода
+%d input actions,действий ввода: %d
+1 variable,1 переменная
+%d variables,переменных: %d
+on %s,на %s

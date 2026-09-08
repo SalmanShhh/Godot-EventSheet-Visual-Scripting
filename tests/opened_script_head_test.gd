@@ -45,12 +45,15 @@ static func run() -> bool:
 static func _test_a_script_with_a_class_name() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PLAYER_PATH)
-	var rows: Array = view.get_flat_rows()
+	var rows: Array = _all_rows(view)
 
 	# The head is the file's own first lines. The name and the class are BANDS, each echoing the
 	# line it stands for; the Include bar under them carries only what no line of the file says.
-	ok = _check("an opened script opens on the band that names it",
-		_texts(_row_at(rows, 0)), "▣ | PlayerAvatar | class_name PlayerAvatar") and ok
+	ok = _check("an opened script opens on ONE head bar",
+		_texts(_row_at(rows, 0)),
+		"▣ | PlayerAvatar | extends | CharacterBody2D | · reads as events | · 9 variables") and ok
+	ok = _check("and the bar folds the bands it stands for",
+		_texts(_row_with_uid(rows, "sheet_head_name_")), "▣ | PlayerAvatar | class_name PlayerAvatar") and ok
 	ok = _check("the class it extends is a band of its own",
 		_texts(_row_with_uid(rows, "sheet_head_extends_")),
 		"extends | CharacterBody2D | extends CharacterBody2D") and ok
@@ -64,14 +67,14 @@ static func _test_a_script_with_a_class_name() -> bool:
 
 	# The script's own opening sentence sits ABOVE class_name, where the importer's class-description
 	# rule never looks - the head reads it off the prelude, so it lands on the description band.
-	ok = _check("the file's own sentence is the description band",
-		_texts(_row_with_uid(rows, "sheet_head_description_")).begins_with(
-			"## | A hand-written game script - not a behavior pack"), true) and ok
-	ok = _check("and it is not said a second time as a comment row",
-		_row_at(rows, 4) != null and _row_at(rows, 4).row_type == EventRowData.RowType.COMMENT, false) and ok
+	ok = _check("the file's own sentence is a comment row, not a band",
+		_texts(_row_with_uid(rows, "head_description_row_")).begins_with(
+			"A hand-written game script - not a behavior pack"), true) and ok
+	ok = _check("and the band that used to draw it twice is gone",
+		_row_with_uid(rows, "sheet_head_description_") == null, true) and ok
 
-	ok = _check("the head bars read in file order",
-		_head_bar_titles(rows), "Triggers | Movement | Instance variables") and ok
+	ok = _check("the head bars read in file order, the folded ones first",
+		_head_bar_titles(rows), "Movement | Instance variables | Triggers") and ok
 	ok = _check("the Triggers bar says a SCRIPT fires them",
 		_texts(_bar_titled(rows, "Triggers")), "Triggers | this script fires - 3") and ok
 	ok = _test_signals_read_as_triggers(view) and ok
@@ -110,14 +113,14 @@ static func _test_signals_read_as_triggers(view: EventSheetViewport) -> bool:
 static func _test_a_script_named_by_its_scene() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PAD_PATH)
-	var rows: Array = view.get_flat_rows()
+	var rows: Array = _all_rows(view)
 	# The node's name is a fact of the SCENE, not a line of the file, so it stays on the bar while the
 	# name band says what the file itself does: that it declares no class at all.
 	ok = _check("a script with no class_name is named by its scene's root node",
 		_texts(_row_with_uid(rows, "pack_include_bar_")),
 		"⇥ | SpawnerPad | · opened_script_head_pad.gd · scene opened_script_head_pad.tscn | reads as events") and ok
 	ok = _check("and its name band says the file names it",
-		_texts(_row_at(rows, 0)),
+		_texts(_row_with_uid(rows, "sheet_head_name_")),
 		"▣ | opened_script_head_pad.gd | # no class_name - named by its file") and ok
 	view.free()
 	return ok
@@ -142,11 +145,11 @@ static func _test_a_script_no_scene_uses() -> bool:
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)
-	var bar: EventRowData = _row_with_uid(view.get_flat_rows(), "pack_include_bar_")
+	var bar: EventRowData = _row_with_uid(_all_rows(view), "pack_include_bar_")
 	ok = _check("a script no scene uses names nothing on the bar - the band has the file",
 		_texts(bar), "⇥ | · no_such_script_head.gd | reads as events") and ok
 	ok = _check("…and no scene note is invented",
-		_texts(_row_at(view.get_flat_rows(), 0)),
+		_texts(_row_with_uid(_all_rows(view), "sheet_head_name_")),
 		"▣ | no_such_script_head.gd | # no class_name - named by its file") and ok
 	view.free()
 	return ok
@@ -156,7 +159,7 @@ static func _test_a_script_no_scene_uses() -> bool:
 static func _test_type_words() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PLAYER_PATH)
-	var internal_bar: EventRowData = _bar_titled(view.get_flat_rows(), "Instance variables")
+	var internal_bar: EventRowData = _bar_titled(_all_rows(view), "Instance variables")
 	ok = _check("the Instance variables bar was found", internal_bar != null, true) and ok
 	if internal_bar == null:
 		view.free()
@@ -180,7 +183,7 @@ static func _test_type_words() -> bool:
 		read[6] if read.size() > 6 else "", "x | Instance | number | _cooldown | = | 0 | var _cooldown: float = 0.0") and ok
 
 	# The knob rows keep their doc comment, exactly as a pack's do.
-	var movement_bar: EventRowData = _bar_titled(view.get_flat_rows(), "Movement")
+	var movement_bar: EventRowData = _bar_titled(_all_rows(view), "Movement")
 	ok = _check("an @export knob reads type-word, name, value, description",
 		_texts(movement_bar.children[0]) if movement_bar != null and not movement_bar.children.is_empty() else "",
 		"x | Instance | number | move_speed | ⚙ | = | 180 | How fast the avatar walks, in pixels per second. | @export var move_speed: float = 180.0") and ok
@@ -235,6 +238,22 @@ static func _open(path: String) -> EventSheetViewport:
 	view.set_sheet(sheet)
 	view.set_reading_mode(true)
 	return view
+
+
+## Every row of an opened file, parents before children, in the shape `get_flat_rows()` answers in.
+## The head is one FOLDED bar now, so the bands and bars it stands for are off screen exactly as the
+## Triggers bar's rows have always been - and a test about what the head SAYS has to see them.
+static func _all_rows(view: EventSheetViewport) -> Array:
+	var found: Array = []
+	_sweep_rows(view, view._root_rows, found)
+	return found
+
+
+static func _sweep_rows(view: EventSheetViewport, rows: Array, into: Array) -> void:
+	for row_data: EventRowData in rows:
+		view._ensure_event_spans(row_data)
+		into.append({"row": row_data})
+		_sweep_rows(view, row_data.children, into)
 
 
 static func _row_at(rows: Array, index: int) -> EventRowData:

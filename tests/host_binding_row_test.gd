@@ -38,11 +38,9 @@ static func run() -> bool:
 	dock.setup(EventSheetResource.new())
 	dock._load_sheet_from_path(pack_path)
 	var view: EventSheetViewport = dock._active_view()
-	var preview_bar: EventRowData = null
-	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.row_uid.begins_with("pack_include_bar_"):
-			preview_bar = row_data
+	# The Include bar rides the head bar's fold now, so the preview is read from the row TREE - the
+	# bar is a real row that is simply not on screen until the head is opened.
+	var preview_bar: EventRowData = _row_with_uid(view._root_rows, "pack_include_bar_")
 	ok = _check("a read-only preview folds the binding into the Include bar", preview_bar != null, true) and ok
 	ok = _check("the Include bar still names the host class",
 		preview_bar != null and _span_texts(preview_bar).has("Node2D"), true) and ok
@@ -108,3 +106,14 @@ static func _has_enter_tree_block(view: EventSheetViewport) -> bool:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("host_binding_row_test", label, actual, expected)
+
+
+## The first row of a tree whose uid opens with `prefix`, at any depth, or null.
+static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
+	for row_data: EventRowData in rows:
+		if row_data.row_uid.begins_with(prefix):
+			return row_data
+		var deeper: EventRowData = _row_with_uid(row_data.children, prefix)
+		if deeper != null:
+			return deeper
+	return null

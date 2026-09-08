@@ -7225,3 +7225,11 @@ Delete Step,Schritt löschen
 (none),(keine)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","Formen: %d Blatt/Blätter lassen die Striche einer Form laufen, %d davon auf einer Form, deren Striche aus sind."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s lässt die Striche an %s laufen, und diese Form hat keine zum Laufen: Das Kästchen Gestrichelt ist in %s aus, und keine Zeile hier schaltet es ein. Schalte Gestrichelt im Inspektor ein, oder setze eine Zeile Striche setzen vor die Zeile Striche laufen lassen."
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" ist nicht in der Eingabezuordnung - die Steuerung löst nie aus und nichts sagt es. Füge sie unter Projekt ▸ Eingabezuordnung hinzu oder korrigiere die Schreibweise."
+What this file is. ▸ opens the lines behind it.,Was diese Datei ist. ▸ öffnet die Zeilen dahinter.
+Open the base script as a sheet.,Das Basisskript als Blatt öffnen.
+1 input action,1 Eingabeaktion
+%d input actions,%d Eingabeaktionen
+1 variable,1 Variable
+%d variables,%d Variablen
+on %s,auf %s

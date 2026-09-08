@@ -1,10 +1,11 @@
 # EventForge - render harness (dev tool) for the HEAD of an opened behaviour pack.
 # Imports the FPS Controller pack as a READ-ONLY preview and screenshots the top of the sheet twice:
-#   docs/images/opened-pack-head.png      - the head as it opens: the Include bar, the description
-#                                           once, and the Triggers / settings / Internal state bars
-#                                           closed, with the pack's logic right below them
-#   docs/images/opened-pack-head-open.png - the same head with the Jump bar open, so a knob's reading
-#                                           shows (type word, name, value, description)
+#   docs/images/opened-pack-head.png      - the head as it opens: ONE head bar, the description once
+#                                           as a comment row, and the Triggers bar closed, with the
+#                                           pack's logic right below them
+#   docs/images/opened-pack-head-open.png - the same head with the head bar and the Jump bar open, so
+#                                           the bands, the Include bar, the Input bar and a knob's
+#                                           reading all show (type word, name, value, description)
 # Run NON-headless (headless runs cannot render):
 #   godot --path . --script tools/render_opened_pack_head_preview.gd
 @tool
@@ -69,20 +70,22 @@ func _on_frame() -> void:
 			quit(0)
 
 
-## Opens the Jump settings bar (the fold state the user would click), rebuilds, and scrolls to it -
-## so the second shot carries both readings: an open settings bar, and the logic the head hands over to.
+## Opens the head bar and, inside it, the Jump settings bar (the two folds the user would click),
+## rebuilds, and scrolls to the top - so the second shot carries the whole head: the bands, the
+## Include bar, the Input bar, and one settings bar with a knob's reading in it.
 func _open_jump_bar() -> void:
-	for entry: Variant in _viewport._flat_rows:
-		var row_data: EventRowData = (entry as Dictionary).get("row")
-		if row_data != null and row_data.row_uid.begins_with("pack_settings_Jump"):
-			_viewport._fold_state[row_data.row_uid] = false
+	_open_folds(_viewport._root_rows)
 	_viewport.set_sheet(_sheet)
 	_viewport.set_reading_mode(true)
-	for index in range(_viewport._flat_rows.size()):
-		var row_data: EventRowData = (_viewport._flat_rows[index] as Dictionary).get("row")
-		if row_data != null and row_data.row_uid.begins_with("pack_settings_Jump"):
-			_scroll.scroll_vertical = int(maxf(_viewport._row_metrics_helper.row_top(index) - 20.0, 0.0))
-			return
+	_scroll.scroll_vertical = 0
+
+
+## The head bar's own fold and the Jump settings bar's, opened wherever they sit in the tree.
+func _open_folds(rows: Array) -> void:
+	for row_data: EventRowData in rows:
+		if row_data.row_uid.begins_with("sheet_head_bar_") 				or row_data.row_uid.begins_with("pack_settings_Jump"):
+			_viewport._fold_state[row_data.row_uid] = false
+		_open_folds(row_data.children)
 
 
 ## Prints what the head actually READS as, so a run doubles as a text check of the bars (the image

@@ -7225,3 +7225,11 @@ Delete Step,删除步骤
 (none),(无)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","形状：%d 个表让形状的虚线流动，其中 %d 个所在的形状虚线是关闭的。"
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s 让 %s 的虚线流动，但那个形状没有可流动的虚线：它在 %s 中的虚线开关是关闭的，而这个表里没有任何一行把它打开。请在检查器中打开虚线，或在流动虚线一行之前放一行设置虚线。"
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" 不在输入映射中 - 该控制永远不会触发，也没有任何提示。请在项目 ▸ 输入映射中添加它，或修正拼写。"
+What this file is. ▸ opens the lines behind it.,这个文件是什么。▸ 展开它背后的行。
+Open the base script as a sheet.,将基类脚本作为事件表打开。
+1 input action,1 个输入动作
+%d input actions,%d 个输入动作
+1 variable,1 个变量
+%d variables,%d 个变量
+on %s,在 %s

@@ -48,12 +48,13 @@ static func run() -> bool:
 	view.set_sheet(sheet)
 	view.set_reading_mode(true)
 
-	# ── 1. The head: the file's own first lines, then the bar for what no line says ──
-	var rows: Array = view.get_flat_rows()
-	ok = _check("the sheet opens on the band that names it",
-		_texts(_row_at(rows, 0)), "▣ | FPSController | class_name FPSController") and ok
-	ok = _check("the band stack IS the head - one band per line of the file",
-		_band_kinds(rows), "name | extends | icon | description | host") and ok
+	# ── 1. The head: ONE bar, and the file's own first lines folded under it ──
+	var rows: Array = _all_rows(view)
+	ok = _check("the sheet opens on ONE head bar",
+		_texts(_row_at(rows, 0)),
+		"▣ | FPSController | extends | Node | · reads as events | · 5 input actions | · 62 variables") and ok
+	ok = _check("the bands are the bar's fold - one band per line of the file",
+		_band_kinds(rows), "name | extends | icon | host") and ok
 	ok = _check("a band states its line and echoes it",
 		_texts(_band(rows, "extends")), "extends | Node | extends Node") and ok
 	var include_bar: EventRowData = _row_with_uid(rows, "pack_include_bar_")
@@ -68,20 +69,21 @@ static func run() -> bool:
 	ok = _check("the host variable folded into it", _has_variable_row(rows, "host"), false) and ok
 
 	# ── 2. The description, once ──
-	ok = _check("the class description is a band of the head",
-		_texts(_band(rows, "description")).begins_with(
-			"## | A complete first / third person character controller"), true) and ok
-	var about_bar: EventRowData = _row_at(rows, 6)
-	ok = _check("the file's own opening comment reads directly under the bar",
+	# The `##` block is a COMMENT ROW at the top of the sheet, not a band. As a band it drew its
+	# value and its echo of the same line over each other, and this pack's own about-comment said
+	# the sentence a second time; one row says it now, and the band that used to is gone.
+	var about_bar: EventRowData = _row_with_uid(rows, "head_description_row_")
+	ok = _check("the class description is a comment row, not a band",
 		about_bar != null and about_bar.row_type == EventRowData.RowType.COMMENT, true) and ok
-	ok = _check("it is the pack's own about text",
-		about_bar != null and _texts(about_bar).begins_with("FPS/TPS controller behavior: mouse look"), true) and ok
-	ok = _check("and it is not repeated at the end of the file", _count_about_rows(rows), 1) and ok
+	ok = _check("it is the file's own \u0023\u0023 block",
+		_texts(about_bar).begins_with("A complete first / third person character controller"), true) and ok
+	ok = _check("the description band is gone", _band(rows, "description") == null, true) and ok
+	ok = _check("and the pack's about text is not hoisted on top of it", _count_about_rows(rows), 1) and ok
 
 	# ── 3. The group bars, in file order, closed ──
-	ok = _check("the head bars read in file order",
+	ok = _check("the head bars read in file order, the folded ones first",
 		_head_bar_titles(rows),
-		"Triggers | AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Weapon Feel | Instance variables") and ok
+		"AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Weapon Feel | Instance variables | Triggers") and ok
 	var triggers_bar: EventRowData = _bar_titled(rows, "Triggers")
 	ok = _check("the Triggers bar says what it holds", _texts(triggers_bar), "Triggers | this pack fires - 11") and ok
 	ok = _check("its children are the pack's trigger rows", triggers_bar.children.size() if triggers_bar != null else -1, 11) and ok
@@ -91,7 +93,8 @@ static func run() -> bool:
 	var jump_bar: EventRowData = _bar_titled(rows, "Jump")
 	ok = _check("a settings bar counts its knobs", _texts(jump_bar), "Jump | 3 settings") and ok
 	ok = _check("a settings bar is CLOSED on a preview", jump_bar != null and jump_bar.folded, true) and ok
-	ok = _check("its knobs are hidden while it is closed", _has_variable_row(rows, "jump_velocity"), false) and ok
+	ok = _check("its knobs are hidden while it is closed",
+		_has_variable_row(view.get_flat_rows(), "jump_velocity"), false) and ok
 	var internal_bar: EventRowData = _bar_titled(rows, "Instance variables")
 	ok = _check("the one variable folder gathers what the groups did not",
 		_texts(internal_bar), "Instance variables | of FPSController") and ok
@@ -103,7 +106,7 @@ static func run() -> bool:
 	# ── 4. The reading shape of a knob ──
 	view._fold_state[jump_bar.row_uid] = false
 	view.set_sheet(sheet)
-	rows = view.get_flat_rows()
+	rows = _all_rows(view)
 	var knob: EventRowData = _variable_row(rows, "jump_velocity")
 	ok = _check("a knob reads type-word, name, value, description",
 		_texts(knob),
@@ -168,15 +171,15 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)
-	var bar: EventRowData = _row_with_uid(view.get_flat_rows(), "pack_include_bar_")
+	var bar: EventRowData = _row_with_uid(_all_rows(view), "pack_include_bar_")
 	ok = _check("a plain script still gets the Include bar", bar != null, true) and ok
 	# And it does not wear the word "Script" either. Its name and its class are the head bands'
 	# to say, so all the bar owes a plain script is how much of it read as events.
 	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | reads as events") and ok
-	ok = _check("the bands name it instead", _texts(_row_at(view.get_flat_rows(), 0)),
+	ok = _check("the bands name it instead", _texts(_band(_all_rows(view), "name")),
 		"▣ | Patrol | class_name Patrol") and ok
 	ok = _check("its exported knob lands in the one variable folder",
-		_texts(_bar_titled(view.get_flat_rows(), "Instance variables")), "Instance variables | of Patrol") and ok
+		_texts(_bar_titled(_all_rows(view), "Instance variables")), "Instance variables | of Patrol") and ok
 	view.free()
 	return ok
 
@@ -212,20 +215,51 @@ static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
 
 
 ## One head band by its kind, or null - `_band(rows, "extends")`.
+## Every row of the opened pack, parents before children, in the shape `get_flat_rows()` answers
+## in. The head is one FOLDED bar now, so the bands and bars it stands for are off screen exactly as
+## the Triggers bar's rows have always been - and a test about what the head SAYS has to see them.
+static func _all_rows(view: EventSheetViewport) -> Array:
+	var found: Array = []
+	_sweep_rows(view, view._root_rows, found)
+	return found
+
+
+static func _sweep_rows(view: EventSheetViewport, rows: Array, into: Array) -> void:
+	for row_data: EventRowData in rows:
+		view._ensure_event_spans(row_data)
+		into.append({"row": row_data})
+		_sweep_rows(view, row_data.children, into)
+
+
 static func _band(rows: Array, kind: String) -> EventRowData:
 	return _row_with_uid(rows, "sheet_head_%s_" % kind)
 
 
-## The head band stack in reading order, by kind: "name | extends | icon | description | host".
+## The head band stack in reading order, by kind: "name | extends | icon | host" - the lines the
+## FILE opens with. The bands read out of a `.tscn` are left out: which lights reach this pack's host
+## is a fact of somebody's scene, and a project that grew one would otherwise change what this file
+## is said to say.
 static func _band_kinds(rows: Array) -> String:
 	var kinds: PackedStringArray = PackedStringArray()
 	for entry: Variant in rows:
 		var row_data: EventRowData = (entry as Dictionary).get("row")
-		if row_data == null or not row_data.row_uid.begins_with("sheet_head_"):
+		if row_data == null or not row_data.row_uid.begins_with("sheet_head_") \
+				or row_data.row_uid.begins_with("sheet_head_bar_"):
 			continue
 		var tail: String = row_data.row_uid.trim_prefix("sheet_head_")
+		if _is_scene_band(tail):
+			continue
 		kinds.append(tail.substr(0, tail.rfind("_")))
 	return " | ".join(kinds)
+
+
+## True for a band read out of a `.tscn` - the lights, the spawners, the collisions - asked of the
+## one table that says which kinds those are.
+static func _is_scene_band(uid_tail: String) -> bool:
+	for kind: String in EventSheetHeadBands.SCENE_BANDS.keys():
+		if uid_tail.begins_with(kind):
+			return true
+	return false
 
 
 static func _texts(row_data: EventRowData) -> String:

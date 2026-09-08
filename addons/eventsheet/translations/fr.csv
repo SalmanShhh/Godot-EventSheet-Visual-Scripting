@@ -7225,3 +7225,11 @@ Delete Step,Supprimer l'étape
 (none),(aucun)
 "Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","Formes : %d feuille(s) font défiler les tirets d'une forme, dont %d sur une forme dont les tirets sont désactivés."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s fait défiler les tirets de %s, et cette forme n'en a aucun à faire défiler : sa case Tirets est désactivée dans %s, et aucune ligne ici ne l'active. Activez Tirets dans l'Inspecteur, ou placez une ligne Définir les tirets avant la ligne Faire défiler les tirets."
+"""%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" est absent de la carte des entrées - la commande ne se déclenche jamais et rien ne le dit. Ajoutez-la dans Projet ▸ Carte des entrées, ou corrigez l'orthographe."
+What this file is. ▸ opens the lines behind it.,Ce qu'est ce fichier. ▸ ouvre les lignes qui sont derrière.
+Open the base script as a sheet.,Ouvrir le script de base comme feuille.
+1 input action,1 action d'entrée
+%d input actions,%d actions d'entrée
+1 variable,1 variable
+%d variables,%d variables
+on %s,sur %s
