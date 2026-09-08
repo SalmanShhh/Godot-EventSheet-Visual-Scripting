@@ -1561,11 +1561,11 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 	row_data.row_type = EventRowData.RowType.GROUP
 	row_data.source_resource = null
 	row_data.row_uid = "sheet_head_bar_%d" % sheet.get_instance_id()
+	# The bands the bar quotes fold under it, closed, and the bar is one row tall and flat with
+	# nothing trailing it - the shape an Include row has in every other event-sheet editor.
 	row_data.children = detail
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
-	row_data.height_scale = 1.5
-	var accent: Color = _viewport._get_event_style().behavior_accent_color
-	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
+	row_data.custom_color = _viewport._get_event_style().head_bar_color
 	var bar_meta: Dictionary = {"editable": false, "kind": "head_bar", "line_index": 0}
 	var extends_word: String = _head_band_value(_head_band_row(detail, EventSheetHeadBands.BAND_EXTENDS))
 	var spans: Array[SemanticSpan] = [_head_band_icon_span(bar_meta, EventSheetHeadBands.BAND_NAME,
@@ -1593,11 +1593,9 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 			base_meta["hover_note"] = EventSheetL10n.translate("Open the base script as a sheet.")
 		spans.append(_make_span(extends_word, SemanticSpan.SpanType.VALUE, base_meta))
 	var muted_meta: Dictionary = bar_meta.merged({"text_color": reading_style.muted_text_color}, true)
-	# How much of the file arrived as events, and how many blocks did not - the coverage chip's two
-	# halves, said in words on the line and still walking the blocks one per click.
+	# A file that reads whole says nothing about it: the only coverage word left is the count of
+	# blocks that did NOT arrive as events, below, which still walks them one per click.
 	var coverage_meta: Dictionary = muted_meta.merged({"kind": "reading_coverage"}, true)
-	spans.append(_make_span("· %s" % EventSheetL10n.translate("reads as events"),
-		SemanticSpan.SpanType.COMMENT, coverage_meta))
 	var actions: int = 0
 	for bar: EventRowData in input_bars:
 		actions += bar.children.size()
@@ -2337,14 +2335,13 @@ func _include_muted_span(text: String) -> SemanticSpan:
 
 
 func _pack_include_chip(text: String, chip_kind: String = "pack_include") -> SemanticSpan:
+	# A plain word, muted, on the bar's one line. It used to be a filled pill, and a head made of
+	# pills read as a row of buttons on a sheet that draws none; a word says the same thing quietly.
 	return _make_span(text, SemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
-		"badge": true,
-		"badge_style": "scope",
-		"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
-		"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
 		"kind": chip_kind,
-		"line_index": 0
+		"line_index": 0,
+		"text_color": _viewport._get_reading_style().muted_text_color
 	})
 
 
@@ -2870,6 +2867,7 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 	row_data.children = members
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid,
 		sheet.read_only or default_folded))
+	row_data.custom_color = event_style.head_bar_color
 	row_data.spans = [
 		_make_span(title, SemanticSpan.SpanType.OBJECT, {
 			"editable": false,
@@ -2885,19 +2883,27 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 			"text_color": _viewport._get_reading_style().muted_text_color
 		})
 	]
-	# The counts, as TEXT SPANS of the bar - the same chip a "reads as events" mark is, never a
-	# widget: a sheet row draws no controls. A chip that names a kind of behavior carries that
-	# kind's own script, so clicking the word opens that behavior as a sheet - the same jump the
-	# Include bar makes, through the same span field.
+	# The kinds, as plain WORDS of the bar's sentence - "Spring 10, Tween 10, Sine 8" - never a
+	# pill and never a widget: a sheet row draws no controls and wears no badges. A word that names
+	# a kind of behavior still carries that kind's own script, so clicking it opens that behavior
+	# as a sheet - the same jump the Include bar makes, through the same span field.
 	for chip_index: int in chips.size():
-		var chip_span: SemanticSpan = _pack_include_chip(chips[chip_index], "head_group_chip")
+		var word: String = str(chips[chip_index]).replace(" ×", " ")
+		if chip_index < chips.size() - 1:
+			word += ","
+		var word_span: SemanticSpan = _make_span(word, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "head_group_chip",
+			"line_index": 0,
+			"text_color": _viewport._get_reading_style().primary_text_color
+		})
 		var chip_path: String = str(chip_paths[chip_index]).strip_edges() \
 			if chip_index < chip_paths.size() else ""
 		if not chip_path.is_empty() and ResourceLoader.exists(chip_path):
-			(chip_span.metadata as Dictionary)["include_path"] = chip_path
-			(chip_span.metadata as Dictionary)["hover_note"] = EventSheetL10n.translate(
+			(word_span.metadata as Dictionary)["include_path"] = chip_path
+			(word_span.metadata as Dictionary)["hover_note"] = EventSheetL10n.translate(
 				"Opens this behavior as a sheet.")
-		row_data.spans.append(chip_span)
+		row_data.spans.append(word_span)
 	return row_data
 
 

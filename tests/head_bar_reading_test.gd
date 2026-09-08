@@ -48,7 +48,7 @@ static func _one_bar_for_a_showcase() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
 		["input_rebind head bar", _words_of(head[0]),
-			"▣ InputRebindDemo extends Control · reads as events · 4 input actions · 1 variable"],
+			"▣ InputRebindDemo extends Control · 4 input actions · 1 variable"],
 		["input_rebind head bar folds the bars it stands for", _child_uids(head[0]),
 			"sheet_head_name, sheet_head_extends, pack_include_bar, input_actions, pack_internal_state"],
 		["input_rebind head bar is a fold, closed", str(head[0].folded), "true"],
@@ -66,7 +66,7 @@ static func _one_bar_for_a_pack() -> bool:
 	var head: Array = _head_rows(PACK)
 	return SUPPORT.pins(P, [
 		["flash head bar", _words_of(head[0]),
-			"▣ FlashBehavior extends Node · reads as events"],
+			"▣ FlashBehavior extends Node"],
 		["flash head bar folds the bars it stands for", _child_uids(head[0]),
 			"sheet_head_name, sheet_head_extends, sheet_head_icon, sheet_head_host, pack_include_bar"],
 	])
@@ -110,7 +110,7 @@ static func _behaviors_count_by_kind() -> bool:
 		lines.append(_words_of(member))
 	return SUPPORT.pins(P, [
 		["carousel Behaviors band", _words_of(band),
-			"Behaviors · 34 on this object - Spring ×10 Tween ×10 Flash ×2 Juice Scenes Blend Modes Screen FX Sine ×8"],
+			"Behaviors · 34 on this object - Spring 10, Tween 10, Flash 2, Juice, Scenes, Blend Modes, Screen FX, Sine 8"],
 		["carousel Behaviors band is folded", str(band.folded), "true"],
 		["carousel Behaviors kinds", "\n".join(lines), "\n".join(PackedStringArray([
 			"Spring ×10 on Carousel … Tile7",
@@ -125,7 +125,7 @@ static func _behaviors_count_by_kind() -> bool:
 		# A kind is a DOOR: the chip carries the pack's own script, so clicking the word opens
 		# that behavior as a sheet - the same jump the Include bar makes, through the same field.
 		["carousel Behaviors chips open their packs", _chip_doors(band),
-			"Spring ×10 -> spring_behavior.gd"],
+			"Spring 10 -> spring_behavior.gd"],
 	])
 
 
@@ -138,7 +138,7 @@ static func _chip_doors(band: EventRowData) -> String:
 			continue
 		var opens: String = str((span.metadata as Dictionary).get("include_path", ""))
 		if not opens.is_empty():
-			return "%s -> %s" % [span.text, opens.get_file()]
+			return "%s -> %s" % [span.text.trim_suffix(","), opens.get_file()]
 	return ""
 
 

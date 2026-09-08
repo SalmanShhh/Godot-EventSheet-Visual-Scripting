@@ -6,6 +6,18 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: the head bars are flat, one line, and say nothing twice
+
+- **The head is painted the way an Include row is painted elsewhere.** The bar a file opens on,
+  and the Input, Instance variables and Behaviors bars under it, sat on a purple wash one and a
+  half rows tall, wore a row of filled word pills, and trailed a grey echo of the very lines they
+  folded. They are one row tall now, on one quiet flat tint (`head_bar_color`, a token on the sheet
+  theme, stated by every shipped theme), the counts and kinds are plain words - `Behaviors · 34 on
+  this object - Spring 10, Tween 10, Sine 8` - each still a door into its pack, and nothing trails
+  the bar: the folded lines are read by opening the fold, not by squinting at its echo. The words
+  `reads as events` left the bar for a file that reads whole; only a count of script blocks that
+  did not is said, and it still walks them one per click.
+
 ### Changed: a behavior pack opens on its verbs
 
 - **Four bands instead of a wall.** A pack opened to read used to open on its implementation -

@@ -51,7 +51,7 @@ static func _test_a_script_with_a_class_name() -> bool:
 	# line it stands for; the Include bar under them carries only what no line of the file says.
 	ok = _check("an opened script opens on ONE head bar",
 		_texts(_row_at(rows, 0)),
-		"▣ | PlayerAvatar | extends | CharacterBody2D | · reads as events | · 9 variables") and ok
+		"▣ | PlayerAvatar | extends | CharacterBody2D | · 9 variables") and ok
 	ok = _check("and the bar folds the bands it stands for",
 		_texts(_row_with_uid(rows, "sheet_head_name_")), "▣ | PlayerAvatar | class_name PlayerAvatar") and ok
 	ok = _check("the class it extends is a band of its own",

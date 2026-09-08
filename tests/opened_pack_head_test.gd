@@ -52,7 +52,7 @@ static func run() -> bool:
 	var rows: Array = _all_rows(view)
 	ok = _check("the sheet opens on ONE head bar",
 		_texts(_row_at(rows, 0)),
-		"▣ | FPSController | extends | Node | · reads as events | · 5 input actions") and ok
+		"▣ | FPSController | extends | Node | · 5 input actions") and ok
 	ok = _check("the bands are the bar's fold - one band per line of the file",
 		_band_kinds(rows), "name | extends | icon | host") and ok
 	ok = _check("a band states its line and echoes it",

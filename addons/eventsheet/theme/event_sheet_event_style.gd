@@ -82,6 +82,10 @@ extends Resource
 ## Accent for behavior sheets (identity banner / tab badge) - soft purple, the event-sheet-style
 ## "this is a behavior" color language.
 @export var behavior_accent_color: Color = Color("#8a7bd8")
+## The flat fill of the head bars - the file's own line, its Input, its variables, its behaviors -
+## one quiet tint, one row tall, nothing drawn on the right. The muted green every other event-sheet
+## editor paints its Include rows in, so a reader meets a familiar shape before a single event.
+@export var head_bar_color: Color = Color(0.27, 0.46, 0.33, 0.42)
 ## The left gutter strip (line + event numbers, breakpoints, bookmark pennants).
 @export var gutter_background_color: Color = EventSheetPalette.COLOR_GUTTER_BG
 ## Line and event numbers drawn in the gutter.

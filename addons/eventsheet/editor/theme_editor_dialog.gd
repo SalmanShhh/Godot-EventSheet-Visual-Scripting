@@ -239,6 +239,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"value_highlight_color": "Parameter values (numbers, strings) highlighted inside ACE text.",
 	"cell_hover_color": "Tint over a single condition/action cell under the mouse.",
 	"behavior_accent_color": "The soft-purple 'this is a behavior' accent (banner, region default).",
+	"head_bar_color": "Flat fill of the head bars (the file's line, Input, Instance variables, Behaviors).",
 	"gutter_background_color": "The strip down the left of the sheet that carries the event numbers.",
 	"gutter_text_color": "The event numbers themselves.",
 	"language_block_accent_color": "The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.",

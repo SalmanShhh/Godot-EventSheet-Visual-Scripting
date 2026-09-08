@@ -375,6 +375,11 @@ func _draw_collapsed_summary(control: Control, row_rect: Rect2, row_data: EventR
 	var summary: String = str(control.collapsed_row_summary(row_data))
 	if summary.is_empty() or row_data.spans.is_empty():
 		return
+	# A head bar (the file's line, its Input, its variables, its behaviors) already says on its one
+	# line what its members are; the echo of those members trailing it doubled every word.
+	var lead_meta: Variant = row_data.spans[0].metadata
+	if lead_meta is Dictionary and str((lead_meta as Dictionary).get("kind", "")) in ["head_bar", "pack_head_group"]:
+		return
 	# The summary follows the row's FIRST line: a header that stacks (a verb row with input
 	# chips) keeps its summary beside the line that names it, not floating past the last one.
 	# The line is found by the spans' own line_index, not by matching their y: a BADGE is inset
