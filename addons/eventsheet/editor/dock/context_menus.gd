@@ -257,7 +257,7 @@ func build_all() -> void:
 	_dock._empty_space_context_menu.add_item("Insert Snippet…", _dock.EMPTY_MENU_INSERT_SNIPPET)
 	# Another sheet's events, in this one - the shared-sheet include, where a reader from another
 	# event-sheet editor looks for "Include event sheet".
-	_dock._empty_space_context_menu.add_item("Include Sheet…", _dock.EMPTY_MENU_INCLUDE_SHEET)
+	_dock._empty_space_context_menu.add_item("Include sheet…", _dock.EMPTY_MENU_INCLUDE_SHEET)
 	_dock._empty_space_context_menu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock.add_child(_dock._empty_space_context_menu)
 

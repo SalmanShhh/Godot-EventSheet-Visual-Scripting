@@ -4,7 +4,7 @@
 
 ### Added: the Include you look for, where you look for it, as one line
 
-- **Include Sheet… on the canvas menu.** Including a shared sheet was two menus deep on the toolbar.
+- **Include sheet… on the canvas menu.** Including a shared sheet was two menus deep on the toolbar.
   It is now on the menu the canvas's "+ Add…" corner link and a right-click on empty space open,
   which is where a reader from another event-sheet editor reaches for "Include event sheet".
 - **An included shared sheet reads as one Include line at the head.** Each shared sheet a script
