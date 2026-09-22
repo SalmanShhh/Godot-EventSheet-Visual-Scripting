@@ -41,6 +41,8 @@ static func run() -> bool:
 	passed = _test_including_as_a_base_class_rewrites_one_line() and passed
 	passed = _test_including_as_a_helper_writes_the_forwarding_rows() and passed
 	passed = _test_two_includes_on_one_trigger_are_reported() and passed
+	passed = _test_a_helper_joins_the_handler_the_script_already_has() and passed
+	passed = _test_a_base_keeps_running_under_the_script_that_extends_it() and passed
 	return passed
 
 
@@ -280,6 +282,87 @@ static func _test_including_as_a_helper_writes_the_forwarding_rows() -> bool:
 	ok = _check("a script that is not a shared sheet says so", str(not_shared["error"]),
 		"plain.gd is not a shared sheet - make one with Sheet > New shared sheet….") and ok
 	return ok
+
+
+## A helper included into a script that already has `_process` puts its one call at the top of that
+## function - a second `func _process` beside the first is a script Godot refuses to parse. A comment
+## inside the existing body is not the file's head, so the member still lands above the functions.
+static func _test_a_helper_joins_the_handler_the_script_already_has() -> bool:
+	var shared: String = "%s(helper)\nclass_name PauseHandling\nextends RefCounted\n\n\nfunc on_ready(host: Node) -> void:\n\tpass\n\n\nfunc on_tick(host: Node, delta: float) -> void:\n\tpass\n" % EventSheetSharedSheets.MARKER
+	var ticking: String = "extends Node\n\n\nfunc _process(delta: float) -> void:\n\t# keep the score moving\n\tprint(delta)\n"
+	var one: Dictionary = EventSheetSharedSheets.apply_include(ticking, shared, "res://pause_handling.gd")
+	var ok: bool = _check("an existing _process takes the call as its first line", str(one["text"]),
+		"extends Node\n\n\nvar _pause_handling := PauseHandling.new()\n\n\nfunc _ready() -> void:\n\t_pause_handling.on_ready(self)\n\n\nfunc _process(delta: float) -> void:\n\t_pause_handling.on_tick(self, delta)\n\t# keep the score moving\n\tprint(delta)\n")
+	ok = _check("and the file it writes parses", _parses(str(one["text"])), true) and ok
+	# The check can fail: the shape the include used to write - a second _process - does not parse.
+	ok = _check("the old two-function shape did not", _parses(
+		"extends Node
+var _pause_handling := PauseHandling.new()
+
+
+func _process(delta: float) -> void:
+	_pause_handling.on_tick(self, delta)
+
+
+func _process(delta: float) -> void:
+	print(delta)
+"),
+		false) and ok
+	var both: String = "extends Node\n\n\nfunc _ready() -> void:\n    print(\"up\")\n\n\nfunc _process(_dt: float) -> void:\n    pass\n"
+	var two: Dictionary = EventSheetSharedSheets.apply_include(both, shared, "res://pause_handling.gd")
+	ok = _check("an existing _ready and _process each take one line, in their own indent and names",
+		str(two["text"]),
+		"extends Node\n\n\nvar _pause_handling := PauseHandling.new()\n\n\nfunc _ready() -> void:\n    _pause_handling.on_ready(self)\n    print(\"up\")\n\n\nfunc _process(_dt: float) -> void:\n    _pause_handling.on_tick(self, _dt)\n    pass\n")
+	ok = _check("and that file parses too", _parses(str(two["text"])), true) and ok
+	var one_liner: Dictionary = EventSheetSharedSheets.apply_include(
+		"extends Node\n\n\nfunc _process(delta: float) -> void: pass\n", shared, "res://pause_handling.gd")
+	ok = _check("a header it cannot add to is refused, with the line to write", str(one_liner["error"]),
+		"This script's _process cannot be added to automatically - its first line is not a whole header ending in a colon. Put _pause_handling.on_tick(self, delta) at the top of it by hand.") and ok
+	return ok
+
+
+## In Godot 4 a script's own `_process` replaces its base's unless it calls super. So the include
+## writes `super(...)` into a function the script already has, and a script that overrides the shared
+## base's function without it later is a finding - the base's events on that trigger have stopped.
+static func _test_a_base_keeps_running_under_the_script_that_extends_it() -> bool:
+	var shared: String = EventSheetSharedSheets.new_shared_sheet_source("Pause Handling", EventSheetSharedSheets.WIRING_BASE_CLASS)
+	var ticking: String = "extends Node\n\n\nfunc _process(delta: float) -> void:\n\tprint(delta)\n"
+	var result: Dictionary = EventSheetSharedSheets.apply_include(ticking, shared, "res://pause_handling.gd")
+	var ok: bool = _check("the script's own _process calls the base first", str(result["text"]),
+		"extends PauseHandling\n\n\nfunc _process(delta: float) -> void:\n\tsuper(delta)\n\tprint(delta)\n")
+	ok = _check("and says the line it wrote", result["added"], PackedStringArray(["extends PauseHandling", "super(delta)"])) and ok
+	ok = _check("a script that already calls super gets no second one",
+		str(EventSheetSharedSheets.apply_include(
+			"extends Node\n\n\nfunc _process(delta: float) -> void:\n\tsuper(delta)\n", shared, "res://pause_handling.gd")["text"]),
+		"extends PauseHandling\n\n\nfunc _process(delta: float) -> void:\n\tsuper(delta)\n") and ok
+	var later: String = "extends PauseHandling\n\n\nfunc _process(delta: float) -> void:\n\tprint(delta)\n"
+	var found: Array[Dictionary] = EventSheetSharedSheets.base_not_reached(later, "PauseHandling", shared)
+	ok = _check("a tick added later without super is the finding",
+		found[0].get("message", "") if found.size() > 0 else "",
+		"PauseHandling's Every tick events no longer run - this script's own _process replaces them. Call super(delta) first in it.") and ok
+	ok = _check("and it names the function, so the canvas finds the Every tick event",
+		str(EventSheetSharedSheets.TRIGGER_OF_FUNCTION.get(found[0].get("subject", "") if found.size() > 0 else "", "")), "OnProcess") and ok
+	ok = _check("a helper wiring never earns it",
+		EventSheetSharedSheets.base_not_reached(later, "PauseHandling",
+			"%s(helper)\nclass_name PauseHandling\nfunc _process(delta: float) -> void:\n\tpass\n" % EventSheetSharedSheets.MARKER).size(), 0) and ok
+	return ok
+
+
+## True when a written source parses, proved through a real file under user:// rather than a string:
+## the class the include names is swapped for a preload of a stand-in written beside it, so the
+## question is only the SHAPE the include wrote - two functions of one name is what fails here.
+static func _parses(text: String) -> bool:
+	var dir: String = "user://include_parse_check"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var stand_in: FileAccess = FileAccess.open(dir + "/pause_handling.gd", FileAccess.WRITE)
+	stand_in.store_string("extends RefCounted\n\n\nfunc on_ready(host: Node) -> void:\n\tpass\n\n\nfunc on_tick(host: Node, delta: float) -> void:\n\tpass\n")
+	stand_in.close()
+	var includer: FileAccess = FileAccess.open(dir + "/includer.gd", FileAccess.WRITE)
+	includer.store_string(text.replace("PauseHandling.new()", "preload(\"%s/pause_handling.gd\").new()" % dir))
+	includer.close()
+	var script: GDScript = GDScript.new()
+	script.source_code = FileAccess.get_file_as_string(dir + "/includer.gd")
+	return script.reload() == OK
 
 
 ## The one confusion a reader of the INCLUDER cannot see, because neither handler is written there.

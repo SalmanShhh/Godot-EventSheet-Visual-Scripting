@@ -136,6 +136,7 @@ const FINDINGS_MIGRATION := "migration"
 const FINDINGS_RENAME := "rename"
 const FINDINGS_FEEDBACK := "feedback"
 const FINDINGS_INPUT := "input"
+const FINDINGS_INCLUDES := "includes"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -1620,7 +1621,9 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 	# put a warning mark and a sentence inside the Input bar. It is a finding, so the bar says nothing
 	# at all now - the head bar wears the amber state, the sentence is read in the help strip once the
 	# bar is selected, and the Doctor's inbox carries the same line with the fix beside it.
-	_stamp_attention(row_data, _tagged(FINDINGS_INPUT, _sheet_findings(FINDINGS_INPUT)))
+	var head_findings: Array[Dictionary] = _tagged(FINDINGS_INPUT, _sheet_findings(FINDINGS_INPUT))
+	head_findings.append_array(_tagged(FINDINGS_INCLUDES, _sheet_findings(FINDINGS_INCLUDES)))
+	_stamp_attention(row_data, head_findings)
 	return row_data
 
 
@@ -10418,6 +10421,12 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# with no player in it both earn nothing at all.
 				_sheet_findings_cache[family] = EventSheetFeedbackFindings.findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
+			FINDINGS_INCLUDES:
+				# A shared sheet this script extends whose tick (or ready, or input) the script replaces
+				# without calling super: those events stop. Read off the file on disk, the same bytes
+				# the Doctor reads, so the amber and the inbox line cannot disagree.
+				_sheet_findings_cache[family] = EventSheetSharedSheets.base_not_reached_in_file(
+					str(sheet.external_source_path) if sheet != null else "")
 			FINDINGS_INPUT:
 				# A control this file asks for that the project's Input Map has not got. The head
 				# bar wears the amber for it; the sentence and the door live in the strip and in the
@@ -10470,6 +10479,13 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 		EventSheetRenameFindings.for_event(_sheet_findings(FINDINGS_RENAME), event_row)))
 	about.append_array(_tagged(FINDINGS_FEEDBACK,
 		EventSheetFeedbackFindings.for_event(_sheet_findings(FINDINGS_FEEDBACK), event_row)))
+	# The event whose trigger compiles to the function that replaced the shared base's.
+	if event_row != null:
+		var over: Array[Dictionary] = []
+		for finding: Dictionary in _sheet_findings(FINDINGS_INCLUDES):
+			if str(EventSheetSharedSheets.TRIGGER_OF_FUNCTION.get(str(finding.get("subject", "")), "")) == event_row.trigger_id:
+				over.append(finding)
+		about.append_array(_tagged(FINDINGS_INCLUDES, over))
 	return about
 
 

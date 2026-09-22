@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed: including a shared sheet into a script that already has the handler
+
+- **A helper include no longer writes a second `_process`.** Including a shared sheet as a helper
+  into a script that already had its own `_process` (or `_ready`, `_physics_process`, `_input`)
+  reported success and wrote a second function of the same name, which Godot refuses to parse. The
+  one forwarding call now goes at the top of the function that is already there, in its own indent
+  and with its own argument names; a header it cannot safely add to (a one-line body, a header
+  broken over lines, the wrong number of arguments) is refused with the exact line to write by hand.
+  The member the include adds also stopped landing inside a function whose body held a comment.
+- **A shared sheet included as the base keeps running.** In Godot 4 a script's own `_process`
+  replaces its base's unless it calls `super(delta)`, so a shared sheet included as the base had its
+  Every tick events stop the moment the script had a tick of its own - measured, the base ticked
+  zero times. The include now writes `super(...)` as the first line of every such function the
+  script already has. A tick added later without it is a warning in the Doctor and the quiet amber
+  state on the event that overrides it, with the sentence in the help strip.
+
 ### Changed: the head bars are flat, one line, and say nothing twice
 
 - **The head is painted the way an Include row is painted elsewhere.** The bar a file opens on,

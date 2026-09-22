@@ -38,6 +38,18 @@ const HELPER_HANDLERS: Array[Dictionary] = [
 	{"handler": "on_input", "from": "_input", "signature": "(event: InputEvent) -> void", "call_args": "self, event"},
 ]
 
+## The sheet trigger that compiles to each of those engine functions - how a finding about a function
+## finds the event a reader wrote it with.
+const TRIGGER_OF_FUNCTION: Dictionary = {
+	"_ready": "OnReady",
+	"_process": "OnProcess",
+	"_physics_process": "OnPhysicsProcess",
+	"_input": "OnInput",
+}
+
+## The kind of the one finding this file reports about an includer.
+const KIND_BASE_NOT_REACHED := "shared_base_not_reached"
+
 
 ## True when this source is a shared sheet (it carries the marker on a line of its own). Matching
 ## the marker anywhere in the text would claim this file and its own guide first of all.
@@ -142,7 +154,7 @@ static func apply_include(source: String, shared_source: String, shared_path: St
 	if shared_class.is_empty():
 		return _failure("%s has no class name, so no script can include it." % shared_path.get_file())
 	if wiring == WIRING_BASE_CLASS:
-		return _include_as_base_class(source, shared_class)
+		return _include_as_base_class(source, shared_source, shared_class)
 	return _include_as_helper(source, shared_source, shared_class)
 
 
@@ -150,7 +162,11 @@ static func _failure(error: String) -> Dictionary:
 	return {"ok": false, "text": "", "error": error, "wiring": "", "added": PackedStringArray()}
 
 
-static func _include_as_base_class(source: String, shared_class: String) -> Dictionary:
+## In Godot 4 a script that declares `_process` REPLACES its base's `_process` - the base's runs only
+## when the script calls `super(...)`. So pointing `extends` at a shared sheet whose events live in
+## `_process` would stop them the moment the includer has a tick of its own. The include therefore
+## writes that one `super` call as the first line of every such function the includer already has.
+static func _include_as_base_class(source: String, shared_source: String, shared_class: String) -> Dictionary:
 	var lines: PackedStringArray = source.split("\n")
 	for index: int in lines.size():
 		if not lines[index].strip_edges().begins_with("extends "):
@@ -158,8 +174,22 @@ static func _include_as_base_class(source: String, shared_class: String) -> Dict
 		if lines[index].strip_edges() == "extends %s" % shared_class:
 			return _failure("This script already includes %s." % shared_class)
 		lines[index] = "extends %s" % shared_class
+		var added: PackedStringArray = PackedStringArray(["extends %s" % shared_class])
+		for entry: Dictionary in HELPER_HANDLERS:
+			var function_name: String = str(entry["from"])
+			if _function_at(shared_source.split("\n"), function_name) < 0:
+				continue
+			var at: int = _function_at(lines, function_name)
+			if at < 0 or _body_calls_super(lines, at):
+				continue
+			var header: Dictionary = _header_arguments(lines[at], _arity_of(entry))
+			var call: String = "super(%s)" % ", ".join(header.get("names", PackedStringArray()))
+			if not bool(header["ok"]):
+				return _failure(_cannot_add_to(function_name, str(header["why"]), call))
+			lines.insert(at + 1, _body_indent(lines, at) + call)
+			added.append(call)
 		return {"ok": true, "text": "\n".join(lines), "error": "", "wiring": WIRING_BASE_CLASS,
-			"added": PackedStringArray(["extends %s" % shared_class])}
+			"added": added}
 	return _failure("This script has no `extends` line to include a base class on.")
 
 
@@ -167,10 +197,31 @@ static func _include_as_helper(source: String, shared_source: String, shared_cla
 	var member: String = member_name_for(shared_class)
 	if _declares_member(source, member):
 		return _failure("This script already includes %s." % shared_class)
-	var written: PackedStringArray = helper_lines(shared_source, shared_class)
-	if written.is_empty():
+	var handlers: PackedStringArray = handlers_of(shared_source)
+	if handlers.is_empty():
 		return _failure("%s has no on_ready / on_tick / on_physics_tick / on_input to forward to." % shared_class)
 	var lines: PackedStringArray = source.split("\n")
+	# A function the includer ALREADY declares gets the one forwarding call as its first statement:
+	# writing a second `func _process` beside the first is a script Godot refuses to parse.
+	var merged: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in HELPER_HANDLERS:
+		var handler: String = str(entry["handler"])
+		var function_name: String = str(entry["from"])
+		if not handlers.has(handler):
+			continue
+		var existing: int = _function_at(lines, function_name)
+		if existing < 0:
+			continue
+		var header: Dictionary = _header_arguments(lines[existing], _arity_of(entry))
+		var args: PackedStringArray = PackedStringArray(["self"])
+		args.append_array(header.get("names", PackedStringArray()))
+		var call: String = "%s.%s(%s)" % [member, handler, ", ".join(args)]
+		if not bool(header["ok"]):
+			return _failure(_cannot_add_to(function_name, str(header["why"]),
+				"%s.%s(%s)" % [member, handler, str(entry["call_args"])]))
+		lines.insert(existing + 1, _body_indent(lines, existing) + call)
+		merged.append(function_name)
+	var written: PackedStringArray = helper_lines(shared_source, shared_class, merged)
 	var at: int = _insert_point(lines)
 	var out: PackedStringArray = PackedStringArray()
 	for index: int in lines.size():
@@ -179,7 +230,12 @@ static func _include_as_helper(source: String, shared_source: String, shared_cla
 		out.append(lines[index])
 	if at >= lines.size():
 		out.append_array(written)
-	return {"ok": true, "text": "\n".join(out), "error": "", "wiring": WIRING_HELPER, "added": written}
+	var added: PackedStringArray = written.duplicate()
+	for function_name: String in merged:
+		for entry: Dictionary in HELPER_HANDLERS:
+			if str(entry["from"]) == function_name:
+				added.append("%s.%s(...)" % [member, str(entry["handler"])])
+	return {"ok": true, "text": "\n".join(out), "error": "", "wiring": WIRING_HELPER, "added": added}
 
 
 static func _declares_member(source: String, member: String) -> bool:
@@ -192,7 +248,11 @@ static func _declares_member(source: String, member: String) -> bool:
 ## The lines a helper include writes: the one member, and one forwarding function per handler the
 ## shared sheet declares. Written exactly the way a person would write them by hand, so the file
 ## reads the same whether the sheet wrote them or the reader did.
-static func helper_lines(shared_source: String, shared_class: String) -> PackedStringArray:
+##
+## `skip` names the engine functions the includer already declares; those get their call merged into
+## the existing body instead, so no function is written twice.
+static func helper_lines(shared_source: String, shared_class: String,
+		skip: PackedStringArray = PackedStringArray()) -> PackedStringArray:
 	var handlers: PackedStringArray = handlers_of(shared_source)
 	if handlers.is_empty():
 		return PackedStringArray()
@@ -201,7 +261,7 @@ static func helper_lines(shared_source: String, shared_class: String) -> PackedS
 	out.append("var %s := %s.new()" % [member, shared_class])
 	for entry: Dictionary in HELPER_HANDLERS:
 		var handler: String = str(entry["handler"])
-		if not handlers.has(handler):
+		if not handlers.has(handler) or skip.has(str(entry["from"])):
 			continue
 		out.append("")
 		out.append("")
@@ -217,17 +277,133 @@ static func helper_lines(shared_source: String, shared_class: String) -> PackedS
 ## at the end.
 static func _insert_point(lines: PackedStringArray) -> int:
 	var last_head: int = -1
+	# Only the LEADING run counts: a comment inside a function body further down is not the head,
+	# and treating it as one put the written member inside that function.
 	for index: int in lines.size():
 		var text: String = lines[index].strip_edges()
+		if text.is_empty():
+			continue
 		if text.begins_with("extends ") or text.begins_with("class_name ") or text.begins_with("@icon") \
 				or text.begins_with("@tool") or text.begins_with("##") or text.begins_with("#"):
 			last_head = index
+			continue
+		break
 	if last_head < 0:
 		return 0
 	var at: int = last_head + 1
 	while at < lines.size() and lines[at].strip_edges().is_empty():
 		at += 1
 	return at
+
+
+## The line index of a top-level `func <name>(`, or -1. Top-level means unindented: a nested class's
+## function of the same name is not the one Godot calls on this node.
+static func _function_at(lines: PackedStringArray, function_name: String) -> int:
+	for index: int in lines.size():
+		if lines[index].begins_with("func %s(" % function_name):
+			return index
+	return -1
+
+
+## How many arguments Godot passes to the engine function an entry forwards from.
+static func _arity_of(entry: Dictionary) -> int:
+	var inside: String = str(entry["signature"]).get_slice("(", 1).get_slice(")", 0).strip_edges()
+	return 0 if inside.is_empty() else inside.split(",").size()
+
+
+## The argument names a function header declares, as {ok, names, why}. Only a header that fits on
+## its own line and ends in `:` can be added to - a one-line body or a header broken over lines is
+## refused with the reason rather than edited into something that does not parse.
+static func _header_arguments(header: String, arity: int) -> Dictionary:
+	var open: int = header.find("(")
+	var close: int = header.find(")", open)
+	if open < 0 or close < 0 or not header.strip_edges().ends_with(":"):
+		return {"ok": false, "names": PackedStringArray(), "why": "its first line is not a whole header ending in a colon"}
+	var names: PackedStringArray = PackedStringArray()
+	for part: String in header.substr(open + 1, close - open - 1).split(",", false):
+		var argument: String = part.get_slice(":", 0).get_slice("=", 0).strip_edges()
+		if not argument.is_empty():
+			names.append(argument)
+	if names.size() != arity:
+		return {"ok": false, "names": names,
+			"why": "it takes %d argument(s) where Godot passes %d" % [names.size(), arity]}
+	return {"ok": true, "names": names, "why": ""}
+
+
+## The indentation of a function's first statement, so a line put above it lines up with it.
+static func _body_indent(lines: PackedStringArray, header_index: int) -> String:
+	for index: int in range(header_index + 1, lines.size()):
+		var line: String = lines[index]
+		if line.strip_edges().is_empty():
+			continue
+		var indent: String = line.substr(0, line.length() - line.strip_edges(true, false).length())
+		return indent if not indent.is_empty() else "\t"
+	return "\t"
+
+
+## True when a function's body already calls its base - an include run twice, or a reader who wrote
+## it by hand, must not get a second one.
+static func _body_calls_super(lines: PackedStringArray, header_index: int) -> bool:
+	for index: int in range(header_index + 1, lines.size()):
+		var line: String = lines[index]
+		if not line.strip_edges().is_empty() and not line.begins_with("\t") and not line.begins_with(" "):
+			return false
+		if line.strip_edges().begins_with("super"):
+			return true
+	return false
+
+
+static func _cannot_add_to(function_name: String, why: String, call: String) -> String:
+	return "This script's %s cannot be added to automatically - %s. Put %s at the top of it by hand." % [
+		function_name, why, call]
+
+
+## The base-class include's one silent failure, asked of an includer and the shared sheet it extends:
+## every engine function both declare where the includer's never calls `super` - Godot 4 runs only
+## the includer's, so the shared sheet's events on that trigger stop without a word. Returns
+## {kind, subject, message} per function; `subject` is the function, which is how the canvas finds
+## the event that wrote it.
+static func base_not_reached(source: String, shared_class: String, shared_source: String) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if wiring_of(shared_source) != WIRING_BASE_CLASS:
+		return found
+	var lines: PackedStringArray = source.split("\n")
+	var shared_lines: PackedStringArray = shared_source.split("\n")
+	for entry: Dictionary in HELPER_HANDLERS:
+		var function_name: String = str(entry["from"])
+		var at: int = _function_at(lines, function_name)
+		if at < 0 or _function_at(shared_lines, function_name) < 0 or _body_calls_super(lines, at):
+			continue
+		var names: PackedStringArray = _header_arguments(lines[at], _arity_of(entry)).get("names", PackedStringArray())
+		found.append({
+			"kind": KIND_BASE_NOT_REACHED,
+			"subject": function_name,
+			"message": "%s's %s events no longer run - this script's own %s replaces them. Call super(%s) first in it." % [
+				shared_class, _handler_words(str(entry["handler"])), function_name, ", ".join(names)],
+		})
+	return found
+
+
+## The same question asked of a script on disk: which shared sheet it extends, read off its own
+## `extends` line and the project's class list. Empty for a script that extends no shared sheet.
+static func base_not_reached_in_file(script_path: String) -> Array[Dictionary]:
+	var none: Array[Dictionary] = []
+	if script_path.is_empty() or not FileAccess.file_exists(script_path):
+		return none
+	var source: String = FileAccess.get_file_as_string(script_path)
+	var base: String = ""
+	for line: String in source.split("\n"):
+		if line.begins_with("extends "):
+			base = line.substr("extends ".length()).strip_edges()
+			break
+	if base.is_empty() or base.begins_with("\""):
+		return none
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == base:
+			var base_path: String = str(entry.get("path", ""))
+			if FileAccess.file_exists(base_path):
+				return base_not_reached(source, base, FileAccess.get_file_as_string(base_path))
+	return none
 
 
 ## Every shared sheet an includer's source pulls in: an Array of {wiring, class, member}. Read off

@@ -2792,6 +2792,15 @@ static func check_shared_sheet_includes(findings: Array[Dictionary]) -> void:
 			continue
 		for message: String in EventSheetSharedSheets.duplicate_trigger_messages(source, shared_by_class):
 			_add(findings, "info", "shared-sheet-includes", script_path, message)
+		# A warning, unlike the clash above: a shared sheet included as the base whose tick this
+		# script replaces without calling super has events that simply stop, and nothing else says so.
+		for include: Dictionary in EventSheetSharedSheets.includes_in(source, shared_by_class):
+			if str(include["wiring"]) != EventSheetSharedSheets.WIRING_BASE_CLASS:
+				continue
+			var shared_class: String = str(include["class"])
+			for finding: Dictionary in EventSheetSharedSheets.base_not_reached(source, shared_class,
+					str(shared_by_class[shared_class])):
+				_add(findings, "warning", "shared-sheet-includes", script_path, str(finding["message"]))
 
 
 ## THE SKILL TREE ASSETS: the two ways a tree is wrong before it is ever played, and the
