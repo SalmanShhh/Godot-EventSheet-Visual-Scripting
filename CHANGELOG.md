@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added: the Welcome window asks how you usually make games
+
+- **One question instead of three hidden settings.** The Welcome window opens on "How do you usually
+  make games?" with three answers. "I come from another event-sheet editor" switches on that
+  editor's words, the Classic sheet look and the Project bar, and opens the migration guide in the
+  Manual rather than a browser tab. "I write GDScript" switches on Godot's words and the GDScript
+  panel beside every sheet. "I'm new to event sheets" keeps the familiar words and starts the tour.
+  A line under the answers says exactly what the pressed one set and where to change it, every
+  setting stays reversible where it always lived, and the answer is remembered per project. The old
+  footer link to the guide is gone, because the second answer is that link and more.
+
 ### Added: the picker answers to the names another event-sheet editor uses
 
 - **Search reads the importer's own table.** The project importer already knows which verb each of

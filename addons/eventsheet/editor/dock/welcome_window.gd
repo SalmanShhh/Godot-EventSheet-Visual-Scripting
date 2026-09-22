@@ -14,8 +14,56 @@ extends RefCounted
 # parents itself on the dock and reaches back through the dock reference for the showcase-open guard,
 # the starter-template menu, and the Simple-mode toggle.
 
+## The three answers to "how do you usually make games?", and exactly what each one sets. One table,
+## read by the buttons, the line that says what changed, and the tests - so the promise the card
+## makes and the settings it writes cannot drift apart. Every value is an existing, reversible
+## setting: the card invents no mode of its own.
+const CAME_FROM_NEW := "new"
+const CAME_FROM_SHEETS := "sheets"
+const CAME_FROM_GDSCRIPT := "gdscript"
+const CAME_FROM_CHOICES: Array[String] = [CAME_FROM_NEW, CAME_FROM_SHEETS, CAME_FROM_GDSCRIPT]
+## The Classic sheet starter's own file - the look another event-sheet editor's users already know.
+const CLASSIC_THEME_PATH := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
+## The guide a reader from another event-sheet editor is handed, opened in the Manual.
+const MIGRATION_GUIDE_ID := "GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR"
+
 var _dock: Control = null
 var _welcome_window: Window = null
+
+
+## What one answer sets: {label, note, words, theme, project_bar, code_panel, guide, tour}. `theme` is a
+## theme file ("" keeps the editor-matching default); `words` is a words preset name.
+static func choice_settings(choice: String) -> Dictionary:
+	match choice:
+		CAME_FROM_SHEETS:
+			return {"label": "I come from another event-sheet editor",
+				"words": EventSheetWords.PRESET_SHEET, "theme": CLASSIC_THEME_PATH, "project_bar": true,
+				"code_panel": false, "guide": MIGRATION_GUIDE_ID, "tour": false}
+		CAME_FROM_GDSCRIPT:
+			return {"label": "I write GDScript",
+				"words": EventSheetWords.PRESET_GODOT, "theme": "", "project_bar": false,
+				"code_panel": true, "guide": "", "tour": false}
+	return {"label": "I'm new to event sheets",
+		"words": EventSheetWords.PRESET_FAMILIAR, "theme": "", "project_bar": false,
+		"code_panel": false, "guide": "", "tour": true}
+
+
+## The one line under the choices that says what an answer changed and where each thing lives, so
+## nothing it set is a mystery to find later.
+static func choice_summary(choice: String) -> String:
+	var settings: Dictionary = choice_settings(choice)
+	var said: PackedStringArray = PackedStringArray()
+	said.append(EventSheetWords.preset_label(str(settings["words"])))
+	said.append("Classic sheet theme" if not str(settings["theme"]).is_empty() else "the editor-matching theme")
+	if bool(settings["project_bar"]):
+		said.append("Project bar on")
+	if bool(settings["code_panel"]):
+		said.append("the GDScript panel beside every sheet")
+	if not str(settings["guide"]).is_empty():
+		said.append("the migration guide open in the Manual")
+	if bool(settings["tour"]):
+		said.append("the tour")
+	return "Sets: %s. Change any of it later in Settings ▸ Words and the View menu." % ", ".join(said)
 
 
 ## Wires the dock reference used to parent the window + reach the Simple-mode / template callbacks.
@@ -83,6 +131,9 @@ func _build() -> void:
 	blurb.text = "Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code."
 	about_box.add_child(blurb)
 	box.add_child(EventSheetPopupUI.titled_card("About EventSheets", about_box))
+	# The one question that sets the words, the look and the panels a reader already expects,
+	# instead of three settings in three menus they would have to know existed.
+	box.add_child(EventSheetPopupUI.titled_card("How do you usually make games?", _build_came_from()))
 	var start_box: VBoxContainer = EventSheetPopupUI.form_box()
 	# The first-time walkthrough - a floating 6-step tour of the core loop, done in the live editor.
 	var tour_button: Button = Button.new()
@@ -144,29 +195,6 @@ func _build() -> void:
 			if preference_row is Control:
 				prefs_box.add_child(preference_row)
 	box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
-	# Footer migration row: the guide is one CLICK, not a filename to go hunting for - the old
-	# text named it without linking it. Reopen note stays a muted hint below.
-	var migration_row: HBoxContainer = HBoxContainer.new()
-	migration_row.add_theme_constant_override("separation", 8)
-	var migration_label: Label = Label.new()
-	migration_label.text = "Coming from another event-sheet tool?"
-	migration_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.65))
-	migration_row.add_child(migration_label)
-	var migration_button: Button = Button.new()
-	migration_button.text = "Open the migration guide"
-	migration_button.flat = true
-	migration_button.tooltip_text = "Opens the migration guide in your browser - it maps the vocabulary you already know onto this plugin's."
-	# The guides live in the repo, not in the plugin zip (the release ships addons/ only), so a
-	# res:// path opened nothing in an installed project. The link is pinned to the installed
-	# version's tag, so the page matches the build in front of the reader.
-	migration_button.pressed.connect(func() -> void:
-		# Taking the migration path is a reader telling us which surfaces they expect. The
-		# Project bar turns itself on for them, and View ▸ Project bar takes it away again.
-		EventSheetProjectBarGlue.mark_started_from_template()
-		_dock._project_bar_glue.apply_visibility()
-		EventSheets.open_online_doc("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"))
-	migration_row.add_child(migration_button)
-	box.add_child(migration_row)
 	# Second footer row: somebody hitting a bug on day one should not have to work out where the
 	# project lives. The Tools menu carries the same action for people already past the Welcome.
 	var issue_row: HBoxContainer = HBoxContainer.new()
@@ -185,6 +213,64 @@ func _build() -> void:
 	box.add_child(EventSheetPopupUI.hint_label("Reopen this window any time: Tools → Welcome…", 440.0))
 	dialog.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(dialog)
+
+
+## The three answers as toggle buttons in one group, and the line that says what the pressed one set.
+## Pressing an answer applies it at once; the answer is remembered per project, so the card opens on
+## it next time.
+func _build_came_from() -> VBoxContainer:
+	var card: VBoxContainer = EventSheetPopupUI.form_box()
+	var group: ButtonGroup = ButtonGroup.new()
+	var summary: Label = EventSheetPopupUI.hint_label("", 440.0)
+	var remembered: String = _remembered_choice()
+	for choice: String in CAME_FROM_CHOICES:
+		var answer: Button = Button.new()
+		answer.text = str(choice_settings(choice)["label"])
+		answer.toggle_mode = true
+		answer.button_group = group
+		answer.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		answer.tooltip_text = choice_summary(choice)
+		answer.set_pressed_no_signal(choice == remembered)
+		answer.pressed.connect(func() -> void:
+			summary.text = choice_summary(choice)
+			apply_choice(choice))
+		card.add_child(answer)
+	summary.text = choice_summary(remembered) if not remembered.is_empty() else "Pick one - it sets the words, the look and the panels, and each stays changeable."
+	card.add_child(summary)
+	return card
+
+
+## Applies one answer through the settings the rest of the editor already owns.
+func apply_choice(choice: String) -> void:
+	var settings: Dictionary = choice_settings(choice)
+	EventSheetWords.apply_preset(str(settings["words"]))
+	if _dock != null and _dock.get("_theme_manager") != null:
+		var theme_path: String = str(settings["theme"])
+		if theme_path.is_empty():
+			_dock._theme_manager.use_default_theme()
+		else:
+			_dock._theme_manager.load_theme_style_from_path(theme_path)
+		_dock._theme_manager._refresh_theme_menu_selection()
+	if bool(settings["project_bar"]):
+		# The reader told us which surfaces they expect; View ▸ Project bar takes it away again.
+		EventSheetProjectBarGlue.mark_started_from_template()
+		if _dock != null:
+			_dock._project_bar_glue.apply_visibility()
+	ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default",
+		true if bool(settings["code_panel"]) else null)
+	if Engine.is_editor_hint() and DisplayServer.get_name() != "headless":
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "came_from", choice)
+	if not str(settings["guide"]).is_empty():
+		EventSheets.open_docs(str(settings["guide"]))
+	if bool(settings["tour"]) and _dock != null and _welcome_window != null:
+		_welcome_window.hide()
+		_dock.start_tour()
+
+
+func _remembered_choice() -> String:
+	if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
+		return ""
+	return str(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "came_from", ""))
 
 
 ## Fills the language picker from the discovered locales (English first, then one entry per
