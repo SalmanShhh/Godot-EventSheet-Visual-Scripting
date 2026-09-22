@@ -388,6 +388,85 @@ static func translate_expression(text: String, aliases: Dictionary = {}) -> Dict
 	return {"text": out, "translated": not _has_residual(out)}
 
 
+## What an expression FIELD writes when a reader types it the way another event-sheet editor spells
+## it, or "" when there is nothing to rewrite. `object_paths` is {object name: its node path in the
+## open scene}, so `Player.X` becomes `$Player.position.x` only for an object that is really there;
+## `Self.X` is the object the sheet is on. `&` joins text: `a & " px"` becomes `str(a) + " px"` -
+## but only when a side is a text literal or the field takes text, because in GDScript `&` between
+## two numbers is bitwise AND and must be left alone. The caller only asks this of text that does NOT
+## already parse as GDScript, so valid code is never rewritten.
+static func field_expression(text: String, object_paths: Dictionary, text_field: bool) -> String:
+	var typed: String = text.strip_edges()
+	if typed.is_empty():
+		return ""
+	var aliases: Dictionary = {}
+	for property_name: String in OBJECT_PROPERTIES:
+		aliases["Self.%s" % property_name] = str(OBJECT_PROPERTIES[property_name])
+	for object_name: String in object_paths:
+		var path: String = str(object_paths[object_name]).strip_edges()
+		if path.is_empty():
+			continue
+		for property_name: String in OBJECT_PROPERTIES:
+			aliases["%s.%s" % [object_name, property_name]] = "%s.%s" % [path, OBJECT_PROPERTIES[property_name]]
+	var joined: String = _join_text(typed, text_field)
+	var out: String = str(translate_expression(joined, aliases)["text"])
+	return out if out != typed else ""
+
+
+## `a & b & c` at the top level, as `str(a) + str(b) + str(c)` with text literals left bare. Skips
+## `&&`, a StringName literal (`&"name"`), and anything inside quotes or brackets. Answers the text
+## unchanged when there is no top-level `&`, or when neither a literal nor the field says it is text.
+static func _join_text(text: String, text_field: bool) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var quote: String = ""
+	var start: int = 0
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]", "}"]:
+			depth -= 1
+		elif character == "&" and depth == 0:
+			var next: String = text[index + 1] if index + 1 < text.length() else ""
+			var previous: String = text[index - 1] if index > 0 else ""
+			if next != "&" and previous != "&" and next != "\"" and next != "'":
+				parts.append(text.substr(start, index - start).strip_edges())
+				start = index + 1
+		index += 1
+	if parts.is_empty():
+		return text
+	parts.append(text.substr(start).strip_edges())
+	# A side with nothing in it is a line still being typed, not a join: `a &` must stay refused
+	# rather than become `str(a) + str()`, which parses and would commit half a thought.
+	if parts.has(""):
+		return text
+	var any_literal: bool = false
+	for part: String in parts:
+		if _is_text_literal(part):
+			any_literal = true
+	if not any_literal and not text_field:
+		return text
+	var joined: PackedStringArray = PackedStringArray()
+	for part: String in parts:
+		joined.append(part if _is_text_literal(part) else "str(%s)" % part)
+	return " + ".join(joined)
+
+
+static func _is_text_literal(part: String) -> bool:
+	return part.length() >= 2 and ((part.begins_with("\"") and part.ends_with("\""))
+		or (part.begins_with("'") and part.ends_with("'")))
+
+
 ## Longest name first, so `Player.X` is rewritten before the bare `Player` in it ever could be.
 static func _apply_aliases(text: String, aliases: Dictionary) -> String:
 	if aliases.is_empty():

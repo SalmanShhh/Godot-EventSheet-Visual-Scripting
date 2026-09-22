@@ -2981,6 +2981,21 @@ func _validate_expression_field(edit: Control) -> void:
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet)
 	var key: String = _key_of_field(edit)
 	var param: Dictionary = _param_dict(key)
+	if edit.has_meta(FOREIGN_READING_META):
+		edit.remove_meta(FOREIGN_READING_META)
+	if not bool(lint_result.get("ok", true)):
+		# Another event-sheet editor's spelling - `Player.X & " px"`, `random(10)` - is read rather
+		# than refused: the field says the GDScript it will write, and OK writes that.
+		var foreign: String = _foreign_reading(edit, sheet)
+		if not foreign.is_empty():
+			edit.set_meta(FOREIGN_READING_META, {"typed": str(edit.get("text")), "gdscript": foreign})
+			edit.remove_theme_color_override("font_color")
+			_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_NOTE,
+				EventSheetParamFieldFactory.strip_heading(param, EventSheetL10n.translate("reads as")),
+				foreign, "", "")
+			if _dialog != null:
+				_refresh_live_reading()
+			return
 	if bool(lint_result.get("ok", true)):
 		# Valid GDScript - but a literal $node / get_node("…") path that does NOT exist in the edited
 		# scene is almost always a typo. Flag it amber (a warning, not a red error: the node may be
@@ -3018,6 +3033,42 @@ func _validate_expression_field(edit: Control) -> void:
 			body, undeclared, suggestion)
 	if _dialog != null:
 		_refresh_live_reading()
+
+
+## The meta an expression field carries while it holds another editor's spelling that reads as
+## valid GDScript: {typed, gdscript}. Checked against the field's current text everywhere it is
+## read, so a keystroke after the note never commits a stale translation.
+const FOREIGN_READING_META := "foreign_reading"
+
+
+## The GDScript another editor's expression becomes, or "" when it is not one or would not compile.
+func _foreign_reading(edit: Control, sheet: EventSheetResource) -> String:
+	var key: String = _key_of_field(edit)
+	var text_field: bool = int(_param_dict(key).get("type", TYPE_NIL)) == TYPE_STRING
+	var written: String = EventSheetForeignACEMap.field_expression(str(edit.get("text")),
+		_scene_object_paths(), text_field)
+	if written.is_empty():
+		return ""
+	return written if bool(EventSheetGDScriptLint.lint_expression(written, sheet).get("ok", false)) else ""
+
+
+## {node name: "$path"} for every node in the open scene, so `Player.X` names a node that is really
+## there. Empty with no scene open, which leaves only `Self.X` and the functions to read.
+func _scene_object_paths() -> Dictionary:
+	var paths: Dictionary = {}
+	var root: Node = _validation_scene_root()
+	if root == null:
+		return paths
+	for node: Node in root.find_children("*", "", true, false):
+		if not paths.has(str(node.name)):
+			paths[str(node.name)] = "$%s" % str(root.get_path_to(node))
+	return paths
+
+
+## True while an expression field holds a translation of exactly its current text.
+static func _holds_foreign_reading(field: Control) -> bool:
+	return field != null and field.has_meta(FOREIGN_READING_META) \
+		and str((field.get_meta(FOREIGN_READING_META) as Dictionary).get("typed", "")) == str(field.get("text"))
 
 
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
@@ -3168,7 +3219,8 @@ func _record_expression_note(edit: Control, level: String, heading: String, body
 		"heading": heading,
 		"body": body,
 		"reason": EventSheetL10n.translate("fix %s first") % _param_label(key) if level == EventSheetParamFieldFactory.LEVEL_ERROR
-			else EventSheetL10n.translate("check %s") % _param_label(key),
+			else ("" if level == EventSheetParamFieldFactory.LEVEL_NOTE
+				else EventSheetL10n.translate("check %s") % _param_label(key)),
 		"fixes": fixes,
 	}
 
@@ -3337,6 +3389,9 @@ func _extract_value(field: Control) -> Variant:
 				return "tr(\"%s\")" % (field as LineEdit).text.replace("\\", "\\\\").replace("\"", "\\\"")
 		return (field as LineEdit).text
 	if field is CodeEdit:
+		# Another editor's spelling commits as the GDScript it reads as - one truth on disk.
+		if _holds_foreign_reading(field):
+			return str((field.get_meta(FOREIGN_READING_META) as Dictionary).get("gdscript", ""))
 		# Expression fields are single-line CodeEdits (for completion); strip any newline
 		# completion may sneak in.
 		return (field as CodeEdit).text.replace("
@@ -3352,7 +3407,8 @@ func _first_invalid_expression() -> Control:
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	for key: Variant in _fields.keys():
 		var field: Control = _fields[key]
-		if field is CodeEdit and not bool(EventSheetGDScriptLint.lint_expression(str(field.get("text")), sheet).get("ok", true)):
+		if field is CodeEdit and not _holds_foreign_reading(field) \
+				and not bool(EventSheetGDScriptLint.lint_expression(str(field.get("text")), sheet).get("ok", true)):
 			return field
 	return null
 
@@ -3363,7 +3419,8 @@ func _first_invalid_expression() -> Control:
 func _first_structural_error_field() -> Control:
 	for key: Variant in _fields.keys():
 		var field: Control = _fields[key]
-		if field is CodeEdit and not EventSheetGDScriptLint.structural_syntax_error(str(field.get("text"))).is_empty():
+		if field is CodeEdit and not _holds_foreign_reading(field) \
+				and not EventSheetGDScriptLint.structural_syntax_error(str(field.get("text"))).is_empty():
 			return field
 	return null
 

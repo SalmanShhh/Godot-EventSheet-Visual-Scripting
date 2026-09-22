@@ -6,6 +6,20 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: an expression field reads the spelling another event-sheet editor uses
+
+- **`Player.X + random(10) & \" px\"` is read, not refused.** The first expression a reader from
+  another event-sheet editor writes used to go red, because it is not GDScript. An expression field
+  now reads it: an object's `X`, `Y`, `Angle`, `Opacity`, `Text` or `Visible` for a node that is
+  really in the open scene, `Self.X` for the object the sheet is on, `&` joining text, and the
+  functions the project importer already knew (`random`, `choose`, `dt`, `len`, `left`, `mid`,
+  `tokenat`, `zeropad`, `uppercase` and the rest). The help strip says the GDScript it will write
+  under \"reads as\", nothing is coloured and nothing blocks OK, and OK writes that GDScript - the
+  typed spelling is not kept, so the file on disk stays plain code and the round trip is untouched.
+  Text that is already GDScript is never rewritten, an object the scene has not got is left as
+  typed, `&` between two numbers stays bitwise AND unless the field takes text, and a line still
+  being typed (`a &`) stays refused rather than committing half a thought.
+
 ### Added: the Welcome window asks how you usually make games
 
 - **One question instead of three hidden settings.** The Welcome window opens on \"How do you usually

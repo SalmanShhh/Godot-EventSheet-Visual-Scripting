@@ -402,6 +402,9 @@ static func _unquoted(value: String) -> String:
 const LEVEL_WARNING := "warning"
 ## It cannot be meant: a name that is not a variable, a required field left blank.
 const LEVEL_ERROR := "error"
+## Nothing is wrong - the field has something to SAY: another editor's expression it understood, and
+## the GDScript it will write. No tint, and nothing beside OK.
+const LEVEL_NOTE := "note"
 
 
 ## What is wrong with `value` in `param`, or {} when nothing is - {} IS "nothing is wrong", which is
