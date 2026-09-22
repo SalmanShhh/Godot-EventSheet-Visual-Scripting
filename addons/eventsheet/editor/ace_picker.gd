@@ -1421,6 +1421,25 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 	return extra
 
 
+## The verbs a typed query names by the OTHER editor's name for them, as {ace id: the phrase that
+## named it}. Read from the project importer's own row table, so the search and the importer can never
+## disagree about what "go to layout" is. Same three-letter floor and the same whole-words rule as the
+## hand-written phrases above.
+static func foreign_query_matches(query: String) -> Dictionary:
+	var found: Dictionary = {}
+	var lowered: String = query.to_lower().strip_edges()
+	if lowered.length() < 3:
+		return found
+	var phrases: Dictionary = EventSheetForeignACEMap.search_phrases()
+	for phrase: String in phrases:
+		if not (lowered.contains(phrase) or _phrase_holds_the_words(phrase, lowered)):
+			continue
+		for ace_id: Variant in phrases[phrase]:
+			if not found.has(str(ace_id)):
+				found[str(ace_id)] = phrase
+	return found
+
+
 ## The verbs a typed query names by their ALIAS - the second name the words seam holds for a handful
 ## of verbs, sorted, as "<provider>::<ace_id>" keys the registry can resolve.
 ##
@@ -2033,6 +2052,13 @@ func _refresh_tree() -> void:
 		var aliased: ACEDefinition = _registry.find_definition(alias_parts[0], alias_parts[1])
 		if aliased != null and not definitions.has(aliased):
 			definitions.append(aliased)
+	# The other editor's names, straight from the importer's table: "go to layout" finds Change
+	# Scene by its id rather than by a guessed search word, and the row then says the phrase back.
+	_foreign_phrase_by_id = foreign_query_matches(query)
+	if not _foreign_phrase_by_id.is_empty():
+		for candidate: ACEDefinition in _registry.get_all_definitions():
+			if _foreign_phrase_by_id.has(str(candidate.id)) and not definitions.has(candidate):
+				definitions.append(candidate)
 	# The other direction: a Godot user types the CALL they know. Every row whose template
 	# writes that call answers, and so does the row the reading's idiom tables name for it, so
 	# `queue_free` lands on Destroy and `is_on_floor` on Is on floor. The GDScript is written beside
@@ -2644,6 +2670,14 @@ func _category_of(definition: ACEDefinition) -> String:
 ## one tree rebuild so the matched rows can write that call beside their names.
 var _code_query: String = ""
 
+## The relevance a verb earns when the whole query is the other editor's name for it - above any
+## textual score, because the reader typed the exact words that verb answers to.
+const FOREIGN_PHRASE_SCORE := 10000
+
+## {ace id: the other editor's phrase} for the current search - held for one tree rebuild so a row the
+## phrase found can say it back beside its own name.
+var _foreign_phrase_by_id: Dictionary = {}
+
 
 ## The Variables verbs, put back into the order a reader looks for them: set it, change it by an
 ## amount, the boolean pair, then the two questions. Everything else keeps the order it arrived in,
@@ -2686,6 +2720,7 @@ func _item_label(definition: ACEDefinition) -> String:
 		var hint: String = EventSheetCodeSearch.gdscript_hint(definition, _code_query)
 		if not hint.is_empty():
 			display_name = "%s  ·  %s" % [display_name, hint]
+	display_name = foreign_name_note(display_name, str(_foreign_phrase_by_id.get(str(definition.id), "")))
 	# A variable verb says which variables it can take, so "Add to" with no numbers in scope
 	# reads as empty before it is clicked rather than after.
 	var takes: String = variable_verb_note(_variables_in_scope(), definition)
@@ -2696,6 +2731,16 @@ func _item_label(definition: ACEDefinition) -> String:
 	# Title-case the pack suffix for display ("weapon_kit" -> "Weapon Kit"): raw snake_case ids
 	# read as internals, not as the addon's name. Display-only - the id itself never changes.
 	return "%s  ·  %s" % [display_name, definition.provider_id.capitalize()]
+
+
+## A row's name with the other editor's phrase for it after, in quotes - "Change Scene  ·  \"go to
+## layout\"" - so the reader sees that the word they typed and the verb that landed are one row. The
+## phrase is that editor's own term, quoted rather than translated. Nothing is added when the two
+## names already read the same.
+static func foreign_name_note(display_name: String, phrase: String) -> String:
+	if phrase.is_empty() or display_name.to_lower().contains(phrase.to_lower()):
+		return display_name
+	return "%s  ·  \"%s\"" % [display_name, phrase]
 
 
 ## The id every "?" on a row carries. One id, because there is one question a "?" asks.
@@ -3138,6 +3183,11 @@ func _best_match_item() -> TreeItem:
 			var child_meta: Variant = child.get_metadata(0)
 			if child_meta is ACEDefinition:
 				var score: int = _score_match(query, child_meta as ACEDefinition)
+				# The other editor's whole phrase names exactly one verb in the importer's table, so
+				# "create object" pre-selects the verb that table writes rather than whichever row
+				# happens to hold the word "object" in its name.
+				if str(_foreign_phrase_by_id.get(str((child_meta as ACEDefinition).id), "")) == query.to_lower():
+					score = maxi(score, FOREIGN_PHRASE_SCORE)
 				if score > best_score:
 					best_score = score
 					best = child

@@ -6,6 +6,18 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: the picker answers to the names another event-sheet editor uses
+
+- **Search reads the importer's own table.** The project importer already knows which verb each of
+  that editor's rows becomes - \"go to layout\" is Go To Layout, \"create object\" is Spawn Scene
+  Instance, \"every x seconds\", \"compare two values\", \"subtract from\" and sixty more. The picker and
+  Quick add now search that same table, so a reader who types the name they have used for years
+  lands on the verb the importer would have written, pre-selected when the whole phrase is typed.
+  A row found that way says the phrase back after its name in quotes, and says nothing when the two
+  names already agree. The one row that only stands in for something with no equivalent here - the
+  window size - is never offered, and a test walks every phrase so none can point at a verb that no
+  longer ships.
+
 ### Fixed: including a shared sheet into a script that already has the handler
 
 - **A helper include no longer writes a second `_process`.** Including a shared sheet as a helper

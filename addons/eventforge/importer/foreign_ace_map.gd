@@ -75,7 +75,7 @@ const ROWS: Dictionary = {
 	"System/create-object": {"ace": "SpawnScene", "kind": KIND_ACTION, "params": {"path": "!Object to create"}, "note": "The object name is kept as written - point it at the scene file that object became."},
 	"System/set-timescale": {"ace": "SetTimeScale", "kind": KIND_ACTION, "params": {"scale": "#Time scale"}},
 	"System/set-paused": {"ace": "SetPaused", "kind": KIND_ACTION, "params": {"paused": "#Paused"}},
-	"System/set-canvas-size": {"ace": "PrintLog", "kind": KIND_ACTION, "params": {"message": "$\"TODO: set the window size\""}, "note": "Window size is a project setting here, not a row."},
+	"System/set-canvas-size": {"ace": "PrintLog", "kind": KIND_ACTION, "params": {"message": "$\"TODO: set the window size\""}, "note": "Window size is a project setting here, not a row.", "stand_in": true},
 	"Browser/log": {"ace": "PrintLog", "kind": KIND_ACTION, "params": {"message": "#Message"}},
 	"Browser/close": {"ace": "QuitGame", "kind": KIND_ACTION},
 
@@ -260,11 +260,37 @@ const RESIDUAL_PATTERNS: Array = [
 
 static var _compiled_expressions: Array = []
 static var _compiled_residuals: Array = []
+## search_phrases(), derived once from ROWS.
+static var _search_phrases: Dictionary = {}
 
 
 ## The lookup key for a row: the object kind and the row id, both normalised.
 static func row_key(object_kind: String, row_id: String) -> String:
 	return "%s/%s" % [object_kind.strip_edges(), normalize_id(row_id)]
+
+
+## The same table read the other way, as SEARCH: every row id here is a name a reader who moved from
+## that editor types when they look for the verb, so "System/go-to-layout" answers the words
+## "go to layout" with ChangeScene. {phrase: [ace ids]}, a phrase holding every verb it names across
+## object kinds. A row marked "stand_in" holds the place of something with no real equivalent (the
+## window size written as a log line), so it never becomes a search answer; a row with only a "note"
+## is a real equivalent with a caveat, and answers. Derived once - the table is constant.
+static func search_phrases() -> Dictionary:
+	if not _search_phrases.is_empty():
+		return _search_phrases
+	for key: Variant in ROWS:
+		var entry: Dictionary = ROWS[key] as Dictionary
+		if bool(entry.get("stand_in", false)):
+			continue
+		var phrase: String = str(key).get_slice("/", 1).replace("-", " ").strip_edges()
+		var ace_id: String = str(entry.get("ace", ""))
+		if phrase.is_empty() or ace_id.is_empty():
+			continue
+		var ids: Array = _search_phrases.get(phrase, []) as Array
+		if not ids.has(ace_id):
+			ids.append(ace_id)
+		_search_phrases[phrase] = ids
+	return _search_phrases
 
 
 ## A foreign row id in the one spelling this table uses: lower case, dashes between words.

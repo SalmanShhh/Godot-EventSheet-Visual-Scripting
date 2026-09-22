@@ -77,6 +77,11 @@ func _quick_match_ranked(query: String, limit: int = 5, prefer_type: int = -1) -
 	var queries: Array[String] = [text]
 	for synonym_query: String in ACEPickerDialog._c3_synonym_queries(text):
 		queries.append(synonym_query.to_lower())
+	# The importer's names answer here too, by verb id - the quick-add bar compares ids as well as
+	# names, so "go to layout" lands on ChangeScene exactly as it does in the picker.
+	for ace_id: String in ACEPickerDialog.foreign_query_matches(text):
+		if not queries.has(ace_id.to_lower()):
+			queries.append(ace_id.to_lower())
 	var candidates: Array = []
 	for definition: ACEDefinition in _dock._ace_registry.get_all_definitions():
 		if bool(definition.metadata.get("hidden", false)):
