@@ -60,6 +60,7 @@ const SHOWCASE_KINDS: Dictionary = {
 	"skill_tree": "Systems",
 	"starfall": "Arcade",
 	"swarm": "Arcade",
+	"top_down_shooter": "Arcade",
 	"traversal_course": "Platformer",
 	"traversal_course_3d": "First person",
 	"uhtn_planning": "AI",

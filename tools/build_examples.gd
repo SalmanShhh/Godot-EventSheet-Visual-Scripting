@@ -70,6 +70,7 @@ func _init() -> void:
 	all_ok = _build_input_rebind() and all_ok
 	all_ok = _build_path_chase() and all_ok
 	all_ok = _build_platformer_pathfinding() and all_ok
+	all_ok = _build_top_down_shooter() and all_ok
 	all_ok = _build_draw_lab() and all_ok
 	all_ok = _build_raycast_lab() and all_ok
 	all_ok = _build_raycast_lab_3d() and all_ok
@@ -2489,6 +2490,222 @@ Green line = the route it is following. Stand somewhere else and watch it re-rou
 	hud.owner = root
 
 	return _save_scene(root, "res://demo/showcase/platformer_pathfinding/platformer_pathfinding.tscn")
+
+
+# ── Top-Down Shooter (the first game a reader from another event-sheet editor already knows) ──
+
+
+const SHOOTER_DIR := "res://demo/showcase/top_down_shooter"
+
+
+## A top-down shooter in the shape most event-sheet beginners build first: a player that faces the
+## mouse, bullets, monsters that take several hits, an explosion and a score. Four small sheets, and
+## the monster is a FAMILY so the main sheet's picking row - For each Monster where health <= 0 -
+## reads the way that habit reads everywhere else. Shapes are drawn here; nothing is copied.
+func _build_top_down_shooter() -> bool:
+	# ── Explosion: a burst that tidies itself away ──
+	var boom_sheet: EventSheetResource = EventSheetResource.new()
+	boom_sheet.host_class = "CPUParticles2D"
+	boom_sheet.custom_class_name = "ShooterExplosion"
+	var boom_ready: EventRow = EventRow.new()
+	boom_ready.trigger_provider_id = "Core"; boom_ready.trigger_id = "OnReady"
+	boom_ready.actions.append(_action("Core", "Wait", "await get_tree().create_timer({seconds}).timeout", {"seconds": "0.6"}))
+	boom_ready.actions.append(_action("Core", "QueueFree", "queue_free()", {}))
+	boom_sheet.events.append(boom_ready)
+	if not _compile(boom_sheet, SHOOTER_DIR + "/explosion.tres", SHOOTER_DIR + "/explosion.gd"):
+		return false
+	var boom: CPUParticles2D = CPUParticles2D.new()
+	boom.name = "Explosion"
+	boom.set_script(load(SHOOTER_DIR + "/explosion.gd"))
+	boom.one_shot = true
+	boom.emitting = true
+	boom.amount = 24
+	boom.lifetime = 0.5
+	boom.explosiveness = 1.0
+	boom.spread = 180.0
+	boom.initial_velocity_min = 80.0
+	boom.initial_velocity_max = 180.0
+	boom.scale_amount_min = 3.0
+	boom.scale_amount_max = 5.0
+	boom.color = Color(1.0, 0.65, 0.2)
+	if not _save_scene(boom, SHOOTER_DIR + "/explosion.tscn"):
+		return false
+
+	# ── Monster: a FAMILY, so one row can speak about every monster at once ──
+	var monster_sheet: EventSheetResource = EventSheetResource.new()
+	monster_sheet.host_class = "Area2D"
+	monster_sheet.custom_class_name = "ShooterMonster"
+	monster_sheet.is_family = true
+	monster_sheet.class_description = "A monster that walks toward the player. A family, so the main sheet can pick every one at once."
+	monster_sheet.variables = {
+		"health": {"type": "int", "default": 3, "exported": true,
+			"attributes": {"tooltip": "Hits this monster takes before it explodes."}},
+		"speed": {"type": "float", "default": 90.0, "exported": true,
+			"attributes": {"tooltip": "How fast it walks toward the player (px/sec)."}}
+	}
+	var monster_ready: EventRow = EventRow.new()
+	monster_ready.trigger_provider_id = "Core"; monster_ready.trigger_id = "OnReady"
+	monster_ready.actions.append(_action("Core", "AddToGroup", "{target}.add_to_group({group})",
+		{"target": "self", "group": "\"family_shooter_monster\""}))
+	monster_sheet.events.append(monster_ready)
+	var monster_walk: EventRow = EventRow.new()
+	monster_walk.trigger_provider_id = "Core"; monster_walk.trigger_id = "OnProcess"
+	monster_walk.actions.append(_action("Core", "SetProperty", "{target}.{property} = {value}", {"target": "self",
+		"property": "position", "value": "position.move_toward(get_tree().get_first_node_in_group(\"player\").position, speed * delta)"}))
+	monster_sheet.events.append(monster_walk)
+	if not _compile(monster_sheet, SHOOTER_DIR + "/monster.tres", SHOOTER_DIR + "/monster.gd"):
+		return false
+	var monster: Area2D = Area2D.new()
+	monster.name = "Monster"
+	monster.set_script(load(SHOOTER_DIR + "/monster.gd"))
+	var monster_shape: CollisionShape2D = CollisionShape2D.new()
+	monster_shape.name = "Collider"
+	var monster_circle: CircleShape2D = CircleShape2D.new()
+	monster_circle.radius = 16.0
+	monster_shape.shape = monster_circle
+	monster.add_child(monster_shape)
+	monster_shape.owner = monster
+	var monster_look: Polygon2D = Polygon2D.new()
+	monster_look.name = "Look"
+	monster_look.color = Color(0.85, 0.3, 0.4)
+	monster_look.polygon = PackedVector2Array([Vector2(0, -18), Vector2(16, -6), Vector2(12, 14), Vector2(-12, 14), Vector2(-16, -6)])
+	monster.add_child(monster_look)
+	monster_look.owner = monster
+	if not _save_scene(monster, SHOOTER_DIR + "/monster.tscn"):
+		return false
+
+	# ── Bullet: faces the mouse when fired, hurts the monster it touches ──
+	var bullet_sheet: EventSheetResource = EventSheetResource.new()
+	bullet_sheet.host_class = "Area2D"
+	bullet_sheet.custom_class_name = "ShooterBullet"
+	var bullet_ready: EventRow = EventRow.new()
+	bullet_ready.trigger_provider_id = "Core"; bullet_ready.trigger_id = "OnReady"
+	bullet_ready.actions.append(_action("Core", "SetProperty", "{target}.{property} = {value}", {"target": "self",
+		"property": "rotation", "value": "global_position.direction_to(get_global_mouse_position()).angle()"}))
+	bullet_ready.actions.append(_action("Core", "Wait", "await get_tree().create_timer({seconds}).timeout", {"seconds": "1.5"}))
+	bullet_ready.actions.append(_action("Core", "QueueFree", "queue_free()", {}))
+	bullet_sheet.events.append(bullet_ready)
+	var bullet_hit: EventRow = EventRow.new()
+	bullet_hit.trigger_provider_id = "Core"; bullet_hit.trigger_id = "OnAreaEntered"
+	bullet_hit.conditions.append(_condition("Core", "IsInGroup", "{target}.is_in_group({group})",
+		{"target": "area", "group": "\"family_shooter_monster\""}))
+	bullet_hit.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "area.health", "amount": "-1"}))
+	bullet_hit.actions.append(_action("Core", "QueueFree", "queue_free()", {}))
+	bullet_sheet.events.append(bullet_hit)
+	if not _compile(bullet_sheet, SHOOTER_DIR + "/bullet.tres", SHOOTER_DIR + "/bullet.gd"):
+		return false
+	var bullet: Area2D = Area2D.new()
+	bullet.name = "Bullet"
+	bullet.set_script(load(SHOOTER_DIR + "/bullet.gd"))
+	var bullet_shape: CollisionShape2D = CollisionShape2D.new()
+	bullet_shape.name = "Collider"
+	var bullet_circle: CircleShape2D = CircleShape2D.new()
+	bullet_circle.radius = 5.0
+	bullet_shape.shape = bullet_circle
+	bullet.add_child(bullet_shape)
+	bullet_shape.owner = bullet
+	var bullet_look: Polygon2D = Polygon2D.new()
+	bullet_look.name = "Look"
+	bullet_look.color = Color(1.0, 0.95, 0.5)
+	bullet_look.polygon = PackedVector2Array([Vector2(-6, -3), Vector2(8, 0), Vector2(-6, 3)])
+	bullet.add_child(bullet_look)
+	bullet_look.owner = bullet
+	_attach_behavior(bullet, "Motion", BULLET, bullet, {"speed": 700.0})
+	if not _save_scene(bullet, SHOOTER_DIR + "/bullet.tscn"):
+		return false
+
+	# ── The main sheet ──
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "TopDownShooter"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"score": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Monsters blown up."}}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Top-Down Shooter[/b] - the first game most event-sheet users make, built here in four small sheets: the player faces the mouse and fires where it points, monsters walk in from the edges, and one picking row - For each Monster where health <= 0 - blows up every monster that has run out of health."
+	sheet.events.append(about)
+
+	var aim: EventRow = EventRow.new()
+	aim.trigger_provider_id = "Core"; aim.trigger_id = "OnProcess"
+	aim.actions.append(_action("Core", "SetProperty", "{target}.{property} = {value}", {"target": "$Player",
+		"property": "rotation", "value": "$Player.global_position.direction_to(get_global_mouse_position()).angle()"}))
+	sheet.events.append(aim)
+
+	var fire: EventRow = EventRow.new()
+	fire.trigger_provider_id = "Core"; fire.trigger_id = "OnInput"
+	fire.conditions.append(_condition("Core", "MouseButtonEventPressed",
+		"(event is InputEventMouseButton and event.pressed and event.button_index == {button})", {"button": "MOUSE_BUTTON_LEFT"}))
+	fire.actions.append(_action("Core", "SpawnSceneAt",
+		"var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})".replace("{uid}", "bullet"),
+		{"path": "\"%s/bullet.tscn\"" % SHOOTER_DIR, "position": "$Player.position"}))
+	sheet.events.append(fire)
+
+	var arrive: EventRow = EventRow.new()
+	arrive.trigger_provider_id = "Core"; arrive.trigger_id = "OnProcess"
+	arrive.conditions.append(_every("monster_arrives", "1.2"))
+	arrive.actions.append(_action("Core", "SpawnSceneAt",
+		"var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})".replace("{uid}", "monster"),
+		{"path": "\"%s/monster.tscn\"" % SHOOTER_DIR,
+			"position": "[Vector2(randf_range(0.0, 1152.0), -30.0), Vector2(randf_range(0.0, 1152.0), 680.0)].pick_random()"}))
+	sheet.events.append(arrive)
+
+	# The picking row: every monster that has run out of health, at once.
+	var explode: EventRow = EventRow.new()
+	explode.trigger_provider_id = "Core"; explode.trigger_id = "OnProcess"
+	var picked: PickFilter = PickFilter.new()
+	picked.collection_kind = PickFilter.CollectionKind.GROUP
+	picked.collection_value = "family_shooter_monster"
+	picked.iterator_name = "shooter_monster"
+	picked.predicate_expression = "shooter_monster.health <= 0"
+	explode.pick_filters.append(picked)
+	explode.actions.append(_action("Core", "SpawnSceneAt",
+		"var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})".replace("{uid}", "boom"),
+		{"path": "\"%s/explosion.tscn\"" % SHOOTER_DIR, "position": "shooter_monster.position"}))
+	explode.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "score", "amount": "1"}))
+	explode.actions.append(_action("Core", "QueueFreeNode", "{target}.queue_free()", {"target": "shooter_monster"}))
+	sheet.events.append(explode)
+
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"; hud.trigger_id = "OnProcess"
+	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]",
+		{"target": "$Hud", "template": "\"Score %d    arrows move, click to fire\"", "args": "score"}))
+	sheet.events.append(hud)
+
+	if not _compile(sheet, SHOOTER_DIR + "/top_down_shooter.tres", SHOOTER_DIR + "/top_down_shooter.gd"):
+		return false
+
+	var root: Node2D = Node2D.new()
+	root.name = "TopDownShooter"
+	root.set_script(load(SHOOTER_DIR + "/top_down_shooter.gd"))
+	var player: CharacterBody2D = CharacterBody2D.new()
+	player.name = "Player"
+	player.position = Vector2(576.0, 324.0)
+	player.add_to_group("player", true)
+	var player_shape: CollisionShape2D = CollisionShape2D.new()
+	player_shape.name = "Collider"
+	var player_circle: CircleShape2D = CircleShape2D.new()
+	player_circle.radius = 14.0
+	player_shape.shape = player_circle
+	player.add_child(player_shape)
+	var player_look: Polygon2D = Polygon2D.new()
+	player_look.name = "Look"
+	player_look.color = Color(0.4, 0.8, 1.0)
+	player_look.polygon = PackedVector2Array([Vector2(-12, -12), Vector2(18, 0), Vector2(-12, 12), Vector2(-6, 0)])
+	player.add_child(player_look)
+	root.add_child(player)
+	_own_deep(player, root)
+	_attach_behavior(player, "Movement", EIGHT_DIRECTION, root)
+	# The camera never moves, so the score label can sit in the world at the top left.
+	var hud_label: Label = Label.new()
+	hud_label.name = "Hud"
+	hud_label.position = Vector2(24.0, 16.0)
+	hud_label.add_theme_font_size_override("font_size", 20)
+	hud_label.text = "Score 0    arrows move, click to fire"
+	root.add_child(hud_label)
+	hud_label.owner = root
+	return _save_scene(root, SHOOTER_DIR + "/top_down_shooter.tscn")
 
 
 # ── Draw Lab (Drawing Canvas feature tour) ──────────────────────────────────

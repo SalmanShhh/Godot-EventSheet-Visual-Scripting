@@ -142,6 +142,14 @@ func _build() -> void:
 		_welcome_window.hide()
 		_dock.start_tour())
 	start_box.add_child(tour_button)
+	# The game most event-sheet users built first, rebuilt row by row - ten steps on the same tour
+	# window, ending at the finished showcase.
+	var shooter_button: Button = Button.new()
+	shooter_button.text = "Build a top-down shooter (10 steps)"
+	shooter_button.pressed.connect(func() -> void:
+		_welcome_window.hide()
+		EventSheets.start_tour(EventSheetShooterTour.steps()))
+	start_box.add_child(shooter_button)
 	var showcase_button: Button = Button.new()
 	showcase_button.text = "Open the playable showcase scene"
 	showcase_button.pressed.connect(func() -> void:

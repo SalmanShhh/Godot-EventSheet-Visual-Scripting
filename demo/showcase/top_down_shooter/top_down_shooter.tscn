@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/top_down_shooter/top_down_shooter.gd" id="1_ioo0p"]
+[ext_resource type="Script" path="res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd" id="2_2x58u"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fckba"]
+radius = 14.0
+
+[node name="TopDownShooter" type="Node2D"]
+script = ExtResource("1_ioo0p")
+
+[node name="Player" type="CharacterBody2D" parent="." groups=["player"]]
+position = Vector2(576, 324)
+
+[node name="Collider" type="CollisionShape2D" parent="Player"]
+shape = SubResource("CircleShape2D_fckba")
+
+[node name="Look" type="Polygon2D" parent="Player"]
+color = Color(0.4, 0.8, 1, 1)
+polygon = PackedVector2Array(-12, -12, 18, 0, -12, 12, -6, 0)
+
+[node name="Movement" type="Node" parent="Player"]
+script = ExtResource("2_2x58u")
+
+[node name="Hud" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 24.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 20
+text = "Score 0    arrows move, click to fire"

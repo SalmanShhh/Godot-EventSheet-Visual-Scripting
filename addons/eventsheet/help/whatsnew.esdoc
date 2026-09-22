@@ -6,6 +6,21 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: the first game you already know, as a showcase and a ten-step tour
+
+- **Top-Down Shooter.** A player that faces the mouse and fires where it points, monsters that walk
+  in from the edges and take three hits, an explosion and a score - the game most event-sheet users
+  built first - as a new showcase in four small sheets. The monster is a family, so the main sheet's
+  picking row reads \"For each Shooter Monster where health ≤ 0\" and compiles to the loop a person
+  writes by hand. Checked by a runtime smoke on the real scene: one bullet takes one point of
+  health, a monster at zero explodes, and the score reads 1. The Start page lists it.
+- **Build a top-down shooter (10 steps).** A new Welcome window button starts a tour on the same
+  floating window as the built-in one: ten steps that rebuild the main sheet on a practice sheet,
+  each ticking itself off by compiling the sheet and finding the line its rows write, so a row made
+  in the picker, by Quick add, by the Ghost Row or typed as GDScript all count. The last step opens
+  the finished game. A new guide, the Top-Down Shooter Tutorial, shows the same ten steps with the
+  GDScript beside each row.
+
 ### Added: picking, offered in Godot's shape
 
 - **\"Enemy health <= 0\" on another object's sheet offers the For each.** In another event-sheet

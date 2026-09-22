@@ -85,6 +85,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 ## Coming from Construct 3
 
 - [Migration Guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) - every concept, behavior, and plugin mapped to its home here.
+- [Top-Down Shooter Tutorial](GUIDE-TOP-DOWN-SHOOTER-TUTORIAL.md) - the first game most event-sheet users build, rebuilt in ten rows with the GDScript beside each, and picking as a For each.
 - [Glossary](REFERENCE-GLOSSARY.md) - the cross-tool term map.
 
 ## Reference
@@ -131,12 +132,13 @@ You have never built one, and you would like to finish something small.
 You have shipped games in another event-sheet tool, or you already write GDScript.
 
 1. [Migration Guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md)
-2. [Coming from GDScript](GUIDE-COMING-FROM-GDSCRIPT.md)
-3. [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md)
-4. [Glossary](REFERENCE-GLOSSARY.md)
-5. [Custom ACEs](GUIDE-CUSTOM-ACES.md)
-6. [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md)
-7. [Updating and Refactoring Without Breaking Your Game](GUIDE-UPDATING-AND-REFACTORING.md)
+2. [Top-Down Shooter Tutorial](GUIDE-TOP-DOWN-SHOOTER-TUTORIAL.md)
+3. [Coming from GDScript](GUIDE-COMING-FROM-GDSCRIPT.md)
+4. [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md)
+5. [Glossary](REFERENCE-GLOSSARY.md)
+6. [Custom ACEs](GUIDE-CUSTOM-ACES.md)
+7. [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md)
+8. [Updating and Refactoring Without Breaking Your Game](GUIDE-UPDATING-AND-REFACTORING.md)
 
 ### Multiplayer
 

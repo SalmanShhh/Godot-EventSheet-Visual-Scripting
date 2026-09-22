@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/top_down_shooter/explosion.gd" id="1_qwr5x"]
+
+[node name="Explosion" type="CPUParticles2D"]
+amount = 24
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+spread = 180.0
+initial_velocity_min = 80.0
+initial_velocity_max = 180.0
+scale_amount_min = 3.0
+scale_amount_max = 5.0
+color = Color(1, 0.65, 0.2, 1)
+script = ExtResource("1_qwr5x")

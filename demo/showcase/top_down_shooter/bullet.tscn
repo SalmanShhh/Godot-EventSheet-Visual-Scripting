@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/top_down_shooter/bullet.gd" id="1_jfxro"]
+[ext_resource type="Script" path="res://eventsheet_addons/bullet/bullet_behavior.gd" id="2_8rj35"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_845oe"]
+radius = 5.0
+
+[node name="Bullet" type="Area2D"]
+script = ExtResource("1_jfxro")
+
+[node name="Collider" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_845oe")
+
+[node name="Look" type="Polygon2D" parent="."]
+color = Color(1, 0.95, 0.5, 1)
+polygon = PackedVector2Array(-6, -3, 8, 0, -6, 3)
+
+[node name="Motion" type="Node" parent="."]
+script = ExtResource("2_8rj35")
+speed = 700.0
