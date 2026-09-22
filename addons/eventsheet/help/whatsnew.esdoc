@@ -6,6 +6,21 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: the Include you look for, where you look for it, as one line
+
+- **Include Sheet… on the canvas menu.** Including a shared sheet was two menus deep on the toolbar.
+  It is now on the menu the canvas's \"+ Add…\" corner link and a right-click on empty space open,
+  which is where a reader from another event-sheet editor reaches for \"Include event sheet\".
+- **An included shared sheet reads as one Include line at the head.** Each shared sheet a script
+  includes gets one flat line in the head, with no pills: `Include DamageRules · shared sheet, as
+  its base - extends DamageRules`, or `Include PauseHandling · shared sheet, as a helper - var
+  _pause_handling, called from _process`. The line leads with the word the other editor uses and
+  ends in the exact Godot shape it stands for, so both readers find their own word on the same
+  line; clicking the name opens the shared sheet. A helper's forwarding call inside an event now
+  reads `Include PauseHandling ▸ run its Every Frame`, the way a base's `super` call already did,
+  and the file name on that action is a word rather than a pill. The Include bar of an ordinary base
+  script lost its pills and its purple wash too.
+
 ### Added: an expression field reads the spelling another event-sheet editor uses
 
 - **`Player.X + random(10) & \" px\"` is read, not refused.** The first expression a reader from

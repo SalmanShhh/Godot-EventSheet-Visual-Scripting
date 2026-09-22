@@ -406,6 +406,58 @@ static func base_not_reached_in_file(script_path: String) -> Array[Dictionary]:
 	return none
 
 
+## A project class's script path, from the project's own class list, or "" - how an include names
+## the file it opens without loading anything.
+static func class_path(class_name_text: String) -> String:
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == class_name_text:
+			return str(entry.get("path", ""))
+	return ""
+
+
+## Every shared sheet a script's own source includes, in file order: the one it extends (wired as
+## its base) and each helper it keeps (`var _x := SharedClass.new()`), as
+## [{wiring, class, member, path, from}]. `from` names the engine functions that forward to a
+## helper. Only a class whose file is a shared sheet of that wiring counts, so an ordinary base
+## script or an ordinary object the script makes is never called an include.
+static func includes_of_source(source: String) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var lines: PackedStringArray = source.split("\n")
+	for line: String in lines:
+		if not line.begins_with("extends "):
+			continue
+		var base: String = line.substr("extends ".length()).strip_edges()
+		var base_path: String = class_path(base)
+		if not base_path.is_empty() and FileAccess.file_exists(base_path) \
+				and wiring_of(FileAccess.get_file_as_string(base_path)) == WIRING_BASE_CLASS:
+			found.append({"wiring": WIRING_BASE_CLASS, "class": base, "member": "", "path": base_path,
+				"from": PackedStringArray()})
+		break
+	for line: String in lines:
+		if not line.begins_with("var ") or not line.contains(".new()"):
+			continue
+		var member: String = line.substr("var ".length()).get_slice(" ", 0).get_slice(":", 0).strip_edges()
+		var made: String = line.get_slice("=", 1).strip_edges().trim_suffix(".new()").strip_edges()
+		var helper_path: String = class_path(made)
+		if helper_path.is_empty() or not FileAccess.file_exists(helper_path) \
+				or wiring_of(FileAccess.get_file_as_string(helper_path)) != WIRING_HELPER:
+			continue
+		var from: PackedStringArray = PackedStringArray()
+		for entry: Dictionary in HELPER_HANDLERS:
+			var at: int = _function_at(lines, str(entry["from"]))
+			if at < 0:
+				continue
+			for index: int in range(at + 1, lines.size()):
+				var body_line: String = lines[index]
+				if not body_line.strip_edges().is_empty() and not body_line.begins_with("\t") and not body_line.begins_with(" "):
+					break
+				if body_line.strip_edges().begins_with("%s.%s(" % [member, str(entry["handler"])]):
+					from.append(str(entry["from"]))
+					break
+		found.append({"wiring": WIRING_HELPER, "class": made, "member": member, "path": helper_path, "from": from})
+	return found
+
+
 ## Every shared sheet an includer's source pulls in: an Array of {wiring, class, member}. Read off
 ## the includer alone, so the Include bar can name them without loading anything.
 static func includes_in(source: String, known: Dictionary) -> Array[Dictionary]:

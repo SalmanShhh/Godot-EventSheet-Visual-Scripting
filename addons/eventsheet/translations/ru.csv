@@ -7257,3 +7257,7 @@ Bring %s back at the height it had.,Вернуть %s в прежней высо
 Slide %s off the rail - its name waits in the tab strip at the foot.,Убрать %s с рейки - имя останется во вкладке внизу.
 Opens this behavior as a sheet.,Открывает это поведение как лист.
 reads as,читается как
+"· shared sheet, as a helper","· общий лист, как помощник"
+"· shared sheet, as its base","· общий лист, как основа"
+called from,вызывается из
+Opens the shared sheet.,Открывает общий лист.

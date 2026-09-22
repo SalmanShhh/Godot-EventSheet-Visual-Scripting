@@ -7257,3 +7257,7 @@ Bring %s back at the height it had.,%s を元の高さで戻します。
 Slide %s off the rail - its name waits in the tab strip at the foot.,%s をレールから外す - 名前は下部のタブ帯に残ります。
 Opens this behavior as a sheet.,このビヘイビアをシートとして開きます。
 reads as,次のように読む
+"· shared sheet, as a helper",· 共有シート、ヘルパーとして
+"· shared sheet, as its base",· 共有シート、ベースとして
+called from,呼び出し元
+Opens the shared sheet.,共有シートを開きます。

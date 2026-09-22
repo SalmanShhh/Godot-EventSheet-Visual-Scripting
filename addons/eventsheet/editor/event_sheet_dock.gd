@@ -171,6 +171,9 @@ const EMPTY_MENU_ADD_INSPECTOR_BUTTON := 5
 ## questions and the answer decides where the declaration goes.
 const EMPTY_MENU_ADD_LOCAL_VARIABLE := 6
 const EMPTY_MENU_ADD_INSTANCE_VARIABLE := 7
+## Include another sheet - on the canvas menu the "+ Add…" corner link opens, where a reader from
+## another event-sheet editor reaches for it, as well as on the toolbar's Add menu.
+const EMPTY_MENU_INCLUDE_SHEET := 8
 # The "New Function" submenu on the empty-space menu. Its items open the function dialog pre-set:
 # a plain (unpublished) helper, or a published Action / Condition / Expression.
 const NEW_FUNCTION_MENU_PLAIN := 0
@@ -5343,6 +5346,8 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 			_quick_prompts.prompt_inspector_button(add_inspector_button)
 		EMPTY_MENU_INSERT_SNIPPET:
 			_open_insert_snippet()
+		EMPTY_MENU_INCLUDE_SHEET:
+			_shared_sheets.open_include_sheet()
 
 
 ## The `@export_tool_button` line and the empty function it calls, in ONE undo step. The button

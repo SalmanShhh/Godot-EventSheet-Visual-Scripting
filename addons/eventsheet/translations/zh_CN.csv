@@ -7257,3 +7257,7 @@ Bring %s back at the height it had.,按原来的高度把 %s 带回来。
 Slide %s off the rail - its name waits in the tab strip at the foot.,把 %s 移出左侧栏 - 名字会留在栏底的标签带里。
 Opens this behavior as a sheet.,把这个行为作为事件表打开。
 reads as,读作
+"· shared sheet, as a helper",· 共享表，作为助手
+"· shared sheet, as its base",· 共享表，作为基类
+called from,调用自
+Opens the shared sheet.,打开共享表。

@@ -683,6 +683,9 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 		EventSheetMigrationFindings.events_asking(_sheet_findings(FINDINGS_MIGRATION)))
 	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
 		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
+	# The shared sheets this script includes, one Include line each - where a reader from another
+	# event-sheet editor looks for them, instead of scattered through the forwarding rows they wrote.
+	rows.append_array(_build_include_line_rows(sheet, false))
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
 	if not add_text.is_empty() and not sheet.read_only:
 		rows.append(_build_head_add_row(sheet, add_text))
@@ -1493,6 +1496,8 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	var base_include_row: EventRowData = _build_base_script_include_bar_row(sheet)
 	if base_include_row != null:
 		detail.append(base_include_row)
+	# And every shared sheet it keeps as a helper, one line each, beside the base it extends.
+	detail.append_array(_build_include_line_rows(sheet, true))
 	var input_bars: Array[EventRowData] = _build_input_actions_bar_rows(sheet)
 	detail.append_array(input_bars)
 	var knob_bars: Array[EventRowData] = _build_knob_group_rows(sheet, knobs)
@@ -2250,35 +2255,121 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
 	row_data.row_uid = "base_include_bar_%d" % sheet.get_instance_id()
-	var accent: Color = _viewport._get_event_style().behavior_accent_color
-	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.12)
+	# Flat and pill-free, the way every head line is drawn: the tint says "the head", the words
+	# say the rest. A shared sheet wired as the base is drawn by _build_include_line_rows instead,
+	# which also says which wiring it is.
+	for include: Dictionary in _includes_of(sheet):
+		if str(include["wiring"]) == EventSheetSharedSheets.WIRING_BASE_CLASS:
+			return null
+	row_data.custom_color = _viewport._get_event_style().head_bar_color
 	var open_meta: Dictionary = {
 		"editable": false,
 		"kind": "include_open",
 		"include_path": base_path,
 		"line_index": 0
 	}
+	var muted: Color = _viewport._get_reading_style().muted_text_color
 	var spans: Array[SemanticSpan] = [
-		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
-			"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color
-		}, true)),
-		_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
+		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": muted}, true)),
+		_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
 			"text_color": _viewport._get_reading_style().primary_text_color
 		}, true)),
 		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
-			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
+			"text_color": _viewport._get_event_style().object_label_color
 		}, true)),
 		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
-			open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true))
+			open_meta.duplicate().merged({"text_color": muted}, true))
 	]
 	row_data.spans = spans
 	return row_data
+
+
+## The word an Include line leads with. One word for every reader: the line ENDS in the Godot
+## shape it stands for (`extends X`, `var _x`), so a reader from another event-sheet editor and a
+## Godot reader each find their own word on the same line, whatever the Words setting says.
+func _include_word() -> String:
+	return EventSheetL10n.translate("Include")
+
+
+## The shared sheets this sheet's file includes, read off the file on disk once per file version.
+func _includes_of(sheet: EventSheetResource) -> Array[Dictionary]:
+	var path: String = str(sheet.external_source_path) if sheet != null else ""
+	if path.is_empty() or not FileAccess.file_exists(path):
+		return []
+	var stamp: String = "%s@%d" % [path, FileAccess.get_modified_time(path)]
+	if stamp != _includes_stamp:
+		_includes_stamp = stamp
+		_includes_cache = EventSheetSharedSheets.includes_of_source(FileAccess.get_file_as_string(path))
+	return _includes_cache
+
+
+## One Include line per shared sheet this script includes: which sheet, and in which of Godot's two
+## shapes - as its base (`extends`) or as a helper the script calls (`var` plus the forwarding
+## calls), said in those very words at the end of the line. The name opens the shared sheet; no
+## pill anywhere.
+## `indent_detail` puts the lines one step in, the way the read-only head folds its detail.
+func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	var muted: Color = _viewport._get_reading_style().muted_text_color
+	for include: Dictionary in _includes_of(sheet):
+		var helper: bool = str(include["wiring"]) == EventSheetSharedSheets.WIRING_HELPER
+		var row_data := EventRowData.new()
+		row_data.indent = 0
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = null
+		row_data.row_uid = "include_line_%s_%d" % [str(include["class"]), sheet.get_instance_id()]
+		row_data.custom_color = _viewport._get_event_style().head_bar_color
+		var open_meta: Dictionary = {"editable": false, "kind": "include_open",
+			"include_path": str(include["path"]), "line_index": 0,
+			"hover_note": EventSheetL10n.translate("Opens the shared sheet.")}
+		var from: PackedStringArray = include["from"] as PackedStringArray
+		var said: String = ""
+		if helper:
+			said = "%s - var %s" % [EventSheetL10n.translate("· shared sheet, as a helper"), str(include["member"])]
+			if not from.is_empty():
+				said += ", %s %s" % [EventSheetL10n.translate("called from"), ", ".join(from)]
+		else:
+			said = "%s - extends %s" % [EventSheetL10n.translate("· shared sheet, as its base"), str(include["class"])]
+		row_data.spans = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": muted}, true))]
+		row_data.spans.append(_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
+			"text_color": _viewport._get_reading_style().primary_text_color}, true)))
+		row_data.spans.append(_make_span(str(include["class"]), SemanticSpan.SpanType.KEYWORD,
+			open_meta.duplicate().merged({"text_color": _viewport._get_event_style().object_label_color}, true)))
+		row_data.spans.append(_make_span(said, SemanticSpan.SpanType.COMMENT,
+			open_meta.duplicate().merged({"text_color": muted}, true)))
+		if indent_detail:
+			_bump_indent(row_data, 1)
+		rows.append(row_data)
+	return rows
+
+
+## A helper's forwarding call - `_pause_handling.on_tick(self, delta)` - read as what it is: the
+## shared sheet's own handler running here, in the same words a `super` call to a base reads in.
+## {} when the action is not one.
+func helper_call_reading(action_resource: Variant, event_row: EventRow) -> Dictionary:
+	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+	var includes: Array[Dictionary] = _includes_of(sheet)
+	if includes.is_empty():
+		return {}
+	var code: String = ""
+	if action_resource is RawCodeRow:
+		code = (action_resource as RawCodeRow).code.strip_edges()
+	elif action_resource is ACEAction:
+		code = ActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
+	if code.is_empty() or code.contains("\n"):
+		return {}
+	for include: Dictionary in includes:
+		var member: String = str(include["member"])
+		if member.is_empty() or not code.begins_with(member + "."):
+			continue
+		var handler: String = code.substr(member.length() + 1).get_slice("(", 0)
+		for entry: Dictionary in EventSheetSharedSheets.HELPER_HANDLERS:
+			if str(entry["handler"]) != handler:
+				continue
+			var runs: String = _trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id) \
+				if event_row != null and not event_row.trigger_id.is_empty() else ""
+			return {"file": str(include["class"]), "verb": handler.capitalize(), "runs": runs, "args": ""}
+	return {}
 
 
 ## The middle of a TOOL script's Include bar - the one sentence that says what the
@@ -11478,6 +11569,9 @@ static func await_loop_seconds(code: String) -> String:
 ## row asks for it once per `super` line.
 var _base_script_path: String = ""
 var _base_script_stamp: int = -1
+## The shared sheets the open file includes (_includes_of), and the file version they were read from.
+var _includes_stamp: String = ""
+var _includes_cache: Array[Dictionary] = []
 
 
 func _cached_base_script_path() -> String:
@@ -11546,10 +11640,7 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 		base_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true).merged(action_style_meta, false)))
 	spans.append(_make_span(str(reading.get("file", "")), SemanticSpan.SpanType.KEYWORD,
 		base_meta.duplicate().merged({
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
-			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
+			"text_color": _viewport._get_event_style().object_label_color
 		}, true).merged(action_style_meta, false)))
 	var runs: String = str(reading.get("runs", ""))
 	var tail: String = ""
@@ -12966,6 +13057,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			# `super.take_damage(x)` is calling the INCLUDED sheet's verb, not an object named
 			# `super`. It reads that way: the include, the file it names, and the verb.
 			var super_call: Dictionary = super_call_reading(action_resource, event_row)
+			if super_call.is_empty():
+				super_call = helper_call_reading(action_resource, event_row)
 			if not super_call.is_empty():
 				_append_super_call_spans(spans, super_call, action_index, action_line_index, action_style_meta)
 				action_line_index += 1

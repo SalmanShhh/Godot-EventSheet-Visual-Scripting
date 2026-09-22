@@ -7257,3 +7257,7 @@ Bring %s back at the height it had.,Riporta %s all'altezza che aveva.
 Slide %s off the rail - its name waits in the tab strip at the foot.,Sposta %s via dalla barra - il suo nome aspetta nella striscia di schede ai piedi.
 Opens this behavior as a sheet.,Apre questo comportamento come un foglio.
 reads as,si legge come
+"· shared sheet, as a helper","· foglio condiviso, come aiutante"
+"· shared sheet, as its base","· foglio condiviso, come base"
+called from,chiamato da
+Opens the shared sheet.,Apre il foglio condiviso.
