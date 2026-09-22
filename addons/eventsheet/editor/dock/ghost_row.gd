@@ -109,12 +109,21 @@ func _move_selection(delta: int) -> void:
 func _refresh(query: String) -> void:
 	var typing: bool = not query.strip_edges().is_empty()
 	_candidates = _dock._quick_match_ranked(query, 5, _prefer_type()) if typing else []
+	# A condition on a FAMILY the sheet is not: the picking form leads, because the words a reader
+	# from another event-sheet editor types there mean "every one that passes", and a Godot script
+	# only says that as a loop.
+	var offer: Dictionary = picking_offer(query) if typing else {}
+	if not offer.is_empty():
+		_candidates.push_front({"picking": offer})
 	if _chips != null:
 		_chips.visible = not typing and _chips.get_child_count() > 0
 	if _list == null:
 		return
 	_list.clear()
 	for candidate: Dictionary in _candidates:
+		if candidate.has("picking"):
+			_list.add_item(EventSheetPickingOffer.label_for(candidate["picking"] as Dictionary))
+			continue
 		var definition: ACEDefinition = candidate.get("definition")
 		var summary: String = ""
 		var params: Dictionary = candidate.get("params", {})
@@ -184,7 +193,33 @@ func _apply_selected() -> void:
 	if index < 0 or index >= _candidates.size():
 		index = 0
 	var candidate: Dictionary = _candidates[index]
+	if candidate.has("picking"):
+		_apply_picking(candidate["picking"] as Dictionary)
+		return
 	_apply_definition(candidate.get("definition"), candidate.get("params", {}))
+
+
+## The picking offer for what was typed, or {} - read against the project's families and the open
+## sheet's own class. Public so a test can ask it without a popup.
+func picking_offer(query: String) -> Dictionary:
+	var sheet: EventSheetResource = _dock._current_sheet if _dock != null else null
+	var own_class: String = sheet.custom_class_name if sheet != null else ""
+	return EventSheetPickingOffer.offer_for(query, EventSheetPickingOffer.families(), own_class)
+
+
+## Lands the picking form in one undo step. Summoned with C on a selected event, the loop joins THAT
+## event - its conditions and actions then apply to each one picked; otherwise it is a new event.
+func _apply_picking(offer: Dictionary) -> void:
+	if _popup != null:
+		_popup.hide()
+	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
+	var joins: bool = _origin == "condition" and selected_resource is EventRow
+	_dock._perform_undoable_sheet_edit("For each %s" % str(offer["family"]), func() -> bool:
+		if joins:
+			(selected_resource as EventRow).pick_filters.append(EventSheetPickingOffer.pick_filter_for(offer))
+		else:
+			_dock._current_sheet.events.append(EventSheetPickingOffer.event_for(offer, _dock._fresh_uid_token()))
+		return true)
 
 
 ## Lands a definition on the sheet - the shared tail of a list Enter and a suggestion-chip

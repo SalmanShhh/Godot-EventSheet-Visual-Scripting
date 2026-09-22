@@ -2180,7 +2180,29 @@ static func pick_words(collection: String, test: String, order_by: String,
 			text = "%s · %s" % [text, " · ".join(facts)]
 	else:
 		text = "%s %s" % [text, " · ".join(facts)]
-	return {"text": text, "object": family.capitalize()}
+	return {"text": text, "object": family_label(family)}
+
+
+## The group a `get_tree().get_nodes_in_group("x")` call walks, or "" for any other collection.
+static func family_group_in_call(collection: String) -> String:
+	var text: String = collection.strip_edges()
+	var head: String = "get_tree().get_nodes_in_group("
+	if not text.begins_with(head) or not text.ends_with(")"):
+		return ""
+	var inside: String = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+	inside = inside.trim_prefix("&")
+	if inside.length() < 2 or not inside.begins_with("\"") or not inside.ends_with("\""):
+		return ""
+	return inside.substr(1, inside.length() - 2)
+
+
+## The object a family's group names: `family_enemy` is the Enemy family, so the object column says
+## Enemy rather than "Family Enemy". Any other group reads as itself, capitalised as before.
+static func family_label(group: String) -> String:
+	var name: String = group.strip_edges().trim_prefix("\"").trim_suffix("\"")
+	if name.begins_with("family_") and name.length() > "family_".length():
+		name = name.substr("family_".length())
+	return name.capitalize()
 
 
 ## An order-by expression read back as the order it asks for. A distance is the one shape worth

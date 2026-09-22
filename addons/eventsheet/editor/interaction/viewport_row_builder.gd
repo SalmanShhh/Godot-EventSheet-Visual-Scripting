@@ -12785,6 +12785,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			loop_reading = pick_reading
 			loop_text = str(pick_reading.get("text", ""))
 			loop_object = str(pick_reading.get("object", ""))
+		# A walk over a family is that family's row: Enemy in the object column, as the picking
+		# form reads in every event sheet.
+		if loop_object.is_empty():
+			var walked_group: String = pick.collection_value.strip_edges() 				if pick.collection_kind == PickFilter.CollectionKind.GROUP 				else EventSheetViewportReadingRows.family_group_in_call(_pick_collection_text(pick))
+			if walked_group.begins_with("family_"):
+				loop_object = EventSheetViewportReadingRows.family_label(walked_group)
 		spans.append(
 			_make_span(
 				loop_text if not loop_reading.is_empty() else _format_pick_filter(pick),
@@ -15319,6 +15325,13 @@ func _format_pick_filter(pick: PickFilter) -> String:
 	if not overlapped.is_empty():
 		return "%s %s %s %s" % [EventSheetL10n.translate("For each"), iterator,
 			EventSheetL10n.translate("overlapping"), overlapped]
+	# A loop over a FAMILY'S group - as a group pick, or as the `get_nodes_in_group("family_x")` call
+	# a hand-written file spells it with - is the picking row: For each Enemy.
+	var family_group: String = collection if pick.collection_kind == PickFilter.CollectionKind.GROUP \
+		else EventSheetViewportReadingRows.family_group_in_call(collection)
+	if family_group.begins_with("family_") and pick.predicate_expression.strip_edges().is_empty() \
+			and pick.pick_first_n <= 0:
+		return "%s %s" % [EventSheetL10n.translate("For each"), EventSheetViewportReadingRows.family_label(family_group)]
 	var source_text: String = collection
 	match pick.collection_kind:
 		PickFilter.CollectionKind.GROUP:
