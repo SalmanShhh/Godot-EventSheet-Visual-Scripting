@@ -78,10 +78,18 @@ func _quick_match_ranked(query: String, limit: int = 5, prefer_type: int = -1) -
 	for synonym_query: String in ACEPickerDialog._c3_synonym_queries(text):
 		queries.append(synonym_query.to_lower())
 	# The importer's names answer here too, by verb id - the quick-add bar compares ids as well as
-	# names, so "go to layout" lands on ChangeScene exactly as it does in the picker.
-	for ace_id: String in ACEPickerDialog.foreign_query_matches(text):
-		if not queries.has(ace_id.to_lower()):
-			queries.append(ace_id.to_lower())
+	# names, so "go to layout" lands on ChangeScene exactly as it does in the picker. The phrase is
+	# REPLACED by the id inside what was typed rather than added bare: "set value greeting 5" must
+	# still carry "greeting 5" into the parameters, and a bare id would win as an exact match with
+	# nothing to fill them. A phrase only held inside a longer one ("go to" of "go to layout") adds
+	# nothing here, so a half-typed name never outranks what the reader actually wrote.
+	var foreign: Dictionary = ACEPickerDialog.foreign_query_matches(text)
+	for ace_id: String in foreign:
+		var phrase: String = str(foreign[ace_id])
+		if text.contains(phrase):
+			var swapped: String = text.replace(phrase, ace_id.to_lower())
+			if not queries.has(swapped):
+				queries.append(swapped)
 	var candidates: Array = []
 	for definition: ACEDefinition in _dock._ace_registry.get_all_definitions():
 		if bool(definition.metadata.get("hidden", false)):

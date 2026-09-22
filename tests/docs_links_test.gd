@@ -74,8 +74,10 @@ static func _test_hardwired_doc_paths() -> bool:
 	all_passed = _check("every doc path hardwired into shipped code exists", ", ".join(missing), "") and all_passed
 	# Pinned by NAME, not by count: the sweep must not be able to pass by matching nothing, and
 	# these two are the literals that actually ship today.
-	all_passed = _check("the migration guide the Welcome window opens is swept",
-		seen.has("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"), true) and all_passed
+	# The Welcome window no longer names a file: it opens the migration guide by its Manual id, and
+	# the page that id names has to ship inside the plugin for the in-editor Manual to draw it.
+	all_passed = _check("the migration guide the Welcome window opens ships in the Manual",
+		EventSheetDocLibrary.has_page(EventSheetWelcomeWindow.MIGRATION_GUIDE_ID), true) and all_passed
 	all_passed = _check("the guide index the docs window opens is swept",
 		seen.has("docs/README.md"), true) and all_passed
 	# And the detector must be able to FAIL: the same regex on a call site naming a guide that is
