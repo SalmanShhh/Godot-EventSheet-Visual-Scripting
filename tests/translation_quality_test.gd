@@ -538,7 +538,8 @@ static func _test_doctor_gate() -> bool:
 	# away from: quietly starting to accuse working scripts. The suite's own fixtures and the build
 	# tools embed emitted GDScript as string literals, so they are expected here and excluded by
 	# path; everything else must be exactly the seven showcase games, which really are written in one
-	# language on purpose (batch fourteen's Combo Fighter is the ninth). A regression names the
+	# language on purpose (batch fourteen's Combo Fighter is the ninth; the Top-Down Shooter's score line
+	# is another). A regression names the
 	# script it broke on instead of moving a number.
 	var accused: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in unmarked_findings:
@@ -567,6 +568,7 @@ static func _test_doctor_gate() -> bool:
 			"res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd",
 			"res://demo/showcase/skill_tree/skill_tree.gd",
 			"res://demo/showcase/starfall/starfall.gd",
+			"res://demo/showcase/top_down_shooter/top_down_shooter.gd",
 			"res://demo/showcase/traversal_course/traversal_course.gd",
 			"res://demo/showcase/traversal_course_3d/traversal_course_3d.gd",
 		]))) and ok
