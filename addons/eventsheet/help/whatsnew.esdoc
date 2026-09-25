@@ -90,6 +90,20 @@ What changed in the build you have installed (v0.18.0), in the words the release
   window size - is never offered, and a test walks every phrase so none can point at a verb that no
   longer ships.
 
+### Changed: CI runs as parallel jobs
+
+- **One job ran every gate in a row, 20 to 26 minutes.** The full suite took 12-14 of them and the
+  whole-project standing-contracts walk another 8-9, on one machine. Now six matrix jobs each run a
+  sixth of the suite beside a sixth of the contracts walk, a seventh runs the timing tests alone,
+  and an eighth runs the whole-tree gates (import, Doctor, pack audit, translations). Two steps went:
+  the packs-and-demo contracts walk is part of the whole-project one, and the fast gate only re-ran
+  tests the suite runs anyway.
+- **`tools/verify_sheets.gd --shard k/n`** reads every n-th file from k, so n processes read the
+  project once between them; shard 0 also runs the migration check, which samples the project as one.
+- **The serial suite runs nightly** (`serial-suite.yml`, also runnable by hand): one process running
+  every test after every other is the only run that catches a test leaving state behind for a later
+  one, and a six-way split mostly never makes that pairing.
+
 ### Fixed: the Add picker in the editor holds every pack's verbs, not 142 of 4,477
 
 - **In the real editor, 149 of the 179 pack scripts published nothing.** The registry reflected

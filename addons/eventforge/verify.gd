@@ -90,19 +90,50 @@ const QUOTED_LINE_WIDTH: int = 72
 ## sheet and only samples the `.gd` ones, and a verdict printing one of those numbers over the other
 ## is how a gate reports green over files nobody read. `migration_note` is the sentence a whole read
 ## names itself with, and "" for every other run.
+##
+## `shard` ("k/n", k from 0) splits the per-file checks across n processes, taking every n-th file of
+## the sorted corpus from k - so n machines between them read every file exactly once. The migration
+## check reads the project as ONE corpus (its sample is drawn across all of it), so shard 0 runs it
+## whole and the others leave it out. "" is the unsplit run.
 static func run(requested: PackedStringArray = PackedStringArray(),
 		skipped: PackedStringArray = PackedStringArray(),
-		running_script: String = "", read_every_script: bool = false) -> Dictionary:
-	var paths: PackedStringArray = corpus(requested, skipped)
+		running_script: String = "", read_every_script: bool = false, shard: String = "") -> Dictionary:
+	var everything: PackedStringArray = corpus(requested, skipped)
+	var paths: PackedStringArray = shard_slice(everything, shard)
 	var failures: Array[Dictionary] = []
 	for path: String in paths:
 		failures.append_array(file_failures(path, running_script))
-	var migration: Dictionary = _migration_rows(requested, paths, read_every_script)
+	var migration: Dictionary = {"rows": [], "files": 0, "note": ""}
+	if reads_migration(shard):
+		migration = _migration_rows(requested, everything, read_every_script)
 	var rows: Array[Dictionary] = []
 	rows.assign(migration.get("rows", []))
 	failures.append_array(migration_failures(rows))
 	return {"files": paths.size(), "migration_files": int(migration.get("files", 0)),
 		"migration_note": str(migration.get("note", "")), "failures": failures}
+
+
+## The part of a sorted corpus shard "k/n" reads: every n-th path from k. "" is all of it, and so is a
+## spelling that is not "k/n" with 0 <= k < n - a malformed shard reads everything rather than nothing,
+## because a gate that silently read no files would print a clean verdict.
+static func shard_slice(paths: PackedStringArray, shard: String) -> PackedStringArray:
+	var parts: PackedStringArray = shard.strip_edges().split("/")
+	if parts.size() != 2 or not parts[0].is_valid_int() or not parts[1].is_valid_int():
+		return paths
+	var index: int = int(parts[0])
+	var count: int = int(parts[1])
+	if count < 1 or index < 0 or index >= count:
+		return paths
+	var picked: PackedStringArray = PackedStringArray()
+	for position: int in range(paths.size()):
+		if position % count == index:
+			picked.append(paths[position])
+	return picked
+
+
+## Whether shard `shard` is the one that runs the migration check: the unsplit run, and shard 0.
+static func reads_migration(shard: String) -> bool:
+	return shard_slice(PackedStringArray(["only"]), shard).size() == 1
 
 
 ## The files one run reads: the ones asked for, or the whole project when nothing was asked for.

@@ -1,7 +1,14 @@
-# Godot EventSheets CI - runs the headless-safe test suite on every push/PR.
-# The full suite (tests/run_tests.gd) currently ends in a known harmless segfault after
-# printing its summary, so CI gates on the headless-safe runner (clean exit codes) and
-# additionally greps the full suite's output for unexpected [FAIL] lines.
+# Godot EventSheets CI - every gate on every push/PR, spread across parallel jobs.
+#
+# One job doing everything in a row took 20-26 minutes: the full suite alone was 12-14 of them and the
+# whole-project standing-contracts walk another 8-9. Neither needs one machine. The suite's
+# parallel-safe tests are split six ways (tests/run_tests.gd, EVENTFORGE_TEST_SHARD), the contracts
+# walk the same six ways (tools/verify_sheets.gd --shard), and each matrix job runs one slice of each
+# side by side. The timing tests - the ones a loaded machine fails for the wrong reason - get a job to
+# themselves, and the whole-tree gates get one more. The run takes as long as its slowest job.
+#
+# What the split gives up is one serial process running all 800 tests, which is what once exposed a
+# test leaking state into a later one; serial-suite.yml keeps that run, nightly and on demand.
 name: CI
 
 on:
@@ -9,54 +16,92 @@ on:
     branches: ["**"]
   pull_request:
 
+# A newer push to the same branch supersedes a run still going, except on main, where every commit
+# keeps its own verdict so a red one can be named.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 env:
   # Match the version the plugin is developed + tested on (the "current iteration"). 4.7 Linux build:
   # github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
   GODOT_VERSION: "4.7"
+  # How many ways the suite and the contracts walk are split. The matrix below lists 0..SHARDS-1.
+  SHARDS: "6"
 
 jobs:
-  test:
+  # One slice of the suite and one slice of the standing contracts, at the same time: a runner has
+  # four cores and each Godot process uses one.
+  shard:
+    name: suite + contracts ${{ matrix.index }}/6
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        index: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-godot
+
+      # The contracts walk is the guide's whole-project pre-push recipe, split. The two skips name
+      # this repository's folders of GDScript that is not meant to load: tests/fixtures/ is
+      # deliberately broken so the importer can be tested against it, and tests/corpus/ illustrates
+      # code a reader is shown rather than code that runs. A game project needs neither. Shard 0 also
+      # runs the migration check, which reads the project as one corpus.
+      - name: Suite shard and contracts shard ${{ matrix.index }}/${{ env.SHARDS }}
+        shell: bash
+        run: |
+          EVENTFORGE_TEST_SHARD="${{ matrix.index }}/${SHARDS}" \
+            ~/godot/godot --headless --path . --script tests/run_tests.gd > suite.log 2>&1 &
+          SUITE_PID=$!
+          ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
+            --skip res://tests/fixtures/ --skip res://tests/corpus/ --shard "${{ matrix.index }}/${SHARDS}" \
+            > verify.log 2>&1
+          VERIFY_EXIT=$?
+          # The suite ends in a known harmless segfault after its verdict, so its exit code is not the
+          # answer - the verdict line is.
+          wait $SUITE_PID || true
+          echo "── standing contracts ──"; cat verify.log
+          SUITE_OK=0
+          bash .github/scripts/suite_verdict.sh suite.log "suite shard ${{ matrix.index }}/${SHARDS}" || SUITE_OK=1
+          if [ $VERIFY_EXIT -ne 0 ]; then
+            grep -vE '^verify:' verify.log | head -n 24 | while IFS= read -r line; do echo "::error::contracts: $line"; done
+          fi
+          [ $SUITE_OK -eq 0 ] && [ $VERIFY_EXIT -eq 0 ]
+
+  # The timing tests (a *BUDGET_MS* or PARALLEL_UNSAFE constant in their own source) and the
+  # shared-state tests that must run last, serially, with the machine to themselves.
+  tail:
+    name: suite tail (timing tests, alone)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Cache Godot
-        id: cache-godot
-        uses: actions/cache@v4
-        with:
-          path: ~/godot
-          key: godot-${{ env.GODOT_VERSION }}-linux
-
-      - name: Download Godot ${{ env.GODOT_VERSION }}
-        if: steps.cache-godot.outputs.cache-hit != 'true'
+      - uses: ./.github/actions/setup-godot
+      - name: Timing and shared-state tests
+        shell: bash
         run: |
-          mkdir -p ~/godot
-          curl -fsSL -o ~/godot/godot.zip \
-            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
-          unzip -q ~/godot/godot.zip -d ~/godot
-          mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
-          chmod +x ~/godot/godot
+          EVENTFORGE_TEST_SHARD=tail ~/godot/godot --headless --path . --script tests/run_tests.gd > tail.log 2>&1 || true
+          bash .github/scripts/suite_verdict.sh tail.log "suite tail"
 
-      - name: Import project
-        run: ~/godot/godot --headless --import --path . 2>&1 | tee import.log
+  # The gates that read the whole tree at once.
+  gates:
+    name: whole-tree gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-godot
 
       - name: Import must be clean
         run: "! grep -E 'SCRIPT ERROR|Parse Error' import.log"
 
-      - name: Headless-safe suite (gates the build)
-        run: ~/godot/godot --headless --path . --script tests/run_perf.gd
-
       - name: Project Doctor (committed generated scripts must match their sheets)
         run: ~/godot/godot --headless --path . --script tools/project_doctor.gd
 
-      # The behaviour packs are compiler output and have had a drift gate for a long time; it had
-      # no CI step of its own, so it ran only when somebody remembered. The verdict is a printed
-      # line rather than an exit code alone, so the line is what this greps.
-      #
-      # `shell: bash` is what puts pipefail on: the default shell runs with `-e` alone, so a pipe
-      # takes tee's exit code and the audit's own exit 1 - which it uses for the problems the
-      # drifted line does not mention, an unsound successor map among them - was being thrown away.
-      # Both halves are the gate: the exit code, and the line that says which question was asked.
+      # The behaviour packs are compiler output. The verdict is a printed line rather than an exit
+      # code alone, so the line is what this greps. `shell: bash` is what puts pipefail on: the default
+      # shell runs with `-e` alone, so a pipe would take tee's exit code and throw away the audit's own
+      # exit 1 - which it uses for problems the drifted line does not mention, an unsound successor
+      # map among them. Both halves are the gate.
       - name: Behaviour packs must match their builders
         shell: bash
         run: |
@@ -71,55 +116,3 @@ jobs:
           ~/godot/godot --headless --path . --script tools/harvest_translations.gd 2>&1 | tee harvest.log
           grep -qi 'nothing owed' harvest.log
           git diff --exit-code -- addons/eventsheet/translations/
-
-      # The branch gate the guide hands to teams, run on this repository as the proof that the
-      # recipe works. A game project runs the whole-project form (no arguments after the --); this
-      # repository is not a game, and most of its .gd files are the plugin's own test harnesses and
-      # build tools, with tests/fixtures/ a folder of deliberately broken GDScript that the gate
-      # cannot tell from a real file. What IS content here is generated from sheets by the builders,
-      # which is exactly the corpus the four checks are about. Paths are passed the way git prints
-      # them, which is the same shape the pre-commit hook in the guide uses.
-      - name: The standing contracts (parse, byte-exact round trip, baked locals, migration)
-        run: |
-          ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
-            $(git ls-files 'demo/*.gd' 'eventsheet_addons/*.gd')
-
-      # And the WHOLE-PROJECT form, which is the one the guide prints for a pre-push hook and a
-      # branch gate - run here so that recipe is exercised rather than only described. The two skips
-      # name this repository's folders of GDScript that is not meant to load: tests/fixtures/ is
-      # deliberately broken so the importer can be tested against it, and tests/corpus/ illustrates
-      # code a reader is shown rather than code that runs. A game project needs neither.
-      - name: The standing contracts, whole project (the guide's own pre-push recipe)
-        run: |
-          ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
-            --skip res://tests/fixtures/ --skip res://tests/corpus/
-
-      - name: Full suite (known harmless tail segfault tolerated; zero failures expected)
-        run: |
-          ~/godot/godot --headless --path . --script tests/run_tests.gd 2>&1 | tee full.log || true
-          # [FAIL] lines can be indented (nested reporters), and a test may print one ON PURPOSE
-          # to prove the red-run report formats it - such a line names itself with the
-          # deliberate_probe_not_a_failure marker and does not count. Same filter as
-          # tools/run_tests_parallel.ps1 and tools/test_report.gd.
-          FAILURES=$(grep -F '[FAIL]' full.log | grep -v 'deliberate_probe_not_a_failure' || true)
-          echo "PASS: $(grep -cE '^\[PASS\]' full.log)  FAIL: $(printf '%s' "$FAILURES" | grep -c . || true)"
-          VERDICT_OK=true
-          # The verdict line is the only always-right signal: a test that crashes mid-run prints
-          # zero [FAIL] lines, so the absence of failures alone does not make a run green.
-          grep -qxF 'All tests passed.' full.log || VERDICT_OK=false
-          if [ -z "$FAILURES" ] && $VERDICT_OK; then exit 0; fi
-          # Say WHY in annotations: annotations are readable on the run page without repo
-          # access, while the raw step log is not.
-          if [ -n "$FAILURES" ]; then
-            echo "Failures:"; echo "$FAILURES"
-            # Two lines of context after each [FAIL]: tests print their expected/actual there,
-            # and a summary without them cannot be diagnosed from outside the runner.
-            grep -F -A 2 '[FAIL]' full.log | grep -v 'deliberate_probe_not_a_failure' | head -n 24 \
-              | while IFS= read -r line; do echo "::error::$line"; done
-          fi
-          if ! $VERDICT_OK; then
-            echo "::error::The 'All tests passed.' verdict never printed - the run died mid-suite."
-            echo "::error::Crash sentinel last line: $(tail -n 1 .godot/test_progress/serial.log 2>/dev/null || echo 'no trail file')"
-            tail -n 8 full.log | while IFS= read -r line; do echo "::error::log tail: $line"; done
-          fi
-          exit 1

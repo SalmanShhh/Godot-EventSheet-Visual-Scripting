@@ -56,6 +56,25 @@ static func run() -> bool:
 	ok = _test_a_file_nothing_can_read() and ok
 	ok = _test_the_running_script_is_not_reloaded() and ok
 	ok = _test_the_lines_it_prints() and ok
+	ok = _test_shards_read_every_file_once() and ok
+	return ok
+
+
+# ── shards: n processes read the corpus once between them ─────────────────────────
+
+
+static func _test_shards_read_every_file_once() -> bool:
+	var corpus: PackedStringArray = PackedStringArray(["a.gd", "b.gd", "c.gd", "d.gd", "e.gd"])
+	var ok: bool = _check("shard 0/2 takes every other file from the first",
+		EventSheetVerify.shard_slice(corpus, "0/2"), PackedStringArray(["a.gd", "c.gd", "e.gd"]))
+	ok = _check("shard 1/2 takes the rest", EventSheetVerify.shard_slice(corpus, "1/2"),
+		PackedStringArray(["b.gd", "d.gd"])) and ok
+	ok = _check("no shard reads everything", EventSheetVerify.shard_slice(corpus, ""), corpus) and ok
+	ok = _check("a malformed shard reads everything rather than nothing",
+		[EventSheetVerify.shard_slice(corpus, "2/2"), EventSheetVerify.shard_slice(corpus, "x")], [corpus, corpus]) and ok
+	ok = _check("only shard 0 and the unsplit run read the project-wide migration corpus",
+		[EventSheetVerify.reads_migration(""), EventSheetVerify.reads_migration("0/3"),
+			EventSheetVerify.reads_migration("1/3")], [true, true, false]) and ok
 	return ok
 
 

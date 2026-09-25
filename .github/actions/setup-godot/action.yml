@@ -1,0 +1,29 @@
+# The three steps every CI job starts with: the cached Godot binary (downloaded once per version), and
+# the project imported so the class cache and every resource are in place before anything runs.
+# The import log is kept as import.log for a job that wants to hold it to being clean.
+name: Set up Godot
+description: Cache or download the Godot binary named by GODOT_VERSION, then import the project.
+runs:
+  using: composite
+  steps:
+    - name: Cache Godot
+      id: cache-godot
+      uses: actions/cache@v4
+      with:
+        path: ~/godot
+        key: godot-${{ env.GODOT_VERSION }}-linux
+
+    - name: Download Godot ${{ env.GODOT_VERSION }}
+      if: steps.cache-godot.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ~/godot
+        curl -fsSL -o ~/godot/godot.zip \
+          "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+        unzip -q ~/godot/godot.zip -d ~/godot
+        mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+        chmod +x ~/godot/godot
+
+    - name: Import project
+      shell: bash
+      run: ~/godot/godot --headless --import --path . 2>&1 | tee import.log

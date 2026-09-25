@@ -5,6 +5,7 @@
 #   godot --headless --path . --script tools/verify_sheets.gd -- sheets/
 #   godot --headless --path . --script tools/verify_sheets.gd -- --skip res://tests/fixtures/
 #   godot --headless --path . --script tools/verify_sheets.gd -- --whole
+#   godot --headless --path . --script tools/verify_sheets.gd -- --shard 0/4
 #
 # Exit 0 when every check passes, 1 when any fails. A failure prints one line naming the file, the
 # line, what is wrong and where in the editor the same thing is shown - the shape a terminal turns
@@ -28,6 +29,9 @@
 # tell from a real file. Repeat it for several. It applies to a listed path as much as to a walked
 # one, so a hook can pass git's whole list without filtering it first.
 #
+# `--shard k/n` (k from 0) reads every n-th file from k, so n processes - a CI matrix - read the
+# project once between them; shard 0 also runs the migration check, which reads the project as one.
+#
 # Nothing under res:// is written or touched, and the report is sorted - two machines given the same
 # tree print the same lines.
 @tool
@@ -39,12 +43,19 @@ func _init() -> void:
 	var skipped: PackedStringArray = PackedStringArray()
 	var read_every_script: bool = false
 	var expecting_skip: bool = false
+	var shard: String = ""
+	var expecting_shard: bool = false
 	for argument: String in OS.get_cmdline_user_args():
 		if expecting_skip:
 			skipped.append(argument)
 			expecting_skip = false
+		elif expecting_shard:
+			shard = argument
+			expecting_shard = false
 		elif argument == "--skip":
 			expecting_skip = true
+		elif argument == "--shard":
+			expecting_shard = true
 		elif argument == "--whole":
 			read_every_script = true
 		else:
@@ -54,7 +65,7 @@ func _init() -> void:
 	# the engine is currently running hangs the process and then takes it down; a file the engine is
 	# running is a file the engine read, so that one answer comes from that fact instead.
 	var running: String = str((get_script() as Script).resource_path)
-	var result: Dictionary = EventSheetVerify.run(requested, skipped, running, read_every_script)
+	var result: Dictionary = EventSheetVerify.run(requested, skipped, running, read_every_script, shard)
 	var failures: Array = result.get("failures", []) as Array
 	for failure: Dictionary in failures:
 		print(EventSheetVerify.failure_line(failure))

@@ -1,0 +1,28 @@
+# The whole suite in ONE process, every test after every other, as CI ran it before it was split.
+#
+# The per-push CI splits the suite across six machines for speed. One serial process is still the
+# only run where every test follows every other, which is how a test that leaves state behind (a
+# static cache, a registration, a file under user://) gets caught failing a LATER test - the pairing a
+# six-way split mostly never makes. So it runs here instead: nightly on main, and by hand from the
+# Actions tab whenever a green split run looks suspicious.
+name: Serial suite
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.7"
+
+jobs:
+  serial:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-godot
+      - name: Full suite, one process (known harmless tail segfault tolerated)
+        shell: bash
+        run: |
+          ~/godot/godot --headless --path . --script tests/run_tests.gd > full.log 2>&1 || true
+          bash .github/scripts/suite_verdict.sh full.log "serial suite"
