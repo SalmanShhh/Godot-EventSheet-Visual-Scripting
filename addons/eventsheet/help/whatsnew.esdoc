@@ -90,6 +90,17 @@ What changed in the build you have installed (v0.18.0), in the words the release
   window size - is never offered, and a test walks every phrase so none can point at a verb that no
   longer ships.
 
+### Changed: eight tests another test already made are gone
+
+- **An audit of all 820 test files**, each file checked for an assertion no other test makes.
+  Eight had none: `while_loop`, `icon_roundtrip`, `const_roundtrip`, `gap3_body_lift`,
+  `variable_export_badge`, `variable_export`, `preview_autounlock` and `variable_row_format`.
+  Every check they made is made, as strictly or more so, by a test that stays. The one case only the
+  byte gates still covered - a global marked not exported emits as a plain `var` - is now pinned in
+  `codegen_parity_test`, so the fast gate keeps it.
+- **`VariableRowFormat` is removed.** It was lifted out of a widget that no longer exists and was
+  never wired into the editor, so its test guarded code nothing runs.
+
 ### Fixed: including a shared sheet into a script that already has the handler
 
 - **A helper include no longer writes a second `_process`.** Including a shared sheet as a helper

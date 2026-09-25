@@ -26,7 +26,6 @@ func _init() -> void:
 	passed = LaneResizeTest.run() and passed
 	passed = LayoutStateTest.run() and passed
 	passed = ACEReorderDragTest.run() and passed
-	passed = VariableExportTest.run() and passed
 	passed = TreeVariableTest.run() and passed
 	passed = CommentNestingTest.run() and passed
 	passed = ConditionEditTest.run() and passed

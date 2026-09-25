@@ -33,7 +33,10 @@ static func run() -> bool:
 	# trigger + condition + builtin action + baked addon-template action, sheet function.
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "CharacterBody2D"
-	sheet.variables = {"health": {"type": "int", "default": 100, "exported": true}}
+	sheet.variables = {
+		"health": {"type": "int", "default": 100, "exported": true},
+		"secret": {"type": "int", "default": 7, "exported": false},
+	}
 	var tree_var: LocalVariable = LocalVariable.new()
 	tree_var.name = "ammo"
 	tree_var.type_name = "int"
@@ -79,6 +82,8 @@ static func run() -> bool:
 
 	# Direct, typed output is present.
 	all_passed = _check("globals emit with static types", code_body.contains("@export var health: int = 100"), true) and all_passed
+	all_passed = _check("a private global emits as a plain typed var", code_body.contains("var secret: int = 7"), true) and all_passed
+	all_passed = _check("and never as an export", code_body.contains("@export var secret"), false) and all_passed
 	all_passed = _check("tree variables emit with static types", code_body.contains("var ammo: int = 3"), true) and all_passed
 	all_passed = _check("conditions compile to direct if-expressions", code_body.contains("if is_on_floor():"), true) and all_passed
 	all_passed = _check("builtin actions compile to direct calls", code_body.contains("queue_free()"), true) and all_passed

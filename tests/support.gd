@@ -37,7 +37,7 @@ extends RefCounted
 ## Reports one assertion in the suite's line format and returns whether it held, so a caller can
 ## fold it: `all_passed = EventSheetTestSupport.check(P, "label", got, want) and all_passed`.
 ##
-## `label_prefix` is the reporting test's own name (`"const_roundtrip_test"`), printed before the
+## `label_prefix` is the reporting test's own name (`"codegen_parity_test"`), printed before the
 ## label with `": "` between them. `actual` and `expected` are compared with `==`, so pass VALUES
 ## rather than a boolean-and chain: `check(P, "x", a and b, "text")` compares a bool against a
 ## String, which is a runtime error in GDScript and takes the whole test down silently.
