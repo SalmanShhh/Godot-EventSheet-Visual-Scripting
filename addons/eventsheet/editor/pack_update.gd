@@ -199,7 +199,7 @@ static func vocabulary_after(pack_folder: String, incoming: Dictionary) -> Dicti
 
 ## The one reflection both answers above come out of: {"diff", "entries"}, `entries` being the
 ## incoming version's own catalogue. Reflected ONCE, because reflecting a pack means writing it out
-## and instantiating it, and doing that twice for two questions about one archive is the same answer
+## and loading it (instantiating it, where the process allows), and doing that twice for two questions about one archive is the same answer
 ## computed twice.
 static func _reflected(pack_folder: String, incoming: Dictionary) -> Dictionary:
 	var installed_script: String = EventSheetPackCatalog.main_script_for(

@@ -574,17 +574,12 @@ static func _pack_definitions() -> Array[ACEDefinition]:
 	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
 	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
 		var script: Script = load(script_path) as Script
-		if script == null or not script.can_instantiate():
-			continue
-		var instance: Object = script.new()
-		if instance == null:
+		if script == null:
 			continue
 		# The analyzer reads annotations off DISK, so the reflection below sees the same
 		# `## @ace_succeeded_by(...)` a reader sees in the file.
 		analyzer.parse_source_metadata(script)
-		definitions.append_array(generator.generate_from_object(instance))
-		if instance is Node:
-			(instance as Node).free()
+		definitions.append_array(generator.reflect_script(script))
 	return definitions
 
 

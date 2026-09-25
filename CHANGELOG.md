@@ -86,6 +86,23 @@
   window size - is never offered, and a test walks every phrase so none can point at a verb that no
   longer ships.
 
+### Fixed: the Add picker in the editor holds every pack's verbs, not 142 of 4,477
+
+- **In the real editor, 149 of the 179 pack scripts published nothing.** The registry reflected
+  each pack by making an instance of it, and the editor will not instantiate a script that is not
+  `@tool` - it runs no game code - which is most packs. Measured under `--editor`: 142 pack verbs
+  reached the picker where a plain run found 4,477. Every test runs outside the editor, where every
+  pack instantiates, so the suite never saw it.
+- **A pack the editor will not instantiate is now reflected from its script**, which declares the
+  same members. Where an instance can be made it still is. One door, `reflect_script`, now serves the
+  picker, the Doctor's reading check, the successor map, the pack update dry run and the provider
+  preview, so none of them can drop a pack the others see. Measured under `--editor` after: 4,477.
+- **`script_reflection_parity_test`** asks every shipped pack both ways and holds the script's
+  verbs to the instance's, field for field and in order.
+- **The same trap, two more places**: the provider wizard read a healthy first draft that publishes
+  nothing yet as "cannot be instantiated", and `EventSheets.verify_pack` called a sound pack
+  unparseable, both only inside the editor. Both now ask whether the script compiled.
+
 ### Fixed: the editor starts in about 11 seconds, not 30
 
 - **The plugin compiled the whole editor half of itself at every editor start.** Godot sets up the

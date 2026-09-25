@@ -56,6 +56,23 @@ static func run() -> bool:
 	var not_a_script: Dictionary = EventSheetProviderPreview.scan("res://project.godot")
 	ok = _check("a non-script path fails closed", not_a_script.get("ok", true), false) and ok
 
+	# ── A first draft that publishes nothing yet is not a broken script ──
+	var draft_path: String = "user://provider_preview_draft.gd"
+	var draft_file: FileAccess = FileAccess.open(draft_path, FileAccess.WRITE)
+	draft_file.store_string("extends Node
+
+
+func _private_helper() -> void:
+	pass
+")
+	draft_file.close()
+	var draft: Dictionary = EventSheetProviderPreview.scan(draft_path)
+	ok = _check("a script that publishes nothing yet still reads", draft.get("ok", false), true) and ok
+	ok = _check("and says what would become a verb", _warning_text(draft, "empty").is_empty(), false) and ok
+	ok = _check("the compile test does not lean on instancing, which the editor refuses",
+		str((load(draft_path) as Script).get_instance_base_type()), "Node") and ok
+	DirAccess.remove_absolute(draft_path)
+
 	return ok
 
 

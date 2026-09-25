@@ -269,10 +269,15 @@ func _annotation_token(directive: String) -> String:
 
 
 func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
+	return provider_id_for_script(target.get_script() as Script, target.get_class(), source_metadata)
+
+
+## The provider id from the script alone, for a provider reflected without an instance: its
+## class_name, else its file name, else the engine class it builds on.
+func provider_id_for_script(script: Script, fallback_class: String, source_metadata: Dictionary) -> String:
 	var class_name_text: String = str(source_metadata.get("class_name", ""))
 	if not class_name_text.is_empty():
 		return class_name_text
-	var script: Script = target.get_script() as Script
 	if script != null and not script.resource_path.is_empty():
 		# PASCAL case, not capitalize(): the provider id is interpolated into a GDScript IDENTIFIER for
 		# non-Node providers (`__eventsheet_provider_<id>.member`), so `score_keeper.gd` becoming
@@ -280,7 +285,7 @@ func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
 		# declaration scan then read as `__eventsheet_provider_Score` and declared `Score.new()`. The Node
 		# path already pascal-cases the same fallback, so this also makes the two agree.
 		return script.resource_path.get_file().get_basename().to_pascal_case()
-	return target.get_class()
+	return fallback_class
 
 
 func build_property_display_name(name: String) -> String:

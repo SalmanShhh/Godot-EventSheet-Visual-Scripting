@@ -135,24 +135,15 @@ static func combine(definition_result: Dictionary, demo_result: Dictionary) -> D
 	}
 
 
-## Everything one pack script publishes, reflected the same way the picker reflects it. Empty
-## when the script cannot be instantiated (an abstract base, a Resource host with no default).
+## Everything one pack script publishes, reflected the same way the picker reflects it.
 static func definitions_for_script(script_path: String) -> Array[ACEDefinition]:
 	var empty: Array[ACEDefinition] = []
 	if script_path.strip_edges().is_empty() or not ResourceLoader.exists(script_path):
 		return empty
 	var resource: Resource = load(script_path)
-	if not (resource is Script) or not (resource as Script).can_instantiate():
+	if not (resource is Script):
 		return empty
-	var instance: Variant = (resource as Script).new()
-	if not (instance is Object):
-		return empty
-	var definitions: Array[ACEDefinition] = EventSheetACEGenerator.new().generate_from_object(instance as Object)
-	# A pack is usually a Node, and `.new()` on one is not reference counted: without this every
-	# check leaves an orphan behind, and a sweep over ninety packs leaks ninety of them.
-	if instance is Node:
-		(instance as Node).free()
-	return definitions
+	return EventSheetACEGenerator.new().reflect_script(resource as Script)
 
 
 ## The whole verdict for one pack script: what it publishes, checked. The Publish dialog, the

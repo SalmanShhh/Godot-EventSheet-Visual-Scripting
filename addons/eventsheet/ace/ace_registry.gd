@@ -62,7 +62,7 @@ func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) 
 ## byte count is the accepted residual edge). "" (uncacheable) for sources without a saved
 ## script - those reflect fresh every time, as before.
 static func _source_cache_key(source_object: Object) -> String:
-	var script: Script = source_object.get_script() as Script
+	var script: Script = source_object as Script if source_object is Script else source_object.get_script() as Script
 	if script == null or script.resource_path.is_empty():
 		return ""
 	var script_path: String = script.resource_path

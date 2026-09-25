@@ -2,7 +2,7 @@
 #
 # Pointing the picker at one of your own scripts used to be an act of faith: you registered it and found
 # out afterwards what joined the vocabulary. This answers the question BEFORE anything is registered, and
-# it answers it with the SAME call the registry makes (EventSheetACEGenerator.generate_from_object), so
+# it answers it with the SAME call the registry makes (EventSheetACEGenerator.reflect_script), so
 # the preview can never drift from what actually ships.
 #
 # Pure and headless-testable: scan() takes a path and returns a Dictionary. It reads the file, never
@@ -16,7 +16,7 @@ const BUSY_VERB_COUNT: int = 25
 
 
 ## Everything the wizard needs to render a decision, from one script path:
-##   ok            - true when the script could be read and instantiated
+##   ok            - true when the script could be read and it compiled
 ##   reason        - why not, when ok is false (shown instead of the table)
 ##   provider_id   - the id its verbs will publish under
 ##   class_name    - the declared class_name, or "" when it falls back to the file name
@@ -37,16 +37,14 @@ static func scan(script_path: String) -> Dictionary:
 		result["reason"] = "%s is not a script." % clean_path.get_file()
 		return result
 	var script: Script = resource as Script
-	if not script.can_instantiate():
-		# Abstract or erroring scripts cannot be reflected - the registry skips them silently, so say it.
-		result["reason"] = "%s cannot be instantiated (it may be abstract, or have a script error)." % clean_path.get_file()
+	var definitions: Array[ACEDefinition] = EventSheetACEGenerator.new().reflect_script(script)
+	# A script that did not compile has no engine class under it; one that compiled and publishes
+	# nothing yet is the wizard's commonest input and gets the "what becomes a verb" warning below.
+	# Asked this way rather than through can_instantiate(), which the editor answers false for every
+	# script that is not @tool - a healthy first draft would read as broken there.
+	if definitions.is_empty() and str(script.get_instance_base_type()).is_empty():
+		result["reason"] = "%s did not compile (it has a script error)." % clean_path.get_file()
 		return result
-	var instance: Variant = script.new()
-	if not (instance is Object):
-		result["reason"] = "%s did not produce an object." % clean_path.get_file()
-		return result
-
-	var definitions: Array[ACEDefinition] = EventSheetACEGenerator.new().generate_from_object(instance)
 	var source: String = FileAccess.get_file_as_string(clean_path)
 	result["ok"] = true
 	result["class_name"] = str(script.get_global_name())
@@ -70,8 +68,6 @@ static func scan(script_path: String) -> Dictionary:
 			"member": str(definition.metadata.get("source_name", "")),
 		})
 	result["warnings"] = _warnings_for(result, source, script)
-	if instance is Node:
-		(instance as Node).free()
 	return result
 
 
@@ -150,7 +146,7 @@ static func _warnings_for(scan_result: Dictionary, source: String, script: Scrip
 			"text": "Nothing to publish: only signals, `@export` properties and public methods declared in THIS script become verbs (inherited members and `_`-prefixed methods do not).",
 		})
 
-	# Reflection instantiates the script. A Node provider is targeted as $NodeName in the scene, so the
+	# A Node provider is targeted as $NodeName in the scene, so the
 	# author needs to know a node of this type has to exist.
 	if script.get_instance_base_type() == "Node" or ClassDB.is_parent_class(script.get_instance_base_type(), "Node"):
 		warnings.append({

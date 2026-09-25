@@ -45,16 +45,61 @@ var _autoload_singleton: String = ""
 var _provider_node_name: String = ""
 
 
+## Every verb one provider script publishes - the one door the picker, the Doctor, the successor map
+## and the pack dialogs reflect a script through.
+##
+## THE EDITOR WILL NOT INSTANTIATE A SCRIPT THAT IS NOT `@tool`: `can_instantiate()` is false there
+## for every such script, because the editor runs no game code. Most packs are not tool scripts, so a
+## door that only reflected instances published about 30 of 179 pack scripts in the real editor -
+## 142 verbs where a plain run saw 4,477 - while every test, which runs outside the editor, saw them
+## all. Where an instance can be made it still is (a provider may build members at run time); where
+## the editor refuses, the script itself is reflected, which declares the same members.
+func reflect_script(script: Script) -> Array[ACEDefinition]:
+	if script == null:
+		return [] as Array[ACEDefinition]
+	if not script.can_instantiate():
+		return generate_from_script(script)
+	var instance: Variant = script.new()
+	if not (instance is Object):
+		return generate_from_script(script)
+	var definitions: Array[ACEDefinition] = generate_from_object(instance as Object)
+	# A Node from `.new()` is not reference counted: without this every reflection leaves an orphan.
+	if instance is Node:
+		(instance as Node).free()
+	return definitions
+
+
+## A provider reflected from its SCRIPT, with no instance: the members the script declares, which
+## are the only ones a provider publishes (an annotation names a member of this file). Whether it is a
+## Node comes from the engine class it builds on.
+func generate_from_script(script: Script) -> Array[ACEDefinition]:
+	if script == null:
+		return [] as Array[ACEDefinition]
+	var base_class: String = str(script.get_instance_base_type())
+	return _generate(script, ClassDB.is_parent_class(base_class, "Node"), base_class,
+		script.get_script_signal_list(), script.get_script_property_list(), script.get_script_method_list())
+
+
 func generate_from_object(target: Object) -> Array[ACEDefinition]:
-	var output: Array[ACEDefinition] = []
 	if target == null:
-		return output
-	var script: Script = target.get_script() as Script
+		return [] as Array[ACEDefinition]
+	# A Script handed in as the source is the provider itself, not an object to reflect.
+	if target is Script:
+		return generate_from_script(target as Script)
+	return _generate(target.get_script() as Script, target is Node, target.get_class(),
+		target.get_signal_list(), target.get_property_list(), target.get_method_list())
+
+
+## The reflection both doors share: the provider's script, whether it is a Node, the engine class to
+## fall back on for its id, and its signal, property and method lists.
+func _generate(script: Script, is_node: bool, fallback_class: String, signal_list: Array,
+		property_list: Array, method_list: Array) -> Array[ACEDefinition]:
+	var output: Array[ACEDefinition] = []
 	var source_metadata: Dictionary = _analyzer.parse_source_metadata(script)
 	_expose_all_mode = str(source_metadata.get("expose_all_mode", ""))
-	_provider_is_node = target is Node
+	_provider_is_node = is_node
 	_autoload_singleton = _autoload_name_for(script)
-	var provider_id: String = _analyzer.get_provider_id(target, source_metadata)
+	var provider_id: String = _analyzer.provider_id_for_script(script, fallback_class, source_metadata)
 	_provider_node_name = str(source_metadata.get("class_name", ""))
 	if _provider_node_name.is_empty() and script != null and not script.resource_path.is_empty():
 		_provider_node_name = script.resource_path.get_file().get_basename().to_pascal_case()
@@ -64,7 +109,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 	var property_overrides: Dictionary = source_metadata.get("properties", {})
 	var method_overrides: Dictionary = source_metadata.get("methods", {})
 
-	for signal_info in target.get_signal_list():
+	for signal_info: Dictionary in signal_list:
 		var signal_name: String = str(signal_info.get("name", ""))
 		if signal_name.is_empty() or (script != null and not signal_overrides.has(signal_name)):
 			continue
@@ -75,7 +120,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 		_apply_deprecation_metadata(signal_definition, overrides)
 		output.append(signal_definition)
 
-	for property_info in target.get_property_list():
+	for property_info: Dictionary in property_list:
 		var property_name: String = str(property_info.get("name", ""))
 		if property_name.is_empty() or (script != null and not property_overrides.has(property_name)):
 			continue
@@ -89,7 +134,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 			_apply_deprecation_metadata(property_definition, property_overrides_entry)
 		output.append_array(property_definitions)
 
-	for method_info in target.get_method_list():
+	for method_info: Dictionary in method_list:
 		var method_name: String = str(method_info.get("name", ""))
 		if method_name.is_empty() or method_name.begins_with("_") or COMMON_METHOD_IGNORE.has(method_name):
 			continue

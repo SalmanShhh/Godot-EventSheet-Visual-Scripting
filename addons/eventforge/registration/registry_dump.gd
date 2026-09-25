@@ -212,20 +212,15 @@ static func diff(old_text: String, new_text: String) -> Dictionary:
 static func entries_of_script(script_path: String) -> Dictionary:
 	var built: Dictionary = {}
 	var script: Script = load(script_path) as Script
-	if script == null or not script.can_instantiate():
-		return built
-	var instance: Object = script.new()
-	if instance == null:
+	if script == null:
 		return built
 	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
 	analyzer.parse_source_metadata(script)
 	var generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
-	for definition: ACEDefinition in generator.generate_from_object(instance):
+	for definition: ACEDefinition in generator.reflect_script(script):
 		var entry: Dictionary = EventForgeSuccessors.entry_of(definition)
 		if not entry.is_empty():
 			built[str(entry["key"])] = entry
-	if instance is Node:
-		(instance as Node).free()
 	return built
 
 

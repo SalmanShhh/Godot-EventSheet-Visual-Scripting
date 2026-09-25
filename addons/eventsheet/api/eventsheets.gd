@@ -1743,7 +1743,9 @@ static func verify_pack(pack_gd_path: String) -> Dictionary:
 		(report["errors"] as Array).append("no such file: %s" % pack_gd_path)
 		return report
 	var script: Variant = load(pack_gd_path)
-	report["parses"] = script is Script and (script as Script).can_instantiate()
+	# Compiled, asked by the engine class under it: can_instantiate() is false in the editor for every
+	# script that is not @tool, so it would call a sound pack unparseable there.
+	report["parses"] = script is Script and not str((script as Script).get_instance_base_type()).is_empty()
 	if not bool(report["parses"]):
 		(report["errors"] as Array).append("the emitted GDScript does not parse/load: %s" % pack_gd_path)
 	var source: String = FileAccess.get_file_as_string(pack_gd_path)

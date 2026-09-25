@@ -7751,8 +7751,10 @@ func _build_addon_ace_sources() -> Array[Object]:
 	return sources
 
 
-## Loads and instantiates a provider script (Node/Resource/RefCounted) for reflection.
-## Returns null when the path is not an instantiable script.
+## Loads and instantiates a provider script (Node/Resource/RefCounted) for reflection. Where the
+## editor refuses to instantiate it - every script that is not `@tool`, which is most packs - the
+## SCRIPT itself is the source: the registry reflects a Script as the provider it is. Returns null
+## when the path is not a script.
 func _instantiate_provider_script(path: String) -> Object:
 	if path.strip_edges().is_empty() or not ResourceLoader.exists(path):
 		return null
@@ -7761,9 +7763,9 @@ func _instantiate_provider_script(path: String) -> Object:
 		return null
 	var script: Script = resource as Script
 	if not script.can_instantiate():
-		return null
+		return script
 	var instance: Variant = script.new()
-	return instance if instance is Object else null
+	return instance if instance is Object else script
 
 
 func _build_default_ace_sources() -> Array[Object]:
