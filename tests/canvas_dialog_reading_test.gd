@@ -95,11 +95,11 @@ static func run() -> bool:
 	return ok
 
 
-## In the action lane: every canvas verb at the arities a sentence can name.
+## In the action lane: every canvas verb at the arities a sentence can name. The line with a width
+## is reading_words5_test's, and the opened file below reads one on this Control.
 static func _drawing_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		["draw_line(a, b, Color.RED, 4.0)", "Viewport ▸ Draw line a to b, red width 4"],
 		["draw_rect(Rect2(Vector2.ZERO, size), Color.BLUE)",
 			"Viewport ▸ Draw rectangle (0, 0) size size, blue"],
 		["draw_rect(box, Color.BLUE, false)", "Viewport ▸ Draw rectangle box, blue (outline)"],

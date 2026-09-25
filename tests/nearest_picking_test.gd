@@ -30,22 +30,6 @@ static func run() -> bool:
 	if by_id.has("FurthestInGroup"):
 		all_passed = _check("Furthest compares with >", str((by_id["FurthestInGroup"] as ACEDescriptor).codegen_template).contains("> global_position.distance_to"), true) and all_passed
 
-	# --- Logic: the exact reduce algorithm picks the right node, and an empty group yields null ---
-	var ref: Node2D = Node2D.new()
-	ref.position = Vector2.ZERO
-	var near_node: Node2D = Node2D.new(); near_node.position = Vector2(-5, 0)
-	var mid_node: Node2D = Node2D.new(); mid_node.position = Vector2(10, 0)
-	var far_node: Node2D = Node2D.new(); far_node.position = Vector2(50, 0)
-	var nodes: Array = [mid_node, far_node, near_node]
-	var nearest: Variant = nodes.reduce(func(__acc, __n): return __n if __acc == null or ref.global_position.distance_to(__n.global_position) < ref.global_position.distance_to(__acc.global_position) else __acc, null)
-	all_passed = _check("nearest picks the closest node", nearest == near_node, true) and all_passed
-	var furthest: Variant = nodes.reduce(func(__acc, __n): return __n if __acc == null or ref.global_position.distance_to(__n.global_position) > ref.global_position.distance_to(__acc.global_position) else __acc, null)
-	all_passed = _check("furthest picks the farthest node", furthest == far_node, true) and all_passed
-	var empty_nodes: Array = []
-	var none: Variant = empty_nodes.reduce(func(__acc, __n): return __n if __acc == null or ref.global_position.distance_to(__n.global_position) < ref.global_position.distance_to(__acc.global_position) else __acc, null)
-	all_passed = _check("empty group reduces to null", none == null, true) and all_passed
-	ref.free(); near_node.free(); mid_node.free(); far_node.free()
-
 	# --- LoS packs: the occlusion-correct "Nearest Visible In Group" compiles + exists (2D + 3D) ---
 	var los2d: GDScript = load(LOS_PACK)
 	all_passed = _check("LoS 2D pack loads", los2d != null, true) and all_passed

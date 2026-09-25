@@ -1,6 +1,5 @@
 # EventSheet - Ghost Row Part II: the usage store (record / count / trim determinism), the
-# learn-as-you-type tie-break (equal-score order FLIPS after use - red-before/green-after in one
-# test), the summoning key's kind nudge, and the before-you-type suggestion chips (featured
+# learn-as-you-type tie-break (equal-score order FLIPS after use), the summoning key's kind nudge, and the before-you-type suggestion chips (featured
 # fallback cold, most-used first warm, chip click applies through the shared flow).
 @tool
 class_name GhostRowSuggestionsTest
@@ -43,10 +42,8 @@ static func run() -> bool:
 	dock.setup(sheet)
 
 	# Learn-as-you-type: "process" leaves OnProcess and OnPhysicsProcess in the same score band,
-	# where the shorter name wins cold - until the LONGER one is what the user actually applies.
-	var cold: Array = dock._quick_match_ranked("process", 5)
-	ok = _check("cold, the shorter name wins the band",
-		str(((cold[0] as Dictionary).get("definition") as ACEDefinition).id), "OnProcess") and ok
+	# where the shorter name wins cold (ghost_row_test pins that half on this same sheet) - until
+	# the LONGER one is what the user actually applies.
 	EventSheetAceUsageStats.record("Core", "OnPhysicsProcess")
 	var warm: Array = dock._quick_match_ranked("process", 5)
 	ok = _check("after use, the applied verb wins the same band",

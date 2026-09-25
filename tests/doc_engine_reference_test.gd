@@ -346,8 +346,9 @@ static func _test_plain() -> bool:
 	return all_passed
 
 
-## The scan and the page. Both run against a fixture folder rather than against a real harvest, so
-## the assertions are about the RULES - recursive, sorted, credited - and not about an engine build.
+## The scan and the credit. The scan runs against a fixture folder rather than against a real
+## harvest, so the assertions are about the RULES - recursive, sorted, XML only - and not about an
+## engine build.
 static func _test_scan() -> bool:
 	var all_passed: bool = true
 	_clean_up()
@@ -367,17 +368,7 @@ static func _test_scan() -> bool:
 	all_passed = _check("a folder with no harvest in it scans to nothing",
 		EventSheetDocEngineReference.scan_files("%s/nowhere" % FIXTURE_ROOT).size(), 0) and all_passed
 
-	# The page. Built from the parsed class rather than from the scan, so this pins what a reader
-	# sees: the class, what it inherits, its prose, a table per member kind, and the credit.
-	var blocks: Array[Dictionary] = _blocks_from(FIXTURE_XML)
-	all_passed = _check("the page leads with the class name",
-		str(blocks[0].get("text", "")) if not blocks.is_empty() else "", "TestNode") and all_passed
-	all_passed = _check("the page has a section per member kind",
-		_headings(blocks), "Properties, Methods, Signals") and all_passed
-	# THE LICENCE TERM, not decoration: this text is CC BY, so every page built from it credits it.
-	all_passed = _check("every page built from engine text carries the credit",
-		str(blocks[blocks.size() - 1].get("bbcode", "")) if not blocks.is_empty() else "",
-		"[i]%s[/i]" % EventSheetDocEngineReference.CREDIT_LINE) and all_passed
+	# THE LICENCE TERM, not decoration: this text is CC BY, so an exporter credits it too.
 	all_passed = _check("an exporter is handed the same one line",
 		EventSheetDocEngineReference.export_credit(),
 		EventSheetDocEngineReference.CREDIT_LINE) and all_passed
@@ -404,26 +395,6 @@ static func _test_doc_ids() -> bool:
 	all_passed = _check("an empty class names no page", EventSheetDocEngineReference.doc_id("  "),
 		"") and all_passed
 	return all_passed
-
-
-## A page built from a fixture without touching the module's session cache, which belongs to
-## whatever this machine really harvested and must not be left holding a test's class.
-static func _blocks_from(xml: String) -> Array[Dictionary]:
-	var doc: Dictionary = EventSheetDocEngineReference.parse_xml(xml)
-	if doc.is_empty():
-		return []
-	var blocks: Array[Dictionary] = [
-		{"kind": "heading", "level": 1, "text": str(doc.get("name", "")),
-			"bbcode": str(doc.get("name", "")), "slug": ""},
-	]
-	for section: Array in [["members", "Properties"], ["methods", "Methods"], ["signals", "Signals"]]:
-		if (doc.get(str(section[0]), []) as Array).is_empty():
-			continue
-		blocks.append({"kind": "heading", "level": 2, "text": str(section[1]),
-			"bbcode": str(section[1]), "slug": ""})
-	blocks.append({"kind": "paragraph",
-		"bbcode": "[i]%s[/i]" % EventSheetDocEngineReference.CREDIT_LINE})
-	return blocks
 
 
 ## The headers of the first member table on a page, which is where "does this page claim to describe
@@ -480,14 +451,6 @@ static func _names(entries: Array) -> String:
 	for entry: Variant in entries:
 		names.append(str((entry as Dictionary).get("name", "")))
 	return ", ".join(names)
-
-
-static func _headings(blocks: Array[Dictionary]) -> String:
-	var found: PackedStringArray = PackedStringArray()
-	for block: Dictionary in blocks:
-		if str(block.get("kind", "")) == "heading" and int(block.get("level", 0)) == 2:
-			found.append(str(block.get("text", "")))
-	return ", ".join(found)
 
 
 static func _write(path: String, text: String) -> void:

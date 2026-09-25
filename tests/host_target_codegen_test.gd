@@ -5,6 +5,8 @@
 # idiom does this: it resolves to `host.` when the compiler passes host_default="host" (behavior mode)
 # and to nothing otherwise - so the SAME descriptor stays byte-identical on a normal sheet and becomes
 # host-targeted in a behavior. Pins both shapes, incl. a negated condition wrapping the host call.
+# That a behaviour compile leaves no "host" standing for the next caller (the lift gates included) is
+# compiler_state_leak_test's, which re-runs every emission path after one.
 @tool
 class_name HostTargetCodegenTest
 extends RefCounted
@@ -51,44 +53,6 @@ static func run() -> bool:
 	ok = _check("IsOnWall stays bare on a normal sheet", ConditionCodegen.generate_condition(on_wall, ""), "is_on_wall()") and ok
 	ok = _check("IsOnWall targets the host in a behavior", ConditionCodegen.generate_condition(on_wall, "host"), "host.is_on_wall()") and ok
 
-	ok = _no_leak_into_the_lift_gate() and ok
-	return ok
-
-
-## The host default is a per-compile temporary static, so a behaviour compile must not leave "host"
-## standing for the NEXT caller. The lifter gates every function of an opened file by asking
-## emit_function_block_text for its text and comparing it to the source bytes; a leaked "host" makes
-## that text say `host.move_and_slide()` where the file says `move_and_slide()`, the gate refuses the
-## match, and the whole file falls back to verbatim blocks - with nothing about the failure naming a
-## behaviour compile that ran minutes earlier. Pinned here because it is invisible from either side.
-static func _no_leak_into_the_lift_gate() -> bool:
-	var behavior: EventSheetResource = EventSheetResource.new()
-	behavior.behavior_mode = true
-	behavior.host_class = "CharacterBody2D"
-	behavior.custom_class_name = "HostLeakProbe"
-	SheetCompiler.compile(behavior, "user://host_leak_probe.gd")
-
-	var slide: ACEAction = ACEAction.new()
-	slide.provider_id = "Core"
-	slide.ace_id = "MoveAndSlide"
-	slide.enabled = true
-	var row: EventRow = EventRow.new()
-	row.actions = [slide]
-	var mover: EventFunction = EventFunction.new()
-	mover.function_name = "step"
-	mover.events = [row]
-	var plain: EventSheetResource = EventSheetResource.new()
-	plain.host_class = "CharacterBody2D"
-	var emitted: String = SheetCompiler.emit_function_block_text(mover, plain)
-	var ok: bool = _check("a function block after a behaviour compile is not host-targeted",
-		emitted.contains("host.move_and_slide()"), false)
-	ok = _check("and writes the bare call the opened file spells",
-		emitted.contains("move_and_slide()"), true) and ok
-
-	SheetCompiler.compile(behavior, "user://host_leak_probe.gd")
-	var anchored: String = SheetCompiler.emit_anchored_trigger_text([row])
-	ok = _check("the anchored-handler gate is not host-targeted either",
-		anchored.contains("host.move_and_slide()"), false) and ok
 	return ok
 
 

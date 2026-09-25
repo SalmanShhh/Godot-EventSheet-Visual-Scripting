@@ -141,12 +141,6 @@ static func run() -> bool:
 	all_passed = _check("simple mode on: an everyday action is still shown", picker._is_allowed_for_mode(everyday, "append_action", false), true) and all_passed
 	picker.set_simple_mode_provider(Callable())
 
-	# Grouping key prefers node_type over category.
-	var node_typed: ACEDefinition = _make_def(ACEDefinition.ACEType.CONDITION)
-	node_typed.category = "General Conditions"
-	node_typed.metadata = {"node_type": "CharacterBody2D"}
-	all_passed = _check("node_type wins over category", str(node_typed.metadata.get("node_type", "")), "CharacterBody2D") and all_passed
-
 	# Item label + tooltip.
 	var labelled: ACEDefinition = _make_def(ACEDefinition.ACEType.CONDITION)
 	labelled.display_name = "Is on floor"

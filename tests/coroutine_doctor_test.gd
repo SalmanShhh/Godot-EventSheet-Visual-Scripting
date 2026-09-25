@@ -52,10 +52,6 @@ static func run() -> bool:
 	all_passed = _check("and the canvas draws the hourglass on it",
 		ViewportRowBuilder.action_awaits(_awaiting_action()), true) and all_passed
 
-	# The caller gates on per-frame triggers, so a one-shot trigger is never scanned.
-	all_passed = _check("OnReady is not per-frame (caller skips it)", EventSheetProjectDoctor._is_per_frame_trigger("OnReady"), false) and all_passed
-	all_passed = _check("OnProcess is per-frame", EventSheetProjectDoctor._is_per_frame_trigger("OnProcess"), true) and all_passed
-
 	return all_passed
 
 

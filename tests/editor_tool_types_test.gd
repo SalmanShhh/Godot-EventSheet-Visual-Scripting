@@ -21,8 +21,9 @@ static func run() -> bool:
 	return all_passed
 
 
-## The three parallel tables the dialog reads: a hint per type, the host each forces, and the
-## identity line each previews. A type with a hint but no host would ship as a plain Node script.
+## The parallel tables the dialog reads: a hint per type, and the identity line each previews with
+## the host it forces. A type with a hint but no host would ship as a plain Node script. Which fields
+## each type shows is sheet_type_dialog_test's, pinned there as whole rows.
 static func _test_type_table() -> bool:
 	var passed: bool = true
 	# 10 shipped types, +2 later ones: Editor add-on and Command tool.
@@ -46,15 +47,6 @@ static func _test_type_table() -> bool:
 	passed = _check("Export hook ships as an EditorScript",
 		EventSheetSheetTypeDialog.identity_preview(9, "", "", ""),
 		"Ships as:  extends EditorScript") and passed
-	# The host field hides for all four tool types (each forces its own), and the capability ticks
-	# belong to the Editor plugin alone.
-	for type_index: int in [3, 7, 8, 9]:
-		passed = _check("type %d hides the host field" % type_index,
-			bool(EventSheetSheetTypeDialog.field_visibility(type_index)["host"]), false) and passed
-	passed = _check("only the Editor plugin shows capability ticks",
-		bool(EventSheetSheetTypeDialog.field_visibility(7)["plugin_capabilities"]), true) and passed
-	passed = _check("an Import tool shows no capability ticks",
-		bool(EventSheetSheetTypeDialog.field_visibility(8)["plugin_capabilities"]), false) and passed
 	return passed
 
 

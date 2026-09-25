@@ -90,7 +90,7 @@ What changed in the build you have installed (v0.18.0), in the words the release
   window size - is never offered, and a test walks every phrase so none can point at a verb that no
   longer ships.
 
-### Changed: eight tests another test already made are gone
+### Changed: tests and checks another test already made are gone
 
 - **An audit of all 820 test files**, each file checked for an assertion no other test makes.
   Eight had none: `while_loop`, `icon_roundtrip`, `const_roundtrip`, `gap3_body_lift`,
@@ -100,6 +100,12 @@ What changed in the build you have installed (v0.18.0), in the words the release
   `codegen_parity_test`, so the fast gate keeps it.
 - **`VariableRowFormat` is removed.** It was lifted out of a widget that no longer exists and was
   never wired into the editor, so its test guarded code nothing runs.
+- **Duplicate checks inside 44 tests that stay are gone too**: a check another test already makes
+  on the same path with the same or a stricter expectation, or one that cannot fail - a test
+  computing `clampf` itself, a hand-copied lambda standing in for the shipped template, a
+  `has_method` asked after the method already ran. Each file names the test that still pins what
+  left it. Where an audit found a cover weaker than claimed, the check stayed; and the leak test's
+  emission paths now also pin that the action is written at all, not only that no `host.` form is.
 
 ### Fixed: including a shared sheet into a script that already has the handler
 

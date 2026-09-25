@@ -25,19 +25,12 @@ static func run() -> bool:
 	var source: String = str(SheetCompiler.compile(authored, "user://match_source.gd").get("output", ""))
 
 	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	# That it lifts at all, and that it round-trips byte for byte, is switch_case_lift_test's on this
+	# same input; what is pinned here is the verbatim branch text the MatchRow carries.
 	var match_rows: Array = _collect_match_rows(imported.events)
-	ok = _check("match lifts to a MatchRow", match_rows.size() >= 1, true) and ok
-	if match_rows.size() >= 1:
-		var mr: MatchRow = match_rows[0]
-		ok = _check("subject expression extracted", mr.match_expression, "state") and ok
-		ok = _check("branch text reconstructed", mr.branches_text, "State.IDLE:\n\tpass\n_:\n\tqueue_free()") and ok
+	var branches: String = (match_rows[0] as MatchRow).branches_text if not match_rows.is_empty() else "<no MatchRow>"
+	ok = _check("branch text reconstructed", branches, "State.IDLE:\n\tpass\n_:\n\tqueue_free()") and ok
 	ok = _check("no match header stayed an in-flow code cell", _has_raw_match(imported.events), false) and ok
-
-	imported.external_source_path = "user://match_rt.gd"
-	var roundtrip: String = str(SheetCompiler.compile(imported, "user://match_rt.gd").get("output", ""))
-	ok = _check("match lift round-trips byte-identically", roundtrip == source, true) and ok
-	if roundtrip != source:
-		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
 
 	return ok
 

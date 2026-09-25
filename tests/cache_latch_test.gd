@@ -4,7 +4,8 @@
 # "not derived yet" never latches when the derivation legitimately answers nothing, so the whole
 # derivation runs again on every question. That is what froze the Add picker for nine and a half
 # seconds on a sheet with no variables in scope: an empty catalog read as an underived one, and
-# every one of the picker's rows asked again.
+# every one of the picker's rows asked again. That catalog's own latch is pinned beside the rest of
+# the picker, in ace_picker_logic_test; the caches below are the other places the tree holds it.
 #
 # The fix everywhere is the same - an explicit boolean the deriving function sets - and so is the
 # pin: derive once, then EMPTY the cache behind the flag's back and ask again. A latch that holds
@@ -28,7 +29,6 @@ static func run() -> bool:
 	passed = _pin_lift_families() and passed
 	passed = _pin_builtin_descriptor_index() and passed
 	passed = _pin_category_hosts() and passed
-	passed = _pin_the_picker_catalog() and passed
 	passed = _pin_the_descriptor_count() and passed
 	return passed
 
@@ -145,21 +145,6 @@ static func _pin_category_hosts() -> bool:
 		["the category hosts derive", derived > 0, true],
 		["an empty host map is not walked again behind the latch", after_emptying, 0],
 		["dropping the latch walks the vocabulary again", rebuilt, derived],
-	])
-
-
-## The one this class of bug was found in, counted rather than emptied: a provider that answers
-## nothing is still asked exactly once per open.
-static func _pin_the_picker_catalog() -> bool:
-	var picker: ACEPickerDialog = ACEPickerDialog.new()
-	var calls: Array[int] = [0]
-	picker.set_variable_catalog_provider(func() -> Array:
-		calls[0] += 1
-		return [])
-	for repeat in 50:
-		picker._variables_in_scope()
-	return SUPPORT.pins(TEST_NAME, [
-		["fifty asks of an empty catalog derive it once", calls[0], 1],
 	])
 
 

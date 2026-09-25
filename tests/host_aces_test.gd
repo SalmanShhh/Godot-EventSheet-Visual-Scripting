@@ -31,7 +31,6 @@ static func run() -> bool:
 
 	# The behaviour-only gate: hidden off a non-behaviour sheet, shown on a behaviour one, never touches
 	# other vocabulary. This is exactly the predicate the picker filters `definitions` on.
-	ok = _check("Host is hidden on a non-behaviour sheet", ACEPickerDialog.host_ace_hidden("Core", "BehaviorHost", false), true) and ok
 	ok = _check("Host Is Valid is hidden on a non-behaviour sheet", ACEPickerDialog.host_ace_hidden("Core", "BehaviorHostValid", false), true) and ok
 	ok = _check("Host is shown on a behaviour sheet", ACEPickerDialog.host_ace_hidden("Core", "BehaviorHost", true), false) and ok
 	ok = _check("a normal ACE is never gated", ACEPickerDialog.host_ace_hidden("Core", "SetVar", false), false) and ok

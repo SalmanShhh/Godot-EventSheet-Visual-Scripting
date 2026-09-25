@@ -3,7 +3,8 @@
 # the parser stored `Vector2.ZERO` as a String and the emitter re-quoted it (`= "Vector2.ZERO"`), so
 # the byte-verify failed and it stayed raw. The importer now flags an unquoted-expression default so
 # it re-emits verbatim (byte-verify gated). Pins: the emitter branch, the importer detection over a
-# real pack, that a genuine String literal is NOT mis-flagged, and drift=0.
+# real pack, and that a genuine String literal is NOT mis-flagged. The pack's byte round trip is
+# pack_open_lift_test's, which re-emits every shipped pack file.
 @tool
 class_name ExpressionDefaultVarTest
 extends RefCounted
@@ -43,7 +44,7 @@ static func run() -> bool:
 	ok = _check("engine-constant defaults lift too (Color.RED)",
 		GDScriptImporter.new()._try_lift_variable("var tint: Color = Color.RED") != null, true) and ok
 
-	# ── Over a REAL pack (juice): its private Vector2 state vars now lift, none stay raw, drift=0 ──
+	# ── Over a REAL pack (juice): its private Vector2 state vars now lift, none stay raw ──
 	var pack_path: String = "res://eventsheet_addons/juice/juice_behavior.gd"
 	var source: String = FileAccess.get_file_as_string(pack_path)
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
@@ -58,9 +59,6 @@ static func run() -> bool:
 				raw_var_blocks += 1
 	ok = _check("juice lifts its expression-default state vars", expr_defaults > 5, true) and ok
 	ok = _check("no `var` block stays raw in juice", raw_var_blocks, 0) and ok
-	sheet.external_source_path = pack_path
-	var reemitted: String = str(SheetCompiler.compile(sheet, pack_path).get("output", ""))
-	ok = _check("juice round-trips byte-identically", reemitted == source, true) and ok
 
 	return ok
 

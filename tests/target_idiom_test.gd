@@ -17,14 +17,11 @@ const SUPPORT := preload("res://tests/support.gd")
 static func run() -> bool:
 	var all_passed: bool = true
 
-	# 1. The idiom itself: {target.} emits "<value>." only when set; optional-comma and plain unaffected.
+	# 1. The idiom itself: {target.} emits "<value>." only when set.
 	all_passed = _check("blank target (absent) drops the prefix", ActionCodegen._apply_template("{target.}play()", {}), "play()") and all_passed
 	all_passed = _check("blank target (empty) drops the prefix", ActionCodegen._apply_template("{target.}play()", {"target": ""}), "play()") and all_passed
 	all_passed = _check("set target prefixes the call", ActionCodegen._apply_template("{target.}play()", {"target": "$Enemy"}), "$Enemy.play()") and all_passed
 	all_passed = _check("self target prefixes too", ActionCodegen._apply_template("{target.}volume_db = {db}", {"target": "self", "db": "-6.0"}), "self.volume_db = -6.0") and all_passed
-	all_passed = _check("optional-comma still drops when empty", ActionCodegen._apply_template("emit({a}{, b})", {"a": "1", "b": ""}), "emit(1)") and all_passed
-	all_passed = _check("optional-comma still joins when set", ActionCodegen._apply_template("emit({a}{, b})", {"a": "1", "b": "2"}), "emit(1, 2)") and all_passed
-	all_passed = _check("plain placeholders still substitute", ActionCodegen._apply_template("{x} + {y}", {"x": "a", "y": "b"}), "a + b") and all_passed
 
 	# 2. The post-pass added an optional target to a real node-scoped ACE, and the template now leads
 	#    with {target.} so a blank value vanishes.

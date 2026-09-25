@@ -10,7 +10,7 @@ extends RefCounted
 
 static func run() -> bool:
 	var ok: bool = true
-	ok = _case("top-level and splits into two terms", "if a and b:\n\tfoo()", 2, false) and ok
+	# A plain `if a and b:` splitting into two terms is or_condition_lift_test's "plain AND" case.
 	ok = _case("and inside a call stays one term", "if f(a and b):\n\tfoo()", 1, false) and ok
 	ok = _case("and inside a string stays one term", "if x == \"a and b\" and ok:\n\tfoo()", 2, false) and ok
 	ok = _case("negated compound stays one term", "if not (a and b):\n\tfoo()", 1, true) and ok

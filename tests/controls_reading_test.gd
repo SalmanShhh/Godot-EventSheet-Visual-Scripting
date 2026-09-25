@@ -35,12 +35,11 @@ static func _check_analog_values() -> bool:
 	return passed
 
 
-## The four sensors.
+## Three of the four sensors. The accelerometer's word is pinned by controls_lift_test, beside the
+## local variable row it reads in.
 static func _check_sensor_values() -> bool:
-	var passed: bool = _pin("the accelerometer reads as acceleration",
-		EventSheetSentence.expression_text("Input.get_accelerometer()"), "acceleration")
-	passed = _pin("gravity reads as gravity",
-		EventSheetSentence.expression_text("Input.get_gravity()"), "gravity") and passed
+	var passed: bool = _pin("gravity reads as gravity",
+		EventSheetSentence.expression_text("Input.get_gravity()"), "gravity")
 	passed = _pin("the gyroscope reads as a rotation rate",
 		EventSheetSentence.expression_text("Input.get_gyroscope()"), "rotation rate") and passed
 	passed = _pin("the magnetometer reads as a magnetic field",

@@ -159,12 +159,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	# variable filled from it says that, and the whole Date family reads alike. The game's own running
 	# clock above keeps "now", because no Date expression stands for a number that restarts with the game.
 	"started = Time.get_unix_time_from_system()": "Player ▸ Set started to Date.Now",
-	"get_tree().change_scene_to_file(\"res://levels/level_2.tscn\")": "System ▸ Go to layout Level 2",
-	"get_tree().reload_current_scene()": "System ▸ Restart layout",
-	"get_tree().paused = true": "System ▸ Pause the game",
-	"get_tree().paused = false": "System ▸ Unpause",
-	"Engine.time_scale = 0.5": "System ▸ Set time scale to 0.5",
-	"get_tree().quit()": "System ▸ Quit game"
+	# The other scene-flow words (Restart layout, Pause the game, Unpause, Set time scale, Quit game)
+	# are pinned value by value in reading_nouns_test, with the glossary off and on.
+	"get_tree().change_scene_to_file(\"res://levels/level_2.tscn\")": "System ▸ Go to layout Level 2"
 }
 
 ## One Godot spelling, one sheet name, and what the same value reads as with the glossary off.

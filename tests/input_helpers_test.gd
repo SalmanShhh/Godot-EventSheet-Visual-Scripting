@@ -1,10 +1,10 @@
 # Godot EventSheets - Input helper vocabulary + the live Input Map picker.
 #
-# Pins the new Mouse/Keyboard/InputMap/Gamepad ACEs (present, unique ids - the duplicate-id trap
-# has bitten before), the "input_action" hint on every existing-action parameter (what routes the
-# params dialog to the LIVE Input Map combo instead of the stale options snapshot), and the
-# picker's enumeration itself (quoted literals, ui_* built-ins always present). Template
-# compilability is covered by builtin_ace_compile_test automatically.
+# Pins the new Mouse/Keyboard/InputMap/Gamepad ACEs (present, in the right category and kind), the
+# "input_action" hint on every existing-action parameter (what routes the params dialog to the LIVE
+# Input Map combo instead of the stale options snapshot), and the picker's enumeration itself
+# (quoted literals, ui_* built-ins always present). Id uniqueness is duplicate_ace_id_test's and
+# template compilability is covered by builtin_ace_compile_test automatically.
 @tool
 class_name InputHelpersTest
 extends RefCounted
@@ -17,12 +17,8 @@ static func run() -> bool:
 	var all_passed: bool = true
 	var descriptors: Array[ACEDescriptor] = EventForgeBuiltinACEs.get_descriptors()
 	var by_id: Dictionary = {}
-	var duplicate_ids: Array[String] = []
 	for descriptor: ACEDescriptor in descriptors:
-		if by_id.has(descriptor.ace_id):
-			duplicate_ids.append(descriptor.ace_id)
 		by_id[descriptor.ace_id] = descriptor
-	all_passed = _check("no duplicate ace ids across all builtin modules", duplicate_ids, [] as Array[String]) and all_passed
 
 	# The new vocabulary exists, in the right category, as the right kind.
 	var expected: Dictionary = {

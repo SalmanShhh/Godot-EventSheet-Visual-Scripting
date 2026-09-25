@@ -62,20 +62,6 @@ static func run() -> bool:
 	var generated: GDScript = GDScript.new()
 	generated.source_code = output
 	all_passed = _check("server output parses standalone", generated.reload(true) == OK, true) and all_passed
-
-	# Every remaining template's constants/methods must resolve too - parse them all in one probe.
-	var probe_lines: PackedStringArray = PackedStringArray(["extends Node", "func probe() -> void:"])
-	for ace_id: String in ["AudioSetBusSolo", "AudioSetBusBypass", "AudioIsBusEffectEnabled", "AudioBusPeakDb", "AudioBusCount", "AudioOutputLatency", "PhysicsSetSpaceActive2D", "PhysicsSetSpaceActive3D", "PhysicsSetGravity3D", "PhysicsSetGravityVector2D", "PhysicsCollisionPairs2D", "PhysicsIslands2D", "PhysicsCollisionPairs3D", "PhysicsIslands3D", "PhysicsInterpolationFraction"]:
-		var template: String = str((by_id[ace_id] as ACEDescriptor).codegen_template)
-		for parameter: ACEParam in (by_id[ace_id] as ACEDescriptor).params:
-			template = template.replace("{%s}" % parameter.id, str(parameter.default_value) if str(parameter.default_value) != "" else "0")
-		# Every template in the list is a call, so a bare expression STATEMENT parses for
-		# actions (void) and expressions alike - assigning would break on the void calls.
-		probe_lines.append("\t%s" % template)
-	var probe: GDScript = GDScript.new()
-	probe.source_code = "\n".join(probe_lines)
-	all_passed = _check("every server template's constants resolve", probe.reload(true) == OK, true) and all_passed
-
 	return all_passed
 
 

@@ -224,14 +224,10 @@ static func _toolbar_and_preview_buttons() -> bool:
 		"run_scene debug_layout run_profiler host_client preview_layout preview_project") and all_passed
 	all_passed = _check("and the last two are marked as Godot's own keys under familiar names",
 		" ".join(EventSheetRunControls.GODOT_OWN), "preview_layout preview_project") and all_passed
-	all_passed = _check("Run Scene is what the play button does until a project says otherwise",
-		EventSheetRunControls.main_run_from(""), "run_scene") and all_passed
 	all_passed = _check("the profiler run keeps its name while a game is running - it is not a stop button",
 		EventSheetRunControls.label_for("run_profiler", true), "⏱ Run with profiler") and all_passed
 	all_passed = _check("Preview layout says what it does while nothing is running",
 		EventSheetRunControls.label_for("preview_layout", false), "▶ Preview layout") and all_passed
-	all_passed = _check("and becomes Stop once a game is",
-		EventSheetRunControls.label_for("preview_layout", true), "■ Stop") and all_passed
 	all_passed = _check("Preview project becomes Restart",
 		EventSheetRunControls.label_for("preview_project", true), "↻ Restart") and all_passed
 	all_passed = _check("Debug layout keeps its name - it is not a stop button",

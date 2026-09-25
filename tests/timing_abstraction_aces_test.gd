@@ -82,13 +82,11 @@ static func _test_cooldown_time_left_expression() -> bool:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "CooldownTimeLeft")
 	if descriptor == null:
 		return _check("Cooldown Time Left is registered", false, true)
-	var ok: bool = _check("the expression template is the clamped seconds form", descriptor.codegen_template,
-		"(maxf(0.0, float(int(get_meta(&\"__ef_cool_\" + str({name}), 0)) - Time.get_ticks_msec()) / 1000.0))")
 	var source: String = "extends Node\n\n\nfunc time_left() -> float:\n\treturn %s\n" % descriptor.codegen_template.replace("{name}", "\"dash\"")
 	var node: Node = _instantiate(source)
 	if node == null:
-		return _check("the expression compiles standalone on a Node", false, true) and ok
-	ok = _check("a never-started cooldown has no time left", float(node.call("time_left")), 0.0) and ok
+		return _check("the expression compiles standalone on a Node", false, true)
+	var ok: bool = _check("a never-started cooldown has no time left", float(node.call("time_left")), 0.0)
 	node.set_meta(&"__ef_cool_dash", Time.get_ticks_msec() + 2000)
 	ok = _check("a live cooldown reports time left above one second", float(node.call("time_left")) > 1.0, true) and ok
 	node.free()

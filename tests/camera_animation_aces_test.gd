@@ -1,6 +1,7 @@
 # EventForge - the Camera FOV + Animation control modules: node-scoped ACEs that compile to plain
-# Camera3D / AnimationPlayer member operations, parse standalone against the real host classes, and
-# gain the optional "On node" target from the builtin targetable pass.
+# Camera3D / AnimationPlayer member operations and gain the optional "On node" target from the
+# builtin targetable pass. That each template parses inside its real host class is
+# builtin_ace_compile_test's job, which compiles every builtin with its defaults in its node_type.
 @tool
 class_name CameraAnimationAcesTest
 extends RefCounted
@@ -30,38 +31,7 @@ static func run() -> bool:
 	# The active-camera tween is NOT node-scoped (so it never mis-targets self's fov onto another camera).
 	all_passed = _check("Tween Camera FOV is active-camera, not node-scoped", str((by_id["TweenCameraFov"] as ACEDescriptor).node_type), "") and all_passed
 
-	# Each host-only template must be valid GDScript inside its real host class - substitute defaults
-	# and compile a subclass so the member operations (fov, speed_scale, seek(), queue()...) resolve.
-	all_passed = _check("Camera3D FOV templates parse in a Camera3D", _templates_parse_in("Camera3D",
-		["AdjustCameraFov", "GetCameraFov"], by_id), true) and all_passed
-	all_passed = _check("the active-camera FOV tween parses in a Node", _templates_parse_in("Node", ["TweenCameraFov"], by_id), true) and all_passed
-	all_passed = _check("AnimationPlayer templates parse in an AnimationPlayer", _templates_parse_in("AnimationPlayer",
-		["SetAnimationSpeed", "SeekAnimation", "QueueAnimation", "PauseAnimation", "SetAnimationTime", "HasAnimation", "AnimationPosition", "AnimationLength", "AnimationSpeed"], by_id), true) and all_passed
-
 	return all_passed
-
-
-## Compiles a subclass of `host_class` whose method body runs each ACE's template (defaults filled),
-## so every member/method the templates name is resolved against the real engine class.
-static func _templates_parse_in(host_class: String, ace_ids: Array, by_id: Dictionary) -> bool:
-	var lines: PackedStringArray = PackedStringArray(["extends %s" % host_class, "func _probe() -> void:"])
-	for ace_id: String in ace_ids:
-		var descriptor: ACEDescriptor = by_id[ace_id]
-		# The builtin targetable pass rewrites clean member ops to `{target.}member`; the blank-target
-		# form (host-relative) is what compiles, so resolve the idiom to empty for the probe.
-		var template: String = str(descriptor.codegen_template).replace("{target.}", "").replace("{uid}", "probe")
-		for parameter: ACEParam in descriptor.params:
-			template = template.replace("{%s}" % parameter.id, str(parameter.default_value) if str(parameter.default_value) != "" else "0")
-		# Expressions are values (bind them); actions are statements (run them bare). Multi-line action
-		# templates keep their own indentation - re-indent every line one tab into the probe method.
-		if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION or descriptor.ace_type == ACEDescriptor.ACEType.CONDITION:
-			lines.append("\tvar __r_%s = %s" % [ace_id.to_snake_case(), template])
-		else:
-			for template_line: String in template.split("\n"):
-				lines.append("\t%s" % template_line)
-	var script: GDScript = GDScript.new()
-	script.source_code = "\n".join(lines)
-	return script.reload(true) == OK
 
 
 static func _has_target_param(descriptor: ACEDescriptor) -> bool:

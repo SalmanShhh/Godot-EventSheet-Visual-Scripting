@@ -35,14 +35,10 @@ static func run() -> bool:
 	return passed
 
 
-## Mirrored, flipped, frame, speed, image, blend and travel.
+## Flipped, frame, speed, image, blend and travel.
 static func _check_sprite_words() -> bool:
-	var passed: bool = _pin("a mirror driven by a test says the test",
-		_reading("sprite.flip_h = dir < 0"), "sprite ▸ Set mirrored when dir < 0")
-	passed = _pin("a plain mirror is still the plain verb",
-		_reading("sprite.flip_h = true"), "sprite ▸ Set mirrored") and passed
-	passed = _pin("a vertical flip reads as flipped",
-		_reading("sprite.flip_v = true"), "sprite ▸ Set flipped") and passed
+	var passed: bool = _pin("a vertical flip reads as flipped",
+		_reading("sprite.flip_v = true"), "sprite ▸ Set flipped")
 	passed = _pin("a frame write is an animation frame",
 		_reading("sprite.frame = 3"), "sprite ▸ Set animation frame to 3") and passed
 	passed = _pin("a speed scale is the animation's speed",
@@ -93,8 +89,6 @@ static func _check_sound_words() -> bool:
 		_reading("music.volume_db = -6.0"), "music ▸ Set volume to -6 dB") and passed
 	passed = _pin("a seek reads in seconds",
 		_reading("music.seek(12.0)"), "music ▸ Seek to 12 seconds") and passed
-	passed = _pin("the play belongs to the player it acts on",
-		_reading("sfx.play()"), "sfx ▸ Play sound") and passed
 	passed = _pin("an audio player answers is playing",
 		_condition_reading("sfx.playing"), "sfx ▸ Is playing") and passed
 	return passed

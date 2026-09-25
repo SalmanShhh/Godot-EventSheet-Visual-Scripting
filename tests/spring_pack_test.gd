@@ -23,7 +23,6 @@ static func run() -> bool:
 	# Numeric spring: starts springing, settles AT the target, stops, zero residual velocity.
 	# Precision is ABSOLUTE (0.01), so a small target keeps the settle time well inside the loop budget.
 	behavior.spring_to("test", 1.0)
-	all_passed = _check("a sprung value is springing", behavior.is_springing("test"), true) and all_passed
 	for _i in 2000:
 		behavior._process(0.016)
 		if not behavior.is_springing("test"):

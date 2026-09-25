@@ -5,7 +5,8 @@ extends RefCounted
 # Pins the four boomer-shooter leftovers - the pieces of the boomer-shooter shape that were named but not built:
 #
 #   A  the FPS Controller's firing slowdown: an exported firing speed, a window a weapon opens, and
-#      the tick's speed line folding it in without touching Set Move Speed
+#      the row that opens it (the tick's speed line and Set Move Speed are pinned beside the
+#      boomer-feel knobs)
 #   B  the end-of-level stats screen starter - kills, secrets and time reaching a named panel
 #      through the shipped HUD Kit rows, and nothing wired by hand
 #   C  the writable `secret` mark on an Area, and the counting event a drop then offers
@@ -33,8 +34,6 @@ static func _firing_slowdown() -> bool:
 		source.contains("@export var firing_move_speed: float = 2.5"), true) and ok
 	ok = _check("the firing window is private state",
 		source.contains("var _firing_timer: float = 0.0"), true) and ok
-	ok = _check("the tick picks the firing speed while the window is open",
-		source.contains("var base_speed := firing_move_speed if _firing_timer > 0.0 else move_speed"), true) and ok
 	ok = _check("sprint and crouch still multiply it",
 		source.contains("var speed := base_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)"), true) and ok
 	ok = _check("the window closes on its own",
@@ -45,9 +44,6 @@ static func _firing_slowdown() -> bool:
 		source.contains("## @ace_codegen_template(\"$FPSController.set_move_speed_while_firing({speed}, {seconds})\")"), true) and ok
 	ok = _check("the firing state reads back as a condition",
 		source.contains("func is_firing() -> bool:"), true) and ok
-	# The frozen neighbour: adding a row must not have retemplated the one that shipped.
-	ok = _check("Set Move Speed is untouched",
-		source.contains("## @ace_codegen_template(\"$FPSController.set_move_speed({value})\")"), true) and ok
 	return ok
 
 
@@ -142,7 +138,6 @@ static func _secret_mark() -> bool:
 static func _ammo_table() -> bool:
 	var ok: bool = true
 	var arsenal: EventSheetResource = EventSheetStarterTemplates.build_starter(30)
-	ok = _check("the arsenal starter is still a body that moves", arsenal.host_class, "CharacterBody3D") and ok
 	var ammo: Dictionary = arsenal.variables.get("ammo", {})
 	ok = _check("ammo is a table, not a keyed dictionary", str(ammo.get("type", "")), "Array") and ok
 	ok = _check("with one record per weapon, a name column and a rounds column",

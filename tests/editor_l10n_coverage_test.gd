@@ -1,30 +1,28 @@
-# EventForge - every string the editor asks to translate is actually translatable.
+# EventForge - the reader that decides what the editor asks to translate.
 #
 # EventSheetL10n.translate() falls back to its English key when nothing carries it, so a message
 # that never reached the CSVs looks perfectly fine in English and stays English in every other
-# language - a half-translated dialog nobody's suite ever notices. This gate closes that: it reads
-# the plugin's own scripts, collects every translate() call whose argument IS a literal, and fails
-# on any key TEMPLATE.csv does not carry. It then holds the shipped locales to the template: the
-# same keys, in the same set, with no empty cell (an empty cell is an untranslated string wearing a
-# translation's clothes).
+# language - a half-translated dialog nobody's suite ever notices. The sweep that closes that gap
+# (every literal translate() argument has a TEMPLATE.csv row) is translation_harvest_test, and the
+# locale files are held to the template, key for key and with no empty cell, by
+# vocabulary_l10n_test. This file pins the one thing both lean on: the reader that turns a script
+# into the keys it asks for.
 #
 # A call whose argument is COMPUTED (a variable, a joined string, a table lookup) cannot be read
-# from here and is skipped - the gate pins what it can see, which is every literal the UI says.
+# from here and is skipped - the sweep pins what it can see, which is every literal the UI says.
 #
 # THE READER ITSELF lives in tools/harvest_translations.gd, because the harvester that WRITES a
 # missing row and the gate that FAILS on one have to agree, to the character, about what a literal
-# is. Two copies of that reader would be two answers waiting to disagree. This file still pins the
+# is. Two copies of that reader would be two answers waiting to disagree. This file pins the
 # reader's behaviour, one line per shape, so the shared reader cannot drift unnoticed.
 @tool
 class_name EditorL10nCoverageTest
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
-## The shared translate()-literal reader, and the roots it sweeps.
+## The shared translate()-literal reader.
 const HARVEST := preload("res://tools/harvest_translations.gd")
-const TRANSLATIONS_DIR := "res://addons/eventsheet/translations"
 const TEMPLATE_PATH := "res://addons/eventsheet/translations/TEMPLATE.csv"
-const SHIPPED_LOCALES: PackedStringArray = ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]
 
 
 static func run() -> bool:
@@ -35,8 +33,6 @@ static func run() -> bool:
 		template_keys[row[0]] = true
 	ok = _check("the template is there and full", template_keys.size() > 100, true) and ok
 	ok = _test_the_reader() and ok
-	ok = _test_literals_are_in_the_template(template_keys) and ok
-	ok = _test_locales_match_the_template(template_keys) and ok
 	return ok
 
 
@@ -60,42 +56,6 @@ static func _test_the_reader() -> bool:
 		PackedStringArray()) and ok
 	ok = _check("and neither is a joined one",
 		HARVEST.translated_keys("EventSheetL10n.translate(\"a \" + noun)"), PackedStringArray()) and ok
-	return ok
-
-
-## Every literal the editor asks to translate has a row in TEMPLATE.csv. The failure prints the
-## strings themselves with the file each came from, because "3 keys missing" is not actionable.
-static func _test_literals_are_in_the_template(template_keys: Dictionary) -> bool:
-	var uncovered: PackedStringArray = PackedStringArray()
-	var seen: int = 0
-	for root: String in HARVEST.SCRIPT_ROOTS:
-		for path: String in HARVEST.scripts_under(root):
-			for key: String in HARVEST.translated_keys(FileAccess.get_file_as_string(path)):
-				seen += 1
-				if not template_keys.has(key):
-					uncovered.append("%s  <- %s" % [key, path.get_file()])
-	var ok: bool = _check("the sweep found the plugin's translated strings", seen > 300, true)
-	return _check("every translated literal has a template row", uncovered, PackedStringArray()) and ok
-
-
-## Each shipped locale carries the template's keys, all of them, none of them blank.
-static func _test_locales_match_the_template(template_keys: Dictionary) -> bool:
-	var ok: bool = true
-	for locale: String in SHIPPED_LOCALES:
-		var missing: PackedStringArray = PackedStringArray()
-		var blank: PackedStringArray = PackedStringArray()
-		var carried: Dictionary = {}
-		for row: PackedStringArray in _csv_rows("%s/%s.csv" % [TRANSLATIONS_DIR, locale]):
-			carried[row[0]] = true
-			if row[0] == "keys":
-				continue
-			if row.size() < 2 or row[1].strip_edges().is_empty():
-				blank.append(row[0])
-		for key: String in template_keys:
-			if not carried.has(key):
-				missing.append(key)
-		ok = _check("%s carries every template key" % locale, missing, PackedStringArray()) and ok
-		ok = _check("%s leaves no cell empty" % locale, blank, PackedStringArray()) and ok
 	return ok
 
 

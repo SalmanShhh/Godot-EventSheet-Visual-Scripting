@@ -13,10 +13,8 @@ const SUPPORT := preload("res://tests/support.gd")
 static func run() -> bool:
 	var ok: bool = true
 
-	# ── Shortcut map: B/I/R present + the whole DEFAULTS table is collision-free ──
-	ok = _check("B bound to add_blank_subevent", EventSheetShortcuts.binding_for("add_blank_subevent"), "B") and ok
-	ok = _check("I bound to invert_condition", EventSheetShortcuts.binding_for("invert_condition"), "I") and ok
-	ok = _check("R bound to replace_ace", EventSheetShortcuts.binding_for("replace_ace"), "R") and ok
+	# ── Shortcut map: the whole DEFAULTS table is collision-free (the B/I/R keys themselves are
+	# pinned by godot_workflow_test's key-parity table) ──
 	var conflict_free: bool = true
 	for action: Variant in EventSheetShortcuts.DEFAULTS:
 		var clash: String = EventSheetShortcuts.conflicting_action(str(action), EventSheetShortcuts.binding_for(str(action)))

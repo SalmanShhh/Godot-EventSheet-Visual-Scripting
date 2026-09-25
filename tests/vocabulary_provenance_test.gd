@@ -44,7 +44,6 @@ static func run() -> bool:
 	# After an override, the same verb reads as curated - through the REAL apply path.
 	EventSheetVocabularyCatalog.set_override("Enemy", "method:take_damage", {"display_name": "Wound"})
 	var applied: Array[ACEDefinition] = EventSheetVocabularyCatalog.apply([reflected])
-	ok = _check("the override renames through apply", applied[0].display_name, "Wound") and ok
 	ok = _check("an overridden verb reads as curated",
 		EventSheetVocabularyCatalog.provenance_of(applied[0]), "curated") and ok
 	ok = _check("the curated note says who renamed it",

@@ -15,9 +15,8 @@ const SUPPORT := preload("res://tests/support.gd")
 static func run() -> bool:
 	var ok: bool = true
 
-	# Section descriptions registry: core categories are seeded, and describe() adds/overrides.
-	ok = _check("a core category has a seeded description",
-		not EventSheetSectionInfo.description_for("Editor Tools").is_empty(), true) and ok
+	# Section descriptions registry: describe() adds/overrides. The seeded core descriptions are
+	# pinned by value in editor_tool_census_test.
 	EventSheetSectionInfo.describe("__picker_test_section__", "a test blurb")
 	ok = _check("describe() registers a custom section description",
 		EventSheetSectionInfo.description_for("__picker_test_section__"), "a test blurb") and ok

@@ -138,6 +138,8 @@ static func _test_a_behaviour_compile_leaves_a_plain_file_alone() -> bool:
 		var emit: Callable = runner["emit"]
 		_restore(_defaults())
 		var clean: String = emit.call()
+		ok = _check("%s writes the action at all" % str(runner["name"]),
+			clean.contains("move_and_slide()"), true) and ok
 		_compile_a_behaviour_sheet()
 		ok = _check("%s is unchanged by a behaviour compile before it" % str(runner["name"]),
 			emit.call(), clean) and ok

@@ -46,14 +46,14 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 
-	# Reorder: drag condition A (index 0) to after condition B (index 1) -> [B, A].
+	# Reorder: drag condition A (index 0) to after condition B (index 1) -> [B, A]. The reorder
+	# itself is pinned through the real mouse drag by ace_reorder_drag_test; here it only sets up
+	# the order the moves below start from.
 	var event_row: EventRowData = _find_row(viewport, event)
 	all_passed = _check("event row resolved", event_row != null, true) and all_passed
 	editor._on_viewport_ace_drop_requested(
 		[{"source_resource": event, "kind": "condition", "ace_index": 0}],
 		event_row, "condition", 1, "after", false)
-	all_passed = _check("conditions reordered to [B, A]",
-		event.conditions.size() == 2 and event.conditions[0] == cond_b and event.conditions[1] == cond_a, true) and all_passed
 
 	# Move across events: drag condition A (now index 1) onto event2.
 	var event2_row: EventRowData = _find_row(viewport, event2)

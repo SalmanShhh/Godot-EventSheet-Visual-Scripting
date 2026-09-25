@@ -1,5 +1,7 @@
 # Godot EventSheets - the Vector Shapes pack: the shader compiles, the arithmetic is right, and the
-# eight shipped scripts round-trip.
+# eight shipped scripts parse and keep the markers the Inspector reads. That each one opens as a sheet
+# and re-emits itself byte for byte is pack_open_lift_test's walk, which reads every .gd in every
+# pack - but that walk never loads a script, and three of these shapes are loaded by no other test.
 #
 # THE SHADER PIN IS A COMPILE PROOF. A shader that fails to compile reports NO uniforms at all, so a
 # test that asked "does it have a `radius`?" would pass on a broken shader by asking the wrong thing.
@@ -83,18 +85,7 @@ static func run() -> bool:
 	all_passed = _pin_the_scroll_tick() and all_passed
 	all_passed = _pin_the_shipped_scripts() and all_passed
 	all_passed = _pin_the_published_fields() and all_passed
-	_cleanup()
 	return all_passed
-
-
-## The scripts the round trip above wrote. A compile writes to where it is told to compile, so each
-## re-emission leaves a copy of a shape in the user folder - and on CI the whole suite runs serially
-## in one process, so what one test leaves behind is state the next one sees.
-static func _cleanup() -> void:
-	for file_name: String in PACK_SCRIPTS:
-		var written: String = "user://vector_shapes_%s" % file_name
-		if FileAccess.file_exists(written):
-			DirAccess.remove_absolute(written)
 
 
 ## The fields each shape publishes as a row, read back out of the shipped source the same way the
@@ -277,19 +268,14 @@ static func _pin_the_scroll_tick() -> bool:
 	])
 
 
-## Every shipped script parses, opens as a sheet and re-emits itself byte for byte - the lossless
-## covenant, held for all eight rather than for the one file the folder walk happens to reach first.
-## Each shape also still says its thickness is stored in pixels.
+## Every shipped script parses, and each shape still says its thickness is stored in pixels and still
+## asks for the preview card.
 static func _pin_the_shipped_scripts() -> bool:
 	var rows: Array = []
 	for file_name: String in PACK_SCRIPTS:
 		var path: String = PACK_DIR + file_name
-		var shipped: String = FileAccess.get_file_as_string(path)
 		rows.append(["%s parses" % file_name, load(path) != null, true])
-		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
-		var verify_path: String = "user://vector_shapes_%s" % file_name
-		var reemitted: String = SUPPORT.compile_output(sheet, verify_path)
-		rows.append(["%s re-emits itself" % file_name, reemitted == shipped, true])
+		var shipped: String = FileAccess.get_file_as_string(path)
 		if file_name != "vector_shape_2d.gd":
 			rows.append(["%s stores its thickness in pixels" % file_name, shipped.contains(UNIT_MARKER), true])
 			rows.append(["%s asks for the preview card" % file_name, shipped.contains("# @inspector_preview"), true])

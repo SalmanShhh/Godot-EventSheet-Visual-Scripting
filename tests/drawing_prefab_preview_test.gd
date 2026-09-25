@@ -67,14 +67,13 @@ static func run() -> bool:
 	# both are thin wrappers over the rasterizer pinned above, which is their substantive logic.
 
 	# The shape-aware steps editor's substance is its INNER Control (a plain VBoxContainer, so it DOES
-	# instantiate headless). On load it preserves the stored keys exactly - never injecting a `texture`
-	# slot the source lacked, never coercing a legacy color name - so opening a prefab reads back faithfully;
-	# only an explicit edit changes the data.
+	# instantiate headless). On load it never coerces a legacy color name, so opening a prefab reads back
+	# faithfully; only an explicit edit changes the data. (The key set on load and the freshly added step
+	# are pinned by the card list drawer's own test.)
 	var steps_editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
 	steps_editor.set_steps([{"kind": "line", "x": 1.0, "y": 2.0, "p1": 5.0, "p2": 6.0, "p3": 3.0, "color": "red"}])
 	var roundtrip: Array = steps_editor.get_steps()
 	var first: Dictionary = roundtrip[0] if not roundtrip.is_empty() else {}
-	all_passed = _check("steps editor round-trips the stored keys unchanged", "|".join(first.keys()), "kind|x|y|p1|p2|p3|color") and all_passed
 	all_passed = _check("steps editor keeps a legacy color name verbatim on load", str(first.get("color", "")), "red") and all_passed
 	# Each shape titles its own slots (never the raw p1/p2/p3) - the field vocabulary IS the promise this
 	# feature makes to a beginner, so pin it per shape.
@@ -82,12 +81,6 @@ static func run() -> bool:
 	all_passed = _check("rect titles p1/p2 as Width/Height", _shape_labels("rect"), "Width|Height") and all_passed
 	all_passed = _check("line titles p1/p2/p3 as End X/End Y/Thickness", _shape_labels("line"), "End X|End Y|Thickness") and all_passed
 	all_passed = _check("cone titles p1/p2/p3 as Facing/FOV/Radius", _shape_labels("cone"), "Facing|FOV|Radius") and all_passed
-	# A freshly added step is a visible filled circle with every storage slot seeded (valid immediately).
-	steps_editor.set_steps([])
-	steps_editor.add_default_step()
-	var added: Dictionary = steps_editor.get_steps()[0]
-	all_passed = _check("a new step defaults to a circle", str(added.get("kind", "")), "circle") and all_passed
-	all_passed = _check("a new step seeds every storage slot", added.has("p1") and added.has("texture") and added.has("color"), true) and all_passed
 	steps_editor.free()
 
 	return all_passed

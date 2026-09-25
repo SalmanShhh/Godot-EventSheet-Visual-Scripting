@@ -56,11 +56,10 @@ static func run() -> bool:
 	all_passed = _check("double-click a group opens the editor popup, not inline edit",
 		requested_group[0] == group and int(viewport.get_editing_context_for_test().get("span_index", -1)) == -1, true) and all_passed
 	# The popup's mutation (factored static, no dialog needed) maps name -> .name + .group_name.
+	# The trim, the .group_name half and the blank fallback are group_head_test's; the Resource
+	# .name mirror is pinned here.
 	EventSheetDock.set_group_fields(group, "  NewGroup  ", "  the core loop  ")
-	all_passed = _check("group name updates (trimmed, mirrored)", group.group_name == "NewGroup" and group.name == "NewGroup", true) and all_passed
-	all_passed = _check("group description updates (trimmed)", group.description, "the core loop") and all_passed
-	EventSheetDock.set_group_fields(group, "   ", "")
-	all_passed = _check("blank group name falls back to Group", group.group_name, "Group") and all_passed
+	all_passed = _check("group name is mirrored onto the resource name", group.name, "NewGroup") and all_passed
 
 	# What KIND of field a parameter is, asked the same way in the row as in the parameters dialog.
 	# A Call row's function name carries no hint at all - its kind is its own id - so working the

@@ -83,7 +83,8 @@ static func run() -> bool:
 	all_passed = _check("function lift round-trips byte-identically", roundtrip == source, true) and all_passed
 
 	# End-to-end on the shipped behavior pack: behavior-mode annotation regeneration
-	# ($PlatformerMovement.jump() templates) must verify too.
+	# ($PlatformerMovement.jump() templates) must verify too. Its byte round trip is
+	# pack_open_lift_test's, which re-emits every shipped pack file; the rows it lifts to are here.
 	var pack_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd")
 	var pack: EventSheetResource = GDScriptImporter.new().import_external_source(pack_source)
 	var pack_function_blocks: Array[String] = []
@@ -109,9 +110,6 @@ static func run() -> bool:
 		pack_function_blocks.has("func _enter_tree() -> void:"), true) and all_passed
 	all_passed = _check("behavior identity recovered from the prelude",
 		pack.behavior_mode and pack.custom_class_name == "PlatformerMovement" and pack.host_class == "CharacterBody2D", true) and all_passed
-	pack.external_source_path = "user://eventsheets_pack_lift_rt.gd"
-	var pack_roundtrip: String = str(SheetCompiler.compile(pack, "user://eventsheets_pack_lift_rt.gd").get("output", ""))
-	all_passed = _check("behavior pack round-trips byte-identically", pack_roundtrip == pack_source, true) and all_passed
 
 	# Phase 1: an unannotated hand-written function reverse-lifts to an un-exposed sheet function
 	# (lifted_unannotated suppresses the @ace_hidden emission), still byte-identical.

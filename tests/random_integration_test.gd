@@ -102,20 +102,18 @@ static func _test_shared_random_toggle() -> bool:
 	passed = _check("ProcRoom generates with shared flag off", proc.total_rooms() > 0, true) and passed
 	proc.free()
 
-	# The other three packs expose the same toggle - calling it must not error.
+	# The other three packs expose the same toggle - calling it must not error. A missing method
+	# stops this function with a runtime error, so the call itself is the check.
 	var loot: Node = load(LOOT_TABLE).new()
 	loot.use_advanced_random(true)
-	passed = _check("LootBox toggle callable", loot.has_method("use_advanced_random"), true) and passed
 	loot.free()
 
 	var skins: Node = load(SKIN_VAULT).new()
 	skins.use_advanced_random(true)
-	passed = _check("SkinVault toggle callable", skins.has_method("use_advanced_random"), true) and passed
 	skins.free()
 
 	var story: Node = load(STORYLETS).new()
 	story.use_advanced_random(true)
-	passed = _check("Storylets toggle callable", story.has_method("use_advanced_random"), true) and passed
 	story.free()
 	return passed
 

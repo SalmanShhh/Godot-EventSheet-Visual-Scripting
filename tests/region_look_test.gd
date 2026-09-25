@@ -4,8 +4,8 @@
 #   1. THE ROW. A fence is its OWN row type, asked for through the Custom Block API rather than
 #      borrowed from the group bar: a dashed `#` badge, the name, the description beside it and the
 #      fence line echoed at the right edge - all found by span METADATA, never by position.
-#   2. THE PAIRING. Unchanged by the new look: a matched pair still adopts its rows, the closing
-#      fence still rides last, and an unmatched fence still stays flat (the wart-not-error covenant).
+#   2. THE PAIRING. Unchanged by the new look: a matched pair still pairs, regions nest by a stack,
+#      and an unmatched fence is still an orphan (the wart-not-error covenant).
 #   3. THE REFACTORS. Region to group and back, on the plain container the rows live in - and the
 #      round trip is byte-identical, which is the only proof that "nothing inside moves" is true.
 #   4. THE ORPHAN. The amber note under an unmatched fence, the row its fix names, and the fence the
@@ -153,18 +153,6 @@ static func _test_pairing_unchanged() -> bool:
 		lopsided_pairing["orphan_closers"], [0] as Array[int]) and passed
 	passed = _check("an opener that never closes is an orphan",
 		lopsided_pairing["orphan_openers"], [1] as Array[int]) and passed
-
-	# The view still adopts the rows between a pair, and the model still compiles the same bytes.
-	var sheet: EventSheetResource = _sheet_with(container)
-	var before: String = str(SheetCompiler.compile(sheet).get("output", ""))
-	var viewport: EventSheetViewport = EventSheetViewport.new()
-	viewport.set_sheet(sheet)
-	var head: EventRowData = _row_for(viewport, container[0])
-	passed = _check("the opener adopts its rows plus the closing fence",
-		head.children.size() if head != null else -1, 3) and passed
-	passed = _check("building rows never touches the model bytes",
-		str(SheetCompiler.compile(sheet).get("output", "")), before) and passed
-	viewport.free()
 	return passed
 
 

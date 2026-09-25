@@ -21,8 +21,8 @@ static func run() -> bool:
 	if is_valid == null or is_null == null:
 		return false
 
-	# Frozen API: ace_id + codegen_template are compatibility promises once shipped.
-	ok = _check("Is Valid template is is_instance_valid({target})", is_valid.codegen_template, "is_instance_valid({target})") and ok
+	# Frozen API: ace_id + codegen_template are compatibility promises once shipped. Is Valid's
+	# template is pinned by helper_aces_test.
 	ok = _check("Is Null template is {target} == null", is_null.codegen_template, "{target} == null") and ok
 	ok = _check("Is Valid is a CONDITION", is_valid.ace_type, ACEDescriptor.ACEType.CONDITION) and ok
 	ok = _check("Is Null is a CONDITION", is_null.ace_type, ACEDescriptor.ACEType.CONDITION) and ok
