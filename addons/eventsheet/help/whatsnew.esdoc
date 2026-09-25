@@ -90,6 +90,28 @@ What changed in the build you have installed (v0.18.0), in the words the release
   window size - is never offered, and a test walks every phrase so none can point at a verb that no
   longer ships.
 
+### Fixed: the editor starts in about 11 seconds, not 30
+
+- **The plugin compiled the whole editor half of itself at every editor start.** Godot sets up the
+  debugger tab that already exists the moment the plugin adds its debugger bridge, and the bridge
+  used that moment to empty the Run's stores - the hit counts, the timings, the state trail. The
+  state trail named the state watch and the fact scanner, which between them reach the compiler,
+  the registry and everything the dock uses: about 546 scripts compiled before the editor was
+  usable, whether or not a sheet was ever opened. Measured on the same machine and checkout with
+  `--editor --headless --quit-after 1`, twice each: 29.8 s and 27.7 s before, 10.5 s and 11.1 s after.
+- **The stores now start over when a game starts**, from the debugger session's `started`, which is
+  the Run their comments always meant. The editor keeps one debugger tab between runs, so emptying
+  them when the tab was made meant a second Run added its hit counts to the first's. A second copy of
+  the game joining a run already under way (Play as host + client) is not a new Run and empties
+  nothing, and which copy each window is gets read as it starts rather than once at editor start.
+- **The state trail reaches the watch and the fact scanner by path**, so loading it costs the trail
+  alone.
+- **Held by the boot lint**: the debugger bridge and the trail may not name those classes in code,
+  and the hook the editor calls at boot may not load anything - by class or by path, since a path
+  string names no class and slipped past the old rule.
+- A cold session still compiles the editor half once, now at the first sheet tab instead of at
+  every start - so a session spent in scenes and scripts never pays it.
+
 ### Changed: tests and checks another test already made are gone
 
 - **An audit of all 820 test files**, each file checked for an assertion no other test makes.

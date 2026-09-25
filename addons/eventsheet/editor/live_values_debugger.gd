@@ -41,7 +41,7 @@ signal runtime_error_received(message: String, script_path: String, line: int)
 
 var _last_session_id: int = -1
 ## Session id -> the feature tag that copy of the game was started with. Read once when the
-## session opens, because the editor setting can be changed while a game runs and the chip must go
+## game starts, because the editor setting can be changed while a game runs and the chip must go
 ## on saying which window it is describing.
 var _instance_labels: Dictionary = {}
 
@@ -50,12 +50,37 @@ func _has_capture(capture: String) -> bool:
 	return capture == "eventsheets"
 
 
-## A new debug session IS the Run: the trace's hit counts belong to one run, so they start over
-## here rather than accumulating across launches (a count that spans two runs answers no question
-## anyone asked). Loaded BY PATH - this bridge is constructed at plugin boot, and naming a class
-## here would compile it into every editor start for a store most sessions never look at.
+## Wires a debugger tab, and does NOTHING else. The editor calls this for the tab that already exists
+## the moment the plugin is added - at every editor start, long before anyone presses Play - so any
+## script loaded here is compiled into every boot. The state trail once was, and through what it names
+## it compiled the whole editor half of the plugin into a thirty-second start. The Run's own work waits
+## for the session's `started`, which is the Run.
 func _setup_session(session_id: int) -> void:
 	_last_session_id = session_id
+	var session: EditorDebuggerSession = get_session(session_id)
+	if session == null:
+		return
+	# Bound to the id, because a run can be two games: each handler is connected once per session
+	# and has to know which of them it is about.
+	var started: Callable = _on_session_started.bind(session_id)
+	if not session.started.is_connected(started):
+		session.started.connect(started)
+	var stopped: Callable = _on_session_stopped.bind(session_id)
+	if not session.stopped.is_connected(stopped):
+		session.stopped.connect(stopped)
+
+
+## A game started under this tab, so a new Run begins: the trace's hit counts belong to one run, so
+## they start over here rather than accumulating across launches (a count that spans two runs answers
+## no question anyone asked). Loaded BY PATH, and only now, so an editor session that never runs a
+## game never compiles any of these stores.
+func _on_session_started(session_id: int) -> void:
+	# Which copy of the game this is, read as the game starts: the editor setting can change between
+	# runs, and the chip must say which window the values it shows came from.
+	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
+	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)
+	if not starts_new_run(_other_active_sessions(session_id)):
+		return
 	var counts: GDScript = load("res://addons/eventsheet/editor/trace_hit_counts.gd")
 	if counts != null:
 		counts.reset()
@@ -69,16 +94,24 @@ func _setup_session(session_id: int) -> void:
 	var trail: GDScript = load("res://addons/eventsheet/editor/state_trail.gd")
 	if trail != null:
 		trail.clear()
-	# Which copy of the game this is. Loaded BY PATH for the same reason the two stores above
-	# are: naming the class here would compile it into every editor start.
-	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
-	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)
-	var session: EditorDebuggerSession = get_session(session_id)
-	# Bound to the id, because a run can be two games: the handler is connected once per session and
-	# has to know which of them just went.
-	var stopped: Callable = _on_session_stopped.bind(session_id)
-	if session != null and not session.stopped.is_connected(stopped):
-		session.stopped.connect(stopped)
+
+
+## How many OTHER debugger tabs have a game running right now.
+func _other_active_sessions(session_id: int) -> int:
+	var own: EditorDebuggerSession = get_session(session_id)
+	var active: int = 0
+	for other: EditorDebuggerSession in get_sessions():
+		if other != own and other.is_active():
+			active += 1
+	return active
+
+
+## Whether a game starting is a new Run. Play as host + client starts two copies a moment apart, and
+## the second one is joining the Run the first began: emptying the stores then would drop what the
+## host already streamed and restart its trail's clock mid-run. Static like the parsers below, because
+## `EditorDebuggerPlugin` cannot be instantiated headless, so the rule is pinned here or nowhere.
+static func starts_new_run(other_active_sessions: int) -> bool:
+	return other_active_sessions == 0
 
 
 ## The run ended. Announced rather than inferred: "no values have arrived recently" and "the game is

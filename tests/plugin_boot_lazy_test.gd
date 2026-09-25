@@ -88,18 +88,34 @@ const FORBIDDEN := {
 		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
 	],
 	# The Live Values bridge is constructed eagerly in _enter_tree (the transport has to be live
-	# before the workspace opens), so it is a boot file too: the hit-count store it resets on every
-	# new Run is reached by path, never named.
+	# before the workspace opens), and the editor then sets up the debugger tab that already exists -
+	# so it is a boot file twice over: the Run stores it resets are reached by path when a game
+	# starts, never named.
 	"res://addons/eventsheet/editor/live_values_debugger.gd": [
 		"EventSheetTraceHitCounts", "EventSheetTraceTimings", "EventSheetWhyPanel",
-		"EventSheetViewport",
+		"EventSheetViewport", "EventSheetStateTrail", "EventSheetStateWatch", "EventSheetStateFacts",
+		"EventSheetRunInstances",
 	],
 	# The import hook is attached in _enter_tree like the export ones, so it is a boot file too. It
 	# deliberately carries no class_name and names no plugin class; without a row here, nothing said so.
 	"res://addons/eventforge/editor/import_tools_plugin.gd": [
 		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
 	],
+	# The state trail is emptied at the start of every Run. It once named the state watch and the fact
+	# scanner, which between them reach the compiler, the registry and the whole editor half of the
+	# plugin, and the bridge loaded it at boot: a thirty-second editor start. Insurance for the rule
+	# above - loading the trail compiles the trail and nothing else.
+	"res://addons/eventsheet/editor/state_trail.gd": [
+		"EventSheetStateWatch", "EventSheetStateFacts",
+	],
 }
+
+## The debugger bridge's hook the editor calls AT BOOT, for the tab that exists before any Run. The
+## FORBIDDEN lint reads class names, and a `load("res://...")` string names none - which is exactly how
+## the state trail slipped into every editor start with this whole test green. So the hook itself is
+## held to loading nothing at all.
+const BOOT_HOOK_FILE: String = "res://addons/eventsheet/editor/live_values_debugger.gd"
+const BOOT_HOOK: String = "func _setup_session("
 
 ## Every boot file, and the READING classes none of them may name.
 ##
@@ -164,6 +180,13 @@ const LAZY_PATHS := [
 	# literal, so a rename would break the exact click that needs them - hit counts would quietly
 	# stop resetting per Run, the Why panel would open onto nothing - with the suite still green.
 	"res://addons/eventsheet/editor/trace_hit_counts.gd",
+	# The rest of the Run's stores, reset by path when a game starts, and the two scripts the trail
+	# reads its keys and words from by path.
+	"res://addons/eventsheet/editor/trace_timings.gd",
+	"res://addons/eventsheet/editor/state_trail.gd",
+	"res://addons/eventsheet/editor/dock/run_instances.gd",
+	"res://addons/eventsheet/editor/interaction/state_watch.gd",
+	"res://addons/eventsheet/editor/interaction/state_facts.gd",
 	"res://addons/eventsheet/editor/docs/doc_why_panel.gd",
 	"res://addons/eventsheet/editor/dock/test_report_panel.gd",
 	# The registry store the plugin registers the Feedback Player's card schema and step field
@@ -198,6 +221,17 @@ static func run() -> bool:
 		all_passed = _check("%s never calls the %s API in code" % [
 			boot_path.get_file(), PUBLIC_API_TOKEN.trim_suffix(".")],
 			api_code.contains(PUBLIC_API_TOKEN), false) and all_passed
+
+	# 1d. The debugger hook the editor calls at boot loads nothing, by class or by path.
+	var hook: String = _function_body(_code_only(BOOT_HOOK_FILE), BOOT_HOOK)
+	all_passed = _check("the debugger bridge's boot hook is found", hook.is_empty(), false) and all_passed
+	all_passed = _check("the debugger bridge's boot hook loads nothing", hook.contains("load("), false) and all_passed
+	# A load moved into a helper the hook calls would pass the line above with the thirty seconds back,
+	# so the hook may only CONNECT the Run's work, never do it.
+	all_passed = _check("the boot hook connects the Run's work to started",
+		hook.contains("_on_session_started.bind("), true) and all_passed
+	all_passed = _check("and never does that work itself",
+		hook.replace("_on_session_started.bind(", "").contains("_on_session_started("), false) and all_passed
 
 	# 2. The lazy targets exist and the load-by-path dispatch works.
 	for lazy_path: String in LAZY_PATHS:
@@ -243,6 +277,23 @@ static func _code_only(path: String) -> String:
 			line = line.left(hash_index)
 		code_lines.append(line)
 	return "\n".join(code_lines)
+
+
+## One function's code, from its `func` line up to the next top-level declaration, or "" when the
+## file has no such function.
+static func _function_body(code: String, head: String) -> String:
+	var start: int = code.find(head)
+	if start < 0:
+		return ""
+	var body: PackedStringArray = PackedStringArray()
+	var lines: PackedStringArray = code.substr(start).split("\n")
+	body.append(lines[0])
+	for index: int in range(1, lines.size()):
+		var line: String = lines[index]
+		if not line.is_empty() and not line.begins_with("	") and not line.begins_with(" "):
+			break
+		body.append(line)
+	return "\n".join(body)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

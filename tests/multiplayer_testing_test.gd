@@ -116,6 +116,10 @@ static func _test_what_each_instance_is_called() -> bool:
 		EventSheetLiveValuesDebugger.labels_after_stop({0: "host", 1: "client"}, 1), {0: "host"}) and ok
 	ok = _check("and closing the last one leaves nothing behind",
 		EventSheetLiveValuesDebugger.labels_after_stop({0: "host"}, 0), {}) and ok
+	ok = _check("the first copy of a game to start begins a new Run",
+		EventSheetLiveValuesDebugger.starts_new_run(0), true) and ok
+	ok = _check("a copy that joins a game already running does not",
+		EventSheetLiveValuesDebugger.starts_new_run(1), false) and ok
 	return ok
 
 

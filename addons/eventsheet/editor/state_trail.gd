@@ -66,6 +66,13 @@ extends RefCounted
 ## seconds of a machine that is thrashing, and far short of a log.
 const RING_LIMIT: int = 40
 
+## The two scripts the trail reads its keys and words from, reached BY PATH. The trail is emptied at
+## the start of every Run from the debugger bridge, and naming either class here compiled the state
+## watch, the fact scanner and - through them - the compiler, the registry and the whole editor half of
+## the plugin the first time the trail was touched. Only reading a frame or saying a line needs them.
+const WATCH_PATH: String = "res://addons/eventsheet/editor/interaction/state_watch.gd"
+const FACTS_PATH: String = "res://addons/eventsheet/editor/interaction/state_facts.gd"
+
 ## How far the hold has to go BACKWARDS before it counts as a restart rather than as float noise.
 ## A real hold only ever grows, and it grows by the cadence, so anything below this is not a drop.
 const RESTART_MARGIN: float = 0.05
@@ -156,7 +163,8 @@ static func note_frame(values: Dictionary, instance: String = "", rows: Dictiona
 	# A line waits exactly one message for its name. This frame opens the next flush, so whatever was
 	# still waiting is never going to be named - which is what a run with the Event Trace off is.
 	_awaiting = {}
-	if not values.has(EventSheetStateWatch.STATE_KEY):
+	var watch: Dictionary = _watch_constants()
+	if not values.has(watch["STATE_KEY"]):
 		_rings.erase(instance)
 		_last.erase(instance)
 		_frames_seen.erase(instance)
@@ -169,8 +177,8 @@ static func note_frame(values: Dictionary, instance: String = "", rows: Dictiona
 	if was_labelled != (not instance.is_empty()):
 		clear()
 	_has_run = true
-	var member: String = str(values[EventSheetStateWatch.STATE_KEY]).strip_edges()
-	var seconds: float = float(values.get(EventSheetStateWatch.SECONDS_KEY, 0.0))
+	var member: String = str(values[watch["STATE_KEY"]]).strip_edges()
+	var seconds: float = float(values.get(watch["SECONDS_KEY"], 0.0))
 	var frames: int = int(_frames_seen.get(instance, 0))
 	_frames_seen[instance] = frames + 1
 	var before: Variant = _last.get(instance)
@@ -184,7 +192,7 @@ static func note_frame(values: Dictionary, instance: String = "", rows: Dictiona
 		return
 	var entry: Dictionary = {
 		"instance": instance,
-		"at": float(frames) * EventSheetStateWatch.CADENCE_SECONDS,
+		"at": float(frames) * float(watch["CADENCE_SECONDS"]),
 		"from": was,
 		"to": member,
 		"re_entered": re_entered,
@@ -294,15 +302,15 @@ static func all_entries() -> Array:
 ## Stagger". The row is named only when the run saw it fire; otherwise the line says what happened
 ## and leaves the cause unclaimed, which is the honest half of what is known.
 static func sentence(entry: Dictionary) -> String:
-	var moment: String = "%s s" % EventSheetStateWatch.seconds_text(float(entry.get("at", 0.0)))
+	var moment: String = "%s s" % load(WATCH_PATH).call("seconds_text", float(entry.get("at", 0.0)))
 	var instance: String = str(entry.get("instance", ""))
 	if not instance.is_empty():
 		moment = "%s · %s" % [instance, moment]
-	var into: String = EventSheetStateFacts.word_for(str(entry.get("to", "")))
+	var into: String = _word_for(str(entry.get("to", "")))
 	var moved: String = EventSheetL10n.translate("re-entered %s") % into
 	if not bool(entry.get("re_entered", false)):
 		moved = EventSheetL10n.translate("went from %s to %s") % [
-			EventSheetStateFacts.word_for(str(entry.get("from", ""))), into]
+			_word_for(str(entry.get("from", ""))), into]
 	var named: String = str(entry.get("cause_text", "")).strip_edges()
 	if named.is_empty():
 		return "%s · %s" % [moment, moved]
@@ -353,7 +361,7 @@ static func notes_for(ring: Array, rows: Dictionary) -> Array[Dictionary]:
 ## deliberately: a trail that annotated every line would be a trail with nothing to point at.
 static func _note_for(entry: Dictionary, rows: Dictionary) -> Dictionary:
 	var member: String = str(entry.get("to", ""))
-	var word: String = EventSheetStateFacts.word_for(member)
+	var word: String = _word_for(member)
 	var timed: Dictionary = (rows.get("timed", {}) as Dictionary).get(member, {})
 	var leaving: Dictionary = (rows.get("leaving", {}) as Dictionary).get(member, {})
 	var entering: Dictionary = (rows.get("entering", {}) as Dictionary).get(member, {})
@@ -397,3 +405,13 @@ static func _with_count(text: String, count: int) -> String:
 	if count < 2:
 		return text
 	return "%s %s" % [text, EventSheetL10n.translate("This happened %d times in this run.") % count]
+
+
+## The state watch's frame keys and cadence, read off its script rather than named.
+static func _watch_constants() -> Dictionary:
+	return (load(WATCH_PATH) as Script).get_script_constant_map()
+
+
+## A state member as the word the sheet says it in, from the fact scanner reached by path.
+static func _word_for(member: String) -> String:
+	return str(load(FACTS_PATH).call("word_for", member))
