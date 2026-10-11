@@ -355,6 +355,9 @@ func _sync_active_theme_binding() -> void:
 ## breath it reaches the viewport.
 func _publish_active_style() -> void:
 	EventSheetActiveTheme.publish(EventSheetEditorThemeDeriver.follow_running_editor(_active_theme_style))
+	# The strip's layout and the open tab's edge come from the same style, so they follow it here.
+	if _dock._menu_bar != null:
+		_dock._menu_bar.apply_theme_chrome()
 
 
 func _on_active_theme_style_changed() -> void:

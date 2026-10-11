@@ -286,6 +286,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"saved_badge_foreground_color": "The icon on the badge of a variable the Save System keeps.",
 	"saved_badge_background_color": "The tile behind the saved badge.",
 	"follow_editor_greys": "Let the sheet's greys follow the editor - dark in a dark editor, light in a light one. A colour you have changed always stays yours.",
+	"toolbar_text_labels": "Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences. Your own View > Text labels choice always wins.",
 	"font_size_delta": "Text size adjustment for this chip kind, relative to the sheet font (+/- points).",
 	"horizontal_padding": "Space inside the chip, left and right of its text, in pixels.",
 	"vertical_padding": "Space inside the chip, above and below its text, in pixels.",
@@ -364,6 +365,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"row_address_color": "The row address beside it (\"event 12 ▸ action 2\").",
 	"unsaved_dot_color": "The ● that says this sheet has edits you have not saved.",
 	"title_path_color": "The file path printed beside the sheet's name.",
+	"active_tab_edge_color": "A line along the top of the open sheet's tab, so it reads as the one in front. Clear = the tab as the editor draws it.",
 	# ── The minimap column ───────────────────────────────────────────────────────────────────
 	"minimap_background_color": "The sunken column down the right edge of a long sheet.",
 	"minimap_window_color": "The box over the part of the sheet you are looking at.",

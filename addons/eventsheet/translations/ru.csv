@@ -7261,3 +7261,9 @@ reads as,читается как
 "· shared sheet, as its base","· общий лист, как основа"
 called from,вызывается из
 Opens the shared sheet.,Открывает общий лист.
+Text labels,Текстовые подписи
+"Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences - instead of icons. Remembered for this project; until you choose, the sheet's theme decides.","Показывать панель инструментов словами вместо значков - Лист, Сохранить, Добавить событие, Добавить условие, Добавить действие, Поиск и Предложения. Запоминается для этого проекта; пока вы не выбрали, решает тема листа."
+Toolbar: text labels.,Панель инструментов: текстовые подписи.
+Toolbar: icons.,Панель инструментов: значки.
+Sentences,Предложения
+"How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Как читается лист: строки переменных как предложения, как их объявление GDScript или и то и другое - и каждое слово, которое лист позволяет выбрать."

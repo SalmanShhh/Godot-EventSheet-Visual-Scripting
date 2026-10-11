@@ -45,6 +45,9 @@ extends Resource
 ## The ● that says this sheet has unsaved edits, and the file path printed beside its name.
 @export var unsaved_dot_color: Color = Color(0.99, 0.78, 0.30, 1.0)
 @export var title_path_color: Color = Color(0.72, 0.76, 0.84, 1.0)
+## A line along the top edge of the tab of the sheet being read, so the open tab reads as the one in
+## front. Clear = no line, the tab exactly as the editor draws it.
+@export var active_tab_edge_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 
 # ── The minimap ───────────────────────────────────────────────────────────────────────────────
 ## The thin column down the right edge of a long sheet: one bar per event, tinted by what the

@@ -18,6 +18,17 @@
   text and keyword colours inside a sentence - are clear by default, clear means "as before", and
   every bundled theme states them clear, so no existing theme changes how it looks. Drawing only:
   compiled output is unchanged.
+- **Text labels: the toolbar as words, and an accent edge on the open tab.** View > Text labels lays
+  the resting strip out as words - Sheet (the same Menu), Save, the Undo and Redo arrows, the play
+  button, Add Event as the one filled button, Add Condition and Add Action, the Quick add field at
+  the right edge as the strip's Find, and a new Sentences menu holding the variable-row dial
+  (sentence, both, code - the dial View > Variable rows turns) and Words. Nothing joins or leaves the
+  strip, so every key, id and handler is unchanged. Until you choose, the sheet's theme decides: the
+  Editor Native starter turns it on (`toolbar_text_labels` on the theme resource) and every other
+  theme keeps the icon-led strip; your choice, once made, is remembered per project and wins. One
+  new bar token, the open tab's edge (`active_tab_edge_color`), draws a two-pixel accent line along
+  the top of the open sheet's tab; it is clear in every theme but Editor Native, so their tabs look
+  exactly as the editor draws them.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

@@ -214,6 +214,11 @@ const NATIVE_TEXT_LIGHT := Color("#16191d")
 const NATIVE_CELL_HOVER_DARK := Color("#343b46")
 const NATIVE_CELL_HOVER_LIGHT := Color("#f5f8fc")
 
+## The line along the top of the open sheet's tab, per hand: the selection blue of the design, a
+## shade deeper on light paper so it still reads as a line rather than a smudge.
+const NATIVE_TAB_EDGE_DARK := Color("#3a79bb")
+const NATIVE_TAB_EDGE_LIGHT := Color("#3a72b0")
+
 ## The last native_style() built, by base colour. follow_editor() asks for two per call and a
 ## sheet is re-seated on every edit, so the rule runs once per editor base rather than per edit.
 ## Read-only by contract: callers copy from these, never write into them.
@@ -289,6 +294,9 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	var light: bool = is_light_base(base_color)
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.follow_editor_greys = true
+	# The design's strip is words (Sheet, Save, Add Event, Find, Sentences), not icons. A default the
+	# reader's own View > Text labels choice overrules.
+	style.toolbar_text_labels = true
 	var event_style: EventSheetEventStyle = style.get_event_style()
 	var greys: Dictionary = NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK
 	for token_name: String in greys:
@@ -312,7 +320,11 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.group_corner_radius = 3
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
-	return EventSheetThemeDerivation.fill_derived_tokens(style)
+	EventSheetThemeDerivation.fill_derived_tokens(style)
+	# The one bar colour the shared rule leaves clear on purpose (every other theme keeps the tab as
+	# the editor draws it), stated here because the design gives the open tab its accent edge.
+	style.get_chrome_style().active_tab_edge_color = NATIVE_TAB_EDGE_LIGHT if light else NATIVE_TAB_EDGE_DARK
+	return style
 
 
 ## A lane's cells: the sentence text of the hand on a plate that IS the lane, so nothing draws a

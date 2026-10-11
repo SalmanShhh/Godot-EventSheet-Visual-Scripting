@@ -7261,3 +7261,9 @@ reads as,读作
 "· shared sheet, as its base",· 共享表，作为基类
 called from,调用自
 Opens the shared sheet.,打开共享表。
+Text labels,文字标签
+"Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences - instead of icons. Remembered for this project; until you choose, the sheet's theme decides.",用文字而非图标排列工具栏 - 事件表、保存、添加事件、添加条件、添加动作、查找和句子。为此项目记住；在你选择之前，由事件表的主题决定。
+Toolbar: text labels.,工具栏：文字标签。
+Toolbar: icons.,工具栏：图标。
+Sentences,句子
+"How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.",事件表的阅读方式：变量行显示为句子、GDScript 声明，或两者兼有 - 以及事件表允许你选择的每个词。

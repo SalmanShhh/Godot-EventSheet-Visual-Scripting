@@ -7261,3 +7261,9 @@ reads as,次のように読む
 "· shared sheet, as its base",· 共有シート、ベースとして
 called from,呼び出し元
 Opens the shared sheet.,共有シートを開きます。
+Text labels,テキストラベル
+"Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences - instead of icons. Remembered for this project; until you choose, the sheet's theme decides.",ツールバーをアイコンではなく言葉で並べます - シート、保存、イベントを追加、条件を追加、アクションを追加、検索、文。このプロジェクトに記憶されます。選ぶまではシートのテーマが決めます。
+Toolbar: text labels.,ツールバー: テキストラベル。
+Toolbar: icons.,ツールバー: アイコン。
+Sentences,文
+"How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.",シートの読み方: 変数の行を文として、GDScript の宣言として、またはその両方で表示 - そしてシートで選べるすべての言葉。

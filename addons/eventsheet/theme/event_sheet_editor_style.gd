@@ -30,6 +30,11 @@ extends Resource
 ## edited away from the value this theme shipped with is the designer's and is never touched. The
 ## Editor Native starter turns it on; every other theme leaves it off and is painted exactly as saved.
 @export var follow_editor_greys: bool = false
+## Lays the dock's resting toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, a
+## Find field on the right and the Sentences menu - instead of the icon-led strip. A default only:
+## the reader's own View > Text labels choice, once made, wins over every theme. The Editor Native
+## starter turns it on; every other theme leaves the strip as it was.
+@export var toolbar_text_labels: bool = false
 
 
 func _init() -> void:

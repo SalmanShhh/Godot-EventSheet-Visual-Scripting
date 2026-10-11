@@ -114,7 +114,7 @@ static func run() -> bool:
 		# The Project bar is the Object bar's other tab, so its two tokens sit with them.
 		"project_bar_heading_color", "project_bar_note_color",
 		"status_text_color", "status_error_color", "row_address_color",
-		"unsaved_dot_color", "title_path_color",
+		"unsaved_dot_color", "title_path_color", "active_tab_edge_color",
 		"minimap_background_color", "minimap_window_color", "minimap_window_border_color",
 		"minimap_trigger_color", "minimap_tick_color", "minimap_function_color",
 		"minimap_group_color", "minimap_comment_color", "minimap_script_color",

@@ -147,6 +147,10 @@ Two more ship inside the addon, in `res://addons/eventsheet/themes/`:
   light editor. Following only ever touches a token still at the value the starter shipped with - a
   colour you change is yours and stays put. Untick `follow_editor_greys` in the Theme Editor to
   freeze it as saved.
+  It also turns on `toolbar_text_labels`, which lays the toolbar out as words (Sheet, Save, Add
+  Event, Add Condition, Add Action, Find, Sentences) until you pick a layout yourself under View >
+  Text labels, and states `active_tab_edge_color`, the accent line along the top of the open sheet's
+  tab. Every other theme leaves that edge clear, which keeps the tab exactly as the editor draws it.
 
 The native look also brought tokens for marks the sheet is learning to draw (type colours, word
 colours, the Include line, the inner-class block, badges, links). The ones that re-colour something

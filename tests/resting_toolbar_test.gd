@@ -257,22 +257,25 @@ static func _test_the_cascade() -> bool:
 	# the Panels menu is filled from the open sheet's own census each time View opens. View ▸ Reset
 	# Lane Split is the 59th: the conditions/actions boundary is dragged from the column header
 	# band now, so the way back to the theme's own share is a menu item rather than a gesture.
-	ok = _check("View keeps its items, plus Full toolbar, Sheet theme and Panels",
-		counts["EventSheetViewMenu"], 59) and ok
+	# View ▸ Text labels is the 60th: the strip laid out as words, one choice beside Full toolbar.
+	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
+		counts["EventSheetViewMenu"], 60) and ok
 	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	ok = _check("Words… is on Tools, at its own id",
 		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok
 	ok = _check("and it sits beside Keyboard Shortcuts",
 		tools.get_item_index(63) - tools.get_item_index(16), 1) and ok
-	# Nothing named Settings is left on the strip, and the Menu is the ONLY MenuButton on it - Add
-	# was the last one beside it, and it cascades from inside the Menu now.
+	# Nothing named Settings is left on the strip, and the Menu is the only command MenuButton on it -
+	# Add was the last one beside it, and it cascades from inside the Menu now. Sentences is the one
+	# other: a second door onto the variable-row dial and Words, shown by the Text labels layout and
+	# on the expanded strip, never at rest.
 	var menu_buttons: PackedStringArray = PackedStringArray()
 	for child: Node in editor._toolbar.get_children():
 		if child is MenuButton:
 			menu_buttons.append(str((child as MenuButton).text))
-	ok = _check("the Menu is the only MenuButton on the strip", menu_buttons,
-		PackedStringArray(["☰ Menu"])) and ok
+	ok = _check("the Menu and Sentences are the only MenuButtons on the strip", menu_buttons,
+		PackedStringArray(["☰ Menu", "Sentences ▾"])) and ok
 	editor.free()
 	return ok
 

@@ -7261,3 +7261,9 @@ reads as,se lit comme
 "· shared sheet, as its base","· feuille partagée, comme base"
 called from,appelé depuis
 Opens the shared sheet.,Ouvre la feuille partagée.
+Text labels,Libellés texte
+"Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences - instead of icons. Remembered for this project; until you choose, the sheet's theme decides.","Afficher la barre d'outils en mots plutôt qu'en icônes - Feuille, Enregistrer, Ajouter un événement, Ajouter une condition, Ajouter une action, Rechercher et Phrases. Mémorisé pour ce projet ; tant que vous n'avez pas choisi, le thème de la feuille décide."
+Toolbar: text labels.,Barre d'outils : libellés texte.
+Toolbar: icons.,Barre d'outils : icônes.
+Sentences,Phrases
+"How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Comment se lit la feuille : les lignes de variables en phrases, en déclaration GDScript, ou les deux - et chaque mot que la feuille vous laisse choisir."

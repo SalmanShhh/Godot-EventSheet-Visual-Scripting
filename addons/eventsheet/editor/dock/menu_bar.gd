@@ -37,6 +37,19 @@ const PANELS_VIEW_ID: int = 9816
 ## next number the View menu has never used.
 const RESET_LANE_SPLIT_VIEW_ID: int = 9817
 
+## View ▸ Text labels - the strip laid out as words. Clear of the run the View toggles beside Object
+## Icons take (9818 onwards), so two passes adding View items at once never share a number.
+const TEXT_LABELS_VIEW_ID: int = 9830
+
+## Where the reader's own "Text labels" choice is remembered, beside the full-toolbar choice: "text"
+## or "icons". Anything else - a project that never chose - lets the sheet's theme decide, which is
+## how the Editor Native starter arrives as words while every other theme keeps the icon-led strip.
+const TOOLBAR_LAYOUT_META_KEY: String = "eventsheets_toolbar_layout"
+
+## The Sentences menu's own ids: the variable-row modes are their index in the code echo's labels,
+## and Words… sits well clear of them.
+const SENTENCES_WORDS_ID: int = 100
+
 ## Where "this project has already been told the strip rests" is remembered, in the same editor
 ## settings project metadata section every other per-project editor choice uses. Read with a NON-null
 ## sentinel default, because a missing key with a null default prints an editor ERROR.
@@ -81,6 +94,31 @@ var _redo_button: Button = null
 ## The View menu, kept so the chevron and the menu item stay one choice shown twice.
 var _view_popup_ref: PopupMenu = null
 
+## Whether the strip is laid out as words (the Text labels layout) rather than icon-led. Read back
+## from the reader's stored choice, or from the active theme when nobody chose.
+var _text_labels: bool = false
+
+## The layout the reader picked this session ("text" or "icons"), or empty when nobody has. The
+## durable answer is the project metadata; this is what keeps the choice winning over the theme in a
+## session with no EditorSettings to write to (a headless run, a test).
+var _chosen_layout: String = ""
+
+## The controls the Text labels layout re-faces or shows, kept by reference for the same reason the
+## resting list is: an index into a strip every pass edits goes stale silently.
+var _menu_button: MenuButton = null
+var _save_button: Button = null
+var _add_separator: Control = null
+var _add_event_button: Button = null
+var _add_condition_button: Button = null
+var _add_action_button: Button = null
+var _find_spacer: Control = null
+var _sentences_button: MenuButton = null
+
+## Each re-faced button's own face (text, icon, flat) as it was built, so leaving the Text labels
+## layout puts back exactly what the icon-led strip wore - an editor icon in the editor, a glyph
+## headless - rather than a second guess at it.
+var _built_faces: Dictionary = {}
+
 ## The split play button that fills the strip's play slot: one face for the run this project chose,
 ## one narrow dropdown for all six. Kept so the dock and the suite can reach the face and its menu.
 var _play_button: EventSheetPlayButton = EventSheetPlayButton.new()
@@ -119,6 +157,10 @@ func build(root: Node) -> void:
 	# the list from this popup's own submenus, so the next group to join fails that check by name.
 	menu_button.tooltip_text = "Every command in the editor, in five groups: Sheet, Add, Edit, View and Tools."
 	menu_button.flat = false
+	# The words it was built with, kept on the label meta like every other strip button, so a pulse
+	# that names "Menu" still finds it while the Text labels layout has it reading "Sheet".
+	menu_button.set_meta(LABEL_META_KEY, menu_button.text)
+	_menu_button = menu_button
 	# TAB REACHES IT. A MenuButton defaults to FOCUS_ACCESSIBILITY, which means the focus ring skips
 	# it entirely - so the one button holding the whole command tree could only be reached with a
 	# mouse or through the Ctrl+P palette. Enter opens the cascade from the keyboard once it can be
@@ -246,6 +288,7 @@ func build(root: Node) -> void:
 		_with_key("Save the sheet - compile-on-save keeps its generated script fresh.", "save"),
 		"Save", true)
 	save_button.name = "EventSheetSaveButton"
+	_save_button = save_button
 	_undo_button = _add_toolbar_button(_toolbar, "Undo", _dock._on_undo_requested,
 		_with_key("Undo the last edit to this sheet.", "undo"), "Undo", true, "↶")
 	_undo_button.name = "EventSheetUndoButton"
@@ -281,10 +324,12 @@ func build(root: Node) -> void:
 	# Timer among them is not a control anybody meant to put there.
 	_dock._run_controls.watch(_dock)
 	_add_toolbar_separator(_toolbar)
+	_add_separator = _toolbar.get_child(_toolbar.get_child_count() - 1) as Control
+	_add_separator.name = "EventSheetAddSeparator"
 	# The core reflexes stay one click (E / C / A on the keyboard).
-	_add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
-	_add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
-	_add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
+	_add_event_button = _add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
+	_add_condition_button = _add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
+	_add_action_button = _add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
 	# Kept as a reference: Simple Mode hides this deliberate drop-to-code surface entirely.
 	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
 	# Add ▸ - the whole authoring vocabulary, as a cascading submenu of the one Menu rather than as a
@@ -800,6 +845,13 @@ func build(root: Node) -> void:
 	# first entry in that list and runs this very same call, so Enter on an untouched list still
 	# adds the row - the popup swallows the key, and the add happens on the other side of it.
 	_dock._ask_field.attach(_quick_add_edit)
+	# The Text labels layout keeps the Find field at the right edge, the way a word-led strip reads:
+	# this spacer takes the room left on the line while that layout is on, and is a zero-width
+	# nothing on the icon-led strip.
+	_find_spacer = Control.new()
+	_find_spacer.name = "EventSheetFindSpacer"
+	_find_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_toolbar.add_child(_find_spacer)
 	_toolbar.add_child(_quick_add_edit)
 	# ── THE CONTEXTUAL SEGMENTS ────────────────────────────────────────────────────────────────
 	# A segment appears for what is SELECTED and goes away when the selection moves. The Moment
@@ -810,6 +862,11 @@ func build(root: Node) -> void:
 	_moment_segment.init(_dock)
 	var moment_segment: Control = _moment_segment.build(_toolbar)
 	_dock._moment_segment = _moment_segment
+	# ── SENTENCES ▾ ─────────────────────────────────────────────────────────────────────────────
+	# How the sheet reads, in one menu: the variable-row dial (the sentence, the declaration, or
+	# both - the very dial View ▸ Variable rows turns) and the Words page. A second door onto two
+	# choices that already exist, never a second copy of either.
+	_sentences_button = _build_sentences_menu(_toolbar)
 	# ── THE CHEVRON ────────────────────────────────────────────────────────────────────────────
 	# The whole strip, one click away, and back again. It is a plain Button carrying a glyph rather
 	# than an editor icon, so it reads the same on a build whose editor theme has no arrow to lend.
@@ -1110,6 +1167,17 @@ func build(root: Node) -> void:
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == FULL_TOOLBAR_VIEW_ID:
 			set_full_toolbar(not _full_toolbar))
+	# ── View ▸ Text labels (appended block - keep together) ────────────────────────────────────
+	# The strip as words: Sheet, Save, Undo, Redo, Add Event (filled), Add Condition, Add Action, the
+	# Find field on the right and the Sentences menu. Remembered for this project once the reader
+	# picks it; until then the sheet's theme says (the Editor Native starter says yes).
+	view_popup.add_check_item(EventSheetL10n.translate("Text labels"), TEXT_LABELS_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(TEXT_LABELS_VIEW_ID), EventSheetL10n.translate(
+		"Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences - instead of icons. Remembered for this project; until you choose, the sheet's theme decides."))
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == TEXT_LABELS_VIEW_ID:
+			set_text_labels(not _text_labels))
+	apply_theme_chrome()
 
 
 ## Puts (or takes off) the unread mark on a Manual entry: a reader who has not opened What's new
@@ -1244,11 +1312,18 @@ func _toggle_full_toolbar_from_chevron() -> void:
 func _apply_toolbar_expansion() -> void:
 	if _toolbar_ref == null:
 		return
+	var text_extras: Array = [_add_separator, _add_event_button, _add_condition_button,
+		_add_action_button, _find_spacer, _sentences_button]
 	for child: Node in _toolbar_ref.get_children():
 		var control: Control = child as Control
 		if control == null:
 			continue
-		control.visible = _full_toolbar or _resting_controls.has(control)
+		control.visible = (_full_toolbar or _resting_controls.has(control)
+			or (_text_labels and text_extras.has(control)))
+	if _find_spacer != null:
+		_find_spacer.size_flags_horizontal = (Control.SIZE_EXPAND_FILL if _text_labels
+			else Control.SIZE_FILL)
+	_apply_text_label_faces()
 	if _expander != null:
 		_expander.text = "«" if _full_toolbar else "»"
 		_expander.tooltip_text = ("Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add."
@@ -1257,6 +1332,149 @@ func _apply_toolbar_expansion() -> void:
 		var index: int = _view_popup_ref.get_item_index(FULL_TOOLBAR_VIEW_ID)
 		if index >= 0:
 			_view_popup_ref.set_item_checked(index, _full_toolbar)
+		var labels_index: int = _view_popup_ref.get_item_index(TEXT_LABELS_VIEW_ID)
+		if labels_index >= 0:
+			_view_popup_ref.set_item_checked(labels_index, _text_labels)
+
+
+## Whether the strip is laid out as words.
+func text_labels() -> bool:
+	return _text_labels
+
+
+## Lay the strip out as words (or back as icons), remember the choice for this project - from now on
+## it wins over whatever the sheet's theme says - and put the View menu's tick on the same answer.
+func set_text_labels(shown: bool) -> void:
+	_text_labels = shown
+	_chosen_layout = "text" if shown else "icons"
+	var settings: Object = EventSheetEditorSettings.current()
+	if settings != null:
+		settings.call("set_project_metadata", "eventsheets", TOOLBAR_LAYOUT_META_KEY,
+			"text" if shown else "icons")
+	_apply_toolbar_expansion()
+	if _dock != null:
+		_dock._set_status(EventSheetL10n.translate("Toolbar: text labels.") if shown
+			else EventSheetL10n.translate("Toolbar: icons."))
+
+
+## What the strip and the tabs take from the sheet's theme: the Text labels layout when the reader
+## never chose one, and the line along the top of the open tab. Called once the strip is built, once
+## the tab bar is, and every time the dock publishes a new active style.
+func apply_theme_chrome() -> void:
+	if _toolbar_ref == null:
+		return
+	_text_labels = _effective_text_labels()
+	_apply_toolbar_expansion()
+	_apply_tab_edge()
+
+
+## The reader's stored layout when there is one, the active theme's word on it when there is not.
+func _effective_text_labels() -> bool:
+	var settings: Object = EventSheetEditorSettings.current()
+	var stored: Variant = _chosen_layout
+	if _chosen_layout.is_empty() and settings != null:
+		stored = settings.call("get_project_metadata", "eventsheets", TOOLBAR_LAYOUT_META_KEY, "")
+	if str(stored) == "text":
+		return true
+	if str(stored) == "icons":
+		return false
+	return EventSheetActiveTheme.active().toolbar_text_labels
+
+
+## The faces the Text labels layout puts on the strip, or the ones the strip was built with. Words
+## where the icon-led strip wears pictures (the Menu reads "Sheet", Save says its name, the three
+## Add buttons drop their icons), Undo and Redo keep their arrows, and every button but Add Event is
+## flat - Add Event keeps the editor's filled button, because it is the one the strip leads with.
+func _apply_text_label_faces() -> void:
+	var refaced: Array = [_menu_button, _save_button, _undo_button, _redo_button,
+		_add_event_button, _add_condition_button, _add_action_button]
+	for button: Variant in refaced:
+		if button == null:
+			continue
+		var face_button: Button = button as Button
+		if not _built_faces.has(face_button):
+			_built_faces[face_button] = {"text": face_button.text, "icon": face_button.icon,
+				"flat": face_button.flat}
+		var built: Dictionary = _built_faces[face_button]
+		face_button.text = str(built["text"])
+		face_button.icon = built["icon"]
+		face_button.flat = bool(built["flat"])
+		if not _text_labels:
+			continue
+		face_button.flat = face_button != _add_event_button
+		if face_button == _menu_button:
+			face_button.text = "%s ▾" % EventSheetL10n.translate("Sheet")
+		elif face_button == _save_button:
+			face_button.text = EventSheetL10n.translate("Save")
+			face_button.icon = null
+		elif face_button in [_add_event_button, _add_condition_button, _add_action_button]:
+			face_button.icon = null
+
+
+## The open tab's top edge in the theme's accent, drawn by the tab bar's own selected-tab style with
+## a two-pixel top border - a stylebox, never a control. A clear token takes the override off, so
+## every theme that does not state the edge keeps the tab exactly as the editor draws it.
+func _apply_tab_edge() -> void:
+	var tab_bar: TabBar = _dock._tab_bar if _dock != null else null
+	if tab_bar == null:
+		return
+	tab_bar.remove_theme_stylebox_override("tab_selected")
+	var edge: Color = EventSheetActiveTheme.chrome().active_tab_edge_color
+	if edge.a <= 0.0:
+		return
+	var base: StyleBox = tab_bar.get_theme_stylebox("tab_selected")
+	var edged: StyleBoxFlat = null
+	if base is StyleBoxFlat:
+		edged = (base as StyleBoxFlat).duplicate() as StyleBoxFlat
+	else:
+		edged = StyleBoxFlat.new()
+		edged.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+		if base != null:
+			for side: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+				edged.set_content_margin(side, base.get_content_margin(side))
+	edged.border_width_left = 0
+	edged.border_width_right = 0
+	edged.border_width_bottom = 0
+	edged.border_width_top = EventSheetPalette.scaled(2)
+	edged.border_color = edge
+	tab_bar.add_theme_stylebox_override("tab_selected", edged)
+
+
+## The Sentences menu: the three variable-row modes as a radio (ticked on the one every pane reads
+## at), then Words…. Refilled on every open, so the tick always shows the live dial.
+func _build_sentences_menu(toolbar: HFlowContainer) -> MenuButton:
+	var sentences: MenuButton = MenuButton.new()
+	sentences.name = "EventSheetSentencesMenu"
+	sentences.text = "%s ▾" % EventSheetL10n.translate("Sentences")
+	sentences.tooltip_text = EventSheetL10n.translate(
+		"How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.")
+	sentences.set_meta(LABEL_META_KEY, "Sentences")
+	sentences.flat = true
+	# Tab reaches it, like the Menu: a MenuButton otherwise defaults to accessibility-only focus.
+	sentences.focus_mode = Control.FOCUS_ALL
+	var popup: PopupMenu = sentences.get_popup()
+	popup.about_to_popup.connect(func() -> void: _fill_sentences_menu(popup))
+	popup.id_pressed.connect(func(id: int) -> void:
+		if id == SENTENCES_WORDS_ID:
+			_dock.open_words_settings()
+		elif id >= 0 and id < EventSheetCodeEcho.VIEW_LABELS.size():
+			_dock.set_variable_row_view(id))
+	toolbar.add_child(sentences)
+	return sentences
+
+
+## The Sentences menu's items, rebuilt on every open: a heading, the variable-row modes as a radio
+## ticked on the one the active pane reads at, then Words….
+func _fill_sentences_menu(popup: PopupMenu) -> void:
+	popup.clear()
+	popup.add_separator(EventSheetL10n.translate("Variable rows"))
+	var active_view_mode: int = (_dock.variable_row_view() if _dock != null
+		else EventSheetCodeEcho.VIEW_BOTH)
+	for mode: int in EventSheetCodeEcho.VIEW_LABELS.size():
+		popup.add_radio_check_item(EventSheetL10n.translate(EventSheetCodeEcho.VIEW_LABELS[mode]), mode)
+		popup.set_item_checked(popup.get_item_index(mode), mode == active_view_mode)
+	popup.add_separator()
+	popup.add_item(EventSheetL10n.translate("Words…"), SENTENCES_WORDS_ID)
 
 
 ## Undo and Redo grey out when there is nothing to undo or redo, the way Godot's own toolbars do.

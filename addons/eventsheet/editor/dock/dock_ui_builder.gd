@@ -50,6 +50,8 @@ func build_ui() -> void:
 	_dock._tab_bar.tab_selected.connect(_dock._on_tab_selected)
 	_dock._tab_bar.tab_close_pressed.connect(_dock._on_tab_close_pressed)
 	root.add_child(_dock._tab_bar)
+	# The open tab's edge is a theme token; the strip was dressed before the tab bar existed.
+	_dock._menu_bar.apply_theme_chrome()
 
 	_dock._title_strip = HBoxContainer.new()
 	_dock._title_strip.name = "EventSheetTitleStrip"

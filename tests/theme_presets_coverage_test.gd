@@ -45,10 +45,12 @@ const PRESET_PATHS := [
 
 ## The derived tokens the shared rule deliberately leaves at nothing, in enumeration order. Clear is
 ## a MEANING here, not a gap: a clear pattern chip follows the plain chip it sits beside, and a clear
-## Manual page sits on the editor's own paper the way the Manual ships. Adding a token here is a
+## Manual page sits on the editor's own paper the way the Manual ships, and a clear tab edge leaves
+## the open tab exactly as the editor draws it. Adding a token here is a
 ## design decision - the default is that the rule dresses it.
 const CLEAR_BY_DESIGN := [
 	"pattern_chip_background_color", "pattern_chip_foreground_color",
+	"active_tab_edge_color",
 	"page_background_color", "search_hit_color",
 	"contents_active_background_color", "contents_active_text_color",
 ]

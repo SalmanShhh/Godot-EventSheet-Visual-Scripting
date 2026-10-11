@@ -20,6 +20,7 @@ door inside the sheet itself. A button you cannot see still answers to its key.
 - [The play button, and which run it does](#the-play-button-and-which-run-it-does)
 - [Adding lives in the sheet](#adding-lives-in-the-sheet)
 - [The chevron, and View > Full toolbar](#the-chevron-and-view--full-toolbar)
+- [Text labels: the strip as words](#text-labels-the-strip-as-words)
 - [Where did it go? The whole table](#where-did-it-go-the-whole-table)
 - [What Simple Mode actually does](#what-simple-mode-actually-does)
 - [The one-time note](#the-one-time-note)
@@ -69,7 +70,7 @@ One button, five groups, then two doors at its foot:
 | **Sheet** | The file's own life: New, Open, Save, Save As, Export GDScript, Import event sheet, Save as Text, Sheet Type, shared sheets, Manage Includes, the addon / editor-tool / custom-resource starters, Teach a Verb, Inspector Designer, Export Addon, Publish New Version, Name Raw Calls, Health, Export (image / PDF / Markdown), Workspaces, Start page | 23 |
 | **Add** | The whole authoring vocabulary: Event, Condition, Action, Group, Comment (each printing its key), signals, the three kinds of variable, the Declare submenu, functions, includes, sub-events, Or, Else, Pattern, a code block, and one entry per registered custom block kind | 20 |
 | **Edit** | Copy, Paste, Undo, Redo, Extract Selection to Include, Find References, Generate from Description | 7 |
-| **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Project bar, Full toolbar | 50 |
+| **View** | Everything about what is on screen: the panels and lenses, zoom, split and detached views, Sheet theme, Load / Reload Theme, the Theme Editor, Language, Simple Mode, Familiar Words, the Outline, the Sheet Map, the Debugger, Saved Views, Arrange by, the collapse sweeps, Add toolbar, Project bar, Full toolbar, Text labels | 50 |
 | **Tools** | Debug and project work: breakpoints, Live Values, Event Trace, Bookmarks, Find in Project, Project View, Project Doctor, Check Sheet for Errors, the Studios, Lift Report and Workbench, the Addon manager, Compare With, Loose Ends, Find Repeated Rows, Run Tests, the Replay Recorder, Welcome, the Tour, Keyboard Shortcuts, Words | 37 |
 | _(foot)_ | **Manual...** and **What's new...**, the two doors a reader looks for by name rather than by group | 2 |
 
@@ -180,6 +181,27 @@ The chevron and **Menu > View > Full toolbar** are one choice shown twice: use e
 follows. The choice is remembered per project, and rest is the default for every project, including
 one that already existed before the strip started resting. There was no resting/expanded choice to
 migrate, so nothing was.
+
+## Text labels: the strip as words
+
+**Menu > View > Text labels** lays the resting strip out as words instead of icons: **Sheet**
+(the same Menu, under its first group's name), **Save**, the Undo and Redo arrows, the play button,
+**Add Event** as the one filled button, **Add Condition** and **Add Action** as plain words, the
+Quick add field moved to the right edge to be the strip's Find, and a **Sentences** menu beside it.
+
+**Sentences** holds two choices that already exist elsewhere: how a variable row reads (the
+sentence on its own, the sentence with its GDScript declaration beside it, or the declaration
+alone - the same dial as *Menu > View > Variable rows*) and **Words...**, the page of every word the
+sheet lets you choose.
+
+Until you pick, the sheet's theme decides: the **Editor Native** starter arrives with text labels
+on, and every other theme keeps the icon-led strip. Once you tick or untick Text labels, your
+choice is remembered for the project and wins over every theme. The chevron and Full toolbar work
+the same in both layouts.
+
+The Editor Native starter also draws a thin accent line along the top of the open sheet's tab. It is
+one colour in the theme (*the open tab's edge*), clear in every other theme, so their tabs look
+exactly as the editor draws them.
 
 ## Where did it go? The whole table
 
