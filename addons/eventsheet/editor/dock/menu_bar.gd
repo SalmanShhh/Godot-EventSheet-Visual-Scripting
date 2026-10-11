@@ -132,6 +132,11 @@ var _add_event_button: Button = null
 var _add_condition_button: Button = null
 var _add_action_button: Button = null
 var _find_spacer: Control = null
+## The rule between Sheet and Save, which only the Text labels layout shows.
+var _sheet_separator: Control = null
+## The magnifier at the Find field's left edge in the Text labels layout - a mark drawn inside the
+## field (a LineEdit only offers an icon at its right), so the strip gains no child for it.
+var _find_mark: TextureRect = null
 var _sentences_button: MenuButton = null
 ## The play slot and the Find field, which the Text labels layout re-dresses: the design's word-led
 ## strip has no play button at rest (it stays in the full strip, and Godot's own play bar keeps
@@ -195,6 +200,9 @@ func build(root: Node) -> void:
 	menu_button.focus_mode = Control.FOCUS_ALL
 	var menu_popup: PopupMenu = menu_button.get_popup()
 	_toolbar.add_child(menu_button)
+	_add_toolbar_separator(_toolbar)
+	_sheet_separator = _toolbar.get_child(_toolbar.get_child_count() - 1) as Control
+	_sheet_separator.name = "EventSheetSheetSeparator"
 
 	# Sheet ▸ - file lifecycle + identity (low frequency, one menu).
 	var sheet_popup: PopupMenu = PopupMenu.new()
@@ -1365,14 +1373,16 @@ func _toggle_full_toolbar_from_chevron() -> void:
 func _apply_toolbar_expansion() -> void:
 	if _toolbar_ref == null:
 		return
-	var text_extras: Array = [_add_separator, _add_event_button, _add_condition_button,
+	var text_extras: Array = [_sheet_separator, _add_separator, _add_event_button, _add_condition_button,
 		_add_action_button, _find_spacer, _sentences_button]
 	for child: Node in _toolbar_ref.get_children():
 		var control: Control = child as Control
 		if control == null:
 			continue
 		# The word-led strip rests without the play button; the full strip still shows it.
-		var resting: bool = _resting_controls.has(control) and not (_text_labels and control == _play_slot)
+		# The word-led strip rests without the play button and the chevron; the full strip still shows
+		# both, and View > Full toolbar is the door to it.
+		var resting: bool = _resting_controls.has(control) 			and not (_text_labels and (control == _play_slot or control == _expander))
 		control.visible = (_full_toolbar or resting
 			or (_text_labels and text_extras.has(control)))
 	if _find_spacer != null:
@@ -1480,11 +1490,45 @@ func _apply_find_face() -> void:
 	_find_field.placeholder_text = str(_find_built["placeholder"])
 	_find_field.right_icon = _find_built["icon"]
 	_find_field.custom_minimum_size.x = float(_find_built["width"])
+	for box_name: String in ["normal", "focus", "read_only"]:
+		_find_field.remove_theme_stylebox_override(box_name)
+	if _find_mark != null:
+		_find_mark.visible = false
 	if not _text_labels:
 		return
 	_find_field.placeholder_text = EventSheetL10n.translate("Find")
-	_find_field.right_icon = ACEPickerDialog.editor_icon("Search")
 	_find_field.custom_minimum_size.x = float(EventSheetPalette.scaled(FIND_FIELD_WIDTH))
+	# The magnifier leads the word, the way a search field reads: a mark inside the field's left
+	# edge, with the field's own boxes widened on that side so the typed text starts after it.
+	var icon: Texture2D = ACEPickerDialog.editor_icon("Search")
+	if icon == null:
+		_find_field.right_icon = icon
+		return
+	_find_field.right_icon = null
+	var mark_size: float = float(EventSheetPalette.scaled(12))
+	var inset: float = float(EventSheetPalette.scaled(6))
+	if _find_mark == null:
+		_find_mark = TextureRect.new()
+		_find_mark.name = "EventSheetFindMark"
+		_find_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_find_mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_find_mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_find_field.add_child(_find_mark, false, Node.INTERNAL_MODE_FRONT)
+	_find_mark.texture = icon
+	_find_mark.modulate = Color(1.0, 1.0, 1.0, 0.6)
+	_find_mark.set_anchors_preset(Control.PRESET_CENTER_LEFT)
+	_find_mark.offset_left = inset
+	_find_mark.offset_right = inset + mark_size
+	_find_mark.offset_top = -mark_size * 0.5
+	_find_mark.offset_bottom = mark_size * 0.5
+	_find_mark.visible = true
+	for box_name: String in ["normal", "focus", "read_only"]:
+		var base: StyleBox = _find_field.get_theme_stylebox(box_name)
+		if base == null:
+			continue
+		var widened: StyleBox = base.duplicate() as StyleBox
+		widened.content_margin_left = maxf(base.get_margin(SIDE_LEFT), 0.0) + inset + mark_size
+		_find_field.add_theme_stylebox_override(box_name, widened)
 
 
 ## Where the open-sheet tabs sit: over the strip when the active theme stacks them that way

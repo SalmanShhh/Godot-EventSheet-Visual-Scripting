@@ -82,6 +82,7 @@ script = ExtResource("3_rj62w")
 sheet_background_color = Color(0.18039216, 0.20392157, 0.2509804, 1)
 inspector_variable_rows = false
 hide_compiler_variables = false
+variable_row_cards = false
 inspector_class_head = false
 add_lines_on_hover = false
 comment_notes = false

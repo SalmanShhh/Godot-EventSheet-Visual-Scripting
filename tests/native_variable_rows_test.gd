@@ -55,16 +55,20 @@ static func _test_tokens() -> bool:
 	var others: Array = []
 	for path: String in OTHER_THEMES:
 		var style: EventSheetEventStyle = (load(path) as EventSheetEditorStyle).get_event_style()
-		others.append([path.get_file(), style.inspector_variable_rows, style.hide_compiler_variables])
+		others.append([path.get_file(), style.inspector_variable_rows, style.hide_compiler_variables,
+			style.variable_row_cards])
 	var expected_others: Array = []
 	for path: String in OTHER_THEMES:
-		expected_others.append([path.get_file(), false, false])
+		expected_others.append([path.get_file(), false, false, false])
 	return SUPPORT.pins(TEST_NAME, [
 		["the tokens default off", [EventSheetEventStyle.new().inspector_variable_rows,
-			EventSheetEventStyle.new().hide_compiler_variables], [false, false]],
-		["the starter states both on", [native.inspector_variable_rows, native.hide_compiler_variables], [true, true]],
-		["and so does the rule it is built by", [built.inspector_variable_rows, built.hide_compiler_variables], [true, true]],
-		["every other shipped theme states both off", others, expected_others],
+			EventSheetEventStyle.new().hide_compiler_variables, EventSheetEventStyle.new().variable_row_cards],
+			[false, false, false]],
+		["the starter states them on", [native.inspector_variable_rows, native.hide_compiler_variables,
+			native.variable_row_cards], [true, true, true]],
+		["and so does the rule it is built by", [built.inspector_variable_rows, built.hide_compiler_variables,
+			built.variable_row_cards], [true, true, true]],
+		["every other shipped theme states them off", others, expected_others],
 	])
 
 
@@ -88,6 +92,14 @@ static func _test_readings() -> bool:
 		["a computed colour is not read", NativeVariableMarks.color_of("Color(r, g, b)"), null],
 		["a bookkeeping member", NativeVariableMarks.is_compiler_variable("__every_ps_spawn"), true],
 		["an author's member", NativeVariableMarks.is_compiler_variable("_private"), false],
+		# The rule is the prefix, stated in the token's description: the compiler and the packs mint too
+		# many `__` names to list, so an author's own `__cache` is left out of the rows as well.
+		["an author's double-underscore member counts as bookkeeping", NativeVariableMarks.is_compiler_variable("__cache"), true],
+		["an enum value reads as its choice", NativeVariableMarks.enum_choice("GateState", "GateState.CLOSED"), "Closed"],
+		["in the Inspector's capitals", NativeVariableMarks.enum_choice("GateState", "GateState.HALF_OPEN"), "Half Open"],
+		["another type's value is left as written", NativeVariableMarks.enum_choice("GateState", "Mood.CALM"), "Mood.CALM"],
+		["a computed value too", NativeVariableMarks.enum_choice("GateState", "GateState.CLOSED if a else b"),
+			"GateState.CLOSED if a else b"],
 	])
 
 
@@ -121,6 +133,9 @@ static func _test_native_rows() -> bool:
 			str(speed_name.metadata.get("hover_note", "")).contains(EventSheetVariableSentence.scope_word(
 				EventSheetVariableSentence.SCOPE_INSTANCE)), true],
 		["the compiler's bookkeeping member is not listed", _row_named(viewport, "__every_tick") == null, true],
+		["each row is its own card: 28 px and a 6 px gap over the 24 px line",
+			[_row_named(viewport, "open_speed").variable_card, _row_named(viewport, "open_speed").height_scale],
+			[true, 34.0 / 24.0]],
 	])
 	viewport.free()
 	return ok
@@ -137,6 +152,8 @@ static func _test_classic_rows_unchanged() -> bool:
 		["classic: the colour keeps its numbers",
 			_span_with(_row_named(viewport, "glow_color"), "variable_value_span").text, "(1.0, 0.702, 0.2784, 1.0)"],
 		["classic: the bookkeeping member is listed", _row_named(viewport, "__every_tick") != null, true],
+		["classic: the row is no card and keeps its line", [_row_named(viewport, "open_speed").variable_card,
+			_row_named(viewport, "open_speed").height_scale], [false, 1.0]],
 	])
 	viewport.free()
 	return ok

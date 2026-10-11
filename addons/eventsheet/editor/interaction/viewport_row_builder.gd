@@ -67,6 +67,9 @@ const HEAD_BAND_UID_PREFIX := "sheet_head_"
 ## little taller than a row.
 const INCLUDE_BAR_RADIUS := 16.0
 const INCLUDE_BAR_HEIGHT_SCALE := 1.3
+## A variable card's row (variable_row_cards): the 28 px card and the 6 px gap under it, over the
+## 24 px line the row would otherwise take.
+const VARIABLE_CARD_ROW_SCALE := (28.0 + 6.0) / 24.0
 
 ## The bars an opened pack's head builds, each named once here so the reading that gathers them into
 ## Settings / Verbs / How it works / Internal state asks for them by name rather than by a literal
@@ -8113,7 +8116,9 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 			"text_color": reading_style.muted_text_color,
 			"hover_note": EventSheetL10n.translate("What this group holds.")
 		}))
-	if group.runtime_toggleable:
+	# The two-line head is count then tick, nothing between: the ring's fact rides the tick's hover
+	# instead, and the group's Edit dialog still switches it.
+	if group.runtime_toggleable and not active_tick:
 		status.append(_make_span(GROUP_TOGGLEABLE_GLYPH, SemanticSpan.SpanType.KEYWORD, {
 			"badge": true,
 			"badge_style": "glyph",
@@ -8148,6 +8153,10 @@ func _group_head_status_spans(group: EventGroup, folded: bool,
 	if active_tick:
 		var switch_meta: Dictionary = status[status.size() - 1].metadata
 		switch_meta["group_active_tick"] = true
+		if group.runtime_toggleable:
+			switch_meta["hover_note"] = "%s
+%s" % [str(switch_meta.get("hover_note", "")),
+				EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")]
 		switch_meta["badge_fixed_width"] = NativeHeadMarks.active_tick_width(_viewport._get_font(), _viewport._get_font_size())
 	return status
 
@@ -11351,6 +11360,11 @@ func _build_variable_row(
 	# note and the icon tiles - no kind mark, no scope word, no code echo. A local inside an event is
 	# no property the Inspector lists, so it keeps the sentence row the event around it reads in.
 	var inspector_rows: bool = _viewport._get_event_style().inspector_variable_rows and scope_label != "local"
+	# And as its own card when the theme says so: the row grows to hold the card and the gap under
+	# it, and the words re-centre inside - nothing about them moves.
+	if inspector_rows and _viewport._get_event_style().variable_row_cards:
+		row_data.variable_card = true
+		row_data.height_scale = VARIABLE_CARD_ROW_SCALE
 	# The type word a READER needs, which is not always the declared one: `const SPEED := 300.0`
 	# declares nothing, so the word comes from the value.
 	var type_word: String = _reading_type_word(
@@ -11597,6 +11611,13 @@ func _build_variable_row(
 			value_meta.erase("swatch_color")
 			value_meta["value_glyph"] = NativeVariableMarks.GLYPH_COLOR
 			value_meta["value_swatch"] = colour as Color
+	# The Inspector lists an enum's value as the choice alone ("Closed"), the type already standing at
+	# the row's left: `GateState.CLOSED` loses its repeated type name and reads in the Inspector's capitals.
+	if inspector_rows and type_family == NativeVariableMarks.FAMILY_ENUM:
+		var choice: String = NativeVariableMarks.enum_choice(type_name, value_text)
+		if choice != value_text:
+			value_meta["edit_text"] = value_text
+			value_text = choice
 	if not hide_value:
 		row_data.spans.append(
 			_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
@@ -13053,7 +13074,23 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# one muted note, because blank alone cannot say WHICH tick. Display only: the row still
 		# carries its trigger id and still compiles to exactly the handler it came from.
 		var blank_note: String = str(_blank_tick_reading(event_row).get("note", ""))
-		if not blank_note.is_empty():
+		# A theme that draws the trigger icon in the gutter (trigger_icon_in_gutter) has an object
+		# column on every line, so the physics note reads as the trigger cell its neighbours wear -
+		# "System | Every tick (physics)" - instead of a bare lowercase note with no column.
+		var native_note: bool = event_style != null and event_style.trigger_icon_in_gutter
+		if not blank_note.is_empty() and native_note:
+			spans.append(_make_span(
+				EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row)),
+				SemanticSpan.SpanType.CONDITION, {
+					"lane": "condition",
+					"kind": "trigger",
+					"ace_index": 0,
+					"chip": true,
+					"line_index": condition_line_index,
+					"object_label": _handler_object_label(event_row),
+					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
+				}.merged(condition_style_meta, true)))
+		elif not blank_note.is_empty():
 			spans.append(_make_span(blank_note, SemanticSpan.SpanType.COMMENT, {
 				"lane": "condition",
 				"kind": "trigger",

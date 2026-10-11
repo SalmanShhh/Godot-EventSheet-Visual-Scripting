@@ -362,6 +362,20 @@ static func inspector_name(identifier: String) -> String:
 	return shown if not shown.is_empty() else identifier
 
 
+## An enum value as the Inspector lists it: `GateState.CLOSED` on a `GateState` variable reads
+## "Closed". A value that does not start with its own type's name (a computed one, another enum's)
+## is returned as it was.
+static func enum_choice(type_name: String, value_text: String) -> String:
+	var prefix: String = type_name.strip_edges() + "."
+	var text: String = value_text.strip_edges()
+	if prefix.length() < 2 or not text.begins_with(prefix):
+		return value_text
+	var choice: String = text.substr(prefix.length())
+	if choice.is_empty() or not choice.is_valid_identifier():
+		return value_text
+	return inspector_name(choice)
+
+
 ## The colour a value holds, whichever way it was written - a real Color, a `Color.RED` constant, a
 ## `Color(1, 0.7, 0.3)` literal, a `Color("#ffb347")` call - or null when it is not one the row can
 ## read without running anything.

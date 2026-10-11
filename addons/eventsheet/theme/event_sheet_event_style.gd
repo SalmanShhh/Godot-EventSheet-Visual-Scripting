@@ -137,8 +137,13 @@ extends Resource
 @export var inspector_variable_rows: bool = false
 ## Leaves out of the sheet's variable rows the bookkeeping variables the compiler writes for rows
 ## such as Every X Seconds (names starting with two underscores). They still compile and save; the
-## view only stops listing them. Off lists every variable the file declares.
+## view only stops listing them. The rule is the prefix, so a variable an author named with two
+## underscores is left out too. Off lists every variable the file declares.
 @export var hide_compiler_variables: bool = false
+## Each Inspector-style variable row as its own card: the event card's fill and one-pixel edge with
+## its corner radius, 28 px tall with a 6 px gap to the next, in place of the flat variable wash and
+## its left rule. Drawing only - the row's words do not move. Off keeps the flat washed row.
+@export var variable_row_cards: bool = false
 ## The sheet's head as the Inspector heads a script: ONE class head card - the class icon, the name
 ## in bold, the kind of file, "· extends" and the base in the faint colour, the share mark and who
 ## includes a shared sheet, and the attached scene at the right - with no code echo, no "change…"

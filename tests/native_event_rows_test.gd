@@ -125,6 +125,7 @@ static func _test_shooter_events() -> bool:
 	var shoot_trailing: float = native_view._row_metrics_helper.condition_trailing_width(
 		shoot, 0, native_view._get_font(), native_view._get_font_size())
 	var lane: float = native_view.lane_width_for("condition")
+	var blank_tick: EventRowData = _event_with(native_view, events, "Keep ")
 	var result: bool = SUPPORT.pins(TEST_NAME, [
 		["the text is the design's 12 px, on 24 px lines", [native_view._get_font_size(), line], [12, 24.0]],
 		["a one-condition, one-action event is one line at rest", at_rest, [24.0, 24.0]],
@@ -134,18 +135,24 @@ static func _test_shooter_events() -> bool:
 		["no trigger badge in the lane", _texts(jump), "On \"ui_up\" pressed | + Add condition | Jump | + Add action"],
 		["the behaviour names itself in the object column", _object_of(jump, "Jump"), "Platformer"],
 		["the pattern chip yields to the trigger's words", shoot_trailing <= lane * 0.4 + 0.01, true],
+		["a physics tick with no condition reads as its neighbours' trigger cell",
+			[_object_of(blank_tick, "Every tick (physics)"), _texts(blank_tick).contains("every tick (physics)")],
+			["System", false]],
 	])
 	native_view.free()
 	var classic_view: EventSheetViewport = _view_of(SHOOTER, CLASSIC_THEME)
 	var classic_events: Array[int] = _top_level_events(classic_view)
 	var classic_jump: EventRowData = classic_view._row_at(classic_events[0])
 	var classic_rest: float = classic_view._get_row_height(classic_events[0])
+	var classic_blank_tick: EventRowData = _event_with(classic_view, classic_events, "Keep ")
 	classic_view._set_hover_state(classic_events[0], -1)
 	result = SUPPORT.pins(TEST_NAME, [
 		["Classic Sheet keeps its font, its trigger badge and the behaviour in the sentence",
 			[classic_view._get_font_size(), _texts(classic_jump)],
 			[16, "⌨ | On \"ui_up\" pressed | + Add condition | Platformer  Jump | + Add action"]],
 		["and the script's object in the column", _object_of(classic_jump, "Platformer"), "PlatformerShooter"],
+		["and the blank physics tick as its muted note, no column", [_texts(classic_blank_tick).begins_with(
+			"every tick (physics)"), _object_of(classic_blank_tick, "every tick")], [true, ""]],
 		["and the add line reserved, hovered or not",
 			[classic_rest, classic_view._get_row_height(classic_events[0])], [64.0, 64.0]],
 	]) and result
@@ -198,6 +205,15 @@ static func _top_level_events(view: EventSheetViewport) -> Array[int]:
 			view._ensure_event_spans(row_data)
 			found.append(index)
 	return found
+
+
+## The first top-level event whose words contain `text_part`.
+static func _event_with(view: EventSheetViewport, events: Array[int], text_part: String) -> EventRowData:
+	for index: int in events:
+		var row_data: EventRowData = view._row_at(index)
+		if _texts(row_data).contains(text_part):
+			return row_data
+	return null
 
 
 static func _object_of(row_data: EventRowData, text_part: String) -> String:

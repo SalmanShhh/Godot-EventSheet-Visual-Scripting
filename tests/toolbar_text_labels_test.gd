@@ -1,9 +1,9 @@
 # Godot EventSheets - the strip laid out as words, and the open tab's edge
 #
-# View > Text labels lays the resting strip out as words: Sheet, Save, the Undo and Redo arrows, Add
-# Event as the one filled button, Add Condition, Add Action, the Find field ("Find", 180 px) pushed to
-# the right edge and a Sentences menu holding the variable-row dial and Words. The play button rests
-# only on the full strip there. Nothing is added or removed - the same controls are shown, hidden and
+# View > Text labels lays the resting strip out as words: Sheet, a rule, Save, the Undo and Redo
+# arrows, Add Event as the one filled button, Add Condition, Add Action, the Find field ("Find",
+# 180 px, the magnifier at its left) pushed to the right edge and a Sentences menu holding the
+# variable-row dial and Words. The play button and the chevron rest only on the full strip there. Nothing is added or removed - the same controls are shown, hidden and
 # re-faced - so every key, id and handler holds.
 #
 # Pinned here as values:
@@ -30,10 +30,10 @@ const ICON_ROW := [
 	"EventSheetToolbarExpander",
 ]
 const TEXT_ROW := [
-	"EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton", "EventSheetRedoButton",
+	"EventSheetMenu", "EventSheetSheetSeparator", "EventSheetSaveButton", "EventSheetUndoButton", "EventSheetRedoButton",
 	"EventSheetAddSeparator", "Add Event", "Add Condition", "Add Action",
 	"EventSheetFindSpacer", "EventSheetQuickAdd", "EventSheetMomentSegment",
-	"EventSheetSentencesMenu", "EventSheetToolbarExpander",
+	"EventSheetSentencesMenu",
 ]
 
 
@@ -85,6 +85,11 @@ static func _test_the_starter_opens_on_words() -> bool:
 		["the play button rests on the full strip only",
 			(editor._toolbar.find_child("EventSheetPlaySlot", false, false) as Control).visible, false],
 		["the Find field reads Find", editor._quick_add_edit.placeholder_text, "Find"],
+		["the chevron rests on the full strip only", _button(editor, "EventSheetToolbarExpander").visible, false],
+		["the magnifier is not on the field's right", editor._quick_add_edit.right_icon == null
+			or editor._menu_bar._find_mark == null, true],
+		["it leads the word when the editor lends one", editor._menu_bar._find_mark == null
+			or editor._menu_bar._find_mark.offset_left < editor._quick_add_edit.get_theme_stylebox("normal").content_margin_left, true],
 		["at the design's width", editor._quick_add_edit.custom_minimum_size.x,
 			float(EventSheetPalette.scaled(EventSheetMenuBar.FIND_FIELD_WIDTH))],
 		["the Find field is pushed to the right edge",

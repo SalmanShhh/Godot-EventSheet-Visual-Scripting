@@ -42,6 +42,8 @@ const SWATCH_MIN_BOX := 8.0
 const SWATCH_FONT_RATIO := 0.7
 # The rule down the left edge of a variable row, in logical pixels.
 const VARIABLE_ROW_RULE_WIDTH := 2.0
+## How much of a variable card's row the card fills: 28 px of the 34 the row takes, the rest the gap.
+const VARIABLE_CARD_FILL := 28.0 / 34.0
 ## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
 ## lilac, so the break reads without competing with the rows it separates.
 const BLOCK_HAIRLINE_ALPHA := 0.45
@@ -76,6 +78,8 @@ const DOOR_RULE_WIDTH := 1.0
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
 static var _icon_plate_style: StyleBoxFlat = null
+# The variable cards' boxes, one per fill / edge / radius (a handful per session).
+static var _variable_card_boxes: Dictionary = {}
 
 # Stamped by the viewport ONCE per _draw frame (it is constant across the frame): the
 # per-row alternative - a dynamic control.get() in the draw loop - is exactly the lookup
@@ -647,7 +651,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		_draw_dashed_outline(control, row_rect.grow(-1.5), row_data.outline_color)
 	elif row_data.outline_color.a > 0.01 and row_data.outline_radius <= 0.0:
 		control.draw_rect(row_rect.grow(-1.0), row_data.outline_color, false, 2.0)
-	if row_data.variable_row:
+	if row_data.variable_card and event_style != null:
+		_draw_variable_card(control, row_rect, event_style)
+	elif row_data.variable_row:
 		_draw_variable_row_wash(control, row_rect, reading_style)
 	if row_data.rule_below:
 		# The hairline that closes a block (the globals this sheet only uses, above the ones it
@@ -2150,6 +2156,26 @@ func _draw_variable_row_wash(control: Control, row_rect: Rect2, reading: EventSh
 		reading.variable_row_rule_color,
 		true
 	)
+
+
+## A variable row as its own card (variable_row_cards): the event card's fill and one-pixel edge with
+## its corner radius, inset top and bottom by half the gap so two cards stand apart. One StyleBoxFlat
+## per colour set, so a frame allocates nothing.
+func _draw_variable_card(control: Control, row_rect: Rect2, event_style: EventSheetEventStyle) -> void:
+	var gap: float = row_rect.size.y * (1.0 - VARIABLE_CARD_FILL) * 0.5
+	var card: Rect2 = Rect2(row_rect.position + Vector2(0.0, gap), Vector2(row_rect.size.x, row_rect.size.y - gap * 2.0))
+	var key: String = "%s/%s/%d" % [event_style.row_background_color.to_html(), event_style.row_border_color.to_html(),
+		event_style.event_corner_radius]
+	var box: StyleBoxFlat = _variable_card_boxes.get(key)
+	if box == null:
+		box = StyleBoxFlat.new()
+		box.bg_color = event_style.row_background_color
+		box.border_color = event_style.row_border_color
+		box.set_border_width_all(1)
+		box.set_corner_radius_all(event_style.event_corner_radius)
+		box.anti_aliasing = false
+		_variable_card_boxes[key] = box
+	control.draw_style_box(box, card)
 
 
 func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:

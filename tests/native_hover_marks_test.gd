@@ -80,7 +80,14 @@ static func _test_selected_gutter() -> bool:
 static func _test_two_line_group_head() -> bool:
 	var native: Dictionary = _group_head(NATIVE_THEME)
 	var classic: Dictionary = _group_head(CLASSIC_THEME)
+	var native_switchable: Dictionary = _group_head(NATIVE_THEME, true)
+	var classic_switchable: Dictionary = _group_head(CLASSIC_THEME, true)
 	return SUPPORT.pins(TEST_NAME, [
+		["a switchable group's two-line head is count then tick, no ring between",
+			native_switchable.get("ring"), false],
+		["the tick's hover says it can be switched", str(native_switchable.get("tick_hover", "")).contains(
+			EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")), true],
+		["the one-line head keeps its ring", classic_switchable.get("ring"), true],
 		["the starter asks for the two-line head", (load(NATIVE_THEME) as EventSheetEditorStyle).get_event_style().group_head_two_line, true],
 		["the derived native look asks for it too", EventSheetEditorThemeDeriver.native_style(
 			Color("#363d4a")).get_event_style().group_head_two_line, true],
@@ -129,12 +136,13 @@ static func _test_status_counts() -> bool:
 
 ## The laid-out head of one group with a description under `theme_path`: where its name and its
 ## description start, which line the description is on, how the switch is drawn, and its words.
-static func _group_head(theme_path: String) -> Dictionary:
+static func _group_head(theme_path: String, toggleable: bool = false) -> Dictionary:
 	var sheet := EventSheetResource.new()
 	sheet.editor_style = load(theme_path) as EventSheetEditorStyle
 	var group := EventGroup.new()
 	group.name = "Gate Movement"
 	group.description = "Opens the gate and reports the space key"
+	group.runtime_toggleable = toggleable
 	var event := EventRow.new()
 	event.trigger_id = "OnProcess"
 	group.events.append(event)
@@ -158,6 +166,7 @@ static func _group_head(theme_path: String) -> Dictionary:
 		found["font_size"] = font_size
 		found["description_italic"] = false
 		found["active_tick"] = false
+		found["ring"] = false
 		for span: SemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata
 			texts.append(span.text)
@@ -175,7 +184,10 @@ static func _group_head(theme_path: String) -> Dictionary:
 				found["description_x"] = span.rect.position.x
 				found["description_line"] = int(metadata.get("line_index", 0))
 				found["description_italic"] = bool(metadata.get("italic_note", false))
+			if str(metadata.get("group_action", "")) == "toggleable":
+				found["ring"] = true
 			if str(metadata.get("group_action", "")) == "enabled":
+				found["tick_hover"] = str(metadata.get("hover_note", ""))
 				found["active_tick"] = bool(metadata.get("group_active_tick", false))
 				found["switch_width"] = float(metadata.get("badge_fixed_width", 0.0))
 		found["texts"] = texts

@@ -33,6 +33,9 @@ const FOLLOW_SETTING := "eventsheets/editor/follow_scene_selection"
 ## about. A sentence rather than a silent filter: the reader chose a node in another dock, and
 ## rewriting what their sheet shows because of it would be the sheet taking a liberty.
 const FILTER_OFFER := "Filter events to %s"
+## The objects a row can be about that are never a node in a scene: the sheet's own System and the
+## input devices. A row about one of them has nothing in the Scene dock to land on.
+const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 
 var _dock: Control = null
 var _selection: EditorSelection = null
@@ -127,6 +130,12 @@ static func object_label_for_row(row_data: EventRowData) -> String:
 	return ""
 
 
+## Whether an object label names something no scene holds (System, Keyboard, Mouse, Gamepad, Touch,
+## Input), so selecting its row leaves the Scene dock alone.
+static func is_scene_free_object(label: String) -> bool:
+	return NativeRowMarks.OBJECT_GLYPHS.has(label.strip_edges())
+
+
 ## Scene dock -> sheet. Highlights the object on the Object bar and offers the filter; it never
 ## applies the filter itself, because the reader clicked in another dock and did not ask this one
 ## to hide anything.
@@ -170,9 +179,11 @@ func follow_row(row_data: EventRowData) -> void:
 	if not Engine.is_editor_hint():
 		return
 	var label: String = object_label_for_row(row_data)
-	if label.is_empty():
+	if label.is_empty() or is_scene_free_object(label):
 		return
 	_crossing = true
 	_driven_label = label
-	_dock.select_object_in_scene(label)
+	# Following is a courtesy the reader did not ask for: a node the open scene does not hold is
+	# simply not followed, never reported as a problem.
+	_dock.select_object_in_scene(label, true)
 	_crossing = false

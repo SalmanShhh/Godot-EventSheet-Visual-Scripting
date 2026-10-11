@@ -112,6 +112,10 @@ var language_block: bool = false
 # variable tint and rules their left edge, so a declaration never reads as an event. View-only,
 # never serialized.
 var variable_row: bool = false
+# True on a variable row the theme draws as its own small card (variable_row_cards): a rounded fill
+# one step above the sheet, a one-pixel edge and a gap to the next card, in place of the flat wash
+# and its left rule. View-only, never serialized.
+var variable_card: bool = false
 # True on the LAST row of a block that a hairline closes - the globals this sheet only uses,
 # separated from the variables it declares. A rule, not a row: it costs no height, so a block break
 # never pushes the sheet down a line. View-only, never serialized.

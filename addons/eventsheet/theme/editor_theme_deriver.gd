@@ -333,6 +333,7 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# bookkeeping variables among them.
 	event_style.inspector_variable_rows = true
 	event_style.hide_compiler_variables = true
+	event_style.variable_row_cards = true
 	# The design's head: one class head card, no code echoes, no scene-fact or "+ add" rows.
 	event_style.inspector_class_head = true
 	# The design's events: 12 px text on 24 px lines, the trigger icon beside the number in the

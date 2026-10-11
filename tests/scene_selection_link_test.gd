@@ -49,6 +49,12 @@ static func run() -> bool:
 		EventSheetSceneSelectionLink.object_label_for_row(EventRowData.new()), "") and ok
 	ok = _check("no row at all selects nothing",
 		EventSheetSceneSelectionLink.object_label_for_row(null), "") and ok
+	# System and the input devices are never nodes, so a row about one is not followed (and so never
+	# reports "No node named System" on the status bar).
+	ok = _check("System is no node to follow",
+		[EventSheetSceneSelectionLink.is_scene_free_object("System"),
+			EventSheetSceneSelectionLink.is_scene_free_object("Keyboard"),
+			EventSheetSceneSelectionLink.is_scene_free_object("Enemy")], [true, true, false]) and ok
 
 	# ── The guard: nothing is crossing until something crosses ──
 	var link: EventSheetSceneSelectionLink = EventSheetSceneSelectionLink.new(null)

@@ -5511,7 +5511,9 @@ func _sync_class_head_line_item() -> void:
 	var index: int = _empty_space_context_menu.get_item_index(EMPTY_MENU_CLASS_HEAD_LINE)
 	if index >= 0:
 		_empty_space_context_menu.remove_item(index)
-	if _current_sheet == null or _current_sheet.read_only or _viewport == null 			or not _viewport.get_event_style().inspector_class_head:
+	if _current_sheet == null or _current_sheet.read_only or _viewport == null:
+		return
+	if not _viewport.get_event_style().inspector_class_head:
 		return
 	if not _head_actions.has_lines_to_add():
 		return
@@ -6875,20 +6877,24 @@ func open_object_file_as_sheet(script_path: String) -> void:
 
 ## Reveal an object in the Godot scene dock. Only meaningful while the scene holding it is the
 ## one open in the editor, which is why the popup's button is disabled otherwise; this still guards,
-## because a scene can be closed between the popup opening and the button being pressed.
-func select_object_in_scene(node_path: String) -> void:
+## because a scene can be closed between the popup opening and the button being pressed. `quiet` is
+## for a selection the reader did not ask for (a row followed into the Scene dock): a node that is not
+## there is then left alone without a word on the status bar.
+func select_object_in_scene(node_path: String, quiet: bool = false) -> void:
 	var path: String = node_path.strip_edges().trim_prefix("$").trim_prefix("%")
 	if path.is_empty() or not Engine.has_singleton("EditorInterface"):
 		return
 	var edited_root: Node = EditorInterface.get_edited_scene_root()
 	if edited_root == null:
-		_set_status("Open the scene this object lives in to select it there.", true)
+		if not quiet:
+			_set_status("Open the scene this object lives in to select it there.", true)
 		return
 	var found: Node = edited_root.get_node_or_null(NodePath(path))
 	if found == null:
 		found = edited_root.find_child(path.get_file(), true, false)
 	if found == null:
-		_set_status("No node named %s in the open scene." % path, true)
+		if not quiet:
+			_set_status("No node named %s in the open scene." % path, true)
 		return
 	EditorInterface.get_selection().clear()
 	EditorInterface.get_selection().add_node(found)

@@ -185,6 +185,26 @@ What changed in the build you have installed (v0.18.0), in the words the release
   running editor the slanted words can measure a pixel or two wider than that, so the note lost its
   last letter (\"in units per secon\", \"the space ke\"). The note now draws in its span's room plus
   whatever the slant adds. Drawing only, and only where Editor Native draws italics.
+- **Editor Native follows the design closer: variable cards, enum choices, the strip and the head.**
+  A new token (`variable_row_cards`, on in Editor Native, stated off in every other shipped theme)
+  draws each Inspector-style variable row as its own 28 px card - the event card's fill, its one-pixel
+  edge and corner radius - with a 6 px gap to the next, in place of the flat variable wash; the
+  words do not move. An enum variable reads its choice alone in the Inspector's capitals (\"State =
+  Closed\", not \"GateState.CLOSED\"); typing into it still edits the file's spelling. The two-line
+  group head is the count then the Active tick, with no switch ring between them (its fact moves to
+  the tick's hover; the group's Edit dialog still switches it). A physics tick with no condition of
+  its own reads \"System | Every tick (physics)\" like its neighbours, not a bare lowercase note. The
+  type word keeps its family's colour, a deliberate departure from the design's single grey, so a
+  `Color` and a `float` tell apart at a glance. The double-underscore rule of
+  `hide_compiler_variables` is the prefix itself: the compiler and the packs mint too many such names
+  to list, so a variable an author names `__cache` is left out of the rows too (it still compiles).
+  With View > Text labels on, under any theme, the word-led strip now rests with a rule between Sheet
+  and Save, the magnifier at the Find field's left, and without the play button or the chevron (both
+  stay on the full strip, which View > Full toolbar opens). And a selected row about System, Keyboard,
+  Mouse, Gamepad, Touch or Input no longer reports \"No node named System in the open scene\": those are
+  never nodes, so the Scene dock is left alone, and a row the open scene does not hold is followed
+  quietly rather than flagged in red. Drawing only: compiled output and the default-theme reading are
+  unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 
