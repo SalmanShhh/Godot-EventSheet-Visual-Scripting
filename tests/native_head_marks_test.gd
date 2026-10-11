@@ -1,0 +1,214 @@
+@tool
+extends RefCounted
+# Godot EventSheets - the class head, the Include bar and the inner-class block
+#
+# The head of a sheet reads as ONE class head row (the class, the kind of file, what it extends, a
+# shared sheet's mark and who includes it), each Include as a bar with the line it writes at its
+# right and the included sheet's variables under it, and an inner data class as one framed block
+# whose open form ends in "+ Add field" and in what a class is for. The pins hold:
+#   1. how one line of source reads as a top-level variable, and what does not;
+#   2. a shared sheet's wiring and the project's scripts that include it;
+#   3. which variables of a sheet hold an inner class;
+#   4. the class head row of a shared sheet: its words, the drawn mark, "Included by";
+#   5. the Include bar's shape in a theme that states the Include edge, and in one that does not,
+#      and View > Included Variables turning the rows under it off;
+#   6. the inner-class block's frame, its "+ Add field" and its explainer - and that a read-only
+#      preview gets neither.
+
+const SUPPORT := preload("res://tests/support.gd")
+const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/native_head_marks.gd")
+const TEST_NAME := "native_head_marks_test"
+const SHARED_BASE := "res://tests/fixtures/shared_sheets/fixture_damage_rules.gd"
+const SHARED_HELPER := "res://tests/fixtures/shared_sheets/fixture_pause_handling.gd"
+const INCLUDER := "res://tests/fixtures/shared_sheets/fixture_includer.gd"
+const NATIVE_THEME := "res://addons/eventsheet/themes/editor_native_theme.tres"
+const CLASSIC_THEME := "res://addons/eventsheet/themes/classic_sheet_theme.tres"
+const USERS_FILE := "user://native_head_marks_users.gd"
+
+
+static func run() -> bool:
+	var ok: bool = true
+	ok = _test_declarations() and ok
+	ok = _test_includers() and ok
+	ok = _test_class_users() and ok
+	ok = _test_class_head_of_a_shared_sheet() and ok
+	ok = _test_include_bar_shape() and ok
+	ok = _test_included_variables_toggle() and ok
+	ok = _test_class_block() and ok
+	return ok
+
+
+static func _test_declarations() -> bool:
+	return SUPPORT.pins(TEST_NAME, [
+		["an inferred literal", NativeHeadMarks.declaration_of("var health := 100"),
+			{"name": "health", "type": "int", "value": "100"}],
+		["an exported, typed variable", NativeHeadMarks.declaration_of("@export var speed: float = 2.0"),
+			{"name": "speed", "type": "float", "value": "2.0"}],
+		["a typed list", NativeHeadMarks.declaration_of("var guards: Array[Node2D] = []"),
+			{"name": "guards", "type": "Array[Node2D]", "value": "[]"}],
+		["an object a constructor makes", NativeHeadMarks.declaration_of("var settings := GateSettings.new()"),
+			{"name": "settings", "type": "GateSettings", "value": "GateSettings.new()"}],
+		["a trailing comment is not the value", NativeHeadMarks.declaration_of("var lives: int = 3 # starting lives"),
+			{"name": "lives", "type": "int", "value": "3"}],
+		["an indented line belongs to a function or a class", NativeHeadMarks.declaration_of("\tvar inner := 1"), {}],
+		["a function is not a variable", NativeHeadMarks.declaration_of("func _ready() -> void:"), {}],
+	])
+
+
+static func _test_includers() -> bool:
+	NativeHeadMarks.forget_includers()
+	var variables: Array = []
+	for variable: Dictionary in NativeHeadMarks.shared_variables(SHARED_BASE):
+		variables.append("%s %s %s" % [variable["type"], variable["name"], variable["value"]])
+	return SUPPORT.pins(TEST_NAME, [
+		["the base wiring is read off the file", NativeHeadMarks.shared_wiring(SHARED_BASE), "base_class"],
+		["the helper wiring is read off the file", NativeHeadMarks.shared_wiring(SHARED_HELPER), "helper"],
+		["an ordinary script is not a shared sheet", NativeHeadMarks.shared_wiring(INCLUDER), ""],
+		["the script that extends the base includes it",
+			NativeHeadMarks.includers_of(SHARED_BASE), PackedStringArray(["Fixture Includer"])],
+		["the script that keeps the helper includes it",
+			NativeHeadMarks.includers_of(SHARED_HELPER), PackedStringArray(["Fixture Includer"])],
+		["the variables an includer can use", variables, ["int damage_taken 0"]],
+	])
+
+
+static func _test_class_users() -> bool:
+	var file: FileAccess = FileAccess.open(USERS_FILE, FileAccess.WRITE)
+	file.store_string("extends Node\n\nvar settings: GateSettings\nvar waves: Array[GateSettings] = []\n"
+		+ "var _spare := GateSettings.new()\nvar speed := 2.0\n")
+	file.close()
+	var users: PackedStringArray = NativeHeadMarks.class_users(USERS_FILE, "GateSettings")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(USERS_FILE))
+	return SUPPORT.pins(TEST_NAME, [
+		["a variable, a list and a private one hold the class", users,
+			PackedStringArray(["settings (a variable)", "waves (a list)", "_spare (a variable)"])],
+	])
+
+
+static func _test_class_head_of_a_shared_sheet() -> bool:
+	NativeHeadMarks.forget_includers()
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SHARED_BASE)
+	sheet.read_only = false
+	var view := _view_of(sheet)
+	var head: EventRowData = _row_with_uid(view, "sheet_head_name_")
+	var share_mark: Dictionary = {}
+	for span: SemanticSpan in head.spans if head != null else []:
+		if span.text == "⇆":
+			share_mark = span.metadata as Dictionary
+	var result: bool = SUPPORT.pins(TEST_NAME, [
+		["the class head reads the class, the kind, the base, the mark and who includes it",
+			_texts(head), "▣ | FixtureDamageRules | Script | · extends | Node | change… | ⇆ | Included by Fixture Includer | class_name FixtureDamageRules"],
+		["no extends band of its own", _row_with_uid(view, "sheet_head_extends_") == null, true],
+		["the share mark is a drawn glyph on a tile", [str(share_mark.get("badge_style", "")),
+			bool(share_mark.get("badge_plate", false))], ["glyph", true]],
+	])
+	view.free()
+	return result
+
+
+static func _test_included_variables_toggle() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(INCLUDER)
+	var view := _view_of(sheet)
+	var shown: bool = _row_with_uid(view, "include_variable_FixtureDamageRules_damage_taken") != null
+	view.show_included_variables = false
+	view.rebuild_rows()
+	var hidden: bool = _row_with_uid(view, "include_variable_FixtureDamageRules_damage_taken") == null
+	var bar_kept: bool = _row_with_uid(view, "include_line_FixtureDamageRules") != null
+	view.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["View > Included Variables on lists them, off leaves the bar alone",
+			[shown, hidden, bar_kept], [true, true, true]],
+	])
+
+
+static func _test_include_bar_shape() -> bool:
+	var native_bar: EventRowData = _include_bar(NATIVE_THEME)
+	var classic_bar: EventRowData = _include_bar(CLASSIC_THEME)
+	return SUPPORT.pins(TEST_NAME, [
+		["a theme stating the Include edge draws a rounded bar",
+			[native_bar.outline_radius, native_bar.height_scale, native_bar.outline_color.a > 0.0],
+			[16.0, 1.3, true]],
+		["a theme leaving it clear keeps the flat line",
+			[classic_bar.outline_radius, classic_bar.height_scale, classic_bar.outline_color.a > 0.0],
+			[0.0, 1.0, false]],
+	])
+
+
+static func _test_class_block() -> bool:
+	var editable: EventRowData = _class_block(false)
+	var preview: EventRowData = _class_block(true)
+	var uids: PackedStringArray = PackedStringArray()
+	var texts: PackedStringArray = PackedStringArray()
+	for child: EventRowData in editable.children:
+		uids.append(child.row_uid.get_slice("_Config", 0))
+		texts.append(_texts(child))
+	var last: EventRowData = editable.children[editable.children.size() - 1]
+	return SUPPORT.pins(TEST_NAME, [
+		["the open block: its fields, then Add field, then what a class is for", uids,
+			PackedStringArray(["data_class_field", "data_class_field", "data_class_add_field",
+				"data_class_why", "data_class_why", "data_class_why"])],
+		["the add field words", texts[2], "+ Add field"],
+		["the explainer leads with when to use a class", texts[3], "Use a class when values belong together"],
+		["the head opens the frame and the last row closes it",
+			[editable.frame_top, editable.frame_bottom, last.frame_bottom, last.frame_indent == editable.frame_indent],
+			[true, false, true, true]],
+		["the frame wears the class tokens", editable.frame_color.a > 0.0 and editable.frame_fill.a > 0.0, true],
+		["a read-only preview has its fields and nothing to add", preview.children.size(), 2],
+	])
+
+
+static func _class_block(read_only: bool) -> EventRowData:
+	var sheet := EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.read_only = read_only
+	var raw := RawCodeRow.new()
+	raw.code = "class Config:\n\tvar volume: float = 1.0\n\tvar muted: bool = false"
+	sheet.events.append(raw)
+	var view := _view_of(sheet)
+	var found: EventRowData = null
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource == raw:
+			found = row_data
+	view.free()
+	return found
+
+
+static func _include_bar(theme_path: String) -> EventRowData:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(INCLUDER)
+	sheet.editor_style = load(theme_path) as EventSheetEditorStyle
+	var view := _view_of(sheet)
+	var bar: EventRowData = _row_with_uid(view, "include_line_FixtureDamageRules")
+	view.free()
+	return bar
+
+
+static func _view_of(sheet: EventSheetResource) -> EventSheetViewport:
+	var view := EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(sheet)
+	return view
+
+
+static func _row_with_uid(view: EventSheetViewport, prefix: String) -> EventRowData:
+	var stack: Array = []
+	for entry: Dictionary in view.get_flat_rows():
+		stack.append(entry.get("row"))
+	while not stack.is_empty():
+		var row_data: EventRowData = stack.pop_front()
+		if row_data == null:
+			continue
+		if row_data.row_uid.begins_with(prefix):
+			view._row_builder._ensure_event_spans(row_data)
+			return row_data
+		stack.append_array(row_data.children)
+	return null
+
+
+static func _texts(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		parts.append(span.text)
+	return " | ".join(parts)

@@ -46,6 +46,10 @@ const TRIGGER_ICONS_VIEW_ID: int = 9818
 const VALUE_GLYPHS_VIEW_ID: int = 9820
 const VARIABLE_BADGES_VIEW_ID: int = 9821
 
+## View ▸ Included Variables - the included sheet's own variables, listed read-only under each
+## Include bar. Two along from the badges, so the toggle a neighbouring pass adds never shares it.
+const INCLUDED_VARIABLES_VIEW_ID: int = 9823
+
 ## View ▸ Text labels - the strip laid out as words. Clear of the run the View toggles beside Object
 ## Icons take (9818 onwards), so two passes adding View items at once never share a number.
 const TEXT_LABELS_VIEW_ID: int = 9830
@@ -555,6 +559,10 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(VARIABLE_BADGES_VIEW_ID), _dock._variable_badges_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(VARIABLE_BADGES_VIEW_ID), EventSheetL10n.translate(
 		"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name."))
+	view_popup.add_check_item(EventSheetL10n.translate("Included Variables"), INCLUDED_VARIABLES_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(INCLUDED_VARIABLES_VIEW_ID), _dock._included_variables_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(INCLUDED_VARIABLES_VIEW_ID), EventSheetL10n.translate(
+		"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone."))
 	view_popup.add_check_item("Event Numbers", 16)
 	view_popup.set_item_checked(view_popup.get_item_index(16), true)
 	view_popup.add_check_item("Aligned Object Columns", 18)
@@ -701,6 +709,7 @@ func build(root: Node) -> void:
 			TRIGGER_ICONS_VIEW_ID: _dock._toggle_trigger_icons(view_popup)
 			VALUE_GLYPHS_VIEW_ID: _dock._toggle_value_glyphs(view_popup)
 			VARIABLE_BADGES_VIEW_ID: _dock._toggle_variable_badges(view_popup)
+			INCLUDED_VARIABLES_VIEW_ID: _dock._toggle_included_variables(view_popup)
 			16: _dock._toggle_event_numbers(view_popup)
 			18: _dock._toggle_object_column_alignment(view_popup)
 			RESET_LANE_SPLIT_VIEW_ID: _dock._reset_lane_split()

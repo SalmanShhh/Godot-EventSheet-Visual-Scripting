@@ -7288,3 +7288,22 @@ Variable Badges,Variablen-Abzeichen
 Kept between limits in the Inspector (@export_range).,Im Inspektor zwischen Grenzen gehalten (@export_range).
 "Has a description: its ## comment, which the Inspector shows as its tooltip.","Hat eine Beschreibung: ihren ##-Kommentar, den der Inspektor als Tooltip zeigt."
 Kept by the Save System under this variable's name.,Vom Speichersystem unter dem Namen dieser Variable gesichert.
+%s (a variable),%s (eine Variable)
+%s (a list),%s (eine Liste)
+"What this file is: a script, run by the node it is attached to.","Was diese Datei ist: ein Skript, ausgeführt von dem Node, an den es angehängt ist."
+A shared sheet: other sheets can include it.,Ein geteiltes Blatt: andere Blätter können es einbinden.
+Included by %s,Eingebunden von %s
+The sheets that include this one.,"Die Blätter, die dieses einbinden."
+The scene this script is attached to.,"Die Szene, an die dieses Skript angehängt ist."
+The line this include writes into the script.,"Die Zeile, die diese Einbindung ins Skript schreibt."
+"A variable of the included sheet, read-only here. Click to open that sheet.","Eine Variable des eingebundenen Blatts, hier schreibgeschützt. Klicken, um das Blatt zu öffnen."
++ Add field,+ Feld hinzufügen
+"Adds a field to this class: a name, a type and a starting value.","Fügt dieser Klasse ein Feld hinzu: einen Namen, einen Typ und einen Startwert."
+Use a class when values belong together,"Nutze eine Klasse, wenn Werte zusammengehören"
+"• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• Gib jedem Gegner, Level oder Gegenstand eigene Einstellungen in einer Variable, gemeinsam im Inspektor bearbeitet."
+"• Keep a list of them: every wave, every shop item, every line of dialogue.","• Führe eine Liste davon: jede Welle, jeder Shop-Artikel, jede Dialogzeile."
+Used by %s,Verwendet von %s
+Included variables shown under each Include bar.,Eingebundene Variablen unter jeder Einbinden-Leiste angezeigt.
+Included variables hidden.,Eingebundene Variablen ausgeblendet.
+Included Variables,Eingebundene Variablen
+"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Unter jeder Einbinden-Leiste die Variablen, die das eingebundene Blatt mitbringt, schreibgeschützt und nach ihrer Herkunft benannt. Klicke eine an, um das Blatt zu öffnen. Aus lässt nur die Einbinden-Leisten."

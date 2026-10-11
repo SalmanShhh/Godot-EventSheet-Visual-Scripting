@@ -85,6 +85,21 @@ var custom_color: Color = Color(0, 0, 0, 0)
 # An edge drawn just inside the row, in this colour, over its fill (the Include line's border). Alpha
 # 0 = no edge. Paint only: it reserves no room and is never hit-tested. View-only, never serialized.
 var outline_color: Color = Color(0, 0, 0, 0)
+# The corner radius of that edge. Above 0 the row is drawn as a rounded bar: its fill (custom_color)
+# and its edge inside one rounded box, with the canvas showing at the corners (the Include bar).
+var outline_radius: float = 0.0
+# True draws the edge dashed instead of solid (an included sheet's variable, read-only here).
+var outline_dashed: bool = false
+# One BLOCK drawn across several rows (an inner class and its fields): the block's fill over the
+# row's lanes, its side edges in frame_color, and a top or bottom edge on the first and last row of
+# the block. Alpha 0 = no block. Paint only, like the outline above.
+var frame_color: Color = Color(0, 0, 0, 0)
+var frame_fill: Color = Color(0, 0, 0, 0)
+var frame_top: bool = false
+var frame_bottom: bool = false
+# The nesting level the block's left edge is drawn at - the head row's own, so the rows inside it
+# line up under one edge however deep they are indented.
+var frame_indent: int = 0
 # True on a row that renders a LANGUAGE construct (a data-class holder, a methods-class, a host binding,
 # a lifted switch case, a collapsed function...) rather than a regular ACE event. The renderer marks such
 # rows with a quiet indigo left stripe + faint wash so the distinction is visible at a glance without

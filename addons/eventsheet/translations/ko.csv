@@ -7288,3 +7288,22 @@ Variable Badges,변수 배지
 Kept between limits in the Inspector (@export_range).,인스펙터에서 한계 사이로 유지됩니다 (@export_range).
 "Has a description: its ## comment, which the Inspector shows as its tooltip.","설명이 있습니다: ## 주석이며, 인스펙터가 툴팁으로 보여 줍니다."
 Kept by the Save System under this variable's name.,이 변수의 이름으로 저장 시스템이 보관합니다.
+%s (a variable),%s (변수)
+%s (a list),%s (목록)
+"What this file is: a script, run by the node it is attached to.",이 파일의 종류: 연결된 노드가 실행하는 스크립트입니다.
+A shared sheet: other sheets can include it.,공유 시트: 다른 시트가 포함할 수 있습니다.
+Included by %s,%s 에서 포함
+The sheets that include this one.,이 시트를 포함하는 시트들.
+The scene this script is attached to.,이 스크립트가 연결된 씬.
+The line this include writes into the script.,이 포함이 스크립트에 쓰는 줄.
+"A variable of the included sheet, read-only here. Click to open that sheet.","포함된 시트의 변수로, 여기서는 읽기 전용입니다. 클릭하면 그 시트를 엽니다."
++ Add field,+ 필드 추가
+"Adds a field to this class: a name, a type and a starting value.","이 클래스에 필드를 추가합니다: 이름, 타입, 시작 값."
+Use a class when values belong together,값들이 함께 묶일 때 클래스를 사용하세요
+"• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• 각 적, 레벨, 아이템에 자신만의 설정을 변수 하나로 주고 인스펙터에서 함께 편집하세요."
+"• Keep a list of them: every wave, every shop item, every line of dialogue.","• 목록으로 관리하세요: 모든 웨이브, 모든 상점 아이템, 모든 대사 한 줄."
+Used by %s,%s 에서 사용
+Included variables shown under each Include bar.,각 포함 막대 아래에 포함된 변수를 표시했습니다.
+Included variables hidden.,포함된 변수를 숨겼습니다.
+Included Variables,포함된 변수
+"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","각 포함 막대 아래에 포함된 시트가 가져오는 변수를 읽기 전용으로, 출처 이름과 함께 표시합니다. 클릭하면 그 시트를 엽니다. 끄면 포함 막대만 남습니다."

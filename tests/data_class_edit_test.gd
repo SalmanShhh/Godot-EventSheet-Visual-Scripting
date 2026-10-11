@@ -101,7 +101,7 @@ static func run() -> bool:
 	dock2.setup(syn_sheet)
 	var syn_row: EventRowData = _find_data_class_row(dock2._active_view())
 	ok = _check("an @export-only data class shows its members as rows (never '0 fields' with them hidden)",
-		syn_row != null and syn_row.children.size() == 2, true) and ok
+		_member_row_count(syn_row), 2) and ok
 	dock2.free()
 
 	# ---- menu reachability (review regression: data-class rows are EVENT-typed, so the
@@ -171,6 +171,18 @@ static func _diff_is(before: String, after: String, old_line: String, new_line: 
 			if b[i] == old_line and a[i] == new_line:
 				matched = true
 	return diffs == 1 and matched
+
+
+## The rows of an open data class that are its MEMBERS - the fields and the read-only lines - leaving
+## out the "+ Add field" and the class explainer an editable sheet ends the open block with.
+static func _member_row_count(class_row: EventRowData) -> int:
+	if class_row == null:
+		return -1
+	var members: int = 0
+	for child: EventRowData in class_row.children:
+		if child.row_uid.begins_with("data_class_field_") or child.row_uid.begins_with("data_class_member_"):
+			members += 1
+	return members
 
 
 static func _find_data_class_row(view: EventSheetViewport) -> EventRowData:

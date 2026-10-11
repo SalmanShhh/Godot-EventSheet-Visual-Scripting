@@ -7288,3 +7288,22 @@ Variable Badges,Значки переменных
 Kept between limits in the Inspector (@export_range).,Ограничена пределами в Инспекторе (@export_range).
 "Has a description: its ## comment, which the Inspector shows as its tooltip.","Есть описание: её комментарий ##, который Инспектор показывает как подсказку."
 Kept by the Save System under this variable's name.,Хранится системой сохранений под именем этой переменной.
+%s (a variable),%s (переменная)
+%s (a list),%s (список)
+"What this file is: a script, run by the node it is attached to.","Что это за файл: скрипт, который выполняет узел, к которому он прикреплён."
+A shared sheet: other sheets can include it.,Общий лист: другие листы могут его подключать.
+Included by %s,Подключён в %s
+The sheets that include this one.,"Листы, которые подключают этот."
+The scene this script is attached to.,"Сцена, к которой прикреплён этот скрипт."
+The line this include writes into the script.,"Строка, которую это подключение записывает в скрипт."
+"A variable of the included sheet, read-only here. Click to open that sheet.","Переменная подключённого листа, здесь только для чтения. Щёлкните, чтобы открыть этот лист."
++ Add field,+ Добавить поле
+"Adds a field to this class: a name, a type and a starting value.","Добавляет поле в этот класс: имя, тип и начальное значение."
+Use a class when values belong together,"Используйте класс, когда значения связаны друг с другом"
+"• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• Дайте каждому врагу, уровню или предмету свои настройки в одной переменной и правьте их вместе в Инспекторе."
+"• Keep a list of them: every wave, every shop item, every line of dialogue.","• Храните их списком: каждая волна, каждый товар магазина, каждая реплика диалога."
+Used by %s,Используется в %s
+Included variables shown under each Include bar.,Включённые переменные показаны под каждой полосой «Включить».
+Included variables hidden.,Включённые переменные скрыты.
+Included Variables,Включённые переменные
+"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Под каждой полосой «Включить» - переменные, которые приносит включённый лист, только для чтения и с указанием источника. Щёлкните одну, чтобы открыть этот лист. Выключено оставляет только полосы «Включить»."

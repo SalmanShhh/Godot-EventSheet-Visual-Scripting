@@ -7288,3 +7288,22 @@ Variable Badges,Badges de variable
 Kept between limits in the Inspector (@export_range).,Gardée entre des limites dans l'Inspecteur (@export_range).
 "Has a description: its ## comment, which the Inspector shows as its tooltip.","A une description : son commentaire ##, que l'Inspecteur affiche en infobulle."
 Kept by the Save System under this variable's name.,Conservée par le système de sauvegarde sous le nom de cette variable.
+%s (a variable),%s (une variable)
+%s (a list),%s (une liste)
+"What this file is: a script, run by the node it is attached to.","Ce qu'est ce fichier : un script, exécuté par le nœud auquel il est attaché."
+A shared sheet: other sheets can include it.,Une feuille partagée : d'autres feuilles peuvent l'inclure.
+Included by %s,Incluse par %s
+The sheets that include this one.,Les feuilles qui incluent celle-ci.
+The scene this script is attached to.,La scène à laquelle ce script est attaché.
+The line this include writes into the script.,La ligne que cette inclusion écrit dans le script.
+"A variable of the included sheet, read-only here. Click to open that sheet.","Une variable de la feuille incluse, en lecture seule ici. Cliquez pour ouvrir cette feuille."
++ Add field,+ Ajouter un champ
+"Adds a field to this class: a name, a type and a starting value.","Ajoute un champ à cette classe : un nom, un type et une valeur de départ."
+Use a class when values belong together,Utilisez une classe quand des valeurs vont ensemble
+"• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.","• Donnez à chaque ennemi, niveau ou objet ses propres réglages dans une variable, modifiés ensemble dans l'Inspecteur."
+"• Keep a list of them: every wave, every shop item, every line of dialogue.","• Gardez-en une liste : chaque vague, chaque article de boutique, chaque ligne de dialogue."
+Used by %s,Utilisée par %s
+Included variables shown under each Include bar.,Variables incluses affichées sous chaque barre Inclure.
+Included variables hidden.,Variables incluses masquées.
+Included Variables,Variables incluses
+"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Sous chaque barre Inclure, les variables qu'apporte la feuille incluse, en lecture seule et nommées par leur provenance. Cliquez sur l'une pour ouvrir cette feuille. Désactivé laisse les barres Inclure seules."

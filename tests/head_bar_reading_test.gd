@@ -50,7 +50,7 @@ static func _one_bar_for_a_showcase() -> bool:
 		["input_rebind head bar", _words_of(head[0]),
 			"▣ InputRebindDemo extends Control · 4 input actions · 1 variable"],
 		["input_rebind head bar folds the bars it stands for", _child_uids(head[0]),
-			"sheet_head_name, sheet_head_extends, pack_include_bar, input_actions, pack_internal_state"],
+			"sheet_head_name, pack_include_bar, input_actions, pack_internal_state"],
 		["input_rebind head bar is a fold, closed", str(head[0].folded), "true"],
 	])
 
@@ -68,7 +68,7 @@ static func _one_bar_for_a_pack() -> bool:
 		["flash head bar", _words_of(head[0]),
 			"▣ FlashBehavior extends Node"],
 		["flash head bar folds the bars it stands for", _child_uids(head[0]),
-			"sheet_head_name, sheet_head_extends, sheet_head_icon, sheet_head_host, pack_include_bar"],
+			"sheet_head_name, sheet_head_icon, sheet_head_host, pack_include_bar"],
 	])
 
 

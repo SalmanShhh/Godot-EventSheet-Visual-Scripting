@@ -7288,3 +7288,22 @@ Variable Badges,変数バッジ
 Kept between limits in the Inspector (@export_range).,インスペクターで範囲内に制限されます (@export_range)。
 "Has a description: its ## comment, which the Inspector shows as its tooltip.",説明があります: その ## コメントで、インスペクターがツールチップとして表示します。
 Kept by the Save System under this variable's name.,この変数の名前でセーブシステムに保存されます。
+%s (a variable),%s (変数)
+%s (a list),%s (リスト)
+"What this file is: a script, run by the node it is attached to.",このファイルの種類: アタッチされたノードが実行するスクリプトです。
+A shared sheet: other sheets can include it.,共有シート: 他のシートがインクルードできます。
+Included by %s,%s がインクルード
+The sheets that include this one.,このシートをインクルードしているシート。
+The scene this script is attached to.,このスクリプトがアタッチされているシーン。
+The line this include writes into the script.,このインクルードがスクリプトに書き込む行。
+"A variable of the included sheet, read-only here. Click to open that sheet.",インクルードされたシートの変数 (ここでは読み取り専用)。クリックでそのシートを開きます。
++ Add field,+ フィールドを追加
+"Adds a field to this class: a name, a type and a starting value.",このクラスにフィールドを追加します: 名前、型、初期値。
+Use a class when values belong together,値がひとまとまりのときはクラスを使います
+"• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.",• 敵・レベル・アイテムごとの設定を 1 つの変数にまとめ、インスペクターで一緒に編集します。
+"• Keep a list of them: every wave, every shop item, every line of dialogue.",• リストにまとめます: ウェーブごと、ショップの品ごと、セリフ 1 行ごと。
+Used by %s,%s が使用
+Included variables shown under each Include bar.,各インクルードバーの下にインクルードされた変数を表示しました。
+Included variables hidden.,インクルードされた変数を非表示にしました。
+Included Variables,インクルードされた変数
+"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.",各インクルードバーの下に、インクルードされたシートが持ち込む変数を読み取り専用で、出どころの名前付きで表示します。クリックするとそのシートを開きます。オフにするとインクルードバーだけになります。

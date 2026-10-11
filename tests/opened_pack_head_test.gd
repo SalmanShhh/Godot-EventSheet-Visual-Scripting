@@ -53,10 +53,10 @@ static func run() -> bool:
 	ok = _check("the sheet opens on ONE head bar",
 		_texts(_row_at(rows, 0)),
 		"▣ | FPSController | extends | Node | · 5 input actions") and ok
-	ok = _check("the bands are the bar's fold - one band per line of the file",
-		_band_kinds(rows), "name | extends | icon | host") and ok
-	ok = _check("a band states its line and echoes it",
-		_texts(_band(rows, "extends")), "extends | Node | extends Node") and ok
+	ok = _check("the bands are the bar's fold - the class head, then one band per line of the file",
+		_band_kinds(rows), "name | icon | host") and ok
+	ok = _check("the class head states the class and what it extends, and echoes its line",
+		_texts(_band(rows, "name")), "▣ | FPSController | Script | · extends | Node | class_name FPSController") and ok
 	var include_bar: EventRowData = _row_with_uid(rows, "pack_include_bar_")
 	# The identity half is gone from the bar: the name band says FPSController and the extends
 	# band says Node, so what is left is what the file is as a PACKAGE. Two patterns since the feel
@@ -180,7 +180,7 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	# to say, so all the bar owes a plain script is how much of it read as events.
 	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | reads as events") and ok
 	ok = _check("the bands name it instead", _texts(_band(_all_rows(view), "name")),
-		"▣ | Patrol | class_name Patrol") and ok
+		"▣ | Patrol | Script | · extends | Node2D | class_name Patrol") and ok
 	ok = _check("its exported knob lands in the one variable folder",
 		_texts(_bar_titled(_all_rows(view), "Instance variables")), "Instance variables | of Patrol") and ok
 	view.free()

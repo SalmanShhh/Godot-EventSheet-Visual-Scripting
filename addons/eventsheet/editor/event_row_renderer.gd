@@ -92,6 +92,7 @@ var show_trigger_icons: bool = true
 var show_value_glyphs: bool = true
 var show_variable_badges: bool = true
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/native_head_marks.gd")
 
 # ── The hit-count chip (LEFT MARGIN ONLY - never a cell, never program text) ──
 # Height/inset of the small count chip that stacks under the event number in the 20px gutter.
@@ -602,6 +603,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			event_style.row_background_alt_color if alternating else event_style.row_background_color,
 			true
 		)
+	elif row_data.outline_radius > 0.0 and row_data.outline_color.a > 0.01:
+		# A rounded bar (the Include bar): the canvas shows at its corners, and its fill and its
+		# edge are one rounded box rather than a full-bleed band with a stripe.
+		control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+		NativeHeadMarks.draw_rounded_bar(control, row_rect, row_data.custom_color,
+			row_data.outline_color, row_data.outline_radius)
 	else:
 		var section_bg: Color = BG_1 if alternating else BG_0
 		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it
@@ -612,7 +619,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_bg, true)
 		if row_data.custom_color.a > 0.01:
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
-	if row_data.outline_color.a > 0.01:
+	if row_data.outline_color.a > 0.01 and row_data.outline_dashed:
+		_draw_dashed_outline(control, row_rect.grow(-1.5), row_data.outline_color)
+	elif row_data.outline_color.a > 0.01 and row_data.outline_radius <= 0.0:
 		control.draw_rect(row_rect.grow(-1.0), row_data.outline_color, false, 2.0)
 	if row_data.variable_row:
 		_draw_variable_row_wash(control, row_rect, reading_style)
@@ -682,6 +691,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		)
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(language_accent.r, language_accent.g, language_accent.b, 0.75), true)
 		control.draw_rect(row_fill_rect, Color(language_accent.r, language_accent.g, language_accent.b, 0.05), true)
+	if row_data.frame_color.a > 0.01:
+		# One block drawn across its rows (an inner class and its fields): the block's own fill over
+		# the lanes, so the class reads as one panel, and its edges at the head row's indent.
+		NativeHeadMarks.draw_block_frame(control, row_data,
+			NativeHeadMarks.block_frame_rect(row_rect, gutter_rect, row_data.frame_indent, row_indent_width))
 	if is_event_row and row_data.custom_color.a > 0.01:
 		# A published verb's Define row is washed by its ACE KIND: a left accent bar plus a faint tint over
 		# the whole block. Drawn AFTER the lane fills (the same place the language-block cue draws) so the
@@ -1969,6 +1983,17 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		# editable in the Inspector). No plate and no word - the hover carries the sentence. Falls
 		# through to the plain text draw below if the mark has no art.
 		var mark_side: float = min(badge_rect.size.x, badge_rect.size.y) * 0.95
+		if bool(metadata.get("badge_plate", false)):
+			# A mark on a small tile (the shared-sheet mark on a class head): the tile is the
+			# badge's background, the mark a little smaller than the tile so it sits inside it.
+			var plate: StyleBoxFlat = StyleBoxFlat.new()
+			plate.bg_color = badge_bg
+			plate.set_corner_radius_all(4)
+			plate.set_content_margin_all(0)
+			var plate_side: float = min(badge_rect.size.x, badge_rect.size.y)
+			control.draw_style_box(plate, Rect2(badge_rect.get_center() - Vector2(plate_side, plate_side) * 0.5,
+				Vector2(plate_side, plate_side)))
+			mark_side = plate_side * 0.68
 		# A row may hand the slot a real texture instead (a group head's folder, which is the
 		# editor's own Folder icon): drawn untinted, the way the icon was designed.
 		var supplied_mark: Variant = metadata.get("badge_icon")
@@ -2080,6 +2105,9 @@ const BADGE_MARK_SVGS: Dictionary = {
 	"⚌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>",
 	"⚍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\" stroke-dasharray=\"1.8 2.6\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-dasharray=\"0.6 3.1\"/></svg>",
 	"⚏": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\" stroke-dasharray=\"4 3\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"butt\" stroke-dasharray=\"3.4 2.6\"/></svg>",
+	# The shared-sheet mark a class head wears when other sheets can include this one: three nodes
+	# joined from one, the share idiom.
+	"⇆": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"6\" cy=\"12\" r=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.1\"/><circle cx=\"18\" cy=\"6\" r=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.1\"/><circle cx=\"18\" cy=\"18\" r=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.1\"/><path d=\"M8.7 10.5l6.6-3.3M8.7 13.5l6.6 3.3\" stroke=\"#fff\" stroke-width=\"2.1\"/></svg>",
 	# The folder a group head leads with when the editor's own Folder texture is unavailable
 	# (headless, or object icons turned off): a tab and a body, the file-manager idiom.
 	"▤": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.2 6.6a1.6 1.6 0 0 1 1.6-1.6h4.1l1.9 2.2h7.4a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.8a1.6 1.6 0 0 1-1.6-1.6z\" fill=\"#fff\"/></svg>",

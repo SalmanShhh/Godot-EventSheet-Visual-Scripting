@@ -59,12 +59,12 @@ extends Node
 	host = get_parent() as Node"))
 	sheet.events.append(_raw("velocity.y += gravity"))  # real logic - must stay inline
 	var rows: Array = viewport._build_rows_from_sheet(sheet)
-	all_passed = _check("the head reads one band per line, in reading order",
-		_band_kinds(rows), "name | extends | host") and all_passed
-	all_passed = _check("the name band says the class the file declares",
-		_band_texts(rows, "name"), "▣ | Patrol | class_name Patrol") and all_passed
-	all_passed = _check("the extends band says what it builds on",
-		_band_texts(rows, "extends"), "extends | Node | change… | extends Node") and all_passed
+	# The class head joins the name and what it extends into one row; every other band is one row
+	# per line of the file.
+	all_passed = _check("the head reads one band per line, the class head first",
+		_band_kinds(rows), "name | host") and all_passed
+	all_passed = _check("the class head says the class, the kind of file and what it builds on",
+		_band_texts(rows, "name"), "▣ | Patrol | Script | · extends | Node | change… | class_name Patrol") and all_passed
 	all_passed = _check("the host binding is ONE band, however many lines it is",
 		_band_texts(rows, "host"),
 		"host | acts on its parent | var host: Node · _enter_tree: host = get_parent()") and all_passed
@@ -85,7 +85,7 @@ extends Node2D
 ## @ace_family(Foe)"))  # 3 lines, 1 row
 	prelude_only.events.append(_raw("position += velocity"))
 	all_passed = _check("a single ≥3-line prelude block reads as bands",
-		_band_kinds(viewport._build_rows_from_sheet(prelude_only)), "name | extends") and all_passed
+		_band_kinds(viewport._build_rows_from_sheet(prelude_only)), "name") and all_passed
 
 	# ── A lone identity line still makes a head (after the lifts it is often the whole prelude) ──
 	var lone: EventSheetResource = EventSheetResource.new()
@@ -93,10 +93,10 @@ extends Node2D
 	lone.events.append(_raw("velocity.y += gravity"))
 	var lone_rows: Array = viewport._build_rows_from_sheet(lone)
 	all_passed = _check("a lone extends still makes a head",
-		_band_kinds(lone_rows), "name | extends | attach") and all_passed
+		_band_kinds(lone_rows), "name | attach") and all_passed
 	# A sheet with nothing named yet asks, rather than showing an empty strip.
 	all_passed = _check("a sheet with no class_name and no file asks to be named",
-		_band_texts(lone_rows, "name"), "▣ | Untitled | name it | # no class_name yet") and all_passed
+		_band_texts(lone_rows, "name"), "▣ | Untitled | name it | Script | · extends | Node | change… | # no class_name yet") and all_passed
 	all_passed = _check("and it offers to be attached to a node",
 		_band_texts(lone_rows, "attach"), "attach | attach to a node") and all_passed
 

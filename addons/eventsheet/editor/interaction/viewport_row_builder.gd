@@ -63,6 +63,11 @@ const SYNC_BADGE_GLYPHS: Dictionary = {
 ## opened-pack reading, the fold guard, a test - asks one question instead of listing band kinds.
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
 
+## The Include bar's corner radius and height, where a theme states the Include edge: a rounded bar a
+## little taller than a row.
+const INCLUDE_BAR_RADIUS := 16.0
+const INCLUDE_BAR_HEIGHT_SCALE := 1.3
+
 ## The bars an opened pack's head builds, each named once here so the reading that gathers them into
 ## Settings / Verbs / How it works / Internal state asks for them by name rather than by a literal
 ## spelled twice. The row uids these open are `<prefix><sheet id>`, or `<prefix><group><sheet id>`
@@ -681,8 +686,22 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	head_facts["migration"] = EventForgeVocabularyRecord.band_facts(
 		_rows_with_a_newer_spelling(sheet),
 		EventSheetMigrationFindings.events_asking(_sheet_findings(FINDINGS_MIGRATION)))
-	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
-		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
+	# THE CLASS HEAD: the name band and the extends band read as ONE row - the class, the kind of
+	# file it is, and what it extends - the way a component's header reads in an Inspector. The
+	# extends band keeps its own words, its control and its gesture; it is drawn on the head row
+	# instead of on a row of its own, and every other band stays one row per line.
+	var head_bands: Array[Dictionary] = EventSheetHeadBands.bands(head_facts)
+	var extends_band: Dictionary = {}
+	for band: Dictionary in head_bands:
+		if str(band["kind"]) == EventSheetHeadBands.BAND_EXTENDS:
+			extends_band = band
+	for band: Dictionary in head_bands:
+		var kind: String = str(band["kind"])
+		if kind == EventSheetHeadBands.BAND_EXTENDS:
+			continue
+		var head_row: EventRowData = _build_head_band_row(sheet, band, head_facts, description_source,
+			extends_band if kind == EventSheetHeadBands.BAND_NAME else {})
+		rows.append(head_row)
 	# The shared sheets this script includes, one Include line each - where a reader from another
 	# event-sheet editor looks for them, instead of scattered through the forwarding rows they wrote.
 	rows.append_array(_build_include_line_rows(sheet, false))
@@ -699,7 +718,7 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 ## One band: the leader word of its line, the fact, its control, and the line itself echoed at the
 ## right edge. The name band leads with the class icon and a little more presence; the rest are slim.
 func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_facts: Dictionary,
-		description_source: Resource) -> EventRowData:
+		description_source: Resource, joined_extends: Dictionary = {}) -> EventRowData:
 	var kind: String = str(band["kind"])
 	# A band about something outside this file names it after a colon, so one gesture carries
 	# both which band was clicked and which node it was about (the way an edit kind does).
@@ -781,6 +800,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			"text_color": _viewport._get_event_style().behavior_accent_color
 		}, true)))
 	if is_name_band:
+		spans.append_array(_class_head_spans(sheet, joined_extends))
 		# What this file is as a piece of TOOLING, and the buttons that run it: a test sheet and how
 		# many checks it makes, a command tool that runs headless, a pack recipe and the behavior it
 		# builds, Run now / Reload / Output for an editor script. Not lines of the file, so not bands
@@ -788,6 +808,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
 		spans.append_array(_editor_tool_bar_spans(sheet))
 		spans.append_array(_this_editor_bar_spans(sheet))
+		spans.append_array(_class_head_scene_spans(sheet, band_meta))
 	_append_head_band_echo(spans, band_meta, str(band["echo"]), bool(band["echo_ghosted"]))
 	row_data.spans = spans
 	return row_data
@@ -811,6 +832,92 @@ func _head_band_icon_span(band_meta: Dictionary, action: String, art: Texture2D,
 	if art != null:
 		badge_meta["badge_icon"] = art
 	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)
+
+
+## The class head's own words after the name: the kind of file this is, what it extends (the extends
+## band's words, control and gesture, drawn here instead of on a row of their own), and - for a
+## shared sheet - the drawn share mark and the sheets that include it.
+func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> Array[SemanticSpan]:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var spans: Array[SemanticSpan] = []
+	var name_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_NAME,
+		"head_band": EventSheetHeadBands.BAND_NAME, "line_index": 0}
+	spans.append(_make_span(EventSheetL10n.translate("Script"), SemanticSpan.SpanType.KEYWORD, name_meta.merged({
+		"text_color": reading_style.secondary_text_color,
+		"hover_note": EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.")
+	}, true)))
+	if not extends_band.is_empty():
+		var extends_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_EXTENDS,
+			"head_band": EventSheetHeadBands.BAND_EXTENDS, "line_index": 0}
+		spans.append(_make_span("· %s" % str(extends_band["leader"]), SemanticSpan.SpanType.KEYWORD,
+			extends_meta.merged({"text_color": reading_style.muted_text_color}, true)))
+		var base_meta: Dictionary = extends_meta.merged({
+			"text_color": reading_style.muted_text_color if bool(extends_band["value_muted"]) \
+				else reading_style.primary_text_color
+		}, true)
+		# A base that is another SCRIPT of this project opens as its own sheet, the door the pack
+		# head's base word has always had.
+		var base_path: String = base_script_path(sheet)
+		if not base_path.is_empty():
+			base_meta["include_path"] = base_path
+			base_meta["hover_note"] = EventSheetL10n.translate("Open the base script as a sheet.")
+		spans.append(_make_span(str(extends_band["value"]), SemanticSpan.SpanType.VALUE, base_meta))
+		for word: String in [str(extends_band["prompt"]), str(extends_band["control"])]:
+			if word.is_empty() or sheet.read_only:
+				continue
+			spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, extends_meta.merged({
+				"head_action": EventSheetHeadBands.BAND_EXTENDS,
+				"text_color": event_style.behavior_accent_color
+			}, true)))
+	var source_path: String = str(sheet.external_source_path)
+	if NativeHeadMarks.shared_wiring(source_path).is_empty():
+		return spans
+	# A shared sheet says so with a drawn mark on a small tile, and names who includes it. Both are
+	# facts about the project rather than lines of the file, read off the include index.
+	spans.append(_make_span("⇆", SemanticSpan.SpanType.KEYWORD, name_meta.merged({
+		"badge": true,
+		"badge_style": "glyph",
+		"badge_plate": true,
+		"badge_natural_width": true,
+		"badge_fixed_width": KIND_BADGE_WIDTH,
+		"badge_bg": event_style.inspector_badge_background_color,
+		"badge_fg": event_style.inspector_badge_foreground_color,
+		"hover_note": EventSheetL10n.translate("A shared sheet: other sheets can include it.")
+	}, true)))
+	var includers: PackedStringArray = NativeHeadMarks.includers_of(source_path)
+	if not includers.is_empty():
+		spans.append(_make_span(EventSheetL10n.translate("Included by %s") % ", ".join(includers),
+			SemanticSpan.SpanType.COMMENT, name_meta.merged({
+				"text_color": reading_style.muted_text_color,
+				"hover_note": EventSheetL10n.translate("The sheets that include this one.")
+			}, true)))
+	return spans
+
+
+## The scene this script is attached to, at the right of the class head: "Scene gate.tscn". Only
+## when exactly one scene runs it - the answer the head's lighting bands already ask for, so it costs
+## no walk of its own - and never on a sheet with no file. A read-only preview says its scene on the
+## head bar it opens on, so the class head inside that bar's fold does not say it twice.
+func _class_head_scene_spans(sheet: EventSheetResource, band_meta: Dictionary) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var source_path: String = str(sheet.external_source_path)
+	if source_path.is_empty() or sheet.read_only:
+		return spans
+	var scene_path: String = EventSheetSceneLightingFacts.attached_scene(source_path)
+	if scene_path.is_empty():
+		return spans
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var scene_meta: Dictionary = band_meta.merged({
+		"editable": false,
+		"align_right": true,
+		"hover_note": EventSheetL10n.translate("The scene this script is attached to.")
+	}, true)
+	spans.append(_make_span(EventSheetL10n.translate("Scene"), SemanticSpan.SpanType.KEYWORD,
+		scene_meta.merged({"text_color": reading_style.muted_text_color}, true)))
+	spans.append(_make_span(scene_path.get_file(), SemanticSpan.SpanType.COMMENT,
+		scene_meta.merged({"text_color": reading_style.primary_text_color}, true)))
+	return spans
 
 
 ## The `@tool` band's switch: a mark, never a word. Clicking it writes or removes the line.
@@ -1573,7 +1680,9 @@ func _build_one_head_bar_row(sheet: EventSheetResource, detail: Array[EventRowDa
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 	row_data.custom_color = _viewport._get_event_style().head_bar_color
 	var bar_meta: Dictionary = {"editable": false, "kind": "head_bar", "line_index": 0}
-	var extends_word: String = _head_band_value(_head_band_row(detail, EventSheetHeadBands.BAND_EXTENDS))
+	# What the class extends is read off the class head row, which carries the extends band's words.
+	var extends_word: String = _head_band_value_of(_head_band_row(detail, EventSheetHeadBands.BAND_NAME),
+		EventSheetHeadBands.BAND_EXTENDS)
 	var spans: Array[SemanticSpan] = [_head_band_icon_span(bar_meta, EventSheetHeadBands.BAND_NAME,
 		ACEPickerDialog.editor_icon(extends_word) if not extends_word.is_empty() else null,
 		EventSheetL10n.translate("What this file is. ▸ opens the lines behind it."))]
@@ -1650,6 +1759,18 @@ func _head_band_value(row_data: EventRowData) -> String:
 		return ""
 	for span: SemanticSpan in row_data.spans:
 		if span.type == SemanticSpan.SpanType.VALUE:
+			return span.text
+	return ""
+
+
+## The VALUE words a head row carries for one band - the extends band's base class on the class
+## head row, which draws two bands' words. "" when the row or the band is not there.
+func _head_band_value_of(row_data: EventRowData, band_kind: String) -> String:
+	if row_data == null:
+		return ""
+	for span: SemanticSpan in row_data.spans:
+		if span.type == SemanticSpan.SpanType.VALUE and span.metadata is Dictionary \
+				and str((span.metadata as Dictionary).get("head_band", "")) == band_kind:
 			return span.text
 	return ""
 
@@ -2292,6 +2413,11 @@ func _include_line_inks(row_data: EventRowData) -> Dictionary:
 	var reading: EventSheetReadingStyle = _viewport._get_reading_style()
 	row_data.custom_color = EventSheetEventStyle.stated_or(event_style.include_fill_color, event_style.head_bar_color)
 	row_data.outline_color = event_style.include_border_color
+	if event_style.include_border_color.a > 0.01:
+		# A theme that states the Include edge draws the line as a rounded bar, a little taller than
+		# a row so the bar's ends read as round.
+		row_data.outline_radius = INCLUDE_BAR_RADIUS
+		row_data.height_scale = INCLUDE_BAR_HEIGHT_SCALE
 	return {
 		"arrow": EventSheetEventStyle.stated_or(event_style.include_tag_color, reading.muted_text_color),
 		"tag": EventSheetEventStyle.stated_or(event_style.include_tag_color, reading.primary_text_color),
@@ -2321,8 +2447,10 @@ func _includes_of(sheet: EventSheetResource) -> Array[Dictionary]:
 
 ## One Include line per shared sheet this script includes: which sheet, and in which of Godot's two
 ## shapes - as its base (`extends`) or as a helper the script calls (`var` plus the forwarding
-## calls), said in those very words at the end of the line. The name opens the shared sheet; no
-## pill anywhere.
+## calls). The words read left to right as a bar: the Include word, the name, what kind of include
+## it is, and - at the right edge, in the script editor's colours - the very line it writes. The
+## name opens the shared sheet; no pill anywhere. Under each bar, the variables the included sheet
+## brings with it, read-only.
 ## `indent_detail` puts the lines one step in, the way the read-only head folds its detail.
 func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
@@ -2339,12 +2467,15 @@ func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) ->
 			"hover_note": EventSheetL10n.translate("Opens the shared sheet.")}
 		var from: PackedStringArray = include["from"] as PackedStringArray
 		var said: String = ""
+		var written: String = ""
 		if helper:
-			said = "%s - var %s" % [EventSheetL10n.translate("· shared sheet, as a helper"), str(include["member"])]
+			said = EventSheetL10n.translate("· shared sheet, as a helper")
 			if not from.is_empty():
 				said += ", %s %s" % [EventSheetL10n.translate("called from"), ", ".join(from)]
+			written = "var %s" % str(include["member"])
 		else:
-			said = "%s - extends %s" % [EventSheetL10n.translate("· shared sheet, as its base"), str(include["class"])]
+			said = EventSheetL10n.translate("· shared sheet, as its base")
+			written = "extends %s" % str(include["class"])
 		row_data.spans = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true))]
 		row_data.spans.append(_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
 			"text_color": inks["tag"]}, true)))
@@ -2352,8 +2483,62 @@ func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) ->
 			open_meta.duplicate().merged({"text_color": inks["name"]}, true)))
 		row_data.spans.append(_make_span(said, SemanticSpan.SpanType.COMMENT,
 			open_meta.duplicate().merged({"text_color": inks["note"]}, true)))
+		# The line the include writes, at the right edge, coloured the way the script editor colours it.
+		row_data.spans.append(_code_echo_span(written, open_meta.merged({
+			"hover_note": EventSheetL10n.translate("The line this include writes into the script.")
+		}, true), EventSheetCodeEcho.REST_ALPHA, true))
 		if indent_detail:
 			_bump_indent(row_data, 1)
+		rows.append(row_data)
+		if _viewport.show_included_variables:
+			rows.append_array(_build_included_variable_rows(sheet, include, row_data.indent + 1))
+	return rows
+
+
+## The variables an included shared sheet declares, one read-only row each under its Include bar,
+## drawn dashed and named by where they come from: `int health = 100  from EnemyCommon`. They are
+## the included sheet's own, so nothing about them is editable here - one click opens the sheet that
+## declares them, the same door the bar is.
+func _build_included_variable_rows(sheet: EventSheetResource, include: Dictionary, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	var include_path: String = str(include["path"])
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var muted: Color = reading_style.muted_text_color
+	var edge: Color = EventSheetEventStyle.stated_or(event_style.include_border_color,
+		Color(muted.r, muted.g, muted.b, muted.a * 0.6))
+	var tag: Color = EventSheetEventStyle.stated_or(event_style.include_tag_color, muted)
+	for variable: Dictionary in NativeHeadMarks.shared_variables(include_path):
+		var row_data := EventRowData.new()
+		row_data.indent = indent
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = null
+		row_data.row_uid = "include_variable_%s_%s_%d" % [str(include["class"]), str(variable["name"]),
+			sheet.get_instance_id()]
+		row_data.variable_row = true
+		row_data.outline_color = edge
+		row_data.outline_dashed = true
+		var meta: Dictionary = {"editable": false, "kind": "include_variable", "include_path": include_path,
+			"line_index": 0,
+			"hover_note": EventSheetL10n.translate("A variable of the included sheet, read-only here. Click to open that sheet.")}
+		var type_text: String = str(variable["type"])
+		var value_text: String = str(variable["value"])
+		if not type_text.is_empty():
+			row_data.spans.append(_make_span(type_text, SemanticSpan.SpanType.KEYWORD, meta.merged({
+				"variable_type_span": true,
+				"variable_type_family": NativeVariableMarks.type_family(type_text, value_text, true),
+				"text_color": reading_style.secondary_text_color
+			}, true)))
+		row_data.spans.append(_make_span(str(variable["name"]), SemanticSpan.SpanType.OBJECT, meta.merged({
+			"text_color": event_style.object_label_color
+		}, true)))
+		if not value_text.is_empty():
+			row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, meta.merged({"text_color": muted}, true)))
+			row_data.spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, meta.merged({
+				"text_color": event_style.value_highlight_color
+			}, true)))
+		row_data.spans.append(_make_span(EventSheetL10n.translate("from %s") % str(include["class"]),
+			SemanticSpan.SpanType.COMMENT, meta.merged({"text_color": tag}, true)))
 		rows.append(row_data)
 	return rows
 
@@ -6451,7 +6636,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
-			"text_color": event_style.object_label_color
+			"text_color": event_style.class_name_color
 		}.merged(condition_style, true))
 	]
 	var cue: String = "%d field%s" % [member_count, "" if member_count == 1 else "s"]
@@ -6462,7 +6647,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		"editable": false,
 		"kind": "raw_code",
 		"line_index": 0,
-		"text_color": event_style.value_highlight_color
+		"text_color": event_style.class_note_color
 	}.merged(action_style, true)))
 	row_data.spans = header_spans
 	for body_index: int in range(body.size()):
@@ -6473,9 +6658,89 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			# @export / const / comment members render verbatim and READ-ONLY (inert). Editing the default of
 			# a plain `var` field is the editable path; these keep the block honest - no hidden declarations.
 			row_data.children.append(_build_data_class_member_row(data_class_name_str, body_index, str(entry.get("text")), indent + 1))
+	# The open block ends in its own "+ Add field" and in what a class is FOR - teaching text, shown
+	# only inside the open block (a closed block is one row) and never on a read-only preview, which
+	# offers no gestures.
+	var sheet: EventSheetResource = _viewport._sheet
+	if not (sheet != null and sheet.read_only):
+		row_data.children.append(_build_data_class_add_field_row(raw_row, data_class_name_str, indent + 1))
+		row_data.children.append_array(_build_data_class_why_rows(sheet, data_class_display_name,
+			data_class_name_str, indent + 1))
+	_frame_class_block(row_data, indent)
 	if not row_data.children.is_empty():
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 	return row_data
+
+
+## Stamps one inner-class block's frame on its head row and every row inside it: the head fill on
+## the head, the block fill on the rows, the edges at the head's indent, the top edge on the head and
+## the bottom edge on the last row (the head's own while the block is closed, which the painter
+## reads off the fold).
+func _frame_class_block(head: EventRowData, indent: int) -> void:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	head.frame_color = event_style.class_border_color
+	head.frame_fill = event_style.class_head_color
+	head.frame_indent = indent
+	head.frame_top = true
+	head.frame_bottom = head.children.is_empty()
+	for child: EventRowData in head.children:
+		child.frame_color = event_style.class_border_color
+		child.frame_fill = event_style.class_fill_color
+		child.frame_indent = indent
+	if not head.children.is_empty():
+		head.children[head.children.size() - 1].frame_bottom = true
+
+
+## "+ Add field" at the foot of an open data class: the same gesture as the block's right-click Add
+## Field…, offered where the fields end.
+func _build_data_class_add_field_row(raw_row: RawCodeRow, class_name_str: String, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "data_class_add_field_%s" % class_name_str
+	row_data.spans = [_make_span(EventSheetL10n.translate("+ Add field"), SemanticSpan.SpanType.COMMENT, {
+		"editable": false,
+		"kind": "data_class_add_field",
+		"raw_row": raw_row,
+		"line_index": 0,
+		"text_color": _viewport._get_event_style().class_tag_color,
+		"hover_note": EventSheetL10n.translate("Adds a field to this class: a name, a type and a starting value.")
+	})]
+	return row_data
+
+
+## What a class is for, under its fields while the block is open: when to reach for one, and which
+## variables of this sheet already hold it. Teaching text, never a finding.
+func _build_data_class_why_rows(sheet: EventSheetResource, display_name: String, class_name_str: String,
+		indent: int) -> Array[EventRowData]:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var lines: Array[Dictionary] = [
+		{"text": EventSheetL10n.translate("Use a class when values belong together"), "color": event_style.class_name_color},
+		{"text": EventSheetL10n.translate("• Give each enemy, level or item its own settings in one variable, edited together in the Inspector."),
+			"color": event_style.class_note_color},
+		{"text": EventSheetL10n.translate("• Keep a list of them: every wave, every shop item, every line of dialogue."),
+			"color": event_style.class_note_color},
+	]
+	var users: PackedStringArray = NativeHeadMarks.class_users(
+		str(sheet.external_source_path) if sheet != null else "", display_name)
+	if not users.is_empty():
+		lines.append({"text": EventSheetL10n.translate("Used by %s") % ", ".join(users), "color": event_style.class_note_color})
+	var rows: Array[EventRowData] = []
+	for index: int in range(lines.size()):
+		var row_data := EventRowData.new()
+		row_data.indent = indent
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = null
+		row_data.row_uid = "data_class_why_%s_%d" % [class_name_str, index]
+		row_data.spans = [_make_span(str(lines[index]["text"]), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "data_class_why",
+			"line_index": 0,
+			"text_color": lines[index]["color"]
+		})]
+		rows.append(row_data)
+	return rows
 
 
 ## One field of a "Data class" block, mapped onto the sheet's condition/action model: the field IDENTITY
@@ -6509,7 +6774,7 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 			"field_index": field_index,
 			"raw_row": raw_row,
 			"line_index": 0,
-			"text_color": _viewport._get_event_style().object_label_color
+			"text_color": _viewport._get_event_style().class_name_color
 		}.merged(condition_style, true)),
 		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"lane": "condition", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(condition_style, true)),
 		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, {
@@ -18216,6 +18481,7 @@ var _lens_variable_regex: RegEx = null
 ## The drawn marks of a row; here for the variable-name search the sentence spans carry for them.
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/native_head_marks.gd")
 
 
 func _reset_lens_caches_if_stale() -> void:

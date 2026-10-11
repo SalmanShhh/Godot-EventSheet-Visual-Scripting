@@ -114,6 +114,9 @@ signal object_properties_requested(object_label: String)
 ## The flags chip on an Add child row was clicked: the ticks it was written with travel in the
 ## payload, and the dock opens them as the tick dialog and writes the answer back.
 signal hierarchy_flags_requested(payload: Dictionary)
+## "+ Add field" at the foot of an open data class was clicked: the row and the clicked span's
+## metadata (which carries the class's raw row) travel, and the dock opens its Add Field dialog.
+signal data_class_add_field_requested(row_data: EventRowData, metadata: Dictionary)
 ## A door in a comment was clicked - a noun the project's own indexes could prove. The payload is the
 ## door itself ({kind, target, text}); the dock owns where each kind leads, because arriving is
 ## navigation and the viewport never navigates.
@@ -1853,6 +1856,9 @@ var show_value_glyphs: bool = true
 ## System. Off keeps the one Inspector mark beside the name, as it was. The tiles reserve room at
 ## the row's right, so flipping it rebuilds the rows.
 var show_variable_badges: bool = true
+## Included Variables (View menu, on by default): under each Include bar, the included sheet's own
+## variables as read-only rows. They are rows of their own, so flipping it rebuilds the rows.
+var show_included_variables: bool = true
 
 ## Row Hit Counts (View menu, SHIPS OFF): the Event Trace's per-row tally, drawn as a small chip
 ## under the event number in the GUTTER. Off is the default forever - debugger information is a

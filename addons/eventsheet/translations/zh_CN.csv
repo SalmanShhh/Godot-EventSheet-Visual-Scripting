@@ -7288,3 +7288,22 @@ Variable Badges,变量徽章
 Kept between limits in the Inspector (@export_range).,在检查器中限制在范围内（@export_range）。
 "Has a description: its ## comment, which the Inspector shows as its tooltip.",有说明：它的 ## 注释，检查器会将其显示为提示。
 Kept by the Save System under this variable's name.,由存档系统以此变量的名称保存。
+%s (a variable),%s（变量）
+%s (a list),%s（列表）
+"What this file is: a script, run by the node it is attached to.",此文件是什么：一个脚本，由它所附加的节点运行。
+A shared sheet: other sheets can include it.,共享表：其他表可以包含它。
+Included by %s,被 %s 包含
+The sheets that include this one.,包含此表的表。
+The scene this script is attached to.,此脚本所附加的场景。
+The line this include writes into the script.,此包含写入脚本的那一行。
+"A variable of the included sheet, read-only here. Click to open that sheet.",被包含表的变量，此处只读。点击打开该表。
++ Add field,+ 添加字段
+"Adds a field to this class: a name, a type and a starting value.",为此类添加一个字段：名称、类型和初始值。
+Use a class when values belong together,当几个值属于一体时使用类
+"• Give each enemy, level or item its own settings in one variable, edited together in the Inspector.",• 让每个敌人、关卡或物品在一个变量中拥有自己的设置，在检查器中一起编辑。
+"• Keep a list of them: every wave, every shop item, every line of dialogue.",• 把它们存成列表：每一波、每件商店物品、每句对白。
+Used by %s,被 %s 使用
+Included variables shown under each Include bar.,已在每个包含栏下显示包含的变量。
+Included variables hidden.,已隐藏包含的变量。
+Included Variables,包含的变量
+"Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.",在每个包含栏下，列出被包含表带来的变量，只读并注明来源。点击一个即可打开该表。关闭后只保留包含栏。

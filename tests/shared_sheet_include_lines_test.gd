@@ -10,7 +10,9 @@ extends RefCounted
 # pins hold:
 #   1. which includes a script's own source declares, by value, and only real shared sheets;
 #   2. the Include lines the head draws for them - "Include" for the one reader, and the Godot shape
-#      (`extends X`, `var _x, called from _process`) at the end of the same line for the other;
+#      (`extends X`, `var _x`) at the right edge of the same line for the other, with what kind of
+#      include it is (and where a helper is called from) in between;
+#   2b. under each line, the variables the included sheet declares, read-only and named by source;
 #   3. the helper's forwarding call reads as the shared sheet's handler running here;
 #   4. no pill on any of it - every span is a plain word.
 
@@ -59,9 +61,11 @@ static func _the_lines() -> bool:
 	view.free()
 	return SUPPORT.pins("shared_sheet_include_lines_test", [
 		["the base reads as one line, with its Godot shape",
-			texts.has("⇥ | Include | FixtureDamageRules | · shared sheet, as its base - extends FixtureDamageRules"), true],
+			texts.has("⇥ | Include | FixtureDamageRules | · shared sheet, as its base | extends FixtureDamageRules"), true],
 		["the helper reads as one line, with its Godot shape",
-			texts.has("⇥ | Include | FixturePauseHandling | · shared sheet, as a helper - var _fixture_pause_handling, called from _process"), true],
+			texts.has("⇥ | Include | FixturePauseHandling | · shared sheet, as a helper, called from _process | var _fixture_pause_handling"), true],
+		["the base's variable reads under its line, named by where it comes from",
+			texts.has("int | damage_taken | = | 0 | from FixtureDamageRules"), true],
 		["the forwarding call runs the helper's handler",
 			_any_contains(texts, "Include | FixturePauseHandling | ▸ run its Every Frame"), true],
 		["no pill on an Include line", pills, 0],

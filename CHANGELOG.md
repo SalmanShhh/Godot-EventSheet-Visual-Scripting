@@ -60,6 +60,26 @@
   Glyphs and View > Variable Badges turn each half off (remembered per project, and in saved views);
   with both off a variable row looks exactly as before. Every mark is painted on the canvas, no word
   of any row changes, and compiled output is unchanged.
+- **One class head, the Include bar, the included variables and the class block.** The head opens on
+  ONE class head row: the class icon and name, the word Script, and `· extends` with the base class
+  and its change… control - the extends band's own words and gesture, drawn on the head row instead
+  of on a row of their own (every other head band is still one row per line of the file). A shared
+  sheet (`## @ace_shared_sheet`) wears a drawn share mark on a small tile and says which scripts of
+  the project include it ("Included by Portcullis, Drawbridge"), read from the project's scripts and
+  cached for a few seconds; the scene the script is attached to, when exactly one scene runs it, sits
+  at the head's right edge ("Scene gate.tscn") on an editable sheet (a read-only preview already says
+  it on the bar it opens on). Each Include line reads as a bar - the Include word and the name in the
+  theme's Include colours with no fill behind any word, what kind of include it is, and the line it
+  writes (`var _enemy_common`, `extends EnemyCommon`) at the right edge in the script editor's
+  colours; a theme that states the Include edge (Editor Native does) draws it as a rounded bar. Under
+  each Include bar, the included sheet's own variables are listed read-only in a dashed outline,
+  "int health = 100  from EnemyCommon"; a click opens the shared sheet, and View > Included
+  Variables turns them off (remembered per project, and in saved views). An inner data class draws as
+  one framed block in the class colours, and while it is open it ends in "+ Add field" (the Add
+  Field dialog its right-click menu has always had) and a short note on when to use a class, with
+  the variables of this sheet that hold it ("Used by settings (a variable), waves (a list)"); a
+  read-only preview shows neither. Compiled output is unchanged; the reading of every opened sheet
+  changes only in that the class head row carries the extends words and no extends row follows it.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

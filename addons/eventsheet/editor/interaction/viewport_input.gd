@@ -355,6 +355,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_jump_to_function(str(metadata.get("name", "")))
 			_viewport.accept_event()
 			return
+		# "+ Add field" at the foot of an open data class: one click opens the Add Field dialog the
+		# block's right-click menu has always offered.
+		if not event.double_click and str(metadata.get("kind", "")) == "data_class_add_field" \
+				and not (_viewport._sheet != null and _viewport._sheet.read_only):
+			_viewport.data_class_add_field_requested.emit(row_data, metadata)
+			_viewport.accept_event()
+			return
 		# The flags… chip at the end of an Add child row reopens the four ticks the row was
 		# written with. One click, like every other chip that ends in an affordance; the viewport
 		# only names what was clicked, and the dock owns the dialog and the undoable write.

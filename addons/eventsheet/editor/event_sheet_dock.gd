@@ -2979,10 +2979,12 @@ func _stored_view_flag(key: String) -> bool:
 func _apply_variable_marks_prefs() -> void:
 	var glyphs: bool = _stored_view_flag("value_glyphs")
 	var badges: bool = _stored_view_flag("variable_badges")
+	var included: bool = _stored_view_flag("included_variables")
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.show_value_glyphs = glyphs
 			view.show_variable_badges = badges
+			view.show_included_variables = included
 
 
 func _toggle_value_glyphs(view_popup: PopupMenu) -> void:
@@ -2999,6 +3001,21 @@ func _toggle_variable_badges(view_popup: PopupMenu) -> void:
 		else EventSheetL10n.translate("Variable badges hidden."))
 
 
+## View > Included Variables: the included sheet's own variables, read-only under each Include bar.
+## They are rows, so flipping it rebuilds the rows. On by default; persisted like the marks above.
+func _included_variables_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.show_included_variables
+	return _stored_view_flag("included_variables")
+
+
+func _toggle_included_variables(view_popup: PopupMenu) -> void:
+	var showing: bool = not _included_variables_enabled()
+	_set_variable_marks_flag("included_variables", showing, view_popup, EventSheetMenuBar.INCLUDED_VARIABLES_VIEW_ID)
+	_set_status(EventSheetL10n.translate("Included variables shown under each Include bar.") if showing
+		else EventSheetL10n.translate("Included variables hidden."))
+
+
 func _set_variable_marks_flag(key: String, showing: bool, view_popup: PopupMenu, item_id: int) -> void:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", key, showing)
@@ -3007,6 +3024,8 @@ func _set_variable_marks_flag(key: String, showing: bool, view_popup: PopupMenu,
 			continue
 		if key == "value_glyphs":
 			view.show_value_glyphs = showing
+		elif key == "included_variables":
+			view.show_included_variables = showing
 		else:
 			view.show_variable_badges = showing
 		view.rebuild_rows()
@@ -3222,6 +3241,14 @@ var _data_class_field_dialog: AcceptDialog = null
 ## Add/Remove Field handlers can never disagree about the target.
 func _data_class_context_raw_row() -> RawCodeRow:
 	return _context_menus._data_class_row_target(_context_row)
+
+
+## "+ Add field" clicked at the foot of an open data class: the clicked row and span become the
+## context the Add Field dialog resolves its class from, exactly as a right-click on the block does.
+func _open_data_class_add_field_for(row_data: EventRowData, metadata: Dictionary) -> void:
+	_context_row = row_data
+	_context_hit = {"span_metadata": metadata}
+	_open_data_class_add_field()
 
 
 ## Add Field (the "add an action" gesture, for data classes): a small Name / Type / Default
@@ -8214,6 +8241,7 @@ func current_view_lenses() -> Dictionary:
 		"trigger_icons": view != null and view.show_trigger_icons,
 		"value_glyphs": view != null and view.show_value_glyphs,
 		"variable_badges": view != null and view.show_variable_badges,
+		"included_variables": view != null and view.show_included_variables,
 	}
 
 
@@ -8243,7 +8271,11 @@ func apply_saved_view(name: String) -> void:
 		if lenses.has("variable_badges") and pane.show_variable_badges != bool(lenses["variable_badges"]):
 			pane.show_variable_badges = bool(lenses["variable_badges"])
 			marks_changed = true
-		# Both take room on a variable row, so a saved view that changes either lays the rows out again.
+		if lenses.has("included_variables") and pane.show_included_variables != bool(lenses["included_variables"]):
+			pane.show_included_variables = bool(lenses["included_variables"])
+			marks_changed = true
+		# Each changes the rows (room on a variable row, or rows of their own), so a saved view that
+		# changes one lays the rows out again.
 		if marks_changed:
 			pane.rebuild_rows()
 		pane.queue_redraw()
