@@ -7267,13 +7267,24 @@ Toolbar: text labels.,Barra de herramientas: etiquetas de texto.
 Toolbar: icons.,Barra de herramientas: iconos.
 Sentences,Frases
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Cómo se lee la hoja: las filas de variables como frases, como su declaración de GDScript o ambas - y cada palabra que la hoja te deja elegir."
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,Iconos de disparador visibles - cada evento dice cómo empieza.
+Trigger icons hidden.,Iconos de disparador ocultos.
+Trigger Icons,Iconos de disparador
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.","Una pequeña marca junto al número de cada evento que dice cómo empieza: una vez al estar listo, cada tick, cada tick de física, con una entrada o con una señal. Pasa el cursor para leerla. Desactivado mantiene el margen tranquilo."
+"Runs once, when the node starts (On ready).","Se ejecuta una vez, cuando el nodo empieza (Al estar listo)."
+Runs every frame (Every tick).,Se ejecuta en cada fotograma (Cada tick).
+Runs every physics step (Every physics tick).,Se ejecuta en cada paso de física (Cada tick de física).
+"Runs when input arrives - a key, a button, the mouse.","Se ejecuta cuando llega una entrada - una tecla, un botón, el ratón."
+Runs when a signal is emitted.,Se ejecuta cuando se emite una señal.
+Runs when the engine sends this notification.,Se ejecuta cuando el motor envía esta notificación.
+Value glyphs shown - variables draw their values as the Inspector does.,Glifos de valor visibles - las variables dibujan sus valores como el Inspector.
+Value glyphs hidden.,Glifos de valor ocultos.
+Variable badges shown.,Insignias de variable visibles.
+Variable badges hidden.,Insignias de variable ocultas.
+Value Glyphs,Glifos de valor
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.","Las filas de variables dibujan su valor como el Inspector: una casilla para verdadero o falso, campos X e Y para un vector, una ficha para una escena o un recurso. El tipo lleva su color y la nota ## se inclina en cursiva. Las palabras no cambian."
+Variable Badges,Insignias de variable
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.","Pequeños iconos a la derecha de una fila de variable: visible en el Inspector, limitada a un rango, con descripción emergente, guardada por el sistema de guardado. Pasa el cursor para leerlo. Desactivado mantiene la única marca del Inspector junto al nombre."
+Kept between limits in the Inspector (@export_range).,Limitada entre dos valores en el Inspector (@export_range).
+"Has a description: its ## comment, which the Inspector shows as its tooltip.","Tiene una descripción: su comentario ##, que el Inspector muestra como descripción emergente."
+Kept by the Save System under this variable's name.,Guardada por el sistema de guardado con el nombre de esta variable.

@@ -1335,6 +1335,9 @@ func _get_span_gap(span: SemanticSpan) -> float:
 	if span == null or not (span.metadata is Dictionary):
 		return EventSheetPalette.SPAN_GAP
 	var metadata: Dictionary = span.metadata as Dictionary
+	# The Inspector mark stands among a variable's badge tiles while they are shown, and leaves no gap.
+	if show_variable_badges and bool(metadata.get("inspector_badge", false)):
+		return 0.0
 	var fallback_gap: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
 	return max(float(metadata.get("gap_after", fallback_gap)), 0.0)
 
@@ -1838,6 +1841,18 @@ var show_event_numbers: bool = true
 ## it is a redraw and no span, row height or layout ever moves.
 var show_trigger_icons: bool = true
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+
+## Value Glyphs (View menu, on by default): a variable row's type word in its colour family and a
+## monospaced face, its value as the Inspector draws it (a tick box, X / Y fields, a resource chip)
+## and its `##` note in italics. The words never change; the glyphs take room, so the span builds
+## read this and flipping it rebuilds the rows.
+var show_value_glyphs: bool = true
+## Variable Badges (View menu, on by default): the small icon tiles at a variable row's right that
+## say how the Inspector treats it - shown in it, kept in a range, given a tooltip, kept by the Save
+## System. Off keeps the one Inspector mark beside the name, as it was. The tiles reserve room at
+## the row's right, so flipping it rebuilds the rows.
+var show_variable_badges: bool = true
 
 ## Row Hit Counts (View menu, SHIPS OFF): the Event Trace's per-row tally, drawn as a small chip
 ## under the event number in the GUTTER. Off is the default forever - debugger information is a
@@ -2251,6 +2266,8 @@ func _draw() -> void:
 	_renderer.show_hit_counts = show_hit_counts
 	_renderer.show_costs = show_costs
 	_renderer.show_trigger_icons = show_trigger_icons
+	_renderer.show_value_glyphs = show_value_glyphs
+	_renderer.show_variable_badges = show_variable_badges
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
@@ -4052,6 +4069,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 		var trigger_hover: String = _trigger_icon_tooltip(int(hit.get("row_index", -1)), _to_logical_position(at_position))
 		if not trigger_hover.is_empty():
 			return trigger_hover
+	# A variable's badge tiles are pictures too; each says what it means.
+	if show_variable_badges:
+		var badge: String = NativeVariableMarks.badge_at(_row_at(int(hit.get("row_index", -1))), _to_logical_position(at_position))
+		if not badge.is_empty():
+			return NativeVariableMarks.badge_tooltip(badge)
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
 	# A MARK explains itself. The glyphs a sheet puts on a row (runs every frame, trigger, calls a

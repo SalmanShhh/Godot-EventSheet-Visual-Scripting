@@ -7267,13 +7267,24 @@ Toolbar: text labels.,Панель инструментов: текстовые 
 Toolbar: icons.,Панель инструментов: значки.
 Sentences,Предложения
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Как читается лист: строки переменных как предложения, как их объявление GDScript или и то и другое - и каждое слово, которое лист позволяет выбрать."
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,"Значки запуска показаны - каждое событие говорит, как оно запускается."
+Trigger icons hidden.,Значки запуска скрыты.
+Trigger Icons,Значки запуска
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.","Небольшая метка рядом с номером каждого события, показывающая, как оно запускается: один раз при готовности, каждый тик, каждый физический тик, по вводу или по сигналу. Наведите, чтобы прочитать. Выключено - поле остаётся спокойным."
+"Runs once, when the node starts (On ready).",Выполняется один раз при запуске узла (При готовности).
+Runs every frame (Every tick).,Выполняется каждый кадр (Каждый тик).
+Runs every physics step (Every physics tick).,Выполняется каждый шаг физики (Каждый физический тик).
+"Runs when input arrives - a key, a button, the mouse.","Выполняется при вводе - клавиша, кнопка, мышь."
+Runs when a signal is emitted.,Выполняется при испускании сигнала.
+Runs when the engine sends this notification.,"Выполняется, когда движок отправляет это уведомление."
+Value glyphs shown - variables draw their values as the Inspector does.,"Значки значений показаны - переменные рисуют значения, как Инспектор."
+Value glyphs hidden.,Значки значений скрыты.
+Variable badges shown.,Значки переменных показаны.
+Variable badges hidden.,Значки переменных скрыты.
+Value Glyphs,Значки значений
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.","Строки переменных рисуют значение, как Инспектор: флажок для истины или лжи, поля X и Y для вектора, плашка для сцены или ресурса. Тип получает свой цвет, а заметка ## - курсив. Слова не меняются."
+Variable Badges,Значки переменных
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.","Маленькие плитки со значками справа в строке переменной: видна в Инспекторе, ограничена диапазоном, есть подсказка, хранится системой сохранений. Наведите, чтобы прочитать. Выключено - остаётся одна метка Инспектора рядом с именем."
+Kept between limits in the Inspector (@export_range).,Ограничена пределами в Инспекторе (@export_range).
+"Has a description: its ## comment, which the Inspector shows as its tooltip.","Есть описание: её комментарий ##, который Инспектор показывает как подсказку."
+Kept by the Save System under this variable's name.,Хранится системой сохранений под именем этой переменной.

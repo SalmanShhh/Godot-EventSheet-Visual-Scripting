@@ -7267,13 +7267,24 @@ Toolbar: text labels.,ツールバー: テキストラベル。
 Toolbar: icons.,ツールバー: アイコン。
 Sentences,文
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.",シートの読み方: 変数の行を文として、GDScript の宣言として、またはその両方で表示 - そしてシートで選べるすべての言葉。
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,トリガーアイコンを表示 - 各イベントが開始方法を示します。
+Trigger icons hidden.,トリガーアイコンを非表示にしました。
+Trigger Icons,トリガーアイコン
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",各イベント番号の横の小さな印で、開始方法を示します: 準備完了時に一度、毎ティック、毎物理ティック、入力時、シグナル時。ホバーで内容を表示。オフにすると余白がすっきりします。
+"Runs once, when the node starts (On ready).",ノードの開始時に一度実行されます (準備完了時)。
+Runs every frame (Every tick).,毎フレーム実行されます (毎ティック)。
+Runs every physics step (Every physics tick).,物理ステップごとに実行されます (毎物理ティック)。
+"Runs when input arrives - a key, a button, the mouse.",入力が届いたときに実行されます - キー、ボタン、マウス。
+Runs when a signal is emitted.,シグナルが発行されたときに実行されます。
+Runs when the engine sends this notification.,エンジンがこの通知を送ったときに実行されます。
+Value glyphs shown - variables draw their values as the Inspector does.,値グリフを表示 - 変数はインスペクターと同じように値を描きます。
+Value glyphs hidden.,値グリフを非表示にしました。
+Variable badges shown.,変数バッジを表示しました。
+Variable badges hidden.,変数バッジを非表示にしました。
+Value Glyphs,値グリフ
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.",変数行はインスペクターと同じように値を描きます: true/false はチェックボックス、ベクトルは X と Y のフィールド、シーンやリソースはチップ。型は色付きになり、## のメモは斜体になります。言葉は変わりません。
+Variable Badges,変数バッジ
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.",変数行の右側の小さなアイコンタイル: インスペクターに表示、範囲内に制限、ツールチップあり、セーブシステムで保存。ホバーで内容を表示。オフにすると名前の横のインスペクター印だけが残ります。
+Kept between limits in the Inspector (@export_range).,インスペクターで範囲内に制限されます (@export_range)。
+"Has a description: its ## comment, which the Inspector shows as its tooltip.",説明があります: その ## コメントで、インスペクターがツールチップとして表示します。
+Kept by the Save System under this variable's name.,この変数の名前でセーブシステムに保存されます。

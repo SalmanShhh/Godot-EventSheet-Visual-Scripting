@@ -49,6 +49,21 @@ What changed in the build you have installed (v0.18.0), in the words the release
   number, text and keyword colours now also reach the values of a row read from hand-written code.
   The hovered event's lane divider shows a three-dot grip where the divider is wide enough to hold
   it. Drawing only: compiled output and every reading are unchanged.
+- **Variable rows draw their values the way the Inspector does, and wear badges.** The type word is
+  drawn in a monospaced face in its type's colour (number, text, true/false, vector, colour, object,
+  enum, collection or class, from the theme's type colours, kept readable on the row). A true/false
+  value gets a tick box in front of it - filled with a tick for true, an empty frame for false - a
+  vector shows X and Y (and Z) fields with axis-coloured letters, the way the Inspector draws them,
+  and a scene, resource or node path sits in a framed chip with a resource mark; a colour keeps its
+  swatch. The variable's `##` comment, already the row's last note, leans into italics. At the row's
+  right, small icon tiles say how the Inspector treats the variable: an eye where it is shown in the
+  Inspector (the old sliders mark beside the name, restyled and moved there), a slider where
+  `@export_range` keeps it between limits, a speech bubble where a `##` comment gives it a tooltip,
+  and a disk where the sheet's own file saves it with the Save System or remembers it - read off the
+  same save keys the Doctor's save check reads. Hovering a tile says what it means. View > Value
+  Glyphs and View > Variable Badges turn each half off (remembered per project, and in saved views);
+  with both off a variable row looks exactly as before. Every mark is painted on the canvas, no word
+  of any row changes, and compiled output is unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

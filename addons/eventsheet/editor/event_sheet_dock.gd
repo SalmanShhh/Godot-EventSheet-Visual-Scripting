@@ -2607,6 +2607,7 @@ func _load_simple_mode_preference() -> void:
 	_apply_familiar_words_pref()
 	_apply_patterns_lens_pref()
 	_apply_trigger_icons_pref()
+	_apply_variable_marks_prefs()
 	# The sheet zoom rides the same startup read: it belongs to the layout, so the first sheet
 	# opens at the size the last one was being read at.
 	_apply_sheet_zoom_pref()
@@ -2951,6 +2952,68 @@ func _toggle_trigger_icons(view_popup: PopupMenu) -> void:
 			view_popup.set_item_checked(item_index, showing)
 	_set_status(EventSheetL10n.translate("Trigger icons shown - each event says how it is started.") if showing
 		else EventSheetL10n.translate("Trigger icons hidden."))
+
+
+## View > Value Glyphs and View > Variable Badges: how a variable row DRAWS its type, its value and
+## its note, and the icon tiles at its right. Both take room on the row, so flipping one rebuilds the
+## rows (the words never change, only the room the pictures take). On by default; persisted per
+## project per user in editor metadata, like Trigger Icons.
+func _value_glyphs_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.show_value_glyphs
+	return _stored_view_flag("value_glyphs")
+
+
+func _variable_badges_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.show_variable_badges
+	return _stored_view_flag("variable_badges")
+
+
+func _stored_view_flag(key: String) -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", key, true))
+	return true
+
+
+func _apply_variable_marks_prefs() -> void:
+	var glyphs: bool = _stored_view_flag("value_glyphs")
+	var badges: bool = _stored_view_flag("variable_badges")
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.show_value_glyphs = glyphs
+			view.show_variable_badges = badges
+
+
+func _toggle_value_glyphs(view_popup: PopupMenu) -> void:
+	var showing: bool = not _value_glyphs_enabled()
+	_set_variable_marks_flag("value_glyphs", showing, view_popup, EventSheetMenuBar.VALUE_GLYPHS_VIEW_ID)
+	_set_status(EventSheetL10n.translate("Value glyphs shown - variables draw their values as the Inspector does.") if showing
+		else EventSheetL10n.translate("Value glyphs hidden."))
+
+
+func _toggle_variable_badges(view_popup: PopupMenu) -> void:
+	var showing: bool = not _variable_badges_enabled()
+	_set_variable_marks_flag("variable_badges", showing, view_popup, EventSheetMenuBar.VARIABLE_BADGES_VIEW_ID)
+	_set_status(EventSheetL10n.translate("Variable badges shown.") if showing
+		else EventSheetL10n.translate("Variable badges hidden."))
+
+
+func _set_variable_marks_flag(key: String, showing: bool, view_popup: PopupMenu, item_id: int) -> void:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", key, showing)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		if key == "value_glyphs":
+			view.show_value_glyphs = showing
+		else:
+			view.show_variable_badges = showing
+		view.rebuild_rows()
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(item_id)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, showing)
 
 
 func _toggle_add_event_rows(view_popup: PopupMenu) -> void:
@@ -8149,6 +8212,8 @@ func current_view_lenses() -> Dictionary:
 		"event_numbers": view != null and view.show_event_numbers,
 		"object_icons": view != null and view.show_object_icons,
 		"trigger_icons": view != null and view.show_trigger_icons,
+		"value_glyphs": view != null and view.show_value_glyphs,
+		"variable_badges": view != null and view.show_variable_badges,
 	}
 
 
@@ -8171,6 +8236,16 @@ func apply_saved_view(name: String) -> void:
 			pane.show_object_icons = bool(lenses["object_icons"])
 		if lenses.has("trigger_icons"):
 			pane.show_trigger_icons = bool(lenses["trigger_icons"])
+		var marks_changed: bool = false
+		if lenses.has("value_glyphs") and pane.show_value_glyphs != bool(lenses["value_glyphs"]):
+			pane.show_value_glyphs = bool(lenses["value_glyphs"])
+			marks_changed = true
+		if lenses.has("variable_badges") and pane.show_variable_badges != bool(lenses["variable_badges"]):
+			pane.show_variable_badges = bool(lenses["variable_badges"])
+			marks_changed = true
+		# Both take room on a variable row, so a saved view that changes either lays the rows out again.
+		if marks_changed:
+			pane.rebuild_rows()
 		pane.queue_redraw()
 	_set_status(EventSheetL10n.translate("View: %s") % name)
 

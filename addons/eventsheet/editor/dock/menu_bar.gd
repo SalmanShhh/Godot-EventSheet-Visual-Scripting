@@ -41,6 +41,11 @@ const RESET_LANE_SPLIT_VIEW_ID: int = 9817
 ## first of the run the View toggles beside Object Icons take (9818 onwards).
 const TRIGGER_ICONS_VIEW_ID: int = 9818
 
+## View ▸ Value Glyphs and View ▸ Variable Badges - a variable row's value as the Inspector draws it,
+## and the icon tiles at its right. Further along the same run, leaving 9819 to the next toggle.
+const VALUE_GLYPHS_VIEW_ID: int = 9820
+const VARIABLE_BADGES_VIEW_ID: int = 9821
+
 ## View ▸ Text labels - the strip laid out as words. Clear of the run the View toggles beside Object
 ## Icons take (9818 onwards), so two passes adding View items at once never share a number.
 const TEXT_LABELS_VIEW_ID: int = 9830
@@ -542,6 +547,14 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), _dock._trigger_icons_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), EventSheetL10n.translate(
 		"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet."))
+	view_popup.add_check_item(EventSheetL10n.translate("Value Glyphs"), VALUE_GLYPHS_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), _dock._value_glyphs_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), EventSheetL10n.translate(
+		"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same."))
+	view_popup.add_check_item(EventSheetL10n.translate("Variable Badges"), VARIABLE_BADGES_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(VARIABLE_BADGES_VIEW_ID), _dock._variable_badges_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(VARIABLE_BADGES_VIEW_ID), EventSheetL10n.translate(
+		"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name."))
 	view_popup.add_check_item("Event Numbers", 16)
 	view_popup.set_item_checked(view_popup.get_item_index(16), true)
 	view_popup.add_check_item("Aligned Object Columns", 18)
@@ -686,6 +699,8 @@ func build(root: Node) -> void:
 			9: _dock._toggle_add_event_rows(view_popup)
 			15: _dock._toggle_object_icons(view_popup)
 			TRIGGER_ICONS_VIEW_ID: _dock._toggle_trigger_icons(view_popup)
+			VALUE_GLYPHS_VIEW_ID: _dock._toggle_value_glyphs(view_popup)
+			VARIABLE_BADGES_VIEW_ID: _dock._toggle_variable_badges(view_popup)
 			16: _dock._toggle_event_numbers(view_popup)
 			18: _dock._toggle_object_column_alignment(view_popup)
 			RESET_LANE_SPLIT_VIEW_ID: _dock._reset_lane_split()

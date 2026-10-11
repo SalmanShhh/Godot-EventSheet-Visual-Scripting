@@ -7267,13 +7267,24 @@ Toolbar: text labels.,도구 모음: 텍스트 레이블.
 Toolbar: icons.,도구 모음: 아이콘.
 Sentences,문장
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","시트를 읽는 방식: 변수 행을 문장으로, GDScript 선언으로, 또는 둘 다로 - 그리고 시트에서 고를 수 있는 모든 단어."
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,트리거 아이콘 표시 - 각 이벤트가 시작 방식을 알려 줍니다.
+Trigger icons hidden.,트리거 아이콘 숨김.
+Trigger Icons,트리거 아이콘
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.","각 이벤트 번호 옆의 작은 표시로 시작 방식을 알려 줍니다: 준비될 때 한 번, 매 틱, 매 물리 틱, 입력 시 또는 시그널 시. 마우스를 올리면 읽을 수 있습니다. 끄면 여백이 조용해집니다."
+"Runs once, when the node starts (On ready).",노드가 시작될 때 한 번 실행됩니다 (준비 시).
+Runs every frame (Every tick).,매 프레임 실행됩니다 (매 틱).
+Runs every physics step (Every physics tick).,매 물리 단계마다 실행됩니다 (매 물리 틱).
+"Runs when input arrives - a key, a button, the mouse.","입력이 들어올 때 실행됩니다 - 키, 버튼, 마우스."
+Runs when a signal is emitted.,시그널이 발생할 때 실행됩니다.
+Runs when the engine sends this notification.,엔진이 이 알림을 보낼 때 실행됩니다.
+Value glyphs shown - variables draw their values as the Inspector does.,값 글리프 표시 - 변수가 인스펙터처럼 값을 그립니다.
+Value glyphs hidden.,값 글리프 숨김.
+Variable badges shown.,변수 배지 표시.
+Variable badges hidden.,변수 배지 숨김.
+Value Glyphs,값 글리프
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.","변수 행이 인스펙터처럼 값을 그립니다: 참/거짓은 체크 상자, 벡터는 X와 Y 필드, 씬이나 리소스는 칩. 타입은 색을 띠고 ## 메모는 기울임꼴이 됩니다. 단어는 그대로입니다."
+Variable Badges,변수 배지
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.","변수 행 오른쪽의 작은 아이콘 타일: 인스펙터에 표시됨, 범위 내로 유지됨, 툴팁 있음, 저장 시스템이 보관함. 마우스를 올리면 읽을 수 있습니다. 끄면 이름 옆의 인스펙터 표시 하나만 남습니다."
+Kept between limits in the Inspector (@export_range).,인스펙터에서 한계 사이로 유지됩니다 (@export_range).
+"Has a description: its ## comment, which the Inspector shows as its tooltip.","설명이 있습니다: ## 주석이며, 인스펙터가 툴팁으로 보여 줍니다."
+Kept by the Save System under this variable's name.,이 변수의 이름으로 저장 시스템이 보관합니다.

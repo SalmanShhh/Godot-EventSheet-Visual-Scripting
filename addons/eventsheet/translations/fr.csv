@@ -7267,13 +7267,24 @@ Toolbar: text labels.,Barre d'outils : libellés texte.
 Toolbar: icons.,Barre d'outils : icônes.
 Sentences,Phrases
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Comment se lit la feuille : les lignes de variables en phrases, en déclaration GDScript, ou les deux - et chaque mot que la feuille vous laisse choisir."
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,Icônes de déclencheur affichées - chaque événement indique comment il démarre.
+Trigger icons hidden.,Icônes de déclencheur masquées.
+Trigger Icons,Icônes de déclencheur
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.","Une petite marque à côté du numéro de chaque événement qui indique comment il démarre : une fois prêt, à chaque tick, à chaque tick physique, sur une entrée ou sur un signal. Survolez-la pour la lire. Désactivé garde la marge calme."
+"Runs once, when the node starts (On ready).","S'exécute une fois, au démarrage du nœud (Quand prêt)."
+Runs every frame (Every tick).,S'exécute à chaque image (Chaque tick).
+Runs every physics step (Every physics tick).,S'exécute à chaque pas physique (Chaque tick physique).
+"Runs when input arrives - a key, a button, the mouse.","S'exécute à l'arrivée d'une entrée - une touche, un bouton, la souris."
+Runs when a signal is emitted.,S'exécute quand un signal est émis.
+Runs when the engine sends this notification.,S'exécute quand le moteur envoie cette notification.
+Value glyphs shown - variables draw their values as the Inspector does.,Glyphes de valeur affichés - les variables dessinent leurs valeurs comme l'Inspecteur.
+Value glyphs hidden.,Glyphes de valeur masqués.
+Variable badges shown.,Badges de variable affichés.
+Variable badges hidden.,Badges de variable masqués.
+Value Glyphs,Glyphes de valeur
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.","Les lignes de variable dessinent leur valeur comme l'Inspecteur : une case à cocher pour vrai ou faux, des champs X et Y pour un vecteur, une puce pour une scène ou une ressource. Le type porte sa couleur et la note ## passe en italique. Les mots restent les mêmes."
+Variable Badges,Badges de variable
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.","Petites tuiles d'icônes à droite d'une ligne de variable : visible dans l'Inspecteur, gardée dans une plage, a une infobulle, conservée par le système de sauvegarde. Survolez-en une pour la lire. Désactivé garde la seule marque de l'Inspecteur à côté du nom."
+Kept between limits in the Inspector (@export_range).,Gardée entre des limites dans l'Inspecteur (@export_range).
+"Has a description: its ## comment, which the Inspector shows as its tooltip.","A une description : son commentaire ##, que l'Inspecteur affiche en infobulle."
+Kept by the Save System under this variable's name.,Conservée par le système de sauvegarde sous le nom de cette variable.

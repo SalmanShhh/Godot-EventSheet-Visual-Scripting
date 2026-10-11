@@ -7267,13 +7267,24 @@ Toolbar: text labels.,工具栏：文字标签。
 Toolbar: icons.,工具栏：图标。
 Sentences,句子
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.",事件表的阅读方式：变量行显示为句子、GDScript 声明，或两者兼有 - 以及事件表允许你选择的每个词。
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,已显示触发图标 - 每个事件都会说明它如何开始。
+Trigger icons hidden.,已隐藏触发图标。
+Trigger Icons,触发图标
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",每个事件编号旁的小标记，说明它如何开始：就绪时一次、每帧、每个物理帧、输入时或信号时。悬停即可查看。关闭后边距保持简洁。
+"Runs once, when the node starts (On ready).",节点启动时运行一次（就绪时）。
+Runs every frame (Every tick).,每帧运行（每帧）。
+Runs every physics step (Every physics tick).,每个物理步运行（每个物理帧）。
+"Runs when input arrives - a key, a button, the mouse.",有输入时运行 - 按键、按钮、鼠标。
+Runs when a signal is emitted.,发出信号时运行。
+Runs when the engine sends this notification.,引擎发送此通知时运行。
+Value glyphs shown - variables draw their values as the Inspector does.,已显示值图形 - 变量像检查器一样绘制它们的值。
+Value glyphs hidden.,已隐藏值图形。
+Variable badges shown.,已显示变量徽章。
+Variable badges hidden.,已隐藏变量徽章。
+Value Glyphs,值图形
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.",变量行像检查器一样绘制其值：真或假显示为复选框，向量显示 X 和 Y 字段，场景或资源显示为标签。类型带有颜色，## 注释变为斜体。文字保持不变。
+Variable Badges,变量徽章
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.",变量行右侧的小图标块：在检查器中显示、限制在范围内、带有提示、由存档系统保存。悬停即可查看。关闭后只保留名称旁的一个检查器标记。
+Kept between limits in the Inspector (@export_range).,在检查器中限制在范围内（@export_range）。
+"Has a description: its ## comment, which the Inspector shows as its tooltip.",有说明：它的 ## 注释，检查器会将其显示为提示。
+Kept by the Save System under this variable's name.,由存档系统以此变量的名称保存。

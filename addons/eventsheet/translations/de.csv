@@ -7267,13 +7267,24 @@ Toolbar: text labels.,Werkzeugleiste: Textbeschriftungen.
 Toolbar: icons.,Werkzeugleiste: Symbole.
 Sentences,Sätze
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Wie das Blatt sich liest: Variablenzeilen als Sätze, als ihre GDScript-Deklaration oder beides - und jedes Wort, das das Blatt dich wählen lässt."
-Trigger icons shown - each event says how it is started.,
-Trigger icons hidden.,
-Trigger Icons,
-"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
-"Runs once, when the node starts (On ready).",
-Runs every frame (Every tick).,
-Runs every physics step (Every physics tick).,
-"Runs when input arrives - a key, a button, the mouse.",
-Runs when a signal is emitted.,
-Runs when the engine sends this notification.,
+Trigger icons shown - each event says how it is started.,"Auslöser-Symbole sichtbar - jedes Ereignis zeigt, wie es gestartet wird."
+Trigger icons hidden.,Auslöser-Symbole ausgeblendet.
+Trigger Icons,Auslöser-Symbole
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.","Ein kleines Zeichen neben der Nummer jedes Ereignisses, das zeigt, wie es gestartet wird: einmal bei Bereitschaft, jeden Tick, jeden Physik-Tick, bei Eingabe oder bei einem Signal. Zum Lesen darüberfahren. Aus hält den Rand ruhig."
+"Runs once, when the node starts (On ready).","Läuft einmal, wenn der Knoten startet (Bei Bereitschaft)."
+Runs every frame (Every tick).,Läuft in jedem Frame (Jeden Tick).
+Runs every physics step (Every physics tick).,Läuft in jedem Physikschritt (Jeden Physik-Tick).
+"Runs when input arrives - a key, a button, the mouse.","Läuft, wenn eine Eingabe ankommt - eine Taste, ein Knopf, die Maus."
+Runs when a signal is emitted.,"Läuft, wenn ein Signal ausgesendet wird."
+Runs when the engine sends this notification.,"Läuft, wenn die Engine diese Benachrichtigung sendet."
+Value glyphs shown - variables draw their values as the Inspector does.,Wert-Symbole sichtbar - Variablen zeigen ihre Werte wie der Inspektor.
+Value glyphs hidden.,Wert-Symbole ausgeblendet.
+Variable badges shown.,Variablen-Abzeichen sichtbar.
+Variable badges hidden.,Variablen-Abzeichen ausgeblendet.
+Value Glyphs,Wert-Symbole
+"Variable rows draw their value the way the Inspector does: a tick box for true or false, X and Y fields for a vector, a chip for a scene or resource. The type wears its colour and the ## note leans into italics. The words stay the same.","Variablenzeilen zeigen ihren Wert wie der Inspektor: ein Kontrollkästchen für wahr oder falsch, X- und Y-Felder für einen Vektor, ein Chip für eine Szene oder Ressource. Der Typ trägt seine Farbe und die ##-Notiz wird kursiv. Die Wörter bleiben gleich."
+Variable Badges,Variablen-Abzeichen
+"Small icon tiles at a variable row's right: shown in the Inspector, kept in a range, has a tooltip, kept by the Save System. Hover one to read it. Off keeps the one Inspector mark beside the name.","Kleine Symbolkacheln rechts in einer Variablenzeile: im Inspektor sichtbar, in einem Bereich gehalten, hat einen Tooltip, vom Speichersystem gesichert. Zum Lesen darüberfahren. Aus behält das eine Inspektor-Zeichen neben dem Namen."
+Kept between limits in the Inspector (@export_range).,Im Inspektor zwischen Grenzen gehalten (@export_range).
+"Has a description: its ## comment, which the Inspector shows as its tooltip.","Hat eine Beschreibung: ihren ##-Kommentar, den der Inspektor als Tooltip zeigt."
+Kept by the Save System under this variable's name.,Vom Speichersystem unter dem Namen dieser Variable gesichert.

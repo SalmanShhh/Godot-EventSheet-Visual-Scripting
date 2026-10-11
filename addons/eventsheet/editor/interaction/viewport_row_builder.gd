@@ -10940,6 +10940,17 @@ func _build_variable_row(
 	# MultiplayerSynchronizer keeps it in step, which is every variable of every project with no
 	# networking in it.
 	var sync_entry: Dictionary = _sync_entry(scope_label, var_name, declared_in)
+	# The native look's facts about this variable: the colour family its type paints in, and the
+	# badges it earns. Stamped on spans the row already has, so no span is added for them.
+	var source_variable: LocalVariable = options.get("source_resource") as LocalVariable
+	var type_family: String = NativeVariableMarks.type_family(type_name, default_value,
+		bool(options.get("expression_default", false)), _sheet_enum_names())
+	var description_text: String = str(options.get("description", "")).strip_edges()
+	var variable_badges: PackedStringArray = NativeVariableMarks.badges_for(
+		bool(options.get("exported", false)),
+		NativeVariableMarks.has_range(source_variable),
+		not description_text.is_empty(),
+		_is_saved_variable(scope_label, var_name, declared_in))
 	# The kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
 	# scrolling. A mark, never a word pill.
 	row_data.spans = [
@@ -10980,7 +10991,10 @@ func _build_variable_row(
 					variable_meta.merged({
 						"editable": false,
 						"variable_type_span": true,
-						"text_color": reading_style.secondary_text_color
+						"text_color": reading_style.secondary_text_color,
+						# Which colour family the type word paints in (View > Value Glyphs). A fact,
+						# not a colour: the painter asks the theme, so the reading never moves.
+						"variable_type_family": type_family
 					}, true)
 				)
 			)
@@ -11000,6 +11014,8 @@ func _build_variable_row(
 					"edit_kind": "variable_rename",
 					"edit_gesture": "rename",
 					"variable_name_span": true,
+					# The badge tiles drawn at the row's right (View > Variable Badges).
+					"variable_badges": variable_badges,
 					"bbcode_segments": [{
 						"text": display_name,
 						"color": _viewport._get_event_style().object_label_color,
@@ -11090,6 +11106,14 @@ func _build_variable_row(
 	# follows keeps its first character.
 	if facts.get("swatch") is Color:
 		value_meta["swatch_color"] = facts["swatch"] as Color
+	# The value as the Inspector draws it (View > Value Glyphs): a tick box, X / Y fields, a resource
+	# chip. Facts only - the text stays the value's reading, and the painter decides.
+	var glyph: Dictionary = NativeVariableMarks.value_glyph(type_family, value_text, default_value,
+		bool(options.get("expression_default", false)))
+	if not str(glyph.get("glyph", "")).is_empty():
+		value_meta["value_glyph"] = str(glyph["glyph"])
+		value_meta["value_axes"] = glyph.get("axes", PackedStringArray())
+		value_meta["value_on"] = bool(glyph.get("on", false))
 	if not hide_value:
 		row_data.spans.append(
 			_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
@@ -11126,7 +11150,7 @@ func _build_variable_row(
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
 	_append_variable_note(row_data, variable_meta,
-		str(options.get("description", "")).strip_edges() if not code_only else "")
+		description_text if not code_only else "", "", true)
 	_append_code_echo_span(row_data, variable_meta, code_line, view_mode)
 	return row_data
 
@@ -11147,14 +11171,36 @@ func _sync_entry(scope_label: String, var_name: String, declared_in: String) -> 
 ## so all of them are appended the same way. An empty note appends nothing, which is what lets the
 ## caller compute one and hand it over without a guard of its own.
 func _append_variable_note(row_data: EventRowData, variable_meta: Dictionary, note: String,
-		hover_note: String = "") -> void:
+		hover_note: String = "", doc_note: bool = false) -> void:
 	if note.strip_edges().is_empty():
 		return
 	row_data.spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT, variable_meta.merged({
 		"editable": false,
 		"text_color": _viewport._get_reading_style().muted_text_color,
-		"hover_note": hover_note
+		"hover_note": hover_note,
+		# The `##` doc comment, which the painter leans into italics (View > Value Glyphs).
+		"variable_doc_note": doc_note
 	}, true)))
+
+
+## The enums this sheet declares at its top level, so a variable typed by one reads as an enum.
+func _sheet_enum_names() -> PackedStringArray:
+	var names := PackedStringArray()
+	if _viewport == null or _viewport._sheet == null:
+		return names
+	for entry: Variant in _viewport._sheet.events:
+		if entry is EnumRow:
+			names.append((entry as EnumRow).enum_name)
+	return names
+
+
+## Whether the Save System keeps this variable: the sheet's own file saves a key, or remembers a
+## value, spelled as the variable's name. A local lives and dies inside its event, and a borrowed
+## declaration is saved (or not) by the file that declares it.
+func _is_saved_variable(scope_label: String, var_name: String, declared_in: String) -> bool:
+	if scope_label == "local" or not declared_in.is_empty() or _viewport == null or _viewport._sheet == null:
+		return false
+	return NativeVariableMarks.saved_names(str(_viewport._sheet.external_source_path)).has(var_name)
 
 
 ## The View dial this sheet is being read at (sentence / both / code). A viewport that has not
@@ -15225,6 +15271,21 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 			span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	if metadata.get("object_icon") is Texture2D:
 		span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
+	# The native look's variable marks (View > Value Glyphs, View > Variable Badges): the type word
+	# measured in the face it paints in, the room a value glyph takes, and the Inspector mark that
+	# stands among the badge tiles instead of beside the name. One source of sizes, shared with the
+	# painter, so the room reserved is the room drawn.
+	if _viewport.show_value_glyphs:
+		if bool(metadata.get("variable_type_span", false)) and not str(metadata.get("variable_type_family", "")).is_empty():
+			span_width = NativeVariableMarks.type_word_width(display_text, font, draw_font_size)
+		match str(metadata.get("value_glyph", "")):
+			NativeVariableMarks.GLYPH_VECTOR:
+				span_width = NativeVariableMarks.vector_width(
+					PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size)
+			NativeVariableMarks.GLYPH_BOOL, NativeVariableMarks.GLYPH_RESOURCE:
+				span_width += NativeVariableMarks.glyph_extra_width(str(metadata["value_glyph"]))
+	if _viewport.show_variable_badges and bool(metadata.get("inspector_badge", false)):
+		return 0.0
 	if metadata.get("swatch_color") is Color:
 		# The swatch draws just past the span's text, so the span has to OWN that room; without it
 		# the next span starts under the swatch and loses its first character. Mirrors the
@@ -18154,6 +18215,7 @@ var _lens_variable_regex: RegEx = null
 
 ## The drawn marks of a row; here for the variable-name search the sentence spans carry for them.
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
 
 func _reset_lens_caches_if_stale() -> void:

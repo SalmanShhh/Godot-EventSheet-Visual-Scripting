@@ -86,6 +86,12 @@ var show_costs: bool = false
 ## Stamped the same way: View > Trigger Icons (ships ON). Draw-only, in the slot every event row
 ## already reserves beside its margin, so with it false the row paints exactly as before.
 var show_trigger_icons: bool = true
+## And View > Value Glyphs / View > Variable Badges (both ship ON): a variable row's type colour,
+## value glyphs and italic note, and the badge tiles at its right. With both false a variable row
+## paints exactly as before.
+var show_value_glyphs: bool = true
+var show_variable_badges: bool = true
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
 # ── The hit-count chip (LEFT MARGIN ONLY - never a cell, never program text) ──
 # Height/inset of the small count chip that stacks under the event number in the 20px gutter.
@@ -1350,8 +1356,17 @@ func _draw_spans(
 				var hover_outline: Color = hover_fill.lightened(SPAN_HOVER_OUTLINE_LIGHTEN)
 				hover_outline.a = 0.55
 				control.draw_rect(span.rect.grow(1.0), hover_outline, false, 1.0)
+		# A variable's badge tiles, at the row's right where the layout reserved them. Painted from the
+		# name span that carries them, so the row needs no span of its own for each tile.
+		if show_variable_badges and metadata.get("badge_tiles_x") is float:
+			_draw_variable_badges(control, span, metadata, event_style)
 		if bool(metadata.get("badge", false)):
+			# The Inspector mark joins the badge tiles while they are shown; it measured to nothing.
+			if show_variable_badges and bool(metadata.get("inspector_badge", false)):
+				continue
 			_draw_badge_span(control, span, font, font_size, metadata)
+			continue
+		if show_value_glyphs and row_data.variable_row and span_index != editing_span_index 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
 		# The type word is the guide rail on a variable's value: while the field is being typed
@@ -1474,6 +1489,19 @@ func _draw_spans(
 			span.metadata["object_label_rect"] = Rect2(
 				span.rect.position.x, span.rect.position.y,
 				text_x - span.rect.position.x, span.rect.size.y)
+			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+		# A bool's tick box and a resource's chip sit in front of the value's own text, in the room the
+		# layout measured for them; the text then draws as it always did, colours and all.
+		if show_value_glyphs and row_data.variable_row and span_index != editing_span_index:
+			match str(metadata.get("value_glyph", "")):
+				NativeVariableMarks.GLYPH_BOOL:
+					text_x += NativeVariableMarks.draw_tick_box(control, text_x, span.rect.get_center().y,
+						bool(metadata.get("value_on", false)), _family_ink(event_style, NativeVariableMarks.FAMILY_BOOL),
+						NativeVariableMarks.frame_ink(BG_0))
+				NativeVariableMarks.GLYPH_RESOURCE:
+					var chip_text_width: float = font.get_string_size(span.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+					text_x += NativeVariableMarks.draw_resource_chip(control, text_x, span.rect.get_center().y,
+						chip_text_width, _family_ink(event_style, NativeVariableMarks.FAMILY_OBJECT), NativeVariableMarks.frame_ink(BG_0))
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		# What the painter walks: the value ranges, plus - where the theme colours variables - the
@@ -1660,6 +1688,56 @@ func _draw_spans(
 				1.0,
 				true
 			)
+
+
+## Paints the variable-row words the native look draws whole, and says whether it did: the type
+## word in its family's colour and the monospaced face it was measured in, a vector's X / Y fields in
+## place of its text, and the `##` note in italics. Anything else falls through to the ordinary
+## painter.
+func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Dictionary, font: Font,
+		font_size: int, event_style: EventSheetEventStyle, reading: EventSheetReadingStyle) -> bool:
+	var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
+	var centre_y: float = span.rect.position.y + span.rect.size.y * ROW_VERTICAL_CENTER_RATIO
+	var family: String = str(metadata.get("variable_type_family", ""))
+	if bool(metadata.get("variable_type_span", false)) and not family.is_empty():
+		var ink: Color = _family_ink(event_style, family)
+		if ink.a <= 0.01:
+			ink = metadata.get("text_color", reading.secondary_text_color)
+		var type_size: int = NativeVariableMarks.type_font_size(draw_font_size)
+		_draw_text(control, Vector2(span.rect.position.x, centre_y + type_size * FONT_BASELINE_OFFSET_RATIO), span.text,
+			maxf(span.rect.size.x, 1.0), NativeVariableMarks.mono_font(font), type_size, ink)
+		return true
+	if str(metadata.get("value_glyph", "")) == NativeVariableMarks.GLYPH_VECTOR:
+		var value_ink: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
+		NativeVariableMarks.draw_vector_fields(control, span.rect.position.x, span.rect.get_center().y,
+			PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size, value_ink,
+			NativeVariableMarks.axis_colors(BG_0), NativeVariableMarks.frame_ink(BG_0))
+		return true
+	if bool(metadata.get("variable_doc_note", false)) and not bool(metadata.get("comment_wrap", false)):
+		var note_ink: Color = metadata.get("text_color", reading.muted_text_color)
+		_draw_text(control, Vector2(span.rect.position.x, centre_y + draw_font_size * FONT_BASELINE_OFFSET_RATIO), span.text,
+			maxf(span.rect.size.x - 2.0, 1.0), NativeVariableMarks.italic_font(font), draw_font_size, note_ink)
+		return true
+	return false
+
+
+## A type family's colour on a variable row: the theme's token, kept readable on the fill every
+## variable row is drawn on.
+func _family_ink(event_style: EventSheetEventStyle, family: String) -> Color:
+	return NativeVariableMarks.family_color(event_style if event_style != null else _fallback_event_style(),
+		family, BG_0)
+
+
+## The badge tiles a variable row earns, from where the layout put them, in the theme's badge pairs.
+func _draw_variable_badges(control: Control, span: SemanticSpan, metadata: Dictionary,
+		event_style: EventSheetEventStyle) -> void:
+	var badges: PackedStringArray = PackedStringArray(metadata.get("variable_badges", PackedStringArray()))
+	var style: EventSheetEventStyle = event_style if event_style != null else _fallback_event_style()
+	var rects: Array[Rect2] = NativeVariableMarks.tile_rects(float(metadata["badge_tiles_x"]),
+		span.rect.get_center().y, badges.size())
+	for index: int in range(mini(badges.size(), rects.size())):
+		var pair: Array[Color] = NativeVariableMarks.badge_colors(style, badges[index])
+		NativeVariableMarks.draw_badge_tile(control, rects[index], badges[index], pair[0], pair[1])
 
 
 ## The muted line beside an open inline editor, starting one gap past the field it belongs to

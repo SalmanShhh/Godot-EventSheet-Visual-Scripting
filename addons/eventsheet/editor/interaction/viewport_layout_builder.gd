@@ -26,6 +26,8 @@ const CODE_ECHO_MIN_ROW_WIDTH := 440.0
 ## and leave the words it stands for nowhere to draw - so the echo is the half that gets clipped.
 const FLOW_RIGHT_ANCHOR_MIN_SHARE := 0.5
 
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
+
 var _viewport: Control = null
 
 
@@ -151,6 +153,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var flow_right_anchor: float = _flow_right_anchor(row_data, row_right_limit, width, font, font_size) \
 		if lane_divider_x <= 0.0 else row_right_limit
 	var flow_right_x: float = flow_right_anchor
+	# A variable row's badge tiles stand between the sentence and the right-anchored run: the anchor
+	# already gave them their room, so the run starts past them, and the name span is told where the
+	# tiles begin for the painter and the hover to share.
+	var badge_reserve: float = _badge_reserve(row_data) if lane_divider_x <= 0.0 else 0.0
+	if badge_reserve > 0.0:
+		flow_right_x = flow_right_anchor + badge_reserve + EventSheetPalette.SPAN_GAP
+		(NativeVariableMarks.badge_span(row_data).metadata as Dictionary)["badge_tiles_x"] = flow_right_anchor
 	var comment_wrap_width: float = _viewport._row_metrics_helper._comment_wrap_width(
 			row_data.indent, width, flow_right_anchor) if is_comment_row else 0.0
 	var comment_line_tops: Array[int] = []
@@ -474,4 +483,15 @@ func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: f
 		if run > 0.0:
 			run += _viewport._get_span_gap(span)
 		run += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0
+	var badge_reserve: float = _badge_reserve(row_data)
+	if badge_reserve > 0.0:
+		run += badge_reserve + (EventSheetPalette.SPAN_GAP if run > 0.0 else 0.0)
 	return maxf(row_right_limit - run, width * FLOW_RIGHT_ANCHOR_MIN_SHARE)
+
+
+## The room a variable row's badge tiles take at its right, or 0 when the row has none or the View
+## menu has them off.
+func _badge_reserve(row_data: EventRowData) -> float:
+	if not _viewport.show_variable_badges:
+		return 0.0
+	return NativeVariableMarks.badge_reserve(NativeVariableMarks.row_badges(row_data).size())
