@@ -7307,12 +7307,12 @@ Included variables shown under each Include bar.,Variables incluidas mostradas b
 Included variables hidden.,Variables incluidas ocultas.
 Included Variables,Variables incluidas
 "Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Bajo cada barra Incluir, las variables que trae la hoja incluida, de solo lectura y nombradas por su origen. Haz clic en una para abrir esa hoja. Desactivado deja solo las barras Incluir."
-Add links shown on the event under the pointer.,
-"Add links drawn as before: on hover, on the selected event and under an empty lane.",
-Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,
-No problems,
-1 problem,
-%d problems,
-Add Links On Hover,
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",
-Active,
+Add links shown on the event under the pointer.,Enlaces de añadir mostrados en el evento bajo el puntero.
+"Add links drawn as before: on hover, on the selected event and under an empty lane.","Enlaces de añadir dibujados como antes: al pasar el puntero, en el evento seleccionado y bajo un carril vacío."
+Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,Filas de esta hoja sobre las que el Doctor tiene algo que decir. Cada una se dibuja en ámbar; selecciona una para leer por qué.
+No problems,Sin problemas
+1 problem,1 problema
+%d problems,%d problemas
+Add Links On Hover,Enlaces de añadir al pasar el puntero
+"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.","Añadir condición y Añadir acción aparecen como enlaces bajo los carriles del evento bajo el puntero, y en ningún otro sitio. Haz clic en uno para elegir qué añadir. Desactivado los dibuja como antes: al pasar el puntero, en el evento seleccionado y bajo un carril vacío."
+Active,Activo

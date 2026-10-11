@@ -7307,12 +7307,12 @@ Included variables shown under each Include bar.,Включённые перем
 Included variables hidden.,Включённые переменные скрыты.
 Included Variables,Включённые переменные
 "Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Под каждой полосой «Включить» - переменные, которые приносит включённый лист, только для чтения и с указанием источника. Щёлкните одну, чтобы открыть этот лист. Выключено оставляет только полосы «Включить»."
-Add links shown on the event under the pointer.,
-"Add links drawn as before: on hover, on the selected event and under an empty lane.",
-Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,
-No problems,
-1 problem,
-%d problems,
-Add Links On Hover,
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",
-Active,
+Add links shown on the event under the pointer.,Ссылки добавления показаны на событии под указателем.
+"Add links drawn as before: on hover, on the selected event and under an empty lane.","Ссылки добавления рисуются как раньше: при наведении, на выбранном событии и под пустой дорожкой."
+Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,"Строки этого листа, о которых Doctor может что-то сказать. Каждая нарисована янтарным; выберите строку, чтобы прочитать причину."
+No problems,Нет проблем
+1 problem,1 проблема
+%d problems,Проблем: %d
+Add Links On Hover,Ссылки добавления при наведении
+"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.","Добавить условие и Добавить действие появляются как ссылки под дорожками события под указателем, и больше нигде. Нажмите одну, чтобы выбрать, что добавить. Выключено - рисуются как раньше: при наведении, на выбранном событии и под пустой дорожкой."
+Active,Активна

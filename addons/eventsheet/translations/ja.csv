@@ -7307,12 +7307,12 @@ Included variables shown under each Include bar.,各インクルードバーの�
 Included variables hidden.,インクルードされた変数を非表示にしました。
 Included Variables,インクルードされた変数
 "Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.",各インクルードバーの下に、インクルードされたシートが持ち込む変数を読み取り専用で、出どころの名前付きで表示します。クリックするとそのシートを開きます。オフにするとインクルードバーだけになります。
-Add links shown on the event under the pointer.,
-"Add links drawn as before: on hover, on the selected event and under an empty lane.",
-Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,
-No problems,
-1 problem,
-%d problems,
-Add Links On Hover,
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",
-Active,
+Add links shown on the event under the pointer.,ポインター下のイベントに追加リンクを表示しました。
+"Add links drawn as before: on hover, on the selected event and under an empty lane.",追加リンクを従来どおり描画します: ホバー時、選択中のイベント、空のレーンの下。
+Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,このシートで Doctor が指摘している行です。各行は琥珀色で描かれます。選択すると理由を読めます。
+No problems,問題なし
+1 problem,問題 1 件
+%d problems,問題 %d 件
+Add Links On Hover,ホバー時の追加リンク
+"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",条件を追加とアクションを追加は、ポインター下のイベントのレーンの下にだけリンクとして表示されます。クリックすると追加するものを選べます。オフにすると従来どおり描画します: ホバー時、選択中のイベント、空のレーンの下。
+Active,有効

@@ -7307,12 +7307,12 @@ Included variables shown under each Include bar.,Variables incluses affichées s
 Included variables hidden.,Variables incluses masquées.
 Included Variables,Variables incluses
 "Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Sous chaque barre Inclure, les variables qu'apporte la feuille incluse, en lecture seule et nommées par leur provenance. Cliquez sur l'une pour ouvrir cette feuille. Désactivé laisse les barres Inclure seules."
-Add links shown on the event under the pointer.,
-"Add links drawn as before: on hover, on the selected event and under an empty lane.",
-Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,
-No problems,
-1 problem,
-%d problems,
-Add Links On Hover,
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",
-Active,
+Add links shown on the event under the pointer.,Liens d'ajout affichés sur l'événement sous le pointeur.
+"Add links drawn as before: on hover, on the selected event and under an empty lane.","Liens d'ajout dessinés comme avant : au survol, sur l'événement sélectionné et sous une voie vide."
+Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,Lignes de cette feuille sur lesquelles le Docteur a quelque chose à dire. Chacune est dessinée en ambre ; sélectionnez-en une pour lire pourquoi.
+No problems,Aucun problème
+1 problem,1 problème
+%d problems,%d problèmes
+Add Links On Hover,Liens d'ajout au survol
+"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.","Ajouter une condition et Ajouter une action apparaissent comme liens sous les voies de l'événement sous le pointeur, et nulle part ailleurs. Cliquez sur l'un d'eux pour choisir quoi ajouter. Désactivé, ils sont dessinés comme avant : au survol, sur l'événement sélectionné et sous une voie vide."
+Active,Actif

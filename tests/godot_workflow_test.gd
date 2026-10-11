@@ -404,7 +404,7 @@ static func run() -> bool:
 	all_passed = _check("the toolbar wraps instead of clipping",
 		toolbar_editor._toolbar is HFlowContainer, true) and all_passed
 	all_passed = _check("grouping leaves a short toolbar",
-		toolbar_editor._toolbar.get_child_count() <= 21, true) and all_passed  # -1: the Simple Mode pill left the strip, -1: the Settings menu retired into Tools, -4: Sheet/Edit/View/Tools became submenus of one Menu, -1: Add became a submenu of it too, -1: the theme OptionButton became View ▸ Sheet theme, +1: that Menu, +2: the Undo and Redo icons, +1: the play button's slot, +1: the chevron
+		toolbar_editor._toolbar.get_child_count() <= 23, true) and all_passed  # +2: the Text labels layout's Find spacer and Sentences menu (shown only in that layout), -1: the Simple Mode pill left the strip, -1: the Settings menu retired into Tools, -4: Sheet/Edit/View/Tools became submenus of one Menu, -1: Add became a submenu of it too, -1: the theme OptionButton became View ▸ Sheet theme, +1: that Menu, +2: the Undo and Redo icons, +1: the play button's slot, +1: the chevron
 	# THE MENUS MOVED, THEY DID NOT CHANGE. Sheet, Edit, View and Tools are the very same PopupMenus
 	# they always were - re-parented under the one cascading Menu button, so they are now addressed
 	# as PopupMenu children of that button's popup rather than as MenuButtons on the strip. Every
