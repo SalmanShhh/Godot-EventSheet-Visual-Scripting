@@ -99,6 +99,19 @@ What changed in the build you have installed (v0.18.0), in the words the release
   holds, beside the address and the zoom - a count only, the findings themselves still live in the
   amber row, the help strip and the Doctor. Drawing only: compiled output and every reading are
   unchanged.
+- **Every bundled theme wears the new look in its own colours.** Classic Sheet, Mockup Slate,
+  Catppuccin Mocha, Dracula, Gruvbox Dark, Monokai, Nord, Solarized Light, Soft Light, High Contrast
+  and the Designer Template now state every native-look token from their own palette instead of
+  leaving them clear or on the generic dark design: numbers in the palette's green, text in its
+  orange, true/false in its blue, vectors and the Include line in its teal or aqua, colours in its
+  pink, enums and the comment edge in its yellow, lists and the inner-class block in its purple,
+  links and the open tab's edge in its accent. Each word and glyph colour reads at 4.5:1 or better on
+  the surface it is drawn on (both lanes, a variable row, the Include bar, the class block, its badge
+  tile; 7:1 in High Contrast), and Solarized Light's are light-theme values. The rows at the head of a
+  sheet (its class line, variables, Include lines and the rows under them) are now filled with the
+  theme's own row colours and written in its own inks rather than the plugin's fixed dark pair, so a
+  light theme is light there too. The six palette presets are rebuilt by `tools/build_theme_presets.gd`,
+  which now carries these values. Drawing only: compiled output and every reading are unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

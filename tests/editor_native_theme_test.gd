@@ -7,8 +7,9 @@
 #   2. The greys the rule DERIVES for a dark and for a light editor base, pinned colour by colour.
 #   3. Following the editor moves only the tokens still at their shipped value; one a designer
 #      changed stays theirs, and a theme that does not ask is handed back untouched.
-#   4. The tokens that re-colour something older default to clear, every older theme states them
-#      clear, and clear reads as "the colour that was there before".
+#   4. The tokens that re-colour something older default to clear, and clear reads as "the colour
+#      that was there before" - while every bundled theme states each of them in its own colours,
+#      so none of them is left on the look it had before the native tokens existed.
 @tool
 class_name EditorNativeThemeTest
 extends RefCounted
@@ -24,7 +25,14 @@ const AS_BEFORE_TOKENS := [
 ]
 const OLDER_PRESETS := [
 	"res://demo/themes/dracula_theme.tres",
+	"res://demo/themes/nord_theme.tres",
+	"res://demo/themes/gruvbox_dark_theme.tres",
+	"res://demo/themes/monokai_theme.tres",
 	"res://demo/themes/solarized_light_theme.tres",
+	"res://demo/themes/catppuccin_mocha_theme.tres",
+	"res://demo/themes/high_contrast_theme.tres",
+	"res://demo/themes/soft_light_theme.tres",
+	"res://demo/themes/designer_template_theme.tres",
 	"res://addons/eventsheet/themes/classic_sheet_theme.tres",
 	"res://addons/eventsheet/themes/mockup_slate_theme.tres",
 ]
@@ -149,12 +157,12 @@ static func _test_clear_means_as_before() -> bool:
 	rows.append(["every as-before token defaults to clear", defaults, AS_BEFORE_TOKENS.map(func(_n: String) -> float: return 0.0)])
 	for preset_path: String in OLDER_PRESETS:
 		var preset: EventSheetEventStyle = (load(preset_path) as EventSheetEditorStyle).get_event_style()
-		var stated: Array[String] = []
+		var clear: Array[String] = []
 		for token_name: String in AS_BEFORE_TOKENS:
-			if (preset.get(token_name) as Color).a > 0.01:
-				stated.append(token_name)
-		rows.append(["%s keeps its look: every as-before token is clear (not: %s)" % [preset_path.get_file(), str(stated)],
-			stated, [] as Array[String]])
+			if (preset.get(token_name) as Color).a <= 0.01:
+				clear.append(token_name)
+		rows.append(["%s dresses every as-before token in its own colours (clear: %s)" % [preset_path.get_file(), str(clear)],
+			clear, [] as Array[String]])
 	rows.append(["a clear word colour stands in for the older one",
 		EventSheetEventStyle.stated_or(Color(0.0, 0.0, 0.0, 0.0), Color("#123456")).to_html(false), "123456"])
 	rows.append(["a stated word colour wins",

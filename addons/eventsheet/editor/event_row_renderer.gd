@@ -611,11 +611,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	elif row_data.outline_radius > 0.0 and row_data.outline_color.a > 0.01:
 		# A rounded bar (the Include bar): the canvas shows at its corners, and its fill and its
 		# edge are one rounded box rather than a full-bleed band with a stripe.
-		control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+		control.draw_rect(row_rect, section_fill(event_style, alternating), true)
 		NativeHeadMarks.draw_rounded_bar(control, row_rect, row_data.custom_color,
 			row_data.outline_color, row_data.outline_radius)
 	else:
-		var section_bg: Color = BG_1 if alternating else BG_0
+		var section_bg: Color = section_fill(event_style, alternating)
 		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it
 		# over the base so the block reads as its kind - an event block - then a left accent
 		# bar in the same hue drives the cue home. custom_color.a == 0 rows are untouched.
@@ -1410,7 +1410,7 @@ func _draw_spans(
 				+ (note_size * FONT_BASELINE_OFFSET_RATIO)
 			_draw_text(control, Vector2(span.rect.position.x, note_baseline), span.text,
 				maxf(span.rect.size.x - 2.0, 1.0), NativeVariableMarks.italic_font(font), note_size,
-				metadata.get("text_color", _get_span_color(span.type, event_style)))
+				metadata.get("text_color", _get_span_color(span.type, event_style, reading)))
 			continue
 		if bool(metadata.get("badge", false)):
 			# The Inspector mark joins the badge tiles while they are shown; it measured to nothing.
@@ -1420,7 +1420,7 @@ func _draw_spans(
 			continue
 		if show_value_glyphs and row_data.variable_row and span_index != editing_span_index 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
 			continue
-		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
+		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
 		# The type word is the guide rail on a variable's value: while the field is being typed
 		# into, a literal the declared type cannot hold turns amber with the reason on the row, never
 		# a modal. The value is still whatever the file says until Enter.
@@ -1553,11 +1553,12 @@ func _draw_spans(
 				NativeVariableMarks.GLYPH_BOOL:
 					text_x += NativeVariableMarks.draw_tick_box(control, text_x, span.rect.get_center().y,
 						bool(metadata.get("value_on", false)), _family_ink(event_style, NativeVariableMarks.FAMILY_BOOL),
-						NativeVariableMarks.frame_ink(BG_0))
+						NativeVariableMarks.frame_ink(section_fill(event_style, false)))
 				NativeVariableMarks.GLYPH_RESOURCE:
 					var chip_text_width: float = font.get_string_size(span.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 					text_x += NativeVariableMarks.draw_resource_chip(control, text_x, span.rect.get_center().y,
-						chip_text_width, _family_ink(event_style, NativeVariableMarks.FAMILY_OBJECT), NativeVariableMarks.frame_ink(BG_0))
+						chip_text_width, _family_ink(event_style, NativeVariableMarks.FAMILY_OBJECT),
+						NativeVariableMarks.frame_ink(section_fill(event_style, false)))
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		# What the painter walks: the value ranges, plus - where the theme colours variables - the
@@ -1740,7 +1741,7 @@ func _draw_spans(
 			control.draw_line(
 				Vector2(caret_x, span.rect.position.y + 5.0),
 				Vector2(caret_x, span.rect.end.y - 5.0),
-				TEXT_PRIMARY,
+				reading.primary_text_color,
 				1.0,
 				true
 			)
@@ -1764,10 +1765,11 @@ func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Diction
 			maxf(span.rect.size.x, 1.0), NativeVariableMarks.mono_font(font), type_size, ink)
 		return true
 	if str(metadata.get("value_glyph", "")) == NativeVariableMarks.GLYPH_VECTOR:
-		var value_ink: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
+		var value_ink: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
+		var surface: Color = section_fill(event_style, false)
 		NativeVariableMarks.draw_vector_fields(control, span.rect.position.x, span.rect.get_center().y,
 			PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size, value_ink,
-			NativeVariableMarks.axis_colors(BG_0), NativeVariableMarks.frame_ink(BG_0))
+			NativeVariableMarks.axis_colors(surface), NativeVariableMarks.frame_ink(surface))
 		return true
 	if bool(metadata.get("variable_doc_note", false)) and not bool(metadata.get("comment_wrap", false)):
 		var note_ink: Color = metadata.get("text_color", reading.muted_text_color)
@@ -1781,7 +1783,7 @@ func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Diction
 ## variable row is drawn on.
 func _family_ink(event_style: EventSheetEventStyle, family: String) -> Color:
 	return NativeVariableMarks.family_color(event_style if event_style != null else _fallback_event_style(),
-		family, BG_0)
+		family, section_fill(event_style, false))
 
 
 ## The badge tiles a variable row earns, from where the layout put them, in the theme's badge pairs.
@@ -2281,7 +2283,36 @@ func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_siz
 	_draw_text(control, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, -1.0, font, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
 
 
-func _get_span_color(span_type: int, event_style: EventSheetEventStyle = null) -> Color:
+## The surface a full-width row that is not an event (a variable, a head line, an Include bar's
+## corners) is filled with: the theme's own row colours, so a light theme is light there too. The
+## plugin's dark pair stands in only when no theme is there to ask.
+static func section_fill(event_style: EventSheetEventStyle, alternating: bool) -> Color:
+	if event_style == null:
+		return BG_1 if alternating else BG_0
+	return event_style.row_background_alt_color if alternating else event_style.row_background_color
+
+
+## The ink a span is drawn in when its row says nothing of its own: the theme's reading inks, its
+## object colour and its number colour, so the words of a light theme are dark. The plugin's own inks
+## stand in only when no theme is there to ask.
+func _get_span_color(span_type: int, event_style: EventSheetEventStyle = null,
+		reading: EventSheetReadingStyle = null) -> Color:
+	if event_style != null and reading != null:
+		match span_type:
+			SemanticSpan.SpanType.OBJECT:
+				return event_style.object_label_color
+			SemanticSpan.SpanType.ACTION:
+				return event_style.ace_action_accent_color
+			SemanticSpan.SpanType.VALUE:
+				return EventSheetEventStyle.stated_or(event_style.word_number_color, event_style.value_highlight_color)
+			SemanticSpan.SpanType.OPERATOR:
+				return reading.secondary_text_color
+			SemanticSpan.SpanType.KEYWORD:
+				return reading.muted_text_color
+			SemanticSpan.SpanType.COMMENT:
+				return event_style.comment_text_color
+			_:
+				return reading.primary_text_color
 	match span_type:
 		SemanticSpan.SpanType.OBJECT:
 			return COLOR_OBJECT

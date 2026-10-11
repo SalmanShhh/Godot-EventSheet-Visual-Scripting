@@ -123,7 +123,9 @@ static func _test_included_variables_toggle() -> bool:
 
 static func _test_include_bar_shape() -> bool:
 	var native_bar: EventRowData = _include_bar(NATIVE_THEME)
-	var classic_bar: EventRowData = _include_bar(CLASSIC_THEME)
+	# Every bundled theme states the Include edge now, so the clear case is a theme whose designer
+	# cleared it.
+	var classic_bar: EventRowData = _include_bar(CLASSIC_THEME, true)
 	return SUPPORT.pins(TEST_NAME, [
 		["a theme stating the Include edge draws a rounded bar",
 			[native_bar.outline_radius, native_bar.height_scale, native_bar.outline_color.a > 0.0],
@@ -174,9 +176,13 @@ static func _class_block(read_only: bool) -> EventRowData:
 	return found
 
 
-static func _include_bar(theme_path: String) -> EventRowData:
+static func _include_bar(theme_path: String, clear_include: bool = false) -> EventRowData:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(INCLUDER)
-	sheet.editor_style = load(theme_path) as EventSheetEditorStyle
+	sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
+	if clear_include:
+		for token_name: String in ["include_border_color", "include_fill_color", "include_tag_color",
+				"include_name_color", "include_note_color"]:
+			sheet.editor_style.get_event_style().set(token_name, Color(0.0, 0.0, 0.0, 0.0))
 	var view := _view_of(sheet)
 	var bar: EventRowData = _row_with_uid(view, "include_line_FixtureDamageRules")
 	view.free()

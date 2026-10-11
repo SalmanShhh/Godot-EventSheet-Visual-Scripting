@@ -127,11 +127,15 @@ static func _test_the_readers_choice_wins() -> bool:
 static func _test_a_clear_edge_leaves_the_tab_alone() -> bool:
 	var editor: EventSheetEditor = _editor(load(STARTER_PATH) as EventSheetEditorStyle)
 	var had_edge: bool = editor._tab_bar.has_theme_stylebox_override("tab_selected")
-	EventSheetActiveTheme.publish(load(CLASSIC_PATH) as EventSheetEditorStyle)
+	# Every bundled theme now draws the edge in its own accent, so the clear case is a Classic Sheet
+	# whose designer cleared it.
+	var cleared: EventSheetEditorStyle = (load(CLASSIC_PATH) as EventSheetEditorStyle).duplicate(true)
+	cleared.get_chrome_style().active_tab_edge_color = Color(0.0, 0.0, 0.0, 0.0)
+	EventSheetActiveTheme.publish(cleared)
 	editor._menu_bar.apply_theme_chrome()
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["the starter put an edge on the tab", had_edge, true],
-		["Classic Sheet states the edge clear",
+		["a theme that states the edge clear",
 			EventSheetActiveTheme.chrome().active_tab_edge_color, Color(0.0, 0.0, 0.0, 0.0)],
 		["so the tab's own style comes back", editor._tab_bar.has_theme_stylebox_override("tab_selected"), false],
 		["and the strip goes back to icons", editor._menu_bar.text_labels(), false],
