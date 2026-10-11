@@ -3071,7 +3071,14 @@ func _build_object_fact_row(sheet: EventSheetResource, uid_suffix: String, title
 
 ## The pack's knobs as event-sheet setting folders: one bar per @export_group in FILE order, a Settings
 ## bar for exported knobs declared before any group, and Internal state for the rest.
-func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
+func _build_knob_group_rows(sheet: EventSheetResource, all_knobs: Array) -> Array[EventRowData]:
+	# The compiler's own bookkeeping members are left out where the theme asks (hide_compiler_variables).
+	var knobs: Array = []
+	for entry: Variant in all_knobs:
+		var knob_variable: LocalVariable = (entry as Dictionary).get("variable") if entry is Dictionary else null
+		if knob_variable != null and hides_compiler_variable(knob_variable.name):
+			continue
+		knobs.append(entry)
 	# On an autoload every one of these IS a global variable, exported or not: the whole point
 	# of the singleton is that the rest of the project reads them. Splitting them into Settings and
 	# Internal state would be drawing a line a reader of an event sheet has no use for, so they read
@@ -7465,8 +7472,27 @@ static func _record_scene_root_script(scene_path: String) -> void:
 	handle.close()
 
 
+## The prose of a line that is nothing but a `##` doc comment, "" for any other line - what an
+## Inspector-style row reads as the note of the plain `var` written under it.
+static func doc_comment_only_prose(code: String) -> String:
+	var text: String = code.strip_edges()
+	if text.is_empty():
+		return ""
+	for line: String in text.split("\n"):
+		if not line.strip_edges().begins_with("##"):
+			return ""
+	return join_doc_prose(text)
+
+
+## Whether this sheet's theme leaves `variable_name` out of its variable rows: a bookkeeping member
+## the compiler writes (hide_compiler_variables). The view only - it still compiles and saves.
+func hides_compiler_variable(variable_name: String) -> bool:
+	return _viewport._get_event_style().hide_compiler_variables \
+		and NativeVariableMarks.is_compiler_variable(variable_name)
+
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
-func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
+func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: String = "") -> EventRowData:
 	# While reading, an @onready node reference is an OBJECT declaration, not a variable row.
 	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
 	if object_row != null:
@@ -7494,6 +7520,9 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 			# The `##` doc comment's first line, which is the sentence the Inspector shows as this
 			# variable's tooltip - the rest of the block stays where it was written.
 			"description": variable.description.strip_edges().get_slice("\n", 0).strip_edges(),
+			# A `##` line kept on its own above a plain `var`, which an Inspector-style row reads as
+			# the variable's note (the line is left out of the view, never out of the file).
+			"doc_note": doc_note,
 			"code_line": EventSheetCodeEcho.line_for(variable)
 		}
 	)
@@ -10465,6 +10494,8 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	# the strips need their own uids or two of them would share a fold.
 	var group_runs: Dictionary = {}
 	for var_name: Variant in sheet.variables.keys():
+		if hides_compiler_variable(str(var_name)):
+			continue
 		var descriptor: Dictionary = sheet.variables.get(var_name, {})
 		var is_exported: bool = bool(descriptor.get("exported", descriptor.get("exposed", true)))
 		var var_attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
@@ -11219,6 +11250,11 @@ func _build_variable_row(
 	# as a percent, a colour's word) and the muted note that says the limits or the choices.
 	var facts: Dictionary = options.get("facts", {}) if options.get("facts") is Dictionary else {}
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	# A theme that asks for Inspector-style rows (inspector_variable_rows) reads the row the way the
+	# Inspector lists the property: the GDScript type, the capitalised name, the value, the `##`
+	# note and the icon tiles - no kind mark, no scope word, no code echo. A local inside an event is
+	# no property the Inspector lists, so it keeps the sentence row the event around it reads in.
+	var inspector_rows: bool = _viewport._get_event_style().inspector_variable_rows and scope_label != "local"
 	# The type word a READER needs, which is not always the declared one: `const SPEED := 300.0`
 	# declares nothing, so the word comes from the value.
 	var type_word: String = _reading_type_word(
@@ -11227,6 +11263,9 @@ func _build_variable_row(
 	var hinted_type_word: String = str(facts.get("type_word", "")).strip_edges()
 	if not hinted_type_word.is_empty():
 		type_word = hinted_type_word
+	if inspector_rows:
+		type_word = NativeVariableMarks.gdscript_type_word(type_name, default_value,
+			bool(options.get("expression_default", false)))
 	# The scope word is DERIVED, never stored: the caller settles it from where the sheet lives
 	# (an autoload says Global, a node script Instance, a Resource script Field), and a `const` or a
 	# `static var` answers for itself even when nothing else did.
@@ -11240,10 +11279,16 @@ func _build_variable_row(
 		scope_word_key = EventSheetVariableSentence.SCOPE_LOCAL
 	variable_meta["variable_scope_word"] = scope_word_key
 	var display_name: String = str(facts.get("name_text", "")).strip_edges()
+	if display_name.is_empty() and inspector_rows and not var_name.is_empty():
+		display_name = NativeVariableMarks.inspector_name(var_name)
 	if display_name.is_empty():
 		display_name = var_name if not var_name.is_empty() else "(unnamed)"
 	var code_line: String = str(options.get("code_line", ""))
 	var view_mode: int = _variable_row_view()
+	# The Inspector draws no code beside a property, so the resting echo goes; the View dial's Code
+	# setting is still the reader's own choice, and still shows the line.
+	if inspector_rows and view_mode == EventSheetCodeEcho.VIEW_BOTH:
+		view_mode = EventSheetCodeEcho.VIEW_SENTENCE
 	var code_only: bool = view_mode == EventSheetCodeEcho.VIEW_CODE and not code_line.is_empty()
 	# What the SCENE says about this variable, asked once for the row: {} unless a
 	# MultiplayerSynchronizer keeps it in step, which is every variable of every project with no
@@ -11255,31 +11300,49 @@ func _build_variable_row(
 	var type_family: String = NativeVariableMarks.type_family(type_name, default_value,
 		bool(options.get("expression_default", false)), _sheet_enum_names())
 	var description_text: String = str(options.get("description", "")).strip_edges()
+	# An exported variable's `##` comment is lifted into its tooltip attribute, which is exactly the
+	# sentence the Inspector shows; an Inspector-style row reads it as the note. A doc line kept as a
+	# line of its own above a plain `var` arrives as `doc_note`.
+	if inspector_rows and description_text.is_empty():
+		description_text = str(options.get("doc_note", "")).strip_edges()
+	if inspector_rows and description_text.is_empty() and source_variable != null \
+			and source_variable.attributes is Dictionary:
+		description_text = str((source_variable.attributes as Dictionary).get("tooltip", "")).strip_edges() \
+			.get_slice("\n", 0).strip_edges()
 	var variable_badges: PackedStringArray = NativeVariableMarks.badges_for(
 		bool(options.get("exported", false)),
 		NativeVariableMarks.has_range(source_variable),
 		not description_text.is_empty(),
 		_is_saved_variable(scope_label, var_name, declared_in))
 	# The kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
-	# scrolling. A mark, never a word pill.
-	row_data.spans = [
-		_make_span(
-			"x",
-			SemanticSpan.SpanType.KEYWORD,
-			variable_meta.merged({
-				"editable": false,
-				"badge": true,
-				"badge_style": "outline",
-				"badge_natural_width": true,
-				"badge_fixed_width": KIND_BADGE_WIDTH,
-				"variable_badge": true,
-				"badge_bg": reading_style.variable_row_wash_color,
-				"badge_fg": reading_style.variable_row_rule_color
-			}, true)
+	# scrolling. A mark, never a word pill. An Inspector-style row has none: its type leads it.
+	row_data.spans = []
+	if not inspector_rows:
+		row_data.spans.append(
+			_make_span(
+				"x",
+				SemanticSpan.SpanType.KEYWORD,
+				variable_meta.merged({
+					"editable": false,
+					"badge": true,
+					"badge_style": "outline",
+					"badge_natural_width": true,
+					"badge_fixed_width": KIND_BADGE_WIDTH,
+					"variable_badge": true,
+					"badge_bg": reading_style.variable_row_wash_color,
+					"badge_fg": reading_style.variable_row_rule_color
+				}, true)
+			)
 		)
-	]
+	# What an Inspector-style row says only on its name's hover: the scope and the muted notes the
+	# sentence row trails (the limits, what the scope adds, a frozen constant's promise).
+	var hover_lines := PackedStringArray()
+	if inspector_rows and not scope_word_key.is_empty():
+		hover_lines.append("%s - %s" % [EventSheetVariableSentence.scope_word(scope_word_key),
+			EventSheetVariableSentence.scope_note(scope_word_key)])
+	var name_span: SemanticSpan = null
 	if not code_only:
-		if not scope_word_key.is_empty():
+		if not scope_word_key.is_empty() and not inspector_rows:
 			row_data.spans.append(
 				_make_span(
 					EventSheetVariableSentence.scope_word(scope_word_key),
@@ -11314,27 +11377,30 @@ func _build_variable_row(
 		# committing will rewrite beside it. `edit_gesture` is what keeps it OUT of every other way
 		# in - Enter still edits the value, and a double-click anywhere on the row still opens the
 		# variable dialog, so the field belongs to the one key that means "rename this".
-		row_data.spans.append(
-			_make_span(
-				display_name,
-				SemanticSpan.SpanType.OBJECT,
-				variable_meta.merged({
-					"editable": declared_in.is_empty(),
-					"edit_kind": "variable_rename",
-					"edit_gesture": "rename",
-					"variable_name_span": true,
-					# The badge tiles drawn at the row's right (View > Variable Badges).
-					"variable_badges": variable_badges,
-					"bbcode_segments": [{
-						"text": display_name,
-						"color": _viewport._get_event_style().object_label_color,
-						"bold": true,
-						"italic": false
-					}],
-					"hover_note": "%s : %s" % [display_name, type_name if not type_name.is_empty() else "Variant"]
-				}, true)
-			)
+		name_span = _make_span(
+			display_name,
+			SemanticSpan.SpanType.OBJECT,
+			variable_meta.merged({
+				"editable": declared_in.is_empty(),
+				"edit_kind": "variable_rename",
+				"edit_gesture": "rename",
+				"variable_name_span": true,
+				# The badge tiles drawn at the row's right (View > Variable Badges).
+				"variable_badges": variable_badges,
+				"bbcode_segments": [{
+					"text": display_name,
+					"color": _viewport._get_event_style().object_label_color,
+					"bold": true,
+					"italic": false
+				}],
+				"hover_note": "%s : %s" % [var_name if inspector_rows else display_name,
+					type_name if not type_name.is_empty() else "Variant"]
+			}, true)
 		)
+		# A capitalised name still renames as the identifier the file holds.
+		if inspector_rows and display_name != var_name:
+			(name_span.metadata as Dictionary)["edit_text"] = var_name
+		row_data.spans.append(name_span)
 		# The one Godot-only fact a reader needs about a variable, as a mark rather than a word: this
 		# value shows up in the Inspector. The Inspector GROUP is not a chip any more - the folder
 		# strip above the run names it once.
@@ -11423,14 +11489,28 @@ func _build_variable_row(
 		value_meta["value_glyph"] = str(glyph["glyph"])
 		value_meta["value_axes"] = glyph.get("axes", PackedStringArray())
 		value_meta["value_on"] = bool(glyph.get("on", false))
+	# The Inspector draws a colour as its swatch then its hex, never as the numbers it was written
+	# with: the swatch leads (and still opens the picker), and the hex is the value's text.
+	if inspector_rows and type_family == NativeVariableMarks.FAMILY_COLOR:
+		var colour: Variant = facts["swatch"] if facts.get("swatch") is Color \
+			else NativeVariableMarks.color_of(default_value)
+		if colour is Color:
+			# Typing into the field edits what the file holds, not the hex the row shows.
+			value_meta["edit_text"] = value_text
+			value_text = NativeVariableMarks.color_hex(colour as Color)
+			value_meta.erase("swatch_color")
+			value_meta["value_glyph"] = NativeVariableMarks.GLYPH_COLOR
+			value_meta["value_swatch"] = colour as Color
 	if not hide_value:
 		row_data.spans.append(
 			_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
 		)
 	# The limits and the choices, muted, straight after the value - the same slot the Inspector puts
 	# them in, and ahead of the knob's own sentence so the fact reads before the prose.
+	# An Inspector-style row trails only its `##` note; these quieter notes go to its name's hover.
+	var notes_target: EventRowData = EventRowData.new() if inspector_rows else row_data
 	var hint_note: String = str(facts.get("note", "")).strip_edges() if not code_only else ""
-	_append_variable_note(row_data, variable_meta, hint_note)
+	_append_variable_note(notes_target, variable_meta, hint_note)
 	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
 	# in the same slot the limits use - a fact about the variable, ahead of its prose.
 	var is_static: bool = bool(options.get("is_static", false))
@@ -11438,7 +11518,7 @@ func _build_variable_row(
 	var shared_hover: String = EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
 		if _is_shared_store() else ""
 	var scope_note: String = str(options.get("scope_note", "")).strip_edges() if not code_only else ""
-	_append_variable_note(row_data, variable_meta, scope_note, shared_hover if is_static else "")
+	_append_variable_note(notes_target, variable_meta, scope_note, shared_hover if is_static else "")
 	# A static variable says who shares it: one value on the CLASS, so every object of this type reads
 	# and writes the same one. Without the note "Static number spawned = 0" looks like an ordinary
 	# variable that happens to wear an extra word. A head row already carries the note as its
@@ -11446,15 +11526,21 @@ func _build_variable_row(
 	# is ever made of, "shared by every X" names copies that do not exist; what the reader needs
 	# there is that this ONE value is the editor's, and it outlives the sheet they are looking at.
 	if is_static and scope_note.is_empty() and not code_only:
-		_append_variable_note(row_data, variable_meta,
+		_append_variable_note(notes_target, variable_meta,
 			EventSheetL10n.translate("one for the whole editor") if _is_shared_store() \
 				else EventSheetL10n.translate("shared by every %s") % _static_owner_word(),
 			shared_hover)
 	# A constant the file itself says must never change wears that promise where a reader meets
 	# it. The words come from the doc comment above the line, so nothing here decides what is frozen.
 	if is_constant and not code_only and _frozen_constants().has(var_name):
-		_append_variable_note(row_data, variable_meta, EventSheetL10n.translate("frozen"),
+		_append_variable_note(notes_target, variable_meta, EventSheetL10n.translate("frozen"),
 			EventSheetL10n.translate("Named elsewhere: add to it, never rename one."))
+	if inspector_rows:
+		for note_span: SemanticSpan in notes_target.spans:
+			hover_lines.append(note_span.text)
+		if name_span != null and not hover_lines.is_empty():
+			var name_meta: Dictionary = name_span.metadata as Dictionary
+			name_meta["hover_note"] = "%s\n%s" % [str(name_meta.get("hover_note", "")), "\n".join(hover_lines)]
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
@@ -15593,6 +15679,8 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 					PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size)
 			NativeVariableMarks.GLYPH_BOOL, NativeVariableMarks.GLYPH_RESOURCE:
 				span_width += NativeVariableMarks.glyph_extra_width(str(metadata["value_glyph"]))
+			NativeVariableMarks.GLYPH_COLOR:
+				span_width = NativeVariableMarks.color_value_width(display_text, font, draw_font_size)
 	if _viewport.show_variable_badges and bool(metadata.get("inspector_badge", false)):
 		return 0.0
 	if metadata.get("swatch_color") is Color:

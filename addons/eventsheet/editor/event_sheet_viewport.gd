@@ -2929,8 +2929,30 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# it declares itself. A reader meets `Game.Score` where it is used, not only where it lives.
 	root_rows.append_array(_row_builder.build_globals_used_here_rows(sheet))
 	root_rows.append_array(_build_global_variable_rows(sheet))
+	# An Inspector-style sheet (inspector_variable_rows) reads a `##` line kept on its own above a plain
+	# `var` as that variable's note, so the line is not listed twice. View only: the file keeps it.
+	var inspector_rows: bool = _get_event_style().inspector_variable_rows
+	var pending_doc: String = ""
 	for entry_index in range(event_start, sheet.events.size()):
 		var entry: Resource = sheet.events[entry_index]
+		if entry is LocalVariable and _row_builder.hides_compiler_variable((entry as LocalVariable).name):
+			pending_doc = ""
+			continue
+		if inspector_rows and entry is RawCodeRow and entry_index + 1 < sheet.events.size() \
+				and _takes_doc_line(sheet.events[entry_index + 1]):
+			var doc: String = ViewportRowBuilder.doc_comment_only_prose((entry as RawCodeRow).code)
+			if not doc.is_empty():
+				pending_doc = doc
+				continue
+		if entry is LocalVariable and not pending_doc.is_empty():
+			var documented: EventRowData = _row_builder._build_tree_variable_row(entry as LocalVariable, 0, pending_doc)
+			pending_doc = ""
+			if documented != null:
+				if not _row_diagnostics.is_empty():
+					documented.error_message = str(_row_diagnostics.get(str(entry.get_instance_id()), ""))
+				root_rows.append(documented)
+			continue
+		pending_doc = ""
 		# A lifted MID-FILE function emits at its anchor slot, so the canvas splices the whole verb block
 		# in HERE too: the vocabulary reads where it actually lives in the file instead of being hoisted
 		# above everything. A missing verb keeps the anchor's muted "defined here" stub as the fallback.
@@ -3011,6 +3033,18 @@ func _build_scene_sheet_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 		rows.append_array(member_rows)
 		member_index += 1
 	return rows
+
+
+## Whether a `##` line written above `entry` is read as its note on an Inspector-style sheet: a plain
+## variable row the view lists, with no description of its own to say instead.
+func _takes_doc_line(entry: Resource) -> bool:
+	var variable: LocalVariable = entry as LocalVariable
+	if variable == null or _row_builder.hides_compiler_variable(variable.name):
+		return false
+	if variable.onready or not variable.description.strip_edges().is_empty():
+		return false
+	return not (variable.attributes is Dictionary \
+		and not str((variable.attributes as Dictionary).get("tooltip", "")).strip_edges().is_empty())
 
 
 ## Makes one member's row uids its own, children included.
@@ -3901,8 +3935,12 @@ func _commit_edit() -> void:
 		return
 	var span: SemanticSpan = row_data.spans[_editing_span_index]
 	var previous_value: String = span.text
-	span.text = _editing_buffer
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+	# A variable row that SHOWS a reading (an Inspector-style "Open Speed", a colour's hex) edits the
+	# characters the file holds, so what it held before is that text, not the reading.
+	if str(metadata.get("kind", "")) == "variable" and not str(metadata.get("edit_text", "")).is_empty():
+		previous_value = str(metadata["edit_text"])
+	span.text = _editing_buffer
 	var edit_kind: String = str(metadata.get("edit_kind", ""))
 	if _external_span_edit_handler_enabled:
 		span_edit_requested.emit(row_data, edit_kind, previous_value, _editing_buffer)

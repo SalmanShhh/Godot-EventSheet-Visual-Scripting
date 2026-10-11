@@ -33,10 +33,21 @@ const FAMILY_ENUM := "enum"
 const FAMILY_COLLECTION := "collection"
 const FAMILY_CLASS := "class"
 
-## The value glyphs. A colour has none of its own here: the row's swatch already draws it.
+## The value glyphs. A colour's swatch is the row's own trailing one, except on an Inspector-style
+## row (inspector_variable_rows), where the swatch leads and the value reads as its #RRGGBB hex.
 const GLYPH_BOOL := "bool"
 const GLYPH_VECTOR := "vector"
 const GLYPH_RESOURCE := "resource"
+const GLYPH_COLOR := "color"
+
+## The leading colour swatch of an Inspector-style row, and the gap between it and the hex.
+const SWATCH_WIDTH := 34.0
+const SWATCH_HEIGHT := 14.0
+const SWATCH_GAP := 6.0
+
+## The prefix the compiler's own bookkeeping members start with (the Every X Seconds clock, a spawn's
+## temporary), which an Inspector-style sheet leaves out of its variable rows.
+const COMPILER_VARIABLE_PREFIX := "__"
 
 ## The badges, in the order they stand at the row's right.
 const BADGE_INSPECTOR := "inspector"
@@ -302,6 +313,113 @@ static func vector_axes(default_value: Variant, expression_default: bool = false
 			return PackedStringArray()
 		axes.append(_number_text(float(part)))
 	return axes
+
+
+## The GDScript type an Inspector-style row prints: the declared type exactly as written, else the
+## type the value gives away (`var hits := 5` is an `int`), else `Variant`. Never a reading word.
+static func gdscript_type_word(type_name: String, default_value: Variant, expression_default: bool) -> String:
+	var declared: String = type_name.strip_edges()
+	if not declared.is_empty() and declared != "Variant":
+		return declared
+	if not expression_default:
+		if typeof(default_value) == TYPE_NIL or typeof(default_value) == TYPE_OBJECT:
+			return "Variant"
+		return type_string(typeof(default_value))
+	var text: String = str(default_value).strip_edges()
+	if text == "true" or text == "false":
+		return "bool"
+	if text.begins_with("&\""):
+		return "StringName"
+	if text.begins_with("^\""):
+		return "NodePath"
+	if text.begins_with("\"") or text.begins_with("'"):
+		return "String"
+	if text.begins_with("["):
+		return "Array"
+	if text.begins_with("{"):
+		return "Dictionary"
+	if text.is_valid_int():
+		return "int"
+	if text.is_valid_float():
+		return "float"
+	# A constructor or a constant of one of the engine's value types: `Vector2(0, 3)`, `Color.WHITE`.
+	var cut: int = -1
+	for index: int in range(text.length()):
+		if text[index] == "(" or text[index] == ".":
+			cut = index
+			break
+	if cut > 0:
+		var head: String = text.left(cut)
+		for variant_type: int in range(1, TYPE_MAX):
+			if type_string(variant_type) == head and head != "Object":
+				return head
+	return "Variant"
+
+
+## A variable's name the way the Inspector capitalises a property: `open_speed` reads "Open Speed".
+static func inspector_name(identifier: String) -> String:
+	var shown: String = identifier.strip_edges().capitalize()
+	return shown if not shown.is_empty() else identifier
+
+
+## The colour a value holds, whichever way it was written - a real Color, a `Color.RED` constant, a
+## `Color(1, 0.7, 0.3)` literal, a `Color("#ffb347")` call - or null when it is not one the row can
+## read without running anything.
+static func color_of(default_value: Variant) -> Variant:
+	if default_value is Color:
+		return default_value
+	if not (default_value is String or default_value is StringName):
+		return null
+	var text: String = str(default_value).strip_edges()
+	if text.begins_with("Color.") and not text.contains("("):
+		var named: String = text.trim_prefix("Color.").replace("_", "").to_lower()
+		# A name the engine does not know falls back to whichever default it is handed, so two
+		# opposite defaults disagree exactly when the name is not a colour.
+		var dark := Color()
+		var found: Color = Color.from_string(named, dark)
+		return found if found == Color.from_string(named, dark.inverted()) else null
+	if not (text.begins_with("Color(") and text.ends_with(")")):
+		return null
+	var inner: String = text.trim_prefix("Color(").trim_suffix(")").strip_edges()
+	if inner.begins_with("\"") and inner.ends_with("\"") and inner.length() >= 2:
+		var html: String = inner.substr(1, inner.length() - 2)
+		return Color.html(html) if Color.html_is_valid(html) else null
+	var numbers: PackedStringArray = inner.split(",")
+	if numbers.size() < 3 or numbers.size() > 4:
+		return null
+	for number: String in numbers:
+		if not number.strip_edges().is_valid_float():
+			return null
+	return Color(float(numbers[0]), float(numbers[1]), float(numbers[2]),
+		float(numbers[3]) if numbers.size() > 3 else 1.0)
+
+
+## `#RRGGBB`, or `#RRGGBBAA` when the colour is not fully opaque - the Inspector's own spelling.
+static func color_hex(colour: Color) -> String:
+	return "#%s" % (colour.to_html(false) if is_equal_approx(colour.a, 1.0) else colour.to_html(true)).to_upper()
+
+
+## The width a colour value draws at: the swatch, the gap, and its hex in the type word's face.
+static func color_value_width(hex: String, base: Font, font_size: int) -> float:
+	return SWATCH_WIDTH + SWATCH_GAP + type_word_width(hex, base, font_size)
+
+
+## Paints a colour value from `x`, centred on `centre_y`: the swatch edged in `frame`, then the hex in
+## `ink` in the type word's face. Returns the swatch's rect, which a click on it opens the picker from.
+static func draw_color_value(control: CanvasItem, x: float, centre_y: float, colour: Color, hex: String,
+		base: Font, font_size: int, ink: Color, frame: Color) -> Rect2:
+	var swatch := Rect2(x, centre_y - SWATCH_HEIGHT * 0.5, SWATCH_WIDTH, SWATCH_HEIGHT)
+	_fill_rounded(control, swatch, colour, 2)
+	control.draw_rect(swatch.grow(-0.5), frame, false, 1.0)
+	var size: int = type_font_size(font_size)
+	control.draw_string(mono_font(base), Vector2(swatch.end.x + SWATCH_GAP, centre_y + float(size) * 0.35), hex,
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, size, ink)
+	return swatch
+
+
+## True for a member the compiler writes for its own bookkeeping, never one an author declared.
+static func is_compiler_variable(variable_name: String) -> bool:
+	return variable_name.begins_with(COMPILER_VARIABLE_PREFIX)
 
 
 static func _repeat(text: String, count: int) -> PackedStringArray:

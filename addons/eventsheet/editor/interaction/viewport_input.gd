@@ -285,11 +285,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# it and the cell's ACE has a Color param, hand off to the dock's picker popup.
 		# The same swatch, the same picker, on a VARIABLE row. A colour is a colour wherever it
 		# is written; the write-back keeps the spelling the line already used.
-		if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
+		# An Inspector-style row's swatch leads its hex (value_swatch) instead of trailing it.
+		var variable_swatch: Variant = metadata.get("swatch_color", metadata.get("value_swatch"))
+		if row_data != null and variable_swatch is Color and metadata.get("swatch_rect") is Rect2 \
 				and (metadata["swatch_rect"] as Rect2).has_point(local_position) \
 				and str(metadata.get("kind", "")) == "variable" and row_data.source_resource is LocalVariable:
 			_viewport.color_swatch_edit_requested.emit(
-				row_data.source_resource, "", metadata["swatch_color"] as Color
+				row_data.source_resource, "", variable_swatch as Color
 			)
 			_viewport.accept_event()
 			return

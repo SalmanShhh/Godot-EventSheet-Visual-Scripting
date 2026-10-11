@@ -127,6 +127,17 @@ extends Resource
 ## the on/off switch drawn as an Active tick box at its right. Off keeps the one-line head, the
 ## description beside the name and the switch as its glyph.
 @export var group_head_two_line: bool = false
+## A variable row drawn the way the Inspector lists a property: the GDScript type in mono in its
+## family's colour, the name capitalised the way the Inspector capitalises it (editing still shows the
+## identifier), the value as the Inspector shows it (a colour as its swatch and hex), the `##`
+## description as the row's one italic note, and the attributes only as the icon tiles at the right.
+## No kind mark, no scope word (it moves to the name's hover) and no code echo. Off keeps the
+## sentence row: kind mark, scope word, the type in words and the declaration echo.
+@export var inspector_variable_rows: bool = false
+## Leaves out of the sheet's variable rows the bookkeeping variables the compiler writes for rows
+## such as Every X Seconds (names starting with two underscores). They still compile and save; the
+## view only stops listing them. Off lists every variable the file declares.
+@export var hide_compiler_variables: bool = false
 ## Corner roundness of REGION marker bubbles, in pixels.
 @export_range(0, 24, 1) var region_corner_radius: int = 7
 ## Line thickness of REGION marker borders, in pixels.

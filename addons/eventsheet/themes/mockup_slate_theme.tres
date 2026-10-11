@@ -80,6 +80,8 @@ badge_foreground_color = Color(1, 1, 1, 1)
 [sub_resource type="Resource" id="Resource_mksle"]
 script = ExtResource("2_mksl2")
 sheet_background_color = Color(0.098039, 0.113725, 0.133333, 1)
+inspector_variable_rows = false
+hide_compiler_variables = false
 row_background_color = Color(0.129412, 0.14902, 0.176471, 1)
 row_background_alt_color = Color(0.137255, 0.160784, 0.192157, 1)
 row_border_color = Color(0.223529, 0.254902, 0.301961, 1)

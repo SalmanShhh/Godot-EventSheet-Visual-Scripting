@@ -112,6 +112,22 @@
   theme's own row colours and written in its own inks rather than the plugin's fixed dark pair, so a
   light theme is light there too. The six palette presets are rebuilt by `tools/build_theme_presets.gd`,
   which now carries these values. Drawing only: compiled output and every reading are unchanged.
+- **Editor Native variable rows read the way the Inspector lists a property.** A theme can draw its
+  variable rows Inspector-style (`inspector_variable_rows`, on in Editor Native): the GDScript type
+  in mono in its family's colour (`float`, `int`, `String`, `Vector2`, `Color`, `Array[Node2D]`, an
+  enum's or a class's own name - never "number" or "list of objects"), the name capitalised the way
+  the Inspector capitalises it ("Open Speed" for `open_speed`; F2 still renames from the
+  identifier), the value (a colour as its swatch then its `#RRGGBB` hex, the swatch still opening
+  the picker), then the `##` description as the row's one italic note - an exported variable's lifted
+  tooltip, or the `##` line kept above a plain `var`, which the view then stops listing twice - and
+  the attributes only as the icon tiles at the right. The outlined kind mark, the scope word and the
+  declaration echo are gone from the row; the scope and the quieter notes (limits, what a static
+  shares, a frozen constant) move to the name's hover, and View > Variable rows > Code still shows
+  the line. A second token (`hide_compiler_variables`, on in Editor Native) leaves the compiler's own
+  bookkeeping members - names starting with two underscores, such as the clock an Every X Seconds row
+  keeps - out of the variable rows; they still compile and save. Locals inside an event keep their
+  sentence row, and every other theme states both tokens off and draws exactly as before. Drawing
+  only: compiled output and the default-theme reading are unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

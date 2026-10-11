@@ -1783,6 +1783,13 @@ func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Diction
 			PackedStringArray(metadata.get("value_axes", PackedStringArray())), font, draw_font_size, value_ink,
 			NativeVariableMarks.axis_colors(surface), NativeVariableMarks.frame_ink(surface))
 		return true
+	if str(metadata.get("value_glyph", "")) == NativeVariableMarks.GLYPH_COLOR and metadata.get("value_swatch") is Color:
+		var swatch_surface: Color = section_fill(event_style, false)
+		# Where the swatch landed, so a click on it opens the picker the way the trailing swatch does.
+		span.metadata["swatch_rect"] = NativeVariableMarks.draw_color_value(control, span.rect.position.x,
+			span.rect.get_center().y, metadata["value_swatch"] as Color, span.text, font, draw_font_size,
+			reading.secondary_text_color, NativeVariableMarks.frame_ink(swatch_surface))
+		return true
 	if bool(metadata.get("variable_doc_note", false)) and not bool(metadata.get("comment_wrap", false)):
 		var note_ink: Color = metadata.get("text_color", reading.muted_text_color)
 		_draw_text(control, Vector2(span.rect.position.x, centre_y + draw_font_size * FONT_BASELINE_OFFSET_RATIO), span.text,
