@@ -144,20 +144,23 @@ static func declaration_of(line: String) -> Dictionary:
 
 
 ## Paints a rounded bar inside `row_rect`: `fill` inside an edge of `edge`, its corners rounded by
-## `radius` (never more than half the bar's height, which is the pill end of the bar).
-static func draw_rounded_bar(control: Control, row_rect: Rect2, fill: Color, edge: Color, radius: float) -> void:
+## `radius` (never more than half the bar's height, which is the pill end of the bar), the edge
+## `edge_width` pixels wide (0 = the Include bar's own BAR_EDGE).
+static func draw_rounded_bar(control: Control, row_rect: Rect2, fill: Color, edge: Color, radius: float,
+		edge_width: float = 0.0) -> void:
 	var bar: Rect2 = row_rect.grow_individual(-BAR_INSET, -BAR_INSET, -BAR_INSET, -BAR_INSET)
 	if bar.size.x <= 0.0 or bar.size.y <= 0.0:
 		return
-	# One box per fill, edge and corner (a handful per theme), so a frame allocates nothing.
+	# One box per fill, edge, width and corner (a handful per theme), so a frame allocates nothing.
 	var corner: int = int(minf(radius, bar.size.y * 0.5))
-	var key: String = "%s/%s/%d" % [fill.to_html(), edge.to_html(), corner]
+	var width: int = int(edge_width) if edge_width > 0.0 else int(BAR_EDGE)
+	var key: String = "%s/%s/%d/%d" % [fill.to_html(), edge.to_html(), corner, width]
 	var box: StyleBoxFlat = _bar_box_cache.get(key)
 	if box == null:
 		box = StyleBoxFlat.new()
 		box.bg_color = fill
 		box.border_color = edge
-		box.set_border_width_all(int(BAR_EDGE))
+		box.set_border_width_all(width)
 		box.set_corner_radius_all(corner)
 		box.anti_aliasing = true
 		box.set_content_margin_all(0)

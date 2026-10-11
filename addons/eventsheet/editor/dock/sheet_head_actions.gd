@@ -225,7 +225,15 @@ func toggle_tool_mode() -> void:
 	apply_band_value(EventSheetHeadBands.BAND_TOOL, "true" if switching_on else "false")
 
 
-## "+ add" under the stack: only the lines this sheet could have and does not.
+## True while the sheet could still gain one of the lines "+ add" offers.
+func has_lines_to_add() -> bool:
+	if _dock._current_sheet == null:
+		return false
+	return not EventSheetHeadBands.addable(EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text())).is_empty()
+
+
+## "+ add" under the stack (or the canvas menu's "Add to Class Head…" under a quiet class head): only
+## the lines this sheet could have and does not.
 func open_add_menu() -> void:
 	_add_offers = EventSheetHeadBands.addable(
 		EventSheetHeadBands.facts(_dock._current_sheet, _prelude_text())

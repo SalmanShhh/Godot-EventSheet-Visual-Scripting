@@ -174,6 +174,9 @@ const EMPTY_MENU_ADD_INSTANCE_VARIABLE := 7
 ## Include another sheet - on the canvas menu the "+ Add…" corner link opens, where a reader from
 ## another event-sheet editor reaches for it, as well as on the toolbar's Add menu.
 const EMPTY_MENU_INCLUDE_SHEET := 8
+## The lines a class head could have and does not (an icon, @tool, a description, states) - on the
+## canvas menu only while the theme heads the sheet as one quiet class head, which has no "+ add" row.
+const EMPTY_MENU_CLASS_HEAD_LINE := 9
 # The "New Function" submenu on the empty-space menu. Its items open the function dialog pre-set:
 # a plain (unpublished) helper, or a published Action / Condition / Expression.
 const NEW_FUNCTION_MENU_PLAIN := 0
@@ -5496,7 +5499,23 @@ func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -
 	_context_row = null
 	_context_hit = {}
 	_variables._context_variable = {}
+	_sync_class_head_line_item()
 	_show_popup_menu(_empty_space_context_menu, global_position)
+
+
+## Lists "Add to Class Head…" on the canvas menu exactly while the head has no "+ add" row of its own
+## to offer those lines from: a quiet class head, on a sheet that can still gain one.
+func _sync_class_head_line_item() -> void:
+	if _empty_space_context_menu == null:
+		return
+	var index: int = _empty_space_context_menu.get_item_index(EMPTY_MENU_CLASS_HEAD_LINE)
+	if index >= 0:
+		_empty_space_context_menu.remove_item(index)
+	if _current_sheet == null or _current_sheet.read_only or _viewport == null 			or not _viewport.get_event_style().inspector_class_head:
+		return
+	if not _head_actions.has_lines_to_add():
+		return
+	_empty_space_context_menu.add_item(EventSheetL10n.translate("Add to Class Head…"), EMPTY_MENU_CLASS_HEAD_LINE)
 
 
 func _on_empty_space_context_menu_id_pressed(id: int) -> void:
@@ -5519,6 +5538,8 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 			_open_insert_snippet()
 		EMPTY_MENU_INCLUDE_SHEET:
 			_shared_sheets.open_include_sheet()
+		EMPTY_MENU_CLASS_HEAD_LINE:
+			_head_actions.open_add_menu()
 
 
 ## The `@export_tool_button` line and the empty function it calls, in ONE undo step. The button

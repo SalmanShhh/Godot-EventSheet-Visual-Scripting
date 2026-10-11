@@ -138,6 +138,13 @@ extends Resource
 ## such as Every X Seconds (names starting with two underscores). They still compile and save; the
 ## view only stops listing them. Off lists every variable the file declares.
 @export var hide_compiler_variables: bool = false
+## The sheet's head as the Inspector heads a script: ONE class head card - the class icon, the name
+## in bold, the kind of file, "· extends" and the base in the faint colour, the share mark and who
+## includes a shared sheet, and the attached scene at the right - with no code echo, no "change…"
+## word, no rows for the scene's facts and no "+ add" row. Clicking the kind or the base opens the
+## Sheet Type dialog, the canvas's "+ Add…" menu adds the lines "+ add" offered, and the scene's facts
+## are read in the scene's hover. A fact that is a problem keeps its row. Off keeps the band stack.
+@export var inspector_class_head: bool = false
 ## Corner roundness of REGION marker bubbles, in pixels.
 @export_range(0, 24, 1) var region_corner_radius: int = 7
 ## Line thickness of REGION marker borders, in pixels.

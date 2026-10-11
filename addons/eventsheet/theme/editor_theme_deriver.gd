@@ -324,6 +324,8 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# bookkeeping variables among them.
 	event_style.inspector_variable_rows = true
 	event_style.hide_compiler_variables = true
+	# The design's head: one class head card, no code echoes, no scene-fact or "+ add" rows.
+	event_style.inspector_class_head = true
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)

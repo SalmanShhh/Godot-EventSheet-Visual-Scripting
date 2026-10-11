@@ -84,6 +84,7 @@ script = ExtResource("3_6dnue")
 sheet_background_color = Color(0.10980392, 0.12156863, 0.14901961, 1)
 inspector_variable_rows = false
 hide_compiler_variables = false
+inspector_class_head = false
 row_background_color = Color(0.13725491, 0.15294118, 0.1882353, 1)
 row_background_alt_color = Color(0.14509805, 0.16470589, 0.2, 1)
 row_border_color = Color(0.2901961, 0.30980393, 0.34509805, 1)

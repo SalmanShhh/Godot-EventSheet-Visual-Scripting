@@ -88,6 +88,8 @@ var outline_color: Color = Color(0, 0, 0, 0)
 # The corner radius of that edge. Above 0 the row is drawn as a rounded bar: its fill (custom_color)
 # and its edge inside one rounded box, with the canvas showing at the corners (the Include bar).
 var outline_radius: float = 0.0
+# The width of that rounded edge; 0 = the Include bar's own two pixels.
+var outline_width: float = 0.0
 # True draws the edge dashed instead of solid (an included sheet's variable, read-only here).
 var outline_dashed: bool = false
 # One BLOCK drawn across several rows (an inner class and its fields): the block's fill over the

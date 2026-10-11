@@ -623,7 +623,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		# edge are one rounded box rather than a full-bleed band with a stripe.
 		control.draw_rect(row_rect, section_fill(event_style, alternating), true)
 		NativeHeadMarks.draw_rounded_bar(control, row_rect, row_data.custom_color,
-			row_data.outline_color, row_data.outline_radius)
+			row_data.outline_color, row_data.outline_radius, row_data.outline_width)
 	else:
 		var section_bg: Color = section_fill(event_style, alternating)
 		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it

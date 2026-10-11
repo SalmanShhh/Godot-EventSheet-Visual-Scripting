@@ -84,6 +84,7 @@ script = ExtResource("2_event_style")
 sheet_background_color = Color(0.12, 0.13, 0.16, 1)
 inspector_variable_rows = false
 hide_compiler_variables = false
+inspector_class_head = false
 row_background_color = Color(0.12, 0.13, 0.16, 1)
 row_background_alt_color = Color(0.15, 0.16, 0.2, 1)
 row_border_color = Color(0.38, 0.46, 0.58, 0.7)

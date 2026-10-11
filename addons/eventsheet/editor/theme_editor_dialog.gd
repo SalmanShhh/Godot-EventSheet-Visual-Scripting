@@ -214,6 +214,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"group_head_two_line": "Lay a group head out in two lines: the name over its description in italics, with the event count and an Active tick box at the right.",
 	"inspector_variable_rows": "Draw a variable row the way the Inspector lists a property: its type, its capitalised name, its value and its ## description, with its attributes as icon tiles - no scope word, no kind mark and no code.",
 	"hide_compiler_variables": "Leave the bookkeeping variables the compiler writes (names starting with two underscores) out of the variable rows. They still compile and save.",
+	"inspector_class_head": "Draw the sheet's head as one class head card: icon, name, kind, what it extends, the share mark and the attached scene - no code, no change… word, no scene-fact rows and no + add row (the + Add… menu and the Sheet Type dialog keep those gestures).",
 	"condition_object_column_width": "Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
 	"action_object_column_width": "Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
 	"event_block_gap": "Gap opened before an event or group that starts a new block, in pixels - the air between one event and the next.",

@@ -128,6 +128,18 @@
   keeps - out of the variable rows; they still compile and save. Locals inside an event keep their
   sentence row, and every other theme states both tokens off and draws exactly as before. Drawing
   only: compiled output and the default-theme reading are unchanged.
+- **The Editor Native head is one class head card.** A theme can head the sheet the way the
+  Inspector heads a script (`inspector_class_head`, on in Editor Native): one card in the head's grey
+  with a one-pixel edge - the class icon, the name in bold, the word Script, "· extends" and the base
+  in the faint colour, the share mark and an italic "Included by ..." on a shared sheet, and the
+  attached scene at the right. The "change…" word and the `class_name` echo are gone from it: a click
+  on Script, "· extends" or the base opens the Sheet Type dialog, as their hover says. No head line
+  echoes its code, and the rows for the scene's facts ("spawns shot.tscn", lit by, collisions and the
+  rest) leave the canvas for the scene's hover - a click on the scene shows it in the FileSystem dock -
+  while a fact that is a problem keeps its row. The "+ add: icon · @tool · description · states" row
+  moves to the canvas's "+ Add…" menu as Add to Class Head…. The Include bars keep the line they
+  write, as the design draws them. Every other theme states the token off and draws exactly as before.
+  Drawing only: compiled output and the default-theme reading are unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

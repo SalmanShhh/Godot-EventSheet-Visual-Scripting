@@ -695,18 +695,30 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	for band: Dictionary in head_bands:
 		if str(band["kind"]) == EventSheetHeadBands.BAND_EXTENDS:
 			extends_band = band
+	# A theme that heads the sheet as the Inspector heads a script keeps the scene's facts off the
+	# canvas: each one is said in the attached scene's hover instead, and only a fact that is a
+	# problem keeps a row of its own.
+	var quiet_head: bool = _viewport._get_event_style().inspector_class_head
+	var hovered_facts: PackedStringArray = PackedStringArray()
+	if quiet_head:
+		for band: Dictionary in head_bands:
+			if head_band_moves_to_hover(band):
+				hovered_facts.append("%s %s" % [str(band["leader"]), str(band["value"])])
 	for band: Dictionary in head_bands:
 		var kind: String = str(band["kind"])
 		if kind == EventSheetHeadBands.BAND_EXTENDS:
 			continue
+		if quiet_head and head_band_moves_to_hover(band):
+			continue
 		var head_row: EventRowData = _build_head_band_row(sheet, band, head_facts, description_source,
-			extends_band if kind == EventSheetHeadBands.BAND_NAME else {})
+			extends_band if kind == EventSheetHeadBands.BAND_NAME else {}, hovered_facts)
 		rows.append(head_row)
 	# The shared sheets this script includes, one Include line each - where a reader from another
 	# event-sheet editor looks for them, instead of scattered through the forwarding rows they wrote.
 	rows.append_array(_build_include_line_rows(sheet, false))
+	# The quiet head offers the same lines from the canvas's "+ Add…" menu instead of a row.
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
-	if not add_text.is_empty() and not sheet.read_only:
+	if not add_text.is_empty() and not sheet.read_only and not quiet_head:
 		rows.append(_build_head_add_row(sheet, add_text))
 	for child: EventRowData in scaffold_rows:
 		if not child.error_message.strip_edges().is_empty():
@@ -715,10 +727,20 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	return rows
 
 
+## True when a head band is one of the SCENE's facts with nothing wrong in it - the bands a quiet
+## class head says in the attached scene's hover rather than on a row. A band about a problem is
+## never moved: problems are never hidden.
+static func head_band_moves_to_hover(band: Dictionary) -> bool:
+	return EventSheetHeadBands.SCENE_BANDS.has(str(band.get("kind", ""))) and not bool(band.get("warning", false))
+
+
 ## One band: the leader word of its line, the fact, its control, and the line itself echoed at the
 ## right edge. The name band leads with the class icon and a little more presence; the rest are slim.
+## Under a quiet class head (the theme's `inspector_class_head`) no band echoes its line or prints
+## its control word, and the name band is drawn as the class head card.
 func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_facts: Dictionary,
-		description_source: Resource, joined_extends: Dictionary = {}) -> EventRowData:
+		description_source: Resource, joined_extends: Dictionary = {},
+		hovered_facts: PackedStringArray = PackedStringArray()) -> EventRowData:
 	var kind: String = str(band["kind"])
 	# A band about something outside this file names it after a colon, so one gesture carries
 	# both which band was clicked and which node it was about (the way an edit kind does).
@@ -731,10 +753,22 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 	row_data.source_resource = null
 	row_data.row_uid = "%s%s%s_%d" % [HEAD_BAND_UID_PREFIX, kind, reference, sheet.get_instance_id()]
 	row_data.folded = false
-	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var quiet_head: bool = event_style.inspector_class_head
+	var accent: Color = event_style.behavior_accent_color
 	var is_name_band: bool = kind == EventSheetHeadBands.BAND_NAME
 	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22 if is_name_band else 0.10)
 	row_data.height_scale = 1.35 if is_name_band else 1.0
+	if quiet_head and not is_name_band:
+		# The quiet head's other lines sit on the canvas like any declaration: no accent wash.
+		row_data.custom_color = Color(0, 0, 0, 0)
+	elif quiet_head and is_name_band:
+		# The class head card: the head's own grey inside the event card's edge and corner, the way
+		# an Inspector draws a component's header - no accent wash and no stripe.
+		row_data.custom_color = event_style.head_bar_color
+		row_data.outline_color = event_style.row_border_color
+		row_data.outline_radius = maxf(1.0, float(event_style.event_corner_radius))
+		row_data.outline_width = 1.0
 	var band_meta: Dictionary = {
 		"editable": false,
 		"kind": "head_band_%s" % kind,
@@ -777,6 +811,9 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			# The name IS the rename control: F2 or a double-click renames the class everywhere.
 			value_meta["head_action"] = EventSheetHeadBands.BAND_NAME
 			value_meta["hover_note"] = EventSheetL10n.translate("F2 renames this class everywhere.")
+		if is_name_band and quiet_head:
+			# The card's name is the one bold word on it.
+			value_meta["bbcode_segments"] = [{"text": value_text, "color": value_colour, "bold": true, "italic": false}]
 		if kind == EventSheetHeadBands.BAND_STATES:
 			# The band gains a live half while a game runs, so it says here how often that half is
 			# true. Stated on the band itself, because the number ticking in front of a reader is
@@ -792,12 +829,20 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta))
 	# The band's own words that ACT: the prompt a half-made sheet answers ("name it") and the control
 	# that opens the gesture ("change…"). Both are the band's action, so both read the same way.
-	for word: String in [str(band["prompt"]), str(band["control"])]:
+	# A quiet class head prints no control word: the band's own words carry its gesture instead.
+	var words: Array[String] = [str(band["prompt"])]
+	if not quiet_head:
+		words.append(str(band["control"]))
+	elif not str(band["control"]).is_empty() and not sheet.read_only:
+		for span: SemanticSpan in spans:
+			if span.metadata is Dictionary and not (span.metadata as Dictionary).has("head_action"):
+				(span.metadata as Dictionary)["head_action"] = band_action
+	for word: String in words:
 		if word.is_empty() or sheet.read_only:
 			continue
 		spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, band_meta.merged({
 			"head_action": band_action,
-			"text_color": _viewport._get_event_style().behavior_accent_color
+			"text_color": event_style.behavior_accent_color
 		}, true)))
 	if is_name_band:
 		spans.append_array(_class_head_spans(sheet, joined_extends))
@@ -808,8 +853,9 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
 		spans.append_array(_editor_tool_bar_spans(sheet))
 		spans.append_array(_this_editor_bar_spans(sheet))
-		spans.append_array(_class_head_scene_spans(sheet, band_meta))
-	_append_head_band_echo(spans, band_meta, str(band["echo"]), bool(band["echo_ghosted"]))
+		spans.append_array(_class_head_scene_spans(sheet, band_meta, hovered_facts))
+	if not quiet_head:
+		_append_head_band_echo(spans, band_meta, str(band["echo"]), bool(band["echo_ghosted"]))
 	row_data.spans = spans
 	return row_data
 
@@ -865,17 +911,29 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 	# Only a node runs a script it is attached to: a Resource or RefCounted script is made and held
 	# by other code, so its head says what it is and no more.
 	var script_note: String = EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.") 		if host_is_node(str(sheet.host_class)) else EventSheetL10n.translate("What this file is: a script.")
-	spans.append(_make_span(EventSheetL10n.translate("Script"), SemanticSpan.SpanType.KEYWORD, name_meta.merged({
+	# A quiet class head has no "change…" word, so the kind and "· extends" ARE the gesture: a click
+	# changes what kind of script this is, as their hover says.
+	var quiet_head: bool = event_style.inspector_class_head
+	var kind_meta: Dictionary = name_meta.merged({
 		"text_color": reading_style.secondary_text_color,
 		"hover_note": script_note
-	}, true)))
+	}, true)
+	var change_note: String = EventSheetL10n.translate("Click to change what kind of script it is.")
+	if quiet_head and not sheet.read_only and not extends_band.is_empty():
+		kind_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
+		kind_meta["hover_note"] = "%s %s" % [script_note, change_note]
+	spans.append(_make_span(EventSheetL10n.translate("Script"), SemanticSpan.SpanType.KEYWORD, kind_meta))
 	if not extends_band.is_empty():
 		var extends_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_EXTENDS,
 			"head_band": EventSheetHeadBands.BAND_EXTENDS, "line_index": 0}
-		spans.append(_make_span("· %s" % str(extends_band["leader"]), SemanticSpan.SpanType.KEYWORD,
-			extends_meta.merged({"text_color": reading_style.muted_text_color}, true)))
+		var leader_meta: Dictionary = extends_meta.merged({"text_color": reading_style.muted_text_color}, true)
+		if quiet_head and not sheet.read_only:
+			leader_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
+			leader_meta["hover_note"] = change_note
+		spans.append(_make_span("· %s" % str(extends_band["leader"]), SemanticSpan.SpanType.KEYWORD, leader_meta))
+		# The quiet head says what it extends in the faint colour, all of it, as one aside.
 		var base_meta: Dictionary = extends_meta.merged({
-			"text_color": reading_style.muted_text_color if bool(extends_band["value_muted"]) \
+			"text_color": reading_style.muted_text_color if bool(extends_band["value_muted"]) or quiet_head \
 				else reading_style.primary_text_color
 		}, true)
 		# A base that is another SCRIPT of this project opens as its own sheet, the door the pack
@@ -884,8 +942,11 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 		if not base_path.is_empty():
 			base_meta["include_path"] = base_path
 			base_meta["hover_note"] = EventSheetL10n.translate("Open the base script as a sheet.")
+		elif quiet_head and not sheet.read_only:
+			base_meta["head_action"] = EventSheetHeadBands.BAND_EXTENDS
+			base_meta["hover_note"] = change_note
 		spans.append(_make_span(str(extends_band["value"]), SemanticSpan.SpanType.VALUE, base_meta))
-		for word: String in [str(extends_band["prompt"]), str(extends_band["control"])]:
+		for word: String in [str(extends_band["prompt"]), "" if quiet_head else str(extends_band["control"])]:
 			if word.is_empty() or sheet.read_only:
 				continue
 			spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, extends_meta.merged({
@@ -909,16 +970,20 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 	}, true)))
 	var includers: PackedStringArray = NativeHeadMarks.includers_of(source_path)
 	if not includers.is_empty():
+		var includers_meta: Dictionary = name_meta.merged({
+			"text_color": reading_style.muted_text_color,
+			# The longest words on the head and the last of its sentence, so on a narrow dock they
+			# are the ones that give way to the right-anchored echo - with an ellipsis, never sliced.
+			"elide": true,
+			# Named in the hover too, so a list the dock cut short is still one hover away.
+			"hover_note": "%s %s" % [EventSheetL10n.translate("The sheets that include this one."),
+				", ".join(includers)]
+		}, true)
+		if event_style.inspector_class_head:
+			# The card's one aside, in italics like a variable's note.
+			includers_meta["italic_note"] = true
 		spans.append(_make_span(EventSheetL10n.translate("Included by %s") % ", ".join(includers),
-			SemanticSpan.SpanType.COMMENT, name_meta.merged({
-				"text_color": reading_style.muted_text_color,
-				# The longest words on the head and the last of its sentence, so on a narrow dock they
-				# are the ones that give way to the right-anchored echo - with an ellipsis, never sliced.
-				"elide": true,
-				# Named in the hover too, so a list the dock cut short is still one hover away.
-				"hover_note": "%s %s" % [EventSheetL10n.translate("The sheets that include this one."),
-					", ".join(includers)]
-			}, true)))
+			SemanticSpan.SpanType.COMMENT, includers_meta))
 	return spans
 
 
@@ -926,7 +991,11 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 ## when exactly one scene runs it - the answer the head's lighting bands already ask for, so it costs
 ## no walk of its own - and never on a sheet with no file. A read-only preview says its scene on the
 ## head bar it opens on, so the class head inside that bar's fold does not say it twice.
-func _class_head_scene_spans(sheet: EventSheetResource, band_meta: Dictionary) -> Array[SemanticSpan]:
+##
+## `hovered_facts` are the scene's facts a quiet class head keeps off the canvas ("spawns shot.tscn"):
+## said in this hover, one per line, and a click on the scene shows it in the FileSystem dock.
+func _class_head_scene_spans(sheet: EventSheetResource, band_meta: Dictionary,
+		hovered_facts: PackedStringArray = PackedStringArray()) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	var source_path: String = str(sheet.external_source_path)
 	if source_path.is_empty() or sheet.read_only:
@@ -935,11 +1004,18 @@ func _class_head_scene_spans(sheet: EventSheetResource, band_meta: Dictionary) -
 	if scene_path.is_empty():
 		return spans
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var scene_note: String = EventSheetL10n.translate("The scene this script is attached to.")
+	if not hovered_facts.is_empty():
+		scene_note = "%s\n%s" % [scene_note, "\n".join(hovered_facts)]
 	var scene_meta: Dictionary = band_meta.merged({
 		"editable": false,
 		"align_right": true,
-		"hover_note": EventSheetL10n.translate("The scene this script is attached to.")
+		"hover_note": scene_note
 	}, true)
+	if _viewport._get_event_style().inspector_class_head:
+		# The scene's own gesture on a quiet head: show the file where it lives, the gesture the
+		# spawns rows it stands in for had.
+		scene_meta["head_action"] = "%s:%s" % [EventSheetHeadBands.BAND_SPAWNS, scene_path]
 	spans.append(_make_span(EventSheetL10n.translate("Scene"), SemanticSpan.SpanType.KEYWORD,
 		scene_meta.merged({"text_color": reading_style.muted_text_color}, true)))
 	spans.append(_make_span(scene_path.get_file(), SemanticSpan.SpanType.COMMENT,

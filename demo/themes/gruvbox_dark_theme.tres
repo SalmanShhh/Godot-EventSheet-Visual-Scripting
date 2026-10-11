@@ -82,6 +82,7 @@ script = ExtResource("3_jogx0")
 sheet_background_color = Color(0.15686275, 0.15686275, 0.15686275, 1)
 inspector_variable_rows = false
 hide_compiler_variables = false
+inspector_class_head = false
 row_background_color = Color(0.15686275, 0.15686275, 0.15686275, 1)
 row_background_alt_color = Color(0.18039216, 0.17254902, 0.16470589, 1)
 row_border_color = Color(0.11372549, 0.1254902, 0.12941177, 1)
