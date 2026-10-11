@@ -547,7 +547,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# The hit-count lens: resolved ONCE per row here, so _draw_gutter stays a painter. Empty
 	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
 	var hit_uid: String = hit_chip_uid(show_hit_counts or show_costs, is_event_row, str(layout.get("event_uid", "")))
-	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style)
+	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style,
+		is_event_row and row_data.selected)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -567,6 +568,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		# Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.
 		var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
 		control.draw_rect(row_rect, comment_bg, true)
+		# The note card's edge. Clear (every theme saved before the token) draws none.
+		if event_style.comment_border_color.a > 0.01:
+			control.draw_rect(row_rect.grow(-0.5), event_style.comment_border_color, false, 1.0)
 	elif is_event_row and event_style != null:
 		control.draw_rect(
 			row_fill_rect,
@@ -583,6 +587,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_bg, true)
 		if row_data.custom_color.a > 0.01:
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
+	if row_data.outline_color.a > 0.01:
+		control.draw_rect(row_rect.grow(-1.0), row_data.outline_color, false, 2.0)
 	if row_data.variable_row:
 		_draw_variable_row_wash(control, row_rect, reading_style)
 	if row_data.rule_below:
@@ -798,11 +804,14 @@ func _draw_or_dividers(control: Control, row_data: EventRowData, lane_rect: Rect
 			control.draw_line(Vector2(rule_start, y), Vector2(to_x, y), rule, 1.0)
 
 
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null) -> void:
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null, selected: bool = false) -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
 	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
+	# A selected event's margin filled, so the selection reads from the number. Clear leaves it.
+	if selected and event_style != null and event_style.selected_gutter_fill_color.a > 0.01:
+		gutter_bg = event_style.selected_gutter_fill_color
 	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
 	control.draw_rect(gutter_rect, gutter_bg, true)
 	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
@@ -1197,6 +1206,16 @@ func _draw_spans(
 	reading_style: EventSheetReadingStyle = null
 ) -> void:
 	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
+	# The typed value tints, by kind: a theme's word colour where it states one, and where it is
+	# clear the colour the sheet always used for that kind (the value highlight for a number, the
+	# string and true/false colours for text and keywords).
+	var word_number_color: Color = EventSheetEventStyle.stated_or(
+		event_style.word_number_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0),
+		event_style.value_highlight_color if event_style != null else COLOR_VALUE)
+	var word_text_color: Color = EventSheetEventStyle.stated_or(
+		event_style.word_text_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0), reading.string_value_color)
+	var word_keyword_color: Color = EventSheetEventStyle.stated_or(
+		event_style.word_keyword_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0), reading.boolean_value_color)
 	# Multi-line blocks (in-flow GDScript, action-lane comments) paint as ONE merged
 	# cell: union rects per block, background/hover/selection drawn once. The per-line
 	# spans remain the layout + hit-test truth - the merge is purely visual (user
@@ -1423,7 +1442,7 @@ func _draw_spans(
 			# When the layout stamped segment_wrap_breaks (the cell is taller than one line),
 			# the segment run is sliced at those exact offsets and drawn as stacked visual
 			# lines - the event-sheet rule: the cell grows, styled text never clips.
-			var bbcode_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
+			var bbcode_value_color: Color = word_number_color
 			var seg_breaks: PackedInt32Array = metadata.get("segment_wrap_breaks", PackedInt32Array()) if span_index != editing_span_index else PackedInt32Array()
 			if seg_breaks.is_empty():
 				seg_breaks = PackedInt32Array([0])
@@ -1477,11 +1496,11 @@ func _draw_spans(
 									shifted_ranges.append(kept)
 						_draw_text_with_values(control, Vector2(segment_x, line_baseline_y), segment_text, shifted_ranges,
 							remaining, font, draw_font_size, segment_color, bbcode_value_color,
-							reading.string_value_color, reading.boolean_value_color)
+							word_text_color, word_keyword_color)
 						if bool(segment.get("bold", false)):
 							_draw_text_with_values(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, shifted_ranges,
 								remaining, font, draw_font_size, segment_color, bbcode_value_color,
-								reading.string_value_color, reading.boolean_value_color)
+								word_text_color, word_keyword_color)
 					segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
 			# Wrapped comment: draw from the top of the (multi-line-tall) cell so the whole
@@ -1493,16 +1512,14 @@ func _draw_spans(
 		elif value_ranges.is_empty():
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
-			var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
-			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, reading.string_value_color, reading.boolean_value_color, reading.muted_text_color)
+			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, word_number_color, word_text_color, word_keyword_color, reading.muted_text_color)
 		# The event-sheet parameter emphasis: every substituted parameter value re-draws 0.7px over -
 		# the same double-draw bold the BBCode cells use - in whatever colour that run already
 		# has, so the typed value tints never wash out.
 		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)):
-			var emphasis_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
-				text_width, font, draw_font_size, color, emphasis_value_color,
-				reading.string_value_color, reading.boolean_value_color, reading.muted_text_color)
+				text_width, font, draw_font_size, color, word_number_color,
+				word_text_color, word_keyword_color, reading.muted_text_color)
 		# The doors of a comment: a noun the project's own indexes could prove gets a hairline under
 		# it and a rectangle stamped back for the click. Measured against the very break points this
 		# span was just drawn with, so a door on a wrapped note underlines the line it is really on.

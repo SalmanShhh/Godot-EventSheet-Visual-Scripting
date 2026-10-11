@@ -25,6 +25,11 @@ extends Resource
 @export var reading_style: EventSheetReadingStyle
 @export var chrome_style: EventSheetChromeStyle
 @export var manual_style: EventSheetManualStyle
+## Lets the sheet's greys follow the running Godot editor - dark in a dark editor, light in a light
+## one - while every colour this theme states and nobody has changed swaps to its partner. A token
+## edited away from the value this theme shipped with is the designer's and is never touched. The
+## Editor Native starter turns it on; every other theme leaves it off and is painted exactly as saved.
+@export var follow_editor_greys: bool = false
 
 
 func _init() -> void:

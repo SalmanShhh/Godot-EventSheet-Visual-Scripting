@@ -20,7 +20,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 ## The presets that must dress every token. All of them: the six generated from well-known palettes,
-## the three hand-written ones, and the bundled Mockup Slate.
+## the three hand-written ones, the bundled Mockup Slate and the Editor Native starter.
 const PRESET_PATHS := [
 	"res://demo/themes/dracula_theme.tres",
 	"res://demo/themes/nord_theme.tres",
@@ -32,6 +32,7 @@ const PRESET_PATHS := [
 	"res://demo/themes/soft_light_theme.tres",
 	"res://demo/themes/designer_template_theme.tres",
 	"res://addons/eventsheet/themes/mockup_slate_theme.tres",
+	"res://addons/eventsheet/themes/editor_native_theme.tres",
 ]
 
 ## The painters that must never grow a new literal colour. Deliberately the files that draw the

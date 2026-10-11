@@ -354,7 +354,7 @@ func _sync_active_theme_binding() -> void:
 ## Called from every point the active style can change, so a theme switch reaches them in the same
 ## breath it reaches the viewport.
 func _publish_active_style() -> void:
-	EventSheetActiveTheme.publish(_active_theme_style)
+	EventSheetActiveTheme.publish(EventSheetEditorThemeDeriver.follow_running_editor(_active_theme_style))
 
 
 func _on_active_theme_style_changed() -> void:

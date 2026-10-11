@@ -2261,27 +2261,43 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 	for include: Dictionary in _includes_of(sheet):
 		if str(include["wiring"]) == EventSheetSharedSheets.WIRING_BASE_CLASS:
 			return null
-	row_data.custom_color = _viewport._get_event_style().head_bar_color
+	var inks: Dictionary = _include_line_inks(row_data)
 	var open_meta: Dictionary = {
 		"editable": false,
 		"kind": "include_open",
 		"include_path": base_path,
 		"line_index": 0
 	}
-	var muted: Color = _viewport._get_reading_style().muted_text_color
 	var spans: Array[SemanticSpan] = [
-		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": muted}, true)),
+		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true)),
 		_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
-			"text_color": _viewport._get_reading_style().primary_text_color
+			"text_color": inks["tag"]
 		}, true)),
 		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
-			"text_color": _viewport._get_event_style().object_label_color
+			"text_color": inks["name"]
 		}, true)),
 		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
-			open_meta.duplicate().merged({"text_color": muted}, true))
+			open_meta.duplicate().merged({"text_color": inks["note"]}, true))
 	]
 	row_data.spans = spans
 	return row_data
+
+
+## Dresses an Include line in the theme's Include colours and returns the inks for its words:
+## {arrow, tag, name, note}. Each Include token the theme leaves clear keeps the head bar look - the
+## head bar fill, no edge, the primary ink on the word, the object ink on the name, muted ink on the
+## arrow and the note - so a theme saved before the tokens existed draws the line as it always did.
+func _include_line_inks(row_data: EventRowData) -> Dictionary:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var reading: EventSheetReadingStyle = _viewport._get_reading_style()
+	row_data.custom_color = EventSheetEventStyle.stated_or(event_style.include_fill_color, event_style.head_bar_color)
+	row_data.outline_color = event_style.include_border_color
+	return {
+		"arrow": EventSheetEventStyle.stated_or(event_style.include_tag_color, reading.muted_text_color),
+		"tag": EventSheetEventStyle.stated_or(event_style.include_tag_color, reading.primary_text_color),
+		"name": EventSheetEventStyle.stated_or(event_style.include_name_color, event_style.object_label_color),
+		"note": EventSheetEventStyle.stated_or(event_style.include_note_color, reading.muted_text_color),
+	}
 
 
 ## The word an Include line leads with. One word for every reader: the line ENDS in the Godot
@@ -2310,7 +2326,6 @@ func _includes_of(sheet: EventSheetResource) -> Array[Dictionary]:
 ## `indent_detail` puts the lines one step in, the way the read-only head folds its detail.
 func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
-	var muted: Color = _viewport._get_reading_style().muted_text_color
 	for include: Dictionary in _includes_of(sheet):
 		var helper: bool = str(include["wiring"]) == EventSheetSharedSheets.WIRING_HELPER
 		var row_data := EventRowData.new()
@@ -2318,7 +2333,7 @@ func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) ->
 		row_data.row_type = EventRowData.RowType.SECTION
 		row_data.source_resource = null
 		row_data.row_uid = "include_line_%s_%d" % [str(include["class"]), sheet.get_instance_id()]
-		row_data.custom_color = _viewport._get_event_style().head_bar_color
+		var inks: Dictionary = _include_line_inks(row_data)
 		var open_meta: Dictionary = {"editable": false, "kind": "include_open",
 			"include_path": str(include["path"]), "line_index": 0,
 			"hover_note": EventSheetL10n.translate("Opens the shared sheet.")}
@@ -2330,13 +2345,13 @@ func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) ->
 				said += ", %s %s" % [EventSheetL10n.translate("called from"), ", ".join(from)]
 		else:
 			said = "%s - extends %s" % [EventSheetL10n.translate("· shared sheet, as its base"), str(include["class"])]
-		row_data.spans = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": muted}, true))]
+		row_data.spans = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({"text_color": inks["arrow"]}, true))]
 		row_data.spans.append(_make_span(_include_word(), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
-			"text_color": _viewport._get_reading_style().primary_text_color}, true)))
+			"text_color": inks["tag"]}, true)))
 		row_data.spans.append(_make_span(str(include["class"]), SemanticSpan.SpanType.KEYWORD,
-			open_meta.duplicate().merged({"text_color": _viewport._get_event_style().object_label_color}, true)))
+			open_meta.duplicate().merged({"text_color": inks["name"]}, true)))
 		row_data.spans.append(_make_span(said, SemanticSpan.SpanType.COMMENT,
-			open_meta.duplicate().merged({"text_color": muted}, true)))
+			open_meta.duplicate().merged({"text_color": inks["note"]}, true)))
 		if indent_detail:
 			_bump_indent(row_data, 1)
 		rows.append(row_data)

@@ -357,11 +357,12 @@ static func _test_theme_home() -> bool:
 		viewport._get_event_style().value_highlight_color, Color(0.623529, 0.831373, 0.478431)) and all_passed
 	# The point of the move: a plugin-only install had ZERO theme presets, because the bundled
 	# themes all live in demo/, which ships in the samples zip and not the plugin zip.
-	var addon_presets: int = 0
+	var addon_presets: Array[String] = []
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
 		if str(preset.get("path", "")).begins_with("res://addons/eventsheet/themes/"):
-			addon_presets += 1
-	all_passed = _check("a plugin-only install now has theme presets", addon_presets, 2) and all_passed
+			addon_presets.append(str(preset.get("name", "")))
+	all_passed = _check("a plugin-only install now has theme presets", addon_presets,
+		["Classic Sheet", "Editor Native", "Mockup Slate"] as Array[String]) and all_passed
 	viewport.free()
 	return all_passed
 

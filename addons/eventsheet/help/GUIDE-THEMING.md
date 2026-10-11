@@ -139,6 +139,18 @@ Two more ship inside the addon, in `res://addons/eventsheet/themes/`:
   bold group bars, green pinned local-variable rows, a blue plate before every object name, values
   in bold and disabled actions struck through, and a 40 / 60 lane split. It is an ordinary theme
   resource like every other - duplicate it and change anything you disagree with.
+- `editor_native_theme.tres` - **Editor Native**, the sheet drawn to sit inside the Godot editor:
+  tinted condition and action lanes, cards with a one-pixel edge, 24 px rows, a 92 px object column,
+  a note-card comment and a filled gutter on the selected event. It is the one bundled theme with
+  `follow_editor_greys` on: its greys are rebuilt from the running editor's base colour, so it is
+  dark in a dark editor and light in a light one, and its colours swap to their light partners on a
+  light editor. Following only ever touches a token still at the value the starter shipped with - a
+  colour you change is yours and stays put. Untick `follow_editor_greys` in the Theme Editor to
+  freeze it as saved.
+
+The native look also brought tokens for marks the sheet is learning to draw (type colours, word
+colours, the Include line, the inner-class block, badges, links). The ones that re-colour something
+older default to clear, and clear means "exactly as before", so a theme saved earlier keeps its look.
 
 ## Density: the six numbers that decide how much room a row gets
 

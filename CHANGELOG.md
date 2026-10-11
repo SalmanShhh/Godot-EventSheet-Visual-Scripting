@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed: the Editor Native look
+
+- **The Editor Native theme starter, and the tokens the native look is drawn with.** One more theme
+  starter beside Classic Sheet in View > Sheet theme: tinted condition and action lanes, cards with a
+  one-pixel edge, 24 px rows, a 92 px object column, a note-card comment and a filled gutter on the
+  selected event. Its greys follow the running editor - dark in a dark editor, light in a light one -
+  and its colours swap to their light partners on a light editor, while any token you change stays
+  exactly as you set it (`follow_editor_greys` on the theme resource; every other theme leaves it off
+  and is painted as saved). Thirty-seven new theme tokens: nine type colours, four word colours, the
+  Include line (border, fill, tag, name, note), the inner-class block (border, fill, head, tag, name,
+  note), the comment border, the gutter icon, the selected-gutter fill, the object hairline, the link
+  colour and four badge pairs (Inspector, range, tooltip, saved). The ones that re-colour something
+  the sheet already draws - the comment edge, the selected gutter, the Include line and the number,
+  text and keyword colours inside a sentence - are clear by default, clear means "as before", and
+  every bundled theme states them clear, so no existing theme changes how it looks. Drawing only:
+  compiled output is unchanged.
+
 ### Added: the first game you already know, as a showcase and a ten-step tour
 
 - **Top-Down Shooter.** A player that faces the mouse and fires where it points, monsters that walk

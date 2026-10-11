@@ -961,7 +961,9 @@ func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
 	if sheet != null and sheet.editor_style is EventSheetEditorStyle:
 		var configured_style: EventSheetEditorStyle = sheet.editor_style as EventSheetEditorStyle
 		configured_style.ensure_defaults()
-		return configured_style
+		# A theme that asks to follow the editor (the Editor Native starter) is painted from a copy
+		# moved onto the running editor's base colour; every other theme comes back as saved.
+		return EventSheetEditorThemeDeriver.follow_running_editor(configured_style)
 	var fallback_style := EventSheetEditorStyle.new()
 	fallback_style.ensure_defaults()
 	# Default-themed sheets adopt the running editor's colors so they look native to Godot

@@ -127,3 +127,71 @@ extends Resource
 @export_range(0, 24, 1) var region_corner_radius: int = 7
 ## Line thickness of REGION marker borders, in pixels.
 @export_range(1, 6, 1) var region_line_width: int = 1
+## THE NATIVE-LOOK TOKENS. The colours the Editor Native starter is drawn with: what kind of value a
+## variable holds, what kind of word a sentence is made of, the Include bar and the inner-class block,
+## and the small marks around them. Two kinds live here, and the default says which:
+##   - a token that RE-COLOURS something the sheet already draws (the comment edge, the selected
+##     gutter, the Include line, the value highlight) defaults to CLEAR, and clear means "exactly as
+##     before" - so a theme saved before these tokens existed looks the way it always did;
+##   - a token for a mark that is new defaults to the dark design palette, and every bundled theme
+##     states its own.
+##
+## Type colours: the type word of a variable row, one hue per kind of value, so a list of variables
+## is read by its colours before a single type name is.
+@export var type_number_color: Color = Color("#a6d18f")
+@export var type_text_color: Color = Color("#e3b47e")
+@export var type_bool_color: Color = Color("#8ec3f2")
+@export var type_vector_color: Color = Color("#7fe3d3")
+@export var type_color_color: Color = Color("#f0a6c8")
+@export var type_object_color: Color = Color("#b9c9da")
+@export var type_enum_color: Color = Color("#ffd27a")
+@export var type_collection_color: Color = Color("#c9a6ff")
+@export var type_class_color: Color = Color("#c2b4d6")
+## Word colours: the pieces of a condition or action sentence by kind. Clear follows the colour the
+## sheet already uses for that piece (the value highlight for a number, the string and true/false
+## colours for text and keywords).
+@export var word_variable_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var word_text_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var word_number_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var word_keyword_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## The Include line of a sheet that includes a shared one. Clear keeps the head bar look: the head
+## bar fill, no border, and the line's own inks.
+@export var include_border_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var include_fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var include_tag_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var include_name_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var include_note_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## The inner-class block: a class declared inside the script, its fields and what it is for.
+@export var class_border_color: Color = Color("#5f566c")
+@export var class_fill_color: Color = Color("#36323d")
+@export var class_head_color: Color = Color("#3c3744")
+@export var class_tag_color: Color = Color("#c2b4d6")
+@export var class_name_color: Color = Color("#eeeaf3")
+@export var class_note_color: Color = Color("#b9b0c6")
+## The edge drawn round a full-width comment, so a note reads as a note card. Clear draws none.
+@export var comment_border_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## The small icon in the number gutter that says how an event is started (on ready, every tick).
+@export var gutter_icon_color: Color = Color("#b0b7c2")
+## The number gutter of a SELECTED event, filled so the selection reads from the margin. Clear
+## leaves the gutter as it is.
+@export var selected_gutter_fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## The hairline between an object's name and the sentence that follows it.
+@export var object_hairline_color: Color = Color("#454d59")
+## Words drawn as links on the sheet (Add condition, Add action).
+@export var link_color: Color = Color("#7fa7f5")
+## The badges beside a variable that say how the Inspector shows it: shown in the Inspector, kept
+## in a range, given a tooltip, and saved by the Save System. Each is an icon on a small tile.
+@export var inspector_badge_foreground_color: Color = Color("#7cc4ff")
+@export var inspector_badge_background_color: Color = Color("#23384d")
+@export var range_badge_foreground_color: Color = Color("#c9a6ff")
+@export var range_badge_background_color: Color = Color("#3a2f4d")
+@export var tooltip_badge_foreground_color: Color = Color("#ffd27a")
+@export var tooltip_badge_background_color: Color = Color("#4a3e22")
+@export var saved_badge_foreground_color: Color = Color("#8ee09a")
+@export var saved_badge_background_color: Color = Color("#25402a")
+
+
+## A token that re-colours something older, or the colour it stands in for while the theme leaves it
+## clear. The one reading of "clear means as before", shared by every painter that honours it.
+static func stated_or(stated: Color, fallback: Color) -> Color:
+	return stated if stated.a > 0.01 else fallback

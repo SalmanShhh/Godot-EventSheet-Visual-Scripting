@@ -27,7 +27,7 @@ extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
 ## Every bundled preset: the six generated from well-known palettes, the three hand-written ones,
-## and the two that ship inside the addon (Mockup Slate and Classic Sheet).
+## and the three that ship inside the addon (Mockup Slate, Classic Sheet and Editor Native).
 const PRESET_PATHS := [
 	"res://demo/themes/dracula_theme.tres",
 	"res://demo/themes/nord_theme.tres",
@@ -40,6 +40,7 @@ const PRESET_PATHS := [
 	"res://demo/themes/designer_template_theme.tres",
 	"res://addons/eventsheet/themes/mockup_slate_theme.tres",
 	"res://addons/eventsheet/themes/classic_sheet_theme.tres",
+	"res://addons/eventsheet/themes/editor_native_theme.tres",
 ]
 
 ## The derived tokens the shared rule deliberately leaves at nothing, in enumeration order. Clear is

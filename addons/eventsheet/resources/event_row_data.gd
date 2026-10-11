@@ -82,6 +82,9 @@ var bookmark_enabled: bool = false
 var disabled: bool = false
 # Per-row custom tint (event-sheet-style colored comments); alpha 0 = use the theme color.
 var custom_color: Color = Color(0, 0, 0, 0)
+# An edge drawn just inside the row, in this colour, over its fill (the Include line's border). Alpha
+# 0 = no edge. Paint only: it reserves no room and is never hit-tested. View-only, never serialized.
+var outline_color: Color = Color(0, 0, 0, 0)
 # True on a row that renders a LANGUAGE construct (a data-class holder, a methods-class, a host binding,
 # a lifted switch case, a collapsed function...) rather than a regular ACE event. The renderer marks such
 # rows with a quiet indigo left stripe + faint wash so the distinction is visible at a glance without
