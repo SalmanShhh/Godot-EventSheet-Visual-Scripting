@@ -123,6 +123,10 @@ extends Resource
 @export_range(0, 16, 1) var cell_corner_radius: int = 4
 ## Corner roundness of GROUP rows, in pixels. 0 = the classic square group bar.
 @export_range(0, 24, 1) var group_corner_radius: int = 0
+## The group head in two lines: the name over its description in italics, with the event count and
+## the on/off switch drawn as an Active tick box at its right. Off keeps the one-line head, the
+## description beside the name and the switch as its glyph.
+@export var group_head_two_line: bool = false
 ## Corner roundness of REGION marker bubbles, in pixels.
 @export_range(0, 24, 1) var region_corner_radius: int = 7
 ## Line thickness of REGION marker borders, in pixels.

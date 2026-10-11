@@ -262,6 +262,7 @@ func build_ui() -> void:
 			_dock._viewport.queue_redraw())
 	_dock._viewport.property_dropped.connect(_dock._apply_property_drop)
 	_dock._viewport.ace_picker_requested.connect(_dock._on_viewport_ace_picker_requested)
+	_dock._viewport.rows_rebuilt.connect(_dock._update_sheet_counts_status)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
 	_dock._viewport.navigate_requested.connect(_dock._navigate.navigate)
 	_dock._viewport.navigation_probe = _dock._navigate.can_navigate
@@ -416,8 +417,20 @@ func build_ui() -> void:
 	# than no button.
 	_dock._live_edit_bar.init(_dock)
 	_dock._live_edit_bar.build(status_strip)
+	# The sheet's own counts, right of the message and before the address: how many rows the Doctor
+	# has a word about ("No problems" when none - a count, never the finding itself, which stays the
+	# amber row and the strip above) and how many events the sheet holds. Both are read off what the
+	# canvas already built, so the bar and the sheet can never disagree.
+	_dock._problem_count_label = Label.new()
+	_dock._problem_count_label.name = "EventSheetProblemCount"
+	status_strip.add_child(_dock._problem_count_label)
+	_dock._event_count_label = Label.new()
+	_dock._event_count_label.name = "EventSheetEventCount"
+	_dock._event_count_label.modulate = EventSheetActiveTheme.chrome().row_address_color
+	status_strip.add_child(_dock._event_count_label)
 	status_strip.add_child(_dock._row_address_label)
 	status_strip.add_child(_dock._build_zoom_pill())
+	_dock._update_sheet_counts_status()
 	root.add_child(status_strip)
 
 	_dock._exposed_node.name = "EventSheetExposedParams"

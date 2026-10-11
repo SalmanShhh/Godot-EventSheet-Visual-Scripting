@@ -80,6 +80,21 @@
   the variables of this sheet that hold it ("Used by settings (a variable), waves (a list)"); a
   read-only preview shows neither. Compiled output is unchanged; the reading of every opened sheet
   changes only in that the class head row carries the extends words and no extends row follows it.
+- **Add links on hover, the selected gutter, the two-line group head and the status bar counts.**
+  "Add condition" and "Add action" now appear as link words, in the theme's link colour, under the
+  lanes of the event under the pointer and nowhere else; a click opens the picker on that lane of
+  that event, and the link underlines while the pointer is on it. View > Add Links On Hover turns
+  it off and brings back the old pills, shown on hover, on the selected event and under an empty lane
+  (remembered per project, and in saved views). Either way they are the same two add lines in the
+  same places, so no row moves. A selected event's filled gutter (the selected-gutter token, which
+  Editor Native states) now reaches across the trigger icon's slot, with the number and the icon in
+  white. A theme can lay group heads out in two lines (`group_head_two_line`, on in Editor Native):
+  the name over its description in italics, the event count, and the on/off switch drawn as a tick
+  box and the word Active; every other theme keeps the one-line head. The status bar now says how
+  many rows of the sheet are drawn amber ("No problems", "2 problems") and how many events the sheet
+  holds, beside the address and the zoom - a count only, the findings themselves still live in the
+  amber row, the help strip and the Doctor. Drawing only: compiled output and every reading are
+  unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

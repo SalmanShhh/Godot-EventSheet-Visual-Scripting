@@ -318,6 +318,8 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.event_corner_radius = 3
 	event_style.cell_corner_radius = 0
 	event_style.group_corner_radius = 3
+	# The design's group head: the name over an italic description, the count and an Active tick.
+	event_style.group_head_two_line = true
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)

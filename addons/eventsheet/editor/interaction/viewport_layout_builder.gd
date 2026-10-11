@@ -141,6 +141,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# Comments read as an event-sheet full-width banner: text starts at the row's left edge (no
 	# badge-column indent) and the cell fills the row (see the width branch below).
 	var non_event_line_x: Dictionary = {}
+	# Where a group head's name started, for a description laid out under it.
+	var group_title_x: float = -1.0
 	# Comment wrapping: each logical line wraps to the row width, so a span can be several
 	# visual lines tall. Precompute, per span, the visual-line offset it starts at and how
 	# many visual lines it spans, so spans stack without overlapping (height matches the
@@ -196,6 +198,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var flow_line: int = int(metadata.get("line_index", 0))
 			span_y = row_top + scale_pad + group_v_offset + float(flow_line) * line_height + 3.0
 			span_x = float(non_event_line_x.get(flow_line, non_event_origin_x))
+			# A two-line group head's description starts under the name rather than under the folder
+			# mark, so the two lines read as one title block.
+			var under_title: bool = bool(metadata.get("flow_under_title", false)) and group_title_x >= 0.0
+			if under_title and not non_event_line_x.has(flow_line):
+				span_x = group_title_x
 			# Comment spans stack by accumulated WRAPPED height, not raw line index, so a
 			# multi-line wrapped span pushes the next one down past its full height.
 			if is_comment_row and span_index < comment_line_tops.size():
@@ -310,7 +317,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			# Clamped against its own start rather than the row's: with one right-aligned span the
 			# anchor already puts it flush with the edge and this changes nothing, but a run the
 			# anchor had to floor at half the row would otherwise be measured off the right edge.
-			span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
+			# An echo that opens the run gives up its tail to the spans after it (a group head's
+			# counts and switch), so a long declaration is cut short rather than pushing the switch
+			# off the row's edge.
+			var run_tail: float = 0.0
+			if bool(metadata.get("code_echo", false)):
+				run_tail = _right_run_after(row_data, span_index, font, font_size)
+			span_width = max(min(span_width, row_right_limit - span_x - 2.0 - run_tail), 1.0)
 			flow_right_x = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
 		else:
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
@@ -360,6 +373,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			span.rect = Rect2(span_x, span_y, span_width + 2.0, float(span_visual_lines) * line_height - 6.0)
 		# Store absolute X for the next span start on this line.
 		var next_span_start_x: float = span.rect.end.x + _viewport._get_span_gap(span)
+		if bool(metadata.get("group_title", false)):
+			group_title_x = span.rect.position.x
 		if lane_divider_x <= 0.0:
 			# A right-aligned span sits outside the sentence's run, so it never moves the cursor the
 			# spans after it start from.
@@ -487,6 +502,18 @@ func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: f
 	if badge_reserve > 0.0:
 		run += badge_reserve + (EventSheetPalette.SPAN_GAP if run > 0.0 else 0.0)
 	return maxf(row_right_limit - run, width * FLOW_RIGHT_ANCHOR_MIN_SHARE)
+
+
+## The width the right-aligned spans AFTER `span_index` take, gaps included - what an echo opening
+## the right-anchored run leaves for them.
+func _right_run_after(row_data: EventRowData, span_index: int, font: Font, font_size: int) -> float:
+	var tail: float = 0.0
+	for index: int in range(span_index + 1, row_data.spans.size()):
+		var span: SemanticSpan = row_data.spans[index]
+		if span == null or not (span.metadata is Dictionary) or not bool((span.metadata as Dictionary).get("align_right", false)):
+			continue
+		tail += _viewport._get_span_gap(span) + _viewport._measure_span_width(span, span.text, font, font_size) + 2.0
+	return tail
 
 
 ## The room a variable row's badge tiles take at its right, or 0 when the row has none or the View

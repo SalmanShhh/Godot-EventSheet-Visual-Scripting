@@ -7307,3 +7307,12 @@ Included variables shown under each Include bar.,Variabili incluse mostrate sott
 Included variables hidden.,Variabili incluse nascoste.
 Included Variables,Variabili incluse
 "Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.","Sotto ogni barra Includi, le variabili che il foglio incluso porta con sé, in sola lettura e nominate in base alla provenienza. Fai clic su una per aprire quel foglio. Disattivato lascia solo le barre Includi."
+Add links shown on the event under the pointer.,
+"Add links drawn as before: on hover, on the selected event and under an empty lane.",
+Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,
+No problems,
+1 problem,
+%d problems,
+Add Links On Hover,
+"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",
+Active,

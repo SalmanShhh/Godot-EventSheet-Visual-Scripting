@@ -73,6 +73,9 @@ const HAIRLINE_INSET := 5.0
 const GRIP_DOT_SPACING := 6.0
 const GRIP_MIN_DIVIDER_WIDTH := 3.0
 
+## The luminance under which a selected gutter's fill takes white ink rather than near-black.
+const SELECTED_INK_LUMINANCE := 0.6
+
 ## The word-range kind a variable name inside a sentence is stamped with.
 const WORD_VARIABLE := "variable"
 
@@ -167,6 +170,28 @@ static func draw_trigger_icon(control: CanvasItem, rect: Rect2, kind: String, co
 		TRIGGER_OTHER:
 			control.draw_arc(_at(rect, 8.0, 8.0), _units(rect, 5.0), 0.0, TAU, 24, color, stroke, true)
 			control.draw_circle(_at(rect, 8.0, 8.0), _units(rect, 1.6), color)
+
+
+## The ink that reads on `fill`: white on a dark or saturated fill (the design's selected blue), a
+## near-black on a pale one. What a selected gutter's number and trigger icon are drawn in.
+static func ink_on(fill: Color) -> Color:
+	return Color.WHITE if fill.get_luminance() < SELECTED_INK_LUMINANCE else Color(0.08, 0.09, 0.11)
+
+
+## Where a selected event's filled margin continues past the 20 px gutter: from the gutter's edge
+## across the trigger icon's slot for an event at the left edge, so the number and the icon sit on
+## one fill; for a nested event only the slot itself, and only when an icon is drawn in it, so the
+## indent guides between keep their place. An empty rect means nothing more is filled.
+static func selected_slot_rect(gutter_rect: Rect2, row_rect: Rect2, indent: int, indent_width: int,
+		has_icon: bool) -> Rect2:
+	var slot_x: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING \
+		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width)
+	if indent <= 0:
+		return Rect2(gutter_rect.end.x, row_rect.position.y, slot_x + TRIGGER_ICON_SLOT - gutter_rect.end.x,
+			row_rect.size.y)
+	if not has_icon:
+		return Rect2()
+	return Rect2(slot_x, row_rect.position.y, TRIGGER_ICON_SLOT, row_rect.size.y)
 
 
 ## The glyph an object label draws in place of its icon, or "" for one that keeps its icon.

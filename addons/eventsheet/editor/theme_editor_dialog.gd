@@ -211,6 +211,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"lane_divider_width": "Thickness of the conditions/actions divider line.",
 	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
 	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
+	"group_head_two_line": "Lay a group head out in two lines: the name over its description in italics, with the event count and an Active tick box at the right.",
 	"condition_object_column_width": "Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
 	"action_object_column_width": "Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
 	"event_block_gap": "Gap opened before an event or group that starts a new block, in pixels - the air between one event and the next.",

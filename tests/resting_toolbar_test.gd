@@ -260,9 +260,10 @@ static func _test_the_cascade() -> bool:
 	# View ▸ Text labels is the 60th: the strip laid out as words, one choice beside Full toolbar.
 	# View ▸ Trigger Icons, Value Glyphs and Variable Badges are the 61st to 63rd: the native look's
 	# drawn marks, each one a toggle beside Object Icons. View ▸ Included Variables is the 64th: the
-	# included sheet's variables under each Include bar.
+	# included sheet's variables under each Include bar. View ▸ Add Links On Hover is the 65th: the
+	# hovered event's Add condition and Add action links.
 	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
-		counts["EventSheetViewMenu"], 64) and ok
+		counts["EventSheetViewMenu"], 65) and ok
 	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	ok = _check("Words… is on Tools, at its own id",

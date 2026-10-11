@@ -155,6 +155,9 @@ signal raw_code_edit_requested(raw_row: Resource, in_flow: bool)
 ## field at field_index -> emit_data_class) into raw_row.code through the undo funnel. field_index is the
 ## field's index in the parsed model's body array; part is "name", "type" or "default".
 signal data_class_field_edit_requested(raw_row: Resource, field_index: int, part: String, current_text: String)
+## The rows were built again (a sheet set, an edit, a fold, a rescan). The status bar's sheet counts
+## listen, so the number of events and of rows the Doctor has a word about follow the sheet.
+signal rows_rebuilt
 
 # The DEFAULT density's numbers. Every layout read goes through row_height_floor() /
 # indent_width() / event_block_gap() below, which ask the sheet's own theme; these two are the
@@ -1859,6 +1862,11 @@ var show_variable_badges: bool = true
 ## Included Variables (View menu, on by default): under each Include bar, the included sheet's own
 ## variables as read-only rows. They are rows of their own, so flipping it rebuilds the rows.
 var show_included_variables: bool = true
+## Add Links On Hover (View menu, on by default): "Add condition" and "Add action" drawn as link words
+## under the lanes of the hovered event only. The add spans exist either way, in the same places, so
+## flipping it is a redraw: off paints them as the pills they were, on hover, on selection and under
+## an empty lane.
+var show_hover_add_links: bool = true
 
 ## Row Hit Counts (View menu, SHIPS OFF): the Event Trace's per-row tally, drawn as a small chip
 ## under the event number in the GUTTER. Off is the default forever - debugger information is a
@@ -2274,6 +2282,7 @@ func _draw() -> void:
 	_renderer.show_trigger_icons = show_trigger_icons
 	_renderer.show_value_glyphs = show_value_glyphs
 	_renderer.show_variable_badges = show_variable_badges
+	_renderer.show_hover_add_links = show_hover_add_links
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
@@ -2811,6 +2820,25 @@ func _refresh_rows() -> void:
 	_update_canvas_min_size()
 	_layout_cache.clear()
 	queue_redraw()
+	rows_rebuilt.emit()
+
+
+## How many rows of this sheet are in the quiet amber state - the rows the Doctor's findings were
+## joined onto when the sheet was built, folded ones included. A count read off the rows the canvas
+## already holds, so it can never disagree with what the sheet draws amber.
+func attention_row_count() -> int:
+	return _count_attention_rows(_root_rows)
+
+
+func _count_attention_rows(rows: Array) -> int:
+	var counted: int = 0
+	for row_data: EventRowData in rows:
+		if row_data == null:
+			continue
+		if not row_data.attention_note.is_empty():
+			counted += 1
+		counted += _count_attention_rows(row_data.children)
+	return counted
 
 
 func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:

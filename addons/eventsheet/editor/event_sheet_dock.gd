@@ -196,6 +196,9 @@ var _title_dirty_dot: Label = null
 var _status_label: Label = null
 ## The status bar's right half: "event 4 of 61 · line 38" for the selected row.
 var _row_address_label: Label = null
+## The status bar's sheet counts: the rows the Doctor has a word about, and the events.
+var _problem_count_label: Label = null
+var _event_count_label: Label = null
 ## THE SELECTED ROW'S HELP STRIP. A row in the quiet amber state says nothing in the sheet; this is
 ## where its sentence and its doors are read, and only while that row is selected. Hidden the rest
 ## of the time, which is nearly always - a button that can never do anything is worse than no button.
@@ -2608,6 +2611,7 @@ func _load_simple_mode_preference() -> void:
 	_apply_patterns_lens_pref()
 	_apply_trigger_icons_pref()
 	_apply_variable_marks_prefs()
+	_apply_hover_add_links_pref()
 	# The sheet zoom rides the same startup read: it belongs to the layout, so the first sheet
 	# opens at the size the last one was being read at.
 	_apply_sheet_zoom_pref()
@@ -3033,6 +3037,39 @@ func _set_variable_marks_flag(key: String, showing: bool, view_popup: PopupMenu,
 		var item_index: int = view_popup.get_item_index(item_id)
 		if item_index >= 0:
 			view_popup.set_item_checked(item_index, showing)
+
+
+## View > Add Links On Hover: "Add condition" and "Add action" as link words under the lanes of the
+## event under the pointer, and nowhere else. The add spans are the same either way, so flipping it is
+## a redraw; off paints them as the pills they were. On by default; persisted like Trigger Icons.
+func _hover_add_links_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.show_hover_add_links
+	return _stored_view_flag("hover_add_links")
+
+
+func _apply_hover_add_links_pref() -> void:
+	var stored: bool = _stored_view_flag("hover_add_links")
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.show_hover_add_links = stored
+
+
+func _toggle_hover_add_links(view_popup: PopupMenu) -> void:
+	var showing: bool = not _hover_add_links_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "hover_add_links", showing)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.show_hover_add_links = showing
+		view.queue_redraw()
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(EventSheetMenuBar.HOVER_ADD_LINKS_VIEW_ID)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, showing)
+	_set_status(EventSheetL10n.translate("Add links shown on the event under the pointer.") if showing
+		else EventSheetL10n.translate("Add links drawn as before: on hover, on the selected event and under an empty lane."))
 
 
 func _toggle_add_event_rows(view_popup: PopupMenu) -> void:
@@ -7508,6 +7545,43 @@ func _set_status(text: String, is_error: bool = false) -> void:
 ## is the file line the row came from (omitted on a sheet that has no file behind it). A row
 ## that is not an event (a comment, a group bar, a variable) keeps the last event's address
 ## empty rather than inventing one, so the bar never names a row the margin does not number.
+## The status bar's two sheet counts, refreshed whenever the rows are built and whenever the open
+## sheet changes. The problem count is the number of rows drawn amber; the event count is the one the
+## address's "of N" uses.
+func _update_sheet_counts_status() -> void:
+	if _problem_count_label == null or _event_count_label == null:
+		return
+	var has_sheet: bool = _current_sheet != null and _viewport != null
+	_problem_count_label.visible = has_sheet
+	_event_count_label.visible = has_sheet
+	if not has_sheet:
+		return
+	var problems: int = _viewport.attention_row_count()
+	_problem_count_label.text = problem_count_text(problems)
+	_problem_count_label.tooltip_text = EventSheetL10n.translate(
+		"Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.")
+	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+	_problem_count_label.modulate = chrome.object_bar_warning_color if problems > 0 else chrome.row_address_color
+	_event_count_label.text = event_count_text(EventSheetViewport.event_numbers_for(_current_sheet.events).size())
+	_event_count_label.modulate = chrome.row_address_color
+
+
+## "No problems", "1 problem" or "N problems".
+static func problem_count_text(count: int) -> String:
+	if count <= 0:
+		return EventSheetL10n.translate("No problems")
+	if count == 1:
+		return EventSheetL10n.translate("1 problem")
+	return EventSheetL10n.translate("%d problems") % count
+
+
+## "1 event" or "N events" - the same words a group head counts its events in.
+static func event_count_text(count: int) -> String:
+	if count == 1:
+		return EventSheetL10n.translate("1 event")
+	return EventSheetL10n.translate("%d events") % count
+
+
 func _update_row_address_status() -> void:
 	if _row_address_label == null:
 		return
@@ -7736,6 +7810,7 @@ func _refresh_title_strip() -> void:
 	# Keep the active tab's persisted state and tab title in sync with the live state.
 	_sync_active_tab_state()
 	_update_active_tab_title()
+	_update_sheet_counts_status()
 	if _title_tab_label == null or _title_path_label == null or _title_dirty_dot == null:
 		return
 	_title_tab_label.text = _format_sheet_title(_current_sheet, _current_sheet_path)
@@ -8242,6 +8317,7 @@ func current_view_lenses() -> Dictionary:
 		"value_glyphs": view != null and view.show_value_glyphs,
 		"variable_badges": view != null and view.show_variable_badges,
 		"included_variables": view != null and view.show_included_variables,
+		"hover_add_links": view != null and view.show_hover_add_links,
 	}
 
 
@@ -8264,6 +8340,8 @@ func apply_saved_view(name: String) -> void:
 			pane.show_object_icons = bool(lenses["object_icons"])
 		if lenses.has("trigger_icons"):
 			pane.show_trigger_icons = bool(lenses["trigger_icons"])
+		if lenses.has("hover_add_links"):
+			pane.show_hover_add_links = bool(lenses["hover_add_links"])
 		var marks_changed: bool = false
 		if lenses.has("value_glyphs") and pane.show_value_glyphs != bool(lenses["value_glyphs"]):
 			pane.show_value_glyphs = bool(lenses["value_glyphs"])

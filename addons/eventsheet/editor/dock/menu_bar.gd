@@ -41,6 +41,10 @@ const RESET_LANE_SPLIT_VIEW_ID: int = 9817
 ## first of the run the View toggles beside Object Icons take (9818 onwards).
 const TRIGGER_ICONS_VIEW_ID: int = 9818
 
+## View ▸ Add Links On Hover - "Add condition" and "Add action" as link words under the lanes of the
+## hovered event. The number the run left free beside Trigger Icons.
+const HOVER_ADD_LINKS_VIEW_ID: int = 9819
+
 ## View ▸ Value Glyphs and View ▸ Variable Badges - a variable row's value as the Inspector draws it,
 ## and the icon tiles at its right. Further along the same run, leaving 9819 to the next toggle.
 const VALUE_GLYPHS_VIEW_ID: int = 9820
@@ -551,6 +555,10 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), _dock._trigger_icons_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), EventSheetL10n.translate(
 		"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet."))
+	view_popup.add_check_item(EventSheetL10n.translate("Add Links On Hover"), HOVER_ADD_LINKS_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(HOVER_ADD_LINKS_VIEW_ID), _dock._hover_add_links_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(HOVER_ADD_LINKS_VIEW_ID), EventSheetL10n.translate(
+		"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane."))
 	view_popup.add_check_item(EventSheetL10n.translate("Value Glyphs"), VALUE_GLYPHS_VIEW_ID)
 	view_popup.set_item_checked(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), _dock._value_glyphs_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), EventSheetL10n.translate(
@@ -707,6 +715,7 @@ func build(root: Node) -> void:
 			9: _dock._toggle_add_event_rows(view_popup)
 			15: _dock._toggle_object_icons(view_popup)
 			TRIGGER_ICONS_VIEW_ID: _dock._toggle_trigger_icons(view_popup)
+			HOVER_ADD_LINKS_VIEW_ID: _dock._toggle_hover_add_links(view_popup)
 			VALUE_GLYPHS_VIEW_ID: _dock._toggle_value_glyphs(view_popup)
 			VARIABLE_BADGES_VIEW_ID: _dock._toggle_variable_badges(view_popup)
 			INCLUDED_VARIABLES_VIEW_ID: _dock._toggle_included_variables(view_popup)

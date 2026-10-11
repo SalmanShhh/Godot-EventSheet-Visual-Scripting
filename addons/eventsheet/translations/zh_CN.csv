@@ -7307,3 +7307,12 @@ Included variables shown under each Include bar.,已在每个包含栏下显示�
 Included variables hidden.,已隐藏包含的变量。
 Included Variables,包含的变量
 "Under each Include bar, the variables the included sheet brings with it, read-only and named by where they come from. Click one to open that sheet. Off keeps the Include bars alone.",在每个包含栏下，列出被包含表带来的变量，只读并注明来源。点击一个即可打开该表。关闭后只保留包含栏。
+Add links shown on the event under the pointer.,
+"Add links drawn as before: on hover, on the selected event and under an empty lane.",
+Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.,
+No problems,
+1 problem,
+%d problems,
+Add Links On Hover,
+"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",
+Active,

@@ -91,6 +91,11 @@ var show_trigger_icons: bool = true
 ## paints exactly as before.
 var show_value_glyphs: bool = true
 var show_variable_badges: bool = true
+## And View > Add Links On Hover (ships ON): "Add condition" and "Add action" drawn as link words
+## under the lanes of the HOVERED event only. False paints the add affordances exactly as before -
+## the pills shown on hover, on selection and under an empty lane. Draw-only either way: the two
+## spans are the same spans in the same places, so no row, no reading and no hit target moves.
+var show_hover_add_links: bool = true
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/native_head_marks.gd")
 
@@ -751,15 +756,24 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var soft_hover: Color = hover_fill
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
+	# A selected event's filled margin reaches across the trigger icon's slot, so the number and the
+	# icon read as one selected gutter. Paint only, over the row's own fill and under the fold arrow.
+	var gutter_selected: bool = is_event_row and row_data.selected and event_style != null \
+		and event_style.selected_gutter_fill_color.a > 0.01
+	var trigger_kind: String = NativeRowMarks.trigger_kind(row_data) if show_trigger_icons and is_event_row else ""
+	if gutter_selected:
+		var slot_fill: Rect2 = NativeRowMarks.selected_slot_rect(gutter_rect, row_rect, row_data.indent,
+			row_indent_width, not trigger_kind.is_empty())
+		if slot_fill.size.x > 0.0:
+			control.draw_rect(slot_fill, event_style.selected_gutter_fill_color, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
 	# How the event is started, as a small icon beside its number: in the slot right of the margin
 	# that every event row reserves, so it moves nothing. Its meaning is the canvas tooltip's.
-	if show_trigger_icons and is_event_row and event_style != null:
-		var trigger_kind: String = NativeRowMarks.trigger_kind(row_data)
-		if not trigger_kind.is_empty():
-			NativeRowMarks.draw_trigger_icon(control,
-				NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, row_indent_width),
-				trigger_kind, event_style.gutter_icon_color)
+	if not trigger_kind.is_empty() and event_style != null:
+		NativeRowMarks.draw_trigger_icon(control,
+			NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, row_indent_width),
+			trigger_kind, NativeRowMarks.ink_on(event_style.selected_gutter_fill_color) if gutter_selected
+				else event_style.gutter_icon_color)
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
 	# What the open inline editor has to say before it is committed ("renames 6 uses in 2
 	# sheets · Enter to apply · Esc"). Drawn AFTER the spans and measured from the field's own rect,
@@ -861,9 +875,11 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
 	# A selected event's margin filled, so the selection reads from the number. Clear leaves it.
+	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
 	if selected and event_style != null and event_style.selected_gutter_fill_color.a > 0.01:
 		gutter_bg = event_style.selected_gutter_fill_color
-	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
+		# The number turns to the ink that reads on the fill (white on the design's blue).
+		gutter_text = NativeRowMarks.ink_on(gutter_bg)
 	control.draw_rect(gutter_rect, gutter_bg, true)
 	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
 	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
@@ -1306,6 +1322,10 @@ func _draw_spans(
 			row_has_condition = true
 	var reveal_add_action: bool = row_data.hovered or row_data.selected or not row_has_action
 	var reveal_add_condition: bool = row_data.hovered or row_data.selected or not row_has_condition
+	# The hover links: only the event under the pointer says them, so a sheet at rest repeats nothing.
+	if show_hover_add_links:
+		reveal_add_action = row_data.hovered
+		reveal_add_condition = row_data.hovered
 	for span_index: int in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[span_index]
 		if span == null:
@@ -1374,6 +1394,24 @@ func _draw_spans(
 		# name span that carries them, so the row needs no span of its own for each tile.
 		if show_variable_badges and metadata.get("badge_tiles_x") is float:
 			_draw_variable_badges(control, span, metadata, event_style)
+		# The two-line group head: its switch drawn as a tick box and the word Active, and its
+		# description in italics under the name. Same spans, same words - only the paint differs.
+		if bool(metadata.get("group_active_tick", false)):
+			var group_on: bool = not (row_data.source_resource is EventGroup) \
+				or (row_data.source_resource as EventGroup).enabled
+			var head_fill: Color = event_style.group_background_color if event_style != null else BG_0
+			NativeHeadMarks.draw_active_tick(control, span.rect, group_on, font, font_size,
+				event_style.trigger_badge_background_color if event_style != null else reading.primary_text_color,
+				NativeVariableMarks.frame_ink(head_fill), reading.primary_text_color, reading.muted_text_color)
+			continue
+		if bool(metadata.get("italic_note", false)) and span_index != editing_span_index:
+			var note_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
+			var note_baseline: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) \
+				+ (note_size * FONT_BASELINE_OFFSET_RATIO)
+			_draw_text(control, Vector2(span.rect.position.x, note_baseline), span.text,
+				maxf(span.rect.size.x - 2.0, 1.0), NativeVariableMarks.italic_font(font), note_size,
+				metadata.get("text_color", _get_span_color(span.type, event_style)))
+			continue
 		if bool(metadata.get("badge", false)):
 			# The Inspector mark joins the badge tiles while they are shown; it measured to nothing.
 			if show_variable_badges and bool(metadata.get("inspector_badge", false)):
@@ -1392,6 +1430,10 @@ func _draw_spans(
 		var ace_enabled: bool = bool(metadata.get("ace_enabled", true))
 		if not ace_enabled:
 			color = color.lerp(TEXT_MUTED, 0.6)
+		if show_hover_add_links and span_kind in ["add_condition", "add_action"]:
+			_draw_add_link(control, span, span_kind, font, font_size, metadata, event_style,
+				span_index == hovered_span_index)
+			continue
 		if is_add_affordance:
 			_draw_add_affordance_pill(control, span.rect, color, span_index == hovered_span_index)
 		if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
@@ -1819,6 +1861,34 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary,
 ## an outline, brightening on hover - so the add gestures read as clickable buttons instead of
 ## stray muted text (newcomers don't click things that look like notes). Alpha is fixed here; the
 ## accent's own alpha is ignored (the affordance text is deliberately faded to 55%).
+## The words a hover link says for an add span's kind: "Add condition" or "Add action", without the
+## plus the pill wears - a link is read as a link by its colour.
+static func hover_link_label(span_kind: String) -> String:
+	return EventSheetL10n.translate("Add action" if span_kind == "add_action" else "Add condition")
+
+
+## One hover link: the words in the theme's link colour on the add span's own line, underlined while
+## the pointer is on it. Painted in the span's rect and nowhere else, so the click that opens the
+## picker lands exactly where the words are. A theme that leaves the link colour clear gets the
+## span's own ink.
+func _draw_add_link(control: Control, span: SemanticSpan, span_kind: String, font: Font, font_size: int,
+		metadata: Dictionary, event_style: EventSheetEventStyle, hovered: bool) -> void:
+	if font == null:
+		return
+	var fallback: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
+	var ink: Color = EventSheetEventStyle.stated_or(event_style.link_color, fallback) if event_style != null else fallback
+	var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
+	var label: String = hover_link_label(span_kind)
+	var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) \
+		+ (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
+	var room: float = maxf(span.rect.size.x - 2.0, 1.0)
+	_draw_text(control, Vector2(span.rect.position.x, baseline_y), label, room, font, draw_font_size, ink)
+	if hovered:
+		var label_width: float = minf(font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, room)
+		control.draw_line(Vector2(span.rect.position.x, baseline_y + 2.0),
+			Vector2(span.rect.position.x + label_width, baseline_y + 2.0), ink, 1.0)
+
+
 static func _draw_add_affordance_pill(control: Control, rect: Rect2, accent: Color, hovered: bool) -> void:
 	var pill: StyleBoxFlat = StyleBoxFlat.new()
 	pill.set_corner_radius_all(8)
