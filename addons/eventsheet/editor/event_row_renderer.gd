@@ -1488,7 +1488,8 @@ func _draw_spans(
 			var note_baseline: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) \
 				+ (note_size * FONT_BASELINE_OFFSET_RATIO)
 			_draw_text(control, Vector2(span.rect.position.x, note_baseline), span.text,
-				maxf(span.rect.size.x - 2.0, 1.0), NativeVariableMarks.italic_font(font), note_size,
+				NativeVariableMarks.italic_room(font, span.text, note_size, maxf(span.rect.size.x - 2.0, 1.0)),
+				NativeVariableMarks.italic_font(font), note_size,
 				metadata.get("text_color", _get_span_color(span.type, event_style, reading)))
 			continue
 		if bool(metadata.get("comment_note_lead", false)):
@@ -1874,7 +1875,8 @@ func _draw_variable_word(control: Control, span: SemanticSpan, metadata: Diction
 	if bool(metadata.get("variable_doc_note", false)) and not bool(metadata.get("comment_wrap", false)):
 		var note_ink: Color = metadata.get("text_color", reading.muted_text_color)
 		_draw_text(control, Vector2(span.rect.position.x, centre_y + draw_font_size * FONT_BASELINE_OFFSET_RATIO), span.text,
-			maxf(span.rect.size.x - 2.0, 1.0), NativeVariableMarks.italic_font(font), draw_font_size, note_ink)
+			NativeVariableMarks.italic_room(font, span.text, draw_font_size, maxf(span.rect.size.x - 2.0, 1.0)),
+			NativeVariableMarks.italic_font(font), draw_font_size, note_ink)
 		return true
 	return false
 

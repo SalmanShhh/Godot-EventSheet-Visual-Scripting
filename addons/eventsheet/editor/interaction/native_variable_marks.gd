@@ -79,8 +79,8 @@ const CHIP_ICON := 12.0
 const CHIP_ICON_GAP := 5.0
 const CHIP_PAD_RIGHT := 8.0
 
-## The slant of the italic note, as the shear the font's outlines take. Shearing leaves every advance
-## as it was, so the note is measured exactly as before and only its letters lean.
+## The slant of the italic note, as the shear the font's outlines take. Shearing leaves the advances
+## all but as they were, so the note is measured as before and only its letters lean.
 const ITALIC_SHEAR := 0.2
 
 ## The axis letters' colours when no editor theme is there to ask (a headless run, a preview): the
@@ -748,8 +748,9 @@ static func type_word_width(text: String, base: Font, font_size: int) -> float:
 	return mono_font(base).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, type_font_size(font_size)).x
 
 
-## `base` leaning into italics. A shear of the outlines only, so every advance is the one `base`
-## measures - the note keeps the room it always had.
+## `base` leaning into italics. A shear of the outlines only, so every advance is close to the one
+## `base` measures - close, not equal: the editor's own fonts round the sheared glyphs a pixel or two
+## differently, which is what `italic_room` makes up for.
 static func italic_font(base: Font) -> Font:
 	if base == null:
 		return null
@@ -761,6 +762,17 @@ static func italic_font(base: Font) -> Font:
 	italic.variation_transform = Transform2D(Vector2(1.0, ITALIC_SHEAR), Vector2(0.0, 1.0), Vector2.ZERO)
 	_italic_cache[key] = italic
 	return italic
+
+
+## The width an italic note may draw in: the `room` its span was laid out with, plus however much
+## wider the slanted words measure than the upright ones the layout measured. Without it the editor's
+## fonts lose a note's last letter ("in units per secon") to a rounding the span never knew about.
+static func italic_room(base: Font, text: String, font_size: int, room: float) -> float:
+	if base == null or text.is_empty():
+		return room
+	var upright: float = base.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var leaning: float = italic_font(base).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	return room + maxf(leaning - upright, 0.0)
 
 
 ## Rounded fills share one StyleBoxFlat per colour and radius (a handful per theme), so a frame

@@ -12,7 +12,9 @@ extends RefCounted
 #   2. the readings the row prints: the GDScript type word, the Inspector name, a colour's hex;
 #   3. the rows the builder makes under Editor Native, word for word, and under Classic Sheet as before;
 #   4. a capitalised name still renames from the identifier the file holds;
-#   5. the hidden bookkeeping member still compiles.
+#   5. the hidden bookkeeping member still compiles;
+#   6. an italic note draws in room enough for its slanted words, so the editor's fonts keep its last
+#      letter (the span is measured upright, and a slant can round a pixel or two wider).
 
 const SUPPORT := preload("res://tests/support.gd")
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
@@ -42,6 +44,7 @@ static func run() -> bool:
 	ok = _test_classic_rows_unchanged() and ok
 	ok = _test_rename_edits_the_identifier() and ok
 	ok = _test_hidden_member_still_compiles() and ok
+	ok = _test_italic_note_keeps_its_last_letter() and ok
 	return ok
 
 
@@ -167,6 +170,21 @@ static func _test_hidden_member_still_compiles() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["the hidden member is still declared", output.contains("var __every_tick: float = 0.0"), true],
 		["the ## line above a plain var is still written", output.contains("## How far open the gate is"), true],
+	])
+
+
+static func _test_italic_note_keeps_its_last_letter() -> bool:
+	var font: Font = ThemeDB.fallback_font
+	var text: String = "How fast the gate opens, in units per second"
+	var upright: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
+	var leaning: float = NativeVariableMarks.italic_font(font).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12).x
+	var room: float = NativeVariableMarks.italic_room(font, text, 12, upright)
+	return SUPPORT.pins(TEST_NAME, [
+		["the room covers the slanted words", room >= leaning, true],
+		["and never shrinks below the span's own", room >= upright, true],
+		["the room is the span's plus only what the slant adds", room, upright + maxf(leaning - upright, 0.0)],
+		["no font keeps the span's room", NativeVariableMarks.italic_room(null, text, 12, 40.0), 40.0],
+		["an empty note keeps it too", NativeVariableMarks.italic_room(font, "", 12, 40.0), 40.0],
 	])
 
 

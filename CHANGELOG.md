@@ -176,6 +176,11 @@
   edge, a small filled fold arrow - with the count and the Active tick at its right. Drawing only:
   compiled output and the default-theme reading are unchanged, and Classic Sheet renders pixel for
   pixel as before.
+- **An italic note keeps its last letter in the editor.** A variable's `##` note and a two-line group
+  head's description lean into italics, and the span each is laid out in is measured upright. In the
+  running editor the slanted words can measure a pixel or two wider than that, so the note lost its
+  last letter ("in units per secon", "the space ke"). The note now draws in its span's room plus
+  whatever the slant adds. Drawing only, and only where Editor Native draws italics.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 
