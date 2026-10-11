@@ -16,6 +16,8 @@ var _dock: Control = null
 ## This file's own path, so a control it builds can say where it was built. Written out rather
 ## than derived, because a RefCounted helper has no script path to ask for at the point it matters.
 const THIS_FILE_PATH: String = "res://addons/eventsheet/editor/dock/menu_bar.gd"
+## The Find field's width in the Text labels layout, the design's 180 px at 100% editor scale.
+const FIND_FIELD_WIDTH: int = 180
 
 ## Where the "show every button" choice is remembered, in the same editor-settings project
 ## metadata section every other per-project editor choice uses. The default is REST, for every
@@ -131,6 +133,13 @@ var _add_condition_button: Button = null
 var _add_action_button: Button = null
 var _find_spacer: Control = null
 var _sentences_button: MenuButton = null
+## The play slot and the Find field, which the Text labels layout re-dresses: the design's word-led
+## strip has no play button at rest (it stays in the full strip, and Godot's own play bar keeps
+## F5 and F6), and its field reads "Find" behind a magnifier, 180 px wide.
+var _play_slot: Control = null
+var _find_field: LineEdit = null
+## The Find field's face as it was built (placeholder, icon, width), put back when the layout leaves.
+var _find_built: Dictionary = {}
 
 ## Each re-faced button's own face (text, icon, flat) as it was built, so leaving the Text labels
 ## layout puts back exactly what the icon-led strip wore - an editor icon in the editor, a glyph
@@ -322,6 +331,7 @@ func build(root: Node) -> void:
 	play_slot.name = "EventSheetPlaySlot"
 	play_slot.add_theme_constant_override("separation", 0)
 	_toolbar.add_child(play_slot)
+	_play_slot = play_slot
 	_play_button.build(play_slot, _dock)
 	# And the same six ways to play, as the plain buttons they have always been, for the expanded
 	# strip. They are one table with the play button's dropdown - the same words, the same order and
@@ -880,6 +890,7 @@ func build(root: Node) -> void:
 	# live, and a label cut in half is a label nobody reads.
 	_quick_add_edit.custom_minimum_size = Vector2(240.0, 0.0)
 	_dock._quick_add_edit = _quick_add_edit
+	_find_field = _quick_add_edit
 	_quick_add_edit.text_submitted.connect(func(text: String) -> void:
 		if _dock._quick_add(text):
 			_quick_add_edit.clear()
@@ -1360,7 +1371,9 @@ func _apply_toolbar_expansion() -> void:
 		var control: Control = child as Control
 		if control == null:
 			continue
-		control.visible = (_full_toolbar or _resting_controls.has(control)
+		# The word-led strip rests without the play button; the full strip still shows it.
+		var resting: bool = _resting_controls.has(control) and not (_text_labels and control == _play_slot)
+		control.visible = (_full_toolbar or resting
 			or (_text_labels and text_extras.has(control)))
 	if _find_spacer != null:
 		_find_spacer.size_flags_horizontal = (Control.SIZE_EXPAND_FILL if _text_labels
@@ -1408,6 +1421,7 @@ func apply_theme_chrome() -> void:
 	_text_labels = _effective_text_labels()
 	_apply_toolbar_expansion()
 	_apply_tab_edge()
+	_apply_tab_position()
 
 
 ## The reader's stored layout when there is one, the active theme's word on it when there is not.
@@ -1451,6 +1465,41 @@ func _apply_text_label_faces() -> void:
 			face_button.icon = null
 		elif face_button in [_add_event_button, _add_condition_button, _add_action_button]:
 			face_button.icon = null
+	_apply_find_face()
+
+
+## The Find field's face: "Find" behind the editor's magnifier, at the design's 180 px, while the
+## strip is laid out as words; the face it was built with otherwise. Same field, same handlers - it
+## still adds a row on Enter and answers underneath.
+func _apply_find_face() -> void:
+	if _find_field == null:
+		return
+	if _find_built.is_empty():
+		_find_built = {"placeholder": _find_field.placeholder_text, "icon": _find_field.right_icon,
+			"width": _find_field.custom_minimum_size.x}
+	_find_field.placeholder_text = str(_find_built["placeholder"])
+	_find_field.right_icon = _find_built["icon"]
+	_find_field.custom_minimum_size.x = float(_find_built["width"])
+	if not _text_labels:
+		return
+	_find_field.placeholder_text = EventSheetL10n.translate("Find")
+	_find_field.right_icon = ACEPickerDialog.editor_icon("Search")
+	_find_field.custom_minimum_size.x = float(EventSheetPalette.scaled(FIND_FIELD_WIDTH))
+
+
+## Where the open-sheet tabs sit: over the strip when the active theme stacks them that way
+## (tabs_above_toolbar), under it otherwise - the order the dock was built in. A move of the one
+## TabBar inside the dock's own column, so every signal and reference stays as it was.
+func _apply_tab_position() -> void:
+	var tab_bar: TabBar = _dock._tab_bar if _dock != null else null
+	if tab_bar == null or _toolbar_ref == null or tab_bar.get_parent() != _toolbar_ref.get_parent():
+		return
+	var column: Node = _toolbar_ref.get_parent()
+	var above: bool = tab_bar.get_index() < _toolbar_ref.get_index()
+	# Either way the target is the strip's own index: taken out from below, the tabs land over it;
+	# taken out from above, the strip moves up one and the tabs land straight under it.
+	if EventSheetActiveTheme.active().tabs_above_toolbar != above:
+		column.move_child(tab_bar, _toolbar_ref.get_index())
 
 
 ## The open tab's top edge in the theme's accent, drawn by the tab bar's own selected-tab style with

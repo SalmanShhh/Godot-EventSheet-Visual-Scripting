@@ -75,6 +75,7 @@ anatomy_trigger_pill_background_color = Color(0.1052, 0.25239998, 0.1372, 1)
 anatomy_trigger_pill_foreground_color = Color(0.549, 0.802, 0.604, 1)
 anatomy_knob_pill_foreground_color = Color(0.6905, 0.7925, 0.86050004, 1)
 active_tab_edge_color = Color(1, 0.8784314, 0.4, 1)
+status_ok_color = Color(0, 0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_condition"]
 script = ExtResource("3_element_style")
@@ -98,6 +99,8 @@ inspector_variable_rows = false
 hide_compiler_variables = false
 inspector_class_head = false
 add_lines_on_hover = false
+comment_notes = false
+selection_as_outline = false
 trigger_icon_in_gutter = false
 behaviour_in_object_column = false
 lane_chips_yield = false
@@ -277,3 +280,5 @@ chrome_style = SubResource("Resource_sguh7")
 manual_style = SubResource("Resource_e2mpa")
 follow_editor_greys = false
 toolbar_text_labels = false
+tabs_above_toolbar = false
+status_bar_selection_line = false

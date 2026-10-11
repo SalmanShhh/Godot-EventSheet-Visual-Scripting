@@ -48,6 +48,9 @@ extends Resource
 ## A line along the top edge of the tab of the sheet being read, so the open tab reads as the one in
 ## front. Clear = no line, the tab exactly as the editor draws it.
 @export var active_tab_edge_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## "No problems" in the status bar, said in a colour that means all is well. Clear = the same quiet
+## colour as the counts beside it.
+@export var status_ok_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 
 # ── The minimap ───────────────────────────────────────────────────────────────────────────────
 ## The thin column down the right edge of a long sheet: one bar per event, tinted by what the

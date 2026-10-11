@@ -745,7 +745,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var firing_stripe: Color = reading_style.firing_stripe_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, pulse), true)
 		control.draw_rect(row_fill_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10 * pulse), true)
-	if row_data.selected and not has_span_selection:
+	# A theme that marks a selected event by its gutter and frame alone (selection_as_outline) washes
+	# nothing over the lanes: the filled gutter below and the frame drawn over the card say it.
+	var outline_only: bool = row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
+		and event_style.selection_as_outline
+	if row_data.selected and not has_span_selection and not outline_only:
 		# Slightly tempered for single-cell rows (comments especially) - selection
 		# stays unmistakable via the outline, without the full-strength flood fill.
 		var row_selection: Color = selection_fill
@@ -785,7 +789,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			row_indent_width, not trigger_kind.is_empty())
 		if slot_fill.size.x > 0.0:
 			control.draw_rect(slot_fill, event_style.selected_gutter_fill_color, true)
-	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
+	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty(),
+		row_data.row_type == EventRowData.RowType.GROUP and event_style != null and event_style.group_head_two_line)
 	# How the event is started, as a small icon beside its number: in the slot right of the margin
 	# that every event row reserves, so it moves nothing. Its meaning is the canvas tooltip's.
 	if not trigger_kind.is_empty() and event_style != null:
@@ -1047,11 +1052,20 @@ func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_co
 		)
 
 
-func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool) -> void:
+func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool, solid: bool = false) -> void:
 	if not visible or fold_rect.size == Vector2.ZERO:
 		return
 	var center: Vector2 = fold_rect.get_center()
 	var color: Color = TEXT_MUTED
+	if solid:
+		# The two-line group head's arrow: a small filled triangle, the design's 9 px "▼".
+		var arrow: PackedVector2Array = PackedVector2Array([
+			Vector2(center.x - 2.5, center.y - 4.0), Vector2(center.x + 2.5, center.y), Vector2(center.x - 2.5, center.y + 4.0)
+		]) if folded else PackedVector2Array([
+			Vector2(center.x - 4.0, center.y - 2.5), Vector2(center.x + 4.0, center.y - 2.5), Vector2(center.x, center.y + 2.5)
+		])
+		control.draw_colored_polygon(arrow, color)
+		return
 	if folded:
 		control.draw_polyline(
 			PackedVector2Array([
@@ -1129,6 +1143,9 @@ func draw_event_selection_outline(control: Control, rect: Rect2, event_style: Ev
 	var fill: Color = event_style.selection_fill_color if event_style != null else EventSheetPalette.COLOR_SELECTION
 	var outline: Color = fill.lightened(SELECTION_OUTLINE_LIGHTEN)
 	outline.a = SELECTION_OUTLINE_ALPHA
+	if event_style != null and event_style.selection_as_outline \
+			and event_style.selected_gutter_fill_color.a > 0.01:
+		outline = NativeRowMarks.selection_frame_color(event_style.selected_gutter_fill_color)
 	var radius: int = event_style.event_corner_radius if event_style != null else 8
 	var key: String = "selection:%d:%s" % [radius, outline.to_html()]
 	var box: StyleBoxFlat = _rounded_box_cache.get(key)
@@ -1140,6 +1157,20 @@ func draw_event_selection_outline(control: Control, rect: Rect2, event_style: Ev
 		box.set_corner_radius_all(radius)
 		_rounded_box_cache[key] = box
 	box.draw(control.get_canvas_item(), rect.grow(-1.0))
+
+
+## The one-pixel edge round a two-line group head, kept per colour and radius like every other box.
+func _group_card_edge(edge_color: Color, radius: int) -> StyleBoxFlat:
+	var key: String = "group_edge:%d:%s" % [radius, edge_color.to_html()]
+	var box: StyleBoxFlat = _rounded_box_cache.get(key)
+	if box == null:
+		box = StyleBoxFlat.new()
+		box.draw_center = false
+		box.border_color = edge_color
+		box.set_border_width_all(1)
+		box.set_corner_radius_all(radius)
+		_rounded_box_cache[key] = box
+	return box
 
 
 func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
@@ -1156,6 +1187,15 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 	# top/bottom accent hairlines inset by the radius so they don't overhang the rounded corners.
 	var group_radius: int = event_style.group_corner_radius if event_style != null else 0
 	_draw_rounded_rect(control, row_rect, bg, group_radius, group_radius, group_radius, group_radius)
+	# The two-line head is the design's card: one 1 px edge in the row border colour round the grey,
+	# no accent stripe or hairlines (a group's own colour tag still draws its stripe), and the fold
+	# arrow on the grey with no box behind it.
+	if event_style != null and event_style.group_head_two_line:
+		var edge: StyleBoxFlat = _group_card_edge(event_style.row_border_color, group_radius)
+		edge.draw(control.get_canvas_item(), row_rect)
+		if group_tint.a > 0.0:
+			control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
+		return
 	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.position.y, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.28), true)
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.end.y - 1.0, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.38), true)
@@ -1382,6 +1422,12 @@ func _draw_spans(
 				_draw_block_cell(control, span.rect, metadata)
 			else:
 				_draw_chip_span(control, span, metadata, event_style.cell_corner_radius if event_style != null else 4)
+			# A comment in the action lane drawn as a note (comment_notes): its card set inside the
+			# cell, once per block, with the grip and the bubble on its first line.
+			if bool(metadata.get("comment_note", false)) and event_style != null and (not in_block or is_block_head):
+				NativeRowMarks.draw_comment_note_card(control, block_unions[span_index] if in_block else span.rect,
+					span.rect.get_center().y, event_style.comment_row_background_color,
+					event_style.comment_border_color, event_style.comment_text_color)
 		if selected_span_indices.has(span_index):
 			if bool(metadata.get("chip", false)):
 				var head_for_block: int = int(block_heads.get(span_index, -1))
@@ -1444,6 +1490,11 @@ func _draw_spans(
 			_draw_text(control, Vector2(span.rect.position.x, note_baseline), span.text,
 				maxf(span.rect.size.x - 2.0, 1.0), NativeVariableMarks.italic_font(font), note_size,
 				metadata.get("text_color", _get_span_color(span.type, event_style, reading)))
+			continue
+		if bool(metadata.get("comment_note_lead", false)):
+			# A note's grip and speech bubble, in the room the lead span holds before its words.
+			var note_ink: Color = event_style.comment_text_color if event_style != null else EventSheetPalette.COLOR_COMMENT
+			NativeRowMarks.draw_comment_note_lead(control, span.rect.position.x, span.rect.get_center().y, note_ink)
 			continue
 		if bool(metadata.get("badge", false)):
 			# The Inspector mark joins the badge tiles while they are shown; it measured to nothing.

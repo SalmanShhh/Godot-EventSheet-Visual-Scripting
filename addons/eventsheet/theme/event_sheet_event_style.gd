@@ -124,8 +124,9 @@ extends Resource
 ## Corner roundness of GROUP rows, in pixels. 0 = the classic square group bar.
 @export_range(0, 24, 1) var group_corner_radius: int = 0
 ## The group head in two lines: the name over its description in italics, with the event count and
-## the on/off switch drawn as an Active tick box at its right. Off keeps the one-line head, the
-## description beside the name and the switch as its glyph.
+## the on/off switch drawn as an Active tick box at its right - no folder mark before the name and no
+## echo of its line (the code panel still shows it). Off keeps the one-line head, the folder mark, the
+## description beside the name, the echo and the switch as its glyph.
 @export var group_head_two_line: bool = false
 ## A variable row drawn the way the Inspector lists a property: the GDScript type in mono in its
 ## family's colour, the name capitalised the way the Inspector capitalises it (editing still shows the
@@ -160,6 +161,15 @@ extends Resource
 ## two fifths of the conditions lane, so the condition's own words keep their room and a long chip is
 ## cut short. Off lets a chip take what it measures, however little that leaves the condition.
 @export var lane_chips_yield: bool = false
+## A comment drawn as a note: the yellow card with a drag grip and a speech-bubble mark before its
+## words, the same in its own row and inside an event's action lane, where it drops its "#" marker.
+## No code echo beside it (the Code view and the code panel still show the line). Off keeps the
+## banner with its echo and the "#"-led line in the action lane.
+@export var comment_notes: bool = false
+## A selected event is marked by its filled number gutter and a two-pixel frame in the gutter's
+## colour, with nothing washed over its lanes, so its words read exactly as they did. A selected cell
+## keeps its own highlight. Off keeps the selection fill over the whole event.
+@export var selection_as_outline: bool = false
 ## The size the sheet's text is drawn at, in pixels at 100% editor scale. Never larger than the
 ## editor's own font. 0 follows the editor's font size.
 @export_range(0, 32, 1) var row_font_size: int = 0

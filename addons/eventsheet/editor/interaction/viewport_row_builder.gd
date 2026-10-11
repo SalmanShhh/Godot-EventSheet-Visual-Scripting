@@ -7975,7 +7975,11 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# null and the mark simply does not draw.
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var spans: Array[SemanticSpan] = []
-	spans.append(_group_folder_span(reading_style))
+	# The two-line head (group_head_two_line) is the design's: the fold arrow, then the name block -
+	# no folder mark before it and, further on, no echo of its line.
+	var two_line_head: bool = event_style.group_head_two_line
+	if not two_line_head:
+		spans.append(_group_folder_span(reading_style))
 	spans.append(
 		_make_span(
 			EventSheetGroupFacts.display_name(group),
@@ -7994,7 +7998,6 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# A theme that lays the head out in two lines (group_head_two_line) puts the description UNDER the
 	# name instead, in italics, starting where the name starts: the same span with the same words,
 	# only placed and painted differently, so no reading changes.
-	var two_line_head: bool = event_style.group_head_two_line
 	if not group.description.strip_edges().is_empty():
 		var description_meta: Dictionary = {
 			"editable": true,
@@ -8043,7 +8046,8 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# The line this head IS, echoed in the script editor's own colours. It opens the
 	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
 	# edge where the pinned copy of this head also draws them.
-	_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
+	if not two_line_head:
+		_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
 	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style, two_line_head))
 	row_data.spans = spans
 	# The group's own locals are rows at the TOP of its body: they are declarations, and a
@@ -8245,6 +8249,21 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	if not documentation:
 		line_color = Color(line_color, line_color.a * COMMENT_PRIVATE_ALPHA)
 	var comment_spans: Array[SemanticSpan] = []
+	# A theme that draws comments as notes (comment_notes) leads the row with the note's drag grip and
+	# speech bubble: one mark span the painter draws, holding the room so the words start past it.
+	var note_look: bool = event_style.comment_notes
+	if note_look:
+		comment_spans.append(_make_span("", SemanticSpan.SpanType.KEYWORD, {
+			"kind": "comment_row",
+			"badge": true,
+			"badge_style": "glyph",
+			"badge_natural_width": true,
+			"badge_fixed_width": NativeRowMarks.comment_note_lead_width() - 2.0,
+			"gap_after": 0.0,
+			"line_index": 0,
+			"comment_note_lead": true,
+			"hover_note": EventSheetL10n.translate("Comment - drag the grip to move it into an event's actions or between events.")
+		}))
 	if documentation:
 		comment_spans.append(_make_span(COMMENT_PARAGRAPH_GLYPH, SemanticSpan.SpanType.KEYWORD, {
 			"kind": "comment_row",
@@ -8283,7 +8302,8 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	# The echo of the line this row actually writes, asked of the row itself so it cannot disagree
 	# with what emission puts in the file - the whole point of the checkbox is that the echo restyles
 	# with the row and stays true either way.
-	if not comment_row.text.strip_edges().is_empty():
+	# A note carries no echo: its words are the note, and the line it writes is the code panel's.
+	if not comment_row.text.strip_edges().is_empty() and not note_look:
 		comment_spans.append(_code_echo_span(
 			comment_row.echo_line(0),
 			{
@@ -13838,13 +13858,22 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# The OTHER kind of comment - the same CommentRow, read inside the event's action
 				# flow - gets the same doors. A note is a note wherever it is written.
 				var action_door_table: Dictionary = EventSheetCommentDoors.table_for(_viewport._sheet)
+				# A theme that draws comments as notes (comment_notes) draws this one as the same note
+				# card, set inside the lane, and drops its marker the way Reading Mode does.
+				var action_note_look: bool = _viewport._get_event_style().comment_notes
 				for comment_line_index in range(action_comment_lines.size()):
 					# Reading Mode drops the marker and draws the line italic, so what is DRAWN - and
 					# therefore what the door offsets index - is the bare line there and the
 					# "# "-prefixed one everywhere else.
-					var action_comment_drawn: String = action_comment_lines[comment_line_index] if _viewport.is_reading_mode() else "# " + action_comment_lines[comment_line_index]
+					var action_comment_drawn: String = action_comment_lines[comment_line_index] \
+						if _viewport.is_reading_mode() or action_note_look else "# " + action_comment_lines[comment_line_index]
 					var action_comment_doors: Dictionary = {}
 					_note_comment_doors(action_comment_doors, action_comment_drawn, action_door_table)
+					if action_note_look:
+						action_comment_doors["comment_note"] = true
+						# The words start past the card's inset and its lead, and the caret and the wrap
+						# read the same padding, so an edit opens where the words are drawn.
+						action_comment_doors["padding_x"] = NativeRowMarks.comment_note_text_inset()
 					spans.append(
 						_make_span(
 						action_comment_drawn,

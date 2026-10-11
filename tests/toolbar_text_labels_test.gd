@@ -1,9 +1,10 @@
 # Godot EventSheets - the strip laid out as words, and the open tab's edge
 #
-# View > Text labels lays the resting strip out as words: Sheet, Save, the Undo and Redo arrows, the
-# play button, Add Event as the one filled button, Add Condition, Add Action, the Find field pushed
-# to the right edge and a Sentences menu holding the variable-row dial and Words. Nothing on the strip
-# is added or removed - the same controls are shown and re-faced - so every key, id and handler holds.
+# View > Text labels lays the resting strip out as words: Sheet, Save, the Undo and Redo arrows, Add
+# Event as the one filled button, Add Condition, Add Action, the Find field ("Find", 180 px) pushed to
+# the right edge and a Sentences menu holding the variable-row dial and Words. The play button rests
+# only on the full strip there. Nothing is added or removed - the same controls are shown, hidden and
+# re-faced - so every key, id and handler holds.
 #
 # Pinned here as values:
 #   1. Nobody chose and the theme says nothing: the icon-led strip, untouched.
@@ -30,7 +31,7 @@ const ICON_ROW := [
 ]
 const TEXT_ROW := [
 	"EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton", "EventSheetRedoButton",
-	"EventSheetPlaySlot", "EventSheetAddSeparator", "Add Event", "Add Condition", "Add Action",
+	"EventSheetAddSeparator", "Add Event", "Add Condition", "Add Action",
 	"EventSheetFindSpacer", "EventSheetQuickAdd", "EventSheetMomentSegment",
 	"EventSheetSentencesMenu", "EventSheetToolbarExpander",
 ]
@@ -81,6 +82,11 @@ static func _test_the_starter_opens_on_words() -> bool:
 		["Add Event is the one filled button", add_event.flat, false],
 		["Add Condition is flat", add_condition.flat, true],
 		["Add Condition wears no icon", add_condition.icon, null],
+		["the play button rests on the full strip only",
+			(editor._toolbar.find_child("EventSheetPlaySlot", false, false) as Control).visible, false],
+		["the Find field reads Find", editor._quick_add_edit.placeholder_text, "Find"],
+		["at the design's width", editor._quick_add_edit.custom_minimum_size.x,
+			float(EventSheetPalette.scaled(EventSheetMenuBar.FIND_FIELD_WIDTH))],
 		["the Find field is pushed to the right edge",
 			(editor._toolbar.find_child("EventSheetFindSpacer", false, false) as Control).size_flags_horizontal,
 			Control.SIZE_EXPAND_FILL],
@@ -110,6 +116,9 @@ static func _test_the_readers_choice_wins() -> bool:
 		["the strip rests icon-led again", _visible_row(editor), _as_strings(ICON_ROW)],
 		["the Menu has its own face back", _button(editor, "EventSheetMenu").text, "☰ Menu"],
 		["Add Event is the editor's button again", _button(editor, "Add Event").flat, false],
+		["the field has its own face back", editor._quick_add_edit.placeholder_text,
+			"Quick add or find…  (e.g. heal 5, or Chase)"],
+		["and its own width", editor._quick_add_edit.custom_minimum_size.x, 240.0],
 		["and the View tick follows", editor._view_popup.is_item_checked(
 			editor._view_popup.get_item_index(EventSheetMenuBar.TEXT_LABELS_VIEW_ID)), false],
 	])

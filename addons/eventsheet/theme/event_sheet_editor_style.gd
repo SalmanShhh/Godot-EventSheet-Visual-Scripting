@@ -35,6 +35,14 @@ extends Resource
 ## the reader's own View > Text labels choice, once made, wins over every theme. The Editor Native
 ## starter turns it on; every other theme leaves the strip as it was.
 @export var toolbar_text_labels: bool = false
+## Puts the row of open-sheet tabs above the toolbar, the way an editor window stacks its tabs over
+## the tools for the document in front. Off keeps the toolbar on top and the tabs under it.
+@export var tabs_above_toolbar: bool = false
+## The status bar says what is selected the way the sheet reads it - "Event 3 selected · Every tick,
+## Space is down" - at its left, with "No problems" in the chrome's ok colour, the event count and the
+## zoom at its right, and no file line. Off keeps the message at the left and "event 3 of 9 · line 40"
+## beside the counts.
+@export var status_bar_selection_line: bool = false
 
 
 func _init() -> void:

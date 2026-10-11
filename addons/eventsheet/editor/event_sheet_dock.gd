@@ -7585,7 +7585,13 @@ func _update_sheet_counts_status() -> void:
 	_problem_count_label.tooltip_text = EventSheetL10n.translate(
 		"Rows the Doctor has something to say about on this sheet. Each is drawn amber; select one to read why.")
 	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
-	_problem_count_label.modulate = chrome.object_bar_warning_color if problems > 0 else chrome.row_address_color
+	# "No problems" in the ok colour when the theme gives one (status_ok_color); quiet otherwise.
+	var quiet: Color = chrome.status_ok_color if chrome.status_ok_color.a > 0.0 else chrome.row_address_color
+	_problem_count_label.modulate = chrome.object_bar_warning_color if problems > 0 else quiet
+	# The selection line follows the theme in the same breath as the counts (a theme switch lands
+	# here); the classic address keeps its own selection-driven refresh.
+	if _apply_status_layout() or EventSheetActiveTheme.active().status_bar_selection_line:
+		_update_row_address_status()
 	_event_count_label.text = event_count_text(EventSheetViewport.event_numbers_for(_current_sheet.events).size())
 	_event_count_label.modulate = chrome.row_address_color
 
@@ -7609,10 +7615,64 @@ static func event_count_text(count: int) -> String:
 func _update_row_address_status() -> void:
 	if _row_address_label == null:
 		return
-	_row_address_label.text = row_address_text(
-		_viewport.get_selected_row_data() if _viewport != null else null,
-		_current_sheet)
+	_apply_status_layout()
+	var selected_row: EventRowData = _viewport.get_selected_row_data() if _viewport != null else null
+	if EventSheetActiveTheme.active().status_bar_selection_line:
+		_row_address_label.text = selection_line_text(selected_row)
+		_row_address_label.tooltip_text = row_address_text(selected_row, _current_sheet)
+		return
+	_row_address_label.text = row_address_text(selected_row, _current_sheet)
 	_row_address_label.tooltip_text = _row_address_label.text
+
+
+## Where the selected row's words sit in the status bar. A theme that says what is selected the way
+## the sheet reads it (status_bar_selection_line) puts them first, at the strip's left edge, ahead of
+## the passing message; otherwise they sit with the counts, beside the zoom. The same Label moved
+## inside the same strip, so every caller and every test that names it is unmoved. True when it moved.
+func _apply_status_layout() -> bool:
+	if _row_address_label == null or _event_count_label == null:
+		return false
+	var strip: Node = _row_address_label.get_parent()
+	if strip == null or strip != _event_count_label.get_parent():
+		return false
+	var leading: bool = EventSheetActiveTheme.active().status_bar_selection_line
+	_row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if leading \
+		else HORIZONTAL_ALIGNMENT_RIGHT
+	if leading == (_row_address_label.get_index() == 0):
+		return false
+	if leading:
+		strip.move_child(_row_address_label, 0)
+	else:
+		# Taken out from the front, everything after it moves up one: the slot right after the
+		# event count is then the count's own index.
+		strip.move_child(_row_address_label, _event_count_label.get_index())
+	return true
+
+
+## The status bar's left edge under status_bar_selection_line: "Event 3 selected · Every tick, Space
+## is down" - the margin number, then the event's trigger and conditions as the sheet words them,
+## joined by commas. "" for no selection or a row the margin does not number (a comment, a group).
+static func selection_line_text(row_data: EventRowData) -> String:
+	if row_data == null or row_data.event_number <= 0:
+		return ""
+	var head: String = EventSheetL10n.translate("Event %d selected") % row_data.event_number
+	var words: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("lane", "condition")) != "condition" or bool(metadata.get("placeholder", false)):
+			continue
+		if not (str(metadata.get("kind", "")) in ["trigger", "condition"]):
+			continue
+		var said: String = EventSheetBBCodeLite.strip(span.text) if EventSheetBBCodeLite.has_markup(span.text) \
+			else span.text
+		said = said.strip_edges()
+		if not said.is_empty():
+			words.append(said)
+	if words.is_empty():
+		return head
+	return "%s · %s" % [head, ", ".join(words)]
 
 
 ## The selected row's help strip. A row in the quiet amber state carries its finding's sentence and

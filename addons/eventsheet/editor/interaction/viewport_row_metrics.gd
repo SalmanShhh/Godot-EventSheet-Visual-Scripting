@@ -317,6 +317,8 @@ const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip
 ## The most of the conditions lane the chips after a condition may take, under a theme that lets them
 ## yield (lane_chips_yield).
 const LANE_CHIP_SHARE := 0.4
+## The small drawn marks of an event row (the comment note's lead width is read from there).
+const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 
 
 ## Width the payload chips trailing a trigger cell need on one condition line. A condition/trigger cell
@@ -472,11 +474,16 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 func _comment_text_origin_x(indent: int) -> float:
 	# Event-sheet banner: comment text starts at the row's left edge (no badge-column indent),
 	# kept in sync with the comment branch of the layout pass (which now adds no indent either).
+	# A note (comment_notes) leads with its grip and bubble, and its words start past them.
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var note_lead: float = NativeRowMarks.comment_note_lead_width() \
+		if event_style != null and event_style.comment_notes else 0.0
 	return (
 		EventSheetPalette.ROW_HORIZONTAL_PADDING
 		+ EventSheetPalette.GUTTER_WIDTH
 		+ float(indent * _viewport.indent_width())
 		+ 18.0
+		+ note_lead
 	)
 
 

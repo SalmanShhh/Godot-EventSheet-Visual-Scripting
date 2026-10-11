@@ -7321,3 +7321,5 @@ code,código
 What this file is: a script.,Qué es este archivo: un script.
 Add to Class Head…,Añadir a la cabecera de clase…
 Click to change what kind of script it is.,Haz clic para cambiar qué tipo de script es.
+Event %d selected,Evento %d seleccionado
+Comment - drag the grip to move it into an event's actions or between events.,"Comentario - arrastra el asa para moverlo a las acciones de un evento o entre eventos."

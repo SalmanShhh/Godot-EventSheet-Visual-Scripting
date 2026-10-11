@@ -7321,3 +7321,5 @@ code,코드
 What this file is: a script.,이 파일의 정체: 스크립트.
 Add to Class Head…,클래스 헤드에 추가…
 Click to change what kind of script it is.,클릭하여 스크립트 종류를 변경합니다.
+Event %d selected,이벤트 %d 선택됨
+Comment - drag the grip to move it into an event's actions or between events.,"주석 - 손잡이를 끌어 이벤트의 액션 안이나 이벤트 사이로 옮깁니다."

@@ -50,7 +50,7 @@ const PRESET_PATHS := [
 ## design decision - the default is that the rule dresses it.
 const CLEAR_BY_DESIGN := [
 	"pattern_chip_background_color", "pattern_chip_foreground_color",
-	"active_tab_edge_color",
+	"active_tab_edge_color", "status_ok_color",
 	"page_background_color", "search_hit_color",
 	"contents_active_background_color", "contents_active_text_color",
 ]

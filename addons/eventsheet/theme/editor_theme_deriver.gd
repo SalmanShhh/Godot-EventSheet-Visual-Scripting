@@ -220,6 +220,9 @@ const NATIVE_CELL_HOVER_LIGHT := Color("#f5f8fc")
 ## shade deeper on light paper so it still reads as a line rather than a smudge.
 const NATIVE_TAB_EDGE_DARK := Color("#3a79bb")
 const NATIVE_TAB_EDGE_LIGHT := Color("#3a72b0")
+## The design's "No problems" green, dark and light.
+const NATIVE_STATUS_OK_DARK := Color("#8fc27a")
+const NATIVE_STATUS_OK_LIGHT := Color("#2f6b1f")
 
 ## The last native_style() built, by base colour. follow_editor() asks for two per call and a
 ## sheet is re-seated on every edit, so the rule runs once per editor base rather than per edit.
@@ -299,6 +302,9 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# The design's strip is words (Sheet, Save, Add Event, Find, Sentences), not icons. A default the
 	# reader's own View > Text labels choice overrules.
 	style.toolbar_text_labels = true
+	# The design stacks the tabs over the strip, and its status bar says what is selected.
+	style.tabs_above_toolbar = true
+	style.status_bar_selection_line = true
 	var event_style: EventSheetEventStyle = style.get_event_style()
 	var greys: Dictionary = NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK
 	for token_name: String in greys:
@@ -338,12 +344,17 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.behaviour_in_object_column = true
 	event_style.lane_chips_yield = true
 	event_style.add_lines_on_hover = true
+	# The design's notes (a yellow card with a grip and a bubble, no echo) and its selection (a filled
+	# gutter and a frame, no wash over the lanes).
+	event_style.comment_notes = true
+	event_style.selection_as_outline = true
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)
 	# The one bar colour the shared rule leaves clear on purpose (every other theme keeps the tab as
 	# the editor draws it), stated here because the design gives the open tab its accent edge.
 	style.get_chrome_style().active_tab_edge_color = NATIVE_TAB_EDGE_LIGHT if light else NATIVE_TAB_EDGE_DARK
+	style.get_chrome_style().status_ok_color = NATIVE_STATUS_OK_LIGHT if light else NATIVE_STATUS_OK_DARK
 	return style
 
 

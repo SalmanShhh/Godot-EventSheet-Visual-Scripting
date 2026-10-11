@@ -185,9 +185,11 @@ migrate, so nothing was.
 ## Text labels: the strip as words
 
 **Menu > View > Text labels** lays the resting strip out as words instead of icons: **Sheet**
-(the same Menu, under its first group's name), **Save**, the Undo and Redo arrows, the play button,
-**Add Event** as the one filled button, **Add Condition** and **Add Action** as plain words, the
-Quick add field moved to the right edge to be the strip's Find, and a **Sentences** menu beside it.
+(the same Menu, under its first group's name), **Save**, the Undo and Redo arrows, **Add Event** as
+the one filled button, **Add Condition** and **Add Action** as plain words, the Quick add field
+moved to the right edge to be the strip's **Find** (it still adds a row on Enter), and a
+**Sentences** menu beside it. The play button rests on the full strip in this layout - the chevron
+shows it - and Godot's own play bar keeps F5 and F6.
 
 **Sentences** holds two choices that already exist elsewhere: how a variable row reads (the
 sentence on its own, the sentence with its GDScript declaration beside it, or the declaration
@@ -201,7 +203,8 @@ the same in both layouts.
 
 The Editor Native starter also draws a thin accent line along the top of the open sheet's tab. It is
 one colour in the theme (*the open tab's edge*), clear in every other theme, so their tabs look
-exactly as the editor draws them.
+exactly as the editor draws them. It also stacks the tabs over the strip (*Tabs above toolbar* in
+the Theme Editor), as an editor window stacks its tabs over the tools for the document in front.
 
 ## Where did it go? The whole table
 

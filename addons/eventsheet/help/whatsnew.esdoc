@@ -162,6 +162,24 @@ What changed in the build you have installed (v0.18.0), in the words the release
   action lane is the card moved toward green rather than olive, so the two lanes read blue and green
   beside each other on a grey editor. Drawing only: compiled output and the default-theme reading are
   unchanged, and Classic Sheet renders pixel for pixel as before.
+- **The Editor Native chrome: tabs, strip, status bar, group heads, notes and selection.** Four theme
+  switches, off by default, on in Editor Native and stated off in every other shipped theme, plus one
+  bar colour. `tabs_above_toolbar` stacks the open-sheet tabs over the strip, as the design does. The
+  word-led strip rests without the play button (it stays on the full strip, and Godot's own play bar
+  keeps F5 and F6), and its field reads \"Find\" behind the editor's magnifier at 180 px.
+  `status_bar_selection_line` says what is selected the way the sheet reads it - \"Event 3 selected ·
+  Every tick (physics), \"ui_accept\" is down\" - at the status bar's left edge, with No problems in a new
+  ok colour (`status_ok_color`, the design's green in Editor Native, clear everywhere else), the event
+  count and the zoom at its right; the file line moves to that text's hover. `comment_notes` draws a
+  comment as the design's note: the yellow card with a drag grip and a speech bubble before its words
+  and no code echo beside it, and a comment inside an event's action lane as the same card set in the
+  lane, without its \"#\". `selection_as_outline` marks a selected event by its filled gutter and a
+  two-pixel frame in the gutter's hue, with nothing washed over its lanes, so its words read as they
+  did; a selected cell keeps its own highlight. The two-line group head (`group_head_two_line`) now
+  drops the folder mark and the `## @ace_group(...)` echo and draws as the design's card - a one-pixel
+  edge, a small filled fold arrow - with the count and the Active tick at its right. Drawing only:
+  compiled output and the default-theme reading are unchanged, and Classic Sheet renders pixel for
+  pixel as before.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

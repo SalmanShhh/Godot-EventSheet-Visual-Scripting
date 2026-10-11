@@ -47,6 +47,17 @@ const PHYSICS_TRIGGER_IDS: PackedStringArray = [
 const TRIGGER_ICON_SIZE := 14.0
 const TRIGGER_ICON_SLOT := 18.0
 
+## How far a selection frame's value steps from the selected gutter's (selection_frame_color).
+const SELECTION_FRAME_STEP := 1.3
+## A comment note's lead, in unscaled pixels: the 12 px grip, an 8 px gap, the 14 px bubble and the
+## 8 px gap before the words - the design's note row.
+const COMMENT_NOTE_GRIP := 12
+const COMMENT_NOTE_GAP := 8
+const COMMENT_NOTE_LEAD := 42
+## The note card inside an action lane: 6 px in from the cell's sides, 4 px of its own padding.
+const COMMENT_NOTE_CARD_SIDE := 6
+const COMMENT_NOTE_CARD_PAD := 4
+
 ## The object labels that draw a glyph of their own in place of their category icon: System, and
 ## the input devices an event sheet treats as objects. Always DRAWN, in the object ink: Godot ships
 ## no gear, and its device icons are class icons in their own colours, so one drawn family is what
@@ -82,6 +93,8 @@ const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction
 const WORD_VARIABLE := "variable"
 
 static var _editor_icon_cache: Dictionary = {}
+## The note cards' styleboxes, one per fill/border pair, so a note is not a new allocation per frame.
+static var _note_box_cache: Dictionary = {}
 
 
 ## The trigger kind of an event row, or "" when it draws no trigger icon. Classified the way the
@@ -215,6 +228,82 @@ static func selected_slot_rect(gutter_rect: Rect2, row_rect: Rect2, indent: int,
 	if not has_icon:
 		return Rect2()
 	return Rect2(slot_x, row_rect.position.y, TRIGGER_ICON_SLOT, row_rect.size.y)
+
+
+## The frame round a selected event under selection_as_outline: the selected gutter's own hue and
+## saturation, a step brighter on a dark gutter and a step deeper on a light one, so the frame and
+## the filled margin read as one mark (the design pairs #2c5d87 with #3a72b0 the same way).
+static func selection_frame_color(gutter_fill: Color) -> Color:
+	var value: float = gutter_fill.v * SELECTION_FRAME_STEP if gutter_fill.v < 0.6 \
+		else gutter_fill.v / SELECTION_FRAME_STEP
+	return Color.from_hsv(gutter_fill.h, gutter_fill.s, clampf(value, 0.0, 1.0), 1.0)
+
+
+## The room a comment note's lead takes before its words: the drag grip, the speech-bubble mark and
+## the gaps after each. One number, read by the layout (the wrap width), the row builder (the lead
+## span) and the painter, so the words land where the room was left for them.
+static func comment_note_lead_width() -> float:
+	return EventSheetPalette.scaled(COMMENT_NOTE_LEAD)
+
+
+## Where a note's words start inside an action-lane cell: past the card's side inset, the card's own
+## 4 px padding and the lead.
+static func comment_note_text_inset() -> float:
+	return float(EventSheetPalette.scaled(COMMENT_NOTE_CARD_SIDE + COMMENT_NOTE_CARD_PAD)) + comment_note_lead_width()
+
+
+## Paints a note's card inside an action-lane cell, and its lead at the card's left on the first
+## line: the comment fill, the comment border, the design's 3 px corners.
+static func draw_comment_note_card(control: CanvasItem, cell: Rect2, first_line_center_y: float,
+		fill: Color, border: Color, ink: Color) -> void:
+	var card: Rect2 = comment_note_card_rect(cell)
+	var key: String = "%s:%s:%d" % [fill.to_html(), border.to_html(), EventSheetPalette.scaled(3)]
+	var box: StyleBoxFlat = _note_box_cache.get(key)
+	if box == null:
+		if _note_box_cache.size() > 16:
+			_note_box_cache.clear()
+		box = StyleBoxFlat.new()
+		box.bg_color = fill
+		box.border_color = border
+		box.set_border_width_all(1 if border.a > 0.01 else 0)
+		box.set_corner_radius_all(EventSheetPalette.scaled(3))
+		_note_box_cache[key] = box
+	control.draw_style_box(box, card)
+	draw_comment_note_lead(control, card.position.x + EventSheetPalette.scaled(COMMENT_NOTE_CARD_PAD),
+		first_line_center_y, ink)
+
+
+## Paints a comment note's lead -the two-column, three-row drag grip and the speech bubble - from
+## `x`, centred on `center_y`, in the note's own ink. Paint only: the lead's room is reserved by the
+## caller, and the grip's drag is the row's own.
+static func draw_comment_note_lead(control: CanvasItem, x: float, center_y: float, ink: Color) -> void:
+	var dot: float = EventSheetPalette.scaled(3)
+	var step: float = dot + EventSheetPalette.scaled(3)
+	var grip_ink: Color = Color(ink, ink.a * 0.6)
+	for column: int in range(2):
+		for line: int in range(3):
+			var dot_x: float = x + float(column) * step
+			var dot_y: float = center_y + float(line - 1) * step - dot * 0.5
+			control.draw_rect(Rect2(dot_x, dot_y, dot, dot), grip_ink, true)
+	var bubble_side: float = EventSheetPalette.scaled(14)
+	var bubble_x: float = x + EventSheetPalette.scaled(COMMENT_NOTE_GRIP + COMMENT_NOTE_GAP)
+	var bubble := Rect2(bubble_x, center_y - bubble_side * 0.5, bubble_side, bubble_side)
+	var stroke: float = maxf(_units(bubble, 1.4), 1.0)
+	var outline: PackedVector2Array = PackedVector2Array([
+		_at(bubble, 2.5, 3.0), _at(bubble, 13.5, 3.0), _at(bubble, 13.5, 10.5), _at(bubble, 7.5, 10.5),
+		_at(bubble, 4.5, 13.0), _at(bubble, 4.5, 10.5), _at(bubble, 2.5, 10.5), _at(bubble, 2.5, 3.0),
+	])
+	control.draw_polyline(outline, ink, stroke, true)
+
+
+## The note's card inside an event's action lane: inset from the cell the way the design sets it
+## (6 px at the sides, 2 px above, 4 px below), filled in the comment colour and edged in its border.
+static func comment_note_card_rect(cell: Rect2) -> Rect2:
+	var side: float = EventSheetPalette.scaled(COMMENT_NOTE_CARD_SIDE)
+	var top: float = EventSheetPalette.scaled(2)
+	var bottom: float = EventSheetPalette.scaled(4)
+	return Rect2(cell.position.x + side, cell.position.y + top,
+		maxf(cell.size.x - side * 2.0, 1.0), maxf(cell.size.y - top - bottom, 1.0))
 
 
 ## The glyph an object label draws in place of its icon, or "" for one that keeps its icon.

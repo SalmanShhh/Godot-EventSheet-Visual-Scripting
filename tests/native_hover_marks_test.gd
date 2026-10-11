@@ -10,8 +10,8 @@ extends RefCounted
 #   2. a selected gutter's ink reads on its fill, and the fill reaches across the trigger icon's slot
 #      for a top-level event and only over the slot (when an icon is there) for a nested one;
 #   3. a theme that asks for the two-line group head moves the description under the name, in
-#      italics, and draws the switch as an Active tick - the same spans with the same words, so the
-#      reading is unchanged - and a theme that does not ask leaves the head exactly as it was;
+#      italics, draws the switch as an Active tick and drops the folder mark and the echo of its
+#      line - the same words otherwise - and a theme that does not ask leaves the head as it was;
 #   4. the status bar counts the rows drawn amber and the sheet's events in the words a group head
 #      uses.
 
@@ -92,7 +92,9 @@ static func _test_two_line_group_head() -> bool:
 		["the switch is drawn as the Active tick", native.get("active_tick"), true],
 		["holding the room the tick and the word take", native.get("switch_width"),
 			NativeHeadMarks.active_tick_width(native.get("font"), int(native.get("font_size")))],
-		["the words are the same words", native.get("texts"), classic.get("texts")],
+		["the words are the same words", native.get("words"), classic.get("words")],
+		["the two-line head leads with no folder mark and echoes no line", native.get("chrome"), []],
+		["the one-line head keeps both", (classic.get("chrome") as Array).size(), 2],
 		["one line: the description beside the name", classic.get("description_line"), 0],
 		["no italics there", classic.get("description_italic"), false],
 		["no tick there", classic.get("active_tick"), false],
@@ -149,6 +151,8 @@ static func _group_head(theme_path: String) -> Dictionary:
 		var font_size: int = view._get_font_size()
 		view._get_or_build_row_layout(index, 900.0, font, font_size)
 		var texts: PackedStringArray = PackedStringArray()
+		var words: Array = []
+		var chrome: Array = []
 		found["line_count"] = row_data.line_count
 		found["font"] = font
 		found["font_size"] = font_size
@@ -157,6 +161,14 @@ static func _group_head(theme_path: String) -> Dictionary:
 		for span: SemanticSpan in row_data.spans:
 			var metadata: Dictionary = span.metadata
 			texts.append(span.text)
+			# The folder mark (a badge that is not the switch) and the echo of the line are chrome;
+			# everything else is the head's words.
+			var is_chrome: bool = bool(metadata.get("group_echo", false)) or (bool(metadata.get("badge", false))
+				and str(metadata.get("group_action", "")).is_empty())
+			if is_chrome:
+				chrome.append(span.text)
+			else:
+				words.append(span.text)
 			if bool(metadata.get("group_title", false)):
 				found["title_x"] = span.rect.position.x
 			if str(metadata.get("edit_kind", "")) == "group_description":
@@ -167,6 +179,8 @@ static func _group_head(theme_path: String) -> Dictionary:
 				found["active_tick"] = bool(metadata.get("group_active_tick", false))
 				found["switch_width"] = float(metadata.get("badge_fixed_width", 0.0))
 		found["texts"] = texts
+		found["words"] = words
+		found["chrome"] = chrome
 	view.free()
 	return found
 
