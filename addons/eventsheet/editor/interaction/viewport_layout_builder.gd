@@ -431,6 +431,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var layout := {
 		"row_rect": row_rect,
 		"row_height": row_height,
+		# One line of an event, so a painter can place a mark on the first line rather than the middle.
+		"line_height": line_height,
 		"gutter_rect": gutter_rect,
 		"fold_rect": fold_rect,
 		"condition_lane_rect": condition_lane_rect,

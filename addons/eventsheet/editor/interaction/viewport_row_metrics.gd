@@ -81,13 +81,44 @@ func rebuild() -> void:
 		):
 			top += _viewport.event_block_gap() * EventSheetPalette.row_density()
 		var height: float = _resolve_row_height(row_data)
-		_row_metrics.append({"top": top, "height": height})
+		# "open": whether the row was measured hovered or selected - the state a theme that shows the add
+		# lines on hover measures an event in (remeasure_open_rows reads it back).
+		_row_metrics.append({"top": top, "height": height,
+			"open": row_data != null and (row_data.hovered or row_data.selected)})
 		top += height
 		if row_data != null:
 			previous_indent = row_data.indent
 			previous_attached = row_data.attached_below
 		else:
 			previous_attached = false
+
+
+## Re-measures every EVENT row whose hovered-or-selected state differs from the state it was measured
+## in, and moves the rows below by what it gained or lost. A theme that shows the add lines on hover
+## (add_lines_on_hover) gives an event its add lines only while it is hovered or selected, so moving
+## the pointer from one event to the next grows one and shrinks the other; nothing else is measured
+## again. Returns true when any height changed.
+func remeasure_open_rows() -> bool:
+	var shift: float = 0.0
+	var changed: bool = false
+	for index: int in range(_row_metrics.size()):
+		var metric: Dictionary = _row_metrics[index]
+		if shift != 0.0:
+			metric["top"] = float(metric.get("top", 0.0)) + shift
+		var row_data: EventRowData = _viewport._row_at(index)
+		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+			continue
+		var open: bool = row_data.hovered or row_data.selected
+		if open == bool(metric.get("open", false)):
+			continue
+		metric["open"] = open
+		var height: float = _resolve_row_height(row_data)
+		var old_height: float = float(metric.get("height", height))
+		if not is_equal_approx(height, old_height):
+			shift += height - old_height
+			metric["height"] = height
+			changed = true
+	return changed
 
 
 func _resolve_row_height(row_data: EventRowData) -> float:
@@ -183,11 +214,15 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	var chip_offset: Dictionary = {}
 	var chip_line_offset: Dictionary = {}
 	var max_line: int = 0
+	# A theme that shows the add lines on hover gives them no room on an event at rest.
+	var resting_add_kinds: PackedStringArray = resting_add_line_kinds(row_data, event_style)
 	for span_index: int in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[span_index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
+		if resting_add_kinds.has(str(metadata.get("kind", ""))):
+			continue
 		var line: int = int(metadata.get("line_index", 0))
 		max_line = maxi(max_line, line)
 		var lane: String = _viewport._resolve_span_lane(span)
@@ -246,9 +281,42 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	}
 
 
+## The add-line kinds ("add_condition", "add_action") that take no room on `row_data` right now: none
+## unless the theme shows the add lines on hover (add_lines_on_hover), and then the add line of
+## every lane that already holds something, on an event neither hovered nor selected. An empty lane
+## keeps its add line, because there the add line is the lane's only invitation. Mirrors the
+## renderer's own reveal rule (EventRowRenderer.add_door_revealed), so a line is given room exactly
+## when it is drawn. Static and pure, so the suite can pin it.
+static func resting_add_line_kinds(row_data: EventRowData, event_style: EventSheetEventStyle) -> PackedStringArray:
+	var kinds := PackedStringArray()
+	if row_data == null or event_style == null or not event_style.add_lines_on_hover:
+		return kinds
+	if row_data.row_type != EventRowData.RowType.EVENT or row_data.hovered or row_data.selected:
+		return kinds
+	var has_condition: bool = false
+	var has_action: bool = false
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var kind: String = str(metadata.get("kind", ""))
+		if kind == "action":
+			has_action = true
+		elif kind == "trigger" or (kind == "condition" and not bool(metadata.get("placeholder", false))):
+			has_condition = true
+	if not EventRowRenderer.add_door_revealed(false, false, has_condition):
+		kinds.append("add_condition")
+	if not EventRowRenderer.add_door_revealed(false, false, has_action):
+		kinds.append("add_action")
+	return kinds
+
+
 ## The chip kinds that sit AFTER a condition cell on its own line and must therefore be given room
 ## back out of it: a trigger's parameter chips, and the ⟡ chip that names the pattern the event is.
 const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip"]
+## The most of the conditions lane the chips after a condition may take, under a theme that lets them
+## yield (lane_chips_yield).
+const LANE_CHIP_SHARE := 0.4
 
 
 ## Width the payload chips trailing a trigger cell need on one condition line. A condition/trigger cell
@@ -270,6 +338,11 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 			continue
 		total += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0 \
 			+ maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP)
+	# A theme that lets the chips yield gives them at most two fifths of the lane, so the condition's
+	# own words keep their room and a long chip is the half that is cut short.
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	if event_style != null and event_style.lane_chips_yield and total > 0.0:
+		total = minf(total, _viewport.lane_width_for("condition") * LANE_CHIP_SHARE)
 	return total
 
 

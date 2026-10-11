@@ -145,6 +145,24 @@ extends Resource
 ## Sheet Type dialog, the canvas's "+ Add…" menu adds the lines "+ add" offered, and the scene's facts
 ## are read in the scene's hover. A fact that is a problem keeps its row. Off keeps the band stack.
 @export var inspector_class_head: bool = false
+## An event's "Add condition" and "Add action" lines take room only while the event is hovered or
+## selected, so an event at rest is as tall as its conditions and actions and no taller. Off keeps
+## the line reserved under every event and revealed in place.
+@export var add_lines_on_hover: bool = false
+## The trigger icon sits in the number gutter beside the event's number, at its first line, and the
+## coloured trigger badge leaves the conditions lane, so the lane starts with the object column. Off
+## keeps the badge column and centres the number on the event.
+@export var trigger_icon_in_gutter: bool = false
+## A behaviour's own row names the behaviour in the object column ("Platformer | Jump") rather
+## than the script's object with the behaviour's name repeated at the head of the sentence.
+@export var behaviour_in_object_column: bool = false
+## The chips after a condition (a trigger's payload, the chip naming the event's pattern) take at most
+## two fifths of the conditions lane, so the condition's own words keep their room and a long chip is
+## cut short. Off lets a chip take what it measures, however little that leaves the condition.
+@export var lane_chips_yield: bool = false
+## The size the sheet's text is drawn at, in pixels at 100% editor scale. Never larger than the
+## editor's own font. 0 follows the editor's font size.
+@export_range(0, 32, 1) var row_font_size: int = 0
 ## Corner roundness of REGION marker bubbles, in pixels.
 @export_range(0, 24, 1) var region_corner_radius: int = 7
 ## Line thickness of REGION marker borders, in pixels.

@@ -2820,6 +2820,7 @@ func _refresh_rows() -> void:
 			continue
 		row_data_state.selected = _selected_row_uids.has(row_data_state.statement_uid())
 		row_data_state.hovered = index == _hovered_row_index
+	_refresh_resting_add_lines()
 	_update_canvas_min_size()
 	_layout_cache.clear()
 	queue_redraw()
@@ -3623,7 +3624,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 	# Keyboard/programmatic selection can target a row that has not been drawn yet,
 	# so ensure its spans before selection consumers read them.
 	_ensure_event_spans(selected_row)
-	_selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
+	_sync_row_selection_flags()
 	# The canvas is one Control, so the only thing a screen reader can be told about it is what is
 	# focused right now. The row's own sentence is that thing: whatever the reader would have read
 	# on screen is what the platform is handed, updated as the selection moves.
@@ -3745,8 +3746,24 @@ func _clear_selection() -> void:
 	queue_redraw()
 
 
+## Stamps the selection onto the rows, and re-measures any event a theme that shows the add lines on
+## hover grows or shrinks by it.
 func _sync_row_selection_flags() -> void:
 	_selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
+	_refresh_resting_add_lines()
+
+
+## A theme that shows the add lines on hover (add_lines_on_hover) gives an event its add lines only
+## while it is hovered or selected: when either changes, the events it changed are measured again and
+## the canvas laid out afresh. Any other theme reserves the lines always, and this does nothing.
+func _refresh_resting_add_lines() -> void:
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if event_style == null or not event_style.add_lines_on_hover or _row_metrics_helper.is_empty():
+		return
+	if _row_metrics_helper.remeasure_open_rows():
+		_layout_cache.clear()
+		_update_canvas_min_size()
+		queue_redraw()
 
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
@@ -3763,6 +3780,7 @@ func _set_hover_state(row_index: int, span_index: int) -> void:
 	_hovered_span_index = span_index
 	_hover_match_spans = _compute_hover_matches(row_index, span_index)
 	_selection_helper.apply_hover_state(_flat_rows, _hovered_row_index)
+	_refresh_resting_add_lines()
 	queue_redraw()
 
 
@@ -4040,7 +4058,7 @@ func _update_inline_format_bar() -> void:
 	var font: Font = get_theme_default_font()
 	var prefix_width: float = 0.0
 	if font != null:
-		prefix_width = font.get_string_size(_editing_buffer.substr(0, _editing_selection_range().x), HORIZONTAL_ALIGNMENT_LEFT, -1.0, get_theme_default_font_size()).x
+		prefix_width = font.get_string_size(_editing_buffer.substr(0, _editing_selection_range().x), HORIZONTAL_ALIGNMENT_LEFT, -1.0, _get_font_size()).x
 	_inline_format_bar.visible = true
 	var bar_size: Vector2 = _inline_format_bar.get_combined_minimum_size()
 	var target: Vector2 = span.rect.position + Vector2(prefix_width, -bar_size.y - 4.0)
@@ -4109,7 +4127,8 @@ func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
 	if kind.is_empty():
 		return ""
 	var row_rect := Rect2(0.0, _get_row_top(row_index), _get_logical_canvas_width(), _get_row_height(row_index))
-	var icon_rect: Rect2 = NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, indent_width())
+	var first_line: float = _get_event_line_height(_get_font_size()) if _get_event_style().trigger_icon_in_gutter else 0.0
+	var icon_rect: Rect2 = NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, indent_width(), first_line)
 	return NativeRowMarks.trigger_tooltip(kind) if icon_rect.grow(2.0).has_point(logical_position) else ""
 
 
@@ -4470,6 +4489,10 @@ func event_card_border_rect(row_index: int) -> Rect2:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	var gap: float = float(event_style.event_card_gutter_gap) if event_style != null else 0.0
 	var left: float = float(EventSheetPalette.GUTTER_WIDTH) + gap
+	# A theme that draws the trigger icon in the number gutter frames the gutter as the card's first
+	# column, so the number sits inside the event the way the Inspector's rows hold their labels.
+	if event_style != null and event_style.trigger_icon_in_gutter:
+		left = 0.0
 	return Rect2(left, card.position.y, maxf(card.size.x - left - 1.0, 0.0), card.size.y)
 
 
@@ -5151,7 +5174,13 @@ func _get_font() -> Font:
 
 func _get_font_size() -> int:
 	var theme_size: int = get_theme_default_font_size()
-	return theme_size if theme_size > 0 else FONT_SIZE
+	var font_size: int = theme_size if theme_size > 0 else FONT_SIZE
+	# A theme that states its own text size (the Editor Native starter's 12 px) draws at that size,
+	# scaled for the editor, and never larger than the editor's own font.
+	var stated: int = _get_event_style().row_font_size
+	if stated > 0:
+		font_size = mini(font_size, EventSheetPalette.scaled(stated))
+	return font_size
 
 
 func _get_scroll_container() -> ScrollContainer:

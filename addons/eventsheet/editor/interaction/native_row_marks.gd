@@ -90,7 +90,11 @@ static var _editor_icon_cache: Dictionary = {}
 static func trigger_kind(row_data: EventRowData) -> String:
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 		return ""
-	var event_row: EventRow = row_data.source_resource as EventRow
+	return trigger_kind_for_event(row_data.source_resource as EventRow)
+
+
+## The kind for an event resource itself - what trigger_kind answers for the row it is drawn on.
+static func trigger_kind_for_event(event_row: EventRow) -> String:
 	if event_row == null or event_row.else_mode != EventRow.ElseMode.NONE:
 		return ""
 	if ViewportRowBuilder.is_input_trigger_tick(event_row):
@@ -134,12 +138,29 @@ static func trigger_tooltip(kind: String) -> String:
 
 ## Where an event's trigger icon is drawn: centred in the slot every event row reserves right of
 ## its margin, at the height of the event number (which the margin centres on the row).
-static func trigger_icon_rect(row_rect: Rect2, indent: int, indent_width: int) -> Rect2:
+## With `first_line_height` above zero (a theme that draws the icon in the number gutter) the icon is
+## centred on the event's first line instead, beside a number drawn on that line too.
+static func trigger_icon_rect(row_rect: Rect2, indent: int, indent_width: int,
+		first_line_height: float = 0.0) -> Rect2:
 	var slot_x: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING \
 		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width)
 	var centre_y: float = row_rect.position.y + row_rect.size.y * 0.5
+	if first_line_height > 0.0:
+		centre_y = row_rect.position.y + minf(first_line_height, row_rect.size.y) * 0.5
 	var inset: float = (TRIGGER_ICON_SLOT - TRIGGER_ICON_SIZE) * 0.5
 	return Rect2(slot_x + inset, centre_y - TRIGGER_ICON_SIZE * 0.5, TRIGGER_ICON_SIZE, TRIGGER_ICON_SIZE)
+
+
+## The number gutter of an event drawn the way a theme with the trigger icon in the gutter draws it:
+## one margin column from the left edge across the icon's slot, so the number and the icon read as
+## one gutter. A nested event keeps the plain gutter, so the indent guides between keep their place.
+static func gutter_band_rect(gutter_rect: Rect2, row_rect: Rect2, indent: int, indent_width: int) -> Rect2:
+	if indent > 0:
+		return gutter_rect
+	var slot_end: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING \
+		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width) + TRIGGER_ICON_SLOT
+	return Rect2(gutter_rect.position, Vector2(maxf(slot_end - gutter_rect.position.x, gutter_rect.size.x),
+		gutter_rect.size.y))
 
 
 ## Paints one trigger icon: the editor's own icon tinted `color` where Godot ships one for the kind,

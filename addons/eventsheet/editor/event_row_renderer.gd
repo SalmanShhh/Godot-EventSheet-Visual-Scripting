@@ -3,6 +3,9 @@ class_name EventRowRenderer
 extends RefCounted
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
+## Where a gutter number drawn on an event's first line ends, measured in from the gutter's right
+## edge - clear of the fold arrow that sits just past it.
+const GUTTER_NUMBER_END_INSET := 2.0
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
 const BG_0 = EventSheetPalette.BG_0
@@ -583,13 +586,19 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# strings smear whenever a comment/group/variable row makes them diverge. Off
 	# restores the flat index on every row (visible where fills don't cover the gutter).
 	var is_event_row: bool = row_data.row_type == EventRowData.RowType.EVENT
-	var row_fill_rect: Rect2 = Rect2(gutter_rect.end.x, row_rect.position.y, maxf(row_rect.size.x - gutter_rect.size.x, 0.0), row_rect.size.y) if is_event_row else row_rect
+	# A theme that draws the trigger icon in the number gutter makes the margin and the icon's slot one
+	# column, the number and the icon on the event's first line; the row's fills start after it.
+	var gutter_in_band: bool = is_event_row and event_style != null and event_style.trigger_icon_in_gutter
+	var first_line_height: float = float(layout.get("line_height", 0.0)) if gutter_in_band else 0.0
+	var gutter_band: Rect2 = NativeRowMarks.gutter_band_rect(gutter_rect, row_rect, row_data.indent,
+		row_indent_width) if gutter_in_band else gutter_rect
+	var row_fill_rect: Rect2 = Rect2(gutter_band.end.x, row_rect.position.y, maxf(row_rect.end.x - gutter_band.end.x, 0.0), row_rect.size.y) if is_event_row else row_rect
 	var gutter_number: int = int(layout.get("event_number", 0)) if show_event_numbers else line_number
 	# The hit-count lens: resolved ONCE per row here, so _draw_gutter stays a painter. Empty
 	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
 	var hit_uid: String = hit_chip_uid(show_hit_counts or show_costs, is_event_row, str(layout.get("event_uid", "")))
 	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style,
-		is_event_row and row_data.selected)
+		is_event_row and row_data.selected, gutter_band, first_line_height)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -781,7 +790,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# that every event row reserves, so it moves nothing. Its meaning is the canvas tooltip's.
 	if not trigger_kind.is_empty() and event_style != null:
 		NativeRowMarks.draw_trigger_icon(control,
-			NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, row_indent_width),
+			NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, row_indent_width, first_line_height),
 			trigger_kind, NativeRowMarks.ink_on(event_style.selected_gutter_fill_color) if gutter_selected
 				else event_style.gutter_icon_color)
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
@@ -879,9 +888,14 @@ func _draw_or_dividers(control: Control, row_data: EventRowData, lane_rect: Rect
 			control.draw_line(Vector2(rule_start, y), Vector2(to_x, y), rule, 1.0)
 
 
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null, selected: bool = false) -> void:
+## `band_rect`, when it is wider than the gutter, is the one margin column a theme with the trigger
+## icon in the gutter paints (the gutter and the icon's slot), and `first_line_height` above zero
+## puts the number on the event's first line rather than in the middle of the event.
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null, selected: bool = false,
+		band_rect: Rect2 = Rect2(), first_line_height: float = 0.0) -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
+	var fill_rect: Rect2 = band_rect if band_rect.size.x > gutter_rect.size.x else gutter_rect
 	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
 	# A selected event's margin filled, so the selection reads from the number. Clear leaves it.
@@ -890,8 +904,11 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		gutter_bg = event_style.selected_gutter_fill_color
 		# The number turns to the ink that reads on the fill (white on the design's blue).
 		gutter_text = NativeRowMarks.ink_on(gutter_bg)
-	control.draw_rect(gutter_rect, gutter_bg, true)
-	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
+	control.draw_rect(fill_rect, gutter_bg, true)
+	# The rail between the margin and the lanes. One gutter column drawn as part of the card has
+	# none: the conditions lane's own tint is where the margin ends.
+	if fill_rect == gutter_rect:
+		control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
 	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
 	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one
 	# thing the lens must never do. Only a run that has actually streamed draws anything.
@@ -899,13 +916,23 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 	if line_number > 0:
 		var text: String = str(line_number)
 		var center_ratio: float = ROW_VERTICAL_CENTER_RATIO if not stacked else 0.0
-		var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * center_ratio) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
+		var number_height: float = minf(first_line_height, gutter_rect.size.y) if first_line_height > 0.0 else gutter_rect.size.y
+		var baseline_y: float = gutter_rect.position.y + (number_height * center_ratio) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
 		if stacked:
 			baseline_y = gutter_rect.get_center().y - 1.0
 		# The number itself carries the verdict, so a scroll past a hundred rows finds the expensive
 		# ones without reading a single chip: amber over a millisecond a fire, red over a quarter of
 		# a frame or never fired at all.
-		_draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1,
+		var number_x: float = gutter_rect.position.x + 4.0
+		var number_room: float = gutter_rect.size.x - 8.0
+		if first_line_height > 0.0 and font != null:
+			# On the first line beside the trigger icon the number is right-aligned against the
+			# margin's edge, the way a line number is, so "9" and "10" end in the same place and two
+			# digits are not cut to one.
+			number_room = gutter_rect.size.x - GUTTER_NUMBER_END_INSET
+			var number_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x
+			number_x = gutter_rect.position.x + maxf(number_room - number_width, 1.0)
+		_draw_text(control, Vector2(number_x, baseline_y), text, number_room, font, font_size - 1,
 			_gutter_number_color(hit_uid, gutter_text) if stacked else gutter_text)
 	if stacked:
 		_draw_hit_count_chip(control, gutter_rect, hit_uid, font, font_size)
@@ -1665,7 +1692,10 @@ func _draw_spans(
 			# A span flagged `elide` gives up its tail with an ellipsis and a gap rather than being
 			# sliced against whatever the layout put after it (a class head's includers against the
 			# head's own code echo, on a dock too narrow for both).
-			if bool(metadata.get("elide", false)) and span_index != editing_span_index:
+			# So does a chip after a condition that yielded its room to the condition (lane_chips_yield).
+			var yielded_chip: bool = event_style != null and event_style.lane_chips_yield \
+				and ViewportRowMetrics.TRAILING_CHIP_KINDS.has(span_kind)
+			if (bool(metadata.get("elide", false)) or yielded_chip) and span_index != editing_span_index:
 				draw_text = elide_with_gap(draw_text, text_width, font, draw_font_size)
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:

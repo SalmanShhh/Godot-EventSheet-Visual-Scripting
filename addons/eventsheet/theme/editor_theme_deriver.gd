@@ -32,7 +32,9 @@ const NATIVE_GREYS_DARK := {
 	"row_background_alt_color": Color("#2e343e"),
 	"row_border_color": Color("#1b1f25"),
 	"condition_lane_color": Color("#2f3846"),
-	"action_lane_color": Color("#2f3a35"),
+	# The design's action tint is the card moved toward green and a hair toward blue (#3c423d on
+	# #3b3b3b) - never toward yellow, which reads as olive once the greys follow a neutral editor.
+	"action_lane_color": Color("#2f3b40"),
 	"lane_divider_color": Color("#22272e"),
 	"group_background_color": Color("#38404c"),
 	"group_background_alt_color": Color("#38404c"),
@@ -304,13 +306,14 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	var colours: Dictionary = NATIVE_COLOURS_LIGHT if light else NATIVE_COLOURS_DARK
 	for token_name: String in colours:
 		event_style.set(token_name, colours[token_name])
-	# The density the design is drawn at: 24 px rows, a 92 px object column, an 18 px nesting step,
+	# The density the design is drawn at: 24 px rows, a 92 px object name after its 14 px icon and the
+	# 8 px gap (114 px in all, the column counting the icon), an 18 px nesting step,
 	# a 7 px lane divider and square-ish cards with a one-pixel edge.
 	event_style.condition_lane_ratio = 0.42
 	event_style.minimum_row_height = 24
 	event_style.group_row_height = 36
-	event_style.condition_object_column_width = 92
-	event_style.action_object_column_width = 92
+	event_style.condition_object_column_width = 114
+	event_style.action_object_column_width = 114
 	event_style.event_block_gap = 6
 	event_style.sub_event_indent = 18
 	event_style.lane_divider_width = 7
@@ -326,6 +329,15 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	event_style.hide_compiler_variables = true
 	# The design's head: one class head card, no code echoes, no scene-fact or "+ add" rows.
 	event_style.inspector_class_head = true
+	# The design's events: 12 px text on 24 px lines, the trigger icon beside the number in the
+	# gutter (so no badge column in the lane), a behaviour named in the object column, and the add
+	# lines only on the hovered or selected event - a one-condition, one-action event is one line.
+	event_style.row_font_size = 12
+	event_style.trigger_icon_in_gutter = true
+	event_style.condition_badge_column_width = 0
+	event_style.behaviour_in_object_column = true
+	event_style.lane_chips_yield = true
+	event_style.add_lines_on_hover = true
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)
@@ -347,6 +359,8 @@ static func _native_cells(cells: EventSheetElementStyle, lane: Color, base_color
 		(NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK)["lane_divider_color"], base_color)
 	cells.badge_foreground_color = text
 	cells.corner_radius = 0
+	# One pixel above and below the text: with the 12 px text that is the design's 24 px line.
+	cells.vertical_padding = 1
 
 
 ## A style that asks to follow the editor (follow_editor_greys), moved onto `base_color`. Every

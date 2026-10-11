@@ -13909,6 +13909,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	spans.append_array(_pattern_chip_spans(event_row))
+	# A theme that draws the trigger icon in the number gutter leaves out the badge that said the same
+	# thing at the head of the conditions lane, so the lane starts with its object column.
+	if event_style != null and event_style.trigger_icon_in_gutter \
+			and not NativeRowMarks.trigger_kind_for_event(event_row).is_empty():
+		var kept: Array[SemanticSpan] = []
+		for span: SemanticSpan in spans:
+			var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
+			if bool(metadata.get("badge", false)) and str(metadata.get("badge_style", "")) == "trigger":
+				continue
+			kept.append(span)
+		spans = kept
 	return spans
 
 
@@ -14078,6 +14089,14 @@ func _count_event_lines(event_row: EventRow) -> int:
 	if not event_row.comment.is_empty():
 		var comment_line: int = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX)
 		max_action_line = comment_line if _scaffolding_suppressed() else comment_line + 1
+	# A theme that shows the add lines on hover gives a filled lane's add line no room at rest
+	# (ViewportRowMetrics.resting_add_line_kinds is the same rule, read off the built spans).
+	var resting_style: EventSheetEventStyle = _viewport._get_event_style()
+	if resting_style != null and resting_style.add_lines_on_hover and not _scaffolding_suppressed():
+		if condition_lines > 0:
+			max_condition_line = condition_lines - 1
+		if action_count > 0 and event_row.comment.is_empty():
+			max_action_line = action_count - 1
 	return maxi(max_condition_line, max_action_line) + 1
 
 
@@ -17124,7 +17143,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# lens below so the lookup keys are still the names the file actually uses.
 	var attribution: Dictionary = EventSheetViewportReadingRows.object_attribution(
 		object_label, pieces, _script_object_name(), _reading_class_map(), _reading_autoloads(),
-		pack_object_name(), _pack_class_name())
+		pack_object_name(), _pack_class_name(), _behaviour_in_object_column())
 	object_label = str(attribution.get("object", object_label))
 	pieces = attribution.get("pieces", pieces) as Array
 	var attributed_icon: Variant = attribution.get("icon")
@@ -18898,7 +18917,8 @@ func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionar
 		pieces.append([str(segment.get("text", "")), str(segment.get("tone", "plain"))])
 	var attribution: Dictionary = EventSheetViewportReadingRows.object_attribution(
 		str(grammar.get("object", "")), pieces, _script_object_name(),
-		_reading_class_map(), _reading_autoloads(), pack_object_name(), _pack_class_name())
+		_reading_class_map(), _reading_autoloads(), pack_object_name(), _pack_class_name(),
+		_behaviour_in_object_column())
 	var attributed_pieces: Array = attribution.get("pieces", pieces) as Array
 	if attributed_pieces.size() == pieces.size():
 		var same: Dictionary = grammar.duplicate()
@@ -18908,6 +18928,13 @@ func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionar
 	for piece: Array in attributed_pieces:
 		rebuilt.append({"text": str(piece[0]), "tone": str(piece[1])})
 	return {"object": str(attribution.get("object", "")), "segments": rebuilt}
+
+
+## True when the sheet's theme names a behaviour in the object column rather than handing its rows to
+## the script's object with the behaviour's name at the head of the sentence.
+func _behaviour_in_object_column() -> bool:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	return event_style != null and event_style.behaviour_in_object_column
 
 
 ## The name the script's own object goes by, so a behaviour pack mounted under it can hand its

@@ -3032,9 +3032,12 @@ static func behaviour_pack_of(object_label: String, class_map: Dictionary) -> St
 ## its rows back to the object the pack is mounted ON, with the pack's name as the leading chip, so
 ## the row reads "Player > [Health] Take damage 3". When the sheet has no object of its own (a plain
 ## `extends Node`), a behaviour keeps its own label rather than being handed to nobody.
+##
+## With `behaviour_in_object_column` (a theme that asks for it) a pack node names ITSELF in the object
+## column by the pack's name, and the sentence keeps only what it does: "Platformer | Jump".
 static func object_attribution(object_label: String, pieces: Array, script_object: String,
 		class_map: Dictionary, autoloads: Dictionary,
-		pack_object: String = "", pack_class: String = "") -> Dictionary:
+		pack_object: String = "", pack_class: String = "", behaviour_in_object_column: bool = false) -> Dictionary:
 	var label: String = object_label.strip_edges()
 	var unchanged: Dictionary = {"object": object_label, "pieces": pieces, "icon": null}
 	if label.is_empty():
@@ -3051,6 +3054,8 @@ static func object_attribution(object_label: String, pieces: Array, script_objec
 	var pack: String = behaviour_pack_of(label, class_map)
 	if pack.is_empty():
 		return unchanged
+	if behaviour_in_object_column:
+		return {"object": pack, "pieces": pieces, "icon": class_icon_for(label, class_map)}
 	var owner: String = script_object.strip_edges()
 	if owner.is_empty():
 		return unchanged

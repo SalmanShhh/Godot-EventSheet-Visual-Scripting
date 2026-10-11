@@ -140,6 +140,24 @@
   moves to the canvas's "+ Add…" menu as Add to Class Head…. The Include bars keep the line they
   write, as the design draws them. Every other theme states the token off and draws exactly as before.
   Drawing only: compiled output and the default-theme reading are unchanged.
+- **Editor Native events are drawn at the design's size.** A one-condition, one-action event is one
+  24 px line, not two and a half. The cause was three things at once: every event reserved a line for
+  "Add condition" and "Add action" even at rest, the text followed the editor's 14-16 px font, and
+  the cells kept a 3 px pad. Five theme tokens, off by default, on in Editor Native and stated off in
+  every other shipped theme: `add_lines_on_hover` gives an event its add lines only while it is
+  hovered or selected (an empty lane keeps its line, because there it is the only invitation);
+  `row_font_size` draws the sheet's text at 12 px, never larger than the editor's own font;
+  `trigger_icon_in_gutter` puts the trigger icon beside the number on the event's first line, makes
+  the number and the icon one margin column inside the card, and leaves the coloured trigger badge out
+  of the conditions lane, which now starts with its object column; `behaviour_in_object_column` reads
+  a behaviour's row as "Platformer | Jump" instead of the script's object cut short in the column with
+  "Platformer" repeated at the head of the sentence; `lane_chips_yield` keeps the chip after a
+  condition (the pattern a spawning event is) to two fifths of the lane, cut short with an ellipsis,
+  so "Every tick (physics)" no longer breaks across three lines. Editor Native also states a 1 px cell
+  pad, no badge column and a 114 px object column (the design's 92 px name after its icon), and its
+  action lane is the card moved toward green rather than olive, so the two lanes read blue and green
+  beside each other on a grey editor. Drawing only: compiled output and the default-theme reading are
+  unchanged, and Classic Sheet renders pixel for pixel as before.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 
