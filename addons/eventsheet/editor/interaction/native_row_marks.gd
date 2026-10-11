@@ -75,6 +75,8 @@ const GRIP_MIN_DIVIDER_WIDTH := 3.0
 
 ## The luminance under which a selected gutter's fill takes white ink rather than near-black.
 const SELECTED_INK_LUMINANCE := 0.6
+## The two contrast inks, chosen between here and on a variable row's tick box alike.
+const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 
 ## The word-range kind a variable name inside a sentence is stamped with.
 const WORD_VARIABLE := "variable"
@@ -175,7 +177,7 @@ static func draw_trigger_icon(control: CanvasItem, rect: Rect2, kind: String, co
 ## The ink that reads on `fill`: white on a dark or saturated fill (the design's selected blue), a
 ## near-black on a pale one. What a selected gutter's number and trigger icon are drawn in.
 static func ink_on(fill: Color) -> Color:
-	return Color.WHITE if fill.get_luminance() < SELECTED_INK_LUMINANCE else Color(0.08, 0.09, 0.11)
+	return NativeVariableMarks.contrast_ink(fill, SELECTED_INK_LUMINANCE)
 
 
 ## Where a selected event's filled margin continues past the 20 px gutter: from the gutter's edge

@@ -14,7 +14,9 @@ extends RefCounted
 #   5. where a sheet's own variable names are found in a sentence, in every spelling, and how those
 #      ranges join the value ranges the painter walks;
 #   6. that the row builder stamps them, and the tone of a grammar-read piece, without touching a
-#      span's text.
+#      span's text;
+#   7. that a variable added to the SAME sheet object (an ordinary edit changes the sheet in place)
+#      colours on the next row build, and a renamed one stops colouring under its old name.
 
 const SUPPORT := preload("res://tests/support.gd")
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
@@ -29,6 +31,7 @@ static func run() -> bool:
 	ok = _test_hairline_and_grip() and ok
 	ok = _test_variable_words() and ok
 	ok = _test_builder_stamps_paint_metadata() and ok
+	ok = _test_variable_added_in_place_colours_next_build() and ok
 	return ok
 
 
@@ -151,6 +154,31 @@ static func _test_builder_stamps_paint_metadata() -> bool:
 		["and its text is untouched", action.text, "Add open speed to score"],
 		["a comment is not searched", comment.metadata.has("variable_ranges"), false],
 		["a grammar piece keeps its tone for the painter", [str(pieces[0].get("tone")), str(pieces[1].get("tone"))], ["name", "value"]],
+	])
+	viewport.free()
+	return ok
+
+
+static func _test_variable_added_in_place_colours_next_build() -> bool:
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	var sheet := EventSheetResource.new()
+	var variable := LocalVariable.new()
+	variable.name = "open_speed"
+	sheet.events.append(variable)
+	viewport._sheet = sheet
+	var before: SemanticSpan = viewport._make_span("Add jump height to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
+	# The edit an undoable sheet edit makes: the same sheet object, one more variable, one renamed.
+	var added := LocalVariable.new()
+	added.name = "jump_height"
+	sheet.events.append(added)
+	variable.name = "close_speed"
+	viewport._row_builder.invalidate_lens_caches()
+	var after: SemanticSpan = viewport._make_span("Add jump height to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
+	var renamed: SemanticSpan = viewport._make_span("Add open speed to score", SemanticSpan.SpanType.ACTION, {"kind": "action"})
+	var ok: bool = SUPPORT.pins(TEST_NAME, [
+		["before the edit the new name is not a variable", before.metadata.get("variable_ranges", []), []],
+		["after the next build it colours", after.metadata.get("variable_ranges", []), [[4, 11, "variable"]]],
+		["and the old name of a renamed variable no longer does", renamed.metadata.get("variable_ranges", []), []],
 	])
 	viewport.free()
 	return ok

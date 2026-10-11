@@ -7314,5 +7314,8 @@ No problems,問題なし
 1 problem,問題 1 件
 %d problems,問題 %d 件
 Add Links On Hover,ホバー時の追加リンク
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.",条件を追加とアクションを追加は、ポインター下のイベントのレーンの下にだけリンクとして表示されます。クリックすると追加するものを選べます。オフにすると従来どおり描画します: ホバー時、選択中のイベント、空のレーンの下。
+"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.","条件を追加とアクションを追加は、ポインター下のイベント、選択中のイベント、空のレーンの下にリンクとして表示されます。クリックすると追加するものを選べます。オフにすると同じ場所にボタンとして描画します。"
 Active,有効
+sentence,文
+code,コード
+What this file is: a script.,このファイルの種類: スクリプト。

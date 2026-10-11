@@ -642,6 +642,9 @@ func _on_translations_maybe_changed() -> void:
 	# row, a sheet title and a thumbnail, and it was built ONCE per session: a scene saved, added or
 	# re-pointed mid-session went on reading as the object it used to be until a restart.
 	ViewportRowBuilder.clear_scene_script_index()
+	# A shared sheet's head names who includes it, and an included sheet's variables come off its
+	# file: both are file reads, dropped here so a saved includer shows on the next rebuild.
+	load("res://addons/eventsheet/editor/interaction/native_head_marks.gd").forget_includers()
 	# The Input Map is read out of project.godot as TEXT, so an action added in Project Settings (or
 	# by another tool writing the file) only lands here when the read is dropped. The editor rescans
 	# on both, so this hook covers the settings change as well as the file one.

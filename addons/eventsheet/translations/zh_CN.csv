@@ -7314,5 +7314,8 @@ No problems,没有问题
 1 problem,1 个问题
 %d problems,%d 个问题
 Add Links On Hover,悬停时显示添加链接
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.","添加条件和添加动作只以链接形式出现在指针下事件的通道下方, 别处不显示。点击其中一个来选择要添加的内容。关闭时按原样绘制: 悬停时、选中的事件上以及空通道下方。"
+"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.","添加条件和添加动作以链接形式出现在指针下的事件、选中的事件以及空通道的下方。点击其中一个来选择要添加的内容。关闭时在相同位置绘制为按钮。"
 Active,启用
+sentence,句子
+code,代码
+What this file is: a script.,这个文件是什么: 一个脚本。

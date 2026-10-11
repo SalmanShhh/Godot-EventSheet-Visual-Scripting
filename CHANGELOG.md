@@ -15,9 +15,9 @@
   note), the comment border, the gutter icon, the selected-gutter fill, the object hairline, the link
   colour and four badge pairs (Inspector, range, tooltip, saved). The ones that re-colour something
   the sheet already draws - the comment edge, the selected gutter, the Include line and the number,
-  text and keyword colours inside a sentence - are clear by default, clear means "as before", and
-  every bundled theme states them clear, so no existing theme changes how it looks. Drawing only:
-  compiled output is unchanged.
+  text and keyword colours inside a sentence - are clear by default, and clear means "as before", so
+  a theme you saved yourself keeps its look; every bundled theme now states them in its own colours
+  (see the last entry). Drawing only: compiled output is unchanged.
 - **Text labels: the toolbar as words, and an accent edge on the open tab.** View > Text labels lays
   the resting strip out as words - Sheet (the same Menu), Save, the Undo and Redo arrows, the play
   button, Add Event as the one filled button, Add Condition and Add Action, the Quick add field at
@@ -65,8 +65,10 @@
   and its change… control - the extends band's own words and gesture, drawn on the head row instead
   of on a row of their own (every other head band is still one row per line of the file). A shared
   sheet (`## @ace_shared_sheet`) wears a drawn share mark on a small tile and says which scripts of
-  the project include it ("Included by Portcullis, Drawbridge"), read from the project's scripts and
-  cached for a few seconds; the scene the script is attached to, when exactly one scene runs it, sits
+  the project include it ("Included by Portcullis, Drawbridge"), read from the project's scripts -
+  each file once per version, so a later look only checks dates, and dropped on the editor's
+  filesystem ping - and, on a dock too narrow for both, cut short with an ellipsis rather than run
+  under the head's code echo; the scene the script is attached to, when exactly one scene runs it, sits
   at the head's right edge ("Scene gate.tscn") on an editable sheet (a read-only preview already says
   it on the bar it opens on). Each Include line reads as a bar - the Include word and the name in the
   theme's Include colours with no fill behind any word, what kind of include it is, and the line it
@@ -77,16 +79,18 @@
   Variables turns them off (remembered per project, and in saved views). An inner data class draws as
   one framed block in the class colours, and while it is open it ends in "+ Add field" (the Add
   Field dialog its right-click menu has always had) and a short note on when to use a class, with
-  the variables of this sheet that hold it ("Used by settings (a variable), waves (a list)"); a
-  read-only preview shows neither. Compiled output is unchanged; the reading of every opened sheet
+  the variables of this sheet that hold it ("Used by settings (a variable), waves (a list)"), read
+  off the open sheet so an edit shows before it is saved; a read-only preview shows neither. The word
+  Script's hover says a node runs the script only when the script extends a node. Compiled output is unchanged; the reading of every opened sheet
   changes only in that the class head row carries the extends words and no extends row follows it.
 - **Add links on hover, the selected gutter, the two-line group head and the status bar counts.**
   "Add condition" and "Add action" now appear as link words, in the theme's link colour, under the
-  lanes of the event under the pointer and nowhere else; a click opens the picker on that lane of
-  that event, and the link underlines while the pointer is on it. View > Add Links On Hover turns
-  it off and brings back the old pills, shown on hover, on the selected event and under an empty lane
-  (remembered per project, and in saved views). Either way they are the same two add lines in the
-  same places, so no row moves. A selected event's filled gutter (the selected-gutter token, which
+  lanes of the event under the pointer, of the selected event (a keyboard selection has no pointer)
+  and under a lane that holds nothing yet - every other event keeps them hidden; a click opens the
+  picker on that lane of that event, and the link underlines while the pointer is on it. View > Add
+  Links On Hover turns it off and brings back the old pills in those same places (remembered per
+  project, and in saved views). Either way they are the same two add lines in the same places, so no
+  row moves. A selected event's filled gutter (the selected-gutter token, which
   Editor Native states) now reaches across the trigger icon's slot, with the number and the icon in
   white. A theme can lay group heads out in two lines (`group_head_two_line`, on in Editor Native):
   the name over its description in italics, the event count, and the on/off switch drawn as a tick

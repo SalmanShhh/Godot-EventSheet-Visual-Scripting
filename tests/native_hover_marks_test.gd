@@ -5,7 +5,8 @@ extends RefCounted
 #
 # Every pin here is a VALUE the paint is decided by, because all four are drawing on top of rows the
 # sheet already builds:
-#   1. the hover links say "Add condition" / "Add action" and ship on, in the renderer and the canvas;
+#   1. the hover links say "Add condition" / "Add action" and ship on, in the renderer and the canvas,
+#      and show on the hovered event, the selected one and under an empty lane - nowhere else;
 #   2. a selected gutter's ink reads on its fill, and the fill reaches across the trigger icon's slot
 #      for a top-level event and only over the slot (when an icon is there) for a nested one;
 #   3. a theme that asks for the two-line group head moves the description under the name, in
@@ -40,6 +41,13 @@ static func _test_hover_links() -> bool:
 		["the renderer ships the hover links on", renderer.show_hover_add_links, true],
 		["and so does the canvas", view.show_hover_add_links, true],
 		["the View menu item has its own number", EventSheetMenuBar.HOVER_ADD_LINKS_VIEW_ID, 9819],
+		["a filled lane of an event at rest keeps its door hidden",
+			EventRowRenderer.add_door_revealed(false, false, true), false],
+		["the hovered event shows it", EventRowRenderer.add_door_revealed(true, false, true), true],
+		["so does the selected event, which a keyboard selection reaches with no pointer",
+			EventRowRenderer.add_door_revealed(false, true, true), true],
+		["and an empty lane shows it at rest, so a new event is never a blank lane",
+			EventRowRenderer.add_door_revealed(false, false, false), true],
 	])
 	view.free()
 	return ok

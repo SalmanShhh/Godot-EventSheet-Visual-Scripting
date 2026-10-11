@@ -834,6 +834,25 @@ func _head_band_icon_span(band_meta: Dictionary, action: String, art: Texture2D,
 	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)
 
 
+## True when a script extending `host` is a node's script: `host` is Node or an engine class under
+## it, or a project class whose chain of bases reaches one. An empty host is a plain script's
+## default, Node.
+static func host_is_node(host: String) -> bool:
+	var current: String = host if not host.is_empty() else "Node"
+	for _step: int in range(32):
+		if ClassDB.class_exists(current):
+			return current == "Node" or ClassDB.is_parent_class(current, "Node")
+		var base: String = ""
+		for entry: Dictionary in ProjectSettings.get_global_class_list():
+			if str(entry.get("class", "")) == current:
+				base = str(entry.get("base", ""))
+				break
+		if base.is_empty():
+			return false
+		current = base
+	return false
+
+
 ## The class head's own words after the name: the kind of file this is, what it extends (the extends
 ## band's words, control and gesture, drawn here instead of on a row of their own), and - for a
 ## shared sheet - the drawn share mark and the sheets that include it.
@@ -843,9 +862,12 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 	var spans: Array[SemanticSpan] = []
 	var name_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_NAME,
 		"head_band": EventSheetHeadBands.BAND_NAME, "line_index": 0}
+	# Only a node runs a script it is attached to: a Resource or RefCounted script is made and held
+	# by other code, so its head says what it is and no more.
+	var script_note: String = EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.") 		if host_is_node(str(sheet.host_class)) else EventSheetL10n.translate("What this file is: a script.")
 	spans.append(_make_span(EventSheetL10n.translate("Script"), SemanticSpan.SpanType.KEYWORD, name_meta.merged({
 		"text_color": reading_style.secondary_text_color,
-		"hover_note": EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.")
+		"hover_note": script_note
 	}, true)))
 	if not extends_band.is_empty():
 		var extends_meta: Dictionary = {"editable": false, "kind": "head_band_%s" % EventSheetHeadBands.BAND_EXTENDS,
@@ -890,7 +912,12 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 		spans.append(_make_span(EventSheetL10n.translate("Included by %s") % ", ".join(includers),
 			SemanticSpan.SpanType.COMMENT, name_meta.merged({
 				"text_color": reading_style.muted_text_color,
-				"hover_note": EventSheetL10n.translate("The sheets that include this one.")
+				# The longest words on the head and the last of its sentence, so on a narrow dock they
+				# are the ones that give way to the right-anchored echo - with an ellipsis, never sliced.
+				"elide": true,
+				# Named in the hover too, so a list the dock cut short is still one hover away.
+				"hover_note": "%s %s" % [EventSheetL10n.translate("The sheets that include this one."),
+					", ".join(includers)]
 			}, true)))
 	return spans
 
@@ -2484,9 +2511,17 @@ func _build_include_line_rows(sheet: EventSheetResource, indent_detail: bool) ->
 		row_data.spans.append(_make_span(said, SemanticSpan.SpanType.COMMENT,
 			open_meta.duplicate().merged({"text_color": inks["note"]}, true)))
 		# The line the include writes, at the right edge, coloured the way the script editor colours it.
-		row_data.spans.append(_code_echo_span(written, open_meta.merged({
+		# On a rounded bar it is drawn at full strength and each colour kept readable on the bar's fill:
+		# the bar is already a highlighted band, and the echo's resting fade over that fill left a
+		# keyword like `extends` all but invisible.
+		var on_bar: bool = row_data.outline_radius > 0.0
+		var echo: SemanticSpan = _code_echo_span(written, open_meta.merged({
 			"hover_note": EventSheetL10n.translate("The line this include writes into the script.")
-		}, true), EventSheetCodeEcho.REST_ALPHA, true))
+		}, true), 1.0 if on_bar else EventSheetCodeEcho.REST_ALPHA, true)
+		if on_bar:
+			for segment: Dictionary in (echo.metadata as Dictionary)["bbcode_segments"]:
+				segment["color"] = NativeVariableMarks.readable_ink(segment["color"], row_data.custom_color)
+		row_data.spans.append(echo)
 		if indent_detail:
 			_bump_indent(row_data, 1)
 		rows.append(row_data)
@@ -6722,8 +6757,7 @@ func _build_data_class_why_rows(sheet: EventSheetResource, display_name: String,
 		{"text": EventSheetL10n.translate("• Keep a list of them: every wave, every shop item, every line of dialogue."),
 			"color": event_style.class_note_color},
 	]
-	var users: PackedStringArray = NativeHeadMarks.class_users(
-		str(sheet.external_source_path) if sheet != null else "", display_name)
+	var users: PackedStringArray = NativeHeadMarks.class_users_in_sheet(sheet, display_name)
 	if not users.is_empty():
 		lines.append({"text": EventSheetL10n.translate("Used by %s") % ", ".join(users), "color": event_style.class_note_color})
 	var rows: Array[EventRowData] = []
@@ -18473,7 +18507,9 @@ func _editor_plugin_class() -> String:
 # The lenses themselves live in viewport_lenses.gd (text) and viewport_reading_rows.gd (rows).
 # What lives HERE is only the per-rebuild caching: both need to ask the sheet a question whose
 # answer is the same for every row in the pass, and asking it per span would walk the whole
-# events array thousands of times on a large sheet. Cleared whenever the sheet identity changes.
+# events array thousands of times on a large sheet. Cleared whenever the sheet identity changes,
+# and at the start of every rebuild: an ordinary edit changes the sheet IN PLACE, so a variable
+# added or renamed a moment ago has to reach the word colours on the very next pass.
 var _lens_sheet_stamp: int = 0
 var _lens_knob_names: Dictionary = {}
 var _lens_class_map: Dictionary = {}
@@ -18492,6 +18528,12 @@ var _lens_variable_regex: RegEx = null
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
 const NativeHeadMarks := preload("res://addons/eventsheet/editor/interaction/native_head_marks.gd")
+
+
+## Drops the per-rebuild answers, so the next row that asks reads the sheet as it is now. The
+## viewport calls it once at the start of every row build.
+func invalidate_lens_caches() -> void:
+	_lens_sheet_stamp = 0
 
 
 func _reset_lens_caches_if_stale() -> void:

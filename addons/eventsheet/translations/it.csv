@@ -7314,5 +7314,8 @@ No problems,Nessun problema
 1 problem,1 problema
 %d problems,%d problemi
 Add Links On Hover,Link di aggiunta al passaggio
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.","Aggiungi condizione e Aggiungi azione compaiono come link sotto le corsie dell'evento sotto il puntatore, e da nessun'altra parte. Fai clic su uno per scegliere cosa aggiungere. Disattivato li disegna come prima: al passaggio del puntatore, sull'evento selezionato e sotto una corsia vuota."
+"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.","Aggiungi condizione e Aggiungi azione compaiono come link sotto le corsie dell'evento sotto il puntatore, dell'evento selezionato e sotto una corsia vuota. Fai clic su uno per scegliere cosa aggiungere. Disattivato li disegna come pulsanti negli stessi punti."
 Active,Attivo
+sentence,frase
+code,codice
+What this file is: a script.,Che cos'è questo file: uno script.

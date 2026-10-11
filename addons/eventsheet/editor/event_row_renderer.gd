@@ -42,10 +42,12 @@ const VARIABLE_ROW_RULE_WIDTH := 2.0
 ## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
 ## lilac, so the break reads without competing with the rows it separates.
 const BLOCK_HAIRLINE_ALPHA := 0.45
-## The drawn marks of a row (trigger icon, System and input glyphs, object hairline, divider grip,
-## variable word ranges): paint only, kept in one file the tooltip and the suite ask too.
+## The room an elided `elide` span leaves between its ellipsis and the span after it.
+const ELIDE_GAP := 8.0
 ## How far, in luminance, the object hairline must stand off its lane to be drawn in its own colour.
 const HAIRLINE_MIN_CONTRAST := 0.06
+## The drawn marks of a row (trigger icon, System and input glyphs, object hairline, divider grip,
+## variable word ranges): paint only, kept in one file the tooltip and the suite ask too.
 const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 
 # How a region fence paints in its own colour: the faintest wash behind the opening head, a
@@ -92,8 +94,8 @@ var show_trigger_icons: bool = true
 var show_value_glyphs: bool = true
 var show_variable_badges: bool = true
 ## And View > Add Links On Hover (ships ON): "Add condition" and "Add action" drawn as link words
-## under the lanes of the HOVERED event only. False paints the add affordances exactly as before -
-## the pills shown on hover, on selection and under an empty lane. Draw-only either way: the two
+## under the lanes of the hovered event, the selected one and an empty lane. False paints the add
+## affordances exactly as before - the pills, in the same places. Draw-only either way: the two
 ## spans are the same spans in the same places, so no row, no reading and no hit target moves.
 var show_hover_add_links: bool = true
 const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction/native_variable_marks.gd")
@@ -151,6 +153,14 @@ static func _fallback_event_style() -> EventSheetEventStyle:
 ## width but CLIPS at it - a name in a user-draggable column would be sliced through a glyph, which is
 ## eliding avoids. Returns the text untouched when it already fits (the common case),
 ## so the measuring loop only ever runs on a name that is actually too long for its column.
+## `text` as an `elide` span draws it in `max_width`: whole when it fits, and otherwise elided short
+## of the edge by ELIDE_GAP, so the ellipsis never touches the span the layout put after it.
+static func elide_with_gap(text: String, max_width: float, font: Font, font_size: int) -> String:
+	if font == null or font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+		return text
+	return _elide(text, maxf(max_width - ELIDE_GAP, 1.0), font, font_size)
+
+
 static func _elide(text: String, max_width: float, font: Font, font_size: int) -> String:
 	if max_width <= 0.0 or font == null:
 		return text
@@ -1320,12 +1330,8 @@ func _draw_spans(
 			# A trigger occupies the lane too: an "On Ready -> act" row is complete, so its add
 			# link can wait for hover like any populated lane.
 			row_has_condition = true
-	var reveal_add_action: bool = row_data.hovered or row_data.selected or not row_has_action
-	var reveal_add_condition: bool = row_data.hovered or row_data.selected or not row_has_condition
-	# The hover links: only the event under the pointer says them, so a sheet at rest repeats nothing.
-	if show_hover_add_links:
-		reveal_add_action = row_data.hovered
-		reveal_add_condition = row_data.hovered
+	var reveal_add_action: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_action)
+	var reveal_add_condition: bool = add_door_revealed(row_data.hovered, row_data.selected, row_has_condition)
 	for span_index: int in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[span_index]
 		if span == null:
@@ -1418,7 +1424,8 @@ func _draw_spans(
 				continue
 			_draw_badge_span(control, span, font, font_size, metadata)
 			continue
-		if show_value_glyphs and row_data.variable_row and span_index != editing_span_index 				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
+		if show_value_glyphs and row_data.variable_row and span_index != editing_span_index \
+				and _draw_variable_word(control, span, metadata, font, font_size, event_style, reading):
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style, reading))
 		# The type word is the guide rail on a variable's value: while the field is being typed
@@ -1655,6 +1662,11 @@ func _draw_spans(
 			var comment_baseline_y: float = span.rect.position.y + (comment_line_h * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
 			_draw_multiline_text(control, Vector2(text_x, comment_baseline_y), draw_text, text_width, font, draw_font_size, color)
 		elif painted_ranges.is_empty():
+			# A span flagged `elide` gives up its tail with an ellipsis and a gap rather than being
+			# sliced against whatever the layout put after it (a class head's includers against the
+			# head's own code echo, on a dock too narrow for both).
+			if bool(metadata.get("elide", false)) and span_index != editing_span_index:
+				draw_text = elide_with_gap(draw_text, text_width, font, draw_font_size)
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
 			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, painted_ranges, text_width, font, draw_font_size, color, word_number_color, word_text_color, word_keyword_color, reading.muted_text_color, word_variable_color)
@@ -1791,11 +1803,12 @@ func _draw_variable_badges(control: Control, span: SemanticSpan, metadata: Dicti
 		event_style: EventSheetEventStyle) -> void:
 	var badges: PackedStringArray = PackedStringArray(metadata.get("variable_badges", PackedStringArray()))
 	var style: EventSheetEventStyle = event_style if event_style != null else _fallback_event_style()
-	var rects: Array[Rect2] = NativeVariableMarks.tile_rects(float(metadata["badge_tiles_x"]),
-		span.rect.get_center().y, badges.size())
-	for index: int in range(mini(badges.size(), rects.size())):
-		var pair: Array[Color] = NativeVariableMarks.badge_colors(style, badges[index])
-		NativeVariableMarks.draw_badge_tile(control, rects[index], badges[index], pair[0], pair[1])
+	var tiles_x: float = float(metadata["badge_tiles_x"])
+	var centre_y: float = span.rect.get_center().y
+	for index: int in range(badges.size()):
+		NativeVariableMarks.draw_badge_tile(control, NativeVariableMarks.tile_rect(tiles_x, centre_y, index),
+			badges[index], NativeVariableMarks.badge_ink(style, badges[index], true),
+			NativeVariableMarks.badge_ink(style, badges[index], false))
 
 
 ## The muted line beside an open inline editor, starting one gap past the field it belongs to
@@ -1859,10 +1872,15 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary,
 	_draw_rounded_rect(control, span.rect, bg, cell_radius, cell_radius, cell_radius, cell_radius)
 
 
-## Button chrome behind the "+ Add event/condition/action" affordances: a faint rounded pill with
-## an outline, brightening on hover - so the add gestures read as clickable buttons instead of
-## stray muted text (newcomers don't click things that look like notes). Alpha is fixed here; the
-## accent's own alpha is ignored (the affordance text is deliberately faded to 55%).
+## Whether an event shows its add door under one lane: while the pointer is on the event, while it is
+## the selected event (a keyboard selection has no pointer, and its add spans still take clicks), and
+## under a lane that holds nothing yet, which a newcomer would otherwise read as blank. Every other
+## event keeps it hidden, so a sheet at rest repeats nothing. The same places for the hover links
+## and for the pills; the toggle changes how the door is drawn, never where.
+static func add_door_revealed(hovered: bool, selected: bool, lane_filled: bool) -> bool:
+	return hovered or selected or not lane_filled
+
+
 ## The words a hover link says for an add span's kind: "Add condition" or "Add action", without the
 ## plus the pill wears - a link is read as a link by its colour.
 static func hover_link_label(span_kind: String) -> String:
@@ -1891,6 +1909,10 @@ func _draw_add_link(control: Control, span: SemanticSpan, span_kind: String, fon
 			Vector2(span.rect.position.x + label_width, baseline_y + 2.0), ink, 1.0)
 
 
+## Button chrome behind the "+ Add event/condition/action" affordances: a faint rounded pill with
+## an outline, brightening on hover - so the add gestures read as clickable buttons instead of
+## stray muted text (newcomers don't click things that look like notes). Alpha is fixed here; the
+## accent's own alpha is ignored (the affordance text is deliberately faded to 55%).
 static func _draw_add_affordance_pill(control: Control, rect: Rect2, accent: Color, hovered: bool) -> void:
 	var pill: StyleBoxFlat = StyleBoxFlat.new()
 	pill.set_corner_radius_all(8)
@@ -2058,13 +2080,9 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		if bool(metadata.get("badge_plate", false)):
 			# A mark on a small tile (the shared-sheet mark on a class head): the tile is the
 			# badge's background, the mark a little smaller than the tile so it sits inside it.
-			var plate: StyleBoxFlat = StyleBoxFlat.new()
-			plate.bg_color = badge_bg
-			plate.set_corner_radius_all(4)
-			plate.set_content_margin_all(0)
 			var plate_side: float = min(badge_rect.size.x, badge_rect.size.y)
-			control.draw_style_box(plate, Rect2(badge_rect.get_center() - Vector2(plate_side, plate_side) * 0.5,
-				Vector2(plate_side, plate_side)))
+			_draw_rounded_rect(control, Rect2(badge_rect.get_center() - Vector2(plate_side, plate_side) * 0.5,
+				Vector2(plate_side, plate_side)), badge_bg, 4, 4, 4, 4)
 			mark_side = plate_side * 0.68
 		# A row may hand the slot a real texture instead (a group head's folder, which is the
 		# editor's own Folder icon): drawn untinted, the way the icon was designed.

@@ -45,6 +45,12 @@ const LINTED_PAINTERS := [
 	"res://addons/eventsheet/editor/dock/sheet_map_panel.gd",
 	"res://addons/eventsheet/editor/drawer_widgets.gd",
 	"res://addons/eventsheet/editor/behaviour_anatomy_panel.gd",
+	# The native marks: the trigger icons, glyphs and hairline; the variable row's values and badge
+	# tiles; the class head, Include bar and class block. Paint moved into its own files is still
+	# paint on the sheet.
+	"res://addons/eventsheet/editor/interaction/native_row_marks.gd",
+	"res://addons/eventsheet/editor/interaction/native_variable_marks.gd",
+	"res://addons/eventsheet/editor/interaction/native_head_marks.gd",
 ]
 
 ## What each linted painter is still allowed to spell literally, and why. Every entry is a colour
@@ -70,6 +76,14 @@ const LINT_ALLOWANCES := {
 		"Color.from_string", "Color.WHITE",
 	],
 	"behaviour_anatomy_panel.gd": [],
+	"native_row_marks.gd": [],
+	"native_variable_marks.gd": [
+		# The axis letters' colours when no editor is there to ask (the running editor's own
+		# Inspector colours win), the two contrast inks a mark on a filled shape is chosen between,
+		# their faint frame pair, and a transparent sentinel meaning "this family has no colour".
+		"AXIS_COLORS_", "CONTRAST_INK_ON_", "FRAME_INK_ON_", "Color(0.0, 0.0, 0.0, 0.0)",
+	],
+	"native_head_marks.gd": [],
 }
 
 

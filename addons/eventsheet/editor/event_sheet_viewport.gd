@@ -2745,6 +2745,9 @@ func _refresh_rows() -> void:
 	# claims. Cleared here (the one place a whole sweep starts) so a claim can never outlive the
 	# rows it was made from - the recursive builds below fill it back in, member sheets included.
 	EventSheetPatternFacts.clear(_sheet)
+	# The same goes for the row builder's answers about the sheet (its variable names, its knobs):
+	# an edit changes the sheet in place, so they are read again for every sweep.
+	_row_builder.invalidate_lens_caches()
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
 	_group_breadcrumb.invalidate()

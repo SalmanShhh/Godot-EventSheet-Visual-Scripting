@@ -69,7 +69,16 @@ static func _test_includers() -> bool:
 		["the script that keeps the helper includes it",
 			NativeHeadMarks.includers_of(SHARED_HELPER), PackedStringArray(["Fixture Includer"])],
 		["the variables an includer can use", variables, ["int damage_taken 0"]],
+		["a file's includes are read once per version, so a second walk only checks its date",
+			is_same(NativeHeadMarks._include_facts(INCLUDER), NativeHeadMarks._include_facts(INCLUDER)), true],
+		["the walk names an includer by its class", NativeHeadMarks._include_facts(INCLUDER)["name"], "Fixture Includer"],
+		["a script that extends a node is a node's script", _host_cases(), [true, true, false, false]],
 	])
+
+
+static func _host_cases() -> Array:
+	return [ViewportRowBuilder.host_is_node("CharacterBody2D"), ViewportRowBuilder.host_is_node(""),
+		ViewportRowBuilder.host_is_node("Resource"), ViewportRowBuilder.host_is_node("RefCounted")]
 
 
 static func _test_class_users() -> bool:
@@ -79,8 +88,20 @@ static func _test_class_users() -> bool:
 	file.close()
 	var users: PackedStringArray = NativeHeadMarks.class_users(USERS_FILE, "GateSettings")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(USERS_FILE))
+	# The open sheet answers from the rows it holds, so a variable added a moment ago - never saved,
+	# never on disk - is a user straight away.
+	var sheet := EventSheetResource.new()
+	for declared: Array in [["settings", "GateSettings", null], ["waves", "Array[GateSettings]", null],
+			["_spare", "Variant", "GateSettings.new()"], ["speed", "float", 2.0]]:
+		var variable := LocalVariable.new()
+		variable.name = declared[0]
+		variable.type_name = declared[1]
+		variable.default_value = declared[2]
+		sheet.events.append(variable)
 	return SUPPORT.pins(TEST_NAME, [
 		["a variable, a list and a private one hold the class", users,
+			PackedStringArray(["settings (a variable)", "waves (a list)", "_spare (a variable)"])],
+		["an unsaved sheet answers from its own rows", NativeHeadMarks.class_users_in_sheet(sheet, "GateSettings"),
 			PackedStringArray(["settings (a variable)", "waves (a list)", "_spare (a variable)"])],
 	])
 
@@ -101,6 +122,9 @@ static func _test_class_head_of_a_shared_sheet() -> bool:
 		["no extends band of its own", _row_with_uid(view, "sheet_head_extends_") == null, true],
 		["the share mark is a drawn glyph on a tile", [str(share_mark.get("badge_style", "")),
 			bool(share_mark.get("badge_plate", false))], ["glyph", true]],
+		["the includers give way to the echo with an ellipsis", _flag_of(head, "Included by", "elide"), true],
+		["a node's script says the node runs it", _flag_of(head, "Script", "hover_note"),
+			"What this file is: a script, run by the node it is attached to."],
 	])
 	view.free()
 	return result
@@ -133,7 +157,18 @@ static func _test_include_bar_shape() -> bool:
 		["a theme leaving it clear keeps the flat line",
 			[classic_bar.outline_radius, classic_bar.height_scale, classic_bar.outline_color.a > 0.0],
 			[0.0, 1.0, false]],
+		["the rounded bar's echo is drawn at full strength", _echo_alpha(native_bar), 1.0],
+		["the flat line's echo keeps its resting fade", _echo_alpha(classic_bar), EventSheetCodeEcho.REST_ALPHA],
 	])
+
+
+## The alpha the first segment of a row's code echo is drawn at, as a fraction of its colour's own.
+static func _echo_alpha(row_data: EventRowData) -> float:
+	for span: SemanticSpan in row_data.spans if row_data != null else []:
+		if bool((span.metadata as Dictionary).get("code_echo", false)):
+			var colour: Color = ((span.metadata as Dictionary)["bbcode_segments"] as Array)[0]["color"]
+			return snappedf(colour.a, 0.01)
+	return -1.0
 
 
 static func _test_class_block() -> bool:
@@ -208,6 +243,14 @@ static func _row_with_uid(view: EventSheetViewport, prefix: String) -> EventRowD
 			view._row_builder._ensure_event_spans(row_data)
 			return row_data
 		stack.append_array(row_data.children)
+	return null
+
+
+## One metadata value of the first span on `row_data` whose text starts with `prefix`.
+static func _flag_of(row_data: EventRowData, prefix: String, key: String) -> Variant:
+	for span: SemanticSpan in row_data.spans if row_data != null else []:
+		if span.text.begins_with(prefix):
+			return (span.metadata as Dictionary).get(key)
 	return null
 
 

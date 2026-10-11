@@ -79,6 +79,17 @@ const AXIS_COLORS_DARK: Array[Color] = [Color("#ff8a80"), Color("#9ccc65"), Colo
 const AXIS_COLORS_LIGHT: Array[Color] = [Color("#b3261e"), Color("#2e7d32"), Color("#1565c0")]
 const AXIS_LETTERS: PackedStringArray = ["X", "Y", "Z", "W"]
 
+## The two inks a mark drawn ON a filled shape is chosen between - a tick on its box, a number on a
+## selected gutter. Not a theme decision: the fill is the theme's, and the ink is whichever of these
+## reads on it.
+const CONTRAST_INK_ON_DARK := Color.WHITE
+const CONTRAST_INK_ON_LIGHT := Color(0.08, 0.09, 0.11)
+## The faint frame of a glyph, the same choice at a whisper: dark on a light fill, light on a dark.
+const FRAME_INK_ON_LIGHT := Color(0.0, 0.0, 0.0, 0.45)
+const FRAME_INK_ON_DARK := Color(1.0, 1.0, 1.0, 0.5)
+## Under this luminance a fill takes the light ink.
+const TICK_INK_LUMINANCE := 0.6
+
 ## The monospaced faces a type word asks the system for, in order; the sheet's own font backs them.
 const MONO_FONT_NAMES: PackedStringArray = ["Cascadia Mono", "Consolas", "JetBrains Mono", "Menlo",
 	"DejaVu Sans Mono", "monospace"]
@@ -92,6 +103,7 @@ static var _mono_cache: Dictionary = {}
 static var _italic_cache: Dictionary = {}
 static var _saved_cache: Dictionary = {}
 static var _box_cache: Dictionary = {}
+static var _default_style: EventSheetEventStyle = null
 
 
 ## The colour family of a variable's type, or "" when nothing about it says. Read from the declared
@@ -217,7 +229,12 @@ static func readable_ink(ink: Color, background: Color) -> Color:
 
 ## The faint ink a glyph's frame is drawn in on `background`: light on a dark fill, dark on a light.
 static func frame_ink(background: Color) -> Color:
-	return Color(0.0, 0.0, 0.0, 0.45) if background.get_luminance() >= 0.5 else Color(1.0, 1.0, 1.0, 0.5)
+	return FRAME_INK_ON_LIGHT if background.get_luminance() >= 0.5 else FRAME_INK_ON_DARK
+
+
+## The ink that reads on `fill`: the light one under `threshold` luminance, the dark one above it.
+static func contrast_ink(fill: Color, threshold: float) -> Color:
+	return CONTRAST_INK_ON_DARK if fill.get_luminance() < threshold else CONTRAST_INK_ON_LIGHT
 
 
 ## Which glyph a value takes, as {"glyph": String, "axes": PackedStringArray, "on": bool}; an empty
@@ -396,11 +413,16 @@ static func badge_span(row_data: EventRowData) -> SemanticSpan:
 ## `centre_y`. One rect per badge, in order.
 static func tile_rects(start_x: float, centre_y: float, count: int) -> Array[Rect2]:
 	var rects: Array[Rect2] = []
-	var x: float = start_x + TILE_LEAD
-	for _index: int in range(count):
-		rects.append(Rect2(x, centre_y - TILE_SIZE * 0.5, TILE_SIZE, TILE_SIZE))
-		x += TILE_SIZE + TILE_GAP
+	for index: int in range(count):
+		rects.append(tile_rect(start_x, centre_y, index))
 	return rects
+
+
+## One tile of the run `tile_rects` lays out, by its index - what the painter asks per tile, so a
+## frame builds no array per row.
+static func tile_rect(start_x: float, centre_y: float, index: int) -> Rect2:
+	return Rect2(start_x + TILE_LEAD + float(index) * (TILE_SIZE + TILE_GAP), centre_y - TILE_SIZE * 0.5,
+		TILE_SIZE, TILE_SIZE)
 
 
 ## The badge whose tile `point` is on, or "" - the one question the hover asks.
@@ -419,16 +441,28 @@ static func badge_at(row_data: EventRowData, point: Vector2) -> String:
 
 ## The foreground and background of a badge's tile, from the theme's four badge pairs.
 static func badge_colors(event_style: EventSheetEventStyle, badge: String) -> Array[Color]:
-	if event_style == null:
-		return [Color.WHITE, Color(0.2, 0.2, 0.2)]
+	return [badge_ink(event_style, badge, true), badge_ink(event_style, badge, false)]
+
+
+## One half of a badge's pair - its foreground, or its background - without building the pair, which
+## is what the painter asks per tile per frame.
+static func badge_ink(event_style: EventSheetEventStyle, badge: String, foreground: bool) -> Color:
+	var style: EventSheetEventStyle = event_style if event_style != null else _fallback_style()
 	match badge:
 		BADGE_RANGE:
-			return [event_style.range_badge_foreground_color, event_style.range_badge_background_color]
+			return style.range_badge_foreground_color if foreground else style.range_badge_background_color
 		BADGE_TOOLTIP:
-			return [event_style.tooltip_badge_foreground_color, event_style.tooltip_badge_background_color]
+			return style.tooltip_badge_foreground_color if foreground else style.tooltip_badge_background_color
 		BADGE_SAVED:
-			return [event_style.saved_badge_foreground_color, event_style.saved_badge_background_color]
-	return [event_style.inspector_badge_foreground_color, event_style.inspector_badge_background_color]
+			return style.saved_badge_foreground_color if foreground else style.saved_badge_background_color
+	return style.inspector_badge_foreground_color if foreground else style.inspector_badge_background_color
+
+
+## The style a badge asks when the canvas has none: the style's own defaults, made once.
+static func _fallback_style() -> EventSheetEventStyle:
+	if _default_style == null:
+		_default_style = EventSheetEventStyle.new()
+	return _default_style
 
 
 ## Paints one badge tile: a rounded tile in the badge's background with its icon on it.
@@ -507,7 +541,7 @@ static func draw_tick_box(control: CanvasItem, x: float, centre_y: float, checke
 	var box := Rect2(x, centre_y - TICK_BOX * 0.5, TICK_BOX, TICK_BOX)
 	if checked:
 		_fill_rounded(control, box, fill, 2)
-		var tick_ink: Color = Color("#ffffff") if fill.get_luminance() < 0.6 else Color("#1b1f24")
+		var tick_ink: Color = contrast_ink(fill, TICK_INK_LUMINANCE)
 		control.draw_polyline(PackedVector2Array([_at(box, 3.5, 8.5), _at(box, 6.7, 11.5),
 			_at(box, 12.5, 4.5)]), tick_ink, maxf(TICK_BOX / 16.0 * 2.2, 1.5), true)
 	else:

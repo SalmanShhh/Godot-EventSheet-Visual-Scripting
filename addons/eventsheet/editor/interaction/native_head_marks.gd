@@ -5,10 +5,10 @@ extends RefCounted
 # and the paint for the rounded Include bar and the inner-class block.
 #
 # The facts here are READ, never stored: a shared sheet's includers come from walking the project's
-# scripts, an included sheet's variables from its own file, a class's users from the including
-# sheet's file. Each answer is cached - the walk for a few seconds, a file's answer until the file
-# changes on disk - because the row build asks them on every rebuild and the head must not make a
-# rebuild pay for a scan.
+# scripts, an included sheet's variables from its own file, a class's users from the open sheet's
+# own variable rows. Each file answer is cached - the walk for a few seconds, a file's answer until
+# the file changes on disk or the editor's filesystem ping drops it - because the row build asks
+# them on every rebuild and the head must not make a rebuild pay for a scan.
 #
 # The paint is PAINT ONLY, like the other native marks: a rounded bar and a block frame are drawn
 # over the geometry a row already has, reserve no width and are never hit-tested.
@@ -35,6 +35,8 @@ const NativeVariableMarks := preload("res://addons/eventsheet/editor/interaction
 
 static var _includers_cache: Dictionary = {}
 static var _file_cache: Dictionary = {}
+static var _include_cache: Dictionary = {}
+static var _bar_box_cache: Dictionary = {}
 static var _declaration_re: RegEx = null
 
 
@@ -52,29 +54,28 @@ static func includers_of(shared_path: String) -> PackedStringArray:
 	var cached: Variant = _includers_cache.get(shared_path)
 	if cached is Dictionary and Time.get_ticks_msec() - int((cached as Dictionary)["at"]) < INCLUDERS_TRUST_MSEC:
 		return (cached as Dictionary)["names"]
-	var shared_class: String = str(_file_facts(shared_path).get("class", ""))
 	var names: PackedStringArray = PackedStringArray()
-	if not shared_class.is_empty():
+	if not str(_file_facts(shared_path).get("class", "")).is_empty():
 		var scripts: PackedStringArray = PackedStringArray()
 		_collect_scripts("res://", scripts)
 		for script_path: String in scripts:
 			if script_path == shared_path:
 				continue
-			var source: String = FileAccess.get_file_as_string(script_path)
-			if not source.contains(shared_class):
-				continue
-			for include: Dictionary in EventSheetSharedSheets.includes_of_source(source):
-				if str(include["path"]) == shared_path:
-					names.append(_display_name(script_path, source))
-					break
+			var facts: Dictionary = _include_facts(script_path)
+			if (facts["paths"] as PackedStringArray).has(shared_path):
+				names.append(str(facts["name"]))
 	names.sort()
 	_includers_cache[shared_path] = {"at": Time.get_ticks_msec(), "names": names}
 	return names
 
 
-## Forgets every cached walk, so the next question walks the project again.
+## Forgets every cached walk and every file's answers, so the next question reads again. The dock
+## calls it on the editor's filesystem ping: a file's includes name OTHER files (the class it
+## extends, the helper it makes), so a file can go stale without its own stamp moving.
 static func forget_includers() -> void:
 	_includers_cache.clear()
+	_include_cache.clear()
+	_file_cache.clear()
 
 
 ## The variables a script file declares at its top level, in file order, as {name, type, value}:
@@ -103,6 +104,27 @@ static func class_users(path: String, inner_class: String) -> PackedStringArray:
 	return users
 
 
+## The same answer for a sheet that is OPEN: read off the variable rows it holds in memory, so the
+## line under an inner class follows an edit straight away rather than waiting for a save, and an
+## unsaved sheet answers too. A `:=` variable says the type its value makes, as in a file.
+static func class_users_in_sheet(sheet: EventSheetResource, inner_class: String) -> PackedStringArray:
+	var users: PackedStringArray = PackedStringArray()
+	if sheet == null or inner_class.is_empty():
+		return users
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null or variable.name.is_empty():
+			continue
+		var type_text: String = variable.type_name.replace(" ", "")
+		if (type_text.is_empty() or type_text == "Variant") and variable.default_value is String:
+			type_text = _literal_type(str(variable.default_value).strip_edges())
+		if type_text == inner_class:
+			users.append(EventSheetL10n.translate("%s (a variable)") % variable.name)
+		elif type_text == "Array[%s]" % inner_class:
+			users.append(EventSheetL10n.translate("%s (a list)") % variable.name)
+	return users
+
+
 ## The top-level declarations of one line of source, {name, type, value}, or {} when the line is not
 ## one. Public so a test can pin the reading of a line without a file.
 static func declaration_of(line: String) -> Dictionary:
@@ -127,13 +149,19 @@ static func draw_rounded_bar(control: Control, row_rect: Rect2, fill: Color, edg
 	var bar: Rect2 = row_rect.grow_individual(-BAR_INSET, -BAR_INSET, -BAR_INSET, -BAR_INSET)
 	if bar.size.x <= 0.0 or bar.size.y <= 0.0:
 		return
-	var box: StyleBoxFlat = StyleBoxFlat.new()
-	box.bg_color = fill
-	box.border_color = edge
-	box.set_border_width_all(int(BAR_EDGE))
-	box.set_corner_radius_all(int(minf(radius, bar.size.y * 0.5)))
-	box.anti_aliasing = true
-	box.set_content_margin_all(0)
+	# One box per fill, edge and corner (a handful per theme), so a frame allocates nothing.
+	var corner: int = int(minf(radius, bar.size.y * 0.5))
+	var key: String = "%s/%s/%d" % [fill.to_html(), edge.to_html(), corner]
+	var box: StyleBoxFlat = _bar_box_cache.get(key)
+	if box == null:
+		box = StyleBoxFlat.new()
+		box.bg_color = fill
+		box.border_color = edge
+		box.set_border_width_all(int(BAR_EDGE))
+		box.set_corner_radius_all(corner)
+		box.anti_aliasing = true
+		box.set_content_margin_all(0)
+		_bar_box_cache[key] = box
 	control.draw_style_box(box, bar)
 
 
@@ -227,10 +255,27 @@ static func _private_variables(path: String) -> Array[Dictionary]:
 	return typed
 
 
-## What a script is called on a head: its class, or its file name read as words.
-static func _display_name(script_path: String, source: String) -> String:
+## The shared sheets a script file includes, as their paths, and what the file is called on a head
+## (its class, or its file name read as words), read once per version of the file - so a walk that
+## finds nothing changed only stats each file. Kept apart from `_file_facts` so a walk never pays
+## for reading every file's variables.
+static func _include_facts(path: String) -> Dictionary:
+	var stamp: int = FileAccess.get_modified_time(path)
+	var cached: Variant = _include_cache.get(path)
+	if cached is Dictionary and int((cached as Dictionary)["stamp"]) == stamp:
+		return cached
+	var source: String = FileAccess.get_file_as_string(path)
+	var paths: PackedStringArray = PackedStringArray()
+	for include: Dictionary in EventSheetSharedSheets.includes_of_source(source):
+		paths.append(str(include["path"]))
 	var declared: String = EventSheetSharedSheets.class_name_of(source)
-	return declared if not declared.is_empty() else script_path.get_file().get_basename().capitalize()
+	var facts: Dictionary = {
+		"stamp": stamp,
+		"paths": paths,
+		"name": declared if not declared.is_empty() else path.get_file().get_basename().capitalize(),
+	}
+	_include_cache[path] = facts
+	return facts
 
 
 ## The type a `:=` literal gives a variable, "" when the literal does not say.

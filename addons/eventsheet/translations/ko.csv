@@ -7314,5 +7314,8 @@ No problems,문제 없음
 1 problem,문제 1개
 %d problems,문제 %d개
 Add Links On Hover,마우스 오버 시 추가 링크
-"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane.","조건 추가와 액션 추가가 포인터 아래 이벤트의 레인 아래에만 링크로 나타납니다. 하나를 클릭해 추가할 것을 고르세요. 끄면 이전처럼 그립니다: 마우스를 올렸을 때, 선택한 이벤트, 빈 레인 아래."
+"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.","조건 추가와 액션 추가가 포인터 아래 이벤트, 선택한 이벤트, 빈 레인 아래에 링크로 나타납니다. 하나를 클릭해 추가할 것을 고르세요. 끄면 같은 자리에 버튼으로 그립니다."
 Active,활성
+sentence,문장
+code,코드
+What this file is: a script.,이 파일의 정체: 스크립트.

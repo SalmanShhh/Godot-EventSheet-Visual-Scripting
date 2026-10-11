@@ -42,11 +42,12 @@ const RESET_LANE_SPLIT_VIEW_ID: int = 9817
 const TRIGGER_ICONS_VIEW_ID: int = 9818
 
 ## View ▸ Add Links On Hover - "Add condition" and "Add action" as link words under the lanes of the
-## hovered event. The number the run left free beside Trigger Icons.
+## hovered or selected event and under an empty lane. The number the run left free beside Trigger Icons.
 const HOVER_ADD_LINKS_VIEW_ID: int = 9819
 
 ## View ▸ Value Glyphs and View ▸ Variable Badges - a variable row's value as the Inspector draws it,
-## and the icon tiles at its right. Further along the same run, leaving 9819 to the next toggle.
+## and the icon tiles at its right. Further along the same run, after Trigger Icons (9818) and Add
+## Links On Hover (9819).
 const VALUE_GLYPHS_VIEW_ID: int = 9820
 const VARIABLE_BADGES_VIEW_ID: int = 9821
 
@@ -558,7 +559,7 @@ func build(root: Node) -> void:
 	view_popup.add_check_item(EventSheetL10n.translate("Add Links On Hover"), HOVER_ADD_LINKS_VIEW_ID)
 	view_popup.set_item_checked(view_popup.get_item_index(HOVER_ADD_LINKS_VIEW_ID), _dock._hover_add_links_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(HOVER_ADD_LINKS_VIEW_ID), EventSheetL10n.translate(
-		"Add condition and Add action appear as links under the lanes of the event under the pointer, and nowhere else. Click one to pick what to add. Off draws them as before: on hover, on the selected event and under an empty lane."))
+		"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places."))
 	view_popup.add_check_item(EventSheetL10n.translate("Value Glyphs"), VALUE_GLYPHS_VIEW_ID)
 	view_popup.set_item_checked(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), _dock._value_glyphs_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(VALUE_GLYPHS_VIEW_ID), EventSheetL10n.translate(
@@ -1069,8 +1070,7 @@ func build(root: Node) -> void:
 		variable_view_menu.clear()
 		var active_view_mode: int = _dock.variable_row_view()
 		for mode: int in EventSheetCodeEcho.VIEW_LABELS.size():
-			variable_view_menu.add_radio_check_item(
-				EventSheetL10n.translate(EventSheetCodeEcho.VIEW_LABELS[mode]), mode)
+			variable_view_menu.add_radio_check_item(view_mode_label(mode), mode)
 			variable_view_menu.set_item_checked(mode, mode == active_view_mode))
 	variable_view_menu.id_pressed.connect(func(mode: int) -> void: _dock.set_variable_row_view(mode))
 	var views_menu: PopupMenu = PopupMenu.new()
@@ -1513,10 +1513,21 @@ func _fill_sentences_menu(popup: PopupMenu) -> void:
 	var active_view_mode: int = (_dock.variable_row_view() if _dock != null
 		else EventSheetCodeEcho.VIEW_BOTH)
 	for mode: int in EventSheetCodeEcho.VIEW_LABELS.size():
-		popup.add_radio_check_item(EventSheetL10n.translate(EventSheetCodeEcho.VIEW_LABELS[mode]), mode)
+		popup.add_radio_check_item(view_mode_label(mode), mode)
 		popup.set_item_checked(popup.get_item_index(mode), mode == active_view_mode)
 	popup.add_separator()
 	popup.add_item(EventSheetL10n.translate("Words…"), SENTENCES_WORDS_ID)
+
+
+## The word a menu shows for one variable-row view mode, translated. Spelled as literal calls rather
+## than a lookup into the mode names, so the translation harvester sees every word a menu can show.
+static func view_mode_label(mode: int) -> String:
+	match mode:
+		EventSheetCodeEcho.VIEW_SENTENCE:
+			return EventSheetL10n.translate("sentence")
+		EventSheetCodeEcho.VIEW_CODE:
+			return EventSheetL10n.translate("code")
+	return EventSheetL10n.translate("both")
 
 
 ## Undo and Redo grey out when there is nothing to undo or redo, the way Godot's own toolbars do.
