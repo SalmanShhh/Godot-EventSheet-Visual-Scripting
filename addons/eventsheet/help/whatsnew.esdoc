@@ -33,6 +33,22 @@ What changed in the build you have installed (v0.18.0), in the words the release
   new bar token, the open tab's edge (`active_tab_edge_color`), draws a two-pixel accent line along
   the top of the open sheet's tab; it is clear in every theme but Editor Native, so their tabs look
   exactly as the editor draws them.
+- **Trigger icons, the object hairline, word colours and the divider grip.** Each event now shows how
+  it is started as a small icon right beside its number - a play mark for On ready, a turning arrow
+  for Every tick, a falling ball for Every physics tick, a keyboard for input, a signal mark for a
+  signal and a notification mark for an engine notification - in the slot beside the gutter that
+  every event row already reserved, so no row, column or reading moves; hovering one says what it
+  means, and View > Trigger
+  Icons turns them off (remembered per project, and in saved views). System rows wear a drawn gear
+  and the Keyboard, Mouse, Gamepad and Touch rows a drawn device glyph in place of their category
+  icon, in the object colour. The line between the object column and the sentence is drawn in the
+  theme's object hairline colour and stands short of the row's edges, falling back to the old faint
+  label ink where that colour would vanish against its lane. Where a theme states the variable word
+  colour (Editor Native does), the sheet's own variable names inside a condition or action sentence
+  wear it - in every spelling the sheet shows them in, and only inside the row's parameters - and the
+  number, text and keyword colours now also reach the values of a row read from hand-written code.
+  The hovered event's lane divider shows a three-dot grip where the divider is wide enough to hold
+  it. Drawing only: compiled output and every reading are unchanged.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

@@ -37,6 +37,10 @@ const PANELS_VIEW_ID: int = 9816
 ## next number the View menu has never used.
 const RESET_LANE_SPLIT_VIEW_ID: int = 9817
 
+## View ▸ Trigger Icons - the mark beside each event's number that says how the event is started. The
+## first of the run the View toggles beside Object Icons take (9818 onwards).
+const TRIGGER_ICONS_VIEW_ID: int = 9818
+
 ## View ▸ Text labels - the strip laid out as words. Clear of the run the View toggles beside Object
 ## Icons take (9818 onwards), so two passes adding View items at once never share a number.
 const TEXT_LABELS_VIEW_ID: int = 9830
@@ -534,6 +538,10 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(9), true)
 	view_popup.add_check_item("Object Icons", 15)
 	view_popup.set_item_checked(view_popup.get_item_index(15), true)
+	view_popup.add_check_item(EventSheetL10n.translate("Trigger Icons"), TRIGGER_ICONS_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), _dock._trigger_icons_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(TRIGGER_ICONS_VIEW_ID), EventSheetL10n.translate(
+		"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet."))
 	view_popup.add_check_item("Event Numbers", 16)
 	view_popup.set_item_checked(view_popup.get_item_index(16), true)
 	view_popup.add_check_item("Aligned Object Columns", 18)
@@ -677,6 +685,7 @@ func build(root: Node) -> void:
 			8: _dock._open_theme_editor()
 			9: _dock._toggle_add_event_rows(view_popup)
 			15: _dock._toggle_object_icons(view_popup)
+			TRIGGER_ICONS_VIEW_ID: _dock._toggle_trigger_icons(view_popup)
 			16: _dock._toggle_event_numbers(view_popup)
 			18: _dock._toggle_object_column_alignment(view_popup)
 			RESET_LANE_SPLIT_VIEW_ID: _dock._reset_lane_split()

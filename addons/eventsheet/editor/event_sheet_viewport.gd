@@ -1833,6 +1833,12 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 ## filtering never renumbers anything and "check event 34" stays stable.
 var show_event_numbers: bool = true
 
+## Trigger Icons (View menu, on by default): the mark beside an event's number that says how the
+## event is started. Draw-only - it sits in the margin every event row already reserves - so flipping
+## it is a redraw and no span, row height or layout ever moves.
+var show_trigger_icons: bool = true
+const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
+
 ## Row Hit Counts (View menu, SHIPS OFF): the Event Trace's per-row tally, drawn as a small chip
 ## under the event number in the GUTTER. Off is the default forever - debugger information is a
 ## lens the reader picks up, so with this false the sheet paints exactly as it did before the
@@ -2244,6 +2250,7 @@ func _draw() -> void:
 	# Same once-per-frame rule as the numbers above: the hit-count lens is constant across a frame.
 	_renderer.show_hit_counts = show_hit_counts
 	_renderer.show_costs = show_costs
+	_renderer.show_trigger_icons = show_trigger_icons
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
@@ -4002,6 +4009,18 @@ static func _apply_decl_entry_edit(source: Resource, edit_kind: String, value: S
 ## Hovering a condition/action/trigger shows the GDScript it compiles to (the codegen
 ## template with the ACE's parameter values substituted) - the sheet continuously teaches
 ## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
+## What the trigger icon of row `row_index` means, when `logical_position` is on it; "" otherwise.
+## Asks the same geometry the renderer paints the icon with, so the hover is exactly where the icon is.
+func _trigger_icon_tooltip(row_index: int, logical_position: Vector2) -> String:
+	var row_data: EventRowData = _row_at(row_index)
+	var kind: String = NativeRowMarks.trigger_kind(row_data)
+	if kind.is_empty():
+		return ""
+	var row_rect := Rect2(0.0, _get_row_top(row_index), _get_logical_canvas_width(), _get_row_height(row_index))
+	var icon_rect: Rect2 = NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, indent_width())
+	return NativeRowMarks.trigger_tooltip(kind) if icon_rect.grow(2.0).has_point(logical_position) else ""
+
+
 func _get_tooltip(at_position: Vector2) -> String:
 	# The pinned head shows the last two parent names; the hover is where the whole chain is.
 	if _group_breadcrumb.covers(at_position):
@@ -4028,6 +4047,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 			(hovered_error_row.source_resource as EventRow).event_uid, hovered_error_row.event_number)
 		if not hit_count_hover.is_empty():
 			return hit_count_hover
+	# The trigger icon beside an event's number is a picture; its hover says what it means.
+	if show_trigger_icons:
+		var trigger_hover: String = _trigger_icon_tooltip(int(hit.get("row_index", -1)), _to_logical_position(at_position))
+		if not trigger_hover.is_empty():
+			return trigger_hover
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
 	# A MARK explains itself. The glyphs a sheet puts on a row (runs every frame, trigger, calls a

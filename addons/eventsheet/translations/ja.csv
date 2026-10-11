@@ -7267,3 +7267,13 @@ Toolbar: text labels.,ツールバー: テキストラベル。
 Toolbar: icons.,ツールバー: アイコン。
 Sentences,文
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.",シートの読み方: 変数の行を文として、GDScript の宣言として、またはその両方で表示 - そしてシートで選べるすべての言葉。
+Trigger icons shown - each event says how it is started.,
+Trigger icons hidden.,
+Trigger Icons,
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
+"Runs once, when the node starts (On ready).",
+Runs every frame (Every tick).,
+Runs every physics step (Every physics tick).,
+"Runs when input arrives - a key, a button, the mouse.",
+Runs when a signal is emitted.,
+Runs when the engine sends this notification.,

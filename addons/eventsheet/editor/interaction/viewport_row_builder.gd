@@ -17995,7 +17995,10 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 				# plainer call style instead of the curated sentence's bold name.
 				tone_color = _viewport._get_reading_style().primary_text_color.lerp(
 					_viewport._get_reading_style().muted_text_color, DERIVED_TONE_BLEND)
-		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
+		# The tone rides along for the painter (a theme's word colours read it at draw time); the
+		# colour and emphasis above are what every reading of the row is built from.
+		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false,
+			"tone": str(part.get("tone", "plain"))})
 	return segments
 
 
@@ -18144,6 +18147,13 @@ var _lens_class_map: Dictionary = {}
 var _lens_scene_vars: Dictionary = {}
 ## Every registered autoload, so a row naming one can say it is a project-wide global.
 var _lens_autoloads: Dictionary = {}
+## The sheet's own variable names, in every spelling a sentence shows them in, as one pattern - so a
+## theme that colours variables can find them in a condition or action sentence. Null for a sheet
+## with none.
+var _lens_variable_regex: RegEx = null
+
+## The drawn marks of a row; here for the variable-name search the sentence spans carry for them.
+const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 
 
 func _reset_lens_caches_if_stale() -> void:
@@ -18159,6 +18169,22 @@ func _reset_lens_caches_if_stale() -> void:
 	# and asking it per object label walked a several-hundred-entry property list thousands of times
 	# on a large sheet.
 	_lens_autoloads = EventSheetViewportReadingRows.autoload_singletons()
+	_lens_variable_regex = NativeRowMarks.variable_names_regex(_sheet_variable_names(sheet))
+
+
+## The names a sheet declares as its own variables: the members it lists as rows and the ones it
+## keeps in its variable table.
+static func _sheet_variable_names(sheet: EventSheetResource) -> PackedStringArray:
+	var names := PackedStringArray()
+	if sheet == null:
+		return names
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable != null and not variable.name.is_empty():
+			names.append(variable.name)
+	for key: Variant in sheet.variables.keys():
+		names.append(str(key))
+	return names
 
 
 ## Every `var x = preload("res://...")` / `const X := preload(...)` of a sheet, resolved once per
@@ -18589,6 +18615,16 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 			if not read_class.is_empty():
 				span.metadata["object_note"] = read_class
 		_pending_derived_ace = {}
+	# Where the sheet's own variables are named inside a condition or action sentence, for a theme
+	# that gives them a word colour. Paint metadata only: the text, the value ranges and every
+	# reading stay exactly as they were. Where the row knows where its parameters landed, only a
+	# name inside one of them counts - the sentence's own words are never a variable.
+	if str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] and not span.text.is_empty():
+		_reset_lens_caches_if_stale()
+		var variable_ranges: Array = NativeRowMarks.variable_word_ranges(span.text, _lens_variable_regex,
+			span.metadata.get("param_ranges", []))
+		if not variable_ranges.is_empty():
+			span.metadata["variable_ranges"] = variable_ranges
 	_pending_object_note = ""
 	_pending_display_bbcode = false
 	_pending_param_ranges = {}

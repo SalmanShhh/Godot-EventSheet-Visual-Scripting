@@ -2606,6 +2606,7 @@ func _load_simple_mode_preference() -> void:
 	_apply_humanized_names_pref()
 	_apply_familiar_words_pref()
 	_apply_patterns_lens_pref()
+	_apply_trigger_icons_pref()
 	# The sheet zoom rides the same startup read: it belongs to the layout, so the first sheet
 	# opens at the size the last one was being read at.
 	_apply_sheet_zoom_pref()
@@ -2910,6 +2911,46 @@ func _toggle_object_icons(view_popup: PopupMenu) -> void:
 		if icons_index >= 0:
 			view_popup.set_item_checked(icons_index, show_icons)
 	_set_status("Object icons shown." if show_icons else "Object icons hidden (text-only sheet).")
+
+
+## View > Trigger Icons: the small mark beside an event's number that says how the event is started
+## - once when ready, every tick, every physics tick, on input, on a signal. It is drawn in the
+## margin every event row already reserves, so flipping it is a redraw, never a rebuild, and no row
+## moves. On by default; persisted per project per user in editor metadata, like Patterns.
+func _trigger_icons_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.show_trigger_icons
+	return _stored_trigger_icons()
+
+
+func _stored_trigger_icons() -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "trigger_icons", true))
+	return true
+
+
+func _apply_trigger_icons_pref() -> void:
+	var stored: bool = _stored_trigger_icons()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.show_trigger_icons = stored
+
+
+func _toggle_trigger_icons(view_popup: PopupMenu) -> void:
+	var showing: bool = not _trigger_icons_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "trigger_icons", showing)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.show_trigger_icons = showing
+		view.queue_redraw()
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(EventSheetMenuBar.TRIGGER_ICONS_VIEW_ID)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, showing)
+	_set_status(EventSheetL10n.translate("Trigger icons shown - each event says how it is started.") if showing
+		else EventSheetL10n.translate("Trigger icons hidden."))
 
 
 func _toggle_add_event_rows(view_popup: PopupMenu) -> void:
@@ -8107,6 +8148,7 @@ func current_view_lenses() -> Dictionary:
 		"compact_rows": _compact_rows_enabled(),
 		"event_numbers": view != null and view.show_event_numbers,
 		"object_icons": view != null and view.show_object_icons,
+		"trigger_icons": view != null and view.show_trigger_icons,
 	}
 
 
@@ -8127,6 +8169,8 @@ func apply_saved_view(name: String) -> void:
 			pane.show_event_numbers = bool(lenses["event_numbers"])
 		if lenses.has("object_icons"):
 			pane.show_object_icons = bool(lenses["object_icons"])
+		if lenses.has("trigger_icons"):
+			pane.show_trigger_icons = bool(lenses["trigger_icons"])
 		pane.queue_redraw()
 	_set_status(EventSheetL10n.translate("View: %s") % name)
 

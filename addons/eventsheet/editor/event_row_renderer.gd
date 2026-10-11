@@ -42,6 +42,11 @@ const VARIABLE_ROW_RULE_WIDTH := 2.0
 ## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
 ## lilac, so the break reads without competing with the rows it separates.
 const BLOCK_HAIRLINE_ALPHA := 0.45
+## The drawn marks of a row (trigger icon, System and input glyphs, object hairline, divider grip,
+## variable word ranges): paint only, kept in one file the tooltip and the suite ask too.
+## How far, in luminance, the object hairline must stand off its lane to be drawn in its own colour.
+const HAIRLINE_MIN_CONTRAST := 0.06
+const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/native_row_marks.gd")
 
 # How a region fence paints in its own colour: the faintest wash behind the opening head, a
 # firm rule at the left edge of both fences, and the dash rhythm the badge and the body rule share.
@@ -78,6 +83,9 @@ var show_hit_counts: bool = false
 ## also OFF). Costs and counts share ONE chip - the gutter is 20px wide and holds one number - so
 ## when both are on the cost is the one shown and the count is one hover away.
 var show_costs: bool = false
+## Stamped the same way: View > Trigger Icons (ships ON). Draw-only, in the slot every event row
+## already reserves beside its margin, so with it false the row paints exactly as before.
+var show_trigger_icons: bool = true
 
 # ── The hit-count chip (LEFT MARGIN ONLY - never a cell, never program text) ──
 # Height/inset of the small count chip that stacks under the event number in the 20px gutter.
@@ -148,19 +156,22 @@ static func _elide(text: String, max_width: float, font: Font, font_size: int) -
 ## sub-lane split. It sits ON the boundary the resize grab tests against, so what you see is exactly
 ## what you can drag. Skipped for a cell too short to show it.
 ##
-## It deliberately does NOT reuse lane_divider_color: that token is a dark grey-blue tuned to separate
-## the lanes over the SHEET BACKGROUND, and measured against a filled condition cell it lands within
-## about six values of the fill - drawn there it is invisible. The column's own label colour, faint,
-## reads on both the blue condition fill and the green action fill and still follows the theme.
+## It is drawn in the theme's object hairline colour, short of the cell's top and bottom so it reads
+## as the divider between the name and the sentence. It deliberately does NOT reuse
+## lane_divider_color: that token is tuned to separate the lanes over the SHEET BACKGROUND, and
+## against a filled cell it can land within a few values of the fill. For the same reason a hairline
+## colour that would vanish against the lane it sits on (several themes state it close to their
+## divider) falls back to the column's own label colour, faint, which reads on either lane.
 static func _draw_object_column_separator(control: CanvasItem, span: SemanticSpan, boundary_x: float, event_style: EventSheetEventStyle) -> void:
 	if event_style == null or span == null or span.rect.size.y <= 4.0:
 		return
-	var separator: Color = event_style.object_label_color
-	control.draw_rect(
-		Rect2(boundary_x - 3.0, span.rect.position.y + 1.0, 1.0, span.rect.size.y - 2.0),
-		Color(separator.r, separator.g, separator.b, 0.30),
-		true
-	)
+	var span_lane: String = str((span.metadata as Dictionary).get("lane", "")) if span.metadata is Dictionary else ""
+	var lane_fill: Color = event_style.action_lane_color if span_lane == "action" else event_style.condition_lane_color
+	var hairline: Color = event_style.object_hairline_color
+	if absf(hairline.get_luminance() - lane_fill.get_luminance()) * hairline.a < HAIRLINE_MIN_CONTRAST:
+		var label_ink: Color = event_style.object_label_color
+		hairline = Color(label_ink.r, label_ink.g, label_ink.b, 0.30)
+	control.draw_rect(NativeRowMarks.object_hairline_rect(span.rect, boundary_x), hairline, true)
 
 
 ## The object column actually in force for a lane. THE one resolver - draw, measure, hit-test and the
@@ -259,7 +270,8 @@ func _draw_param_emphasis(
 	value_color: Color,
 	string_color: Color,
 	bool_color: Color,
-	muted_color: Color = TEXT_MUTED
+	muted_color: Color = TEXT_MUTED,
+	variable_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ) -> void:
 	var limit: float = baseline.x + max_width
 	for entry: Variant in param_ranges:
@@ -289,6 +301,8 @@ func _draw_param_emphasis(
 						run_color = bool_color
 					elif kind == "muted":
 						run_color = muted_color
+					elif kind == NativeRowMarks.WORD_VARIABLE:
+						run_color = variable_color if variable_color.a > 0.01 else base_color
 					else:
 						run_color = value_color
 					break
@@ -313,7 +327,8 @@ func _draw_text_with_values(
 	value_color: Color = COLOR_VALUE,
 	string_color: Color = COLOR_VALUE,
 	bool_color: Color = COLOR_VALUE,
-	muted_color: Color = TEXT_MUTED
+	muted_color: Color = TEXT_MUTED,
+	variable_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ) -> void:
 	var cursor: int = 0
 	var x: float = baseline.x
@@ -342,6 +357,10 @@ func _draw_text_with_values(
 				# once and then stops reading, so it is drawn quietly and the name is not.
 				"muted":
 					value_col = muted_color
+				# A variable's name inside the sentence (NativeRowMarks.WORD_VARIABLE), where the theme
+				# gives names a colour.
+				"variable":
+					value_col = variable_color if variable_color.a > 0.01 else base_color
 		var value_text: String = text.substr(start, length)
 		if not value_text.is_empty() and x < limit:
 			_draw_text(control, Vector2(x, baseline.y), value_text, limit - x, font, font_size, value_col)
@@ -622,6 +641,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			event_style.lane_divider_color if event_style != null else EventSheetPalette.COLOR_LANE_DIVIDER,
 			true
 		)
+		# The divider is draggable; the hovered event shows it with a three-dot grip. A divider too
+		# narrow to hold the dots draws none.
+		if row_data.hovered and is_event_row:
+			NativeRowMarks.draw_grip(control, lane_divider_rect, reading_style.muted_text_color)
 	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
 			and event_style.event_card_border_width <= 0:
 		# The per-ROW hairlines, drawn only when the theme asks for NO card. With a card border in
@@ -709,6 +732,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
+	# How the event is started, as a small icon beside its number: in the slot right of the margin
+	# that every event row reserves, so it moves nothing. Its meaning is the canvas tooltip's.
+	if show_trigger_icons and is_event_row and event_style != null:
+		var trigger_kind: String = NativeRowMarks.trigger_kind(row_data)
+		if not trigger_kind.is_empty():
+			NativeRowMarks.draw_trigger_icon(control,
+				NativeRowMarks.trigger_icon_rect(row_rect, row_data.indent, row_indent_width),
+				trigger_kind, event_style.gutter_icon_color)
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
 	# What the open inline editor has to say before it is committed ("renames 6 uses in 2
 	# sheets · Enter to apply · Esc"). Drawn AFTER the spans and measured from the field's own rect,
@@ -1216,6 +1247,14 @@ func _draw_spans(
 		event_style.word_text_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0), reading.string_value_color)
 	var word_keyword_color: Color = EventSheetEventStyle.stated_or(
 		event_style.word_keyword_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0), reading.boolean_value_color)
+	# A variable's name inside a sentence has no colour of its own before a theme states one, so a
+	# clear token paints nothing new: the ranges are only merged in when it is stated.
+	var word_variable_color: Color = event_style.word_variable_color if event_style != null else Color(0.0, 0.0, 0.0, 0.0)
+	var colour_variables: bool = word_variable_color.a > 0.01
+	# Whether ANY word colour is stated, which is what lets a grammar-read value piece show its
+	# numbers and quoted text in their own colours instead of the one value tint it was built with.
+	var colour_words: bool = colour_variables or (event_style != null and (event_style.word_number_color.a > 0.01
+		or event_style.word_text_color.a > 0.01 or event_style.word_keyword_color.a > 0.01))
 	# Multi-line blocks (in-flow GDScript, action-lane comments) paint as ONE merged
 	# cell: union rects per block, background/hover/selection drawn once. The per-line
 	# spans remain the layout + hit-test truth - the merge is purely visual (user
@@ -1350,7 +1389,16 @@ func _draw_spans(
 			var plate_rect := Rect2(text_x, plate_y, OBJECT_ICON_PLATE_SIZE, OBJECT_ICON_PLATE_SIZE)
 			control.draw_style_box(_object_icon_plate_style(), plate_rect)
 			var icon_inset: float = (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
-			control.draw_texture_rect(object_icon as Texture2D, Rect2(text_x + icon_inset, plate_y + icon_inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE), false)
+			var icon_rect := Rect2(text_x + icon_inset, plate_y + icon_inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE)
+			# System and the input devices wear a glyph of their own (a gear, a keyboard, a mouse...)
+			# instead of their category's icon, in the object ink, so the catch-all object reads as one
+			# thing on every row. Same box, same advance: only what is painted in it changes.
+			var object_glyph: String = NativeRowMarks.object_glyph_for(str(metadata.get("object_label", "")))
+			if object_glyph.is_empty():
+				control.draw_texture_rect(object_icon as Texture2D, icon_rect, false)
+			else:
+				var glyph_ink: Color = event_style.object_label_color if event_style != null else COLOR_OBJECT
+				NativeRowMarks.draw_object_glyph(control, icon_rect, object_glyph, Color(glyph_ink, glyph_ink.a * 0.85))
 			text_x += OBJECT_ICON_ADVANCE
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var object_label: String = str(metadata.get("object_label", ""))
@@ -1428,6 +1476,12 @@ func _draw_spans(
 				text_x - span.rect.position.x, span.rect.size.y)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
+		# What the painter walks: the value ranges, plus - where the theme colours variables - the
+		# variable names the row builder found in the sentence. Kept apart from value_ranges, which the
+		# tune-me marks read and which must keep meaning "a literal the reader may retune".
+		var painted_ranges: Array = value_ranges
+		if colour_variables and span_index != editing_span_index:
+			painted_ranges = NativeRowMarks.merged_word_ranges(value_ranges, metadata.get("variable_ranges", []))
 		var param_ranges: Array = metadata.get("param_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
 		# The code echo rests at a fraction of its colour so the sentence leads, and comes up
@@ -1474,18 +1528,24 @@ func _draw_spans(
 						continue
 					var has_author_color: bool = segment.get("color") is Color
 					var segment_color: Color = segment.get("color") if has_author_color else color
+					# A grammar-read piece says what kind of word it is. Where the theme states word
+					# colours, a NAME or VALUE piece is walked through the ranges too, so the sheet's own
+					# variables and the literals inside it take their colours while every other word
+					# (a key, a property, an engine name) keeps the piece's own.
+					var segment_tone: String = str(segment.get("tone", ""))
+					var tinted_by_ranges: bool = not has_author_color or (colour_words and segment_tone in ["name", "value"])
 					if bool(segment.get("italic", false)):
 						segment_color = Color(segment_color, segment_color.a * 0.85)
 					var remaining: float = text_width - (segment_x - text_x)
 					if remaining <= 1.0:
 						break
-					if has_author_color or value_ranges.is_empty():
+					if not tinted_by_ranges or painted_ranges.is_empty():
 						_draw_text(control, Vector2(segment_x, line_baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
 						if bool(segment.get("bold", false)):
 							_draw_text(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
 					else:
 						var shifted_ranges: Array = []
-						for value_range: Variant in value_ranges:
+						for value_range: Variant in painted_ranges:
 							if value_range is Array and (value_range as Array).size() >= 2:
 								var local_start: int = int((value_range as Array)[0]) - piece_offset_shift
 								if local_start + int((value_range as Array)[1]) > 0 and local_start < segment_text.length():
@@ -1496,11 +1556,11 @@ func _draw_spans(
 									shifted_ranges.append(kept)
 						_draw_text_with_values(control, Vector2(segment_x, line_baseline_y), segment_text, shifted_ranges,
 							remaining, font, draw_font_size, segment_color, bbcode_value_color,
-							word_text_color, word_keyword_color)
+							word_text_color, word_keyword_color, TEXT_MUTED, word_variable_color)
 						if bool(segment.get("bold", false)):
 							_draw_text_with_values(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, shifted_ranges,
 								remaining, font, draw_font_size, segment_color, bbcode_value_color,
-								word_text_color, word_keyword_color)
+								word_text_color, word_keyword_color, TEXT_MUTED, word_variable_color)
 					segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
 			# Wrapped comment: draw from the top of the (multi-line-tall) cell so the whole
@@ -1509,17 +1569,17 @@ func _draw_spans(
 			var comment_line_h: float = float(metadata.get("comment_line_height", draw_font_size + 6))
 			var comment_baseline_y: float = span.rect.position.y + (comment_line_h * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
 			_draw_multiline_text(control, Vector2(text_x, comment_baseline_y), draw_text, text_width, font, draw_font_size, color)
-		elif value_ranges.is_empty():
+		elif painted_ranges.is_empty():
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
-			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, word_number_color, word_text_color, word_keyword_color, reading.muted_text_color)
+			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, painted_ranges, text_width, font, draw_font_size, color, word_number_color, word_text_color, word_keyword_color, reading.muted_text_color, word_variable_color)
 		# The event-sheet parameter emphasis: every substituted parameter value re-draws 0.7px over -
 		# the same double-draw bold the BBCode cells use - in whatever colour that run already
 		# has, so the typed value tints never wash out.
 		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)):
-			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
+			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, painted_ranges,
 				text_width, font, draw_font_size, color, word_number_color,
-				word_text_color, word_keyword_color, reading.muted_text_color)
+				word_text_color, word_keyword_color, reading.muted_text_color, word_variable_color)
 		# The doors of a comment: a noun the project's own indexes could prove gets a hairline under
 		# it and a rectangle stamped back for the click. Measured against the very break points this
 		# span was just drawn with, so a door on a wrapped note underlines the line it is really on.

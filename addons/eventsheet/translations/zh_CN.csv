@@ -7267,3 +7267,13 @@ Toolbar: text labels.,工具栏：文字标签。
 Toolbar: icons.,工具栏：图标。
 Sentences,句子
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.",事件表的阅读方式：变量行显示为句子、GDScript 声明，或两者兼有 - 以及事件表允许你选择的每个词。
+Trigger icons shown - each event says how it is started.,
+Trigger icons hidden.,
+Trigger Icons,
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
+"Runs once, when the node starts (On ready).",
+Runs every frame (Every tick).,
+Runs every physics step (Every physics tick).,
+"Runs when input arrives - a key, a button, the mouse.",
+Runs when a signal is emitted.,
+Runs when the engine sends this notification.,

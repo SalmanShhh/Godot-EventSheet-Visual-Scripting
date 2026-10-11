@@ -7267,3 +7267,13 @@ Toolbar: text labels.,Barra de herramientas: etiquetas de texto.
 Toolbar: icons.,Barra de herramientas: iconos.
 Sentences,Frases
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","Cómo se lee la hoja: las filas de variables como frases, como su declaración de GDScript o ambas - y cada palabra que la hoja te deja elegir."
+Trigger icons shown - each event says how it is started.,
+Trigger icons hidden.,
+Trigger Icons,
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
+"Runs once, when the node starts (On ready).",
+Runs every frame (Every tick).,
+Runs every physics step (Every physics tick).,
+"Runs when input arrives - a key, a button, the mouse.",
+Runs when a signal is emitted.,
+Runs when the engine sends this notification.,

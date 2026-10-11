@@ -7267,3 +7267,13 @@ Toolbar: text labels.,도구 모음: 텍스트 레이블.
 Toolbar: icons.,도구 모음: 아이콘.
 Sentences,문장
 "How the sheet reads: variable rows as sentences, as their GDScript declaration, or both - and every word the sheet lets you choose.","시트를 읽는 방식: 변수 행을 문장으로, GDScript 선언으로, 또는 둘 다로 - 그리고 시트에서 고를 수 있는 모든 단어."
+Trigger icons shown - each event says how it is started.,
+Trigger icons hidden.,
+Trigger Icons,
+"A small mark beside each event's number that says how it is started: once when ready, every tick, every physics tick, on input or on a signal. Hover one to read it. Off keeps the margin quiet.",
+"Runs once, when the node starts (On ready).",
+Runs every frame (Every tick).,
+Runs every physics step (Every physics tick).,
+"Runs when input arrives - a key, a button, the mouse.",
+Runs when a signal is emitted.,
+Runs when the engine sends this notification.,
