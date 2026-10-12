@@ -64,6 +64,8 @@ static func _test_the_templates_are_the_calls() -> bool:
 		"KeepBetween": "{var_name} = clampf({var_name}, {low}, {high})",
 		"MoveTowardEachTick": "{var_name} = lerp({var_name}, {target}, {weight})",
 		"RescaleInto": "{into} = remap({amount}, {in_low}, {in_high}, {out_low}, {out_high})",
+		"RescaleKeptInside": "{into} = clampf(remap({amount}, {in_low}, {in_high}, {out_low}, {out_high}), minf({out_low}, {out_high}), maxf({out_low}, {out_high}))",
+		"RescaleIntoProperty": "{node}.{property} = clampf(remap({amount}, {in_low}, {in_high}, {out_low}, {out_high}), minf({out_low}, {out_high}), maxf({out_low}, {out_high}))",
 		"WrapAround": "{var_name} = wrapf({var_name}, {low}, {high})",
 		"MoveForwardOwnFacing": "position += transform.x * {speed} * {delta_t}",
 		"MoveTheWorldsWay": "global_position += {direction} * {speed} * {delta_t}",
