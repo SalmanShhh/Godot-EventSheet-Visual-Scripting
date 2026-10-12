@@ -6,6 +6,34 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: the names a reader brings from another engine find what already ships
+
+- **Search answers to API calls and action titles.** The picker and Quick add already answered to the
+  names another event-sheet editor uses; they now also answer to the call a C# developer types and
+  the action title a visual-scripting add-on lists, for the rows that already do that job here.
+  `WaitForSeconds` finds Wait, \"Random Wait\" finds Wait and Random (the random wait is Wait with
+  Random in its seconds slot), `Random.Range` finds Random and Random Integer, \"Get Random Child\" and
+  \"Pick random instance\" find Pick A Random One, `string.Format`, \"Format String\" and \"Build String\"
+  find Text From Pattern, `magnitude` and \"Get Speed\" find Vector Length (and Get Velocity),
+  `Debug.Log` finds Print Log, \"Show a value on screen\" finds the Debug Overlay's Watch Value,
+  `Debug.DrawRay` and \"Draw Debug Ray\" find Draw Ray, and `GetRange` finds Slice. The found row says the name back as it was typed, in
+  quotes after its own name, and a test pins that every name reaches a row that ships.
+- **An expression field reads the C# spelling.** The translator that already turned `&` and
+  `random(10)` into GDScript now reads `Mathf.Lerp`, `Mathf.InverseLerp`, `Mathf.Clamp`,
+  `Mathf.Abs`, `Mathf.Min`, `Mathf.Max`, `Mathf.Sqrt`, `Vector2.Distance` / `Vector3.Distance`,
+  `Time.deltaTime`, the `2f` float suffix and an interpolated `$\"HP: {hp}\"` (written as
+  `\"HP: %s\" % [hp]`). `Random.Range` becomes `randi_range(a, b - 1)` with two whole numbers and
+  `randf_range(a, b)` with a decimal (its arguments may hold calls); with two names, where only their
+  types would say which, the field refuses it rather than guess, and so it does for a formatted slot
+  like `{hp:0.0}` and for a `Mathf` call it has no twin for. The help strip says the GDScript under a
+  quiet note and OK writes it, exactly as for the other editor's spelling. Compiled output is
+  unchanged.
+- **Text From Pattern fills its values from the pattern.** Typing `\"{player} scored {score}!\"` into
+  the pattern writes `{\"player\": player, \"score\": 100}` into the values field: a value already
+  given to a name is kept, a new slot names the variable of the same name, and a key the pattern no
+  longer asks for is dropped. A values field holding a variable or a call is left alone. Read off the
+  row's template, so any row that writes `{pattern}.format({values})` gets the same help.
+
 ### Changed: the Editor Native look
 
 - **The Editor Native theme starter, and the tokens the native look is drawn with.** One more theme

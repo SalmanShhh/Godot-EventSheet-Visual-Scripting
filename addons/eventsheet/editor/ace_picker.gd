@@ -1422,9 +1422,9 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 
 
 ## The verbs a typed query names by the OTHER editor's name for them, as {ace id: the phrase that
-## named it}. Read from the project importer's own row table, so the search and the importer can never
-## disagree about what "go to layout" is. Same three-letter floor and the same whole-words rule as the
-## hand-written phrases above.
+## named it, as written}. Read from the project importer's own row table and its search-only names,
+## so the search and the importer can never disagree about what "go to layout" is. Same three-letter
+## floor and the same whole-words rule as the hand-written phrases above.
 static func foreign_query_matches(query: String) -> Dictionary:
 	var found: Dictionary = {}
 	var lowered: String = query.to_lower().strip_edges()
@@ -1434,9 +1434,12 @@ static func foreign_query_matches(query: String) -> Dictionary:
 	for phrase: String in phrases:
 		if not (lowered.contains(phrase) or _phrase_holds_the_words(phrase, lowered)):
 			continue
+		var written: String = EventSheetForeignACEMap.phrase_as_written(phrase)
 		for ace_id: Variant in phrases[phrase]:
-			if not found.has(str(ace_id)):
-				found[str(ace_id)] = phrase
+			# The longest phrase that named a verb is the one said back: "get random child" was
+			# typed, so the note quotes that rather than the "random child" inside it.
+			if not found.has(str(ace_id)) or str(found[str(ace_id)]).length() < written.length():
+				found[str(ace_id)] = written
 	return found
 
 
@@ -3186,7 +3189,7 @@ func _best_match_item() -> TreeItem:
 				# The other editor's whole phrase names exactly one verb in the importer's table, so
 				# "create object" pre-selects the verb that table writes rather than whichever row
 				# happens to hold the word "object" in its name.
-				if str(_foreign_phrase_by_id.get(str((child_meta as ACEDefinition).id), "")) == query.to_lower():
+				if str(_foreign_phrase_by_id.get(str((child_meta as ACEDefinition).id), "")).to_lower() == query.to_lower():
 					score = maxi(score, FOREIGN_PHRASE_SCORE)
 				if score > best_score:
 					best_score = score

@@ -336,8 +336,108 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 		if not (parameter is Dictionary):
 			continue
 		_add_param_row(parameter as Dictionary, initial_values)
+	_couple_pattern_values()
 
 	_describe_dialog_itself()
+
+
+## A row whose template fills a pattern from a dictionary - `{pattern}.format({values})` - keeps the
+## dictionary in step with the pattern: typing "{player} scored {score}!" writes
+## `{"player": player, "score": ...}` into the values field, so the keys are never typed twice. Read
+## off the template rather than a list of rows, so every row that writes `.format()` this way gets it.
+func _couple_pattern_values() -> void:
+	var shape: RegExMatch = RegEx.create_from_string("\\{(\\w+)\\}\\.format\\(\\{(\\w+)\\}\\)").search(_definition_template())
+	if shape == null:
+		return
+	var pattern_edit: CodeEdit = _fields.get(shape.get_string(1)) as CodeEdit
+	var values_edit: CodeEdit = _fields.get(shape.get_string(2)) as CodeEdit
+	if pattern_edit == null or values_edit == null:
+		return
+	pattern_edit.text_changed.connect(func() -> void:
+		var filled: String = values_for_pattern(pattern_edit.text, values_edit.text)
+		if filled.is_empty():
+			return
+		values_edit.text = filled
+		_validate_expression_field(values_edit))
+
+
+## The {names} a pattern's slots ask for, in the order they first appear, or nothing when the pattern
+## is not one quoted text (a variable holding the pattern says nothing about its slots here).
+static func pattern_slot_names(pattern: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var text: String = pattern.strip_edges()
+	if text.length() < 2 or not ((text.begins_with("\"") and text.ends_with("\""))
+			or (text.begins_with("'") and text.ends_with("'"))):
+		return names
+	for hit: RegExMatch in RegEx.create_from_string("\\{([A-Za-z_][A-Za-z0-9_]*)\\}").search_all(text):
+		if not names.has(hit.get_string(1)):
+			names.append(hit.get_string(1))
+	return names
+
+
+## The values dictionary a pattern asks for, keeping what the field already says for every name it
+## still uses and naming the variable of the same name for a new slot: `{"player": player}`. Answers
+## "" - leave the field alone - when the pattern names no slot, when the field already says exactly
+## this, or when the field holds something other than a plain `{"name": value, ...}` written by hand
+## (a variable, a call), which is the reader's own answer and not this helper's to overwrite.
+static func values_for_pattern(pattern: String, values: String) -> String:
+	var names: PackedStringArray = pattern_slot_names(pattern)
+	if names.is_empty():
+		return ""
+	var known: Dictionary = _plain_dictionary_entries(values)
+	if known.has("__not_plain__"):
+		return ""
+	var entries: PackedStringArray = PackedStringArray()
+	for name: String in names:
+		entries.append("\"%s\": %s" % [name, str(known.get(name, name))])
+	var filled: String = "{%s}" % ", ".join(entries)
+	return "" if filled == values.strip_edges() else filled
+
+
+## {key: value text} for a dictionary written as `{"key": value, ...}`, {} for an empty field, and
+## {"__not_plain__": true} for anything else. Commas inside brackets, calls and quotes stay with
+## their value.
+static func _plain_dictionary_entries(values: String) -> Dictionary:
+	var text: String = values.strip_edges()
+	if text.is_empty() or text == "{}":
+		return {}
+	if not (text.begins_with("{") and text.ends_with("}")):
+		return {"__not_plain__": true}
+	var parts: PackedStringArray = PackedStringArray()
+	var body: String = text.substr(1, text.length() - 2)
+	var depth: int = 0
+	var quote: String = ""
+	var start: int = 0
+	var index: int = 0
+	while index < body.length():
+		var character: String = body[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]", "}"]:
+			depth -= 1
+		elif character == "," and depth == 0:
+			parts.append(body.substr(start, index - start))
+			start = index + 1
+		index += 1
+	parts.append(body.substr(start))
+	var entries: Dictionary = {}
+	var entry_shape: RegEx = RegEx.create_from_string("^\\s*\"([A-Za-z_][A-Za-z0-9_]*)\"\\s*:\\s*(.+?)\\s*$")
+	for part: String in parts:
+		if part.strip_edges().is_empty():
+			continue
+		var hit: RegExMatch = entry_shape.search(part)
+		if hit == null:
+			return {"__not_plain__": true}
+		entries[hit.get_string(1)] = hit.get_string(2)
+	return entries
 
 
 ## The declared parameter behind a field key, or {} when nothing is known about it. One reader, so
@@ -2983,9 +3083,11 @@ func _validate_expression_field(edit: Control) -> void:
 	var param: Dictionary = _param_dict(key)
 	if edit.has_meta(FOREIGN_READING_META):
 		edit.remove_meta(FOREIGN_READING_META)
-	if not bool(lint_result.get("ok", true)):
-		# Another event-sheet editor's spelling - `Player.X & " px"`, `random(10)` - is read rather
-		# than refused: the field says the GDScript it will write, and OK writes that.
+	if not bool(lint_result.get("ok", true)) or EventSheetForeignACEMap.has_interpolation(str(edit.get("text"))):
+		# Another event-sheet editor's spelling - `Player.X & " px"`, `random(10)` - or a C# one -
+		# `Mathf.Clamp(hp, 0, 100)`, `$"HP: {hp}"` - is read rather than refused: the field says the
+		# GDScript it will write, and OK writes that. An interpolated string is asked about even when
+		# it lints, because GDScript reads `$"..."` as a node path and would accept it as one.
 		var foreign: String = _foreign_reading(edit, sheet)
 		if not foreign.is_empty():
 			edit.set_meta(FOREIGN_READING_META, {"typed": str(edit.get("text")), "gdscript": foreign})

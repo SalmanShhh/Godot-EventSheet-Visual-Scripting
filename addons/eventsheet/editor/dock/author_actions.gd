@@ -85,7 +85,7 @@ func _quick_match_ranked(query: String, limit: int = 5, prefer_type: int = -1) -
 	# nothing here, so a half-typed name never outranks what the reader actually wrote.
 	var foreign: Dictionary = ACEPickerDialog.foreign_query_matches(text)
 	for ace_id: String in foreign:
-		var phrase: String = str(foreign[ace_id])
+		var phrase: String = str(foreign[ace_id]).to_lower()
 		if text.contains(phrase):
 			var swapped: String = text.replace(phrase, ace_id.to_lower())
 			if not queries.has(swapped):

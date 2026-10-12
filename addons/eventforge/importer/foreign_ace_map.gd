@@ -140,6 +140,38 @@ const ROWS: Dictionary = {
 	"Functions/set-return-value": {"ace": "ReturnValue", "kind": KIND_ACTION, "params": {"value": "#Value"}},
 }
 
+## Search-only names: what a reader who moved from a general-purpose engine or from a visual-scripting
+## add-on types when they look for a verb that ships here - an API call as they would write it, or an
+## action's title as their action browser lists it. {phrase as written: [ace ids]}. Nothing here is
+## imported (there is no export to read these from); the table only joins ROWS in search_phrases(),
+## so the picker finds the row and says the typed name back beside it. A phrase names every row a
+## reader would reach for with it: a random wait is the Wait row with the Random expression in its
+## seconds slot, so "Random Wait" answers both. Pack verbs are named by the id their pack's script
+## gives them ("method:<function>"), the same id the picker's definitions carry.
+const FAMILIAR_NAMES: Dictionary = {
+	"WaitForSeconds": ["Wait"],
+	"Random Wait": ["Wait", "RandomRange"],
+	"Wait For Random Time": ["Wait", "RandomRange"],
+	"Random.Range": ["RandomRange", "RandomInt"],
+	"Pick random instance": ["PickRandomInstance"],
+	"Get Random Child": ["PickRandomInstance"],
+	"Random Child": ["PickRandomInstance"],
+	"string.Format": ["TextFromPattern"],
+	"Format String": ["TextFromPattern"],
+	"Build String": ["TextFromPattern"],
+	"Text With Variables": ["TextFromPattern"],
+	"magnitude": ["VectorLength"],
+	"Get Vector Length": ["VectorLength"],
+	"Get Speed": ["VectorLength", "GetVelocity2D", "GetVelocity3D"],
+	"Debug.Log": ["PrintLog"],
+	"Debug Log": ["PrintLog"],
+	"Show a value on screen": ["method:watch_value"],
+	"Debug.DrawRay": ["method:draw_ray"],
+	"Draw Debug Ray": ["method:draw_ray"],
+	"GetRange": ["ArraySlice"],
+	"Page Of": ["ArraySlice"],
+}
+
 ## Foreign behaviours whose shape a shipped behaviour pack already covers. A row on one of these
 ## cannot be mapped honestly (the free vocabulary has no single sentence for it), so the importer
 ## disables the row and the report says which pack to attach instead.
@@ -244,6 +276,19 @@ const EXPRESSION_PATTERNS: Array = [
 	["\\blowercase\\(([^()]+)\\)", "$1.to_lower()"],
 	["\\bfind\\(([^(),]+),\\s*([^(),]+)\\)", "$1.find($2)"],
 	["\\bnewline\\b", "\"\\n\""],
+	# The C# spellings a reader from a general-purpose engine types without thinking. Each is the
+	# same function under another name, so the name is all that changes and nested calls keep
+	# working. Lerp is the float lerp, as theirs is. Random.Range is NOT here: which Godot call it is
+	# depends on its arguments, so _familiar_random_range decides it.
+	["\\bMathf\\.Lerp\\b", "lerpf"],
+	["\\bMathf\\.InverseLerp\\b", "inverse_lerp"],
+	["\\bMathf\\.Clamp\\b", "clamp"],
+	["\\bMathf\\.Abs\\b", "abs"],
+	["\\bMathf\\.Min\\b", "min"],
+	["\\bMathf\\.Max\\b", "max"],
+	["\\bMathf\\.Sqrt\\b", "sqrt"],
+	["\\bVector[23]\\.Distance\\(([^(),]+),\\s*([^(),]+)\\)", "$1.distance_to($2)"],
+	["\\bTime\\.deltaTime\\b", "delta"],
 ]
 
 ## Foreign shapes that survive translation and mean the value still needs a human. Kept separate
@@ -262,6 +307,8 @@ static var _compiled_expressions: Array = []
 static var _compiled_residuals: Array = []
 ## search_phrases(), derived once from ROWS.
 static var _search_phrases: Dictionary = {}
+## phrase_as_written(), filled beside _search_phrases.
+static var _phrase_spellings: Dictionary = {}
 
 
 ## The lookup key for a row: the object kind and the row id, both normalised.
@@ -274,7 +321,8 @@ static func row_key(object_kind: String, row_id: String) -> String:
 ## "go to layout" with ChangeScene. {phrase: [ace ids]}, a phrase holding every verb it names across
 ## object kinds. A row marked "stand_in" holds the place of something with no real equivalent (the
 ## window size written as a log line), so it never becomes a search answer; a row with only a "note"
-## is a real equivalent with a caveat, and answers. Derived once - the table is constant.
+## is a real equivalent with a caveat, and answers. FAMILIAR_NAMES joins the same answer under its
+## lower-case key, so one search reads both tables. Derived once - the tables are constant.
 static func search_phrases() -> Dictionary:
 	if not _search_phrases.is_empty():
 		return _search_phrases
@@ -290,7 +338,23 @@ static func search_phrases() -> Dictionary:
 		if not ids.has(ace_id):
 			ids.append(ace_id)
 		_search_phrases[phrase] = ids
+	for spelled: String in FAMILIAR_NAMES:
+		var lowered: String = spelled.to_lower()
+		var named: Array = _search_phrases.get(lowered, []) as Array
+		for familiar_id: Variant in FAMILIAR_NAMES[spelled]:
+			if not named.has(str(familiar_id)):
+				named.append(str(familiar_id))
+		_search_phrases[lowered] = named
+		_phrase_spellings[lowered] = spelled
 	return _search_phrases
+
+
+## A search phrase the way a reader writes it - "WaitForSeconds", not the lower-case key the search
+## compares - so the note beside a found row reads as the name they typed. The importer's row ids are
+## lower case already and come back as themselves.
+static func phrase_as_written(phrase: String) -> String:
+	search_phrases()
+	return str(_phrase_spellings.get(phrase, phrase))
 
 
 ## A foreign row id in the one spelling this table uses: lower case, dashes between words.
@@ -383,9 +447,215 @@ static func translate_expression(text: String, aliases: Dictionary = {}) -> Dict
 	if trimmed.is_empty():
 		return {"text": "", "translated": true}
 	var out: String = _apply_aliases(trimmed, aliases)
+	out = _familiar_interpolation(out)
+	out = _familiar_float_suffixes(out)
+	out = _familiar_random_range(out)
 	for entry: Array in _expression_patterns():
 		out = (entry[0] as RegEx).sub(out, str(entry[1]), true)
 	return {"text": out, "translated": not _has_residual(out)}
+
+
+## True when the text holds an interpolated string, `$"HP: {hp}"`. GDScript reads `$"..."` as a node
+## path, so a field that only translated what fails to parse would never see one: the caller asks
+## this as well. A node path never holds a brace, so the brace is what tells the two apart.
+static func has_interpolation(text: String) -> bool:
+	return _familiar_interpolation(text) != text
+
+
+## Every `$"...{x}..."` as `"...%s..." % [x]`, the one GDScript form that takes any expression in a
+## slot. `{{` and `}}` are a brace, and a `%` in the words is doubled so it stays one. A slot carrying
+## a format (`{hp:0.0}`) or an alignment (`{name,8}`) has no clean GDScript twin, so the WHOLE text is
+## handed back untouched - and the field then refuses it, as it refuses anything it cannot read.
+static func _familiar_interpolation(text: String) -> String:
+	var out: String = ""
+	var index: int = 0
+	while index < text.length():
+		var opens: bool = text[index] == "$" and index + 1 < text.length() and text[index + 1] == "\""
+		var previous: String = text[index - 1] if index > 0 else ""
+		if not opens or previous == "_" or previous.is_valid_identifier() or previous.is_valid_int() 				or _in_text_literal(text, index):
+			out += text[index]
+			index += 1
+			continue
+		var read: Dictionary = _read_interpolated(text, index + 2)
+		if read.is_empty():
+			return text
+		if (read["values"] as PackedStringArray).is_empty():
+			# No slot at all: this is a node path, and GDScript's own.
+			out += text.substr(index, int(read["end"]) - index)
+		else:
+			out += "\"%s\" %% [%s]" % [str(read["words"]), ", ".join(read["values"] as PackedStringArray)]
+		index = int(read["end"])
+	return out
+
+
+## One interpolated string read from just after its `$"`: {words, values, end}, or {} when it does not
+## close or a slot cannot be written as GDScript. `end` is the index just past the closing quote.
+static func _read_interpolated(text: String, start: int) -> Dictionary:
+	var words: String = ""
+	var values: PackedStringArray = PackedStringArray()
+	var index: int = start
+	while index < text.length():
+		var character: String = text[index]
+		var next: String = text[index + 1] if index + 1 < text.length() else ""
+		if character == "\\":
+			words += character + next
+			index += 2
+		elif character == "\"":
+			return {"words": words, "values": values, "end": index + 1}
+		elif (character == "{" and next == "{") or (character == "}" and next == "}"):
+			words += character
+			index += 2
+		elif character == "}":
+			return {}
+		elif character == "{":
+			var slot: Dictionary = _read_slot(text, index + 1)
+			if slot.is_empty():
+				return {}
+			values.append(str(slot["value"]))
+			words += "%s"
+			index = int(slot["end"])
+		else:
+			words += "%%" if character == "%" else character
+			index += 1
+	return {}
+
+
+## One `{...}` slot read from just after its brace: {value, end}, or {} when it holds a format, an
+## alignment, nothing at all, or never closes. Quotes and brackets inside the slot are skipped over,
+## so `{names[0]}` and `{a + "x"}` are one value each.
+static func _read_slot(text: String, start: int) -> Dictionary:
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = start
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]"]:
+			depth -= 1
+		elif character == "}":
+			if depth == 0:
+				var value: String = text.substr(start, index - start).strip_edges()
+				return {} if value.is_empty() else {"value": value, "end": index + 1}
+			depth -= 1
+		elif (character == ":" or character == ",") and depth == 0:
+			return {}
+		index += 1
+	return {}
+
+
+## `0.5f` and `2f`, the C# float suffix, as the plain numbers GDScript writes: `0.5` and `2.0`. Only a
+## number standing on its own and outside quotes is touched, so a name like `f2f`, a hex `0xff` or
+## the words "Level 2f" are never a number here.
+static func _familiar_float_suffixes(text: String) -> String:
+	var pattern: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_.])([0-9]+)(\\.[0-9]+)?[fF](?![A-Za-z0-9_])")
+	var found: Array[RegExMatch] = pattern.search_all(text)
+	var out: String = text
+	for index: int in range(found.size() - 1, -1, -1):
+		var hit: RegExMatch = found[index]
+		if _in_text_literal(text, hit.get_start()):
+			continue
+		var fraction: String = hit.get_string(2)
+		var number: String = hit.get_string(1) + (fraction if not fraction.is_empty() else ".0")
+		out = out.substr(0, hit.get_start()) + number + out.substr(hit.get_end())
+	return out
+
+
+## `Random.Range(a, b)` is two functions under one name: with two whole numbers it picks a whole
+## number and never `b` itself, with a decimal on either side it picks any number up to `b`. So two
+## whole numbers become `randi_range(a, b - 1)` with the subtraction already done, a decimal makes it
+## `randf_range(a, b)`, and two names - where only their types would say which - are left as written,
+## for the field to refuse rather than guess.
+static func _familiar_random_range(text: String) -> String:
+	var pattern: RegEx = RegEx.create_from_string("\\bRandom\\.Range\\(")
+	var found: Array[RegExMatch] = pattern.search_all(text)
+	var out: String = text
+	# Last first, so a Random.Range inside another one's arguments is already written when the outer
+	# one is read, and every earlier index still points where it did.
+	for index: int in range(found.size() - 1, -1, -1):
+		var hit: RegExMatch = found[index]
+		if _in_text_literal(out, hit.get_start()):
+			continue
+		var call: Dictionary = _read_arguments(out, hit.get_end())
+		var arguments: PackedStringArray = call.get("arguments", PackedStringArray())
+		if arguments.size() != 2:
+			continue
+		var low: String = arguments[0]
+		var high: String = arguments[1]
+		var written: String = ""
+		if low.is_valid_int() and high.is_valid_int():
+			written = "randi_range(%s, %d)" % [low, int(high) - 1]
+		elif _is_decimal_literal(low) or _is_decimal_literal(high):
+			written = "randf_range(%s, %s)" % [low, high]
+		else:
+			continue
+		out = out.substr(0, hit.get_start()) + written + out.substr(int(call["end"]))
+	return out
+
+
+## The arguments of a call read from just after its `(`: {arguments, end}, split at the commas that
+## belong to this call alone, or {} when the call never closes. `end` is just past the `)`.
+static func _read_arguments(text: String, start: int) -> Dictionary:
+	var arguments: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var quote: String = ""
+	var begun: int = start
+	var index: int = start
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character in ["(", "[", "{"]:
+			depth += 1
+		elif character in ["]", "}"]:
+			depth -= 1
+		elif character == ")":
+			if depth == 0:
+				arguments.append(text.substr(begun, index - begun).strip_edges())
+				return {"arguments": arguments, "end": index + 1}
+			depth -= 1
+		elif character == "," and depth == 0:
+			arguments.append(text.substr(begun, index - begun).strip_edges())
+			begun = index + 1
+		index += 1
+	return {}
+
+
+## True when `at` falls inside a quoted text literal, where `2f` is two letters of somebody's words
+## and not a number at all.
+static func _in_text_literal(text: String, at: int) -> bool:
+	var quote: String = ""
+	var index: int = 0
+	while index < at and index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		index += 1
+	return not quote.is_empty()
+
+
+static func _is_decimal_literal(text: String) -> bool:
+	return text.contains(".") and text.is_valid_float()
 
 
 ## What an expression FIELD writes when a reader types it the way another event-sheet editor spells
