@@ -518,11 +518,13 @@ Node script extending `CharacterBody2D`.
 - **Show Bar** (`bar_name: String, fraction: float, bar_color: Color`) - Draws a named meter filled to a fraction from 0 to 1, in the colour you pick. The fastest way to see stamina, a cooldown, or an AI's confidence without building any UI.
 - **Mark Point** (`at: Vector2, mark_label: String, seconds: float`) - Drops a labelled cross at a world position for a moment, so you can SEE where something happened. The mark stays glued to the world while the camera moves, then fades out on its own.
 - **Draw Ray** (`origin: Vector2, direction: Vector2, length: float, ray_color: Color, seconds: float`) - Draws a line from a world position along a direction for a given length, which is what you want on screen while tuning a detection cone, an aim vector, or a raycast that keeps missing.
+- **Draw Rect** (`area: Rect2, rect_color: Color, seconds: float`) - Outlines an area of the world for a given time, the way Draw Ray shows a direction - a hitbox you are tuning, a spawn zone, the box a camera is limited to, the region a query just searched.
+- **Draw Ray (3D)** (`origin: Vector3, direction: Vector3, length: float, ray_color: Color, seconds: float`) - Draws a line in a 3D world from a position along a direction for a given length, seen through the active camera - a raycast that keeps missing, an aim direction, the way a character thinks it is facing. A ray that reaches behind the camera is not drawn.
 - **Label Above** (`node: Node, label_text: String, seconds: float`) - Floats a line of text above a node for a moment - the fastest way to debug a dozen enemies at once, because each one carries its own state on screen. Works for a Node2D, a Control, or a Node3D seen through the active camera.
 - **Show Overlay** - Makes the overlay visible again after it was hidden. Fires On Overlay Toggled when it was actually hidden.
 - **Hide Overlay** - Hides the overlay without clearing anything. Rows keep recording, so showing it again brings the values straight back.
 - **Toggle Overlay** - Flips the overlay between shown and hidden, the same thing the toggle key does - put it on a button so a playtester can turn it on for a screenshot.
-- **Clear Overlay** - Wipes every watch, bar, mark, ray and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.
+- **Clear Overlay** - Wipes every watch, bar, mark, ray, rect and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.
 
 ### DecalPainter (`res://eventsheet_addons/decal_painter/decal_painter_behavior.gd`)
 @ace_tags(3d, drawing, visual) @ace_category("Decal Painter") @ace_version(1.0.0)
@@ -3506,6 +3508,8 @@ the things AROUND an object: picking, layers and Z order, text, the browser.
 - **Pick Farthest** (`name: String, list: String, from: String`) - The other end of Pick Nearest: keeps the instance furthest from a position. Useful for spawning away from the player, retreating, and picking the loneliest of a crowd.
 - **Pick A Random One** (`name: String, list: String`) - One instance at random out of the list, named so the rows below can act on it. An empty list has nothing to pick, so check the name exists first.
 - **Pick Where** (`name: String, list: String, item: String, test: String`) - Keeps every instance the test holds for - the "pick by comparison" of an event sheet. The result is a list, so the rows below run over what it holds rather than over one instance.
+- **Pick First Where** (`name: String, list: String, item: String, test: String`) - Keeps the FIRST instance the test holds for, in the list's own order - the first free slot, the first enemy in range, the oldest bullet still flying. Nothing is picked when none passes, so check the name exists before using it.
+- **Pick Last Where** (`name: String, list: String, item: String, test: String`) - Keeps the LAST instance the test holds for, in the list's own order - the newest enemy that is still hurt, the last checkpoint touched, the top card that can be played. Nothing is picked when none passes, so check the name exists before using it.
 - **Pick Top** (`name: String, list: String`) - The LAST instance in the list - the newest one when the list is in the order things were made, and the one drawn over the others in a scene's own order.
 - **Pick Bottom** (`name: String, list: String`) - The FIRST instance in the list - the oldest one when the list is in the order things were made.
 - **Pick By UID** (`name: String, uid_value: String`) - Finds one instance again from the unique id it was remembered by - the way to store "which one" in a variable, a save file or a table. Nothing is found when that instance is gone, so check the name exists before using it.
@@ -3540,6 +3544,7 @@ higher-order + typed-array operations for the "Variables: Array" vocabulary.
 - **Is Typed** (`var_name: String`) - True when the array is a typed container (e.g. Array[int]) rather than a plain untyped Array. Godot's Array.is_typed().
 
 #### Actions
+- **Remove Where** (`var_name: String, predicate: String, element: String`) - Takes every element the test is true for OUT of the array, in place - the dead from a list of enemies, the spent from a list of bullets, the finished from a list of jobs. The current element is named by the Element field - `x` unless you rename it.
 - **Assign (Type-Converting)** (`var_name: String, source: String`) - Replaces this array's contents with a COPY of the source array, converting each element to this array's element type - the type-safe way to fill a typed array (Array[int], ...) from another array. Converting values that fit is silent (a float 2.7 into an Array[int] truncates to 2); a value that cannot convert at all leaves the destination EMPTY and pushes an error. Godot's Array.assign().
 
 #### Expressions
@@ -4321,6 +4326,7 @@ Developer helper vocabulary (the everyday dev tools).
 #### Conditions
 - **Frame Took Longer Than** (`ms: String`) - True on a frame that took longer than your budget, which is the hitch caught as it happens. Needs a per-frame trigger.
 - **FPS Below For** (`fps: String, seconds: String`) - True once the framerate has stayed under your floor for the whole stretch you name, which tells a real performance drop apart from one stuttery frame. Needs a per-frame trigger.
+- **Has Been True For** (`test: String, seconds: String`) - True once a test has held without a break for the whole stretch you name - standing still for two seconds, a button held for one, out of sight for five. The moment the test fails the count starts again from nothing. Needs a per-frame trigger, so every moment of it is seen.
 - **On The Frame Running Long** (`ms: String, frames: String`) - True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.
 - **On The Frame Recovered** (`ms: String, frames: String`) - True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.
 - **Is In Group** (`target: String, group: String`) - True when the given node currently belongs to the named group.
@@ -4383,6 +4389,7 @@ Device input (Keyboard/Mouse/Gamepad/Touch)
 #### Conditions
 - **Key Is Down** (`key: String`) - True while the given keyboard key is being held down.
 - **On Key Pressed (event)** (`key: String`) - True the moment a key is pressed, used inside an input event.
+- **Event Is Any Press** - True the moment any key, mouse button or gamepad button goes down, used inside an input event - press-anything screens, skipping a cutscene, waking an idle game. A held key's repeats and a moving mouse do not count.
 - **On Key Released (event)** (`key: String`) - True the moment a key is released, used inside an input event.
 - **Mouse Button Is Down** (`button: String`) - True while the given mouse button is being held down.
 - **Gamepad Button Is Down** (`device: String, button: String`) - True while the given gamepad button is being held down.
@@ -4884,6 +4891,7 @@ Helper vocabulary (the "structured escape hatch").
 - **Power** (`base: String, exp: String`) - Raises a base number to an exponent power, like 2 to the 8th.
 - **Floor** (`value: String`) - Rounds a number down to the nearest whole number.
 - **Ceil** (`value: String`) - Rounds a number up to the nearest whole number.
+- **Ceil (whole)** (`value: String`) - Rounds a number up to the nearest whole number and gives it back as a whole number (an int) - how many pages, how many rows, how many trips. ceili(25 / 12.0) is 3.
 - **Float Modulo** (`a: String, b: String`) - Returns the remainder after dividing one number by another.
 - **Ease** (`value: String, curve: String`) - Bends a 0-to-1 value along an easing curve for smoother eased motion.
 - **Snapped** (`value: String, step: String`) - Snaps a value to the nearest multiple of a step, like a grid.
@@ -5124,6 +5132,8 @@ the four value-shaping words, with the call in the echo.
 - **Keep Between** (`var_name: String, low: String, high: String`) - Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.
 - **Move Toward (each tick)** (`var_name: String, target: String, weight: String`) - Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.
 - **Rescale** (`into: String, amount: String, in_low: String, in_high: String, out_low: String, out_high: String`) - Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.
+- **Rescale (kept inside)** (`into: String, amount: String, in_low: String, in_high: String, out_low: String, out_high: String`) - Rescale, with the answer kept inside the range it was rescaled into: an amount past either end of its own range gives the nearest end, never a number beyond it. A speed of 500 on a 0 to 400 scale fills the bar, it does not overfill it.
+- **Rescale Into Property** (`node: String, property: String, amount: String, in_low: String, in_high: String, out_low: String, out_high: String`) - Drives a node's property from a number - the exhaust's amount from the speed, the music's volume from the danger, a light's energy from the time of day. The answer is kept inside the range it was rescaled into, so the property never goes past either end.
 - **Wrap Around** (`var_name: String, low: String, high: String`) - Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.
 
 ### Mesh (`res://addons/eventforge/registration/modules/mesh_aces.gd`)
@@ -5814,6 +5824,7 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 - **Is Behind Camera (3D)** (`world_point: Vector3`) - True when a 3D point sits behind the camera plane, where its projected screen position is a mirrored lie. The guard every 3D waypoint marker needs before it draws. With no camera in the scene it reads true, so nothing is drawn into a view that does not exist.
 - **Is Cell In Bounds** (`cell: Vector2i, size: Vector2i`) - True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.
 - **For Each Cell In Radius** (`center: Vector2i, radius: int, shape: String`) - Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.
+- **For Each Cell In Rectangle** (`top_left: Vector2i, size: Vector2i`) - Runs this event's actions once per cell of a rectangular block, row by row - filling a room, clearing a board, drawing an inventory grid, checking every tile a building would cover. Read the current one as `cell`. An empty or negative size runs nothing.
 - **Is Within Cone Of** (`origin: Vector2, facing_degrees: float, point: Vector2, fov_degrees: float, range_px: float`) - True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.
 - **Is Within Angle Of Facing** (`forward: String, direction: String, angle: String`) - Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.
 - **Is Behind** (`point: String, target: String`) - Asks whether a place is behind this object - the backstab half of a facing test.

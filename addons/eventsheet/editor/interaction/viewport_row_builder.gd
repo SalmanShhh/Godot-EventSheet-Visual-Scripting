@@ -15968,6 +15968,11 @@ func _format_pick_filter(pick: PickFilter) -> String:
 	if not overlapped.is_empty():
 		return "%s %s %s %s" % [EventSheetL10n.translate("For each"), iterator,
 			EventSheetL10n.translate("overlapping"), overlapped]
+	# A loop over the cells of a block is the For Each Cell In Rectangle row it was placed as, and
+	# reads as that row's sentence rather than as the walk it compiles to.
+	var block_words: String = EventSheetSentence.cell_block_loop_words(collection, iterator)
+	if not block_words.is_empty():
+		return block_words
 	# A loop over a FAMILY'S group - as a group pick, or as the `get_nodes_in_group("family_x")` call
 	# a hand-written file spells it with - is the picking row: For each Enemy.
 	var family_group: String = collection if pick.collection_kind == PickFilter.CollectionKind.GROUP \

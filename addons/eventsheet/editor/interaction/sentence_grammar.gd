@@ -12026,6 +12026,36 @@ static func _overlap_offset_condition(text: String, context: Dictionary) -> Dict
 	return _sentence(object_name, template, {"offset": [expression_text(offset, context), "value"]})
 
 
+## The cell walk For Each Cell In Rectangle lands as, read back as that row's own sentence: a loop
+## over `range(...).reduce(...)` reads "For each cell in the Vector2i(6, 4) block at Vector2i(2, 2)"
+## instead of the walk. The pattern is built from the shipped row's own template, so the loop and its
+## reading cannot drift apart. Only under the row's own iterator name; "" for anything else, which
+## keeps the ordinary For each reading.
+static var _cell_block_pattern: RegEx = null
+static var _cell_block_descriptor: ACEDescriptor = null
+
+
+static func cell_block_loop_words(collection: String, iterator: String) -> String:
+	if not collection.begins_with("range("):
+		return ""
+	if _cell_block_descriptor == null:
+		_cell_block_descriptor = ACERegistry.find_descriptor("Core", "ForEachCellInRectangle")
+		if _cell_block_descriptor == null:
+			return ""
+		_cell_block_pattern = EventSheetACELifter._template_to_regex(_cell_block_descriptor.codegen_template)
+	if _cell_block_pattern == null or iterator != _cell_block_descriptor.looping_iterator:
+		return ""
+	var found: RegExMatch = _cell_block_pattern.search(collection.strip_edges())
+	if found == null:
+		return ""
+	var words: String = EventSheetL10n.translate(_cell_block_descriptor.get_display_text())
+	words = words.replace("{size}", found.get_string("size").strip_edges())
+	words = words.replace("{top_left}", found.get_string("top_left").strip_edges())
+	for tag: String in ["[b]", "[/b]", "[i]", "[/i]"]:
+		words = words.replace(tag, "")
+	return words.substr(0, 1).to_upper() + words.substr(1)
+
+
 ## The object a `for a in x.get_overlapping_areas()` loop is walking the overlaps OF, or "" when
 ## the collection is anything else. What turns the loop's own row into `For each a overlapping Player`.
 static func overlap_collection_source(collection: String) -> String:

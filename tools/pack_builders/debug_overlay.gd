@@ -24,7 +24,7 @@ static func build() -> bool:
 	sheet.autoload_name = "DebugOverlay"
 	sheet.host_class = "CanvasLayer"
 	sheet.custom_class_name = "DebugOverlayAddon"
-	sheet.class_description = "An on-screen debug display driven from event rows, drawn over the running game and only in debug builds. Watch Value lists named values, Show Bar draws a labelled meter, Mark Point drops a fading cross in the world, Draw Ray shows a direction, and Label Above floats text over a node. Nothing exists until a row calls one of them, and the toggle key hides the whole thing while you play."
+	sheet.class_description = "An on-screen debug display driven from event rows, drawn over the running game and only in debug builds. Watch Value lists named values, Show Bar draws a labelled meter, Mark Point drops a fading cross in the world, Draw Ray shows a direction, Draw Rect outlines an area, Draw Ray (3D) shows a direction in a 3D world, and Label Above floats text over a node. Nothing exists until a row calls one of them, and the toggle key hides the whole thing while you play."
 	sheet.addon_category = "Debug Overlay"
 	sheet.addon_tags = PackedStringArray(["debug", "overlay", "hud", "profiling"])
 	sheet.variables = {
@@ -35,7 +35,7 @@ static func build() -> bool:
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "Debug Overlay (autoload): register as the DebugOverlay autoload, then call its verbs from any sheet - Watch Value, Show Bar, Mark Point, Draw Ray, Label Above. The drawing surface is created on the FIRST call and only in a debug build, so a project that never calls it pays nothing and an exported release draws nothing. Press the toggle key (F3 by default) to hide it while you play. This pack is an event sheet - extend it by editing it."
+	about.text = "Debug Overlay (autoload): register as the DebugOverlay autoload, then call its verbs from any sheet - Watch Value, Show Bar, Mark Point, Draw Ray, Draw Rect, Draw Ray (3D), Label Above. The drawing surface is created on the FIRST call and only in a debug build, so a project that never calls it pays nothing and an exported release draws nothing. Press the toggle key (F3 by default) to hide it while you play. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
 
 	var toggled: SignalRow = SignalRow.new()
@@ -79,6 +79,8 @@ static func build() -> bool:
 		"show_bar": "Bar [b]{bar_name}[/b] = [b]{fraction}[/b] in [b]{bar_color}[/b]",
 		"mark_point": "Mark point [b]{at}[/b] label [b]{mark_label}[/b] for [b]{seconds}[/b]s",
 		"draw_ray": "Draw ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]",
+		"draw_rect": "Draw rect [b]{area}[/b] in [b]{rect_color}[/b] for [b]{seconds}[/b]s",
+		"draw_ray_3d": "Draw 3D ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]",
 		"label_above": "Label above [i]{node}[/i] text [b]{label_text}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["watch_value", "mark_point"])
@@ -104,6 +106,10 @@ static func _runtime_block() -> RawCodeRow:
 		"var _bar_order: PackedStringArray = PackedStringArray()",
 		"var _marks: Array = []",
 		"var _rays: Array = []",
+		"# Rects are world-space areas; 3D rays keep their two world points and are projected through",
+		"# the active camera each time they are painted, so they stay put while the camera moves.",
+		"var _rects: Array = []",
+		"var _rays_3d: Array = []",
 		"var _labels: Array = []",
 		"",
 		"# Builds the surface on FIRST use, and only in a debug build. Every verb starts with this,",
@@ -139,6 +145,12 @@ static func _runtime_block() -> RawCodeRow:
 		"\tfor index: int in range(_rays.size() - 1, -1, -1):",
 		"\t\tif now >= int((_rays[index] as Array)[3]):",
 		"\t\t\t_rays.remove_at(index)",
+		"\tfor index: int in range(_rects.size() - 1, -1, -1):",
+		"\t\tif now >= int((_rects[index] as Array)[2]):",
+		"\t\t\t_rects.remove_at(index)",
+		"\tfor index: int in range(_rays_3d.size() - 1, -1, -1):",
+		"\t\tif now >= int((_rays_3d[index] as Array)[3]):",
+		"\t\t\t_rays_3d.remove_at(index)",
 		"\tfor index: int in range(_labels.size() - 1, -1, -1):",
 		"\t\tvar entry: Array = _labels[index] as Array",
 		"\t\tif now >= int(entry[2]) or not is_instance_valid(entry[0]):",
@@ -173,6 +185,17 @@ static func _runtime_block() -> RawCodeRow:
 		"\t\t_surface.draw_string(font, at + Vector2(10.0, -8.0), str(mark[1]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, mark_color)",
 		"\tfor ray: Array in _rays:",
 		"\t\t_surface.draw_line(_world_to_screen(ray[0] as Vector2), _world_to_screen(ray[1] as Vector2), ray[2] as Color, 2.0)",
+		"\tfor rect_entry: Array in _rects:",
+		"\t\tvar area: Rect2 = rect_entry[0] as Rect2",
+		"\t\tvar corners: PackedVector2Array = PackedVector2Array([_world_to_screen(area.position), _world_to_screen(Vector2(area.end.x, area.position.y)), _world_to_screen(area.end), _world_to_screen(Vector2(area.position.x, area.end.y)), _world_to_screen(area.position)])",
+		"\t\t_surface.draw_polyline(corners, rect_entry[1] as Color, 2.0)",
+		"\tvar view: Viewport = get_viewport()",
+		"\tvar camera: Camera3D = view.get_camera_3d() if view != null else null",
+		"\tif camera != null:",
+		"\t\tfor ray_3d: Array in _rays_3d:",
+		"\t\t\tif camera.is_position_behind(ray_3d[0] as Vector3) or camera.is_position_behind(ray_3d[1] as Vector3):",
+		"\t\t\t\tcontinue",
+		"\t\t\t_surface.draw_line(camera.unproject_position(ray_3d[0] as Vector3), camera.unproject_position(ray_3d[1] as Vector3), ray_3d[2] as Color, 2.0)",
 		"\tfor label_entry: Array in _labels:",
 		"\t\tif not is_instance_valid(label_entry[0]):",
 		"\t\t\tcontinue",
@@ -227,7 +250,7 @@ static func _runtime_block() -> RawCodeRow:
 	return block
 
 
-## The published vocabulary: five drawing effects, four visibility effects, one condition. Every
+## The published vocabulary: seven drawing effects, four visibility effects, one condition. Every
 ## one is a void effect in the action lane except Overlay Is Visible, which is a question.
 static func _append_verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "watch_value", "Watch Value", "Debug Overlay",
@@ -275,6 +298,22 @@ static func _append_verbs(sheet: EventSheetResource) -> void:
 			"\treturn",
 			"_rays.append([origin, origin + direction.normalized() * length, ray_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])",
 		])))
+	Lib.append_function(sheet, "draw_rect", "Draw Rect", "Debug Overlay",
+		"Outlines an area of the world for a given time, the way Draw Ray shows a direction - a hitbox you are tuning, a spawn zone, the box a camera is limited to, the region a query just searched.",
+		[["area", "Rect2"], ["rect_color", "Color"], ["seconds", "float"]],
+		"\n".join(PackedStringArray([
+			"if not _ensure_surface():",
+			"\treturn",
+			"_rects.append([area, rect_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])",
+		])))
+	Lib.append_function(sheet, "draw_ray_3d", "Draw Ray (3D)", "Debug Overlay",
+		"Draws a line in a 3D world from a position along a direction for a given length, seen through the active camera - a raycast that keeps missing, an aim direction, the way a character thinks it is facing. A ray that reaches behind the camera is not drawn.",
+		[["origin", "Vector3"], ["direction", "Vector3"], ["length", "float"], ["ray_color", "Color"], ["seconds", "float"]],
+		"\n".join(PackedStringArray([
+			"if not _ensure_surface():",
+			"\treturn",
+			"_rays_3d.append([origin, origin + direction.normalized() * length, ray_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])",
+		])))
 	Lib.append_function(sheet, "label_above", "Label Above", "Debug Overlay",
 		"Floats a line of text above a node for a moment - the fastest way to debug a dozen enemies at once, because each one carries its own state on screen. Works for a Node2D, a Control, or a Node3D seen through the active camera.",
 		[["node", "Node"], ["label_text", "String"], ["seconds", "float"]],
@@ -296,7 +335,7 @@ static func _append_verbs(sheet: EventSheetResource) -> void:
 		[],
 		"_set_overlay_shown(not _shown)")
 	Lib.append_function(sheet, "clear_overlay", "Clear Overlay", "Debug Overlay",
-		"Wipes every watch, bar, mark, ray and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.",
+		"Wipes every watch, bar, mark, ray, rect and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.",
 		[],
 		"\n".join(PackedStringArray([
 			"_watches.clear()",
@@ -305,6 +344,8 @@ static func _append_verbs(sheet: EventSheetResource) -> void:
 			"_bar_order = PackedStringArray()",
 			"_marks.clear()",
 			"_rays.clear()",
+			"_rects.clear()",
+			"_rays_3d.clear()",
 			"_labels.clear()",
 		])))
 	Lib.condition(sheet, "is_overlay_visible", "Overlay Is Visible", "Debug Overlay",

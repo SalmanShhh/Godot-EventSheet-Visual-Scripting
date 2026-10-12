@@ -73,6 +73,7 @@ const NOT_STANDALONE: Array[String] = [
 	"FirstTimeInSave", "HasSeenInSave",
 	"OnceThisFrame",  # calls a sheet-synthesized helper over its own per-frame claim slots
 	"FpsBelowFor",  # calls a sheet-synthesized helper over its own drop-started-at slot
+	"HasBeenTrueFor",  # the same shape for any test: its helper and its true-since slot are synthesized beside the class
 	"AnimationJustPastMarker",  # reads its own sheet-synthesized latch, which says whether the play head had already passed the marker last frame
 	"FrameRunningLong", "FrameRecovered",  # call sheet-synthesized helpers over their own run counters
 	"RenderingIsOnScreen",  # calls a sheet-synthesized helper over its own notifier-node slot

@@ -7325,3 +7325,27 @@ Event %d selected,Evento %d selezionato
 Comment - drag the grip to move it into an event's actions or between events.,"Commento - trascina la maniglia per spostarlo nelle azioni di un evento o tra gli eventi."
 Side Rail,Barra laterale
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","I pannelli accanto al foglio - Fogli aperti, Oggetti, Funzioni. Se deselezionata, la barra viene ripiegata e il foglio occupa tutta la larghezza."
+Move every child of %s to %s,Sposta ogni figlio di %s in %s
+Move children,Sposta i figli
+For Each Cell In Rectangle,Per ogni cella nel rettangolo
+"Runs this event's actions once per cell of a rectangular block, row by row - filling a room, clearing a board, drawing an inventory grid, checking every tile a building would cover. Read the current one as `cell`. An empty or negative size runs nothing.","Esegue le azioni di questo evento una volta per ogni cella di un blocco rettangolare, riga per riga - riempire una stanza, svuotare una plancia, disegnare una griglia d'inventario, controllare ogni casella che un edificio coprirebbe. La cella corrente si legge come `cell`. Una dimensione vuota o negativa non esegue nulla."
+for each cell in the [b]{size}[/b] block at [b]{top_left}[/b],per ogni cella del blocco [b]{size}[/b] in [b]{top_left}[/b]
+Rescale (kept inside),Riscala (tenuto dentro)
+"Rescale, with the answer kept inside the range it was rescaled into: an amount past either end of its own range gives the nearest end, never a number beyond it. A speed of 500 on a 0 to 400 scale fills the bar, it does not overfill it.","Riscala, tenendo il risultato dentro l'intervallo di arrivo: un valore oltre uno dei due estremi del proprio intervallo dà l'estremo più vicino, mai un numero oltre. Una velocità di 500 su una scala da 0 a 400 riempie la barra, non la fa traboccare."
+"Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i], kept inside, into [b]{into}[/b]","Riscala [i]{amount}[/i] da [i]{in_low}[/i]..[i]{in_high}[/i] a [i]{out_low}[/i]..[i]{out_high}[/i], tenuto dentro, in [b]{into}[/b]"
+Rescale Into Property,Riscala in una proprietà
+"Drives a node's property from a number - the exhaust's amount from the speed, the music's volume from the danger, a light's energy from the time of day. The answer is kept inside the range it was rescaled into, so the property never goes past either end.","Guida la proprietà di un nodo a partire da un numero - la quantità dello scarico dalla velocità, il volume della musica dal pericolo, l'energia di una luce dall'ora del giorno. Il risultato resta dentro l'intervallo di arrivo, quindi la proprietà non supera mai nessuno dei due estremi."
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [i]{node}[/i]'s [b]{property}[/b],Riscala [i]{amount}[/i] da [i]{in_low}[/i]..[i]{in_high}[/i] a [i]{out_low}[/i]..[i]{out_high}[/i] in [b]{property}[/b] di [i]{node}[/i]
+The node whose property is driven.,Il nodo la cui proprietà viene guidata.
+"The property to set, e.g. amount_ratio, volume_db, energy.","La proprietà da impostare, ad es. amount_ratio, volume_db, energy."
+Event Is Any Press,L'evento è una pressione qualsiasi
+any key or button is pressed,viene premuto un tasto o pulsante qualsiasi
+Pick First Where,Scegli il primo dove
+pick the first of [i]{list}[/i] where {test} -> [b]{name}[/b],scegli il primo di [i]{list}[/i] dove {test} -> [b]{name}[/b]
+Pick Last Where,Scegli l'ultimo dove
+pick the last of [i]{list}[/i] where {test} -> [b]{name}[/b],scegli l'ultimo di [i]{list}[/i] dove {test} -> [b]{name}[/b]
+Remove Where,Rimuovi dove
+remove from {var_name} where {predicate},rimuovi da {var_name} dove {predicate}
+Has Been True For,È vero da
+[b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] è vero da [b]{seconds}[/b] secondi
+Ceil (whole),Arrotonda per eccesso (intero)

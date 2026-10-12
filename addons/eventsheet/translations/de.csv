@@ -7325,3 +7325,27 @@ Event %d selected,Ereignis %d ausgewählt
 Comment - drag the grip to move it into an event's actions or between events.,"Kommentar - am Griff ziehen, um ihn in die Aktionen eines Ereignisses oder zwischen Ereignisse zu verschieben."
 Side Rail,Seitenleiste
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","Die Bereiche neben dem Blatt - Offene Blätter, Objekte, Funktionen. Ohne Haken ist die Leiste eingeklappt und das Blatt nimmt die Breite ein."
+Move every child of %s to %s,Jedes Kind von %s nach %s verschieben
+Move children,Kinder verschieben
+For Each Cell In Rectangle,Für jede Zelle im Rechteck
+"Runs this event's actions once per cell of a rectangular block, row by row - filling a room, clearing a board, drawing an inventory grid, checking every tile a building would cover. Read the current one as `cell`. An empty or negative size runs nothing.","Führt die Aktionen dieses Ereignisses einmal pro Zelle eines rechteckigen Blocks aus, Reihe für Reihe - einen Raum füllen, ein Spielfeld leeren, ein Inventarraster zeichnen, jede Kachel prüfen, die ein Gebäude belegen würde. Die aktuelle Zelle heißt `cell`. Eine leere oder negative Größe führt nichts aus."
+for each cell in the [b]{size}[/b] block at [b]{top_left}[/b],für jede Zelle im [b]{size}[/b]-Block bei [b]{top_left}[/b]
+Rescale (kept inside),Umskalieren (innerhalb gehalten)
+"Rescale, with the answer kept inside the range it was rescaled into: an amount past either end of its own range gives the nearest end, never a number beyond it. A speed of 500 on a 0 to 400 scale fills the bar, it does not overfill it.","Umskalieren, wobei das Ergebnis im Zielbereich bleibt: ein Wert jenseits eines Endes seines eigenen Bereichs ergibt das nächste Ende, nie eine Zahl darüber hinaus. Eine Geschwindigkeit von 500 auf einer Skala von 0 bis 400 füllt den Balken, überfüllt ihn aber nicht."
+"Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i], kept inside, into [b]{into}[/b]","[i]{amount}[/i] von [i]{in_low}[/i]..[i]{in_high}[/i] auf [i]{out_low}[/i]..[i]{out_high}[/i] umskalieren, innerhalb gehalten, in [b]{into}[/b]"
+Rescale Into Property,In Eigenschaft umskalieren
+"Drives a node's property from a number - the exhaust's amount from the speed, the music's volume from the danger, a light's energy from the time of day. The answer is kept inside the range it was rescaled into, so the property never goes past either end.","Steuert die Eigenschaft eines Nodes über eine Zahl - die Menge des Abgases aus der Geschwindigkeit, die Lautstärke der Musik aus der Gefahr, die Energie eines Lichts aus der Tageszeit. Das Ergebnis bleibt im Zielbereich, sodass die Eigenschaft nie über eines der Enden hinausgeht."
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [i]{node}[/i]'s [b]{property}[/b],[i]{amount}[/i] von [i]{in_low}[/i]..[i]{in_high}[/i] auf [i]{out_low}[/i]..[i]{out_high}[/i] umskalieren in [b]{property}[/b] von [i]{node}[/i]
+The node whose property is driven.,"Der Node, dessen Eigenschaft gesteuert wird."
+"The property to set, e.g. amount_ratio, volume_db, energy.","Die zu setzende Eigenschaft, z. B. amount_ratio, volume_db, energy."
+Event Is Any Press,Ereignis ist beliebiger Druck
+any key or button is pressed,eine beliebige Taste wird gedrückt
+Pick First Where,"Erstes auswählen, wo"
+pick the first of [i]{list}[/i] where {test} -> [b]{name}[/b],"das erste von [i]{list}[/i] auswählen, wo {test} -> [b]{name}[/b]"
+Pick Last Where,"Letztes auswählen, wo"
+pick the last of [i]{list}[/i] where {test} -> [b]{name}[/b],"das letzte von [i]{list}[/i] auswählen, wo {test} -> [b]{name}[/b]"
+Remove Where,"Entfernen, wo"
+remove from {var_name} where {predicate},"aus {var_name} entfernen, wo {predicate}"
+Has Been True For,Ist wahr seit
+[b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] ist seit [b]{seconds}[/b] Sekunden wahr
+Ceil (whole),Aufrunden (ganz)

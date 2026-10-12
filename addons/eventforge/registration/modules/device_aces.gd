@@ -18,6 +18,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# for On Input events, where `event` exists.
 	descriptors.append(F.cond("KeyIsDown", "Key Is Down", "Input.is_physical_key_pressed({key})", "Keyboard", "Key {key} is down", "True while the given keyboard key is being held down.").param("key", "KEY_SPACE", "Key", "Press a key to capture it.", "key_capture"))
 	descriptors.append(F.cond("KeyEventPressed", "On Key Pressed (event)", "(event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == {key})", "Keyboard", "On {key} pressed", "True the moment a key is pressed, used inside an input event.").param("key", "KEY_SPACE", "Key", "Use inside an On Input event.", "key_capture"))
+	# The press of ANY key, button or click, as the sibling of the one-key press above: a title screen's
+	# "press anything", a cutscene skip, a rebind prompt waiting for whatever comes next. Asked of the
+	# event itself, so it is true once per real press - never for the operating system's repeats of a
+	# held key, and never for a mouse that only moved.
+	descriptors.append(F.cond("EventIsAnyPress", "Event Is Any Press", "(event.is_pressed() and not event.is_echo())", "Keyboard", "any key or button is pressed", "True the moment any key, mouse button or gamepad button goes down, used inside an input event - press-anything screens, skipping a cutscene, waking an idle game. A held key's repeats and a moving mouse do not count."))
 	descriptors.append(F.cond("KeyEventReleased", "On Key Released (event)", "(event is InputEventKey and not event.pressed and event.physical_keycode == {key})", "Keyboard", "On {key} released", "True the moment a key is released, used inside an input event.").param("key", "KEY_SPACE", "Key", "Use inside an On Input event.", "key_capture"))
 	descriptors.append(F.cond("MouseButtonDown", "Mouse Button Is Down", "Input.is_mouse_button_pressed({button})", "Mouse", "{button} is down", "True while the given mouse button is being held down.").param_choice("button", "MOUSE_BUTTON_LEFT", "Button", "Mouse button.", ["MOUSE_BUTTON_LEFT", "MOUSE_BUTTON_RIGHT", "MOUSE_BUTTON_MIDDLE"]))
 	descriptors.append(F.expr("GetMouseWorldPosition", "Mouse Position (world)", "get_global_mouse_position()", "Mouse", "mouse position", "Returns the mouse position in world coordinates, matching where things sit in the level.", "Node2D"))

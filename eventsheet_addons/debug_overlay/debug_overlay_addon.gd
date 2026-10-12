@@ -4,7 +4,7 @@
 @icon("res://eventsheet_addons/debug_overlay/icon.svg")
 class_name DebugOverlayAddon
 extends CanvasLayer
-## An on-screen debug display driven from event rows, drawn over the running game and only in debug builds. Watch Value lists named values, Show Bar draws a labelled meter, Mark Point drops a fading cross in the world, Draw Ray shows a direction, and Label Above floats text over a node. Nothing exists until a row calls one of them, and the toggle key hides the whole thing while you play.
+## An on-screen debug display driven from event rows, drawn over the running game and only in debug builds. Watch Value lists named values, Show Bar draws a labelled meter, Mark Point drops a fading cross in the world, Draw Ray shows a direction, Draw Rect outlines an area, Draw Ray (3D) shows a direction in a 3D world, and Label Above floats text over a node. Nothing exists until a row calls one of them, and the toggle key hides the whole thing while you play.
 
 ## @ace_trigger
 ## @ace_name("On Overlay Toggled")
@@ -30,6 +30,10 @@ var _bars: Dictionary = {}
 var _bar_order: PackedStringArray = PackedStringArray()
 var _marks: Array = []
 var _rays: Array = []
+# Rects are world-space areas; 3D rays keep their two world points and are projected through
+# the active camera each time they are painted, so they stay put while the camera moves.
+var _rects: Array = []
+var _rays_3d: Array = []
 var _labels: Array = []
 
 func _process(delta: float) -> void:
@@ -109,6 +113,30 @@ func draw_ray(origin: Vector2, direction: Vector2, length: float, ray_color: Col
 	_rays.append([origin, origin + direction.normalized() * length, ray_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
 
 ## @ace_action
+## @ace_name("Draw Rect")
+## @ace_category("Debug Overlay")
+## @ace_description("Outlines an area of the world for a given time, the way Draw Ray shows a direction - a hitbox you are tuning, a spawn zone, the box a camera is limited to, the region a query just searched.")
+## @ace_display_template("Draw rect [b]{area}[/b] in [b]{rect_color}[/b] for [b]{seconds}[/b]s")
+## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
+## @ace_codegen_template("DebugOverlay.draw_rect({area}, {rect_color}, {seconds})")
+func draw_rect(area: Rect2, rect_color: Color, seconds: float) -> void:
+	if not _ensure_surface():
+		return
+	_rects.append([area, rect_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
+
+## @ace_action
+## @ace_name("Draw Ray (3D)")
+## @ace_category("Debug Overlay")
+## @ace_description("Draws a line in a 3D world from a position along a direction for a given length, seen through the active camera - a raycast that keeps missing, an aim direction, the way a character thinks it is facing. A ray that reaches behind the camera is not drawn.")
+## @ace_display_template("Draw 3D ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]")
+## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
+## @ace_codegen_template("DebugOverlay.draw_ray_3d({origin}, {direction}, {length}, {ray_color}, {seconds})")
+func draw_ray_3d(origin: Vector3, direction: Vector3, length: float, ray_color: Color, seconds: float) -> void:
+	if not _ensure_surface():
+		return
+	_rays_3d.append([origin, origin + direction.normalized() * length, ray_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
+
+## @ace_action
 ## @ace_name("Label Above")
 ## @ace_category("Debug Overlay")
 ## @ace_description("Floats a line of text above a node for a moment - the fastest way to debug a dozen enemies at once, because each one carries its own state on screen. Works for a Node2D, a Control, or a Node3D seen through the active camera.")
@@ -150,7 +178,7 @@ func toggle_overlay() -> void:
 ## @ace_action
 ## @ace_name("Clear Overlay")
 ## @ace_category("Debug Overlay")
-## @ace_description("Wipes every watch, bar, mark, ray and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.")
+## @ace_description("Wipes every watch, bar, mark, ray, rect and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.")
 ## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
 ## @ace_codegen_template("DebugOverlay.clear_overlay()")
 func clear_overlay() -> void:
@@ -160,6 +188,8 @@ func clear_overlay() -> void:
 	_bar_order = PackedStringArray()
 	_marks.clear()
 	_rays.clear()
+	_rects.clear()
+	_rays_3d.clear()
 	_labels.clear()
 
 ## @ace_condition
@@ -204,6 +234,12 @@ func _expire_overlay_entries() -> void:
 	for index: int in range(_rays.size() - 1, -1, -1):
 		if now >= int((_rays[index] as Array)[3]):
 			_rays.remove_at(index)
+	for index: int in range(_rects.size() - 1, -1, -1):
+		if now >= int((_rects[index] as Array)[2]):
+			_rects.remove_at(index)
+	for index: int in range(_rays_3d.size() - 1, -1, -1):
+		if now >= int((_rays_3d[index] as Array)[3]):
+			_rays_3d.remove_at(index)
 	for index: int in range(_labels.size() - 1, -1, -1):
 		var entry: Array = _labels[index] as Array
 		if now >= int(entry[2]) or not is_instance_valid(entry[0]):
@@ -238,6 +274,17 @@ func _paint_overlay() -> void:
 		_surface.draw_string(font, at + Vector2(10.0, -8.0), str(mark[1]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, mark_color)
 	for ray: Array in _rays:
 		_surface.draw_line(_world_to_screen(ray[0] as Vector2), _world_to_screen(ray[1] as Vector2), ray[2] as Color, 2.0)
+	for rect_entry: Array in _rects:
+		var area: Rect2 = rect_entry[0] as Rect2
+		var corners: PackedVector2Array = PackedVector2Array([_world_to_screen(area.position), _world_to_screen(Vector2(area.end.x, area.position.y)), _world_to_screen(area.end), _world_to_screen(Vector2(area.position.x, area.end.y)), _world_to_screen(area.position)])
+		_surface.draw_polyline(corners, rect_entry[1] as Color, 2.0)
+	var view: Viewport = get_viewport()
+	var camera: Camera3D = view.get_camera_3d() if view != null else null
+	if camera != null:
+		for ray_3d: Array in _rays_3d:
+			if camera.is_position_behind(ray_3d[0] as Vector3) or camera.is_position_behind(ray_3d[1] as Vector3):
+				continue
+			_surface.draw_line(camera.unproject_position(ray_3d[0] as Vector3), camera.unproject_position(ray_3d[1] as Vector3), ray_3d[2] as Color, 2.0)
 	for label_entry: Array in _labels:
 		if not is_instance_valid(label_entry[0]):
 			continue
@@ -289,4 +336,4 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key_event.keycode == OS.find_keycode_from_string(toggle_key.strip_edges()):
 		_set_overlay_shown(not _shown)
 
-# Debug Overlay (autoload): register as the DebugOverlay autoload, then call its verbs from any sheet - Watch Value, Show Bar, Mark Point, Draw Ray, Label Above. The drawing surface is created on the FIRST call and only in a debug build, so a project that never calls it pays nothing and an exported release draws nothing. Press the toggle key (F3 by default) to hide it while you play. This pack is an event sheet - extend it by editing it.
+# Debug Overlay (autoload): register as the DebugOverlay autoload, then call its verbs from any sheet - Watch Value, Show Bar, Mark Point, Draw Ray, Draw Rect, Draw Ray (3D), Label Above. The drawing surface is created on the FIRST call and only in a debug build, so a project that never calls it pays nothing and an exported release draws nothing. Press the toggle key (F3 by default) to hide it while you play. This pack is an event sheet - extend it by editing it.

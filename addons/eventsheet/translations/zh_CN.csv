@@ -7325,3 +7325,27 @@ Event %d selected,已选择事件 %d
 Comment - drag the grip to move it into an event's actions or between events.,"注释 - 拖动手柄可将其移入某个事件的动作中或事件之间。"
 Side Rail,侧边栏
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.",表格旁的面板 - 打开的表格、对象、函数。取消勾选后侧边栏会收起，表格占满整个宽度。
+Move every child of %s to %s,将 %s 的每个子节点移到 %s
+Move children,移动子节点
+For Each Cell In Rectangle,对矩形中的每个单元格
+"Runs this event's actions once per cell of a rectangular block, row by row - filling a room, clearing a board, drawing an inventory grid, checking every tile a building would cover. Read the current one as `cell`. An empty or negative size runs nothing.",对矩形块中的每个单元格逐行执行一次此事件的动作 - 填满房间、清空棋盘、绘制物品栏网格、检查建筑会覆盖的每个图块。当前单元格读作 `cell`。空或负的尺寸不执行任何操作。
+for each cell in the [b]{size}[/b] block at [b]{top_left}[/b],对 [b]{top_left}[/b] 处 [b]{size}[/b] 块中的每个单元格
+Rescale (kept inside),重新缩放（保持在范围内）
+"Rescale, with the answer kept inside the range it was rescaled into: an amount past either end of its own range gives the nearest end, never a number beyond it. A speed of 500 on a 0 to 400 scale fills the bar, it does not overfill it.",重新缩放，并把结果保持在目标范围内：超出自身范围任一端的数值取最近的一端，绝不超出。0 到 400 刻度上的速度 500 会填满条，但不会溢出。
+"Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i], kept inside, into [b]{into}[/b]",将 [i]{amount}[/i] 从 [i]{in_low}[/i]..[i]{in_high}[/i] 重新缩放到 [i]{out_low}[/i]..[i]{out_high}[/i]，保持在范围内，存入 [b]{into}[/b]
+Rescale Into Property,重新缩放到属性
+"Drives a node's property from a number - the exhaust's amount from the speed, the music's volume from the danger, a light's energy from the time of day. The answer is kept inside the range it was rescaled into, so the property never goes past either end.",用一个数字驱动节点的属性 - 由速度决定尾气的量，由危险程度决定音乐的音量，由一天中的时间决定灯光的能量。结果保持在目标范围内，因此属性不会超出任何一端。
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [i]{node}[/i]'s [b]{property}[/b],将 [i]{amount}[/i] 从 [i]{in_low}[/i]..[i]{in_high}[/i] 重新缩放到 [i]{out_low}[/i]..[i]{out_high}[/i]，存入 [i]{node}[/i] 的 [b]{property}[/b]
+The node whose property is driven.,其属性被驱动的节点。
+"The property to set, e.g. amount_ratio, volume_db, energy.",要设置的属性，例如 amount_ratio、volume_db、energy。
+Event Is Any Press,事件是任意按下
+any key or button is pressed,按下了任意键或按钮
+Pick First Where,选取第一个满足条件的
+pick the first of [i]{list}[/i] where {test} -> [b]{name}[/b],从 [i]{list}[/i] 中选取第一个满足 {test} 的 -> [b]{name}[/b]
+Pick Last Where,选取最后一个满足条件的
+pick the last of [i]{list}[/i] where {test} -> [b]{name}[/b],从 [i]{list}[/i] 中选取最后一个满足 {test} 的 -> [b]{name}[/b]
+Remove Where,按条件移除
+remove from {var_name} where {predicate},从 {var_name} 中移除满足 {predicate} 的
+Has Been True For,已持续为真
+[b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] 已持续为真 [b]{seconds}[/b] 秒
+Ceil (whole),向上取整（整数）

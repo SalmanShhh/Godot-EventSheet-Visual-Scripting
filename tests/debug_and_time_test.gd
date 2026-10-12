@@ -408,7 +408,7 @@ static func _test_overlay_pack_source() -> bool:
 	all_passed = _check("and its gate is OS.is_debug_build(), the same one Log (Debug Builds Only) uses",
 		source.contains("if not OS.is_debug_build():\n\t\treturn false"), true) and all_passed
 	all_passed = _check("every drawing verb goes through that gate",
-		source.count("if not _ensure_surface():"), 5) and all_passed
+		source.count("if not _ensure_surface():"), 7) and all_passed
 	all_passed = _check("the toggle key is read by name so the Inspector field stays readable",
 		source.contains("OS.find_keycode_from_string(toggle_key.strip_edges())"), true) and all_passed
 	all_passed = _check("the trigger is a real signal carrying whether it is now shown",

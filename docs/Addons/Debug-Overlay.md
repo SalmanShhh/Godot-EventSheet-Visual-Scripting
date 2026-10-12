@@ -43,9 +43,9 @@ you play.
   name. There is nothing to attach and nothing to wire up.
 - **A watch is keyed by name.** Watch Value with the same name refreshes the line rather than adding
   a second one, which is what makes it safe to call from an Every Frame row.
-- **Marks, rays and labels are timed.** Each carries a number of seconds, ages itself out on the
+- **Marks, rays, rects and labels are timed.** Each carries a number of seconds, ages itself out on the
   overlay's own tick, and disappears. Nothing accumulates forever.
-- **World positions stay glued to the world.** Marks and rays are drawn through the viewport's canvas
+- **World positions stay glued to the world.** Marks, rays and rects are drawn through the viewport's canvas
   transform, so they sit where the thing is while the camera moves.
 - **Label Above works in 2D and in 3D.** A Node2D or a Control uses its screen position; a Node3D is
   projected through the active Camera3D.
@@ -81,11 +81,13 @@ Two properties are on the autoload node in the Inspector:
 | Show Bar | Draws a named meter filled to a fraction from 0 to 1, in the colour you pick. | `DebugOverlay.show_bar({bar_name}, {fraction}, {bar_color})` |
 | Mark Point | Drops a labelled cross at a world position for a moment, so you can SEE where something happened. | `DebugOverlay.mark_point({at}, {mark_label}, {seconds})` |
 | Draw Ray | Draws a line from a world position along a direction for a given length. | `DebugOverlay.draw_ray({origin}, {direction}, {length}, {ray_color}, {seconds})` |
+| Draw Rect | Outlines an area of the world for a given time - a hitbox, a spawn zone, a camera's limits. | `DebugOverlay.draw_rect({area}, {rect_color}, {seconds})` |
+| Draw Ray (3D) | Draws a line in a 3D world along a direction for a given length, seen through the active camera. | `DebugOverlay.draw_ray_3d({origin}, {direction}, {length}, {ray_color}, {seconds})` |
 | Label Above | Floats a line of text above a node for a moment. | `DebugOverlay.label_above({node}, {label_text}, {seconds})` |
 | Show Overlay | Makes the overlay visible again after it was hidden. | `DebugOverlay.show_overlay()` |
 | Hide Overlay | Hides the overlay without clearing anything. | `DebugOverlay.hide_overlay()` |
 | Toggle Overlay | Flips the overlay between shown and hidden, the same thing the toggle key does. | `DebugOverlay.toggle_overlay()` |
-| Clear Overlay | Wipes every watch, bar, mark, ray and label at once. | `DebugOverlay.clear_overlay()` |
+| Clear Overlay | Wipes every watch, bar, mark, ray, rect and label at once. | `DebugOverlay.clear_overlay()` |
 
 ### Conditions
 
@@ -311,6 +313,29 @@ extends Node
 
 func _process(delta: float) -> void:
 	DebugOverlay.label_above(enemy_3d, enemy_3d.name, 0.2)
+```
+
+**19. Outline the area a hitbox really covers.** Draw Rect takes a world-space Rect2, so the box
+you are tuning is drawn where it is, and moves with the camera like everything else here.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	DebugOverlay.draw_rect(Rect2(enemy.global_position - Vector2(16, 16), Vector2(32, 32)), Color.RED, 0.1)
+```
+
+**20. Show a 3D raycast while you tune it.** Draw Ray (3D) projects both ends through the active
+camera, so the same row that shows an aim in 2D shows one in a 3D scene. A ray reaching behind the
+camera is skipped rather than drawn wrapped across the screen.
+
+```gdscript
+extends Node
+
+
+func _physics_process(delta: float) -> void:
+	DebugOverlay.draw_ray_3d(muzzle.global_position, -muzzle.global_basis.z, 30.0, Color.ORANGE, 0.1)
 ```
 
 ### Other use cases

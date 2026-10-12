@@ -151,6 +151,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `cast_motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
 | `cast_shadow` | [Set Shadows Off (3D)](ace:Core/SetShadowsOff3D) | Native 3D | Vocabulary |
 | `ceil` | [Ceil](ace:Core/CeilValue) | Helpers | Vocabulary |
+| `ceili` | [Ceil (whole)](ace:Core/CeilWhole) | Helpers | Vocabulary |
 | `cfg` | [Has Saved Settings](ace:Core/OptionsHasSavedSettings) | Game Options | Vocabulary |
 | `change_scene_to_file` | [Go To Layout](ace:Core/ChangeScene) | Scene | Vocabulary |
 | `change_scene_to_packed` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
@@ -614,7 +615,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_physics_processing` | [Node Is Physics Processing](ace:Core/NodeIsPhysicsProcessing) | Nodes: Activation | Vocabulary |
 | `is_playing` | [Is Playing](ace:Core/AnimationIsPlaying) | Animation | Vocabulary |
 | `is_position_behind` | [Is Behind Camera (3D)](ace:Core/IsBehindCamera3D) | Math & Random | Vocabulary |
-| `is_pressed` | [Any Input Received](ace:Core/AnyInputReceived) | Accessibility | Vocabulary |
+| `is_pressed` | [Event Is Any Press](ace:Core/EventIsAnyPress) | Keyboard | Vocabulary |
 | `is_processing` | [Node Is Processing Per Frame](ace:Core/NodeIsProcessing) | Nodes: Activation | Vocabulary |
 | `is_processing_input` | [Node Is Handling Input](ace:Core/NodeIsProcessingInput) | Nodes: Activation | Vocabulary |
 | `is_queued_for_deletion` | [Crowd Is Down To This One](ace:Core/CrowdIsDownToThisOne) | Crowd | Vocabulary |

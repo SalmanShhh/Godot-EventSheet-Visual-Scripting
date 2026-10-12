@@ -7325,3 +7325,27 @@ Event %d selected,이벤트 %d 선택됨
 Comment - drag the grip to move it into an event's actions or between events.,"주석 - 손잡이를 끌어 이벤트의 액션 안이나 이벤트 사이로 옮깁니다."
 Side Rail,사이드 레일
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","시트 옆의 패널 - 열린 시트, 오브젝트, 함수. 체크를 해제하면 레일이 접히고 시트가 전체 너비를 차지합니다."
+Move every child of %s to %s,%s의 모든 자식을 %s(으)로 옮기기
+Move children,자식 옮기기
+For Each Cell In Rectangle,사각형의 각 셀마다
+"Runs this event's actions once per cell of a rectangular block, row by row - filling a room, clearing a board, drawing an inventory grid, checking every tile a building would cover. Read the current one as `cell`. An empty or negative size runs nothing.","사각형 블록의 셀마다 한 번씩, 행 단위로 이 이벤트의 액션을 실행합니다 - 방 채우기, 보드 비우기, 인벤토리 격자 그리기, 건물이 덮을 모든 타일 확인. 현재 셀은 `cell`로 읽습니다. 비어 있거나 음수인 크기는 아무것도 실행하지 않습니다."
+for each cell in the [b]{size}[/b] block at [b]{top_left}[/b],[b]{top_left}[/b]의 [b]{size}[/b] 블록의 각 셀마다
+Rescale (kept inside),재조정 (범위 안에 유지)
+"Rescale, with the answer kept inside the range it was rescaled into: an amount past either end of its own range gives the nearest end, never a number beyond it. A speed of 500 on a 0 to 400 scale fills the bar, it does not overfill it.","재조정하되 결과를 대상 범위 안에 유지합니다: 원래 범위의 어느 끝을 넘는 값은 가까운 끝이 되며, 그 너머의 수가 되지 않습니다. 0에서 400 척도에서 속도 500은 막대를 가득 채우지만 넘치게 하지 않습니다."
+"Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i], kept inside, into [b]{into}[/b]",[i]{amount}[/i]을(를) [i]{in_low}[/i]..[i]{in_high}[/i]에서 [i]{out_low}[/i]..[i]{out_high}[/i](으)로 재조정해 범위 안에 유지하고 [b]{into}[/b]에
+Rescale Into Property,속성으로 재조정
+"Drives a node's property from a number - the exhaust's amount from the speed, the music's volume from the danger, a light's energy from the time of day. The answer is kept inside the range it was rescaled into, so the property never goes past either end.","숫자로 노드의 속성을 구동합니다 - 속도로 배기의 양을, 위험도로 음악의 볼륨을, 시간대로 조명의 에너지를. 결과는 대상 범위 안에 유지되므로 속성이 어느 끝도 넘지 않습니다."
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [i]{node}[/i]'s [b]{property}[/b],[i]{amount}[/i]을(를) [i]{in_low}[/i]..[i]{in_high}[/i]에서 [i]{out_low}[/i]..[i]{out_high}[/i](으)로 재조정해 [i]{node}[/i]의 [b]{property}[/b]에
+The node whose property is driven.,속성이 구동되는 노드.
+"The property to set, e.g. amount_ratio, volume_db, energy.","설정할 속성. 예: amount_ratio, volume_db, energy."
+Event Is Any Press,이벤트가 아무 입력 누름
+any key or button is pressed,아무 키나 버튼이 눌림
+Pick First Where,조건에 맞는 첫째 고르기
+pick the first of [i]{list}[/i] where {test} -> [b]{name}[/b],[i]{list}[/i] 중 {test}인 첫째를 고르기 -> [b]{name}[/b]
+Pick Last Where,조건에 맞는 마지막 고르기
+pick the last of [i]{list}[/i] where {test} -> [b]{name}[/b],[i]{list}[/i] 중 {test}인 마지막을 고르기 -> [b]{name}[/b]
+Remove Where,조건으로 제거
+remove from {var_name} where {predicate},{var_name}에서 {predicate}인 것을 제거
+Has Been True For,일정 시간 참임
+[b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b]이(가) [b]{seconds}[/b]초 동안 참
+Ceil (whole),올림 (정수)

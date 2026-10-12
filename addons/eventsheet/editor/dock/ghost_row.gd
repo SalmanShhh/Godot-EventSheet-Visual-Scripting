@@ -13,6 +13,9 @@ extends RefCounted
 # While its LineEdit has focus the dock's single-key reflexes suppress themselves exactly as they do
 # for any focused text field, so typing "e" into the query never re-triggers Add Event.
 
+## The several-rows answers to a few typed words, read by path so the boot path names no new class.
+const GhostRecipes := preload("res://addons/eventsheet/editor/dock/ghost_recipes.gd")
+
 var _dock: Control = null
 var _popup: PopupPanel = null
 var _edit: LineEdit = null
@@ -115,6 +118,11 @@ func _refresh(query: String) -> void:
 	var offer: Dictionary = picking_offer(query) if typing else {}
 	if not offer.is_empty():
 		_candidates.push_front({"picking": offer})
+	# A job that is two shipped rows in Godot's spelling ("move children"): the recipe leads, and
+	# writes both rows filled in, rather than a third row doing what the two already do.
+	var recipe: Dictionary = GhostRecipes.offer_for(query) if typing else {}
+	if not recipe.is_empty():
+		_candidates.push_front({"recipe": recipe})
 	if _chips != null:
 		_chips.visible = not typing and _chips.get_child_count() > 0
 	if _list == null:
@@ -123,6 +131,9 @@ func _refresh(query: String) -> void:
 	for candidate: Dictionary in _candidates:
 		if candidate.has("picking"):
 			_list.add_item(EventSheetPickingOffer.label_for(candidate["picking"] as Dictionary))
+			continue
+		if candidate.has("recipe"):
+			_list.add_item(GhostRecipes.label_for(candidate["recipe"] as Dictionary))
 			continue
 		var definition: ACEDefinition = candidate.get("definition")
 		var summary: String = ""
@@ -196,6 +207,9 @@ func _apply_selected() -> void:
 	if candidate.has("picking"):
 		_apply_picking(candidate["picking"] as Dictionary)
 		return
+	if candidate.has("recipe"):
+		_apply_recipe(candidate["recipe"] as Dictionary)
+		return
 	_apply_definition(candidate.get("definition"), candidate.get("params", {}))
 
 
@@ -219,6 +233,28 @@ func _apply_picking(offer: Dictionary) -> void:
 			(selected_resource as EventRow).pick_filters.append(EventSheetPickingOffer.pick_filter_for(offer))
 		else:
 			_dock._current_sheet.events.append(EventSheetPickingOffer.event_for(offer, _dock._fresh_uid_token()))
+		return true)
+
+
+## Lands a recipe's rows in one undo step. With an event selected the rows go UNDER it, so the move
+## happens when that event does (On Opened, On Body Entered...); otherwise they are a new event.
+func _apply_recipe(offer: Dictionary) -> void:
+	if _popup != null:
+		_popup.hide()
+	var built: EventRow = GhostRecipes.event_for(offer,
+		_dock._find_definition("Core", GhostRecipes.LOOP_ID),
+		_dock._find_definition("Core", GhostRecipes.MOVE_ID),
+		_dock._fresh_uid_token(),
+		func(definition: ACEDefinition, params: Dictionary) -> ACEAction:
+			return _dock._create_action_from_definition(definition, params))
+	if built == null:
+		return
+	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
+	_dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Move children"), func() -> bool:
+		if selected_resource is EventRow:
+			(selected_resource as EventRow).sub_events.append(built)
+		else:
+			_dock._current_sheet.events.append(built)
 		return true)
 
 

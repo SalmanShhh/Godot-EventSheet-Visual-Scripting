@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### Added: siblings beside the rows they extend
+
+- **Event Is Any Press**, beside Key Pressed (event): true once per real press of any key, mouse
+  button or gamepad button inside an input event - `(event.is_pressed() and not event.is_echo())`,
+  so a held key's repeats and a moving mouse never count. Press-anything screens, cutscene skips.
+- **For Each Cell In Rectangle**, the looping twin of Cells In Rectangle the way For Each Cell In
+  Radius is the twin of Cells In Radius: the same block walk, each cell arriving as `cell`. The
+  loop reads as its row ("For each cell in the Vector2i(6, 4) block at Vector2i(2, 2)"), not as
+  the walk it compiles to.
+- **Pick First Where** and **Pick Last Where**, beside Pick Where: the first or last instance the test
+  holds for, in the list's own order. They take the end of the filtered list with `pop_front()` /
+  `pop_back()`, so a list where nothing passes picks null rather than raising an error.
+- **Remove Where**, the action sibling of Filter with the same element and test fields: takes every
+  match out of the array in place with `assign()`, so a typed array stays typed.
+- **Has Been True For**, FPS Below For's "has it lasted?" helper for any test: true once the test has
+  held without a break for the seconds you name - standing still for two seconds, a button held for
+  one. Filed in Run Context beside Was Recently True, its mirror.
+- **Rescale (kept inside)** and **Rescale Into Property**, beside Rescale: the answer clamped to the
+  range it was rescaled into (lowest end first, so a range that runs downward is kept inside too),
+  and the same rescale written straight onto a node's property - the exhaust's amount from the speed.
+  Rescale itself writes exactly the line it always wrote.
+- **Ceil (whole)**, beside Ceil: `ceili()`, the whole number a page count or a row count is.
+- **Debug Overlay: Draw Rect and Draw Ray (3D)**, with the same expiry as Draw Ray: a world-space
+  rectangle outlined for N seconds, and a ray in a 3D world projected through the active camera.
+- **Move children, as a Ghost Row recipe.** Typing "move children of $Crate to $Level" (or
+  `SetParent`) offers For Each Child with Add Child (existing node) inside it, filled in - the two
+  shipped rows, which compile to `for child in $Crate.get_children(): child.reparent($Level)`. With an
+  event selected the rows go under it. No new row: the two that ship already say it.
+- Each sibling answers to the name its job goes by elsewhere (`Input.anyKeyDown`, "On any key
+  pressed", "For each XY element", `FindLast`, `RemoveAll`, `InverseLerp`, `CeilToInt`, "Draw Debug
+  Rect"), and an expression field reads `Mathf.CeilToInt`, `FloorToInt` and `RoundToInt` as `ceili`,
+  `floori` and `roundi`. The rows that lift (every condition and action here but Has Been True For,
+  whose helper is written beside the class as FPS Below For's is) read back as themselves and
+  re-emit byte for byte.
+
+
 ### Added: the names a reader brings from another engine find what already ships
 
 - **Search answers to API calls and action titles.** The picker and Quick add already answered to the
