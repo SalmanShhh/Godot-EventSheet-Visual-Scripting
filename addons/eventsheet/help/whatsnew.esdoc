@@ -183,9 +183,9 @@ What changed in the build you have installed (v0.18.0), in the words the release
 - **Editor Native variable rows read the way the Inspector lists a property.** A theme can draw its
   variable rows Inspector-style (`inspector_variable_rows`, on in Editor Native): the GDScript type
   in mono in its family's colour (`float`, `int`, `String`, `Vector2`, `Color`, `Array[Node2D]`, an
-  enum's or a class's own name - never \"number\" or \"list of objects\"), the name capitalised the way
-  the Inspector capitalises it (\"Open Speed\" for `open_speed`; F2 still renames from the
-  identifier), the value (a colour as its swatch then its `#RRGGBB` hex, the swatch still opening
+  enum's or a class's own name - never \"number\" or \"list of objects\"), the name exactly as the code
+  writes it (`open_speed` reads \"open_speed\", never a capitalised \"Open Speed\", in this theme as in
+  every other), the value (a colour as its swatch then its `#RRGGBB` hex, the swatch still opening
   the picker), then the `##` description as the row's one italic note - an exported variable's lifted
   tooltip, or the `##` line kept above a plain `var`, which the view then stops listing twice - and
   the attributes only as the icon tiles at the right. The outlined kind mark, the scope word and the

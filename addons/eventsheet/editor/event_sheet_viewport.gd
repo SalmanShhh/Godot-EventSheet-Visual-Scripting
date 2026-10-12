@@ -4032,7 +4032,7 @@ func _commit_edit() -> void:
 	var span: SemanticSpan = row_data.spans[_editing_span_index]
 	var previous_value: String = span.text
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-	# A variable row that SHOWS a reading (an Inspector-style "Open Speed", a colour's hex) edits the
+	# A variable row that SHOWS a reading (a tool button's label, a colour's hex) edits the
 	# characters the file holds, so what it held before is that text, not the reading.
 	if str(metadata.get("kind", "")) == "variable" and not str(metadata.get("edit_text", "")).is_empty():
 		previous_value = str(metadata["edit_text"])

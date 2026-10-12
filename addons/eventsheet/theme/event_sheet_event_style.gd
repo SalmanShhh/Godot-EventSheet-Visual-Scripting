@@ -129,8 +129,8 @@ extends Resource
 ## description beside the name, the echo and the switch as its glyph.
 @export var group_head_two_line: bool = false
 ## A variable row drawn the way the Inspector lists a property: the GDScript type in mono in its
-## family's colour, the name capitalised the way the Inspector capitalises it (editing still shows the
-## identifier), the value as the Inspector shows it (a colour as its swatch and hex), the `##`
+## family's colour, the name exactly as the file writes it (`open_speed`, never "Open Speed"), the
+## value as the Inspector shows it (a colour as its swatch and hex), the `##`
 ## description as the row's one italic note, and the attributes only as the icon tiles at the right.
 ## No kind mark, no scope word (it moves to the name's hover) and no code echo. Off keeps the
 ## sentence row: kind mark, scope word, the type in words and the declaration echo.

@@ -3,15 +3,15 @@ extends RefCounted
 # Godot EventSheets - Inspector-style variable rows
 #
 # A theme that states inspector_variable_rows reads a variable row the way the Inspector lists a
-# property: the GDScript type, the capitalised name, the value (a colour as its swatch and hex), the
-# `##` description as the one italic note, and the attributes only as icon tiles - no kind mark, no
-# scope word, no code echo. hide_compiler_variables leaves the compiler's `__` bookkeeping members
-# out of the rows. Pinned as values:
+# property: the GDScript type, the name exactly as the file writes it, the value (a colour as its
+# swatch and hex), the `##` description as the one italic note, and the attributes only as icon
+# tiles - no kind mark, no scope word, no code echo. hide_compiler_variables leaves the compiler's
+# `__` bookkeeping members out of the rows. Pinned as values:
 #   1. the two tokens: off by default, on in the Editor Native starter and its rule, stated off in
 #      every other shipped theme;
-#   2. the readings the row prints: the GDScript type word, the Inspector name, a colour's hex;
+#   2. the readings the row prints: the GDScript type word, an enum choice's Inspector name, a colour's hex;
 #   3. the rows the builder makes under Editor Native, word for word, and under Classic Sheet as before;
-#   4. a capitalised name still renames from the identifier the file holds;
+#   4. the name is the identifier as written (`open_speed`, never "Open Speed"), and F2 renames it;
 #   5. the hidden bookkeeping member still compiles;
 #   6. an italic note draws in room enough for its slanted words, so the editor's fonts keep its last
 #      letter (the span is measured upright, and a slant can round a pixel or two wider).
@@ -82,8 +82,7 @@ static func _test_readings() -> bool:
 		["a constructor names its type", NativeVariableMarks.gdscript_type_word("", "Vector2.ZERO", true), "Vector2"],
 		["a real value names its type", NativeVariableMarks.gdscript_type_word("Variant", Color.RED, false), "Color"],
 		["a computed value says Variant", NativeVariableMarks.gdscript_type_word("", "speed * 2", true), "Variant"],
-		["the Inspector's capitals", NativeVariableMarks.inspector_name("open_speed"), "Open Speed"],
-		["a one-word name", NativeVariableMarks.inspector_name("lives"), "Lives"],
+		["the Inspector capitals an enum choice only", NativeVariableMarks.inspector_name("HALF_OPEN"), "Half Open"],
 		["a real colour as its hex", NativeVariableMarks.color_hex(NativeVariableMarks.color_of(Color8(255, 179, 71))), "#FFB347"],
 		["a literal colour", NativeVariableMarks.color_hex(NativeVariableMarks.color_of("Color(1, 0, 0)")), "#FF0000"],
 		["a named constant", NativeVariableMarks.color_hex(NativeVariableMarks.color_of("Color.WHITE")), "#FFFFFF"],
@@ -115,18 +114,20 @@ static func _test_native_rows() -> bool:
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["an exported variable: type, name, value, its tooltip as the note",
 			_words(_row_named(viewport, "open_speed")),
-			["float", "Open Speed", "⚙", "=", "2", "How fast the gate opens"]],
+			["float", "open_speed", "⚙", "=", "2", "How fast the gate opens"]],
 		["a plain var reads the ## line above it as its note",
-			_words(_row_named(viewport, "open_progress")), ["float", "Open Progress", "=", "0", "How far open the gate is"]],
+			_words(_row_named(viewport, "open_progress")), ["float", "open_progress", "=", "0", "How far open the gate is"]],
 		["so the ## line is not listed again", raw_rows, 0],
 		["an untyped var prints the type its value gives away", _words(_row_named(viewport, "hit_count")),
-			["int", "Hit Count", "=", "5"]],
-		["a colour reads as its hex", _words(_row_named(viewport, "glow_color")), ["Color", "Glow Color", "=", "#FFB347"]],
+			["int", "hit_count", "=", "5"]],
+		["a colour reads as its hex", _words(_row_named(viewport, "glow_color")), ["Color", "glow_color", "=", "#FFB347"]],
 		["and leads with its swatch", [glow_value.metadata.get("value_glyph"), glow_value.metadata.get("value_swatch")],
 			["color", Color8(255, 179, 71)]],
 		["typing into it edits the reading the sentence row edits", glow_value.metadata.get("edit_text"), "(1.0, 0.702, 0.2784, 1.0)"],
 		["a typed list keeps its GDScript type", _words(_row_named(viewport, "guards")).slice(0, 2),
-			["Array[Node2D]", "Guards"]],
+			["Array[Node2D]", "guards"]],
+		["the name is the identifier as the file writes it, never capitalised",
+			[speed_name.text, speed_name.metadata.get("edit_text", "")], ["open_speed", ""]],
 		["the tiles are the attributes", speed_name.metadata.get("variable_badges"),
 			PackedStringArray(["inspector", "range", "tooltip"])],
 		["the scope word moves to the name's hover",
@@ -175,7 +176,7 @@ static func _test_rename_edits_the_identifier() -> bool:
 	viewport._commit_edit()
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
 		["F2 opens the field", opened, true],
-		["on the identifier, not the capitalised name", buffer, "open_speed"],
+		["on the identifier the row shows", buffer, "open_speed"],
 		["and the rename runs from the identifier", captured, [["variable_rename", "open_speed", "gate_speed"]]],
 	])
 	viewport.free()

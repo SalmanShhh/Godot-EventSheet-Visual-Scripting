@@ -356,7 +356,8 @@ static func gdscript_type_word(type_name: String, default_value: Variant, expres
 	return "Variant"
 
 
-## A variable's name the way the Inspector capitalises a property: `open_speed` reads "Open Speed".
+## An enum choice the way the Inspector's dropdown capitalises it: `HALF_OPEN` reads "Half Open".
+## Never a variable's name - a variable row prints its identifier exactly as the file writes it.
 static func inspector_name(identifier: String) -> String:
 	var shown: String = identifier.strip_edges().capitalize()
 	return shown if not shown.is_empty() else identifier

@@ -11365,7 +11365,7 @@ func _build_variable_row(
 	var facts: Dictionary = options.get("facts", {}) if options.get("facts") is Dictionary else {}
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	# A theme that asks for Inspector-style rows (inspector_variable_rows) reads the row the way the
-	# Inspector lists the property: the GDScript type, the capitalised name, the value, the `##`
+	# Inspector lists the property: the GDScript type, the name as written, the value, the `##`
 	# note and the icon tiles - no kind mark, no scope word, no code echo. A local inside an event is
 	# no property the Inspector lists, so it keeps the sentence row the event around it reads in.
 	var inspector_rows: bool = _viewport._get_event_style().inspector_variable_rows and scope_label != "local"
@@ -11397,9 +11397,9 @@ func _build_variable_row(
 	if scope_word_key.is_empty() and scope_label == "local":
 		scope_word_key = EventSheetVariableSentence.SCOPE_LOCAL
 	variable_meta["variable_scope_word"] = scope_word_key
+	# An Inspector-style row prints the identifier exactly as the file writes it: `open_speed` reads
+	# "open_speed", never a capitalised "Open Speed".
 	var display_name: String = str(facts.get("name_text", "")).strip_edges()
-	if display_name.is_empty() and inspector_rows and not var_name.is_empty():
-		display_name = NativeVariableMarks.inspector_name(var_name)
 	if display_name.is_empty():
 		display_name = var_name if not var_name.is_empty() else "(unnamed)"
 	var code_line: String = str(options.get("code_line", ""))
@@ -11516,7 +11516,8 @@ func _build_variable_row(
 					type_name if not type_name.is_empty() else "Variant"]
 			}, true)
 		)
-		# A capitalised name still renames as the identifier the file holds.
+		# A row led by something other than its identifier (a tool button's own label) still renames
+		# as the identifier the file holds.
 		if inspector_rows and display_name != var_name:
 			(name_span.metadata as Dictionary)["edit_text"] = var_name
 		row_data.spans.append(name_span)
