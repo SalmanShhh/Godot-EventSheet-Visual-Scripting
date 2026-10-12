@@ -13,9 +13,6 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const ADDONS_DIR := "res://eventsheet_addons"
 
-# Categories deliberately left without a module icon (nothing in the editor theme fits yet).
-const UNMAPPED_CATEGORIES := ["Performance"]
-
 ## Every live builtin category and the EditorIcons name it resolves to, each one CONFIRMED to exist
 ## in a running editor's theme by tools/check_section_icons.gd. This suite is headless and cannot ask
 ## the theme, so the verified answer is pinned here instead: renaming an override, or a derivation
@@ -206,7 +203,7 @@ static func run() -> bool:
 	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
 		categories[descriptor.category] = true
 	for category: String in categories:
-		if category in UNMAPPED_CATEGORIES:
+		if category in ACEPickerDialog.UNMAPPED_ICON_CATEGORIES:
 			continue
 		var icon_name: String = ACEPickerDialog.category_icon_name(category)
 		ok = _check(ok, not icon_name.is_empty(), "builtin category \"%s\" maps to an editor icon" % category)
@@ -219,7 +216,7 @@ static func run() -> bool:
 	var unverified: Array[String] = []
 	for live_entry: Variant in ACERegistry.get_builtin_descriptors():
 		var live_category: String = str(live_entry.get("category"))
-		if live_category.is_empty() or live_category in UNMAPPED_CATEGORIES:
+		if live_category.is_empty() or live_category in ACEPickerDialog.UNMAPPED_ICON_CATEGORIES:
 			continue
 		if not VERIFIED_SECTION_ICONS.has(live_category) and not unverified.has(live_category):
 			unverified.append(live_category)

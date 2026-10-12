@@ -18,6 +18,9 @@ const PROBE_DIR: String = "user://pack_vocabulary_probe"
 const BASE_PATH: String = "user://pack_vocabulary_probe/probe_base.gd"
 const PROVIDER_PATH: String = "user://pack_vocabulary_probe/probe_provider.gd"
 const NAMED_PATH: String = "user://pack_vocabulary_probe/probe_named.gd"
+const WAITING_PATH: String = "user://pack_vocabulary_probe/probe_waiting.gd"
+const HELPER_PATH: String = "user://pack_vocabulary_probe/probe_helper.gd"
+const HELPER_CLASS: String = "PackVocabularyProbeHelper"
 
 const BASE_SOURCE: String = """extends Node
 
@@ -53,6 +56,8 @@ static func run() -> bool:
 	all_passed = _every_pack_matches_a_fresh_reflection() and all_passed
 	all_passed = _a_changed_input_is_never_trusted() and all_passed
 	all_passed = _a_damaged_file_is_ignored() and all_passed
+	all_passed = _a_class_that_appears_is_seen() and all_passed
+	all_passed = _a_settled_entry_is_not_hashed_again() and all_passed
 	EventSheetPackVocabularyCache.forget(true)
 	EventSheetPackVocabularyCache.cache_path = saved_path
 	EventSheetPackVocabularyCache.forget()
@@ -179,7 +184,82 @@ static func _ask(rows: Array, label: String, which: String, expected: PackedStri
 
 
 static func _how_answered(which: String) -> PackedStringArray:
-	return EventSheetPackVocabularyCache.last_reflected if which == "last_reflected" 		else EventSheetPackVocabularyCache.last_remembered
+	return EventSheetPackVocabularyCache.last_reflected if which == "last_reflected" \
+		else EventSheetPackVocabularyCache.last_remembered
+
+
+## A pack written before the helper class it names: it does not compile, so it publishes nothing,
+## and none of its files change when the helper's file is added. The name it spelled is what sends
+## it back to a fresh reflection the moment that name is a class. The class list is handed in
+## here, because only an editor filesystem scan registers a new class_name.
+static func _a_class_that_appears_is_seen() -> bool:
+	var saved_source: Callable = EventSheetPackVocabularyCache.class_list_source
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	_write(WAITING_PATH, "extends Node\n\n\n## @ace_action\n## @ace_name(\"Wait For Helper\")\n"
+		+ "## @ace_codegen_template(\"wait_for_helper()\")\nfunc wait_for_helper() -> void:\n"
+		+ "\tprint(%s.new())\n" % HELPER_CLASS)
+	var probe: Array[String] = [WAITING_PATH]
+	var expected: PackedStringArray = PackedStringArray(probe)
+	EventSheetPackVocabularyCache.forget(true)
+	var rows: Array = []
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	rows.append(["a pack naming a missing class is reflected", EventSheetPackVocabularyCache.last_reflected, expected])
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	rows.append(["and remembered while the class is still missing", EventSheetPackVocabularyCache.last_remembered,
+		expected])
+	EventSheetPackVocabularyCache.forget()
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	rows.append(["the next session remembers it too", EventSheetPackVocabularyCache.last_remembered, expected])
+	_write(HELPER_PATH, "class_name %s\nextends RefCounted\n" % HELPER_CLASS)
+	EventSheetPackVocabularyCache.class_list_source = func() -> Array[Dictionary]:
+		var classes: Array[Dictionary] = ProjectSettings.get_global_class_list()
+		classes.append({"class": HELPER_CLASS, "path": HELPER_PATH, "base": "RefCounted", "language": "GDScript"})
+		return classes
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	rows.append(["the class appearing sends it back to a fresh reflection", EventSheetPackVocabularyCache.last_reflected,
+		expected])
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	rows.append(["after which it is remembered again", EventSheetPackVocabularyCache.last_remembered, expected])
+	EventSheetPackVocabularyCache.class_list_source = saved_source
+	for path: String in [WAITING_PATH, HELPER_PATH]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	EventSheetPackVocabularyCache.forget(true)
+	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## A same-session entry checked in a later second than its file was last written is not hashed
+## again - and an edit that keeps the length is still caught, because it moves the modified time.
+static func _a_settled_entry_is_not_hashed_again() -> bool:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	_write(BASE_PATH, BASE_SOURCE)
+	_reload(BASE_PATH)
+	var probe: Array[String] = [BASE_PATH]
+	EventSheetPackVocabularyCache.forget(true)
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	# Let the second the file was written in end, so the next check may settle the entry.
+	var written: int = FileAccess.get_modified_time(BASE_PATH)
+	while int(Time.get_unix_time_from_system()) <= written:
+		OS.delay_msec(50)
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	var settled: int = int((EventSheetPackVocabularyCache._entries[BASE_PATH] as Dictionary).get("hashed_at", 0))
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	var rows: Array = [
+		["the entry is hashed once after its file's second is over", settled > written, true],
+		["and not hashed again while nothing moved",
+			int((EventSheetPackVocabularyCache._entries[BASE_PATH] as Dictionary).get("hashed_at", 0)), settled],
+		["it is still answered from memory", EventSheetPackVocabularyCache.last_remembered, PackedStringArray(probe)],
+	]
+	_write(BASE_PATH, BASE_SOURCE.replace("Base Step", "Base Hops"))
+	_reload(BASE_PATH)
+	EventSheetPackVocabularyCache.definitions_for(probe)
+	rows.append(["a same-length edit after that is still reflected", EventSheetPackVocabularyCache.last_reflected,
+		PackedStringArray(probe)])
+	rows.append(["and answers the edit", _names(EventSheetPackVocabularyCache.definitions_for(probe)), "Base Hops"])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(BASE_PATH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_DIR))
+	EventSheetPackVocabularyCache.forget(true)
+	return SUPPORT.pins(TEST_NAME, rows)
 
 
 ## A file that is damaged, or written by another format, is never decoded: everything is reflected.

@@ -35,6 +35,7 @@
 # Run:
 #   godot --headless --path . --script tools/build_help_bundle.gd            regenerate
 #   godot --headless --path . --script tools/build_help_bundle.gd -- --check report only
+#   godot --headless --path . --script tools/build_help_bundle.gd -- --force bake past a collapse refusal
 #
 # Both modes print `help: pages=N drifted=N`. THE GATE IS NOT THIS FILE - the byte-identity check
 # that CI runs lives in tests/doc_library_test.gd, because the suite is what CI discovers. This is
@@ -43,6 +44,10 @@
 # Exit 2 means NOTHING was written, for one of two reasons it prints: a known-good body does not
 # round-trip (the importer or compiler is broken, so every verdict would be noise), or the fresh
 # verdicts collapsed - none drawable, or fewer than half the drawable count already committed.
+# The second is a heuristic, so it can be overridden: `-- --force` bakes anyway after printing the
+# refusal it overrode, for a guide edit that really does remove most of the figures, or a first bake
+# where every fence is legitimately undrawable. The first is never overridden - a broken toolchain
+# has no right answer to write.
 @tool
 extends SceneTree
 
@@ -84,6 +89,7 @@ static func locale_sets() -> Array:
 
 func _init() -> void:
 	var check_only: bool = OS.get_cmdline_user_args().has("--check") or OS.get_cmdline_args().has("--check")
+	var forced: bool = OS.get_cmdline_user_args().has("--force")
 	# Every figure verdict is an import and a compile. When those are broken - a core script saved
 	# half way by another process, say - every verdict reads "cannot be drawn", and writing them
 	# would ship a manual with no figures in it. So the toolchain answers a known-good body first.
@@ -96,8 +102,10 @@ func _init() -> void:
 	var gates: Dictionary = build_gates(pages)
 	# Read BEFORE anything is written, so the comparison is against the committed file.
 	var refusal: String = EventSheetDocFigures.bake_refusal(gates, committed_gates())
-	if not refusal.is_empty():
-		printerr("help: refusing to bake figures.esdoc - %s; nothing was written" % refusal)
+	if not refusal.is_empty() and forced:
+		print("help: --force overrides the refusal to bake figures.esdoc - %s" % refusal)
+	elif not refusal.is_empty():
+		printerr("help: refusing to bake figures.esdoc - %s; nothing was written (pass -- --force to bake anyway)" % refusal)
 		quit(2)
 		return
 	var drifted: PackedStringArray = drifted_pages(pages)

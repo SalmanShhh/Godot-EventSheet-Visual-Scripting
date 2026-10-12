@@ -221,6 +221,11 @@ const EVENT_PICKER_GROUPS: Array[String] = [
 ## category "Parent: Sub" - no schema change. Node-type sections never sub-nest.
 const SUBCATEGORY_SEPARATOR: String = ": "
 
+## Categories deliberately left without a section icon, because nothing in the editor theme fits
+## yet. The one list both the icon check tool and the suite read, so a category is only ever
+## unmapped on purpose.
+const UNMAPPED_ICON_CATEGORIES: Array[String] = ["Performance"]
+
 ## Hand-picked icons for categories that DERIVATION cannot reach: abstract groupings whose name is
 ## not a class and whose verbs have no host node ("Math & Random", "General Actions", "Helpers").
 ## Everything else resolves automatically - see category_icon_name - so adding a category to the

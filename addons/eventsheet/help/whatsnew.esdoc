@@ -19,6 +19,17 @@ What changed in the build you have installed (v0.18.0), in the words the release
   is always safe. The first session after an update pays about one second extra to write it.
 - `pack_vocabulary_cache_test` compares the remembered answer with a fresh reflection for every pack,
   dump line for dump line and field for field.
+- A pack written before the helper class it names (so it did not compile and published nothing) is
+  reflected again the moment that class exists: every capitalised name a pack spells that was not a
+  class when its entry was written is part of the entry, and the entry stops holding once that name
+  resolves. Before, the empty answer was served until the pack itself was touched.
+- Later refreshes in the same session hash a remembered pack again only while its file's modified
+  second is not yet over, instead of hashing every pack on every refresh; a same-length edit is still
+  caught either way.
+- `tools/build_help_bundle.gd -- --force` bakes past the figure-collapse refusal (printing the refusal
+  it overrode), for a guide edit that really removes most figures; a broken toolchain still refuses.
+- The categories left without a picker section icon are one list, `ACEPickerDialog.UNMAPPED_ICON_CATEGORIES`,
+  read by both `tools/check_section_icons.gd` and `pack_icons_test`.
 
 ### Fixed: the help bundle never bakes a manual with no figures in it
 

@@ -14,6 +14,9 @@
 #   - every script it builds on (its base-script chain: inherited members are reflected too),
 #   - every script its source, or a base's source, NAMES (a class_name or a res:// path: an
 #     exported property typed with another class's enum takes its hint from that file),
+#   - every capitalised name its source spells that is NOT a class yet: a pack written before the
+#     helper class it uses does not compile and publishes nothing, and the moment that name becomes
+#     a global class the entry no longer holds, although none of the files above changed,
 #   - the autoload it is registered as, if any (an autoload's verbs call the singleton by name),
 #   - and, for the whole file, the plugin version, the engine version, and the code that does the
 #     reflecting (the generator, the analyzer and every script they name).
@@ -48,7 +51,8 @@ const MAGIC: String = "ESPV"
 const COMPUTED_SURFACE_MARKERS: PackedStringArray = ["_get_property_list", "_eventforge_register"]
 
 ## path -> {"stamp", "md5", "deps", "autoload", "definitions": Array[ACEDefinition]} for every
-## script answered this session.
+## script answered this session. In memory only, also "hashed_at": the second the content hash was
+## last taken (see _entry_holds).
 static var _entries: Dictionary = {}
 ## path -> the same entry in its stored form, read from disk and not yet asked for this session.
 static var _stored: Dictionary = {}
@@ -57,9 +61,15 @@ static var _disk_read: bool = false
 ## What the reflecting code looked like when this session first asked - see _code_stamp.
 static var _code_stamp_value: String = ""
 static var _code_stamp_built: bool = false
-## class_name -> script path, built only when a script has to be reflected.
+## class_name -> script path, read afresh on every call that needs it, so a class added in this
+## session is seen by the next one.
 static var _class_paths: Dictionary = {}
 static var _class_paths_built: bool = false
+## Where the global class list comes from. ProjectSettings, except in a test that must make a class
+## appear without an editor filesystem scan to register it.
+static var class_list_source: Callable = Callable(ProjectSettings, "get_global_class_list")
+## Vector2, Color, PackedStringArray and the other built-in types, which are not engine classes.
+static var _builtin_types: Dictionary = {}
 ## Where this session reads and writes the file. CACHE_PATH, except in a test that must not touch
 ## the project's own copy.
 static var cache_path: String = CACHE_PATH
@@ -67,6 +77,9 @@ static var cache_path: String = CACHE_PATH
 ## and the paths that had to be loaded and reflected.
 static var last_remembered: PackedStringArray = PackedStringArray()
 static var last_reflected: PackedStringArray = PackedStringArray()
+## The prefix of a dependency that is a name, not a file: `class:<Name>|missing` is a name the
+## source spelled that was not a class when the entry was written.
+const MISSING_CLASS_PREFIX: String = "class:"
 ## The two patterns the dependency scan reads a source with, compiled on first use.
 static var _identifier_pattern: RegEx = null
 static var _path_pattern: RegEx = null
@@ -79,6 +92,7 @@ static var _fields: PackedStringArray = PackedStringArray()
 ## nothing, as before.
 static func definitions_for(paths: Array[String]) -> Array[ACEDefinition]:
 	_read_disk()
+	_class_paths_built = false
 	last_remembered = PackedStringArray()
 	last_reflected = PackedStringArray()
 	var output: Array[ACEDefinition] = []
@@ -137,18 +151,31 @@ static func forget(delete_file: bool = false) -> void:
 
 
 ## Whether an entry still describes the script at `path`: its own stamp and content hash, its
-## autoload, and the stamp of every file it depends on, all as they were when it was written.
+## autoload, the stamp of every file it depends on, and every name it spelled that was not a class
+## then and is still not one, all as they were when it was written.
+##
+## The content hash is what catches an edit that kept both the length and the modified second, and
+## that can only happen while the file's modified second is not yet over. So an entry hashed THIS
+## session in a later second than the file was last modified is not hashed again: any edit since
+## would have moved the modified time off the stamp. An entry read off disk is always hashed once.
 static func _entry_holds(entry: Dictionary, path: String, autoloads: Dictionary, stat_memo: Dictionary) -> bool:
-	if str(entry.get("stamp", "")) != _file_stamp(path, stat_memo):
+	var stamp: String = _file_stamp(path, stat_memo)
+	if str(entry.get("stamp", "")) != stamp:
 		return false
 	if str(entry.get("autoload", "")) != str(autoloads.get(path, "")):
 		return false
-	if str(entry.get("md5", "")) != FileAccess.get_md5(path):
-		return false
+	if int(entry.get("hashed_at", 0)) <= int(stamp.get_slice(":", 0)):
+		var hashed_at: int = int(Time.get_unix_time_from_system())
+		if str(entry.get("md5", "")) != FileAccess.get_md5(path):
+			return false
+		entry["hashed_at"] = hashed_at
 	for dep: Variant in entry.get("deps", PackedStringArray()):
 		var separator: int = str(dep).rfind("|")
 		var dep_path: String = str(dep).substr(0, separator)
-		if _file_stamp(dep_path, stat_memo) != str(dep).substr(separator + 1):
+		if dep_path.begins_with(MISSING_CLASS_PREFIX):
+			if _global_class_paths().has(dep_path.trim_prefix(MISSING_CLASS_PREFIX)):
+				return false
+		elif _file_stamp(dep_path, stat_memo) != str(dep).substr(separator + 1):
 			return false
 	return true
 
@@ -185,6 +212,8 @@ static func _autoload_names() -> Dictionary:
 
 ## A fresh reflection of one script, with everything needed to know later whether it still holds.
 static func _reflect(path: String, autoloads: Dictionary) -> Dictionary:
+	# Taken before the content is read, so an edit later in the same second is hashed again.
+	var hashed_at: int = int(Time.get_unix_time_from_system())
 	var resource: Resource = load(path)
 	if not (resource is Script):
 		return {}
@@ -222,30 +251,55 @@ static func _reflect(path: String, autoloads: Dictionary) -> Dictionary:
 	var dep_paths: Array = named.keys()
 	dep_paths.sort()
 	for dep_path: Variant in dep_paths:
-		deps.append("%s|%s" % [dep_path, _file_stamp(str(dep_path), stat_memo)])
+		if str(dep_path).begins_with(MISSING_CLASS_PREFIX):
+			deps.append("%s|missing" % dep_path)
+		else:
+			deps.append("%s|%s" % [dep_path, _file_stamp(str(dep_path), stat_memo)])
 	reflected["rememberable"] = true
 	reflected["stamp"] = _file_stamp(path, stat_memo)
 	reflected["md5"] = FileAccess.get_md5(path)
+	reflected["hashed_at"] = hashed_at
 	reflected["deps"] = deps
 	reflected["autoload"] = str(autoloads.get(path, ""))
 	reflected["encoded"] = encoded
 	return reflected
 
 
-## Every script a source names: a global class_name it mentions, or a res:// or user:// .gd path it spells.
+## Every script a source names: a global class_name it mentions, or a res:// or user:// .gd path it
+## spells. Every other capitalised name it spells that the engine does not know either - not a global
+## class, not an engine class, not a built-in type - is listed as `class:<Name>`, so the entry
+## stops holding if a class of that name is added later. A constant or an enum spelled in capitals
+## is listed too; it never becomes a class, so it never sends the entry back.
 static func _paths_named_in(source: String) -> PackedStringArray:
-	if not _class_paths_built:
-		for info: Dictionary in ProjectSettings.get_global_class_list():
-			_class_paths[str(info.get("class", ""))] = str(info.get("path", ""))
-		_class_paths_built = true
+	var class_paths: Dictionary = _global_class_paths()
 	var found: Dictionary = {}
 	for match_found: RegExMatch in _identifier_regex().search_all(source):
 		var named: String = match_found.get_string()
-		if _class_paths.has(named):
-			found[_class_paths[named]] = true
+		if class_paths.has(named):
+			found[class_paths[named]] = true
+		elif not ClassDB.class_exists(named) and not _builtin_type_names().has(named):
+			found[MISSING_CLASS_PREFIX + named] = true
 	for match_found: RegExMatch in _path_regex().search_all(source):
 		found[match_found.get_string()] = true
 	return PackedStringArray(found.keys())
+
+
+## class_name -> script path, read once per definitions_for call.
+static func _global_class_paths() -> Dictionary:
+	if not _class_paths_built:
+		_class_paths.clear()
+		for info: Variant in class_list_source.call():
+			if info is Dictionary:
+				_class_paths[str((info as Dictionary).get("class", ""))] = str((info as Dictionary).get("path", ""))
+		_class_paths_built = true
+	return _class_paths
+
+
+static func _builtin_type_names() -> Dictionary:
+	if _builtin_types.is_empty():
+		for type_index: int in range(1, TYPE_MAX):
+			_builtin_types[type_string(type_index)] = true
+	return _builtin_types
 
 
 static func _identifier_regex() -> RegEx:
@@ -308,7 +362,8 @@ static func _code_stamp() -> String:
 	for root: String in roots:
 		files[root] = true
 		for named: String in _paths_named_in(FileAccess.get_file_as_string(root)):
-			files[named] = true
+			if not named.begins_with(MISSING_CLASS_PREFIX):
+				files[named] = true
 	var sorted: Array = files.keys()
 	sorted.sort()
 	var stat_memo: Dictionary = {}

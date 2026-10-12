@@ -14,10 +14,6 @@
 @tool
 extends SceneTree
 
-## Categories deliberately left without an icon (nothing in the editor theme fits yet). Kept equal
-## to the suite's own list, so a category is only ever unmapped on purpose.
-const UNMAPPED_CATEGORIES: Array[String] = ["Performance"]
-
 var _frames: int = 0
 
 
@@ -49,7 +45,7 @@ func _check() -> int:
 	var checked: int = 0
 	var missing: int = 0
 	for category: String in names:
-		if category.is_empty() or category in UNMAPPED_CATEGORIES:
+		if category.is_empty() or category in ACEPickerDialog.UNMAPPED_ICON_CATEGORIES:
 			continue
 		checked += 1
 		var icon_name: String = ACEPickerDialog.category_icon_name(category)
