@@ -7594,6 +7594,8 @@ const LOCAL_DECLARATION_ACES: PackedStringArray = ["SetLocalVar", "SetLocalVarIn
 ## The "__" copies of a scene the event whose spans are being built can name, {local: shown}. Set
 ## around each lazy span build and empty everywhere else, so every reading outside it is untouched.
 var _spawn_copy_names: Dictionary = {}
+## The "__" loop names the same event can name, {loop name: what it walks}. Set and emptied with it.
+var _walked_names: Dictionary = {}
 ## The parent event of every sub-event of the sheet, {EventRow: EventRow}, and every entry the walk
 ## that made it saw, so a sub-event names a copy its parent made. Rebuilt when an event turns up that
 ## the walk never saw - an edit replaces rows with duplicates - and only ever while the theme asks.
@@ -7727,11 +7729,83 @@ func _spawn_copy_text(action: ACEAction, text: String) -> String:
 	for alias: Variant in _spawn_copy_names:
 		if not _plant_placement_word(action, str(alias)).is_empty():
 			return "%s %s" % [EventSheetL10n.translate("Spawn"), str(_spawn_copy_names[alias])]
+	return _compiler_names_text(text)
+
+
+## `text` with every "__" name the event being built can name said as what it stands for: a scene
+## copy by its scene file, a loop's own name by what the loop walks. A name without the two
+## underscores is never in either table, so whatever the author wrote reads exactly as written.
+func _compiler_names_text(text: String) -> String:
 	var named: String = text
-	for alias: Variant in _spawn_copy_names:
-		var pattern: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % str(alias))
-		named = pattern.sub(named, str(_spawn_copy_names[alias]), true)
+	for table: Dictionary in [_spawn_copy_names, _walked_names]:
+		for alias: Variant in table:
+			var pattern: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % str(alias))
+			named = pattern.sub(named, str(table[alias]), true)
 	return named
+
+
+## One walked group as a loop names it: a family's group by the family, as its picking row reads,
+## and any other group by its name exactly as written.
+func _walked_group_shown(group: String) -> String:
+	return EventSheetViewportReadingRows.family_label(group) if group.begins_with("family_") else group
+
+
+## Whether the event being built has any "__" name to say differently.
+func _names_compiler_helpers() -> bool:
+	return not (_spawn_copy_names.is_empty() and _walked_names.is_empty())
+
+
+## The "__" names a For Each over `event_row` and its parent events gives each thing it walks,
+## {loop name: shown}. A generated loop keeps the current one in a two-underscore local, which is
+## nothing a reader typed, so where the theme asks it reads as what the loop walks: the group it
+## walks ("shots"), several groups walked as one list ("shots/targets"), or the list it is handed.
+## Empty when the theme keeps names, and a loop name the author wrote is never in it.
+func walked_loop_names(event_row: EventRow) -> Dictionary:
+	var names: Dictionary = {}
+	if event_row == null or not folds_compiler_helpers():
+		return names
+	for row: EventRow in _event_chain(event_row):
+		for pick_resource: Resource in row.pick_filters:
+			var pick: PickFilter = pick_resource as PickFilter
+			if pick == null or not pick.enabled:
+				continue
+			var loop_name: String = pick.iterator_name.strip_edges()
+			if not NativeVariableMarks.is_compiler_variable(loop_name):
+				continue
+			var shown: String = walked_collection_shown(pick)
+			if not shown.is_empty():
+				names[loop_name] = shown
+	return names
+
+
+## What a loop walks, in the fewest words that still name it: a group by its name as written, a sum
+## of group lists by its groups joined with "/", a plain list by its own name. "" for anything else
+## (a call, a range, children), which keeps the loop's name as the file writes it.
+func walked_collection_shown(pick: PickFilter) -> String:
+	if pick == null:
+		return ""
+	var collection: String = _pick_collection_text(pick)
+	match pick.collection_kind:
+		PickFilter.CollectionKind.GROUP:
+			return _walked_group_shown(collection.trim_prefix("&").trim_prefix("\"").trim_suffix("\""))
+		PickFilter.CollectionKind.EXPRESSION:
+			pass
+		_:
+			return ""
+	var groups: PackedStringArray = PackedStringArray()
+	var group_call: RegEx = RegEx.create_from_string(
+		"^(?:get_tree\\(\\)\\.)?get_nodes_in_group\\(\\s*&?\"([^\"]+)\"\\s*\\)$")
+	for part: String in EventSheetSentence.split_top_level(collection, " + "):
+		var found: RegExMatch = group_call.search(part.strip_edges())
+		if found == null:
+			groups.clear()
+			break
+		groups.append(_walked_group_shown(found.get_string(1)))
+	if not groups.is_empty():
+		return "/".join(groups)
+	if EventSheetSentence.is_identifier(collection) and not NativeVariableMarks.is_compiler_variable(collection):
+		return collection
+	return ""
 
 
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
@@ -13474,6 +13548,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				condition_index, {})
 			var condition_text: String = str(joined_lead.get("text", "")) if not joined_lead.is_empty() \
 				else _format_condition_descriptor(condition)
+			if _names_compiler_helpers():
+				condition_text = _compiler_names_text(condition_text)
 			var condition_owner: String = str(joined_lead.get("object", "")) if not joined_lead.is_empty() \
 				else _object_label_or_pending(condition.provider_id, condition.ace_id)
 			spans.append(
@@ -13545,6 +13621,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			loop_reading = pick_reading
 			loop_text = str(pick_reading.get("text", ""))
 			loop_object = str(pick_reading.get("object", ""))
+		# A walk whose own name is the compiler's "__" local reads as what it walks, which then names
+		# the current one in every row under it - the picking row a family walk reads as.
+		var walked_shown: String = str(_walked_names.get(pick.iterator_name.strip_edges(), ""))
+		if not walked_shown.is_empty() and pick.predicate_expression.strip_edges().is_empty() \
+				and pick.pick_first_n <= 0:
+			loop_reading = {"text": "%s %s" % [EventSheetL10n.translate("For each"), walked_shown],
+				"object": walked_shown}
+			loop_text = str(loop_reading["text"])
+			loop_object = walked_shown
 		# A walk over a family is that family's row: Enemy in the object column, as the picking
 		# form reads in every event sheet.
 		if loop_object.is_empty():
@@ -13864,7 +13949,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						action_line_index += 1
 						continue
 				var action_words: String = _format_action_descriptor(action_resource as ACEAction)
-				if not _spawn_copy_names.is_empty():
+				if _names_compiler_helpers():
 					action_words = _spawn_copy_text(action_resource as ACEAction, action_words)
 				spans.append(
 					_make_span(
@@ -15320,9 +15405,12 @@ func _expand_ternary_row(row: EventRowData) -> Array[EventRowData]:
 	# The slices and arms build their words right here rather than lazily, so the "__" copies the
 	# event can name are set for the whole expansion.
 	var outer_copies: Dictionary = _spawn_copy_names
+	var outer_walked: Dictionary = _walked_names
 	_spawn_copy_names = spawned_copy_names(row.source_resource as EventRow)
+	_walked_names = walked_loop_names(row.source_resource as EventRow)
 	var expanded: Array[EventRowData] = _expand_event_from(row, 0, row.indent, false)
 	_spawn_copy_names = outer_copies
+	_walked_names = outer_walked
 	if expanded.size() == 1 and expanded[0] == row:
 		return single
 	# Exactly ONE row of a pair leads it: the head slice when it survived, otherwise the first branch
@@ -15843,11 +15931,14 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		_pending_grammar_breakpoint = false
 		_pending_patterns = {}
 		var outer_copies: Dictionary = _spawn_copy_names
+		var outer_walked: Dictionary = _walked_names
 		_spawn_copy_names = spawned_copy_names(event)
+		_walked_names = walked_loop_names(event)
 		row_data.spans = _build_event_spans(event, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		_spawn_copy_names = outer_copies
+		_walked_names = outer_walked
 		row_data.spans = _split_function_reference_spans(row_data.spans)
 		# Which condition lines carry an "or" above them. A sliced row hides its conditions, so
 		# it keeps none: there is nothing left to divide.
@@ -18832,10 +18923,14 @@ func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
 	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
-	# A "__" copy of a scene is named by the scene it was made from (fold_compiler_helpers).
+	# A "__" copy of a scene is named by the scene it was made from, and a "__" loop name by what the
+	# loop walks (fold_compiler_helpers).
 	if _spawn_copy_names.has(label):
 		_pending_object_note = ""
 		return str(_spawn_copy_names[label])
+	if _walked_names.has(label):
+		_pending_object_note = ""
+		return str(_walked_names[label])
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The same reading a hand-written statement gets: a receiver the sheet declared a class for is
 	# named by that class, with its own name muted beside it. Applied here because this is the ONE

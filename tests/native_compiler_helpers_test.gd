@@ -12,7 +12,10 @@ extends RefCounted
 #   2. the rows the builder makes under Editor Native, word for word;
 #   3. the same rows under Classic Sheet, exactly as before;
 #   4. an event whose whole content is the upkeep keeps it;
-#   5. the file still opens and saves byte for byte.
+#   5. the file still opens and saves byte for byte;
+#   6. a For Each's own "__" name reads as what it walks, under the starter and under the rule a
+#      derived Native theme is built by alike, while Classic keeps it and a name the author wrote
+#      reads exactly as written.
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "native_compiler_helpers_test"
@@ -41,6 +44,7 @@ static func run() -> bool:
 	ok = _test_classic_rows_unchanged() and ok
 	ok = _test_upkeep_alone_stays() and ok
 	ok = _test_round_trip() and ok
+	ok = _test_loop_names() and ok
 	return ok
 
 
@@ -138,7 +142,11 @@ static func _shooter() -> EventSheetResource:
 
 
 static func _viewport_for(sheet: EventSheetResource, theme_path: String) -> EventSheetViewport:
-	sheet.editor_style = (load(theme_path) as EventSheetEditorStyle).duplicate(true)
+	return _viewport_with(sheet, (load(theme_path) as EventSheetEditorStyle).duplicate(true))
+
+
+static func _viewport_with(sheet: EventSheetResource, style: EventSheetEditorStyle) -> EventSheetViewport:
+	sheet.editor_style = style
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_ace_registry(EventSheetACERegistry.new())
 	viewport.set_sheet(sheet)
@@ -195,3 +203,93 @@ static func _lane_words(row: EventRowData, lane: String) -> Array:
 		var label: String = str(meta.get("object_label", ""))
 		words.append(("[%s] %s" % [label, span.text]) if not label.is_empty() else span.text)
 	return words
+
+
+static func _test_loop_names() -> bool:
+	var expected: Array = [
+		"[System] Every tick (physics) | [shots] For each shots",
+		"[targets] For each targets",
+		"[System] shots still exists | [System] targets still exists | [shots] is within 42 of targets.global_position"
+			+ " || [shots] Destroy | [targets] Destroy | [System] Add 1 to score | [System] Stop loop",
+		"[System] Every tick (physics) | [shots/targets] For each shots/targets",
+		"[System] shots/targets.global_position.x < -60 | [System] shots/targets.global_position.x > 1300"
+			+ " || [shots/targets] Destroy",
+	]
+	var starter: EventSheetViewport = _viewport_for(_shooter(), NATIVE_THEME)
+	var native_loops: Array = _loop_lines(starter)
+	starter.free()
+	var derived: EventSheetViewport = _viewport_with(_shooter(), EventSheetEditorThemeDeriver.native_style(
+		EventSheetEditorThemeDeriver.NATIVE_DARK_REFERENCE_BASE))
+	var derived_loops: Array = _loop_lines(derived)
+	derived.free()
+	var classic: EventSheetViewport = _viewport_for(_shooter(), CLASSIC_THEME)
+	var classic_loops: Array = _loop_lines(classic)
+	classic.free()
+	var written: EventSheetResource = SUPPORT.reopen("extends Node2D
+
+"
+		+ "func _physics_process(_delta: float) -> void:
+"
+		+ "	for shot in get_tree().get_nodes_in_group(\"shots\"):
+"
+		+ "		if shot.global_position.x < -60.0:
+			shot.queue_free()
+")
+	var authored: EventSheetViewport = _viewport_for(written, NATIVE_THEME)
+	var authored_loops: Array = _loop_lines(authored)
+	authored.free()
+	var family_sheet: EventSheetResource = SUPPORT.reopen("extends Node2D
+
+"
+		+ "func _physics_process(_delta: float) -> void:
+"
+		+ "	for __each in get_tree().get_nodes_in_group(\"family_enemy\"):
+"
+		+ "		if __each.global_position.x < -60.0:
+			__each.queue_free()
+")
+	var family: EventSheetViewport = _viewport_for(family_sheet, NATIVE_THEME)
+	var family_loops: Array = _loop_lines(family)
+	family.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["native: each loop name reads as what it walks", native_loops, expected],
+		["a derived Native theme reads the same", derived_loops, expected],
+		["classic: the loop names read as the file writes them", classic_loops, [
+			"⟳ | [System] Every tick (physics) | [System] For each __shot in get_tree().get_nodes_in_group(\"shots\")",
+			"[System] For each __target in get_tree().get_nodes_in_group(\"targets\")",
+			"[System] __shot still exists | [System] __target still exists | [__shot] is within 42 of __target.global_position"
+				+ " || [__shot] Destroy | [__target] Destroy | [System] Add 1 to score | [System] Stop loop",
+			"⟳ | [System] Every tick (physics) | [System] For each __node in get_tree().get_nodes_in_group(\"shots\")"
+				+ " + get_tree().get_nodes_in_group(\"targets\")",
+			"[System] __node.global_position.x < -60 | [System] __node.global_position.x > 1300 || [__node] Destroy",
+		]],
+		["a loop name the author wrote reads exactly as written", authored_loops, [
+			"[System] Every tick (physics) | [System] For each shot in get_tree().get_nodes_in_group(\"shots\")",
+			"[System] shot.global_position.x < -60 || [shot] Destroy",
+		]],
+		["a walk over a family's group reads as the family", family_loops, [
+			"[System] Every tick (physics) | [Enemy] For each Enemy",
+			"[System] Enemy.global_position.x < -60 || [Enemy] Destroy",
+		]],
+	])
+
+
+## The rows from the first loop on, each as "conditions || actions" in "[object] words".
+static func _loop_lines(viewport: EventSheetViewport) -> Array:
+	var lines: Array = []
+	var started: bool = false
+	for index: int in range(viewport._flat_rows.size()):
+		var row: EventRowData = viewport._row_at(index)
+		if row == null or not (row.source_resource is EventRow):
+			continue
+		viewport._ensure_event_spans(row)
+		var conditions: Array = _lane_words(row, "condition")
+		var said: String = " | ".join(conditions)
+		if not started and not said.contains("For each"):
+			continue
+		if started and (said.contains("is reloading") or said.contains("Else")):
+			break
+		started = true
+		var actions: Array = _lane_words(row, "action")
+		lines.append(said if actions.is_empty() else "%s || %s" % [said, " | ".join(actions)])
+	return lines

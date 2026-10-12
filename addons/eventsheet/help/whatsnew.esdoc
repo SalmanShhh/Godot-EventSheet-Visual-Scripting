@@ -135,6 +135,13 @@ What changed in the build you have installed (v0.18.0), in the words the release
   X Seconds row adds the frame time to and then wraps - folds away like its variable row did, unless
   it is all the event does. Every other theme states the token off and reads exactly as before.
   Reading only: compiled output, the byte round trip and the default-theme reading are unchanged.
+- **A For Each's own `__` name reads as what it walks.** Under the same token, a loop the compiler
+  wrote over a group (`for __shot in get_tree().get_nodes_in_group(\"shots\")`) reads \"For each shots\"
+  with \"shots\" in its object column, and every row under it says \"shots\" where the file says
+  `__shot` (\"shots still exists\", \"shots | Destroy\"). Several groups walked as one list read joined
+  (\"shots/targets\"); a loop over a plain list reads by that list's name. A theme derived from the
+  editor (Editor Native's own rule) reads the same as the starter. A loop name the author wrote
+  (no `__`) always reads exactly as written, and Classic Sheet keeps the `__` names.
 
 ### Added: new rows for the tree, for starting over, and for distance
 
