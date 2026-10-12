@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added: the Flock pack and Flock 3D - birds, fish and swarms that steer by their neighbours
+
+- **Flock** (`FlockBehavior`, on a Node2D) and **Flock 3D** (`Flock3DBehavior`, on a Node3D): attach
+  one under every member and the group flies as one, with separation from the members too close,
+  alignment with the way the neighbours fly and cohesion toward their middle, inside a neighbour
+  radius. An **avoid group** is fled on top - a predator, the player, a hazard. Weights, speeds, the
+  steering force and both radii are Inspector values, and each has a Set row: Set Flock Weights, Set
+  Flock Speeds, Set Max Force, Set Flock Radii, Set Avoid Group, Set Flock Group (leaves the old
+  group and joins the new in one row) and Set Flocking Enabled.
+- Compiles to plain typed GDScript: the host joins the flock group, a neighbour carrying the same
+  behaviour reports its flock velocity (a CharacterBody or RigidBody in the group reports its own),
+  and a CharacterBody host flies with `move_and_slide`. The 3D host looks along its flight.
+- Found under the names the technique goes by elsewhere: Boids, Flocking, and Separation Alignment
+  Cohesion. Each pack has a guide; for hundreds of members the guide points to one script driving a
+  MultiMeshInstance.
+
 ### Added: pause requests, so one reason unpausing does not unpause the rest
 
 - **Ask To Pause**, **Stop Asking To Pause** and **Pause Requested By**, beside Pause The Game, Set

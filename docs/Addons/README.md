@@ -90,6 +90,7 @@ Attach to a node to move it.
 - [Bullet](Bullet.md) - fire a node in a straight line at a speed and angle.
 - [Sine](Sine.md) - oscillate a property (position, size, angle) on a sine wave.
 - [Orbit](Orbit.md) - circle a node around a centre point.
+- [Flock](Flock.md) - birds, fish and swarms that steer by their neighbours: every member of a group keeps apart from the ones too close, flies the way the rest are flying and drifts toward their middle, and flees an avoid group - weights, speeds, steering force and both radii as Inspector values with a Set row each.
 
 ## Movement (3D)
 
@@ -101,6 +102,7 @@ Attach to a node to move it.
 - [Pin 3D](Pin-3D.md) - the Pin behavior's twin on a Node3D host, mode for mode, with the point pin riding a BoneAttachment3D so "pin the sword to the hand" is one name.
 - [Skateboard 3D](Skateboard-3D.md) - the board on a surface: gravity projected onto the floor normal so bowls carve, the board kept flat on ramps, a named moment for leaving a halfpipe lip, Path3D grinds, and landings judged by the board's up against the surface.
 - [Traversal Kit 3D](Traversal-Kit-3D.md) - the same traversal moveset in metres: ledge grabs, mantles, wall runs, ladders, vaults, crouching, swimming and buoyancy on top of the FPS Controller.
+- [Flock 3D](Flock-3D.md) - the Flock pack's twin on a Node3D in metres: the same three rules and avoid group, the host looking along its flight, and a flock free to climb and dive.
 
 ## AI and logic
 

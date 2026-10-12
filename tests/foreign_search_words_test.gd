@@ -31,13 +31,18 @@ static func _every_phrase_names_a_shipped_verb() -> bool:
 	var shipped: Dictionary = {}
 	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
 		shipped[str(descriptor.ace_id)] = true
-	# The two pack verbs the search-only names reach are read off their pack's own script, the same
-	# way the picker's definitions are.
+	# The pack verbs the search-only names reach are read off their packs' own scripts, the same way
+	# the picker's definitions are.
 	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
-	registry.refresh_from_sources([load("res://eventsheet_addons/debug_overlay/debug_overlay_addon.gd").new()], true)
+	var flock: Node = load("res://eventsheet_addons/flock/flock_behavior.gd").new()
+	var flock_3d: Node = load("res://eventsheet_addons/flock_3d/flock_3d_behavior.gd").new()
+	registry.refresh_from_sources([load("res://eventsheet_addons/debug_overlay/debug_overlay_addon.gd").new(),
+		flock, flock_3d], true)
 	for definition: ACEDefinition in registry.get_all_definitions():
-		if definition.provider_id == "DebugOverlayAddon":
+		if definition.provider_id in ["DebugOverlayAddon", "FlockBehavior", "Flock3DBehavior"]:
 			shipped[str(definition.id)] = true
+	flock.free()
+	flock_3d.free()
 	var missing: PackedStringArray = PackedStringArray()
 	var phrases: Dictionary = EventSheetForeignACEMap.search_phrases()
 	var sorted: Array = phrases.keys()

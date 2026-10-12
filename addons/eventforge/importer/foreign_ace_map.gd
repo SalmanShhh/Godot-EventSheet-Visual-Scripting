@@ -215,6 +215,11 @@ const FAMILIAR_NAMES: Dictionary = {
 	"Request Pause": ["AskToPause"],
 	"Release Pause": ["StopAskingToPause"],
 	"Is Pause Requested": ["PauseRequestedBy"],
+	# The Flock packs, under the names steering by neighbours goes by elsewhere: an action browser
+	# shelves it as Boids, and the technique is called flocking, after its three rules.
+	"Boids": ["method:set_flock_weights", "method:set_flock_speeds", "method:set_flock_radii", "method:set_avoid_group"],
+	"Flocking": ["method:set_flock_weights", "method:set_flock_speeds", "method:set_flock_radii", "method:set_avoid_group"],
+	"Separation Alignment Cohesion": ["method:set_flock_weights"],
 }
 
 ## Foreign behaviours whose shape a shipped behaviour pack already covers. A row on one of these

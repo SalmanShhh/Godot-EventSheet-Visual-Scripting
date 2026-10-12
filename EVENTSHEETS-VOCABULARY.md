@@ -872,6 +872,30 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Blink Phase** - Which phase of the pattern is playing, counting from 1. 0 when nothing is blinking - so a row can tell the fast winks from the slow ones that follow them.
 
+### FlockBehavior (`res://eventsheet_addons/flock/flock_behavior.gd`)
+@ace_tags(movement, steering, group) @ace_category("Flock") @ace_version(1.0.0)
+
+#### Actions
+- **Set Flock Weights** (`separation: float, alignment: float, cohesion: float`) - Sets how strongly the three rules pull: separation keeps members apart, alignment turns them the way their neighbours fly, cohesion draws them toward their neighbours' middle. Zero switches a rule off; a weight is relative to the other two.
+- **Set Flock Speeds** (`minimum: float, maximum: float`) - Sets the slowest and the fastest a member flies, in pixels per second. A maximum below the minimum is raised to it, so the two can never cross.
+- **Set Max Force** (`force: float`) - Sets how quickly a member may change its velocity, in pixels per second per second, for each rule. Low turns in wide arcs; high turns on the spot.
+- **Set Flock Radii** (`neighbours: float, too_close: float`) - Sets how far a member looks for neighbours, and how close a neighbour may come before separation pushes it away. Make the second a little wider than the sprite and members never overlap.
+- **Set Avoid Group** (`group: StringName, radius: float, weight: float`) - Sets the group the flock flees - a predator, the player, a hazard - how close it must come before the flock reacts, and how strongly it flees. An empty group avoids nothing.
+- **Set Flock Group** (`group: StringName`) - Moves the host from its flock to another one in a single row: it leaves the old group and joins the new, so it is never counted by both.
+- **Set Flocking Enabled** (`enabled: bool`) - Turns the steering on or off at runtime. Off, the host keeps still and costs nothing per frame; on again, it flies off at the velocity it had.
+
+### Flock3DBehavior (`res://eventsheet_addons/flock_3d/flock_3d_behavior.gd`)
+@ace_tags(movement, steering, group) @ace_category("Flock 3D") @ace_version(1.0.0)
+
+#### Actions
+- **Set Flock Weights** (`separation: float, alignment: float, cohesion: float`) - Sets how strongly the three rules pull: separation keeps members apart, alignment turns them the way their neighbours fly, cohesion draws them toward their neighbours' middle. Zero switches a rule off; a weight is relative to the other two.
+- **Set Flock Speeds** (`minimum: float, maximum: float`) - Sets the slowest and the fastest a member flies, in metres per second. A maximum below the minimum is raised to it, so the two can never cross.
+- **Set Max Force** (`force: float`) - Sets how quickly a member may change its velocity, in metres per second per second, for each rule. Low turns in wide arcs; high turns on the spot.
+- **Set Flock Radii** (`neighbours: float, too_close: float`) - Sets how far a member looks for neighbours, and how close a neighbour may come before separation pushes it away. Make the second a little wider than the model and members never overlap.
+- **Set Avoid Group** (`group: StringName, radius: float, weight: float`) - Sets the group the flock flees - a predator, the player, a hazard - how close it must come before the flock reacts, and how strongly it flees. An empty group avoids nothing.
+- **Set Flock Group** (`group: StringName`) - Moves the host from its flock to another one in a single row: it leaves the old group and joins the new, so it is never counted by both.
+- **Set Flocking Enabled** (`enabled: bool`) - Turns the steering on or off at runtime. Off, the host keeps still and costs nothing per frame; on again, it flies off at the velocity it had.
+
 ### FolderWatcher (`res://eventsheet_addons/folder_watcher/folder_watcher_behavior.gd`)
 @ace_tags(files, tools) @ace_category("Folder Watcher") @ace_expose_all(node) @ace_version(1.0.0)
 
