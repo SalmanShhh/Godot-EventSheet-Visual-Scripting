@@ -14,6 +14,7 @@
 class_name GameStateTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
 const OUT_PATH := "user://__eventsheets_modes_probe.gd"
 
 
@@ -26,6 +27,7 @@ static func run() -> bool:
 	all_passed = _run_dialog() and all_passed
 	all_passed = _run_findings() and all_passed
 	all_passed = _run_seen() and all_passed
+	all_passed = _run_mode_row_before_ready() and all_passed
 	if all_passed:
 		print("[PASS] game_state_test: the reader, the guard, the moment, the round trip, the dialog, the findings and the trail")
 	return all_passed
@@ -302,6 +304,54 @@ static func _run_moment() -> bool:
 	all_passed = _check("a sheet with mode triggers opens and saves byte for byte",
 		str(SheetCompiler.compile(opened, OUT_PATH).get("output", "")), built) and all_passed
 	return all_passed
+
+
+# ── 6. A mode row written before the On created row ───────────────────────────────────────
+## Functions are emitted in the order their first row appears, so a mode row above the On created
+## row puts `_on_mode_changed` ABOVE `_ready` in the file. Opened by path, that file used to fall
+## back WHOLE to code blocks: the handler stayed raw, the lifted `_ready` dropped its connect line
+## anyway, nothing wrote it back and the whole-file check reverted every row.
+static func _run_mode_row_before_ready() -> bool:
+	var all_passed: bool = true
+	var sheet: EventSheetResource = _modes_sheet()
+	sheet.events.append(_row(EventSheetModeFacts.ENTERING_TRIGGER_ID, [],
+		[_shipped_action("SetPaused", {"paused": "true"})], {"mode": "PAUSED"}))
+	sheet.events.append(_row("OnReady", [], [_shipped_action("Print", {"value": "\"ready\""})]))
+	var built: String = SUPPORT.compile_output(sheet, OUT_PATH)
+	all_passed = SUPPORT.check("game_state_test", "the handler is written above _ready",
+		built.find("func _on_mode_changed(") < built.find("func _ready("), true) and all_passed
+	var file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
+	file.store_string(built)
+	file.close()
+	var opened: EventSheetResource = GDScriptImporter.new().import_external(OUT_PATH)
+	all_passed = SUPPORT.check("game_state_test", "a mode row above On created opens", opened != null, true) and all_passed
+	if opened == null:
+		return all_passed
+	var again: String = SUPPORT.compile_output(opened, OUT_PATH)
+	all_passed = SUPPORT.check("game_state_test", "and saves byte for byte", again, built) and all_passed
+	all_passed = SUPPORT.check("game_state_test", "the On created row lifted instead of falling back",
+		_first_ace_id(opened.events, "PrintLog"), true) and all_passed
+	var ready_rows: int = 0
+	for item: Variant in opened.events:
+		if item is EventRow and (item as EventRow).trigger_id == "OnReady":
+			ready_rows += 1
+	all_passed = SUPPORT.check("game_state_test", "as one top-level On created row", ready_rows, 1) and all_passed
+	all_passed = SUPPORT.check("game_state_test", "the mode signal is wired exactly once",
+		again.count("mode_changed.connect(_on_mode_changed)"), 1) and all_passed
+	return all_passed
+
+
+## A shipped action with its params filled, so the row carries the template users get.
+static func _shipped_action(ace_id: String, params: Dictionary) -> ACEAction:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	if descriptor != null:
+		action.provider_id = descriptor.provider_id
+		action.codegen_template = descriptor.codegen_template
+	return action
 
 
 # ── 4. Compiled, opened, re-emitted byte for byte ─────────────────────────────────────────

@@ -557,7 +557,15 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					else:
 						# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
 						# the event instead of failing the file (byte-verify still gates).
-						var lift: Dictionary = _lift_function(row.code.split("\n"), connections, true)
+						# A `_ready` may only drop the connect lines whose handler is still AHEAD of it in
+						# this run: emission writes a connect back only for a handler that lifts in the
+						# trailing section, and one sitting above `_ready` never does (it stayed a block
+						# above, or anchors in place, which writes no connect). Dropping its line anyway
+						# lost it from the file, and the whole-file verify reverted EVERY row - which is
+						# what a sheet whose mode rows came before its On created row opened as.
+						var claimable: Dictionary = _claims_still_ahead(sheet, index, connections) \
+								if header.begins_with("func _ready(") else connections
+						var lift: Dictionary = _lift_function(row.code.split("\n"), claimable, true)
 						# Per-function gate, the trigger-branch twin of the sheet-function gate below:
 						# the lifted events must re-emit this handler's exact bytes, or the handler
 						# stays raw and the run re-anchors after it (a mis-emitting handler used to
@@ -1610,6 +1618,29 @@ static func _connects_through_ready(header: String, connections: Dictionary) -> 
 		return false
 	var connection: Dictionary = connections.get(header_match.get_string(1), {}) as Dictionary
 	return not str(connection.get("line", "")).is_empty()
+
+
+## The connection map cut down to what a `_ready` at `ready_index` may claim: every connection whose
+## handler function is a row AFTER it in the sheet, plus the scene-wired ones (they have no line in
+## the file to claim). A connect whose handler sits above the `_ready` is left out, so the lift keeps
+## that line as an ordinary statement of the On created row instead of counting on a re-emission
+## that never comes.
+static func _claims_still_ahead(sheet: EventSheetResource, ready_index: int, connections: Dictionary) -> Dictionary:
+	var header_regex: RegEx = RegEx.create_from_string("^func ([A-Za-z_][A-Za-z0-9_]*)")
+	var ahead: Dictionary = {}
+	for later_index in range(ready_index + 1, sheet.events.size()):
+		var later_row: RawCodeRow = sheet.events[later_index] as RawCodeRow
+		if later_row == null:
+			continue
+		var header_match: RegExMatch = header_regex.search(later_row.code)
+		if header_match != null:
+			ahead[header_match.get_string(1)] = true
+	var claimable: Dictionary = {}
+	for handler: Variant in connections:
+		var connection: Dictionary = connections[handler] as Dictionary
+		if str(connection.get("line", "")).is_empty() or ahead.has(str(handler)):
+			claimable[handler] = connection
+	return claimable
 
 
 ## True when the header is a signal handler present in the `_ready` connection map.

@@ -124,6 +124,47 @@ static func run() -> bool:
 	var exit_roundtrip: String = str(SheetCompiler.compile(exit_imported, "user://eventsheets_exits_rt.gd").get("output", ""))
 	all_passed = _check("exit triggers round-trip byte-identically", exit_roundtrip == exit_source, true) and all_passed
 
+	all_passed = _run_handler_above_ready() and all_passed
+	return all_passed
+
+
+## A signal row written ABOVE the On created row emits its handler above `_ready` (functions come
+## out in first-row order). Opened by path, that file must still lift: the handler's connect line
+## stays a statement of the On created row rather than vanishing and reverting the whole file.
+static func _run_handler_above_ready() -> bool:
+	var all_passed: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var ping: SignalRow = SignalRow.new()
+	ping.signal_name = "ping"
+	sheet.events.append(ping)
+	var pinged: EventRow = EventRow.new()
+	pinged.trigger_provider_id = "Core"
+	pinged.trigger_id = "signal:ping"
+	pinged.actions.append(_action("print(\"pinged\")"))
+	sheet.events.append(pinged)
+	var ready_event: EventRow = EventRow.new()
+	ready_event.trigger_provider_id = "Core"
+	ready_event.trigger_id = "OnReady"
+	ready_event.actions.append(_action("print(\"ready\")"))
+	sheet.events.append(ready_event)
+	var path: String = "user://eventsheets_signal_above_ready.gd"
+	var source: String = SUPPORT.compile_output(sheet, path)
+	all_passed = _check("the handler is written above _ready",
+		source.find("func _on_ping(") < source.find("func _ready("), true) and all_passed
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(source)
+	file.close()
+	var opened: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var ready_rows: int = 0
+	for row: Variant in opened.events:
+		if row is EventRow and (row as EventRow).trigger_id == "OnReady":
+			ready_rows += 1
+	all_passed = _check("a signal row above On created still lifts its On created row", ready_rows, 1) and all_passed
+	var again: String = SUPPORT.compile_output(opened, path)
+	all_passed = _check("and saves byte for byte", again, source) and all_passed
+	all_passed = _check("with the signal wired exactly once",
+		again.count("ping.connect(_on_ping)"), 1) and all_passed
 	return all_passed
 
 
