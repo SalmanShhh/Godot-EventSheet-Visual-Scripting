@@ -386,6 +386,8 @@ const FULLY_KEYED_ACES: Array[String] = [
 	# The rows new to the vocabulary for the tree, for starting over, and for distance.
 	"TellChildren", "NearestAncestorOfType", "NextSibling", "PreviousSibling", "ResetVariable",
 	"ResetVariables", "DistanceTravelled",
+	# Pause requests, beside the pause switch.
+	"AskToPause", "StopAskingToPause", "PauseRequestedBy",
 ]
 
 

@@ -7387,3 +7387,15 @@ Tell {object} and everything under it to {method} with {values},Dire à {object}
 %s back to its starting value - the line Reset Variable writes,%s remis à sa valeur de départ - la ligne qu'écrit Réinitialiser la variable
 Method,Méthode
 General Expressions,Expressions générales
+Ask To Pause,Demander la pause
+Ask the game to pause for {reason},Demander au jeu de se mettre en pause pour {reason}
+"Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.","Met le jeu en pause au nom d'une raison - l'inventaire, la boîte de dialogue, une cinématique - et le garde en pause jusqu'à ce que chaque raison qui l'a demandé ait cessé de le demander. Fermer l'inventaire ne relance plus un jeu que la boîte de dialogue garde encore en pause."
+"Who is asking, as a name in quotes: ""inventory"", ""dialogue"", ""menu"". Stop Asking To Pause with the same name takes this request back.","Qui demande, sous forme de nom entre guillemets : ""inventory"", ""dialogue"", ""menu"". Cesser de demander la pause avec le même nom retire cette demande."
+Stop Asking To Pause,Cesser de demander la pause
+Stop asking the game to pause for {reason},Cesser de demander au jeu de se mettre en pause pour {reason}
+"Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.",Retire la demande de pause d'une raison. Le jeu ne reprend que lorsqu'aucune autre raison ne demande encore la pause : la dernière à cesser de la demander est celle qui le relance.
+The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.,"Le nom donné à Demander la pause. Un nom qui n'a jamais demandé ne change rien, mais relance tout de même un jeu que personne ne demande de garder en pause."
+Pause Requested By,Pause demandée par
+A pause is requested by {reason},Une pause est demandée par {reason}
+"True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Vrai tant que cette raison a demandé la pause du jeu sans avoir cessé de la demander - quoi que fassent les autres raisons. Pour savoir si le jeu est en pause tout court, utilisez Jeu en pause."
+The name Ask To Pause was given.,Le nom donné à Demander la pause.

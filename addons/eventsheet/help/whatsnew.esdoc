@@ -6,6 +6,31 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Added: pause requests, so one reason unpausing does not unpause the rest
+
+- **Ask To Pause**, **Stop Asking To Pause** and **Pause Requested By**, beside Pause The Game, Set
+  Game Paused and Is Game Paused. Pausing used to be one switch, so closing the inventory unpaused a
+  game the dialogue box still had paused. These keep a set of who is asking - `_pause_requests[&\"inventory\"] = true`
+  then `get_tree().paused = true`, and `_pause_requests.erase(&\"inventory\")` then
+  `get_tree().paused = not _pause_requests.is_empty()` - and the game runs again only when nobody is
+  left asking. Read \"Ask the game to pause for \"inventory\"\" and \"A pause is requested by \"dialogue\"\",
+  a question about the request rather than about a node frozen by the pause.
+- **One set for the whole game, no autoload.** The compiler declares
+  `static var _pause_requests: Dictionary` beside the class only when a row reads it, and its starting
+  value is the one Dictionary kept on the Engine singleton, so a pause menu sheet and an inventory
+  sheet count into the same set.
+- **The two lines open again as the request.** Each pair is its own statement run, so the importer
+  reads it back as Ask To Pause or Stop Asking To Pause - never as a Set Paused that would lose who
+  asked - and the file saves back byte for byte. A lone `get_tree().paused = true` keeps the row it
+  always had.
+- **The game's modes go through the requests.** Edit modes now writes Ask To Pause for \"mode\" on
+  entering a mode that stops the game and Stop Asking To Pause for \"mode\" on entering one that runs
+  it, instead of Set Game Paused, so an inventory that asked to pause stays paused when the game
+  passes through a running mode. A sheet holding the old Set Game Paused policy reads back the same
+  and is rewritten as the request the next time the dialog writes it.
+- Each answers to the names a counted pause goes by elsewhere (Time.timeScale, Pause Counter,
+  Request Pause, Release Pause) and is keyed in all nine translation files.
+
 ### Changed: Editor Native says an event's pattern in the help strip, not the conditions lane
 
 - **The conditions lane holds conditions only.** A theme can take the ⟡ chip that names the pattern

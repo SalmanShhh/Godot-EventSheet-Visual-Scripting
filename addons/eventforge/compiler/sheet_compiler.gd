@@ -77,6 +77,13 @@ const NEAREST_ANCESTOR_HELPER: String = "__eventsheets_nearest_ancestor_of_type"
 ## Kept beside the class only when a row reads it - see _keep_distance_travelled.
 const TRAVELLED_MEMBER: String = "_travelled"
 
+## Who is asking the game to pause, for the three pause-request rows: the member they read, the
+## helper its starting value comes from, and the Engine metadata name the one shared set is kept
+## under. Declared beside the class only when a row reads it - see _keep_pause_requests.
+const PAUSE_REQUESTS_MEMBER: String = "_pause_requests"
+const PAUSE_REQUESTS_HELPER: String = "__eventsheets_pause_requests"
+const PAUSE_REQUESTS_META: String = "pause_requests"
+
 ## The comment written above a hoisted Static local, naming the ROW the member belongs to. A
 ## cosmetic marker with zero runtime weight, exactly like the `# @group:` row tags: it is what lets an
 ## opened file hand the member back to the row instead of reading it as an ordinary private member.
@@ -844,6 +851,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_keep_distance_travelled(lines, sheet, result)
+	_keep_pause_requests(lines, sheet, result)
 	# What the ROWS asked for, told apart from what merely rode through: the shared helpers are
 	# appended for the calls this compile wrote, never for one sitting inside a verbatim block.
 	var verbatim_lines: PackedStringArray = _verbatim_code_lines(sheet)
@@ -851,6 +859,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_append_scene_trust_helper(lines, verbatim_lines)
 	_append_level_query_helpers(lines, verbatim_lines)
 	_append_hierarchy_helpers(lines, verbatim_lines)
+	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -1057,6 +1066,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_keep_distance_travelled(lines, sheet, result)
+	_keep_pause_requests(lines, sheet, result)
 	# What the ROWS asked for, told apart from what merely rode through: the shared helpers are
 	# appended for the calls this compile wrote, never for one sitting inside a verbatim block.
 	var verbatim_lines: PackedStringArray = _verbatim_code_lines(sheet)
@@ -1064,6 +1074,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_append_scene_trust_helper(lines, verbatim_lines)
 	_append_level_query_helpers(lines, verbatim_lines)
 	_append_hierarchy_helpers(lines, verbatim_lines)
+	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -5029,6 +5040,18 @@ static func _append_hierarchy_helpers(lines: PackedStringArray,
 		"	return null"], verbatim_lines)
 
 
+## The one shared set the pause-request rows count into, made the first time any script asks and
+## kept on the Engine singleton so every script that asks reads the same Dictionary. Appended under
+## the same rules as every shared helper: last, once, and only for a call a row wrote.
+static func _append_pause_requests_helper(lines: PackedStringArray,
+		verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
+	_append_shared_helper(lines, PAUSE_REQUESTS_HELPER,
+		"static func %s() -> Dictionary:" % PAUSE_REQUESTS_HELPER,
+		["	if not Engine.has_meta(&\"%s\"):" % PAUSE_REQUESTS_META,
+		"		Engine.set_meta(&\"%s\", {})" % PAUSE_REQUESTS_META,
+		"	return Engine.get_meta(&\"%s\")" % PAUSE_REQUESTS_META], verbatim_lines)
+
+
 ## What every variable this sheet declares starts on, as the Reset rows write it:
 ## {name: {"value": the code its declaration starts it on, "every": whether Reset Variables puts it
 ## back}}. Read off the declarations themselves - the sheet's own variables, the variable rows at its
@@ -5165,6 +5188,41 @@ static func _keep_distance_travelled(lines: PackedStringArray, sheet: EventSheet
 	lines.append("")
 	lines.append("func _physics_process(delta: float) -> void:")
 	lines.append("\t%s += %s.length() * delta" % [TRAVELLED_MEMBER, velocity])
+
+
+## Declares the set the pause-request rows read, when - and only when - a row reads it:
+##
+##     static var _pause_requests: Dictionary = __eventsheets_pause_requests()
+##
+## STATIC, AND ONE SET FOR THE WHOLE GAME. A static member is one per script, and a game that asks to
+## pause from its inventory sheet and from its dialogue sheet needs both to count into the SAME set,
+## or the inventory closing would unpause a game the dialogue box still has paused. So the member's
+## starting value is not a fresh Dictionary: it is the one Dictionary kept on the Engine singleton,
+## made by whichever script asks first (_append_pause_requests_helper writes that function). A
+## Dictionary is shared by reference, so every script's member is the same set. No autoload, nothing
+## from this plugin, and a hand-written script can read the same set off the Engine by its name.
+##
+## The round trip holds the same way Distance Travelled's does: reopened, the declaration is a
+## variable row that re-emits as itself, this pass finds the member declared and stands down, and the
+## helper's head line is already in the file. A read inside a verbatim block is not a row asking.
+static func _keep_pause_requests(lines: PackedStringArray, sheet: EventSheetResource, result: Dictionary) -> void:
+	var reads: int = 0
+	for line: String in lines:
+		if _declares_member(line, PAUSE_REQUESTS_MEMBER):
+			return
+		reads += _member_reads(line, PAUSE_REQUESTS_MEMBER)
+	for line: String in _verbatim_code_lines(sheet):
+		reads -= _member_reads(line, PAUSE_REQUESTS_MEMBER)
+	if reads <= 0:
+		return
+	var insert_index: int = lines.size()
+	for index: int in range(lines.size()):
+		if lines[index].begins_with("func ") or lines[index].begins_with("static func ") or lines[index].begins_with("## @ace"):
+			insert_index = index
+			break
+	lines.insert(insert_index, "static var %s: Dictionary = %s()" % [PAUSE_REQUESTS_MEMBER, PAUSE_REQUESTS_HELPER])
+	lines.insert(insert_index + 1, "")
+	_shift_source_map(result.get("source_map", []), insert_index + 1, 2)
 
 
 ## The body's real velocity, spelled the way the host class spells it, or "" for a host that has none.

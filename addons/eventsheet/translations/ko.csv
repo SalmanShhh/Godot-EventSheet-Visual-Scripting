@@ -7387,3 +7387,15 @@ Tell {object} and everything under it to {method} with {values},{object}와(과)
 %s back to its starting value - the line Reset Variable writes,%s을(를) 시작 값으로 되돌림 - 변수 초기화가 쓰는 줄
 Method,메서드
 General Expressions,일반 표현식
+Ask To Pause,일시정지 요청
+Ask the game to pause for {reason},{reason}을(를) 위해 게임 일시정지 요청
+"Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.","하나의 이유 - 인벤토리, 대화 상자, 컷신 - 를 대신해 게임을 일시정지하고, 요청한 모든 이유가 요청을 멈출 때까지 일시정지 상태로 둡니다. 인벤토리를 닫아도 대화 상자가 아직 일시정지해 둔 게임은 더 이상 재개되지 않습니다."
+"Who is asking, as a name in quotes: ""inventory"", ""dialogue"", ""menu"". Stop Asking To Pause with the same name takes this request back.","요청하는 쪽을 따옴표로 묶은 이름으로: ""inventory"", ""dialogue"", ""menu"". 같은 이름으로 일시정지 요청 중지를 하면 이 요청을 거둡니다."
+Stop Asking To Pause,일시정지 요청 중지
+Stop asking the game to pause for {reason},{reason}을(를) 위한 게임 일시정지 요청 중지
+"Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.","한 이유의 일시정지 요청을 거둡니다. 다른 이유가 더 이상 요청하지 않을 때만 게임이 다시 실행되므로, 마지막으로 요청을 멈춘 쪽이 일시정지를 풉니다."
+The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.,"일시정지 요청에 준 이름. 요청한 적 없는 이름은 아무것도 바꾸지 않지만, 아무도 일시정지를 원하지 않는 게임은 그래도 재개합니다."
+Pause Requested By,일시정지 요청자
+A pause is requested by {reason},{reason}이(가) 일시정지를 요청함
+"True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.",이 이유가 게임 일시정지를 요청했고 아직 멈추지 않은 동안 참입니다 - 다른 이유가 무엇을 하든. 게임이 일시정지 상태인지 자체는 게임 일시정지 중을 사용하세요.
+The name Ask To Pause was given.,일시정지 요청에 준 이름.

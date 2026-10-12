@@ -25,7 +25,23 @@ extends RefCounted
 
 ## The rows the policy is written as, by ace id - shipped vocabulary, so the events this dialog
 ## writes are events the author could have picked themselves.
-const PAUSE_ACE: String = "SetPaused"
+##
+## A MODE'S PAUSE IS A REQUEST, NOT THE SWITCH. Entering a mode that stops the game asks to pause for
+## the reason "mode", and entering one that runs it stops asking for that reason - so a mode change
+## goes THROUGH the pause requests rather than over them. An inventory that asked to pause stays
+## paused when the game passes through a running mode, and the game runs again only when the
+## inventory and the mode have both stopped asking. A sheet saved before this wrote Set Game Paused
+## instead; that row is still read back as the policy it says, and replaced by the request the next
+## time the dialog writes the policy.
+const PAUSE_ACE: String = "AskToPause"
+const RUN_ACE: String = "StopAskingToPause"
+const LEGACY_PAUSE_ACE: String = "SetPaused"
+## The two rows that older line opens as from a `.gd`, where `get_tree().paused = true` reads back as
+## Pause The Game and `= false` as Unpause. Read and replaced exactly like Set Game Paused.
+const LEGACY_PAUSED_ACE: String = "PauseGame"
+const LEGACY_RUNNING_ACE: String = "UnpauseGame"
+## The reason a mode asks under. One name for every mode, because only one mode is current at a time.
+const PAUSE_REASON: String = "\"mode\""
 const MOUSE_SHOWN_ACE: String = "MouseCursorVisible"
 const MOUSE_HIDDEN_ACE: String = "MouseRequestPointerLock"
 
@@ -105,7 +121,7 @@ func _build() -> void:
 	_help_strip.follow(_policy_mode_option, "Policy for",
 		"Which mode the two answers below are about. Each mode declares its own policy once, and entering it applies them.")
 	_help_strip.follow(_physics_option, "Physics",
-		"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to \"does gameplay input reach the game\": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode.")
+		"Whether the scene tree keeps processing while the game is in this mode. This is also the answer to \"does gameplay input reach the game\": pausing the tree is what stops gameplay nodes hearing it, and a node that must keep hearing it says so with its own process mode. A mode that stops it asks to pause for \"mode\" rather than flipping the switch, so a pause something else asked for - the inventory, a dialogue box - holds until that stops asking too.")
 	_help_strip.follow(_mouse_option, "Mouse",
 		"Whether the mouse cursor is shown while the game is in this mode. A menu shows it; a first-person view captures it.")
 
@@ -237,7 +253,11 @@ static func read_policy(sheet: EventSheetResource) -> Dictionary:
 			var params: Variant = (action as Resource).get("params")
 			var paused: String = str((params as Dictionary).get("paused", "")) if params is Dictionary else ""
 			match str((action as Resource).get("ace_id")):
-				PAUSE_ACE:
+				PAUSE_ACE, LEGACY_PAUSED_ACE:
+					answers["physics"] = false
+				RUN_ACE, LEGACY_RUNNING_ACE:
+					answers["physics"] = true
+				LEGACY_PAUSE_ACE:
 					answers["physics"] = not paused.contains("true")
 				MOUSE_HIDDEN_ACE:
 					answers["mouse"] = false
@@ -362,8 +382,8 @@ static func _write_policy_event(sheet: EventSheetResource, word: String, answers
 		if action is Resource and not _is_policy_action(action as Resource):
 			kept.append(action as Resource)
 	event_row.actions.clear()
-	event_row.actions.append(_policy_action(PAUSE_ACE,
-		{"paused": "false" if bool(answers.get("physics", true)) else "true"}))
+	event_row.actions.append(_policy_action(
+		RUN_ACE if bool(answers.get("physics", true)) else PAUSE_ACE, {"reason": PAUSE_REASON}))
 	event_row.actions.append(_policy_action(
 		MOUSE_SHOWN_ACE if bool(answers.get("mouse", true)) else MOUSE_HIDDEN_ACE, {}))
 	for action: Resource in kept:
@@ -380,7 +400,8 @@ static func _is_only_policy(event_row: EventRow) -> bool:
 
 
 static func _is_policy_action(action: Resource) -> bool:
-	return [PAUSE_ACE, MOUSE_SHOWN_ACE, MOUSE_HIDDEN_ACE].has(str(action.get("ace_id")))
+	return [PAUSE_ACE, RUN_ACE, LEGACY_PAUSE_ACE, LEGACY_PAUSED_ACE, LEGACY_RUNNING_ACE, MOUSE_SHOWN_ACE,
+		MOUSE_HIDDEN_ACE].has(str(action.get("ace_id")))
 
 
 static func _policy_action(ace_id: String, params: Dictionary) -> ACEAction:

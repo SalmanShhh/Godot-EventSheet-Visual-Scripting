@@ -7387,3 +7387,15 @@ Tell {object} and everything under it to {method} with {values},{object} とそ�
 %s back to its starting value - the line Reset Variable writes,%s を初期値に戻す - 変数をリセット が書く行
 Method,メソッド
 General Expressions,一般の式
+Ask To Pause,一時停止を要求
+Ask the game to pause for {reason},{reason} のためにゲームの一時停止を要求
+"Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.",1 つの理由 - インベントリ、ダイアログボックス、カットシーン - の代わりにゲームを一時停止し、要求したすべての理由が要求をやめるまで一時停止したままにします。インベントリを閉じても、ダイアログボックスがまだ一時停止しているゲームは再開しなくなります。
+"Who is asking, as a name in quotes: ""inventory"", ""dialogue"", ""menu"". Stop Asking To Pause with the same name takes this request back.","要求しているもの。引用符で囲んだ名前で: ""inventory""、""dialogue""、""menu""。同じ名前で「一時停止の要求をやめる」とこの要求を取り下げます。"
+Stop Asking To Pause,一時停止の要求をやめる
+Stop asking the game to pause for {reason},{reason} のためのゲームの一時停止の要求をやめる
+"Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.",1 つの理由の一時停止の要求を取り下げます。ほかに要求している理由がなくなったときだけゲームは再開するので、最後に要求をやめたものが一時停止を解除します。
+The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.,「一時停止を要求」に付けた名前。一度も要求していない名前は何も変えませんが、誰も一時停止を求めていないゲームはやはり再開します。
+Pause Requested By,一時停止の要求元
+A pause is requested by {reason},{reason} が一時停止を要求している
+"True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.",この理由がゲームの一時停止を要求していて、まだやめていない間は真 - ほかの理由が何をしていても。ゲームがそもそも一時停止中かどうかは「ゲームが一時停止中」を使います。
+The name Ask To Pause was given.,「一時停止を要求」に付けた名前。

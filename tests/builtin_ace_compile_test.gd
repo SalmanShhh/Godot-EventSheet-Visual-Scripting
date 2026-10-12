@@ -188,6 +188,10 @@ const NOT_STANDALONE: Array[String] = [
 	# compiles each through the real compiler, parses the whole emitted file and re-emits it byte for
 	# byte.
 	"NearestAncestorOfType", "ResetVariable", "ResetVariables", "DistanceTravelled",
+	# The three pause-request rows read `_pause_requests`, the shared set the compiler declares beside
+	# the class only when a row reads it. Gated by pause_requests_test, which compiles each through the
+	# real compiler, parses the whole emitted file and re-emits it byte for byte.
+	"AskToPause", "StopAskingToPause", "PauseRequestedBy",
 ]
 
 

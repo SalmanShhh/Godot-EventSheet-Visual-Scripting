@@ -149,6 +149,22 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.act("SetPaused", "Set Game Paused", "get_tree().paused = {paused}", "Scene", "Set paused to {paused}", "Pauses or resumes the whole game by toggling the scene tree's pause state.").param_choice("paused", "true", "Paused", "Pause state.", ["true", "false"]))
 	descriptors.append(F.act("SpawnScene", "Spawn Scene Instance", "add_child(load({path}).instantiate())", "Scene", "Spawn {path}", "Loads a scene file and adds an instance of it as a child (spawning objects).").param("path", "\"res://enemy.tscn\"", "Scene", "Scene file to instance as a child.", "expression"))
 	descriptors.append(F.cond("IsPaused", "Is Game Paused", "get_tree().paused", "Scene", "Game is paused", "True when the game is currently paused."))
+	# Pause REQUESTS, beside the pause switch. Pause The Game and Set Game Paused are one switch, and
+	# nothing counts who flipped it: the inventory closing unpauses a game the dialogue box still has
+	# paused. These three keep a set of who is asking, and the game stays paused while anyone is.
+	#   THE SET IS ONE FOR THE WHOLE GAME, not one per script. `_pause_requests` is a static member the
+	#     compiler declares beside the class when a row reads it, and its starting value is the one
+	#     Dictionary every script that asks shares, kept on the Engine singleton - so a pause menu sheet
+	#     and an inventory sheet count into the same set without an autoload. See
+	#     SheetCompiler._keep_pause_requests for the two lines it writes.
+	#   EACH REQUEST IS ITS OWN STATEMENT, two lines rather than one with a semicolon, and the pair
+	#     opens again as this row (EventForgePauseRequestLift) rather than as a Set Paused, because the
+	#     second line alone would be read as the plain switch and lose who asked.
+	#   THE QUESTION IS "Pause Requested By", about the request, so it is never read as Node Is Frozen
+	#     By The Game Pause, which is about one node and the pause it is under.
+	descriptors.append(F.act("AskToPause", "Ask To Pause", "_pause_requests[&{reason}] = true\nget_tree().paused = true", "Scene", "Ask the game to pause for {reason}", "Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.").param("reason", "\"inventory\"", "For", "Who is asking, as a name in quotes: \"inventory\", \"dialogue\", \"menu\". Stop Asking To Pause with the same name takes this request back.", "expression"))
+	descriptors.append(F.act("StopAskingToPause", "Stop Asking To Pause", "_pause_requests.erase(&{reason})\nget_tree().paused = not _pause_requests.is_empty()", "Scene", "Stop asking the game to pause for {reason}", "Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.").param("reason", "\"inventory\"", "For", "The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.", "expression"))
+	descriptors.append(F.cond("PauseRequestedBy", "Pause Requested By", "_pause_requests.has(&{reason})", "Scene", "A pause is requested by {reason}", "True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.").param("reason", "\"inventory\"", "For", "The name Ask To Pause was given.", "expression"))
 	# A layout ON TOP of the game rather than instead of it: the pause menu, the inventory, the
 	# dialogue box. Three rows, and each one is deliberately NOT a re-saying of a row that already
 	# ships:

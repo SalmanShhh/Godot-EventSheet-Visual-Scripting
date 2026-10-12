@@ -7387,3 +7387,15 @@ Tell {object} and everything under it to {method} with {values},Сказать {
 %s back to its starting value - the line Reset Variable writes,"%s возвращена к начальному значению - строка, которую пишет «Сбросить переменную»"
 Method,Метод
 General Expressions,Общие выражения
+Ask To Pause,Попросить паузу
+Ask the game to pause for {reason},Попросить игру встать на паузу ради {reason}
+"Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.","Ставит игру на паузу от имени одной причины - инвентаря, окна диалога, катсцены - и держит её на паузе, пока каждая причина, попросившая об этом, не перестанет просить. Закрытие инвентаря больше не снимает с паузы игру, которую окно диалога всё ещё держит на паузе."
+"Who is asking, as a name in quotes: ""inventory"", ""dialogue"", ""menu"". Stop Asking To Pause with the same name takes this request back.","Кто просит, именем в кавычках: ""inventory"", ""dialogue"", ""menu"". «Перестать просить паузу» с тем же именем отзывает эту просьбу."
+Stop Asking To Pause,Перестать просить паузу
+Stop asking the game to pause for {reason},Перестать просить игру встать на паузу ради {reason}
+"Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.","Отзывает просьбу о паузе одной причины. Игра снова идёт, только когда ни одна другая причина больше не просит, поэтому снимает паузу последняя переставшая просить."
+The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.,"Имя, данное «Попросить паузу». Имя, которое никогда не просило, ничего не меняет, но всё равно снимает с паузы игру, которую никто не просит держать на паузе."
+Pause Requested By,Пауза запрошена
+A pause is requested by {reason},Пауза запрошена ради {reason}
+"True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Истинно, пока эта причина попросила игру встать на паузу и ещё не перестала просить - что бы ни делали другие причины. Чтобы узнать, стоит ли игра на паузе вообще, используйте «Игра на паузе»."
+The name Ask To Pause was given.,"Имя, данное «Попросить паузу»."

@@ -7387,3 +7387,15 @@ Tell {object} and everything under it to {method} with {values},Dire a {object} 
 %s back to its starting value - the line Reset Variable writes,%s riportato al suo valore iniziale - la riga che scrive Reimposta variabile
 Method,Metodo
 General Expressions,Espressioni generali
+Ask To Pause,Chiedi la pausa
+Ask the game to pause for {reason},Chiedi al gioco di mettersi in pausa per {reason}
+"Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.","Mette in pausa il gioco per conto di un motivo - l'inventario, la finestra di dialogo, una scena d'intermezzo - e lo tiene in pausa finché ogni motivo che l'ha chiesto non smette di chiederlo. Chiudere l'inventario non riprende più un gioco che la finestra di dialogo tiene ancora in pausa."
+"Who is asking, as a name in quotes: ""inventory"", ""dialogue"", ""menu"". Stop Asking To Pause with the same name takes this request back.","Chi lo chiede, come nome tra virgolette: ""inventory"", ""dialogue"", ""menu"". Smetti di chiedere la pausa con lo stesso nome ritira questa richiesta."
+Stop Asking To Pause,Smetti di chiedere la pausa
+Stop asking the game to pause for {reason},Smetti di chiedere al gioco di mettersi in pausa per {reason}
+"Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.","Ritira la richiesta di pausa di un motivo. Il gioco riparte solo quando nessun altro motivo la chiede ancora, quindi l'ultimo a smettere di chiederla è quello che lo riprende."
+The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.,"Il nome dato a Chiedi la pausa. Un nome che non l'ha mai chiesta non cambia nulla, ma riprende comunque un gioco che nessuno chiede di tenere in pausa."
+Pause Requested By,Pausa chiesta da
+A pause is requested by {reason},Una pausa è chiesta da {reason}
+"True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","Vero finché questo motivo ha chiesto al gioco di mettersi in pausa e non ha ancora smesso di chiederlo - qualunque cosa facciano gli altri motivi. Per sapere se il gioco è in pausa, usa Gioco in pausa."
+The name Ask To Pause was given.,Il nome dato a Chiedi la pausa.

@@ -208,6 +208,13 @@ const FAMILIAR_NAMES: Dictionary = {
 	"Reset To Default": ["ResetVariable", "ResetVariables"],
 	"Odometer": ["DistanceTravelled"],
 	"Total Distance": ["DistanceTravelled"],
+	# The pause requests, under the names a counted pause goes by elsewhere. Setting the time scale to
+	# nothing is how another engine pauses, so it finds the pause switch and the request beside it.
+	"Time.timeScale": ["PauseGame", "AskToPause"],
+	"Pause Counter": ["AskToPause", "StopAskingToPause", "PauseRequestedBy"],
+	"Request Pause": ["AskToPause"],
+	"Release Pause": ["StopAskingToPause"],
+	"Is Pause Requested": ["PauseRequestedBy"],
 }
 
 ## Foreign behaviours whose shape a shipped behaviour pack already covers. A row on one of these

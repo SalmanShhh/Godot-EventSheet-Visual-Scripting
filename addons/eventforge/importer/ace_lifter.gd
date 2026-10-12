@@ -93,6 +93,9 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# The still a view is asked for: a wait and a write, whose two lines are each already claimed by
 	# an older row on their own. Asked here so the pair reads as the one row that emits it.
 	preload("res://addons/eventforge/importer/view_lift.gd"),
+	# A pause request: the change to the set of who is asking, then the switch set from it. Asked
+	# here because the second line alone is Pause The Game, which would lose who asked.
+	preload("res://addons/eventforge/importer/pause_request_lift.gd"),
 	# The three statements a ray asked of the physics world directly has always been written as -
 	# the space state, the query, the cast - which mean the one Cast Ray Into row together and three
 	# unrelated declarations apart.

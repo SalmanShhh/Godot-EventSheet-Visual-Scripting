@@ -7387,3 +7387,15 @@ Tell {object} and everything under it to {method} with {values},通知 {object} 
 %s back to its starting value - the line Reset Variable writes,%s 恢复为初始值 - 重置变量写出的那一行
 Method,方法
 General Expressions,通用表达式
+Ask To Pause,请求暂停
+Ask the game to pause for {reason},为 {reason} 请求游戏暂停
+"Pauses the game on behalf of one reason - the inventory, the dialogue box, a cutscene - and keeps it paused until every reason that asked has stopped asking. Closing the inventory no longer unpauses a game the dialogue box still has paused.","代表一个原因 - 物品栏、对话框、过场动画 - 暂停游戏,并保持暂停,直到每个提出请求的原因都停止请求。关闭物品栏不再会让对话框仍在暂停的游戏继续运行。"
+"Who is asking, as a name in quotes: ""inventory"", ""dialogue"", ""menu"". Stop Asking To Pause with the same name takes this request back.","谁在请求,用加引号的名称:""inventory""、""dialogue""、""menu""。用同一名称执行“停止请求暂停”即可撤回此请求。"
+Stop Asking To Pause,停止请求暂停
+Stop asking the game to pause for {reason},停止为 {reason} 请求游戏暂停
+"Takes back one reason's request to pause. The game runs again only when no other reason is still asking, so the last one to stop asking is the one that unpauses it.","撤回一个原因的暂停请求。只有当没有其他原因仍在请求时游戏才会继续运行,因此最后一个停止请求的原因才会解除暂停。"
+The name Ask To Pause was given. A name that never asked changes nothing but still unpauses a game nobody is asking to keep paused.,"“请求暂停”所用的名称。从未请求过的名称不会改变任何东西,但仍会让一个没人要求保持暂停的游戏继续运行。"
+Pause Requested By,暂停请求者
+A pause is requested by {reason},{reason} 正在请求暂停
+"True while this reason has asked the game to pause and not yet stopped asking - whatever any other reason is doing. To ask whether the game is paused at all, use Is Game Paused.","当此原因已请求游戏暂停且尚未停止请求时为真 - 无论其他原因在做什么。要询问游戏是否处于暂停状态,请使用“游戏已暂停”。"
+The name Ask To Pause was given.,“请求暂停”所用的名称。
