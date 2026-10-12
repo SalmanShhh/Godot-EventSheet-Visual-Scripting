@@ -42,6 +42,12 @@ extends Resource
 ## verbatim source text. Byte-verify gated like every lift; editing the type in the dialog
 ## clears the flag and the byte change rides the user's own edit.
 @export var inferred_type: bool = false
+## When true, the declaration was written with NO initial value (`@export var spark: PackedScene`,
+## `var target: Node2D`), the usual spelling for a slot filled in the Inspector or in `_ready`. The
+## declaration then emits without ` = ...` - but only while the default is still empty (null): the
+## moment someone gives the row a starting value, that value is written, so the flag can never hide
+## an edit. Set by the importer and byte-verify gated like every lift.
+@export var no_default: bool = false
 ## Property SETTER body (the statements under `set(<setter_param>):`), verbatim, one statement per line,
 ## dedented relative to the accessor header. Non-empty turns the variable into a GDScript property:
 ## the declaration line gains a `:` suffix and the accessor blocks emit beneath it. Byte-gated on lift.

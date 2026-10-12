@@ -539,6 +539,21 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	lifted.is_constant = bool(descriptor.get("constant", false))
 	lifted.onready = onready_prefixed
 	lifted.is_static = static_prefixed
+	# A typed declaration with NO initial value (`@export var spark: PackedScene`, `var target: Node2D`)
+	# is how a slot for the Inspector or `_ready` is usually written. The parser reads it as an empty
+	# default; the flag keeps the spelling, so the gate below compares like with like instead of
+	# against a `= null` the file never had. Read off the declaration rather than the parsed default,
+	# because `= null` written out is a different line. Any `=` at all (inside a hint's quotes, say)
+	# leaves the flag off and the line to whichever reading it had before.
+	lifted.no_default = lifted.default_value == null and not declaration.contains("=") \
+		and not lifted.is_constant
+	# With no `=` to stop at, the parser reads a trailing comment as part of the TYPE
+	# (`PackedScene # set in the Inspector`). The line would still round-trip, but the row would
+	# carry a type no picker or value check knows, so that spelling keeps its code block.
+	# An @onready with nothing to wait for is not a node declaration (those read their node off the
+	# value), and every reader of an @onready row reads that value, so it keeps its code block too.
+	if lifted.no_default and (declaration.contains("#") or lifted.onready):
+		return null
 	# A String default that appeared UNQUOTED in the source is a bare code expression (Vector2.ZERO,
 	# Color.RED, Type.CONST), not a literal - mark it so it re-emits verbatim rather than quoted. The
 	# byte-verify below still gates it: if the flagged re-emission doesn't reproduce the line, revert.

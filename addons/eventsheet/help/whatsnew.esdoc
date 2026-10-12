@@ -6,6 +6,19 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Fixed: a typed variable with no starting value opens as a variable, not a script block
+
+- `@export var spark_prefab: PackedScene`, `var target: Node2D`, `var hp: int` - the usual way to
+  write a slot the Inspector or `_ready` fills - used to open as a raw script block in the variable
+  list, because the only spelling a variable row could save back carried ` = ...`. Each now opens as
+  the variable row it is, in every theme, with its type, its `@export` hint, its group and its doc
+  comment, and saves back byte for byte: the row remembers the file gave no value and writes none,
+  for as long as its starting value stays empty. Give it a value and that value is written.
+- Gated like every other lift: a line that does not come back exactly keeps its block. Two spellings
+  stay code on purpose - a trailing `# comment` with no `=` before it (the comment would be read as
+  part of the type) and an `@onready` with nothing to wait for (every reader of an @onready row reads
+  the node it names).
+
 ### Added: the Flock pack and Flock 3D - birds, fish and swarms that steer by their neighbours
 
 - **Flock** (`FlockBehavior`, on a Node2D) and **Flock 3D** (`Flock3DBehavior`, on a Node3D): attach

@@ -4216,6 +4216,16 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		# first-class row instead of stranding it as a GDScript block over a quoted `"Vector2.ZERO"`.
 		var default_code: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
 		var_line = "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, default_code]
+	# A declaration written with no initial value (`@export var spark: PackedScene`) keeps that
+	# spelling for as long as its default is still empty. Every branch above renders an empty default
+	# as `null` (a literal) or `<null>` (an expression), so dropping that one tail is the whole change;
+	# a const always has a value and the walrus has nothing to infer from, so neither is touched.
+	if local_var.no_default and typeof(local_var.default_value) == TYPE_NIL \
+			and not local_var.is_constant and not local_var.inferred_type:
+		for empty_tail: String in [" = null", " = <null>"]:
+			if var_line.ends_with(empty_tail):
+				var_line = var_line.substr(0, var_line.length() - empty_tail.length())
+				break
 	# A property (setter and/or getter body set): suffix the declaration with `:` and emit the accessor
 	# blocks beneath it. The bodies are stored verbatim + dedented, so re-indenting them one/two tabs
 	# reproduces the source exactly (the lift byte-gate below refuses anything that does not).
