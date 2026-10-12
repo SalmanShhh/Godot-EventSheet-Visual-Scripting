@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added: the first open of the workspace is measured, and what it compiles is listed
+
+- The cold boot probe now also times building the workspace editor in a fresh process of its own:
+  `editor_load_ms` (loading `event_sheet_editor.gd`, which compiles every class it names) and
+  `editor_build_ms` (that plus `.new()`). Measured at about 15.6 s and 16.8 s headless on this
+  project, and the huge-project budget test holds it under 21 s while that number is cut down.
+- `tools/measure_editor_closure.gd` reads the sources without compiling them and prints what that
+  first open compiles (558 files, about 249,000 lines today), the fifteen names whose removal would
+  drop the most of it, and the largest files in it. The output is the same on every run.
+
 ### Changed: the first sheet tab of a session no longer re-reads every pack
 
 - The verbs every pack script publishes are remembered in `.godot/eventsheets_pack_vocabulary.bin`

@@ -3,7 +3,7 @@
 # Boot cost cannot be measured from inside the test suite. By the time any test runs, half the plugin
 # is compiled and every registry is warm, so the same code that costs a second at editor start
 # measures as zero. The only honest measurement is a FRESH process that does it once and says how
-# long it took, which is what this script is: run it, it prints two numbers and quits.
+# long it took, which is what this script is: run it, it prints one line of numbers and quits.
 #
 #     $GODOT --headless --path . --script tests/cold_boot_probe.gd
 #
@@ -23,6 +23,16 @@
 #   first_open_ms - those registries plus one real script opened as a sheet: the whole wait between
 #                   clicking a sheet and reading it, on a session's first tab.
 #
+# And two more, measured in a SECOND fresh process the probe starts for itself, because the three
+# above have already compiled half of what they would measure:
+#
+#   editor_load_ms  - loading the workspace editor script and nothing else: the compile of every
+#                     class the editor names, which the first open of the workspace pays before a
+#                     single object exists.
+#
+#   editor_build_ms - that load plus `.new()` on it: what the plugin's lazy editor build pays
+#                     before the editor is handed to the main screen.
+#
 # What it deliberately leaves out: the three EditorPlugin registration calls (`add_context_menu_plugin`
 # and friends), which need a live editor, and the import hook's `attach`, which needs
 # EditorInterface. All four are engine bookkeeping over objects already built by then; the cost
@@ -37,6 +47,11 @@ extends SceneTree
 ## The line the budget test parses. Kept on one line, with plain `key=value` pairs, so reading it
 ## back is a split rather than a parse.
 const RESULT_PREFIX: String = "cold_boot"
+
+## The workspace editor the plugin builds lazily on the first open, and the argument that makes this
+## script measure ONLY that, in a process of its own.
+const EDITOR_SCRIPT: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
+const EDITOR_ONLY_ARGUMENT: String = "--editor-only"
 
 ## A typical first sheet: a showcase script of about seventy lines, the size most files really are.
 ## The heaviest open in the project has its own budget elsewhere; this one is about what the first
@@ -86,11 +101,15 @@ const NAMED_BOOT_OBJECTS: Array[String] = [
 
 
 func _init() -> void:
+	if OS.get_cmdline_user_args().has(EDITOR_ONLY_ARGUMENT):
+		print("%s %s" % [RESULT_PREFIX, _time_editor_build()])
+		quit(0)
+		return
 	var closure_ms: float = _time_boot_closure()
 	var registries_ms: float = _time_registries()
 	var first_open_ms: float = registries_ms + _time_sheet_open()
-	print("%s closure_ms=%.1f registries_ms=%.1f first_open_ms=%.1f" % [
-		RESULT_PREFIX, closure_ms, registries_ms, first_open_ms])
+	print("%s closure_ms=%.1f registries_ms=%.1f first_open_ms=%.1f %s" % [
+		RESULT_PREFIX, closure_ms, registries_ms, first_open_ms, _editor_build_in_fresh_process()])
 	quit(0)
 
 
@@ -125,6 +144,42 @@ func _time_registries() -> float:
 	var start_usec: int = Time.get_ticks_usec()
 	(load("res://addons/eventforge/importer/open_job.gd") as Object).call("warm_registries")
 	return float(Time.get_ticks_usec() - start_usec) / 1000.0
+
+
+## The editor build, asked of a second fresh process. By now this one has compiled the importer,
+## the lifter and every registry the editor names, so timing the editor here would leave most of
+## its compile off the clock. Answers the child's `key=value` pairs, or -1 for both when it printed
+## none, which the budget reads as a failure rather than as free.
+func _editor_build_in_fresh_process() -> String:
+	var output: Array = []
+	var arguments: PackedStringArray = PackedStringArray(["--headless", "--path",
+		ProjectSettings.globalize_path("res://"), "--script", get_script().resource_path, "--",
+		EDITOR_ONLY_ARGUMENT])
+	OS.execute(OS.get_executable_path(), arguments, output, true)
+	for chunk: Variant in output:
+		for line: String in str(chunk).split("\n"):
+			if line.begins_with(RESULT_PREFIX + " editor_load_ms="):
+				return line.trim_prefix(RESULT_PREFIX + " ").strip_edges()
+	return "editor_load_ms=-1 editor_build_ms=-1"
+
+
+## Loading the workspace editor and building one, timed apart: the compile alone, then the compile
+## plus the construction. The plugin's settings are declared first, as `_enter_tree` has always
+## done by the time a workspace opens, and that is kept off the clock.
+func _time_editor_build() -> String:
+	(load("res://addons/eventforge/settings.gd") as Object).call("register_all")
+	var start_usec: int = Time.get_ticks_usec()
+	var editor_script: Script = load(EDITOR_SCRIPT)
+	var loaded_usec: int = Time.get_ticks_usec()
+	if editor_script == null or not editor_script.can_instantiate():
+		push_error("[cold boot probe] the workspace editor did not load")
+		return "editor_load_ms=-1 editor_build_ms=-1"
+	var editor: Variant = editor_script.new()
+	var built_usec: int = Time.get_ticks_usec()
+	if editor is Node:
+		(editor as Node).free()
+	return "editor_load_ms=%.1f editor_build_ms=%.1f" % [float(loaded_usec - start_usec) / 1000.0,
+		float(built_usec - start_usec) / 1000.0]
 
 
 ## One ordinary sheet, opened through the registries above.

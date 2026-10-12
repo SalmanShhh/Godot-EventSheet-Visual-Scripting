@@ -24,7 +24,7 @@
 #
 # COLD BOOT IS MEASURED IN ITS OWN PROCESS. By the time any test runs, half the plugin is compiled
 # and every registry is warm, so the work an editor start really does measures as zero from in here.
-# `cold_boot_probe.gd` is run as a subprocess and its two numbers are pinned.
+# `cold_boot_probe.gd` is run as a subprocess and its numbers are pinned.
 @tool
 class_name HugeProjectBudgetTest
 extends RefCounted
@@ -53,6 +53,14 @@ const BOOT_CLOSURE_BUDGET_MS: int = 1200
 ## because something heavy started being built per tab instead of once. The registries are still
 ## the half no later tab pays, and still the half worth making smaller.
 const FIRST_OPEN_BUDGET_MS: int = 6500
+
+## Building the workspace editor in a process that has compiled nothing of it yet: loading
+## event_sheet_editor.gd, which compiles every class it names and everything those name in turn,
+## then `.new()` on it. This is the wait the FIRST open of the workspace pays, on top of the first
+## tab above. Measured 16,671, 16,754 and 17,051 ms (15,548-15,884 of it the compile alone), and the
+## budget is that median times 1.25 - a ceiling to hold the line while the closure is cut down, and
+## to be lowered with every cut that lands rather than left with room to grow back into.
+const EDITOR_BUILD_BUDGET_MS: int = 21000
 
 ## Opening the fixture's 2,000-line script as a sheet: the import, the lift, and the row build with
 ## its head bands, ending in 1,441 rows. Measured 5,629, 5,758 and 7,305 ms - the widest spread of
@@ -219,6 +227,13 @@ static func _pin_cold_boot() -> bool:
 	passed = _check("the first sheet tab costs under %d ms (took %.1f ms, %.1f of it registries)" % [
 		FIRST_OPEN_BUDGET_MS, first_open_ms, float(numbers.get("registries_ms", 0.0))],
 		first_open_ms <= float(FIRST_OPEN_BUDGET_MS), true) and passed
+	# A child that printed nothing answers -1, and -1 is under every budget, so it is named as the
+	# failure it is rather than read as an editor that cost nothing.
+	var editor_build_ms: float = float(numbers.get("editor_build_ms", -1.0))
+	passed = _check("the probe measured the workspace editor build", editor_build_ms >= 0.0, true) and passed
+	passed = _check("building the workspace editor costs under %d ms (took %.1f ms, %.1f of it the compile)" % [
+		EDITOR_BUILD_BUDGET_MS, editor_build_ms, float(numbers.get("editor_load_ms", -1.0))],
+		editor_build_ms <= float(EDITOR_BUILD_BUDGET_MS), true) and passed
 	return passed
 
 
