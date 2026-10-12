@@ -159,12 +159,73 @@ static func capability_failure(body: String) -> String:
 static func live_capability_failure(body: String) -> String:
 	if body.strip_edges().is_empty():
 		return "the fence is empty"
-	if not EventSheets.round_trips(body):
+	# The REASON, not the bool: an importer or compiler that faults says so here, instead of every
+	# fence in the corpus reading as a body whose re-emission drifted.
+	var round_trip: String = EventSheets.round_trip_failure(body)
+	if round_trip == "output differs":
 		return "re-emitting the rows would not reproduce the code byte for byte"
+	if not round_trip.is_empty():
+		return "the code could not be re-emitted at all - %s" % round_trip
 	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(body)
 	if lifted_row_count(sheet) <= 0:
 		return "every line stayed verbatim code - there are no rows to draw"
 	return ""
+
+
+## A body that MUST round-trip on any working toolchain. The bake asks it first: when this fails,
+## every verdict computed afterwards would describe the broken importer or compiler rather than the
+## guides, and writing them would replace the shipped answers with noise.
+const KNOWN_GOOD_FENCE := "extends Node\nvar a: int = 1\n"
+
+
+## "" when the importer and compiler answer the known-good fence correctly, and the reason they
+## refused it otherwise. A result that is not a String (a call that aborted on a script error
+## returns nothing) counts as broken too.
+static func toolchain_failure() -> String:
+	var reason: Variant = EventSheets.round_trip_failure(KNOWN_GOOD_FENCE)
+	if not (reason is String):
+		return "the round trip returned no answer"
+	if not (reason as String).is_empty():
+		return reason as String
+	if not EventSheets.round_trips(KNOWN_GOOD_FENCE):
+		return "the round trip answered false with no reason"
+	return ""
+
+
+## Whether a freshly computed set of verdicts may replace the committed ones: "" when it may, and
+## why not otherwise. It may not when there are verdicts and none of them can be drawn, or when the
+## drawable count falls to less than half of what is committed - neither is what a guide edit or a
+## lifter change does, and both are what a toolchain fault mid-bake does. The reason carries the
+## first underlying error: the one a fence that used to draw gives now, else the first given.
+static func bake_refusal(fresh: Dictionary, committed: Dictionary) -> String:
+	if fresh.is_empty():
+		return ""
+	var fresh_drawable: int = drawable_count(fresh)
+	var committed_drawable: int = drawable_count(committed)
+	var collapsed: bool = fresh_drawable == 0 or fresh_drawable * 2 < committed_drawable
+	if not collapsed:
+		return ""
+	var first_error: String = ""
+	for key: Variant in fresh:
+		var reason: String = str(fresh[key])
+		if reason.is_empty():
+			continue
+		if committed.has(key) and str(committed[key]).is_empty():
+			first_error = reason
+			break
+		if first_error.is_empty():
+			first_error = reason
+	return "only %d of %d figure verdicts can be drawn (%d committed) - first error: %s" % [
+		fresh_drawable, fresh.size(), committed_drawable, first_error]
+
+
+## How many verdicts say "drawable" (an empty reason).
+static func drawable_count(gates: Dictionary) -> int:
+	var count: int = 0
+	for key: Variant in gates:
+		if str(gates[key]).is_empty():
+			count += 1
+	return count
 
 
 ## The key a body's baked verdict is filed under. One definition, so the build step and the reader

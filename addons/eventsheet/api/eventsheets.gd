@@ -803,11 +803,31 @@ const ROUND_TRIP_PROBE_PATH: String = "user://__eventsheets_api_roundtrip.gd"
 ## it byte-identically - the same covenant every built-in lift must satisfy. Use it to
 ## verify a custom block kind or an emission tweak can never corrupt user files.
 static func round_trips(source: String) -> bool:
+	return round_trip_failure(source).is_empty()
+
+
+## The byte gate's REASON: "" exactly when `round_trips(source)` is true, and otherwise which step
+## refused - so a tool reporting the gate can say why, not only that.
+##   "import failed"              the importer handed back no sheet at all
+##   "compile failed: <errors>"   the compiler reported errors (joined with "; ")
+##   "output differs"             both ran, and the re-emitted bytes are not the source
+## The three are told apart on purpose: a broken toolchain (a core script that will not load)
+## fails EVERY body at the first two steps, which reads very differently from one body whose
+## re-emission drifts.
+static func round_trip_failure(source: String) -> String:
 	var sheet: EventSheetResource = open_gd_as_sheet(source)
 	if sheet == null:
-		return false
+		return "import failed"
 	sheet.external_source_path = ROUND_TRIP_PROBE_PATH
-	return str(compile(sheet, sheet.external_source_path).get("output", "")) == source
+	var result: Dictionary = compile(sheet, sheet.external_source_path)
+	if str(result.get("output", "")) == source:
+		return ""
+	var errors: PackedStringArray = PackedStringArray()
+	for error: Variant in (result.get("errors", []) as Array):
+		errors.append(str(error))
+	if not errors.is_empty():
+		return "compile failed: %s" % "; ".join(errors)
+	return "output differs"
 
 
 # ── Data tables (a spreadsheet read exactly the way the Table From File verb reads it) ─

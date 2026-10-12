@@ -39,6 +39,10 @@
 # Both modes print `help: pages=N drifted=N`. THE GATE IS NOT THIS FILE - the byte-identity check
 # that CI runs lives in tests/doc_library_test.gd, because the suite is what CI discovers. This is
 # the convenience wrapper you run while editing a guide.
+#
+# Exit 2 means NOTHING was written, for one of two reasons it prints: a known-good body does not
+# round-trip (the importer or compiler is broken, so every verdict would be noise), or the fresh
+# verdicts collapsed - none drawable, or fewer than half the drawable count already committed.
 @tool
 extends SceneTree
 
@@ -80,8 +84,22 @@ static func locale_sets() -> Array:
 
 func _init() -> void:
 	var check_only: bool = OS.get_cmdline_user_args().has("--check") or OS.get_cmdline_args().has("--check")
+	# Every figure verdict is an import and a compile. When those are broken - a core script saved
+	# half way by another process, say - every verdict reads "cannot be drawn", and writing them
+	# would ship a manual with no figures in it. So the toolchain answers a known-good body first.
+	var toolchain: String = EventSheetDocFigures.toolchain_failure()
+	if not toolchain.is_empty():
+		printerr("help: the toolchain is broken - a known-good body does not round-trip (%s); nothing was baked" % toolchain)
+		quit(2)
+		return
 	var pages: Dictionary = collect_pages()
 	var gates: Dictionary = build_gates(pages)
+	# Read BEFORE anything is written, so the comparison is against the committed file.
+	var refusal: String = EventSheetDocFigures.bake_refusal(gates, committed_gates())
+	if not refusal.is_empty():
+		printerr("help: refusing to bake figures.esdoc - %s; nothing was written" % refusal)
+		quit(2)
+		return
 	var drifted: PackedStringArray = drifted_pages(pages)
 	if read_text(EventSheetDocLibrary.FIGURES_PATH) != figures_text(gates):
 		drifted.append("figures.esdoc")
@@ -97,7 +115,7 @@ func _init() -> void:
 		write_text(EventSheetDocLibrary.SEARCH_PATH, search_text(pages))
 		drifted = PackedStringArray()
 	print("help: pages=%d drifted=%d" % [pages.size(), drifted.size()])
-	print("help: figure verdicts baked=%d drawable=%d" % [gates.size(), _drawable_count(gates)])
+	print("help: figure verdicts baked=%d drawable=%d" % [gates.size(), EventSheetDocFigures.drawable_count(gates)])
 	for id: String in drifted:
 		print("  drifted: %s" % id)
 	var manifest: Dictionary = build_manifest(pages)
@@ -140,6 +158,16 @@ static func build_gates(pages: Dictionary) -> Dictionary:
 	return gates
 
 
+## The verdicts in the figure file as it sits on disk now - read fresh, never through the reader's
+## session cache - so a bake can be compared against what is committed before it overwrites it.
+static func committed_gates() -> Dictionary:
+	var payload: Variant = EventSheetDocLibrary.payload_of(EventSheetDocLibrary.FIGURES_PATH,
+		EventSheetDocLibrary.FIGURES_HEADER)
+	if payload is Dictionary:
+		return (payload as Dictionary).get("gates", {}) as Dictionary
+	return {}
+
+
 ## Whether the reader would ever ask this fence's capability question. Mirrors the recognizer's own
 ## precedence, and is the one place that mirroring lives.
 static func _is_gatable(language: String, body: String) -> bool:
@@ -147,14 +175,6 @@ static func _is_gatable(language: String, body: String) -> bool:
 	if tag == EventSheetDocFigures.AUTHORED_TAG:
 		return true
 	return tag == EventSheetDocFigures.AUTO_LANGUAGE and EventSheetDocFigures.has_script_header(body)
-
-
-static func _drawable_count(gates: Dictionary) -> int:
-	var count: int = 0
-	for key: Variant in gates:
-		if str(gates[key]).is_empty():
-			count += 1
-	return count
 
 
 ## The What's-new page's exact bytes, extracted from the repository's own CHANGELOG. It is baked

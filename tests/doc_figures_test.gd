@@ -50,6 +50,8 @@ static func run() -> bool:
 	all_passed = _test_recognizer() and all_passed
 	all_passed = _test_markers() and all_passed
 	all_passed = _test_prelude_crop() and all_passed
+	all_passed = _test_round_trip_reason() and all_passed
+	all_passed = _test_bake_guards() and all_passed
 	all_passed = _test_corpus() and all_passed
 	EventSheetDocFigures.use_prebaked = true
 	EventSheetDocFigures.clear_gate_cache()
@@ -195,6 +197,43 @@ static func _test_prelude_crop() -> bool:
 	return all_passed
 
 
+## The byte gate's reason, and the known-good body the bake asks before anything else.
+static func _test_round_trip_reason() -> bool:
+	return SUPPORT.pins("doc_figures_test", [
+		["the known-good fence round-trips with no reason",
+			EventSheets.round_trip_failure(EventSheetDocFigures.KNOWN_GOOD_FENCE), ""],
+		["so the toolchain answers healthy", EventSheetDocFigures.toolchain_failure(), ""],
+		["round_trips agrees with the reason on the known-good fence",
+			EventSheets.round_trips(EventSheetDocFigures.KNOWN_GOOD_FENCE), true],
+		["a whole little script has no reason either", EventSheets.round_trip_failure(GOOD_BODY), ""],
+		["a header-less fragment has none (it round-trips)", EventSheets.round_trip_failure(HEADERLESS_BODY), ""],
+	])
+
+
+## The bake's refusal rule, proved on fixtures before it guards the real file.
+static func _test_bake_guards() -> bool:
+	var committed: Dictionary = {"a": "", "b": "", "c": "", "d": "", "e": "no rows"}
+	var broken: Dictionary = {"a": "the code could not be re-emitted at all - import failed",
+		"b": "the code could not be re-emitted at all - import failed", "c": "x", "d": "x", "e": "no rows"}
+	var halved: Dictionary = {"a": "", "b": "lost", "c": "lost", "d": "lost", "e": "no rows"}
+	var healthy: Dictionary = {"a": "", "b": "", "c": "", "d": "changed", "e": "no rows"}
+	var all_failing: Dictionary = {"a": "x", "b": "x"}
+	return SUPPORT.pins("doc_figures_test", [
+		["a healthy bake may replace the committed file", EventSheetDocFigures.bake_refusal(healthy, committed), ""],
+		["an empty bake has nothing to refuse", EventSheetDocFigures.bake_refusal({}, committed), ""],
+		["a bake where nothing draws is refused, naming the first error",
+			EventSheetDocFigures.bake_refusal(broken, committed),
+			"only 0 of 5 figure verdicts can be drawn (4 committed) - first error: the code could not be re-emitted at all - import failed"],
+		["a bake that loses more than half the drawable figures is refused",
+			EventSheetDocFigures.bake_refusal(halved, committed),
+			"only 1 of 5 figure verdicts can be drawn (4 committed) - first error: lost"],
+		["no drawable verdict is refused even with nothing committed",
+			EventSheetDocFigures.bake_refusal(all_failing, {}),
+			"only 0 of 2 figure verdicts can be drawn (0 committed) - first error: x"],
+		["drawable count reads empty reasons", EventSheetDocFigures.drawable_count(committed), 4],
+	])
+
+
 ## The anti-rot sweep. Every fence the reader will see drawn as rows is drawn here first, and
 ## every verb those rows name is resolved against the LIVE registry - so a renamed verb, a changed
 ## template or a broken guide edit fails the suite instead of shipping a hole in a page.
@@ -207,6 +246,7 @@ static func _test_corpus() -> bool:
 	var stale: PackedStringArray = PackedStringArray()
 	var baked: Dictionary = EventSheetDocLibrary.gate_verdicts()
 	var compared: int = 0
+	var live_verdicts: Dictionary = {}
 	var authored: int = 0
 	var automatic: int = 0
 	for path: String in _corpus_files():
@@ -226,7 +266,9 @@ static func _test_corpus() -> bool:
 					stale.append("%s line %d: no baked verdict" % [path, int(block.get("line", 0))])
 				else:
 					compared += 1
-					if str(baked[key]) != EventSheetDocFigures.live_capability_failure(body):
+					var live: String = EventSheetDocFigures.live_capability_failure(body)
+					live_verdicts[key] = live
+					if str(baked[key]) != live:
 						stale.append("%s line %d: baked verdict is not what the lifter says" % [path, int(block.get("line", 0))])
 			var verdict: Dictionary = EventSheetDocFigures.recognize(block)
 			var mode: String = str(verdict.get("mode", ""))
@@ -259,9 +301,29 @@ static func _test_corpus() -> bool:
 	# would see a wall of code where a figure used to be).
 	all_passed = _check("every gatable fence has a baked verdict, and every one still holds", ", ".join(stale), "") and all_passed
 	all_passed = _check("and there were verdicts to compare", compared > 0, true) and all_passed
+	# A broken importer or compiler fails every fence for the SAME reason, and a bake taken then
+	# agrees with the live lifter perfectly - so agreement alone cannot catch it. These two can.
+	all_passed = _check("at least half the live verdicts are drawable",
+		EventSheetDocFigures.drawable_count(live_verdicts) * 2 >= live_verdicts.size(), true) and all_passed
+	all_passed = _check("no single refusal reason covers every verdict",
+		_one_reason_covers_all(live_verdicts), "") and all_passed
 	print("[INFO] doc_figures_test: %d authored + %d automatic figure(s) across the corpus, %d baked verdict(s) rechecked." % [
 		authored, automatic, compared])
 	return all_passed
+
+
+## The one non-empty reason every verdict gives, or "" when the verdicts disagree (or none exist).
+static func _one_reason_covers_all(verdicts: Dictionary) -> String:
+	var shared: String = ""
+	for key: Variant in verdicts:
+		var reason: String = str(verdicts[key])
+		if reason.is_empty():
+			return ""
+		if shared.is_empty():
+			shared = reason
+		elif reason != shared:
+			return ""
+	return shared
 
 
 ## Whether the reader would ever ask this fence's capability question, and therefore whether the

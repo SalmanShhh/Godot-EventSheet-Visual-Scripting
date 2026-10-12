@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed: the help bundle never bakes a manual with no figures in it
+
+- `EventSheets.round_trip_failure(source)` is the byte gate's reason: `""` when `round_trips(source)`
+  is true, otherwise `import failed`, `compile failed: <errors>` or `output differs`. `round_trips`
+  keeps its shape and now answers through it. A guide figure that cannot be drawn because the
+  importer or compiler faulted says so, instead of reading as a body whose re-emission drifted.
+- `tools/build_help_bundle.gd` asks a known-good body first and stops with exit 2 when it does not
+  round-trip, and refuses to write anything (exit 2, naming the first underlying error) when the fresh
+  figure verdicts have none drawable or fewer than half the drawable count already committed. A bake
+  once rewrote every figure as "would not reproduce" while the live check disagreed.
+
 ### Changed: Editor Native reads an enum value as written and ends the sheet on its last row
 
 - An enum variable's value reads as its choice spelled the way the file spells it: `GateState.CLOSED`
