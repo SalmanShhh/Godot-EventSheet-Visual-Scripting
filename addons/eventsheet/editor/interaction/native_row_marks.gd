@@ -216,13 +216,15 @@ static func ink_on(fill: Color) -> Color:
 
 ## Where a selected event's filled margin continues past the 20 px gutter: from the gutter's edge
 ## across the trigger icon's slot for an event at the left edge, so the number and the icon sit on
-## one fill; for a nested event only the slot itself, and only when an icon is drawn in it, so the
-## indent guides between keep their place. An empty rect means nothing more is filled.
+## one fill. A nested event under `continuous` (a theme that marks a selection by its gutter and frame
+## alone) fills the same one shape, from the gutter's edge over its indent to the end of the slot, so
+## the group's rails never split the number from the icon; otherwise only the slot itself, and only
+## when an icon is drawn in it, so the indent guides between keep their place. An empty rect means
+## nothing more is filled.
 static func selected_slot_rect(gutter_rect: Rect2, row_rect: Rect2, indent: int, indent_width: int,
-		has_icon: bool) -> Rect2:
-	var slot_x: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING \
-		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width)
-	if indent <= 0:
+		has_icon: bool, continuous: bool = false) -> Rect2:
+	var slot_x: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING 		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width)
+	if indent <= 0 or continuous:
 		return Rect2(gutter_rect.end.x, row_rect.position.y, slot_x + TRIGGER_ICON_SLOT - gutter_rect.end.x,
 			row_rect.size.y)
 	if not has_icon:

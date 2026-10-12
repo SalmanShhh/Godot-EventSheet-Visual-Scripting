@@ -74,6 +74,22 @@ static func _test_selected_gutter() -> bool:
 			Rect2(nested_slot_x, 100.0, NativeRowMarks.TRIGGER_ICON_SLOT, 24.0)],
 		["a nested event with no icon fills nothing more", NativeRowMarks.selected_slot_rect(gutter, row, 2, 18, false),
 			Rect2()],
+		["under an outline selection a nested event's fill is one shape from the gutter to its icon, at depth 1, 2 and 3",
+			[NativeRowMarks.selected_slot_rect(gutter, row, 1, 18, true, true),
+				NativeRowMarks.selected_slot_rect(gutter, row, 2, 18, true, true),
+				NativeRowMarks.selected_slot_rect(gutter, row, 3, 18, true, true)],
+			[Rect2(gutter.end.x, 100.0, slot_end + 18.0 - gutter.end.x, 24.0),
+				Rect2(gutter.end.x, 100.0, slot_end + 36.0 - gutter.end.x, 24.0),
+				Rect2(gutter.end.x, 100.0, slot_end + 54.0 - gutter.end.x, 24.0)]],
+		["and with no icon the margin is the same one shape",
+			NativeRowMarks.selected_slot_rect(gutter, row, 2, 18, false, true),
+			Rect2(gutter.end.x, 100.0, slot_end + 36.0 - gutter.end.x, 24.0)],
+		["Editor Native asks for the one shape, Classic Sheet keeps the slot alone",
+			[(load(NATIVE_THEME) as EventSheetEditorStyle).get_event_style().selection_as_outline,
+				(load(CLASSIC_THEME) as EventSheetEditorStyle).get_event_style().selection_as_outline],
+			[true, false]],
+		["a top-level event reads the same either way", NativeRowMarks.selected_slot_rect(gutter, row, 0, 18, true, true),
+			NativeRowMarks.selected_slot_rect(gutter, row, 0, 18, true)],
 	])
 
 

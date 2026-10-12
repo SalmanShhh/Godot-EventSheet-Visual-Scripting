@@ -786,13 +786,15 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
 	# A selected event's filled margin reaches across the trigger icon's slot, so the number and the
-	# icon read as one selected gutter. Paint only, over the row's own fill and under the fold arrow.
+	# icon read as one selected gutter. Paint only, over the row's own fill, the indent guides and the
+	# rails (so a nested event's selected margin is one fill, not split by its group's rail) and under
+	# the fold arrow.
 	var gutter_selected: bool = is_event_row and row_data.selected and event_style != null \
 		and event_style.selected_gutter_fill_color.a > 0.01
 	var trigger_kind: String = NativeRowMarks.trigger_kind(row_data) if show_trigger_icons and is_event_row else ""
 	if gutter_selected:
 		var slot_fill: Rect2 = NativeRowMarks.selected_slot_rect(gutter_rect, row_rect, row_data.indent,
-			row_indent_width, not trigger_kind.is_empty())
+			row_indent_width, not trigger_kind.is_empty(), event_style.selection_as_outline)
 		if slot_fill.size.x > 0.0:
 			control.draw_rect(slot_fill, event_style.selected_gutter_fill_color, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty(),
@@ -911,14 +913,16 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
 	# A selected event's margin filled, so the selection reads from the number. Clear leaves it.
 	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
-	if selected and event_style != null and event_style.selected_gutter_fill_color.a > 0.01:
+	var filled: bool = selected and event_style != null and event_style.selected_gutter_fill_color.a > 0.01
+	if filled:
 		gutter_bg = event_style.selected_gutter_fill_color
 		# The number turns to the ink that reads on the fill (white on the design's blue).
 		gutter_text = NativeRowMarks.ink_on(gutter_bg)
 	control.draw_rect(fill_rect, gutter_bg, true)
 	# The rail between the margin and the lanes. One gutter column drawn as part of the card has
-	# none: the conditions lane's own tint is where the margin ends.
-	if fill_rect == gutter_rect:
+	# none: the conditions lane's own tint is where the margin ends. Nor has a selected nested event
+	# under selection_as_outline, whose filled margin runs on unbroken to its trigger icon.
+	if fill_rect == gutter_rect and not (filled and event_style.selection_as_outline):
 		control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
 	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
 	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one

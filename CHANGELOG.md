@@ -16,6 +16,15 @@
   (the press edge inside an input event, the held state anywhere), and a search for "Any Key" offers
   both.
 
+### Fixed: a selected event inside a group keeps one filled margin in Editor Native
+
+- Selecting an event that sits in a group used to split its filled margin in two: the number blue,
+  then the group's indent and its rails dark, then the trigger icon blue again. Under a theme that
+  marks a selection by its gutter and frame (Editor Native, dark and light) the fill now runs unbroken
+  from the number across the indent to the trigger icon at any depth, with no rail drawn between
+  the number and the rest. Classic Sheet and every theme that washes its selection paints exactly as
+  before.
+
 ### Fixed: a typed variable with no starting value opens as a variable, not a script block
 
 - `@export var spark_prefab: PackedScene`, `var target: Node2D`, `var hp: int` - the usual way to
