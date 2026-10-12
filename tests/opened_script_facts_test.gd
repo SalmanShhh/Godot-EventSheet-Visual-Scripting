@@ -66,7 +66,7 @@ static func _test_coverage_chip() -> bool:
 	ok = _check("the click walks exactly the blocks the chip counted", blocks.size(), 2) and ok
 	ok = _check("in file order",
 		blocks[0].code.strip_edges().split("\n")[0] if not blocks.is_empty() else "",
-		"@export var target: Node2D") and ok
+		"@export var target: Node2D # set in the Inspector") and ok
 
 	# A file that lifted completely drops the number: "100% reads as events, 0 script blocks" is a
 	# sentence with nothing in it, and a reader would rightly wonder what the 0 was for.
