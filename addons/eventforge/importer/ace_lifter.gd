@@ -4106,6 +4106,14 @@ const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = [
 	"AJAX", "Lighting", "Video", "3D: Move & Turn", "3D: Place", "3D: See"
 ]
 
+## The rows whose `{, x}` optional comma IS reversed, each into its two shapes - the line without the
+## trailing argument and the line with it. Opt-in by id rather than for every such template, because
+## admitting the rest would move lines that already lift (`get_tree().call_group(g, m, v)` reads as
+## Call Method On Group today) onto their siblings, and that is a reading change nobody asked for. The
+## longer shape is tried first; a capture split inside a string is lopsided and refused, so the line
+## falls to the shorter shape with its whole argument list in the one field, which re-emits the same.
+const OPTIONAL_COMMA_REVERSIBLE_ACE_IDS: PackedStringArray = ["TellChildren"]
+
 ## The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
@@ -4119,6 +4127,11 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# every bare identifier in every file - both rows say a CLEARER sentence about a line that
 	# already lifts, so they author only and the general spellings keep their existing rows.
 	"SetBool", "IsBoolSet",
+	# The two Reset rows, for the same reason. What they write is a plain assignment - the value the
+	# declaration starts the variable on, filled in by the compiler - so the line they leave is Set
+	# value's own line and reopens as that row. Their templates hold slots no line spells, so admitted
+	# they could only claim nothing or, worse, everything.
+	"ResetVariable", "ResetVariables",
 	# Make A Copy, for the same reason and no other: its template IS the instancing line, and the
 	# shipped reading of an instantiate already says more about that line than the row can - it
 	# gathers the instancing, the layer it went onto, where it was put and the property set on the
@@ -4240,8 +4253,8 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 	brace_regex.compile("\\{[^}]*\\}")
 	for descriptor: ACEDescriptor in all_descriptors:
 		var template: String = descriptor.codegen_template.strip_edges()
-		if template.is_empty() or template.contains("{,"):
-			continue  # optional-segment templates are not reversible (v1)
+		if template.is_empty() or (template.contains("{,") and not OPTIONAL_COMMA_REVERSIBLE_ACE_IDS.has(descriptor.ace_id)):
+			continue  # optional-segment templates are not reversible (v1), bar the rows named below
 		# Helper ACEs are mostly forward-authoring conveniences with deliberately generic templates
 		# ({code}, math expressions) that would shadow specific ACEs - kept out of the reverse index.
 		# EXCEPT the statement catch-alls, admitted at LOWEST specificity (the literal_len sort at the
@@ -4286,7 +4299,7 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 				continue
 		# Optional-prefix `{target.}` templates compile to two shapes - the blank-target host form
 		# (`play()`) and the set-target form (`$Enemy.play()`) - so register a reverse entry for each.
-		for variant: String in _optional_prefix_variants(template):
+		for variant: String in _optional_comma_variants(_optional_prefix_variants(template)):
 			var regex: RegEx = _template_to_regex(variant)
 			if regex == null:
 				continue
@@ -4543,6 +4556,23 @@ static func _optional_prefix_variants(template: String) -> Array:
 	var placeholder: String = hit.get_string(0)  # e.g. "{target.}"
 	var capture_name: String = hit.get_string(1)  # e.g. "target"
 	return [template.replace(placeholder, ""), template.replace(placeholder, "{%s}." % capture_name)]
+
+
+## Each template with every `{, x}` optional comma spelled both ways: dropped, and as `, {x}`. A
+## template with none comes back as it went in, so this only ever widens the opted-in rows.
+static func _optional_comma_variants(templates: Array) -> Array:
+	var comma_re: RegEx = RegEx.new()
+	comma_re.compile("\\{, ([A-Za-z_][A-Za-z0-9_]*)\\}")
+	var spelled: Array = []
+	for template: Variant in templates:
+		var text: String = str(template)
+		var hit: RegExMatch = comma_re.search(text)
+		if hit == null:
+			spelled.append(text)
+			continue
+		spelled.append_array(_optional_comma_variants([text.replace(hit.get_string(0), ""),
+			text.replace(hit.get_string(0), ", {%s}" % hit.get_string(1))]))
+	return spelled
 
 
 ## "{amount}" placeholders become lazy named captures; everything else matches literally.

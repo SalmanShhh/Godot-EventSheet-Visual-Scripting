@@ -7349,3 +7349,41 @@ remove from {var_name} where {predicate},"удалить из {var_name}, где
 Has Been True For,Истинно уже
 [b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] истинно уже [b]{seconds}[/b] секунд
 Ceil (whole),Округление вверх (целое)
+Distance Travelled,Пройденное расстояние
+how far this has travelled,сколько это прошло
+"How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D.","Сколько это тело действительно прошло с момента появления в игре, суммируется каждый физический кадр по его фактической скорости - тело, упирающееся в стену, ничего не проходит. Для одометра, звука шагов каждый метр или цели пройти сто метров. Работает на CharacterBody или RigidBody, в 2D и 3D."
+Reset Variable,Сбросить переменную
+Put {var_name} back to its starting value,Вернуть {var_name} к начальному значению
+"Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.","Возвращает переменной значение, с которого её начинает объявление - здоровье снова полное, счёт снова ноль. Значение берётся из объявления при компиляции листа, поэтому изменение начального значения меняет то, что пишет эта строка."
+Variable to put back.,"Переменная, которую нужно вернуть."
+Reset Variables,Сбросить переменные
+Put every variable back to its starting value,Вернуть каждую переменную к начальному значению
+"Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set.","Одной строкой возвращает каждую переменную этого листа к значению, с которого её начинает объявление - новый раунд без перезагрузки сцены. Экспортированные переменные не трогаются: их начальное значение задано в Инспекторе."
+Tell Children,Сообщить детям
+tell [i]{target}[/i] and everything under it to [b]{method}[/b],сказать [i]{target}[/i] и всему под ним выполнить [b]{method}[/b]
+"Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.","Одной строкой вызывает метод у узла и у каждого узла под ним - дверь, открывающаяся вместе с ручкой, светом и звуком, уровень, который велит всему в нём сброситься. Узлы без этого метода пропускаются. Оставьте «На узле» пустым для этого узла и всего под ним."
+Method to call on the node and everything under it.,"Метод, вызываемый у узла и всего под ним."
+"The values passed to the method, as a list: [10] or [10, ""fire""]. Leave blank for none.","Значения, передаваемые методу, списком: [10] или [10, ""fire""]. Оставьте пустым, если их нет."
+The node at the top of the branch. Leave blank for this node.,Узел на вершине ветви. Оставьте пустым для этого узла.
+Next Sibling,Следующий сосед
+the sibling after [i]{target}[/i],сосед после [i]{target}[/i]
+"Returns the node just after this one under the same parent - the next inventory slot, the next waypoint. After the last one it wraps round to the first.","Возвращает узел сразу после этого у того же родителя - следующий слот инвентаря, следующую точку пути. После последнего возвращается к первому."
+Node whose next sibling to get.,"Узел, чьего следующего соседа нужно получить."
+Previous Sibling,Предыдущий сосед
+the sibling before [i]{target}[/i],сосед перед [i]{target}[/i]
+"Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.","Возвращает узел сразу перед этим у того же родителя - предыдущий слот инвентаря, предыдущую точку пути. Перед первым возвращается к последнему."
+Node whose previous sibling to get.,"Узел, чьего предыдущего соседа нужно получить."
+Nearest Ancestor Of Type,Ближайший предок типа
+the nearest [b]{type}[/b] above [i]{target}[/i],ближайший [b]{type}[/b] над [i]{target}[/i]
+"Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.","Возвращает ближайший узел над этим, имеющий заданный тип - Room, в которой стоит сундук, Vehicle, которому принадлежит сиденье, Level, куда положили предмет - или ничего, если такого нет."
+Node to search above.,"Узел, над которым искать."
+Node class or class_name to find - the closest match above (null if none).,"Класс узла или class_name для поиска - ближайшее совпадение выше (null, если нет)."
+how far {object} has travelled,сколько прошёл {object}
+the nearest {type} above {object},ближайший {type} над {object}
+the sibling after {object},сосед после {object}
+the sibling before {object},сосед перед {object}
+Tell {object} and everything under it to {method},Сказать {object} и всему под ним выполнить {method}
+Tell {object} and everything under it to {method} with {values},Сказать {object} и всему под ним выполнить {method} с {values}
+%s back to its starting value - the line Reset Variable writes,"%s возвращена к начальному значению - строка, которую пишет «Сбросить переменную»"
+Method,Метод
+General Expressions,Общие выражения

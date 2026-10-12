@@ -7349,3 +7349,41 @@ remove from {var_name} where {predicate},从 {var_name} 中移除满足 {predica
 Has Been True For,已持续为真
 [b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] 已持续为真 [b]{seconds}[/b] 秒
 Ceil (whole),向上取整（整数）
+Distance Travelled,移动距离
+how far this has travelled,这个已移动的距离
+"How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D.","此物体自进入游戏以来实际移动的距离,每个物理帧根据其真实速度累加 - 顶着墙推的物体不算移动。适用于里程表、每米一次的脚步声或走一百米的目标。适用于 2D 或 3D 的 CharacterBody 或 RigidBody。"
+Reset Variable,重置变量
+Put {var_name} back to its starting value,将 {var_name} 恢复为初始值
+"Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.","将变量恢复为其声明给定的初始值 - 生命值回满,分数归零。该值在编译表格时从声明中读取,因此修改初始值会改变这里写出的内容。"
+Variable to put back.,要恢复的变量。
+Reset Variables,重置所有变量
+Put every variable back to its starting value,将所有变量恢复为初始值
+"Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set.",在一行中将此表格声明的每个变量恢复为其声明给定的初始值 - 无需重新加载场景即可开始新一轮。导出的变量保持不变:它们的初始值是检查器设置的值。
+Tell Children,通知子节点
+tell [i]{target}[/i] and everything under it to [b]{method}[/b],通知 [i]{target}[/i] 及其下所有节点执行 [b]{method}[/b]
+"Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.","在一行中对一个节点及其下的每个节点调用方法 - 一扇门连同把手、灯光和声音一起打开,一个关卡通知其中的一切重置。没有该方法的节点会被跳过。将“作用于节点”留空即表示此节点及其下的一切。"
+Method to call on the node and everything under it.,在节点及其下所有节点上调用的方法。
+"The values passed to the method, as a list: [10] or [10, ""fire""]. Leave blank for none.","传给方法的值,以列表形式:[10] 或 [10, ""fire""]。留空表示不传。"
+The node at the top of the branch. Leave blank for this node.,分支顶端的节点。留空表示此节点。
+Next Sibling,下一个兄弟节点
+the sibling after [i]{target}[/i],[i]{target}[/i] 之后的兄弟节点
+"Returns the node just after this one under the same parent - the next inventory slot, the next waypoint. After the last one it wraps round to the first.",返回同一父节点下紧跟在此节点之后的节点 - 下一个物品栏格子、下一个路径点。最后一个之后回到第一个。
+Node whose next sibling to get.,要获取其下一个兄弟的节点。
+Previous Sibling,上一个兄弟节点
+the sibling before [i]{target}[/i],[i]{target}[/i] 之前的兄弟节点
+"Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.",返回同一父节点下紧挨在此节点之前的节点 - 上一个物品栏格子、上一个路径点。第一个之前回到最后一个。
+Node whose previous sibling to get.,要获取其上一个兄弟的节点。
+Nearest Ancestor Of Type,最近的该类型祖先
+the nearest [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] 上方最近的 [b]{type}[/b]
+"Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.",返回此节点上方最近的指定类型节点 - 宝箱所在的 Room、座位所属的 Vehicle、拾取物所在的 Level - 没有则返回空。
+Node to search above.,向上搜索的起点节点。
+Node class or class_name to find - the closest match above (null if none).,要查找的节点类或 class_name - 上方最近的匹配(没有则为 null)。
+how far {object} has travelled,{object} 已移动的距离
+the nearest {type} above {object},{object} 上方最近的 {type}
+the sibling after {object},{object} 之后的兄弟节点
+the sibling before {object},{object} 之前的兄弟节点
+Tell {object} and everything under it to {method},通知 {object} 及其下所有节点执行 {method}
+Tell {object} and everything under it to {method} with {values},通知 {object} 及其下所有节点以 {values} 执行 {method}
+%s back to its starting value - the line Reset Variable writes,%s 恢复为初始值 - 重置变量写出的那一行
+Method,方法
+General Expressions,通用表达式

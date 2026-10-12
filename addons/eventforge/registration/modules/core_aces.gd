@@ -84,6 +84,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# is identical and only the ROW is clearer, which is why it stays out of the reverse index
 	# (ace_lifter.REVERSE_LIFT_EXCLUDED_ACE_IDS): `x = y` must keep lifting back to Set value.
 	descriptors.append(F.act("SetBool", "Set boolean", "{var_name} = {value}", "Variables", "Set boolean {var_name} to {value}", "Sets a boolean variable to true or false, picked from the list instead of typed.").param("var_name", "enabled_flag", "Variable", "Boolean variable to set.", "variable_reference").param_choice("value", "true", "Value", "true or false.", [{"key": "true", "label": "true"}, {"key": "false", "label": "false"}]))
+	# Back to the starting value, beside Set value. The value is the one the variable's own declaration
+	# writes, so it is never typed twice: the compiler fills {starting_value} from that declaration
+	# while it compiles, and a variable whose declaration it cannot see writes nothing and says so.
+	# The line is a plain assignment, so like Set boolean it stays out of the reverse index
+	# (ace_lifter.REVERSE_LIFT_EXCLUDED_ACE_IDS): `health = 100` keeps lifting back to Set value.
+	descriptors.append(F.act("ResetVariable", "Reset Variable", "{var_name} = {starting_value}", "Variables", "Put {var_name} back to its starting value", "Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.").param("var_name", "var", "Variable", "Variable to put back.", "variable_reference"))
+	# Every variable at once: one assignment per variable this sheet declares, each to its own
+	# starting value - a round restarting without reloading the scene. Exported variables are left as
+	# they are, because their starting value is whatever the Inspector set, and the file does not hold
+	# that. Constants never change and @onready ones are found again by the tree, so neither is written.
+	descriptors.append(F.act("ResetVariables", "Reset Variables", "{every_starting_value}", "Variables", "Put every variable back to its starting value", "Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set."))
 	descriptors.append(F.act("AddVar", "Add to", "{var_name} += {amount}", "Variables", "Add {amount} to {var_name}", "Adds an amount to a variable, e.g. increasing score or health.").param("var_name", "var", "Variable", "Variable name to increment.", "variable_reference").param("amount", "1", "Amount", "Amount to add.", "expression"))
 	# Compound-assign siblings to Add Variable (the -=/*=// gap that forced a raw block).
 	descriptors.append(F.act("SubtractVar", "Subtract from", "{var_name} -= {amount}", "Variables", "Subtract {amount} from {var_name}", "Subtracts an amount from a variable, e.g. spending money or taking damage.").param("var_name", "var", "Variable", "Variable name to decrement.", "variable_reference").param("amount", "1", "Amount", "Amount to subtract.", "expression"))

@@ -324,6 +324,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.expr("GetPosition2D", "Get Position", "position", "General Expressions", "position", "Returns the node's 2D position as a Vector2.", "Node2D"))
 	descriptors.append(F.expr("GetVelocity2D", "Get Velocity", "velocity", "General Expressions", "velocity", "Returns the character body's current movement velocity.", "CharacterBody2D"))
 	descriptors.append(F.expr("GetLinearVelocity2D", "Get Linear Velocity", "linear_velocity", "General Expressions", "linear_velocity", "Returns the rigid body's current linear velocity from physics.", "RigidBody2D"))
+	# How far this has gone, all told: a total the compiler keeps beside the class only when a row asks
+	# for it. Added up in _physics_process from the body's REAL velocity - get_real_velocity() on a
+	# character, linear_velocity on a rigid body - so a body pressed against a wall travels nothing,
+	# which is what an odometer, a footstep counter or a "walk 100 metres" goal means.
+	descriptors.append(F.expr("DistanceTravelled", "Distance Travelled", "_travelled", "General Expressions", "how far this has travelled", "How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D."))
 	descriptors.append(F.expr("GetMonitoring", "Get Monitoring", "monitoring", "General Expressions", "monitoring", "Returns whether the area is currently watching for overlaps.", "Area2D"))
 	descriptors.append(F.expr("GetTimerTimeLeft", "Get Time Left", "time_left", "General Expressions", "time_left", "Returns the seconds remaining before the timer fires.", "Timer"))
 	descriptors.append(F.expr("GetCurrentAnimation", "Get Current Animation", "current_animation", "General Expressions", "current_animation", "Returns the name of the animation currently playing.", "AnimationPlayer"))

@@ -105,6 +105,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# call_group carries none, so passing data used to force get_node(sibling).method(x)). Leave Value blank
 	# for a no-arg call - the {, args} optional-comma drops cleanly.
 	descriptors.append(F.act("CallGroupWith", "Call Method On Group (with value)", "get_tree().call_group({group}, {method}{, args})", "Groups", "call {method}({args}) on {group}", "Calls a method with a value on every member of a group at once - a decoupled broadcast that carries data.").param("group", "\"enemies\"", "Group", "Group name.", "group_reference").param("method", "\"take_damage\"", "Method", "Method to call on every member.", "expression").param("args", "10", "Value", "Value(s) passed to the method (comma-separated); leave blank for none.", "expression"))
+	# The call DOWN a subtree, beside the call across a group. Call Method On Group reaches every member
+	# of a group wherever it sits; this reaches one node and everything under it, which is what a door
+	# that opens with its handle, its light and its sound wants. Godot's own spelling of it is
+	# propagate_call, so that is the line - one row, one subtree, no loop and no group to keep up. The
+	# way back UP stays a signal. The values ride as the list propagate_call takes; blank sends none,
+	# and the {, args} optional comma drops cleanly, exactly as it does on the row above.
+	descriptors.append(F.act("TellChildren", "Tell Children", "{target.}propagate_call({method}{, args})", "Groups", "tell [i]{target}[/i] and everything under it to [b]{method}[/b]", "Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.").param("method", "\"reset\"", "Method", "Method to call on the node and everything under it.", "expression").param("args", "", "Values", "The values passed to the method, as a list: [10] or [10, \"fire\"]. Leave blank for none.", "expression").param("target", "", "On node", "The node at the top of the branch. Leave blank for this node.", "expression"))
 
 	# ── Metadata: arbitrary key/value on any node (Godot's set_meta/get_meta) ──
 	descriptors.append(F.act("SetMeta", "Set Metadata", "{target}.set_meta({name}, {value})", "Metadata", "set meta {name} = {value}", "Stores a custom named value on an object as hidden metadata.").param("target", "self", "Target", "Object to tag.", "expression").param("name", "\"key\"", "Name", "Metadata key.", "expression").param("value", "0", "Value", "Value to store.", "expression"))

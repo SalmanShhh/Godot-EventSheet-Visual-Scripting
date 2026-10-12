@@ -18,6 +18,30 @@ What changed in the build you have installed (v0.18.0), in the words the release
   it is all the event does. Every other theme states the token off and reads exactly as before.
   Reading only: compiled output, the byte round trip and the default-theme reading are unchanged.
 
+### Added: new rows for the tree, for starting over, and for distance
+
+- **Tell Children**, beside Call Method On Group (with value): calls a method on a node and on every
+  node beneath it in one line, `$Door.propagate_call(\"open\")`, with the values as the list
+  propagate_call takes. Reads \"Tell Door and everything under it to open\"; the line typed by hand
+  opens as the row and saves back byte for byte. The way back up stays a signal.
+- **Nearest Ancestor Of Type**, the upward mirror of First Child Of Type: the closest node above one
+  that is of a type (an engine class, or a class_name up a script's chain), null when there is none.
+  The short walk up the tree is written into the file once, the first time a row asks for it.
+  Reads \"the nearest Room above Chest\".
+- **Next Sibling** and **Previous Sibling**: the node either side of one under the same parent,
+  wrapping past the ends, as plain index arithmetic. Read \"the sibling after Slot\".
+- **Reset Variable** and **Reset Variables**, beside Set value: put one variable, or every variable
+  the sheet declares, back to the value its declaration starts it on. The compiler writes the
+  declared value, so the starting value is typed once; exported variables are left out of \"every\",
+  and a variable the sheet does not declare writes nothing and says so in the compile warnings. The
+  line is a plain assignment, so it reopens as Set value (like Set boolean, the Reset rows stay out of
+  reverse lifting), and the parameter dialog says when a Set value line is the one Reset wrote.
+- **Distance Travelled**: how far a CharacterBody or RigidBody has really moved, a `_travelled` total
+  added up in `_physics_process` from `get_real_velocity()` / `linear_velocity`, kept beside the class
+  only when a row reads it. Reads \"how far Player has travelled\"; a host with no velocity is told so.
+- Each answers to the names its job goes by in other editors (BroadcastMessage, GetComponentInParent,
+  Pick parent, Reset global variable, Odometer, ...) and is keyed in all nine translation files.
+
 ### Added: siblings beside the rows they extend
 
 - **Event Is Any Press**, beside Key Pressed (event): true once per real press of any key, mouse

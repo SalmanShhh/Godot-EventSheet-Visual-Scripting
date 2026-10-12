@@ -1179,6 +1179,11 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var file_read: String = file_read_words(trimmed, context)
 	if not file_read.is_empty():
 		return file_read
+	# Up and across the tree: the nearest node of a type above one, and the sibling either side of it,
+	# each the sentence of the row that writes it rather than the walk or the index arithmetic.
+	var tree_words: String = hierarchy_expression_words(trimmed, context)
+	if not tree_words.is_empty():
+		return tree_words
 	# A whole controls read (a stick, a gamepad's name, a sensor) is one settled
 	# phrase, ahead of the general call rewriting which would only take its arguments apart.
 	var controls_value: String = controls_expression(trimmed)
@@ -12024,6 +12029,58 @@ static func _overlap_offset_condition(text: String, context: Dictionary) -> Dict
 	var template: String = "Is not overlapping at offset {offset} (a solid)" \
 		if text.strip_edges().begins_with("not ") else "Is overlapping at offset {offset} (a solid)"
 	return _sentence(object_name, template, {"offset": [expression_text(offset, context), "value"]})
+
+
+## The three tree expressions read as their rows' own sentences: Nearest Ancestor Of Type's call
+## reads "the nearest Room above Chest", and Next Sibling / Previous Sibling read "the sibling after
+## Slot" / "the sibling before Slot". Each pattern is built from the shipped row's own template, so a
+## line and its reading cannot drift apart. Distance Travelled's total reads the same way, as "how far
+## Player has travelled" under the script's own object. Whole-expression only; "" for anything else.
+static var _tree_word_patterns: Array = []
+
+
+static func hierarchy_expression_words(text: String, context: Dictionary = {}) -> String:
+	if text == SheetCompiler.TRAVELLED_MEMBER:
+		return _fill(translate("how far {object} has travelled"), {"object": script_object(context)})
+	if not (text.contains("__eventsheets_nearest_ancestor_of_type(") or text.contains(".get_index()")):
+		return ""
+	if _tree_word_patterns.is_empty():
+		for pair: Array in [["NearestAncestorOfType", "the nearest {type} above {object}"],
+				["NextSibling", "the sibling after {object}"], ["PreviousSibling", "the sibling before {object}"]]:
+			var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", str(pair[0]))
+			if descriptor != null:
+				_tree_word_patterns.append([EventSheetACELifter._template_to_regex(descriptor.codegen_template), str(pair[1])])
+	for entry: Array in _tree_word_patterns:
+		var pattern: RegEx = entry[0] as RegEx
+		var found: RegExMatch = pattern.search(text) if pattern != null else null
+		if found == null:
+			continue
+		var target: String = found.get_string("target").strip_edges()
+		if not EventSheetACELifter._is_balanced_expression(target):
+			continue
+		var words: Dictionary = {"object": _receiver_object(target, context)}
+		if pattern.get_names().has("type"):
+			var type_text: String = found.get_string("type").strip_edges()
+			var bare_type: String = unquote(type_text)
+			words["type"] = bare_type if not bare_type.is_empty() else type_text
+		return _fill(translate(str(entry[1])), words)
+	return ""
+
+
+## Tell Children's row in the words of the line it writes: `$Door.propagate_call("open")` reads
+## "Tell Door and everything under it to open", under Door. A blank On node is the script's own
+## object, a quoted method name reads as the bare word a reader called it by, and the values ride at
+## the end when there are any. The node is named as the code names it.
+static func tell_children(target: String, method: String, values: String, context: Dictionary = {}) -> Dictionary:
+	var object_name: String = _receiver_object(target, context)
+	var called: String = unquote(method.strip_edges().trim_prefix("&"))
+	if called.is_empty():
+		called = method.strip_edges()
+	var told: Dictionary = {"object": [object_name, "object"], "method": [called, "value"]}
+	if values.strip_edges().is_empty():
+		return _sentence(object_name, "Tell {object} and everything under it to {method}", told)
+	told["values"] = [values.strip_edges(), "value"]
+	return _sentence(object_name, "Tell {object} and everything under it to {method} with {values}", told)
 
 
 ## The cell walk For Each Cell In Rectangle lands as, read back as that row's own sentence: a loop

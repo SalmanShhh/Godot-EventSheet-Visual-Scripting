@@ -18047,6 +18047,11 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"CallGroup":
 			return EventSheetSentence.statement("get_tree().call_group(%s, %s)" % [
 				str(params_dict.get("group", "")), str(params_dict.get("method", ""))], context)
+		# The call down a branch reads as the branch being told, under the node at its top - the
+		# same sentence whether the row was picked or the propagate_call line was typed by hand.
+		"TellChildren":
+			return EventSheetSentence.tell_children(str(params_dict.get("target", "")),
+				str(params_dict.get("method", "")), str(params_dict.get("args", "")), context)
 		"CallGroupWith":
 			var group_args: String = str(params_dict.get("args", "")).strip_edges()
 			var group_call: String = "get_tree().call_group(%s, %s%s)" % [

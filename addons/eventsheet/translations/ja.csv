@@ -7349,3 +7349,41 @@ remove from {var_name} where {predicate},{var_name} から {predicate} のもの
 Has Been True For,一定時間真である
 [b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] が [b]{seconds}[/b] 秒間真のまま
 Ceil (whole),切り上げ (整数)
+Distance Travelled,移動距離
+how far this has travelled,これが移動した距離
+"How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D.",このボディがゲームに入ってから実際に移動した距離。物理フレームごとに実際の速度から合計されます - 壁に押し付けられているボディは移動しません。走行距離計、1 メートルごとの足音、100 メートル歩く目標などに。2D でも 3D でも、CharacterBody か RigidBody で動作します。
+Reset Variable,変数をリセット
+Put {var_name} back to its starting value,{var_name} を初期値に戻す
+"Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.",変数を、その宣言が与える初期値に戻します - 体力を満タンに、スコアをゼロに。値はシートのコンパイル時に宣言から読み取られるので、初期値を変えると書き出す内容も変わります。
+Variable to put back.,元に戻す変数。
+Reset Variables,変数をすべてリセット
+Put every variable back to its starting value,すべての変数を初期値に戻す
+"Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set.",このシートが宣言するすべての変数を、1 行でそれぞれの宣言の初期値に戻します - シーンを読み込み直さずに新しいラウンドを始めるときに。エクスポートされた変数はそのままです: その初期値はインスペクターで設定された値です。
+Tell Children,子に伝える
+tell [i]{target}[/i] and everything under it to [b]{method}[/b],[i]{target}[/i] とその下のすべてに [b]{method}[/b] を伝える
+"Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.",ノードとその下のすべてのノードでメソッドを 1 行で呼び出します - 取っ手、ライト、音と一緒に開くドア、中のすべてにリセットを伝えるレベルなど。そのメソッドを持たないノードは飛ばされます。このノードとその下すべてには「対象ノード」を空のままにします。
+Method to call on the node and everything under it.,ノードとその下すべてで呼び出すメソッド。
+"The values passed to the method, as a list: [10] or [10, ""fire""]. Leave blank for none.","メソッドに渡す値をリストで: [10] や [10, ""fire""]。なしなら空のままにします。"
+The node at the top of the branch. Leave blank for this node.,枝の一番上のノード。このノードなら空のままにします。
+Next Sibling,次の兄弟
+the sibling after [i]{target}[/i],[i]{target}[/i] の次の兄弟
+"Returns the node just after this one under the same parent - the next inventory slot, the next waypoint. After the last one it wraps round to the first.",同じ親の下で、このノードのすぐ次のノードを返します - 次のインベントリスロット、次のウェイポイント。最後の次は最初に戻ります。
+Node whose next sibling to get.,次の兄弟を取得するノード。
+Previous Sibling,前の兄弟
+the sibling before [i]{target}[/i],[i]{target}[/i] の前の兄弟
+"Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.",同じ親の下で、このノードのすぐ前のノードを返します - 前のインベントリスロット、前のウェイポイント。最初の前は最後に戻ります。
+Node whose previous sibling to get.,前の兄弟を取得するノード。
+Nearest Ancestor Of Type,最も近い型の祖先
+the nearest [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] の上で最も近い [b]{type}[/b]
+"Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.",このノードの上にある、指定した型の最も近いノードを返します - 宝箱が置かれた Room、座席が属する Vehicle、アイテムが置かれた Level など。なければ何も返しません。
+Node to search above.,その上を探すノード。
+Node class or class_name to find - the closest match above (null if none).,探すノードクラスまたは class_name - 上で最も近い一致 (なければ null)。
+how far {object} has travelled,{object} が移動した距離
+the nearest {type} above {object},{object} の上で最も近い {type}
+the sibling after {object},{object} の次の兄弟
+the sibling before {object},{object} の前の兄弟
+Tell {object} and everything under it to {method},{object} とその下のすべてに {method} を伝える
+Tell {object} and everything under it to {method} with {values},{object} とその下のすべてに {values} で {method} を伝える
+%s back to its starting value - the line Reset Variable writes,%s を初期値に戻す - 変数をリセット が書く行
+Method,メソッド
+General Expressions,一般の式

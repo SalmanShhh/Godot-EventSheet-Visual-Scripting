@@ -193,6 +193,21 @@ const FAMILIAR_NAMES: Dictionary = {
 	"Drive a property": ["RescaleIntoProperty"],
 	"CeilToInt": ["CeilWhole"],
 	"How many pages": ["CeilWhole"],
+	# The rows new to the vocabulary, under the names their job goes by elsewhere.
+	"BroadcastMessage": ["TellChildren"],
+	"Broadcast Message": ["TellChildren"],
+	"Pick children": ["TellChildren"],
+	"GetComponentInParent": ["NearestAncestorOfType"],
+	"Get Parent Of Type": ["NearestAncestorOfType"],
+	"Pick parent": ["NearestAncestorOfType"],
+	"Get Next Sibling": ["NextSibling"],
+	"Get Previous Sibling": ["PreviousSibling"],
+	"GetSiblingIndex": ["NextSibling", "PreviousSibling"],
+	"Reset global variable": ["ResetVariable"],
+	"Reset global variables": ["ResetVariables"],
+	"Reset To Default": ["ResetVariable", "ResetVariables"],
+	"Odometer": ["DistanceTravelled"],
+	"Total Distance": ["DistanceTravelled"],
 }
 
 ## Foreign behaviours whose shape a shipped behaviour pack already covers. A row on one of these

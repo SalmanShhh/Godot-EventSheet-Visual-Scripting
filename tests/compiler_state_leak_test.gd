@@ -35,7 +35,8 @@ const EMITTER_SCRIPTS: Array[String] = [
 const DURABLE_STATICS: Dictionary = {
 	"_compile_mutex": "the lock itself - serializing compiles is what protects the working state below",
 	"_template_re": "a compiled RegEx cached for the session; it has no per-compile state",
-	"_segment_re": "a compiled RegEx cached for the session; it has no per-compile state"
+	"_segment_re": "a compiled RegEx cached for the session; it has no per-compile state",
+	"_verbatim_declaration_re": "a compiled RegEx cached for the session; it has no per-compile state"
 }
 
 ## Every working-state static the sweep expects to find, pinned as a VALUE rather than counted. A static
@@ -50,7 +51,11 @@ const SWEPT_STATICS: Array[String] = [
 	# on every compile, and the two text-probe entry points set it from what they were handed rather
 	# than inheriting it, so a poisoned value cannot reach an emission.
 	"_tool_sheet_flag",
-	"_trouble_reporter_pending"
+	"_trouble_reporter_pending",
+	# What the sheet's declarations start each variable on, for the Reset rows, and the names a Reset
+	# row asked for that the sheet does not declare. Both are set from the sheet at the start of every
+	# compile (and emptied by the text probes), so a poisoned value cannot reach an emission.
+	"starting_values", "unresolved_starting_values"
 ]
 
 ## The public statics of the compiler that are not emission entry points: pure answers about a row, a
@@ -59,7 +64,9 @@ const SWEPT_STATICS: Array[String] = [
 const PURE_HELPERS: Array[String] = [
 	"condition_source_text", "group_declaration_lines", "guard_token", "static_local_declaration",
 	"table_enum_entry", "table_enum_key", "table_enum_label", "table_enum_options",
-	"table_enum_pair", "table_enum_type", "variable_emit_order"
+	"table_enum_pair", "table_enum_type", "variable_emit_order",
+	# What a sheet's declarations start each variable on: a read of the sheet handed in, nothing kept.
+	"declared_starting_values"
 ]
 
 ## What a poisoned static is set to, by type. Any value that is not the default will do - what
@@ -69,7 +76,10 @@ const POISON: Dictionary = {
 	TYPE_INT: 4242,
 	TYPE_STRING: "__leaked__",
 	TYPE_DICTIONARY: {"__leaked__": "__leaked__"},
-	TYPE_ARRAY: ["__leaked__"]
+	TYPE_ARRAY: ["__leaked__"],
+	# Written as a plain list because a constant cannot call a constructor; _poison_for hands the
+	# static a real PackedStringArray of it.
+	TYPE_PACKED_STRING_ARRAY: ["__leaked__"]
 }
 
 
@@ -233,6 +243,8 @@ static func _sweep(emit: Callable) -> PackedStringArray:
 ## it would be the same object the next probe reads.
 static func _poison_for(type_id: int) -> Variant:
 	var value: Variant = POISON[type_id]
+	if type_id == TYPE_PACKED_STRING_ARRAY:
+		return PackedStringArray(value as Array)
 	return value.duplicate() if value is Dictionary or value is Array else value
 
 

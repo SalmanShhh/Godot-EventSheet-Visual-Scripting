@@ -3829,9 +3829,21 @@ static func title_bbcode(definition: ACEDefinition, values: Dictionary, owner: S
 ## The line the compiler will write for this row, with the values as typed - produced BY the
 ## emitter, from a throwaway row, so the dialog cannot promise a spelling the compiler would not
 ## use. "" for a definition whose kind has no line of its own.
-static func row_code_line(definition: ACEDefinition, values: Dictionary) -> String:
+static func row_code_line(definition: ACEDefinition, values: Dictionary, starting: Dictionary = {}) -> String:
 	if definition == null:
 		return ""
+	# A Reset row's value is the declaration's, so its line is the one the compiler will write from
+	# the open sheet's declarations rather than the template with its slot still in it.
+	var reset_template: String = str(definition.metadata.get("codegen_template", ""))
+	if definition.ace_type == ACEDefinition.ACEType.ACTION and (
+			reset_template.contains("{%s}" % ActionCodegen.STARTING_VALUE_SLOT)
+			or reset_template.contains("{%s}" % ActionCodegen.EVERY_STARTING_VALUE_SLOT)):
+		var reset: ACEAction = ACEAction.new()
+		reset.provider_id = definition.provider_id
+		reset.ace_id = definition.id
+		reset.params = values.duplicate()
+		reset.codegen_template = reset_template
+		return ActionCodegen.starting_value_line(reset, starting)
 	match definition.ace_type:
 		ACEDefinition.ACEType.CONDITION:
 			var condition: ACECondition = ACECondition.new()
@@ -3859,6 +3871,22 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary) -> Stri
 	for key: Variant in values.keys():
 		template = template.replace("{%s}" % str(key), str(values[key]))
 	return template
+
+
+## What a Set value row says about itself when its line is the one Reset Variable writes - the
+## variable set to exactly the value its declaration starts it on. A Reset row leaves a plain
+## assignment in the file, so the file reopens as Set value; this is where the reader is told which row
+## wrote it, at the moment they open it. "" for every other row and every other value. The variable is
+## named exactly as the code writes it.
+static func reset_reading(definition: ACEDefinition, values: Dictionary, starting: Dictionary) -> String:
+	if definition == null or definition.provider_id != "Core" or definition.id != "SetVar":
+		return ""
+	var variable_name: String = str(values.get("var_name", "")).strip_edges()
+	if not starting.has(variable_name):
+		return ""
+	if str(values.get("value", "")).strip_edges() != str((starting[variable_name] as Dictionary).get("value", "")).strip_edges():
+		return ""
+	return EventSheetL10n.translate("%s back to its starting value - the line Reset Variable writes") % variable_name
 
 
 ## Square brackets in a value are a list, a node path or an array index - never markup. Escaped
@@ -3909,7 +3937,9 @@ func _refresh_live_reading() -> void:
 		_title_ace_label.text = "%s (%s)" % [_definition.display_name,
 			EventSheetL10n.translate("editing")] if _is_reedit_flow() else _definition.display_name
 	if _help_strip != null:
-		_help_strip.set_reading("", row_code_line(_definition, values))
+		var starting: Dictionary = SheetCompiler.declared_starting_values(_lint_sheet())
+		_help_strip.set_reading(reset_reading(_definition, values, starting),
+			row_code_line(_definition, values, starting))
 	for caption: Callable in _choice_captions:
 		caption.call()
 	_refresh_notes()

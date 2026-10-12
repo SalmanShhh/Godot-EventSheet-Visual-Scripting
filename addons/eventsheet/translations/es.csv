@@ -7349,3 +7349,41 @@ remove from {var_name} where {predicate},quitar de {var_name} donde {predicate}
 Has Been True For,Lleva siendo verdadero
 [b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] lleva [b]{seconds}[/b] segundos siendo verdadero
 Ceil (whole),Techo (entero)
+Distance Travelled,Distancia recorrida
+how far this has travelled,cuánto ha recorrido esto
+"How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D.","Cuánto se ha movido realmente este cuerpo desde que entró en el juego, sumado en cada fotograma de física a partir de su velocidad real - un cuerpo que empuja contra una pared no recorre nada. Para un cuentakilómetros, un sonido de pasos cada metro o el objetivo de caminar cien metros. Funciona en un CharacterBody o un RigidBody, en 2D o 3D."
+Reset Variable,Restablecer variable
+Put {var_name} back to its starting value,Devolver {var_name} a su valor inicial
+"Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.","Devuelve una variable al valor con el que la inicia su declaración - la salud de nuevo llena, la puntuación de nuevo a cero. El valor se lee de la declaración al compilar la hoja, así que cambiar el valor inicial cambia lo que esto escribe."
+Variable to put back.,Variable que se restablece.
+Reset Variables,Restablecer variables
+Put every variable back to its starting value,Devolver cada variable a su valor inicial
+"Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set.","Devuelve cada variable que declara esta hoja al valor con el que la inicia su declaración, en una fila - una nueva ronda sin recargar la escena. Las variables exportadas no se tocan: su valor inicial es el que puso el Inspector."
+Tell Children,Avisar a los hijos
+tell [i]{target}[/i] and everything under it to [b]{method}[/b],decir a [i]{target}[/i] y a todo lo que hay debajo que haga [b]{method}[/b]
+"Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.","Llama a un método en un nodo y en cada nodo por debajo, en una línea - una puerta que se abre con su manija, su luz y su sonido, un nivel que dice a todo lo que contiene que se reinicie. Los nodos sin el método se pasan por alto. Deja En el nodo vacío para este nodo y todo lo que hay debajo."
+Method to call on the node and everything under it.,Método que se llama en el nodo y en todo lo que hay debajo.
+"The values passed to the method, as a list: [10] or [10, ""fire""]. Leave blank for none.","Los valores que se pasan al método, como lista: [10] o [10, ""fire""]. Déjalo vacío para ninguno."
+The node at the top of the branch. Leave blank for this node.,El nodo en lo alto de la rama. Déjalo vacío para este nodo.
+Next Sibling,Siguiente hermano
+the sibling after [i]{target}[/i],el hermano después de [i]{target}[/i]
+"Returns the node just after this one under the same parent - the next inventory slot, the next waypoint. After the last one it wraps round to the first.","Devuelve el nodo justo después de este bajo el mismo padre - la siguiente casilla del inventario, el siguiente punto de ruta. Después del último vuelve al primero."
+Node whose next sibling to get.,Nodo cuyo siguiente hermano se obtiene.
+Previous Sibling,Hermano anterior
+the sibling before [i]{target}[/i],el hermano antes de [i]{target}[/i]
+"Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.","Devuelve el nodo justo antes de este bajo el mismo padre - la casilla anterior del inventario, el punto de ruta anterior. Antes del primero vuelve al último."
+Node whose previous sibling to get.,Nodo cuyo hermano anterior se obtiene.
+Nearest Ancestor Of Type,Ancestro más cercano del tipo
+the nearest [b]{type}[/b] above [i]{target}[/i],el [b]{type}[/b] más cercano por encima de [i]{target}[/i]
+"Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.","Devuelve el nodo más cercano por encima de este que sea de un tipo dado - la Room en la que está un cofre, el Vehicle al que pertenece un asiento, el Level en el que se colocó un objeto - o nada si no hay ninguno."
+Node to search above.,Nodo por encima del cual se busca.
+Node class or class_name to find - the closest match above (null if none).,Clase de nodo o class_name que se busca - la coincidencia más cercana por encima (null si no hay).
+how far {object} has travelled,cuánto ha recorrido {object}
+the nearest {type} above {object},el {type} más cercano por encima de {object}
+the sibling after {object},el hermano después de {object}
+the sibling before {object},el hermano antes de {object}
+Tell {object} and everything under it to {method},Decir a {object} y a todo lo que hay debajo que haga {method}
+Tell {object} and everything under it to {method} with {values},Decir a {object} y a todo lo que hay debajo que haga {method} con {values}
+%s back to its starting value - the line Reset Variable writes,%s de vuelta a su valor inicial - la línea que escribe Restablecer variable
+Method,Método
+General Expressions,Expresiones generales

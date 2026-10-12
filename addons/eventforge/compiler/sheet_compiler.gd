@@ -69,6 +69,14 @@ const TILE_SAVE_HELPER: String = "__eventsheets_save_tile_layer"
 const TILE_LOAD_HELPER: String = "__eventsheets_load_tile_layer"
 const GRIDMAP_FILL_BOX_HELPER: String = "__eventsheets_gridmap_fill_box"
 
+## The walk up the tree Nearest Ancestor Of Type calls. Same discipline as the helpers above: one
+## definition per file, appended last, skipped outright when the file already defines it.
+const NEAREST_ANCESTOR_HELPER: String = "__eventsheets_nearest_ancestor_of_type"
+
+## The running total Distance Travelled reads, and the line that adds to it every physics frame.
+## Kept beside the class only when a row reads it - see _keep_distance_travelled.
+const TRAVELLED_MEMBER: String = "_travelled"
+
 ## The comment written above a hoisted Static local, naming the ROW the member belongs to. A
 ## cosmetic marker with zero runtime weight, exactly like the `# @group:` row tags: it is what lets an
 ## opened file hand the member back to the row instead of reading it as an ordinary private member.
@@ -174,6 +182,10 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	# which were minted by a spawn row in some other event. Gathered once here rather than per row,
 	# because it is a walk of the whole sheet and the answer cannot change during a compile.
 	_removal_guard_facts = EventForgeRemovalGuard.facts(sheet)
+	# What each variable's declaration starts it on, for the Reset rows - read once here for the same
+	# reason: a walk of the whole sheet whose answer cannot change during a compile.
+	ActionCodegen.starting_values = declared_starting_values(sheet)
+	ActionCodegen.unresolved_starting_values = PackedStringArray()
 
 
 ## Compiles an event sheet resource to a GDScript output file.
@@ -184,6 +196,11 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
 	_compile_mutex.lock()
 	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner)
+	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
+	for unresolved: String in ActionCodegen.unresolved_starting_values:
+		(locked_result["warnings"] as Array).append("Reset Variable: %s is not declared on this sheet, so there is no starting value to put back - the row writes nothing." % unresolved)
+	ActionCodegen.starting_values = {}
+	ActionCodegen.unresolved_starting_values = PackedStringArray()
 	_compile_mutex.unlock()
 	return locked_result
 
@@ -826,12 +843,14 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
+	_keep_distance_travelled(lines, sheet, result)
 	# What the ROWS asked for, told apart from what merely rode through: the shared helpers are
 	# appended for the calls this compile wrote, never for one sitting inside a verbatim block.
 	var verbatim_lines: PackedStringArray = _verbatim_code_lines(sheet)
 	_append_aimed_cursor_helper(lines, verbatim_lines)
 	_append_scene_trust_helper(lines, verbatim_lines)
 	_append_level_query_helpers(lines, verbatim_lines)
+	_append_hierarchy_helpers(lines, verbatim_lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -1037,12 +1056,14 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		lines.append("# %s" % comment_line)
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
+	_keep_distance_travelled(lines, sheet, result)
 	# What the ROWS asked for, told apart from what merely rode through: the shared helpers are
 	# appended for the calls this compile wrote, never for one sitting inside a verbatim block.
 	var verbatim_lines: PackedStringArray = _verbatim_code_lines(sheet)
 	_append_aimed_cursor_helper(lines, verbatim_lines)
 	_append_scene_trust_helper(lines, verbatim_lines)
 	_append_level_query_helpers(lines, verbatim_lines)
+	_append_hierarchy_helpers(lines, verbatim_lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -4983,6 +5004,233 @@ static func _append_level_query_helpers(lines: PackedStringArray,
 		"		for y: int in range(mini(from.y, to.y), maxi(from.y, to.y) + 1):",
 		"			for z: int in range(mini(from.z, to.z), maxi(from.z, to.z) + 1):",
 		"				grid.set_cell_item(Vector3i(x, y, z), item)"], verbatim_lines)
+
+
+## The walk up the tree that Nearest Ancestor Of Type calls, written into the file the first time a
+## row asks for it. Every rule the aimed-floor helper documents above holds here word for word.
+##
+## The type is matched the way find_children matches it, so this row and First Child Of Type agree
+## about what "of type Room" means: an engine class through is_class, or a class_name anywhere up the
+## node's own script chain. The walk starts at the PARENT, so a node is never its own ancestor.
+static func _append_hierarchy_helpers(lines: PackedStringArray,
+		verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
+	_append_shared_helper(lines, NEAREST_ANCESTOR_HELPER,
+		"func %s(from: Node, type: String) -> Node:" % NEAREST_ANCESTOR_HELPER,
+		["	var node: Node = from.get_parent() if from != null else null",
+		"	while node != null:",
+		"		if node.is_class(type):",
+		"			return node",
+		"		var script: Script = node.get_script() as Script",
+		"		while script != null:",
+		"			if script.get_global_name() == type:",
+		"				return node",
+		"			script = script.get_base_script()",
+		"		node = node.get_parent()",
+		"	return null"], verbatim_lines)
+
+
+## What every variable this sheet declares starts on, as the Reset rows write it:
+## {name: {"value": the code its declaration starts it on, "every": whether Reset Variables puts it
+## back}}. Read off the declarations themselves - the sheet's own variables, the variable rows at its
+## top level, and a plain `var name: Type = value` line kept verbatim - so the starting value is only
+## ever typed once.
+##
+## A constant is left out, because it cannot be assigned, and so is an @onready variable, because its
+## starting value is a node the tree finds rather than a value. An exported variable can be reset by
+## name but is left out of "every": its real starting value is whatever the Inspector set, which the
+## file does not hold. A declaration with no value starts on its type's own default.
+static func declared_starting_values(sheet: EventSheetResource) -> Dictionary:
+	var declared: Dictionary = {}
+	if sheet == null:
+		return declared
+	for key: Variant in variable_emit_order(sheet.variables):
+		var descriptor: Variant = sheet.variables[key]
+		if descriptor is Dictionary:
+			declared[str(key)] = {"value": _to_code_literal((descriptor as Dictionary).get("default", null)),
+				"every": not bool((descriptor as Dictionary).get("exported", true))}
+	_collect_starting_values(sheet.events, declared)
+	return declared
+
+
+static func _collect_starting_values(rows: Array, declared: Dictionary) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			_collect_starting_values((entry as EventGroup).events, declared)
+		elif entry is LocalVariable:
+			var variable: LocalVariable = entry as LocalVariable
+			if variable.name.strip_edges().is_empty() or variable.is_constant or variable.onready or variable.static_local:
+				continue
+			var verbatim_default: bool = variable.expression_default or variable.inferred_type
+			var value: String = str(variable.default_value) if verbatim_default else _to_code_literal(variable.default_value)
+			if typeof(variable.default_value) == TYPE_NIL and not verbatim_default:
+				value = _type_starting_value(variable.type_name)
+			declared[variable.name] = {"value": value, "every": not variable.exported and not variable.is_static}
+		elif entry is RawCodeRow:
+			for code_line: String in (entry as RawCodeRow).code.split("\n"):
+				_collect_verbatim_starting_value(code_line, declared)
+
+
+## One `var name[: Type][ = value]` line a file kept verbatim, at the class's own level. Anything with
+## an annotation, an accessor or a second statement on it is not read - a value this cannot be sure of
+## is better left unreset, with the compiler saying so, than reset to a guess.
+static var _verbatim_declaration_re: RegEx = null
+
+
+static func _collect_verbatim_starting_value(code_line: String, declared: Dictionary) -> void:
+	if not code_line.begins_with("var "):
+		return
+	if _verbatim_declaration_re == null:
+		_verbatim_declaration_re = RegEx.new()
+		_verbatim_declaration_re.compile("^var ([A-Za-z_][A-Za-z0-9_]*)\\s*(?::\\s*([A-Za-z_][A-Za-z0-9_\\[\\], ]*?))?\\s*(?:(?::=|=)\\s*(.+?))?\\s*$")
+	var found: RegExMatch = _verbatim_declaration_re.search(code_line)
+	if found == null or found.get_string(3).ends_with(":") or found.get_string(3).contains(";"):
+		return
+	var value: String = found.get_string(3).strip_edges()
+	if value.is_empty():
+		value = _type_starting_value(found.get_string(2).strip_edges())
+	declared[found.get_string(1)] = {"value": value, "every": true}
+
+
+## The value a declaration with no `= value` starts on, by its type: what GDScript itself gives it.
+static func _type_starting_value(type_name: String) -> String:
+	if type_name.begins_with("Array"):
+		return "[]"
+	match type_name:
+		"int":
+			return "0"
+		"float":
+			return "0.0"
+		"bool":
+			return "false"
+		"String":
+			return "\"\""
+		"StringName":
+			return "&\"\""
+		"Dictionary":
+			return "{}"
+		"Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i":
+			return "%s.ZERO" % type_name
+		"Color":
+			return "Color()"
+	return "null"
+
+
+## Keeps the running total Distance Travelled reads, when - and only when - a row reads it: the
+## member that holds it, and the one line that adds to it every physics frame from the body's REAL
+## velocity, so a body pressed against a wall travels nothing.
+##
+## THE FILE ALREADY DECLARING THE MEMBER MEANS THERE IS NOTHING TO DO. That is what makes the
+## round trip hold: reopened, the member is a variable row and the adding line is a row under On
+## physics process, and both re-emit as themselves - this pass then finds the member declared and
+## stands down, so the file comes back byte for byte. A read that rode through a verbatim block is not
+## a row asking, for the reason _append_shared_helper gives.
+##
+## The adding line goes FIRST in a `_physics_process` the file already has, or into one of its own
+## appended at the end. The velocity is the host's own word for it - get_real_velocity() on a
+## character body, linear_velocity on a rigid body, through `host.` on a behaviour - and a host that is
+## neither is told so rather than given a total that silently stays at nothing.
+static func _keep_distance_travelled(lines: PackedStringArray, sheet: EventSheetResource, result: Dictionary) -> void:
+	var reads: int = 0
+	for line: String in lines:
+		if _declares_member(line, TRAVELLED_MEMBER):
+			return
+		reads += _member_reads(line, TRAVELLED_MEMBER)
+	for line: String in _verbatim_code_lines(sheet):
+		reads -= _member_reads(line, TRAVELLED_MEMBER)
+	if reads <= 0:
+		return
+	var velocity: String = _travelled_velocity(sheet)
+	if velocity.is_empty():
+		(result["warnings"] as Array).append("Distance Travelled: a %s has no velocity of its own, so the total stays at 0 - put this sheet on a CharacterBody or a RigidBody." % sheet.host_class)
+	var source_map: Array = result.get("source_map", [])
+	var insert_index: int = lines.size()
+	for index: int in range(lines.size()):
+		if lines[index].begins_with("func ") or lines[index].begins_with("## @ace"):
+			insert_index = index
+			break
+	lines.insert(insert_index, "var %s: float = 0.0" % TRAVELLED_MEMBER)
+	lines.insert(insert_index + 1, "")
+	_shift_source_map(source_map, insert_index + 1, 2)
+	if velocity.is_empty():
+		return
+	for index: int in range(lines.size()):
+		if not lines[index].begins_with("func _physics_process("):
+			continue
+		var delta_name: String = lines[index].trim_prefix("func _physics_process(").get_slice(")", 0).get_slice(":", 0).strip_edges()
+		if delta_name.is_empty():
+			break
+		lines.insert(index + 1, "\t%s += %s.length() * %s" % [TRAVELLED_MEMBER, velocity, delta_name])
+		_shift_source_map(source_map, index + 2, 1)
+		return
+	lines.append("")
+	lines.append("func _physics_process(delta: float) -> void:")
+	lines.append("\t%s += %s.length() * delta" % [TRAVELLED_MEMBER, velocity])
+
+
+## The body's real velocity, spelled the way the host class spells it, or "" for a host that has none.
+## A class_name host is followed down to the engine class it extends.
+static func _travelled_velocity(sheet: EventSheetResource) -> String:
+	var prefix: String = "host." if sheet.behavior_mode else ""
+	var engine_class: String = _engine_class_of(sheet.host_class)
+	if engine_class.is_empty():
+		return ""
+	for character: String in ["CharacterBody2D", "CharacterBody3D"]:
+		if engine_class == character or ClassDB.is_parent_class(engine_class, character):
+			return prefix + "get_real_velocity()"
+	for rigid: String in ["RigidBody2D", "RigidBody3D"]:
+		if engine_class == rigid or ClassDB.is_parent_class(engine_class, rigid):
+			return prefix + "linear_velocity"
+	return ""
+
+
+static func _engine_class_of(class_text: String) -> String:
+	var current: String = class_text.strip_edges()
+	for _step: int in range(32):
+		if current.is_empty() or ClassDB.class_exists(current):
+			return current
+		var base: String = ""
+		for entry: Dictionary in ProjectSettings.get_global_class_list():
+			if str(entry.get("class", "")) == current:
+				base = str(entry.get("base", ""))
+				break
+		current = base
+	return ""
+
+
+## True for a line that declares `member` at the class's own level, however it is typed or annotated.
+static func _declares_member(line: String, member: String) -> bool:
+	var stripped: String = line
+	while stripped.begins_with("@"):
+		var space: int = stripped.find(" ")
+		if space < 0:
+			return false
+		stripped = stripped.substr(space + 1)
+	if stripped.begins_with("static "):
+		stripped = stripped.substr(7)
+	if not stripped.begins_with("var %s" % member):
+		return false
+	var after: String = stripped.substr(4 + member.length())
+	return after.is_empty() or not (after[0] == "_" or after[0].is_valid_identifier())
+
+
+## How many times `line` reads `member` as a name of its own - not inside a string, not in a comment,
+## and not as the tail of a longer name (`distance_travelled`) or a property of something else.
+static func _member_reads(line: String, member: String) -> int:
+	if line.strip_edges().begins_with("#"):
+		return 0
+	var found: int = 0
+	var scanned: String = _without_string_literals(line)
+	var at: int = scanned.find(member)
+	while at >= 0:
+		var before: String = scanned.substr(at - 1, 1) if at > 0 else ""
+		var end: int = at + member.length()
+		var after: String = scanned.substr(end, 1) if end < scanned.length() else ""
+		var joined_before: bool = not before.is_empty() and (before == "." or before == "_" or before.is_valid_identifier() or before.is_valid_int())
+		var joined_after: bool = not after.is_empty() and (after == "_" or after.is_valid_identifier() or after.is_valid_int())
+		if not joined_before and not joined_after:
+			found += 1
+		at = scanned.find(member, end)
+	return found
 
 
 ## One shared helper's definition, appended when a ROW of the sheet calls it and the file does not

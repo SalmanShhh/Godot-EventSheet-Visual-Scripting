@@ -7349,3 +7349,41 @@ remove from {var_name} where {predicate},"aus {var_name} entfernen, wo {predicat
 Has Been True For,Ist wahr seit
 [b]{test}[/b] has been true for [b]{seconds}[/b] seconds,[b]{test}[/b] ist seit [b]{seconds}[/b] Sekunden wahr
 Ceil (whole),Aufrunden (ganz)
+Distance Travelled,Zurückgelegte Strecke
+how far this has travelled,wie weit dies gereist ist
+"How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D.","Wie weit sich dieser Körper wirklich bewegt hat, seit er ins Spiel kam, in jedem Physik-Frame aus seiner tatsächlichen Geschwindigkeit aufsummiert - ein Körper, der gegen eine Wand drückt, legt nichts zurück. Für einen Kilometerzähler, ein Schrittgeräusch pro Meter oder das Ziel, hundert Meter zu gehen. Funktioniert auf einem CharacterBody oder einem RigidBody, in 2D oder 3D."
+Reset Variable,Variable zurücksetzen
+Put {var_name} back to its starting value,{var_name} auf seinen Startwert zurücksetzen
+"Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.","Setzt eine Variable auf den Wert zurück, mit dem ihre Deklaration sie beginnen lässt - die Gesundheit wieder voll, die Punkte wieder auf null. Der Wert wird beim Kompilieren des Blatts aus der Deklaration gelesen, eine Änderung des Startwerts ändert also, was dies schreibt."
+Variable to put back.,Die zurückzusetzende Variable.
+Reset Variables,Variablen zurücksetzen
+Put every variable back to its starting value,Jede Variable auf ihren Startwert zurücksetzen
+"Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set.","Setzt jede Variable, die dieses Blatt deklariert, in einer Zeile auf den Wert zurück, mit dem ihre Deklaration sie beginnen lässt - eine neue Runde, ohne die Szene neu zu laden. Exportierte Variablen bleiben unberührt: Ihr Startwert ist der, den der Inspektor gesetzt hat."
+Tell Children,Kindern mitteilen
+tell [i]{target}[/i] and everything under it to [b]{method}[/b],[i]{target}[/i] und allem darunter [b]{method}[/b] mitteilen
+"Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.","Ruft in einer Zeile eine Methode auf einem Node und auf jedem Node darunter auf - eine Tür, die sich mit Griff, Licht und Ton öffnet, ein Level, das allem darin sagt, sich zurückzusetzen. Nodes ohne die Methode werden übergangen. Lass An Node leer für diesen Node und alles darunter."
+Method to call on the node and everything under it.,"Methode, die auf dem Node und allem darunter aufgerufen wird."
+"The values passed to the method, as a list: [10] or [10, ""fire""]. Leave blank for none.","Die an die Methode übergebenen Werte als Liste: [10] oder [10, ""fire""]. Leer lassen für keine."
+The node at the top of the branch. Leave blank for this node.,Der Node an der Spitze des Zweigs. Leer lassen für diesen Node.
+Next Sibling,Nächstes Geschwister
+the sibling after [i]{target}[/i],das Geschwister nach [i]{target}[/i]
+"Returns the node just after this one under the same parent - the next inventory slot, the next waypoint. After the last one it wraps round to the first.","Gibt den Node direkt nach diesem unter demselben Elternteil zurück - den nächsten Inventarplatz, den nächsten Wegpunkt. Nach dem letzten geht es wieder beim ersten los."
+Node whose next sibling to get.,"Node, dessen nächstes Geschwister geholt wird."
+Previous Sibling,Vorheriges Geschwister
+the sibling before [i]{target}[/i],das Geschwister vor [i]{target}[/i]
+"Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.","Gibt den Node direkt vor diesem unter demselben Elternteil zurück - den vorherigen Inventarplatz, den vorherigen Wegpunkt. Vor dem ersten geht es beim letzten weiter."
+Node whose previous sibling to get.,"Node, dessen vorheriges Geschwister geholt wird."
+Nearest Ancestor Of Type,Nächster Vorfahre des Typs
+the nearest [b]{type}[/b] above [i]{target}[/i],der nächste [b]{type}[/b] über [i]{target}[/i]
+"Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.","Gibt den nächsten Node über diesem zurück, der von einem bestimmten Typ ist - den Room, in dem eine Truhe steht, das Vehicle, zu dem ein Sitz gehört, das Level, in das ein Pickup gelegt wurde - oder nichts, wenn es keinen gibt."
+Node to search above.,"Node, über dem gesucht wird."
+Node class or class_name to find - the closest match above (null if none).,"Node-Klasse oder class_name, die gesucht wird - der nächste Treffer darüber (null, wenn keiner)."
+how far {object} has travelled,wie weit {object} gereist ist
+the nearest {type} above {object},der nächste {type} über {object}
+the sibling after {object},das Geschwister nach {object}
+the sibling before {object},das Geschwister vor {object}
+Tell {object} and everything under it to {method},{object} und allem darunter {method} mitteilen
+Tell {object} and everything under it to {method} with {values},{object} und allem darunter {method} mit {values} mitteilen
+%s back to its starting value - the line Reset Variable writes,"%s zurück auf seinen Startwert - die Zeile, die Variable zurücksetzen schreibt"
+Method,Methode
+General Expressions,Allgemeine Ausdrücke

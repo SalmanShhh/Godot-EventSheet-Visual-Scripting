@@ -18,6 +18,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `__eventsheets_flood_fill_tiles` | [Flood Fill](ace:Core/TileMapFloodFill) | Tilemap | Vocabulary |
 | `__eventsheets_gridmap_fill_box` | [Fill Box](ace:Core/GridMapFillBox) | GridMap | Vocabulary |
 | `__eventsheets_load_tile_layer` | [Load Layer From File](ace:Core/TileMapLoadLayer) | Tilemap | Vocabulary |
+| `__eventsheets_nearest_ancestor_of_type` | [Nearest Ancestor Of Type](ace:Core/NearestAncestorOfType) | Nodes: Picking | Vocabulary |
 | `__eventsheets_object_at_2d` | [Object Under Cursor (2D)](ace:Core/ObjectUnderCursor2D) | Mouse | Vocabulary |
 | `__eventsheets_save_tile_layer` | [Save Layer To File](ace:Core/TileMapSaveLayer) | Tilemap | Vocabulary |
 | `__eventsheets_scene_is_data_only` | [Scene File Is Data-Only](ace:Core/SceneFileIsDataOnly) | Files | Vocabulary |
@@ -783,6 +784,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `project_ray_normal` | [Mouse Ray Direction (3D)](ace:Core/MouseRayDirection) | Mouse | Vocabulary |
 | `project_ray_origin` | [Mouse Ray Origin (3D)](ace:Core/MouseRayOrigin) | Mouse | Vocabulary |
 | `projection` | [Switch To Perspective](ace:Core/CameraSwitchToPerspective) | Camera | Vocabulary |
+| `propagate_call` | [Tell Children](ace:Core/TellChildren) | Groups | Vocabulary |
 | `public_visibility` | [Show To Everyone](ace:Core/ShowToEveryone) | Multiplayer | Vocabulary |
 | `push_back` | Push back to | Array | Lists |
 | `push_draw_style` | [Push Draw Style](ace:Core/DrawPushStyle) | Drawing | Vocabulary |

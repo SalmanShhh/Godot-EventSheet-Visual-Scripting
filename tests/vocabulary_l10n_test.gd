@@ -383,6 +383,9 @@ const FULLY_KEYED_ACES: Array[String] = [
 	# Who made this: the two rows that write the one owner key, the two that read the chain, and
 	# the three that compare its far end.
 	"Claim", "Disown", "ClaimedBy", "RootOwnerOf", "IsOwnedBy", "IsMine", "HitIsNotMyOwner",
+	# The rows new to the vocabulary for the tree, for starting over, and for distance.
+	"TellChildren", "NearestAncestorOfType", "NextSibling", "PreviousSibling", "ResetVariable",
+	"ResetVariables", "DistanceTravelled",
 ]
 
 

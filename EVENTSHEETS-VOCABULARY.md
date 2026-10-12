@@ -3891,6 +3891,7 @@ Collections (rich variables)
 - **Get Position** (`target: String`) - Returns the node's 2D position as a Vector2.
 - **Get Velocity** (`target: String`) - Returns the character body's current movement velocity.
 - **Get Linear Velocity** (`target: String`) - Returns the rigid body's current linear velocity from physics.
+- **Distance Travelled** - How far this body has really moved since it entered the game, added up every physics frame from its actual velocity - a body pushing against a wall travels nothing. For an odometer, a footstep sound every metre, or a goal to walk a hundred metres. Works on a CharacterBody or a RigidBody, in 2D or 3D.
 - **Get Monitoring** (`target: String`) - Returns whether the area is currently watching for overlaps.
 - **Get Time Left** (`target: String`) - Returns the seconds remaining before the timer fires.
 - **Get Current Animation** (`target: String`) - Returns the name of the animation currently playing.
@@ -4216,6 +4217,8 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 #### Actions
 - **Set value** (`var_name: String, value: String`) - Sets a variable to a value you give, the basic way to store game state.
 - **Set boolean** (`var_name: String, value: String`) - Sets a boolean variable to true or false, picked from the list instead of typed.
+- **Reset Variable** (`var_name: String`) - Puts a variable back to the value its declaration starts it on - health back to full, the score back to nothing. The value is read off the declaration when the sheet compiles, so changing the starting value changes what this writes.
+- **Reset Variables** - Puts every variable this sheet declares back to the value its declaration starts it on, in one row - a new round without reloading the scene. Exported variables are left alone: their starting value is the one the Inspector set.
 - **Add to** (`var_name: String, amount: String`) - Adds an amount to a variable, e.g. increasing score or health.
 - **Subtract from** (`var_name: String, amount: String`) - Subtracts an amount from a variable, e.g. spending money or taking damage.
 - **Multiply Variable** (`var_name: String, amount: String`) - Multiplies a variable by a factor, e.g. scaling speed or applying a bonus.
@@ -4355,6 +4358,7 @@ Developer helper vocabulary (the everyday dev tools).
 - **Remove From Group** (`target: String, group: String`) - Untags a node from a named group when it should no longer belong.
 - **Call Method On Group** (`group: String, method: String`) - Calls the named method on every node in a group at once.
 - **Call Method On Group (with value)** (`group: String, method: String, args: String`) - Calls a method with a value on every member of a group at once - a decoupled broadcast that carries data.
+- **Tell Children** (`method: String, args: String, target: String`) - Calls a method on a node and on every node beneath it, in one line - a door opening with its handle, light and sound, a level telling everything in it to reset. Nodes that do not have the method are passed over. Leave On node blank for this node and everything under it.
 - **Set Metadata** (`target: String, name: String, value: String`) - Stores a custom named value on an object as hidden metadata.
 - **Remove Metadata** (`target: String, name: String`) - Deletes a stored metadata value from an object by its key.
 - **Set Scene Owner** (`target: String, root: String`) - Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.
@@ -5311,11 +5315,14 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Node Name** (`target: String`) - Returns the node's name as text, useful for labels or matching.
 - **Node Path** (`target: String`) - Returns the node's full path in the scene tree as a reference.
 - **Index In Parent** (`target: String`) - Returns the node's position among its siblings as a number.
+- **Next Sibling** (`target: String`) - Returns the node just after this one under the same parent - the next inventory slot, the next waypoint. After the last one it wraps round to the first.
+- **Previous Sibling** (`target: String`) - Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.
 - **Current Scene Root** - Returns the root node of the currently running scene.
 - **Get Children** (`target: String`) - Returns the list of a node's direct children to loop over or pick from.
 - **Find Children (by name)** (`target: String, pattern: String`) - Returns all descendant nodes whose name matches a pattern, wildcards allowed.
 - **Find Children Of Type** (`target: String, type: String`) - Returns all descendant nodes of a given class, e.g. every Area2D beneath this one.
 - **First Child Of Type** (`target: String, type: String`) - Returns the first descendant node of a given class, or nothing if none exist.
+- **Nearest Ancestor Of Type** (`target: String, type: String`) - Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.
 - **Nodes In Group** (`group: String`) - Returns every node belonging to a named group to loop over or count.
 - **Random Node In Group** (`group: String`) - Returns a randomly chosen member of a named group, e.g. a random spawn point.
 - **Nearest Node In Group** (`group: String, target: String`) - Returns the closest member of a group to this node, e.g. the nearest enemy.

@@ -24,7 +24,63 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 	var params: Dictionary = _params_with_scope_target(action, target_default, template)
 	params = _params_with_host(params, host_default, template)
 	params = _params_with_blank_defaults(action, params)
+	if template.contains("{%s}" % STARTING_VALUE_SLOT) or template.contains("{%s}" % EVERY_STARTING_VALUE_SLOT):
+		return _starting_value_line(template, params, starting_values)
 	return _apply_template(template, params)
+
+
+## The two slots a row never fills itself, because the answer is already written in the file: the
+## value a variable's declaration starts it on. Reset Variable writes `{var_name} = {starting_value}`
+## and Reset Variables writes `{every_starting_value}`, and the compiler fills both from the sheet it
+## is compiling (SheetCompiler.declared_starting_values), so the starting value is typed once - on
+## the declaration - and a change to it changes what the reset writes.
+const STARTING_VALUE_SLOT: String = "starting_value"
+const EVERY_STARTING_VALUE_SLOT: String = "every_starting_value"
+
+## What the sheet being compiled declares, as SheetCompiler.declared_starting_values answers it:
+## {variable name: {"value": the code its declaration starts it on, "every": whether Reset
+## Variables puts it back}}. Set at the start of every compile and cleared at the end; empty outside
+## one, which is what a code echo with no sheet behind it sees.
+static var starting_values: Dictionary = {}
+
+## The variables a Reset row named that the sheet does not declare, gathered during a compile so the
+## compiler can say so - a row that writes nothing has to explain itself somewhere.
+static var unresolved_starting_values: PackedStringArray = PackedStringArray()
+
+
+## A Reset row's line against declarations the CALLER read, for the places that show a row's code
+## with no compile running - the parameter dialog's IN CODE line reads the open sheet itself.
+static func starting_value_line(action: ACEAction, declared: Dictionary) -> String:
+	if action == null:
+		return ""
+	var template: String = action.codegen_template
+	if template.strip_edges().is_empty():
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
+		template = "" if descriptor == null else descriptor.codegen_template
+	return _starting_value_line(template, _get_params(action), declared)
+
+
+## A Reset row's line against the declarations `declared` holds. "" when there is nothing to write -
+## a variable the sheet does not declare, or a sheet with no variable to put back - and the compiler
+## leaves an empty action out, the way it leaves out every row that writes nothing.
+static func _starting_value_line(template: String, params: Dictionary, declared: Dictionary) -> String:
+	if template.contains("{%s}" % EVERY_STARTING_VALUE_SLOT):
+		var assignments: PackedStringArray = PackedStringArray()
+		for variable_name: Variant in declared.keys():
+			var entry: Dictionary = declared[variable_name] as Dictionary
+			if bool(entry.get("every", false)):
+				assignments.append("%s = %s" % [str(variable_name), str(entry.get("value", "null"))])
+		var filled_every: Dictionary = params.duplicate()
+		filled_every[EVERY_STARTING_VALUE_SLOT] = "\n".join(assignments)
+		return "" if assignments.is_empty() else _apply_template(template, filled_every)
+	var named: String = str(params.get("var_name", "")).strip_edges()
+	if not declared.has(named):
+		if not named.is_empty() and not unresolved_starting_values.has(named):
+			unresolved_starting_values.append(named)
+		return ""
+	var filled: Dictionary = params.duplicate()
+	filled[STARTING_VALUE_SLOT] = str((declared[named] as Dictionary).get("value", "null"))
+	return _apply_template(template, filled)
 
 
 ## Fills in the parameters a saved row never answered, but ONLY the ones whose shipped answer is
