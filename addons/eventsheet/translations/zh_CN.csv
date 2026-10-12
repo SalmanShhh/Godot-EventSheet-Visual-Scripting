@@ -7323,3 +7323,5 @@ Add to Class Head…,添加到类头…
 Click to change what kind of script it is.,点击以更改脚本的类型。
 Event %d selected,已选择事件 %d
 Comment - drag the grip to move it into an event's actions or between events.,"注释 - 拖动手柄可将其移入某个事件的动作中或事件之间。"
+Side Rail,侧边栏
+"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.",表格旁的面板 - 打开的表格、对象、函数。取消勾选后侧边栏会收起，表格占满整个宽度。

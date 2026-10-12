@@ -226,6 +226,9 @@ func build_ui() -> void:
 	root.add_child(_dock._workspace_body)
 	_dock._rail_panels.attach_split(_dock._workspace_body)
 	_dock._rail_panels.apply_state(EventSheetRailPanels.read_state())
+	_dock._rail_panels.set_rail_choice_known(EventSheetRailPanels.has_stored_rail_choice())
+	# The bands between the strip and the sheet follow the theme; they were all built above.
+	_dock._menu_bar.apply_theme_chrome()
 	_dock._properties_bar.attach_split(properties_split)
 	_dock._apply_open_sheets_panel_prefs()
 

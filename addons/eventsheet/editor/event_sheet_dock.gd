@@ -923,6 +923,9 @@ func _refresh_tab_bar() -> void:
 		# rest of the storage details already live.
 		var group_note: String = str(tab.get("group", "")).strip_edges()
 		var tooltip: String = _tab_tooltip(title, path)
+		if tooltip.is_empty() and EventSheetActiveTheme.active().fold_workspace_bands:
+			# The title strip that said so is folded away under this theme; the tab says it instead.
+			tooltip = EventSheetL10n.translate(_format_sheet_path_hint(sheet, path))
 		if not group_note.is_empty():
 			tooltip = "%s · %s" % [tooltip, group_note]
 		_tab_bar.set_tab_tooltip(tab_index, tooltip)

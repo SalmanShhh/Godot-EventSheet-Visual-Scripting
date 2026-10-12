@@ -7323,3 +7323,5 @@ Add to Class Head…,クラスヘッドに追加…
 Click to change what kind of script it is.,クリックしてスクリプトの種類を変更します。
 Event %d selected,イベント %d を選択中
 Comment - drag the grip to move it into an event's actions or between events.,"コメント - つまみをドラッグして、イベントのアクション内やイベントの間に移動します。"
+Side Rail,サイドレール
+"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.",シートの横のパネル - 開いているシート、オブジェクト、関数。チェックを外すとレールがしまわれ、シートが幅いっぱいに広がります。

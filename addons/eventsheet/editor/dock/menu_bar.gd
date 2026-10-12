@@ -61,6 +61,14 @@ const INCLUDED_VARIABLES_VIEW_ID: int = 9823
 ## Icons take (9818 onwards), so two passes adding View items at once never share a number.
 const TEXT_LABELS_VIEW_ID: int = 9830
 
+## View > Side Rail - the whole left rail out or tucked away. Clear of the runs above, so a
+## neighbouring pass adding View items never shares it.
+const SIDE_RAIL_VIEW_ID: int = 9840
+
+## The design's canvas padding at the sheet's left and right, in pixels at 1x, while the workspace
+## bands are folded away.
+const FOLDED_CANVAS_SIDE_PADDING: int = 10
+
 ## Where the reader's own "Text labels" choice is remembered, beside the full-toolbar choice: "text"
 ## or "icons". Anything else - a project that never chose - lets the sheet's theme decide, which is
 ## how the Editor Native starter arrives as words while every other theme keeps the icon-led strip.
@@ -563,7 +571,16 @@ func build(root: Node) -> void:
 			not _dock._rail_panels.is_panel_tucked(ids[panel_index])))
 	view_popup.about_to_popup.connect(func() -> void:
 		_fill_panels_menu(panels_menu)
-		_refresh_open_sheets_tick(view_popup))
+		_refresh_open_sheets_tick(view_popup)
+		_refresh_side_rail_tick(view_popup))
+	# The whole rail, out or tucked: the chevron's gesture said in words, and the way back to the rail
+	# under a theme that leaves no edge strip for a tucked one.
+	view_popup.add_check_item(EventSheetL10n.translate("Side Rail"), SIDE_RAIL_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(SIDE_RAIL_VIEW_ID), EventSheetL10n.translate(
+		"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width."))
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == SIDE_RAIL_VIEW_ID and _dock._rail_panels != null:
+			_dock._rail_panels.set_rail_tucked(_dock._rail_panels.is_rail_shown()))
 	view_popup.add_check_item("Open Sheets Panel", 13)
 	_refresh_open_sheets_tick(view_popup)
 	view_popup.add_check_item("Add-Event Rows", 9)
@@ -1274,6 +1291,15 @@ func _refresh_open_sheets_tick(view_popup: PopupMenu) -> void:
 		_dock._rail_panels == null or not _dock._rail_panels.is_panel_tucked("open_sheets"))
 
 
+## View > Side Rail's tick, read back from the rail each time the menu opens, because the chevron
+## and a grabber dragged into the edge tuck it too.
+func _refresh_side_rail_tick(view_popup: PopupMenu) -> void:
+	var item_index: int = view_popup.get_item_index(SIDE_RAIL_VIEW_ID)
+	if item_index < 0:
+		return
+	view_popup.set_item_checked(item_index, _dock._rail_panels == null or _dock._rail_panels.is_rail_shown())
+
+
 func _fill_panels_menu(panels_menu: PopupMenu) -> void:
 	panels_menu.clear()
 	if _dock._rail_panels == null:
@@ -1423,8 +1449,9 @@ func set_text_labels(shown: bool) -> void:
 
 
 ## What the strip and the tabs take from the sheet's theme: the Text labels layout when the reader
-## never chose one, and the line along the top of the open tab. Called once the strip is built, once
-## the tab bar is, and every time the dock publishes a new active style.
+## never chose one, the line along the top of the open tab, where the tabs sit, and which bands rest
+## between the strip and the sheet. Called once the strip is built, once the tab bar is, once the
+## workspace is, and every time the dock publishes a new active style.
 func apply_theme_chrome() -> void:
 	if _toolbar_ref == null:
 		return
@@ -1432,6 +1459,46 @@ func apply_theme_chrome() -> void:
 	_apply_toolbar_expansion()
 	_apply_tab_edge()
 	_apply_tab_position()
+	_apply_workspace_bands()
+
+
+## The bands between the strip and the sheet, folded away while the active theme puts the sheet
+## straight under the toolbar (fold_workspace_bands) and back where they were otherwise: the title
+## strip, the identity band, the Conditions | Actions header, and a tucked rail's edge strip. Each
+## one's words and gestures stay reachable - the tab, the class head's hover, the divider inside an
+## event, View > Side Rail - so this is only ever a question of what the resting view shows.
+func _apply_workspace_bands() -> void:
+	if _dock == null:
+		return
+	var folded: bool = EventSheetActiveTheme.active().fold_workspace_bands
+	if _dock._title_strip != null:
+		_dock._title_strip.visible = not folded
+	if _dock._identity_banner != null:
+		_dock._identity_banner.set_folded(folded)
+	if _dock._column_header != null:
+		_dock._column_header.visible = not folded
+	if _dock._rail_panels != null:
+		_dock._rail_panels.set_bands_folded(folded)
+	_apply_canvas_padding(folded)
+
+
+## The design's air either side of the sheet, once nothing else stands between the dock's edge and
+## the class head: the scroll's own panel box widened at its left and right, so the rows, their hit
+## tests and the scrollbar all move together. The canvas's top air is the viewport's own (its
+## content_top_offset). A theme that keeps the bands keeps the scroll exactly as the editor draws it.
+func _apply_canvas_padding(folded: bool) -> void:
+	var scroll: ScrollContainer = _dock._scroll if _dock != null else null
+	if scroll == null:
+		return
+	scroll.remove_theme_stylebox_override("panel")
+	if not folded:
+		return
+	var base: StyleBox = scroll.get_theme_stylebox("panel")
+	var padded: StyleBox = base.duplicate() as StyleBox if base != null else StyleBoxEmpty.new()
+	var side: float = float(EventSheetPalette.scaled(FOLDED_CANVAS_SIDE_PADDING))
+	for edge: int in [SIDE_LEFT, SIDE_RIGHT]:
+		padded.set_content_margin(edge, maxf(base.get_content_margin(edge) if base != null else 0.0, 0.0) + side)
+	scroll.add_theme_stylebox_override("panel", padded)
 
 
 ## The reader's stored layout when there is one, the active theme's word on it when there is not.

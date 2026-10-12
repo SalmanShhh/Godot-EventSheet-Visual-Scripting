@@ -171,6 +171,17 @@ static func read_state() -> Dictionary:
 	return default_state()
 
 
+## Whether this project remembers a choice about the whole rail - tucked or out - rather than only
+## the defaults. A theme that folds the workspace bands away rests the rail tucked until the reader
+## has made that choice once.
+static func has_stored_rail_choice() -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var stored: Variant = EditorInterface.get_editor_settings().get_project_metadata(
+			"eventsheets", META_KEY, {})
+		return stored is Dictionary and (stored as Dictionary).has("rail_tucked")
+	return false
+
+
 ## Write the rail state back for this project. A no-op outside the editor.
 static func save_state(state: Dictionary) -> void:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
@@ -197,6 +208,11 @@ var _width_fixes: int = 0
 # Set while a grabber drag is being answered, so the next layout is read as the reader's chosen
 # width rather than as a width to correct.
 var _reading_drag: bool = false
+# Set while the sheet's theme folds the workspace bands away (fold_workspace_bands): a tucked rail
+# then leaves no edge strip, and until the reader has chosen, the rail rests tucked.
+var _bands_folded: bool = false
+# Whether the reader has said, in this project, whether the rail is out or tucked.
+var _rail_chosen: bool = false
 
 
 func init(dock: Control) -> void:
@@ -444,12 +460,38 @@ func is_panel_tucked(panel_id: String) -> bool:
 ## Tuck the whole rail into its edge strip, or bring it back at the width it had.
 func set_rail_tucked(tucked: bool) -> void:
 	_state["rail_tucked"] = tucked
+	_rail_chosen = true
 	save_state(_state)
 	_apply()
 
 
+## Whether the rail is tucked: the reader's choice, or - under a theme that folds the workspace bands
+## away, before the reader has chosen - tucked, because that theme rests with the sheet alone.
 func is_rail_tucked() -> bool:
+	if _bands_folded and not _rail_chosen:
+		return true
 	return bool(_state.get("rail_tucked", false))
+
+
+## Whether the rail takes any room at all: View > Side Rail's tick.
+func is_rail_shown() -> bool:
+	return not is_rail_tucked()
+
+
+## Says whether the reader has already chosen the rail's state in this project (the dock reads it off
+## the stored record once, as the rail is built). Without that, a folding theme rests it tucked.
+func set_rail_choice_known(known: bool) -> void:
+	_rail_chosen = known
+	_apply()
+
+
+## The theme's fold_workspace_bands, pushed by the dock whenever the active theme changes. Under it a
+## tucked rail takes no room - no edge strip, no grabber - and View > Side Rail brings it back.
+func set_bands_folded(folded: bool) -> void:
+	if _bands_folded == folded:
+		return
+	_bands_folded = folded
+	_apply()
 
 
 ## The rail state for this project, for the dock to hand to the Properties bar and for a test to
@@ -491,6 +533,9 @@ func _apply() -> void:
 	_body.visible = not tucked
 	_edge.visible = tucked
 	_root.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(EDGE_STRIP_WIDTH) if tucked else 0.0, 0.0)
+	# A folding theme leaves nothing of a tucked rail on screen: the split then has one child, so it
+	# draws no grabber either, and the sheet starts at the dock's edge.
+	_root.visible = not (tucked and _bands_folded)
 	if _edge_label != null:
 		var titles: PackedStringArray = PackedStringArray()
 		for panel_id2: String in on_screen:

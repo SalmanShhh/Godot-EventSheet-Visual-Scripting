@@ -7323,3 +7323,5 @@ Add to Class Head…,Ajouter à l'en-tête de classe…
 Click to change what kind of script it is.,Cliquez pour changer le type de script.
 Event %d selected,Événement %d sélectionné
 Comment - drag the grip to move it into an event's actions or between events.,"Commentaire - faites glisser la poignée pour le déplacer dans les actions d'un événement ou entre des événements."
+Side Rail,Barre latérale
+"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","Les panneaux à côté de la feuille - Feuilles ouvertes, Objets, Fonctions. Décochée, la barre est repliée et la feuille prend toute la largeur."

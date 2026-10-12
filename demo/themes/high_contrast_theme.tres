@@ -283,3 +283,4 @@ follow_editor_greys = false
 toolbar_text_labels = false
 tabs_above_toolbar = false
 status_bar_selection_line = false
+fold_workspace_bands = false

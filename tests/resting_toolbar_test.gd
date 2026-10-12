@@ -261,9 +261,10 @@ static func _test_the_cascade() -> bool:
 	# View ▸ Trigger Icons, Value Glyphs and Variable Badges are the 61st to 63rd: the native look's
 	# drawn marks, each one a toggle beside Object Icons. View ▸ Included Variables is the 64th: the
 	# included sheet's variables under each Include bar. View ▸ Add Links On Hover is the 65th: the
-	# hovered event's Add condition and Add action links.
+	# hovered event's Add condition and Add action links. View ▸ Side Rail is the 66th: the whole rail
+	# out or tucked, the way back to it under a theme that leaves no edge strip for a tucked rail.
 	ok = _check("View keeps its items, plus Full toolbar, Sheet theme, Panels and Text labels",
-		counts["EventSheetViewMenu"], 65) and ok
+		counts["EventSheetViewMenu"], 66) and ok
 	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
 	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
 	ok = _check("Words… is on Tools, at its own id",

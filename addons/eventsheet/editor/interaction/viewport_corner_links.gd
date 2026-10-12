@@ -154,10 +154,11 @@ func draw(font: Font, font_size: int, top_offset: float) -> void:
 ## live click zones in it is not a picture. A sheet that is being READ - an opened pack, a read-only
 ## resource, reading mode - carries neither: the trailing "+ Add event…" footers are already
 ## suppressed there because they are an offer the view cannot honour, and these two doors are the
-## same offer in the corners. Static and pure over the viewport, so the answer is one line in both
-## the draw pass and the reserved band.
+## same offer in the corners. A theme that folds the workspace bands away carries neither either:
+## Add Event is on its toolbar, and + Add… is the right-click on empty space it always was. Static
+## and pure over the viewport, so the answer is one line in both the draw pass and the reserved band.
 static func shown_on(viewport: Control) -> bool:
-	return viewport != null and not viewport.figure_mode and not viewport.is_reading_mode()
+	return viewport != null and not viewport.figure_mode and not viewport.is_reading_mode() 		and not viewport.workspace_bands_folded()
 
 
 ## The id of the link under `position` (logical canvas space), or "" when the point is on neither.

@@ -301,6 +301,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"toolbar_text_labels": "Lay the toolbar out as words - Sheet, Save, Add Event, Add Condition, Add Action, Find and Sentences. Your own View > Text labels choice always wins.",
 	"tabs_above_toolbar": "Put the row of open-sheet tabs above the toolbar instead of under it.",
 	"status_bar_selection_line": "Let the status bar say what is selected - Event 3 selected, then its conditions - with No problems, the event count and the zoom at its right.",
+	"fold_workspace_bands": "Put the sheet straight under the toolbar: no title strip, identity band, Conditions | Actions header or Add event band, and no edge strip for a tucked side rail. The tab names the sheet, the class head's hover says what kind it is, the divider inside an event drags the lane split, and View > Side Rail brings the rail back.",
 	"font_size_delta": "Text size adjustment for this chip kind, relative to the sheet font (+/- points).",
 	"horizontal_padding": "Space inside the chip, left and right of its text, in pixels.",
 	"vertical_padding": "Space inside the chip, above and below its text, in pixels.",

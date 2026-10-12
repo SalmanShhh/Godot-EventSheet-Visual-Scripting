@@ -331,6 +331,9 @@ var _zoom_factor: float = 1.0
 var reading_mode: bool = false
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
+## True while a boundary drag begun inside an event (fold_workspace_bands) is in hand, so the motion
+## and the release that follow belong to the drag rather than to the rows under the pointer.
+var _event_boundary_drag: bool = false
 # The full-sheet DIVIDER GUIDE (the event-sheet cue): the logical X of the column boundary under the
 # pointer, or the one being dragged. Negative = none. A per-row divider only ever paints inside its own
 # row band, so a boundary reads as a broken, dashed hint and the object-column boundary has no resting
@@ -344,6 +347,9 @@ var _divider_guide_dragging: bool = false
 var _dragging_object_column_lane: String = ""
 var _object_column_drag_anchor_x: float = 0.0
 const LANE_DIVIDER_GRAB_TOLERANCE := 5.0
+## The air above the first row when the workspace bands are folded away, in logical pixels: the
+## design's canvas padding between the toolbar and the class head.
+const FOLDED_CANVAS_TOP_PADDING := 8.0
 ## Event-sheet-style trailing "Add event…" footer rows (sheet-end and per-group). On by default;
 ## settable so headless tests can assert raw row counts/indices without the affordance
 ## shifting them, and so the dock can offer a "hide add-event rows" declutter option.
@@ -1226,6 +1232,56 @@ func end_column_header_drag() -> bool:
 		object_column_width_changed.emit(resized_lane, resized_width)
 		return true
 	return false
+
+
+## WHAT A PRESS INSIDE AN EVENT WOULD DRAG, at a logical position, when the theme folds the header
+## band away (fold_workspace_bands): the lane split from the divider between the event's lanes, or a
+## fixed object column from the hairline after its object names - the two boundaries the header's
+## grabbers hold everywhere else, so folding the band takes neither away. The same answer shapes
+## column_header_grab_at gives. {} off an event, in a figure, under a theme that keeps the band, and
+## for a column that flows after its names (that edge sits on the words, where a press selects).
+func event_boundary_grab_at(local_position: Vector2) -> Dictionary:
+	if figure_mode or not workspace_bands_folded():
+		return {}
+	var row_data: EventRowData = _row_at(_find_row_index_at_y(local_position.y))
+	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+		return {}
+	if _is_near_lane_divider(local_position.x):
+		return {"kind": "lane_divider", "boundary_x": get_lane_divider_x(_get_logical_canvas_width())}
+	var boundary: Dictionary = object_column_boundary_hit(local_position)
+	if boundary.is_empty():
+		return {}
+	var lane: String = str(boundary.get("lane", ""))
+	if EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane)) <= 0.0:
+		return {}
+	return boundary
+
+
+## A left press or release that starts or finishes a boundary drag inside an event. True when it
+## did, so the row under the press is neither selected nor dragged.
+func _handle_event_boundary_press(mouse_button: InputEventMouseButton) -> bool:
+	if not mouse_button.pressed:
+		if not _event_boundary_drag:
+			return false
+		_event_boundary_drag = false
+		end_column_header_drag()
+		return true
+	var grab: Dictionary = event_boundary_grab_at(_to_logical_position(mouse_button.position))
+	if grab.is_empty() or not begin_column_header_drag(grab):
+		return false
+	_event_boundary_drag = true
+	return true
+
+
+## The resize cursor over a boundary an event can be dragged by, the cursor the header's grabbers
+## show; anything else gives the arrow back only if this put the resize cursor up.
+func _show_event_boundary_cursor(control_position: Vector2) -> void:
+	if not workspace_bands_folded():
+		return
+	if not event_boundary_grab_at(_to_logical_position(control_position)).is_empty():
+		mouse_default_cursor_shape = Control.CURSOR_HSIZE
+	elif mouse_default_cursor_shape == Control.CURSOR_HSIZE:
+		mouse_default_cursor_shape = Control.CURSOR_ARROW
 
 
 ## Back to the split the theme was authored with. The drag lives in the column header now, so the
@@ -2590,10 +2646,19 @@ func _draw_drag_ghost(font: Font, font_size: int) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		_handle_mouse_motion(event as InputEventMouseMotion)
+		var motion: InputEventMouseMotion = event as InputEventMouseMotion
+		if _event_boundary_drag:
+			drag_column_header_to(_to_logical_position(motion.position).x)
+			accept_event()
+			return
+		_handle_mouse_motion(motion)
+		_show_event_boundary_cursor(motion.position)
 		return
 	if event is InputEventMouseButton:
 		var mouse_button: InputEventMouseButton = event as InputEventMouseButton
+		if mouse_button.button_index == MOUSE_BUTTON_LEFT and _handle_event_boundary_press(mouse_button):
+			accept_event()
+			return
 		# The sticky breadcrumb claims a plain left click on its strip (jump to the group bar)
 		# before the row hit-test can read the same click as a row selection underneath it.
 		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT and _group_breadcrumb.handle_click(mouse_button.position):
@@ -3580,10 +3645,23 @@ func _apply_zoom_delta(direction: int, anchor_position: Vector2) -> void:
 ## links before the first of them starts. Zero on a sheet that carries no links - an illustration,
 ## and anything being read rather than edited - so a figure is exactly as tall as its rows and a
 ## read-only preview starts where it always did.
+##
+## A theme that folds the workspace bands away (fold_workspace_bands) draws no links, so the sheet
+## owes them nothing; it keeps only the canvas's own top padding, the air the design leaves between
+## the toolbar and the class head. A figure is still exactly as tall as its rows.
 func content_top_offset() -> float:
+	if workspace_bands_folded():
+		return 0.0 if figure_mode else FOLDED_CANVAS_TOP_PADDING
 	if not ViewportCornerLinks.shown_on(self):
 		return 0.0
 	return ViewportCornerLinks.band_height(EventSheetPalette.resolve_font_size(_get_font_size(), -1))
+
+
+## True when the sheet's theme folds the bands between the toolbar and the sheet away
+## (fold_workspace_bands): no corner links, the top padding alone, and the lane boundary dragged from
+## the divider inside an event rather than from the header band above the canvas.
+func workspace_bands_folded() -> bool:
+	return _editor_style != null and _editor_style.fold_workspace_bands
 
 
 func _to_logical_position(position: Vector2) -> Vector2:
@@ -5204,7 +5282,13 @@ func _get_viewport_height() -> float:
 func _get_scroll_width() -> float:
 	var scroll: ScrollContainer = _get_scroll_container()
 	if scroll != null and scroll.size.x > 0.0:
-		return scroll.size.x
+		if not workspace_bands_folded():
+			return scroll.size.x
+		# The folded workspace pads the scroll's panel at both sides, so the sheet fills what is
+		# inside the padding rather than overflowing it into a sideways scroll.
+		var panel: StyleBox = scroll.get_theme_stylebox("panel")
+		var padding: float = panel.get_margin(SIDE_LEFT) + panel.get_margin(SIDE_RIGHT) if panel != null else 0.0
+		return maxf(scroll.size.x - padding, 1.0)
 	return size.x if size.x > 0.0 else 640.0
 
 

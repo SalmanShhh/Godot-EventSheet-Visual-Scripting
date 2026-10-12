@@ -305,6 +305,8 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# The design stacks the tabs over the strip, and its status bar says what is selected.
 	style.tabs_above_toolbar = true
 	style.status_bar_selection_line = true
+	# The design puts the sheet straight under the strip: no title, identity, header or link bands.
+	style.fold_workspace_bands = true
 	var event_style: EventSheetEventStyle = style.get_event_style()
 	var greys: Dictionary = NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK
 	for token_name: String in greys:

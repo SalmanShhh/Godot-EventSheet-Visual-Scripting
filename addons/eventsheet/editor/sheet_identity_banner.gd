@@ -40,6 +40,10 @@ var _health_sheet: EventSheetResource = null
 var _is_addon_pack: bool = false
 ## The pack's declared @ace_version, "" when undeclared - joins the Addon Pack chip text.
 var _addon_version: String = ""
+## Set while the sheet's theme folds the workspace bands away (fold_workspace_bands): the band keeps
+## reading its sheet, so its words are ready the moment it comes back, but takes no room.
+var _folded: bool = false
+var _has_sheet: bool = false
 
 
 ## The health chip {text, color} for the banner's right end: the calm "works" signal (green
@@ -126,6 +130,56 @@ static func _build_manifest_segments(counts: Dictionary) -> Array:
 	return segments
 
 
+## The band's one line for a sheet: what it is, then how it meets the project ("Player - Custom Node
+## · extends CharacterBody2D"). Static, so the class head's hover can say the same words when the band
+## is folded away.
+static func identity_label(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	var intent: EventSheetScriptIntent.Intent = EventSheetScriptIntent.of_sheet(sheet)
+	var intent_label: String = str(EventSheetScriptIntent.display(intent).get("label", ""))
+	var display_name: String = sheet.custom_class_name.strip_edges()
+	if display_name.is_empty():
+		display_name = sheet.autoload_name.strip_edges() if sheet.autoload_mode else intent_label
+	# Each intent reads distinctly at a glance: what it IS, then how it meets the project. The
+	# banner draws on canvas (no auto-translation), so the TEMPLATES translate explicitly -
+	# names/classes stay verbatim inside the placeholders.
+	match intent:
+		EventSheetScriptIntent.Intent.BEHAVIOUR:
+			return EventSheetL10n.translate("%s - Behavior · acts on host: %s") % [display_name, sheet.host_class]
+		EventSheetScriptIntent.Intent.AUTOLOAD:
+			return EventSheetL10n.translate("%s - Autoload · one instance, project-wide") % display_name
+		EventSheetScriptIntent.Intent.EDITOR_TOOL:
+			return EventSheetL10n.translate("%s - Editor Tool · runs in the editor (File > Run)") % display_name
+		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
+			return EventSheetL10n.translate("%s - Custom Resource · every .tres of it is a data asset") % display_name
+		EventSheetScriptIntent.Intent.EVENT_SHEET:
+			# The plain sheet a beginner makes: say what it is and where it runs, in one line.
+			return EventSheetL10n.translate("Event Sheet · a script for the %s it's attached to") % sheet.host_class
+		_:
+			return EventSheetL10n.translate("%s - Custom Node · extends %s") % [display_name, sheet.host_class]
+
+
+## What the band says, as lines for a hover, for the theme that folds it away (fold_workspace_bands):
+## the Addon Pack tag when the sheet is a published pack, the identity line, and the Publishes
+## Manifest's counts on one line. The health chip is not repeated - the status bar counts problems.
+static func identity_hover_lines(sheet: EventSheetResource, sheet_path: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return lines
+	if sheet_path.begins_with("res://eventsheet_addons/"):
+		var pack_text: String = EventSheetL10n.translate("Addon Pack")
+		var version: String = sheet.addon_version.strip_edges()
+		lines.append(pack_text if version.is_empty() else "%s v%s" % [pack_text, version])
+	lines.append(identity_label(sheet))
+	var counts: PackedStringArray = PackedStringArray()
+	for segment: Dictionary in _build_manifest_segments(manifest_for(sheet)):
+		counts.append(str(segment.get("text", "")))
+	if not counts.is_empty():
+		lines.append(" · ".join(counts))
+	return lines
+
+
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
 	name = "SheetIdentityBanner"
@@ -145,33 +199,14 @@ func update_from_sheet(sheet: EventSheetResource, sheet_path: String = "") -> vo
 	# Every sheet gets its identity strip - INCLUDING the plain event sheets beginners make.
 	# Hiding it for exactly those sheets (the old rule) meant the newcomers who most needed the
 	# "what is this / click to configure" cue and the save-time health chip never saw either.
+	_has_sheet = sheet != null
 	if sheet == null:
 		visible = false
 		queue_redraw()
 		return
 	_is_behavior = sheet.behavior_mode
 	_intent = EventSheetScriptIntent.of_sheet(sheet)
-	var intent_label: String = str(EventSheetScriptIntent.display(_intent).get("label", ""))
-	var display_name: String = sheet.custom_class_name.strip_edges()
-	if display_name.is_empty():
-		display_name = sheet.autoload_name.strip_edges() if sheet.autoload_mode else intent_label
-	# Each intent reads distinctly at a glance: what it IS, then how it meets the project. The
-	# banner draws on canvas (no auto-translation), so the TEMPLATES translate explicitly -
-	# names/classes stay verbatim inside the placeholders.
-	match _intent:
-		EventSheetScriptIntent.Intent.BEHAVIOUR:
-			_label = EventSheetL10n.translate("%s - Behavior · acts on host: %s") % [display_name, sheet.host_class]
-		EventSheetScriptIntent.Intent.AUTOLOAD:
-			_label = EventSheetL10n.translate("%s - Autoload · one instance, project-wide") % display_name
-		EventSheetScriptIntent.Intent.EDITOR_TOOL:
-			_label = EventSheetL10n.translate("%s - Editor Tool · runs in the editor (File > Run)") % display_name
-		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
-			_label = EventSheetL10n.translate("%s - Custom Resource · every .tres of it is a data asset") % display_name
-		EventSheetScriptIntent.Intent.EVENT_SHEET:
-			# The plain sheet a beginner makes: say what it is and where it runs, in one line.
-			_label = EventSheetL10n.translate("Event Sheet · a script for the %s it's attached to") % sheet.host_class
-		_:
-			_label = EventSheetL10n.translate("%s - Custom Node · extends %s") % [display_name, sheet.host_class]
+	_label = identity_label(sheet)
 	var icon_path: String = sheet.custom_class_icon.strip_edges()
 	if icon_path.begins_with("res://") and ResourceLoader.exists(icon_path):
 		var loaded: Resource = load(icon_path)
@@ -185,8 +220,15 @@ func update_from_sheet(sheet: EventSheetResource, sheet_path: String = "") -> vo
 	_manifest_segments = _build_manifest_segments(manifest_for(sheet))
 	var total_height: float = BANNER_HEIGHT + (MANIFEST_HEIGHT if not _manifest_segments.is_empty() else 0.0)
 	custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(total_height))
-	visible = true
+	visible = not _folded
 	queue_redraw()
+
+
+## Folds the band away while the theme puts the sheet straight under the toolbar, or brings it back.
+## What it says is still said: identity_hover_lines() is the class head's name hover there.
+func set_folded(folded: bool) -> void:
+	_folded = folded
+	visible = not folded and _has_sheet
 
 
 func _gui_input(event: InputEvent) -> void:

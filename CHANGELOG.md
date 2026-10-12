@@ -229,6 +229,19 @@
   never nodes, so the Scene dock is left alone, and a row the open scene does not hold is followed
   quietly rather than flagged in red. Drawing only: compiled output and the default-theme reading are
   unchanged.
+- **Editor Native puts the sheet straight under the toolbar.** A new theme switch
+  (`fold_workspace_bands`, on in Editor Native, stated off in every other shipped theme) folds away
+  the five bands that stood between the strip and the sheet, so the order is the design's: tabs, the
+  toolbar, the canvas's own padding (8 px above, 10 px at each side), then the class head. Nothing
+  they offered goes: the title strip's name and unsaved state are the tab's (its ●, and "Unsaved
+  (in-memory)" on its hover); the identity band's line and its published counts ("@ 1 knob") ride
+  the class head name's hover; the Conditions | Actions header's two grabbers move into the sheet,
+  where pressing the divider inside any event drags the lane split and pressing a fixed object
+  column's hairline drags its width; Add event is the toolbar's Add Event and + Add… the right-click
+  on empty space it always was; and the side rail rests tucked with no edge strip left behind until
+  you bring it out with the new View > Side Rail (its chevron and its grabber tuck it again, and the
+  choice is remembered per project). Drawing and layout only: compiled output and the default-theme
+  reading are unchanged, and Classic Sheet renders pixel for pixel as before.
 
 ### Added: the first game you already know, as a showcase and a ten-step tour
 

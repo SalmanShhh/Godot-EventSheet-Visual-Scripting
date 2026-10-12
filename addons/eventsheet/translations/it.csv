@@ -7323,3 +7323,5 @@ Add to Class Head…,Aggiungi all'intestazione della classe…
 Click to change what kind of script it is.,Fai clic per cambiare il tipo di script.
 Event %d selected,Evento %d selezionato
 Comment - drag the grip to move it into an event's actions or between events.,"Commento - trascina la maniglia per spostarlo nelle azioni di un evento o tra gli eventi."
+Side Rail,Barra laterale
+"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","I pannelli accanto al foglio - Fogli aperti, Oggetti, Funzioni. Se deselezionata, la barra viene ripiegata e il foglio occupa tutta la larghezza."

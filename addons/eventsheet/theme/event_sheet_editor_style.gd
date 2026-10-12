@@ -43,6 +43,15 @@ extends Resource
 ## zoom at its right, and no file line. Off keeps the message at the left and "event 3 of 9 · line 40"
 ## beside the counts.
 @export var status_bar_selection_line: bool = false
+## The sheet sits straight under the toolbar, as an editor window puts a document under its tools:
+## the bands between them fold away from the resting view, and each thing they said or did stays
+## one gesture off. The title strip goes (the tab names the sheet, ● marks unsaved edits and the
+## file rides its hover), the identity band goes (its facts ride the class head's name hover), the
+## Conditions | Actions header goes (the boundary drags from the divider inside any event), the Add
+## event / + Add… band goes (Add Event is on the toolbar, + Add… is a right-click on empty space) and
+## a tucked side rail leaves no edge strip behind (View > Side Rail brings it back). Off keeps every
+## band where it was.
+@export var fold_workspace_bands: bool = false
 
 
 func _init() -> void:

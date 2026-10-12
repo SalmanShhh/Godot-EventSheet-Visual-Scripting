@@ -283,3 +283,4 @@ follow_editor_greys = true
 toolbar_text_labels = true
 tabs_above_toolbar = true
 status_bar_selection_line = true
+fold_workspace_bands = true

@@ -238,3 +238,4 @@ chrome_style = SubResource("Resource_vm4ja")
 manual_style = SubResource("Resource_js2ip")
 tabs_above_toolbar = false
 status_bar_selection_line = false
+fold_workspace_bands = false

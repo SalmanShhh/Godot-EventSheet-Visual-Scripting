@@ -814,6 +814,15 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			# The name IS the rename control: F2 or a double-click renames the class everywhere.
 			value_meta["head_action"] = EventSheetHeadBands.BAND_NAME
 			value_meta["hover_note"] = EventSheetL10n.translate("F2 renames this class everywhere.")
+		if is_name_band and _viewport.workspace_bands_folded():
+			# The identity band above the sheet is folded away under this theme, so what it said -
+			# the kind of sheet, how it meets the project, what it publishes - is the name's hover.
+			var identity: PackedStringArray = SheetIdentityBanner.identity_hover_lines(sheet,
+				str(sheet.external_source_path))
+			var said: String = str(value_meta.get("hover_note", ""))
+			if not said.is_empty():
+				identity.append(said)
+			value_meta["hover_note"] = "\n".join(identity)
 		if is_name_band and quiet_head:
 			# The card's name is the one bold word on it.
 			value_meta["bbcode_segments"] = [{"text": value_text, "color": value_colour, "bold": true, "italic": false}]

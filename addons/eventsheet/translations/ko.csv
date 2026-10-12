@@ -7323,3 +7323,5 @@ Add to Class Head…,클래스 헤드에 추가…
 Click to change what kind of script it is.,클릭하여 스크립트 종류를 변경합니다.
 Event %d selected,이벤트 %d 선택됨
 Comment - drag the grip to move it into an event's actions or between events.,"주석 - 손잡이를 끌어 이벤트의 액션 안이나 이벤트 사이로 옮깁니다."
+Side Rail,사이드 레일
+"The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","시트 옆의 패널 - 열린 시트, 오브젝트, 함수. 체크를 해제하면 레일이 접히고 시트가 전체 너비를 차지합니다."

@@ -238,3 +238,4 @@ chrome_style = SubResource("Resource_q7num")
 manual_style = SubResource("Resource_78tq3")
 tabs_above_toolbar = false
 status_bar_selection_line = false
+fold_workspace_bands = false

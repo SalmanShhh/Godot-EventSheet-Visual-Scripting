@@ -240,3 +240,4 @@ chrome_style = SubResource("Resource_mrvpn")
 manual_style = SubResource("Resource_5y1iu")
 tabs_above_toolbar = false
 status_bar_selection_line = false
+fold_workspace_bands = false
