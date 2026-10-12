@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed: Editor Native stops showing the compiler's "__" names inside events
+
+- **A spawned copy is named by its scene.** A theme can stop showing the compiler's two-underscore
+  bookkeeping inside events (`fold_compiler_helpers`, on in Editor Native): a `__` local holding a
+  fresh copy of a scene (`var __spawn_shot = load("res://shot.tscn").instantiate()`) reads by the
+  scene file in the object column ("shot.tscn | Set position to ..."), in its sub-events too, the
+  line that puts it in the tree reads "System | Spawn shot.tscn", and the local's own "Local value"
+  row folds into that one. A row that only keeps a hidden `__` member up to date - the clock an Every
+  X Seconds row adds the frame time to and then wraps - folds away like its variable row did, unless
+  it is all the event does. Every other theme states the token off and reads exactly as before.
+  Reading only: compiled output, the byte round trip and the default-theme reading are unchanged.
+
 ### Added: siblings beside the rows they extend
 
 - **Event Is Any Press**, beside Key Pressed (event): true once per real press of any key, mouse
@@ -36,7 +48,6 @@
   `floori` and `roundi`. The rows that lift (every condition and action here but Has Been True For,
   whose helper is written beside the class as FPS Below For's is) read back as themselves and
   re-emit byte for byte.
-
 
 ### Added: the names a reader brings from another engine find what already ships
 

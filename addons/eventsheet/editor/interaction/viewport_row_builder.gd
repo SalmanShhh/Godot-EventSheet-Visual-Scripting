@@ -7579,6 +7579,161 @@ func hides_compiler_variable(variable_name: String) -> bool:
 		and NativeVariableMarks.is_compiler_variable(variable_name)
 
 
+# ── the compiler's "__" bookkeeping inside events (fold_compiler_helpers) ────────────────────────
+# A generated spawn keeps the copy it makes in a `__spawn_<id>` local, and an Every X Seconds row keeps
+# its clock in a `__every_<id>` member. Neither name is anything a reader typed, so where the theme
+# asks, the copy is named by the scene it was made from and the clock's upkeep folds away. Reading
+# only: the actions, the emitted GDScript and the byte round trip never move.
+
+
+## The rows that only keep a hidden "__" member up to date, by the action that writes it.
+const COMPILER_HELPER_WRITES: PackedStringArray = ["SetVar", "AddVar", "SubtractVar"]
+## The Local Variable rows a declaration is written as.
+const LOCAL_DECLARATION_ACES: PackedStringArray = ["SetLocalVar", "SetLocalVarInferred", "SetLocalVarTyped"]
+
+## The "__" copies of a scene the event whose spans are being built can name, {local: shown}. Set
+## around each lazy span build and empty everywhere else, so every reading outside it is untouched.
+var _spawn_copy_names: Dictionary = {}
+## The parent event of every sub-event of the sheet, {EventRow: EventRow}, and every entry the walk
+## that made it saw, so a sub-event names a copy its parent made. Rebuilt when an event turns up that
+## the walk never saw - an edit replaces rows with duplicates - and only ever while the theme asks.
+var _event_parents: Dictionary = {}
+var _event_parents_seen: Dictionary = {}
+var _event_parents_sheet: Resource = null
+
+
+## Whether this sheet's theme folds the compiler's "__" bookkeeping inside events.
+func folds_compiler_helpers() -> bool:
+	return _viewport._get_event_style().fold_compiler_helpers
+
+
+## What a "__" local holding a fresh copy of a scene is named by: the scene file's name ("shot.tscn"),
+## or "" when the local is an author's own name, holds anything else, or names no scene file.
+func spawned_copy_shown(local_name: String, value: String) -> String:
+	if not NativeVariableMarks.is_compiler_variable(local_name.strip_edges()):
+		return ""
+	var text: String = value.strip_edges()
+	if not text.ends_with(".instantiate()"):
+		return ""
+	var source: String = text.substr(0, text.length() - ".instantiate()".length()).strip_edges()
+	var path: String = EventSheetObjectFacts.scene_path_in(source)
+	if path.is_empty() and _is_identifier_path(source):
+		_reset_lens_caches_if_stale()
+		path = _spawned_scene_path(source)
+	return path.get_file()
+
+
+## The "__" scene copies `event_row` can name, {local: shown}: the ones it declares and the ones its
+## parent events declared above it, the nearest declaration winning. Empty when the theme keeps names.
+func spawned_copy_names(event_row: EventRow) -> Dictionary:
+	var names: Dictionary = {}
+	if event_row == null or not folds_compiler_helpers():
+		return names
+	for row: EventRow in _event_chain(event_row):
+		for entry: Array in _declared_locals(row):
+			var shown: String = spawned_copy_shown(str(entry[0]), str(entry[1]))
+			if not shown.is_empty():
+				names[str(entry[0])] = shown
+	return names
+
+
+## The locals one event declares, as [name, value] pairs: its Local Variable rows and its own table.
+func _declared_locals(event_row: EventRow) -> Array:
+	var declared: Array = []
+	for action_resource: Resource in event_row.actions:
+		var action: ACEAction = action_resource as ACEAction
+		if action == null or not LOCAL_DECLARATION_ACES.has(action.ace_id):
+			continue
+		var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		declared.append([str(params.get("name", "")).strip_edges(), str(params.get("value", ""))])
+	for local: LocalVariable in event_row.local_variables:
+		if local != null:
+			declared.append([local.name.strip_edges(), str(local.default_value)])
+	return declared
+
+
+## `event_row` and the events it is nested in, outermost first.
+func _event_chain(event_row: EventRow) -> Array[EventRow]:
+	var chain: Array[EventRow] = []
+	var here: EventRow = event_row
+	while here != null and not chain.has(here):
+		chain.push_front(here)
+		here = _event_parent_of(here)
+	return chain
+
+
+## The event `event_row` is a sub-event of, or null at the top of a sheet, group or function.
+func _event_parent_of(event_row: EventRow) -> EventRow:
+	var sheet: Resource = _viewport._sheet
+	if sheet != _event_parents_sheet or not _event_parents_seen.has(event_row):
+		_event_parents_sheet = sheet
+		_event_parents.clear()
+		_event_parents_seen.clear()
+		if sheet != null:
+			for key: String in ["events", "functions"]:
+				_note_event_parents(sheet.get(key), null)
+		# Seen either way, so an event the walk cannot reach (a row built from a copy) asks once.
+		_event_parents_seen[event_row] = true
+	return _event_parents.get(event_row, null) as EventRow
+
+
+## One level of that walk: every event under `entries`, filed under the event it hangs from.
+func _note_event_parents(entries: Variant, parent: EventRow) -> void:
+	if not (entries is Array):
+		return
+	for entry: Variant in entries:
+		if not (entry is Resource) or _event_parents_seen.has(entry):
+			continue
+		_event_parents_seen[entry] = true
+		if entry is EventRow:
+			if parent != null:
+				_event_parents[entry] = parent
+			_note_event_parents((entry as EventRow).sub_events, entry as EventRow)
+			continue
+		for key: String in ["events", "rows"]:
+			_note_event_parents((entry as Resource).get(key), parent)
+
+
+## The actions of `event_row` that only keep a hidden "__" member up to date, {index: true}: a Set,
+## Add or Subtract on a two-underscore name the event and its parents never declare as a local. Empty
+## when the theme keeps them, and when they are ALL the event does - folding those would leave an
+## event that reads as doing nothing while it still runs.
+func compiler_helper_consumed(event_row: EventRow) -> Dictionary:
+	var consumed: Dictionary = {}
+	if event_row == null or not folds_compiler_helpers():
+		return consumed
+	var locals: Dictionary = {}
+	for row: EventRow in _event_chain(event_row):
+		for entry: Array in _declared_locals(row):
+			locals[str(entry[0])] = true
+	var shown: int = 0
+	for action_index: int in event_row.actions.size():
+		var action: ACEAction = event_row.actions[action_index] as ACEAction
+		if action == null or not COMPILER_HELPER_WRITES.has(action.ace_id):
+			shown += 1
+			continue
+		var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		var written: String = str(params.get("var_name", "")).strip_edges()
+		if not NativeVariableMarks.is_compiler_variable(written) or locals.has(written):
+			shown += 1
+			continue
+		consumed[action_index] = true
+	return consumed if shown > 0 else {}
+
+
+## The words an action reads with once its "__" copies are named: the line that puts a copy in the
+## tree is the Spawn it stands for, and any other mention of the local says the scene instead.
+func _spawn_copy_text(action: ACEAction, text: String) -> String:
+	for alias: Variant in _spawn_copy_names:
+		if not _plant_placement_word(action, str(alias)).is_empty():
+			return "%s %s" % [EventSheetL10n.translate("Spawn"), str(_spawn_copy_names[alias])]
+	var named: String = text
+	for alias: Variant in _spawn_copy_names:
+		var pattern: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % str(alias))
+		named = pattern.sub(named, str(_spawn_copy_names[alias]), true)
+	return named
+
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int, doc_note: String = "") -> EventRowData:
 	# While reading, an @onready node reference is an OBJECT declaration, not a variable row.
@@ -11251,6 +11406,7 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
 	# Which Local rows have a configure run to draw under them.
 	var setup_runs: Dictionary = _control_setup_groups(event_row).get("runs", {})
+	var copies: Dictionary = spawned_copy_names(event_row)
 	for action_index in event_row.actions.size():
 		if ray_leads.has(action_index) or ray_consumed.has(action_index):
 			continue
@@ -11261,6 +11417,10 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 			continue
 		var promotion: Dictionary = local_declaration_promotion(action)
 		if promotion.is_empty():
+			continue
+		# A "__" copy of a scene has no row of its own where the theme asks: its Spawn row says it.
+		var declared_name: String = str((promotion.get("declaration", {}) as Dictionary).get("name", ""))
+		if copies.has(declared_name):
 			continue
 		var row_data := EventRowData.new()
 		row_data.indent = indent
@@ -13508,9 +13668,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# A test's `var passed := true` is the harness's bookkeeping, and the Check rows are the
 		# verdict it stands for.
 		var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
+		# A row that only keeps a hidden "__" member up to date folds away where the theme asks.
+		var helper_consumed: Dictionary = compiler_helper_consumed(event_row)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
 			if bool(verdict_consumed.get(action_index, false)):
+				continue
+			if bool(helper_consumed.get(action_index, false)):
 				continue
 			if bool(task_notes.get("consumed", {}).get(action_index, false)):
 				continue
@@ -13698,9 +13862,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						}, action_style_meta)
 						action_line_index += 1
 						continue
+				var action_words: String = _format_action_descriptor(action_resource as ACEAction)
+				if not _spawn_copy_names.is_empty():
+					action_words = _spawn_copy_text(action_resource as ACEAction, action_words)
 				spans.append(
 					_make_span(
-						_format_action_descriptor(action_resource as ACEAction),
+						action_words,
 						SemanticSpan.SpanType.ACTION,
 						{
 							"lane": "action",
@@ -14117,10 +14284,14 @@ func _count_event_lines(event_row: EventRow) -> int:
 	var recipe_consumed: Dictionary = _recipe_head_groups(event_row.actions).get("consumed", {})
 	# Mirrors the span pass: a line drawn under the Local row costs the action lane no height.
 	var setup_consumed: Dictionary = _control_setup_groups(event_row).get("consumed", {})
+	# Mirrors the span pass: a folded "__" upkeep row draws no line.
+	var helper_consumed: Dictionary = compiler_helper_consumed(event_row)
 	var literal_index: int = -1
 	for action_resource in event_row.actions:
 		literal_index += 1
 		if bool(verdict_consumed.get(literal_index, false)):
+			continue
+		if bool(helper_consumed.get(literal_index, false)):
 			continue
 		if bool(literal_consumed.get(literal_index, false)):
 			continue
@@ -15140,7 +15311,12 @@ func _expand_ternary_row(row: EventRowData) -> Array[EventRowData]:
 	# An output of this pass would otherwise be branched again, forever.
 	if row.ternary_view:
 		return single
+	# The slices and arms build their words right here rather than lazily, so the "__" copies the
+	# event can name are set for the whole expansion.
+	var outer_copies: Dictionary = _spawn_copy_names
+	_spawn_copy_names = spawned_copy_names(row.source_resource as EventRow)
 	var expanded: Array[EventRowData] = _expand_event_from(row, 0, row.indent, false)
+	_spawn_copy_names = outer_copies
 	if expanded.size() == 1 and expanded[0] == row:
 		return single
 	# Exactly ONE row of a pair leads it: the head slice when it survived, otherwise the first branch
@@ -15660,9 +15836,12 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			_current_verb_function = row_data.verb_function as EventFunction
 		_pending_grammar_breakpoint = false
 		_pending_patterns = {}
+		var outer_copies: Dictionary = _spawn_copy_names
+		_spawn_copy_names = spawned_copy_names(event)
 		row_data.spans = _build_event_spans(event, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
+		_spawn_copy_names = outer_copies
 		row_data.spans = _split_function_reference_spans(row_data.spans)
 		# Which condition lines carry an "or" above them. A sliced row hides its conditions, so
 		# it keeps none: there is nothing left to divide.
@@ -18642,6 +18821,10 @@ func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
 	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
+	# A "__" copy of a scene is named by the scene it was made from (fold_compiler_helpers).
+	if _spawn_copy_names.has(label):
+		_pending_object_note = ""
+		return str(_spawn_copy_names[label])
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The same reading a hand-written statement gets: a receiver the sheet declared a class for is
 	# named by that class, with its own name muted beside it. Applied here because this is the ONE

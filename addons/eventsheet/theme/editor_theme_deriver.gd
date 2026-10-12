@@ -335,6 +335,9 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# bookkeeping variables among them.
 	event_style.inspector_variable_rows = true
 	event_style.hide_compiler_variables = true
+	# And inside the events: a "__" copy of a scene is named by its scene, and the rows that only keep
+	# a hidden "__" member up to date fold away.
+	event_style.fold_compiler_helpers = true
 	event_style.variable_row_cards = true
 	# The design's head: one class head card, no code echoes, no scene-fact or "+ add" rows.
 	event_style.inspector_class_head = true

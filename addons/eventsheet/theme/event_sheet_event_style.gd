@@ -140,6 +140,14 @@ extends Resource
 ## view only stops listing them. The rule is the prefix, so a variable an author named with two
 ## underscores is left out too. Off lists every variable the file declares.
 @export var hide_compiler_variables: bool = false
+## Inside events, the compiler's "__" bookkeeping stops showing its own names. A copy of a scene the
+## file keeps in a "__" local (`var __spawn_shot = load("res://shot.tscn").instantiate()`) is named by
+## its scene in the object column ("shot.tscn"), the line that puts it in the tree reads "Spawn
+## shot.tscn", and the local's own row folds into that one. A row that only keeps a hidden "__"
+## member up to date (the clock an Every X Seconds row adds the frame time to, then wraps) folds
+## away, unless it is all the event does. Reading only: every line still compiles and saves. Off
+## names every local and lists every row as the file writes it.
+@export var fold_compiler_helpers: bool = false
 ## Each Inspector-style variable row as its own card: the event card's fill and one-pixel edge with
 ## its corner radius, 28 px tall with a 6 px gap to the next, in place of the flat variable wash and
 ## its left rule. Drawing only - the row's words do not move. Off keeps the flat washed row.
