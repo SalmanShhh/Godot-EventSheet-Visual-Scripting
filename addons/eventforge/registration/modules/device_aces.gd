@@ -22,7 +22,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# "press anything", a cutscene skip, a rebind prompt waiting for whatever comes next. Asked of the
 	# event itself, so it is true once per real press - never for the operating system's repeats of a
 	# held key, and never for a mouse that only moved.
-	descriptors.append(F.cond("EventIsAnyPress", "Event Is Any Press", "(event.is_pressed() and not event.is_echo())", "Keyboard", "any key or button is pressed", "True the moment any key, mouse button or gamepad button goes down, used inside an input event - press-anything screens, skipping a cutscene, waking an idle game. A held key's repeats and a moving mouse do not count."))
+	descriptors.append(F.cond("EventIsAnyPress", "Event Is Any Press", "(event.is_pressed() and not event.is_echo())", "Keyboard", "any key or button is pressed", "True the moment any key, mouse button or gamepad button goes down, used inside an input event - press-anything screens, skipping a cutscene, waking an idle game. A held key's repeats and a moving mouse do not count. For \"is anything held right now\", outside an input event, use Anything Is Pressed."))
 	descriptors.append(F.cond("KeyEventReleased", "On Key Released (event)", "(event is InputEventKey and not event.pressed and event.physical_keycode == {key})", "Keyboard", "On {key} released", "True the moment a key is released, used inside an input event.").param("key", "KEY_SPACE", "Key", "Use inside an On Input event.", "key_capture"))
 	descriptors.append(F.cond("MouseButtonDown", "Mouse Button Is Down", "Input.is_mouse_button_pressed({button})", "Mouse", "{button} is down", "True while the given mouse button is being held down.").param_choice("button", "MOUSE_BUTTON_LEFT", "Button", "Mouse button.", ["MOUSE_BUTTON_LEFT", "MOUSE_BUTTON_RIGHT", "MOUSE_BUTTON_MIDDLE"]))
 	descriptors.append(F.expr("GetMouseWorldPosition", "Mouse Position (world)", "get_global_mouse_position()", "Mouse", "mouse position", "Returns the mouse position in world coordinates, matching where things sit in the level.", "Node2D"))
@@ -52,7 +52,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.act("ClearCustomCursor", "Clear Custom Cursor", "Input.set_custom_mouse_cursor(null)", "Mouse", "Clear custom cursor", "Restores the system's normal mouse pointer."))
 
 	# ── Keyboard helpers for options menus and rebind screens.
-	descriptors.append(F.cond("IsAnythingPressed", "Anything Is Pressed", "Input.is_anything_pressed()", "Keyboard", "any input is pressed", "True while ANY key, mouse button, or gamepad input is held - press-any-key screens and idle detection."))
+	descriptors.append(F.cond("IsAnythingPressed", "Anything Is Pressed", "Input.is_anything_pressed()", "Keyboard", "any input is pressed", "True while ANY key, mouse button, or gamepad input is held - press-any-key screens and idle detection. For the moment a key goes down, inside an input event, use Event Is Any Press."))
 	descriptors.append(F.expr("KeyName", "Key Name", "OS.get_keycode_string({key})", "Keyboard", "name of key {key}", "The readable name of a key (\"Space\", \"Escape\") - show current bindings on a rebind screen.").param("key", "KEY_SPACE", "Key", "Press a key to capture it.", "key_capture"))
 	descriptors.append(F.expr("KeycodeFromName", "Keycode From Name", "OS.find_keycode_from_string({name})", "Keyboard", "keycode of {name}", "The keycode for a key name - turn saved binding text back into a key.").param("name", "\"Space\"", "Name", "A key name like \"Space\" or \"A\".", "expression"))
 

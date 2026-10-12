@@ -146,7 +146,15 @@ static func _what_comes_back() -> bool:
 static func _the_familiar_names() -> bool:
 	return SUPPORT.pins(P, [
 		["Input.anyKeyDown", ACEPickerDialog.foreign_query_matches("Input.anyKeyDown"), {"EventIsAnyPress": "Input.anyKeyDown"}],
-		["On any key pressed", ACEPickerDialog.foreign_query_matches("on any key pressed"), {"EventIsAnyPress": "On any key pressed"}],
+		# "Any Key" names both jobs - the press edge and the held state - so a search holding it offers
+		# the reader both rows to pick between, the longer name winning for the row it names.
+		["On any key pressed", ACEPickerDialog.foreign_query_matches("on any key pressed"),
+			{"EventIsAnyPress": "On any key pressed", "IsAnythingPressed": "Any Key"}],
+		["Any Key finds the press and the held form", ACEPickerDialog.foreign_query_matches("any key"),
+			{"EventIsAnyPress": "On any key pressed", "IsAnythingPressed": "Any Key"}],
+		["each any-press row names the other", [
+			str(ACERegistry.find_descriptor("Core", "EventIsAnyPress").description).contains("Anything Is Pressed"),
+			str(ACERegistry.find_descriptor("Core", "IsAnythingPressed").description).contains("Event Is Any Press")], [true, true]],
 		["For each XY element", ACEPickerDialog.foreign_query_matches("for each xy element"), {"ForEachCellInRectangle": "For each XY element"}],
 		["FirstOrDefault", ACEPickerDialog.foreign_query_matches("FirstOrDefault"), {"PickFirstWhere": "FirstOrDefault"}],
 		["FindLast", ACEPickerDialog.foreign_query_matches("FindLast"), {"PickLastWhere": "FindLast"}],

@@ -4420,7 +4420,7 @@ Device input (Keyboard/Mouse/Gamepad/Touch)
 #### Conditions
 - **Key Is Down** (`key: String`) - True while the given keyboard key is being held down.
 - **On Key Pressed (event)** (`key: String`) - True the moment a key is pressed, used inside an input event.
-- **Event Is Any Press** - True the moment any key, mouse button or gamepad button goes down, used inside an input event - press-anything screens, skipping a cutscene, waking an idle game. A held key's repeats and a moving mouse do not count.
+- **Event Is Any Press** - True the moment any key, mouse button or gamepad button goes down, used inside an input event - press-anything screens, skipping a cutscene, waking an idle game. A held key's repeats and a moving mouse do not count. For "is anything held right now", outside an input event, use Anything Is Pressed.
 - **On Key Released (event)** (`key: String`) - True the moment a key is released, used inside an input event.
 - **Mouse Button Is Down** (`button: String`) - True while the given mouse button is being held down.
 - **Gamepad Button Is Down** (`device: String, button: String`) - True while the given gamepad button is being held down.
@@ -4430,7 +4430,7 @@ Device input (Keyboard/Mouse/Gamepad/Touch)
 - **On Mouse Button Released (event)** (`button: String`) - True the moment a mouse button is let go, used inside an On Input event.
 - **On Mouse Wheel Up (event)** - True on a wheel-up tick, used inside an On Input event - zoom in, next weapon, scroll a list.
 - **On Mouse Wheel Down (event)** - True on a wheel-down tick, used inside an On Input event.
-- **Anything Is Pressed** - True while ANY key, mouse button, or gamepad input is held - press-any-key screens and idle detection.
+- **Anything Is Pressed** - True while ANY key, mouse button, or gamepad input is held - press-any-key screens and idle detection. For the moment a key goes down, inside an input event, use Event Is Any Press.
 - **Gamepad Is Recognized** (`device: String`) - True when the gamepad matches a known mapping (its buttons mean what you expect).
 - **On Gamepad Button Pressed (event)** (`button: String`) - True the moment a gamepad button goes down, used inside an On Input event.
 - **Touchscreen Available** - True when the device running the game has a touchscreen.

@@ -176,7 +176,7 @@ const FAMILIAR_NAMES: Dictionary = {
 	"Input.anyKeyDown": ["EventIsAnyPress"],
 	"anyKeyDown": ["EventIsAnyPress"],
 	"On any key pressed": ["EventIsAnyPress"],
-	"Any Key": ["EventIsAnyPress"],
+	"Any Key": ["EventIsAnyPress", "IsAnythingPressed"],
 	"For each XY element": ["ForEachCellInRectangle"],
 	"For Each Cell": ["ForEachCellInRectangle", "ForEachCellInRadius"],
 	"FirstOrDefault": ["PickFirstWhere"],
