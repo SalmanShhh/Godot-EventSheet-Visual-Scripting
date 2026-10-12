@@ -7373,13 +7373,13 @@ Previous Sibling,이전 형제
 the sibling before [i]{target}[/i],[i]{target}[/i] 이전 형제
 "Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.","같은 부모 아래에서 이 노드 바로 앞 노드를 반환합니다 - 이전 인벤토리 칸, 이전 웨이포인트. 처음 앞은 마지막으로 돌아갑니다."
 Node whose previous sibling to get.,이전 형제를 가져올 노드.
-Nearest Ancestor Of Type,가장 가까운 유형의 조상
-the nearest [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] 위에서 가장 가까운 [b]{type}[/b]
+First Parent Of Type,첫 번째 유형의 부모
+the first [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] 위의 첫 번째 [b]{type}[/b]
 "Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.","이 노드 위에 있는 지정한 유형의 가장 가까운 노드를 반환합니다 - 상자가 놓인 Room, 좌석이 속한 Vehicle, 아이템이 놓인 Level 등. 없으면 아무것도 반환하지 않습니다."
 Node to search above.,그 위를 찾을 노드.
 Node class or class_name to find - the closest match above (null if none).,찾을 노드 클래스 또는 class_name - 위에서 가장 가까운 일치 (없으면 null).
 how far {object} has travelled,{object}이(가) 이동한 거리
-the nearest {type} above {object},{object} 위에서 가장 가까운 {type}
+the first {type} above {object},{object} 위의 첫 번째 {type}
 the sibling after {object},{object} 다음 형제
 the sibling before {object},{object} 이전 형제
 Tell {object} and everything under it to {method},{object}와(과) 그 아래 모두에게 {method} 알리기

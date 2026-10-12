@@ -5349,7 +5349,7 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Find Children (by name)** (`target: String, pattern: String`) - Returns all descendant nodes whose name matches a pattern, wildcards allowed.
 - **Find Children Of Type** (`target: String, type: String`) - Returns all descendant nodes of a given class, e.g. every Area2D beneath this one.
 - **First Child Of Type** (`target: String, type: String`) - Returns the first descendant node of a given class, or nothing if none exist.
-- **Nearest Ancestor Of Type** (`target: String, type: String`) - Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.
+- **First Parent Of Type** (`target: String, type: String`) - Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.
 - **Nodes In Group** (`group: String`) - Returns every node belonging to a named group to loop over or count.
 - **Random Node In Group** (`group: String`) - Returns a randomly chosen member of a named group, e.g. a random spawn point.
 - **Nearest Node In Group** (`group: String, target: String`) - Returns the closest member of a group to this node, e.g. the nearest enemy.

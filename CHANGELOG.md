@@ -109,10 +109,10 @@
   node beneath it in one line, `$Door.propagate_call("open")`, with the values as the list
   propagate_call takes. Reads "Tell Door and everything under it to open"; the line typed by hand
   opens as the row and saves back byte for byte. The way back up stays a signal.
-- **Nearest Ancestor Of Type**, the upward mirror of First Child Of Type: the closest node above one
+- **First Parent Of Type**, the upward mirror of First Child Of Type: the closest node above one
   that is of a type (an engine class, or a class_name up a script's chain), null when there is none.
   The short walk up the tree is written into the file once, the first time a row asks for it.
-  Reads "the nearest Room above Chest".
+  Reads "the first Room above Chest".
 - **Next Sibling** and **Previous Sibling**: the node either side of one under the same parent,
   wrapping past the ends, as plain index arithmetic. Read "the sibling after Slot".
 - **Reset Variable** and **Reset Variables**, beside Set value: put one variable, or every variable

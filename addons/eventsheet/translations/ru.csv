@@ -7373,13 +7373,13 @@ Previous Sibling,Предыдущий сосед
 the sibling before [i]{target}[/i],сосед перед [i]{target}[/i]
 "Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.","Возвращает узел сразу перед этим у того же родителя - предыдущий слот инвентаря, предыдущую точку пути. Перед первым возвращается к последнему."
 Node whose previous sibling to get.,"Узел, чьего предыдущего соседа нужно получить."
-Nearest Ancestor Of Type,Ближайший предок типа
-the nearest [b]{type}[/b] above [i]{target}[/i],ближайший [b]{type}[/b] над [i]{target}[/i]
+First Parent Of Type,Первый родитель типа
+the first [b]{type}[/b] above [i]{target}[/i],первый [b]{type}[/b] над [i]{target}[/i]
 "Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.","Возвращает ближайший узел над этим, имеющий заданный тип - Room, в которой стоит сундук, Vehicle, которому принадлежит сиденье, Level, куда положили предмет - или ничего, если такого нет."
 Node to search above.,"Узел, над которым искать."
 Node class or class_name to find - the closest match above (null if none).,"Класс узла или class_name для поиска - ближайшее совпадение выше (null, если нет)."
 how far {object} has travelled,сколько прошёл {object}
-the nearest {type} above {object},ближайший {type} над {object}
+the first {type} above {object},первый {type} над {object}
 the sibling after {object},сосед после {object}
 the sibling before {object},сосед перед {object}
 Tell {object} and everything under it to {method},Сказать {object} и всему под ним выполнить {method}

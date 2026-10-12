@@ -180,14 +180,14 @@ const NOT_STANDALONE: Array[String] = [
 	"TileMapCellsWithData", "TileMapRepaintTerrainAround", "TileMapFillRect", "TileMapEraseCircle",
 	"TileMapFloodFill", "TileMapSaveLayer", "TileMapLoadLayer",
 	"GridMapFillBox", "GridMapEraseBox",
-	# Nearest Ancestor Of Type calls the walk up the tree the compiler writes into the file the first
+	# First Parent Of Type calls the walk up the tree the compiler writes into the file the first
 	# time a row asks for it - the same shape as the level-query helpers above. The two Reset rows hold
 	# the slots the compiler fills from the sheet's own declarations, and Distance Travelled reads the
 	# running total the compiler keeps beside the class only when a row reads it: none of the three
 	# exists in a class this harness wraps by hand. All four are gated by borrowed_new_rows_test, which
 	# compiles each through the real compiler, parses the whole emitted file and re-emits it byte for
 	# byte.
-	"NearestAncestorOfType", "ResetVariable", "ResetVariables", "DistanceTravelled",
+	"FirstParentOfType", "ResetVariable", "ResetVariables", "DistanceTravelled",
 	# The three pause-request rows read `_pause_requests`, the shared set the compiler declares beside
 	# the class only when a row reads it. Gated by pause_requests_test, which compiles each through the
 	# real compiler, parses the whole emitted file and re-emits it byte for byte.

@@ -7373,13 +7373,13 @@ Previous Sibling,前の兄弟
 the sibling before [i]{target}[/i],[i]{target}[/i] の前の兄弟
 "Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.",同じ親の下で、このノードのすぐ前のノードを返します - 前のインベントリスロット、前のウェイポイント。最初の前は最後に戻ります。
 Node whose previous sibling to get.,前の兄弟を取得するノード。
-Nearest Ancestor Of Type,最も近い型の祖先
-the nearest [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] の上で最も近い [b]{type}[/b]
+First Parent Of Type,最初の型の親
+the first [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] の上で最初の [b]{type}[/b]
 "Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.",このノードの上にある、指定した型の最も近いノードを返します - 宝箱が置かれた Room、座席が属する Vehicle、アイテムが置かれた Level など。なければ何も返しません。
 Node to search above.,その上を探すノード。
 Node class or class_name to find - the closest match above (null if none).,探すノードクラスまたは class_name - 上で最も近い一致 (なければ null)。
 how far {object} has travelled,{object} が移動した距離
-the nearest {type} above {object},{object} の上で最も近い {type}
+the first {type} above {object},{object} の上で最初の {type}
 the sibling after {object},{object} の次の兄弟
 the sibling before {object},{object} の前の兄弟
 Tell {object} and everything under it to {method},{object} とその下のすべてに {method} を伝える

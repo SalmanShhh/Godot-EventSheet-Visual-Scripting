@@ -7373,13 +7373,13 @@ Previous Sibling,上一个兄弟节点
 the sibling before [i]{target}[/i],[i]{target}[/i] 之前的兄弟节点
 "Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.",返回同一父节点下紧挨在此节点之前的节点 - 上一个物品栏格子、上一个路径点。第一个之前回到最后一个。
 Node whose previous sibling to get.,要获取其上一个兄弟的节点。
-Nearest Ancestor Of Type,最近的该类型祖先
-the nearest [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] 上方最近的 [b]{type}[/b]
+First Parent Of Type,该类型的第一个父节点
+the first [b]{type}[/b] above [i]{target}[/i],[i]{target}[/i] 上方第一个 [b]{type}[/b]
 "Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.",返回此节点上方最近的指定类型节点 - 宝箱所在的 Room、座位所属的 Vehicle、拾取物所在的 Level - 没有则返回空。
 Node to search above.,向上搜索的起点节点。
 Node class or class_name to find - the closest match above (null if none).,要查找的节点类或 class_name - 上方最近的匹配(没有则为 null)。
 how far {object} has travelled,{object} 已移动的距离
-the nearest {type} above {object},{object} 上方最近的 {type}
+the first {type} above {object},{object} 上方第一个 {type}
 the sibling after {object},{object} 之后的兄弟节点
 the sibling before {object},{object} 之前的兄弟节点
 Tell {object} and everything under it to {method},通知 {object} 及其下所有节点执行 {method}

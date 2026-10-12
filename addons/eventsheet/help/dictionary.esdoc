@@ -14,11 +14,11 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `__eventsheets_cells_with_data` | [Cells With Data](ace:Core/TileMapCellsWithData) | Tilemap | Vocabulary |
 | `__eventsheets_erase_tiles_in_circle` | [Erase Tiles In Circle](ace:Core/TileMapEraseCircle) | Tilemap | Vocabulary |
 | `__eventsheets_fill_tile_rect` | [Fill Rect With Tile](ace:Core/TileMapFillRect) | Tilemap | Vocabulary |
+| `__eventsheets_first_parent_of_type` | [First Parent Of Type](ace:Core/FirstParentOfType) | Nodes: Picking | Vocabulary |
 | `__eventsheets_first_solid_cell` | [First Solid Cell Along](ace:Core/TileMapFirstSolidCellAlong) | Tilemap | Vocabulary |
 | `__eventsheets_flood_fill_tiles` | [Flood Fill](ace:Core/TileMapFloodFill) | Tilemap | Vocabulary |
 | `__eventsheets_gridmap_fill_box` | [Fill Box](ace:Core/GridMapFillBox) | GridMap | Vocabulary |
 | `__eventsheets_load_tile_layer` | [Load Layer From File](ace:Core/TileMapLoadLayer) | Tilemap | Vocabulary |
-| `__eventsheets_nearest_ancestor_of_type` | [Nearest Ancestor Of Type](ace:Core/NearestAncestorOfType) | Nodes: Picking | Vocabulary |
 | `__eventsheets_object_at_2d` | [Object Under Cursor (2D)](ace:Core/ObjectUnderCursor2D) | Mouse | Vocabulary |
 | `__eventsheets_save_tile_layer` | [Save Layer To File](ace:Core/TileMapSaveLayer) | Tilemap | Vocabulary |
 | `__eventsheets_scene_is_data_only` | [Scene File Is Data-Only](ace:Core/SceneFileIsDataOnly) | Files | Vocabulary |

@@ -1,4 +1,4 @@
-# Godot EventSheets - the rows new to the vocabulary: Tell Children, Nearest Ancestor Of Type, Next
+# Godot EventSheets - the rows new to the vocabulary: Tell Children, First Parent Of Type, Next
 # Sibling and Previous Sibling, Reset Variable and Reset Variables, and Distance Travelled.
 #
 # Each is filed beside the row it is the sibling or the mirror of, so this test asks five things:
@@ -21,7 +21,7 @@ static func run() -> bool:
 	var ok: bool = _the_rows()
 	ok = _the_rows_beside_them() and ok
 	ok = _telling_children() and ok
-	ok = _the_nearest_ancestor() and ok
+	ok = _the_first_parent() and ok
 	ok = _the_siblings() and ok
 	ok = _putting_variables_back() and ok
 	ok = _the_distance_travelled() and ok
@@ -34,7 +34,7 @@ static func _the_rows() -> bool:
 	var rows: Array = []
 	var expected: Dictionary = {
 		"TellChildren": "action|Tell Children|Groups|method,args,target|{target.}propagate_call({method}{, args})|tell [i]{target}[/i] and everything under it to [b]{method}[/b]",
-		"NearestAncestorOfType": "expression|Nearest Ancestor Of Type|Nodes: Picking|target,type|__eventsheets_nearest_ancestor_of_type({target}, {type})|the nearest [b]{type}[/b] above [i]{target}[/i]",
+		"FirstParentOfType": "expression|First Parent Of Type|Nodes: Picking|target,type|__eventsheets_first_parent_of_type({target}, {type})|the first [b]{type}[/b] above [i]{target}[/i]",
 		"NextSibling": "expression|Next Sibling|Nodes|target|{target}.get_parent().get_child(({target}.get_index() + 1) % {target}.get_parent().get_child_count())|the sibling after [i]{target}[/i]",
 		"PreviousSibling": "expression|Previous Sibling|Nodes|target|{target}.get_parent().get_child(posmod({target}.get_index() - 1, {target}.get_parent().get_child_count()))|the sibling before [i]{target}[/i]",
 		"ResetVariable": "action|Reset Variable|Variables|var_name|{var_name} = {starting_value}|Put {var_name} back to its starting value",
@@ -96,16 +96,16 @@ static func _telling_children() -> bool:
 	return SUPPORT.pins(P, rows)
 
 
-static func _the_nearest_ancestor() -> bool:
+static func _the_first_parent() -> bool:
 	var rows: Array = []
-	var asked: String = _filled("NearestAncestorOfType", {"target": "$Chest", "type": "\"Room\""})
-	rows.append(["the row is one call to the walk", asked, "__eventsheets_nearest_ancestor_of_type($Chest, \"Room\")"])
+	var asked: String = _filled("FirstParentOfType", {"target": "$Chest", "type": "\"Room\""})
+	rows.append(["the row is one call to the walk", asked, "__eventsheets_first_parent_of_type($Chest, \"Room\")"])
 	var source: String = _compiled([_action("SetLocalVar", {"name": "room", "value": asked})])
-	rows.append(["the walk is written into the file", source.contains("func __eventsheets_nearest_ancestor_of_type(from: Node, type: String) -> Node:"), true])
+	rows.append(["the walk is written into the file", source.contains("func __eventsheets_first_parent_of_type(from: Node, type: String) -> Node:"), true])
 	rows.append(["once, though two rows ask", _compiled([_action("SetLocalVar", {"name": "a", "value": asked}),
-		_action("SetLocalVar", {"name": "b", "value": asked})]).count("func __eventsheets_nearest_ancestor_of_type("), 1])
-	rows.append(["a file that asks nothing gains nothing", _compiled([_action("PrintLog", {"message": "\"hi\""})]).contains("__eventsheets_nearest"), false])
-	rows.append(["the file re-emits byte for byte", SUPPORT.reemit(source, "user://borrowed_nearest_ancestor_roundtrip.gd"), source])
+		_action("SetLocalVar", {"name": "b", "value": asked})]).count("func __eventsheets_first_parent_of_type("), 1])
+	rows.append(["a file that asks nothing gains nothing", _compiled([_action("PrintLog", {"message": "\"hi\""})]).contains("__eventsheets_first_parent"), false])
+	rows.append(["the file re-emits byte for byte", SUPPORT.reemit(source, "user://borrowed_first_parent_roundtrip.gd"), source])
 	# The walk itself, run against a tree: an engine class, the closest of several, and a class_name
 	# found up a script's own chain.
 	var walker: GDScript = GDScript.new()
@@ -122,12 +122,12 @@ static func _the_nearest_ancestor() -> bool:
 	var key: Node = _child(annex, "Key", null)
 	if walker.can_instantiate():
 		var walk: Object = walker.new()
-		rows.append(["the nearest Node2D above the chest is the level", walk.call("__eventsheets_nearest_ancestor_of_type", chest, "Node2D") == level, true])
-		rows.append(["the nearest Node is the closest one", walk.call("__eventsheets_nearest_ancestor_of_type", chest, "Node") == box, true])
-		rows.append(["a class_name is found", walk.call("__eventsheets_nearest_ancestor_of_type", chest, "BorrowedTestRoom") == room, true])
-		rows.append(["and found up a script's chain too", walk.call("__eventsheets_nearest_ancestor_of_type", key, "BorrowedTestRoom") == annex, true])
-		rows.append(["a node is never its own ancestor", walk.call("__eventsheets_nearest_ancestor_of_type", box, "Control"), null])
-		rows.append(["nothing of that type above is null", walk.call("__eventsheets_nearest_ancestor_of_type", chest, "Sprite2D"), null])
+		rows.append(["the first Node2D above the chest is the level", walk.call("__eventsheets_first_parent_of_type", chest, "Node2D") == level, true])
+		rows.append(["the first Node above is the closest one", walk.call("__eventsheets_first_parent_of_type", chest, "Node") == box, true])
+		rows.append(["a class_name is found", walk.call("__eventsheets_first_parent_of_type", chest, "BorrowedTestRoom") == room, true])
+		rows.append(["and found up a script's chain too", walk.call("__eventsheets_first_parent_of_type", key, "BorrowedTestRoom") == annex, true])
+		rows.append(["a node is never its own ancestor", walk.call("__eventsheets_first_parent_of_type", box, "Control"), null])
+		rows.append(["nothing of that type above is null", walk.call("__eventsheets_first_parent_of_type", chest, "Sprite2D"), null])
 	level.free()
 	return SUPPORT.pins(P, rows)
 
@@ -249,8 +249,8 @@ static func _the_familiar_names() -> bool:
 	return SUPPORT.pins(P, [
 		["BroadcastMessage", ACEPickerDialog.foreign_query_matches("BroadcastMessage"), {"TellChildren": "BroadcastMessage"}],
 		["Pick children", ACEPickerDialog.foreign_query_matches("pick children"), {"TellChildren": "Pick children"}],
-		["GetComponentInParent", ACEPickerDialog.foreign_query_matches("GetComponentInParent"), {"NearestAncestorOfType": "GetComponentInParent"}],
-		["Pick parent", ACEPickerDialog.foreign_query_matches("pick parent"), {"NearestAncestorOfType": "Pick parent"}],
+		["GetComponentInParent", ACEPickerDialog.foreign_query_matches("GetComponentInParent"), {"FirstParentOfType": "GetComponentInParent"}],
+		["Pick parent", ACEPickerDialog.foreign_query_matches("pick parent"), {"FirstParentOfType": "Pick parent"}],
 		["Get Next Sibling", ACEPickerDialog.foreign_query_matches("get next sibling"), {"NextSibling": "Get Next Sibling"}],
 		["Reset global variable", ACEPickerDialog.foreign_query_matches("reset global variable"), {"ResetVariable": "Reset global variable"}],
 		["Reset global variables", ACEPickerDialog.foreign_query_matches("reset global variables"),
@@ -351,7 +351,7 @@ static func _helper_text(source: String) -> String:
 	var kept: PackedStringArray = PackedStringArray()
 	var inside: bool = false
 	for line: String in source.split("\n"):
-		if line.begins_with("func __eventsheets_nearest_ancestor_of_type("):
+		if line.begins_with("func __eventsheets_first_parent_of_type("):
 			inside = true
 		elif inside and not line.begins_with("\t"):
 			break

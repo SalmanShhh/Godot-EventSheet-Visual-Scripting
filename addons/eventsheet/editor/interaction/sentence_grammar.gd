@@ -1179,7 +1179,7 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var file_read: String = file_read_words(trimmed, context)
 	if not file_read.is_empty():
 		return file_read
-	# Up and across the tree: the nearest node of a type above one, and the sibling either side of it,
+	# Up and across the tree: the first node of a type above one, and the sibling either side of it,
 	# each the sentence of the row that writes it rather than the walk or the index arithmetic.
 	var tree_words: String = hierarchy_expression_words(trimmed, context)
 	if not tree_words.is_empty():
@@ -12031,8 +12031,8 @@ static func _overlap_offset_condition(text: String, context: Dictionary) -> Dict
 	return _sentence(object_name, template, {"offset": [expression_text(offset, context), "value"]})
 
 
-## The three tree expressions read as their rows' own sentences: Nearest Ancestor Of Type's call
-## reads "the nearest Room above Chest", and Next Sibling / Previous Sibling read "the sibling after
+## The three tree expressions read as their rows' own sentences: First Parent Of Type's call
+## reads "the first Room above Chest", and Next Sibling / Previous Sibling read "the sibling after
 ## Slot" / "the sibling before Slot". Each pattern is built from the shipped row's own template, so a
 ## line and its reading cannot drift apart. Distance Travelled's total reads the same way, as "how far
 ## Player has travelled" under the script's own object. Whole-expression only; "" for anything else.
@@ -12042,10 +12042,10 @@ static var _tree_word_patterns: Array = []
 static func hierarchy_expression_words(text: String, context: Dictionary = {}) -> String:
 	if text == SheetCompiler.TRAVELLED_MEMBER:
 		return _fill(translate("how far {object} has travelled"), {"object": script_object(context)})
-	if not (text.contains("__eventsheets_nearest_ancestor_of_type(") or text.contains(".get_index()")):
+	if not (text.contains("__eventsheets_first_parent_of_type(") or text.contains(".get_index()")):
 		return ""
 	if _tree_word_patterns.is_empty():
-		for pair: Array in [["NearestAncestorOfType", "the nearest {type} above {object}"],
+		for pair: Array in [["FirstParentOfType", "the first {type} above {object}"],
 				["NextSibling", "the sibling after {object}"], ["PreviousSibling", "the sibling before {object}"]]:
 			var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", str(pair[0]))
 			if descriptor != null:

@@ -384,7 +384,7 @@ const FULLY_KEYED_ACES: Array[String] = [
 	# the three that compare its far end.
 	"Claim", "Disown", "ClaimedBy", "RootOwnerOf", "IsOwnedBy", "IsMine", "HitIsNotMyOwner",
 	# The rows new to the vocabulary for the tree, for starting over, and for distance.
-	"TellChildren", "NearestAncestorOfType", "NextSibling", "PreviousSibling", "ResetVariable",
+	"TellChildren", "FirstParentOfType", "NextSibling", "PreviousSibling", "ResetVariable",
 	"ResetVariables", "DistanceTravelled",
 	# Pause requests, beside the pause switch.
 	"AskToPause", "StopAskingToPause", "PauseRequestedBy",

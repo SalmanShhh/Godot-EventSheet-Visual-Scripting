@@ -69,9 +69,9 @@ const TILE_SAVE_HELPER: String = "__eventsheets_save_tile_layer"
 const TILE_LOAD_HELPER: String = "__eventsheets_load_tile_layer"
 const GRIDMAP_FILL_BOX_HELPER: String = "__eventsheets_gridmap_fill_box"
 
-## The walk up the tree Nearest Ancestor Of Type calls. Same discipline as the helpers above: one
+## The walk up the tree First Parent Of Type calls. Same discipline as the helpers above: one
 ## definition per file, appended last, skipped outright when the file already defines it.
-const NEAREST_ANCESTOR_HELPER: String = "__eventsheets_nearest_ancestor_of_type"
+const FIRST_PARENT_HELPER: String = "__eventsheets_first_parent_of_type"
 
 ## The running total Distance Travelled reads, and the line that adds to it every physics frame.
 ## Kept beside the class only when a row reads it - see _keep_distance_travelled.
@@ -5027,7 +5027,7 @@ static func _append_level_query_helpers(lines: PackedStringArray,
 		"				grid.set_cell_item(Vector3i(x, y, z), item)"], verbatim_lines)
 
 
-## The walk up the tree that Nearest Ancestor Of Type calls, written into the file the first time a
+## The walk up the tree that First Parent Of Type calls, written into the file the first time a
 ## row asks for it. Every rule the aimed-floor helper documents above holds here word for word.
 ##
 ## The type is matched the way find_children matches it, so this row and First Child Of Type agree
@@ -5035,8 +5035,8 @@ static func _append_level_query_helpers(lines: PackedStringArray,
 ## node's own script chain. The walk starts at the PARENT, so a node is never its own ancestor.
 static func _append_hierarchy_helpers(lines: PackedStringArray,
 		verbatim_lines: PackedStringArray = PackedStringArray()) -> void:
-	_append_shared_helper(lines, NEAREST_ANCESTOR_HELPER,
-		"func %s(from: Node, type: String) -> Node:" % NEAREST_ANCESTOR_HELPER,
+	_append_shared_helper(lines, FIRST_PARENT_HELPER,
+		"func %s(from: Node, type: String) -> Node:" % FIRST_PARENT_HELPER,
 		["	var node: Node = from.get_parent() if from != null else null",
 		"	while node != null:",
 		"		if node.is_class(type):",

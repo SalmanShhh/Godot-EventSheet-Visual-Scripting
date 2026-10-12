@@ -3089,7 +3089,7 @@ static func _top_level_colon(text: String, from: int) -> int:
 
 
 ## Every group slug in a source mapped to the guard its events are wrapped in - its own runs_on
-## answer, or the nearest ancestor's. Filled once per lift, for the same reason the peer variables
+## answer, or the closest enclosing group's. Filled once per lift, for the same reason the peer variables
 ## are: it is one fact about the file being read.
 static var _group_runs_on: Dictionary = {}
 
@@ -3104,7 +3104,7 @@ static func _note_group_guards(source: String) -> void:
 	for slug: String in registry:
 		var walk: String = slug
 		var seen: Dictionary = {}
-		# Both answers ride the same walk up the tree, each taken from the NEAREST ancestor that
+		# Both answers ride the same walk up the tree, each taken from the CLOSEST enclosing group that
 		# gives one - the rule the compiler follows on the way down - and joined in the order the
 		# compiler joins them: who runs it, then which mode.
 		var found: Dictionary = {"runs_on": "", "runs_in": ""}

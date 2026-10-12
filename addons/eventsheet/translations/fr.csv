@@ -7373,13 +7373,13 @@ Previous Sibling,Frère précédent
 the sibling before [i]{target}[/i],le frère avant [i]{target}[/i]
 "Returns the node just before this one under the same parent - the previous inventory slot, the previous waypoint. Before the first one it wraps round to the last.","Renvoie le nœud juste avant celui-ci sous le même parent - l'emplacement d'inventaire précédent, le point de passage précédent. Avant le premier, on revient au dernier."
 Node whose previous sibling to get.,Nœud dont on veut le frère précédent.
-Nearest Ancestor Of Type,Ancêtre le plus proche du type
-the nearest [b]{type}[/b] above [i]{target}[/i],le [b]{type}[/b] le plus proche au-dessus de [i]{target}[/i]
+First Parent Of Type,Premier parent du type
+the first [b]{type}[/b] above [i]{target}[/i],le premier [b]{type}[/b] au-dessus de [i]{target}[/i]
 "Returns the closest node above this one that is of a given type - the Room a chest stands in, the Vehicle a seat belongs to, the Level a pickup was placed in - or nothing when there is none.","Renvoie le nœud le plus proche au-dessus de celui-ci qui est d'un type donné - la Room où se trouve un coffre, le Vehicle auquel appartient un siège, le Level où un objet a été placé - ou rien s'il n'y en a pas."
 Node to search above.,Nœud au-dessus duquel chercher.
 Node class or class_name to find - the closest match above (null if none).,Classe de nœud ou class_name à trouver - la correspondance la plus proche au-dessus (null s'il n'y en a pas).
 how far {object} has travelled,la distance parcourue par {object}
-the nearest {type} above {object},le {type} le plus proche au-dessus de {object}
+the first {type} above {object},le premier {type} au-dessus de {object}
 the sibling after {object},le frère après {object}
 the sibling before {object},le frère avant {object}
 Tell {object} and everything under it to {method},Dire à {object} et à tout ce qui est en dessous de faire {method}
