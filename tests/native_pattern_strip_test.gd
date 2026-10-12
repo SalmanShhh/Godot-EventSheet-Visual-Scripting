@@ -41,6 +41,9 @@ static func run() -> bool:
 	ok = _test_token() and ok
 	ok = _test_lane_chips() and ok
 	ok = _test_strip() and ok
+	# The docks above publish the theme of the sheet they open, and freeing a dock does not take
+	# it back - a later test's fresh sheet would read the Classic Sheet style as its default.
+	EventSheetActiveTheme.publish(null)
 	return ok
 
 
