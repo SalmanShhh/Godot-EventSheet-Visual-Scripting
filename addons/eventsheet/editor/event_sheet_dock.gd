@@ -9,6 +9,8 @@ const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tsc
 ## (a PackedStringArray in project settings), and the provider scan appends them - so a
 ## taught verb survives sessions, unlike the bridge's in-memory registrations.
 const TAUGHT_PROVIDERS_SETTING := "eventsheets/vocabulary/taught_provider_scripts"
+## The help strip's door, when what it shows is the pattern an event was read as rather than a finding.
+const PATTERN_HINT_FAMILY := "pattern_hint"
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2
 const CONDITION_MENU_REPLACE := 3
@@ -7706,10 +7708,16 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 		# Nothing is wrong with this row - but the verb in it may have a newer spelling, which is a
 		# different kind of thing to say and is said differently: muted, with no door and no colour,
 		# because the row is not a problem and neither is leaving it exactly as it is.
-		_show_successor_hint(row_data)
+		if not _show_successor_hint(row_data):
+			_show_pattern_hint(row_data)
 		return
 	_row_help_label.text = row_data.attention_note
 	_row_help_label.tooltip_text = _row_help_label.text
+	# A finding outranks the pattern line, but under a theme that moved the pattern out of the lane
+	# the strip's hover still teaches it, so selecting the event never loses what the chip said.
+	var pattern_line: String = _pattern_hint_text(row_data)
+	if not pattern_line.is_empty():
+		_row_help_label.tooltip_text = "%s\n\n%s" % [_row_help_label.text, pattern_line]
 	# The colour is read from the theme every time the strip is shown, not once when it was built: a
 	# theme reloaded mid-session would otherwise leave it wearing the old theme's warning colour.
 	_row_help_label.modulate = EventSheetActiveTheme.chrome().object_bar_warning_color
@@ -7734,13 +7742,46 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 ## the strip's ordinary muted colour rather than the warning one, because a row written in the older
 ## spelling is not a warning. A row with a finding never reaches here: something being wrong outranks
 ## something being older.
-func _show_successor_hint(row_data: EventRowData) -> void:
+func _show_successor_hint(row_data: EventRowData) -> bool:
 	if row_data.successor_hint.is_empty():
-		return
+		return false
 	_row_help_label.text = row_data.successor_hint
 	_row_help_label.tooltip_text = _row_help_label.text
 	_row_help_label.modulate = EventSheetActiveTheme.reading().muted_text_color
 	_row_help_label.visible = true
+	return true
+
+
+## The pattern an event was read as, under a theme that keeps the ⟡ chip out of the conditions lane
+## (pattern_in_help_strip): "⟡ Making an object and putting it somewhere - why", muted like the
+## newer-spelling hint because it teaches rather than warns, with the chip's own door - its page in
+## the Manual. Only when nothing about the row is wrong or older, and only with the Patterns lens on.
+func _show_pattern_hint(row_data: EventRowData) -> void:
+	var said: Dictionary = _pattern_hint(row_data)
+	if said.is_empty():
+		return
+	_row_help_label.text = str(said.get("text", ""))
+	_row_help_label.tooltip_text = _row_help_label.text
+	_row_help_label.modulate = EventSheetActiveTheme.reading().muted_text_color
+	_row_help_label.visible = true
+	_row_help_finding = {"family": PATTERN_HINT_FAMILY, "pattern": str(said.get("pattern", ""))}
+	_row_help_button.text = EventSheetL10n.translate("Open in the Manual")
+	_row_help_button.visible = true
+
+
+## The pattern line for a selected event, or {} when the theme keeps the chip in the lane, the
+## Patterns lens is off, or the event owns no pattern claim.
+func _pattern_hint(row_data: EventRowData) -> Dictionary:
+	if _viewport == null or row_data == null or not (row_data.source_resource is EventRow) 			or not _viewport.patterns_lens_enabled():
+		return {}
+	var lanes: EventSheetEventStyle = _viewport._get_event_style()
+	if lanes == null or not lanes.pattern_in_help_strip:
+		return {}
+	return ViewportTooltipHelper.pattern_strip_line(_current_sheet, (row_data.source_resource as EventRow).event_uid)
+
+
+func _pattern_hint_text(row_data: EventRowData) -> String:
+	return str(_pattern_hint(row_data).get("text", ""))
 
 
 ## The help strip's door was clicked. The finding's family tag says whose door it is: a collision
@@ -7749,6 +7790,9 @@ func _show_successor_hint(row_data: EventRowData) -> void:
 func apply_selected_row_fix() -> void:
 	var finding: Dictionary = _row_help_finding
 	if finding.is_empty():
+		return
+	if str(finding.get("family", "")) == PATTERN_HINT_FAMILY:
+		EventSheetPatternManual.open_page(str(finding.get("pattern", "")))
 		return
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
 		apply_collision_fix(finding)

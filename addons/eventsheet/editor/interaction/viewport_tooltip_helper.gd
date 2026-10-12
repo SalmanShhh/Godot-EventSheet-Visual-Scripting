@@ -216,6 +216,31 @@ static func pattern_chip_tooltip(pattern: String) -> String:
 	return "%s\n%s" % [why, EventSheetL10n.translate("Open in the Manual")]
 
 
+## What the help strip says about the pattern an event was read as, for a theme that keeps the ⟡ chip
+## out of the conditions lane (pattern_in_help_strip): {"pattern": id, "text": "⟡ Name - why"} for the
+## FIRST marked claim on the event - the same one the chip would have named - or {} when it owns none.
+## Read out of EventSheetPatternFacts like the chip, so the strip and the chip can never disagree.
+static func pattern_strip_line(sheet: EventSheetResource, event_uid: String) -> Dictionary:
+	if sheet == null or event_uid.is_empty():
+		return {}
+	EventSheetViewportReadingRows.ensure_claims(sheet)
+	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_uid):
+		var pattern: String = str((claim as Dictionary).get("pattern", ""))
+		if not EventSheetPatternVocabulary.is_marked(pattern):
+			continue
+		var words: String = EventSheetPatternVocabulary.words(pattern)
+		if words.is_empty():
+			words = str((claim as Dictionary).get("words", ""))
+		if words.is_empty():
+			continue
+		var text: String = "%s %s" % [ViewportRowBuilder.PATTERN_CHIP_MARK, EventSheetL10n.translate(words)]
+		var why: String = EventSheetPatternVocabulary.why(pattern)
+		if not why.is_empty():
+			text = "%s - %s" % [text, why]
+		return {"pattern": pattern, "text": text}
+	return {}
+
+
 ## The EVIDENCE line a pattern-read row owes its reader: which pattern it was read as, and the
 ## exact source lines that were the grounds for saying so. A pattern reading is a claim spanning
 ## several lines, so unlike every other reading in this program it cannot be checked by looking at

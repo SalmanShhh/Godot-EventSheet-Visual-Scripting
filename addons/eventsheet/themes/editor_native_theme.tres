@@ -28,6 +28,7 @@ group_head_two_line = true
 inspector_variable_rows = true
 hide_compiler_variables = true
 fold_compiler_helpers = true
+pattern_in_help_strip = true
 variable_row_cards = true
 inspector_class_head = true
 add_lines_on_hover = true

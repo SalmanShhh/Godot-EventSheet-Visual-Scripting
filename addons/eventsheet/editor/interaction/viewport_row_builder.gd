@@ -14179,6 +14179,11 @@ func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	if event_row == null or not _viewport.patterns_lens_enabled():
 		return spans
+	# A theme whose conditions lane holds conditions only says the pattern in the help strip instead,
+	# once the event is selected (ViewportTooltipHelper.pattern_strip_line).
+	var lane_style: EventSheetEventStyle = _viewport._get_event_style()
+	if lane_style != null and lane_style.pattern_in_help_strip:
+		return spans
 	var sheet: EventSheetResource = _viewport._sheet
 	if sheet == null or event_row.event_uid.is_empty():
 		return spans

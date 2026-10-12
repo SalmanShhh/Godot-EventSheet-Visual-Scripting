@@ -148,6 +148,11 @@ extends Resource
 ## away, unless it is all the event does. Reading only: every line still compiles and saves. Off
 ## names every local and lists every row as the file writes it.
 @export var fold_compiler_helpers: bool = false
+## The pattern an event was read as ("Making an object and putting it somewhere") stops riding in the
+## conditions lane as a chip. Selecting the event says it in the help strip instead - the pattern's
+## name and its one-line why, muted, with an Open in the Manual door - whenever nothing about the row
+## is wrong. Drawing only. Off keeps the chip at the end of the event's first condition line.
+@export var pattern_in_help_strip: bool = false
 ## Each Inspector-style variable row as its own card: the event card's fill and one-pixel edge with
 ## its corner radius, 28 px tall with a 6 px gap to the next, in place of the flat variable wash and
 ## its left rule. Drawing only - the row's words do not move. Off keeps the flat washed row.

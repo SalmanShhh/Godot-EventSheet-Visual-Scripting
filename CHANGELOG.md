@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed: Editor Native says an event's pattern in the help strip, not the conditions lane
+
+- **The conditions lane holds conditions only.** A theme can take the ⟡ chip that names the pattern
+  an event was read as ("Making an object and putting it somewhere") out of the conditions lane
+  (`pattern_in_help_strip`, on in Editor Native). Selecting the event says it in the help strip
+  instead, muted like the newer-spelling hint, with an Open in the Manual door - the page the chip's
+  click opened. A finding on the same event still outranks it, and then the strip's hover carries
+  the pattern under the finding's sentence. Every other theme states the token off and keeps the chip
+  exactly where it was. Drawing only: the default-theme reading is byte-identical.
+
 ### Changed: Editor Native's two lanes read blue and green on any editor
 
 - **The conditions lane is blue and the actions lane green, whatever grey the editor is.** The two
