@@ -235,6 +235,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Video": "VideoStreamPlayer",
 	"Animation": "AnimationPlayer",
 	"Mesh": "MeshInstance3D",
+	# Material is a class with no icon in the editor theme, so its derived name draws nothing. Every
+	# word these rows say is a BaseMaterial3D one, whose everyday face is the standard material.
+	"Material": "StandardMaterial3D",
 	"Gradients & Curves": "Gradient",
 	"Audio Server": "AudioBusLayout",
 	"Physics Server": "PhysicsMaterial",
@@ -272,11 +275,16 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"General Expressions": "Variant",
 	"Groups": "Groups",
 	"Helpers": "GDScript",
-	"Input": "InputEvent",
-	# The questions asked of the ONE event a handler was handed. The engine's own class for that
-	# event is the picture, exactly as it is for the polled Input rows above - the difference between
-	# the two sections is which moment they ask about, not what they are about.
-	"Input Event": "InputEvent",
+	# The editor theme draws no InputEvent icon of its own (only its subclasses), so the derived
+	# class name would leave the header blank. The keyboard is the editor's own picture of input.
+	"Input": "Keyboard",
+	# The questions asked of the ONE event a handler was handed. It wears the same picture as the
+	# polled Input rows above - the difference between the two sections is which moment they ask
+	# about, not what they are about.
+	"Input Event": "Keyboard",
+	# JSON is a class, but one the editor theme has no icon for. These rows cross the text boundary
+	# (a value to JSON text and back), so the editor's own text-file mark is the picture.
+	"JSON": "TextFile",
 	# The engine talking to a node through its notification callback. Nothing derivable: a
 	# notification is a number rather than a class, and the editor's own "something is telling you
 	# this" mark is the nearest picture there is.

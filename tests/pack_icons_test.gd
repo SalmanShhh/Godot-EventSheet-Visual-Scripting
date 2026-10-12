@@ -10,10 +10,155 @@ class_name PackIconsTest
 extends RefCounted
 
 
+const SUPPORT := preload("res://tests/support.gd")
 const ADDONS_DIR := "res://eventsheet_addons"
 
 # Categories deliberately left without a module icon (nothing in the editor theme fits yet).
 const UNMAPPED_CATEGORIES := ["Performance"]
+
+## Every live builtin category and the EditorIcons name it resolves to, each one CONFIRMED to exist
+## in a running editor's theme by tools/check_section_icons.gd. This suite is headless and cannot ask
+## the theme, so the verified answer is pinned here instead: renaming an override, or a derivation
+## starting to land somewhere else, changes a value below even when the set of names does not. A new
+## category belongs here only after that tool has run green in an editor with it present. Four of
+## the names below are overrides precisely because their derived class has NO editor icon: Input and
+## Input Event (InputEvent), JSON and Material - so do not "simplify" them back into derivation.
+const VERIFIED_SECTION_ICONS: Dictionary = {
+	"3D: Move & Turn": "Node3D",
+	"3D: Place": "Node3D",
+	"3D: See": "Node3D",
+	"AJAX": "HTTPRequest",
+	"Accessibility": "GuiRadioCheckedDisabled",
+	"Animation": "AnimationPlayer",
+	"Audio": "AudioStreamPlayer",
+	"Audio Server": "AudioBusLayout",
+	"Behavior": "Node",
+	"Blend Modes": "CanvasItem",
+	"Boss": "GuiRadioUnchecked",
+	"Browser": "ExternalLink",
+	"Bullet": "CharacterBody2D",
+	"Camera": "Camera3D",
+	"Canvas": "Node2D",
+	"Collisions": "CollisionShape2D",
+	"Color": "Color",
+	"Compare: Numbers": "GuiChecked",
+	"Compare: Objects": "GuiChecked",
+	"Compare: Text": "GuiChecked",
+	"Compare: Types": "GuiChecked",
+	"Compare: Vectors": "GuiChecked",
+	"Crowd": "Node2D",
+	"Debug": "NodeWarning",
+	"Destroy": "Remove",
+	"Display": "Window",
+	"Drawing": "CanvasItem",
+	"Editor Tools": "Tools",
+	"Editor Tools: Command tool": "Tools",
+	"Editor Tools: Files & folders": "Tools",
+	"Editor Tools: Import & export": "Tools",
+	"Editor Tools: Menus": "Tools",
+	"Editor Tools: Panels & menus": "Tools",
+	"Editor Tools: Plugin lifecycle": "Tools",
+	"Editor Tools: Project & preferences": "Tools",
+	"Editor Tools: Properties bar": "Tools",
+	"Editor Tools: Undo history": "Tools",
+	"Effects": "Shader",
+	"Enemies 3D": "CharacterBody3D",
+	"Environment": "Environment",
+	"Facing": "Sprite3D",
+	"Files": "File",
+	"Files: Archives": "File",
+	"Files: Directories": "Folder",
+	"Files: Tables": "File",
+	"Follow a Path": "PathFollow2D",
+	"Functions": "MemberMethod",
+	"Game Options": "Tools",
+	"Game State": "GraphNode",
+	"Game Window": "Window",
+	"Gamepad": "InputEventJoypadButton",
+	"General Actions": "Play",
+	"General Conditions": "GuiChecked",
+	"General Expressions": "Variant",
+	"Gradients & Curves": "Gradient",
+	"GridMap": "GridMap",
+	"Groups": "Groups",
+	"Helpers": "GDScript",
+	"Input": "Keyboard",
+	"Input Event": "Keyboard",
+	"InputMap": "InputEventAction",
+	"JSON": "TextFile",
+	"Joints": "PinJoint2D",
+	"Juice": "Node2D",
+	"Keyboard": "InputEventKey",
+	"Keys & Doors": "Key",
+	"Layers": "CanvasLayer",
+	"Layout Edges": "Node2D",
+	"Lighting": "PointLight2D",
+	"Loops": "Loop",
+	"Material": "StandardMaterial3D",
+	"Math & Random": "RandomNumberGenerator",
+	"Mesh": "MeshInstance3D",
+	"Metadata": "Object",
+	"Meters": "ProgressBar",
+	"Missions": "Timer",
+	"Mouse": "InputEventMouseButton",
+	"Move To": "Node2D",
+	"Movement": "Path2D",
+	"Multiplayer": "Signals",
+	"Native 3D": "Node3D",
+	"Nodes": "Node",
+	"Nodes: Activation": "Node",
+	"Nodes: Hierarchy": "Node",
+	"Nodes: Picking": "Node",
+	"Notifications": "NodeInfo",
+	"Object State": "GraphNode",
+	"Overlap 2D": "Area2D",
+	"Overlap 3D": "Area3D",
+	"Ownership": "Object",
+	"Particles": "GPUParticles2D",
+	"Physics": "RigidBody2D",
+	"Physics Server": "PhysicsMaterial",
+	"Pickups": "Area3D",
+	"Pin": "Node2D",
+	"Platform": "Godot",
+	"Procedural": "FastNoiseLite",
+	"Raycast 2D": "RayCast2D",
+	"Raycast 3D": "RayCast3D",
+	"Rendering": "Environment",
+	"Run Context": "PlayScene",
+	"Scene": "PackedScene",
+	"Sequencer": "Node",
+	"Signals / Scene / Input": "Signals",
+	"Skeleton": "Bone2D",
+	"Spawn": "Node3D",
+	"Stealth": "AudioStreamPlayer",
+	"Systems": "Groups",
+	"Testing": "GuiChecked",
+	"Text": "String",
+	"Text: RegEx": "String",
+	"Tilemap": "TileMap",
+	"Time": "Timer",
+	"Timed Input": "Timer",
+	"Touch": "InputEventScreenTouch",
+	"Translation": "Translation",
+	"Translation: Voice": "AudioStreamPlayer",
+	"Tween": "Tween",
+	"UI": "Control",
+	"Utility: Debug": "Tools",
+	"Utility: Nodes": "Tools",
+	"Utility: Settings": "Tools",
+	"Utility: Time": "Tools",
+	"Utility: Window": "Tools",
+	"Variables": "MemberProperty",
+	"Variables: Array": "Array",
+	"Variables: Dictionary": "Dictionary",
+	"Variables: String": "String",
+	"Variables: Vector": "Vector2",
+	"Vibration": "InputEventJoypadMotion",
+	"Video": "VideoStreamPlayer",
+	"Views": "SubViewport",
+	"Weapons 3D": "RayCast3D",
+	"World-space UI": "SubViewport",
+}
 
 
 static func run() -> bool:
@@ -65,6 +210,21 @@ static func run() -> bool:
 			continue
 		var icon_name: String = ACEPickerDialog.category_icon_name(category)
 		ok = _check(ok, not icon_name.is_empty(), "builtin category \"%s\" maps to an editor icon" % category)
+
+	# ---- and to the very name an editor confirmed it carries ----
+	ok = SUPPORT.pin_table("pack_icons_test", VERIFIED_SECTION_ICONS,
+		func(category: String) -> String: return ACEPickerDialog.category_icon_name(category)) and ok
+	# The live list, both shapes included (the registry's builtins, which is what the picker and the
+	# editor-side tool read), must hold nothing the table has not been verified for.
+	var unverified: Array[String] = []
+	for live_entry: Variant in ACERegistry.get_builtin_descriptors():
+		var live_category: String = str(live_entry.get("category"))
+		if live_category.is_empty() or live_category in UNMAPPED_CATEGORIES:
+			continue
+		if not VERIFIED_SECTION_ICONS.has(live_category) and not unverified.has(live_category):
+			unverified.append(live_category)
+	ok = SUPPORT.pin_value("pack_icons_test",
+		"live categories not yet verified in an editor (run tools/check_section_icons.gd)", unverified, []) and ok
 
 	# ---- the mapping's own semantics: explicit entry, derivation, inheritance, unknown -> "" ----
 	# 1. An explicit entry wins, and is how an abstract category (no class of that name, no host

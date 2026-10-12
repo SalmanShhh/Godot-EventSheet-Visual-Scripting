@@ -13,6 +13,15 @@
   figure verdicts have none drawable or fewer than half the drawable count already committed. A bake
   once rewrote every figure as "would not reproduce" while the live check disagreed.
 
+### Fixed: four picker sections that asked for an icon the editor does not have
+
+- The Input, Input Event, JSON and Material sections of the picker had headers with no icon,
+  because the icon each one asked for (InputEvent, JSON, Material) does not exist in the editor
+  theme. They now show the keyboard, text-file and standard-material icons.
+- `tools/check_section_icons.gd`, run in a real editor, asks the editor theme for every builtin
+  section's icon and names any that is missing (`section icons: N checked, M missing`). The test
+  suite now records the icon name each section was checked against, so renaming one is caught.
+
 ### Changed: Editor Native reads an enum value as written and ends the sheet on its last row
 
 - An enum variable's value reads as its choice spelled the way the file spells it: `GateState.CLOSED`
