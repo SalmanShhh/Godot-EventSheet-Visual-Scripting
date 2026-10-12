@@ -922,7 +922,8 @@ func _class_head_spans(sheet: EventSheetResource, extends_band: Dictionary) -> A
 		"head_band": EventSheetHeadBands.BAND_NAME, "line_index": 0}
 	# Only a node runs a script it is attached to: a Resource or RefCounted script is made and held
 	# by other code, so its head says what it is and no more.
-	var script_note: String = EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.") 		if host_is_node(str(sheet.host_class)) else EventSheetL10n.translate("What this file is: a script.")
+	var script_note: String = EventSheetL10n.translate("What this file is: a script, run by the node it is attached to.") \
+		if host_is_node(str(sheet.host_class)) else EventSheetL10n.translate("What this file is: a script.")
 	# A quiet class head has no "change…" word, so the kind and "· extends" ARE the gesture: a click
 	# changes what kind of script this is, as their hover says.
 	var quiet_head: bool = event_style.inspector_class_head
@@ -13633,7 +13634,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# A walk over a family is that family's row: Enemy in the object column, as the picking
 		# form reads in every event sheet.
 		if loop_object.is_empty():
-			var walked_group: String = pick.collection_value.strip_edges() 				if pick.collection_kind == PickFilter.CollectionKind.GROUP 				else EventSheetViewportReadingRows.family_group_in_call(_pick_collection_text(pick))
+			var walked_group: String = pick.collection_value.strip_edges() \
+				if pick.collection_kind == PickFilter.CollectionKind.GROUP \
+				else EventSheetViewportReadingRows.family_group_in_call(_pick_collection_text(pick))
 			if walked_group.begins_with("family_"):
 				loop_object = EventSheetViewportReadingRows.family_label(walked_group)
 		spans.append(

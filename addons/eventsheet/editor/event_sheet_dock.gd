@@ -7778,7 +7778,8 @@ func _show_pattern_hint(row_data: EventRowData) -> void:
 ## The pattern line for a selected event, or {} when the theme keeps the chip in the lane, the
 ## Patterns lens is off, or the event owns no pattern claim.
 func _pattern_hint(row_data: EventRowData) -> Dictionary:
-	if _viewport == null or row_data == null or not (row_data.source_resource is EventRow) 			or not _viewport.patterns_lens_enabled():
+	if _viewport == null or row_data == null or not (row_data.source_resource is EventRow) \
+			or not _viewport.patterns_lens_enabled():
 		return {}
 	var lanes: EventSheetEventStyle = _viewport._get_event_style()
 	if lanes == null or not lanes.pattern_in_help_strip:

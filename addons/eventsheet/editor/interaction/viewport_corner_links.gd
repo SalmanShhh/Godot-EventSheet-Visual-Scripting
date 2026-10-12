@@ -158,7 +158,8 @@ func draw(font: Font, font_size: int, top_offset: float) -> void:
 ## Add Event is on its toolbar, and + Add… is the right-click on empty space it always was. Static
 ## and pure over the viewport, so the answer is one line in both the draw pass and the reserved band.
 static func shown_on(viewport: Control) -> bool:
-	return viewport != null and not viewport.figure_mode and not viewport.is_reading_mode() 		and not viewport.workspace_bands_folded()
+	return viewport != null and not viewport.figure_mode and not viewport.is_reading_mode() \
+		and not viewport.workspace_bands_folded()
 
 
 ## The id of the link under `position` (logical canvas space), or "" when the point is on neither.

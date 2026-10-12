@@ -169,7 +169,8 @@ static func _any_band_folds(rows: Array) -> bool:
 ## True when every head band is inert (null source), which is what keeps Delete off the prelude.
 static func _bands_are_inert(rows: Array) -> bool:
 	for row: Variant in rows:
-		if row is EventRowData and (row as EventRowData).row_uid.begins_with("sheet_head_") 				and (row as EventRowData).source_resource != null:
+		if row is EventRowData and (row as EventRowData).row_uid.begins_with("sheet_head_") \
+				and (row as EventRowData).source_resource != null:
 			return false
 	return true
 

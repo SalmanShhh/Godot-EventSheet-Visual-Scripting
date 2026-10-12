@@ -83,7 +83,8 @@ func _open_jump_bar() -> void:
 ## The head bar's own fold and the Jump settings bar's, opened wherever they sit in the tree.
 func _open_folds(rows: Array) -> void:
 	for row_data: EventRowData in rows:
-		if row_data.row_uid.begins_with("sheet_head_bar_") 				or row_data.row_uid.begins_with("pack_settings_Jump"):
+		if row_data.row_uid.begins_with("sheet_head_bar_") \
+				or row_data.row_uid.begins_with("pack_settings_Jump"):
 			_viewport._fold_state[row_data.row_uid] = false
 		_open_folds(row_data.children)
 

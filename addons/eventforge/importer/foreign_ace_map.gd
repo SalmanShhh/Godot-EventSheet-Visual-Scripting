@@ -525,7 +525,8 @@ static func _familiar_interpolation(text: String) -> String:
 	while index < text.length():
 		var opens: bool = text[index] == "$" and index + 1 < text.length() and text[index + 1] == "\""
 		var previous: String = text[index - 1] if index > 0 else ""
-		if not opens or previous == "_" or previous.is_valid_identifier() or previous.is_valid_int() 				or _in_text_literal(text, index):
+		if not opens or previous == "_" or previous.is_valid_identifier() or previous.is_valid_int() \
+				or _in_text_literal(text, index):
 			out += text[index]
 			index += 1
 			continue

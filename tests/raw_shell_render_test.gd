@@ -136,7 +136,8 @@ static func run() -> bool:
 	var shell_row: EventRowData = null
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
-		if row_data != null and row_data.source_resource is RawCodeRow 				and row_data.spans.size() > 0 and str(row_data.spans[0].text) == "Action":
+		if row_data != null and row_data.source_resource is RawCodeRow \
+				and row_data.spans.size() > 0 and str(row_data.spans[0].text) == "Action":
 			shell_row = row_data
 	ok = _check("the unliftable verb renders as a shell", shell_row != null, true) and ok
 	var has_name: bool = false

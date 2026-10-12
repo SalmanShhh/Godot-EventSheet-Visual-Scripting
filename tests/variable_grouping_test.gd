@@ -217,7 +217,8 @@ static func _parent_strip_of(view: EventSheetViewport, var_name: String) -> Stri
 		if row_data == null or not row_data.row_uid.begins_with("variable_tree_group_"):
 			continue
 		for child: EventRowData in row_data.children:
-			if child.source_resource is LocalVariable 					and (child.source_resource as LocalVariable).name == var_name:
+			if child.source_resource is LocalVariable \
+					and (child.source_resource as LocalVariable).name == var_name:
 				return _texts(row_data)
 	return ""
 

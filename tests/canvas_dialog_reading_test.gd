@@ -239,7 +239,8 @@ static func _setup_run_rows() -> bool:
 		if row_data.row_uid.begins_with("local_declaration_") and not row_data.row_uid.contains("_setup"):
 			local_row = row_data
 		for span: SemanticSpan in row_data.spans:
-			if str(span.metadata.get("kind", "")) == "action" 					and span.text.contains("Wire On Confirmed"):
+			if str(span.metadata.get("kind", "")) == "action" \
+					and span.text.contains("Wire On Confirmed"):
 				event_lines.append(span.text.strip_edges())
 	ok = _check("the dialog's declaration is a Local row", local_row != null, true) and ok
 	if local_row != null:

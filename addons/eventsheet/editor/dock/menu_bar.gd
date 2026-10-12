@@ -1408,7 +1408,8 @@ func _apply_toolbar_expansion() -> void:
 		# The word-led strip rests without the play button; the full strip still shows it.
 		# The word-led strip rests without the play button and the chevron; the full strip still shows
 		# both, and View > Full toolbar is the door to it.
-		var resting: bool = _resting_controls.has(control) 			and not (_text_labels and (control == _play_slot or control == _expander))
+		var resting: bool = _resting_controls.has(control) \
+			and not (_text_labels and (control == _play_slot or control == _expander))
 		control.visible = (_full_toolbar or resting
 			or (_text_labels and text_extras.has(control)))
 	if _find_spacer != null:

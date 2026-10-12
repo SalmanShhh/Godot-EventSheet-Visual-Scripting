@@ -329,7 +329,8 @@ func _process(_delta: float) -> void:
 	_start_one_request()
 	_collect_finished()
 	_announce_idle_when_settled()
-	if not _streaming and _requested.is_empty() 			and (_folder.is_empty() or (_asked.is_empty() and _wanted.is_empty())):
+	if not _streaming and _requested.is_empty() \
+			and (_folder.is_empty() or (_asked.is_empty() and _wanted.is_empty())):
 		# Nothing to follow and nothing in flight: park the tick rather than spend a frame
 		# every frame asking an empty question. Cells asked for before a folder was named park
 		# it too - they are waiting on a row, not on a frame, and Stream Chunks Around starts

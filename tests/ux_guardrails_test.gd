@@ -174,7 +174,8 @@ static func run() -> bool:
 ## The span of a row carrying `edit_kind`, or null. Metadata, never position: rows gain spans.
 static func _span_with_edit_kind(row_data: EventRowData, edit_kind: String) -> SemanticSpan:
 	for span: SemanticSpan in row_data.spans:
-		if span != null and span.metadata is Dictionary 				and str((span.metadata as Dictionary).get("edit_kind", "")) == edit_kind:
+		if span != null and span.metadata is Dictionary \
+				and str((span.metadata as Dictionary).get("edit_kind", "")) == edit_kind:
 			return span
 	return null
 

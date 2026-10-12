@@ -3072,7 +3072,8 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	root_rows = _row_builder.expand_ternary_rows(root_rows)
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet - not on a read-only
 	# preview, where it is an offer the view cannot honour.
-	if add_event_footer_wanted(sheet != null and not sheet.events.is_empty()) 			and not (sheet != null and sheet.read_only):
+	if add_event_footer_wanted(sheet != null and not sheet.events.is_empty()) \
+			and not (sheet != null and sheet.read_only):
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
 	return root_rows
 

@@ -223,7 +223,8 @@ static func ink_on(fill: Color) -> Color:
 ## nothing more is filled.
 static func selected_slot_rect(gutter_rect: Rect2, row_rect: Rect2, indent: int, indent_width: int,
 		has_icon: bool, continuous: bool = false) -> Rect2:
-	var slot_x: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING 		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width)
+	var slot_x: float = row_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING \
+		+ float(EventSheetPalette.GUTTER_WIDTH) + float(indent * indent_width)
 	if indent <= 0 or continuous:
 		return Rect2(gutter_rect.end.x, row_rect.position.y, slot_x + TRIGGER_ICON_SLOT - gutter_rect.end.x,
 			row_rect.size.y)

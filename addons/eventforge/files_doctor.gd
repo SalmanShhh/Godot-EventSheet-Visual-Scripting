@@ -320,7 +320,8 @@ static func _write_path_literals(line: String) -> PackedStringArray:
 		var at: int = line.find(call_text)
 		while at >= 0:
 			var arguments: String = _arguments_after(line, at + call_text.length())
-			if not call_text.begins_with(EventForgeFilePlaces.OPEN_CALL_PREFIX) 					or _opens_for_writing(arguments):
+			if not call_text.begins_with(EventForgeFilePlaces.OPEN_CALL_PREFIX) \
+					or _opens_for_writing(arguments):
 				for literal: String in _quoted_literals(arguments):
 					found.append(literal)
 			at = line.find(call_text, at + call_text.length())
