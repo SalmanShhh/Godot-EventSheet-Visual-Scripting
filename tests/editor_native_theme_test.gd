@@ -42,6 +42,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_starter_is_the_rule_at_its_reference() and ok
 	ok = _test_derived_greys_for_a_dark_and_a_light_editor() and ok
+	ok = _test_lanes_read_blue_and_green_on_any_editor() and ok
 	ok = _test_following_keeps_what_a_designer_changed() and ok
 	ok = _test_clear_means_as_before() and ok
 	return ok
@@ -91,11 +92,11 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 		EventSheetEditorThemeDeriver.NATIVE_LIGHT_REFERENCE_BASE).get_event_style()
 	rows.append(["dark reference: canvas", dark.sheet_background_color.to_html(false), "262b33"])
 	rows.append(["dark reference: card", dark.row_background_color.to_html(false), "2e343e"])
-	rows.append(["dark reference: condition lane", dark.condition_lane_color.to_html(false), "2f3846"])
+	rows.append(["dark reference: condition lane", dark.condition_lane_color.to_html(false), "353e48"])
 	rows.append(["dark reference: comment note", dark.comment_row_background_color.to_html(false), "4a4630"])
 	rows.append(["light reference: canvas", light.sheet_background_color.to_html(false), "e9ebee"])
 	rows.append(["light reference: card", light.row_background_color.to_html(false), "ffffff"])
-	rows.append(["light reference: condition lane", light.condition_lane_color.to_html(false), "f0f5fb"])
+	rows.append(["light reference: condition lane", light.condition_lane_color.to_html(false), "ebf2fa"])
 	rows.append(["light reference: comment note", light.comment_row_background_color.to_html(false), "fff6c7"])
 	# A neutral dark editor (the grey Modern skin) and a bright light one: the greys move with the
 	# editor, the colours do not.
@@ -120,6 +121,38 @@ static func _test_derived_greys_for_a_dark_and_a_light_editor() -> bool:
 		bright_light.get_reading_style().plain_chip_background_color.get_luminance() > 0.5, true])
 	rows.append(["a dark editor gets dark reading chips",
 		neutral_dark.get_reading_style().plain_chip_background_color.get_luminance() > 0.5, false])
+	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## The condition lane is visibly blue and the action lane visibly green whatever grey the editor is -
+## the reference base, the neutral dark and light skins, a tinted base - and the sentence text keeps
+## at least 4.5:1 against both. "Blue" is the blue channel leading by at least 12 of 255 levels over
+## red, "green" the green channel leading by as much over both others.
+static func _test_lanes_read_blue_and_green_on_any_editor() -> bool:
+	var rows: Array = []
+	var bases: Array = ["363d4a", "252525", "3a3a3a", "1a2b1a", "4a2040", "e0e2e7", "f5f5f5", "c8c8c8"]
+	for base_html: String in bases:
+		var style: EventSheetEditorStyle = EventSheetEditorThemeDeriver.native_style(Color(base_html))
+		var lanes: EventSheetEventStyle = style.get_event_style()
+		var cond: Color = lanes.condition_lane_color
+		var act: Color = lanes.action_lane_color
+		var text: Color = style.get_condition_style().text_color
+		rows.append(["a #%s editor: the condition lane is blue, the action lane green" % base_html,
+			[cond.b8 - cond.r8 >= 12, act.g8 - act.r8 >= 12, act.g8 - act.b8 >= 12],
+			[true, true, true]])
+		rows.append(["a #%s editor: the text keeps 4.5:1 on both lanes" % base_html,
+			[EventSheetEditorThemeDeriver.contrast_ratio(text, cond) >= 4.5,
+				EventSheetEditorThemeDeriver.contrast_ratio(text, act) >= 4.5], [true, true]])
+		rows.append(["a #%s editor: a hovered cell keeps its lane's hue" % base_html,
+			[style.get_condition_style().chip_hover_color.b8 > style.get_condition_style().chip_hover_color.g8,
+				style.get_action_style().chip_hover_color.g8 > style.get_action_style().chip_hover_color.b8],
+			[true, true]])
+	rows.append(["the neutral dark skin's lanes", [EventSheetEditorThemeDeriver.native_style(Color("#252525"))
+		.get_event_style().condition_lane_color.to_html(false), EventSheetEditorThemeDeriver.native_style(
+		Color("#252525")).get_event_style().action_lane_color.to_html(false)], ["1b242e", "1b2e1e"]])
+	rows.append(["the light reference's action lane", EventSheetEditorThemeDeriver.native_style(
+		EventSheetEditorThemeDeriver.NATIVE_LIGHT_REFERENCE_BASE).get_event_style().action_lane_color.to_html(false),
+		"ebfaed"])
 	return SUPPORT.pins(TEST_NAME, rows)
 
 

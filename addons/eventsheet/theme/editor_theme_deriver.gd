@@ -25,16 +25,13 @@ const NATIVE_CANVAS_STEP := 0.3
 
 ## The greys of the Editor Native look, dark hand then light. Each is drawn at the reference base
 ## and moves with the editor's canvas: an editor a little darker than the reference gets every one
-## of these a little darker, so the steps between them - card on canvas, lane on card - survive.
+## of these a little darker, so the steps between them - card on canvas, divider on card - survive. The two lanes are
+## not greys: native_lane() tints them from the card.
 const NATIVE_GREYS_DARK := {
 	"sheet_background_color": Color("#262b33"),
 	"row_background_color": Color("#2e343e"),
 	"row_background_alt_color": Color("#2e343e"),
 	"row_border_color": Color("#1b1f25"),
-	"condition_lane_color": Color("#2f3846"),
-	# The design's action tint is the card moved toward green and a hair toward blue (#3c423d on
-	# #3b3b3b) - never toward yellow, which reads as olive once the greys follow a neutral editor.
-	"action_lane_color": Color("#2f3b40"),
 	"lane_divider_color": Color("#22272e"),
 	"group_background_color": Color("#38404c"),
 	"group_background_alt_color": Color("#38404c"),
@@ -54,8 +51,6 @@ const NATIVE_GREYS_LIGHT := {
 	"row_background_color": Color("#ffffff"),
 	"row_background_alt_color": Color("#ffffff"),
 	"row_border_color": Color("#c3c8cf"),
-	"condition_lane_color": Color("#f0f5fb"),
-	"action_lane_color": Color("#f7fbf5"),
 	"lane_divider_color": Color("#dde1e6"),
 	"group_background_color": Color("#dce6f0"),
 	"group_background_alt_color": Color("#dce6f0"),
@@ -209,12 +204,25 @@ const NATIVE_NEW_MARK_TOKENS: Array[String] = [
 	"saved_badge_foreground_color", "saved_badge_background_color",
 ]
 
-## The sentence text and the cell plates of the two lanes, per hand. The plates are the lane's own
-## tint, so a cell reads as part of its lane rather than as a chip sitting on it.
+## The sentence text of the two lanes, per hand. The cell plates are the lane's own tint, so a cell
+## reads as part of its lane rather than as a chip sitting on it.
 const NATIVE_TEXT_DARK := Color("#dfe3ea")
 const NATIVE_TEXT_LIGHT := Color("#16191d")
-const NATIVE_CELL_HOVER_DARK := Color("#343b46")
-const NATIVE_CELL_HOVER_LIGHT := Color("#f5f8fc")
+
+## The two lanes' hues: the condition lane leans blue and the action lane green, on any editor base.
+## A lane is the card's own brightness (a step lighter in a dark editor, a step darker in a light one)
+## at that hue with a fixed amount of colour, so the tint stays the same size whatever grey the editor
+## is - a neutral editor gets lanes exactly as blue and as green as the reference one does.
+const NATIVE_CONDITION_LANE_HUE := 212.0
+const NATIVE_ACTION_LANE_HUE := 128.0
+## How much colour each lane carries (the gap between its strongest and weakest channel, 0 to 1), and
+## how far its brightness steps from the card, per hand.
+const NATIVE_LANE_CHROMA_DARK := 0.075
+const NATIVE_LANE_CHROMA_LIGHT := 0.06
+const NATIVE_LANE_STEP_DARK := 0.04
+const NATIVE_LANE_STEP_LIGHT := -0.02
+## The least contrast the sentence text keeps against a lane (the WCAG body-text bar).
+const NATIVE_LANE_MIN_CONTRAST := 4.5
 
 ## The line along the top of the open sheet's tab, per hand: the selection blue of the design, a
 ## shade deeper on light paper so it still reads as a line rather than a smudge.
@@ -354,6 +362,10 @@ static func native_style(base_color: Color) -> EventSheetEditorStyle:
 	# gutter and a frame, no wash over the lanes).
 	event_style.comment_notes = true
 	event_style.selection_as_outline = true
+	# The lanes are tinted from the card they sit on rather than shifted with the greys: a shift keeps
+	# the reference editor's few levels of blue and green, which a neutral editor reads as grey.
+	event_style.condition_lane_color = native_lane(event_style.row_background_color, NATIVE_CONDITION_LANE_HUE, light)
+	event_style.action_lane_color = native_lane(event_style.row_background_color, NATIVE_ACTION_LANE_HUE, light)
 	_native_cells(style.get_condition_style(), event_style.condition_lane_color, base_color, light)
 	_native_cells(style.get_action_style(), event_style.action_lane_color, base_color, light)
 	EventSheetThemeDerivation.fill_derived_tokens(style)
@@ -371,13 +383,38 @@ static func _native_cells(cells: EventSheetElementStyle, lane: Color, base_color
 	cells.text_color = text
 	cells.chip_background_color = lane
 	cells.chip_border_color = lane
-	cells.chip_hover_color = native_grey(NATIVE_CELL_HOVER_LIGHT if light else NATIVE_CELL_HOVER_DARK, base_color)
+	# The cell under the pointer is its own lane lifted a step, so a hovered action keeps its green.
+	cells.chip_hover_color = lane.darkened(0.04) if light else lane.lightened(0.07)
 	cells.badge_background_color = native_grey(
 		(NATIVE_GREYS_LIGHT if light else NATIVE_GREYS_DARK)["lane_divider_color"], base_color)
 	cells.badge_foreground_color = text
 	cells.corner_radius = 0
 	# One pixel above and below the text: with the 12 px text that is the design's 24 px line.
 	cells.vertical_padding = 1
+
+
+## One lane's tint on a card: the card's brightness stepped by the hand's lane step, at `hue_degrees`,
+## carrying the hand's fixed amount of colour. Darkened (dark hand) or lightened (light hand) further
+## only if the sentence text would otherwise fall under NATIVE_LANE_MIN_CONTRAST against it.
+## Pure; the alpha is the card's.
+static func native_lane(card: Color, hue_degrees: float, light: bool) -> Color:
+	var text: Color = NATIVE_TEXT_LIGHT if light else NATIVE_TEXT_DARK
+	var chroma: float = NATIVE_LANE_CHROMA_LIGHT if light else NATIVE_LANE_CHROMA_DARK
+	var value: float = clampf(card.v + (NATIVE_LANE_STEP_LIGHT if light else NATIVE_LANE_STEP_DARK), chroma, 1.0)
+	var lane: Color = Color.from_hsv(hue_degrees / 360.0, clampf(chroma / value, 0.0, 1.0), value, card.a)
+	var guard: int = 0
+	while contrast_ratio(text, lane) < NATIVE_LANE_MIN_CONTRAST and guard < 40:
+		value = clampf(value + (0.02 if light else -0.02), chroma, 1.0)
+		lane = Color.from_hsv(hue_degrees / 360.0, clampf(chroma / value, 0.0, 1.0), value, card.a)
+		guard += 1
+	return lane
+
+
+## The WCAG contrast ratio between two opaque colours, 1 to 21.
+static func contrast_ratio(first: Color, second: Color) -> float:
+	var a: float = first.srgb_to_linear().get_luminance()
+	var b: float = second.srgb_to_linear().get_luminance()
+	return (maxf(a, b) + 0.05) / (minf(a, b) + 0.05)
 
 
 ## A style that asks to follow the editor (follow_editor_greys), moved onto `base_color`. Every

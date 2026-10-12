@@ -6,6 +6,17 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: Editor Native's two lanes read blue and green on any editor
+
+- **The conditions lane is blue and the actions lane green, whatever grey the editor is.** The two
+  lanes used to move with the editor's greys like the cards do, which kept the reference editor's few
+  levels of tint and read as plain grey on a neutral editor. Each lane is now tinted from the card it
+  sits on: the card's brightness a step lighter in a dark editor (a step darker in a light one), at a
+  blue or green hue with a fixed amount of colour, so a neutral, a tinted and a light editor all get
+  the same visible blue and green. The sentence text keeps at least 4.5:1 contrast on both, and a
+  hovered cell is its own lane lifted a step, so a hovered action stays green. Only Editor Native's
+  colours move; every other theme draws exactly as before.
+
 ### Changed: Editor Native stops showing the compiler's \"__\" names inside events
 
 - **A spawned copy is named by its scene.** A theme can stop showing the compiler's two-underscore
