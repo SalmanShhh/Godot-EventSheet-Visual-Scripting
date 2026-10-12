@@ -263,9 +263,12 @@ static func _test_the_words_ride() -> bool:
 			"derived_property": UNCLAIMED_PROPERTY,
 			"derived_doc": "How soft the shadow edge is.",
 			"derived_doc_id": "engine:Light2D.%s" % UNCLAIMED_PROPERTY}) and ok
-	# The Inspector's own spelling, which is what the hover leads a second property's words with.
-	ok = _check("the Inspector's name for a property is the Inspector's",
-		EventSheetDerivedProperties.inspector_name("shadow_filter_smooth"), "Shadow Filter Smooth") and ok
+	# A second property's words are led by its name exactly as the code writes it, never recapitalised.
+	ok = _check("the hover leads a read property's words with its identifier as written",
+		EventSheetDerivedProperties._joined_words({"doc": "How soft the shadow edge is."},
+			{"property": "shadow_filter_smooth", "doc": "How smooth the filter is."}),
+		"How soft the shadow edge is.
+shadow_filter_smooth: How smooth the filter is.") and ok
 	# The credit is not a courtesy: the engine's prose is published under a licence that asks for it,
 	# and the one hover builder is where that rule lives for this layer as for the calls.
 	ok = _check("the engine's own words carry the credit its licence asks for",

@@ -9,7 +9,7 @@ extends RefCounted
 # `__` bookkeeping members out of the rows. Pinned as values:
 #   1. the two tokens: off by default, on in the Editor Native starter and its rule, stated off in
 #      every other shipped theme;
-#   2. the readings the row prints: the GDScript type word, an enum choice's Inspector name, a colour's hex;
+#   2. the readings the row prints: the GDScript type word, an enum choice as written (`CLOSED`), a colour's hex;
 #   3. the rows the builder makes under Editor Native, word for word, and under Classic Sheet as before;
 #   4. the name is the identifier as written (`open_speed`, never "Open Speed"), and F2 renames it;
 #   5. the hidden bookkeeping member still compiles;
@@ -82,7 +82,6 @@ static func _test_readings() -> bool:
 		["a constructor names its type", NativeVariableMarks.gdscript_type_word("", "Vector2.ZERO", true), "Vector2"],
 		["a real value names its type", NativeVariableMarks.gdscript_type_word("Variant", Color.RED, false), "Color"],
 		["a computed value says Variant", NativeVariableMarks.gdscript_type_word("", "speed * 2", true), "Variant"],
-		["the Inspector capitals an enum choice only", NativeVariableMarks.inspector_name("HALF_OPEN"), "Half Open"],
 		["a real colour as its hex", NativeVariableMarks.color_hex(NativeVariableMarks.color_of(Color8(255, 179, 71))), "#FFB347"],
 		["a literal colour", NativeVariableMarks.color_hex(NativeVariableMarks.color_of("Color(1, 0, 0)")), "#FF0000"],
 		["a named constant", NativeVariableMarks.color_hex(NativeVariableMarks.color_of("Color.WHITE")), "#FFFFFF"],
@@ -94,8 +93,8 @@ static func _test_readings() -> bool:
 		# The rule is the prefix, stated in the token's description: the compiler and the packs mint too
 		# many `__` names to list, so an author's own `__cache` is left out of the rows as well.
 		["an author's double-underscore member counts as bookkeeping", NativeVariableMarks.is_compiler_variable("__cache"), true],
-		["an enum value reads as its choice", NativeVariableMarks.enum_choice("GateState", "GateState.CLOSED"), "Closed"],
-		["in the Inspector's capitals", NativeVariableMarks.enum_choice("GateState", "GateState.HALF_OPEN"), "Half Open"],
+		["an enum value reads as its choice", NativeVariableMarks.enum_choice("GateState", "GateState.CLOSED"), "CLOSED"],
+		["spelled as the file spells it, never recapitalised", NativeVariableMarks.enum_choice("GateState", "GateState.HALF_OPEN"), "HALF_OPEN"],
 		["another type's value is left as written", NativeVariableMarks.enum_choice("GateState", "Mood.CALM"), "Mood.CALM"],
 		["a computed value too", NativeVariableMarks.enum_choice("GateState", "GateState.CLOSED if a else b"),
 			"GateState.CLOSED if a else b"],

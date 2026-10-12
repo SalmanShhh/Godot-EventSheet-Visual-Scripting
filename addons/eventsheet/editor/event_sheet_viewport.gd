@@ -3072,7 +3072,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	root_rows = _row_builder.expand_ternary_rows(root_rows)
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet - not on a read-only
 	# preview, where it is an offer the view cannot honour.
-	if show_add_event_footers and not (sheet != null and sheet.read_only):
+	if add_event_footer_wanted(sheet != null and not sheet.events.is_empty()) 			and not (sheet != null and sheet.read_only):
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
 	return root_rows
 
@@ -3662,6 +3662,16 @@ func content_top_offset() -> float:
 ## the divider inside an event rather than from the header band above the canvas.
 func workspace_bands_folded() -> bool:
 	return _editor_style != null and _editor_style.fold_workspace_bands
+
+
+## Whether a trailing "+ Add event…" row closes a body (the sheet, a group, a verb) that does or does
+## not hold events yet. A theme that folds the workspace bands away (fold_workspace_bands) draws none
+## under a body that already has events - its events offer Add on hover, so the sheet ends on its last
+## row - and keeps it on an empty body, where it is the only way in.
+func add_event_footer_wanted(has_events: bool) -> bool:
+	if not show_add_event_footers:
+		return false
+	return not has_events or not workspace_bands_folded()
 
 
 func _to_logical_position(position: Vector2) -> Vector2:

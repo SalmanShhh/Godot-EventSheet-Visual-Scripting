@@ -6,6 +6,20 @@ What changed in the build you have installed (v0.18.0), in the words the release
 
 ## Unreleased
 
+### Changed: Editor Native reads an enum value as written and ends the sheet on its last row
+
+- An enum variable's value reads as its choice spelled the way the file spells it: `GateState.CLOSED`
+  on a `GateState` variable reads `CLOSED`, matching the enum's own row, never \"Closed\". A derived
+  property row's hover leads a second property's words with that property's identifier as written
+  too. No identifier is recapitalised anywhere.
+- Under a theme that folds the workspace bands away, a sheet, group or verb that already holds events
+  no longer ends on a \"+ Add event…\" row - its events offer Add on hover. An empty one keeps the row,
+  its only way in. A status bar that says what is selected keeps its middle quiet on a load instead
+  of repeating the sheet's name the tab already shows.
+- **Event Is Any Press** and **Anything Is Pressed** each point at the other in their description
+  (the press edge inside an input event, the held state anywhere), and a search for \"Any Key\" offers
+  both.
+
 ### Fixed: a typed variable with no starting value opens as a variable, not a script block
 
 - `@export var spark_prefab: PackedScene`, `var target: Node2D`, `var hp: int` - the usual way to

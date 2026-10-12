@@ -356,16 +356,10 @@ static func gdscript_type_word(type_name: String, default_value: Variant, expres
 	return "Variant"
 
 
-## An enum choice the way the Inspector's dropdown capitalises it: `HALF_OPEN` reads "Half Open".
-## Never a variable's name - a variable row prints its identifier exactly as the file writes it.
-static func inspector_name(identifier: String) -> String:
-	var shown: String = identifier.strip_edges().capitalize()
-	return shown if not shown.is_empty() else identifier
-
-
-## An enum value as the Inspector lists it: `GateState.CLOSED` on a `GateState` variable reads
-## "Closed". A value that does not start with its own type's name (a computed one, another enum's)
-## is returned as it was.
+## An enum value as a choice: `GateState.CLOSED` on a `GateState` variable reads "CLOSED", the type
+## already standing at the row's left. The choice keeps the file's own spelling - an identifier is
+## never recapitalised. A value that does not start with its own type's name (a computed one,
+## another enum's) is returned as it was.
 static func enum_choice(type_name: String, value_text: String) -> String:
 	var prefix: String = type_name.strip_edges() + "."
 	var text: String = value_text.strip_edges()
@@ -374,7 +368,7 @@ static func enum_choice(type_name: String, value_text: String) -> String:
 	var choice: String = text.substr(prefix.length())
 	if choice.is_empty() or not choice.is_valid_identifier():
 		return value_text
-	return inspector_name(choice)
+	return choice
 
 
 ## The colour a value holds, whichever way it was written - a real Color, a `Color.RED` constant, a

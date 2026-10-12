@@ -807,7 +807,13 @@ func _activate_tab(index: int) -> void:
 	# changed on disk behind it while the reader was somewhere else.
 	var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
 	if seating == "loaded":
-		_set_status("Loaded: %s" % label)
+		# A status bar that says what is selected (status_bar_selection_line) keeps its middle quiet
+		# on a load: the tab already names the sheet, and the bar is the selection on the left and the
+		# counts on the right, nothing between them.
+		if EventSheetActiveTheme.active().status_bar_selection_line:
+			_set_status("")
+		else:
+			_set_status("Loaded: %s" % label)
 	elif seating == "reloaded":
 		# The FILE moved while the reader was on another tab, so the rows were built again -
 		# from the sheet the editor is holding, which is not the same thing as reading the file

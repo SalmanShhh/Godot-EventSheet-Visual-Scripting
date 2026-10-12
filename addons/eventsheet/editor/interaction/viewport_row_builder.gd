@@ -4657,7 +4657,7 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 	# The way IN to a verb's body, mirroring a group's own footer. A freshly created verb has an empty
 	# body, so without this there is nowhere to put its first event - and since a "run only when" guard
 	# is just a condition on an event inside the verb, that first event is exactly what a guard needs.
-	if body_editable:
+	if body_editable and _viewport.add_event_footer_wanted(not body_entries.is_empty()):
 		row_data.children.append(_build_add_event_footer_row(
 			event_function, indent + 1,
 			"+ Add event to '%s'…" % (display_name if not display_name.is_empty() else event_function.function_name)
@@ -8221,13 +8221,14 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# declaration reads where it is declared. The echo is the member the compiler really writes.
 	for local_row: EventRowData in _build_group_local_rows(group, indent + 1):
 		row_data.children.append(local_row)
-	for child in _viewport._group_children(group):
+	var group_children: Array = _viewport._group_children(group)
+	for child in group_children:
 		var child_row: EventRowData = _viewport._build_row_from_resource(child, indent + 1)
 		if child_row != null:
 			row_data.children.append(child_row)
 	# Event-sheet-style per-group footer: always the group's last child, one level deeper. A read-only
 	# preview grows none: nothing can be added to it.
-	if _viewport.show_add_event_footers and not _scaffolding_suppressed():
+	if _viewport.add_event_footer_wanted(not group_children.is_empty()) and not _scaffolding_suppressed():
 		row_data.children.append(
 			_build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % EventSheetGroupFacts.display_name(group))
 		)
@@ -11781,8 +11782,8 @@ func _build_variable_row(
 			value_meta.erase("swatch_color")
 			value_meta["value_glyph"] = NativeVariableMarks.GLYPH_COLOR
 			value_meta["value_swatch"] = colour as Color
-	# The Inspector lists an enum's value as the choice alone ("Closed"), the type already standing at
-	# the row's left: `GateState.CLOSED` loses its repeated type name and reads in the Inspector's capitals.
+	# An enum's value reads as the choice alone, the type already standing at the row's left:
+	# `GateState.CLOSED` loses its repeated type name and reads "CLOSED", spelled as the file spells it.
 	if inspector_rows and type_family == NativeVariableMarks.FAMILY_ENUM:
 		var choice: String = NativeVariableMarks.enum_choice(type_name, value_text)
 		if choice != value_text:

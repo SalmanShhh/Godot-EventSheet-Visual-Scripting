@@ -13,7 +13,10 @@ extends RefCounted
 #   5. the lane boundary is grabbed from the divider inside an event, never from a row that is not one;
 #   6. a tucked rail leaves nothing on screen, the rail rests tucked until the reader chooses, and
 #      View > Side Rail's gesture brings it back;
-#   7. an unsaved sheet's tab says so on its hover.
+#   7. an unsaved sheet's tab says so on its hover;
+#   8. the resting view ends where the design ends it: no "+ Add event…" row after a body that has
+#      events (an empty one keeps it, as its only way in), and no "Loaded:" line in the status bar's
+#      middle, which holds only the selection on the left and the counts on the right.
 
 const SUPPORT := preload("res://tests/support.gd")
 const TEST_NAME := "native_workspace_bands_test"
@@ -31,6 +34,7 @@ static func run() -> bool:
 	ok = _test_the_divider_grab() and ok
 	ok = _test_the_rail() and ok
 	ok = _test_the_unsaved_tab() and ok
+	ok = _test_the_resting_ends() and ok
 	EventSheetActiveTheme.publish(null)
 	return ok
 
@@ -208,6 +212,28 @@ static func _test_the_unsaved_tab() -> bool:
 	])
 
 
+static func _test_the_resting_ends() -> bool:
+	var native: EventSheetEditor = _editor(NATIVE_THEME, _sheet_with_grouped_events())
+	var native_status: String = native._status_label.text
+	var native_footers: PackedStringArray = _footer_words(native._viewport)
+	var empty: EventSheetEditor = _editor(NATIVE_THEME, EventSheetResource.new())
+	var empty_footers: PackedStringArray = _footer_words(empty._viewport)
+	var classic: EventSheetEditor = _editor(CLASSIC_THEME, _sheet_with_grouped_events())
+	var classic_status: String = classic._status_label.text
+	var classic_footers: PackedStringArray = _footer_words(classic._viewport)
+	native.free()
+	empty.free()
+	classic.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["Editor Native ends the sheet on its last row", native_footers, PackedStringArray()],
+		["an empty sheet keeps its one way in", empty_footers, PackedStringArray(["+ Add event…"])],
+		["Classic Sheet keeps both footers", classic_footers,
+			PackedStringArray(["+ Add event to 'Gate Movement'…", "+ Add event…"])],
+		["Editor Native's status bar says nothing in its middle on a load", native_status, ""],
+		["Classic Sheet says what it loaded", classic_status, "Loaded: (unsaved EventSheet)"],
+	])
+
+
 static func _editor(theme_path: String, sheet: EventSheetResource) -> EventSheetEditor:
 	var editor := EventSheetEditor.new()
 	sheet.editor_style = load(theme_path) as EventSheetEditorStyle
@@ -222,6 +248,29 @@ static func _sheet_with_events(count: int) -> EventSheetResource:
 		event.trigger_id = "OnProcess"
 		sheet.events.append(event)
 	return sheet
+
+
+static func _sheet_with_grouped_events() -> EventSheetResource:
+	var sheet: EventSheetResource = _sheet_with_events(1)
+	var group := EventGroup.new()
+	group.name = "Gate Movement"
+	var inner := EventRow.new()
+	inner.trigger_id = "OnProcess"
+	group.events.append(inner)
+	sheet.events.append(group)
+	return sheet
+
+
+static func _footer_words(view: EventSheetViewport) -> PackedStringArray:
+	var words: PackedStringArray = PackedStringArray()
+	for index: int in range(view.get_flat_rows().size()):
+		var row_data: EventRowData = view._row_at(index)
+		if row_data == null:
+			continue
+		for span: SemanticSpan in row_data.spans:
+			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) == "add_event":
+				words.append(span.text)
+	return words
 
 
 static func _pack_sheet() -> EventSheetResource:

@@ -163,13 +163,6 @@ static func doc_id_for(class_text: String, property: String) -> String:
 	return EventSheetDocEngineReference.doc_id(bare, property.strip_edges())
 
 
-## The Inspector's own spelling of a property name, for the line the hover leads with:
-## `shadow_blur` -> "Shadow Blur". Never drawn on the row itself - the row shows the identifier the
-## file writes, because that is the text a reader is looking at in the code beside it.
-static func inspector_name(property: String) -> String:
-	return property.strip_edges().capitalize()
-
-
 ## Drops every cached answer. Called from the same filesystem ping that drops the derived call
 ## layer's caches: a property added to a script nobody opened still has to reach the rows writing it.
 static func clear_cache() -> void:
@@ -202,8 +195,8 @@ static func _repainted(segments: Array, value_is_derived: bool) -> Array:
 
 
 ## What the row says about itself on hover: the property's own words, and - when the value is a read
-## of another property - that one's words after them, each led by the Inspector's name for it so a
-## reader can tell the two apart. "" when neither said anything, which is honest and leaves the row
+## of another property - that one's words after them, led by that property's name exactly as the code
+## writes it, so a reader can tell the two apart. "" when neither said anything, which is honest and leaves the row
 ## hovering as the line it is.
 static func _joined_words(facts: Dictionary, read: Dictionary) -> String:
 	var said: PackedStringArray = PackedStringArray()
@@ -212,7 +205,7 @@ static func _joined_words(facts: Dictionary, read: Dictionary) -> String:
 		said.append(written)
 	var answered: String = str(read.get("doc", "")).strip_edges()
 	if not answered.is_empty():
-		said.append("%s: %s" % [inspector_name(str(read.get("property", ""))), answered])
+		said.append("%s: %s" % [str(read.get("property", "")).strip_edges(), answered])
 	return "\n".join(said)
 
 
