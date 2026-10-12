@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed: the first sheet tab of a session no longer re-reads every pack
+
+- The verbs every pack script publishes are remembered in `.godot/eventsheets_pack_vocabulary.bin`
+  between editor sessions, so the first sheet tab answers the picker's pack vocabulary without
+  compiling or reflecting the packs again. On this project's 181 pack scripts the vocabulary step of
+  the first open went from about 6.7 s to about 3.1 s (median of three, same machine, interleaved).
+- A remembered entry is used only while the script's bytes (content hash included), every script it
+  builds on or names, its autoload, the plugin and engine versions and the reflecting code are what
+  they were; anything else and that one script is reflected again. A script whose surface is computed
+  by code (`_get_property_list`, `_eventforge_register`) is always reflected fresh. Deleting the file
+  is always safe. The first session after an update pays about one second extra to write it.
+- `pack_vocabulary_cache_test` compares the remembered answer with a fresh reflection for every pack,
+  dump line for dump line and field for field.
+
 ### Fixed: the help bundle never bakes a manual with no figures in it
 
 - `EventSheets.round_trip_failure(source)` is the byte gate's reason: `""` when `round_trips(source)`

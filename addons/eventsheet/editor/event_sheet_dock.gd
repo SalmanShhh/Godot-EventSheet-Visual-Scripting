@@ -8010,12 +8010,12 @@ func _refresh_ace_registry() -> void:
 		combined_sources = owned_sources.duplicate()
 	# Zero-config addons: scripts under res://eventsheet_addons/ register project-wide
 	# automatically - purely additive (they never displace the default vocabulary or the
-	# sheet's own providers; deduped against the sheet's provider list).
-	var addon_sources: Array[Object] = _build_addon_ace_sources()
-	owned_sources.append_array(addon_sources)
-	combined_sources.append_array(addon_sources)
+	# sheet's own providers; deduped against the sheet's provider list). Their definitions come
+	# remembered from the last session where the scripts are unchanged, so the fleet is neither
+	# compiled nor reflected again; they are stored after every source, as they always were.
+	var addon_definitions: Array[ACEDefinition] = _build_addon_ace_definitions()
 	_ace_sources = owned_sources
-	_ace_registry.refresh_from_sources(combined_sources, true)
+	_ace_registry.refresh_from_sources(combined_sources, true, addon_definitions)
 	# What this vocabulary was built from, so a switch to a tab with the same sources keeps it.
 	_tab_state.note_registry_built()
 	if _viewport != null:
@@ -8036,10 +8036,11 @@ func _build_sheet_ace_sources() -> Array[Object]:
 	return sources
 
 
-## Instantiates every scanned zero-config addon script (res://eventsheet_addons/), skipping
-## paths the sheet already registers explicitly.
-func _build_addon_ace_sources() -> Array[Object]:
-	var sources: Array[Object] = []
+## The definitions of every scanned zero-config addon script (res://eventsheet_addons/), plus the
+## code-registered, taught and annotated-autoload providers, skipping paths the sheet already
+## registers explicitly. Answered by EventSheetPackVocabularyCache: a script unchanged since it was
+## last reflected is not loaded at all.
+func _build_addon_ace_definitions() -> Array[ACEDefinition]:
 	# Same scan, second registry: pack-defined Custom Block kinds (scripts extending
 	# EventSheetBlockKind) register here so a newly dropped kind is usable without a restart.
 	EventSheetBlockRegistry.rescan_pack_kinds()
@@ -8091,13 +8092,11 @@ func _build_addon_ace_sources() -> Array[Object]:
 		_autoload_provider_names[provider_class] = setting_name.trim_prefix("autoload/")
 		if not provider_paths.has(autoload_path):
 			provider_paths.append(autoload_path)
+	var reflected_paths: Array[String] = []
 	for path: String in provider_paths:
-		if sheet_paths.has(path):
-			continue
-		var instance: Object = _instantiate_provider_script(path)
-		if instance != null:
-			sources.append(instance)
-	return sources
+		if not sheet_paths.has(path):
+			reflected_paths.append(path)
+	return EventSheetPackVocabularyCache.definitions_for(reflected_paths)
 
 
 ## Loads and instantiates a provider script (Node/Resource/RefCounted) for reflection. Where the

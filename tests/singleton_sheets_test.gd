@@ -109,7 +109,7 @@ static func run() -> bool:
 	var scan_editor: EventSheetEditor = EventSheetEditor.new()
 	scan_editor.setup(EventSheetResource.new())
 	scan_editor.set_undo_redo_manager(NoopUndoManager.new())
-	scan_editor._build_addon_ace_sources()
+	scan_editor._build_addon_ace_definitions()
 	all_passed = _check("registered autoloads map provider class to singleton name",
 		str(scan_editor._autoload_provider_names.get("SpringBehavior", "")), "SpringDemo") and all_passed
 	var bus_definition: ACEDefinition = ACEDefinition.new()
@@ -176,7 +176,7 @@ signal kicked"
 	# Unannotated autoload scripts must NOT publish (the bridge mentions \"@ace_*\" in a
 	# doc comment - that must not count either).
 	ProjectSettings.set_setting("autoload/PlainBus", "*res://tests/fixtures/test_bus.gd")
-	author_editor._build_addon_ace_sources()
+	author_editor._build_addon_ace_definitions()
 	all_passed = _check("unannotated autoloads stay out of the provider scan",
 		author_editor._autoload_provider_names.values().has("PlainBus"), false) and all_passed
 	ProjectSettings.set_setting("autoload/PlainBus", null)

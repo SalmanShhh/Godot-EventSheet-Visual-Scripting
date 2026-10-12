@@ -21,7 +21,11 @@ static var _builtin_definitions_derived: bool = false
 static var _source_definition_cache: Dictionary = {}
 
 
-func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) -> void:
+## Rebuilds the vocabulary: the session's simple verbs, the builtins, then each source in order,
+## then `trailing_definitions` - definitions a caller already holds (the pack fleet, remembered or
+## reflected by EventSheetPackVocabularyCache), stored last exactly as sources listed last would be.
+func refresh_from_sources(sources: Array[Object], include_builtin: bool = true,
+		trailing_definitions: Array[ACEDefinition] = []) -> void:
 	_definitions.clear()
 	_definitions_by_key.clear()
 	# Extension seam: dictionary-defined ACEs (EventSheets.register_simple_ace) join every
@@ -54,6 +58,8 @@ func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) 
 			_source_definition_cache[cache_key] = generated
 		for definition in generated:
 			_store_definition(definition)
+	for trailing_definition: ACEDefinition in trailing_definitions:
+		_store_definition(trailing_definition)
 
 
 ## Cache identity for a reflectable source: its script's path + saved mtime + byte length.
